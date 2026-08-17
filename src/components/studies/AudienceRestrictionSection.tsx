@@ -82,13 +82,13 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
       >
         <span>
           <span className="text-sm text-navy font-display">Restringir este grupo a… (opcional)</span>
-          <span className="block text-[12px] text-navy-light/60 font-body mt-0.5">
+          <span className="block text-[12px] text-navy-light/70 font-body mt-0.5">
             {resumen
               ? `Solo para: ${resumen}`
               : 'Sin restricción: se le ofrece a cualquiera que califique para esta etapa.'}
           </span>
         </span>
-        {open ? <ChevronUp size={18} className="text-navy-light/60 shrink-0" /> : <ChevronDown size={18} className="text-navy-light/60 shrink-0" />}
+        {open ? <ChevronUp size={18} className="text-navy-light/70 shrink-0" /> : <ChevronDown size={18} className="text-navy-light/70 shrink-0" />}
       </button>
 
       {open && (

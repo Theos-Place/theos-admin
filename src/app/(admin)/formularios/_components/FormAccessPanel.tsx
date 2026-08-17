@@ -81,7 +81,7 @@ export function FormAccessPanel({ formId }: { formId: string }) {
       </p>
 
       <div>
-        <label className="text-[11px] text-navy-light/70 mb-1 block font-body" htmlFor="form-access-search">
+        <label className="text-[12px] text-navy-light/70 mb-1 block font-body" htmlFor="form-access-search">
           Agregar una persona
         </label>
         {/* Buscador compartido de gestión, no /api/members: ese exige el módulo
@@ -96,12 +96,12 @@ export function FormAccessPanel({ formId }: { formId: string }) {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 py-4 text-[13px] text-navy-light/60 font-body">
+        <div className="flex items-center gap-2 py-4 text-[13px] text-navy-light/70 font-body">
           <Loader2 size={14} className="animate-spin" /> Cargando accesos…
         </div>
       ) : grants.length === 0 ? (
         <div className="flex items-start gap-2 rounded-xl bg-surface-low px-4 py-3">
-          <UserPlus size={15} className="text-navy-light/60 shrink-0 mt-0.5" />
+          <UserPlus size={15} className="text-navy-light/70 shrink-0 mt-0.5" />
           <p className="text-[13px] text-navy-light/70 font-body">
             Nadie tiene acceso puntual todavía. Quien tenga el módulo de formularios
             (dirección, comunicaciones, staff o el rol Formularios) ya ve las respuestas.
@@ -114,7 +114,7 @@ export function FormAccessPanel({ formId }: { formId: string }) {
               <ShieldCheck size={15} className="text-teal-deep shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm text-navy font-body font-medium">{g.member_name}</p>
-                <p className="truncate text-[11px] text-navy-light/60 font-body">
+                <p className="truncate text-[12px] text-navy-light/70 font-body">
                   {g.member_email ?? 'Sin correo'}
                   {' · desde '}{formatDate(g.granted_at)}
                   {g.granted_by_name ? ` · lo dio ${g.granted_by_name}` : ''}
@@ -125,7 +125,7 @@ export function FormAccessPanel({ formId }: { formId: string }) {
                 onClick={() => remove(g)}
                 disabled={busy === g.member_id}
                 aria-label={`Quitar el acceso de ${g.member_name}`}
-                className="shrink-0 rounded-full p-2 text-navy-light/60 hover:bg-coral/10 hover:text-coral transition-colors disabled:opacity-50"
+                className="shrink-0 rounded-full p-2 text-navy-light/70 hover:bg-coral/10 hover:text-coral transition-colors disabled:opacity-50"
               >
                 {busy === g.member_id
                   ? <Loader2 size={14} className="animate-spin" />

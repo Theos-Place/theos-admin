@@ -57,7 +57,7 @@ const QTY_OPS: { value: QtyOperator; label: string }[] = [
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+    <p className="mb-1.5 text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
       {children}
     </p>
   )
@@ -143,11 +143,11 @@ function ConditionsList({
     <div
       className="rounded-xl p-3 h-full bg-surface-low min-h-[120px]"
     >
-      <p className="mb-2 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+      <p className="mb-2 text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
         Filtros activos
       </p>
       {filtered.length === 0 ? (
-        <p className="text-xs text-navy-light/60 italic font-body">
+        <p className="text-xs text-navy-light/70 italic font-body">
           Ninguno
         </p>
       ) : (
@@ -159,7 +159,7 @@ function ConditionsList({
               </span>
               <button
                 onClick={() => removeCondition(c.id)}
-                className="shrink-0 text-navy-light/60 hover:text-coral transition-colors"
+                className="shrink-0 text-navy-light/70 hover:text-coral transition-colors"
                 aria-label="Quitar"
               >
                 <X size={12} strokeWidth={2} />
@@ -207,7 +207,7 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             aria-pressed={mode === 'taken'}
             className={cn(
               'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium font-display transition-all',
-              mode === 'taken' ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy',
+              mode === 'taken' ? 'bg-navy text-white' : 'text-navy-light/70 hover:text-navy',
             )}
           >
             Ha llevado
@@ -218,14 +218,14 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             aria-pressed={mode === 'not_taken'}
             className={cn(
               'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium font-display transition-all',
-              mode === 'not_taken' ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy',
+              mode === 'not_taken' ? 'bg-navy text-white' : 'text-navy-light/70 hover:text-navy',
             )}
           >
             No ha llevado
           </button>
         </div>
         {mode === 'not_taken' && (
-          <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">
+          <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">
             Excluye a quienes ya lo completaron o lo están cursando ahora mismo.
           </p>
         )}
@@ -365,14 +365,14 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 </span>
               </label>
             ))}
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 pt-1 font-display">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 pt-1 font-display">
               Sedes históricas
             </p>
             {HISTORICAL_SEDES.map(s => (
               <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={sedes.includes(s.id)} onChange={() => toggleSede(s.id)}
                   className="accent-coral h-3.5 w-3.5 cursor-pointer" />
-                <span className="text-xs text-navy-light/60 select-none font-body">
+                <span className="text-xs text-navy-light/70 select-none font-body">
                   {s.name}
                 </span>
               </label>
@@ -833,7 +833,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
             placeholder="Mín"
             className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 font-body"
           />
-          <span className="text-navy-light/60 shrink-0 text-sm">–</span>
+          <span className="text-navy-light/70 shrink-0 text-sm">–</span>
           <input
             type="number" min={0} max={120} value={ageMax}
             onChange={e => setAgeMax(e.target.value)}
@@ -885,13 +885,13 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
               'shrink-0 px-4 py-3 text-sm transition-colors whitespace-nowrap',
               activeTab === tab.key
                 ? 'text-navy border-b-2 border-navy -mb-px'
-                : 'text-navy-light/60 hover:text-navy-light',
+                : 'text-navy-light/70 hover:text-navy-light',
               'font-body',
             )}
           >
             {tab.label}
             {conditionTypes[tab.key].some(t => conditions.some(c => c.type === t)) && (
-              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-coral text-[9px] text-white">
+              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-coral text-[10px] text-white">
                 {conditions.filter(c => conditionTypes[tab.key].includes(c.type)).length}
               </span>
             )}
@@ -908,7 +908,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
             <div className="space-y-6">
               <AttendPanel addCondition={addCondition} />
               <div className="border-t border-[var(--outline-variant)] pt-5">
-                <p className="mb-3 text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                <p className="mb-3 text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                   Inscripción a evento
                 </p>
                 <RegistrationPanel addCondition={addCondition} />

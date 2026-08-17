@@ -56,8 +56,8 @@ function RequirementChips({ requirements, size = 'md' }: { requirements: string[
             key={key}
             className={cn(
               'inline-flex items-center gap-1 rounded-full font-body',
-              size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]',
-              active ? 'bg-teal/15 text-teal-deep font-medium' : 'bg-surface-low text-navy-light/60 line-through',
+              size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-[12px]',
+              active ? 'bg-teal/15 text-teal-deep font-medium' : 'bg-surface-low text-navy-light/70 line-through',
             )}
           >
             <Icon size={size === 'sm' ? 10 : 12} />
@@ -161,7 +161,7 @@ export default function AnalisisPage() {
               className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-1 text-[12px] text-navy font-body hover:bg-navy/10 transition-colors"
             >
               {memberNames[id] ?? 'Cargando…'}
-              <ExternalLink size={10} className="text-navy-light/60" />
+              <ExternalLink size={10} className="text-navy-light/70" />
             </Link>
           </li>
         ))}
@@ -178,17 +178,17 @@ export default function AnalisisPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Análisis de bloque
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           Estimación de demanda para etapas Inicial e Intermedia
         </p>
       </div>
 
       {/* Banner de contexto de bloque */}
       <div className="rounded-2xl bg-surface-card shadow-card px-5 py-4 flex items-center gap-3 flex-wrap">
-        <span className="rounded-full bg-navy px-3 py-1 text-[11px] font-medium text-white font-body">
+        <span className="rounded-full bg-navy px-3 py-1 text-[12px] font-medium text-white font-body">
           Hoy: {currentBlock.label}
         </span>
-        <span className="rounded-full bg-coral px-3 py-1 text-[11px] font-medium text-white font-body">
+        <span className="rounded-full bg-coral px-3 py-1 text-[12px] font-medium text-white font-body">
           Analizando para {nextBlock.label}
         </span>
         <span className="text-[13px] text-navy-light/70 font-body">
@@ -198,7 +198,7 @@ export default function AnalisisPage() {
 
       {/* Selector de estudio (solo Inicial e Intermedia; Niveles no aplican) */}
       <div className="rounded-2xl p-5 bg-surface-card shadow-card space-y-3">
-        <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+        <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
           Seleccionar estudio a analizar
         </p>
         <select
@@ -268,7 +268,7 @@ export default function AnalisisPage() {
               { label: 'Grupos sugeridos', value: analysis.suggestedGroups, color: 'text-navy' },
             ].map(({ label, value, color }) => (
               <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                   {label}
                 </p>
                 <p className={`mt-2 text-3xl font-bold font-display ${color}`}>
@@ -285,7 +285,7 @@ export default function AnalisisPage() {
                 Desglose por zona
               </h2>
               <StudyTypeBadge code={study.code} size="sm" />
-              <span className="text-[11px] text-navy-light/60 font-body ml-auto">
+              <span className="text-[12px] text-navy-light/70 font-body ml-auto">
                 Clic en un número para ver los miembros
               </span>
             </div>
@@ -293,27 +293,27 @@ export default function AnalisisPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Zona</th>
+                    <th className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Zona</th>
                     <th
                       title={tooltipA}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
+                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
                     >
                       Por graduarse (A)
                     </th>
                     <th
                       title={tooltipB}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
+                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display cursor-help underline decoration-dotted decoration-navy-light/50 underline-offset-2"
                     >
                       Elegibles (B)
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Total demanda</th>
-                    <th className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Grupos sugeridos</th>
+                    <th className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Total demanda</th>
+                    <th className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Grupos sugeridos</th>
                   </tr>
                 </thead>
                 <tbody>
                   {analysis.rows.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">
+                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-navy-light/70 font-body">
                         Sin demanda detectada para este estudio.
                       </td>
                     </tr>
@@ -333,7 +333,7 @@ export default function AnalisisPage() {
                               disabled={row.graduating === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/60 cursor-default',
+                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/70 cursor-default',
                               )}
                             >
                               {row.graduating}
@@ -346,7 +346,7 @@ export default function AnalisisPage() {
                               disabled={row.eligible === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/60 cursor-default',
+                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/70 cursor-default',
                               )}
                             >
                               {row.eligible}
@@ -363,7 +363,7 @@ export default function AnalisisPage() {
                         {(isExpA || isExpB) && (
                           <tr className="border-b border-outline bg-surface-low/60">
                             <td colSpan={5} className="px-4 py-2">
-                              <p className="text-[11px] text-navy-light/60 font-body mb-1">
+                              <p className="text-[12px] text-navy-light/70 font-body mb-1">
                                 {isExpA ? `Por graduarse de ${analysis.studyInfo.prerequisite}` : 'Elegibles'} en {sedeLabel(row.zone)}:
                               </p>
                               <MemberList ids={isExpA ? row.graduating_members : row.eligible_members} />
@@ -391,7 +391,7 @@ export default function AnalisisPage() {
 
       {!selectedStudyId && (
         <div className="rounded-2xl p-10 text-center bg-surface-card shadow-card">
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Seleccioná un estudio para ver el análisis de demanda.
           </p>
         </div>

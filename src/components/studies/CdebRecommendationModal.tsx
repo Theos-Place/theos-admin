@@ -54,7 +54,7 @@ function ScaleRow({ label, value, onChange, allowX }: {
           </button>
         ))}
       </div>
-      {value && <p className="mt-1 text-[12px] text-navy-light/60 font-body">{SCALE_LABELS[value]}</p>}
+      {value && <p className="mt-1 text-[12px] text-navy-light/70 font-body">{SCALE_LABELS[value]}</p>}
     </div>
   )
 }
@@ -153,13 +153,13 @@ export function CdebRecommendationModal({
         <div>
           <label htmlFor="cdeb-date" className={LABEL}>{COMPLETION_DATE_LABEL}</label>
           <input id="cdeb-date" type="date" value={f.completion_date ?? ''} onChange={e => set('completion_date', e.target.value)} className={INPUT} />
-          <p className="mt-1 text-[12px] text-navy-light/60 font-body">{COMPLETION_DATE_HINT}</p>
+          <p className="mt-1 text-[12px] text-navy-light/70 font-body">{COMPLETION_DATE_HINT}</p>
         </div>
 
         {/* Convicciones POR EXCEPCIÓN */}
         <div className="space-y-2">
           <label className={LABEL}>Convicciones</label>
-          <p className="text-[12px] text-navy-light/60 font-body">{CONVICTIONS_INSTRUCTION}</p>
+          <p className="text-[12px] text-navy-light/70 font-body">{CONVICTIONS_INSTRUCTION}</p>
           <div className="space-y-2">
             {CONVICTION_TOPICS.map(t => {
               const flag = flagOf(t.value)
@@ -172,8 +172,8 @@ export function CdebRecommendationModal({
                         type="button"
                         aria-pressed={!flag}
                         onClick={() => setStance(t.value, null)}
-                        className={cn('rounded-full px-2.5 py-1 text-[11px] font-body border transition-colors',
-                          !flag ? 'bg-teal/15 text-teal-deep border-teal/40' : 'bg-white text-navy-light/60 border-navy/15')}
+                        className={cn('rounded-full px-2.5 py-1 text-[12px] font-body border transition-colors',
+                          !flag ? 'bg-teal/15 text-teal-deep border-teal/40' : 'bg-white text-navy-light/70 border-navy/15')}
                       >
                         Convicción firme
                       </button>
@@ -183,7 +183,7 @@ export function CdebRecommendationModal({
                           type="button"
                           aria-pressed={flag?.stance === sOpt.value}
                           onClick={() => setStance(t.value, sOpt.value)}
-                          className={cn('rounded-full px-2.5 py-1 text-[11px] font-body border transition-colors',
+                          className={cn('rounded-full px-2.5 py-1 text-[12px] font-body border transition-colors',
                             flag?.stance === sOpt.value ? 'bg-coral text-white border-coral' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}
                         >
                           {sOpt.label}
@@ -229,7 +229,7 @@ export function CdebRecommendationModal({
         </div>
 
         <div>
-          <label htmlFor="cdeb-commitment" className={LABEL}>{COMMITMENT_TEXT_LABEL} <span className="text-navy-light/50">(opcional)</span></label>
+          <label htmlFor="cdeb-commitment" className={LABEL}>{COMMITMENT_TEXT_LABEL} <span className="text-navy-light/70">(opcional)</span></label>
           <textarea id="cdeb-commitment" value={f.commitment_notes ?? ''} onChange={e => set('commitment_notes', e.target.value)} rows={2} className={cn(INPUT, 'resize-none')} />
         </div>
 
@@ -278,7 +278,7 @@ export function CdebRecommendationModal({
             Cancelar
           </button>
         </div>
-        <p className="text-[12px] text-navy-light/60 font-body">
+        <p className="text-[12px] text-navy-light/70 font-body">
           El borrador no bloquea el cierre del grupo: podés completarlo después desde el grupo.
         </p>
       </div>

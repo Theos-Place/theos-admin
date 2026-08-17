@@ -148,7 +148,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={16} className="text-[#3DB97A]" />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Total ingresos</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Total ingresos</p>
             </div>
             <p className="text-2xl font-extrabold font-display text-navy">
               <TotalsDisplay totals={totalIngresos} defaultHidden={false} revealed={revealAll} />
@@ -159,26 +159,26 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <Heart size={16} className="text-teal-deep" />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donadores activos</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donadores activos</p>
             </div>
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}
             </p>
-            <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">Donaron en los últimos 2 trimestres</p>
+            <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">Donaron en los últimos 2 trimestres</p>
           </div>
 
           {/* Pagos pendientes */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Pagos pendientes</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
-                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -189,14 +189,14 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
-                <span className="text-[10px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -225,7 +225,7 @@ export default function FinanzasPage() {
                     {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]"
+                        className="px-4 py-3 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]"
                       >
                         {h}
                       </th>
@@ -242,7 +242,7 @@ export default function FinanzasPage() {
                         <p className="text-[13px] font-medium font-body text-navy">
                           {p.member_name.split(' ')[0]}
                         </p>
-                        <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body">
+                        <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body">
                           {p.member_cedula}
                         </p>
                       </td>
@@ -284,7 +284,7 @@ export default function FinanzasPage() {
                       {p.member_name.split(' ')[0]} <span className="text-[rgba(22,20,64,0.45)] font-normal">{p.member_cedula}</span>
                     </p>
                     <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
-                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -301,7 +301,7 @@ export default function FinanzasPage() {
           <div className="space-y-4">
             {/* Quick access */}
             <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
+              <p className="text-[12px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
                 Accesos rápidos
               </p>
               <div className="space-y-2">
@@ -338,7 +338,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                       {sinpePendingRefunds.length} devoluci{sinpePendingRefunds.length === 1 ? 'ón' : 'ones'} SINPE pendiente{sinpePendingRefunds.length !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-[11px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
+                    <p className="text-[12px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                       Requieren procesamiento manual →
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#C41A1A]">
                       {failedRecent7.length} pago{failedRecent7.length !== 1 ? 's' : ''} fallido{failedRecent7.length !== 1 ? 's' : ''} (7 días)
                     </p>
-                    <p className="text-[11px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
+                    <p className="text-[12px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
                       Revisar en módulo de pagos →
                     </p>
                   </div>
@@ -372,7 +372,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#1E6B42]">
                       {unusedScholarships} beca{unusedScholarships !== 1 ? 's' : ''} sin usar
                     </p>
-                    <p className="text-[11px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
+                    <p className="text-[12px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
                       Ver módulo de becas →
                     </p>
                   </div>

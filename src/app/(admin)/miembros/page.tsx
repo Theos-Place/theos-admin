@@ -228,7 +228,7 @@ function MiembrosContent() {
           >
             Miembros
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60 font-body">
+          <p className="mt-1 text-sm text-navy-light/70 font-body">
             {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : countsFailed ? '— registrados' : 'Cargando…'}
             {error && <span className="text-coral"> · {error}</span>}
           </p>
@@ -325,7 +325,7 @@ function MiembrosContent() {
                     <Info size={13} strokeWidth={2} />
                     <span
                       role="tooltip"
-                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[11px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
+                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[12px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
                     >
                       {ATTENDANCE_GENERAL_TOOLTIP}
                     </span>
@@ -348,17 +348,17 @@ function MiembrosContent() {
             <SlidersHorizontal size={13} strokeWidth={1.75} />
             Filtros
             {activeFilterCount > 0 && (
-              <span className="rounded-full bg-coral px-1.5 py-0.5 text-[10px] leading-none text-white">
+              <span className="rounded-full bg-coral px-1.5 py-0.5 text-[11px] leading-none text-white">
                 {activeFilterCount}
               </span>
             )}
-            <span className="text-[10px] opacity-60">{filtersOpen ? '↑' : '↓'}</span>
+            <span className="text-[11px] opacity-60">{filtersOpen ? '↑' : '↓'}</span>
           </button>
         </div>
 
         {/* Search */}
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-64 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={15} className="text-navy-light/60 shrink-0" strokeWidth={1.75} />
+          <Search size={15} className="text-navy-light/70 shrink-0" strokeWidth={1.75} />
           <input
             type="search"
             value={search}
@@ -404,7 +404,7 @@ function MiembrosContent() {
       {/* ── Summary bar ── */}
       {activeFilterCount > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             <span className="font-medium text-navy">
               {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
@@ -469,7 +469,7 @@ function MiembrosContent() {
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="flex items-center gap-1 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/60 hover:bg-surface-low transition-colors font-body"
+              className="flex items-center gap-1 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
             >
               <X size={13} />
               Cancelar
@@ -515,16 +515,16 @@ function MiembrosContent() {
               {!shouldFetch ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
-                    <Search size={26} className="text-navy-light/60 mx-auto mb-3" strokeWidth={1.75} />
-                    <p className="text-sm font-semibold text-navy-light/60">Usá el buscador o aplicá un filtro para ver miembros</p>
-                    <p className="text-[13px] text-navy-light/60 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
+                    <Search size={26} className="text-navy-light/70 mx-auto mb-3" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-navy-light/70">Usá el buscador o aplicá un filtro para ver miembros</p>
+                    <p className="text-[13px] text-navy-light/70 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
                   </td>
                 </tr>
               ) : loading && visibleMembers.length === 0 ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-                    <p className="text-sm text-navy-light/60">Buscando miembros…</p>
+                    <p className="text-sm text-navy-light/70">Buscando miembros…</p>
                   </td>
                 </tr>
               ) : visibleMembers.length === 0 ? (
@@ -569,7 +569,7 @@ function MiembrosContent() {
                                     <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
                                     {member.is_dirigente && <DirigenteLink id={member.id} />}
                                   </div>
-                                  <p className="truncate text-xs text-navy-light/60 font-body">{member.email}</p>
+                                  <p className="truncate text-xs text-navy-light/70 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
@@ -577,7 +577,7 @@ function MiembrosContent() {
                         case 'cedula':
                           return (
                             <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
-                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[10px] text-navy-light/60 font-sans">Sin cédula</span>}
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[11px] text-navy-light/70 font-sans">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
@@ -599,7 +599,7 @@ function MiembrosContent() {
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
                                 ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
-                                : <span className="text-sm text-navy-light/60 font-body">—</span>
+                                : <span className="text-sm text-navy-light/70 font-body">—</span>
                               }
                             </td>
                           )
@@ -629,7 +629,7 @@ function MiembrosContent() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => router.push(`/miembros/${member.id}`)}
-                        className="rounded-lg p-1.5 text-navy-light/60 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/60"
+                        className="rounded-lg p-1.5 text-navy-light/70 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/70"
                         aria-label={`Ver perfil de ${member.first_name}`}
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
@@ -646,14 +646,14 @@ function MiembrosContent() {
         <div className="md:hidden">
           {!shouldFetch ? (
             <div className="px-4 py-14 text-center font-body">
-              <Search size={26} className="text-navy-light/60 mx-auto mb-3" strokeWidth={1.75} />
-              <p className="text-sm font-semibold text-navy-light/60">Usá el buscador o aplicá un filtro</p>
-              <p className="text-[13px] text-navy-light/60 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
+              <Search size={26} className="text-navy-light/70 mx-auto mb-3" strokeWidth={1.75} />
+              <p className="text-sm font-semibold text-navy-light/70">Usá el buscador o aplicá un filtro</p>
+              <p className="text-[13px] text-navy-light/70 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
             </div>
           ) : loading && visibleMembers.length === 0 ? (
             <div className="px-4 py-14 text-center font-body">
               <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-              <p className="text-sm text-navy-light/60">Buscando miembros…</p>
+              <p className="text-sm text-navy-light/70">Buscando miembros…</p>
             </div>
           ) : visibleMembers.length === 0 ? (
             <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
@@ -685,14 +685,14 @@ function MiembrosContent() {
                       <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
                       {member.is_dirigente && <DirigenteLink id={member.id} />}
                     </div>
-                    <p className="truncate text-xs text-navy-light/60 font-body">
+                    <p className="truncate text-xs text-navy-light/70 font-body">
                       {member.cedula ?? 'Sin cédula'}{member.email ? ` · ${member.email}` : ''}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] text-coral font-body">Donador</span>}
+                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] text-coral font-body">Donador</span>}
                     <AccountBadge state={member.account_state} />
-                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                       {member.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </div>
@@ -707,7 +707,7 @@ function MiembrosContent() {
           <div
             className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap border-t border-[var(--outline-variant)]"
           >
-            <span className="text-xs text-navy-light/60 font-body">
+            <span className="text-xs text-navy-light/70 font-body">
               Mostrando <strong className="text-navy">{visibleMembers.length.toLocaleString('es-CR')}</strong> de{' '}
               <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
@@ -770,7 +770,7 @@ export default function MiembrosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
       </div>
     }>
       <MiembrosContent />

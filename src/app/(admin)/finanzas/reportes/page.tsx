@@ -180,7 +180,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Estado'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -192,7 +192,7 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
                             {d.is_identified ? 'Identificado' : 'Sin identificar'}
                           </span>
                         </td>
@@ -229,7 +229,7 @@ export default function ReportesPage() {
                 { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#519DA2' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                  <p className="text-[10px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+                  <p className="text-[11px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
                   <p className="text-lg font-extrabold font-display" style={{ color }}>
                     <TotalsDisplay totals={value} defaultHidden={false} />
                   </p>
@@ -243,7 +243,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -286,14 +286,14 @@ export default function ReportesPage() {
             {/* Top months */}
             {topMonths.length > 0 && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[11px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
+                <p className="text-[12px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
                   Top meses {yearFilter}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {topMonths.map((m, i) => (
                     <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
                       <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
-                      <p className="text-[11px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
+                      <p className="text-[12px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
                         {formatTotalsInline(m.total)}
                       </p>
                     </div>
@@ -309,7 +309,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Mes', 'Total donaciones', 'Donadores únicos', ''].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -320,7 +320,7 @@ export default function ReportesPage() {
                           <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/60'}`}>
+                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/70'}`}>
                             {barra(m) > 0 ? formatTotalsInline(m.total) : '—'}
                           </p>
                         </td>
@@ -338,7 +338,7 @@ export default function ReportesPage() {
                                   style={{ width: `${(barra(m) / maxMonthTotal) * 100}%` }}
                                 />
                               </div>
-                              <span className="text-[10px] w-6 text-right text-[rgba(22,20,64,0.60)] font-body">
+                              <span className="text-[11px] w-6 text-right text-[rgba(22,20,64,0.60)] font-body">
                                 {Math.round((barra(m) / maxMonthTotal) * 100)}%
                               </span>
                             </div>
@@ -374,7 +374,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-teal-deep shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar donaciones</p>
-                <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
             <button
@@ -384,7 +384,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-[#3DB97A] shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
-                <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
           </div>

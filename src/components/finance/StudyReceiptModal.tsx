@@ -74,7 +74,7 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
               recién hecho — es el momento en que tenés la captura a mano.
             </p>
             <div className="space-y-1">
-              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Comprobante (imagen)</label>
               <input
                 type="file"
                 accept="image/*"
@@ -84,7 +84,7 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="mat-pay-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <label htmlFor="mat-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Número de referencia</label>
               <input
                 id="mat-pay-ref"
                 value={reference}

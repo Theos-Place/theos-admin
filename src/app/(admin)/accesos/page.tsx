@@ -18,7 +18,7 @@ function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   if (!role) return null
   return (
     <span
-      className={cn('inline-flex items-center rounded-full font-medium', small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]')}
+      className={cn('inline-flex items-center rounded-full font-medium', small ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-[12px]')}
       style={{ background: `${role.color}18`, color: role.color, border: `1px solid ${role.color}30` }}
     >
       {role.name}
@@ -169,7 +169,7 @@ export default function AccesosPage() {
           { label: 'Último acceso',              value: formatDate(latestLogin),  color: 'text-navy', isText: true },
         ].map(({ label, value, color, isText }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-card">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-2 font-display">{label}</p>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-2 font-display">{label}</p>
             <p className={cn('font-extrabold', isText ? 'text-2xl' : 'text-4xl', color, 'font-display')}>
               {value}
             </p>
@@ -179,7 +179,7 @@ export default function AccesosPage() {
 
       {/* Referencia de roles (al inicio, antes de la lista de usuarios) */}
       <div>
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-3 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 mb-3 font-display">
           Referencia de roles
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -192,7 +192,7 @@ export default function AccesosPage() {
                 <div className="h-3 w-3 rounded-full shrink-0" style={{ background: role.color }} />
                 <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
               </div>
-              <p className="text-[12px] text-navy-light/55 leading-relaxed font-body">{role.description}</p>
+              <p className="text-[12px] text-navy-light/70 leading-relaxed font-body">{role.description}</p>
             </div>
           ))}
         </div>
@@ -207,8 +207,8 @@ export default function AccesosPage() {
                 <div className="h-3 w-3 rounded-full mt-0.5 shrink-0" style={{ background: miembro.color }} />
                 <div>
                   <p className="text-[13px] font-semibold text-navy font-body">{miembro.name}</p>
-                  <p className="text-[12px] text-navy-light/55 leading-relaxed mb-1.5 font-body">{miembro.description}</p>
-                  <span className="inline-flex text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body">
+                  <p className="text-[12px] text-navy-light/70 leading-relaxed mb-1.5 font-body">{miembro.description}</p>
+                  <span className="inline-flex text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body">
                     Asignado automáticamente a todos — no requiere gestión manual
                   </span>
                 </div>
@@ -221,7 +221,7 @@ export default function AccesosPage() {
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2.5 flex-1 max-w-sm border border-outline">
-          <Search size={15} className="text-navy-light/60 shrink-0" />
+          <Search size={15} className="text-navy-light/70 shrink-0" />
           <input
             type="search"
             placeholder="Buscar por nombre o correo..."
@@ -246,7 +246,7 @@ export default function AccesosPage() {
               onClick={() => setStatusFilter(s)}
               className={cn(
                 'rounded-full px-3.5 py-2 text-[12px] font-medium border transition-all',
-                statusFilter === s ? 'bg-navy text-white border-navy' : 'text-navy-light/60 border-transparent hover:border-navy/20 hover:text-navy'
+                statusFilter === s ? 'bg-navy text-white border-navy' : 'text-navy-light/70 border-transparent hover:border-navy/20 hover:text-navy'
               , 'font-display')}
             >
               {s === 'all' ? 'Todos' : s === 'active' ? 'Activos' : 'Inactivos'}
@@ -259,7 +259,7 @@ export default function AccesosPage() {
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-card">
         {/* Info note */}
         <div
-          className="flex items-center gap-2 px-5 py-3 border-b text-[12px] text-navy-light/60 border-outline bg-navy/2 font-body"
+          className="flex items-center gap-2 px-5 py-3 border-b text-[12px] text-navy-light/70 border-outline bg-navy/2 font-body"
         >
           <span className="text-teal-deep shrink-0">ℹ️</span>
           Todos los miembros tienen el rol <span className="font-medium text-navy-light/80">“Miembro”</span> por defecto. Los roles adicionales amplían sus permisos.
@@ -271,7 +271,7 @@ export default function AccesosPage() {
                 {['Miembro', 'Roles', 'Otorgado por', 'Desde', 'Último login', 'Estado', ''].map(h => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest text-navy-light/60 font-display whitespace-nowrap"
+                    className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest text-navy-light/70 font-display whitespace-nowrap"
                   >
                     {h}
                   </th>
@@ -296,7 +296,7 @@ export default function AccesosPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-navy font-body">{u.member_name}</p>
-                        <p className="text-[12px] text-navy-light/60 font-body">{u.member_email}</p>
+                        <p className="text-[12px] text-navy-light/70 font-body">{u.member_email}</p>
                       </div>
                     </div>
                   </td>
@@ -326,18 +326,18 @@ export default function AccesosPage() {
                   </td>
                   {/* Desde */}
                   <td className="px-5 py-4">
-                    <p className="text-[13px] text-navy-light/60 whitespace-nowrap font-body">{formatDate(u.granted_at)}</p>
+                    <p className="text-[13px] text-navy-light/70 whitespace-nowrap font-body">{formatDate(u.granted_at)}</p>
                   </td>
                   {/* Último login */}
                   <td className="px-5 py-4">
-                    <p className={cn('text-[13px] whitespace-nowrap', u.last_login ? 'text-navy-light/60' : 'text-navy-light/60', 'font-body')}>
+                    <p className={cn('text-[13px] whitespace-nowrap', u.last_login ? 'text-navy-light/70' : 'text-navy-light/70', 'font-body')}>
                       {formatDate(u.last_login)}
                     </p>
                   </td>
                   {/* Estado */}
                   <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                     <span
-                      className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/60')}
+                      className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/70')}
                       style={{ background: u.is_active ? 'rgba(61,185,122,0.10)' : 'rgba(22,20,64,0.06)' }}
                     >
                       {u.is_active ? 'Activo' : 'Inactivo'}
@@ -366,7 +366,7 @@ export default function AccesosPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-navy-light/60 font-body">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-navy-light/70 font-body">
                     No hay usuarios que coincidan con los filtros
                   </td>
                 </tr>
@@ -393,12 +393,12 @@ export default function AccesosPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-navy font-body">{u.member_name}</p>
-                  <p className="truncate text-[12px] text-navy-light/60 font-body">
+                  <p className="truncate text-[12px] text-navy-light/70 font-body">
                     {extra.length === 0 ? 'Miembro' : extra.map(rid => ROLES.find(r => r.id === rid)?.name ?? rid).join(', ')}
                   </p>
                 </div>
                 <span
-                  className={cn('shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/60')}
+                  className={cn('shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium', u.is_active ? 'text-emerald-700' : 'text-navy-light/70')}
                   style={{ background: u.is_active ? 'rgba(61,185,122,0.10)' : 'rgba(22,20,64,0.06)' }}
                 >
                   {u.is_active ? 'Activo' : 'Inactivo'}
@@ -407,7 +407,7 @@ export default function AccesosPage() {
             )
           })}
           {filtered.length === 0 && (
-            <li className="px-4 py-12 text-center text-sm text-navy-light/60 font-body">
+            <li className="px-4 py-12 text-center text-sm text-navy-light/70 font-body">
               No hay usuarios que coincidan con los filtros
             </li>
           )}
@@ -435,7 +435,7 @@ export default function AccesosPage() {
               </div>
               <div>
                 <p id="confirm-revoke-title" className="text-sm font-bold text-navy font-display">¿Revocar todos los accesos?</p>
-                <p className="text-[12px] text-navy-light/60 font-body">Esta acción es reversible</p>
+                <p className="text-[12px] text-navy-light/70 font-body">Esta acción es reversible</p>
               </div>
             </div>
             <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
@@ -525,7 +525,7 @@ function DarAccesoModal({
             <p id="dar-acceso-title" className="text-sm font-bold text-navy font-display">
               Dar acceso al sistema
             </p>
-            <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
+            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
               Paso {step} de 2 — {step === 1 ? 'Buscar miembro' : 'Asignar roles'}
             </p>
           </div>
@@ -541,9 +541,9 @@ function DarAccesoModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-navy font-body">{selected.first_name} {selected.last_name}</p>
-                  <p className="text-[12px] text-navy-light/60 font-body">{selected.email}</p>
+                  <p className="text-[12px] text-navy-light/70 font-body">{selected.email}</p>
                 </div>
-                <button onClick={() => setSelected(null)} aria-label="Quitar miembro seleccionado" className="text-[11px] text-coral hover:underline font-body shrink-0">
+                <button onClick={() => setSelected(null)} aria-label="Quitar miembro seleccionado" className="text-[12px] text-coral hover:underline font-body shrink-0">
                   Cambiar
                 </button>
               </div>
@@ -563,7 +563,7 @@ function DarAccesoModal({
         {/* Step 2 */}
         {step === 2 && (
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            <p className="text-[12px] text-navy-light/60 font-body">
+            <p className="text-[12px] text-navy-light/70 font-body">
               Seleccioná uno o más roles para <strong className="text-navy">{selected?.first_name} {selected?.last_name}</strong>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -584,7 +584,7 @@ function DarAccesoModal({
                       <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
                       {isSelected && <Check size={13} className="text-coral ml-auto shrink-0" />}
                     </div>
-                    <p className="text-[11px] text-navy-light/60 leading-relaxed font-body">{role.description}</p>
+                    <p className="text-[12px] text-navy-light/70 leading-relaxed font-body">{role.description}</p>
                   </button>
                 )
               })}

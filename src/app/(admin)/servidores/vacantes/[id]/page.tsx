@@ -58,7 +58,7 @@ export default function VacanteDetailPage() {
   if (!vacancy) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -150,14 +150,14 @@ export default function VacanteDetailPage() {
         <div className="ph-row">
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display">
+              <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/70 font-display">
                 {vacancy.committee_name}
               </span>
-              <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', vacancyClosed ? VACANCY_STATUS_COLORS['cerrada'] : VACANCY_STATUS_COLORS[vacancy.status])}>
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', vacancyClosed ? VACANCY_STATUS_COLORS['cerrada'] : VACANCY_STATUS_COLORS[vacancy.status])}>
                 {vacancyClosed ? 'Cerrada' : VACANCY_STATUS_LABELS[vacancy.status]}
               </span>
               {vacancy.published_at && (
-                <span className="text-[11px] text-navy-light/60 font-body">
+                <span className="text-[12px] text-navy-light/70 font-body">
                   Publicada {new Date(vacancy.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               )}
@@ -187,7 +187,7 @@ export default function VacanteDetailPage() {
               'shrink-0 whitespace-nowrap px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
               tab === t
                 ? 'border-coral text-navy font-semibold'
-                : 'border-transparent text-navy-light/60 hover:text-navy'
+                : 'border-transparent text-navy-light/70 hover:text-navy'
             )}
           >
             {t === 'descripcion' ? 'Descripción' : `Aplicaciones (${counts.total})`}
@@ -202,7 +202,7 @@ export default function VacanteDetailPage() {
               vacantes viejas que tenían texto propio, se usa ese como fallback. */}
           {(vacancy.position_description || vacancy.description) && (
             <div className="space-y-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Descripción
               </p>
               <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
@@ -213,7 +213,7 @@ export default function VacanteDetailPage() {
 
           {vacancy.position_functions ? (
             <div className="space-y-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Funciones principales
               </p>
               <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
@@ -222,7 +222,7 @@ export default function VacanteDetailPage() {
             </div>
           ) : vacancy.functions.length > 0 ? (
             <div className="space-y-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Funciones principales
               </p>
               <ul className="space-y-1.5">
@@ -238,7 +238,7 @@ export default function VacanteDetailPage() {
 
           {vacancy.position_profile && (
             <div className="space-y-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Perfil
               </p>
               <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
@@ -249,7 +249,7 @@ export default function VacanteDetailPage() {
 
           {vacancy.position_skills && (
             <div className="space-y-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Habilidades
               </p>
               <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
@@ -260,20 +260,20 @@ export default function VacanteDetailPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Horario
               </p>
               <p className="text-sm text-navy font-body">{vacancy.schedule}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Compromiso
               </p>
               <p className="text-sm text-navy font-body">{vacancy.commitment}</p>
             </div>
             {vacancy.position_study_requirement && (
               <div className="space-y-1">
-                <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                   Nivel requerido
                 </p>
                 <p className="text-sm text-navy font-body">{vacancy.position_study_requirement}</p>
@@ -303,7 +303,7 @@ export default function VacanteDetailPage() {
                 <p className={cn('text-2xl font-extrabold tabular-nums font-display', color as string)}>
                   {value as number}
                 </p>
-                <p className="text-[10px] text-navy-light/60 mt-0.5 font-display">
+                <p className="text-[11px] text-navy-light/70 mt-0.5 font-display">
                   {label as string}
                 </p>
               </div>
@@ -323,7 +323,7 @@ export default function VacanteDetailPage() {
                       {['Aplicante', 'Fecha', 'Estado', ''].map(h => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+                          className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
                         >
                           {h}
                         </th>
@@ -344,7 +344,7 @@ export default function VacanteDetailPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                              <span className="text-[10px] font-bold text-white font-display">
+                              <span className="text-[11px] font-bold text-white font-display">
                                 {a.applicant_initials}
                               </span>
                             </div>
@@ -353,12 +353,12 @@ export default function VacanteDetailPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
+                        <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
                           {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[a.status])}
+                            className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}
                           >
                             {APP_STATUS_LABELS[a.status]}
                           </span>
@@ -367,7 +367,7 @@ export default function VacanteDetailPage() {
                           <button
                             onClick={e => { e.stopPropagation(); changeStatus(a.id, 'reviewing') }}
                             className={cn(
-                              'text-[11px] text-navy-light/60 hover:text-navy transition-colors font-body',
+                              'text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body',
                               a.status !== 'pending' && 'opacity-0 pointer-events-none'
                             )}
                           >
@@ -392,7 +392,7 @@ export default function VacanteDetailPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
-                      <span className="text-[11px] font-bold text-white font-display">
+                      <span className="text-[12px] font-bold text-white font-display">
                         {selectedApp.applicant_initials}
                       </span>
                     </div>
@@ -402,7 +402,7 @@ export default function VacanteDetailPage() {
                       </p>
                       <Link
                         href={`/miembros/${selectedApp.applicant_id}`}
-                        className="text-[11px] text-coral hover:underline font-body"
+                        className="text-[12px] text-coral hover:underline font-body"
                       >
                         Ver perfil
                       </Link>
@@ -410,14 +410,14 @@ export default function VacanteDetailPage() {
                   </div>
                   <button
                     onClick={() => setSelectedApp(null)}
-                    className="text-navy-light/60 hover:text-navy transition-colors"
+                    className="text-navy-light/70 hover:text-navy transition-colors"
                   >
                     <X size={15} />
                   </button>
                 </div>
 
                 <span
-                  className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[selectedApp.status])}
+                  className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[selectedApp.status])}
                 >
                   {APP_STATUS_LABELS[selectedApp.status]}
                 </span>
@@ -425,7 +425,7 @@ export default function VacanteDetailPage() {
                 {/* Service history */}
                 {selectedApp.service_history.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                    <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                       Historial de servicio
                     </p>
                     {selectedApp.service_history.map((h, i) => (
@@ -433,7 +433,7 @@ export default function VacanteDetailPage() {
                         <p className="text-[12px] font-medium text-navy font-body">
                           {h.position}
                         </p>
-                        <p className="text-[11px] text-navy-light/60 font-body">
+                        <p className="text-[12px] text-navy-light/70 font-body">
                           {h.committee} · {h.period}
                         </p>
                       </div>
@@ -443,7 +443,7 @@ export default function VacanteDetailPage() {
 
                 {/* Internal notes */}
                 <div className="space-y-1.5">
-                  <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                  <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                     Notas internas
                   </p>
                   <textarea
@@ -490,7 +490,7 @@ export default function VacanteDetailPage() {
               <strong>{vacancy.position}</strong> en {vacancy.committee_name}.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Fecha de inicio
               </label>
               <input
@@ -529,7 +529,7 @@ export default function VacanteDetailPage() {
               La vacante <strong>{vacancy.title}</strong> será marcada como cerrada y dejará de recibir aplicaciones.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Motivo de cierre (opcional)</label>
+              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Motivo de cierre (opcional)</label>
               <textarea
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none font-body"
                 rows={2}
@@ -557,7 +557,7 @@ export default function VacanteDetailPage() {
               {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Motivo (opcional)
               </label>
               <textarea

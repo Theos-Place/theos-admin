@@ -202,7 +202,7 @@ export default function MatriculaPage() {
   if (!effectiveMemberId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           No hay un miembro asociado a tu cuenta.
         </p>
       </div>
@@ -219,7 +219,7 @@ export default function MatriculaPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <GraduationCap size={18} className="text-white/60" />
+              <GraduationCap size={18} className="text-white/70" />
               <span className="text-xs uppercase tracking-widest text-white/70 font-display">
                 Portal de Matrícula
               </span>
@@ -229,7 +229,7 @@ export default function MatriculaPage() {
             >
               Matrícula de Estudios
             </h1>
-            <p className="mt-0.5 text-sm text-white/60 font-body">
+            <p className="mt-0.5 text-sm text-white/70 font-body">
               Hola, <span className="text-white font-medium">{effectiveName}</span>
               {' · '}{availableCount} estudio{availableCount !== 1 ? 's' : ''} disponible{availableCount !== 1 ? 's' : ''}
             </p>
@@ -249,14 +249,14 @@ export default function MatriculaPage() {
       <div
         className="rounded-2xl px-5 py-4 bg-surface-card shadow-card"
       >
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-3 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 mb-3 font-display">
           Perfil académico
         </p>
         <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           <div className="flex-1 space-y-2.5">
             {/* Estudios completados */}
             <div>
-              <p className="text-[11px] text-navy-light/60 mb-1.5 font-body">
+              <p className="text-[12px] text-navy-light/70 mb-1.5 font-body">
                 Estudios completados ({completedStudies.length})
               </p>
               {completedStudies.length > 0 ? (
@@ -264,14 +264,14 @@ export default function MatriculaPage() {
                   {completedStudies.map(s => (
                     <span
                       key={s.code}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-teal-soft/30 text-teal-deep font-display"
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold bg-teal-soft/30 text-teal-deep font-display"
                     >
                       {s.code} ✓
                     </span>
                   ))}
                 </div>
               ) : (
-                <span className="text-[12px] text-navy-light/60 italic font-body">
+                <span className="text-[12px] text-navy-light/70 italic font-body">
                   Ninguno aún
                 </span>
               )}
@@ -280,11 +280,11 @@ export default function MatriculaPage() {
             {/* En curso */}
             {currentStudyInfo && (
               <div>
-                <p className="text-[11px] text-navy-light/60 mb-1.5 font-body">
+                <p className="text-[12px] text-navy-light/70 mb-1.5 font-body">
                   En curso
                 </p>
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-coral/15 text-coral font-display"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold bg-coral/15 text-coral font-display"
                 >
                   {currentStudyInfo.code} — {currentStudyInfo.name}
                 </span>
@@ -296,7 +296,7 @@ export default function MatriculaPage() {
           <div
             className="rounded-xl px-4 py-3 shrink-0 bg-surface-low"
           >
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-2 font-display">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 mb-2 font-display">
               Compromisos
             </p>
             <div className="space-y-1.5">
@@ -344,7 +344,7 @@ export default function MatriculaPage() {
                 'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all',
                 activeFilter === tab.id
                   ? 'bg-navy text-white border-navy'
-                  : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20'
+                  : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20'
               , 'font-display')}
             >
               {tab.label}
@@ -353,7 +353,7 @@ export default function MatriculaPage() {
         </div>
 
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-64 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={14} className="text-navy-light/60 shrink-0" />
+          <Search size={14} className="text-navy-light/70 shrink-0" />
           <input
             type="search"
             value={search}
@@ -474,11 +474,11 @@ export default function MatriculaPage() {
           <div
             className="rounded-2xl p-12 text-center bg-surface-card shadow-card"
           >
-            <GraduationCap size={28} className="text-navy-light/60 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-navy-light/60 font-body">
+            <GraduationCap size={28} className="text-navy-light/70 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-navy-light/70 font-body">
               Por ahora no hay grupos abiertos para matricular
             </p>
-            <p className="text-[13px] text-navy-light/60 mt-1 font-body">
+            <p className="text-[13px] text-navy-light/70 mt-1 font-body">
               Podés reportar tu interés desde tu perfil — el equipo de estudios analiza la demanda para abrir grupos
             </p>
           </div>
@@ -492,13 +492,13 @@ export default function MatriculaPage() {
                 {/* Separador de etapa */}
                 <div className="flex items-center gap-3 mb-3">
                   <span
-                    className="rounded-full px-3 py-1 text-[11px] font-bold"
+                    className="rounded-full px-3 py-1 text-[12px] font-bold"
                     style={{ background: meta.bg, color: meta.text, fontFamily: 'var(--font-display)' }}
                   >
                     {meta.label}
                   </span>
                   <div className="flex-1 h-px bg-outline" />
-                  <span className="text-[11px] text-navy-light/60 font-body">
+                  <span className="text-[12px] text-navy-light/70 font-body">
                     {items.length} estudio{items.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -604,13 +604,13 @@ function MemberPicker({ selected, onSelect }: {
 }) {
   return (
     <div className="flex flex-col gap-1 w-64">
-      <label className="text-[10px] uppercase tracking-widest text-white/70 font-display">
+      <label className="text-[11px] uppercase tracking-widest text-white/70 font-display">
         Ver disponibilidad como:
       </label>
       {selected ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
           <span className="truncate font-body">{selected.name}</span>
-          <button onClick={() => onSelect(null)} aria-label="Quitar miembro seleccionado" className="text-white/60 hover:text-white shrink-0"><X size={14} /></button>
+          <button onClick={() => onSelect(null)} aria-label="Quitar miembro seleccionado" className="text-white/70 hover:text-white shrink-0"><X size={14} /></button>
         </div>
       ) : (
         <MemberCombobox
@@ -668,7 +668,7 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
               ? `Ya cumplís los requisitos de ${meta.label}`
               : `Requisitos para ${meta.label}`}
           </p>
-          <p className="text-[13px] text-navy-light/60 font-body mt-0.5">
+          <p className="text-[13px] text-navy-light/70 font-body mt-0.5">
             {anyEligible
               ? 'Todavía no hay grupos abiertos en este momento — apenas se abra uno vas a poder matricularte.'
               : 'Estos son los compromisos que pide esta etapa.'}
@@ -680,7 +680,7 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {met.length > 0 && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Ya cumplís</p>
+              <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display mb-2">Ya cumplís</p>
               <div className="space-y-1.5">
                 {met.map(item => (
                   <div key={item.key} className="flex items-start gap-1.5">
@@ -693,14 +693,14 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
           )}
           {missing.length > 0 && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Requisitos para esta etapa</p>
+              <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display mb-2">Requisitos para esta etapa</p>
               <div className="space-y-1.5">
                 {missing.map(item => (
                   <div key={item.key} className="flex items-start gap-1.5">
                     <XCircle size={13} className="text-red-400 shrink-0 mt-0.5" />
                     <span className="text-[13px] text-navy-light/70 font-body">
                       {item.label}
-                      {item.detail && <span className="block text-[11px] text-navy-light/60">{item.detail}</span>}
+                      {item.detail && <span className="block text-[12px] text-navy-light/70">{item.detail}</span>}
                     </span>
                   </div>
                 ))}
@@ -725,10 +725,10 @@ function CommitmentRow({ met, label, info }: { met: boolean; label: string; info
     <div className="flex items-center gap-1.5">
       {met
         ? <CheckCircle2 size={13} className="text-teal-deep shrink-0" />
-        : <XCircle size={13} className="text-navy-light/60 shrink-0" />
+        : <XCircle size={13} className="text-navy-light/70 shrink-0" />
       }
       <span
-        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/60', 'font-body')}
+        className={cn('text-[12px]', met ? 'text-navy' : 'text-navy-light/70', 'font-body')}
       >
         {label}
       </span>
@@ -769,25 +769,25 @@ function StudyCard({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="text-[11px] font-bold rounded px-1.5 py-0.5"
+                className="text-[12px] font-bold rounded px-1.5 py-0.5"
                 style={{ background: stageMeta.bg, color: stageMeta.text, fontFamily: 'var(--font-mono)' }}
               >
                 {result.study_code}
               </span>
               {!result.is_eligible && (
                 <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-red-100 text-red-600 font-display"
+                  className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-red-100 text-red-600 font-display"
                 >
                   Bloqueado
                 </span>
               )}
               {result.by_invitation && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-coral/10 text-coral font-display">
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-coral/10 text-coral font-display">
                   Por invitación
                 </span>
               )}
               {result.by_exception && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-teal-soft/40 text-teal-deep font-display">
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-teal-soft/40 text-teal-deep font-display">
                   Excepción autorizada
                 </span>
               )}
@@ -797,7 +797,7 @@ function StudyCard({
             </p>
           </div>
           <span
-            className="rounded-full px-2.5 py-1 text-[10px] font-semibold shrink-0"
+            className="rounded-full px-2.5 py-1 text-[11px] font-semibold shrink-0"
             style={{ background: stageMeta.bg, color: stageMeta.text, fontFamily: 'var(--font-display)' }}
           >
             {stageMeta.label}
@@ -805,7 +805,7 @@ function StudyCard({
         </div>
 
         {/* Meta: semanas + costo */}
-        <div className="flex items-center gap-3 text-[12px] text-navy-light/60 font-body">
+        <div className="flex items-center gap-3 text-[12px] text-navy-light/70 font-body">
           <span className="flex items-center gap-1">
             <Calendar size={12} />
             {result.weeks} semanas
@@ -826,7 +826,7 @@ function StudyCard({
             <button
               type="button"
               onClick={onRequestScholarship}
-              className="ml-auto text-[11px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+              className="ml-auto text-[12px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
             >
               ¿Necesitás ayuda para pagar? Solicitar beca
             </button>
@@ -837,7 +837,7 @@ function StudyCard({
         <div className="space-y-1">
           {result.is_eligible ? (
             <>
-              <p className="text-[11px] text-navy-light/60 font-medium font-display">
+              <p className="text-[12px] text-navy-light/70 font-medium font-display">
                 Prerequisitos cumplidos:
               </p>
               {result.reasons_met.map((r, i) => (
@@ -849,13 +849,13 @@ function StudyCard({
             </>
           ) : (
             <>
-              <p className="text-[11px] text-navy-light/60 font-medium font-display">
+              <p className="text-[12px] text-navy-light/70 font-medium font-display">
                 Para poder matricular necesitás:
               </p>
               {result.reasons_blocked.map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5">
                   <XCircle size={12} className="text-red-400 shrink-0 mt-0.5" />
-                  <span className="text-[12px] text-navy-light/60 font-body">{r}</span>
+                  <span className="text-[12px] text-navy-light/70 font-body">{r}</span>
                 </div>
               ))}
             </>
@@ -886,7 +886,7 @@ function StudyCard({
           className="border-t border-outline"
         >
           <div className="px-5 py-3">
-            <p className="text-[11px] font-semibold text-navy-light/60 uppercase tracking-widest mb-3 font-display">
+            <p className="text-[12px] font-semibold text-navy-light/70 uppercase tracking-widest mb-3 font-display">
               Grupos disponibles — {result.study_name}
             </p>
             <div className="space-y-2">
@@ -910,26 +910,26 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
     >
       <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5">
         <div>
-          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Zona</p>
+          <p className="text-[11px] text-navy-light/70 uppercase tracking-wider mb-0.5 font-display">Zona</p>
           <p className="text-[13px] font-medium text-navy capitalize font-body flex items-center gap-1.5">
             {group.zone}
             {group.is_virtual && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
+              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
                 Virtual
               </span>
             )}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Horario</p>
+          <p className="text-[11px] text-navy-light/70 uppercase tracking-wider mb-0.5 font-display">Horario</p>
           <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
+          <p className="text-[11px] text-navy-light/70 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
           <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
         </div>
         <div>
-          <p className="text-[10px] text-navy-light/60 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
+          <p className="text-[11px] text-navy-light/70 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-navy font-body">
               {group.spots_available}/{group.max_capacity}
@@ -945,15 +945,15 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className="text-[11px] text-navy-light/60 font-body">
+        <span className="text-[12px] text-navy-light/70 font-body">
           Inicio: {formatDateLong(group.start_date)}
         </span>
         {group.requires_payment && group.cost ? (
-          <span className="text-[11px] font-semibold text-coral font-display">
+          <span className="text-[12px] font-semibold text-coral font-display">
             {formatCRC(group.cost)}
           </span>
         ) : (
-          <span className="text-[11px] font-semibold text-teal-deep font-display">
+          <span className="text-[12px] font-semibold text-teal-deep font-display">
             Gratuito
           </span>
         )}
@@ -1030,7 +1030,7 @@ function ConfirmModal({
               key={label}
               className={cn('flex items-center gap-3 px-4 py-2.5', i > 0 && 'border-t', 'border-outline')}
             >
-              <span className="w-24 text-[11px] text-navy-light/60 uppercase tracking-wider shrink-0 font-display">
+              <span className="w-24 text-[12px] text-navy-light/70 uppercase tracking-wider shrink-0 font-display">
                 {label}
               </span>
               <span className="text-[13px] font-medium text-navy font-body">
@@ -1060,12 +1060,12 @@ function ConfirmModal({
                 <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
                 <span className="text-[13px] text-navy font-body">
                   Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `${formatCRC(applicable.discount_value)}`} de descuento)
-                  {discountedAmount != null && <span className="block text-[11px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
+                  {discountedAmount != null && <span className="block text-[12px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
                 </span>
               </label>
             ) : (
               <div className="space-y-1">
-                <label htmlFor="coupon-code" className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">¿Tenés un código de descuento?</label>
+                <label htmlFor="coupon-code" className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">¿Tenés un código de descuento?</label>
                 <input
                   id="coupon-code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="Opcional"

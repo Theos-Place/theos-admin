@@ -30,7 +30,7 @@ const DAY_LABELS: Record<string, string> = {
   L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo',
 }
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[11px] text-navy-light/60 font-display'
+const labelCls = 'text-[12px] text-navy-light/70 font-display'
 
 export default function EditarGrupoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -51,10 +51,10 @@ export default function EditarGrupoPage({ params }: { params: Promise<{ id: stri
   if (!group) {
     return (
       <div className="space-y-4">
-        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
+        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/60 font-body">Grupo no encontrado.</p>
+        <p className="text-navy-light/70 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -163,7 +163,7 @@ function EditarForm({ group, studyType, refetch }: {
     <div className="space-y-6">
       <Link
         href={`/estudios/grupos/${group.id}`}
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
       </Link>
@@ -174,7 +174,7 @@ function EditarForm({ group, studyType, refetch }: {
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             Editar grupo
           </h1>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             {studyType?.name ?? group.study_type_id} · {sedeLabel(group.zone)}
           </p>
         </div>
@@ -220,7 +220,7 @@ function EditarForm({ group, studyType, refetch }: {
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
-            <p className="text-[11px] text-navy-light/60 font-body">
+            <p className="text-[12px] text-navy-light/70 font-body">
               Para el cierre formal (calificaciones y promoción) usá la página de cierre del grupo.
             </p>
           </div>
@@ -230,7 +230,7 @@ function EditarForm({ group, studyType, refetch }: {
             <label className={labelCls}>Zona</label>
             {isVirtual ? (
               // EST-4: en grupos virtuales la zona queda fija en "Virtual".
-              <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/60 font-body" aria-label="Zona fijada: Virtual">
+              <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/70 font-body" aria-label="Zona fijada: Virtual">
                 Virtual (fijada por ser grupo virtual)
               </p>
             ) : (

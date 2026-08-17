@@ -37,7 +37,7 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
           return (
             <div key={item.label} className="flex items-center gap-2">
               <span
-                className="text-[11px] text-navy-light/60 w-24 shrink-0 truncate font-body"
+                className="text-[12px] text-navy-light/70 w-24 shrink-0 truncate font-body"
               >
                 {item.label}
               </span>
@@ -50,7 +50,7 @@ export function ResponseSummaryChart({ title, items, average, type = 'bar' }: Re
                   style={{ width: `${barWidth}%` }}
                 />
               </div>
-              <span className="text-[11px] text-navy-light/60 w-20 text-right shrink-0 font-mono">
+              <span className="text-[12px] text-navy-light/70 w-20 text-right shrink-0 font-mono">
                 {item.count} ({pct}%)
               </span>
             </div>

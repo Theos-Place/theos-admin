@@ -14,9 +14,9 @@ type EmptyStateProps = {
 export function EmptyState({ icon: Icon = Inbox, title, description, action, className }: EmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center text-center px-4 py-14', className)}>
-      <Icon size={28} strokeWidth={1.75} className="text-navy-light/60 mb-3" />
-      <p className="text-sm font-semibold text-navy-light/60 font-body">{title}</p>
-      {description && <p className="text-[13px] text-navy-light/60 mt-1 font-body max-w-sm">{description}</p>}
+      <Icon size={28} strokeWidth={1.75} className="text-navy-light/70 mb-3" />
+      <p className="text-sm font-semibold text-navy-light/70 font-body">{title}</p>
+      {description && <p className="text-[13px] text-navy-light/70 mt-1 font-body max-w-sm">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )

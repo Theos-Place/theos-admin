@@ -46,7 +46,7 @@ const TRI_LABEL = (v: boolean | null) => v === null ? 'Sin responder' : v ? 'Sí
 
 function StatusPill({ status }: { status: SelectionStatus }) {
   return (
-    <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-body font-semibold', STATUS_STYLE[status])}>
+    <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-body font-semibold', STATUS_STYLE[status])}>
       {SELECTION_STATUS_LABEL[status]}
     </span>
   )
@@ -172,7 +172,7 @@ export default function SeleccionPage() {
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-60">
-      <p className="text-sm text-navy-light/60 font-body">Cargando…</p>
+      <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
     </div>
   }
 
@@ -187,7 +187,7 @@ export default function SeleccionPage() {
 
   if (!data) {
     return <div className="flex items-center justify-center min-h-60">
-      <p className="text-sm text-navy-light/60 font-body">Formulario no encontrado.</p>
+      <p className="text-sm text-navy-light/70 font-body">Formulario no encontrado.</p>
     </div>
   }
 
@@ -244,7 +244,7 @@ export default function SeleccionPage() {
           ['Ya invitados', counts.invitados],
         ] as Array<[string, number]>).map(([label, value]) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/70 font-display">{label}</p>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">{label}</p>
             <p className="text-2xl text-navy font-display font-extrabold mt-1">{value}</p>
           </div>
         ))}
@@ -253,7 +253,7 @@ export default function SeleccionPage() {
       {/* Filtros */}
       <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
           <input
             value={filters.q ?? ''}
             onChange={e => setFilters(f => ({ ...f, q: e.target.value }))}
@@ -332,7 +332,7 @@ export default function SeleccionPage() {
                       <p className="text-sm text-navy font-body font-semibold">{row.member_name}</p>
                       <StatusPill status={row.status} />
                       {row.invited_at && (
-                        <span className="rounded-full bg-teal/10 px-2.5 py-0.5 text-[11px] text-teal font-body font-semibold">
+                        <span className="rounded-full bg-teal/10 px-2.5 py-0.5 text-[12px] text-teal font-body font-semibold">
                           Invitado
                         </span>
                       )}
@@ -385,7 +385,7 @@ export default function SeleccionPage() {
                       Ver respuestas <ChevronRight size={12} />
                     </button>
                     {block && row.status === 'aprobado' && (
-                      <p className="w-full text-right text-[11px] text-navy-light/70 font-body">{block}</p>
+                      <p className="w-full text-right text-[12px] text-navy-light/70 font-body">{block}</p>
                     )}
                   </div>
                 </li>
@@ -412,7 +412,7 @@ export default function SeleccionPage() {
               <p id="detalle-preinscripcion" className="text-sm font-bold text-navy font-display">
                 {detail.member_name}
               </p>
-              <p className="text-[11px] text-navy-light/70 font-body">
+              <p className="text-[12px] text-navy-light/70 font-body">
                 Preinscrito el {new Date(detail.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
@@ -420,15 +420,15 @@ export default function SeleccionPage() {
             <div className="p-5 space-y-4">
               {detail.answers.map((a, i) => (
                 <div key={`${a.label}-${i}`} className="space-y-1">
-                  <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">{a.label}</p>
+                  <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">{a.label}</p>
                   <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
-                    {a.value || <span className="italic text-navy-light/60">Sin respuesta</span>}
+                    {a.value || <span className="italic text-navy-light/70">Sin respuesta</span>}
                   </p>
                 </div>
               ))}
 
               <div className="pt-2 border-t border-[var(--outline-variant)] space-y-2">
-                <label htmlFor="notas-comite" className="block text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+                <label htmlFor="notas-comite" className="block text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                   Notas internas del comité
                 </label>
                 <textarea
@@ -470,7 +470,7 @@ export default function SeleccionPage() {
             </div>
 
             <label className="block space-y-1">
-              <span className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+              <span className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                 Plantilla de correo
               </span>
               <select
@@ -524,7 +524,7 @@ export default function SeleccionPage() {
             </div>
 
             <label className="block space-y-1">
-              <span className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+              <span className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                 Plantilla de correo
               </span>
               <select
@@ -535,7 +535,7 @@ export default function SeleccionPage() {
                 <option value="">Elegí una plantilla…</option>
                 {data.templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <span className="block text-[11px] text-navy-light/70 font-body">
+              <span className="block text-[12px] text-navy-light/70 font-body">
                 Las fechas y el horario del curso se editan en la plantilla, en Comunicaciones.
               </span>
             </label>

@@ -90,7 +90,7 @@ export default function EditarPlantillaPage() {
     setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
   }
 
-  const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
+  const labelCls = 'text-[12px] text-navy-light/70 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
   const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
   // El preview SIEMPRE muestra el correo completo (layout base), igual que el envío:
@@ -111,19 +111,19 @@ export default function EditarPlantillaPage() {
   if (notFound) {
     return (
       <div className="space-y-4">
-        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
+        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
         <p className="text-sm text-coral font-body">No se encontró la plantilla.</p>
       </div>
     )
   }
   if (!loaded) {
-    return <div className="p-8 text-center text-navy-light/60 font-body">Cargando…</div>
+    return <div className="p-8 text-center text-navy-light/70 font-body">Cargando…</div>
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body">
+        <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body">
           <ChevronLeft size={15} /> Plantillas
         </Link>
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Editar plantilla de correo</h1>
@@ -161,12 +161,12 @@ export default function EditarPlantillaPage() {
             <label className={labelCls}>Cuerpo del correo</label>
             <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={htmlOnly} htmlOnlyNotice={htmlOnlyNotice} />
             <div className="mt-1.5 flex items-center justify-between gap-3 flex-wrap">
-              <p className="text-[11px] text-navy-light/60 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
+              <p className="text-[12px] text-navy-light/70 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
               {hayCambios && (
                 <button
                   type="button"
                   onClick={() => setEmailBody(originalBody)}
-                  className="inline-flex items-center gap-1 text-[11px] text-coral hover:underline font-body"
+                  className="inline-flex items-center gap-1 text-[12px] text-coral hover:underline font-body"
                 >
                   <RotateCcw size={12} /> Descartar cambios y volver al original
                 </button>
@@ -175,18 +175,18 @@ export default function EditarPlantillaPage() {
           </div>
 
           <div className="rounded-xl p-3 bg-surface-low">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-semibold font-display mb-2">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-semibold font-display mb-2">
               {isSystem ? 'Variables disponibles (clic para copiar)' : 'Variables (clic para copiar)'}
             </p>
             <div className="flex flex-wrap gap-2">
               {(isSystem ? systemVars.map(v => `{{${v}}}`) : AVAILABLE_VARIABLES.map(v => v.key)).map(token => (
-                <button key={token} type="button" onClick={() => copyVar(token)} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]">
+                <button key={token} type="button" onClick={() => copyVar(token)} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[12px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]">
                   {copied === token ? '¡copiado!' : token}
                 </button>
               ))}
             </div>
             {isSystem && (
-              <p className="mt-2 text-[11px] text-navy-light/60 font-body">
+              <p className="mt-2 text-[12px] text-navy-light/70 font-body">
                 Plantilla del sistema: editá el contenido, pero mantené las variables {'{{...}}'} para que el envío automático las reemplace.
               </p>
             )}
@@ -206,7 +206,7 @@ export default function EditarPlantillaPage() {
         </div>
 
         <div className="space-y-2 xl:sticky xl:top-4">
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Vista previa</p>
           <EmailPreview subject={subject} body={previewBody} format="html" fullDocument />
         </div>
       </div>

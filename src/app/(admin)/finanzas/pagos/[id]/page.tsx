@@ -32,7 +32,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
           {loading ? (
             <>
               <div className="h-7 w-7 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-              <p className="text-sm text-navy-light/60 font-body">Cargando pago…</p>
+              <p className="text-sm text-navy-light/70 font-body">Cargando pago…</p>
             </>
           ) : (
             <>
@@ -95,7 +95,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               <h1 className="text-2xl text-white mb-1 font-display font-extrabold tracking-[-0.02em]">
                 {payment.entity_name}
               </h1>
-              <p className="text-[14px] text-white/60 font-body">
+              <p className="text-[14px] text-white/70 font-body">
                 {payment.member_name}
               </p>
             </div>
@@ -116,7 +116,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Left */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[12px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Información del pago
             </p>
             {[
@@ -136,7 +136,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Right */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[12px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Detalles de la transacción
             </p>
             {payment.gateway_ref && (
@@ -175,7 +175,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Timeline */}
         <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-[11px] uppercase tracking-widest mb-5 font-display text-[rgba(22,20,64,0.60)]">
+          <p className="text-[12px] uppercase tracking-widest mb-5 font-display text-[rgba(22,20,64,0.60)]">
             Línea de tiempo
           </p>
           <div className="relative">

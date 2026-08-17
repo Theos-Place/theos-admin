@@ -20,7 +20,7 @@ export function PaymentMethodSelector({
   ]
   return (
     <div className="space-y-2">
-      <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+      <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
         Método de pago
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -40,7 +40,7 @@ export function PaymentMethodSelector({
             <o.icon size={16} className="mb-1 text-navy" />
             <span className="block text-[13px] text-navy">{o.label}</span>
             {o.disabled && (
-              <span className="absolute top-1.5 right-1.5 rounded-full bg-surface-low px-1.5 py-0.5 text-[9px] font-display text-navy-light/60">
+              <span className="absolute top-1.5 right-1.5 rounded-full bg-surface-low px-1.5 py-0.5 text-[10px] font-display text-navy-light/70">
                 Próximamente
               </span>
             )}

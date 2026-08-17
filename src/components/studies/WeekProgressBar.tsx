@@ -14,7 +14,7 @@ export function WeekProgressBar({ current, total, className }: WeekProgressBarPr
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <span
-        className="text-[10px] text-navy-light/60 font-display"
+        className="text-[11px] text-navy-light/70 font-display"
       >
         Semana {current} de {total}
       </span>

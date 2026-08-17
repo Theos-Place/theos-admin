@@ -57,7 +57,7 @@ export default async function AyudaArticuloPage(
           <ChevronLeft size={15} />
           Centro de ayuda
         </Link>
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
           {doc.seccion}
         </p>
       </div>
@@ -75,7 +75,7 @@ export default async function AyudaArticuloPage(
               href={`/ayuda/${prev.slug}`}
               className="rounded-2xl bg-surface-card px-4 py-3 shadow-[var(--shadow-md)] hover:bg-surface-low transition-colors"
             >
-              <span className="flex items-center gap-1 text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+              <span className="flex items-center gap-1 text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                 <ChevronLeft size={12} /> Anterior
               </span>
               <span className="mt-1 block text-sm text-navy font-body font-medium">{prev.titulo}</span>
@@ -86,7 +86,7 @@ export default async function AyudaArticuloPage(
               href={`/ayuda/${next.slug}`}
               className="rounded-2xl bg-surface-card px-4 py-3 shadow-[var(--shadow-md)] hover:bg-surface-low transition-colors sm:text-right"
             >
-              <span className="flex items-center gap-1 text-[11px] uppercase tracking-widest text-navy-light/70 font-display sm:justify-end">
+              <span className="flex items-center gap-1 text-[12px] uppercase tracking-widest text-navy-light/70 font-display sm:justify-end">
                 Siguiente <ChevronRight size={12} />
               </span>
               <span className="mt-1 block text-sm text-navy font-body font-medium">{next.titulo}</span>

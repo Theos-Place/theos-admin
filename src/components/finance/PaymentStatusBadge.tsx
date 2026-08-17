@@ -14,7 +14,7 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   const cfg = STATUS_CONFIG[status] ?? { label: String(status || '—'), color: '#161440', bg: 'rgba(22,20,64,0.08)' }
   return (
     <span
-      className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
+      className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium"
       style={{ color: cfg.color, background: cfg.bg }}
     >
       {cfg.label}

@@ -57,11 +57,11 @@ export function TemplatePreviewBody({
               </p>
               <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                 <ChannelBadge channel={template.channel} size="sm" />
-                <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', categoryColor(template.category))}>
+                <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', categoryColor(template.category))}>
                   {categoryLabel(template.category)}
                 </span>
                 {template.is_system && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[10px] font-semibold font-display">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">
                     <Lock size={9} /> Del sistema
                   </span>
                 )}
@@ -116,12 +116,12 @@ export function TemplatePreviewBody({
 
           {showWhatsApp && (
             <div className="space-y-2">
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">WhatsApp</p>
+              <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">WhatsApp</p>
               <WhatsAppPreview fromName="Theos Place" body={template.body} />
             </div>
           )}
 
-          <p className="text-[11px] text-navy-light/70 font-body">
+          <p className="text-[12px] text-navy-light/70 font-body">
             Es una vista previa: el nombre y las fechas son de ejemplo, y los links de baja o de
             formulario se resuelven al enviar.
           </p>

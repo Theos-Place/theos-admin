@@ -200,7 +200,7 @@ function PagosContent() {
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/60">Cargando…</p>
+        <p className="text-sm text-navy-light/70">Cargando…</p>
       </div>
     )
   }
@@ -280,7 +280,7 @@ function PagosContent() {
             { label: 'Pendientes', value: totalPending, color: '#E9B949' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               <p className="text-xl font-extrabold font-display" style={{ color }}>
                 <TotalsDisplay totals={value} defaultHidden={false} revealed={revealAll} />
               </p>
@@ -359,7 +359,7 @@ function PagosContent() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -370,13 +370,13 @@ function PagosContent() {
                   <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
+                      <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
                     </td>
                     <td className="px-5 py-4">
                       {/* Qué se está pagando: el NOMBRE del estudio o del
                           evento, y de qué tipo es (2026-08-06). */}
                       <p className="text-[13px] font-body text-navy">{paymentEntityName(toLabel(p)) || p.entity_name}</p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
+                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                         {p.kind_label ?? paymentKindLabel(toLabel(p))}
                       </p>
                     </td>
@@ -426,7 +426,7 @@ function PagosContent() {
                       {error
                         ? <ErrorState message={error} onRetry={refetch} />
                         : loading
-                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando…</p>
+                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body">Cargando…</p>
                           : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
                     </td>
                   </tr>
@@ -449,7 +449,7 @@ function PagosContent() {
                     <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
                       {p.description_label ?? paymentDescription(toLabel(p))}
                     </p>
-                    <p className="text-[11px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                    <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -485,7 +485,7 @@ function PagosContent() {
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
                   : loading
-                    ? <p className="px-4 py-8 text-center text-sm text-navy-light/60 font-body">Cargando pagos…</p>
+                    ? <p className="px-4 py-8 text-center text-sm text-navy-light/70 font-body">Cargando pagos…</p>
                     : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
               </li>
             )}
@@ -530,7 +530,7 @@ function PagosContent() {
             <div className="rounded-xl border border-outline overflow-hidden">
               {rows.map(([label, value], i) => (
                 <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
-                  <span className="w-32 shrink-0 text-[11px] uppercase tracking-wider text-navy-light/60 font-display">{label}</span>
+                  <span className="w-32 shrink-0 text-[12px] uppercase tracking-wider text-navy-light/70 font-display">{label}</span>
                   <span className="text-[13px] text-navy font-body">{value}</span>
                 </div>
               ))}
@@ -574,7 +574,7 @@ function PagosContent() {
                 <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.description_label ?? sinpeTarget.entity_name}
               </p>
               <div>
-                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Número de confirmación SINPE
                 </label>
                 <input
@@ -586,7 +586,7 @@ function PagosContent() {
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Fecha de transferencia
                 </label>
                 <input
@@ -620,7 +620,7 @@ export default function PagosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
       </div>
     }>
       <PagosContent />

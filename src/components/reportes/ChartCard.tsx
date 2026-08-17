@@ -21,14 +21,14 @@ export function ChartCard({
         {subtitle && <p className="text-[12px] text-navy-light/70 font-body mt-0.5 truncate">{subtitle}</p>}
       </div>
       {empty ? (
-        <div className="flex items-center justify-center text-[13px] text-navy-light/50 font-body" style={{ height }}>
+        <div className="flex items-center justify-center text-[13px] text-navy-light/70 font-body" style={{ height }}>
           Sin datos para este filtro
         </div>
       ) : (
         <div style={{ width: '100%', height }}>{children}</div>
       )}
       {!empty && footnote && (
-        <p className="mt-2 text-[11px] text-navy-light/70 font-body leading-snug">{footnote}</p>
+        <p className="mt-2 text-[12px] text-navy-light/70 font-body leading-snug">{footnote}</p>
       )}
     </div>
   )

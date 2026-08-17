@@ -62,10 +62,10 @@ export function AccountBadge({ state }: { state: Member['account_state'] }) {
   const cfg = {
     active:        { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-deep', label: ACCOUNT_STATE_LABEL.active },
     never_entered: { Icon: Clock,     cls: 'bg-amber-100 text-amber-700',    label: ACCOUNT_STATE_LABEL.never_entered },
-    none:          { Icon: UserX,     cls: 'bg-surface-low text-navy-light/60', label: ACCOUNT_STATE_LABEL.none },
+    none:          { Icon: UserX,     cls: 'bg-surface-low text-navy-light/70', label: ACCOUNT_STATE_LABEL.none },
   }[state]
   return (
-    <span title={`Cuenta de acceso: ${cfg.label}`} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium font-body ${cfg.cls}`}>
+    <span title={`Cuenta de acceso: ${cfg.label}`} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium font-body ${cfg.cls}`}>
       <cfg.Icon size={11} /> {cfg.label}
     </span>
   )
@@ -117,7 +117,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.position}</span>
-        : <span className="text-navy-light/60 text-[12px]">—</span>
+        : <span className="text-navy-light/70 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -127,7 +127,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.committee}</span>
-        : <span className="text-navy-light/60 text-[12px]">—</span>
+        : <span className="text-navy-light/70 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -137,21 +137,21 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.area}</span>
-        : <span className="text-navy-light/60 text-[12px]">—</span>
+        : <span className="text-navy-light/70 text-[12px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.area ?? '',
   },
   {
     key: 'sede', label: 'Sede principal', defaultVisible: false, exportable: true,
     render: m => {
-      if (!m.sede) return <span className="text-navy-light/60 text-[12px]">—</span>
+      if (!m.sede) return <span className="text-navy-light/70 text-[12px]">—</span>
       const label = sedeLabel(m.sede)
       const isInactive = m.sede_case === 'inactivo' && m.sede_last_checkin
       return (
         <span className="font-body text-[13px]">
           {label}
           {isInactive && (
-            <span className="text-navy-light/55">
+            <span className="text-navy-light/70">
               {' · última actividad '}{formatSedeRecency(m.sede_last_checkin!)}
             </span>
           )}

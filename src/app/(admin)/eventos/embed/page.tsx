@@ -11,7 +11,7 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60'
+const labelCls = 'text-[12px] tracking-widest uppercase text-navy-light/70'
 
 export default function EmbedPage() {
   // EVE-3: compartir/embeber el calendario es SOLO admin y comunicaciones —
@@ -79,7 +79,7 @@ export default function EmbedPage() {
   return (
     <div className="space-y-5">
       {/* Back + header */}
-      <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
+      <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body">
         <ChevronLeft size={16} /> Eventos
       </Link>
 
@@ -95,7 +95,7 @@ export default function EmbedPage() {
       <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
         {/* Left: Configurator */}
         <div className="rounded-2xl p-5 space-y-5 overflow-y-auto bg-surface-card shadow-[var(--shadow-md)] max-h-[80vh]">
-          <h2 className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+          <h2 className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
             Configuración
           </h2>
 
@@ -114,7 +114,7 @@ export default function EmbedPage() {
                       'flex-1 rounded-xl border py-2 text-[12px] font-medium transition-all',
                       cfg.view === v
                         ? 'border-coral bg-coral/5 text-coral'
-                        : 'text-navy-light/60 hover:bg-surface-low',
+                        : 'text-navy-light/70 hover:bg-surface-low',
                       'font-body'
                     )}
                     style={{ borderColor: cfg.view === v ? undefined : 'var(--outline-variant)' }}
@@ -161,7 +161,7 @@ export default function EmbedPage() {
                     className="h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent"
                   />
                   <div className="flex-1">
-                    <p className="text-[11px] text-navy-light/60 font-body">{label}</p>
+                    <p className="text-[12px] text-navy-light/70 font-body">{label}</p>
                     <p className="text-[12px] text-navy font-mono">{cfg[key]}</p>
                   </div>
                   <button
@@ -170,7 +170,7 @@ export default function EmbedPage() {
                       const defaults = { primary: '#161440', accent: '#EF5554', bg: '#FFFFFF' }
                       setCfg(prev => ({ ...prev, [key]: defaults[key] }))
                     }}
-                    className="text-[10px] text-navy-light/60 hover:text-navy transition-colors font-body"
+                    className="text-[11px] text-navy-light/70 hover:text-navy transition-colors font-body"
                   >
                     restablecer
                   </button>
@@ -215,7 +215,7 @@ export default function EmbedPage() {
                 max={1200}
                 step={50}
               />
-              <span className="text-sm text-navy-light/60 font-body">px</span>
+              <span className="text-sm text-navy-light/70 font-body">px</span>
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function EmbedPage() {
           {/* Preview */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between px-4 py-3 border-b border-b-[var(--outline-variant)]">
-              <span className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <span className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Vista previa
               </span>
               <a
@@ -260,7 +260,7 @@ export default function EmbedPage() {
                   'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all',
                   copied
                     ? 'bg-teal-soft/20 text-teal-deep'
-                    : 'bg-surface-low text-navy-light/60 hover:text-navy',
+                    : 'bg-surface-low text-navy-light/70 hover:text-navy',
                   'font-body'
                 )}
               >

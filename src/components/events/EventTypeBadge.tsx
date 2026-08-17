@@ -14,7 +14,7 @@ export function EventTypeBadge({ type, size = 'sm' }: EventTypeBadgeProps) {
   const typeStyle = useEventTypeStyle()
   const { label, color } = typeStyle(type)
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-2 w-2'
-  const textSize = size === 'md' ? 'text-sm' : 'text-[11px]'
+  const textSize = size === 'md' ? 'text-sm' : 'text-[12px]'
 
   return (
     <span className={cn('inline-flex items-center gap-1.5 font-body', textSize)} style={{ color }}>

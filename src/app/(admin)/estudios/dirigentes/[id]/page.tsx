@@ -26,7 +26,7 @@ function SectionLabel({ text, tooltip }: { text: string; tooltip: string }) {
   const [show, setShow] = useState(false)
   return (
     <span className="relative inline-flex items-center gap-1.5">
-      <span className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">{text}</span>
+      <span className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">{text}</span>
       <button
         type="button"
         aria-label={tooltip}
@@ -34,12 +34,12 @@ function SectionLabel({ text, tooltip }: { text: string; tooltip: string }) {
         onMouseLeave={() => setShow(false)}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
-        className="text-navy-light/60 hover:text-navy transition-colors"
+        className="text-navy-light/70 hover:text-navy transition-colors"
       >
         <Info size={11} />
       </button>
       {show && (
-        <span className="absolute bottom-full left-0 mb-1.5 w-max max-w-[260px] rounded-md bg-navy px-2.5 py-1.5 text-[11px] normal-case tracking-normal text-white z-50 shadow-[var(--shadow-md)] font-body">
+        <span className="absolute bottom-full left-0 mb-1.5 w-max max-w-[260px] rounded-md bg-navy px-2.5 py-1.5 text-[12px] normal-case tracking-normal text-white z-50 shadow-[var(--shadow-md)] font-body">
           {tooltip}
         </span>
       )}
@@ -56,12 +56,12 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
       <StudyTypeBadge code={g.plan_code} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-navy font-body truncate">{g.group_name}</p>
-        <p className="text-[11px] text-navy-light/60 font-body">{fmtDate(g.date)}</p>
+        <p className="text-[12px] text-navy-light/70 font-body">{fmtDate(g.date)}</p>
       </div>
-      <span className="flex items-center gap-1 text-xs text-navy-light/60 font-body shrink-0">
+      <span className="flex items-center gap-1 text-xs text-navy-light/70 font-body shrink-0">
         <Users size={12} /> {g.students_count}
       </span>
-      <ExternalLink size={13} className="text-navy-light/60 shrink-0" />
+      <ExternalLink size={13} className="text-navy-light/70 shrink-0" />
     </Link>
   )
 }
@@ -156,7 +156,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/60">Cargando…</p>
+        <p className="text-sm text-navy-light/70">Cargando…</p>
       </div>
     )
   }
@@ -164,10 +164,10 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
   if (!d) {
     return (
       <div className="space-y-4">
-        <Link href="/estudios/dirigentes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy font-body">
+        <Link href="/estudios/dirigentes" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy font-body">
           <ChevronLeft size={16} /> Dirigentes
         </Link>
-        <p className="text-navy-light/60 font-body">Dirigente no encontrado.</p>
+        <p className="text-navy-light/70 font-body">Dirigente no encontrado.</p>
       </div>
     )
   }
@@ -176,7 +176,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-5">
-      <Link href="/estudios/dirigentes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
+      <Link href="/estudios/dirigentes" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body">
         <ChevronLeft size={16} /> Dirigentes
       </Link>
 
@@ -193,14 +193,14 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
                 <StatusToggle memberId={d.member_id} memberName={d.member_name} active={d.status === 'activo'} onChanged={refetch} />
               ) : (
                 <span className={cn(
-                  'rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body',
-                  d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
+                  'rounded-full px-2.5 py-0.5 text-[12px] font-medium font-body',
+                  d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/70',
                 )}>
                   {d.status === 'activo' ? 'Activo' : 'Inactivo'}
                 </span>
               )}
             </div>
-            <p className="text-sm text-navy-light/60 font-body mt-1">
+            <p className="text-sm text-navy-light/70 font-body mt-1">
               {d.total_grupos} grupos liderados · {d.total_activos} activos · {totalStudents} estudiantes en total
             </p>
             <Link href={`/miembros/${d.member_id}`} className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors font-body mt-2">
@@ -231,7 +231,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         {d.estudios_activos.length > 0 ? (
           <div className="space-y-1">{d.estudios_activos.map(g => <GrupoRow key={g.group_id} g={g} />)}</div>
         ) : (
-          <p className="text-sm text-navy-light/60 font-body">No tiene grupos activos.</p>
+          <p className="text-sm text-navy-light/70 font-body">No tiene grupos activos.</p>
         )}
       </div>
 
@@ -241,7 +241,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
         {d.estudios_completados.length > 0 ? (
           <div className="space-y-1">{d.estudios_completados.map(g => <GrupoRow key={g.group_id} g={g} />)}</div>
         ) : (
-          <p className="text-sm text-navy-light/60 font-body">Sin estudios registrados.</p>
+          <p className="text-sm text-navy-light/70 font-body">Sin estudios registrados.</p>
         )}
       </div>
     </div>
@@ -255,14 +255,14 @@ function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; edi
   return (
     <>
       {badges.map(b => b.value.startsWith('GRP:') ? (
-        <span key={b.value} className="inline-flex items-center gap-1 rounded-full bg-navy/[0.06] px-2.5 py-0.5 text-[11px] text-navy font-body font-semibold">
+        <span key={b.value} className="inline-flex items-center gap-1 rounded-full bg-navy/[0.06] px-2.5 py-0.5 text-[12px] text-navy font-body font-semibold">
           {b.label}
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/60 hover:text-coral"><X size={11} /></button>}
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/70 hover:text-coral"><X size={11} /></button>}
         </span>
       ) : (
         <span key={b.value} className="inline-flex items-center gap-1">
           <StudyTypeBadge code={b.codes[0]} size="sm" />
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/60 hover:text-coral"><X size={12} /></button>}
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/70 hover:text-coral"><X size={12} /></button>}
         </span>
       ))}
     </>
@@ -349,7 +349,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
       <div className="space-y-2">
         <SectionLabel text="Disponibilidad de estudios" tooltip="Estudios que el dirigente está dispuesto a dar en este momento" />
         <div className="flex flex-wrap gap-1.5 items-center">
-          {studies.length === 0 && <span className="text-xs text-navy-light/60 font-body">Ninguno</span>}
+          {studies.length === 0 && <span className="text-xs text-navy-light/70 font-body">Ninguno</span>}
           <GroupedStudyBadges codes={studies} editing={editing} onRemove={removeCodes} />
         </div>
         {editing && (
@@ -368,13 +368,13 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
 
       {/* Zonas */}
       <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Zonas donde da estudios</p>
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Zonas donde da estudios</p>
         <div className="flex flex-wrap gap-1.5 items-center">
-          {zones.length === 0 && <span className="text-xs text-navy-light/60 font-body">Ninguna</span>}
+          {zones.length === 0 && <span className="text-xs text-navy-light/70 font-body">Ninguna</span>}
           {zones.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
               {sedeName(id)}
-              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/60 hover:text-coral"><X size={11} /></button>}
+              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/70 hover:text-coral"><X size={11} /></button>}
             </span>
           ))}
         </div>

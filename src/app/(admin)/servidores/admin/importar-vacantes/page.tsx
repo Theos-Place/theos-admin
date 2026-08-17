@@ -144,7 +144,7 @@ export default function ImportarVacantesPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => (step === 1 ? router.push('/servidores/admin') : setStep(s => (s - 1) as 1 | 2 | 3))}
-            className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white/60"
+            className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white/70"
           >
             <ArrowLeft size={18} />
           </button>
@@ -165,10 +165,10 @@ export default function ImportarVacantesPage() {
               >
                 {step > s ? <Check size={13} /> : s}
               </div>
-              <span className="text-[11px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
+              <span className="text-[12px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
                 {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Resultado'}
               </span>
-              {idx < 2 && <ChevronRight size={14} className="text-white/30" />}
+              {idx < 2 && <ChevronRight size={14} className="text-white/40" />}
             </div>
           ))}
         </div>
@@ -186,8 +186,8 @@ export default function ImportarVacantesPage() {
             </div>
             <div className="text-center">
               <p className="text-base font-bold font-display text-navy">Subí el archivo de vacantes</p>
-              <p className="text-sm mt-1 font-body text-navy-light/60">.xlsx o .csv — hacé clic para seleccionar</p>
-              <p className="text-[11px] mt-2 text-navy-light/70 font-body">
+              <p className="text-sm mt-1 font-body text-navy-light/70">.xlsx o .csv — hacé clic para seleccionar</p>
+              <p className="text-[12px] mt-2 text-navy-light/70 font-body">
                 Columnas: área, comité, puesto, cupos, ubicación, horario, compromiso, expiración, destacado
               </p>
             </div>
@@ -202,7 +202,7 @@ export default function ImportarVacantesPage() {
             >
               <Download size={15} /> Descargar plantilla Excel
             </a>
-            <p className="text-[11px] text-navy-light/70 font-body text-center max-w-md">
+            <p className="text-[12px] text-navy-light/70 font-body text-center max-w-md">
               La plantilla trae las <strong>áreas, comités y puestos actuales</strong> con listas
               desplegables en cascada (Área → Comité → Puesto). La vacante hereda descripción/funciones/perfil
               del puesto. <strong>destacado</strong> = Sí/No · <strong>expiración</strong> = YYYY-MM-DD.
@@ -218,7 +218,7 @@ export default function ImportarVacantesPage() {
             <CheckCircle2 size={20} className="text-navy shrink-0" />
             <div>
               <p className="text-xl font-extrabold font-display text-navy">{rows.length}</p>
-              <p className="text-[11px] font-body text-navy-light/60">filas en el archivo · se validan al importar</p>
+              <p className="text-[12px] font-body text-navy-light/70">filas en el archivo · se validan al importar</p>
             </div>
           </div>
 
@@ -228,7 +228,7 @@ export default function ImportarVacantesPage() {
                 <thead>
                   <tr className="border-b border-[var(--outline-variant)]">
                     {['Área', 'Comité', 'Puesto', 'Cupos', 'Ubicación', 'Horario', 'Compromiso', 'Expiración', 'Destacado'].map(h => (
-                      <th key={h} className="px-3 py-3 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60 whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/70 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -250,7 +250,7 @@ export default function ImportarVacantesPage() {
               </table>
             </div>
             {rows.length > 100 && (
-              <p className="px-4 py-3 text-[12px] text-navy-light/60 font-body border-t border-[var(--outline-variant)]">
+              <p className="px-4 py-3 text-[12px] text-navy-light/70 font-body border-t border-[var(--outline-variant)]">
                 Mostrando 100 de {rows.length}. Se validan e importan todas.
               </p>
             )}
@@ -294,7 +294,7 @@ export default function ImportarVacantesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Fila', 'Motivo'].map(h => (
-                        <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest font-display text-navy-light/60">{h}</th>
+                        <th key={h} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/70">{h}</th>
                       ))}
                     </tr>
                   </thead>

@@ -52,7 +52,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
     }
   }
 
-  const labelCls = 'text-[11px] uppercase tracking-wider text-navy-light/70 mb-1 block font-display'
+  const labelCls = 'text-[12px] uppercase tracking-wider text-navy-light/70 mb-1 block font-display'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   if (loading) {
@@ -70,7 +70,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-5">
       <div className="flex items-center gap-2">
         <Sparkles size={15} className="text-teal-deep" />
-        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Datos espirituales</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Datos espirituales</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

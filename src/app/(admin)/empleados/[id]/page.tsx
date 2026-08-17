@@ -183,7 +183,7 @@ export default function EmpleadoDetailPage() {
   if (!employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           Empleado no encontrado.
         </p>
       </div>
@@ -263,7 +263,7 @@ export default function EmpleadoDetailPage() {
                   'flex items-center gap-1.5 px-4 py-3 text-[12px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px font-display',
                   tab === t.key
                     ? 'border-coral text-coral'
-                    : 'border-transparent text-navy-light/60 hover:text-navy'
+                    : 'border-transparent text-navy-light/70 hover:text-navy'
                 )}
               >
                 <Icon size={13} />

@@ -59,7 +59,7 @@ export default function VacantesPublicasPage() {
       {/* Encabezado público */}
       <header className="bg-navy text-white">
         <PageContainer width="work" className="px-5 py-10">
-          <p className="text-[13px] font-medium text-white/60 font-body">Theos Place</p>
+          <p className="text-[13px] font-medium text-white/70 font-body">Theos Place</p>
           <h1 className="mt-1 text-2xl font-bold font-display sm:text-3xl">Oportunidades de servicio</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/70 font-body">
             Estos son los puestos disponibles para servir. Explorá las vacantes y aplicá a la que te interese
@@ -72,7 +72,7 @@ export default function VacantesPublicasPage() {
         {/* Filtros */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2.5 ring-1 ring-navy/10 focus-within:ring-navy/25">
-            <Search size={16} className="shrink-0 text-navy-light/60" aria-hidden />
+            <Search size={16} className="shrink-0 text-navy-light/70" aria-hidden />
             <input
               type="search"
               value={q}
@@ -95,13 +95,13 @@ export default function VacantesPublicasPage() {
           )}
         </div>
 
-        {loading && <p className="py-16 text-center text-sm text-navy-light/60 font-body">Cargando vacantes…</p>}
+        {loading && <p className="py-16 text-center text-sm text-navy-light/70 font-body">Cargando vacantes…</p>}
         {error && <p className="py-16 text-center text-sm text-coral-deep font-body">{error}</p>}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-16 text-center">
             <Briefcase size={28} className="text-navy-light/40" aria-hidden />
-            <p className="text-sm text-navy-light/60 font-body">
+            <p className="text-sm text-navy-light/70 font-body">
               {vacancies.length === 0 ? 'No hay vacantes disponibles por ahora.' : 'No hay vacantes que coincidan con tu búsqueda.'}
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function VacantesPublicasPage() {
                     </p>
                   </div>
                   {v.is_featured && (
-                    <span className="shrink-0 rounded-full bg-coral/10 px-2.5 py-1 text-[11px] font-medium text-coral-deep font-body">Destacado</span>
+                    <span className="shrink-0 rounded-full bg-coral/10 px-2.5 py-1 text-[12px] font-medium text-coral-deep font-body">Destacado</span>
                   )}
                 </div>
 

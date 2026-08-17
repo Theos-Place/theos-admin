@@ -124,7 +124,7 @@ export function MemberCombobox({
         'flex items-center gap-2 rounded-xl border px-3 py-2.5',
         onDark ? 'border-white/20 bg-white/10' : 'border-outline bg-surface-low',
       )}>
-        <Search size={14} className={cn('shrink-0', onDark ? 'text-white/70' : 'text-navy-light/60')} />
+        <Search size={14} className={cn('shrink-0', onDark ? 'text-white/70' : 'text-navy-light/70')} />
         <input
           autoFocus={autoFocus}
           value={query}
@@ -137,7 +137,7 @@ export function MemberCombobox({
             onDark ? 'text-white placeholder-white/40' : 'text-navy placeholder:text-navy-light/50',
           )}
         />
-        {searching && <Loader2 size={13} className={cn('animate-spin', onDark ? 'text-white/70' : 'text-navy-light/60')} />}
+        {searching && <Loader2 size={13} className={cn('animate-spin', onDark ? 'text-white/70' : 'text-navy-light/70')} />}
       </div>
 
       {results.length > 0 && (
@@ -161,9 +161,9 @@ export function MemberCombobox({
                 <OptionAvatar initials={initials(m)} size={8} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
-                  {secondary && <span className="block truncate text-[11px] text-navy-light/60 font-body">{secondary}</span>}
+                  {secondary && <span className="block truncate text-[12px] text-navy-light/70 font-body">{secondary}</span>}
                 </span>
-                {meta && <span className="text-[11px] text-navy-light/60 shrink-0 font-body">{meta}</span>}
+                {meta && <span className="text-[12px] text-navy-light/70 shrink-0 font-body">{meta}</span>}
               </ComboOption>
             )
           })}
@@ -171,7 +171,7 @@ export function MemberCombobox({
       )}
 
       {!belowMin && !searching && results.length === 0 && (
-        <p className={cn('mt-2 text-[12px] font-body', onDark ? 'text-white/70' : 'text-navy-light/60')}>
+        <p className={cn('mt-2 text-[12px] font-body', onDark ? 'text-white/70' : 'text-navy-light/70')}>
           Sin resultados
         </p>
       )}

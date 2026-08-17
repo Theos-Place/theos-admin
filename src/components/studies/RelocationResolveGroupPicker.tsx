@@ -86,7 +86,7 @@ export function RelocationResolveGroupPicker({
         Grupo destino <span className="text-coral">*</span>
       </label>
       {loading ? (
-        <p className="text-[13px] text-navy-light/60 font-body inline-flex items-center gap-1.5">
+        <p className="text-[13px] text-navy-light/70 font-body inline-flex items-center gap-1.5">
           <Loader2 size={13} className="animate-spin" /> Cargando grupos disponibles…
         </p>
       ) : groups.length === 0 ? (
@@ -114,7 +114,7 @@ export function RelocationResolveGroupPicker({
         </select>
       )}
       {request.wants_folleto && (
-        <p className="text-[11px] text-navy-light/60 font-body">
+        <p className="text-[12px] text-navy-light/70 font-body">
           Marcó &quot;Ocupo folleto&quot;: la matrícula va a quedar pendiente de pago (costo del folleto) y se va a generar el tiquete en la cola de folletos.
         </p>
       )}

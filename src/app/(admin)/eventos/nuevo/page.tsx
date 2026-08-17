@@ -285,7 +285,7 @@ function NuevoEventoForm() {
             Evento publicado
           </p>
           <p
-            className="text-sm text-navy-light/60 mb-6 font-body"
+            className="text-sm text-navy-light/70 mb-6 font-body"
           >
             El evento quedó disponible para inscripciones.
           </p>

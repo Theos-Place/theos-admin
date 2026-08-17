@@ -115,7 +115,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
                 placeholder="Buscá un dirigente o escribí un nombre…"
                 ariaLabel="Dirigente a quien entregar"
               />
-              <p className="mt-1 text-[11px] text-navy-light/60 font-body">Escribí para buscar; si no aparece, podés agregar el nombre igual.</p>
+              <p className="mt-1 text-[12px] text-navy-light/70 font-body">Escribí para buscar; si no aparece, podés agregar el nombre igual.</p>
             </div>
 
             <div>

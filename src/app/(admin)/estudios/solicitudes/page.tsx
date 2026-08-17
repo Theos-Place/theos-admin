@@ -98,7 +98,7 @@ export default function SolicitudesPage() {
   if (!loaded) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 size={20} className="animate-spin text-navy-light/60" />
+        <Loader2 size={20} className="animate-spin text-navy-light/70" />
       </div>
     )
   }
@@ -107,7 +107,7 @@ export default function SolicitudesPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/6 mb-4">
-          <Lock size={22} className="text-navy-light/60" />
+          <Lock size={22} className="text-navy-light/70" />
         </div>
         <p className="text-base font-semibold text-navy font-display mb-1">Acceso restringido</p>
         <p className="text-sm text-navy-light/70 font-body max-w-sm">
@@ -177,7 +177,7 @@ export default function SolicitudesPage() {
             {r.request_type === 'relocation' && (
               <span className="inline-flex items-center gap-1.5">
                 <span className="font-medium text-navy">{r.current_group_name ?? 'Sin grupo actual'}</span>
-                <ArrowRight size={13} className="text-navy-light/60" />
+                <ArrowRight size={13} className="text-navy-light/70" />
                 <span className="font-medium text-navy">
                   {r.status === 'resolved' ? (r.resolved_group_name ?? '—') : (r.needed_study_code ?? r.existing_group_name ?? 'Grupo por definir')}
                 </span>
@@ -190,13 +190,13 @@ export default function SolicitudesPage() {
               <span>Último dirigente: {r.last_leader_name}</span>
             )}
             {r.request_type === 'relocation' && r.wants_folleto && (
-              <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display">
+              <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[12px] font-semibold text-coral font-display">
                 Ocupa folleto
               </span>
             )}
             {r.request_type !== 'relocation' && (
               <span className="inline-flex items-center gap-1.5">
-                <BookOpen size={13} className="text-navy-light/60" />
+                <BookOpen size={13} className="text-navy-light/70" />
                 {r.plan_name ?? 'Plan por definir'}
               </span>
             )}
@@ -206,29 +206,29 @@ export default function SolicitudesPage() {
             {/* REU-1: zonas múltiples (incluye la zona única de solicitudes viejas). */}
             {r.proposed_zones.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
-                <MapPin size={13} className="text-navy-light/60" />
+                <MapPin size={13} className="text-navy-light/70" />
                 {r.proposed_zones.join(', ')}
               </span>
             )}
             {r.proposed_schedule && (
               <span className="inline-flex items-center gap-1.5">
-                <Clock size={13} className="text-navy-light/60" />
+                <Clock size={13} className="text-navy-light/70" />
                 {r.proposed_schedule}
               </span>
             )}
             {r.proposed_days.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
-                <Calendar size={13} className="text-navy-light/60" />
+                <Calendar size={13} className="text-navy-light/70" />
                 {r.proposed_days.join(', ')}{r.proposed_time ? ` · ${r.proposed_time}` : ''}
               </span>
             )}
             {r.request_type === 'study_interest' && r.was_eligible === true && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 font-display">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[12px] font-semibold text-emerald-700 font-display">
                 <CheckCircle2 size={11} /> Elegible al solicitar
               </span>
             )}
             {r.request_type === 'study_interest' && r.was_eligible === false && (
-              <span className="inline-flex items-start gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-[11px] text-amber-700 font-body">
+              <span className="inline-flex items-start gap-1.5 rounded-lg bg-amber-50 px-2 py-1 text-[12px] text-amber-700 font-body">
                 <AlertCircle size={12} className="mt-0.5 shrink-0" /> No elegible: {r.eligibility_note || 'faltan requisitos'}
               </span>
             )}
@@ -251,7 +251,7 @@ export default function SolicitudesPage() {
             </h2>
             {!createFor ? (
               <>
-                <p className="text-[13px] text-navy-light/60 font-body">
+                <p className="text-[13px] text-navy-light/70 font-body">
                   Buscá al miembro; los estudios disponibles se calculan según su elegibilidad.
                 </p>
                 <MemberCombobox autoFocus onSelect={setCreateFor} />
@@ -259,7 +259,7 @@ export default function SolicitudesPage() {
             ) : (
               <>
                 <div className="flex items-center gap-2.5 rounded-xl bg-surface-low px-3 py-2.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold">
                     {initials(`${createFor.first_name} ${createFor.last_name}`)}
                   </span>
                   <span className="flex-1 truncate text-sm text-navy font-body font-medium">
@@ -268,12 +268,12 @@ export default function SolicitudesPage() {
                   <button
                     onClick={() => setCreateFor(null)}
                     aria-label="Cambiar miembro"
-                    className="rounded-lg p-1 text-navy-light/60 hover:text-coral transition-colors"
+                    className="rounded-lg p-1 text-navy-light/70 hover:text-coral transition-colors"
                   >
                     <X size={14} />
                   </button>
                 </div>
-                <p className="text-[12px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   Elegí el tipo de solicitud — los estudios mostrados son los elegibles para este miembro:
                 </p>
                 <StudyRequestActions memberId={createFor.id} />

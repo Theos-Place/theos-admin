@@ -102,15 +102,15 @@ export function PrematrimonialQueue() {
         Solicitudes de curso prematrimonial. Tomá una pendiente y armá el grupo con la pareja.
       </p>
 
-      {loading && <p className="py-12 text-center text-sm text-navy-light/60 font-body">Cargando…</p>}
-      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/60 font-body">No hay solicitudes.</p>}
+      {loading && <p className="py-12 text-center text-sm text-navy-light/70 font-body">Cargando…</p>}
+      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/70 font-body">No hay solicitudes.</p>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {items.map(r => (
           <article key={r.id} className="rounded-2xl bg-white p-5 ring-1 ring-navy/10">
             <div className="flex items-start justify-between gap-2">
-              <h2 className="text-sm font-semibold text-navy font-display inline-flex items-center gap-1.5"><Users size={15} className="text-teal-deep" /> {nm(r.requester)} <span className="text-navy-light/50">y</span> {nm(r.spouse)}</h2>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium font-body ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+              <h2 className="text-sm font-semibold text-navy font-display inline-flex items-center gap-1.5"><Users size={15} className="text-teal-deep" /> {nm(r.requester)} <span className="text-navy-light/70">y</span> {nm(r.spouse)}</h2>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium font-body ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
             </div>
 
             <div className="mt-3 space-y-1.5 text-[13px] text-navy-light/80 font-body">
@@ -118,17 +118,17 @@ export function PrematrimonialQueue() {
               {r.zones.length > 0 && <p className="flex items-center gap-1.5"><MapPin size={13} /> {r.zones.join(', ')}</p>}
               {r.can_host && <p className="flex items-center gap-1.5"><Home size={13} /> Ofrece casa{r.host_address ? `: ${r.host_address}` : ''}{r.host_maps_url ? ` · ${r.host_maps_url}` : ''}</p>}
               {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{/* PRE-10: solo las solicitudes viejas traen oficiante. */}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
-              {r.comments && <p className="text-navy-light/60">“{r.comments}”</p>}
+              {r.comments && <p className="text-navy-light/70">“{r.comments}”</p>}
               {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
                   los tienen → se muestran con "—". */}
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-light/70">
                 <Heart size={13} className="text-coral" />
                 <span>Novios: {DATING_TIME_OPTIONS.find(o => o.value === r.dating_time)?.label ?? '—'}</span>
-                <span className="text-navy-light/30">·</span>
+                <span className="text-navy-light/40">·</span>
                 <span>Primer matrimonio: {r.first_marriage === true ? 'Sí' : r.first_marriage === false ? 'No' : '—'}</span>
-                <span className="text-navy-light/30">·</span>
+                <span className="text-navy-light/40">·</span>
                 <span>Hijos: {r.has_children === true ? (r.children_ages ? `sí (${r.children_ages})` : 'sí') : r.has_children === false ? 'no' : '—'}</span>
-                <span className="text-navy-light/30">·</span>
+                <span className="text-navy-light/40">·</span>
                 <span>{LIVING_OPTIONS.find(o => o.value === r.living_arrangement)?.label ?? '—'}</span>
               </p>
               {/* Pastoral: solo llega con permiso (el API lo recorta). */}
@@ -139,7 +139,7 @@ export function PrematrimonialQueue() {
                 <p className="rounded-lg bg-amber-50 px-3 py-2 text-amber-800"><strong>A conversar con los dirigentes:</strong> {r.diagnostic_notes}</p>
               )}
               {r.status === 'pago_en_revision' && <p className="text-amber-700">Esperando que finanzas apruebe el pago.</p>}
-              {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/60">Motivo: {r.cancel_reason}</p>}
+              {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/70">Motivo: {r.cancel_reason}</p>}
             </div>
 
             {/* PRE-8: marca de seguimiento pastoral tras el cierre. */}
@@ -165,7 +165,7 @@ export function PrematrimonialQueue() {
             {panel?.id === r.id && panel.mode === 'group' && (
               <div className="mt-4 space-y-2 rounded-xl bg-surface-low p-3">
                 <input value={gName} onChange={e => setGName(e.target.value)} placeholder="Nombre del grupo" className="w-full rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
-                <div><p className="mb-1 text-[12px] text-navy-light/60 font-body">Dirigente {leader && <span className="text-teal-deep">· {leader.first_name} {leader.last_name}</span>}</p>
+                <div><p className="mb-1 text-[12px] text-navy-light/70 font-body">Dirigente {leader && <span className="text-teal-deep">· {leader.first_name} {leader.last_name}</span>}</p>
                   <MemberCombobox onSelect={setLeader} placeholder="Buscar dirigente…" dropdown /></div>
                 <div className="flex gap-2">
                   <input value={gZone} onChange={e => setGZone(e.target.value)} placeholder="Zona" className="flex-1 rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />

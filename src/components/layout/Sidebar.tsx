@@ -330,7 +330,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         />
         <span className="flex-1 font-body font-light">{sub.label}</span>
         {(sub.badge ?? 0) > 0 && (
-          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white font-display">
             {sub.badge}
           </span>
         )}
@@ -430,7 +430,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </Link>
           <button
             onClick={onClose}
-            className="lg:hidden rounded-md p-1 text-white/60 hover:text-white transition-colors"
+            className="lg:hidden rounded-md p-1 text-white/70 hover:text-white transition-colors"
             aria-label="Cerrar menú"
           >
             <X size={20} />
@@ -464,7 +464,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   />
                   <span className="flex-1 truncate font-body font-light">{mod.label}</span>
                   {(mod.badge ?? 0) > 0 && (
-                    <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white font-display">
+                    <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white font-display">
                       {mod.badge}
                     </span>
                   )}
@@ -509,7 +509,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           {userName && (
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               <div
-                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold text-white bg-[rgba(255,255,255,0.15)] font-display"
+                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[12px] font-bold text-white bg-[rgba(255,255,255,0.15)] font-display"
               >
                 {userName.slice(0, 2).toUpperCase()}
               </div>
@@ -517,7 +517,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 <p className="text-[13px] text-white truncate font-body font-normal">
                   {userName}
                 </p>
-                <p className="text-[11px] text-white/70 truncate font-body">
+                <p className="text-[12px] text-white/70 truncate font-body">
                   {ROLE_LABELS[userRole] ?? userRole}
                 </p>
               </div>

@@ -40,7 +40,7 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Configuración de mi cuenta
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           Gestioná tus preferencias de notificación
         </p>
       </div>
@@ -148,7 +148,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
       {/* Toggles */}
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
           Preferencias de notificación
         </p>
         {INTERNAL_ITEMS.map(({ key, label, desc }) => (
@@ -182,7 +182,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
 
       {/* Canal preferido */}
       <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
           Canal preferido
         </p>
         <div className="flex gap-2">
@@ -200,13 +200,13 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
               className={cn(
                 'flex-1 flex flex-col items-center gap-0.5 rounded-xl border py-3 text-[13px] font-medium transition-all font-body',
                 opt.disabled
-                  ? 'opacity-50 cursor-not-allowed text-navy-light/60'
-                  : prefs.canal_preferido === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/60 hover:text-navy'
+                  ? 'opacity-50 cursor-not-allowed text-navy-light/70'
+                  : prefs.canal_preferido === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/70 hover:text-navy'
               )}
               style={{ borderColor: !opt.disabled && prefs.canal_preferido === opt.key ? undefined : 'var(--outline-variant)' }}
             >
               {opt.label}
-              {opt.disabled && <span className="text-[10px] font-normal text-navy-light/60">Próximamente</span>}
+              {opt.disabled && <span className="text-[11px] font-normal text-navy-light/70">Próximamente</span>}
             </button>
           ))}
         </div>

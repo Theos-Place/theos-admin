@@ -114,7 +114,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
   if (pairs === null) {
     return (
-      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/60 font-body inline-flex items-center gap-2">
+      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/70 font-body inline-flex items-center gap-2">
         <Loader2 size={14} className="animate-spin" /> Cargando parejas del grupo…
       </p>
     )
@@ -141,7 +141,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                 {p.requester_name} &amp; {p.spouse_name}
               </h3>
             </div>
-            <p className="text-[12px] text-navy-light/60 font-body">
+            <p className="text-[12px] text-navy-light/70 font-body">
               Evaluación de mentores. Es información pastoral: solo la ve la coordinación de estudios y dirección.
             </p>
 

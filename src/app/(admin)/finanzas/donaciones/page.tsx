@@ -135,7 +135,7 @@ export default function DonacionesPage() {
             { label: 'Donadores activos', value: activeDonors, isAmount: false, alert: false },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
               {isAmount
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
                     {/* INT-3: una línea por moneda; con una sola se ve igual que antes. */}
@@ -158,7 +158,7 @@ export default function DonacionesPage() {
                 <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                   {unidentifiedCount} donación{unidentifiedCount !== 1 ? 'es' : ''} sin identificar — <TotalsDisplay totals={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
                 </p>
-                <p className="text-[11px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
+                <p className="text-[12px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                   Vinculalas manualmente a un miembro para que queden registradas correctamente.
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function DonacionesPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Lote importación', 'Estado'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
                   ))}
@@ -252,7 +252,7 @@ export default function DonacionesPage() {
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
+                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium"
                         style={{
                           color: d.is_identified ? '#3DB97A' : '#EF5554',
                           background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
@@ -297,7 +297,7 @@ export default function DonacionesPage() {
                     <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} />
                   </p>
                   <span
-                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                     style={{
                       color: d.is_identified ? '#3DB97A' : '#EF5554',
                       background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
@@ -321,7 +321,7 @@ export default function DonacionesPage() {
         {/* Paginación / contador */}
         {donations.length > 0 && (
           <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-navy-light/60 font-body">
+            <p className="text-sm text-navy-light/70 font-body">
               Mostrando {donations.length.toLocaleString('es-CR')} de {total.toLocaleString('es-CR')} donaciones
               {filteredSum != null && (
                 <> · Total filtrado: <TotalsDisplay totals={filteredSum} defaultHidden={false} revealed={revealAll} /></>
@@ -360,7 +360,7 @@ export default function DonacionesPage() {
                       <p className="text-[13px] font-medium font-body text-navy">
                         {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} />
                       </p>
-                      <p className="text-[11px] text-[rgba(22,20,64,0.60)] font-body">
+                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
                         {d.source_file}
                       </p>
                     </div>
@@ -382,7 +382,7 @@ export default function DonacionesPage() {
                 </div>
               ))}
               {unidentified.length === 0 && (
-                <p className="px-6 py-8 text-center text-sm text-navy-light/60 font-body">
+                <p className="px-6 py-8 text-center text-sm text-navy-light/70 font-body">
                   No hay donaciones sin identificar.
                 </p>
               )}

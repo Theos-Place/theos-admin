@@ -12,7 +12,7 @@ import {
 } from '@/lib/servers/request-window'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-display'
+const labelCls = 'text-[12px] tracking-widest uppercase text-navy-light/70 font-display'
 
 type FlatPosition = {
   id: string
@@ -140,7 +140,7 @@ function SolicitarVacantesContent() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-60 text-navy-light/60">
+      <div className="flex items-center justify-center min-h-60 text-navy-light/70">
         <Loader2 size={20} className="animate-spin" />
       </div>
     )
@@ -192,7 +192,7 @@ function SolicitarVacantesContent() {
       {/* Volver */}
       <Link
         href="/servidores/vacantes"
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy-light transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/70 hover:text-navy-light transition-colors font-body"
       >
         <ChevronLeft size={15} /> Puestos de Servicio
       </Link>
@@ -207,7 +207,7 @@ function SolicitarVacantesContent() {
 
       {/* Sección 1: Comité */}
       <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
-        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Comité</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Comité</p>
         {lockedCommittee ? (
           <div className="inline-flex items-center gap-2 rounded-xl bg-surface-low px-3.5 py-2.5">
             <Lock size={14} className="text-navy-light/50" />
@@ -230,7 +230,7 @@ function SolicitarVacantesContent() {
       {committeeId && (
         <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">
+            <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">
               Puestos del comité
             </p>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3 py-1 text-[12px] text-navy-light/70 font-body">
@@ -239,7 +239,7 @@ function SolicitarVacantesContent() {
           </div>
 
           {committeePositions.length === 0 ? (
-            <p className="text-sm text-navy-light/60 font-body py-6 text-center">
+            <p className="text-sm text-navy-light/70 font-body py-6 text-center">
               Este comité no tiene puestos activos.
             </p>
           ) : (
@@ -288,7 +288,7 @@ function SolicitarVacantesContent() {
       {/* Sección 3: Datos de la vacante (comunes al carrito) */}
       {committeeId && totalSlots > 0 && (
         <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Detalles de la vacante</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Detalles de la vacante</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-1">
               <label className={labelCls}>Ubicación / sede</label>
@@ -333,7 +333,7 @@ function SolicitarVacantesContent() {
             <Info size={14} />
             <span
               role="tooltip"
-              className="pointer-events-none absolute left-1/2 bottom-full z-[60] mb-1.5 hidden w-64 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[11px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
+              className="pointer-events-none absolute left-1/2 bottom-full z-[60] mb-1.5 hidden w-64 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[12px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
             >
               {VACANCY_REQUEST_WINDOW_TOOLTIP}
             </span>
@@ -355,7 +355,7 @@ function SolicitarVacantesContent() {
             {saving ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar vacantes'}
           </button>
           {!canSend && (
-            <p className="text-[11px] text-coral font-body text-center sm:text-right max-w-xs">
+            <p className="text-[12px] text-coral font-body text-center sm:text-right max-w-xs">
               {VACANCY_REQUEST_WINDOW_TOOLTIP}
             </p>
           )}
@@ -364,7 +364,7 @@ function SolicitarVacantesContent() {
 
       {error && <p className="text-sm text-coral font-body">{error}</p>}
 
-      <p className="text-[12px] text-navy-light/60 font-body flex items-center gap-1.5">
+      <p className="text-[12px] text-navy-light/70 font-body flex items-center gap-1.5">
         <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
         <Link href="/servidores/puestos/solicitar" className="text-coral hover:underline">Solicitalo acá</Link>.
       </p>

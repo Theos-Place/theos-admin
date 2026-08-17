@@ -191,7 +191,7 @@ export default function NuevoGrupoPage() {
           <p className="text-xl font-bold text-navy font-display">
             ¡Grupo creado!
           </p>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             El grupo quedó en estado «{STATUS_OPTIONS.find(o => o.value === initialStatus)?.label}».
             {pendingLeader && ' Se notificó al equipo de estudios para asignar dirigente.'}
           </p>
@@ -218,7 +218,7 @@ export default function NuevoGrupoPage() {
       {/* Back */}
       <Link
         href="/estudios/grupos"
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} />
         Volver a grupos
@@ -230,7 +230,7 @@ export default function NuevoGrupoPage() {
         >
           Nuevo grupo
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           Completa los 3 pasos para crear el grupo
         </p>
       </div>
@@ -244,14 +244,14 @@ export default function NuevoGrupoPage() {
                 'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
                 step >= n
                   ? 'bg-coral text-white'
-                  : 'bg-surface-low text-navy-light/60',
+                  : 'bg-surface-low text-navy-light/70',
                 'font-display',
               )}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/60', 'font-body')}
+              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/70', 'font-body')}
             >
               {n === 1 ? 'Configuración' : n === 2 ? 'Dirigente' : 'Confirmación'}
             </span>
@@ -264,14 +264,14 @@ export default function NuevoGrupoPage() {
       {step === 1 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
           >
             Paso 1 — Configuración
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Tipo de estudio *
               </label>
               <select
@@ -296,12 +296,12 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Zona *
               </label>
               {step1.is_virtual ? (
                 // EST-4: en grupos virtuales la zona queda fija en "Virtual".
-                <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/60 font-body" aria-label="Zona fijada: Virtual">
+                <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/70 font-body" aria-label="Zona fijada: Virtual">
                   Virtual (fijada por ser grupo virtual)
                 </p>
               ) : (
@@ -329,7 +329,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Edad desde
               </label>
               <input
@@ -341,7 +341,7 @@ export default function NuevoGrupoPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Edad hasta
               </label>
               <input
@@ -354,7 +354,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Día preferido
               </label>
               <div className="flex gap-1.5 flex-wrap">
@@ -378,14 +378,14 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Horario preferido
               </label>
               <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Capacidad máxima
               </label>
               <input
@@ -398,7 +398,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Ubicación exacta
               </label>
               <input
@@ -410,7 +410,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Fecha de inicio estimada
               </label>
               <input
@@ -425,7 +425,7 @@ export default function NuevoGrupoPage() {
                 dentro del rango; al vencer, el cron lo pasa a en_curso si ya
                 inició. Vacías = modo manual (comportamiento histórico). */}
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Inicio de matrícula
               </label>
               <input
@@ -440,7 +440,7 @@ export default function NuevoGrupoPage() {
                 tope es el arranque del grupo SOLO si es futuro (acotar por un
                 arranque pasado dejaba el campo inservible). */}
             <div className="space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">
+              <label className="text-[12px] text-navy-light/70 font-display">
                 Fin de matrícula
               </label>
               <input
@@ -496,7 +496,7 @@ export default function NuevoGrupoPage() {
       {step === 2 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
           >
             Paso 2 — Seleccionar dirigente
           </h2>
@@ -505,7 +505,7 @@ export default function NuevoGrupoPage() {
               casillas. Antes la casilla de disponibilidad quedaba DESPUÉS del
               co-dirigente y parecía referirse a él (bug 2026-08-04). */}
           <fieldset className="rounded-xl border border-[var(--outline-variant)] bg-surface-low/60 p-4 space-y-3">
-            <legend className="px-1 text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+            <legend className="px-1 text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
               Dirigente {pendingLeader ? '' : '*'}
             </legend>
 
@@ -547,7 +547,7 @@ export default function NuevoGrupoPage() {
           {/* El co-dirigente va aparte, fuera del bloque del dirigente. */}
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                 Co-dirigente (opcional)
               </label>
               <DirigentesCombobox
@@ -587,7 +587,7 @@ export default function NuevoGrupoPage() {
       {step === 3 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
           >
             Paso 3 — Confirmación
           </h2>
@@ -595,39 +595,39 @@ export default function NuevoGrupoPage() {
           <div className="rounded-xl p-4 space-y-3 bg-surface-low">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Tipo</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Tipo</p>
                 <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Zona</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Zona</p>
                 <p className="text-navy font-body">{zoneSel.kind === 'empty' ? '—' : zoneSel.label}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Día</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Día</p>
                 <p className="text-navy font-body">{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Horario</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Horario</p>
                 <p className="text-navy font-body">{step1.time || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Dirigente</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Dirigente</p>
                 <p className="text-navy font-body">{leaderData?.member_name ?? (pendingLeader ? 'Pendiente' : '—')}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Inicio estimado</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Inicio estimado</p>
                 <p className="text-navy font-body">{step1.start_date || '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Capacidad</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Capacidad</p>
                 <p className="text-navy font-body">{step1.capacity} personas</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display">Modalidad</p>
+                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Modalidad</p>
                 <p className="text-navy font-body">{step1.is_virtual ? 'Virtual' : 'Presencial'}</p>
               </div>
               <div>
-                <label className="text-[10px] uppercase text-navy-light/60 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>
+                <label className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>
                 <select
                   id="nuevo-grupo-estado"
                   className={inputCls}

@@ -126,7 +126,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
             {/* Excepciones activas */}
             {activeList.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Activas</p>
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Activas</p>
                 {activeList.map(e => (
                   <div key={e.id} className="flex items-start justify-between gap-3 rounded-xl bg-surface-low px-3 py-2.5">
                     <div className="min-w-0">
@@ -134,9 +134,9 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                       <p className="text-[12px] text-navy-light/70 font-body">
                         Exime: {e.waived_requirements.map(r => REQ_LABEL[r] ?? r).join(', ')}
                       </p>
-                      {e.granted_by_name && <p className="text-[11px] text-navy-light/60 font-body">Otorgada por {e.granted_by_name}</p>}
+                      {e.granted_by_name && <p className="text-[12px] text-navy-light/70 font-body">Otorgada por {e.granted_by_name}</p>}
                     </div>
-                    <button onClick={() => revoke(e.id)} aria-label="Revocar excepción" className="shrink-0 rounded-lg p-1 text-navy-light/60 hover:text-coral hover:bg-coral/10 transition-colors">
+                    <button onClick={() => revoke(e.id)} aria-label="Revocar excepción" className="shrink-0 rounded-lg p-1 text-navy-light/70 hover:text-coral hover:bg-coral/10 transition-colors">
                       <X size={15} />
                     </button>
                   </div>
@@ -146,11 +146,11 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
 
             {/* Crear nueva */}
             <div className="space-y-3 border-t border-[var(--outline-variant)] pt-4">
-              <p className="text-sm text-navy-light/60 font-body">
+              <p className="text-sm text-navy-light/70 font-body">
                 Eximí a {memberName} de requisitos de un estudio para que pueda matricularse.
               </p>
               <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Estudio</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Estudio</label>
                 <select
                   value={planId}
                   onChange={e => setPlanId(e.target.value)}
@@ -162,7 +162,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Requisitos a eximir</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Requisitos a eximir</label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="accent-coral" checked={waiveAll} onChange={e => setWaiveAll(e.target.checked)} />
                   <span className="text-[13px] text-navy font-body font-medium">Eximir de todos los requisitos</span>
@@ -176,7 +176,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
               </div>
 
               <div className="space-y-1">
-                <label htmlFor="exc-reason" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                <label htmlFor="exc-reason" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                   Razón *
                 </label>
                 <textarea
@@ -190,7 +190,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                   className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none"
                   placeholder="Ej.: lleva 3 años sirviendo en alabanza y el sistema no registra su asistencia a charlas."
                 />
-                <p className="text-[11px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   Queda registrada con tu nombre: explicá por qué se hace la excepción.
                 </p>
               </div>

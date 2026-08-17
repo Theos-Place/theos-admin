@@ -25,7 +25,7 @@ export default function Error({
         <p className="mb-1 font-display text-base font-semibold text-navy">
           Algo salió mal
         </p>
-        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/60">
+        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/70">
           Ocurrió un error inesperado. Podés intentar de nuevo; si persiste,
           avisale al equipo de TI.
         </p>

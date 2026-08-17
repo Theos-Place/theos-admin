@@ -70,7 +70,7 @@ export function Combobox({
           {display || placeholder}
         </span>
         {value.kind === 'new' && (
-          <span className="shrink-0 rounded-full bg-coral/15 px-2 py-0.5 text-[10px] font-medium text-coral font-body">nueva</span>
+          <span className="shrink-0 rounded-full bg-coral/15 px-2 py-0.5 text-[11px] font-medium text-coral font-body">nueva</span>
         )}
         <ChevronDown size={15} className="shrink-0 text-navy-light/50" />
       </button>
@@ -78,7 +78,7 @@ export function Combobox({
       {open && (
         <ComboPanel>
           <div className="flex items-center gap-2 border-b border-[var(--outline-variant)] px-3 py-2">
-            <Search size={14} className="shrink-0 text-navy-light/60" />
+            <Search size={14} className="shrink-0 text-navy-light/70" />
             <input
               ref={inputRef}
               value={query}

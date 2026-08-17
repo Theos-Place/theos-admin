@@ -85,7 +85,7 @@ export function NewMemberStep3({
             {data.first_name} {data.last_name}
           </p>
           {data.cedula && (
-            <p className="text-xs text-navy-light/60 mt-0.5 font-mono">
+            <p className="text-xs text-navy-light/70 mt-0.5 font-mono">
               {data.cedula}
             </p>
           )}
@@ -100,7 +100,7 @@ export function NewMemberStep3({
               <p className="text-xs text-navy-light/70 font-body">
                 {calculateAge(data.birth_date)} años
                 {isMinor && (
-                  <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep">Menor</span>
+                  <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep">Menor</span>
                 )}
               </p>
             )}
@@ -134,7 +134,7 @@ export function NewMemberStep3({
       {/* Family members */}
       {familyMembers.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-navy-light/60 uppercase tracking-wider font-display">
+          <p className="text-xs text-navy-light/70 uppercase tracking-wider font-display">
             Familiares ({familyMembers.length})
           </p>
           {familyMembers.map((item, idx) => (
@@ -152,15 +152,15 @@ export function NewMemberStep3({
                   {familyItemName(item)}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-navy-light/60 font-body">
+                  <p className="text-xs text-navy-light/70 font-body">
                     {familyItemRelation(item)}
                   </p>
                   {item.kind === 'linked' ? (
-                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[10px] text-teal-deep font-body">
+                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[11px] text-teal-deep font-body">
                       Perfil existente
                     </span>
                   ) : (
-                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[10px] text-navy-light/60 font-body">
+                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[11px] text-navy-light/70 font-body">
                       Perfil nuevo
                     </span>
                   )}
@@ -173,7 +173,7 @@ export function NewMemberStep3({
 
       {/* Notification checkboxes */}
       <div className="space-y-3">
-        <p className="text-xs text-navy-light/60 uppercase tracking-wider font-display">
+        <p className="text-xs text-navy-light/70 uppercase tracking-wider font-display">
           Notificaciones de bienvenida
         </p>
         <label className="flex items-center gap-3 cursor-pointer">

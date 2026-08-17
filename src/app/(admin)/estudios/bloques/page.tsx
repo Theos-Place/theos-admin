@@ -219,7 +219,7 @@ export default function BloquesPage() {
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : visibleRows.length === 0 ? (
           <EmptyState icon={CalendarRange} title="No hay bloques con ese filtro." />
         ) : (
@@ -227,7 +227,7 @@ export default function BloquesPage() {
             <table className="w-full border-collapse">
               <thead><tr>
                 {['Bloque', 'Apertura', 'Cierre matrícula', 'Hitos (prelim · confirm · final)', 'Estado', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -238,18 +238,18 @@ export default function BloquesPage() {
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{b.nombre}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_apertura)}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_cierre_matricula)}</td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body whitespace-nowrap">
+                      <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body whitespace-nowrap">
                         {fmt(hitos.preliminar)} · {fmt(hitos.confirmacion)} · {fmt(hitos.final)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', BLOQUE_ESTADO_BADGE[b.estado])}>
+                        <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', BLOQUE_ESTADO_BADGE[b.estado])}>
                           {BLOQUE_ESTADO_LABEL[b.estado]}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => openEdit(b)} aria-label="Editar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light hover:bg-surface-low transition-colors"><Pencil size={14} /></button>
-                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/60 hover:text-coral hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
+                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/70 hover:text-coral hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -282,26 +282,26 @@ export default function BloquesPage() {
           <div className="p-6 space-y-4">
             <h3 id="bloque-title" className="text-base font-bold text-navy font-display">{editing ? 'Editar bloque' : 'Nuevo bloque'}</h3>
             <div className="space-y-1">
-              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Nombre</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Nombre</label>
               <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Bloque 1 2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Año</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Año</label>
               <input type="number" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-              <p className="text-[11px] text-navy-light/60 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas.</p>
+              <p className="text-[12px] text-navy-light/70 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Fecha de apertura</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Fecha de apertura</label>
                 <input type="date" value={form.fecha_apertura} onChange={e => setForm(f => ({ ...f, fecha_apertura: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Cierre de matrícula</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Cierre de matrícula</label>
                 <input type="date" value={form.fecha_cierre_matricula} onChange={e => setForm(f => ({ ...f, fecha_cierre_matricula: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
             </div>
             {milestones && (
-              <p className="text-[12px] text-navy-light/60 font-body rounded-xl bg-surface-low px-3 py-2">
+              <p className="text-[12px] text-navy-light/70 font-body rounded-xl bg-surface-low px-3 py-2">
                 Hitos: preliminar <strong>{fmt(milestones.preliminar)}</strong> · confirmación <strong>{fmt(milestones.confirmacion)}</strong> · final <strong>{fmt(milestones.final)}</strong>
               </p>
             )}

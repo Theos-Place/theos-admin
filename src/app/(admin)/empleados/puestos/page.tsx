@@ -64,8 +64,8 @@ export default function PuestosPage() {
       <div
         className="flex items-center gap-2.5 rounded-xl px-4 py-3 bg-surface-low"
       >
-        <Lock size={13} className="text-navy-light/60 shrink-0" />
-        <p className="text-[12px] text-navy-light/60 font-body">
+        <Lock size={13} className="text-navy-light/70 shrink-0" />
+        <p className="text-[12px] text-navy-light/70 font-body">
           Los rangos salariales son confidenciales — solo visibles para Administración y Dirección.
         </p>
       </div>
@@ -87,7 +87,7 @@ export default function PuestosPage() {
           <div key={area.code} className="space-y-3">
             <div className="flex items-center gap-3">
               <p
-                className="text-[11px] tracking-widest uppercase font-semibold text-navy-light/60 font-display"
+                className="text-[12px] tracking-widest uppercase font-semibold text-navy-light/70 font-display"
               >
                 {area.name}
               </p>
@@ -111,14 +111,14 @@ export default function PuestosPage() {
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
+                            className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy-light/70 font-display"
                           >
                             {pos.committee_name}
                           </span>
                           <ContractTypeBadge type={pos.contract_type} size="sm" />
                           {!pos.is_active && (
                             <span
-                              className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral font-display"
+                              className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display"
                             >
                               Inactivo
                             </span>
@@ -129,12 +129,12 @@ export default function PuestosPage() {
 
                     {/* Salary range */}
                     <div className="space-y-0.5">
-                      <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                      <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                         Rango salarial
                       </p>
                       <div className="flex items-center gap-2">
                         <SalaryBadge amount={pos.salary_min} size="sm" />
-                        <span className="text-[11px] text-navy-light/60">—</span>
+                        <span className="text-[12px] text-navy-light/70">—</span>
                         <SalaryBadge amount={pos.salary_max} size="sm" />
                       </div>
                     </div>
@@ -144,7 +144,7 @@ export default function PuestosPage() {
                       {assigned ? (
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-white font-display">
+                            <span className="text-[10px] font-bold text-white font-display">
                               {assigned.member_initials}
                             </span>
                           </div>
@@ -154,7 +154,7 @@ export default function PuestosPage() {
                         </div>
                       ) : (
                         <span
-                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[10px] text-navy-light/60 font-display"
+                          className="rounded-full bg-navy-light/10 px-2.5 py-0.5 text-[11px] text-navy-light/70 font-display"
                         >
                           Sin asignar
                         </span>
@@ -162,7 +162,7 @@ export default function PuestosPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/empleados/puestos/${pos.id}`}
-                          className="rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                          className="rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                         >
                           Ver detalle
                         </Link>

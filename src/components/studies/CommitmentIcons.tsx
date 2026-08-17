@@ -40,7 +40,7 @@ function TooltipIcon({
       />
       {show && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[10px] text-white z-50 shadow-[var(--shadow-md)] bg-navy"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[11px] text-white z-50 shadow-[var(--shadow-md)] bg-navy"
         >
           {tooltip}
         </div>

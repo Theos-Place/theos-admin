@@ -182,7 +182,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
             </h2>
 
             {(openModal === 'relocation' && (dataLoading || !eligibility)) || (openModal === 'study_interest' && !optionsLoaded) ? (
-              <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-navy-light/60" /></div>
+              <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-navy-light/70" /></div>
             ) : (
               <>
                 {/* Disclaimer de interés — al inicio, tono cálido. */}
@@ -289,7 +289,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
                       <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')} />
-                      <p className={cn('mt-1 text-[11px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/60' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
+                      <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
                     </div>
                   </>
                 )}
@@ -302,7 +302,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                         <option value="">Seleccionar estudio…</option>
                         {options.map(o => <option key={o.plan_id} value={o.plan_id}>{o.code} — {o.name}{o.is_eligible ? '' : ' (aún no elegible)'}</option>)}
                       </select>
-                      <p className="mt-1 text-[11px] text-navy-light/60 font-body">Se muestran los estudios que aún no has llevado.</p>
+                      <p className="mt-1 text-[12px] text-navy-light/70 font-body">Se muestran los estudios que aún no has llevado.</p>
                     </div>
 
                     {/* Aviso de elegibilidad: informa qué falta, pero permite enviar igual. */}
@@ -413,7 +413,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
         )}
       </div>
       {muestra('study_interest') && hasOpenReq && (
-        <p className="mt-1.5 text-[12px] text-navy-light/60 font-body">
+        <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">
           Ya registraste una solicitud de estudio (una a la vez). Revisá la página de Matrícula: ahí aparecen los grupos nuevos cuando se abren.
         </p>
       )}

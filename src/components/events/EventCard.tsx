@@ -56,7 +56,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
         <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
           {past ? <RealizadoBadge /> : <EventStatusBadge status={event.status} />}
           {event.is_recurring && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-medium text-navy-light/70 font-body">
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-medium text-navy-light/70 font-body">
               <Repeat size={10} /> {recurrence ?? 'Recurrente'}
             </span>
           )}
@@ -71,14 +71,14 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
         </h3>
         <div className="mt-auto space-y-1 pt-1">
           <p className="flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
-            <Clock size={13} className="shrink-0 text-navy-light/60" />
+            <Clock size={13} className="shrink-0 text-navy-light/70" />
             {start.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             {' · '}
             {start.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })}
           </p>
           {event.location && (
             <p className="flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
-              <MapPin size={13} className="shrink-0 text-navy-light/60" />
+              <MapPin size={13} className="shrink-0 text-navy-light/70" />
               <span className="truncate">{event.location}</span>
             </p>
           )}
@@ -109,7 +109,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
               Ya inscrito/a
             </span>
           ) : (
-            <span className="block text-center text-[11px] text-navy-light/60 font-body">
+            <span className="block text-center text-[12px] text-navy-light/70 font-body">
               {eligibility.reasons_blocked[0] ?? 'No disponible'}
             </span>
           )}
@@ -117,7 +117,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
             <button
               type="button"
               onClick={onRequestScholarship}
-              className="mt-1.5 w-full text-center text-[11px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+              className="mt-1.5 w-full text-center text-[12px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
             >
               ¿Necesitás ayuda para pagar? Solicitar beca
             </button>

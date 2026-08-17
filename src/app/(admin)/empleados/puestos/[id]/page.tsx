@@ -20,7 +20,7 @@ export default function PuestoDetailPage() {
   if (!position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function PuestoDetailPage() {
     <div className="space-y-4">
       <Link
         href="/empleados/puestos"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Puestos
@@ -45,14 +45,14 @@ export default function PuestoDetailPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[10px] font-semibold text-navy-light/60 font-display"
+                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/70 font-display"
               >
                 {position.committee_name}
               </span>
               <ContractTypeBadge type={position.contract_type} size="sm" />
               {!position.is_active && (
                 <span
-                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral font-display"
+                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display"
                 >
                   Inactivo
                 </span>
@@ -82,19 +82,19 @@ export default function PuestoDetailPage() {
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+          <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
             Rango salarial aprobado
           </p>
-          <Lock size={11} className="text-navy-light/60" />
+          <Lock size={11} className="text-navy-light/70" />
         </div>
         <div className="flex items-center gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/60 font-display">Mínimo</p>
+            <p className="text-[11px] text-navy-light/70 font-display">Mínimo</p>
             <SalaryBadge amount={position.salary_min} size="md" />
           </div>
-          <span className="text-navy-light/60 text-lg">—</span>
+          <span className="text-navy-light/70 text-lg">—</span>
           <div className="space-y-0.5">
-            <p className="text-[10px] text-navy-light/60 font-display">Máximo</p>
+            <p className="text-[11px] text-navy-light/70 font-display">Máximo</p>
             <SalaryBadge amount={position.salary_max} size="md" />
           </div>
         </div>
@@ -104,14 +104,14 @@ export default function PuestoDetailPage() {
       <div
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+        <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
           Persona asignada
         </p>
         {assigned ? (
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
-                <span className="text-[11px] font-bold text-white font-display">
+                <span className="text-[12px] font-bold text-white font-display">
                   {assigned.member_initials}
                 </span>
               </div>
@@ -119,7 +119,7 @@ export default function PuestoDetailPage() {
                 <p className="truncate text-sm font-semibold text-navy font-display">
                   {assigned.member_name}
                 </p>
-                <p className="truncate text-[12px] text-navy-light/60 font-body">
+                <p className="truncate text-[12px] text-navy-light/70 font-body">
                   {assigned.member_email}
                 </p>
               </div>
@@ -134,7 +134,7 @@ export default function PuestoDetailPage() {
         ) : (
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <span
-              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/60 font-display"
+              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/70 font-display"
             >
               Sin asignar
             </span>

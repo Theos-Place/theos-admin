@@ -11,18 +11,26 @@ Sobre fondo claro (blanco / `--surface`), usando navy con opacidad:
 | Uso | Mínimo | Contraste aprox. |
 |---|---|---|
 | Texto normal (< 18px) | `text-navy-light/70` o color sólido | 4.8:1 ✓ AA |
-| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/60` | 3.6:1 ✓ AA grande |
-| Metadata secundaria pequeña | `text-navy-light/60` como piso absoluto | 3.6:1 |
+| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/70` | 4.8:1 ✓ AA |
+| Metadata secundaria pequeña | `text-navy-light/70` (el `/60` quedó eliminado en 2026-08-17) | 4.8:1 |
 | Placeholders | `placeholder:text-navy-light/50` mínimo | — |
-| Decorativo puro (íconos de empty state, adornos) | `/40` mínimo | exento de AA |
+| Decorativo puro (íconos de empty state, adornos, separadores «·») | `/40` mínimo | exento de AA |
 
 **Nunca** `/20` o `/30` para texto que comunica algo — a ese nivel el contraste
 ronda 2:1 y es ilegible para mucha gente. Estado deshabilitado: usá `/40` *y*
 otra señal además del color (cursor, opacidad del contenedor).
 
-> Deuda conocida en theos-admin: hay cientos de `/40` y `/50` heredados que
-> migran junto con el refactor de estilos inline a tokens. Código nuevo sigue
-> esta tabla desde ya.
+> 2026-08-17: se saldó la deuda heredada. Se barrió TODO `text-…/60` → `/70`
+> (texto sobre claro y `text-white/60` → `/70` sobre navy), los `/30` de texto
+> pasaron a `/40`, y los `/50` informativos a `/70` (los `/50` legítimos que
+> quedan son placeholders, íconos y estados deshabilitados). No reintroducir
+> `/60` en texto nuevo.
+
+## Tamaño de texto
+
+Piso de la marca (2026-08-17, mismo barrido): **11px** para cualquier texto
+que comunica — los micro-labels uppercase de tablas y chips usan `text-[11px]`
+(antes 10px). `text-[10px]` solo para adornos contados; **nunca** 9px.
 
 ## Botones e inputs
 

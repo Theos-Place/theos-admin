@@ -35,7 +35,7 @@ export function InviteToStudyButton({
 
   if (blocked) {
     return (
-      <p className="text-[12px] text-navy-light/60 font-body italic">
+      <p className="text-[12px] text-navy-light/70 font-body italic">
         No recomendado para dar estudios: no se puede invitar a la formación de dirigentes (CDEB).
       </p>
     )
@@ -84,11 +84,11 @@ export function InviteToStudyButton({
               </div>
             ) : (
               <>
-                <p className="text-sm text-navy-light/60 font-body">
+                <p className="text-sm text-navy-light/70 font-body">
                   Estos estudios son solo por invitación. Al invitar a {memberName}, podrá matricularse.
                 </p>
                 <div className="space-y-1">
-                  <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Estudio</label>
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Estudio</label>
                   <select
                     value={planId}
                     onChange={e => setPlanId(e.target.value)}
@@ -99,7 +99,7 @@ export function InviteToStudyButton({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Nota (opcional)</label>
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Nota (opcional)</label>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}

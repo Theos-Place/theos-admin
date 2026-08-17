@@ -18,7 +18,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
       {/* El buscador NO se estira a todo el ancho: un input de 1.400 px es
           incómodo de leer y de apuntar (layout.md, acotar elementos internos). */}
       <div className="relative max-w-xl">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-light/60" />
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-light/70" />
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
@@ -37,7 +37,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
       ) : (
         groups.map(({ seccion, docs: sectionDocs }) => (
           <section key={seccion} className="space-y-2">
-            <h2 className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display px-1">
+            <h2 className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display px-1">
               {seccion}
             </h2>
             {/* Listado, no lectura: en desktop se reparte en columnas en vez de
@@ -63,7 +63,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
                         </span>
                       )}
                     </span>
-                    <ChevronRight size={16} className="shrink-0 text-navy-light/60" />
+                    <ChevronRight size={16} className="shrink-0 text-navy-light/70" />
                   </Link>
                 </li>
               ))}

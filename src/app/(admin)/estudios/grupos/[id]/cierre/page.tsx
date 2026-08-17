@@ -47,10 +47,10 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
   if (!group) {
     return (
       <div className="space-y-4">
-        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
+        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/60 font-body">Grupo no encontrado.</p>
+        <p className="text-navy-light/70 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -59,10 +59,10 @@ export default function CierrePage({ params }: { params: Promise<{ id: string }>
   if (group.status !== 'en_curso') {
     return (
       <div className="space-y-4">
-        <Link href={`/estudios/grupos/${group.id}`} className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy">
+        <Link href={`/estudios/grupos/${group.id}`} className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
           <ChevronLeft size={16} /> Volver al grupo
         </Link>
-        <p className="text-navy-light/60 font-body">
+        <p className="text-navy-light/70 font-body">
           {group.status === 'finalizado'
             ? 'Este grupo ya fue cerrado.'
             : 'Este grupo todavía está en matrícula; solo los grupos en curso se pueden cerrar.'}
@@ -191,7 +191,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           <p className="text-xl font-bold text-navy font-display">
             Cierre de estudio completado
           </p>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Los historiales académicos fueron actualizados.
           </p>
           <Link
@@ -209,7 +209,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
     <div className="space-y-5">
       <Link
         href={`/estudios/grupos/${group.id}`}
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
       </Link>
@@ -220,7 +220,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         >
           Cierre de estudio
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           {group.study_type_id} · {group.leader_name ?? 'Sin dirigente'}
         </p>
       </div>
@@ -232,14 +232,14 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             <div
               className={cn(
                 'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
-                step >= n ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/60',
+                step >= n ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/70',
                 'font-display',
               )}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/60', 'font-body')}
+              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/70', 'font-body')}
             >
               {n === 1 ? 'Resultados' : 'Confirmación'}
             </span>
@@ -263,7 +263,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
 
           {results.length === 0 && (
             <div className="rounded-xl bg-surface-low px-4 py-3">
-              <p className="text-sm text-navy-light/60 font-body">
+              <p className="text-sm text-navy-light/70 font-body">
                 Este grupo no tiene participantes matriculados.
               </p>
             </div>
@@ -281,7 +281,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-navy font-body">{r.member_name}</p>
-                      <p className="text-[11px] text-navy-light/60">Asistencia: {r.attendance_pct}%</p>
+                      <p className="text-[12px] text-navy-light/70">Asistencia: {r.attendance_pct}%</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       {(['aprobado', 'reprobado', 'retirado'] as const).map(s => (
@@ -289,13 +289,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                           key={s}
                           onClick={() => setResult(r.member_id, 'status_result', s)}
                           className={cn(
-                            'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
+                            'rounded-lg px-2.5 py-1 text-[12px] font-medium border transition-all',
                             r.status_result === s
                               ? s === 'aprobado'
                                 ? 'bg-teal-deep text-white border-teal-deep'
                                 : s === 'reprobado'
                                 ? 'bg-coral text-white border-coral'
-                                : 'bg-surface-low text-navy-light/60 border-navy-light/20'
+                                : 'bg-surface-low text-navy-light/70 border-navy-light/20'
                               : 'text-navy-light hover:bg-surface-low',
                             'font-display',
                           )}
@@ -322,7 +322,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                   {/* Justificación obligatoria al reprobar */}
                   {r.status_result === 'reprobado' && (
                     <div>
-                      <label htmlFor={`fail-${r.member_id}`} className="block text-[11px] font-medium text-coral font-body mb-1">
+                      <label htmlFor={`fail-${r.member_id}`} className="block text-[12px] font-medium text-coral font-body mb-1">
                         Explicá por qué <span aria-hidden>*</span>
                       </label>
                       <textarea
@@ -343,7 +343,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                       elegir "Retirado". Queda en drop_reason de la inscripción. */}
                   {r.status_result === 'retirado' && (
                     <div>
-                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[11px] font-medium text-navy-light/70 font-body mb-1">
+                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[12px] font-medium text-navy-light/70 font-body mb-1">
                         Motivo del retiro *
                       </label>
                       <textarea
@@ -376,7 +376,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                           <Sparkles size={12} /> {saved ? 'Editar recomendación a CDEB' : 'Recomendar para CDEB'}
                         </button>
                         {saved && (
-                          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
+                          <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display',
                             saved.status === 'enviada' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-amber-50 text-amber-700')}>
                             {saved.status === 'enviada' ? 'Enviada al comité' : 'Borrador guardado'}
                           </span>
@@ -388,7 +388,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                   {/* Recomendaciones opcionales — solo N4+ o capacitaciones (EST-3) */}
                   {canRecommend && r.status_result !== '' && r.status_result !== 'retirado' && (
                     <div className="rounded-xl bg-surface-low px-3 py-2.5 space-y-2">
-                      <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                      <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                         Recomendar para (opcional)
                       </p>
                       <div className="flex items-center gap-4 flex-wrap">
@@ -428,7 +428,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           {/* PRE-8: cierre especial de prematrimonial — evaluación por pareja. */}
           {isPremat && (
             <div className="space-y-3">
-              <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+              <h2 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                 Evaluación de la pareja (mentores)
               </h2>
               <PrematCoupleEvaluation groupId={group.id} onChange={handleEvalsChange} />
@@ -460,18 +460,18 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         <div className="space-y-4">
           {/* Summary */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-4 font-display">
+            <h2 className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-4 font-display">
               Resumen
             </h2>
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: 'Aprobados', value: aprobados, color: 'text-teal-deep' },
                 { label: 'Reprobados', value: reprobados, color: 'text-coral' },
-                { label: 'Retirados', value: retirados, color: 'text-navy-light/60' },
+                { label: 'Retirados', value: retirados, color: 'text-navy-light/70' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="text-center rounded-xl p-3 bg-surface-low">
                   <p className={`text-2xl font-bold font-display ${color}`}>{value}</p>
-                  <p className="text-[11px] text-navy-light/60 font-body">{label}</p>
+                  <p className="text-[12px] text-navy-light/70 font-body">{label}</p>
                 </div>
               ))}
             </div>

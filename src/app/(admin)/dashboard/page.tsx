@@ -116,7 +116,7 @@ function StatCard({
       <div className="text-3xl font-bold mb-1 font-display" style={{ color }}>
         {typeof value === 'number' ? value.toLocaleString('es-CR') : value}
       </div>
-      <div className="text-sm text-navy/60 mb-2 font-body">{label}</div>
+      <div className="text-sm text-navy/70 mb-2 font-body">{label}</div>
       {sub && (
         <div className="text-[12px] text-navy/45 font-body">{sub}</div>
       )}
@@ -127,7 +127,7 @@ function StatCard({
         </div>
       )}
       {hovered && (
-        <div className="absolute bottom-3 right-3 text-[11px] font-medium flex items-center gap-1 font-body"
+        <div className="absolute bottom-3 right-3 text-[12px] font-medium flex items-center gap-1 font-body"
           style={{ color }}>
           Ver detalle <ArrowUpRight size={11} />
         </div>
@@ -154,7 +154,7 @@ function AlertRow({
         <div className="w-2 h-2 rounded-full shrink-0" style={{ background: c.dot }} />
         <span className="text-[13px] text-navy/80 font-body">{text}</span>
       </div>
-      {href && <ChevronRight size={14} className="shrink-0 text-navy/60" />}
+      {href && <ChevronRight size={14} className="shrink-0 text-navy/70" />}
     </div>
   )
   if (href) return <Link href={href}>{inner}</Link>
@@ -204,7 +204,7 @@ function ModuleCard({
             </Link>
           ) : (
             <div key={i} className="flex items-center justify-between">
-              <span className="text-[13px] text-navy/60 font-body">{row.label}</span>
+              <span className="text-[13px] text-navy/70 font-body">{row.label}</span>
               <div className="flex items-center gap-2">{valueEl}</div>
             </div>
           )
@@ -315,7 +315,7 @@ export default function DashboardPage() {
             {isFinance && (
               <button
                 onClick={() => setShowAmounts(v => !v)}
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] text-white/60 hover:text-white border border-white/15 hover:bg-white/10 transition-all font-body"
+                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] text-white/70 hover:text-white border border-white/15 hover:bg-white/10 transition-all font-body"
               >
                 {showAmounts ? <EyeOff size={13} /> : <Eye size={13} />}
                 {showAmounts ? 'Ocultar montos' : 'Mostrar montos'}
@@ -356,7 +356,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[12px] text-navy/70 font-body">Eventos programados</div>
             </div>
-            <Calendar size={18} className="text-navy/60" />
+            <Calendar size={18} className="text-navy/70" />
           </div>
 
           {todayEvents.length === 0 ? (
@@ -371,7 +371,7 @@ export default function DashboardPage() {
                     <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: EVENT_TYPE_COLORS[ev.event_type] ?? '#161440' }} />
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-navy truncate font-body">{ev.name}</div>
-                      <div className="text-[11px] text-navy/70 mt-0.5 font-body">
+                      <div className="text-[12px] text-navy/70 mt-0.5 font-body">
                         {formatEventTime(ev.start_at)} · {ev.location} · {ev.registrations.length} inscritos
                       </div>
                     </div>
@@ -407,13 +407,13 @@ export default function DashboardPage() {
             <div className="space-y-2 mb-4">
               {todayCheckins.map((c, i) => (
                 <div key={i} className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#161440]/08 flex items-center justify-center text-[11px] font-bold text-navy/60 font-display">
+                  <div className="w-7 h-7 rounded-lg bg-[#161440]/08 flex items-center justify-center text-[12px] font-bold text-navy/70 font-display">
                     {c.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-[13px] text-navy/80 truncate font-body">{c.name}</span>
                   </div>
-                  <span className="text-[11px] text-navy/70 shrink-0 font-body">{c.time}</span>
+                  <span className="text-[12px] text-navy/70 shrink-0 font-body">{c.time}</span>
                 </div>
               ))}
             </div>
@@ -500,7 +500,7 @@ export default function DashboardPage() {
             <div className="h-px bg-[rgba(22,20,64,0.07)] mb-3" />
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-navy/60 font-body">Pagos recibidos</span>
+                <span className="text-[13px] text-navy/70 font-body">Pagos recibidos</span>
                 <span className="text-[13px] font-semibold text-navy font-body">
                   {/* INT-3: una línea por moneda; hoy todo es CRC, así que se ve una. */}
                   {showAmounts
@@ -509,13 +509,13 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-navy/60 font-body">Donadores activos</span>
+                <span className="text-[13px] text-navy/70 font-body">Donadores activos</span>
                 <span className="text-[13px] font-semibold text-navy font-body">
                   {DASHBOARD_STATS.finance.donors_active.toLocaleString('es-CR')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-navy/60 font-body">Devoluciones pend.</span>
+                <span className="text-[13px] text-navy/70 font-body">Devoluciones pend.</span>
                 <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full text-coral bg-[rgba(239,85,84,0.10)] font-body">
                   {DASHBOARD_STATS.finance.pending_refunds}
                 </span>
@@ -591,7 +591,7 @@ export default function DashboardPage() {
                 Actividad reciente
               </span>
             </div>
-            <ChevronRight size={16} className={cn('text-navy/60 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
+            <ChevronRight size={16} className={cn('text-navy/70 transition-transform', activityCollapsed ? '' : 'rotate-90')} />
           </button>
 
           {!activityCollapsed && (
@@ -600,7 +600,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {RECENT_ACTIVITY.map(item => (
                   <div key={item.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5 bg-navy font-display">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-bold text-white shrink-0 mt-0.5 bg-navy font-display">
                       {item.actor_initials}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -614,7 +614,7 @@ export default function DashboardPage() {
                         ) : item.resource}
                       </p>
                     </div>
-                    <span className="text-[11px] text-navy/70 shrink-0 mt-0.5 font-body">
+                    <span className="text-[12px] text-navy/70 shrink-0 mt-0.5 font-body">
                       {item.time}
                     </span>
                   </div>
@@ -638,7 +638,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   if (hasRole('lider_comite')) {
     return (
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
+        <div className="font-bold text-navy uppercase text-[12px] mb-4 font-display tracking-[0.08em]">
           Mi comité — Bienvenida
         </div>
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -650,7 +650,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             { label: 'Aplicaciones pend.', value: '3' },
           ].map((s, i) => (
             <div key={i}>
-              <div className="text-[11px] text-navy/70 font-body">{s.label}</div>
+              <div className="text-[12px] text-navy/70 font-body">{s.label}</div>
               <div className="text-[15px] font-bold text-navy font-display">{s.value}</div>
             </div>
           ))}
@@ -666,7 +666,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
   if (hasRole('coordinador_estudios', 'coordinador_dirigentes')) {
     return (
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-        <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
+        <div className="font-bold text-navy uppercase text-[12px] mb-4 font-display tracking-[0.08em]">
           Resumen de dirigentes
         </div>
         <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -678,7 +678,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ].map((s, i) => (
             <div key={i} className="text-center p-3 rounded-xl bg-[rgba(22,20,64,0.02)]">
               <div className="text-2xl font-bold mb-0.5 font-display" style={{ color: s.color }}>{s.value}</div>
-              <div className="text-[11px] text-navy/70 font-body">{s.label}</div>
+              <div className="text-[12px] text-navy/70 font-body">{s.label}</div>
             </div>
           ))}
         </div>
@@ -727,7 +727,7 @@ function DirigenteGroupsModule() {
   if (loading || groups.length === 0) return null
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-[rgba(22,20,64,0.06)]">
-      <div className="font-bold text-navy uppercase text-[11px] mb-4 font-display tracking-[0.08em]">
+      <div className="font-bold text-navy uppercase text-[12px] mb-4 font-display tracking-[0.08em]">
         Mis grupos
       </div>
       <div className="h-px bg-[rgba(22,20,64,0.07)] mb-4" />
@@ -736,7 +736,7 @@ function DirigenteGroupsModule() {
           <div key={g.id} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[rgba(22,20,64,0.02)] border border-[rgba(22,20,64,0.04)]">
             <div>
               <div className="text-[13px] font-semibold text-navy font-body">{g.name ?? 'Grupo'}</div>
-              <div className="text-[11px] text-navy/70 mt-0.5 font-body">
+              <div className="text-[12px] text-navy/70 mt-0.5 font-body">
                 {g.enrolled}{g.max ? `/${g.max}` : ''} participantes{g.week ? ` · Semana ${g.week}` : ''}
               </div>
             </div>

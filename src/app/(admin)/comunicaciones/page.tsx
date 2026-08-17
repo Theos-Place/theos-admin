@@ -124,7 +124,7 @@ export default function ComunicacionesPage() {
   const histPage = useClientPagination(filtered, 15)
 
   const STATUS_STYLE: Record<CommunicationStatus, string> = {
-    draft:     'bg-navy/10 text-navy-light/60',
+    draft:     'bg-navy/10 text-navy-light/70',
     scheduled: 'bg-teal-soft/20 text-teal-deep',
     sending:   'bg-amber-50 text-amber-700',
     sent:    'bg-teal-soft/30 text-teal-deep',
@@ -167,11 +167,11 @@ export default function ComunicacionesPage() {
           { label: 'Mensajes este mes', value: stats.sentThisMonth, color: 'text-navy', icon: CheckCircle2 },
           { label: 'Destinatarios alcanzados', value: stats.totalRecipients.toLocaleString('es-CR'), color: 'text-teal-deep', icon: Users },
           { label: 'Tasa de entrega', value: `${stats.avgRate}%`, color: stats.avgRate >= 90 ? 'text-teal-deep' : 'text-amber-600', icon: TrendingUp },
-          { label: 'Con errores', value: stats.withErrors, color: stats.withErrors > 0 ? 'text-coral' : 'text-navy-light/60', icon: AlertTriangle },
+          { label: 'Con errores', value: stats.withErrors, color: stats.withErrors > 0 ? 'text-coral' : 'text-navy-light/70', icon: AlertTriangle },
         ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                 {label}
               </p>
               <Icon size={14} className={color} />
@@ -202,7 +202,7 @@ export default function ComunicacionesPage() {
           ].map(({ label, value, Icon, color }) => (
             <div key={label} className="rounded-xl bg-surface-low px-4 py-3">
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{label}</p>
                 <Icon size={13} className={color} />
               </div>
               <p className={cn('text-2xl font-extrabold tabular-nums font-display', color)}>{value}</p>
@@ -213,7 +213,7 @@ export default function ComunicacionesPage() {
 
       {/* Activity chart */}
       <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 mb-4 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 mb-4 font-display">
           Actividad — últimos 7 días
         </p>
         <div className="flex items-end gap-2 h-20">
@@ -225,12 +225,12 @@ export default function ComunicacionesPage() {
                   style={{ height: `${maxActivity > 0 ? (d.count / maxActivity) * 56 : 0}px`, minHeight: d.count > 0 ? 4 : 0 }}
                 />
                 {d.count > 0 && (
-                  <span className="absolute -top-5 text-[10px] font-bold text-coral font-mono">
+                  <span className="absolute -top-5 text-[11px] font-bold text-coral font-mono">
                     {d.count}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-navy-light/60 capitalize font-body">{d.label}</span>
+              <span className="text-[11px] text-navy-light/70 capitalize font-body">{d.label}</span>
             </div>
           ))}
         </div>
@@ -246,7 +246,7 @@ export default function ComunicacionesPage() {
               onClick={() => setTab(t)}
               className={cn(
                 'px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all capitalize font-body',
-                tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/60 hover:text-navy'
+                tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/70 hover:text-navy'
               )}
             >
               {t === 'historial' ? 'Historial'
@@ -290,7 +290,7 @@ export default function ComunicacionesPage() {
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
                 />
-                <span className="text-navy-light/60 text-sm">—</span>
+                <span className="text-navy-light/70 text-sm">—</span>
                 <input
                   type="date"
                   aria-label="Hasta"
@@ -318,7 +318,7 @@ export default function ComunicacionesPage() {
                         <div className="flex items-center gap-2 flex-wrap mb-2">
                           <ChannelBadge channel={msg.channel} size="sm" />
                           <span
-                            className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', STATUS_STYLE[msg.status])}
+                            className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', STATUS_STYLE[msg.status])}
                           >
                             {STATUS_LABEL[msg.status]}
                           </span>
@@ -326,7 +326,7 @@ export default function ComunicacionesPage() {
                         <p className="text-sm font-semibold text-navy truncate font-body">
                           {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                         </p>
-                        <p className="text-[12px] text-navy-light/60 mt-0.5 font-body">
+                        <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
                           {msg.segment.label}
                         </p>
                       </div>
@@ -352,15 +352,15 @@ export default function ComunicacionesPage() {
                           </span>
                         )}
                         {msg.stats.skipped > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/60 font-body">
+                          <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body">
                             {msg.stats.skipped} saltados
                           </span>
                         )}
-                        <span className="text-[12px] text-navy-light/60 font-body">
+                        <span className="text-[12px] text-navy-light/70 font-body">
                           {getDeliveryRate(msg)}% entrega
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-[11px] text-navy-light/60 font-body">
+                      <div className="flex items-center gap-3 text-[12px] text-navy-light/70 font-body">
                         <span className="flex items-center gap-1">
                           <Calendar size={11} />
                           {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -407,7 +407,7 @@ export default function ComunicacionesPage() {
                     <p className="text-sm font-semibold text-navy truncate font-body">
                       {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                     </p>
-                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body inline-flex items-center gap-1">
+                    <p className="text-[12px] text-navy-light/70 mt-0.5 font-body inline-flex items-center gap-1">
                       <Clock size={11} className="shrink-0" />
                       Sale el {msg.scheduled_at
                         ? new Date(msg.scheduled_at).toLocaleString('es-CR', {
@@ -451,7 +451,7 @@ export default function ComunicacionesPage() {
                     <p className="text-sm font-semibold text-navy truncate font-body">
                       {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                     </p>
-                    <p className="text-[11px] text-navy-light/60 mt-0.5 font-body">
+                    <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
                       Guardado el {new Date(msg.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>

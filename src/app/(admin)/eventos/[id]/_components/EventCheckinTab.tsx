@@ -68,7 +68,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
             const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
             return (
               <div key={se.id} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{se.name}</p>
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{se.name}</p>
                 <p className="mt-1 text-3xl font-extrabold text-navy tabular-nums font-display">{seCheckins}</p>
                 <CapacityBar current={seCheckins} max={se.max_capacity} />
               </div>
@@ -78,14 +78,14 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
       )}
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           {checkinCount} check-ins registrados
         </p>
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Check-ins registrados</p>
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Check-ins registrados</p>
         </div>
         {event.checkins.length === 0 ? (
           <EmptyState icon={QrCode} title="Aún no hay check-ins registrados" />
@@ -96,18 +96,18 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                 key={ci.id}
                 className={cn('flex items-center gap-3 px-4 py-3', idx % 2 === 1 ? 'bg-surface-low/40' : '')}
               >
-                <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
+                <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
                   {getInitials(ci.member_name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{ci.member_name}</p>
-                  <p className="text-[11px] text-navy-light/60 font-body">
+                  <p className="text-[12px] text-navy-light/70 font-body">
                     {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     {ci.sub_event_id && ` · ${ci.sub_event_id}`}
                   </p>
                 </div>
                 <span className={cn(
-                  'rounded-md px-2 py-0.5 text-[10px] font-medium',
+                  'rounded-md px-2 py-0.5 text-[11px] font-medium',
                   ci.attendance_type === 'server' ? 'bg-coral/10 text-coral' : 'bg-teal-soft/30 text-teal-deep'
                 )}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}

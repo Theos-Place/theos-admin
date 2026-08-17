@@ -15,7 +15,7 @@ export function TabDocumentos({ allDocs, uploadRef, onFileChange, onDelete }: Ta
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
           {allDocs.length} documento{allDocs.length !== 1 ? 's' : ''}
         </p>
         <>
@@ -47,7 +47,7 @@ export function TabDocumentos({ allDocs, uploadRef, onFileChange, onDelete }: Ta
           ))}
         </div>
       ) : (
-        <p className="text-center text-sm text-navy-light/60 py-6 font-body">
+        <p className="text-center text-sm text-navy-light/70 py-6 font-body">
           Sin documentos.
         </p>
       )}

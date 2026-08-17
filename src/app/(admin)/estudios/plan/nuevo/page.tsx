@@ -149,7 +149,7 @@ export default function NuevoTipoPage() {
           <p className="text-navy font-semibold font-display">
             Tipo de estudio guardado
           </p>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Redirigiendo al plan de estudios...
           </p>
         </div>
@@ -163,7 +163,7 @@ export default function NuevoTipoPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/estudios/plan"
-          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+          className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
         >
           <ChevronLeft size={16} />
           Volver
@@ -176,7 +176,7 @@ export default function NuevoTipoPage() {
         >
           Nuevo tipo de estudio
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           Define las propiedades del nuevo tipo de estudio bíblico
         </p>
       </div>
@@ -184,23 +184,23 @@ export default function NuevoTipoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* Información básica */}
       <div className="lg:col-span-2 rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+        <h2 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
           Información básica
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="sm:col-span-2 lg:col-span-2 space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Nombre *</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Nombre *</label>
             <input className={inputCls} placeholder="Ej. Discípulos 4" value={form.nombre} onChange={e => set('nombre', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Código *</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Código *</label>
             <input className={inputCls} placeholder="Ej. DIS4" maxLength={6} value={form.codigo} onChange={e => set('codigo', e.target.value.toUpperCase())} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Tipo</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Tipo</label>
             <select className={inputCls} value={form.tipo} onChange={e => set('tipo', e.target.value)}>
               <option value="niveles">Niveles</option>
               <option value="etapa_inicial">Etapa Inicial</option>
@@ -211,12 +211,12 @@ export default function NuevoTipoPage() {
           </div>
 
           <div className="sm:col-span-2 lg:col-span-3 space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Descripción</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Descripción</label>
             <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="Describe el contenido y objetivo del estudio..." value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Duración en semanas</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Duración en semanas</label>
             <input type="number" min={1} max={52} className={inputCls} placeholder="10" value={form.semanas} onChange={e => set('semanas', e.target.value)} />
           </div>
         </div>
@@ -224,10 +224,10 @@ export default function NuevoTipoPage() {
 
       {/* Prerequisitos */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+        <h2 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
           Prerrequisito
         </h2>
-        <p className="text-[12px] text-navy-light/60 font-body">
+        <p className="text-[12px] text-navy-light/70 font-body">
           Elegí el estudio que debe estar completado antes de matricular este (uno solo).
         </p>
 
@@ -238,7 +238,7 @@ export default function NuevoTipoPage() {
           { label: 'Etapa Avanzada',  items: avanzada },
         ].map(group => (
           <div key={group.label}>
-            <p className="text-[11px] text-navy-light/60 mb-2 font-display">{group.label}</p>
+            <p className="text-[12px] text-navy-light/70 mb-2 font-display">{group.label}</p>
             <div className="flex flex-wrap gap-2">
               {group.items.map(s => (
                 <button
@@ -269,7 +269,7 @@ export default function NuevoTipoPage() {
 
       {/* Configuración */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h2 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+        <h2 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
           Configuración
         </h2>
 
@@ -277,7 +277,7 @@ export default function NuevoTipoPage() {
           <Toggle checked={form.req_pago} onChange={v => set('req_pago', v)} label="¿Requiere pago?" />
           {form.req_pago && (
             <div className="ml-4 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">Costo (₡)</label>
+              <label className="text-[12px] text-navy-light/70 font-display">Costo (₡)</label>
               <input type="number" min={0} className={cn(inputCls, 'max-w-xs')} placeholder="15000" value={form.costo} onChange={e => set('costo', e.target.value)} />
             </div>
           )}
@@ -287,7 +287,7 @@ export default function NuevoTipoPage() {
 
           {form.transicion_auto && (
             <div className="ml-4 space-y-1">
-              <label className="text-[11px] text-navy-light/60 font-display">Siguiente estudio</label>
+              <label className="text-[12px] text-navy-light/70 font-display">Siguiente estudio</label>
               <select className={cn(inputCls, 'max-w-xs')} value={form.siguiente_estudio} onChange={e => set('siguiente_estudio', e.target.value)}>
                 <option value="">Seleccionar...</option>
                 {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
@@ -316,7 +316,7 @@ export default function NuevoTipoPage() {
         </button>
         <Link
           href="/estudios/plan"
-          className="text-sm text-navy-light/60 hover:text-navy-light transition-colors ml-2 font-body"
+          className="text-sm text-navy-light/70 hover:text-navy-light transition-colors ml-2 font-body"
         >
           Cancelar
         </Link>

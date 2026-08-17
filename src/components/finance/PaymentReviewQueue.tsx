@@ -316,7 +316,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
     <>
       {visible && (
       <div className="space-y-4">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           {rows.length} pago{rows.length !== 1 ? 's' : ''} · {STATUS_TABS.find(t => t.key === statusFilter)?.label.toLowerCase()}
         </p>
 
@@ -328,7 +328,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               onClick={() => setStatusFilter(t.key)}
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-                statusFilter === t.key ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+                statusFilter === t.key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
               )}
             >
               {t.label}
@@ -343,8 +343,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               key={id}
               onClick={() => setConceptFilter(id)}
               className={cn(
-                'rounded-full px-3 py-1 text-[11px] font-medium border transition-all font-display',
-                conceptFilter === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+                'rounded-full px-3 py-1 text-[12px] font-medium border transition-all font-display',
+                conceptFilter === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
               )}
             >
               {label}
@@ -356,7 +356,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             onChange={e => setPlanFilter(e.target.value)}
             disabled={conceptFilter !== 'matricula'}
             title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
-            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[11px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[12px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <option value="all">Todos los estudios</option>
             {options.plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -367,7 +367,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             onChange={e => setLeaderFilter(e.target.value)}
             disabled={conceptFilter !== 'matricula'}
             title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
-            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[11px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[12px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <option value="all">Todos los dirigentes</option>
             {options.leaders.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -393,7 +393,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
 
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           {loading ? (
-            <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+            <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : rows.length === 0 ? (
             <EmptyState icon={CreditCard} title="No hay pagos con estos filtros" />
           ) : (
@@ -414,7 +414,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </th>
                     )}
                     {['Persona', 'Descripción', 'Monto esperado', 'Estado', 'Referencia', 'Comprobante', ''].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -433,7 +433,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                         {r.concept && (
-                          <span className="mr-1.5 inline-flex items-center rounded-md bg-navy/6 px-1.5 py-0.5 text-[10px] font-semibold text-navy font-display align-middle">
+                          <span className="mr-1.5 inline-flex items-center rounded-md bg-navy/6 px-1.5 py-0.5 text-[11px] font-semibold text-navy font-display align-middle">
                             {CONCEPT_LABEL[r.concept]}
                           </span>
                         )}
@@ -441,12 +441,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </td>
                       <td className="px-4 py-3 text-sm text-navy font-body tabular-nums">{money(r.amount, r.currency)}</td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+                        <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-semibold font-body', badge.cls)}>{badge.label}</span>
                       </td>
                       <td className="px-4 py-3 text-[13px] font-body">
                         <span className="text-navy-light/80">{r.reference_code ?? '—'}</span>
                         {r.duplicate_reference && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px] font-semibold font-display align-middle" title="Este número de referencia aparece en otro pago — posible comprobante reutilizado.">
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px] font-semibold font-display align-middle" title="Este número de referencia aparece en otro pago — posible comprobante reutilizado.">
                             <AlertTriangle size={11} /> Referencia duplicada
                           </span>
                         )}
@@ -455,7 +455,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         <button
                           onClick={() => openReceipt(r)}
                           disabled={!r.receipt_path}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
                         >
                           <ImageIcon size={12} /> Ver comprobante
                         </button>
@@ -505,7 +505,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           <div className="p-5 space-y-3">
             <h3 id="receipt-title" className="text-base font-bold text-navy font-display">Comprobante · {receipt.row.member_name}</h3>
             {receipt.loading ? (
-              <p className="text-sm text-navy-light/60 font-body inline-flex items-center gap-2 py-8"><Loader2 size={15} className="animate-spin" /> Cargando comprobante…</p>
+              <p className="text-sm text-navy-light/70 font-body inline-flex items-center gap-2 py-8"><Loader2 size={15} className="animate-spin" /> Cargando comprobante…</p>
             ) : receipt.url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={receipt.url} alt="Comprobante de pago" className="w-full rounded-xl border border-[var(--outline-variant)]" />
@@ -534,13 +534,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 id="detail-title" className="text-base font-bold text-navy font-display">Tiquete de pago</h3>
-              <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+              <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-semibold font-body', badge.cls)}>{badge.label}</span>
             </div>
 
             <div className="rounded-xl border border-outline overflow-hidden">
               {rows2.map(([label, value], i) => (
                 <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
-                  <span className="w-32 shrink-0 text-[11px] uppercase tracking-wider text-navy-light/60 font-display">{label}</span>
+                  <span className="w-32 shrink-0 text-[12px] uppercase tracking-wider text-navy-light/70 font-display">{label}</span>
                   <span className="text-[13px] text-navy font-body">{value}</span>
                 </div>
               ))}
@@ -566,7 +566,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     Aplicar beca / cupón
                   </button>
                 ) : scholPanel.loading ? (
-                  <p className="text-[13px] text-navy-light/60 font-body inline-flex items-center gap-2">
+                  <p className="text-[13px] text-navy-light/70 font-body inline-flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin" /> Buscando becas de la persona…
                   </p>
                 ) : (
@@ -590,7 +590,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         </button>
                       </div>
                     ) : (
-                      <p className="text-[13px] text-navy-light/60 font-body">Sin beca asignada activa para este destino.</p>
+                      <p className="text-[13px] text-navy-light/70 font-body">Sin beca asignada activa para este destino.</p>
                     )}
                     <div className="flex gap-2">
                       <input
@@ -608,7 +608,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         {scholPanel.busy ? '…' : 'Aplicar código'}
                       </button>
                     </div>
-                    <p className="text-[11px] text-navy-light/60 font-body">
+                    <p className="text-[12px] text-navy-light/70 font-body">
                       Beca completa: el pago queda aprobado sin comprobante. Parcial: queda pendiente por el resto.
                     </p>
                   </>
@@ -672,11 +672,11 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                   </button>
                 )}
                 {detail.queue_status === 'cerrado' && (
-                  <p className="text-[13px] text-navy-light/60 font-body">Este tiquete ya está cerrado.</p>
+                  <p className="text-[13px] text-navy-light/70 font-body">Este tiquete ya está cerrado.</p>
                 )}
               </div>
             ) : (
-              <p className="text-[13px] text-navy-light/60 font-body">Solo lectura: no tenés permiso para gestionar pagos.</p>
+              <p className="text-[13px] text-navy-light/70 font-body">Solo lectura: no tenés permiso para gestionar pagos.</p>
             )}
           </div>
         </Modal>

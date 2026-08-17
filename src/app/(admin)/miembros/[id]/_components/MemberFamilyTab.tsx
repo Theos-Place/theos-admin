@@ -110,12 +110,12 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
 
       {member.family_members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <UserPlus size={32} className="text-navy-light/60 mb-3" strokeWidth={1.25} />
-          <p className="text-sm text-navy-light/60 font-body">
+          <UserPlus size={32} className="text-navy-light/70 mb-3" strokeWidth={1.25} />
+          <p className="text-sm text-navy-light/70 font-body">
             No hay familiares vinculados
           </p>
           {canEdit && (
-            <p className="text-xs text-navy-light/60 mt-1 font-body">
+            <p className="text-xs text-navy-light/70 mt-1 font-body">
               Usá el botón de arriba para vincular un familiar.
             </p>
           )}
@@ -132,7 +132,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
             const info = (
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-navy font-body">{fm.name}</p>
-                <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[10px] text-teal-deep mt-0.5 inline-block font-body">
+                <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep mt-0.5 inline-block font-body">
                   {fm.relation}
                 </span>
               </div>
@@ -143,7 +143,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                   <Link href={`/miembros/${fm.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
                     {avatar}
                     {info}
-                    <ArrowRight size={15} className="shrink-0 text-navy-light/60" strokeWidth={1.75} />
+                    <ArrowRight size={15} className="shrink-0 text-navy-light/70" strokeWidth={1.75} />
                   </Link>
                 ) : (
                   <>

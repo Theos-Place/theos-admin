@@ -152,7 +152,7 @@ export default function AplicacionesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 sm:min-w-48 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre o puesto..."
@@ -184,12 +184,12 @@ export default function AplicacionesPage() {
               'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
               statusFilter === f.key
                 ? 'bg-navy text-white border-navy'
-                : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+                : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent'
             )}
           >
             {f.label}
             {f.key === 'pending' && pending > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[9px] px-1.5 py-0.5 font-display">
+              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5 font-display">
                 {pending}
               </span>
             )}
@@ -230,7 +230,7 @@ export default function AplicacionesPage() {
                   />
                 </th>
                 {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                     {h}
                   </th>
                 ))}
@@ -251,30 +251,30 @@ export default function AplicacionesPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-white font-display">{a.applicant_initials}</span>
+                        <span className="text-[11px] font-bold text-white font-display">{a.applicant_initials}</span>
                       </div>
                       <span className="text-sm font-medium text-navy font-body">{a.applicant_name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-[13px] font-medium text-navy font-body">{a.vacancy_title}</p>
-                    <p className="text-[11px] text-navy-light/60 font-body">{a.committee_name}</p>
+                    <p className="text-[12px] text-navy-light/70 font-body">{a.committee_name}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-medium text-navy-light/60 font-display">{a.area}</span>
+                    <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-medium text-navy-light/70 font-display">{a.area}</span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
                     {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
+                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
                       {APP_STATUS_LABELS[a.status]}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/servidores/vacantes/${a.vacancy_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                     >
                       Ver puesto <ChevronRight size={11} />
                     </Link>
@@ -300,9 +300,9 @@ export default function AplicacionesPage() {
                 <Link href={`/servidores/vacantes/${a.vacancy_id}`} className="flex items-center gap-3 min-w-0 flex-1 active:opacity-70">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
-                    <p className="truncate text-[12px] text-navy-light/60 font-body">{a.vacancy_title} · {a.committee_name}</p>
+                    <p className="truncate text-[12px] text-navy-light/70 font-body">{a.vacancy_title} · {a.committee_name}</p>
                   </div>
-                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
+                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
                     {APP_STATUS_LABELS[a.status]}
                   </span>
                 </Link>
@@ -313,7 +313,7 @@ export default function AplicacionesPage() {
 
         {filtered.length === 0 && (
           loading
-            ? <p className="px-4 py-8 text-center text-sm text-navy-light/60 font-body">Cargando aplicaciones…</p>
+            ? <p className="px-4 py-8 text-center text-sm text-navy-light/70 font-body">Cargando aplicaciones…</p>
             : <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
         )}
 

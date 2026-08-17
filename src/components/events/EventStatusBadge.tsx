@@ -11,15 +11,15 @@ interface EventStatusBadgeProps {
 const BADGE_STYLES: Record<EventStatus, string> = {
   upcoming:    'bg-teal-soft/30 text-teal-deep',
   in_progress: 'bg-coral/10 text-coral',
-  finished:    'bg-navy/10 text-navy/60',
+  finished:    'bg-navy/10 text-navy/70',
   cancelled:   'bg-red-100 text-red-600',
-  archived:    'bg-navy-light/10 text-navy-light/60',
+  archived:    'bg-navy-light/10 text-navy-light/70',
 }
 
 export function EventStatusBadge({ status, size = 'sm' }: EventStatusBadgeProps) {
   const config = EVENT_STATUS_CONFIG[status]
   const badgeStyle = BADGE_STYLES[status]
-  const textSize = size === 'md' ? 'text-xs' : 'text-[10px]'
+  const textSize = size === 'md' ? 'text-xs' : 'text-[11px]'
   const padding = size === 'md' ? 'px-2.5 py-1' : 'px-2 py-0.5'
 
   return (

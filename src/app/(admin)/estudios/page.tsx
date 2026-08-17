@@ -97,7 +97,7 @@ export default function EstudiosPage() {
           >
             Estudios Bíblicos
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60 font-body">
+          <p className="mt-1 text-sm text-navy-light/70 font-body">
             {activeGroups.length} grupos activos en este período
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function EstudiosPage() {
           const inner = (
             <>
               <div className="flex items-start justify-between">
-                <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
                   {label}
                 </p>
                 <Icon size={16} className={color} />
@@ -181,9 +181,9 @@ export default function EstudiosPage() {
           {/* Histórico */}
           <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
-              <History size={16} className="text-navy-light/60" />
+              <History size={16} className="text-navy-light/70" />
               <h2 className="text-sm font-semibold text-navy font-display">Histórico</h2>
-              <span className="text-[11px] text-navy-light/60 font-body">grupos finalizados</span>
+              <span className="text-[12px] text-navy-light/70 font-body">grupos finalizados</span>
             </div>
             <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
               <StatRow
@@ -212,7 +212,7 @@ export default function EstudiosPage() {
             <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
               <Megaphone size={16} className="text-purple-700" />
               <h2 className="text-sm font-semibold text-navy font-display">Campañas</h2>
-              <span className="text-[11px] text-navy-light/60 font-body">histórico</span>
+              <span className="text-[12px] text-navy-light/70 font-body">histórico</span>
             </div>
             <div className="grid sm:grid-cols-1">
               <StatRow
@@ -233,7 +233,7 @@ export default function EstudiosPage() {
           {/* Quick access */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display"
+              className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display"
             >
               Accesos rápidos
             </h3>
@@ -244,17 +244,17 @@ export default function EstudiosPage() {
                   href={href}
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors group"
                 >
-                  <Icon size={16} className="text-navy-light/60 group-hover:text-coral transition-colors" />
+                  <Icon size={16} className="text-navy-light/70 group-hover:text-coral transition-colors" />
                   <div className="min-w-0">
                     <p className="text-sm text-navy font-medium font-body inline-flex items-center gap-1.5">
                       {label}
                       {href.includes('tab=relocation') && openRelocations > 0 && (
-                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[10px] text-white">
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[11px] text-white">
                           {openRelocations}
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-navy-light/60">{desc}</p>
+                    <p className="text-[12px] text-navy-light/70">{desc}</p>
                   </div>
                 </Link>
               ))}
@@ -264,7 +264,7 @@ export default function EstudiosPage() {
           {/* Alerts */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display"
+              className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display"
             >
               Alertas
             </h3>
@@ -297,7 +297,7 @@ export default function EstudiosPage() {
                 </div>
               )}
               {pendingLeaderGroups.length === 0 && closingSoon.length === 0 && openRequests === 0 && (
-                <p className="text-[12px] text-navy-light/60 text-center py-2 font-body">
+                <p className="text-[12px] text-navy-light/70 text-center py-2 font-body">
                   Sin alertas activas
                 </p>
               )}
@@ -323,10 +323,10 @@ function StatRow({
   return (
     <div className="px-5 py-4">
       <div className="flex items-center gap-2">
-        <Icon size={16} className={muted ? 'text-navy-light/60' : 'text-coral'} />
+        <Icon size={16} className={muted ? 'text-navy-light/70' : 'text-coral'} />
         <p className="text-sm font-semibold text-navy font-body">{label}</p>
       </div>
-      <p className="mt-0.5 text-[11px] text-navy-light/60 font-body">{hint}</p>
+      <p className="mt-0.5 text-[12px] text-navy-light/70 font-body">{hint}</p>
       <div className="mt-3 flex items-baseline gap-2 font-body">
         <span className={`text-3xl font-bold font-display ${muted ? 'text-navy' : 'text-coral'}`}>
           {grupos}

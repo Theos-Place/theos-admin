@@ -82,13 +82,13 @@ function RecuperarContent() {
           Correo enviado
         </h2>
 
-        <p className="text-sm text-navy-light/55 leading-relaxed mb-2 font-body">
+        <p className="text-sm text-navy-light/70 leading-relaxed mb-2 font-body">
           {isFirstTime
             ? 'Si el correo ingresado está registrado en el sistema, en los próximos minutos vas a recibir el enlace para crear tu contraseña. Abrilo y usalo de una vez.'
             : 'Si el correo ingresado está registrado en el sistema, recibirás las instrucciones en los próximos minutos.'}
         </p>
 
-        <p className="text-[12px] text-navy-light/60 mb-8 font-body">
+        <p className="text-[12px] text-navy-light/70 mb-8 font-body">
           Revisá también tu carpeta de spam.
         </p>
 
@@ -108,7 +108,7 @@ function RecuperarContent() {
       {/* Back link */}
       <Link
         href="/login"
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy-light transition-colors mb-7 font-body"
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/70 hover:text-navy-light transition-colors mb-7 font-body"
       >
         <ChevronLeft size={15} />
         Volver al login
@@ -126,7 +126,7 @@ function RecuperarContent() {
         >
           {isFirstTime ? 'Creá tu contraseña' : 'Recuperá tu acceso'}
         </h1>
-        <p className="text-sm text-navy-light/60 leading-relaxed font-body">
+        <p className="text-sm text-navy-light/70 leading-relaxed font-body">
           {isFirstTime
             ? 'Ingresá el correo con el que estás registrado en Theos Place y te enviaremos el enlace para definir tu contraseña.'
             : <>Ingresá tu correo y te enviaremos<br />instrucciones para restablecer tu contraseña.</>}
@@ -137,7 +137,7 @@ function RecuperarContent() {
         <div>
           <label
             htmlFor="recuperar-email"
-            className="block text-[12px] font-medium text-navy-light/60 mb-1.5 font-body"
+            className="block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body"
           >
             Correo electrónico
           </label>

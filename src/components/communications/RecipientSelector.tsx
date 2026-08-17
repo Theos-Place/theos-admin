@@ -254,12 +254,12 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
               'flex flex-col items-center gap-1.5 rounded-xl p-3 border text-center transition-all',
               value.mode === opt.key
                 ? 'bg-navy border-navy text-white'
-                : 'border-outline-variant text-navy-light/60 hover:border-navy/30 hover:text-navy'
+                : 'border-outline-variant text-navy-light/70 hover:border-navy/30 hover:text-navy'
             )}
             style={{ borderColor: value.mode === opt.key ? undefined : 'var(--outline-variant)' }}
           >
             <opt.icon size={16} />
-            <span className="text-[11px] font-medium leading-tight font-body">
+            <span className="text-[12px] font-medium leading-tight font-body">
               {opt.label}
             </span>
           </button>
@@ -272,12 +272,12 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
               'flex flex-col items-center gap-1.5 rounded-xl p-3 border text-center transition-all',
               fromList
                 ? 'bg-navy border-navy text-white'
-                : 'border-outline-variant text-navy-light/60 hover:border-navy/30 hover:text-navy',
+                : 'border-outline-variant text-navy-light/70 hover:border-navy/30 hover:text-navy',
             )}
             style={{ borderColor: fromList ? undefined : 'var(--outline-variant)' }}
           >
             <List size={16} />
-            <span className="text-[11px] font-medium leading-tight font-body">
+            <span className="text-[12px] font-medium leading-tight font-body">
               Lista guardada
             </span>
           </button>
@@ -324,7 +324,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
           <div className="rounded-xl bg-surface-low px-3 py-2.5 text-[12px] text-navy-light/70 font-body">
             {audLoading ? 'Calculando elegibles…' : (
               <>Destinatarios elegibles: <strong className="text-navy">{value.count.toLocaleString('es-CR')}</strong>{' '}
-              <span className="text-navy-light/50">(descuenta bajas, rebotes y quejas)</span></>
+              <span className="text-navy-light/70">(descuenta bajas, rebotes y quejas)</span></>
             )}
           </div>
         </div>
@@ -333,7 +333,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
       {value.mode === 'manual' && (
         <div className="space-y-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
             <input
               className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               placeholder="Buscar miembro..."
@@ -353,13 +353,13 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0 border-[var(--outline-variant)]"
                 >
                   <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-[9px] font-bold text-white">{m.first_name[0]}{m.last_name[0]}</span>
+                    <span className="text-[10px] font-bold text-white">{m.first_name[0]}{m.last_name[0]}</span>
                   </div>
                   <div>
                     <p className="text-[12px] font-medium text-navy font-body">
                       {m.first_name} {m.last_name}
                     </p>
-                    <p className="text-[11px] text-navy-light/60 font-body">{m.email}</p>
+                    <p className="text-[12px] text-navy-light/70 font-body">{m.email}</p>
                   </div>
                 </button>
               ))}
@@ -375,7 +375,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 >
                   {m.first_name} {m.last_name}
                   <button type="button" onClick={() => removeMember(m.id)}>
-                    <X size={12} className="text-navy-light/60 hover:text-coral" />
+                    <X size={12} className="text-navy-light/70 hover:text-coral" />
                   </button>
                 </span>
               ))}
@@ -394,7 +394,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
                 value.groupEntity === 'event'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
-                  : 'text-navy-light/60 hover:text-navy'
+                  : 'text-navy-light/70 hover:text-navy'
               , 'border-outline')}
             >
               <BookOpen size={14} />
@@ -407,7 +407,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
                 value.groupEntity === 'study_group'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
-                  : 'text-navy-light/60 hover:text-navy'
+                  : 'text-navy-light/70 hover:text-navy'
               , 'border-outline')}
             >
               <UsersRound size={14} />
@@ -420,7 +420,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 'flex items-center gap-2 rounded-xl border p-3 text-[12px] transition-all font-body',
                 value.groupEntity === 'committee'
                   ? 'bg-navy/10 border-navy/30 text-navy font-medium'
-                  : 'text-navy-light/60 hover:text-navy'
+                  : 'text-navy-light/70 hover:text-navy'
               , 'border-outline')}
             >
               <Users size={14} />
@@ -496,7 +496,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
             <div className="flex items-start gap-2 rounded-xl px-3 py-2 bg-surface-low">
               <div className="min-w-0 flex-1">
                 <p className="text-[12px] text-navy font-body">{value.label}</p>
-                <p className="text-[11px] text-teal-deep font-semibold mt-0.5 font-display">
+                <p className="text-[12px] text-teal-deep font-semibold mt-0.5 font-display">
                   {value.count} destinatario{value.count !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -505,7 +505,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 onClick={clearGroupSelection}
                 title="Quitar la selección"
                 aria-label="Quitar la selección de destinatarios"
-                className="shrink-0 rounded-full p-1 text-navy-light/60 hover:bg-navy/5 hover:text-navy transition-colors"
+                className="shrink-0 rounded-full p-1 text-navy-light/70 hover:bg-navy/5 hover:text-navy transition-colors"
               >
                 <X size={14} />
               </button>

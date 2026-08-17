@@ -18,7 +18,7 @@ export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string 
   if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral' }
   if (p.status === 'paid') return { label: 'Pagado', cls: 'bg-teal-soft/30 text-teal-deep' }
   if (p.status === 'refunded' || p.status === 'partial_refund') return { label: 'Devuelto', cls: 'bg-navy/5 text-navy-light/70' }
-  return { label: 'Cancelado', cls: 'bg-surface-low text-navy-light/60' }
+  return { label: 'Cancelado', cls: 'bg-surface-low text-navy-light/70' }
 }
 
 /** Lista los pagos del miembro (fetch propio). Los pendientes de matrícula/
@@ -51,11 +51,11 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   }, [rows, highlightId])
 
   if (error) return <p className="px-4 py-3 text-[13px] text-coral font-body">No se pudieron cargar los pagos.</p>
-  if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">Cargando…</p>
+  if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/70 font-body">Cargando…</p>
 
   const visible = onlyActionable ? rows.filter(p => p.queue_status === 'pendiente' || p.queue_status === 'en_revision') : rows
   if (visible.length === 0) {
-    return <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
+    return <p className="px-4 py-6 text-center text-[13px] text-navy-light/70 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
   }
 
   return (
@@ -72,12 +72,12 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
           >
             <div className="min-w-0">
               <p className="text-[13px] text-navy font-body truncate">{p.description}</p>
-              <p className="text-[11px] text-navy-light/60 font-body">
+              <p className="text-[12px] text-navy-light/70 font-body">
                 {formatMoney(p.amount, p.currency)} · {formatDate(p.created_at)}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', badge.cls)}>{badge.label}</span>
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display', badge.cls)}>{badge.label}</span>
               {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} />}
               {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} />}
             </div>
@@ -116,7 +116,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
 
   if (done) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[12px] font-semibold font-display">
         <Check size={11} /> Comprobante enviado
       </span>
     )
@@ -127,7 +127,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[11px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[12px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
       >
         <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar matrícula'}
       </button>
@@ -139,7 +139,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
             <div className="space-y-1">
-              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Comprobante (imagen)</label>
               <input
                 type="file"
                 accept="image/*"
@@ -149,7 +149,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="pay-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <label htmlFor="pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Número de referencia</label>
               <input
                 id="pay-ref"
                 value={reference}
@@ -203,7 +203,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
 
   if (done) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[12px] font-semibold font-display">
         <Check size={11} /> Comprobante enviado
       </span>
     )
@@ -214,7 +214,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[11px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[12px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
       >
         <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar inscripción'}
       </button>
@@ -226,7 +226,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
             <div className="space-y-1">
-              <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Comprobante (imagen)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Comprobante (imagen)</label>
               <input
                 type="file"
                 accept="image/*"
@@ -236,7 +236,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="pay-event-ref" className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Número de referencia</label>
+              <label htmlFor="pay-event-ref" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Número de referencia</label>
               <input
                 id="pay-event-ref"
                 value={reference}

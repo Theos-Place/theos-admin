@@ -135,7 +135,7 @@ export default function PlantillasPage() {
                 'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
                 categoryFilter === f.key
                   ? 'bg-navy text-white border-navy'
-                  : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent'
+                  : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent'
               )}
             >
               {f.label}

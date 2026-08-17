@@ -83,7 +83,7 @@ export const BLOQUE_ESTADO_LABEL: Record<BloqueEstado, string> = {
 export const BLOQUE_ESTADO_BADGE: Record<BloqueEstado, string> = {
   en_apertura: 'bg-amber-50 text-amber-700',
   activo: 'bg-teal-soft/30 text-teal-deep',
-  archivado: 'bg-navy-light/10 text-navy-light/60',
+  archivado: 'bg-navy-light/10 text-navy-light/70',
 }
 
 /** Tres bloques sugeridos por defecto para un año (ene/may/sep — fechas editables). */

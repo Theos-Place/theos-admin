@@ -7,7 +7,7 @@ interface ContractTypeBadgeProps {
 }
 
 export function ContractTypeBadge({ type, size = 'md' }: ContractTypeBadgeProps) {
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-[11px]'
+  const textSize = size === 'sm' ? 'text-[11px]' : 'text-[12px]'
   return (
     <span
       className={cn(

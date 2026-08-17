@@ -23,7 +23,7 @@ const QrScanner = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full aspect-square max-h-[340px] rounded-2xl bg-surface-card flex items-center justify-center shadow-[var(--shadow-sm)]">
-        <p className="text-sm text-navy-light/60 font-body">Cargando cámara…</p>
+        <p className="text-sm text-navy-light/70 font-body">Cargando cámara…</p>
       </div>
     ),
   },
@@ -150,7 +150,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-low flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-navy-light/60">
+        <div className="flex flex-col items-center gap-3 text-navy-light/70">
           <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
           <p className="text-sm font-body">Cargando evento…</p>
         </div>
@@ -162,7 +162,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     return (
       <div className="min-h-screen bg-surface-low flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-navy-light/60 font-body">Evento no encontrado.</p>
+          <p className="text-navy-light/70 font-body">Evento no encontrado.</p>
           <Link href="/eventos" className="text-coral hover:text-coral-deep">← Volver</Link>
         </div>
       </div>
@@ -391,24 +391,24 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         <div className="flex items-center justify-between gap-3">
           <Link
             href={`/eventos/${id}`}
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors"
           >
             <ChevronLeft size={16} /> Volver
           </Link>
-          <span className="hidden sm:inline-flex text-navy-light/50"><Clock /></span>
+          <span className="hidden sm:inline-flex text-navy-light/70"><Clock /></span>
         </div>
         <div className="mt-2 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-display font-extrabold text-navy tracking-[-0.02em] truncate">
               {event.name}
             </h1>
-            <p className="text-sm text-navy-light/60 font-body capitalize">{headerDate}</p>
+            <p className="text-sm text-navy-light/70 font-body capitalize">{headerDate}</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-4xl sm:text-5xl font-extrabold text-coral tabular-nums font-display leading-none">
               {visibleCheckins.length}
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mt-1">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mt-1">
               {hasSubs ? 'en este subevento' : 'registrados'}
             </p>
           </div>
@@ -467,7 +467,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   {scanMsg.text}
                 </div>
               )}
-              <p className="text-navy-light/50 text-[12px] text-center font-body">Apuntá al pase digital. La cámara sigue abierta para el siguiente.</p>
+              <p className="text-navy-light/70 text-[12px] text-center font-body">Apuntá al pase digital. La cámara sigue abierta para el siguiente.</p>
             </div>
           )}
 
@@ -505,7 +505,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="min-w-0">
                     <p className="text-navy font-medium font-body truncate">{r.name}</p>
-                    <p className="text-navy-light/60 text-[12px] font-body">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
+                    <p className="text-navy-light/70 text-[12px] font-body">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
                   </div>
                 </button>
               ))}
@@ -519,7 +519,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           ) : query.trim().length >= 2 ? (
             <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)] space-y-3">
-              <p className="text-navy-light/60 text-sm font-body">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
+              <p className="text-navy-light/70 text-sm font-body">{searching ? 'Buscando…' : 'No se encontró nadie con ese nombre.'}</p>
               {!searching && (
                 <button
                   onClick={() => setShowNewPerson(true)}
@@ -537,26 +537,26 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           {/* Lista de registrados */}
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
             <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center justify-between gap-3">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display truncate">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display truncate">
                 Registrados{hasSubs ? ` · ${targetLabel}` : ''}
               </p>
-              <span className="text-[12px] text-navy-light/60 font-body tabular-nums shrink-0">{visibleCheckins.length}</span>
+              <span className="text-[12px] text-navy-light/70 font-body tabular-nums shrink-0">{visibleCheckins.length}</span>
             </div>
             {visibleCheckins.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-navy-light/50 font-body">Aún nadie registrado. Escaneá un QR o buscá por nombre.</p>
+              <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body">Aún nadie registrado. Escaneá un QR o buscá por nombre.</p>
             ) : visibleCheckins.map(ci => (
               <div key={ci.id} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--outline-variant)] last:border-0">
-                <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
+                <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(ci.member_name))}>
                   {getInitials(ci.member_name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-navy text-sm truncate font-body">{ci.member_name}</p>
-                  <p className="text-navy-light/60 text-[11px] font-body">
+                  <p className="text-navy-light/70 text-[12px] font-body">
                     {(() => { const d = new Date(ci.checked_at); return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) })()}
                     {subName(ci.sub_event_id) ? ` · ${subName(ci.sub_event_id)}` : ''}
                   </p>
                 </div>
-                <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0',
+                <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0',
                   ci.attendance_type === 'server' ? 'bg-coral/10 text-coral' : 'bg-teal-soft/30 text-teal-deep')}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>
@@ -565,7 +565,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     onClick={() => setToDelete(ci)}
                     aria-label={`Eliminar check-in de ${ci.member_name}`}
                     title="Eliminar check-in"
-                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/70 hover:text-coral hover:bg-coral/5 transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>
@@ -733,7 +733,7 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
         <h3 id="family-checkin-title" className="text-lg font-extrabold text-white font-display">
           {member.name} viene con familia
         </h3>
-        <p className="text-sm text-white/60 font-body">
+        <p className="text-sm text-white/70 font-body">
           {hasSubs ? '¿Quién llegó y a qué subevento va cada uno?' : '¿Quién más llegó?'}
         </p>
 
@@ -749,10 +749,10 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
                   ) : (
                     <input type="checkbox" checked={on} onChange={() => toggle(p.member_id)} className="accent-coral h-4 w-4 shrink-0" aria-label={`Incluir a ${p.name}`} />
                   )}
-                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', isTitular ? 'bg-coral' : 'bg-navy-light')}>{getInitials(p.name)}</div>
+                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', isTitular ? 'bg-coral' : 'bg-navy-light')}>{getInitials(p.name)}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate font-body">{p.name}</p>
-                    <p className="text-[11px] text-white/70">{p.relation}</p>
+                    <p className="text-[12px] text-white/70">{p.relation}</p>
                   </div>
                 </div>
                 {hasSubs && on && (
@@ -911,7 +911,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
   const fieldCls = 'w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-coral/40'
   const fieldStyle = { background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-body)' } as const
   const labelStyle = { fontFamily: 'var(--font-body)' } as const
-  const labelCls = 'text-[11px] text-white/70 block'
+  const labelCls = 'text-[12px] text-white/70 block'
 
   return (
     <Modal onClose={onClose} titleId="new-person-title" width={448} tone="dark">
@@ -951,17 +951,17 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
         <div className="space-y-2">
           {familyDrafts.map((d, i) => (
             <div key={i} className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2">
-              <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[10px] font-bold text-white">{getInitials(`${d.first_name} ${d.last_name}`)}</div>
+              <div className="h-7 w-7 rounded-full bg-navy-light flex items-center justify-center text-[11px] font-bold text-white">{getInitials(`${d.first_name} ${d.last_name}`)}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
-                <p className="text-[11px] text-white/70">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
+                <p className="text-[12px] text-white/70">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
-              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/60 hover:text-coral"><X size={14} /></button>
+              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/70 hover:text-coral"><X size={14} /></button>
             </div>
           ))}
           <button
             onClick={() => setShowFamily(true)}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-2.5 text-[13px] text-white/60 hover:text-white hover:border-white/30 transition-colors font-body"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 py-2.5 text-[13px] text-white/70 hover:text-white hover:border-white/30 transition-colors font-body"
           >
             <UserPlus size={14} /> Agregar familia
           </button>
@@ -969,7 +969,7 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
 
         {error && <p className="text-[12px] text-coral font-body">{error}</p>}
 
-        <p className="text-[11px] text-white/70 font-body">
+        <p className="text-[12px] text-white/70 font-body">
           Si tiene correo, se le enviará una invitación para completar su perfil y crear su contraseña.
         </p>
 

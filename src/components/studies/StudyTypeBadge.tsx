@@ -33,8 +33,8 @@ export function StudyTypeBadge({ code, name, size = 'md', stage, className }: St
   const colorClass = STAGE_COLOR[resolvedStage]
 
   const sizeClass = size === 'sm'
-    ? 'px-1.5 py-0.5 text-[10px]'
-    : 'px-2 py-0.5 text-[11px]'
+    ? 'px-1.5 py-0.5 text-[11px]'
+    : 'px-2 py-0.5 text-[12px]'
 
   return (
     <span

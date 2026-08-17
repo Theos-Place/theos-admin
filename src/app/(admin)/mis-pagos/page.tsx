@@ -65,20 +65,20 @@ function MemberScholarships({ memberId }: { memberId: string }) {
         </p>
       )}
       {rows === null ? (
-        <p className="px-4 py-6 text-center text-[13px] text-navy-light/60 font-body">Cargando…</p>
+        <p className="px-4 py-6 text-center text-[13px] text-navy-light/70 font-body">Cargando…</p>
       ) : rows.length === 0 ? (
-        <p className="px-4 py-6 text-[13px] text-navy-light/60 font-body">Sin becas asignadas.</p>
+        <p className="px-4 py-6 text-[13px] text-navy-light/70 font-body">Sin becas asignadas.</p>
       ) : (
         <div className="divide-y divide-[var(--outline-variant)]">
           {rows.map(s => (
             <div key={s.id} className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <p className="text-[13px] text-navy font-body truncate">{s.entity_name}</p>
-                <p className="text-[11px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   Descuento de {discountLabel(s)}{s.used_at ? ` · usada el ${formatDate(s.used_at)}` : ''}
                 </p>
               </div>
-              <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', SCHOLARSHIP_BADGE[s.status].cls)}>
+              <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display', SCHOLARSHIP_BADGE[s.status].cls)}>
                 {SCHOLARSHIP_BADGE[s.status].label}
               </span>
             </div>
@@ -156,7 +156,7 @@ function MisPagosContent() {
             aria-selected={memberId === selfId}
             onClick={() => setSelected(null)}
             className={cn('rounded-full px-3 py-1 text-[12px] font-medium border transition-all font-display',
-              memberId === selfId ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/60 hover:text-navy border-navy/15')}
+              memberId === selfId ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/70 hover:text-navy border-navy/15')}
           >
             Míos
           </button>
@@ -167,7 +167,7 @@ function MisPagosContent() {
               aria-selected={memberId === id}
               onClick={() => setSelected(id)}
               className={cn('rounded-full px-3 py-1 text-[12px] font-medium border transition-all font-display',
-                memberId === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/60 hover:text-navy border-navy/15')}
+                memberId === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/70 hover:text-navy border-navy/15')}
             >
               {familyNames[id] ?? 'Familiar'}
             </button>
@@ -182,14 +182,14 @@ function MisPagosContent() {
             {memberId ? (
               <MemberPaymentsList key={memberId} memberId={memberId} highlightId={highlightId} onlyActionable={!showAll} />
             ) : (
-              <p className="px-4 py-6 text-center text-[13px] text-navy-light/50 font-body">Cargando…</p>
+              <p className="px-4 py-6 text-center text-[13px] text-navy-light/70 font-body">Cargando…</p>
             )}
           </div>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <button
               type="button"
               onClick={() => setShowAll(v => !v)}
-              className="text-[12px] text-navy-light/60 hover:text-coral transition-colors font-body"
+              className="text-[12px] text-navy-light/70 hover:text-coral transition-colors font-body"
             >
               {showAll ? 'Ocultar pagos cerrados' : 'Ver también los pagos cerrados'}
             </button>
@@ -209,7 +209,7 @@ function MisPagosContent() {
 
 export default function MisPagosPage() {
   return (
-    <Suspense fallback={<div className="page"><p className="text-sm text-navy-light/60 font-body">Cargando…</p></div>}>
+    <Suspense fallback={<div className="page"><p className="text-sm text-navy-light/70 font-body">Cargando…</p></div>}>
       <MisPagosContent />
     </Suspense>
   )

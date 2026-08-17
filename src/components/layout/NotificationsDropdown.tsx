@@ -92,7 +92,7 @@ export function NotificationsBell() {
         <Bell size={20} strokeWidth={1.75} />
         {count > 0 && (
           <span
-            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 bg-coral font-display"
+            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white px-1 bg-coral font-display"
           >
             {count}
           </span>
@@ -111,7 +111,7 @@ export function NotificationsBell() {
               </span>
               {count > 0 && (
                 <span
-                  className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full text-[10px] font-bold text-white px-1.5 bg-coral font-display"
+                  className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full text-[11px] font-bold text-white px-1.5 bg-coral font-display"
                 >
                   {count}
                 </span>
@@ -121,7 +121,7 @@ export function NotificationsBell() {
 
           <div className="max-h-[340px] overflow-y-auto">
             {count === 0 && (
-              <p className="px-4 py-8 text-center text-[13px] text-navy-light/60 font-body">
+              <p className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
                 Todo al día. No hay notificaciones pendientes.
               </p>
             )}
@@ -139,7 +139,7 @@ export function NotificationsBell() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold leading-snug text-navy font-body">{n.title}</p>
                   {n.body && <p className="text-[12px] leading-snug text-navy-light/70 font-body mt-0.5 line-clamp-2">{n.body}</p>}
-                  <p className="text-[11px] text-navy-light/60 font-body mt-1">{timeAgo(n.created_at)}</p>
+                  <p className="text-[12px] text-navy-light/70 font-body mt-1">{timeAgo(n.created_at)}</p>
                 </div>
               </button>
             ))}
@@ -172,7 +172,7 @@ export function NotificationsBell() {
             <Link
               href="/notificaciones"
               onClick={() => setOpen(false)}
-              className="text-[12px] text-navy-light/60 hover:text-navy transition-colors font-body"
+              className="text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body"
             >
               Ver todas las notificaciones →
             </Link>

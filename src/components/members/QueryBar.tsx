@@ -52,7 +52,7 @@ function OpToggle({ op, onToggle }: { op: 'AND' | 'OR'; onToggle: () => void }) 
     <button
       onClick={onToggle}
       className={cn(
-        'rounded px-1.5 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
+        'rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
         op === 'AND'
           ? 'bg-navy text-white hover:bg-navy/80'
           : 'bg-coral text-white hover:bg-coral/80',
@@ -95,7 +95,7 @@ function ConditionPill({
       {!groupMode && (
         <button
           onClick={e => { e.stopPropagation(); onRemove() }}
-          className="rounded-full p-0.5 text-navy-light/60 hover:text-coral transition-colors"
+          className="rounded-full p-0.5 text-navy-light/70 hover:text-coral transition-colors"
           aria-label="Quitar"
         >
           <X size={10} strokeWidth={2.5} />
@@ -118,7 +118,7 @@ function GroupBracket({
     <span
       className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs border-[1.5px] border-dashed border-[var(--outline-variant)] font-body"
     >
-      <span className="text-[9px] text-navy-light/60 mr-0.5">(</span>
+      <span className="text-[10px] text-navy-light/70 mr-0.5">(</span>
       {conditions.map((c, i) => (
         <Fragment key={c.id}>
           {i > 0 && (
@@ -138,10 +138,10 @@ function GroupBracket({
           <span className="text-navy-light/70">{conditionLabel(c)}</span>
         </Fragment>
       ))}
-      <span className="text-[9px] text-navy-light/60 ml-0.5">)</span>
+      <span className="text-[10px] text-navy-light/70 ml-0.5">)</span>
       <button
         onClick={onUngroup}
-        className="ml-0.5 rounded px-1 py-0.5 text-[9px] text-navy-light/60 hover:text-navy-light transition-colors"
+        className="ml-0.5 rounded px-1 py-0.5 text-[10px] text-navy-light/70 hover:text-navy-light transition-colors"
         title="Disolver grupo"
         aria-label="Disolver grupo"
       >
@@ -149,7 +149,7 @@ function GroupBracket({
       </button>
       <button
         onClick={onRemove}
-        className="rounded-full p-0.5 text-navy-light/60 hover:text-coral transition-colors"
+        className="rounded-full p-0.5 text-navy-light/70 hover:text-coral transition-colors"
         aria-label="Eliminar grupo"
       >
         <X size={10} strokeWidth={2.5} />
@@ -212,7 +212,7 @@ export function QueryBar({
         {!groupMode && standaloneCount >= 2 && (
           <button
             onClick={toggleGroupMode}
-            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/60 hover:bg-navy/8 hover:text-navy transition-colors font-body"
+            className="flex items-center gap-1 rounded-full bg-surface-low px-3 py-1 text-xs text-navy-light/70 hover:bg-navy/8 hover:text-navy transition-colors font-body"
           >
             <Parentheses size={12} strokeWidth={1.75} />
             Agrupar
@@ -225,18 +225,18 @@ export function QueryBar({
         <div
           className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2.5 text-sm bg-surface-low border border-[var(--outline-variant)]"
         >
-          <span className="text-xs text-navy-light/60 font-body">
+          <span className="text-xs text-navy-light/70 font-body">
             Seleccioná 2 o más filtros para agrupar
           </span>
 
           <div className="flex items-center gap-1.5 text-xs font-body">
-            <span className="text-navy-light/60">Operador:</span>
+            <span className="text-navy-light/70">Operador:</span>
             <span className="flex overflow-hidden rounded border border-[var(--outline-variant)]">
               <button
                 onClick={() => setNewGroupOp('AND')}
                 className={cn(
-                  'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
-                  newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/60 hover:bg-surface-card',
+                  'px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
+                  newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/70 hover:bg-surface-card',
                   'font-display',
                 )}
               >
@@ -245,8 +245,8 @@ export function QueryBar({
               <button
                 onClick={() => setNewGroupOp('OR')}
                 className={cn(
-                  'px-2 py-0.5 text-[9px] font-semibold tracking-wide transition-colors',
-                  newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/60 hover:bg-surface-card',
+                  'px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
+                  newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/70 hover:bg-surface-card',
                   'font-display',
                 )}
               >
@@ -265,7 +265,7 @@ export function QueryBar({
 
           <button
             onClick={cancelGroup}
-            className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+            className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
           >
             Cancelar
           </button>

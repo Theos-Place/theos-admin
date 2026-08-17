@@ -240,7 +240,7 @@ export default function NuevoEmpleadoPage() {
         <button
           type="button"
           onClick={() => setStep(s => s - 1)}
-          className="flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+          className="flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
         >
           <ChevronLeft size={15} />
           Volver al paso anterior

@@ -99,7 +99,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               {cap > 0 ? Math.round((registrationCount / cap) * 100) : 0}%
             </text>
           </svg>
-          <p className="text-[11px] text-navy-light/60 mt-1 font-body">Ocupación</p>
+          <p className="text-[12px] text-navy-light/70 mt-1 font-body">Ocupación</p>
           <p className="text-sm font-medium text-navy font-display">
             {registrationCount}/{cap || '∞'}
           </p>
@@ -107,17 +107,17 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         {[
           { label: 'Pagados', value: event.registrations.filter(r => r.payment_status === 'paid').length, color: 'text-teal-deep' },
           { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending').length, color: 'text-amber-600' },
-          { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/60' },
+          { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/70' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{label}</p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>{value}</p>
           </div>
         ))}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           {registrationCount} inscritos
         </p>
         <div className="flex gap-2 flex-wrap">
@@ -162,14 +162,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <thead>
               <tr>
                 {['Nombre', 'Fecha inscripción', 'Pago', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {event.registrations.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/60 font-body">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
                     Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
                   </td>
                 </tr>
@@ -178,13 +178,13 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                 <tr key={reg.member_id} className={cn('hover:bg-surface-low transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '', busyMember === reg.member_id && 'opacity-50')}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className={cn('h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
+                      <div className={cn('h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
                         {getInitials(reg.member_name)}
                       </div>
                       <span className="text-sm text-navy font-body">{reg.member_name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
                     {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                   </td>
                   <td className="px-4 py-3">
@@ -201,7 +201,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     <button
                       onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                       disabled={busyMember === reg.member_id}
-                      className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 hover:text-coral transition-colors font-body"
+                      className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 hover:text-coral transition-colors font-body"
                     >
                       <Trash2 size={13} /> Quitar
                     </button>
@@ -215,7 +215,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         {/* Mobile: tarjetas */}
         <div className="md:hidden">
           {event.registrations.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[13px] text-navy-light/60 font-body">
+            <div className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
               Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
             </div>
           ) : (
@@ -225,12 +225,12 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   key={reg.member_id}
                   className={cn('flex items-center gap-3 px-4 py-3', idx % 2 === 1 ? 'bg-surface-low/40' : '', busyMember === reg.member_id && 'opacity-50')}
                 >
-                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
+                  <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(reg.member_name))}>
                     {getInitials(reg.member_name)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{reg.member_name}</p>
-                    <p className="text-[11px] text-navy-light/60 font-body">
+                    <p className="text-[12px] text-navy-light/70 font-body">
                       {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                     </p>
                   </div>
@@ -245,7 +245,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   <button
                     onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                     disabled={busyMember === reg.member_id}
-                    className="text-navy-light/60 hover:text-coral transition-colors shrink-0"
+                    className="text-navy-light/70 hover:text-coral transition-colors shrink-0"
                     aria-label="Quitar inscripción"
                   >
                     <Trash2 size={15} />
@@ -380,7 +380,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
               {payFor.pricing.isServer && <span className="text-[12px] text-navy-light/70"> (precio servidor)</span>}
             </p>
             <p className="text-2xl font-extrabold text-coral font-display">{formatCRC(payFor.pricing.price)}</p>
-            <p className="text-[12px] text-navy-light/60 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
+            <p className="text-[12px] text-navy-light/70 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => inscribir(payFor.id, 'paid')}
@@ -399,7 +399,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
               <button
                 onClick={() => setPayFor(null)}
                 disabled={adding === payFor.id}
-                className="rounded-full px-4 py-2 text-[12px] text-navy-light/60 hover:text-navy transition-colors font-body"
+                className="rounded-full px-4 py-2 text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body"
               >
                 Cancelar
               </button>
@@ -408,7 +408,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
         )}
 
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
           <input
             autoFocus
             value={query}
@@ -420,29 +420,29 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
         </div>
 
         <div className="max-h-72 overflow-y-auto space-y-1">
-          {loading && <p className="text-[12px] text-navy-light/60 py-2 text-center font-body">Buscando…</p>}
+          {loading && <p className="text-[12px] text-navy-light/70 py-2 text-center font-body">Buscando…</p>}
           {!loading && query.trim().length >= 2 && results.length === 0 && (
-            <p className="text-[12px] text-navy-light/60 py-2 text-center font-body">Sin resultados.</p>
+            <p className="text-[12px] text-navy-light/70 py-2 text-center font-body">Sin resultados.</p>
           )}
           {results.map(m => {
             const name = `${m.first_name} ${m.last_name}`
             const already = alreadyRegistered.has(m.id)
             return (
               <div key={m.id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-surface-low transition-colors">
-                <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(name))}>
+                <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(name))}>
                   {getInitials(name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{name}</p>
-                  {m.cedula && <p className="text-[11px] text-navy-light/60">{m.cedula}</p>}
+                  {m.cedula && <p className="text-[12px] text-navy-light/70">{m.cedula}</p>}
                 </div>
                 {already ? (
-                  <span className="text-[11px] text-navy-light/60 font-body">Ya inscrito</span>
+                  <span className="text-[12px] text-navy-light/70 font-body">Ya inscrito</span>
                 ) : (
                   <button
                     onClick={() => startInscribir(m.id, name)}
                     disabled={adding === m.id}
-                    className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                    className="rounded-full bg-coral px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                   >
                     {adding === m.id ? '…' : 'Inscribir'}
                   </button>

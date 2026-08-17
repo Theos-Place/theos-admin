@@ -68,7 +68,7 @@ export default function EditarPuestoPage() {
   if (loading && !position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">Cargando puesto...</p>
+        <p className="text-sm text-navy-light/70 font-body">Cargando puesto...</p>
       </div>
     )
   }
@@ -76,7 +76,7 @@ export default function EditarPuestoPage() {
   if (!position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">
+        <p className="text-sm text-navy-light/70 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -175,7 +175,7 @@ export default function EditarPuestoPage() {
           <div className="flex items-center gap-3 py-3 px-[14px] rounded-xl bg-surface-low">
             <div className="flex-1">
               <p className="text-[14px] font-body text-navy">Puesto activo</p>
-              <p className="text-[11px] font-body text-navy-light/60 mt-0.5">Los puestos inactivos no aparecen al contratar</p>
+              <p className="text-[12px] font-body text-navy-light/70 mt-0.5">Los puestos inactivos no aparecen al contratar</p>
             </div>
             <label className="toggle">
               <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} />

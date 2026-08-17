@@ -144,7 +144,7 @@ export default function SolicitudesVacantesPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy-light transition-colors font-body">
+      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/70 hover:text-navy-light transition-colors font-body">
         <ChevronLeft size={15} /> Puestos de Servicio
       </Link>
 
@@ -192,7 +192,7 @@ export default function SolicitudesVacantesPage() {
               onClick={() => setStatusFilter(f.key)}
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy hover:bg-surface-low border-transparent',
+                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent',
               )}
             >
               {f.label}
@@ -213,7 +213,7 @@ export default function SolicitudesVacantesPage() {
       {/* Tabla */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : filtered.length === 0 ? (
           <EmptyState icon={ClipboardList} title="No hay solicitudes con esos filtros" />
         ) : (
@@ -232,7 +232,7 @@ export default function SolicitudesVacantesPage() {
                     </th>
                   )}
                   {['Puesto', 'Comité', 'Cupos', 'Aplicaciones', 'Estado'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -253,7 +253,7 @@ export default function SolicitudesVacantesPage() {
                       ) : '0'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', VACANCY_STATE_BADGE[r.status])}>
+                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', VACANCY_STATE_BADGE[r.status])}>
                         {VACANCY_STATE_LABEL[r.status]}
                       </span>
                     </td>

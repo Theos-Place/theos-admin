@@ -39,13 +39,13 @@ export function CommitteeHeader({
           </div>
           {/* Encargado del comité (areas.leader_id) */}
           <div className="mt-3">
-            <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mb-1.5">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mb-1.5">
               Encargado
             </p>
             {hasLeader ? (
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-bold text-white font-display">
+                  <span className="text-[11px] font-bold text-white font-display">
                     {committee.leader.initials}
                   </span>
                 </div>
@@ -54,13 +54,13 @@ export function CommitteeHeader({
                 </span>
                 <Link
                   href={`/miembros/${committee.leader.member_id}`}
-                  className="text-[11px] text-coral hover:underline font-body"
+                  className="text-[12px] text-coral hover:underline font-body"
                 >
                   Ver perfil
                 </Link>
               </div>
             ) : (
-              <span className="text-[12px] text-navy-light/60 italic font-body">
+              <span className="text-[12px] text-navy-light/70 italic font-body">
                 Sin encargado asignado
               </span>
             )}

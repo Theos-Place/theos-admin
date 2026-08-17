@@ -43,7 +43,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <h3 id="cancelar-evento-titulo" className="text-sm font-semibold text-navy font-display">
                   Cancelar evento
                 </h3>
-                <p className="text-[11px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   El evento quedará cancelado; hay {registrationCount} inscritos
                 </p>
               </div>
@@ -58,7 +58,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
+                  className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
                 >
                   Motivo de cancelación *
                 </label>
@@ -73,7 +73,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display"
+                  className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
                 >
                   Escribí &quot;CANCELAR&quot; para confirmar
                 </label>

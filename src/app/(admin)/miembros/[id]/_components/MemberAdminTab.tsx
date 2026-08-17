@@ -169,15 +169,15 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <KeyRound size={15} className="text-navy-light/70" />
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta y acceso</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta y acceso</p>
         </div>
 
         {accountLoading ? (
-          <p className="text-[12px] text-navy-light/60 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
+          <p className="text-[12px] text-navy-light/70 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
         ) : !account || account.state === 'none' ? (
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">
-              <UserX size={14} className="text-navy-light/60" />
+              <UserX size={14} className="text-navy-light/70" />
               <span className="text-[12px] text-navy-light/70 font-body">Este miembro no tiene cuenta de acceso.</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -191,10 +191,10 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 {createBusy ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><UserPlus size={14} /> Crear cuenta de acceso</>}
               </button>
               {!account?.email && (
-                <span className="text-[11px] text-navy-light/60 font-body">Requiere un correo registrado en el perfil.</span>
+                <span className="text-[12px] text-navy-light/70 font-body">Requiere un correo registrado en el perfil.</span>
               )}
             </div>
-            <p className="text-[11px] text-navy-light/60 font-body">
+            <p className="text-[12px] text-navy-light/70 font-body">
               Crea el usuario de acceso y le manda el correo con el paso a paso para crear su contraseña. El correo NO lleva un enlace que venza: la persona lo pide desde la pantalla de ingreso cuando lo va a usar.
             </p>
             {createMsg && (
@@ -224,7 +224,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             </div>
 
             {/* Detalle de fechas */}
-            <div className="text-[11px] text-navy-light/60 font-body space-y-0.5">
+            <div className="text-[12px] text-navy-light/70 font-body space-y-0.5">
               {account.email_confirmed_at && (
                 <p>Contraseña definida el {formatDate(account.email_confirmed_at)}</p>
               )}
@@ -271,7 +271,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
       {/* Acciones de estudios (movidas desde Participación) */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display mb-3">Acciones de estudios</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display mb-3">Acciones de estudios</p>
         <div className="flex gap-2 flex-wrap">
           <InviteToStudyButton memberId={memberId} blocked={!!admin?.not_recommended_to_lead_studies} />
           <StudyExceptionButton memberId={memberId} />
@@ -283,7 +283,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <Ban size={15} className="text-coral" />
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Estudios: excepciones</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios: excepciones</p>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -294,7 +294,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 : 'Solo coordinación de estudios o admin puede cambiarlo.'}
             </p>
             {admin?.not_recommended_to_lead_studies && admin.marked_by_name && (
-              <p className="text-[11px] text-navy-light/60 mt-1 font-body">
+              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
                 Marcado por {admin.marked_by_name}{admin.marked_at ? ` · ${formatDate(admin.marked_at)}` : ''}
               </p>
             )}
@@ -323,7 +323,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <Video size={15} className="text-teal-deep" />
-          <p className="text-[10px] uppercase tracking-wider text-navy-light/70 font-display">Estudios virtuales</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios virtuales</p>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -332,7 +332,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
               {admin?.can_edit_virtual ? 'Habilita a esta persona a ver y matricularse en grupos virtuales.' : 'Solo coordinación de estudios, coordinación de dirigentes o admin puede cambiarlo.'}
             </p>
             {admin?.authorized_virtual_studies && admin.authorized_virtual_studies_by_name && (
-              <p className="text-[11px] text-navy-light/60 mt-1 font-body">
+              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
                 Autorizado por {admin.authorized_virtual_studies_by_name}{admin.authorized_virtual_studies_at ? ` · ${formatDate(admin.authorized_virtual_studies_at)}` : ''}
               </p>
             )}
@@ -404,8 +404,8 @@ function PrematEvaluationPanel({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
       <div>
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Evaluación del prematrimonial</h3>
-        <p className="mt-1 text-[12px] text-navy-light/60 font-body">
+        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Evaluación del prematrimonial</h3>
+        <p className="mt-1 text-[12px] text-navy-light/70 font-body">
           Información pastoral confidencial: visible solo para coordinación de estudios, dirección y admin. No la ve el miembro ni su pareja.
         </p>
       </div>
@@ -415,9 +415,9 @@ function PrematEvaluationPanel({ memberId }: { memberId: string }) {
         return (
           <div key={e.id} className="rounded-xl border border-outline p-4 space-y-2 text-[13px] font-body">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-navy-light/60">{formatDate(e.created_at)}</span>
+              <span className="text-navy-light/70">{formatDate(e.created_at)}</span>
               {needsFollowUp(e.action_plan) && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 font-display">⚑ En seguimiento</span>
+                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[12px] font-semibold text-amber-800 font-display">⚑ En seguimiento</span>
               )}
             </div>
             <p className="text-navy"><strong>Plan de acción:</strong> {plan?.label ?? e.action_plan}</p>
@@ -480,8 +480,8 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
       <div>
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Evaluación para la formación de dirigentes (CDEB)</h3>
-        <p className="mt-1 text-[12px] text-navy-light/60 font-body">
+        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Evaluación para la formación de dirigentes (CDEB)</h3>
+        <p className="mt-1 text-[12px] text-navy-light/70 font-body">
           Evaluación de dirigentes para el comité. Confidencial: no la ve el miembro ni quien la escribió.
         </p>
       </div>
@@ -499,9 +499,9 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
                   ? <PersonaLink id={r.filled_by ?? null} nombre={leader} />
                   : <strong>un dirigente</strong>}
               </p>
-              <span className="text-[12px] text-navy-light/60">{formatDate(r.created_at)}</span>
+              <span className="text-[12px] text-navy-light/70">{formatDate(r.created_at)}</span>
             </div>
-            <p className="text-[12px] text-navy-light/60">
+            <p className="text-[12px] text-navy-light/70">
               Al cerrar {r.group?.plan?.code ?? 'el grupo'}{r.group?.name ? ` · ${r.group.name}` : ''}
             </p>
             <p className="text-navy"><strong>Recomendación:</strong> {rec?.label ?? r.recommendation ?? '—'}</p>

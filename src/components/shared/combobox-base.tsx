@@ -94,7 +94,7 @@ export function ComboOption({ highlighted, selected, onHover, onPick, children, 
 export function OptionAvatar({ initials, size = 7 }: { initials: string; size?: 7 | 8 }) {
   return (
     <span className={cn(
-      'flex shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold',
+      'flex shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold',
       size === 8 ? 'h-8 w-8' : 'h-7 w-7',
     )}>
       {initials || '—'}
@@ -103,5 +103,5 @@ export function OptionAvatar({ initials, size = 7 }: { initials: string; size?: 
 }
 
 export function NoResults({ children = 'Sin resultados' }: { children?: ReactNode }) {
-  return <p className="px-3 py-3 text-[12px] text-navy-light/60 font-body">{children}</p>
+  return <p className="px-3 py-3 text-[12px] text-navy-light/70 font-body">{children}</p>
 }

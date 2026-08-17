@@ -77,15 +77,15 @@ function StepIndicator({ current }: { current: number }) {
               <div
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full text-xs text-white transition-all font-display font-extrabold',
-                  done ? 'bg-coral' : active ? 'bg-navy' : 'bg-surface-low text-navy-light/60'
+                  done ? 'bg-coral' : active ? 'bg-navy' : 'bg-surface-low text-navy-light/70'
                 )}
               >
                 {done ? <Check size={14} strokeWidth={2.5} /> : num}
               </div>
               <span
                 className={cn(
-                  'mt-1 text-[10px] text-center whitespace-nowrap font-body',
-                  active ? 'text-navy font-medium' : 'text-navy-light/60'
+                  'mt-1 text-[11px] text-center whitespace-nowrap font-body',
+                  active ? 'text-navy font-medium' : 'text-navy-light/70'
                 )}
               >
                 {label}
@@ -341,7 +341,7 @@ export default function NuevoMiembroPage() {
         >
           Nuevo miembro
         </h1>
-        <p className="mt-1 text-sm text-navy-light/60 font-body">
+        <p className="mt-1 text-sm text-navy-light/70 font-body">
           Completa los tres pasos para crear el perfil.
         </p>
       </div>

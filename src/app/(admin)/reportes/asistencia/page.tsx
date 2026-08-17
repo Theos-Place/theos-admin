@@ -348,10 +348,10 @@ function MiniStat({ label, value, sub, tone = 'default' }: {
   const valueColor = tone === 'up' ? 'text-teal-deep' : tone === 'down' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/70' : 'text-navy'
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <p className="text-[11px] text-navy-light/70 font-body">{label}</p>
+      <p className="text-[12px] text-navy-light/70 font-body">{label}</p>
       <p className={`text-sm font-extrabold tabular-nums font-display leading-none text-right ${valueColor}`}>
         {value}
-        {sub && <span className="block text-[10px] font-normal text-navy-light/70 font-body mt-0.5">{sub}</span>}
+        {sub && <span className="block text-[11px] font-normal text-navy-light/70 font-body mt-0.5">{sub}</span>}
       </p>
     </div>
   )

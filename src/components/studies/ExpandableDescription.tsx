@@ -15,7 +15,7 @@ export function ExpandableDescription({ text, maxLength = 120 }: { text?: string
       {isLong && (
         <button
           onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-          className="bg-transparent border-none cursor-pointer text-coral text-[11px] font-semibold py-0 pr-0 pl-1"
+          className="bg-transparent border-none cursor-pointer text-coral text-[12px] font-semibold py-0 pr-0 pl-1"
         >
           {expanded ? 'Ver menos' : 'Ver más'}
         </button>

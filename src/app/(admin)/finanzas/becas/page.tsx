@@ -185,7 +185,7 @@ export default function BecasPage() {
             onClick={() => setTab(id)}
             className={cn(
               'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
-              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
             )}
           >
             {label}
@@ -202,7 +202,7 @@ export default function BecasPage() {
                 onClick={() => setStatusFilter(id)}
                 className={cn(
                   'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/60 hover:text-navy border-transparent hover:border-navy/20',
+                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
                 )}
               >
                 {label}
@@ -224,7 +224,7 @@ export default function BecasPage() {
 
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             {couponsLoading ? (
-              <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+              <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
             ) : filteredCoupons.length === 0 ? (
               <EmptyState icon={GraduationCap} title="No hay cupones" />
             ) : (
@@ -239,7 +239,7 @@ export default function BecasPage() {
                         </th>
                       )}
                       {['Código', 'Destino', 'Descuento', 'Vencimiento', 'Usos', 'Estado', ''].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -259,7 +259,7 @@ export default function BecasPage() {
                         <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.used_count}</td>
                         <td className="px-4 py-3">
-                          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', STATUS_BADGE[c.status])}>{STATUS_LABEL[c.status]}</span>
+                          <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display', STATUS_BADGE[c.status])}>{STATUS_LABEL[c.status]}</span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           {canEdit && c.status === 'active' && (
@@ -294,7 +294,7 @@ export default function BecasPage() {
       {tab === 'solicitudes' && (
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           {requestsLoading ? (
-            <p className="px-4 py-10 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+            <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : requests.length === 0 ? (
             <EmptyState icon={GraduationCap} title="No hay solicitudes de beca" />
           ) : (
@@ -303,7 +303,7 @@ export default function BecasPage() {
                 <thead>
                   <tr>
                     {['Persona', 'Destino', 'Motivo', 'Estado', ''].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -314,7 +314,7 @@ export default function BecasPage() {
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.entity_name ?? '—'}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body max-w-xs truncate" title={r.reason}>{r.reason}</td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
+                        <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display',
                           r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-deep'
                           : r.status === 'rejected' ? 'bg-coral-soft/20 text-coral'
                           : 'bg-amber-50 text-amber-700')}>
@@ -383,7 +383,7 @@ export default function BecasPage() {
               <div className="flex items-center justify-between gap-3 rounded-xl border border-outline px-4 py-2.5">
                 <p className="text-sm text-navy font-body">
                   {sendMember.first_name} {sendMember.last_name}
-                  {sendMember.email ? <span className="text-navy-light/60"> · {sendMember.email}</span> : null}
+                  {sendMember.email ? <span className="text-navy-light/70"> · {sendMember.email}</span> : null}
                 </p>
                 <button onClick={() => setSendMember(null)} className="text-[12px] text-navy-light/70 hover:text-navy font-body">
                   Cambiar

@@ -21,10 +21,10 @@ export function AccessDenied() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/6 mb-4">
-        <Lock size={22} className="text-navy-light/60" />
+        <Lock size={22} className="text-navy-light/70" />
       </div>
       <p className="text-base font-semibold text-navy font-display mb-1">Acceso restringido</p>
-      <p className="text-sm text-navy-light/60 font-body max-w-sm">
+      <p className="text-sm text-navy-light/70 font-body max-w-sm">
         Este contenido no está disponible para tu rol. Si llegaste por un enlace que
         te compartieron y creés que sí te corresponde, contactá a un administrador.
       </p>

@@ -230,7 +230,7 @@ export default function MiembroDetailPage() {
   }
   if (loading || !member) {
     return (
-      <div className="p-8 text-center text-navy-light/60 font-body">
+      <div className="p-8 text-center text-navy-light/70 font-body">
         Cargando…
       </div>
     )
@@ -273,7 +273,7 @@ export default function MiembroDetailPage() {
                 'px-5 py-3.5 text-sm whitespace-nowrap transition-all relative font-body',
                 activeTab === tab.id
                   ? 'text-navy font-medium'
-                  : 'text-navy-light/60 hover:text-navy'
+                  : 'text-navy-light/70 hover:text-navy'
               )}
             >
               {tab.label}
@@ -435,12 +435,12 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
     <Modal onClose={onClose} titleId="agregar-estudio-title" width={384}>
       <div className="p-6 space-y-4">
         <p id="agregar-estudio-title" className="text-base font-bold text-navy font-display">Agregar estudio</p>
-        <p className="text-[13px] text-navy-light/60 font-body -mt-2">
+        <p className="text-[13px] text-navy-light/70 font-body -mt-2">
           Para estudios que la persona llevó sin un grupo en el sistema.
         </p>
 
         <div className="space-y-1">
-          <label className="text-[11px] text-navy-light/60 font-display">Estudio *</label>
+          <label className="text-[12px] text-navy-light/70 font-display">Estudio *</label>
           <select className={inputCls} value={code} onChange={e => setCode(e.target.value)}>
             <option value="">Seleccionar…</option>
             {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
@@ -449,11 +449,11 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Fecha</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Fecha</label>
             <input type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-navy-light/60 font-display">Estado</label>
+            <label className="text-[12px] text-navy-light/70 font-display">Estado</label>
             <select className={inputCls} value={status} onChange={e => setStatus(e.target.value)}>
               <option value="completed">Aprobado</option>
               <option value="dropped">Reprobó</option>
@@ -549,7 +549,7 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
       <div className="p-6 space-y-4">
         <div>
           <p id="fusionar-duplicado-title" className="text-base font-bold text-navy font-display">Fusionar duplicado</p>
-          <p className="text-[13px] text-navy-light/60 font-body mt-1">
+          <p className="text-[13px] text-navy-light/70 font-body mt-1">
             Buscá el registro duplicado. Toda su información (estudios, asistencias, servicio, pagos…) se moverá a <strong className="text-navy">{keepName}</strong> y el duplicado se <strong>eliminará</strong>. Esta acción no se puede deshacer.
           </p>
         </div>
@@ -565,9 +565,9 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
               onChange={e => setQuery(e.target.value)}
             />
             <div className="max-h-64 overflow-y-auto space-y-1">
-              {searching && <p className="text-xs text-navy-light/60 px-1 font-body">Buscando…</p>}
+              {searching && <p className="text-xs text-navy-light/70 px-1 font-body">Buscando…</p>}
               {!searching && query.trim().length >= 2 && results.length === 0 && (
-                <p className="text-xs text-navy-light/60 px-1 font-body">Sin resultados.</p>
+                <p className="text-xs text-navy-light/70 px-1 font-body">Sin resultados.</p>
               )}
               {results.map(m => (
                 <button
@@ -577,9 +577,9 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
                 >
                   <p className="text-sm text-navy font-body">
                     {m.first_name} {m.last_name}
-                    {m.is_active === false && <span className="ml-2 text-[11px] text-navy-light/60">· dado de baja</span>}
+                    {m.is_active === false && <span className="ml-2 text-[12px] text-navy-light/70">· dado de baja</span>}
                   </p>
-                  <p className="text-[11px] text-navy-light/60 font-body">
+                  <p className="text-[12px] text-navy-light/70 font-body">
                     {m.cedula ? `Cédula ${m.cedula}` : 'Sin cédula'}{m.email ? ` · ${m.email}` : ''}
                   </p>
                 </button>
@@ -588,12 +588,12 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
           </>
         ) : (
           <div className="rounded-xl bg-coral-soft/15 px-3 py-3">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
+            <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
             <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
-            <p className="text-[11px] text-navy-light/60 font-body">
+            <p className="text-[12px] text-navy-light/70 font-body">
               {picked.cedula ? `Cédula ${picked.cedula}` : 'Sin cédula'}{picked.email ? ` · ${picked.email}` : ''}
             </p>
-            <button onClick={() => setPicked(null)} className="mt-2 text-[11px] text-coral hover:underline font-body">Elegir otro</button>
+            <button onClick={() => setPicked(null)} className="mt-2 text-[12px] text-coral hover:underline font-body">Elegir otro</button>
           </div>
         )}
 

@@ -39,11 +39,11 @@ export function ReportShell({
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body">
+        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/70 hover:text-navy transition-colors font-body">
           <ChevronLeft size={15} /> Reportes
         </Link>
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">{title}</h1>
-        {description && <p className="mt-1 text-sm text-navy-light/60 font-body">{description}</p>}
+        {description && <p className="mt-1 text-sm text-navy-light/70 font-body">{description}</p>}
       </div>
 
       {/* Filtro de año (afecta todo el reporte) */}
@@ -64,7 +64,7 @@ export function ReportShell({
 
       {/* Selector de sede en mobile */}
       <div className="lg:hidden">
-        <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display block mb-1">Sede</label>
+        <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display block mb-1">Sede</label>
         <select
           value={sede}
           onChange={e => onSede(e.target.value)}
@@ -80,10 +80,10 @@ export function ReportShell({
         {/* Sidebar de sedes (desktop) */}
         <aside className="hidden lg:block">
           <div className="rounded-2xl bg-surface-card p-2 shadow-[var(--shadow-md)] sticky top-20">
-            <p className="px-2 py-1.5 text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Sedes</p>
+            <p className="px-2 py-1.5 text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Sedes</p>
             {/* Buscador de sedes */}
             <div className="relative mb-1">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-light/60 pointer-events-none" />
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-light/70 pointer-events-none" />
               <input
                 value={sedeQuery}
                 onChange={e => setSedeQuery(e.target.value)}
@@ -99,7 +99,7 @@ export function ReportShell({
               <SedeButton key={s} label={s} count={fmt(sedeCounts?.[s])} active={sede === s} onClick={() => onSede(s)} />
             ))}
             {q && filteredSedes.length === 0 && (
-              <p className="px-2.5 py-2 text-[12px] text-navy-light/60 font-body">Sin coincidencias.</p>
+              <p className="px-2.5 py-2 text-[12px] text-navy-light/70 font-body">Sin coincidencias.</p>
             )}
           </div>
         </aside>
@@ -122,7 +122,7 @@ function SedeButton({ label, count, active, onClick }: { label: string; count?: 
     >
       <span className="min-w-0 truncate">{label}</span>
       {count != null && (
-        <span className={cn('text-[11px] tabular-nums shrink-0', active ? 'text-white/80' : 'text-navy-light/60')}>{count}</span>
+        <span className={cn('text-[12px] tabular-nums shrink-0', active ? 'text-white/80' : 'text-navy-light/70')}>{count}</span>
       )}
     </button>
   )

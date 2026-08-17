@@ -25,10 +25,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3 py-2.5">
-      <div className="mt-0.5 text-navy-light/60 shrink-0">{icon}</div>
+      <div className="mt-0.5 text-navy-light/70 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
         <p
-          className="text-[10px] uppercase tracking-wider text-navy-light/60 mb-0.5 font-display"
+          className="text-[11px] uppercase tracking-wider text-navy-light/70 mb-0.5 font-display"
         >
           {label}
         </p>
@@ -38,13 +38,13 @@ function InfoRow({
       </div>
       {editable ? (
         <button
-          className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-surface-low transition-all"
+          className="rounded-lg p-1.5 text-navy-light/70 hover:text-coral hover:bg-surface-low transition-all"
           aria-label="Editar"
         >
           <Edit2 size={13} strokeWidth={1.75} />
         </button>
       ) : (
-        <div className="rounded-lg p-1.5 text-navy-light/60">
+        <div className="rounded-lg p-1.5 text-navy-light/70">
           <Lock size={13} strokeWidth={1.75} />
         </div>
       )}
@@ -71,7 +71,7 @@ export function MemberPersonalTab({ member }: Props) {
         {/* Contacto */}
         <div>
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/60 mb-3 font-display"
+            className="text-[11px] uppercase tracking-wider text-navy-light/70 mb-3 font-display"
           >
             Contacto
           </p>
@@ -93,7 +93,7 @@ export function MemberPersonalTab({ member }: Props) {
         {/* Datos personales */}
         <div>
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/60 mb-3 font-display"
+            className="text-[11px] uppercase tracking-wider text-navy-light/70 mb-3 font-display"
           >
             Datos personales
           </p>
@@ -123,7 +123,7 @@ export function MemberPersonalTab({ member }: Props) {
       {(member.allergies || member.medicamentos) && (
         <div className="mt-4 pt-4 border-t border-[var(--outline-variant)]">
           <p
-            className="text-[10px] uppercase tracking-wider text-navy-light/60 mb-3 font-display"
+            className="text-[11px] uppercase tracking-wider text-navy-light/70 mb-3 font-display"
           >
             Salud
           </p>

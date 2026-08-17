@@ -45,16 +45,16 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
               <p className="text-sm font-semibold text-navy font-display">
                 {v.title}
               </p>
-              <p className="text-[12px] text-navy-light/60 font-body">
+              <p className="text-[12px] text-navy-light/70 font-body">
                 {v.position}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] text-navy-light/60 font-mono">
+              <span className="text-[12px] text-navy-light/70 font-mono">
                 {v.slots_filled}/{v.slots_total} cupos
               </span>
               <span
-                className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold font-display', STATUS_COLORS[v.status])}
+                className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', STATUS_COLORS[v.status])}
               >
                 {STATUS_LABELS[v.status]}
               </span>

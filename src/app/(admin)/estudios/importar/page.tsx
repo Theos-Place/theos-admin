@@ -160,7 +160,7 @@ export default function ImportarGruposPage() {
   return (
     <PageContainer width="form" className="page space-y-5">
       <div className="flex items-center gap-3">
-        <Link href="/estudios" className="text-navy-light/60 hover:text-navy" aria-label="Volver a estudios">
+        <Link href="/estudios" className="text-navy-light/70 hover:text-navy" aria-label="Volver a estudios">
           <ArrowLeft size={18} />
         </Link>
         <div>
@@ -184,9 +184,9 @@ export default function ImportarGruposPage() {
             onClick={() => fileInputRef.current?.click()}
             className="w-full rounded-2xl border-2 border-dashed border-navy/20 bg-surface-card px-6 py-14 text-center hover:border-coral/40 transition-colors"
           >
-            {busy ? <Loader2 size={28} className="mx-auto animate-spin text-navy-light/60" /> : <CloudUpload size={28} className="mx-auto text-navy-light/60" />}
+            {busy ? <Loader2 size={28} className="mx-auto animate-spin text-navy-light/70" /> : <CloudUpload size={28} className="mx-auto text-navy-light/70" />}
             <p className="mt-2 text-sm font-medium text-navy font-display">Cargar archivo</p>
-            <p className="text-sm mt-1 font-body text-navy-light/60">.xlsx o .csv — hacé clic para seleccionar</p>
+            <p className="text-sm mt-1 font-body text-navy-light/70">.xlsx o .csv — hacé clic para seleccionar</p>
           </button>
           <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
           {error && <p className="text-sm text-coral font-body inline-flex items-center gap-1.5"><AlertCircle size={15} /> {error}</p>}
@@ -205,7 +205,7 @@ export default function ImportarGruposPage() {
             <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
               <table className="w-full text-[13px] font-body">
                 <thead className="sticky top-0 bg-surface-low">
-                  <tr className="text-left text-[11px] uppercase tracking-wider text-navy-light/60 font-display">
+                  <tr className="text-left text-[12px] uppercase tracking-wider text-navy-light/70 font-display">
                     <th className="px-3 py-2">#</th>
                     <th className="px-3 py-2">Plan</th>
                     <th className="px-3 py-2">Zona</th>
@@ -222,7 +222,7 @@ export default function ImportarGruposPage() {
                     const issue = issueByRow.get(i + 2)
                     return (
                       <tr key={i} className={issue?.kind === 'error' ? 'bg-coral/5' : issue?.kind === 'warning' ? 'bg-amber-50/60' : ''}>
-                        <td className="px-3 py-1.5 text-navy-light/50">{i + 2}</td>
+                        <td className="px-3 py-1.5 text-navy-light/70">{i + 2}</td>
                         <td className="px-3 py-1.5 text-navy">{r.plan || '—'}</td>
                         <td className="px-3 py-1.5">{r.zona || 'Todas'}</td>
                         <td className="px-3 py-1.5">{[r.dia, r.horario].filter(Boolean).join(' · ') || '—'}</td>

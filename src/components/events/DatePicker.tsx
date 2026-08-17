@@ -87,7 +87,7 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
         )}
       >
         <span className="truncate">{selected ? labelOf(selected) : placeholder}</span>
-        <Calendar size={15} className="shrink-0 text-navy-light/60" />
+        <Calendar size={15} className="shrink-0 text-navy-light/70" />
       </button>
 
       {open && rect && createPortal(

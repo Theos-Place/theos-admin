@@ -64,9 +64,9 @@ function SectionAccordion({
           {title}
         </span>
         {open ? (
-          <ChevronUp size={16} strokeWidth={1.75} className="text-navy-light/60" />
+          <ChevronUp size={16} strokeWidth={1.75} className="text-navy-light/70" />
         ) : (
-          <ChevronDown size={16} strokeWidth={1.75} className="text-navy-light/60" />
+          <ChevronDown size={16} strokeWidth={1.75} className="text-navy-light/70" />
         )}
       </button>
       {open && <div className="bg-surface-card">{children}</div>}
@@ -191,7 +191,7 @@ export function MemberParticipationTab({
                   <th
                     key={key}
                     onClick={() => estudiosTable.toggleSort(key)}
-                    className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                    className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wider text-navy-light/70 cursor-pointer hover:text-navy transition-colors select-none font-display"
                   >
                     {label}{' '}
                     <span className="opacity-50">
@@ -214,14 +214,14 @@ export function MemberParticipationTab({
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <span
-                          className={cn('rounded px-1.5 py-0.5 text-[10px] font-mono', entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/60')}
+                          className={cn('rounded px-1.5 py-0.5 text-[11px] font-mono', entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/70')}
                         >
                           {row.code}
                         </span>
                         <span className="text-navy-light/70 font-body">{row.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-navy-light/60 text-xs font-body">
+                    <td className="px-4 py-2.5 text-navy-light/70 text-xs font-body">
                       {row.startLabel}
                     </td>
                     <td className="px-4 py-2.5">
@@ -247,19 +247,19 @@ export function MemberParticipationTab({
                             cuando finanzas agrega un cobro de seguimiento. El
                             badge de al lado es el estado del más nuevo. */}
                         {row.paymentsCount > 1 && (
-                          <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                          <span className="text-[12px] text-navy-light/70 font-body whitespace-nowrap">
                             {row.paymentsCount} pagos
                           </span>
                         )}
                         {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago') && row.requiresPayment && (
                           row.paymentStatus === 'en_revision' ? (
-                            <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>
+                            <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[12px] font-semibold font-display">Pago en revisión</span>
                           ) : row.paymentStatus === 'aprobado' ? (
-                            <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Pagado</span>
+                            <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[12px] font-semibold font-display">Pagado</span>
                           ) : (
                             <span className="inline-flex items-center gap-2">
                               {row.cost > 0 && (
-                                <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                                <span className="text-[12px] text-navy-light/70 font-body whitespace-nowrap">
                                   Pendiente: {formatCRC(row.cost)}
                                 </span>
                               )}
@@ -278,7 +278,7 @@ export function MemberParticipationTab({
                             Ver grupo →
                           </Link>
                         ) : (
-                          <span className="text-xs text-navy-light/60 whitespace-nowrap font-body">Sin grupo</span>
+                          <span className="text-xs text-navy-light/70 whitespace-nowrap font-body">Sin grupo</span>
                         )}
                       </div>
                     </td>
@@ -292,7 +292,7 @@ export function MemberParticipationTab({
           <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
             <button
               onClick={onLoadMoreEstudios}
-              className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+              className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
             >
               Cargar {LOAD_MORE} más (quedan {estudiosTable.sorted.length - visibleEstudios})
             </button>
@@ -312,12 +312,12 @@ export function MemberParticipationTab({
               <div key={g.group_id} className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{g.plan_name ?? g.plan_code ?? g.group_name}</p>
-                  <p className="text-[11px] text-navy-light/60 font-body">
+                  <p className="text-[12px] text-navy-light/70 font-body">
                     {g.role}{g.date ? ` · ${formatDate(g.date)}` : ''}
                   </p>
                 </div>
-                <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-medium shrink-0 font-display',
-                  g.status === 'finalizado' ? 'bg-surface-low text-navy-light/60' : 'bg-teal-soft/30 text-teal-deep')}>
+                <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0 font-display',
+                  g.status === 'finalizado' ? 'bg-surface-low text-navy-light/70' : 'bg-teal-soft/30 text-teal-deep')}>
                   {g.status === 'finalizado' ? 'Finalizado' : g.status === 'en_curso' ? 'En curso' : 'En matrícula'}
                 </span>
               </div>
@@ -333,7 +333,7 @@ export function MemberParticipationTab({
         onToggle={() => onToggleSection('servicio')}
       >
         {servicioTable.sorted.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-navy-light/60 font-body">
+          <p className="px-4 py-6 text-sm text-navy-light/70 font-body">
             Sin historial de servicio
           </p>
         ) : (
@@ -346,7 +346,7 @@ export function MemberParticipationTab({
                       <th
                         key={key}
                         onClick={() => servicioTable.toggleSort(key)}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                        className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wider text-navy-light/70 cursor-pointer hover:text-navy transition-colors select-none font-display"
                       >
                         {label}{' '}
                         <span className="opacity-50">
@@ -365,13 +365,13 @@ export function MemberParticipationTab({
                     >
                       <td className="px-4 py-2.5 text-navy font-body">{row.position}</td>
                       <td className="px-4 py-2.5 text-navy-light/70 font-body">{row.committee}</td>
-                      <td className="px-4 py-2.5 text-navy-light/60 text-xs font-body">{formatDate(row.from)}</td>
-                      <td className="px-4 py-2.5 text-navy-light/60 text-xs font-body">
+                      <td className="px-4 py-2.5 text-navy-light/70 text-xs font-body">{formatDate(row.from)}</td>
+                      <td className="px-4 py-2.5 text-navy-light/70 text-xs font-body">
                         {row.to ? formatDate(row.to) : '—'}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/60')}
+                          className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/70')}
                         >
                           {row.status === 'activo' ? 'Activo' : 'Finalizado'}
                         </span>
@@ -385,7 +385,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreServicio}
-                  className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {servicioTable.sorted.length - visibleServicio})
                 </button>
@@ -402,7 +402,7 @@ export function MemberParticipationTab({
         onToggle={() => onToggleSection('eventos')}
       >
         {eventosTable.sorted.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-navy-light/60 font-body">
+          <p className="px-4 py-6 text-sm text-navy-light/70 font-body">
             Sin registros de asistencia
           </p>
         ) : (
@@ -415,7 +415,7 @@ export function MemberParticipationTab({
                       <th
                         key={key}
                         onClick={() => eventosTable.toggleSort(key)}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                        className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wider text-navy-light/70 cursor-pointer hover:text-navy transition-colors select-none font-display"
                       >
                         {label}{' '}
                         <span className="opacity-50">
@@ -435,17 +435,17 @@ export function MemberParticipationTab({
                       <td className="px-4 py-2.5 text-navy font-body">{row.name}</td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2 py-0.5 text-[10px] font-body', TYPE_BADGE[row.type] ?? 'bg-surface-low text-navy-light/60')}
+                          className={cn('rounded-full px-2 py-0.5 text-[11px] font-body', TYPE_BADGE[row.type] ?? 'bg-surface-low text-navy-light/70')}
                         >
                           {row.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-navy-light/60 text-xs whitespace-nowrap font-body">
+                      <td className="px-4 py-2.5 text-navy-light/70 text-xs whitespace-nowrap font-body">
                         {formatDate(row.date)}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2 py-0.5 text-[10px] font-body', ATTENDANCE_BADGE[row.attendance_type] ?? 'bg-surface-low text-navy-light/60')}
+                          className={cn('rounded-full px-2 py-0.5 text-[11px] font-body', ATTENDANCE_BADGE[row.attendance_type] ?? 'bg-surface-low text-navy-light/70')}
                         >
                           {row.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}
                         </span>
@@ -459,7 +459,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreEventos}
-                  className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {eventosTable.sorted.length - visibleEventos})
                 </button>
@@ -476,7 +476,7 @@ export function MemberParticipationTab({
         onToggle={() => onToggleSection('eventRegistrations')}
       >
         {eventRegistrationTable.sorted.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-navy-light/60 font-body">Sin inscripciones a eventos.</p>
+          <p className="px-4 py-4 text-sm text-navy-light/70 font-body">Sin inscripciones a eventos.</p>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -487,7 +487,7 @@ export function MemberParticipationTab({
                       <th
                         key={key}
                         onClick={() => eventRegistrationTable.toggleSort(key)}
-                        className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                        className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wider text-navy-light/70 cursor-pointer hover:text-navy transition-colors select-none font-display"
                       >
                         {label}{' '}
                         <span className="opacity-50">
@@ -506,22 +506,22 @@ export function MemberParticipationTab({
                       className="hover:bg-surface-low transition-colors"
                     >
                       <td className="px-4 py-2.5 text-navy-light/70 font-body">{row.eventName}</td>
-                      <td className="px-4 py-2.5 text-navy-light/60 text-xs font-body">{formatDate(row.eventDate)}</td>
+                      <td className="px-4 py-2.5 text-navy-light/70 text-xs font-body">{formatDate(row.eventDate)}</td>
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-3">
                           {row.requiresPayment && (
                             row.paymentStatus === 'paid' ? (
-                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Pagado</span>
+                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[12px] font-semibold font-display">Pagado</span>
                             ) : row.paymentStatus === 'exempted' ? (
-                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">Exento</span>
+                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[12px] font-semibold font-display">Exento</span>
                             ) : row.paymentStatus === 'expired' ? (
-                              <span className="rounded-full bg-coral-soft/20 text-coral px-2.5 py-0.5 text-[11px] font-semibold font-display">Reserva vencida</span>
+                              <span className="rounded-full bg-coral-soft/20 text-coral px-2.5 py-0.5 text-[12px] font-semibold font-display">Reserva vencida</span>
                             ) : row.reviewStatus === 'en_revision' ? (
-                              <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[11px] font-semibold font-display">Pago en revisión</span>
+                              <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[12px] font-semibold font-display">Pago en revisión</span>
                             ) : (
                               <span className="inline-flex items-center gap-2">
                                 {row.cost > 0 && (
-                                  <span className="text-[11px] text-navy-light/70 font-body whitespace-nowrap">
+                                  <span className="text-[12px] text-navy-light/70 font-body whitespace-nowrap">
                                     Pendiente: {formatCRC(row.cost)}
                                   </span>
                                 )}
@@ -543,7 +543,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreEventRegistrations}
-                  className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {eventRegistrationTable.sorted.length - visibleEventRegistrations})
                 </button>
@@ -583,7 +583,7 @@ export function MemberParticipationTab({
             <div
               className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)]"
             >
-              <p className="text-xs text-navy-light/60 font-body">
+              <p className="text-xs text-navy-light/70 font-body">
                 {donationsCount} registros
               </p>
               <button
@@ -595,7 +595,7 @@ export function MemberParticipationTab({
               </button>
             </div>
             {donacionesTable.sorted.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-navy-light/60 font-body">
+              <p className="px-4 py-6 text-sm text-navy-light/70 font-body">
                 Sin registros de donaciones
               </p>
             ) : (
@@ -608,7 +608,7 @@ export function MemberParticipationTab({
                           <th
                             key={key}
                             onClick={() => donacionesTable.toggleSort(key)}
-                            className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-navy-light/60 cursor-pointer hover:text-navy transition-colors select-none font-display"
+                            className="px-4 py-2.5 text-left text-[11px] uppercase tracking-wider text-navy-light/70 cursor-pointer hover:text-navy transition-colors select-none font-display"
                           >
                             {label}{' '}
                             <span className="opacity-50">
@@ -625,7 +625,7 @@ export function MemberParticipationTab({
                           className="hover:bg-surface-low transition-colors"
                           style={i < Math.min(visibleDonaciones, donacionesTable.sorted.length) - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                         >
-                          <td className="px-4 py-2.5 text-navy-light/60 text-xs whitespace-nowrap font-body">
+                          <td className="px-4 py-2.5 text-navy-light/70 text-xs whitespace-nowrap font-body">
                             {formatDate(row.date)}
                           </td>
                           <td className="px-4 py-2.5 text-navy-light/70 font-body">
@@ -636,11 +636,11 @@ export function MemberParticipationTab({
                           >
                             {row.amount === 0 ? (
                               // Histórico importado sin monto: el período va en la descripción.
-                              <span className="text-navy-light/60">—</span>
+                              <span className="text-navy-light/70">—</span>
                             ) : revealDonations ? (
                               <span className="text-navy">{formatAmount(row.amount)}</span>
                             ) : (
-                              <span className="text-navy-light/60 tracking-widest">••••••</span>
+                              <span className="text-navy-light/70 tracking-widest">••••••</span>
                             )}
                           </td>
                         </tr>
@@ -652,7 +652,7 @@ export function MemberParticipationTab({
                   <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                     <button
                       onClick={onLoadMoreDonaciones}
-                      className="text-xs text-navy-light/60 hover:text-coral transition-colors font-body"
+                      className="text-xs text-navy-light/70 hover:text-coral transition-colors font-body"
                     >
                       Cargar {LOAD_MORE} más (quedan {donacionesTable.sorted.length - visibleDonaciones})
                     </button>
@@ -663,8 +663,8 @@ export function MemberParticipationTab({
           </div>
         ) : (
           <div className="flex items-center gap-3 px-4 py-6">
-            <Lock size={16} className="text-navy-light/60" strokeWidth={1.75} />
-            <p className="text-sm text-navy-light/60 font-body">
+            <Lock size={16} className="text-navy-light/70" strokeWidth={1.75} />
+            <p className="text-sm text-navy-light/70 font-body">
               No tenés permisos para ver esta información.
             </p>
           </div>
@@ -709,11 +709,11 @@ function MemberScholarshipRequests({ memberId }: { memberId: string }) {
   }, [memberId])
 
   if (loading) {
-    return <p className="px-4 py-6 text-center text-sm text-navy-light/60 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+    return <p className="px-4 py-6 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
   }
   if (rows.length === 0) {
     return (
-      <p className="px-4 py-6 text-sm text-navy-light/60 font-body flex items-center gap-2">
+      <p className="px-4 py-6 text-sm text-navy-light/70 font-body flex items-center gap-2">
         <GraduationCap size={14} /> Sin solicitudes de beca.
       </p>
     )
@@ -724,12 +724,12 @@ function MemberScholarshipRequests({ memberId }: { memberId: string }) {
         <div key={r.id} className="px-4 py-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[13px] font-medium text-navy font-body">{r.entity_name ?? '—'}</p>
-            <p className="text-[12px] text-navy-light/60 font-body">{formatDate(r.created_at)}</p>
+            <p className="text-[12px] text-navy-light/70 font-body">{formatDate(r.created_at)}</p>
             {r.status === 'rejected' && r.review_notes && (
               <p className="text-[12px] text-coral font-body mt-1">Motivo: {r.review_notes}</p>
             )}
           </div>
-          <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display shrink-0', REQUEST_STATUS_BADGE[r.status])}>
+          <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display shrink-0', REQUEST_STATUS_BADGE[r.status])}>
             {REQUEST_STATUS_LABEL[r.status]}
           </span>
         </div>

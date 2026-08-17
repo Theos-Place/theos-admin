@@ -382,7 +382,7 @@ function EventosContent() {
             <p className="text-sm font-semibold text-navy font-body">¡Inscripción confirmada!</p>
             <p className="text-[13px] text-navy-light/70 font-body">Quedaste inscrito/a en {successEvent}.</p>
           </div>
-          <button onClick={clearSuccess} className="ml-auto text-navy-light/60 hover:text-navy"><X size={16} /></button>
+          <button onClick={clearSuccess} className="ml-auto text-navy-light/70 hover:text-navy"><X size={16} /></button>
         </div>
       )}
 
@@ -401,7 +401,7 @@ function EventosContent() {
             className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+              className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
             >
               {label}
             </p>
@@ -459,7 +459,7 @@ function EventosContent() {
                   {['Evento', 'Tipo', 'Fecha', ...(canManage ? ['Capacidad', 'Inscritos'] : []), 'Estado', 'Inscripción'].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
                     >
                       {h}
                     </th>
@@ -496,7 +496,7 @@ function EventosContent() {
                               {event.name}
                             </span>
                             {event.is_recurring && (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 font-body">
+                              <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body">
                                 <Repeat size={11} />
                                 {recurrence ?? 'Recurrente'}
                               </span>
@@ -507,7 +507,7 @@ function EventosContent() {
                       <td className="px-4 py-3">
                         <EventTypeBadge type={event.event_type} size="sm" />
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
+                      <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
                         {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       {/* Conteos de inscripción = datos de gestión: no para
@@ -531,19 +531,19 @@ function EventosContent() {
                             <button
                               type="button"
                               onClick={() => openRegister(elig)}
-                              className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-coral bg-coral/10 hover:bg-coral/20 transition-colors font-body whitespace-nowrap"
+                              className="rounded-lg px-2.5 py-1 text-[12px] font-medium text-coral bg-coral/10 hover:bg-coral/20 transition-colors font-body whitespace-nowrap"
                             >
                               Inscribirme
                             </button>
                           ) : elig?.already_registered ? (
-                            <span className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                            <span className="rounded-lg px-2.5 py-1 text-[12px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
                               Ya inscrito/a
                             </span>
                           ) : null}
                           <Link
                             href={`/eventos/${event.id}`}
                             aria-label={`Ver ${event.name}`}
-                            className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             →
                           </Link>
@@ -578,12 +578,12 @@ function EventosContent() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{event.name}</p>
-                    <p className="truncate text-[12px] text-navy-light/60 font-body">
+                    <p className="truncate text-[12px] text-navy-light/70 font-body">
                       {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       {canManage && <>{' · '}{event.registrations.length} inscritos</>}
                     </p>
                     {event.is_recurring && (
-                      <p className="inline-flex items-center gap-1 text-[11px] text-navy-light/60 font-body">
+                      <p className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body">
                         <Repeat size={11} />
                         {recurrence ?? 'Recurrente'}
                       </p>
@@ -596,12 +596,12 @@ function EventosContent() {
                       <button
                         type="button"
                         onClick={e => { e.stopPropagation(); openRegister(elig) }}
-                        className="rounded-lg px-2 py-0.5 text-[10px] font-medium text-coral bg-coral/10 font-body whitespace-nowrap"
+                        className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-coral bg-coral/10 font-body whitespace-nowrap"
                       >
                         Inscribirme
                       </button>
                     ) : elig?.already_registered ? (
-                      <span className="rounded-lg px-2 py-0.5 text-[10px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
                         Ya inscrito/a
                       </span>
                     ) : null}
@@ -618,7 +618,7 @@ function EventosContent() {
           {/* Paginación: contador + cargar más */}
           {listRows.length > 0 && (
             <div className="flex flex-col items-center gap-2 px-4 py-4 border-t border-[var(--outline-variant)]">
-              <p className="text-[12px] text-navy-light/60 font-body">
+              <p className="text-[12px] text-navy-light/70 font-body">
                 Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} este mes
               </p>
               {listRows.length > visibleCount && (
@@ -659,7 +659,7 @@ function EventosContent() {
                 ))}
               </div>
               <div className="flex flex-col items-center gap-2">
-                <p className="text-[12px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   Mostrando {Math.min(visibleCount, listRows.length)} de {listRows.length} este mes
                 </p>
                 {listRows.length > visibleCount && (
@@ -706,7 +706,7 @@ export default function EventosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/60 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
       </div>
     }>
       <EventosContent />

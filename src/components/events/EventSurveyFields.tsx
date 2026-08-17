@@ -12,7 +12,7 @@ import { SURVEY_OFFSETS, computeSurveySendAt, surveyScheduleError } from '@/lib/
 import { cn } from '@/lib/utils'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[11px] text-navy-light/60 font-display mb-1 block'
+const labelCls = 'text-[12px] text-navy-light/70 font-display mb-1 block'
 
 export type SurveyFieldsValue = {
   survey_form_id: string | null

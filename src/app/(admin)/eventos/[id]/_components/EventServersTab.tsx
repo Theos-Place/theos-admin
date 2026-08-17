@@ -112,7 +112,7 @@ export function EventServersTab({
           {/* Los volunteers viven en el evento padre: en un recurrente SIEMPRE
               aplican a toda la serie. El toggle anterior no controlaba nada. */}
           {isRecurring && (
-            <span className="text-[12px] text-navy-light/60 font-body">
+            <span className="text-[12px] text-navy-light/70 font-body">
               Los servidores asignados aplican a todas las fechas de la serie.
             </span>
           )}
@@ -134,18 +134,18 @@ export function EventServersTab({
         <div className="space-y-3">
           {Object.entries(groupedBookings).map(([role, bookings]) => (
             <div key={role} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display">{role}</p>
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display">{role}</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {bookings.map(b => (
                   <div key={b.id} className="relative flex items-center gap-3 rounded-xl px-3 py-2.5 bg-surface-low">
-                    <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(b.member_name))}>
+                    <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(b.member_name))}>
                       {b.member_initials}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-navy truncate font-body">{b.member_name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={cn(
-                          'rounded-md px-1.5 py-0.5 text-[10px] font-medium',
+                          'rounded-md px-1.5 py-0.5 text-[11px] font-medium',
                           b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-deep' :
                           b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                           'bg-navy/10 text-navy/70'
@@ -180,7 +180,7 @@ export function EventServersTab({
         <Modal onClose={onResetModal} titleId="asignar-servidor-titulo" width={448}>
             {/* Modal header */}
             <div className="flex items-center gap-3 px-5 py-4 border-b border-b-[var(--outline-variant)]">
-              <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
+              <span className={cn('h-6 w-6 rounded-full flex items-center justify-center text-[12px] font-bold text-white', modalStep === 1 ? 'bg-coral' : 'bg-teal-deep')}>
                 {modalStep}
               </span>
               <span id="asignar-servidor-titulo" className="text-sm font-semibold text-navy font-display">
@@ -198,7 +198,7 @@ export function EventServersTab({
               {modalStep === 1 && (
                 <>
                   <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
-                    <Search size={14} className="text-navy-light/60 shrink-0" />
+                    <Search size={14} className="text-navy-light/70 shrink-0" />
                     <input
                       type="search"
                       autoFocus
@@ -215,7 +215,7 @@ export function EventServersTab({
                       checked={filterCommittee}
                       onChange={e => onFilterCommitteeChange(e.target.checked)}
                     />
-                    <span className="text-[12px] text-navy-light/60 font-body">
+                    <span className="text-[12px] text-navy-light/70 font-body">
                       Solo miembros del comité organizador
                     </span>
                   </label>
@@ -232,14 +232,14 @@ export function EventServersTab({
                             : 'hover:bg-surface-low'
                         )}
                       >
-                        <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarColor(m.first_name))}>
+                        <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(m.first_name))}>
                           {(m.first_name[0] + m.last_name[0]).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-navy truncate font-body">
                             {m.first_name} {m.last_name}
                           </p>
-                          <p className="text-[11px] text-navy-light/60 truncate font-mono">
+                          <p className="text-[12px] text-navy-light/70 truncate font-mono">
                             {m.cedula ?? 'Sin cédula'}
                             {m.service_history.filter(s => s.status === 'activo').map(s => ` · ${s.committee}`).join('')}
                           </p>
@@ -248,7 +248,7 @@ export function EventServersTab({
                       </button>
                     ))}
                     {filteredMembers.length === 0 && (
-                      <p className="text-sm text-navy-light/60 text-center py-4 font-body">Sin resultados</p>
+                      <p className="text-sm text-navy-light/70 text-center py-4 font-body">Sin resultados</p>
                     )}
                   </div>
                 </>
@@ -258,21 +258,21 @@ export function EventServersTab({
               {modalStep === 2 && selectedMember && (
                 <>
                   <div className="flex items-center gap-3 rounded-xl bg-teal-soft/10 px-3 py-2.5">
-                    <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0', avatarColor(selectedMember.first_name))}>
+                    <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0', avatarColor(selectedMember.first_name))}>
                       {(selectedMember.first_name[0] + selectedMember.last_name[0]).toUpperCase()}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-navy font-body">
                         {selectedMember.first_name} {selectedMember.last_name}
                       </p>
-                      <p className="text-[11px] text-navy-light/60 font-mono">
+                      <p className="text-[12px] text-navy-light/70 font-mono">
                         {selectedMember.cedula ?? 'Sin cédula'}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">
+                    <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
                       Rol en este evento
                     </label>
                     <select
@@ -298,7 +298,7 @@ export function EventServersTab({
                   </div>
 
                   {isRecurring && (
-                    <p className="rounded-xl bg-surface-low px-3 py-2.5 text-[12px] text-navy-light/60 font-body">
+                    <p className="rounded-xl bg-surface-low px-3 py-2.5 text-[12px] text-navy-light/70 font-body">
                       Este evento es recurrente: la persona quedará asignada a todas las fechas de la serie.
                     </p>
                   )}

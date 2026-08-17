@@ -108,7 +108,7 @@ export default function NuevaContrasenaPage() {
     return (
       <div className="w-full max-w-[400px] text-center py-10">
         <Loader2 size={22} className="animate-spin text-navy-light/50 mx-auto mb-3" />
-        <p className="text-sm text-navy-light/60 font-body">Verificando el enlace…</p>
+        <p className="text-sm text-navy-light/70 font-body">Verificando el enlace…</p>
       </div>
     )
   }
@@ -157,7 +157,7 @@ export default function NuevaContrasenaPage() {
           </div>
         </div>
         <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">Contraseña actualizada</h2>
-        <p className="text-sm text-navy-light/55 leading-relaxed mb-8 font-body">
+        <p className="text-sm text-navy-light/70 leading-relaxed mb-8 font-body">
           Tu contraseña fue cambiada exitosamente. Te llevamos al login…
         </p>
         <Link
@@ -175,7 +175,7 @@ export default function NuevaContrasenaPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8">
         <div className="h-11 w-11 rounded-xl flex items-center justify-center mb-5 bg-[rgba(22,20,64,0.06)]">
-          <Lock size={20} className="text-navy-light/60" />
+          <Lock size={20} className="text-navy-light/70" />
         </div>
         <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">Creá tu nueva contraseña</h1>
         <p className="text-[13px] text-navy-light/70 font-body">
@@ -186,7 +186,7 @@ export default function NuevaContrasenaPage() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
-          <label className="block text-[12px] font-medium text-navy-light/60 mb-1.5 font-body">Nueva contraseña</label>
+          <label className="block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body">Nueva contraseña</label>
           <div className="relative">
             <input
               type={showPass ? 'text' : 'password'}
@@ -196,7 +196,7 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 border-[rgba(22,20,64,0.15)] font-body`}
             />
-            <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -212,7 +212,7 @@ export default function NuevaContrasenaPage() {
         </div>
 
         <div>
-          <label className="block text-[12px] font-medium text-navy-light/60 mb-1.5 font-body">Confirmar contraseña</label>
+          <label className="block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body">Confirmar contraseña</label>
           <div className="relative">
             <input
               type={showConfirm ? 'text' : 'password'}
@@ -223,7 +223,7 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 font-body ${confirmErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>

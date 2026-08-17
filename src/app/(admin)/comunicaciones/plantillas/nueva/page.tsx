@@ -84,7 +84,7 @@ export default function NuevaPlantillaPage() {
     setTimeout(() => router.push('/comunicaciones/plantillas'), 900)
   }
 
-  const labelCls = 'text-[11px] text-navy-light/60 mb-1 block font-body'
+  const labelCls = 'text-[12px] text-navy-light/70 mb-1 block font-body'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
   // El preview muestra el correo completo (layout base + pie de baja), igual que el envío.
   const rawPreview = emailBody.replace(/<[^>]*>/g, '').trim() ? emailBody : '<p style="color:#9aa">El mensaje aparecerá aquí…</p>'
@@ -97,7 +97,7 @@ export default function NuevaPlantillaPage() {
       <div>
         <Link
           href="/comunicaciones/plantillas"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body"
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Plantillas
@@ -166,14 +166,14 @@ export default function NuevaPlantillaPage() {
             htmlOnly={everAdvanced}
             htmlOnlyNotice={advancedHtmlNotice(emailBody)}
           />
-          <p className="mt-1.5 text-[11px] text-navy-light/60 font-body">
+          <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">
             Editá en modo Visual o pegá HTML. Mantené el HTML simple por compatibilidad con clientes de correo. El pie de baja se agrega solo al enviar como marketing.
           </p>
         </div>
 
         {/* Variables (copiar) */}
         <div className="rounded-xl p-3 bg-surface-low">
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-semibold font-display mb-2">Variables (clic para copiar)</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-semibold font-display mb-2">Variables (clic para copiar)</p>
           <div className="flex flex-wrap gap-2">
             {AVAILABLE_VARIABLES.map(v => (
               <button
@@ -181,7 +181,7 @@ export default function NuevaPlantillaPage() {
                 type="button"
                 onClick={() => copyVar(v.key)}
                 title={v.description}
-                className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
+                className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[12px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
               >
                 {copied === v.key ? '¡copiado!' : v.key}
               </button>
@@ -213,7 +213,7 @@ export default function NuevaPlantillaPage() {
 
       {/* Preview al lado (sticky en desktop); el correo se centra a 600px */}
       <div className="space-y-2 xl:sticky xl:top-4">
-        <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display">Vista previa</p>
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Vista previa</p>
         <EmailPreview subject={subject} body={previewBody} format="html" fullDocument />
       </div>
       </div>

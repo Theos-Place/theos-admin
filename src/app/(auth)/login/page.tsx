@@ -13,7 +13,7 @@ function isEmail(value: string): boolean {
   return value.includes('@')
 }
 
-const LABEL = 'block text-[12px] font-medium text-navy-light/60 mb-1.5'
+const LABEL = 'block text-[12px] font-medium text-navy-light/70 mb-1.5'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
@@ -213,7 +213,7 @@ export default function LoginPage() {
           <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">
             Verificación en dos pasos
           </h1>
-          <p className="text-sm text-navy-light/60 leading-relaxed font-body">
+          <p className="text-sm text-navy-light/70 leading-relaxed font-body">
             Ingresá el código de tu app de autenticación
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleMfaBack}
-          className="mt-5 mx-auto flex items-center gap-1.5 text-[13px] text-navy-light/60 hover:text-navy transition-colors font-body"
+          className="mt-5 mx-auto flex items-center gap-1.5 text-[13px] text-navy-light/70 hover:text-navy transition-colors font-body"
         >
           <ArrowLeft size={14} /> Volver al inicio de sesión
         </button>
@@ -278,7 +278,7 @@ export default function LoginPage() {
         >
           Bienvenido de vuelta
         </h1>
-        <p className="text-sm text-navy-light/60 leading-relaxed font-body">
+        <p className="text-sm text-navy-light/70 leading-relaxed font-body">
           Ingresá tu correo y contraseña para<br />
           acceder al sistema administrativo.
         </p>
@@ -338,7 +338,7 @@ export default function LoginPage() {
               type="button"
               onClick={() => setShowPass(v => !v)}
               aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy-light/80 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80 transition-colors"
               tabIndex={-1}
             >
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -377,7 +377,7 @@ export default function LoginPage() {
               )}
             </div>
           </div>
-          <span className="text-[13px] text-navy-light/60 select-none font-body">
+          <span className="text-[13px] text-navy-light/70 select-none font-body">
             Recordarme
           </span>
         </label>
@@ -407,7 +407,7 @@ export default function LoginPage() {
           {/* Separador ── o ── */}
           <div className="flex items-center gap-3 my-5">
             <span className="h-px flex-1 bg-[rgba(22,20,64,0.12)]" />
-            <span className="text-[12px] text-navy-light/60 font-body select-none">o</span>
+            <span className="text-[12px] text-navy-light/70 font-body select-none">o</span>
             <span className="h-px flex-1 bg-[rgba(22,20,64,0.12)]" />
           </div>
 
@@ -455,7 +455,7 @@ export default function LoginPage() {
       </p>
 
       {/* Recuperar */}
-      <p className="mt-4 text-center text-[13px] text-navy-light/60 font-body">
+      <p className="mt-4 text-center text-[13px] text-navy-light/70 font-body">
         ¿Olvidaste tu contraseña?{' '}
         <Link href="/recuperar" className="text-navy-light hover:text-navy font-medium transition-colors">
           Recuperar acceso →

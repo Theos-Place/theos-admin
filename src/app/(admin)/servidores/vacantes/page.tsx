@@ -112,7 +112,7 @@ export default function VacantesPage() {
       {/* Búsquedas: por puesto, por comité, por ubicación */}
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2 shadow-[var(--shadow-sm)]">
-          <Search size={16} className="text-navy-light/60 shrink-0" aria-hidden />
+          <Search size={16} className="text-navy-light/70 shrink-0" aria-hidden />
           <input
             value={qPuesto}
             onChange={e => setQPuesto(e.target.value)}
@@ -144,7 +144,7 @@ export default function VacantesPage() {
       {/* Acordeones por comité */}
       <div className="space-y-3">
         {loading ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-navy-light/60">
+          <div className="flex flex-col items-center gap-3 py-16 text-navy-light/70">
             <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
             <p className="text-sm font-body">Cargando puestos…</p>
           </div>
@@ -165,7 +165,7 @@ export default function VacantesPage() {
               >
                 <div className="min-w-0">
                   <p className="text-base font-bold text-navy font-display truncate">{g.name}</p>
-                  <div className="mt-0.5 flex items-center gap-3 text-[12px] text-navy-light/60 font-body">
+                  <div className="mt-0.5 flex items-center gap-3 text-[12px] text-navy-light/70 font-body">
                     {g.area && <span className="inline-flex items-center gap-1"><MapPin size={12} aria-hidden /> {g.area}</span>}
                     <span>{g.items.length} puesto{g.items.length !== 1 ? 's' : ''} disponible{g.items.length !== 1 ? 's' : ''}</span>
                   </div>
@@ -181,7 +181,7 @@ export default function VacantesPage() {
                       <div key={v.id} className="p-5 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <p className="text-base font-bold text-navy font-display tracking-[-0.01em]">{v.title}</p>
-                          <span className="shrink-0 rounded-full bg-surface-low px-2.5 py-1 text-[11px] text-navy-light/70 font-body">
+                          <span className="shrink-0 rounded-full bg-surface-low px-2.5 py-1 text-[12px] text-navy-light/70 font-body">
                             {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -190,7 +190,7 @@ export default function VacantesPage() {
 
                         {v.functions.length > 0 && (
                           <div>
-                            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display mb-1">¿Qué harás?</p>
+                            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display mb-1">¿Qué harás?</p>
                             <ul className="space-y-0.5">
                               {v.functions.map((f, i) => (
                                 <li key={i} className="flex items-start gap-1.5 text-[13px] text-navy-light/70 font-body">
@@ -202,7 +202,7 @@ export default function VacantesPage() {
                         )}
 
                         {(v.schedule || v.commitment) && (
-                          <div className="flex items-center gap-4 flex-wrap text-[12px] text-navy-light/60 font-body">
+                          <div className="flex items-center gap-4 flex-wrap text-[12px] text-navy-light/70 font-body">
                             {v.schedule && <span className="inline-flex items-center gap-1"><Calendar size={12} aria-hidden /> {v.schedule}</span>}
                             {v.commitment && <span className="inline-flex items-center gap-1"><Clock size={12} aria-hidden /> {v.commitment}</span>}
                           </div>
@@ -266,7 +266,7 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
           <div className="p-6 space-y-4">
             <div>
               <p id="cerrar-puesto-title" className="text-base font-bold text-navy font-display">¿Cerrar este puesto?</p>
-              <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
+              <p className="text-[13px] text-navy-light/70 mt-1 leading-relaxed font-body">
                 Dejará de estar disponible para aplicar. Podés volver a publicarlo más adelante desde la edición del puesto.
               </p>
             </div>

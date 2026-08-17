@@ -196,7 +196,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   if (loadingForm) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-low">
-        <p className="text-sm text-navy-light/60 font-body">Cargando…</p>
+        <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
       </div>
     )
   }
@@ -204,7 +204,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/70 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -215,7 +215,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
         <div className="w-full max-w-md text-center space-y-4">
           <div className="h-16 w-16 rounded-full bg-surface-card flex items-center justify-center mx-auto shadow-[var(--shadow-md)]">
-            <AlertTriangle size={26} className="text-navy-light/60" />
+            <AlertTriangle size={26} className="text-navy-light/70" />
           </div>
           <h1 className="text-xl font-extrabold text-navy font-display tracking-[-0.02em]">
             {form.name}
@@ -240,7 +240,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             <Check size={28} className="text-teal-deep" />
           </div>
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">Ya respondiste este formulario</h2>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Tu respuesta quedó registrada. Si necesitás corregir algo, escribinos y lo revisamos.
           </p>
         </div>
@@ -354,7 +354,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             ¡Respuesta enviada!
           </h2>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Gracias por completar el formulario. Tu respuesta fue registrada correctamente.
           </p>
           {(isPreview || form.allow_multiple_responses) && (
@@ -416,7 +416,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
               </>
             )}
             {form.description && (
-              <p className="text-sm text-navy-light/60 mt-2 text-center leading-relaxed font-body">
+              <p className="text-sm text-navy-light/70 mt-2 text-center leading-relaxed font-body">
                 {form.description}
               </p>
             )}
@@ -425,7 +425,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {isMultiStep && (
               <div className="mt-5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-navy-light/60 font-body">
+                  <span className="text-[12px] font-semibold text-navy-light/70 font-body">
                     Página {currentPage + 1} de {totalPages}
                   </span>
                   <span className="text-[12px] font-semibold text-coral font-mono">
@@ -444,7 +444,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   </p>
                 )}
                 {currentPageBreak?.description && (
-                  <p className="text-[12px] text-navy-light/60 font-body">
+                  <p className="text-[12px] text-navy-light/70 font-body">
                     {currentPageBreak.description}
                   </p>
                 )}
@@ -474,13 +474,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                             Tus datos personales
                           </span>
                         </div>
-                        <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] font-body">
+                        <div className="text-[12px] text-[var(--fg-muted,#8c8fb0)] font-body">
                           Tomados de tu perfil — no editables acá
                         </div>
                       </div>
                       <button
                         type="button"
-                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         onClick={() => toast('Redirigir al perfil del miembro para editar datos', 'info')}
                       >
                         <Pencil size={11} />
@@ -493,7 +493,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                           key={f.key}
                           className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
                         >
-                          <div className="text-[10px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
+                          <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
                             {f.label}
                           </div>
                           <div className="text-[13px] font-semibold mt-[3px] font-body">
@@ -525,7 +525,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                         {field.is_required && <span className="ml-1 text-coral">*</span>}
                       </span>
                       {field.helper_text && (
-                        <span className="block text-[12px] text-navy-light/60 mt-0.5">{field.helper_text}</span>
+                        <span className="block text-[12px] text-navy-light/70 mt-0.5">{field.helper_text}</span>
                       )}
                     </label>
                   )}
@@ -537,7 +537,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   />
 
                   {hasError && (
-                    <p className="text-[11px] text-coral font-body">
+                    <p className="text-[12px] text-coral font-body">
                       Este campo es obligatorio.
                     </p>
                   )}
@@ -623,7 +623,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
               </button>
             )}
 
-            <p className="text-center text-[11px] text-navy-light/60 mt-3 font-body">
+            <p className="text-center text-[12px] text-navy-light/70 mt-3 font-body">
               Theos Place · {form.name}
             </p>
           </div>

@@ -34,11 +34,11 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
 
       {/* Category + marca de sistema */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold font-display', categoryColor(template.category))}>
+        <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', categoryColor(template.category))}>
           {categoryLabel(template.category)}
         </span>
         {template.is_system && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[10px] font-semibold font-display">
+          <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">
             <Lock size={9} /> Plantilla del sistema
           </span>
         )}
@@ -55,7 +55,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
           {template.variables.map(v => (
             <span
               key={v}
-              className="rounded-full bg-navy/5 px-2 py-0.5 text-[10px] text-navy-light/60 font-mono"
+              className="rounded-full bg-navy/5 px-2 py-0.5 text-[11px] text-navy-light/70 font-mono"
             >
               {v}
             </span>
@@ -65,7 +65,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
-        <span className="text-[11px] text-navy-light/60 font-body">
+        <span className="text-[12px] text-navy-light/70 font-body">
           Usado {template.used_count} veces
         </span>
         <div className="flex items-center gap-1">
@@ -75,7 +75,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
               onClick={() => onPreview(template)}
               title="Ver cómo se ve"
               aria-label={`Ver cómo se ve la plantilla ${template.name}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <Eye size={11} />
               Ver
@@ -85,25 +85,25 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
             <button
               type="button"
               onClick={() => onUse(template)}
-              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[11px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={10} />
               Usar
             </button>
           )}
           {onEdit && (
-            <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors">
               <Edit size={13} />
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={() => onDuplicate(template)} title="Duplicar plantilla" aria-label="Duplicar plantilla" className="rounded-lg p-1.5 text-navy-light/60 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onDuplicate(template)} title="Duplicar plantilla" aria-label="Duplicar plantilla" className="rounded-lg p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors">
               <Copy size={13} />
             </button>
           )}
           {/* Las plantillas del sistema NO se borran. */}
           {onDelete && !template.is_system && (
-            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/60 hover:text-coral hover:bg-coral/5 transition-colors">
+            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/70 hover:text-coral hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>
           )}

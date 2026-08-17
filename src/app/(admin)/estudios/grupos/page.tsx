@@ -233,7 +233,7 @@ export default function GruposPage() {
           >
             Grupos
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60 font-body">
+          <p className="mt-1 text-sm text-navy-light/70 font-body">
             Todos los grupos de estudio bíblico
           </p>
         </div>
@@ -267,7 +267,7 @@ export default function GruposPage() {
         <div className="flex flex-wrap gap-3 items-end">
           {/* Búsqueda */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
               Buscar
             </p>
             <input
@@ -282,7 +282,7 @@ export default function GruposPage() {
           {/* Status */}
           <div className="space-y-1.5">
             <p
-              className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+              className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
             >
               Estado
             </p>
@@ -292,7 +292,7 @@ export default function GruposPage() {
                   key={s}
                   onClick={() => toggleStatus(s)}
                   className={cn(
-                    'rounded-lg px-2.5 py-1 text-[11px] font-medium border transition-all',
+                    'rounded-lg px-2.5 py-1 text-[12px] font-medium border transition-all',
                     selectedStatuses.includes(s)
                       ? 'bg-navy text-white border-navy'
                       : 'text-navy-light hover:bg-surface-low',
@@ -305,7 +305,7 @@ export default function GruposPage() {
               {noLeaderOnly && (
                 <button
                   onClick={() => setNoLeaderOnly(false)}
-                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
+                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
                   aria-label="Quitar filtro sin dirigente"
                 >
                   Sin dirigente ✕
@@ -314,7 +314,7 @@ export default function GruposPage() {
               {closingSoonOnly && (
                 <button
                   onClick={() => setClosingSoonOnly(false)}
-                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
+                  className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-medium border border-coral/30 bg-coral/10 text-coral-deep transition-all font-display"
                   aria-label="Quitar filtro prontos a cerrar"
                 >
                   Prontos a cerrar (30 días) ✕
@@ -325,7 +325,7 @@ export default function GruposPage() {
 
           {/* Type */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
               Tipo de estudio
             </p>
             <select
@@ -342,7 +342,7 @@ export default function GruposPage() {
 
           {/* Zone */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
               Zona
             </p>
             <select
@@ -366,7 +366,7 @@ export default function GruposPage() {
 
           {/* Day */}
           <div className="space-y-1.5">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
               Día
             </p>
             <div className="flex gap-1">
@@ -392,7 +392,7 @@ export default function GruposPage() {
 
       {/* Stats row */}
       <div
-        className="flex items-center gap-1 text-[12px] text-navy-light/60 px-1 font-body"
+        className="flex items-center gap-1 text-[12px] text-navy-light/70 px-1 font-body"
       >
         <span><strong className="text-navy">{total.toLocaleString('es-CR')}</strong> grupos con estos filtros</span>
       </div>
@@ -430,22 +430,22 @@ export default function GruposPage() {
                         case 'study_type_id':
                           return <td key="study_type_id" className="px-4 py-3"><StudyTypeBadge code={group.study_type_id} size="sm" /></td>
                         case 'study_stage':
-                          return <td key="study_stage" className="px-4 py-3 text-[12px] text-navy-light/60 font-body">{studyType?.stage ?? '—'}</td>
+                          return <td key="study_stage" className="px-4 py-3 text-[12px] text-navy-light/70 font-body">{studyType?.stage ?? '—'}</td>
                         case 'leader_name':
                           return (
                             <td key="leader_name" className="px-4 py-3">
                               {group.leader_name ? (
                                 <div className="flex items-center gap-2">
-                                  <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">{getInitials(group.leader_name)}</div>
+                                  <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[11px] font-bold text-navy shrink-0">{getInitials(group.leader_name)}</div>
                                   <span className="text-sm text-navy font-body">{group.leader_name}</span>
                                 </div>
-                              ) : <span className="text-[11px] text-amber-600">Sin asignar</span>}
+                              ) : <span className="text-[12px] text-amber-600">Sin asignar</span>}
                             </td>
                           )
                         case 'zone':
                           return <td key="zone" className="px-4 py-3 text-sm text-navy-light/70 font-body">{sedeLabel(group.zone)}</td>
                         case 'schedule':
-                          return <td key="schedule" className="px-4 py-3 text-[12px] text-navy-light/60 font-body">{group.schedule_days.join('/')} {group.schedule_time}</td>
+                          return <td key="schedule" className="px-4 py-3 text-[12px] text-navy-light/70 font-body">{group.schedule_days.join('/')} {group.schedule_time}</td>
                         case 'participants_count':
                           return <td key="participants_count" className="px-4 py-3 text-sm text-navy font-body">{enrolled}/{group.max_capacity}</td>
                         case 'max_capacity':
@@ -474,7 +474,7 @@ export default function GruposPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/estudios/grupos/${group.id}`}
-                        className="rounded-lg px-2.5 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                        className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                       >
                         Ver
                       </Link>
@@ -508,11 +508,11 @@ export default function GruposPage() {
                     <p className="text-sm text-navy font-body truncate">
                       {group.leader_name ?? <span className="text-amber-600">Sin dirigente</span>}
                     </p>
-                    <p className="text-[12px] text-navy-light/60 font-body truncate">
+                    <p className="text-[12px] text-navy-light/70 font-body truncate">
                       {sedeLabel(group.zone)} · {group.schedule_days.join('/')} {group.schedule_time} · {enrolled}/{group.max_capacity}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-navy-light/60 font-body">{studyType?.stage ?? ''}</span>
+                  <span className="shrink-0 text-[12px] text-navy-light/70 font-body">{studyType?.stage ?? ''}</span>
                 </Link>
               </li>
             )
@@ -523,7 +523,7 @@ export default function GruposPage() {
           error
             ? <ErrorState message={error} onRetry={reload} />
             : loading
-              ? <div className="px-4 py-10 text-center text-sm text-navy-light/60 font-body">Cargando grupos…</div>
+              ? <div className="px-4 py-10 text-center text-sm text-navy-light/70 font-body">Cargando grupos…</div>
               : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
         )}
 

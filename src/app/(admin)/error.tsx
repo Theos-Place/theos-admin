@@ -27,7 +27,7 @@ export default function AdminError({
         <p className="mb-1 font-display text-base font-semibold text-navy">
           Algo salió mal en esta pantalla
         </p>
-        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/60">
+        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/70">
           El resto del sistema sigue funcionando. Podés intentar de nuevo o
           navegar a otra sección; si persiste, avisale al equipo de TI.
         </p>

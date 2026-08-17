@@ -109,7 +109,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
         >
           <RotateCcw size={13} />
           Solicitar devolución
-          <span className="text-[10px]">· Próximamente</span>
+          <span className="text-[11px]">· Próximamente</span>
         </button>
       </div>
 
@@ -124,7 +124,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
 
             {dataLoading || loadedFor !== memberId ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 size={18} className="animate-spin text-navy-light/60" />
+                <Loader2 size={18} className="animate-spin text-navy-light/70" />
               </div>
             ) : (
               <>
@@ -157,7 +157,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                         placeholder="Contanos por qué (mínimo 20 caracteres)…"
                         className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
                       />
-                      <p className={cn('mt-1 text-[11px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/60' : 'text-success')}>
+                      <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>
                         {reason.trim().length}/{MIN_REASON} caracteres mínimos
                       </p>
                     </div>

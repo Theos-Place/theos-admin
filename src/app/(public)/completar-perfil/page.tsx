@@ -99,7 +99,7 @@ export default function CompletarPerfilPage() {
 
         <div className="p-7 space-y-5">
           {!ready ? (
-            <p className="text-sm text-navy-light/60 py-6 text-center font-body">Verificando tu enlace…</p>
+            <p className="text-sm text-navy-light/70 py-6 text-center font-body">Verificando tu enlace…</p>
           ) : done ? (
             <div className="py-6 text-center space-y-3">
               <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
@@ -150,15 +150,15 @@ export default function CompletarPerfilPage() {
 
               {email && (
                 <div className="flex items-center gap-2 rounded-2xl bg-surface-low px-3 py-2.5">
-                  <Mail size={15} className="shrink-0 text-navy-light/60" />
+                  <Mail size={15} className="shrink-0 text-navy-light/70" />
                   <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{email}</span>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Contraseña nueva</label>
+                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Contraseña nueva</label>
                 <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
                   <input
                     type="password"
                     value={password}
@@ -170,7 +170,7 @@ export default function CompletarPerfilPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/60 font-display">Repetir contraseña</label>
+                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Repetir contraseña</label>
                 <input
                   type="password"
                   value={confirm}

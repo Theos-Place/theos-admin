@@ -143,7 +143,7 @@ export default function NotificacionesPage() {
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             Notificaciones
           </h1>
-          <p className="mt-1 text-sm text-navy-light/60 font-body">
+          <p className="mt-1 text-sm text-navy-light/70 font-body">
             {unreadCount > 0
               ? `Tenés ${unreadCount} notificación${unreadCount !== 1 ? 'es' : ''} sin leer`
               : 'Todas tus notificaciones, leídas y no leídas'}
@@ -189,7 +189,7 @@ export default function NotificacionesPage() {
                     aria-label="Seleccionar todas"
                   />
                   Seleccionar todas
-                  {selected.size > 0 && <span className="text-navy-light/60">· {selected.size} seleccionada{selected.size !== 1 ? 's' : ''}</span>}
+                  {selected.size > 0 && <span className="text-navy-light/70">· {selected.size} seleccionada{selected.size !== 1 ? 's' : ''}</span>}
                 </label>
                 <div className="flex items-center gap-2">
                   <button
@@ -236,7 +236,7 @@ export default function NotificacionesPage() {
                       'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
                       n.read ? 'bg-surface-low' : 'bg-coral/10',
                     )}>
-                      <Inbox size={18} className={n.read ? 'text-navy-light/60' : 'text-coral'} />
+                      <Inbox size={18} className={n.read ? 'text-navy-light/70' : 'text-coral'} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={cn('text-sm font-body leading-snug break-words', n.read ? 'text-navy-light/70' : 'text-navy font-semibold')}>
@@ -245,11 +245,11 @@ export default function NotificacionesPage() {
                       {n.body && (
                         <p className="text-[13px] text-navy-light/70 font-body mt-0.5 break-words">{n.body}</p>
                       )}
-                      <p className="text-[11px] text-navy-light/60 font-body mt-1">{formatDateTime(n.created_at)}</p>
+                      <p className="text-[12px] text-navy-light/70 font-body mt-1">{formatDateTime(n.created_at)}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 self-center">
                       {!n.read && <span className="h-2 w-2 rounded-full bg-coral" aria-label="No leída" />}
-                      <ChevronRight size={16} className="text-navy-light/60" />
+                      <ChevronRight size={16} className="text-navy-light/70" />
                     </div>
                   </button>
                   <button
@@ -284,11 +284,11 @@ export default function NotificacionesPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-navy font-body">{a.message}</p>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: cfg.color, fontFamily: 'var(--font-display)' }}>
+                      <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: cfg.color, fontFamily: 'var(--font-display)' }}>
                         {cfg.label}
                       </span>
                     </div>
-                    <ChevronRight size={18} className="text-navy-light/60 shrink-0" />
+                    <ChevronRight size={18} className="text-navy-light/70 shrink-0" />
                   </Link>
                 )
               })}

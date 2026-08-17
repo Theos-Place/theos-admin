@@ -101,7 +101,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="ptitle">Editar perfil</div>
         </div>
         <div className="card p-[22px]">
-          <p className="text-sm text-navy-light/60 text-center py-8 font-body">
+          <p className="text-sm text-navy-light/70 text-center py-8 font-body">
             {loading ? 'Cargando…' : 'Miembro no encontrado.'}
           </p>
         </div>
@@ -441,7 +441,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               <p className="text-sm text-navy-light/70 py-2 font-body">
                 {sede ? sedeLabel(sede) : 'Sin sede asignada'}
               </p>
-              <p className="text-[11px] text-navy-light/60 font-body">
+              <p className="text-[12px] text-navy-light/70 font-body">
                 Se asigna automáticamente según la charla a la que más asiste.
               </p>
             </div>

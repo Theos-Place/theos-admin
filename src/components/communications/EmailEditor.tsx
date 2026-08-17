@@ -156,7 +156,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
               setMode(m)
             }}
             className={cn('px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors',
-              mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/60 hover:text-navy')}
+              mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/70 hover:text-navy')}
           >
             {m === 'visual' ? 'Visual' : 'HTML'}
           </button>
@@ -237,14 +237,14 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
       {/* Variables insertables: clic → se mete en el cuerpo (en el cursor). */}
       {variables.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-[var(--outline-variant)] bg-surface-low/40">
-          <span className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mr-1">Insertar variable</span>
+          <span className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mr-1">Insertar variable</span>
           {variables.map(v => (
             <button
               key={v.key}
               type="button"
               title={v.description}
               onClick={() => insertVariable(v.key)}
-              className="rounded-full border px-2.5 py-0.5 text-[11px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
+              className="rounded-full border px-2.5 py-0.5 text-[12px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
             >
               {v.key}
             </button>

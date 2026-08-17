@@ -58,7 +58,7 @@ export function MembersTab({
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-0 sm:min-w-48 w-full sm:w-auto">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/60" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
@@ -74,7 +74,7 @@ export function MembersTab({
               onClick={() => onStatusFilterChange(v)}
               className={cn(
                 'rounded-full px-3 py-1.5 text-[12px] transition-all duration-150 font-display',
-                statusFilter === v ? 'bg-navy text-white' : 'text-navy-light/60 hover:text-navy'
+                statusFilter === v ? 'bg-navy text-white' : 'text-navy-light/70 hover:text-navy'
               )}
             >
               {l}
@@ -114,7 +114,7 @@ export function MembersTab({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-white font-display">
+                        <span className="text-[11px] font-bold text-white font-display">
                           {m.initials}
                         </span>
                       </div>
@@ -126,19 +126,19 @@ export function MembersTab({
                   <td className="px-4 py-3 text-[12px] text-navy-light/70 max-w-[180px] font-body">
                     {m.position}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
                     {new Date(m.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/60 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
                     {calcularAntiguedad(m.start_date)}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
-                        'rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
+                        'rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
                         m.status === 'active'
                           ? 'bg-teal-deep/10 text-teal-deep'
-                          : 'bg-navy-light/10 text-navy-light/60'
+                          : 'bg-navy-light/10 text-navy-light/70'
                       )}
                     >
                       {m.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -171,18 +171,18 @@ export function MembersTab({
               style={i < sortedMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
             >
               <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-white font-display">{m.initials}</span>
+                <span className="text-[11px] font-bold text-white font-display">{m.initials}</span>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-navy font-body">{m.name}</p>
-                <p className="truncate text-[12px] text-navy-light/60 font-body">
+                <p className="truncate text-[12px] text-navy-light/70 font-body">
                   {m.position} · {calcularAntiguedad(m.start_date)}
                 </p>
               </div>
               <span
                 className={cn(
-                  'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold font-display',
-                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/60',
+                  'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
+                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/70',
                 )}
               >
                 {m.status === 'active' ? 'Activo' : 'Inactivo'}

@@ -68,13 +68,13 @@ export function Step1Informacion({
                   'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
                   event_type === t.id
                     ? 'border-coral bg-coral/5 text-coral'
-                    : 'text-navy-light/60 hover:bg-surface-low',
+                    : 'text-navy-light/70 hover:bg-surface-low',
                 )}
                 style={{ borderColor: event_type === t.id ? undefined : 'var(--outline-variant)' }}
               >
                 <Icon size={18} />
                 <span
-                  className="text-[11px] font-medium font-display"
+                  className="text-[12px] font-medium font-display"
                 >
                   {t.name}
                 </span>
@@ -97,7 +97,7 @@ export function Step1Informacion({
           <div className="flex items-center justify-between mb-1">
             <FieldLabel>Descripción</FieldLabel>
             <span
-              className="text-[10px] text-navy-light/60 font-mono"
+              className="text-[11px] text-navy-light/70 font-mono"
             >
               {description.length}/500
             </span>
@@ -144,14 +144,14 @@ export function Step1Informacion({
                 : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low',
             )}
           >
-            <ImageIcon size={28} className="text-navy-light/60" />
+            <ImageIcon size={28} className="text-navy-light/70" />
             <p
-              className="text-[13px] font-medium text-navy-light/60 font-body"
+              className="text-[13px] font-medium text-navy-light/70 font-body"
             >
               Subí el flyer del evento
             </p>
             <p
-              className="text-[11px] text-navy-light/60 font-body"
+              className="text-[12px] text-navy-light/70 font-body"
             >
               PNG, JPG, WebP — máx 5MB · Recomendado: 1200×630px
             </p>

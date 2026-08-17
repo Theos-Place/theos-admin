@@ -341,7 +341,7 @@ export default function PrematrimonialWizardPage() {
                     )}
                   </button>
                 ))}
-                <p className="text-[12px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   ¿No está en la lista? Buscala por cédula o correo.
                 </p>
               </div>
@@ -371,7 +371,7 @@ export default function PrematrimonialWizardPage() {
               <div className="flex flex-wrap gap-2">{DAYS.map(d => <Chip key={d} active={days.includes(d)} onClick={() => toggle(days, setDays, d)}>{d}</Chip>)}</div></div>
             <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Horario</p>
               <div className="flex flex-wrap gap-2">{TIMES.map(t => <Chip key={t} active={times.includes(t)} onClick={() => toggle(times, setTimes, t)}>{t}</Chip>)}</div></div>
-            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Zonas donde pueden llevarlo <span className="text-navy-light/50">(Madrid = Virtual)</span></p>
+            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Zonas donde pueden llevarlo <span className="text-navy-light/70">(Madrid = Virtual)</span></p>
               <div className="flex flex-wrap gap-2">{ZONES.map(z => <Chip key={z} active={zones.includes(z)} onClick={() => toggle(zones, setZones, z)}>{z}</Chip>)}</div></div>
             <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={canHost} onChange={e => setCanHost(e.target.checked)} /> Podemos ofrecer nuestra casa para impartirlo</label>
             {canHost && (

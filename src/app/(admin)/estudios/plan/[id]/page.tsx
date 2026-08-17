@@ -22,7 +22,7 @@ import { formatMoney } from '@/lib/format'
 const PAGE_SIZE = 10
 
 const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const sectionLabelCls = 'text-[10px] tracking-widest uppercase text-navy-light/60 font-display'
+const sectionLabelCls = 'text-[11px] tracking-widest uppercase text-navy-light/70 font-display'
 
 function levelPillCls(level: string): string {
   switch (level) {
@@ -119,11 +119,11 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       <div className="space-y-4">
         <Link
           href="/estudios/plan"
-          className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+          className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
         >
           <ChevronLeft size={16} /> Plan de Estudios
         </Link>
-        <p className="text-navy-light/60 font-body">Tipo de estudio no encontrado.</p>
+        <p className="text-navy-light/70 font-body">Tipo de estudio no encontrado.</p>
       </div>
     )
   }
@@ -187,7 +187,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
       {/* ── Back ── */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver
       </button>
@@ -200,7 +200,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
               {view.name}
             </h1>
-            <p className="mt-0.5 text-sm text-navy-light/60 font-body">
+            <p className="mt-0.5 text-sm text-navy-light/70 font-body">
               {stageInfo?.label} · {view.weeks} semanas
               {view.level && ` · Nivel ${view.level}`}
               {isArchived && <span className="ml-2 text-coral font-semibold">[Desactivado]</span>}
@@ -287,7 +287,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <div>
                 <p className={sectionLabelCls}>Acceso</p>
                 <div className="mt-1.5">
-                  <span className="inline-flex items-center rounded-full bg-[rgba(155,127,212,0.15)] px-2.5 py-1 text-[11px] font-medium text-[#7C5EC2] font-body">
+                  <span className="inline-flex items-center rounded-full bg-[rgba(155,127,212,0.15)] px-2.5 py-1 text-[12px] font-medium text-[#7C5EC2] font-body">
                     Solo por invitación
                   </span>
                 </div>
@@ -300,23 +300,23 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 <p className={sectionLabelCls}>Compromisos requeridos para matricular</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   {view.req_donor && (
-                    <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[11px] font-medium text-coral font-body">
+                    <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[12px] font-medium text-coral font-body">
                       Ser donador activo
                     </span>
                   )}
                   {view.req_server && (
-                    <span className="inline-flex items-center rounded-full bg-teal-soft/30 px-2.5 py-1 text-[11px] font-medium text-teal-deep font-body">
+                    <span className="inline-flex items-center rounded-full bg-teal-soft/30 px-2.5 py-1 text-[12px] font-medium text-teal-deep font-body">
                       Servir en un comité
                     </span>
                   )}
                   {view.req_attendee && (
-                    <span className="inline-flex items-center rounded-full bg-navy/10 px-2.5 py-1 text-[11px] font-medium text-navy font-body">
+                    <span className="inline-flex items-center rounded-full bg-navy/10 px-2.5 py-1 text-[12px] font-medium text-navy font-body">
                       Asistencia regular a charlas
                     </span>
                   )}
                   {view.req_bus && (
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-2.5 py-1 text-[11px] font-medium text-coral font-body"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-2.5 py-1 text-[12px] font-medium text-coral font-body"
                       title="Haber asistido a la charla del Bus"
                     >
                       <Bus size={14} aria-hidden />
@@ -373,7 +373,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-sm font-semibold text-navy font-display">
               Listado de grupos
             </h2>
-            <p className="mt-0.5 text-xs text-navy-light/60 font-body">
+            <p className="mt-0.5 text-xs text-navy-light/70 font-body">
               {filteredGroups.length}{filteredGroups.length !== studyGroups.length ? ` de ${studyGroups.length}` : ''} grupos
             </p>
           </div>
@@ -388,7 +388,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 border-b border-[var(--outline-variant)] px-5 py-3">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-light/60 pointer-events-none" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-navy-light/70 pointer-events-none" />
             <input
               className={`${inputCls} pl-[30px] min-w-[200px]`}
               placeholder="Buscar por dirigente o zona..."
@@ -400,7 +400,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <button
                 onClick={() => setSearch('')}
                 aria-label="Limpiar búsqueda"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-navy-light/60 hover:text-navy transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy transition-colors"
               >
                 <X size={14} />
               </button>
@@ -437,8 +437,8 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
         {/* Table or empty */}
         {filteredGroups.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm font-semibold text-navy-light/60 font-display">Sin resultados</p>
-            <p className="mt-1 text-xs text-navy-light/60 font-body">Probá con otros filtros</p>
+            <p className="text-sm font-semibold text-navy-light/70 font-display">Sin resultados</p>
+            <p className="mt-1 text-xs text-navy-light/70 font-body">Probá con otros filtros</p>
           </div>
         ) : (
           <>
@@ -449,7 +449,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                     {['Dirigente', 'Zona', 'Horario', 'Participantes', 'Estado', 'Año', ''].map((h, i) => (
                       <th
                         key={`${h}-${i}`}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+                        className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
                       >
                         {h}
                       </th>
@@ -465,11 +465,11 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-navy/10 flex items-center justify-center text-[11px] font-bold text-navy shrink-0">
                             {group.leader_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) ?? '?'}
                           </div>
                           <span className="text-sm text-navy font-body">
-                            {group.leader_name ?? <span className="text-amber-600 text-[11px]">Sin asignar</span>}
+                            {group.leader_name ?? <span className="text-amber-600 text-[12px]">Sin asignar</span>}
                           </span>
                         </div>
                       </td>
@@ -503,7 +503,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/estudios/grupos/${group.id}`}
-                          className="rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                          className="rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           onClick={e => e.stopPropagation()}
                         >
                           Ver →
@@ -517,7 +517,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
 
             {hasMore && (
               <div className="flex items-center justify-between border-t border-[var(--outline-variant)] px-5 py-3">
-                <span className="text-[12px] text-navy-light/60 font-body">
+                <span className="text-[12px] text-navy-light/70 font-body">
                   Mostrando {visibleCount} de {filteredGroups.length} grupos
                 </span>
                 <div className="flex gap-2">
@@ -557,7 +557,7 @@ function DirigenteReferenteSelect({ value, currentName, onChange }: {
   if (value) {
     return (
       <div className="flex items-center gap-2 rounded-2xl border border-[var(--outline-variant)] bg-surface-low px-3 py-2">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[10px] font-display font-extrabold">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold">
           {dInitials(currentName ?? '') || '—'}
         </span>
         <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">

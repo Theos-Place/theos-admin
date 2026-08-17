@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
             Algo salió mal
           </p>
           <p
-            className="text-sm text-navy-light/60 mb-5 max-w-xs font-body"
+            className="text-sm text-navy-light/70 mb-5 max-w-xs font-body"
           >
             {this.state.error?.message ?? 'Ocurrió un error inesperado.'}
           </p>

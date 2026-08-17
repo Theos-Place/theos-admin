@@ -44,14 +44,14 @@ export function DeleteConfirmModal({
           </div>
           <div className="flex-1 min-w-0">
             <p id="delete-confirm-title" className="text-base font-bold text-navy font-display">{title}</p>
-            <p className="text-[13px] text-navy-light/60 mt-1 leading-relaxed font-body">
+            <p className="text-[13px] text-navy-light/70 mt-1 leading-relaxed font-body">
               {description}
             </p>
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
             Escribí <span className="text-coral font-semibold">{keyword}</span> para confirmar
           </label>
           <input

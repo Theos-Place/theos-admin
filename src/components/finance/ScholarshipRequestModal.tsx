@@ -120,7 +120,7 @@ export function ScholarshipRequestModal({
 
         {fixedTarget && (
           <div className="rounded-xl bg-surface-low px-4 py-3">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">Solicitando beca para</p>
+            <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Solicitando beca para</p>
             <p className="text-sm font-medium text-navy font-body">{fixedTarget.name}</p>
           </div>
         )}
@@ -137,7 +137,7 @@ export function ScholarshipRequestModal({
             placeholder="Contanos por qué (mínimo 20 caracteres)…"
             className={cn(FIELD_CLS, 'resize-none placeholder:text-navy-light/50')}
           />
-          <p className={cn('mt-1 text-[11px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/60' : 'text-success')}>
+          <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>
             {reason.trim().length}/{MIN_REASON} caracteres mínimos
           </p>
         </div>

@@ -51,33 +51,33 @@ function DirigenteRow({
         />
       )}
       <button onClick={onOpen} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[12px] font-display font-extrabold">
           {getInitials(d.member_name) || '—'}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-navy font-body font-medium truncate">{d.member_name || 'Sin nombre'}</p>
             <span className={cn(
-              'rounded-full px-2 py-0.5 text-[10px] font-medium font-body',
-              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/60',
+              'rounded-full px-2 py-0.5 text-[11px] font-medium font-body',
+              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/70',
             )}>
               {d.status === 'activo' ? 'Activo' : 'Inactivo'}
             </span>
             {d.estudios_activos.length > 0 && (
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-coral/10 text-coral font-body">
+              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-coral/10 text-coral font-body">
                 Dando ahora
               </span>
             )}
           </div>
-          <p className="text-xs text-navy-light/60 font-body mt-0.5 truncate">
+          <p className="text-xs text-navy-light/70 font-body mt-0.5 truncate">
             {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
             {d.estudios_activos.length > 0 && ` · ${d.estudios_activos.map(g => g.plan_code).slice(0, 3).join(', ')}`}
           </p>
         </div>
-        <span className="hidden sm:flex items-center gap-1 text-xs text-navy-light/60 font-body shrink-0">
+        <span className="hidden sm:flex items-center gap-1 text-xs text-navy-light/70 font-body shrink-0">
           <Users size={12} /> {d.estudios_activos.reduce((s, g) => s + g.students_count, 0)}
         </span>
-        <ChevronRight size={16} className="text-navy-light/60 shrink-0" />
+        <ChevronRight size={16} className="text-navy-light/70 shrink-0" />
       </button>
     </div>
   )
@@ -201,7 +201,7 @@ export default function DirigentesPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Dirigentes</h1>
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             {counts.activos} activos · {counts.inactivos} inactivos (con historial)
           </p>
         </div>
@@ -250,7 +250,7 @@ export default function DirigentesPage() {
           ))}
           <div className="flex-1" />
           <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-1.5 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
-            <Search size={15} className="text-navy-light/60 shrink-0" />
+            <Search size={15} className="text-navy-light/70 shrink-0" />
             <input
               value={query}
               onChange={e => setQuery(e.target.value)}
@@ -301,10 +301,10 @@ export default function DirigentesPage() {
       {loading ? (
         <div className="py-16 text-center font-body">
           <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-          <p className="text-sm text-navy-light/60">Cargando dirigentes…</p>
+          <p className="text-sm text-navy-light/70">Cargando dirigentes…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-navy-light/60 font-body">Sin dirigentes para los filtros aplicados</p>
+        <p className="py-12 text-center text-sm text-navy-light/70 font-body">Sin dirigentes para los filtros aplicados</p>
       ) : (
         <>
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
@@ -318,7 +318,7 @@ export default function DirigentesPage() {
                   aria-label="Seleccionar todos"
                   className="accent-coral h-4 w-4 shrink-0"
                 />
-                <span className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+                <span className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                   {sel.count > 0 ? `${sel.count} de ${filtered.length}` : `Seleccionar todos (${filtered.length})`}
                 </span>
               </div>
@@ -351,9 +351,9 @@ export default function DirigentesPage() {
               {confirm.ids.length} dirigente{confirm.ids.length === 1 ? '' : 's'} pasará{confirm.ids.length === 1 ? '' : 'n'} a{' '}
               <strong className="text-navy">{confirm.active ? 'activo' : 'inactivo'}</strong>.
               {confirm.active ? (
-                <span className="block mt-1 text-[12px] text-navy-light/60">Se agregan al <strong>Comité de Dirigentes</strong> y se les asigna el <strong>rol de dirigente</strong>.</span>
+                <span className="block mt-1 text-[12px] text-navy-light/70">Se agregan al <strong>Comité de Dirigentes</strong> y se les asigna el <strong>rol de dirigente</strong>.</span>
               ) : (
-                <span className="block mt-1 text-[12px] text-navy-light/60">Salen del <strong>Comité de Dirigentes</strong> y pierden el <strong>rol de dirigente</strong>. Los que tengan grupo en curso/abierto se omiten automáticamente.</span>
+                <span className="block mt-1 text-[12px] text-navy-light/70">Salen del <strong>Comité de Dirigentes</strong> y pierden el <strong>rol de dirigente</strong>. Los que tengan grupo en curso/abierto se omiten automáticamente.</span>
               )}
             </p>
             <div className="flex gap-2 pt-1">
@@ -401,7 +401,7 @@ function StudyFilter({
   const opts = studySelectOptions(options)
   return (
     <div className="space-y-1">
-      <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display" title={hint}>{label}</p>
+      <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display" title={hint}>{label}</p>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -459,7 +459,7 @@ function BulkStudiesModal({
           {action === 'add' ? 'Agregar' : 'Quitar'} estudio a {field === 'formation' ? 'la formación' : 'la disponibilidad'}
         </h3>
         <div className="space-y-1">
-          <label className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Estudio</label>
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Estudio</label>
           <select
             value={code}
             onChange={e => setCode(e.target.value)}
@@ -529,13 +529,13 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
           <>
             <div className="rounded-xl bg-surface-low px-3 py-2.5">
               <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
-              <button onClick={() => setPicked(null)} className="mt-1 text-[11px] text-coral hover:underline font-body">Elegir otro</button>
+              <button onClick={() => setPicked(null)} className="mt-1 text-[12px] text-coral hover:underline font-body">Elegir otro</button>
             </div>
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input type="checkbox" checked={activo} onChange={e => setActivo(e.target.checked)} className="accent-coral h-4 w-4 mt-0.5 rounded" />
               <span className="text-sm text-navy-light/80 font-body">
                 Marcar como <strong className="text-navy">activo</strong>
-                <span className="block text-[11px] text-navy-light/60">Si lo activás, se agrega al Comité de Dirigentes. Si no, queda como dirigente inactivo.</span>
+                <span className="block text-[12px] text-navy-light/70">Si lo activás, se agrega al Comité de Dirigentes. Si no, queda como dirigente inactivo.</span>
               </span>
             </label>
           </>

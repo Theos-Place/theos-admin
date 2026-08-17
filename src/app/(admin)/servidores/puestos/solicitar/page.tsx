@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, Clock } from 'lucide-react'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/60 font-display'
+const labelCls = 'text-[12px] tracking-widest uppercase text-navy-light/70 font-display'
 
 function SolicitarPuestoContent() {
   const params = useSearchParams()
@@ -120,7 +120,7 @@ function SolicitarPuestoContent() {
         <div className="text-center space-y-3 max-w-sm">
           <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto"><Clock size={24} className="text-amber-700" /></div>
           <p className="text-xl font-bold text-navy font-display">Solicitud enviada</p>
-          <p className="text-sm text-navy-light/60 font-body">Staff revisará tu solicitud. Cuando la aprueben, el puesto quedará disponible para solicitarle vacantes.</p>
+          <p className="text-sm text-navy-light/70 font-body">Staff revisará tu solicitud. Cuando la aprueben, el puesto quedará disponible para solicitarle vacantes.</p>
         </div>
       </div>
     )
@@ -129,10 +129,10 @@ function SolicitarPuestoContent() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/60 hover:text-navy transition-colors font-body">
+        <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body">
           <ChevronLeft size={16} /> Puestos de Servicio
         </Link>
-        <span className="text-navy-light/60">|</span>
+        <span className="text-navy-light/70">|</span>
         <span className="text-sm font-semibold text-navy font-display">Solicitar puesto nuevo</span>
       </div>
 

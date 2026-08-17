@@ -118,7 +118,7 @@ export function EventInfoTab({
       )}
 
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Descripción</h3>
+        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Descripción</h3>
         <p className="text-sm text-navy-light/70 leading-relaxed font-body">{event.description}</p>
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-t-[var(--outline-variant)]">
           {[
@@ -132,14 +132,14 @@ export function EventInfoTab({
             { label: 'Capacidad', value: event.max_capacity != null ? `${event.max_capacity} personas` : 'Sin límite' },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
-              <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">{label}</p>
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{label}</p>
               <p className="text-sm text-navy font-body">{value}</p>
             </div>
           ))}
         </div>
         {event.is_virtual && event.virtual_url && (
           <div className="space-y-0.5 pt-2 border-t border-t-[var(--outline-variant)]">
-            <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Link de la reunión</p>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Link de la reunión</p>
             <a
               href={event.virtual_url}
               target="_blank"
@@ -156,7 +156,7 @@ export function EventInfoTab({
       <div className="space-y-4">
         {event.sub_events.length > 0 && (
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 mb-3 font-display">Sub-eventos</h3>
+            <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display">Sub-eventos</h3>
             <div className="space-y-2">
               {event.sub_events.map(se => {
                 const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
@@ -173,7 +173,7 @@ export function EventInfoTab({
         )}
 
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Configuración</h3>
+          <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Configuración</h3>
           {[
             // recurrenceLabel traduce la regla a algo legible ("El día 21 de cada
             // mes"); la regla cruda (FREQ=MONTHLY;BYMONTHDAY=21) no le dice nada a
@@ -185,7 +185,7 @@ export function EventInfoTab({
             { label: 'Pago', value: event.requires_payment ? formatMoney(event.payment_amount ?? 0, event.currency) : 'Gratuito' },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <span className="text-navy-light/60 font-body">{label}</span>
+              <span className="text-navy-light/70 font-body">{label}</span>
               <span className="text-navy font-medium font-body">{value}</span>
             </div>
           ))}
@@ -193,7 +193,7 @@ export function EventInfoTab({
 
         {/* Flyer */}
         <div className="rounded-2xl p-4 space-y-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <h3 className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Flyer / Banner</h3>
+          <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Flyer / Banner</h3>
           <input
             ref={flyerInputRef}
             type="file"
@@ -221,16 +221,16 @@ export function EventInfoTab({
                   flyerDragOver ? 'border-coral bg-coral/5' : 'border-[rgba(22,20,64,0.15)] hover:border-coral/40 hover:bg-surface-low'
                 )}
               >
-                <ImageIcon size={24} className="text-navy-light/60" />
-                <p className="text-[12px] font-medium text-navy-light/60 font-body">
+                <ImageIcon size={24} className="text-navy-light/70" />
+                <p className="text-[12px] font-medium text-navy-light/70 font-body">
                   Subir flyer
                 </p>
-                <p className="text-[10px] text-navy-light/60 font-body">
+                <p className="text-[11px] text-navy-light/70 font-body">
                   PNG, JPG, WebP — máx 5MB
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-navy-light/60 font-body">Sin flyer.</p>
+              <p className="text-sm text-navy-light/70 font-body">Sin flyer.</p>
             )
           ) : (
             <div className="relative rounded-xl overflow-hidden border border-[var(--outline-variant)]">
@@ -239,11 +239,11 @@ export function EventInfoTab({
               {canEditFlyer && (
                 <div className="absolute bottom-0 inset-x-0 flex gap-2 justify-end p-2 bg-[rgba(22,20,64,0.6)]">
                   <button type="button" onClick={() => flyerInputRef.current?.click()}
-                    className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body">
+                    className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-white bg-white/20 hover:bg-white/30 transition-colors font-body">
                     Cambiar
                   </button>
                   <button type="button" onClick={onFlyerClear}
-                    className="rounded-lg px-3 py-1.5 text-[11px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
+                    className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
                     Eliminar
                   </button>
                 </div>

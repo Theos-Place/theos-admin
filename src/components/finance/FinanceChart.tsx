@@ -61,18 +61,18 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-navy" />
-            <span className="text-[11px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
+            <span className="text-[12px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-teal-deep" />
-            <span className="text-[11px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
+            <span className="text-[12px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
           </div>
           {presentes.length > 1 && (
             <select
               value={cur}
               onChange={e => setMoneda(e.target.value as Currency)}
               aria-label="Moneda del gráfico"
-              className="rounded-lg border border-[var(--outline-variant)] bg-surface-card px-2 py-1 text-[11px] text-navy font-body"
+              className="rounded-lg border border-[var(--outline-variant)] bg-surface-card px-2 py-1 text-[12px] text-navy font-body"
             >
               {presentes.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -85,7 +85,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
           {[1, 0.75, 0.5, 0.25, 0].map(frac => (
             <div key={frac} className="flex items-center gap-2">
-              <span className="text-[10px] w-12 text-right shrink-0 text-[rgba(22,20,64,0.30)] font-body">
+              <span className="text-[11px] w-12 text-right shrink-0 text-[rgba(22,20,64,0.30)] font-body">
                 {frac === 0 ? '0' : `${currencySymbol(cur)}${Math.round(maxVal * frac / 1000)}k`}
               </span>
               <div className="flex-1 border-t border-[rgba(22,20,64,0.06)]" />
@@ -120,7 +120,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                     title={`Donaciones: ${formatMoney(dv, cur)}`}
                   />
                 </div>
-                <span className="text-[11px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
+                <span className="text-[12px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
                   {label}
                 </span>
               </div>

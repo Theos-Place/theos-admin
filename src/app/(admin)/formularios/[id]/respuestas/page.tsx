@@ -126,7 +126,7 @@ export default function RespuestasPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">Cargando…</p>
+        <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
       </div>
     )
   }
@@ -134,7 +134,7 @@ export default function RespuestasPage() {
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/60 font-body">Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/70 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -146,7 +146,7 @@ export default function RespuestasPage() {
         <div>
           <Link
             href="/formularios"
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/60 hover:text-navy transition-colors mb-2 font-body"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body"
           >
             <ChevronLeft size={15} />
             Formularios
@@ -154,7 +154,7 @@ export default function RespuestasPage() {
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             {form.name}
           </h1>
-          <p className="text-sm text-navy-light/60 mt-0.5 font-body">
+          <p className="text-sm text-navy-light/70 mt-0.5 font-body">
             {responses.length} respuesta{responses.length !== 1 ? 's' : ''} · {dataFields.length} campos
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function RespuestasPage() {
 
       {responses.length === 0 ? (
         <div className="rounded-2xl py-16 flex flex-col items-center gap-3 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-sm text-navy-light/60 font-body">
+          <p className="text-sm text-navy-light/70 font-body">
             Este formulario todavía no tiene respuestas.
           </p>
           <Link
@@ -227,7 +227,7 @@ export default function RespuestasPage() {
           {/* Individual responses table */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="px-5 py-4 border-b flex items-center justify-between border-[var(--outline-variant)]">
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+              <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                 Respuestas individuales
               </p>
             </div>
@@ -238,7 +238,7 @@ export default function RespuestasPage() {
                     {['Miembro', 'Fecha de envío', ''].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[10px] tracking-widest uppercase text-navy-light/60 font-display"
+                        className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
                       >
                         {h}
                       </th>
@@ -257,21 +257,21 @@ export default function RespuestasPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-bold text-white font-display">
+                            <span className="text-[11px] font-bold text-white font-display">
                               {resp.member_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                             </span>
                           </div>
                           <p className="text-sm text-navy font-body">{resp.member_name}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/60 font-body">
+                      <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
                         {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </td>
                       <td className="px-4 py-3">
                         <button
                           type="button"
                           onClick={() => setDetailResponse(resp)}
-                          className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                          className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         >
                           Ver detalle
                           <ChevronRight size={12} />
@@ -292,17 +292,17 @@ export default function RespuestasPage() {
                   className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
                 >
                   <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-white font-display">
+                    <span className="text-[11px] font-bold text-white font-display">
                       {resp.member_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{resp.member_name}</p>
-                    <p className="truncate text-[12px] text-navy-light/60 font-body">
+                    <p className="truncate text-[12px] text-navy-light/70 font-body">
                       {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <ChevronRight size={16} className="text-navy-light/60 shrink-0" />
+                  <ChevronRight size={16} className="text-navy-light/70 shrink-0" />
                 </li>
               ))}
             </ul>
@@ -328,7 +328,7 @@ export default function RespuestasPage() {
                 <p id="detalle-respuesta-title" className="text-sm font-bold text-navy font-display">
                   {detailResponse.member_name}
                 </p>
-                <p className="text-[11px] text-navy-light/60 font-body">
+                <p className="text-[12px] text-navy-light/70 font-body">
                   {new Date(detailResponse.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
@@ -338,14 +338,14 @@ export default function RespuestasPage() {
               {dataFields.map(f => {
                 const ans = detailResponse.answers[f.id]
                 const displayAns = ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
-                  ? <span className="italic text-navy-light/60">Sin respuesta</span>
+                  ? <span className="italic text-navy-light/70">Sin respuesta</span>
                   : Array.isArray(ans)
                   ? ans.join(', ')
                   : String(ans)
 
                 return (
                   <div key={f.id} className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-widest text-navy-light/60 font-display">
+                    <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
                       {f.label}
                     </p>
                     <p className="text-sm text-navy leading-relaxed font-body">

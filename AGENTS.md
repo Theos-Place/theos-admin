@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Accesibilidad
 
-Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de la marca, meta WCAG 2.1 AA). Resumen: texto informativo mínimo `text-navy-light/60` (`/70` si es < 18px), nunca `/20`–`/30` para texto; `aria-label` en botones solo-ícono y en inputs sin label visible; modales solo con el `Modal.tsx` compartido; todo operable con teclado.
+Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de la marca, meta WCAG 2.1 AA). Resumen: texto informativo mínimo `text-navy-light/70` (el `/60` se eliminó del código en 2026-08-17 — no reintroducirlo), nunca `/20`–`/30` para texto; tamaño mínimo de texto informativo `text-[11px]` (nunca 9px); `aria-label` en botones solo-ícono y en inputs sin label visible; modales solo con el `Modal.tsx` compartido; todo operable con teclado.
 
 # Ancho y layout
 

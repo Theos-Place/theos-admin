@@ -70,10 +70,10 @@ export default function EditarVacantePage() {
   }
 
   if (loading && !vacancy) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/60 font-body">Cargando vacante...</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/70 font-body">Cargando vacante...</p></div>
   }
   if (!vacancy) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/60 font-body">Vacante no encontrada.</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/70 font-body">Vacante no encontrada.</p></div>
   }
   if (saved) {
     return (
@@ -115,13 +115,13 @@ export default function EditarVacantePage() {
       {/* Contenido del PUESTO (solo lectura): para cambiarlo, editá el puesto. */}
       {(desc || funcs || profile || skills || nivel) && (
         <div className="card py-4 px-[22px] mb-3">
-          <p className="text-[10px] uppercase tracking-widest text-navy-light/60 font-display mb-2">Del puesto (no editable acá)</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mb-2">Del puesto (no editable acá)</p>
           <div className="space-y-3">
             {nivel && <p className="text-[12px] text-navy-light/80 font-body"><span className="font-semibold text-navy">Nivel:</span> {nivel}</p>}
-            {desc && <div><p className="text-[11px] font-semibold text-navy font-display">Descripción</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line">{desc}</p></div>}
-            {funcs && <div><p className="text-[11px] font-semibold text-navy font-display">Funciones</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{funcs}</p></div>}
-            {profile && <div><p className="text-[11px] font-semibold text-navy font-display">Perfil</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{profile}</p></div>}
-            {skills && <div><p className="text-[11px] font-semibold text-navy font-display">Habilidades</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{skills}</p></div>}
+            {desc && <div><p className="text-[12px] font-semibold text-navy font-display">Descripción</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line">{desc}</p></div>}
+            {funcs && <div><p className="text-[12px] font-semibold text-navy font-display">Funciones</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{funcs}</p></div>}
+            {profile && <div><p className="text-[12px] font-semibold text-navy font-display">Perfil</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{profile}</p></div>}
+            {skills && <div><p className="text-[12px] font-semibold text-navy font-display">Habilidades</p><p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">{skills}</p></div>}
           </div>
         </div>
       )}

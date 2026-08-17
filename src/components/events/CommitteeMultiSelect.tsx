@@ -56,7 +56,7 @@ export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar co
           {value.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-navy/10 text-navy px-2.5 py-1 text-[12px] font-body">
               {nameById[id] ?? 'Comité'}
-              <button type="button" onClick={() => remove(id)} aria-label={`Quitar ${nameById[id] ?? 'comité'}`} className="text-navy-light/60 hover:text-coral">
+              <button type="button" onClick={() => remove(id)} aria-label={`Quitar ${nameById[id] ?? 'comité'}`} className="text-navy-light/70 hover:text-coral">
                 <X size={12} />
               </button>
             </span>
@@ -65,7 +65,7 @@ export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar co
       )}
 
       <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
-        <Search size={15} className="text-navy-light/60 shrink-0" />
+        <Search size={15} className="text-navy-light/70 shrink-0" />
         <input
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}

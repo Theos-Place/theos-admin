@@ -169,7 +169,7 @@ export default function ImportarDonacionesPage() {
                 >
                   {step > s ? <Check size={13} /> : s}
                 </div>
-                <span className="text-[11px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
+                <span className="text-[12px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
                   {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Confirmar'}
                 </span>
                 {idx < 2 && <ChevronRight size={14} className="text-[rgba(255,255,255,0.30)]" />}
@@ -207,7 +207,7 @@ export default function ImportarDonacionesPage() {
                 <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.60)]">
                   o hacé clic para seleccionar
                 </p>
-                <p className="text-[11px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
+                <p className="text-[12px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
                   Formato: cédula, nombre, fecha, monto
                 </p>
               </div>
@@ -246,7 +246,7 @@ export default function ImportarDonacionesPage() {
                   <Icon size={20} className="shrink-0" style={{ color }} />
                   <div>
                     <p className="text-xl font-extrabold font-display" style={{ color }}>{count}</p>
-                    <p className="text-[11px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
+                    <p className="text-[12px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
                   </div>
                 </div>
               ))}
@@ -259,7 +259,7 @@ export default function ImportarDonacionesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Cédula', 'Nombre del CSV', 'Fecha', 'Monto'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[10px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                           {h}
                         </th>
                       ))}

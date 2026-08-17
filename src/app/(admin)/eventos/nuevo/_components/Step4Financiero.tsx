@@ -60,7 +60,7 @@ export function Step4Financiero({
               <option value="">Sin sede</option>
               {activeSedes.map(s => <option key={s.sede_id ?? s.id} value={s.sede_id ?? ''}>{s.name}</option>)}
             </select>
-            <p className="text-[11px] text-navy-light/60 mt-1 font-body">
+            <p className="text-[12px] text-navy-light/70 mt-1 font-body">
               Propone la moneda del cobro. Se puede cambiar abajo.
             </p>
           </div>
@@ -88,7 +88,7 @@ export function Step4Financiero({
                 <div>
                   <FieldLabel>Costo</FieldLabel>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">{currencySymbol(currency)}</span>
                     <input
                       type="number"
                       step={amountStep(currency)}
@@ -102,7 +102,7 @@ export function Step4Financiero({
                 <div>
                   <FieldLabel>Costo para servidores (opcional)</FieldLabel>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/60 font-mono">{currencySymbol(currency)}</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">{currencySymbol(currency)}</span>
                     <input
                       type="number"
                       step={amountStep(currency)}
@@ -113,7 +113,7 @@ export function Step4Financiero({
                       disabled={!servers_pay}
                     />
                   </div>
-                  <p className="text-[11px] text-navy-light/60 mt-1 font-body">
+                  <p className="text-[12px] text-navy-light/70 mt-1 font-body">
                     Se aplica a servidores activos de los comités organizadores.
                   </p>
                 </div>

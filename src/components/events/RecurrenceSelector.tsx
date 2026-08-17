@@ -111,7 +111,7 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
     <div className="space-y-3">
       {/* Frecuencia */}
       <div className="space-y-1.5">
-        <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Frecuencia</p>
+        <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Frecuencia</p>
         <div className="flex gap-2">
           {(['WEEKLY', 'MONTHLY'] as const).map(f => (
             <button
@@ -130,7 +130,7 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
       {/* Semanal: días (multi) */}
       {freq === 'WEEKLY' && (
         <div className="space-y-1.5">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Días de la semana</p>
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Días de la semana</p>
           <div className="flex gap-1.5">
             {DAYS.map(d => (
               <button
@@ -145,14 +145,14 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-navy-light/60 font-body">Podés elegir varios días por semana.</p>
+          <p className="text-[12px] text-navy-light/70 font-body">Podés elegir varios días por semana.</p>
         </div>
       )}
 
       {/* Mensual: modo día del mes | posición + día */}
       {freq === 'MONTHLY' && (
         <div className="space-y-2">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Repetir cada mes</p>
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Repetir cada mes</p>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="radio" name="monthMode" className="accent-coral" checked={monthMode === 'dom'} onChange={() => { setMonthMode('dom'); emit({ monthMode: 'dom' }) }} />
             <span className="text-sm text-navy font-body">El día</span>
@@ -190,7 +190,7 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
       {/* Fin de la recurrencia (opcional) */}
       {onEndDateChange && (
         <div className="space-y-1.5 pt-1">
-          <p className="text-[10px] tracking-widest uppercase text-navy-light/60 font-display">Termina el (opcional)</p>
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Termina el (opcional)</p>
           <div className="flex items-center gap-2 max-w-xs">
             <DatePicker
               value={endDate ?? ''}
@@ -202,13 +202,13 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
               <button
                 type="button"
                 onClick={() => onEndDateChange('')}
-                className="shrink-0 text-[12px] text-navy-light/60 hover:text-coral transition-colors font-body"
+                className="shrink-0 text-[12px] text-navy-light/70 hover:text-coral transition-colors font-body"
               >
                 Quitar
               </button>
             )}
           </div>
-          <p className="text-[11px] text-navy-light/60 font-body">Sin fecha, la serie se repite indefinidamente.</p>
+          <p className="text-[12px] text-navy-light/70 font-body">Sin fecha, la serie se repite indefinidamente.</p>
         </div>
       )}
     </div>
