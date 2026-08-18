@@ -52,16 +52,23 @@ describe('la línea del año', () => {
 describe('la barra de un bloque', () => {
   const bar = bloqueBar(BLOQUE, 2026)!
 
-  it('va del primer folleto al cierre de matrícula, no solo de los días abiertos', () => {
-    // preliminar = apertura − 21 días = 2026-08-10; cierre = 2026-09-13.
+  it('va del primer folleto al cierre del bloque (matrícula + 3 meses)', () => {
+    // preliminar = apertura − 21 días = 2026-08-10; cierre de bloque = 2026-12-13.
     const inicio = positionInYear('2026-08-10', 2026)!
     expect(bar.leftPct).toBeCloseTo(inicio, 5)
-    const fin = positionInYear('2026-09-13', 2026)!
+    const fin = positionInYear('2026-12-13', 2026)!
     expect(bar.leftPct + bar.widthPct).toBeCloseTo(fin, 5)
   })
 
-  it('trae los cuatro hitos, en orden cronológico', () => {
-    expect(bar.hitos.map(h => h.key)).toEqual(['preliminar', 'confirmacion', 'apertura', 'final'])
+  it('la ventana de matrícula es un tramo interno al inicio de la barra', () => {
+    expect(bar.matricula).not.toBeNull()
+    expect(bar.matricula!.leftPct).toBeCloseTo(0, 5)
+    // La matrícula (10 ago → 13 sep) es solo una parte de la barra (10 ago → 13 dic).
+    expect(bar.matricula!.leftPct + bar.matricula!.widthPct).toBeLessThan(50)
+  })
+
+  it('trae los cinco hitos, en orden cronológico', () => {
+    expect(bar.hitos.map(h => h.key)).toEqual(['preliminar', 'confirmacion', 'apertura', 'final', 'cierre_bloque'])
     for (let i = 1; i < bar.hitos.length; i++) {
       expect(bar.hitos[i].pct).toBeGreaterThanOrEqual(bar.hitos[i - 1].pct)
     }
@@ -73,6 +80,7 @@ describe('la barra de un bloque', () => {
     expect(porKey.confirmacion).toBe('2026-08-17')    // apertura − 14
     expect(porKey.apertura).toBe('2026-08-31')
     expect(porKey.final).toBe('2026-09-13')
+    expect(porKey.cierre_bloque).toBe('2026-12-13')   // cierre matrícula + 3 meses
   })
 
   it('un bloque de otro año no se pinta', () => {

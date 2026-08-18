@@ -44,7 +44,7 @@ export async function getBloques(): Promise<DbBloque[]> {
   const rows = (data ?? []) as DbBloque[]
   const aperturas = rows.map(b => b.fecha_apertura)
   return rows.map(b => ({
-    ...b, estado: bloqueEstadoActual(b.fecha_apertura, aperturas, today),
+    ...b, estado: bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, aperturas, today),
   }))
 }
 
@@ -59,7 +59,7 @@ export async function createBloque(input: {
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
   const aperturas = [...(await getAperturas(supabase)), input.fecha_apertura]
-  const estado = bloqueEstadoActual(input.fecha_apertura, aperturas, crToday())
+  const estado = bloqueEstadoActual(input.fecha_apertura, input.fecha_cierre_matricula, aperturas, crToday())
   const { data, error } = await supabase.from('capacitacion_bloques').insert({ ...input, estado }).select('id').single()
   if (error) throw error
   return data as { id: string }
@@ -75,9 +75,9 @@ export async function updateBloque(id: string, patch: Partial<{
     nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
     estado: string; updated_at: string
   }> = { ...patch, updated_at: new Date().toISOString() }
-  if (patch.fecha_apertura) {
+  if (patch.fecha_apertura && patch.fecha_cierre_matricula) {
     const aperturas = [...(await getAperturas(supabase)), patch.fecha_apertura]
-    row.estado = bloqueEstadoActual(patch.fecha_apertura, aperturas, crToday())
+    row.estado = bloqueEstadoActual(patch.fecha_apertura, patch.fecha_cierre_matricula, aperturas, crToday())
   }
   const { error } = await supabase.from('capacitacion_bloques').update(row).eq('id', id)
   if (error) throw error
@@ -146,7 +146,7 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
   // Recalcular el estado almacenado (cache) a diario según fechas.
   const aperturas = list.map(b => b.fecha_apertura)
   for (const b of list) {
-    const derived = bloqueEstadoActual(b.fecha_apertura, aperturas, todayIso)
+    const derived = bloqueEstadoActual(b.fecha_apertura, b.fecha_cierre_matricula, aperturas, todayIso)
     if (derived !== b.estado) {
       await supabase.from('capacitacion_bloques').update({ estado: derived }).eq('id', b.id)
     }

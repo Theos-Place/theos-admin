@@ -9,7 +9,7 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { cn } from '@/lib/utils'
 import { CalendarRange, Loader2, Plus, Pencil, Trash2, Check } from 'lucide-react'
-import { bloqueMilestones, suggestedBlocksForYear, BLOQUE_ESTADO_LABEL, BLOQUE_ESTADO_BADGE, type BloqueEstado } from '@/lib/studies/bloques'
+import { bloqueMilestones, bloqueCierre, suggestedBlocksForYear, BLOQUE_ESTADO_LABEL, BLOQUE_ESTADO_BADGE, type BloqueEstado } from '@/lib/studies/bloques'
 import { BloqueCalendar } from '@/components/studies/BloqueCalendar'
 import { availableYears, type VentanaGrupo } from '@/lib/studies/bloque-calendar'
 import { ymdCR } from '@/lib/format'
@@ -226,7 +226,7 @@ export default function BloquesPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead><tr>
-                {['Bloque', 'Apertura', 'Cierre matrícula', 'Hitos (prelim · confirm · final)', 'Estado', ''].map(h => (
+                {['Bloque', 'Apertura', 'Cierre matrícula', 'Cierre de bloque', 'Hitos (prelim · confirm · final)', 'Estado', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
                 ))}
               </tr></thead>
@@ -238,6 +238,7 @@ export default function BloquesPage() {
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{b.nombre}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_apertura)}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_cierre_matricula)}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(bloqueCierre(b.fecha_cierre_matricula))}</td>
                       <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body whitespace-nowrap">
                         {fmt(hitos.preliminar)} · {fmt(hitos.confirmacion)} · {fmt(hitos.final)}
                       </td>
@@ -288,7 +289,7 @@ export default function BloquesPage() {
             <div className="space-y-1">
               <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Año</label>
               <input type="number" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-              <p className="text-[12px] text-navy-light/70 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas.</p>
+              <p className="text-[12px] text-navy-light/70 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas. El bloque cierra 3 meses después del cierre de matrícula (~3.5 meses de duración).</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -302,7 +303,7 @@ export default function BloquesPage() {
             </div>
             {milestones && (
               <p className="text-[12px] text-navy-light/70 font-body rounded-xl bg-surface-low px-3 py-2">
-                Hitos: preliminar <strong>{fmt(milestones.preliminar)}</strong> · confirmación <strong>{fmt(milestones.confirmacion)}</strong> · final <strong>{fmt(milestones.final)}</strong>
+                Hitos: preliminar <strong>{fmt(milestones.preliminar)}</strong> · confirmación <strong>{fmt(milestones.confirmacion)}</strong> · final <strong>{fmt(milestones.final)}</strong> · cierre de bloque <strong>{fmt(bloqueCierre(form.fecha_cierre_matricula))}</strong>
               </p>
             )}
             {msg && <p className="text-[12px] text-coral font-body">{msg}</p>}

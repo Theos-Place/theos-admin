@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
-  addDays, bloqueMilestones, bloqueEstadoActual, suggestedBlocksForYear, isCapacitacion,
+  addDays, addMonths, bloqueMilestones, bloqueEstadoActual, bloqueCierre,
+  suggestedBlocksForYear, isCapacitacion,
 } from './bloques'
 
 describe('addDays', () => {
@@ -31,23 +32,52 @@ describe('bloqueMilestones', () => {
   })
 })
 
-describe('bloqueEstadoActual (regla por cuatrimestre)', () => {
-  // Bloque 2 abre en mayo, bloque 3 en septiembre.
+describe('bloqueEstadoActual (activo hasta el cierre de bloque)', () => {
+  // Bloque 2 abre en mayo (matrícula al 22 may), bloque 3 en septiembre.
   const aperturas = ['2026-01-15', '2026-05-15', '2026-09-14']
   it('antes de la apertura → en_apertura', () => {
-    expect(bloqueEstadoActual('2026-09-14', aperturas, '2026-09-13')).toBe('en_apertura')
+    expect(bloqueEstadoActual('2026-09-14', '2026-09-21', aperturas, '2026-09-13')).toBe('en_apertura')
   })
   it('el día de la apertura → activo', () => {
-    expect(bloqueEstadoActual('2026-09-14', aperturas, '2026-09-14')).toBe('activo')
+    expect(bloqueEstadoActual('2026-09-14', '2026-09-21', aperturas, '2026-09-14')).toBe('activo')
   })
-  it('sigue activo aunque su matrícula haya cerrado, hasta que abra el siguiente', () => {
-    expect(bloqueEstadoActual('2026-05-15', aperturas, '2026-08-17')).toBe('activo')
+  it('sigue activo aunque su matrícula haya cerrado (dura 3 meses más)', () => {
+    expect(bloqueEstadoActual('2026-05-15', '2026-05-22', aperturas, '2026-08-17')).toBe('activo')
   })
-  it('cuando abre el bloque siguiente → archivado', () => {
-    expect(bloqueEstadoActual('2026-05-15', aperturas, '2026-09-14')).toBe('archivado')
+  it('pasado el cierre de bloque (matrícula + 3 meses) → archivado', () => {
+    expect(bloqueEstadoActual('2026-05-15', '2026-05-22', aperturas, '2026-08-22')).toBe('activo')
+    expect(bloqueEstadoActual('2026-05-15', '2026-05-22', aperturas, '2026-08-23')).toBe('archivado')
   })
-  it('el último bloque queda activo indefinidamente si no hay otro posterior', () => {
-    expect(bloqueEstadoActual('2026-09-14', aperturas, '2027-06-01')).toBe('activo')
+  it('si el siguiente abre antes del cierre, archiva al abrir el siguiente', () => {
+    // Cierre de matrícula tardío (1 ago → cierre de bloque 1 nov), pero el
+    // bloque 3 abre el 14 sep: manda la apertura del siguiente.
+    expect(bloqueEstadoActual('2026-05-15', '2026-08-01', aperturas, '2026-09-14')).toBe('archivado')
+  })
+  it('el último bloque queda activo hasta SU cierre, sin depender de otro', () => {
+    expect(bloqueEstadoActual('2026-09-14', '2026-09-21', aperturas, '2026-12-21')).toBe('activo')
+    expect(bloqueEstadoActual('2026-09-14', '2026-09-21', aperturas, '2026-12-22')).toBe('archivado')
+  })
+})
+
+describe('addMonths', () => {
+  it('suma meses calendario', () => {
+    expect(addMonths('2026-05-15', 3)).toBe('2026-08-15')
+  })
+  it('cruza fin de año', () => {
+    expect(addMonths('2026-09-14', 4)).toBe('2027-01-14')
+  })
+  it('si el día no existe en el mes destino, cae al último día (31 ene + 1 mes)', () => {
+    expect(addMonths('2026-01-31', 1)).toBe('2026-02-28')
+  })
+})
+
+describe('bloqueCierre (cierre de matrícula + 3 meses)', () => {
+  it('suma 3 meses al cierre de matrícula', () => {
+    expect(bloqueCierre('2026-09-13')).toBe('2026-12-13')
+    expect(bloqueCierre('2026-05-22')).toBe('2026-08-22')
+  })
+  it('cruza fin de año', () => {
+    expect(bloqueCierre('2026-11-30')).toBe('2027-02-28')
   })
 })
 

@@ -61,15 +61,32 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────
 export type BloqueEstado = 'en_apertura' | 'activo' | 'archivado'
 
-/** Vigencia por cuatrimestre (regla 2026-08-17): un bloque está ACTIVO desde su
- *  apertura hasta que abre el siguiente bloque — no solo durante la ventana de
- *  matrícula. Por eso el estado depende de las aperturas de TODOS los bloques:
- *  - en_apertura: la apertura todavía no llega.
- *  - activo: ya abrió y ningún bloque posterior ha abierto.
- *  - archivado: un bloque posterior ya abrió.
+/** Suma meses calendario; si el día no existe en el mes destino (31 ene + 3),
+ *  cae al último día de ese mes en vez de desbordarse al siguiente. */
+export function addMonths(iso: string, months: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const target = new Date(y, m - 1 + months, 1)
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+  target.setDate(Math.min(d, lastDay))
+  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`
+}
+
+/** Los cursos del bloque duran 3 meses tras el cierre de matrícula. */
+export const BLOQUE_CIERRE_MESES = 3
+
+/** Cierre del bloque (regla 2026-08-18): 3 meses después del cierre de
+ *  matrícula. Con la apertura ~2 semanas antes, el bloque dura ~3.5 meses. */
+export function bloqueCierre(cierreMatriculaIso: string): string {
+  return addMonths(cierreMatriculaIso, BLOQUE_CIERRE_MESES)
+}
+
+/** Estado derivado (regla 2026-08-18): un bloque está ACTIVO desde su apertura
+ *  hasta su CIERRE DE BLOQUE (cierre de matrícula + 3 meses) — o antes, si un
+ *  bloque posterior abre primero (nunca hay dos activos).
  *  `todasLasAperturas` puede incluir la del propio bloque (se ignora). */
-export function bloqueEstadoActual(aperturaIso: string, todasLasAperturas: string[], todayIso: string): BloqueEstado {
+export function bloqueEstadoActual(aperturaIso: string, cierreMatriculaIso: string, todasLasAperturas: string[], todayIso: string): BloqueEstado {
   if (todayIso < aperturaIso) return 'en_apertura'
+  if (todayIso > bloqueCierre(cierreMatriculaIso)) return 'archivado'
   const abrioUnoPosterior = todasLasAperturas.some(a => a > aperturaIso && a <= todayIso)
   return abrioUnoPosterior ? 'archivado' : 'activo'
 }

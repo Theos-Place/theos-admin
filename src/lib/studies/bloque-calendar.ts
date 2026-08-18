@@ -4,7 +4,7 @@
 // Las fechas y los hitos NO se recalculan: salen de bloqueMilestones (bloques.ts),
 // que es donde vive la regla (preliminar = apertura − 3 semanas, confirmación =
 // apertura − 2 semanas, final = cierre de matrícula).
-import { bloqueMilestones, type BloqueMilestone } from '@/lib/studies/bloques'
+import { bloqueMilestones, bloqueCierre, type BloqueMilestone } from '@/lib/studies/bloques'
 
 export const MESES_ES = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
@@ -60,24 +60,29 @@ export type BloqueBar = {
   /** true = el bloque empieza antes / termina después del año que se mira. */
   cortadoAlInicio: boolean
   cortadoAlFinal: boolean
-  hitos: Array<{ key: BloqueMilestone | 'apertura'; label: string; fecha: string; pct: number }>
+  /** Ventana de matrícula (primer folleto → cierre) DENTRO de la barra, en %
+   *  relativos a la barra (0–100). null si no toca el año visible. */
+  matricula: { leftPct: number; widthPct: number } | null
+  hitos: Array<{ key: BloqueMilestone | 'apertura' | 'cierre_bloque'; label: string; fecha: string; pct: number }>
 }
 
-const HITO_LABEL: Record<BloqueMilestone | 'apertura', string> = {
+const HITO_LABEL: Record<BloqueMilestone | 'apertura' | 'cierre_bloque', string> = {
   preliminar: 'Folleto preliminar',
   confirmacion: 'Folleto de confirmación',
   apertura: 'Apertura del bloque',
   final: 'Cierre de matrícula (folleto final)',
+  cierre_bloque: 'Cierre del bloque',
 }
 
-/** La barra de un bloque sobre el año. Va del PRIMER hito (el folleto
- *  preliminar, 3 semanas antes de abrir) al cierre de matrícula: esa es la vida
- *  real del bloque, no solo los días que está abierto.
+/** La barra de un bloque sobre el año: del PRIMER hito (folleto preliminar,
+ *  3 semanas antes de abrir) al CIERRE DEL BLOQUE (cierre de matrícula +
+ *  3 meses — el bloque dura ~3.5 meses). La ventana de matrícula
+ *  (preliminar → cierre de matrícula) sale aparte, como tramo resaltado.
  *  Devuelve null si el bloque no toca el año que se está viendo. */
 export function bloqueBar(b: BloqueLite, year: number): BloqueBar | null {
   const hitos = bloqueMilestones(b.fecha_apertura, b.fecha_cierre_matricula)
   const inicio = hitos.preliminar
-  const fin = b.fecha_cierre_matricula
+  const fin = bloqueCierre(b.fecha_cierre_matricula)
 
   const iniDia = dayOfYear(inicio, year)
   const finDia = dayOfYear(fin, year)
@@ -92,13 +97,29 @@ export function bloqueBar(b: BloqueLite, year: number): BloqueBar | null {
   // Ancho mínimo visible: un bloque de pocos días igual tiene que verse.
   const widthPct = Math.max(((hasta - desde) / total) * 100, 0.8)
 
+  // Ventana de matrícula recortada al año, en % RELATIVOS a la barra.
+  let matricula: BloqueBar['matricula'] = null
+  const matIni = dayOfYear(inicio, year)
+  const matFin = dayOfYear(b.fecha_cierre_matricula, year)
+  if (matIni != null && matFin != null && matFin >= 0 && matIni <= total && hasta > desde) {
+    const mDesde = Math.max(desde, matIni)
+    const mHasta = Math.min(hasta, matFin)
+    if (mHasta > mDesde) {
+      matricula = {
+        leftPct: ((mDesde - desde) / (hasta - desde)) * 100,
+        widthPct: ((mHasta - mDesde) / (hasta - desde)) * 100,
+      }
+    }
+  }
+
   const marcas: BloqueBar['hitos'] = []
   for (const [key, fecha] of [
     ['preliminar', hitos.preliminar],
     ['confirmacion', hitos.confirmacion],
     ['apertura', b.fecha_apertura],
     ['final', hitos.final],
-  ] as Array<[BloqueMilestone | 'apertura', string]>) {
+    ['cierre_bloque', fin],
+  ] as Array<[BloqueMilestone | 'apertura' | 'cierre_bloque', string]>) {
     const pct = positionInYear(fecha, year)
     if (pct != null) marcas.push({ key, label: HITO_LABEL[key], fecha, pct })
   }
@@ -110,6 +131,7 @@ export function bloqueBar(b: BloqueLite, year: number): BloqueBar | null {
     widthPct,
     cortadoAlInicio: iniDia < 0,
     cortadoAlFinal: finDia > total,
+    matricula,
     hitos: marcas,
   }
 }

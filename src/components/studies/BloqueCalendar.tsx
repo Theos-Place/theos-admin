@@ -2,10 +2,11 @@
 
 // BLQ-1 · Calendario anual de bloques de capacitación.
 //
-// Los 12 meses en una línea; cada bloque es una barra que va del PRIMER folleto
-// (3 semanas antes de abrir) al cierre de matrícula, con sus hitos marcados
-// encima. Debajo, en su propio carril, las ventanas de matrícula de los grupos
-// (GRU-1) que caen en el año.
+// Los 12 meses en una línea; cada bloque es una barra que cubre su duración
+// completa (del primer folleto al cierre del bloque: cierre de matrícula +
+// 3 meses ≈ 3.5 meses), con la ventana de matrícula como tramo resaltado y
+// los hitos marcados encima. Debajo, en su propio carril, las ventanas de
+// matrícula de los grupos (GRU-1) que caen en el año.
 //
 // MÓVIL: un año entero en 360 px no se lee. En pantalla angosta esto no se
 // muestra — la página cae a la lista, que sí funciona ahí.
@@ -93,13 +94,21 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
                   onClick={() => onSelect?.(bar.id)}
                   title={`${bar.nombre} · ${bar.hitos.map(h => `${h.label}: ${fmtCorto(h.fecha)}`).join(' · ')}`}
                   className={cn(
-                    'absolute top-1.5 h-6 rounded-lg border text-left transition-all hover:brightness-95',
+                    'absolute top-1.5 h-6 rounded-lg border text-left transition-all hover:brightness-95 overflow-hidden',
                     color.bar, color.border,
                     bar.cortadoAlInicio && 'rounded-l-none',
                     bar.cortadoAlFinal && 'rounded-r-none',
                   )}
                   style={{ left: `${bar.leftPct}%`, width: `${bar.widthPct}%` }}
                 >
+                  {/* Ventana de matrícula: mismo color encimado → tramo más oscuro */}
+                  {bar.matricula && (
+                    <span
+                      aria-hidden
+                      className={cn('absolute inset-y-0', color.bar)}
+                      style={{ left: `${bar.matricula.leftPct}%`, width: `${bar.matricula.widthPct}%` }}
+                    />
+                  )}
                   <span className="sr-only">{bar.nombre}</span>
                 </button>
 
@@ -163,7 +172,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
             <span className="h-2 w-2 rounded-full bg-coral" /> Hoy
           </span>
           <span className="text-navy-light/70">
-            La barra va del primer folleto (3 semanas antes de abrir) al cierre de matrícula.
+            La barra cubre el bloque completo, del primer folleto al cierre del bloque (cierre de matrícula + 3 meses); el tramo oscuro es la ventana de matrícula.
           </span>
         </div>
       </div>
