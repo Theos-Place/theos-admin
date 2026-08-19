@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Ban, Check, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
+import { Ban, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
@@ -15,6 +15,7 @@ import {
 import { ACCOUNT_STATE_LABEL, ACCOUNT_STATE_ACTION, type AccountState } from '@/lib/members/account-state'
 
 type AdminData = {
+  can_view_studies: boolean
   not_recommended_to_lead_studies: boolean
   marked_at: string | null
   marked_by_name: string | null
@@ -23,6 +24,10 @@ type AdminData = {
   authorized_virtual_studies_at: string | null
   authorized_virtual_studies_by_name: string | null
   can_edit_virtual: boolean
+  servers_onboarding: boolean
+  servers_onboarding_at: string | null
+  servers_onboarding_by_name: string | null
+  can_edit_onboarding: boolean
 }
 
 type AccountStatus = {
@@ -45,6 +50,9 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
   const [busyVirtual, setBusyVirtual] = useState(false)
   const [savedVirtual, setSavedVirtual] = useState(false)
   const [errorVirtual, setErrorVirtual] = useState<string | null>(null)
+  const [busyOnboarding, setBusyOnboarding] = useState(false)
+  const [savedOnboarding, setSavedOnboarding] = useState(false)
+  const [errorOnboarding, setErrorOnboarding] = useState<string | null>(null)
   const [pwBusy, setPwBusy] = useState(false)
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [account, setAccount] = useState<AccountStatus | null>(null)
@@ -147,6 +155,26 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
     }
   }
 
+  async function toggleOnboarding() {
+    if (!admin || busyOnboarding || !admin.can_edit_onboarding) return
+    setBusyOnboarding(true)
+    setSavedOnboarding(false)
+    try {
+      const res = await fetch(`/api/members/${memberId}/admin-data`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ servers_onboarding: !admin.servers_onboarding }),
+      })
+      if (!res.ok) throw new Error()
+      await loadAdmin()
+      setSavedOnboarding(true)
+    } catch {
+      setErrorOnboarding('No se pudo actualizar el onboarding.')
+    } finally {
+      setBusyOnboarding(false)
+    }
+  }
+
   async function sendPasswordReset() {
     if (pwBusy) return
     setPwBusy(true)
@@ -165,6 +193,9 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
   return (
     <div className="space-y-4">
+      {/* Todo lo de estudios/cuenta SOLO para roles de estudios; los encargados
+          de servidores entran al tab únicamente por su sección de onboarding. */}
+      {admin?.can_view_studies && <>
       {/* Cuenta y acceso */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
@@ -356,19 +387,67 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         {savedVirtual && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
         {errorVirtual && <p className="text-[12px] text-coral mt-2 font-body">{errorVirtual}</p>}
       </div>
+      </>}
 
-      {/* Recomendaciones (todas, para roles administrativos) */}
-      <MemberRecommendations memberId={memberId} />
+      {/* Onboarding de servidores: SOLO admin y encargados de servidores */}
+      {admin?.can_edit_onboarding && (
+      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
+        <div className="flex items-center gap-2 mb-3">
+          <GraduationCap size={15} className="text-teal-deep" />
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Servidores</p>
+        </div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-navy font-body">
+              Llevó el onboarding de servidores
+              {admin?.servers_onboarding && admin.servers_onboarding_at && (
+                <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[12px] font-semibold text-teal-deep font-display">
+                  {formatDate(admin.servers_onboarding_at)}
+                </span>
+              )}
+            </p>
+            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+              Al marcarlo se guarda automáticamente la fecha.
+            </p>
+            {admin?.servers_onboarding && admin.servers_onboarding_by_name && (
+              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
+                Marcado por {admin.servers_onboarding_by_name}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!admin?.servers_onboarding}
+            aria-label="Llevó el onboarding de servidores"
+            disabled={!admin?.can_edit_onboarding || busyOnboarding}
+            onClick={toggleOnboarding}
+            className={cn(
+              'relative h-6 w-11 rounded-full transition-colors shrink-0 mt-0.5',
+              admin?.servers_onboarding ? 'bg-coral' : 'bg-navy/20',
+              (!admin?.can_edit_onboarding || busyOnboarding) && 'opacity-50 cursor-not-allowed',
+            )}
+          >
+            <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', admin?.servers_onboarding ? 'translate-x-5' : 'translate-x-0')} />
+          </button>
+        </div>
+        {savedOnboarding && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
+        {errorOnboarding && <p className="text-[12px] text-coral mt-2 font-body">{errorOnboarding}</p>}
+      </div>
+      )}
+
+      {/* Recomendaciones (todas, para roles administrativos de estudios) */}
+      {admin?.can_view_studies && <MemberRecommendations memberId={memberId} />}
 
       {/* PRE-8: evaluación del prematrimonial (pastoral). El endpoint gatea a
           coordinador_estudios/direccion/admin — con 403 la sección no aparece
           (coordinador_dirigentes ve este tab pero NO esta información). */}
-      <PrematEvaluationPanel memberId={memberId} />
+      {admin?.can_view_studies && <PrematEvaluationPanel memberId={memberId} />}
 
       {/* EST-9: recomendaciones a CDEB. Gate en el API: coordinador_dirigentes,
           coordinador_estudios y admin — NI el propio miembro, NI el dirigente
           que la escribió, NI dirección (con 403 no se pinta). */}
-      <CdebRecommendationsPanel memberId={memberId} />
+      {admin?.can_view_studies && <CdebRecommendationsPanel memberId={memberId} />}
     </div>
   )
 }

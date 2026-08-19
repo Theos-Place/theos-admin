@@ -68,6 +68,9 @@ export default function MiembroDetailPage() {
   const { hasRole, member: viewer } = useAuth()
 
   const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
+  // Onboarding de servidores: estos roles también entran al tab Administrativo,
+  // pero ahí solo ven su sección (el API no les da los datos de estudios).
+  const isServersOnboardingAdmin = hasRole('admin', 'encargado_staff', 'coordinador_servidores')
   const isDirigente = hasRole('dirigente')
   const isOwnProfile = !!viewer?.id && viewer.id === id
   const canDeactivate = hasRole('admin', 'comunicaciones')
@@ -242,7 +245,7 @@ export default function MiembroDetailPage() {
   const visibleTabs: TabDef[] = [
     ...BASE_TABS,
     ...(isOwnProfile || isStudyAdmin ? [{ id: 'espiritual', label: 'Espiritual' }] : []),
-    ...(isStudyAdmin ? [{ id: 'administrativo', label: 'Administrativo' }] : []),
+    ...(isStudyAdmin || isServersOnboardingAdmin ? [{ id: 'administrativo', label: 'Administrativo' }] : []),
     PASE_TAB,
   ]
 
@@ -370,7 +373,7 @@ export default function MiembroDetailPage() {
       )}
 
       {/* TAB: Administrativo (solo roles administrativos) */}
-      {activeTab === 'administrativo' && isStudyAdmin && (
+      {activeTab === 'administrativo' && (isStudyAdmin || isServersOnboardingAdmin) && (
         <MemberAdminTab memberId={member.id} />
       )}
 

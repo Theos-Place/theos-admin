@@ -1808,6 +1808,9 @@ export type Database = {
           not_recommended_to_lead_studies: boolean
           not_recommended_to_lead_studies_at: string | null
           not_recommended_to_lead_studies_by: string | null
+          servers_onboarding: boolean
+          servers_onboarding_at: string | null
+          servers_onboarding_by: string | null
           updated_at: string
         }
         Insert: {
@@ -1818,6 +1821,9 @@ export type Database = {
           not_recommended_to_lead_studies?: boolean
           not_recommended_to_lead_studies_at?: string | null
           not_recommended_to_lead_studies_by?: string | null
+          servers_onboarding?: boolean
+          servers_onboarding_at?: string | null
+          servers_onboarding_by?: string | null
           updated_at?: string
         }
         Update: {
@@ -1828,9 +1834,19 @@ export type Database = {
           not_recommended_to_lead_studies?: boolean
           not_recommended_to_lead_studies_at?: string | null
           not_recommended_to_lead_studies_by?: string | null
+          servers_onboarding?: boolean
+          servers_onboarding_at?: string | null
+          servers_onboarding_by?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "member_admin_data_servers_onboarding_by_fkey"
+            columns: ["servers_onboarding_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "member_admin_data_authorized_virtual_studies_by_fkey"
             columns: ["authorized_virtual_studies_by"]
