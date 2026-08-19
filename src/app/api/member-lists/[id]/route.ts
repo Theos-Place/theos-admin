@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles')
+    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles', 'coordinador_estudios')
     if (auth.res) return auth.res
   try {
     const { id } = await params
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles')
+    const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles', 'coordinador_estudios')
     if (auth.res) return auth.res
   try {
     const { id } = await params
