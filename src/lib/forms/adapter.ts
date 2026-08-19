@@ -55,6 +55,8 @@ export function toDomainFormTemplate(db: DbFormTemplate): FormTemplate {
     entity_id: db.entity_id,
     entity_name: null, // se resuelve en la vista de detalle si hace falta (Fase 2b)
     is_active: db.is_active,
+    starts_at: db.starts_at ?? null,
+    ends_at: db.ends_at ?? null,
     is_public: db.is_public ?? false,
     requires_auth: db.requires_auth ?? true,
     allow_multiple_responses: db.allow_multiple_responses ?? false,

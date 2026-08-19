@@ -81,6 +81,18 @@ export async function POST(
       )
     }
 
+    // Ventana de vigencia: fuera de ella (o inactivo) NO se aceptan respuestas
+    // — así el cierre por fecha es automático, sin cron (estado derivado).
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const { formWindowStatus, FORM_WINDOW_BLOCKED } = await import('@/lib/forms/active-window')
+    const { data: fw } = await createAdminClient()
+      .from('forms').select('is_active, starts_at, ends_at').eq('id', id).maybeSingle()
+    if (!fw) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
+    const ventana = formWindowStatus(fw as { is_active: boolean; starts_at: string | null; ends_at: string | null })
+    if (ventana !== 'activo') {
+      return NextResponse.json({ error: FORM_WINDOW_BLOCKED[ventana], code: 'formulario_cerrado' }, { status: 403 })
+    }
+
     // Solo puede enviar quien fue convocado (decisión 2026-08-06). Antes
     // alcanzaba con tener sesión y el link: alguien no recomendado podía
     // preinscribirse a CDEB igual. La regla vive en @/lib/forms/fill-access.

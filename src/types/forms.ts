@@ -86,6 +86,10 @@ export interface FormTemplate {
   entity_id: string | null
   entity_name: string | null
   is_active: boolean
+  /** Ventana de vigencia (opcional): fuera de ella no acepta respuestas y el
+   *  estado mostrado se deriva (programado/activo/vencido) sin cron. */
+  starts_at: string | null
+  ends_at: string | null
   is_public: boolean
   requires_auth: boolean
   /** EST-10: si es false, una respuesta por persona (el llenado lo verifica). */

@@ -32,6 +32,9 @@ export type DbFormTemplate = {
   is_public: boolean
   requires_auth: boolean
   allow_multiple_responses: boolean | null
+  /** Ventana de vigencia (opcional): fuera de ella el form no acepta respuestas. */
+  starts_at: string | null
+  ends_at: string | null
   created_at: string
   created_by: string | null
   /** FRM-2 · Encabezado del formulario. */
@@ -53,7 +56,7 @@ export type DbFormResponse = {
 }
 
 const FORM_SELECT = `
-  id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, allow_multiple_responses, created_at, created_by,
+  id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, allow_multiple_responses, starts_at, ends_at, created_at, created_by,
   hero_image_url, hero_title, hero_subtitle,
   fields:form_fields(
     id, field_type, label, placeholder, help_text, description, is_required,
@@ -182,6 +185,9 @@ export type FormWriteInput = {
   entity_id?: string | null
   slug?: string | null
   is_active?: boolean
+  /** Ventana de vigencia (ISO, null = sin límite). */
+  starts_at?: string | null
+  ends_at?: string | null
   /** Abierto a cualquiera con el link (escapatoria del guard de llenado). */
   is_public?: boolean
   /** FRM-2 · Encabezado. null limpia el campo (quitar el flyer). */

@@ -31,6 +31,7 @@ import {
 } from '@/lib/forms/form-actions'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
+import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
 
@@ -143,7 +144,7 @@ export default function FormulariosPage() {
   }
 
   const stats = useMemo(() => {
-    const active = localTemplates.filter(f => f.is_active).length
+    const active = localTemplates.filter(f => formWindowStatus(f) === 'activo').length
     // Aproximación: respuestas de formularios cuya última respuesta cae este mes.
     const responsesThisMonth = localTemplates
       .filter(f => f.last_response_at && thisMonth(f.last_response_at))
@@ -353,10 +354,10 @@ export default function FormulariosPage() {
                         <span
                           className={cn(
                             'rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
-                            form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
+                            FORM_WINDOW_BADGE[formWindowStatus(form)]
                           )}
                         >
-                          {form.is_active ? 'Activo' : 'Inactivo'}
+                          {FORM_WINDOW_LABEL[formWindowStatus(form)]}
                         </span>
                       </td>
 
@@ -481,10 +482,10 @@ export default function FormulariosPage() {
                   <span
                     className={cn(
                       'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
-                      form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
+                      FORM_WINDOW_BADGE[formWindowStatus(form)]
                     )}
                   >
-                    {form.is_active ? 'Activo' : 'Inactivo'}
+                    {FORM_WINDOW_LABEL[formWindowStatus(form)]}
                   </span>
                 </li>
               )

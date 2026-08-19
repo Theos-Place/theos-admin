@@ -1,6 +1,15 @@
 // Mapea el payload del builder (FormTemplate / FormFieldNew) a inputs DB.
 
 import type { FormWriteInput, FieldInput } from '@/lib/supabase/queries/forms'
+import { windowStartToIso, windowEndToIso } from '@/lib/forms/active-window'
+
+/** Fechas de vigencia: el builder manda YYYY-MM-DD ('' = sin límite); si ya
+ *  viene un ISO completo se respeta. */
+function windowFrom(v: unknown, toIso: (ymd: string | null) => string | null): string | null {
+  if (typeof v !== 'string' || !v.trim()) return null
+  const s = v.trim()
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? toIso(s) : s
+}
 
 export function formToWriteInput(body: Record<string, unknown>): FormWriteInput {
   return {
@@ -11,6 +20,8 @@ export function formToWriteInput(body: Record<string, unknown>): FormWriteInput 
     entity_id: (body.entity_id as string) ?? null,
     slug: (body.slug as string) ?? null,
     is_active: body.is_active === undefined ? undefined : Boolean(body.is_active),
+    starts_at: windowFrom(body.starts_at, windowStartToIso),
+    ends_at: windowFrom(body.ends_at, windowEndToIso),
     // Abierto a cualquiera con el link. Por defecto NO: un formulario sin
     // audiencia definida no es para cualquiera (2026-08-06).
     is_public: Boolean(body.is_public),
@@ -41,6 +52,8 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   if ('entity_id' in body) out.entity_id = (body.entity_id as string) ?? null
   if ('slug' in body) out.slug = (body.slug as string) ?? null
   if ('is_active' in body) out.is_active = Boolean(body.is_active)
+  if ('starts_at' in body) out.starts_at = windowFrom(body.starts_at, windowStartToIso)
+  if ('ends_at' in body) out.ends_at = windowFrom(body.ends_at, windowEndToIso)
   if ('is_public' in body) out.is_public = Boolean(body.is_public)
   const hero = heroFrom(body)
   if ('hero_image_url' in body) out.hero_image_url = hero.hero_image_url

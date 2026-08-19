@@ -8,6 +8,7 @@ import { HeroEditor } from '@/components/forms/HeroEditor'
 import { fieldProblems, saveBlockedMessage } from '@/lib/forms/field-validation'
 import { type FormHeroData } from '@/components/forms/FormHero'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
+import { isoToWindowYmd } from '@/lib/forms/active-window'
 import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
@@ -112,6 +113,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   // cuelga de un evento ni de un grupo y no se manda por correo, no hay a quién
   // ofrecérselo, así que queda cerrado hasta que alguien lo abra a propósito.
   const [isPublic, setIsPublic]       = useState(false)
+  // Ventana de vigencia (YYYY-MM-DD, '' = sin límite). Pasada la fecha de fin
+  // el estado cambia solo (derivado, sin cron) y deja de aceptar respuestas.
+  const [windowStart, setWindowStart] = useState('')
+  const [windowEnd, setWindowEnd]     = useState('')
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [focusLogic, setFocusLogic]   = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
@@ -133,6 +138,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setCategory(f.category)
         setStatus(f.is_active ? 'active' : 'draft')
         setIsPublic(f.is_public)
+        setWindowStart(isoToWindowYmd(f.starts_at))
+        setWindowEnd(isoToWindowYmd(f.ends_at))
         setFields(f.fields)
         setHero({
           hero_image_url: f.hero_image_url,
@@ -190,6 +197,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     const isActive = (nextStatus ?? status) === 'active'
     const payload = {
       name, description, category, is_active: isActive, is_public: isPublic, fields,
+      starts_at: windowStart || null,
+      ends_at: windowEnd || null,
       hero_image_url: hero.hero_image_url ?? null,
       hero_title: hero.hero_title ?? null,
       hero_subtitle: hero.hero_subtitle ?? null,
@@ -383,6 +392,36 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 </span>
               </span>
             </label>
+
+            {/* Ventana de vigencia: pasada la fecha de fin, el formulario se
+                cierra solo (estado derivado; no acepta más respuestas). */}
+            <div className="mt-3 pt-3 border-t border-[var(--outline-variant)]">
+              <p className="text-sm text-navy font-body">Vigencia (opcional)</p>
+              <p className="text-[13px] text-navy-light/80 font-body mt-0.5 mb-2">
+                El formulario acepta respuestas solo dentro de estas fechas; al pasar la fecha de fin se cierra automáticamente.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <label className="text-[13px] text-navy-light/80 font-body">
+                  Activo desde
+                  <input
+                    type="date"
+                    value={windowStart}
+                    onChange={e => setWindowStart(e.target.value)}
+                    className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                  />
+                </label>
+                <label className="text-[13px] text-navy-light/80 font-body">
+                  Hasta (inclusive)
+                  <input
+                    type="date"
+                    value={windowEnd}
+                    min={windowStart || undefined}
+                    onChange={e => setWindowEnd(e.target.value)}
+                    className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* FRM-2 · Encabezado, arriba del constructor de campos. */}

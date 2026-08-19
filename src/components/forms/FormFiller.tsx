@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/forms'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
+import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
 import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
 import { FormHero, hasHero } from '@/components/forms/FormHero'
@@ -170,9 +171,14 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       .then(r => (r.ok ? r.json() : null))
       .then(db => {
         if (!alive) return
-        setForm(db ? toDomainFormTemplate(db) : null)
+        const domain = db ? toDomainFormTemplate(db) : null
+        setForm(domain)
         const acceso = db?.fill_access
-        setSinAcceso(acceso && acceso.allowed === false ? String(acceso.reason) : null)
+        // Ventana de vigencia primero (fuera de fechas o inactivo → cerrado);
+        // el POST valida lo mismo por si alguien deja la pestaña abierta.
+        const ventana = domain && !isPreview ? formWindowStatus(domain) : 'activo'
+        if (ventana !== 'activo') setSinAcceso(FORM_WINDOW_BLOCKED[ventana])
+        else setSinAcceso(acceso && acceso.allowed === false ? String(acceso.reason) : null)
         setLoadingForm(false)
       })
       .catch(() => { if (alive) setLoadingForm(false) })
