@@ -8,6 +8,7 @@ import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/fo
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
 import { FormHero, hasHero } from '@/components/forms/FormHero'
@@ -131,6 +132,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   const id = formId
   const isPreview = mode === 'preview'
   const { user } = useAuth()
+  // Llenar A NOMBRE DE otro miembro: solo comunicaciones/dirección (y admin) —
+  // mismo criterio que el anti-suplantación del POST (auditoría S2).
+  const canFillForOther = !isPreview && (user?.roles ?? []).some(r => ['comunicaciones', 'direccion', 'admin'].includes(r))
+  const [onBehalf, setOnBehalf] = useState<MemberHit | null>(null)
   // Prellenado REAL del perfil (los campos personal_data): en preview se usa el
   // miembro de ejemplo; al llenar de verdad, el perfil de quien responde.
   const [profile, setProfile] = useState<Partial<Member> | null>(null)
@@ -308,7 +313,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
     // Autenticado con member → member_id. Autenticado sin member → su correo.
     // Invitado → correo obligatorio y con formato válido.
     let identity: { member_id?: string; guest_name?: string; guest_email?: string }
-    if (user?.member_id) {
+    if (canFillForOther && onBehalf) {
+      // A nombre de otro miembro (el POST valida el rol de nuevo).
+      identity = { member_id: onBehalf.id }
+    } else if (user?.member_id) {
       identity = { member_id: user.member_id }
     } else if (user?.email) {
       // Sesión sin miembro vinculado: el nombre sale del perfil si existe,
@@ -401,6 +409,35 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       )}
 
       <div className="px-4 py-10">
+        {/* Comunicaciones/dirección: registrar la respuesta a nombre de otro
+            miembro (p. ej. alguien que la dio por teléfono o en papel). */}
+        {canFillForOther && (
+          <div className="w-full max-w-lg mx-auto mb-4 rounded-2xl bg-surface-card shadow-[var(--shadow-md)] px-5 py-4">
+            <p className="text-sm font-medium text-navy font-body">
+              Llenar a nombre de otro miembro
+              {onBehalf && <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-deep font-display">{onBehalf.first_name} {onBehalf.last_name}</span>}
+            </p>
+            <p className="text-[13px] text-navy-light/80 font-body mt-0.5 mb-2">
+              {onBehalf
+                ? 'La respuesta quedará registrada en el perfil de esta persona, no en el tuyo.'
+                : 'Opcional: buscá a la persona si estás registrando su respuesta (ej. la dio por teléfono o en papel). Vacío = queda a tu nombre.'}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <MemberCombobox onSelect={setOnBehalf} placeholder="Buscar miembro…" dropdown />
+              </div>
+              {onBehalf && (
+                <button
+                  type="button"
+                  onClick={() => setOnBehalf(null)}
+                  className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <div
           className="w-full max-w-lg mx-auto rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]"
         >
