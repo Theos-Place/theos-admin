@@ -121,7 +121,7 @@ export function NotificationsBell() {
 
           <div className="max-h-[340px] overflow-y-auto">
             {count === 0 && (
-              <p className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
+              <p className="px-4 py-8 text-center text-[13px] text-navy-light/80 font-body">
                 Todo al día. No hay notificaciones pendientes.
               </p>
             )}
@@ -138,8 +138,8 @@ export function NotificationsBell() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold leading-snug text-navy font-body">{n.title}</p>
-                  {n.body && <p className="text-[12px] leading-snug text-navy-light/70 font-body mt-0.5 line-clamp-2">{n.body}</p>}
-                  <p className="text-[12px] text-navy-light/70 font-body mt-1">{timeAgo(n.created_at)}</p>
+                  {n.body && <p className="text-[13px] leading-snug text-navy-light/80 font-body mt-0.5 line-clamp-2">{n.body}</p>}
+                  <p className="text-[13px] text-navy-light/80 font-body mt-1">{timeAgo(n.created_at)}</p>
                 </div>
               </button>
             ))}
@@ -172,7 +172,7 @@ export function NotificationsBell() {
             <Link
               href="/notificaciones"
               onClick={() => setOpen(false)}
-              className="text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body"
+              className="text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
             >
               Ver todas las notificaciones →
             </Link>

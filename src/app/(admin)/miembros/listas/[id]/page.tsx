@@ -66,7 +66,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.position}</span>
-        : <span className="text-navy-light/70 text-[12px]">—</span>
+        : <span className="text-navy-light/80 text-[13px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.position ?? '',
   },
@@ -76,7 +76,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
       const active = m.service_history?.find(s => s.status === 'activo' && s.to === null)
       return active
         ? <span className="font-body text-[13px]">{active.committee}</span>
-        : <span className="text-navy-light/70 text-[12px]">—</span>
+        : <span className="text-navy-light/80 text-[13px]">—</span>
     },
     exportValue: m => m.service_history?.find(s => s.status === 'activo' && s.to === null)?.committee ?? '',
   },
@@ -137,7 +137,7 @@ export default function ListaDetailPage() {
   if (!list) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Lista no encontrada.
         </p>
       </div>
@@ -155,7 +155,7 @@ export default function ListaDetailPage() {
       {/* Back */}
       <Link
         href="/miembros/listas"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Listas guardadas
@@ -171,12 +171,12 @@ export default function ListaDetailPage() {
               <span
                 className={cn(
                   'rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-widest uppercase font-display',
-                  list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/70'
+                  list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80'
                 )}
               >
                 {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
               </span>
-              <span className="text-[12px] text-navy-light/70 font-body">
+              <span className="text-[13px] text-navy-light/80 font-body">
                 {list.member_count.toLocaleString('es-CR')} miembros
               </span>
             </div>
@@ -186,11 +186,11 @@ export default function ListaDetailPage() {
               {list.name}
             </h1>
             {list.description && (
-              <p className="text-sm text-navy-light/70 font-body">
+              <p className="text-sm text-navy-light/80 font-body">
                 {list.description}
               </p>
             )}
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
@@ -229,7 +229,7 @@ export default function ListaDetailPage() {
         <div
           className="rounded-2xl px-5 py-3.5 flex items-center gap-3 bg-surface-low border border-[var(--outline-variant)]"
         >
-          <p className="text-[13px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="mx-2">·</span>
             <button
@@ -255,7 +255,7 @@ export default function ListaDetailPage() {
       <div
         className="rounded-2xl px-5 py-4 space-y-1 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
           Filtros que generaron esta lista
         </p>
         <p className="text-sm text-navy font-body">
@@ -266,7 +266,7 @@ export default function ListaDetailPage() {
             {list.tags.map(tag => (
               <span
                 key={tag}
-                className="rounded-full bg-surface-low px-2.5 py-0.5 text-[11px] text-navy-light/70 font-body"
+                className="rounded-full bg-surface-low px-2.5 py-0.5 text-[11px] text-navy-light/80 font-body"
               >
                 {tag}
               </span>
@@ -281,10 +281,10 @@ export default function ListaDetailPage() {
       >
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[var(--outline-variant)]">
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
-              <span className="ml-1 text-navy-light/70">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
+              <span className="ml-1 text-navy-light/80">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
             )}
           </p>
           <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ export default function ListaDetailPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-navy font-body">{member.first_name} {member.last_name}</p>
-                  <p className="truncate text-xs text-navy-light/70 font-mono">
+                  <p className="truncate text-xs text-navy-light/80 font-mono">
                     {member.cedula ?? 'Sin cédula'}
                     {member.birth_date ? ` · ${calcAge(member.birth_date)} años` : ''}
                   </p>
@@ -326,7 +326,7 @@ export default function ListaDetailPage() {
                 <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                   {member.is_active ? 'Activo' : 'Inactivo'}
                 </span>
-                <ArrowRight size={15} className="shrink-0 text-navy-light/70" strokeWidth={1.75} />
+                <ArrowRight size={15} className="shrink-0 text-navy-light/80" strokeWidth={1.75} />
               </button>
             ))
           )}
@@ -375,20 +375,20 @@ export default function ListaDetailPage() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
-                                  <p className="truncate text-xs text-navy-light/70 font-body">{member.email}</p>
+                                  <p className="truncate text-xs text-navy-light/80 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
                           )
                         case 'cedula':
                           return (
-                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
-                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[11px] text-navy-light/70">Sin cédula</span>}
+                            <td key="cedula" className="px-4 py-3.5 text-navy-light/80 tabular-nums font-mono text-[13px]">
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[11px] text-navy-light/80">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
                           return (
-                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
+                            <td key="age" className="px-4 py-3.5 text-navy-light/80 tabular-nums whitespace-nowrap font-mono text-[13px]">
                               {member.birth_date ? `${calcAge(member.birth_date)} años` : '—'}
                             </td>
                           )
@@ -405,7 +405,7 @@ export default function ListaDetailPage() {
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
                                 ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
-                                : <span className="text-sm text-navy-light/70">—</span>
+                                : <span className="text-sm text-navy-light/80">—</span>
                               }
                             </td>
                           )
@@ -420,7 +420,7 @@ export default function ListaDetailPage() {
                           const rawVal = (member as Record<string, unknown>)[String(col.key)]
                           const display = Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
                           return (
-                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate font-body">
+                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/80 max-w-[180px] truncate font-body">
                               {display || '—'}
                             </td>
                           )
@@ -430,7 +430,7 @@ export default function ListaDetailPage() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={e => { e.stopPropagation(); router.push(`/miembros/${member.id}`) }}
-                        className="rounded-lg p-1.5 text-navy-light/70 transition-all hover:bg-surface-low hover:text-coral"
+                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral"
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
                       </button>

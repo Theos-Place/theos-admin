@@ -34,7 +34,7 @@ export function FilterChips({
             'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
             activeKey === key
               ? 'bg-navy text-white'
-              : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy',
+              : 'bg-surface-low text-navy-light/80 hover:bg-surface-card hover:text-navy',
           )}
         >
           {count !== undefined ? `${label} · ${count.toLocaleString('es-CR')}` : label}

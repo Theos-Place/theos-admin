@@ -58,7 +58,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
     if (!v || v.state === 'sin_revisar') {
       return (
         <Caja>
-          <p className="text-[13px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Tus estudiantes ya pueden evaluar este grupo. La coordinación revisa las
             respuestas antes de compartirlas con vos.
           </p>
@@ -68,7 +68,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
     if (v.state === 'pocas') {
       return (
         <Caja>
-          <p className="text-[13px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             {v.count === 0
               ? 'Todavía no hay respuestas.'
               : `Hay ${v.count} respuesta${v.count === 1 ? '' : 's'}. El detalle se muestra a partir de ${MIN_RESPUESTAS_PARA_MOSTRAR}, para que nadie quede identificado.`}
@@ -91,7 +91,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
   if (!s || s.count === 0) {
     return (
       <Caja>
-        <p className="text-[13px] text-navy-light/70 font-body">Todavía no hay respuestas.</p>
+        <p className="text-[13px] text-navy-light/80 font-body">Todavía no hay respuestas.</p>
       </Caja>
     )
   }
@@ -102,7 +102,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
       <PorPregunta preguntas={data.per_question ?? []} />
 
       <div className="space-y-2 pt-1">
-        <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
           Comentarios ({filas.filter(f => (f.comments ?? '').trim()).length})
         </p>
         {filas.filter(f => (f.comments ?? '').trim()).map(f => (
@@ -115,21 +115,21 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
                 disabled={ocupado}
                 onClick={() => accion({ action: f.hidden ? 'mostrar' : 'ocultar', evaluation_id: f.id })}
                 title={f.hidden ? 'Volver a mostrarlo al dirigente' : 'Que el dirigente NO lo vea'}
-                className="shrink-0 inline-flex items-center gap-1 text-[12px] text-navy-light/70 hover:text-navy transition-colors"
+                className="shrink-0 inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors"
               >
                 {f.hidden ? <><Eye size={12} /> Mostrar</> : <><EyeOff size={12} /> Ocultar</>}
               </button>
             </div>
           </div>
         ))}
-        <p className="text-[12px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           Ocultar un comentario no descarta la evaluación: la nota sigue contando en el promedio.
         </p>
       </div>
 
       <div className="pt-2 border-t border-[var(--outline-variant)]">
         {compartido ? (
-          <p className="inline-flex items-center gap-1.5 text-[12px] text-teal-deep font-body">
+          <p className="inline-flex items-center gap-1.5 text-[13px] text-teal-deep font-body">
             <ShieldCheck size={13} /> Compartida con el dirigente.
           </p>
         ) : (
@@ -143,7 +143,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
               {ocupado ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               Compartir con el dirigente
             </button>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Hasta que la compartas, el dirigente no ve ni el promedio. Revisá los
               comentarios primero: una vez que los lee, no hay vuelta atrás.
             </p>
@@ -164,9 +164,9 @@ function PorPregunta({ preguntas }: { preguntas: PreguntaResumen[] }) {
   if (conNota.length === 0) return null
   return (
     <div className="space-y-1.5 pt-2 border-t border-[var(--outline-variant)]">
-      <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Por pregunta</p>
+      <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Por pregunta</p>
       {conNota.map(p => (
-        <div key={p.fieldId} className="flex items-center gap-2 text-[12px] font-body">
+        <div key={p.fieldId} className="flex items-center gap-2 text-[13px] font-body">
           <span className="flex-1 text-navy-light/80">{p.label}</span>
           <span className="h-1.5 w-16 shrink-0 rounded-full bg-surface-low overflow-hidden">
             <span
@@ -184,7 +184,7 @@ function PorPregunta({ preguntas }: { preguntas: PreguntaResumen[] }) {
 function Caja({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5 space-y-3">
-      <h3 className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+      <h3 className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
         <MessageSquare size={12} /> Retroalimentación del dirigente
       </h3>
       {children}
@@ -197,7 +197,7 @@ function Resumen({ s, sinComentarios }: { s: FeedbackSummary; sinComentarios?: b
     <div className="space-y-3">
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-extrabold text-navy font-display">{s.average ?? '—'}</span>
-        <span className="text-[13px] text-navy-light/70 font-body">
+        <span className="text-[13px] text-navy-light/80 font-body">
           de 5 · {s.count} respuesta{s.count === 1 ? '' : 's'}
         </span>
       </div>
@@ -206,20 +206,20 @@ function Resumen({ s, sinComentarios }: { s: FeedbackSummary; sinComentarios?: b
           const cuantos = s.distribution[n] ?? 0
           const pct = s.count ? (cuantos / s.count) * 100 : 0
           return (
-            <div key={n} className="flex items-center gap-2 text-[12px] font-body">
-              <span className="w-4 text-navy-light/70 tabular-nums">{n}</span>
+            <div key={n} className="flex items-center gap-2 text-[13px] font-body">
+              <span className="w-4 text-navy-light/80 tabular-nums">{n}</span>
               <span className="h-1.5 flex-1 rounded-full bg-surface-low overflow-hidden">
                 <span className="block h-full rounded-full bg-coral" style={{ width: `${pct}%` }} />
               </span>
-              <span className="w-24 text-navy-light/70 truncate" title={SCORE_LABELS[n]}>{SCORE_LABELS[n]}</span>
-              <span className="w-5 text-right text-navy-light/70 tabular-nums">{cuantos}</span>
+              <span className="w-24 text-navy-light/80 truncate" title={SCORE_LABELS[n]}>{SCORE_LABELS[n]}</span>
+              <span className="w-5 text-right text-navy-light/80 tabular-nums">{cuantos}</span>
             </div>
           )
         })}
       </div>
       {!sinComentarios && s.comments.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Comentarios</p>
+          <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Comentarios</p>
           {s.comments.map((c, i) => (
             <p key={i} className="rounded-xl bg-surface-low px-3 py-2.5 text-[13px] text-navy font-body">{c}</p>
           ))}

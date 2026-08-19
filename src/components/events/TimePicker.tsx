@@ -73,7 +73,7 @@ export function TimePicker({ value, onChange, error, min, step = 15, placeholder
         )}
       >
         <span className="truncate">{value ? label12(value) : placeholder}</span>
-        <Clock size={15} className="shrink-0 text-navy-light/70" />
+        <Clock size={15} className="shrink-0 text-navy-light/80" />
       </button>
 
       {open && (

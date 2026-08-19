@@ -102,7 +102,7 @@ export default function FolletosPage() {
             </div>
             <div>
               <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Folletos</h1>
-              <p className="mt-0.5 text-sm text-white/70 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
+              <p className="mt-0.5 text-sm text-white/80 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
             </div>
           </div>
           {canEdit && <ManualFolletoRequestButton onCreated={refetch} />}
@@ -140,8 +140,8 @@ export default function FolletosPage() {
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent',
+                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
+                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent',
               )}
             >
               {f.label}
@@ -157,7 +157,7 @@ export default function FolletosPage() {
             <button
               key={s}
               onClick={() => setConfirm(s)}
-              className="rounded-full border border-white/30 px-3.5 py-1.5 text-[12px] text-white hover:bg-white/10 transition-colors font-body"
+              className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/10 transition-colors font-body"
             >
               {FOLLETO_STATE_LABEL[s]}
             </button>
@@ -168,7 +168,7 @@ export default function FolletosPage() {
       {/* Tabla */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : filtered.length === 0 ? (
           <EmptyState icon={FileText} title="No hay solicitudes de folletos con esos filtros" />
         ) : (
@@ -187,7 +187,7 @@ export default function FolletosPage() {
                     </th>
                   )}
                   {['Tipo', 'Origen', 'Cantidad', 'Sede', 'Fecha estimada', 'Estado', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -208,20 +208,20 @@ export default function FolletosPage() {
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                         {r.tipo === 'cierre' ? (
-                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/70"> · → {levelLabel(r.target_level_code)}</span>}</>
+                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/80"> · → {levelLabel(r.target_level_code)}</span>}</>
                         ) : r.tipo === 'manual' ? (
                           <>
                             {(() => {
                               const leader = r.target_leader_name || (r.target_leader ? [r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ') : '')
                               return <span>{r.target_level_code ? levelLabel(r.target_level_code) : '—'}{leader ? ` · ${leader}` : ''}</span>
                             })()}
-                            {r.note && <span className="block text-navy-light/70 text-[12px] italic">“{r.note}”</span>}
+                            {r.note && <span className="block text-navy-light/80 text-[13px] italic">“{r.note}”</span>}
                           </>
                         ) : (r.bloque?.nombre ?? '—')}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[13px]">{r.quantity}</td>
+                      <td className="px-4 py-3 text-sm text-navy-light/80 tabular-nums font-mono text-[13px]">{r.quantity}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.sede ?? '—'}</td>
-                      <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>
                       <td className="px-4 py-3">
                         <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', FOLLETO_STATE_BADGE[r.status])}>
                           {FOLLETO_STATE_LABEL[r.status]}
@@ -232,7 +232,7 @@ export default function FolletosPage() {
                           <button
                             onClick={() => applyStatus([r.id], next)}
                             disabled={busy}
-                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
                           >
                             {FOLLETO_STATE_LABEL[next]} <ChevronRight size={12} />
                           </button>
@@ -252,7 +252,7 @@ export default function FolletosPage() {
         <Modal onClose={() => !busy && setConfirm(null)} titleId="confirm-folleto-title" width={420}>
           <div className="p-6 space-y-4">
             <h3 id="confirm-folleto-title" className="text-base font-bold text-navy font-display">Cambiar estado</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               <strong className="text-navy">{sel.count}</strong> folleto{sel.count !== 1 ? 's' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">{FOLLETO_STATE_LABEL[confirm]}</strong>.
             </p>
             <div className="flex gap-2 pt-1">

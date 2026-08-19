@@ -16,7 +16,7 @@ const TYPE_BADGE: Record<string, string> = {
 
 const ATTENDANCE_BADGE: Record<string, string> = {
   servidor: 'bg-coral-soft/20 text-coral',
-  participante: 'bg-surface-low text-navy-light/70',
+  participante: 'bg-surface-low text-navy-light/80',
 }
 
 function studyStageColor(stage: string): string {
@@ -60,7 +60,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <MapPin size={14} className="text-coral" strokeWidth={1.75} />
             <span
-              className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display"
+              className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display"
             >
               Sede
             </span>
@@ -69,7 +69,7 @@ export function MemberSummaryTab({
             {member.attendance_sede ? member.attendance_sede.name : 'Sin sede asignada'}
           </p>
           {member.attendance_sede?.case === 'inactivo' && (
-            <p className="text-[12px] text-navy-light/70 font-body mt-0.5">
+            <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
               última actividad {formatSedeRecency(member.attendance_sede.lastCheckin)}
             </p>
           )}
@@ -81,7 +81,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <BookOpen size={14} className="text-teal-deep" strokeWidth={1.75} />
             <span
-              className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display"
+              className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display"
             >
               Estudios en curso
             </span>
@@ -106,7 +106,7 @@ export function MemberSummaryTab({
               ))}
             </div>
           ) : (
-            <p className="text-sm font-medium text-navy-light/70 font-body">Sin estudios activos</p>
+            <p className="text-sm font-medium text-navy-light/80 font-body">Sin estudios activos</p>
           )}
         </div>
 
@@ -116,7 +116,7 @@ export function MemberSummaryTab({
           <div className="flex items-center gap-2 mb-2">
             <Users size={14} className="text-navy" strokeWidth={1.75} />
             <span
-              className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display"
+              className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display"
             >
               Servicio
             </span>
@@ -130,7 +130,7 @@ export function MemberSummaryTab({
               ))}
             </div>
           ) : (
-            <p className="text-sm font-medium text-navy-light/70 font-body">Sin servicio activo</p>
+            <p className="text-sm font-medium text-navy-light/80 font-body">Sin servicio activo</p>
           )}
         </div>
       </div>
@@ -147,7 +147,7 @@ export function MemberSummaryTab({
               >
                 {currentStudyEntry.name}
               </p>
-              <p className="text-xs text-navy-light/70 mt-0.5 font-body">
+              <p className="text-xs text-navy-light/80 mt-0.5 font-body">
                 {currentWeek > 0 ? `Semana ${currentWeek} de ${currentStudyEntry.weeks}` : 'En curso'}
               </p>
             </div>
@@ -189,7 +189,7 @@ export function MemberSummaryTab({
                   key={code + i}
                   className={cn(
                     'rounded-full px-2.5 py-0.5 text-xs font-body',
-                    entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/70'
+                    entry ? studyStageColor(entry.stage) : 'bg-surface-low text-navy-light/80'
                   )}
                 >
                   {entry ? entry.name : code}
@@ -217,7 +217,7 @@ export function MemberSummaryTab({
                   <p className="text-sm text-navy truncate font-body">
                     {ev.name}
                   </p>
-                  <p className="text-xs text-navy-light/70 font-body">
+                  <p className="text-xs text-navy-light/80 font-body">
                     {formatDate(ev.date)}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export function MemberSummaryTab({
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[11px] font-body',
-                      TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/70'
+                      TYPE_BADGE[ev.type] ?? 'bg-surface-low text-navy-light/80'
                     )}
                   >
                     {ev.type}
@@ -233,7 +233,7 @@ export function MemberSummaryTab({
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[11px] font-body',
-                      ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/70'
+                      ATTENDANCE_BADGE[ev.attendance_type] ?? 'bg-surface-low text-navy-light/80'
                     )}
                   >
                     {ev.attendance_type === 'servidor' ? 'Servidor' : 'Participante'}

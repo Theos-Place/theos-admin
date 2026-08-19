@@ -19,7 +19,7 @@ export function SuccessScreen({ selected }: SuccessScreenProps) {
           Contrato formalizado
         </p>
         <p
-          className="text-sm text-navy-light/70 font-body"
+          className="text-sm text-navy-light/80 font-body"
         >
           {selected?.first_name} {selected?.last_name} fue agregado como empleado.
         </p>

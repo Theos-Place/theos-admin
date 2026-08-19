@@ -25,7 +25,7 @@ export function ActiveWarningModal({ open, title, message, onClose }: ActiveWarn
           </div>
           <div className="flex-1 min-w-0">
             <p id="active-warning-title" className="text-base font-bold text-navy font-display">{title}</p>
-            <p className="text-[13px] text-navy-light/70 mt-1 leading-relaxed font-body">
+            <p className="text-[13px] text-navy-light/80 mt-1 leading-relaxed font-body">
               {message}
             </p>
           </div>

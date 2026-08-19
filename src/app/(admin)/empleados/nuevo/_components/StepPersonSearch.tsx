@@ -20,7 +20,7 @@ export function StepPersonSearch({
       className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
     >
       <p
-        className="text-[12px] tracking-widths uppercase text-navy-light/70 font-display"
+        className="text-[13px] tracking-widths uppercase text-navy-light/80 font-display"
       >
         Paso 1 — Buscar miembro
       </p>
@@ -42,12 +42,12 @@ export function StepPersonSearch({
                 {selected.first_name} {selected.last_name}
               </p>
               {selected.email && (
-                <p className="truncate text-[12px] text-navy-light/70 font-body">
+                <p className="truncate text-[13px] text-navy-light/80 font-body">
                   {selected.email}
                 </p>
               )}
               {selected.cedula && (
-                <p className="text-[12px] text-navy-light/70 font-mono">
+                <p className="text-[13px] text-navy-light/80 font-mono">
                   {selected.cedula}
                 </p>
               )}
@@ -63,7 +63,7 @@ export function StepPersonSearch({
               aria-label="Quitar miembro seleccionado"
               className="h-7 w-7 rounded-full hover:bg-surface-low flex items-center justify-center transition-colors"
             >
-              <X size={13} className="text-navy-light/70" />
+              <X size={13} className="text-navy-light/80" />
             </button>
           </div>
         </div>
@@ -78,9 +78,9 @@ export function StepPersonSearch({
           emptyState={
             <div className="flex flex-col items-center gap-2 py-8">
               <div className="h-12 w-12 rounded-full bg-navy/5 flex items-center justify-center">
-                <User size={20} className="text-navy-light/70" />
+                <User size={20} className="text-navy-light/80" />
               </div>
-              <p className="text-sm text-navy-light/70 font-body">
+              <p className="text-sm text-navy-light/80 font-body">
                 Escribí el nombre o cédula del miembro
               </p>
             </div>

@@ -10,7 +10,7 @@ export function FinanceGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/70">Cargando…</p>
+        <p className="text-sm text-navy-light/80">Cargando…</p>
       </div>
     )
   }

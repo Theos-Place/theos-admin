@@ -6,7 +6,7 @@ import { advancedHtmlNotice } from '@/components/communications/email-html'
 import { cn } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 
-const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/70 font-display'
+const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 
 type Props = {
   channel: CommunicationChannel
@@ -50,7 +50,7 @@ export function ContentSection({
         <button
           type="button"
           onClick={onOpenTemplateModal}
-          className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+          className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
         >
           <FileText size={12} />
           Usar plantilla
@@ -59,7 +59,7 @@ export function ContentSection({
 
       {(channel === 'email' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             {channel === 'interna' ? 'Título de la alerta' : 'Asunto del correo'}
           </p>
           <input
@@ -74,12 +74,12 @@ export function ContentSection({
       {(channel === 'whatsapp' || channel === 'both' || channel === 'interna') && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               {channel === 'interna'
                 ? 'Mensaje de la alerta'
-                : <>Mensaje de WhatsApp <span className="text-navy-light/70">(soporta *negrita*, _itálica_, ~tachado~)</span></>}
+                : <>Mensaje de WhatsApp <span className="text-navy-light/80">(soporta *negrita*, _itálica_, ~tachado~)</span></>}
             </p>
-            <span className="text-[12px] text-navy-light/70 tabular-nums font-mono">
+            <span className="text-[13px] text-navy-light/80 tabular-nums font-mono">
               {waBody.length}/1000
             </span>
           </div>
@@ -98,7 +98,7 @@ export function ContentSection({
 
       {(channel === 'email' || channel === 'both') && (
         <div className="space-y-1.5" onFocusCapture={() => setPreviewChannel('email')}>
-          <p className="text-[12px] text-navy-light/70 font-body">Cuerpo del correo</p>
+          <p className="text-[13px] text-navy-light/80 font-body">Cuerpo del correo</p>
           <EmailEditor
             value={emailBody}
             onChange={setEmailBody}
@@ -106,7 +106,7 @@ export function ContentSection({
             htmlOnly={emailHtmlOnly}
             htmlOnlyNotice={advancedHtmlNotice(emailBody)}
           />
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Editá en Visual o pegá HTML. El pie de baja se agrega solo al enviar como marketing.
           </p>
         </div>

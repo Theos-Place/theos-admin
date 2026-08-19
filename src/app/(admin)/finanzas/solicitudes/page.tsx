@@ -42,7 +42,7 @@ export default function FinanzasSolicitudesPage() {
   if (!loaded) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 size={20} className="animate-spin text-navy-light/70" />
+        <Loader2 size={20} className="animate-spin text-navy-light/80" />
       </div>
     )
   }
@@ -51,10 +51,10 @@ export default function FinanzasSolicitudesPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/6 mb-4">
-          <Lock size={22} className="text-navy-light/70" />
+          <Lock size={22} className="text-navy-light/80" />
         </div>
         <p className="text-base font-semibold text-navy font-display mb-1">Acceso restringido</p>
-        <p className="text-sm text-navy-light/70 font-body max-w-sm">
+        <p className="text-sm text-navy-light/80 font-body max-w-sm">
           Esta sección es solo para el equipo de finanzas y administradores.
         </p>
       </div>
@@ -67,7 +67,7 @@ export default function FinanzasSolicitudesPage() {
         <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Solicitudes financieras
         </h1>
-        <p className="mt-1 text-sm text-white/70 font-body">
+        <p className="mt-1 text-sm text-white/80 font-body">
           Becas y devoluciones solicitadas por los miembros
         </p>
       </div>
@@ -85,7 +85,7 @@ export default function FinanzasSolicitudesPage() {
             {r.request_type === 'scholarship' && (
               <>
                 <span className="inline-flex items-center gap-1.5">
-                  <GraduationCap size={13} className="text-navy-light/70" />
+                  <GraduationCap size={13} className="text-navy-light/80" />
                   {r.study_group_name ?? 'Grupo por definir'}
                 </span>
                 {r.amount != null && r.amount > 0 && (
@@ -95,7 +95,7 @@ export default function FinanzasSolicitudesPage() {
             )}
             {r.request_type === 'refund' && (
               <span className="inline-flex items-center gap-1.5">
-                <CreditCard size={13} className="text-navy-light/70" />
+                <CreditCard size={13} className="text-navy-light/80" />
                 {r.payment_label ?? 'Pago no especificado'}
               </span>
             )}

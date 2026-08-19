@@ -19,7 +19,7 @@ type Invitation = {
 const STATUS_LABEL: Record<Invitation['status'], { label: string; cls: string }> = {
   active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-deep' },
   used: { label: 'Matriculado', cls: 'bg-navy/10 text-navy' },
-  revoked: { label: 'Revocada', cls: 'bg-surface-low text-navy-light/70' },
+  revoked: { label: 'Revocada', cls: 'bg-surface-low text-navy-light/80' },
 }
 
 /** Sección "Invitados" del detalle de un plan invitation_only. Solo para roles de estudios. */
@@ -77,18 +77,18 @@ export function PlanInvitations({ planId }: { planId: string }) {
         <UserPlus size={16} className="text-coral" />
         <h3 className="text-sm font-semibold text-navy font-display">Invitados a este estudio</h3>
       </div>
-      <p className="text-[12px] text-navy-light/70 font-body">
+      <p className="text-[13px] text-navy-light/80 font-body">
         Este estudio es solo por invitación. Solo las personas invitadas pueden matricularse.
       </p>
 
       <MemberCombobox onSelect={invite} placeholder="Buscar miembro para invitar…" excludeIds={activeIds} />
-      {adding && <p className="text-[12px] text-navy-light/70 font-body">Invitando…</p>}
+      {adding && <p className="text-[13px] text-navy-light/80 font-body">Invitando…</p>}
 
       <div className="space-y-1.5">
         {loading ? (
-          <p className="text-[12px] text-navy-light/70 font-body">Cargando…</p>
+          <p className="text-[13px] text-navy-light/80 font-body">Cargando…</p>
         ) : invitations.length === 0 ? (
-          <p className="text-[12px] text-navy-light/70 font-body">Todavía no hay invitados.</p>
+          <p className="text-[13px] text-navy-light/80 font-body">Todavía no hay invitados.</p>
         ) : invitations.map(inv => (
           <div key={inv.id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-surface-low transition-colors">
             <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center text-[11px] font-bold text-white shrink-0">
@@ -96,7 +96,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-navy truncate font-body">{inv.member_name}</p>
-              {inv.invited_by_name && <p className="text-[12px] text-navy-light/70 font-body">Invitado por {inv.invited_by_name}</p>}
+              {inv.invited_by_name && <p className="text-[13px] text-navy-light/80 font-body">Invitado por {inv.invited_by_name}</p>}
             </div>
             <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', STATUS_LABEL[inv.status].cls)}>
               {STATUS_LABEL[inv.status].label}

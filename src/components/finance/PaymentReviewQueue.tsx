@@ -316,7 +316,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
     <>
       {visible && (
       <div className="space-y-4">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           {rows.length} pago{rows.length !== 1 ? 's' : ''} · {STATUS_TABS.find(t => t.key === statusFilter)?.label.toLowerCase()}
         </p>
 
@@ -327,8 +327,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               key={t.key}
               onClick={() => setStatusFilter(t.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-                statusFilter === t.key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
+                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
+                statusFilter === t.key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
               )}
             >
               {t.label}
@@ -343,8 +343,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               key={id}
               onClick={() => setConceptFilter(id)}
               className={cn(
-                'rounded-full px-3 py-1 text-[12px] font-medium border transition-all font-display',
-                conceptFilter === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
+                'rounded-full px-3 py-1 text-[13px] font-medium border transition-all font-display',
+                conceptFilter === id ? 'bg-navy/80 text-white border-navy/80' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
               )}
             >
               {label}
@@ -356,7 +356,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             onChange={e => setPlanFilter(e.target.value)}
             disabled={conceptFilter !== 'matricula'}
             title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
-            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[12px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[13px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <option value="all">Todos los estudios</option>
             {options.plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -367,7 +367,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             onChange={e => setLeaderFilter(e.target.value)}
             disabled={conceptFilter !== 'matricula'}
             title={conceptFilter !== 'matricula' ? 'Disponible con el concepto Matrícula' : undefined}
-            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[12px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            className="rounded-full border border-navy/15 bg-surface-card px-3 py-1 text-[13px] text-navy outline-none focus:border-navy/30 font-body disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <option value="all">Todos los dirigentes</option>
             {options.leaders.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -378,13 +378,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           <BulkActionBar count={sel.count} onClear={sel.clear} noun="pagos">
             <button
               onClick={() => setBulkAction('approve')}
-              className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body"
+              className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
             >
               Aprobar seleccionados
             </button>
             <button
               onClick={() => { setBulkAction('reject'); setBulkReason('') }}
-              className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[12px] hover:bg-white/10 transition-colors font-body"
+              className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[13px] hover:bg-white/10 transition-colors font-body"
             >
               Rechazar seleccionados
             </button>
@@ -393,7 +393,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
 
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           {loading ? (
-            <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+            <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : rows.length === 0 ? (
             <EmptyState icon={CreditCard} title="No hay pagos con estos filtros" />
           ) : (
@@ -414,7 +414,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </th>
                     )}
                     {['Persona', 'Descripción', 'Monto esperado', 'Estado', 'Referencia', 'Comprobante', ''].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -441,7 +441,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </td>
                       <td className="px-4 py-3 text-sm text-navy font-body tabular-nums">{money(r.amount, r.currency)}</td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+                        <span className={cn('rounded-full px-2.5 py-1 text-[13px] font-semibold font-body', badge.cls)}>{badge.label}</span>
                       </td>
                       <td className="px-4 py-3 text-[13px] font-body">
                         <span className="text-navy-light/80">{r.reference_code ?? '—'}</span>
@@ -455,7 +455,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         <button
                           onClick={() => openReceipt(r)}
                           disabled={!r.receipt_path}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
                         >
                           <ImageIcon size={12} /> Ver comprobante
                         </button>
@@ -467,14 +467,14 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                               <button
                                 onClick={() => setApproveTarget(r)}
                                 disabled={busyId === r.id}
-                                className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                                className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                               >
                                 {busyId === r.id ? '…' : 'Aprobar'}
                               </button>
                               <button
                                 onClick={() => { setReject(r); setReason('') }}
                                 disabled={busyId === r.id}
-                                className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[12px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                                className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                               >
                                 Rechazar
                               </button>
@@ -482,7 +482,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           )}
                           <button
                             onClick={() => { setScholPanel(null); setDetail(r) }}
-                            className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                            className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           >
                             Abrir
                           </button>
@@ -505,7 +505,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           <div className="p-5 space-y-3">
             <h3 id="receipt-title" className="text-base font-bold text-navy font-display">Comprobante · {receipt.row.member_name}</h3>
             {receipt.loading ? (
-              <p className="text-sm text-navy-light/70 font-body inline-flex items-center gap-2 py-8"><Loader2 size={15} className="animate-spin" /> Cargando comprobante…</p>
+              <p className="text-sm text-navy-light/80 font-body inline-flex items-center gap-2 py-8"><Loader2 size={15} className="animate-spin" /> Cargando comprobante…</p>
             ) : receipt.url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={receipt.url} alt="Comprobante de pago" className="w-full rounded-xl border border-[var(--outline-variant)]" />
@@ -534,13 +534,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h3 id="detail-title" className="text-base font-bold text-navy font-display">Tiquete de pago</h3>
-              <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-semibold font-body', badge.cls)}>{badge.label}</span>
+              <span className={cn('rounded-full px-2.5 py-1 text-[13px] font-semibold font-body', badge.cls)}>{badge.label}</span>
             </div>
 
             <div className="rounded-xl border border-outline overflow-hidden">
               {rows2.map(([label, value], i) => (
                 <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
-                  <span className="w-32 shrink-0 text-[12px] uppercase tracking-wider text-navy-light/70 font-display">{label}</span>
+                  <span className="w-32 shrink-0 text-[13px] uppercase tracking-wider text-navy-light/80 font-display">{label}</span>
                   <span className="text-[13px] text-navy font-body">{value}</span>
                 </div>
               ))}
@@ -549,7 +549,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             {detail.receipt_path && (
               <button
                 onClick={() => openReceipt(detail)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 <ImageIcon size={13} /> Ver comprobante
               </button>
@@ -561,12 +561,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                 {!scholPanel ? (
                   <button
                     onClick={() => openScholarshipPanel(detail)}
-                    className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors font-body"
+                    className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors font-body"
                   >
                     Aplicar beca / cupón
                   </button>
                 ) : scholPanel.loading ? (
-                  <p className="text-[13px] text-navy-light/70 font-body inline-flex items-center gap-2">
+                  <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin" /> Buscando becas de la persona…
                   </p>
                 ) : (
@@ -584,13 +584,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         <button
                           onClick={() => applyScholarship(detail, { scholarship_id: scholPanel.assigned!.id })}
                           disabled={scholPanel.busy}
-                          className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                          className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                         >
                           {scholPanel.busy ? '…' : 'Aplicar beca'}
                         </button>
                       </div>
                     ) : (
-                      <p className="text-[13px] text-navy-light/70 font-body">Sin beca asignada activa para este destino.</p>
+                      <p className="text-[13px] text-navy-light/80 font-body">Sin beca asignada activa para este destino.</p>
                     )}
                     <div className="flex gap-2">
                       <input
@@ -603,12 +603,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       <button
                         onClick={() => applyScholarship(detail, { coupon_code: scholPanel.code.trim().toUpperCase() })}
                         disabled={!scholPanel.code.trim() || scholPanel.busy}
-                        className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+                        className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
                       >
                         {scholPanel.busy ? '…' : 'Aplicar código'}
                       </button>
                     </div>
-                    <p className="text-[12px] text-navy-light/70 font-body">
+                    <p className="text-[13px] text-navy-light/80 font-body">
                       Beca completa: el pago queda aprobado sin comprobante. Parcial: queda pendiente por el resto.
                     </p>
                   </>
@@ -623,7 +623,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     <button
                       onClick={() => transition(detail, 'start_review')}
                       disabled={busyId === detail.id}
-                      className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                      className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                     >
                       {busyId === detail.id ? '…' : 'Poner en revisión'}
                     </button>
@@ -631,7 +631,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     <button
                       onClick={() => remind(detail)}
                       disabled={busyId === detail.id}
-                      className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[12px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+                      className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
                     >
                       Enviar recordatorio
                     </button>
@@ -642,21 +642,21 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     <button
                       onClick={() => { const r = detail; setDetail(null); setApproveTarget(r) }}
                       disabled={busyId === detail.id}
-                      className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                      className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                     >
                       Aprobar
                     </button>
                     <button
                       onClick={() => { const r = detail; setDetail(null); setReject(r); setReason('') }}
                       disabled={busyId === detail.id}
-                      className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[12px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                      className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                     >
                       Rechazar
                     </button>
                     <button
                       onClick={() => transition(detail, 'reopen')}
                       disabled={busyId === detail.id}
-                      className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                      className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
                     >
                       Devolver a pendiente
                     </button>
@@ -666,17 +666,17 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                   <button
                     onClick={() => { setCloseTarget(detail); setCloseReason('') }}
                     disabled={busyId === detail.id}
-                    className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                    className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
                   >
                     Cerrar sin cobro
                   </button>
                 )}
                 {detail.queue_status === 'cerrado' && (
-                  <p className="text-[13px] text-navy-light/70 font-body">Este tiquete ya está cerrado.</p>
+                  <p className="text-[13px] text-navy-light/80 font-body">Este tiquete ya está cerrado.</p>
                 )}
               </div>
             ) : (
-              <p className="text-[13px] text-navy-light/70 font-body">Solo lectura: no tenés permiso para gestionar pagos.</p>
+              <p className="text-[13px] text-navy-light/80 font-body">Solo lectura: no tenés permiso para gestionar pagos.</p>
             )}
           </div>
         </Modal>
@@ -688,7 +688,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
         <Modal onClose={() => !busyId && setCloseTarget(null)} titleId="close-title" width={440}>
           <div className="p-6 space-y-3">
             <h3 id="close-title" className="text-base font-bold text-navy font-display">Cerrar tiquete sin cobro</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               El tiquete de <strong className="text-navy">{closeTarget.member_name}</strong> se cierra sin registrar pago
               (no activa matrícula ni inscripción). Queda en el historial con el motivo.
             </p>
@@ -721,7 +721,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
         <Modal onClose={() => !busyId && setApproveTarget(null)} titleId="approve-title" width={440}>
           <div className="p-6 space-y-3">
             <h3 id="approve-title" className="text-base font-bold text-navy font-display">Aprobar pago</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               ¿Aprobar el pago de <strong className="text-navy">{approveTarget.member_name}</strong>
               {approveTarget.concept ? ` (${CONCEPT_LABEL[approveTarget.concept]})` : ''} por {money(approveTarget.amount, approveTarget.currency)}?
               El pago quedará como pagado y activará lo que corresponda (p. ej. la matrícula o la inscripción al evento).
@@ -745,7 +745,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
         <Modal onClose={() => !busyId && setReject(null)} titleId="reject-title" width={440}>
           <div className="p-6 space-y-3">
             <h3 id="reject-title" className="text-base font-bold text-navy font-display">Rechazar pago</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               Se avisará a <strong className="text-navy">{reject.member_name}</strong> con el motivo para que vuelva a subir el comprobante.
             </p>
             <textarea
@@ -778,7 +778,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             <h3 id="bulk-title" className="text-base font-bold text-navy font-display">
               {bulkAction === 'approve' ? 'Aprobar' : 'Rechazar'} {sel.count} pago{sel.count !== 1 ? 's' : ''}
             </h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {bulkAction === 'approve'
                 ? 'Cada pago quedará como pagado y activará lo que corresponda (matrícula, inscripción a evento, etc.).'
                 : 'Se avisará a cada persona con el mismo motivo para que vuelva a subir el comprobante.'}

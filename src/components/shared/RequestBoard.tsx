@@ -48,7 +48,7 @@ export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: s
   open:      { label: 'Abierta',     cls: 'bg-coral/10 text-coral' },
   in_review: { label: 'En revisión', cls: 'bg-[rgba(233,185,73,0.15)] text-[#A8821F]' },
   resolved:  { label: 'Resuelta',    cls: 'bg-success/12 text-success' },
-  rejected:  { label: 'Rechazada',   cls: 'bg-surface-low text-navy-light/70' },
+  rejected:  { label: 'Rechazada',   cls: 'bg-surface-low text-navy-light/80' },
 }
 
 // Orden: estados activos primero, "Todas" al final. Default al entrar: Abiertas.
@@ -270,10 +270,10 @@ export function RequestBoard<R extends BaseRequest>({
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-[12px] font-body border transition-all',
+                'rounded-full px-3 py-1.5 text-[13px] font-body border transition-all',
                 statusFilter === f.key
                   ? 'bg-navy text-white border-navy'
-                  : 'bg-transparent text-navy/70 border-outline hover:text-navy',
+                  : 'bg-transparent text-navy/80 border-outline hover:text-navy',
               )}
             >
               {f.label}
@@ -282,12 +282,12 @@ export function RequestBoard<R extends BaseRequest>({
         </div>
         {assigneesUrl && (
           <div className="flex items-center gap-1.5">
-            <label htmlFor="req-assigned-filter" className="text-[12px] text-navy-light/70 font-body">Asignado a</label>
+            <label htmlFor="req-assigned-filter" className="text-[13px] text-navy-light/80 font-body">Asignado a</label>
             <select
               id="req-assigned-filter"
               value={assignedFilter}
               onChange={e => setAssignedFilter(e.target.value)}
-              className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[12px] text-navy font-body outline-none"
+              className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
             >
               <option value="all">Todas</option>
               <option value="none">Sin asignar</option>
@@ -296,34 +296,34 @@ export function RequestBoard<R extends BaseRequest>({
           </div>
         )}
         <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-          <label htmlFor="req-date-from" className="text-[12px] text-navy-light/70 font-body">Desde</label>
+          <label htmlFor="req-date-from" className="text-[13px] text-navy-light/80 font-body">Desde</label>
           <input
             id="req-date-from"
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[12px] text-navy font-body outline-none"
+            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
           />
-          <label htmlFor="req-date-to" className="text-[12px] text-navy-light/70 font-body">Hasta</label>
+          <label htmlFor="req-date-to" className="text-[13px] text-navy-light/80 font-body">Hasta</label>
           <input
             id="req-date-to"
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[12px] text-navy font-body outline-none"
+            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
           />
           {(dateFrom || dateTo) && (
             <button
               onClick={() => { setDateFrom(''); setDateTo('') }}
               aria-label="Limpiar fechas"
-              className="rounded-lg p-1 text-navy-light/70 hover:text-coral transition-colors"
+              className="rounded-lg p-1 text-navy-light/80 hover:text-coral transition-colors"
             >
               <X size={13} />
             </button>
           )}
           <button
             onClick={() => setSortDesc(v => !v)}
-            className="inline-flex items-center gap-1 rounded-lg border border-outline px-2 py-1 text-[12px] text-navy-light/70 font-body hover:text-navy transition-colors"
+            className="inline-flex items-center gap-1 rounded-lg border border-outline px-2 py-1 text-[13px] text-navy-light/80 font-body hover:text-navy transition-colors"
             title={sortDesc ? 'Más recientes primero' : 'Más antiguas primero'}
           >
             <ArrowUpDown size={12} />
@@ -335,7 +335,7 @@ export function RequestBoard<R extends BaseRequest>({
       {/* Lista acordeón por año */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={18} className="animate-spin text-navy-light/70" />
+          <Loader2 size={18} className="animate-spin text-navy-light/80" />
         </div>
       ) : byYear.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-card">
@@ -358,10 +358,10 @@ export function RequestBoard<R extends BaseRequest>({
                 >
                   <span className="text-sm font-bold text-navy font-display">{year}</span>
                   <span className="flex items-center gap-2">
-                    <span className="text-[12px] text-navy-light/70 font-body">
+                    <span className="text-[13px] text-navy-light/80 font-body">
                       {items.length} solicitud{items.length !== 1 ? 'es' : ''}
                     </span>
-                    {yearOpen ? <ChevronUp size={15} className="text-navy-light/70" /> : <ChevronDown size={15} className="text-navy-light/70" />}
+                    {yearOpen ? <ChevronUp size={15} className="text-navy-light/80" /> : <ChevronDown size={15} className="text-navy-light/80" />}
                   </span>
                 </button>
 
@@ -384,20 +384,20 @@ export function RequestBoard<R extends BaseRequest>({
                               <span className="block truncate text-sm text-navy font-body">
                                 <strong className="font-semibold">{typeLabel[r.request_type] ?? r.request_type}</strong> · {r.member_name}
                               </span>
-                              <span className="text-[12px] text-navy-light/70 font-body">{formatDate(r.created_at)}</span>
+                              <span className="text-[13px] text-navy-light/80 font-body">{formatDate(r.created_at)}</span>
                             </span>
                             {r.reviewed_by_name && r.status !== 'open' && (
                               <span className="hidden sm:inline-flex items-center gap-1.5 shrink-0" title={`Asignada a ${r.reviewed_by_name}`}>
                                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[10px] font-display font-extrabold">
                                   {getInitials(r.reviewed_by_name)}
                                 </span>
-                                <span className="text-[12px] text-navy-light/70 font-body max-w-[110px] truncate">{r.reviewed_by_name}</span>
+                                <span className="text-[13px] text-navy-light/80 font-body max-w-[110px] truncate">{r.reviewed_by_name}</span>
                               </span>
                             )}
-                            <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-semibold font-body shrink-0', badge.cls)}>
+                            <span className={cn('rounded-full px-2.5 py-1 text-[13px] font-semibold font-body shrink-0', badge.cls)}>
                               {badge.label}
                             </span>
-                            {isOpen ? <ChevronUp size={15} className="text-navy-light/70 shrink-0" /> : <ChevronDown size={15} className="text-navy-light/70 shrink-0" />}
+                            {isOpen ? <ChevronUp size={15} className="text-navy-light/80 shrink-0" /> : <ChevronDown size={15} className="text-navy-light/80 shrink-0" />}
                           </button>
 
                           {isOpen && (
@@ -417,14 +417,14 @@ export function RequestBoard<R extends BaseRequest>({
 
                               {/* Historial */}
                               <div className="space-y-1">
-                                <p className="inline-flex items-center gap-1.5 text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+                                <p className="inline-flex items-center gap-1.5 text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                                   <History size={11} /> Historial
                                 </p>
-                                <p className="text-[12px] text-navy-light/70 font-body">
+                                <p className="text-[13px] text-navy-light/80 font-body">
                                   Creada · {formatDateNumeric(r.created_at)}
                                 </p>
                                 {r.history.map((h, i) => (
-                                  <p key={i} className="text-[12px] text-navy-light/70 font-body">
+                                  <p key={i} className="text-[13px] text-navy-light/80 font-body">
                                     {statusLabel(h.from_status)} → {statusLabel(h.to_status)}
                                     {h.changed_by_name ? ` · por ${h.changed_by_name}` : ''} · {formatDateNumeric(h.created_at)}
                                     {h.notes ? ` — ${h.notes}` : ''}
@@ -494,14 +494,14 @@ export function RequestBoard<R extends BaseRequest>({
               <h2 id="request-assign-title" className="text-lg font-semibold text-navy font-display">
                 Asignar solicitud
               </h2>
-              <p className="text-sm text-navy-light/70 font-body mt-0.5">
+              <p className="text-sm text-navy-light/80 font-body mt-0.5">
                 {typeLabel[assignTarget.request_type] ?? assignTarget.request_type} de {assignTarget.member_name} — elegí el coordinador de dirigentes:
               </p>
             </div>
 
             {assignees.length > 6 && (
               <div className="flex items-center gap-2 rounded-xl border border-outline bg-surface-low px-3 py-2">
-                <Search size={13} className="text-navy-light/70 shrink-0" />
+                <Search size={13} className="text-navy-light/80 shrink-0" />
                 <input
                   autoFocus
                   value={assigneeSearch}
@@ -514,7 +514,7 @@ export function RequestBoard<R extends BaseRequest>({
             )}
 
             {assignees.length === 0 ? (
-              <p className="text-sm text-navy-light/70 font-body py-4 text-center">
+              <p className="text-sm text-navy-light/80 font-body py-4 text-center">
                 No hay coordinadores de dirigentes activos para asignar.
               </p>
             ) : (
@@ -533,7 +533,7 @@ export function RequestBoard<R extends BaseRequest>({
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{a.member_name}</span>
                         {assignTarget.reviewed_by === a.member_id && (
-                          <span className="text-[12px] text-navy-light/70 font-body shrink-0">Asignada actual</span>
+                          <span className="text-[13px] text-navy-light/80 font-body shrink-0">Asignada actual</span>
                         )}
                       </button>
                     </li>
@@ -544,7 +544,7 @@ export function RequestBoard<R extends BaseRequest>({
             <div className="flex justify-end">
               <button
                 onClick={() => setAssignTarget(null)}
-                className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors"
+                className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors"
               >
                 Cancelar
               </button>
@@ -568,14 +568,14 @@ export function RequestBoard<R extends BaseRequest>({
             <h2 id="request-action-title" className="text-lg font-semibold text-navy font-display mb-1">
               {actionTarget.action === 'resolve' ? 'Resolver solicitud' : 'Rechazar solicitud'}
             </h2>
-            <p className="text-sm text-navy-light/70 font-body mb-4">
+            <p className="text-sm text-navy-light/80 font-body mb-4">
               {actionTarget.req.member_name} · {formatDate(actionTarget.req.created_at)}
             </p>
             {actionTarget.action === 'resolve' && renderResolveHint && (
               <div className="mb-4">{renderResolveHint(actionTarget.req)}</div>
             )}
             {resolveExtraNode && <div className="mb-4">{resolveExtraNode}</div>}
-            <label htmlFor="request-review-notes" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">
+            <label htmlFor="request-review-notes" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
               Notas {actionTarget.action === 'resolve' ? 'de resolución' : 'del rechazo'} (opcional)
             </label>
             <textarea
@@ -591,7 +591,7 @@ export function RequestBoard<R extends BaseRequest>({
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setActionTarget(null)}
-                className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors"
+                className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors"
               >
                 Cancelar
               </button>

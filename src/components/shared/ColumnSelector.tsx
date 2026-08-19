@@ -73,7 +73,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
       >
         <Columns2 size={14} strokeWidth={1.75} />
         Columnas
-        <span className="text-[12px] opacity-50">{open ? '↑' : '↓'}</span>
+        <span className="text-[13px] opacity-50">{open ? '↑' : '↓'}</span>
       </button>
 
       {open && (
@@ -81,7 +81,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
           className="absolute right-0 top-[calc(100%+6px)] z-40 w-56 rounded-2xl overflow-hidden bg-surface-card shadow-[0_20px_48px_rgba(22,20,64,0.14)] border border-[var(--outline-variant)]"
         >
           <div className="px-4 py-3 border-b border-[var(--outline-variant)]">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
               Columnas visibles
             </p>
           </div>
@@ -106,7 +106,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
                   />
                   <span className="flex-1 text-navy">{col.label}</span>
                   {col.alwaysVisible && (
-                    <span className="text-[11px] text-navy-light/70 font-body">
+                    <span className="text-[11px] text-navy-light/80 font-body">
                       fijo
                     </span>
                   )}
@@ -118,7 +118,7 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
           <div className="border-t px-4 py-2.5 border-[var(--outline-variant)]">
             <button
               onClick={reset}
-              className="flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy transition-colors w-full font-body"
+              className="flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy transition-colors w-full font-body"
             >
               <RotateCcw size={12} />
               Restaurar por defecto

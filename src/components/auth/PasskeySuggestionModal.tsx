@@ -61,7 +61,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
         {phase === 'success' ? (
           <>
             <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">Huella activada</h2>
-            <p className="mt-2 text-[13px] text-navy-light/70 leading-relaxed font-body">
+            <p className="mt-2 text-[13px] text-navy-light/80 leading-relaxed font-body">
               A partir de ahora podés ingresar sin contraseña.
             </p>
             <button
@@ -77,7 +77,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
               <AlertCircle size={18} />
             </div>
             <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">No se pudo activar</h2>
-            <p className="mt-2 text-[13px] text-navy-light/70 leading-relaxed font-body">
+            <p className="mt-2 text-[13px] text-navy-light/80 leading-relaxed font-body">
               Podés intentarlo más tarde desde Configuración → Seguridad.
             </p>
             <button
@@ -90,7 +90,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
         ) : (
           <>
             <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">Ingresá más rápido la próxima vez</h2>
-            <p className="mt-2 text-[13px] text-navy-light/70 leading-relaxed font-body">
+            <p className="mt-2 text-[13px] text-navy-light/80 leading-relaxed font-body">
               Podés configurar tu huella o Face ID para entrar al sistema sin escribir tu contraseña. Solo tarda unos segundos.
             </p>
 
@@ -115,7 +115,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             <button
               onClick={handleNever}
               disabled={phase === 'registering'}
-              className="mt-3 text-[12px] text-navy-light/70 hover:text-navy-light/70 transition-colors disabled:opacity-50 font-body"
+              className="mt-3 text-[13px] text-navy-light/80 hover:text-navy-light/80 transition-colors disabled:opacity-50 font-body"
             >
               No volver a mostrar
             </button>

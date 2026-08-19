@@ -35,7 +35,7 @@ export function InviteToStudyButton({
 
   if (blocked) {
     return (
-      <p className="text-[12px] text-navy-light/70 font-body italic">
+      <p className="text-[13px] text-navy-light/80 font-body italic">
         No recomendado para dar estudios: no se puede invitar a la formación de dirigentes (CDEB).
       </p>
     )
@@ -77,18 +77,18 @@ export function InviteToStudyButton({
             <h3 id="invitar-estudio-titulo" className="text-lg font-extrabold text-navy font-display">Invitar a un estudio</h3>
             {done ? (
               <div className="space-y-4">
-                <p className="text-sm text-navy-light/70 font-body">
+                <p className="text-sm text-navy-light/80 font-body">
                   Listo. {memberName} quedó invitado y ya puede matricularse en ese estudio (aparece con el sello “Por invitación”).
                 </p>
                 <button onClick={close} className="w-full rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Entendido</button>
               </div>
             ) : (
               <>
-                <p className="text-sm text-navy-light/70 font-body">
+                <p className="text-sm text-navy-light/80 font-body">
                   Estos estudios son solo por invitación. Al invitar a {memberName}, podrá matricularse.
                 </p>
                 <div className="space-y-1">
-                  <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Estudio</label>
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Estudio</label>
                   <select
                     value={planId}
                     onChange={e => setPlanId(e.target.value)}
@@ -99,7 +99,7 @@ export function InviteToStudyButton({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Nota (opcional)</label>
+                  <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nota (opcional)</label>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
@@ -108,7 +108,7 @@ export function InviteToStudyButton({
                     placeholder="Motivo de la invitación…"
                   />
                 </div>
-                {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
                   <button onClick={submit} disabled={!planId || saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">{saving ? 'Invitando…' : 'Invitar'}</button>

@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
 import { TICK_MINUTES } from '@/lib/communications/schedule'
 
-const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/70 font-display'
+const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 
 const TIMEZONES = [
   { value: 'America/Costa_Rica', label: 'Costa Rica (GMT-6)' },
@@ -37,7 +37,7 @@ export function ScheduleSection({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-navy font-body">¿Programar envío?</p>
-          <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+          <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
             Elegí cuándo enviar el mensaje
           </p>
         </div>
@@ -55,8 +55,8 @@ export function ScheduleSection({
       {scheduled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[12px] text-navy-light/70 font-body flex items-center gap-1.5">
-              <Clock size={13} className="text-navy-light/70 shrink-0" /> Fecha y hora
+            <label className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
+              <Clock size={13} className="text-navy-light/80 shrink-0" /> Fecha y hora
             </label>
             <input
               type="datetime-local"
@@ -64,12 +64,12 @@ export function ScheduleSection({
               value={scheduledAt}
               onChange={e => setScheduledAt(e.target.value)}
             />
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               La cola se revisa cada {TICK_MINUTES} min: puede salir hasta {TICK_MINUTES} minutos después.
             </p>
           </div>
           <div className="space-y-1">
-            <label className="text-[12px] text-navy-light/70 font-body">Zona horaria</label>
+            <label className="text-[13px] text-navy-light/80 font-body">Zona horaria</label>
             <select
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={timezone}

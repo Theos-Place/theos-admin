@@ -144,20 +144,20 @@ export default function ImportarVacantesPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => (step === 1 ? router.push('/servidores/admin') : setStep(s => (s - 1) as 1 | 2 | 3))}
-            className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white/70"
+            className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white/80"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
             <h1 className="text-xl text-white font-display font-extrabold">Importar vacantes</h1>
-            <p className="text-[12px] text-white/70 mt-0.5 font-body">{fileName || 'Cargá el archivo .xlsx o .csv'}</p>
+            <p className="text-[13px] text-white/80 mt-0.5 font-body">{fileName || 'Cargá el archivo .xlsx o .csv'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {[1, 2, 3].map((s, idx) => (
             <div key={s} className="flex items-center gap-2">
               <div
-                className="h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold font-display"
+                className="h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold font-display"
                 style={{
                   background: step > s ? '#3DB97A' : step === s ? '#EF5554' : 'rgba(255,255,255,0.15)',
                   color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
@@ -165,7 +165,7 @@ export default function ImportarVacantesPage() {
               >
                 {step > s ? <Check size={13} /> : s}
               </div>
-              <span className="text-[12px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
+              <span className="text-[13px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
                 {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Resultado'}
               </span>
               {idx < 2 && <ChevronRight size={14} className="text-white/40" />}
@@ -186,8 +186,8 @@ export default function ImportarVacantesPage() {
             </div>
             <div className="text-center">
               <p className="text-base font-bold font-display text-navy">Subí el archivo de vacantes</p>
-              <p className="text-sm mt-1 font-body text-navy-light/70">.xlsx o .csv — hacé clic para seleccionar</p>
-              <p className="text-[12px] mt-2 text-navy-light/70 font-body">
+              <p className="text-sm mt-1 font-body text-navy-light/80">.xlsx o .csv — hacé clic para seleccionar</p>
+              <p className="text-[13px] mt-2 text-navy-light/80 font-body">
                 Columnas: área, comité, puesto, cupos, ubicación, horario, compromiso, expiración, destacado
               </p>
             </div>
@@ -202,7 +202,7 @@ export default function ImportarVacantesPage() {
             >
               <Download size={15} /> Descargar plantilla Excel
             </a>
-            <p className="text-[12px] text-navy-light/70 font-body text-center max-w-md">
+            <p className="text-[13px] text-navy-light/80 font-body text-center max-w-md">
               La plantilla trae las <strong>áreas, comités y puestos actuales</strong> con listas
               desplegables en cascada (Área → Comité → Puesto). La vacante hereda descripción/funciones/perfil
               del puesto. <strong>destacado</strong> = Sí/No · <strong>expiración</strong> = YYYY-MM-DD.
@@ -218,7 +218,7 @@ export default function ImportarVacantesPage() {
             <CheckCircle2 size={20} className="text-navy shrink-0" />
             <div>
               <p className="text-xl font-extrabold font-display text-navy">{rows.length}</p>
-              <p className="text-[12px] font-body text-navy-light/70">filas en el archivo · se validan al importar</p>
+              <p className="text-[13px] font-body text-navy-light/80">filas en el archivo · se validan al importar</p>
             </div>
           </div>
 
@@ -228,7 +228,7 @@ export default function ImportarVacantesPage() {
                 <thead>
                   <tr className="border-b border-[var(--outline-variant)]">
                     {['Área', 'Comité', 'Puesto', 'Cupos', 'Ubicación', 'Horario', 'Compromiso', 'Expiración', 'Destacado'].map(h => (
-                      <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/70 whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -239,18 +239,18 @@ export default function ImportarVacantesPage() {
                       <td className="px-3 py-2.5 text-[13px] text-navy font-body whitespace-nowrap">{r.committee || '—'}</td>
                       <td className="px-3 py-2.5 text-[13px] text-navy font-body">{r.position || '—'}</td>
                       <td className="px-3 py-2.5 text-[13px] text-navy font-body text-center">{r.slots}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.location || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.schedule || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body">{r.commitment || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] text-navy-light/70 font-body whitespace-nowrap">{r.expires_at || '—'}</td>
-                      <td className="px-3 py-2.5 text-[12px] font-body text-center">{r.is_featured ? 'Sí' : 'No'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy-light/80 font-body">{r.location || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy-light/80 font-body">{r.schedule || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy-light/80 font-body">{r.commitment || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{r.expires_at || '—'}</td>
+                      <td className="px-3 py-2.5 text-[13px] font-body text-center">{r.is_featured ? 'Sí' : 'No'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             {rows.length > 100 && (
-              <p className="px-4 py-3 text-[12px] text-navy-light/70 font-body border-t border-[var(--outline-variant)]">
+              <p className="px-4 py-3 text-[13px] text-navy-light/80 font-body border-t border-[var(--outline-variant)]">
                 Mostrando 100 de {rows.length}. Se validan e importan todas.
               </p>
             )}
@@ -278,7 +278,7 @@ export default function ImportarVacantesPage() {
             ].map(({ label, count, color, bg }) => (
               <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
                 <p className="text-2xl font-extrabold font-display" style={{ color }}>{count}</p>
-                <p className="text-[12px] font-body text-navy-light/70">{label}</p>
+                <p className="text-[13px] font-body text-navy-light/80">{label}</p>
               </div>
             ))}
           </div>
@@ -287,21 +287,21 @@ export default function ImportarVacantesPage() {
             <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="px-4 py-3 border-b border-[var(--outline-variant)] flex items-center gap-2">
                 <AlertCircle size={15} className="text-coral" />
-                <p className="text-[12px] font-semibold text-navy font-body">Filas rechazadas — corregilas en el Excel y volvé a importar</p>
+                <p className="text-[13px] font-semibold text-navy font-body">Filas rechazadas — corregilas en el Excel y volvé a importar</p>
               </div>
               <div className="overflow-x-auto max-h-96 overflow-y-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Fila', 'Motivo'].map(h => (
-                        <th key={h} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/70">{h}</th>
+                        <th key={h} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {result.errors.map((u, i) => (
                       <tr key={i} className="border-b border-[var(--outline-variant)]">
-                        <td className="px-4 py-2 text-[12px] text-navy-light/70 font-body whitespace-nowrap">Fila {u.row}</td>
+                        <td className="px-4 py-2 text-[13px] text-navy-light/80 font-body whitespace-nowrap">Fila {u.row}</td>
                         <td className="px-4 py-2 text-[13px] text-navy font-body">{u.reason}</td>
                       </tr>
                     ))}

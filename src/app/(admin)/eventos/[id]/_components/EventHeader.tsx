@@ -97,7 +97,7 @@ export function EventHeader({
       {/* Back */}
       <Link
         href="/eventos"
-        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Eventos
       </Link>
@@ -113,13 +113,13 @@ export function EventHeader({
                 ? <RealizadoBadge />
                 : <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />}
               {event.is_recurring && (
-                <span className="inline-flex items-center gap-1 text-[12px] text-white/70 font-body">
+                <span className="inline-flex items-center gap-1 text-[13px] text-white/80 font-body">
                   <Repeat size={11} />
                   {recurrenceLabel(event.recurrence_rule) ?? 'Recurrente'}
                 </span>
               )}
               {!event.is_recurring && event.parent_event_id && (
-                <span className="inline-flex items-center gap-1 text-[12px] text-white/70 font-body">
+                <span className="inline-flex items-center gap-1 text-[13px] text-white/80 font-body">
                   <Repeat size={11} />
                   Editado de una serie
                 </span>
@@ -130,9 +130,9 @@ export function EventHeader({
             >
               {event.name}
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-white/70 font-body">
+            <div className="flex flex-wrap gap-4 text-sm text-white/80 font-body">
               <span className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-white/70" />
+                <Calendar size={13} className="text-white/80" />
                 {startDate.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
                 {' · '}
                 {startDate.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
@@ -140,13 +140,13 @@ export function EventHeader({
                 {endDate.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
               </span>
               <span className="flex items-center gap-1.5">
-                <MapPin size={13} className="text-white/70" />
+                <MapPin size={13} className="text-white/80" />
                 {event.location}
               </span>
               {/* Cuántos se inscribieron es dato de gestión. */}
               {canManage && (
                 <span className="flex items-center gap-1.5">
-                  <Users size={13} className="text-white/70" />
+                  <Users size={13} className="text-white/80" />
                   {registrationCount} inscritos
                 </span>
               )}
@@ -167,10 +167,10 @@ export function EventHeader({
                   className="absolute right-0 top-full mt-2 rounded-2xl p-4 w-72 z-30 space-y-3 bg-surface-card shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+                    <p className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                       Exportar evento
                     </p>
-                    <button onClick={onCalendarPopoverClose} className="text-navy-light/70 hover:text-navy transition-colors">
+                    <button onClick={onCalendarPopoverClose} className="text-navy-light/80 hover:text-navy transition-colors">
                       <XIcon size={14} />
                     </button>
                   </div>
@@ -186,7 +186,7 @@ export function EventHeader({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-navy font-body">Google Calendar</p>
-                      <p className="text-[12px] text-navy-light/70 font-body">Abre en una nueva pestaña</p>
+                      <p className="text-[13px] text-navy-light/80 font-body">Abre en una nueva pestaña</p>
                     </div>
                   </a>
                   <div>
@@ -199,7 +199,7 @@ export function EventHeader({
                       </div>
                       <div>
                         <p className="text-sm font-medium text-navy font-body">Apple / Outlook (.ics)</p>
-                        <p className="text-[12px] text-navy-light/70 font-body">Descargar archivo de calendario</p>
+                        <p className="text-[13px] text-navy-light/80 font-body">Descargar archivo de calendario</p>
                       </div>
                     </button>
                     {event.is_recurring && (
@@ -210,7 +210,7 @@ export function EventHeader({
                           checked={icsWithRRule}
                           onChange={e => onIcsWithRRuleChange(e.target.checked)}
                         />
-                        <span className="text-[12px] text-navy-light/70 font-body">
+                        <span className="text-[13px] text-navy-light/80 font-body">
                           Incluir toda la serie de recurrencia
                         </span>
                       </label>
@@ -241,7 +241,7 @@ export function EventHeader({
             <div className="relative">
               <button
                 onClick={onMenuToggle}
-                className="h-9 w-9 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/10 transition-all"
+                className="h-9 w-9 rounded-full border border-white/20 flex items-center justify-center text-white/80 hover:bg-white/10 transition-all"
               >
                 <MoreHorizontal size={16} />
               </button>

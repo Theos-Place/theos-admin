@@ -25,7 +25,7 @@ function StageLabel({ children, color }: { children: React.ReactNode; color: 'na
   }
   return (
     <span
-      className={cn('inline-block rounded-md px-2 py-0.5 text-[12px] font-semibold tracking-wide', styles[color], 'font-display')}
+      className={cn('inline-block rounded-md px-2 py-0.5 text-[13px] font-semibold tracking-wide', styles[color], 'font-display')}
     >
       {children}
     </span>
@@ -54,7 +54,7 @@ function StudyCardCompact({ study }: { study: StudyType }) {
         {study.name}
       </p>
       <div className="mt-0.5">
-        <span className="text-[11px] text-navy-light/70 font-body">
+        <span className="text-[11px] text-navy-light/80 font-body">
           {study.weeks} sem.
         </span>
       </div>
@@ -97,7 +97,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
               {study.code}
             </span>
             {study.is_archived && (
-              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
+              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
                 Desactivado
               </span>
             )}
@@ -106,14 +106,14 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
             {study.name}
           </div>
         </div>
-        <span className="text-[12px] text-[var(--fg-muted)] whitespace-nowrap ml-2 font-body">
+        <span className="text-[13px] text-[var(--fg-muted)] whitespace-nowrap ml-2 font-body">
           {study.weeks} sem.
         </span>
       </div>
 
       {/* Dirigente encargado — solo para roles de coordinación/administración */}
       {canManage && mentor && (
-        <div className="text-[12px] text-[var(--fg-muted)] mb-1.5 font-body">
+        <div className="text-[13px] text-[var(--fg-muted)] mb-1.5 font-body">
           Dirigente encargado: <strong>{mentor}</strong>
         </div>
       )}
@@ -151,7 +151,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
         <div className="mt-2.5 flex justify-end">
           <button
             onClick={e => { e.stopPropagation(); router.push(`/estudios/plan/${study.code}/editar`) }}
-            className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors border-[var(--outline-variant)] font-body"
+            className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-card hover:text-navy transition-colors border-[var(--outline-variant)] font-body"
           >
             <Pencil size={11} /> Editar
           </button>
@@ -164,9 +164,9 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
 function StageDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="flex items-center gap-1.5 text-navy-light/70">
+      <div className="flex items-center gap-1.5 text-navy-light/80">
         <ArrowDown size={13} strokeWidth={1.5} />
-        <span className="text-[12px] font-body">{label}</span>
+        <span className="text-[13px] font-body">{label}</span>
       </div>
       <div className="flex-1 h-px bg-[var(--outline-variant)]" />
     </div>
@@ -249,7 +249,7 @@ export default function PlanDeEstudiosPage() {
           >
             Plan de Estudios Bíblicos
           </h1>
-          <p className="mt-1 text-sm text-navy-light/70 font-body">
+          <p className="mt-1 text-sm text-navy-light/80 font-body">
             Ruta de crecimiento espiritual de Theos Place
           </p>
         </div>
@@ -286,7 +286,7 @@ export default function PlanDeEstudiosPage() {
             <h2 className="text-sm font-semibold text-navy font-display">
               Todos los tipos de estudio
             </h2>
-            <p className="text-xs text-navy-light/70 mt-0.5 font-body">
+            <p className="text-xs text-navy-light/80 mt-0.5 font-body">
               {curricular.length} estudios en total
             </p>
           </div>
@@ -299,7 +299,7 @@ export default function PlanDeEstudiosPage() {
                 {['Código', 'Nombre', 'Etapa', 'Semanas', 'Costo', ...(canManage ? ['Dirigente encargado'] : []), 'Prerrequisito', 'Compromisos', ''].map(h => (
                   <th
                     key={h}
-                    className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 whitespace-nowrap font-display"
+                    className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display"
                   >
                     {h}
                   </th>
@@ -319,35 +319,35 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3 text-sm text-navy font-body">
                     {s.name}
                     {s.is_archived && (
-                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#6b7280]">
+                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
                         Desactivado
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-xs text-navy-light/80 font-body">
                     {/* Mapa explícito: el ternario anterior caía a "Intermedia"
                         para cualquier etapa nueva (mostraba mal la Avanzada). */}
                     {{ niveles: 'Niveles', inicial: 'Inicial', intermedia: 'Intermedia', avanzada: 'Avanzada', 'campaña': 'Campaña' }[s.stage] ?? s.stage}
                   </td>
-                  <td className="px-4 py-3 text-sm text-navy-light/70 tabular-nums font-mono text-[12px]">
+                  <td className="px-4 py-3 text-sm text-navy-light/80 tabular-nums font-mono text-[13px]">
                     {s.weeks}
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
-                    <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/70'}>
+                    <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/80'}>
                       {studyCostLabel(s.code, s.cost)}
                     </span>
                   </td>
                   {canManage && (
-                    <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                       {mentorName(s) ?? (
-                        <span className="text-navy-light/70">—</span>
+                        <span className="text-navy-light/80">—</span>
                       )}
                     </td>
                   )}
                   <td className="px-4 py-3">
                     {s.prerequisite
                       ? <StudyTypeBadge code={s.prerequisite} size="sm" />
-                      : <span className="text-xs text-navy-light/70 font-body">—</span>
+                      : <span className="text-xs text-navy-light/80 font-body">—</span>
                     }
                   </td>
                   <td className="px-4 py-3">
@@ -360,7 +360,7 @@ export default function PlanDeEstudiosPage() {
                       {canManage && (
                         <Link
                           href={`/estudios/plan/${s.id}`}
-                          className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                          className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         >
                           Ver
                         </Link>
@@ -368,7 +368,7 @@ export default function PlanDeEstudiosPage() {
                       {canEdit && (
                         <Link
                           href={`/estudios/plan/${s.code}/editar`}
-                          className="rounded-lg px-2.5 py-1 text-[12px] text-coral border border-coral/30 hover:bg-coral/5 transition-colors font-body"
+                          className="rounded-lg px-2.5 py-1 text-[13px] text-coral border border-coral/30 hover:bg-coral/5 transition-colors font-body"
                         >
                           Editar
                         </Link>
@@ -396,7 +396,7 @@ export default function PlanDeEstudiosPage() {
           <StageLabel color="coral">Etapa Intermedia</StageLabel>
           <ChevronRight size={13} className="text-navy/25" strokeWidth={1.5} />
           <StageLabel color="purple">Campañas</StageLabel>
-          <span className="ml-auto text-[12px] text-navy-light/70 font-body">
+          <span className="ml-auto text-[13px] text-navy-light/80 font-body">
             Plan de estudios bíblicos
           </span>
         </div>

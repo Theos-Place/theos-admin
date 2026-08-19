@@ -200,7 +200,7 @@ function PagosContent() {
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/70">Cargando…</p>
+        <p className="text-sm text-navy-light/80">Cargando…</p>
       </div>
     )
   }
@@ -220,14 +220,14 @@ function PagosContent() {
             </div>
             <div>
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Pagos</h1>
-              <p className="text-[12px] text-white/70 mt-0.5 font-body">
+              <p className="text-[13px] text-white/80 mt-0.5 font-body">
                 Registro de todos los pagos del sistema y cola de revisión
               </p>
             </div>
           </div>
           <button
             onClick={() => setRevealAll(r => !r)}
-            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
+            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
           >
             {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
             {revealAll ? 'Ocultar montos' : 'Mostrar montos'}
@@ -248,7 +248,7 @@ function PagosContent() {
                 onClick={() => setTab(key === 'todos' ? '' : key)}
                 className={cn(
                   'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
-                  tab === key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-navy/15 hover:border-navy/30 bg-surface-card',
+                  tab === key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-navy/15 hover:border-navy/30 bg-surface-card',
                 )}
               >
                 {label}
@@ -370,13 +370,13 @@ function PagosContent() {
                   <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
-                      <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
+                      <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
                     </td>
                     <td className="px-5 py-4">
                       {/* Qué se está pagando: el NOMBRE del estudio o del
                           evento, y de qué tipo es (2026-08-06). */}
                       <p className="text-[13px] font-body text-navy">{paymentEntityName(toLabel(p)) || p.entity_name}</p>
-                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
+                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
                         {p.kind_label ?? paymentKindLabel(toLabel(p))}
                       </p>
                     </td>
@@ -388,7 +388,7 @@ function PagosContent() {
                     <td className="px-5 py-4"><PaymentMethodBadge method={p.method} /></td>
                     <td className="px-5 py-4"><PaymentStatusBadge status={p.status} /></td>
                     <td className="px-5 py-4">
-                      <p className="text-[12px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
+                      <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
                         {formatDate(p.created_at)}
                       </p>
                     </td>
@@ -396,14 +396,14 @@ function PagosContent() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => openPayment(p)}
-                          className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[var(--outline-variant)] text-navy font-body hover:bg-surface-low"
+                          className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[var(--outline-variant)] text-navy font-body hover:bg-surface-low"
                         >
                           Abrir
                         </button>
                         {canFinanceEdit && p.status === 'paid' && (
                           <button
                             onClick={() => setRefundTarget(p)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                           >
                             Devolver
                           </button>
@@ -411,7 +411,7 @@ function PagosContent() {
                         {canFinanceEdit && p.status === 'pending' && p.method === 'sinpe' && (
                           <button
                             onClick={() => setSinpeTarget(p)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
                           >
                             Confirmar SINPE
                           </button>
@@ -426,7 +426,7 @@ function PagosContent() {
                       {error
                         ? <ErrorState message={error} onRetry={refetch} />
                         : loading
-                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body">Cargando…</p>
+                          ? <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body">Cargando…</p>
                           : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
                     </td>
                   </tr>
@@ -446,10 +446,10 @@ function PagosContent() {
                 <button onClick={() => openPayment(p)} className="flex items-start gap-3 w-full text-left">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{p.member_name}</p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
+                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">
                       {p.description_label ?? paymentDescription(toLabel(p))}
                     </p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -464,7 +464,7 @@ function PagosContent() {
                   {canFinanceEdit && p.status === 'paid' && (
                     <button
                       onClick={() => setRefundTarget(p)}
-                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                     >
                       Devolver
                     </button>
@@ -472,7 +472,7 @@ function PagosContent() {
                   {canFinanceEdit && p.status === 'pending' && p.method === 'sinpe' && (
                     <button
                       onClick={() => setSinpeTarget(p)}
-                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(81,157,162,0.30)] text-teal-deep font-body"
                     >
                       Confirmar SINPE
                     </button>
@@ -485,7 +485,7 @@ function PagosContent() {
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
                   : loading
-                    ? <p className="px-4 py-8 text-center text-sm text-navy-light/70 font-body">Cargando pagos…</p>
+                    ? <p className="px-4 py-8 text-center text-sm text-navy-light/80 font-body">Cargando pagos…</p>
                     : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
               </li>
             )}
@@ -530,13 +530,13 @@ function PagosContent() {
             <div className="rounded-xl border border-outline overflow-hidden">
               {rows.map(([label, value], i) => (
                 <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
-                  <span className="w-32 shrink-0 text-[12px] uppercase tracking-wider text-navy-light/70 font-display">{label}</span>
+                  <span className="w-32 shrink-0 text-[13px] uppercase tracking-wider text-navy-light/80 font-display">{label}</span>
                   <span className="text-[13px] text-navy font-body">{value}</span>
                 </div>
               ))}
             </div>
             {p.notes && (
-              <p className="rounded-xl p-3 text-[12px] text-[rgba(22,20,64,0.65)] font-body bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">{p.notes}</p>
+              <p className="rounded-xl p-3 text-[13px] text-[rgba(22,20,64,0.65)] font-body bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">{p.notes}</p>
             )}
             {canFinance && (
               <Link
@@ -574,7 +574,7 @@ function PagosContent() {
                 <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.description_label ?? sinpeTarget.entity_name}
               </p>
               <div>
-                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Número de confirmación SINPE
                 </label>
                 <input
@@ -586,7 +586,7 @@ function PagosContent() {
                 />
               </div>
               <div>
-                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Fecha de transferencia
                 </label>
                 <input
@@ -620,7 +620,7 @@ export default function PagosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/80 font-body">Cargando...</div>
       </div>
     }>
       <PagosContent />

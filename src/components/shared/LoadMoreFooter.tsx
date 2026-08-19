@@ -30,7 +30,7 @@ export function LoadMoreFooter({
   const fmt = (n: number) => n.toLocaleString('es-CR')
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap border-t border-[var(--outline-variant)]">
-      <span className="text-xs text-navy-light/70 font-body">
+      <span className="text-xs text-navy-light/80 font-body">
         Mostrando <strong className="text-navy">{fmt(shown)}</strong> de{' '}
         <strong className="text-navy">{fmt(total)}</strong> {noun}
       </span>

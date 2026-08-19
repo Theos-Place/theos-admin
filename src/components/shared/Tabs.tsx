@@ -56,7 +56,7 @@ export function Tabs({
               'shrink-0 px-4 py-2.5 text-sm font-body border-b-2 -mb-px transition-colors',
               isActive
                 ? 'border-coral text-navy font-semibold'
-                : 'border-transparent text-navy-light/70 hover:text-navy',
+                : 'border-transparent text-navy-light/80 hover:text-navy',
             )}
           >
             {t.label}

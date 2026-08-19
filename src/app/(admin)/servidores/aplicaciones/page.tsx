@@ -137,7 +137,7 @@ export default function AplicacionesPage() {
       <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitudes de servicio</h1>
-          <p className="mt-1 text-sm text-white/70 font-body">
+          <p className="mt-1 text-sm text-white/80 font-body">
             {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function AplicacionesPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 sm:min-w-48 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre o puesto..."
@@ -181,10 +181,10 @@ export default function AplicacionesPage() {
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
+              'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
               statusFilter === f.key
                 ? 'bg-navy text-white border-navy'
-                : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent'
+                : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent'
             )}
           >
             {f.label}
@@ -201,13 +201,13 @@ export default function AplicacionesPage() {
       <BulkActionBar count={sel.count} onClear={sel.clear} noun="aplicaciones">
         <button
           onClick={() => setConfirm('approve')}
-          className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body"
+          className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
         >
           Aprobar
         </button>
         <button
           onClick={() => setConfirm('reject')}
-          className="rounded-full border border-white/30 px-3.5 py-1.5 text-[12px] text-white hover:bg-white/10 transition-colors font-body"
+          className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/10 transition-colors font-body"
         >
           No seleccionar
         </button>
@@ -230,7 +230,7 @@ export default function AplicacionesPage() {
                   />
                 </th>
                 {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
                     {h}
                   </th>
                 ))}
@@ -258,12 +258,12 @@ export default function AplicacionesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-[13px] font-medium text-navy font-body">{a.vacancy_title}</p>
-                    <p className="text-[12px] text-navy-light/70 font-body">{a.committee_name}</p>
+                    <p className="text-[13px] text-navy-light/80 font-body">{a.committee_name}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-medium text-navy-light/70 font-display">{a.area}</span>
+                    <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-medium text-navy-light/80 font-display">{a.area}</span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-4 py-3">
@@ -274,7 +274,7 @@ export default function AplicacionesPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/servidores/vacantes/${a.vacancy_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                     >
                       Ver puesto <ChevronRight size={11} />
                     </Link>
@@ -300,7 +300,7 @@ export default function AplicacionesPage() {
                 <Link href={`/servidores/vacantes/${a.vacancy_id}`} className="flex items-center gap-3 min-w-0 flex-1 active:opacity-70">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
-                    <p className="truncate text-[12px] text-navy-light/70 font-body">{a.vacancy_title} · {a.committee_name}</p>
+                    <p className="truncate text-[13px] text-navy-light/80 font-body">{a.vacancy_title} · {a.committee_name}</p>
                   </div>
                   <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
                     {APP_STATUS_LABELS[a.status]}
@@ -313,7 +313,7 @@ export default function AplicacionesPage() {
 
         {filtered.length === 0 && (
           loading
-            ? <p className="px-4 py-8 text-center text-sm text-navy-light/70 font-body">Cargando aplicaciones…</p>
+            ? <p className="px-4 py-8 text-center text-sm text-navy-light/80 font-body">Cargando aplicaciones…</p>
             : <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
         )}
 
@@ -329,7 +329,7 @@ export default function AplicacionesPage() {
             <h3 id="confirm-bulk-title" className="text-base font-bold text-navy font-display">
               {confirm === 'approve' ? 'Aprobar aplicaciones' : 'Marcar como no seleccionadas'}
             </h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {confirm === 'approve' ? (
                 <><strong className="text-navy">{sel.count}</strong> aplicación{sel.count !== 1 ? 'es' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">Aprobada</strong>. Cada aplicante quedará activo como servidor del puesto y comité de su vacante.</>
               ) : (

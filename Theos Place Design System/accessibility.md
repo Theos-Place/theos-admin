@@ -10,27 +10,30 @@ Sobre fondo claro (blanco / `--surface`), usando navy con opacidad:
 
 | Uso | Mínimo | Contraste aprox. |
 |---|---|---|
-| Texto normal (< 18px) | `text-navy-light/70` o color sólido | 4.8:1 ✓ AA |
-| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/70` | 4.8:1 ✓ AA |
-| Metadata secundaria pequeña | `text-navy-light/70` (el `/60` quedó eliminado en 2026-08-17) | 4.8:1 |
+| Texto normal (< 18px) | `text-navy-light/80` o color sólido | 6.4:1 ✓ AA, cerca de AAA |
+| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/80` | 6.4:1 |
+| Metadata secundaria pequeña | `text-navy-light/80` | 6.4:1 |
 | Placeholders | `placeholder:text-navy-light/50` mínimo | — |
 | Decorativo puro (íconos de empty state, adornos, separadores «·») | `/40` mínimo | exento de AA |
 
 **Nunca** `/20` o `/30` para texto que comunica algo — a ese nivel el contraste
 ronda 2:1 y es ilegible para mucha gente. Estado deshabilitado: usá `/40` *y*
-otra señal además del color (cursor, opacidad del contenedor).
+otra señal además del color (cursor, opacidad del contenedor). Nada de
+`text-gray-400` ni hexes grises sueltos: siempre los tokens de la marca.
 
-> 2026-08-17: se saldó la deuda heredada. Se barrió TODO `text-…/60` → `/70`
-> (texto sobre claro y `text-white/60` → `/70` sobre navy), los `/30` de texto
-> pasaron a `/40`, y los `/50` informativos a `/70` (los `/50` legítimos que
-> quedan son placeholders, íconos y estados deshabilitados). No reintroducir
-> `/60` en texto nuevo.
+> 2026-08-17: se saldó la deuda heredada (`/60` → `/70`, `/30` → `/40`, `/50`
+> informativos → `/70`). 2026-08-19, segunda vuelta por legibilidad para
+> adultos mayores: TODO `/70` → `/80` (navy, navy-light y white sobre navy;
+> 4.8:1 → 6.4:1) y los `text-gray-400`/hexes grises pasaron a tokens o grises
+> ≥ gray-600. No reintroducir `/60` ni `/70` en texto nuevo.
 
 ## Tamaño de texto
 
-Piso de la marca (2026-08-17, mismo barrido): **11px** para cualquier texto
-que comunica — los micro-labels uppercase de tablas y chips usan `text-[11px]`
-(antes 10px). `text-[10px]` solo para adornos contados; **nunca** 9px.
+Piso de la marca (2026-08-19): **13px** para texto que comunica (metadata,
+notas, celdas) — el barrido subió todo `text-[12px]` a 13px. Los micro-labels
+uppercase con tracking (encabezados de tabla, chips) pueden usar `text-[11px]`.
+`text-[10px]` solo para adornos contados (iniciales de avatar, contadores);
+**nunca** 9px.
 
 ## Botones e inputs
 

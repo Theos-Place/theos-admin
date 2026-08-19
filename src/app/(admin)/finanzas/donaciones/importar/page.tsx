@@ -150,7 +150,7 @@ export default function ImportarDonacionesPage() {
               <h1 className="text-xl text-white font-display font-extrabold">
                 Importar donaciones
               </h1>
-              <p className="text-[12px] text-white/70 mt-0.5 font-body">
+              <p className="text-[13px] text-white/80 mt-0.5 font-body">
                 {fileName || 'Cargá el archivo CSV del banco'}
               </p>
             </div>
@@ -161,7 +161,7 @@ export default function ImportarDonacionesPage() {
             {[1, 2, 3].map((s, idx) => (
               <div key={s} className="flex items-center gap-2">
                 <div
-                  className="h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all font-display"
+                  className="h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold transition-all font-display"
                   style={{
                     background: step > s ? '#3DB97A' : step === s ? '#EF5554' : 'rgba(255,255,255,0.15)',
                     color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
@@ -169,7 +169,7 @@ export default function ImportarDonacionesPage() {
                 >
                   {step > s ? <Check size={13} /> : s}
                 </div>
-                <span className="text-[12px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
+                <span className="text-[13px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
                   {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Confirmar'}
                 </span>
                 {idx < 2 && <ChevronRight size={14} className="text-[rgba(255,255,255,0.30)]" />}
@@ -207,7 +207,7 @@ export default function ImportarDonacionesPage() {
                 <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.60)]">
                   o hacé clic para seleccionar
                 </p>
-                <p className="text-[12px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
+                <p className="text-[13px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
                   Formato: cédula, nombre, fecha, monto
                 </p>
               </div>
@@ -246,7 +246,7 @@ export default function ImportarDonacionesPage() {
                   <Icon size={20} className="shrink-0" style={{ color }} />
                   <div>
                     <p className="text-xl font-extrabold font-display" style={{ color }}>{count}</p>
-                    <p className="text-[12px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
+                    <p className="text-[13px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
                   </div>
                 </div>
               ))}
@@ -341,7 +341,7 @@ export default function ImportarDonacionesPage() {
                   <p className="text-sm font-medium font-body text-navy">
                     Actualizar estado “Donador” en perfiles
                   </p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
+                  <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
                     Marcará como donadores a los miembros identificados en esta importación
                   </p>
                 </div>

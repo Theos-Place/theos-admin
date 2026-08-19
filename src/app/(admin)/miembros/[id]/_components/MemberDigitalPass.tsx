@@ -47,10 +47,10 @@ export function MemberDigitalPass({ member }: { member: Member }) {
           </div>
 
           {member.cedula && (
-            <p className="text-xs text-white/70 mb-1 font-mono">#{member.cedula}</p>
+            <p className="text-xs text-white/80 mb-1 font-mono">#{member.cedula}</p>
           )}
           <p className="text-white text-lg leading-tight font-display font-extrabold">{member.first_name}</p>
-          <p className="text-white/70 text-sm mb-5 font-display font-extrabold">{member.last_name}</p>
+          <p className="text-white/80 text-sm mb-5 font-display font-extrabold">{member.last_name}</p>
 
           {/* QR funcional: member_id, navy sobre blanco para máximo contraste */}
           <div ref={canvasWrapRef} className="rounded-xl bg-white p-3 w-fit shadow-[var(--shadow-md)]">
@@ -59,7 +59,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
         </div>
 
         <div className="w-full max-w-xs space-y-3">
-          <p className="text-[13px] text-navy-light/70 font-body text-center">
+          <p className="text-[13px] text-navy-light/80 font-body text-center">
             Mostrá este código en la entrada del evento para tu check-in.
           </p>
 
@@ -106,7 +106,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light/40 cursor-not-allowed font-body"
             >
               <Apple size={15} aria-hidden /> Agregar a Apple Wallet
-              <span className="text-[11px] uppercase tracking-wide bg-surface-low text-navy-light/70 rounded-full px-1.5 py-0.5">Próximamente</span>
+              <span className="text-[11px] uppercase tracking-wide bg-surface-low text-navy-light/80 rounded-full px-1.5 py-0.5">Próximamente</span>
             </button>
             <button
               type="button"
@@ -116,7 +116,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light/40 cursor-not-allowed font-body"
             >
               <Smartphone size={15} aria-hidden /> Agregar a Google Wallet
-              <span className="text-[11px] uppercase tracking-wide bg-surface-low text-navy-light/70 rounded-full px-1.5 py-0.5">Próximamente</span>
+              <span className="text-[11px] uppercase tracking-wide bg-surface-low text-navy-light/80 rounded-full px-1.5 py-0.5">Próximamente</span>
             </button>
           </div>
         </div>
@@ -132,7 +132,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
             <div className="rounded-2xl bg-white p-4 shadow-[var(--shadow-md)]">
               <QRCodeCanvas value={member.id} size={260} level="M" marginSize={1} fgColor="#161440" bgColor="#ffffff" />
             </div>
-            <p className="text-[12px] text-navy-light/70 font-body text-center">Acercá la pantalla al lector en la entrada.</p>
+            <p className="text-[13px] text-navy-light/80 font-body text-center">Acercá la pantalla al lector en la entrada.</p>
             <button
               onClick={() => setZoom(false)}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body min-h-[44px]"

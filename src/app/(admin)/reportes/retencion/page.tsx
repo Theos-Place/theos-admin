@@ -79,11 +79,11 @@ export default function ReporteRetencionPage() {
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/70 hover:text-navy transition-colors font-body">
+        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
           <ChevronLeft size={15} /> Reportes
         </Link>
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Retención y Transición en Grupos</h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Cómo se retiene y transiciona la gente entre grupos etarios. Clasificado por edad al momento de asistir.
         </p>
       </div>
@@ -93,7 +93,7 @@ export default function ReporteRetencionPage() {
         active={group}
         onChange={k => setGroup(k as MainGroup)}
       />
-      <p className="text-[12px] text-navy-light/70 font-body -mt-2">{GROUP_LABELS[group]}</p>
+      <p className="text-[13px] text-navy-light/80 font-body -mt-2">{GROUP_LABELS[group]}</p>
 
       {/* Flujo POR AÑO: de los que asistieron a este grupo en el año elegido,
           cómo están HOY. Filtro de año (últimos 5). */}
@@ -108,8 +108,8 @@ export default function ReporteRetencionPage() {
                 key={y}
                 onClick={() => setFlowYear(y)}
                 className={cn(
-                  'rounded-full px-3 py-1 text-[12px] font-medium font-body transition-colors',
-                  y === effFlowYear ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/70 hover:bg-surface-high',
+                  'rounded-full px-3 py-1 text-[13px] font-medium font-body transition-colors',
+                  y === effFlowYear ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/80 hover:bg-surface-high',
                 )}
               >
                 {y}
@@ -125,9 +125,9 @@ export default function ReporteRetencionPage() {
             <FlowStat label="Dropout" value={flow.dropout} tone="muted" sub={isTerminal ? 'ya no asisten' : 'dejaron antes de la edad límite'} />
           </div>
         ) : (
-          <p className="text-[13px] text-navy-light/70 font-body py-2">Nadie asistió a {group} en {effFlowYear}.</p>
+          <p className="text-[13px] text-navy-light/80 font-body py-2">Nadie asistió a {group} en {effFlowYear}.</p>
         )}
-        <p className="text-[12px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           Estado calculado a HOY. Siguen asistiendo = ≥2 charlas en los últimos 4 meses.{isTerminal ? ' G4 es el grupo final: solo aplica seguir asistiendo o dropout.' : ''}
         </p>
       </div>
@@ -199,19 +199,19 @@ export default function ReporteRetencionPage() {
         </ResponsiveContainer>
       </ChartCard>
 
-      <p className="text-[12px] text-navy-light/70 font-body">{coverageNote}</p>
+      <p className="text-[13px] text-navy-light/80 font-body">{coverageNote}</p>
     </div>
   )
 }
 
 function FlowStat({ label, value, sub, tone }: { label: string; value: number; sub?: string; tone: 'navy' | 'teal' | 'coral' | 'muted' }) {
-  const color = tone === 'teal' ? 'text-teal-deep' : tone === 'coral' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/70' : 'text-navy'
+  const color = tone === 'teal' ? 'text-teal-deep' : tone === 'coral' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/80' : 'text-navy'
   const bg = tone === 'teal' ? 'bg-teal-soft/20' : tone === 'coral' ? 'bg-coral/10' : tone === 'muted' ? 'bg-surface-low' : 'bg-surface-low'
   return (
     <div className={cn('rounded-2xl p-4 shadow-[var(--shadow-md)]', bg)}>
-      <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">{label}</p>
+      <p className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">{label}</p>
       <p className={cn('mt-1.5 text-2xl font-extrabold tabular-nums font-display leading-none', color)}>{fmt(value)}</p>
-      {sub && <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">{sub}</p>}
+      {sub && <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">{sub}</p>}
     </div>
   )
 }

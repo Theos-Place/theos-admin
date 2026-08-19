@@ -59,12 +59,12 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-2 mb-3">
         <HeartHandshake size={15} className="text-coral" />
-        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Recomendado para oración, servicio o dar estudios</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Recomendado para oración, servicio o dar estudios</p>
       </div>
       {recs === null ? (
         <div className="h-16 rounded-xl bg-surface-low animate-pulse" />
       ) : recs.length === 0 ? (
-        <p className="text-[13px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           Nadie lo ha recomendado para oración, servicio ni para dar estudios al cerrar un grupo.
         </p>
       ) : (
@@ -75,14 +75,14 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
                 <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', REC_BADGE[r.recommended_for])}>
                   {REC_LABEL[r.recommended_for]}
                 </span>
-                <span className="text-[12px] text-navy-light/70 font-body">
+                <span className="text-[13px] text-navy-light/80 font-body">
                   {r.recommended_by_name
                     ? <>la hizo <PersonaLink id={r.recommended_by} nombre={r.recommended_by_name} /></>
                     : 'sin registro de quién la hizo'}
                   {r.group_name ? ` · al cerrar ${r.group_name}` : ''} · {formatDate(r.created_at)}
                 </span>
               </div>
-              {r.justification && <p className="text-[13px] text-navy-light/70 font-body">{r.justification}</p>}
+              {r.justification && <p className="text-[13px] text-navy-light/80 font-body">{r.justification}</p>}
             </li>
           ))}
         </ul>

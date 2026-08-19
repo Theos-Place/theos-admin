@@ -36,7 +36,7 @@ export function BulkActionBar({
       <button
         onClick={onClear}
         aria-label="Limpiar selección"
-        className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+        className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
       >
         <X size={16} />
       </button>

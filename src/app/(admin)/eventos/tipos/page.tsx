@@ -62,7 +62,7 @@ function TypeModal({
 
         {/* Name */}
         <div className="space-y-1.5">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Nombre *
           </label>
           <input
@@ -75,7 +75,7 @@ function TypeModal({
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Descripción
           </label>
           <input
@@ -88,7 +88,7 @@ function TypeModal({
 
         {/* Color */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Color
           </label>
           <div className="flex flex-wrap gap-2">
@@ -111,8 +111,8 @@ function TypeModal({
               type="button"
               onClick={() => setCustomColor(true)}
               className={cn(
-                'h-8 px-3 rounded-full text-[12px] border transition-all',
-                customColor ? 'border-coral text-coral bg-coral/5' : 'text-navy-light/70 hover:bg-surface-low',
+                'h-8 px-3 rounded-full text-[13px] border transition-all',
+                customColor ? 'border-coral text-coral bg-coral/5' : 'text-navy-light/80 hover:bg-surface-low',
                 'font-display'
               )}
               style={{ borderColor: customColor ? undefined : 'var(--outline-variant)' }}
@@ -128,7 +128,7 @@ function TypeModal({
                 value={form.color}
                 onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
               />
-              <span className="text-sm text-navy-light/70 tabular-nums font-mono">
+              <span className="text-sm text-navy-light/80 tabular-nums font-mono">
                 {form.color}
               </span>
             </div>
@@ -137,7 +137,7 @@ function TypeModal({
 
         {/* Icon */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Ícono
           </label>
           <div className="grid grid-cols-6 gap-1.5">
@@ -150,7 +150,7 @@ function TypeModal({
                   onClick={() => setForm(f => ({ ...f, icon: ico }))}
                   className={cn(
                     'h-10 rounded-xl flex items-center justify-center border transition-all duration-150',
-                    form.icon === ico ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/70 hover:bg-surface-low'
+                    form.icon === ico ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/80 hover:bg-surface-low'
                   )}
                   style={{ borderColor: form.icon === ico ? undefined : 'var(--outline-variant)' }}
                   title={ico}
@@ -290,7 +290,7 @@ export default function TiposEventoPage() {
           >
             Tipos de evento
           </h1>
-          <p className="mt-1 text-sm text-navy-light/70 font-body">
+          <p className="mt-1 text-sm text-navy-light/80 font-body">
             {types.filter(t => t.is_active).length} activos · {types.length} en total
           </p>
         </div>
@@ -307,14 +307,14 @@ export default function TiposEventoPage() {
       {loading && (
         <div className="flex items-center justify-center gap-3 py-16">
           <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" aria-hidden="true" />
-          <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
+          <p className="text-sm text-navy-light/80 font-body">Cargando…</p>
         </div>
       )}
 
       {/* Empty state */}
       {!loading && types.length === 0 && (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] px-6 py-12 text-center space-y-3">
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             Todavía no hay tipos de evento. Creá el primero para clasificar tus eventos.
           </p>
           <button
@@ -375,7 +375,7 @@ export default function TiposEventoPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setEditTarget(t); setShowModal(true) }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 <Edit2 size={11} />
                 Editar

@@ -153,7 +153,7 @@ export default function BloquesPage() {
           <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0"><CalendarRange size={22} className="text-white" /></div>
           <div>
             <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Bloques de capacitación</h1>
-            <p className="mt-0.5 text-sm text-white/70 font-body">{rows.length} bloque{rows.length !== 1 ? 's' : ''}</p>
+            <p className="mt-0.5 text-sm text-white/80 font-body">{rows.length} bloque{rows.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
@@ -171,7 +171,7 @@ export default function BloquesPage() {
       {/* BLQ-1 · Lista / Calendario. En pantalla angosta el calendario anual no
           se lee, así que el toggle no aparece y queda la lista. */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <label className="inline-flex items-center gap-2 text-[13px] text-navy-light/70 font-body cursor-pointer">
+        <label className="inline-flex items-center gap-2 text-[13px] text-navy-light/80 font-body cursor-pointer">
           <input type="checkbox" className="accent-coral" checked={showArchivados} onChange={e => setShowArchivados(e.target.checked)} />
           Ver también archivados
         </label>
@@ -195,7 +195,7 @@ export default function BloquesPage() {
                 role="tab"
                 aria-selected={vista === v}
                 onClick={() => setVista(v)}
-                className={cn('rounded-full px-3 py-1 text-[12px] transition-colors font-body',
+                className={cn('rounded-full px-3 py-1 text-[13px] transition-colors font-body',
                   vista === v ? 'bg-navy text-white' : 'text-navy-light hover:bg-surface-low')}
               >
                 {v === 'lista' ? 'Lista' : 'Calendario'}
@@ -219,7 +219,7 @@ export default function BloquesPage() {
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : visibleRows.length === 0 ? (
           <EmptyState icon={CalendarRange} title="No hay bloques con ese filtro." />
         ) : (
@@ -227,7 +227,7 @@ export default function BloquesPage() {
             <table className="w-full border-collapse">
               <thead><tr>
                 {['Bloque', 'Apertura', 'Cierre matrícula', 'Cierre de bloque', 'Hitos (prelim · confirm · final)', 'Estado', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -239,7 +239,7 @@ export default function BloquesPage() {
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_apertura)}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(b.fecha_cierre_matricula)}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmt(bloqueCierre(b.fecha_cierre_matricula))}</td>
-                      <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body whitespace-nowrap">
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">
                         {fmt(hitos.preliminar)} · {fmt(hitos.confirmacion)} · {fmt(hitos.final)}
                       </td>
                       <td className="px-4 py-3">
@@ -250,7 +250,7 @@ export default function BloquesPage() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => openEdit(b)} aria-label="Editar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light hover:bg-surface-low transition-colors"><Pencil size={14} /></button>
-                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/70 hover:text-coral hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
+                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -267,7 +267,7 @@ export default function BloquesPage() {
         <Modal onClose={() => setGenConfirm(false)} titleId="generar-anio-titulo" width={400}>
           <div className="p-5 space-y-4">
             <h3 id="generar-anio-titulo" className="font-semibold text-navy font-display">Generar bloques del año</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               ¿Generar los 3 bloques sugeridos de {new Date().getFullYear() + 1}? Podés ajustar las fechas después.
             </p>
             <div className="flex gap-2">
@@ -283,30 +283,30 @@ export default function BloquesPage() {
           <div className="p-6 space-y-4">
             <h3 id="bloque-title" className="text-base font-bold text-navy font-display">{editing ? 'Editar bloque' : 'Nuevo bloque'}</h3>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Nombre</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
               <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Bloque 1 2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Año</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Año</label>
               <input type="number" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-              <p className="text-[12px] text-navy-light/70 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas. El bloque cierra 3 meses después del cierre de matrícula (~3.5 meses de duración).</p>
+              <p className="text-[13px] text-navy-light/80 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas. El bloque cierra 3 meses después del cierre de matrícula (~3.5 meses de duración).</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Fecha de apertura</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Fecha de apertura</label>
                 <input type="date" value={form.fecha_apertura} onChange={e => setForm(f => ({ ...f, fecha_apertura: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Cierre de matrícula</label>
+                <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cierre de matrícula</label>
                 <input type="date" value={form.fecha_cierre_matricula} onChange={e => setForm(f => ({ ...f, fecha_cierre_matricula: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
             </div>
             {milestones && (
-              <p className="text-[12px] text-navy-light/70 font-body rounded-xl bg-surface-low px-3 py-2">
+              <p className="text-[13px] text-navy-light/80 font-body rounded-xl bg-surface-low px-3 py-2">
                 Hitos: preliminar <strong>{fmt(milestones.preliminar)}</strong> · confirmación <strong>{fmt(milestones.confirmacion)}</strong> · final <strong>{fmt(milestones.final)}</strong> · cierre de bloque <strong>{fmt(bloqueCierre(form.fecha_cierre_matricula))}</strong>
               </p>
             )}
-            {msg && <p className="text-[12px] text-coral font-body">{msg}</p>}
+            {msg && <p className="text-[13px] text-coral font-body">{msg}</p>}
             <div className="flex gap-2 pt-1">
               <button onClick={save} disabled={!valid || busy} className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (!valid || busy) && 'opacity-50 cursor-not-allowed')}>
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Guardando…</> : (editing ? 'Guardar cambios' : 'Crear bloque')}

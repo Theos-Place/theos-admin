@@ -72,7 +72,7 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
       <button
         onClick={() => setFacing(f => (f === 'environment' ? 'user' : 'environment'))}
         aria-label="Alternar cámara"
-        className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-2 text-[12px] text-white hover:bg-black/70 transition-colors backdrop-blur min-h-[40px]"
+        className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-2 text-[13px] text-white hover:bg-black/70 transition-colors backdrop-blur min-h-[40px]"
       >
         <SwitchCamera size={15} /> Cambiar
       </button>

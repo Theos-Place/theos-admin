@@ -28,7 +28,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
       <div className="ph-row">
         <div className="flex items-center gap-4">
           <div className={cn('h-12 w-12 rounded-full flex items-center justify-center shrink-0', employee.status === 'active' ? 'bg-navy' : 'bg-navy-light/20')}>
-            <span className={cn('text-sm font-bold font-display', employee.status === 'active' ? 'text-white' : 'text-navy-light/70')}>
+            <span className={cn('text-sm font-bold font-display', employee.status === 'active' ? 'text-white' : 'text-navy-light/80')}>
               {employee.member_initials}
             </span>
           </div>
@@ -57,7 +57,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
           { label: 'Antigüedad', value: calcularAntiguedad(employee.start_date) },
         ].map(({ label, value }) => (
           <div key={label}>
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">{label}</p>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">{label}</p>
             <p className="text-[13px] text-navy mt-0.5 font-body">{value}</p>
           </div>
         ))}

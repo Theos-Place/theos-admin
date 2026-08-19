@@ -73,7 +73,7 @@ export function HelpArticle({ html }: { html: string }) {
  *  trae al menos una). */
 export function ZoomHint() {
   return (
-    <p className="flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
+    <p className="flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
       <Maximize2 size={12} />
       Tocá una imagen para verla a pantalla completa
     </p>

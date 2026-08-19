@@ -51,7 +51,7 @@ export const FOLLETO_STATE_LABEL: Record<FolletoState, string> = {
 }
 
 export const FOLLETO_STATE_BADGE: Record<FolletoState, string> = {
-  creada: 'bg-navy-light/10 text-navy-light/70',
+  creada: 'bg-navy-light/10 text-navy-light/80',
   en_impresion: 'bg-amber-50 text-amber-700',
   enviado_entregado: 'bg-teal-deep/10 text-teal-deep',
   cerrada: 'bg-teal-soft/30 text-teal-deep',

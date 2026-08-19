@@ -58,7 +58,7 @@ export function MembersTab({
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-0 sm:min-w-48 w-full sm:w-auto">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
@@ -73,8 +73,8 @@ export function MembersTab({
               key={v}
               onClick={() => onStatusFilterChange(v)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-[12px] transition-all duration-150 font-display',
-                statusFilter === v ? 'bg-navy text-white' : 'text-navy-light/70 hover:text-navy'
+                'rounded-full px-3 py-1.5 text-[13px] transition-all duration-150 font-display',
+                statusFilter === v ? 'bg-navy text-white' : 'text-navy-light/80 hover:text-navy'
               )}
             >
               {l}
@@ -83,7 +83,7 @@ export function MembersTab({
         </div>
         {toolbarExtra}
         <button
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
           onClick={onAddServerClick}
         >
           <Plus size={13} />
@@ -123,13 +123,13 @@ export function MembersTab({
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 max-w-[180px] font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 max-w-[180px] font-body">
                     {m.position}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {new Date(m.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {calcularAntiguedad(m.start_date)}
                   </td>
                   <td className="px-4 py-3">
@@ -138,7 +138,7 @@ export function MembersTab({
                         'rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
                         m.status === 'active'
                           ? 'bg-teal-deep/10 text-teal-deep'
-                          : 'bg-navy-light/10 text-navy-light/70'
+                          : 'bg-navy-light/10 text-navy-light/80'
                       )}
                     >
                       {m.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -175,14 +175,14 @@ export function MembersTab({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-navy font-body">{m.name}</p>
-                <p className="truncate text-[12px] text-navy-light/70 font-body">
+                <p className="truncate text-[13px] text-navy-light/80 font-body">
                   {m.position} · {calcularAntiguedad(m.start_date)}
                 </p>
               </div>
               <span
                 className={cn(
                   'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
-                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/70',
+                  m.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80',
                 )}
               >
                 {m.status === 'active' ? 'Activo' : 'Inactivo'}

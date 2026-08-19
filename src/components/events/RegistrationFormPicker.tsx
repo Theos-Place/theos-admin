@@ -33,7 +33,7 @@ export function RegistrationFormPicker({ value, onChange }: {
     <div className="space-y-1.5">
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex-1 min-w-[220px]">
-          <label className="text-[12px] text-navy-light/70 font-display mb-1 block" htmlFor="registration-form">
+          <label className="text-[13px] text-navy-light/80 font-display mb-1 block" htmlFor="registration-form">
             Formulario de inscripción (opcional)
           </label>
           <select
@@ -50,7 +50,7 @@ export function RegistrationFormPicker({ value, onChange }: {
           <Plus size={13} /> Crear formulario
         </a>
       </div>
-      <p className="text-[12px] text-navy-light/70 font-body">
+      <p className="text-[13px] text-navy-light/80 font-body">
         Se le pide al inscribirse. La inscripción vale igual aunque no lo llene: el cupo y el
         pago no dependen del formulario.
       </p>

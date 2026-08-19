@@ -36,7 +36,7 @@ export default function ReportesIndexPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Reportes</h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Reportes analíticos del sistema en vivo. Reemplazan los tableros externos.
         </p>
       </div>
@@ -54,10 +54,10 @@ export default function ReportesIndexPage() {
                 <div className="h-11 w-11 rounded-xl bg-coral/10 flex items-center justify-center shrink-0">
                   <Icon size={20} className="text-coral" />
                 </div>
-                <ChevronRight size={18} className="text-navy-light/40 group-hover:text-navy-light/70 transition-colors mt-1" />
+                <ChevronRight size={18} className="text-navy-light/40 group-hover:text-navy-light/80 transition-colors mt-1" />
               </div>
               <h2 className="mt-3 text-base font-bold text-navy font-display">{r.title}</h2>
-              <p className="mt-1 text-[13px] text-navy-light/70 font-body leading-relaxed">{r.description}</p>
+              <p className="mt-1 text-[13px] text-navy-light/80 font-body leading-relaxed">{r.description}</p>
             </Link>
           )
         })}

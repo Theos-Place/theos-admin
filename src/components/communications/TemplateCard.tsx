@@ -45,7 +45,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
       </div>
 
       {/* Body preview */}
-      <p className="text-[12px] text-navy-light/70 leading-relaxed line-clamp-2 font-body">
+      <p className="text-[13px] text-navy-light/80 leading-relaxed line-clamp-2 font-body">
         {snippet || <span className="italic">Sin texto visible — abrí la vista previa</span>}
       </p>
 
@@ -55,7 +55,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
           {template.variables.map(v => (
             <span
               key={v}
-              className="rounded-full bg-navy/5 px-2 py-0.5 text-[11px] text-navy-light/70 font-mono"
+              className="rounded-full bg-navy/5 px-2 py-0.5 text-[11px] text-navy-light/80 font-mono"
             >
               {v}
             </span>
@@ -65,7 +65,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 border-t border-[var(--outline-variant)]">
-        <span className="text-[12px] text-navy-light/70 font-body">
+        <span className="text-[13px] text-navy-light/80 font-body">
           Usado {template.used_count} veces
         </span>
         <div className="flex items-center gap-1">
@@ -75,7 +75,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
               onClick={() => onPreview(template)}
               title="Ver cómo se ve"
               aria-label={`Ver cómo se ve la plantilla ${template.name}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <Eye size={11} />
               Ver
@@ -85,25 +85,25 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
             <button
               type="button"
               onClick={() => onUse(template)}
-              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="inline-flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={10} />
               Usar
             </button>
           )}
           {onEdit && (
-            <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onEdit(template)} title="Editar" aria-label="Editar" className="rounded-lg p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors">
               <Edit size={13} />
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={() => onDuplicate(template)} title="Duplicar plantilla" aria-label="Duplicar plantilla" className="rounded-lg p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors">
+            <button type="button" onClick={() => onDuplicate(template)} title="Duplicar plantilla" aria-label="Duplicar plantilla" className="rounded-lg p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors">
               <Copy size={13} />
             </button>
           )}
           {/* Las plantillas del sistema NO se borran. */}
           {onDelete && !template.is_system && (
-            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/70 hover:text-coral hover:bg-coral/5 transition-colors">
+            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>
           )}

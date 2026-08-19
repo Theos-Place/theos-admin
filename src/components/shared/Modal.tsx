@@ -92,7 +92,7 @@ export function Modal({
           aria-label="Cerrar modal"
           className={
             tone === 'dark'
-              ? 'absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-white/70 hover:text-white z-[1]'
+              ? 'absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-white/80 hover:text-white z-[1]'
               : 'absolute top-[14px] right-[14px] bg-transparent border-none cursor-pointer text-[rgba(41,54,92,0.4)] hover:text-navy z-[1]'
           }
         >

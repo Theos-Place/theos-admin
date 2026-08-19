@@ -79,7 +79,7 @@ export function RowActionsMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         className={cn(
-          'h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors',
+          'h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors',
           triggerClassName,
         )}
       >

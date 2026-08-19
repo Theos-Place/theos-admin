@@ -96,13 +96,13 @@ export default function NuevoCuponPage() {
       <div className="rounded-2xl px-6 py-5 flex items-center gap-3 bg-navy shadow-[var(--shadow-md)]">
         <button
           onClick={() => router.push('/finanzas/becas')}
-          className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-white/70"
+          className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-white/80"
         >
           <ArrowLeft size={18} />
         </button>
         <div>
           <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Crear cupón</h1>
-          <p className="text-[12px] text-white/70 mt-0.5 font-body">Cupón genérico de descuento, con código y vencimiento</p>
+          <p className="text-[13px] text-white/80 mt-0.5 font-body">Cupón genérico de descuento, con código y vencimiento</p>
         </div>
       </div>
 
@@ -110,11 +110,11 @@ export default function NuevoCuponPage() {
         <div className="lg:col-span-2 rounded-2xl p-6 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
 
           <div>
-            <label className="text-[12px] uppercase tracking-widest mb-2 block font-display text-navy-light/70">1. Destino</label>
+            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">1. Destino</label>
             <div className="grid grid-cols-2 gap-2">
               {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => { setEntityType(v); setSelectedEntity(null); setEntityQuery('') }}
-                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/70'}`}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80'}`}>
                   {l}
                 </button>
               ))}
@@ -122,23 +122,23 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[12px] uppercase tracking-widest mb-2 block font-display text-navy-light/70">
+            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">
               2. {entityType === 'study_plan' ? 'Estudio' : 'Evento'}
             </label>
             {selectedEntity ? (
               <div className="flex items-center gap-3 rounded-xl p-3.5 bg-teal-soft/10 border border-teal-deep/25">
                 <div className="flex-1">
                   <p className="text-sm font-medium font-body text-navy">{selectedEntity.name}</p>
-                  <p className="text-[12px] text-navy-light/70 font-body">{formatCRC(selectedEntity.amount)}</p>
+                  <p className="text-[13px] text-navy-light/80 font-body">{formatCRC(selectedEntity.amount)}</p>
                 </div>
                 <button onClick={() => { setSelectedEntity(null); setEntityQuery('') }} aria-label="Quitar destino seleccionado">
-                  <X size={16} className="text-navy-light/70" />
+                  <X size={16} className="text-navy-light/80" />
                 </button>
               </div>
             ) : (
               <div className="relative">
                 <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
-                  <Search size={14} className="text-navy-light/70" />
+                  <Search size={14} className="text-navy-light/80" />
                   <input
                     type="text"
                     placeholder={`Buscar ${entityType === 'study_plan' ? 'estudio' : 'evento'}...`}
@@ -153,7 +153,7 @@ export default function NuevoCuponPage() {
                       <button key={e.id} onClick={() => { setSelectedEntity(e); setEntityQuery('') }}
                         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-low transition-colors border-b last:border-0 text-left border-[var(--outline-variant)]">
                         <p className="text-[13px] font-body text-navy">{e.name}</p>
-                        <p className="text-[12px] text-teal-deep font-body">{formatCRC(e.amount)}</p>
+                        <p className="text-[13px] text-teal-deep font-body">{formatCRC(e.amount)}</p>
                       </button>
                     ))}
                   </div>
@@ -163,11 +163,11 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[12px] uppercase tracking-widest mb-2 block font-display text-navy-light/70">3. Tipo de descuento</label>
+            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">3. Tipo de descuento</label>
             <div className="grid grid-cols-2 gap-2 mb-4">
               {([['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => setDiscountType(v)}
-                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${discountType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/70'}`}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${discountType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80'}`}>
                   {l}
                 </button>
               ))}
@@ -189,7 +189,7 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[12px] uppercase tracking-widest mb-2 block font-display text-navy-light/70">4. Código</label>
+            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">4. Código</label>
             <div className="flex gap-2">
               <input
                 value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Ej. BECA2026"
@@ -202,7 +202,7 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label htmlFor="expires" className="text-[12px] uppercase tracking-widest mb-2 block font-display text-navy-light/70">5. Vencimiento</label>
+            <label htmlFor="expires" className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">5. Vencimiento</label>
             <input
               id="expires" type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
@@ -223,11 +223,11 @@ export default function NuevoCuponPage() {
             <div className="rounded-2xl overflow-hidden border border-navy/10 bg-surface-card shadow-[var(--shadow-md)]">
               <div className="px-5 py-4 space-y-2 bg-navy/[0.03]">
                 <div className="flex justify-between text-sm font-body">
-                  <span className="text-navy-light/70">Costo original:</span>
+                  <span className="text-navy-light/80">Costo original:</span>
                   <span className="text-navy">{formatCRC(originalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-body">
-                  <span className="text-navy-light/70">Descuento ({discountType === 'percentage' ? `${percentage}%` : 'fijo'}):</span>
+                  <span className="text-navy-light/80">Descuento ({discountType === 'percentage' ? `${percentage}%` : 'fijo'}):</span>
                   <span className="text-coral">-{formatCRC(discountAmount)}</span>
                 </div>
                 <div className="h-px bg-navy/10" />
@@ -239,13 +239,13 @@ export default function NuevoCuponPage() {
               {isFullScholarship && (
                 <div className="px-5 py-3 flex items-center gap-2 bg-teal-soft/20">
                   <Check size={14} className="text-teal-deep shrink-0" />
-                  <p className="text-[12px] font-medium text-teal-deep font-body">Descuento completo — inscripción gratuita para quien lo use</p>
+                  <p className="text-[13px] font-medium text-teal-deep font-body">Descuento completo — inscripción gratuita para quien lo use</p>
                 </div>
               )}
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed p-6 text-center border-[var(--outline-variant)] bg-surface-card">
-              <p className="text-[13px] text-navy/70 font-body">Seleccioná un estudio o evento para ver el cálculo del descuento.</p>
+              <p className="text-[13px] text-navy/80 font-body">Seleccioná un estudio o evento para ver el cálculo del descuento.</p>
             </div>
           )}
         </div>

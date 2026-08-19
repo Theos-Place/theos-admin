@@ -110,8 +110,8 @@ export function CalendarGrid({
       {/* Header — navegación: año « / mes ‹ / selectores mes+año / mes › / año » + Hoy */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-[var(--outline-variant)]">
         <div className="flex items-center gap-0.5 sm:gap-1">
-          <button onClick={onPrevYear} aria-label="Año anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/70 hover:text-navy transition-colors font-display">«</button>
-          <button onClick={onPrev} aria-label="Mes anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/70 hover:text-navy transition-colors font-display">‹</button>
+          <button onClick={onPrevYear} aria-label="Año anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/80 hover:text-navy transition-colors font-display">«</button>
+          <button onClick={onPrev} aria-label="Mes anterior" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/80 hover:text-navy transition-colors font-display">‹</button>
           <select
             value={month}
             onChange={e => onSetMonth(Number(e.target.value))}
@@ -128,12 +128,12 @@ export function CalendarGrid({
           >
             {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button onClick={onNext} aria-label="Mes siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/70 hover:text-navy transition-colors font-display">›</button>
-          <button onClick={onNextYear} aria-label="Año siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/70 hover:text-navy transition-colors font-display">»</button>
+          <button onClick={onNext} aria-label="Mes siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/80 hover:text-navy transition-colors font-display">›</button>
+          <button onClick={onNextYear} aria-label="Año siguiente" className="h-8 w-7 flex items-center justify-center rounded-xl hover:bg-surface-low text-navy-light/80 hover:text-navy transition-colors font-display">»</button>
         </div>
         <button
           onClick={onToday}
-          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral hover:border-coral/30 transition-colors font-body"
+          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral hover:border-coral/30 transition-colors font-body"
         >
           Hoy
         </button>
@@ -144,7 +144,7 @@ export function CalendarGrid({
         {DAY_LABELS.map(d => (
           <div
             key={d}
-            className="py-2 text-center text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+            className="py-2 text-center text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             {d}
           </div>
@@ -176,8 +176,8 @@ export function CalendarGrid({
                 <>
                   <div
                     className={cn(
-                      'h-6 w-6 flex items-center justify-center rounded-full mb-1 text-[12px] font-medium font-display',
-                      isToday ? 'bg-coral text-white' : 'text-navy-light/70'
+                      'h-6 w-6 flex items-center justify-center rounded-full mb-1 text-[13px] font-medium font-display',
+                      isToday ? 'bg-coral text-white' : 'text-navy-light/80'
                     )}
                   >
                     {day}
@@ -201,7 +201,7 @@ export function CalendarGrid({
                       {dayEvents.length > 4 && (
                         <button
                           onClick={e => openDay(day, dayEvents, e)}
-                          className="text-[8px] text-navy-light/70 leading-none font-body hover:text-navy"
+                          className="text-[8px] text-navy-light/80 leading-none font-body hover:text-navy"
                           aria-label={`Ver los ${dayEvents.length} eventos del día`}
                         >
                           +{dayEvents.length - 4}
@@ -232,7 +232,7 @@ export function CalendarGrid({
                     {dayEvents.length > 3 && (
                       <button
                         onClick={e => openDay(day, dayEvents, e)}
-                        className="text-[10px] text-navy-light/70 px-1 font-body hover:text-navy hover:underline"
+                        className="text-[10px] text-navy-light/80 px-1 font-body hover:text-navy hover:underline"
                       >
                         +{dayEvents.length - 3} más
                       </button>
@@ -266,18 +266,18 @@ export function CalendarGrid({
                     <span className={cn('mt-1.5 h-2 w-2 rounded-full shrink-0', past && 'opacity-50')} style={{ backgroundColor: typeStyle(ev.event_type).color }} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <span className="text-[12px] text-navy-light/70 tabular-nums font-body shrink-0">{formatTime(ev.start_at)}</span>
+                        <span className="text-[13px] text-navy-light/80 tabular-nums font-body shrink-0">{formatTime(ev.start_at)}</span>
                         {past && <RealizadoBadge />}
                         {isRecurring(ev) && (
-                          <span className="inline-flex items-center gap-0.5 text-[11px] text-navy-light/70 font-body"><Repeat size={10} /> Recurrente</span>
+                          <span className="inline-flex items-center gap-0.5 text-[11px] text-navy-light/80 font-body"><Repeat size={10} /> Recurrente</span>
                         )}
                       </span>
-                      <span className={cn('block text-[13px] font-medium font-body truncate', past ? 'text-navy-light/70' : 'text-navy')}>
+                      <span className={cn('block text-[13px] font-medium font-body truncate', past ? 'text-navy-light/80' : 'text-navy')}>
                         {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                       </span>
-                      <span className="text-[12px] text-navy-light/70 font-body">{typeStyle(ev.event_type).label}</span>
+                      <span className="text-[13px] text-navy-light/80 font-body">{typeStyle(ev.event_type).label}</span>
                     </span>
-                    <ChevronRight size={15} className="text-navy-light/70 shrink-0 mt-1" />
+                    <ChevronRight size={15} className="text-navy-light/80 shrink-0 mt-1" />
                   </button>
                 </li>
               )
@@ -303,12 +303,12 @@ export function CalendarGrid({
                 <EventTypeBadge type={ev.event_type} />
                 {past && <RealizadoBadge />}
                 {isRecurring(ev) && (
-                  <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body"><Repeat size={11} /> Recurrente</span>
+                  <span className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 font-body"><Repeat size={11} /> Recurrente</span>
                 )}
               </div>
 
-              <div className="flex items-start gap-2 text-[13px] text-navy-light/70 font-body">
-                <Clock size={14} className="text-navy-light/70 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-[13px] text-navy-light/80 font-body">
+                <Clock size={14} className="text-navy-light/80 shrink-0 mt-0.5" />
                 <span>
                   {new Date(ev.start_at).toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   {' · '}{formatTime(ev.start_at)}
@@ -317,8 +317,8 @@ export function CalendarGrid({
               </div>
 
               {ev.location && (
-                <div className="flex items-start gap-2 text-[13px] text-navy-light/70 font-body">
-                  <MapPin size={14} className="text-navy-light/70 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 text-[13px] text-navy-light/80 font-body">
+                  <MapPin size={14} className="text-navy-light/80 shrink-0 mt-0.5" />
                   {ev.location_map_url ? (
                     <a
                       href={ev.location_map_url}

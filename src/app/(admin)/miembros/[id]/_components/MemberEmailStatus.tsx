@@ -67,8 +67,8 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-2 mb-3">
-        <Mail size={15} className="text-navy-light/70" />
-        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">
+        <Mail size={15} className="text-navy-light/80" />
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
           Comunicaciones por email
         </p>
       </div>
@@ -80,23 +80,23 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-medium font-body',
-              status.subscribed ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/70',
+              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-medium font-body',
+              status.subscribed ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/80',
             )}>
               <span className={cn('h-1.5 w-1.5 rounded-full', status.subscribed ? 'bg-teal-deep' : 'bg-navy-light/40')} />
               {status.subscribed ? 'Suscrito' : 'Dado de baja'}
             </span>
             {!status.subscribed && status.opted_out_at && (
-              <span className="text-[12px] text-navy-light/70 font-body">desde {formatDate(status.opted_out_at)}</span>
+              <span className="text-[13px] text-navy-light/80 font-body">desde {formatDate(status.opted_out_at)}</span>
             )}
             {status.bounced && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[12px] font-medium font-body"><AlertTriangle size={11} /> Correo rebotado</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[13px] font-medium font-body"><AlertTriangle size={11} /> Correo rebotado</span>
             )}
             {status.complained && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[12px] font-medium font-body"><AlertTriangle size={11} /> Marcó como spam</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[13px] font-medium font-body"><AlertTriangle size={11} /> Marcó como spam</span>
             )}
           </div>
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Para cambiar tu suscripción a correos, andá a{' '}
             <Link href="/configuracion" className="text-coral hover:underline">Configuración → Notificaciones</Link>.
           </p>
@@ -109,19 +109,19 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
               <p className="text-sm text-navy font-body">
                 {status.subscribed ? 'Suscrito a marketing' : 'Dado de baja del marketing'}
                 {!status.subscribed && status.opted_out_at && (
-                  <span className="text-navy-light/70"> · {formatDate(status.opted_out_at)}</span>
+                  <span className="text-navy-light/80"> · {formatDate(status.opted_out_at)}</span>
                 )}
               </p>
               {/* Badges de rebote/queja */}
               {(status.bounced || status.complained) && (
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {status.bounced && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[12px] font-medium font-body">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[13px] font-medium font-body">
                       <AlertTriangle size={11} /> Correo rebotado
                     </span>
                   )}
                   {status.complained && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[12px] font-medium font-body">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[13px] font-medium font-body">
                       <AlertTriangle size={11} /> Marcó como spam
                     </span>
                   )}
@@ -154,7 +154,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
           {/* Caso especial: limpiar rebote/queja */}
           {(status.bounced || status.complained) && (
             <div className="rounded-xl bg-surface-low p-3 flex items-start justify-between gap-3 flex-wrap">
-              <p className="text-[12px] text-navy-light/70 font-body flex-1 min-w-[180px]">
+              <p className="text-[13px] text-navy-light/80 font-body flex-1 min-w-[180px]">
                 Reactivá el envío a esta dirección solo si el correo se corrigió o fue un falso positivo. Re-habilitar un correo problemático afecta la reputación de envío.
               </p>
               <button
@@ -168,7 +168,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
             </div>
           )}
 
-          {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+          {error && <p className="text-[13px] text-coral font-body">{error}</p>}
         </div>
       ) : null}
 

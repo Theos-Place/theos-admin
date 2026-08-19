@@ -83,7 +83,7 @@ export function Popover({ anchorRect, onClose, title, children, width = 320, tit
         type="button"
         onClick={onClose}
         aria-label="Cerrar"
-        className="h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/70 hover:bg-surface-low hover:text-navy transition-colors shrink-0"
+        className="h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors shrink-0"
       >
         <X size={16} />
       </button>

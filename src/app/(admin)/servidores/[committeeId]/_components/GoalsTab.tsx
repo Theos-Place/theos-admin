@@ -54,13 +54,13 @@ export function GoalsTab({
             <p
               className={cn(
                 'text-sm text-navy font-body',
-                g.status === 'completed' && 'line-through text-navy-light/70'
+                g.status === 'completed' && 'line-through text-navy-light/80'
               )}
             >
               {g.description}
             </p>
             {g.due_date && (
-              <p className="text-[12px] text-navy-light/70 font-mono">
+              <p className="text-[13px] text-navy-light/80 font-mono">
                 Límite: {new Date(g.due_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             )}
@@ -89,7 +89,7 @@ export function GoalsTab({
             autoFocus
           />
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha límite (opcional)
             </label>
             <input
@@ -102,13 +102,13 @@ export function GoalsTab({
           <div className="flex gap-2">
             <button
               onClick={onAddGoal}
-              className="rounded-full bg-navy px-4 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors font-body"
+              className="rounded-full bg-navy px-4 py-1.5 text-[13px] text-white hover:bg-navy/80 transition-colors font-body"
             >
               Agregar meta
             </button>
             <button
               onClick={onHideGoalForm}
-              className="rounded-full border px-4 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+              className="rounded-full border px-4 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
             >
               Cancelar
             </button>
@@ -117,7 +117,7 @@ export function GoalsTab({
       ) : (
         <button
           onClick={onShowGoalForm}
-          className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+          className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
         >
           <Plus size={13} />
           Agregar meta

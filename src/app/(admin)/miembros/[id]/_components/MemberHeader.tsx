@@ -20,14 +20,14 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
       >
-        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/70')} />
+        <Icon size={18} strokeWidth={1.75} className={cn('transition-colors', active ? activeColor : 'text-navy-light/80')} />
         {show && active && (
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-navy px-2 py-1 text-[11px] text-white z-50 shadow-[var(--shadow-md)]">
             {tooltip}
           </div>
         )}
       </div>
-      <span className={cn('text-[10px] font-body', active ? 'text-navy-light/70' : 'text-navy-light/70')}>{label}</span>
+      <span className={cn('text-[10px] font-body', active ? 'text-navy-light/80' : 'text-navy-light/80')}>{label}</span>
     </div>
   )
 }
@@ -114,7 +114,7 @@ export function MemberHeader({
           >
             {member.first_name} {member.last_name}
           </h1>
-          <p className="text-xs text-navy-light/70 mt-0.5 font-mono">
+          <p className="text-xs text-navy-light/80 mt-0.5 font-mono">
             {member.cedula ? `Cédula: ${member.cedula}` : 'Sin cédula'}
             {member.join_date ? ` · Se unió el ${formatDate(member.join_date)}` : ''}
           </p>
@@ -124,7 +124,7 @@ export function MemberHeader({
             {/* "Activo" es el default (solo se listan activos); el tag solo
                 aparece para los pocos perfiles inactivos (fallecidos/se fueron). */}
             {!member.is_active && (
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body bg-surface-low text-navy-light/70">
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body bg-surface-low text-navy-light/80">
                 <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-navy-light/30" />
                 Inactivo
               </span>
@@ -197,7 +197,7 @@ export function MemberHeader({
                 )}
                 <button
                   onClick={onMerge}
-                  className="w-full px-4 py-2 text-left text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
+                  className="w-full px-4 py-2 text-left text-sm text-navy-light/80 hover:bg-surface-low transition-colors font-body"
                 >
                   Fusionar duplicado
                 </button>

@@ -101,7 +101,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="ptitle">Editar perfil</div>
         </div>
         <div className="card p-[22px]">
-          <p className="text-sm text-navy-light/70 text-center py-8 font-body">
+          <p className="text-sm text-navy-light/80 text-center py-8 font-body">
             {loading ? 'Cargando…' : 'Miembro no encontrado.'}
           </p>
         </div>
@@ -195,7 +195,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             {/* Toggle estado — solo admins */}
             {isAdmin && (
               <div className="flex items-center gap-2 mr-2">
-                <span className="text-[12px] text-[var(--fg-muted)] font-body">
+                <span className="text-[13px] text-[var(--fg-muted)] font-body">
                   Estado:
                 </span>
                 <label
@@ -216,7 +216,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   <div className="toggle-track" />
                 </label>
                 <span
-                  className="text-[12px] font-semibold font-body"
+                  className="text-[13px] font-semibold font-body"
                   style={{ color: isActive ? 'var(--success)' : 'var(--fg-muted)' }}
                 >
                   {isActive ? 'Activo' : 'Inactivo'}
@@ -228,7 +228,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 de cédula (cuentas institucionales que nunca tienen cédula). */}
             {isAdmin && (
               <div className="flex items-center gap-2 mr-2">
-                <span className="text-[12px] text-[var(--fg-muted)] font-body">Sistema:</span>
+                <span className="text-[13px] text-[var(--fg-muted)] font-body">Sistema:</span>
                 <label className="toggle cursor-pointer" title="Marcar como perfil de sistema (cuenta institucional)">
                   <input type="checkbox" checked={isSystem} onChange={() => setIsSystem(v => !v)} />
                   <div className="toggle-track" />
@@ -306,8 +306,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   placeholder={documentType === 'dni_nie' ? 'Ej: 12345678Z' : documentType === 'pasaporte' ? 'Ej: AB123456' : 'Ej: 1-1234-5678'}
                   aria-invalid={!!cedulaErr}
                 />
-                {cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">{cedulaErr}</p>}
-                {highlightCedula && !cedulaErr && <p className="mt-1 text-[12px] text-coral-deep font-body">Completá tu documento de identidad acá.</p>}
+                {cedulaErr && <p className="mt-1 text-[13px] text-coral-deep font-body">{cedulaErr}</p>}
+                {highlightCedula && !cedulaErr && <p className="mt-1 text-[13px] text-coral-deep font-body">Completá tu documento de identidad acá.</p>}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
@@ -438,10 +438,10 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
             {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
             <div className="form-group">
               <label className="form-label">Sede</label>
-              <p className="text-sm text-navy-light/70 py-2 font-body">
+              <p className="text-sm text-navy-light/80 py-2 font-body">
                 {sede ? sedeLabel(sede) : 'Sin sede asignada'}
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Se asigna automáticamente según la charla a la que más asiste.
               </p>
             </div>

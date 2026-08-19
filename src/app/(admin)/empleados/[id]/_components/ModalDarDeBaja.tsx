@@ -37,12 +37,12 @@ export function ModalDarDeBaja({
           <h2 id="modal-dar-de-baja" className="text-base font-bold text-navy font-display">Dar de baja</h2>
         </div>
         <div className="rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
-          <p className="text-[12px] text-coral font-body">
+          <p className="text-[13px] text-coral font-body">
             Esta acción marca al empleado como inactivo. Escribí el nombre completo para confirmar.
           </p>
         </div>
         <div className="space-y-1">
-          <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
             Escribí “<span className="font-semibold text-navy">{memberName}</span>” para confirmar
           </label>
           <input
@@ -53,7 +53,7 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Fecha de baja</label>
+          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha de baja</label>
           <input
             type="date"
             className={cn(inputCls, 'font-body')}
@@ -62,7 +62,7 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Motivo</label>
+          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo</label>
           <textarea
             className={cn(inputCls, 'resize-none font-body')}
             rows={2}

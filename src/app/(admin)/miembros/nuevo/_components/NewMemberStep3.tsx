@@ -85,19 +85,19 @@ export function NewMemberStep3({
             {data.first_name} {data.last_name}
           </p>
           {data.cedula && (
-            <p className="text-xs text-navy-light/70 mt-0.5 font-mono">
+            <p className="text-xs text-navy-light/80 mt-0.5 font-mono">
               {data.cedula}
             </p>
           )}
           <div className="mt-2 space-y-1">
             {data.email && (
-              <p className="text-xs text-navy-light/70 font-body">{data.email}</p>
+              <p className="text-xs text-navy-light/80 font-body">{data.email}</p>
             )}
             {data.phone && (
-              <p className="text-xs text-navy-light/70 font-body">{data.phone}</p>
+              <p className="text-xs text-navy-light/80 font-body">{data.phone}</p>
             )}
             {data.birth_date && (
-              <p className="text-xs text-navy-light/70 font-body">
+              <p className="text-xs text-navy-light/80 font-body">
                 {calculateAge(data.birth_date)} años
                 {isMinor && (
                   <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep">Menor</span>
@@ -105,25 +105,25 @@ export function NewMemberStep3({
               </p>
             )}
             {data.province && (
-              <p className="text-xs text-navy-light/70 font-body">
+              <p className="text-xs text-navy-light/80 font-body">
                 {[data.district, data.canton, data.province].filter(Boolean).join(', ')}
               </p>
             )}
             {data.sede && (
-              <p className="text-xs text-navy-light/70 font-body">
+              <p className="text-xs text-navy-light/80 font-body">
                 Sede: {SEDES.find(s => s.id === data.sede)?.name}
               </p>
             )}
             {data.profession && (
-              <p className="text-xs text-navy-light/70 font-body">{data.profession}</p>
+              <p className="text-xs text-navy-light/80 font-body">{data.profession}</p>
             )}
             {data.alergias && (
-              <p className="text-xs text-navy-light/70 font-body">
+              <p className="text-xs text-navy-light/80 font-body">
                 Alergias: {data.alergias}
               </p>
             )}
             {data.medicamentos && (
-              <p className="text-xs text-navy-light/70 font-body">
+              <p className="text-xs text-navy-light/80 font-body">
                 Medicamentos: {data.medicamentos}
               </p>
             )}
@@ -134,7 +134,7 @@ export function NewMemberStep3({
       {/* Family members */}
       {familyMembers.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-navy-light/70 uppercase tracking-wider font-display">
+          <p className="text-xs text-navy-light/80 uppercase tracking-wider font-display">
             Familiares ({familyMembers.length})
           </p>
           {familyMembers.map((item, idx) => (
@@ -152,7 +152,7 @@ export function NewMemberStep3({
                   {familyItemName(item)}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-navy-light/70 font-body">
+                  <p className="text-xs text-navy-light/80 font-body">
                     {familyItemRelation(item)}
                   </p>
                   {item.kind === 'linked' ? (
@@ -160,7 +160,7 @@ export function NewMemberStep3({
                       Perfil existente
                     </span>
                   ) : (
-                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[11px] text-navy-light/70 font-body">
+                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-[11px] text-navy-light/80 font-body">
                       Perfil nuevo
                     </span>
                   )}
@@ -173,7 +173,7 @@ export function NewMemberStep3({
 
       {/* Notification checkboxes */}
       <div className="space-y-3">
-        <p className="text-xs text-navy-light/70 uppercase tracking-wider font-display">
+        <p className="text-xs text-navy-light/80 uppercase tracking-wider font-display">
           Notificaciones de bienvenida
         </p>
         <label className="flex items-center gap-3 cursor-pointer">

@@ -22,7 +22,7 @@ export function LeaderContact({ personas }: { personas: Persona[] }) {
     <div className="space-y-1.5">
       {conDatos.map(p => (
         <div key={p.rol} className="flex items-center gap-2 flex-wrap text-[13px] font-body">
-          <span className="text-navy-light/70">{p.rol}:</span>
+          <span className="text-navy-light/80">{p.rol}:</span>
           <span className="text-navy font-medium">{p.nombre}</span>
           {p.phone && (
             <>

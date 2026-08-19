@@ -53,13 +53,13 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+          className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
           Resumen del contrato
         </p>
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center shrink-0">
-            <span className="text-[12px] font-bold text-white font-display">
+            <span className="text-[13px] font-bold text-white font-display">
               {selected?.first_name[0]}{selected?.last_name[0]}
             </span>
           </div>
@@ -67,7 +67,7 @@ export function StepDocuments({
             <p className="text-sm font-semibold text-navy font-display">
               {selected?.first_name} {selected?.last_name}
             </p>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               {selected?.email}
             </p>
           </div>
@@ -95,7 +95,7 @@ export function StepDocuments({
           ].map(({ label, value }) => (
             <div key={label}>
               <p
-                className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display"
+                className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display"
               >
                 {label}
               </p>
@@ -108,7 +108,7 @@ export function StepDocuments({
         {salaryOutOfRange && (
           <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
             <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-700 font-body">
+            <p className="text-[13px] text-amber-700 font-body">
               Salario fuera del rango aprobado — requiere aprobación adicional.
             </p>
           </div>
@@ -124,11 +124,11 @@ export function StepDocuments({
       >
         <div className="flex items-center justify-between">
           <p
-            className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+            className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Documentos requeridos
           </p>
-          <span className="text-[12px] text-navy-light/70 font-mono">
+          <span className="text-[13px] text-navy-light/80 font-mono">
             {REQUIRED_DOCS.filter(d => uploadedDocs[d.key]).length}/{REQUIRED_DOCS.length}
           </span>
         </div>
@@ -151,7 +151,7 @@ export function StepDocuments({
                     {uploaded ? (
                       <Check size={15} className="text-teal-deep" />
                     ) : (
-                      <DocIcon size={15} className="text-navy-light/70" />
+                      <DocIcon size={15} className="text-navy-light/80" />
                     )}
                   </div>
                   <div>
@@ -159,7 +159,7 @@ export function StepDocuments({
                       {doc.label}
                     </p>
                     {uploaded && (
-                      <p className="text-[12px] text-teal-deep font-mono truncate max-w-[160px]">
+                      <p className="text-[13px] text-teal-deep font-mono truncate max-w-[160px]">
                         {uploaded.name}
                       </p>
                     )}
@@ -188,7 +188,7 @@ export function StepDocuments({
                     <button
                       type="button"
                       onClick={() => fileInputRefs.current[doc.key]?.click()}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-white transition-colors font-body"
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-white transition-colors font-body"
                     >
                       <Upload size={12} />
                       Subir
@@ -206,7 +206,7 @@ export function StepDocuments({
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <p
-          className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+          className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
           Documentos adicionales
         </p>
@@ -228,7 +228,7 @@ export function StepDocuments({
                   {uploaded ? (
                     <Check size={15} className="text-teal-deep" />
                   ) : (
-                    <DocIcon size={15} className="text-navy-light/70" />
+                    <DocIcon size={15} className="text-navy-light/80" />
                   )}
                 </div>
                 <div>
@@ -236,7 +236,7 @@ export function StepDocuments({
                     {doc.label}
                   </p>
                   {uploaded && (
-                    <p className="text-[12px] text-teal-deep font-mono truncate max-w-[160px]">
+                    <p className="text-[13px] text-teal-deep font-mono truncate max-w-[160px]">
                       {uploaded.name}
                     </p>
                   )}
@@ -265,7 +265,7 @@ export function StepDocuments({
                   <button
                     type="button"
                     onClick={() => fileInputRefs.current[doc.key]?.click()}
-                    className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-white transition-colors font-body"
+                    className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-white transition-colors font-body"
                   >
                     <Upload size={12} />
                     Subir
@@ -279,7 +279,7 @@ export function StepDocuments({
 
       {!canFinish && (
         <p
-          className="text-center text-[12px] text-navy-light/70 font-body"
+          className="text-center text-[13px] text-navy-light/80 font-body"
         >
           Subí los 3 documentos requeridos para formalizar el contrato.
         </p>

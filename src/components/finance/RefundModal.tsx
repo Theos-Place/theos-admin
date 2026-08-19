@@ -59,7 +59,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               <p id="solicitar-devolucion" className="text-sm font-bold font-display text-navy">
                 Solicitar devolución
               </p>
-              <p className="text-[12px] font-body text-[rgba(22,20,64,0.45)]">
+              <p className="text-[13px] font-body text-[rgba(22,20,64,0.45)]">
                 {payment.member_name}
               </p>
             </div>
@@ -85,7 +85,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Type */}
           <div>
-            <p className="text-[12px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[13px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">
               Tipo de devolución
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -109,7 +109,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Partial amount input */}
           {type === 'partial' && (
             <div>
-              <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+              <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                 Monto a devolver (₡)
               </label>
               <input
@@ -126,7 +126,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Reason */}
           <div>
-            <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+            <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
               Motivo
             </label>
             <select
@@ -157,7 +157,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
             }}
           >
             <Info size={15} className="mt-px shrink-0" style={{ color: isSinpe ? '#E9B949' : '#3DB97A' }} />
-            <p className="text-[12px] leading-relaxed font-body" style={{ color: isSinpe ? '#9B7200' : '#1E6B42' }}>
+            <p className="text-[13px] leading-relaxed font-body" style={{ color: isSinpe ? '#9B7200' : '#1E6B42' }}>
               {isSinpe
                 ? 'Este pago fue por SINPE. La devolución requiere procesamiento manual — el equipo de finanzas coordinará la transferencia.'
                 : 'Este pago fue por tarjeta y se procesará automáticamente a través de la pasarela de pago.'}

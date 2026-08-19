@@ -108,7 +108,7 @@ export default function NuevaContrasenaPage() {
     return (
       <div className="w-full max-w-[400px] text-center py-10">
         <Loader2 size={22} className="animate-spin text-navy-light/50 mx-auto mb-3" />
-        <p className="text-sm text-navy-light/70 font-body">Verificando el enlace…</p>
+        <p className="text-sm text-navy-light/80 font-body">Verificando el enlace…</p>
       </div>
     )
   }
@@ -125,7 +125,7 @@ export default function NuevaContrasenaPage() {
         <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">
           {linkMsg?.titulo ?? 'Este enlace ya se usó o venció'}
         </h2>
-        <p className="text-sm text-navy-light/70 leading-relaxed mb-8 font-body">
+        <p className="text-sm text-navy-light/80 leading-relaxed mb-8 font-body">
           {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya cambiaste tu contraseña, entrá con la nueva.'}
         </p>
         <div className="space-y-2">
@@ -157,7 +157,7 @@ export default function NuevaContrasenaPage() {
           </div>
         </div>
         <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">Contraseña actualizada</h2>
-        <p className="text-sm text-navy-light/70 leading-relaxed mb-8 font-body">
+        <p className="text-sm text-navy-light/80 leading-relaxed mb-8 font-body">
           Tu contraseña fue cambiada exitosamente. Te llevamos al login…
         </p>
         <Link
@@ -175,10 +175,10 @@ export default function NuevaContrasenaPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8">
         <div className="h-11 w-11 rounded-xl flex items-center justify-center mb-5 bg-[rgba(22,20,64,0.06)]">
-          <Lock size={20} className="text-navy-light/70" />
+          <Lock size={20} className="text-navy-light/80" />
         </div>
         <h1 className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]">Creá tu nueva contraseña</h1>
-        <p className="text-[13px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           Elegí una contraseña segura{email ? ' para ' : '.'}
           {email && <span className="font-medium text-navy">{email}</span>}
         </p>
@@ -186,7 +186,7 @@ export default function NuevaContrasenaPage() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
-          <label className="block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body">Nueva contraseña</label>
+          <label className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Nueva contraseña</label>
           <div className="relative">
             <input
               type={showPass ? 'text' : 'password'}
@@ -196,7 +196,7 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 border-[rgba(22,20,64,0.15)] font-body`}
             />
-            <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -204,7 +204,7 @@ export default function NuevaContrasenaPage() {
 
         <div className="space-y-1.5 px-1">
           {reqs.map(req => (
-            <div key={req.label} className="flex items-center gap-2 text-[12px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#519DA2' : 'rgba(239,85,84,0.7)' }}>
+            <div key={req.label} className="flex items-center gap-2 text-[13px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#519DA2' : 'rgba(239,85,84,0.7)' }}>
               {req.met && password.length > 0 ? <Check size={12} className="shrink-0" /> : <span className="h-3 w-3 rounded-full border shrink-0 border-current inline-block" />}
               {req.label}
             </div>
@@ -212,7 +212,7 @@ export default function NuevaContrasenaPage() {
         </div>
 
         <div>
-          <label className="block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body">Confirmar contraseña</label>
+          <label className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Confirmar contraseña</label>
           <div className="relative">
             <input
               type={showConfirm ? 'text' : 'password'}
@@ -223,17 +223,17 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 font-body ${confirmErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {confirmErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {confirmErr}</p>
+            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {confirmErr}</p>
           )}
         </div>
 
         {submitErr && (
-          <p className="flex items-center gap-1.5 text-[12px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {submitErr}</p>
+          <p className="flex items-center gap-1.5 text-[13px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {submitErr}</p>
         )}
 
         <button

@@ -18,7 +18,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
       {/* El buscador NO se estira a todo el ancho: un input de 1.400 px es
           incómodo de leer y de apuntar (layout.md, acotar elementos internos). */}
       <div className="relative max-w-xl">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-light/70" />
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-light/80" />
         <input
           value={q}
           onChange={e => setQ(e.target.value)}
@@ -29,7 +29,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
       </div>
 
       {groups.length === 0 ? (
-        <p className="rounded-2xl bg-surface-card px-5 py-10 text-center text-sm text-navy-light/70 font-body shadow-[var(--shadow-md)]">
+        <p className="rounded-2xl bg-surface-card px-5 py-10 text-center text-sm text-navy-light/80 font-body shadow-[var(--shadow-md)]">
           {docs.length === 0
             ? 'Todavía no hay guías publicadas.'
             : `Ninguna guía coincide con "${q}".`}
@@ -37,7 +37,7 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
       ) : (
         groups.map(({ seccion, docs: sectionDocs }) => (
           <section key={seccion} className="space-y-2">
-            <h2 className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display px-1">
+            <h2 className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display px-1">
               {seccion}
             </h2>
             {/* Listado, no lectura: en desktop se reparte en columnas en vez de
@@ -58,12 +58,12 @@ export function HelpIndex({ docs }: { docs: HelpDocMeta[] }) {
                         {doc.titulo}
                       </span>
                       {doc.resumen && (
-                        <span className="mt-0.5 block text-[13px] text-navy-light/70 font-body leading-snug">
+                        <span className="mt-0.5 block text-[13px] text-navy-light/80 font-body leading-snug">
                           {doc.resumen}
                         </span>
                       )}
                     </span>
-                    <ChevronRight size={16} className="shrink-0 text-navy-light/70" />
+                    <ChevronRight size={16} className="shrink-0 text-navy-light/80" />
                   </Link>
                 </li>
               ))}

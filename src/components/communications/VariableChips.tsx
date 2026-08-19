@@ -20,7 +20,7 @@ export function VariableChips({ onInsert, available }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+      <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
         Variables disponibles
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -31,7 +31,7 @@ export function VariableChips({ onInsert, available }: Props) {
             title={v.description}
             onClick={() => onInsert(v.key)}
             className={cn(
-              'rounded-full border px-2.5 py-1 text-[12px] font-mono text-navy-light transition-all',
+              'rounded-full border px-2.5 py-1 text-[13px] font-mono text-navy-light transition-all',
               'hover:bg-navy hover:text-white hover:border-navy active:scale-95'
             , 'border-outline')}
           >

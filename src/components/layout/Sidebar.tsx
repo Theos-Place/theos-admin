@@ -326,7 +326,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <SubIcon
           size={14}
           strokeWidth={1.75}
-          className={cn('shrink-0', subActive ? 'text-white' : 'text-white/70 group-hover:text-white')}
+          className={cn('shrink-0', subActive ? 'text-white' : 'text-white/80 group-hover:text-white')}
         />
         <span className="flex-1 font-body font-light">{sub.label}</span>
         {(sub.badge ?? 0) > 0 && (
@@ -345,19 +345,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
     const headerCls = cn(
       'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left transition-all duration-150 min-h-[44px] lg:min-h-0',
-      moduleActive ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white',
+      moduleActive ? 'bg-coral text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
     )
     const headerContent = (chevronOpen: boolean) => (
       <>
         <Icon
           size={18}
           strokeWidth={1.75}
-          className={cn('shrink-0 transition-colors', moduleActive ? 'text-white' : 'text-white/70 group-hover:text-white')}
+          className={cn('shrink-0 transition-colors', moduleActive ? 'text-white' : 'text-white/80 group-hover:text-white')}
         />
         <span className="flex-1 truncate font-body font-light">{mod.label}</span>
         <ChevronDown
           size={14}
-          className={cn('transition-transform duration-200', chevronOpen ? 'rotate-180' : 'rotate-0', moduleActive ? 'text-white' : 'text-white/70')}
+          className={cn('transition-transform duration-200', chevronOpen ? 'rotate-180' : 'rotate-0', moduleActive ? 'text-white' : 'text-white/80')}
         />
       </>
     )
@@ -430,7 +430,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </Link>
           <button
             onClick={onClose}
-            className="lg:hidden rounded-md p-1 text-white/70 hover:text-white transition-colors"
+            className="lg:hidden rounded-md p-1 text-white/80 hover:text-white transition-colors"
             aria-label="Cerrar menú"
           >
             <X size={20} />
@@ -454,13 +454,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   onClick={onClose}
                   className={cn(
                     'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
-                    active ? 'bg-coral text-white' : 'text-white/70 hover:bg-white/10 hover:text-white',
+                    active ? 'bg-coral text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
                   )}
                 >
                   <Icon
                     size={18}
                     strokeWidth={1.75}
-                    className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/70 group-hover:text-white')}
+                    className={cn('shrink-0 transition-colors', active ? 'text-white' : 'text-white/80 group-hover:text-white')}
                   />
                   <span className="flex-1 truncate font-body font-light">{mod.label}</span>
                   {(mod.badge ?? 0) > 0 && (
@@ -486,7 +486,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
                 pathname === '/accesos' || pathname.startsWith('/accesos/')
                   ? 'bg-coral text-white'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
               )}
             >
               <Shield
@@ -496,7 +496,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   'shrink-0 transition-colors',
                   pathname === '/accesos' || pathname.startsWith('/accesos/')
                     ? 'text-white'
-                    : 'text-white/70 group-hover:text-white'
+                    : 'text-white/80 group-hover:text-white'
                 )}
               />
               <span className="font-body font-light">Accesos</span>
@@ -509,7 +509,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           {userName && (
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               <div
-                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[12px] font-bold text-white bg-[rgba(255,255,255,0.15)] font-display"
+                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold text-white bg-[rgba(255,255,255,0.15)] font-display"
               >
                 {userName.slice(0, 2).toUpperCase()}
               </div>
@@ -517,7 +517,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 <p className="text-[13px] text-white truncate font-body font-normal">
                   {userName}
                 </p>
-                <p className="text-[12px] text-white/70 truncate font-body">
+                <p className="text-[13px] text-white/80 truncate font-body">
                   {ROLE_LABELS[userRole] ?? userRole}
                 </p>
               </div>
@@ -525,14 +525,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/70 hover:bg-white/10 hover:text-white transition-all font-body"
+            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] text-white/80 hover:bg-white/10 hover:text-white transition-all font-body"
           >
             <LogOut size={14} className="shrink-0" />
             Cerrar sesión
           </button>
           <Link
             href="/terminos"
-            className="mt-1 block px-3 py-1 text-[12px] text-white/70 hover:text-white transition-colors font-body"
+            className="mt-1 block px-3 py-1 text-[13px] text-white/80 hover:text-white transition-colors font-body"
           >
             Términos y Condiciones
           </Link>

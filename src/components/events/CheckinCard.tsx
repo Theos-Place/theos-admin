@@ -57,7 +57,7 @@ export function CheckinCard({ member, onConfirm, onCancel, targetLabel, allowSer
             {member.name}
           </p>
           {targetLabel && (
-            <p className="text-[13px] text-navy-light/70 font-body mt-1">
+            <p className="text-[13px] text-navy-light/80 font-body mt-1">
               Asistencia a <span className="font-semibold text-navy">{targetLabel}</span>
             </p>
           )}
@@ -82,11 +82,11 @@ export function CheckinCard({ member, onConfirm, onCancel, targetLabel, allowSer
           </button>
         )}
         {serverNotice && (
-          <p className="text-[12px] text-navy-light/70 text-center font-body">{serverNotice}</p>
+          <p className="text-[13px] text-navy-light/80 text-center font-body">{serverNotice}</p>
         )}
         <button
           onClick={onCancel}
-          className="w-full rounded-full border px-5 py-2.5 text-sm text-navy-light/70 hover:bg-surface-low transition-all duration-150 border-[var(--outline-variant)] font-body"
+          className="w-full rounded-full border px-5 py-2.5 text-sm text-navy-light/80 hover:bg-surface-low transition-all duration-150 border-[var(--outline-variant)] font-body"
         >
           Cancelar
         </button>

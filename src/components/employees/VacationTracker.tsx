@@ -12,7 +12,7 @@ export function VacationTracker({ total, used, className }: VacationTrackerProps
 
   if (total === 0) {
     return (
-      <p className="text-[12px] text-navy-light/70 font-body">
+      <p className="text-[13px] text-navy-light/80 font-body">
         No aplica (servicios profesionales)
       </p>
     )
@@ -29,7 +29,7 @@ export function VacationTracker({ total, used, className }: VacationTrackerProps
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="flex justify-between text-[12px] text-navy-light/70 font-body">
+      <div className="flex justify-between text-[13px] text-navy-light/80 font-body">
         <span>{used} usados</span>
         <span>{available} disponibles de {total}</span>
       </div>

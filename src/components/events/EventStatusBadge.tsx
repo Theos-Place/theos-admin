@@ -11,9 +11,9 @@ interface EventStatusBadgeProps {
 const BADGE_STYLES: Record<EventStatus, string> = {
   upcoming:    'bg-teal-soft/30 text-teal-deep',
   in_progress: 'bg-coral/10 text-coral',
-  finished:    'bg-navy/10 text-navy/70',
+  finished:    'bg-navy/10 text-navy/80',
   cancelled:   'bg-red-100 text-red-600',
-  archived:    'bg-navy-light/10 text-navy-light/70',
+  archived:    'bg-navy-light/10 text-navy-light/80',
 }
 
 export function EventStatusBadge({ status, size = 'sm' }: EventStatusBadgeProps) {

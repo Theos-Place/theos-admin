@@ -93,13 +93,13 @@ export function ScholarshipRequestModal({
             <div className="grid grid-cols-2 gap-2">
               {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
                 <button key={v} type="button" onClick={() => { setEntityType(v); setTarget(null) }}
-                  className={cn('rounded-xl p-2.5 text-sm font-medium border transition-all text-left font-body', entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/70')}>
+                  className={cn('rounded-xl p-2.5 text-sm font-medium border transition-all text-left font-body', entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80')}>
                   {l}
                 </button>
               ))}
             </div>
             <div>
-              <label htmlFor="schol-target" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">
+              <label htmlFor="schol-target" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
                 {entityType === 'study_plan' ? 'Estudio' : 'Evento'}
               </label>
               <select
@@ -120,13 +120,13 @@ export function ScholarshipRequestModal({
 
         {fixedTarget && (
           <div className="rounded-xl bg-surface-low px-4 py-3">
-            <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Solicitando beca para</p>
+            <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Solicitando beca para</p>
             <p className="text-sm font-medium text-navy font-body">{fixedTarget.name}</p>
           </div>
         )}
 
         <div>
-          <label htmlFor="schol-reason" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">
+          <label htmlFor="schol-reason" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
             Razón <span className="text-coral">*</span>
           </label>
           <textarea
@@ -137,7 +137,7 @@ export function ScholarshipRequestModal({
             placeholder="Contanos por qué (mínimo 20 caracteres)…"
             className={cn(FIELD_CLS, 'resize-none placeholder:text-navy-light/50')}
           />
-          <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>
+          <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>
             {reason.trim().length}/{MIN_REASON} caracteres mínimos
           </p>
         </div>
@@ -145,7 +145,7 @@ export function ScholarshipRequestModal({
         {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-1">
-          <button onClick={onClose} disabled={submitting} className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors">
+          <button onClick={onClose} disabled={submitting} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">
             Cancelar
           </button>
           <button

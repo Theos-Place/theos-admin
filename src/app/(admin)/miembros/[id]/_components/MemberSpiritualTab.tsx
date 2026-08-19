@@ -52,7 +52,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
     }
   }
 
-  const labelCls = 'text-[12px] uppercase tracking-wider text-navy-light/70 mb-1 block font-display'
+  const labelCls = 'text-[13px] uppercase tracking-wider text-navy-light/80 mb-1 block font-display'
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
   if (loading) {
@@ -70,7 +70,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-5">
       <div className="flex items-center gap-2">
         <Sparkles size={15} className="text-teal-deep" />
-        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Datos espirituales</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Datos espirituales</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -98,7 +98,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         >
           {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : saved ? <><Check size={14} /> Guardado</> : 'Guardar'}
         </button>
-        {error && data && <span className="text-[12px] text-coral font-body">No se pudo guardar. Intentá de nuevo.</span>}
+        {error && data && <span className="text-[13px] text-coral font-body">No se pudo guardar. Intentá de nuevo.</span>}
       </div>
     </div>
   )

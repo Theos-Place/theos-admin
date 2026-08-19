@@ -59,13 +59,13 @@ export function HeroEditor({ value, onChange, formName }: {
       >
         <span>
           <span className="text-sm text-navy font-display">Encabezado (opcional)</span>
-          <span className="block text-[12px] text-navy-light/70 font-body mt-0.5">
+          <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">
             {hasHero(value)
               ? 'El formulario abre con esta portada.'
               : 'Agregale un flyer y una bienvenida para que se vea como una pieza de comunicación.'}
           </span>
         </span>
-        {open ? <ChevronUp size={16} className="text-navy-light/70 shrink-0" /> : <ChevronDown size={16} className="text-navy-light/70 shrink-0" />}
+        {open ? <ChevronUp size={16} className="text-navy-light/80 shrink-0" /> : <ChevronDown size={16} className="text-navy-light/80 shrink-0" />}
       </button>
 
       {open && (
@@ -80,7 +80,7 @@ export function HeroEditor({ value, onChange, formName }: {
               <button
                 type="button"
                 onClick={() => onChange({ hero_image_url: null })}
-                className="inline-flex items-center gap-1 text-[12px] text-coral hover:underline font-body"
+                className="inline-flex items-center gap-1 text-[13px] text-coral hover:underline font-body"
               >
                 <Trash2 size={12} /> Quitar imagen
               </button>
@@ -98,15 +98,15 @@ export function HeroEditor({ value, onChange, formName }: {
               }}
               className={cn(
                 'w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed py-8 transition-colors',
-                'border-[var(--outline-variant)] text-navy-light/70 hover:bg-surface-low disabled:opacity-50',
+                'border-[var(--outline-variant)] text-navy-light/80 hover:bg-surface-low disabled:opacity-50',
               )}
             >
               {subiendo
-                ? <><Loader2 size={18} className="animate-spin" /><span className="text-[12px] font-body">Subiendo…</span></>
+                ? <><Loader2 size={18} className="animate-spin" /><span className="text-[13px] font-body">Subiendo…</span></>
                 : <>
                     <ImagePlus size={18} />
-                    <span className="text-[12px] font-body">Arrastrá el flyer o hacé clic para elegirlo</span>
-                    <span className="text-[12px] text-navy-light/70 font-body">JPG, PNG o WEBP · hasta 5 MB</span>
+                    <span className="text-[13px] font-body">Arrastrá el flyer o hacé clic para elegirlo</span>
+                    <span className="text-[13px] text-navy-light/80 font-body">JPG, PNG o WEBP · hasta 5 MB</span>
                   </>}
             </button>
           )}
@@ -121,11 +121,11 @@ export function HeroEditor({ value, onChange, formName }: {
               if (f) void subir(f)
             }}
           />
-          {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+          {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[12px] text-navy-light/70 font-body mb-1 block" htmlFor="hero-title">Título</label>
+              <label className="text-[13px] text-navy-light/80 font-body mb-1 block" htmlFor="hero-title">Título</label>
               <input
                 id="hero-title"
                 className={inputCls}
@@ -133,10 +133,10 @@ export function HeroEditor({ value, onChange, formName }: {
                 value={value.hero_title ?? ''}
                 onChange={e => onChange({ hero_title: e.target.value })}
               />
-              <p className="mt-1 text-[12px] text-navy-light/70 font-body">Vacío = se usa el nombre del formulario.</p>
+              <p className="mt-1 text-[13px] text-navy-light/80 font-body">Vacío = se usa el nombre del formulario.</p>
             </div>
             <div>
-              <label className="text-[12px] text-navy-light/70 font-body mb-1 block" htmlFor="hero-subtitle">Bienvenida</label>
+              <label className="text-[13px] text-navy-light/80 font-body mb-1 block" htmlFor="hero-subtitle">Bienvenida</label>
               <textarea
                 id="hero-subtitle"
                 rows={3}
@@ -150,7 +150,7 @@ export function HeroEditor({ value, onChange, formName }: {
 
           {hasHero(value) && (
             <div className="space-y-1.5">
-              <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Así se va a ver</p>
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Así se va a ver</p>
               <div className="mx-auto max-w-sm rounded-2xl overflow-hidden bg-surface-card border border-[var(--outline-variant)] pb-4">
                 <FormHero hero={value} fallbackTitle={formName} />
               </div>

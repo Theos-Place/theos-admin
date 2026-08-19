@@ -43,7 +43,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <h3 id="cancelar-evento-titulo" className="text-sm font-semibold text-navy font-display">
                   Cancelar evento
                 </h3>
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   El evento quedará cancelado; hay {registrationCount} inscritos
                 </p>
               </div>
@@ -58,7 +58,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+                  className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   Motivo de cancelación *
                 </label>
@@ -73,7 +73,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+                  className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   Escribí &quot;CANCELAR&quot; para confirmar
                 </label>
@@ -133,7 +133,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <CheckCircle size={20} className="text-teal-deep" />
               </div>
               <p className="font-semibold text-navy font-display">Evento cancelado</p>
-              <p className="text-sm text-navy-light/70 font-body">
+              <p className="text-sm text-navy-light/80 font-body">
                 El motivo quedó registrado y los cupos fueron liberados.
               </p>
               <button

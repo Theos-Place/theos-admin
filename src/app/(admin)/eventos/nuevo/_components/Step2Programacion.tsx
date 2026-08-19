@@ -87,7 +87,7 @@ export function Step2Programacion({
           </div>
         </div>
         {endBeforeStart && (
-          <p className="text-[12px] text-coral mt-2 font-body" role="alert">
+          <p className="text-[13px] text-coral mt-2 font-body" role="alert">
             La fecha y hora de fin no pueden ser anteriores a las de inicio.
           </p>
         )}
@@ -127,7 +127,7 @@ export function Step2Programacion({
                     href={location_map_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                   >
                     <ExternalLink size={13} />
                     Probar
@@ -153,7 +153,7 @@ export function Step2Programacion({
                     href={virtual_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                   >
                     <ExternalLink size={13} />
                     Probar

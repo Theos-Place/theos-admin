@@ -20,7 +20,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
   }
   const c = cfg[status]
   return (
-    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium"
+    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
       style={{ color: c.color, background: c.bg }}>
       {c.label}
     </span>
@@ -111,7 +111,7 @@ export default function DevolucionesPage() {
           </div>
           <div>
             <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">Devoluciones</h1>
-            <p className="text-[12px] text-white/70 mt-0.5 font-body">
+            <p className="text-[13px] text-white/80 mt-0.5 font-body">
               Gestión de reembolsos y devoluciones
             </p>
           </div>
@@ -143,7 +143,7 @@ export default function DevolucionesPage() {
             <p className="text-sm font-bold font-display text-navy">
               Devoluciones
             </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(239,85,84,0.10)] text-coral">
               Proceso manual
             </span>
           </div>
@@ -173,27 +173,27 @@ export default function DevolucionesPage() {
                       </p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{REFUND_METHOD_LABEL[r.method] ?? r.method}</p>
+                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{REFUND_METHOD_LABEL[r.method] ?? r.method}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{r.reason}</p>
+                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{r.reason}</p>
                     </td>
                     <td className="px-5 py-3.5"><RefundStatusBadge status={r.status} /></td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[12px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
+                      <p className="text-[13px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       {(r.status === 'pending' || r.status === 'processing') && (
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setCompleteTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
                           >
                             Completar
                           </button>
                           <button
                             onClick={() => setRejectTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                           >
                             Rechazar
                           </button>
@@ -220,9 +220,9 @@ export default function DevolucionesPage() {
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{r.member_name}</p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
-                    {r.reason && <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body mt-0.5">{r.reason}</p>}
-                    <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
+                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
+                    {r.reason && <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body mt-0.5">{r.reason}</p>}
+                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -235,13 +235,13 @@ export default function DevolucionesPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setCompleteTarget(r)}
-                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
                     >
                       Completar
                     </button>
                     <button
                       onClick={() => setRejectTarget(r)}
-                      className="rounded-lg border px-3 py-1.5 text-[12px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                     >
                       Rechazar
                     </button>
@@ -267,12 +267,12 @@ export default function DevolucionesPage() {
                 Devolución de <strong>{formatMoney(completeTarget.amount, completeTarget.currency)}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
+                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
                 <input type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
-                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
+                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
                 <input type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
@@ -303,7 +303,7 @@ export default function DevolucionesPage() {
                 Rechazando devolución de <strong>{rejectTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[12px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
+                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
                 <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />

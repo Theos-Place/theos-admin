@@ -144,14 +144,14 @@ export default function SolicitudesVacantesPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/70 hover:text-navy-light transition-colors font-body">
+      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy-light transition-colors font-body">
         <ChevronLeft size={15} /> Puestos de Servicio
       </Link>
 
       <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitudes de vacantes</h1>
-          <p className="mt-1 text-sm text-white/70 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
+          <p className="mt-1 text-sm text-white/80 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
         </div>
         {isAdmin && (
           <div className="flex items-center gap-2 shrink-0">
@@ -191,8 +191,8 @@ export default function SolicitudesVacantesPage() {
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent',
+                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
+                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent',
               )}
             >
               {f.label}
@@ -204,16 +204,16 @@ export default function SolicitudesVacantesPage() {
       {/* Bulk bar (solo admin/coordinación) */}
       {isAdmin && (
         <BulkActionBar count={sel.count} onClear={sel.clear} noun="vacantes">
-          <button onClick={() => setConfirm('enviado_lider')} className="rounded-full border border-white/30 px-3.5 py-1.5 text-[12px] text-white hover:bg-white/10 transition-colors font-body">Enviar a líder</button>
-          <button onClick={() => setConfirm('aprobado')} className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body">Aprobar</button>
-          <button onClick={() => setConfirm('denegado')} className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body">Denegar</button>
+          <button onClick={() => setConfirm('enviado_lider')} className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/10 transition-colors font-body">Enviar a líder</button>
+          <button onClick={() => setConfirm('aprobado')} className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body">Aprobar</button>
+          <button onClick={() => setConfirm('denegado')} className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body">Denegar</button>
         </BulkActionBar>
       )}
 
       {/* Tabla */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+          <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : filtered.length === 0 ? (
           <EmptyState icon={ClipboardList} title="No hay solicitudes con esos filtros" />
         ) : (
@@ -232,7 +232,7 @@ export default function SolicitudesVacantesPage() {
                     </th>
                   )}
                   {['Puesto', 'Comité', 'Cupos', 'Aplicaciones', 'Estado'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -245,9 +245,9 @@ export default function SolicitudesVacantesPage() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.title}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{r.committee_name}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{r.slots_total}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.committee_name}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.slots_total}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                       {r.application_count > 0 ? (
                         <Link href={`/servidores/vacantes/${r.id}`} className="text-navy underline underline-offset-2 hover:text-coral-deep">{r.application_count}</Link>
                       ) : '0'}
@@ -270,7 +270,7 @@ export default function SolicitudesVacantesPage() {
         <Modal onClose={() => !busy && setConfirm(null)} titleId="confirm-vac-title" width={420}>
           <div className="p-6 space-y-4">
             <h3 id="confirm-vac-title" className="text-base font-bold text-navy font-display">Cambiar estado</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               <strong className="text-navy">{sel.count}</strong> vacante{sel.count !== 1 ? 's' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">{VACANCY_STATE_LABEL[confirm]}</strong>.
             </p>
             <div className="flex gap-2 pt-1">

@@ -110,12 +110,12 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
 
       {member.family_members.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <UserPlus size={32} className="text-navy-light/70 mb-3" strokeWidth={1.25} />
-          <p className="text-sm text-navy-light/70 font-body">
+          <UserPlus size={32} className="text-navy-light/80 mb-3" strokeWidth={1.25} />
+          <p className="text-sm text-navy-light/80 font-body">
             No hay familiares vinculados
           </p>
           {canEdit && (
-            <p className="text-xs text-navy-light/70 mt-1 font-body">
+            <p className="text-xs text-navy-light/80 mt-1 font-body">
               Usá el botón de arriba para vincular un familiar.
             </p>
           )}
@@ -143,7 +143,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                   <Link href={`/miembros/${fm.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
                     {avatar}
                     {info}
-                    <ArrowRight size={15} className="shrink-0 text-navy-light/70" strokeWidth={1.75} />
+                    <ArrowRight size={15} className="shrink-0 text-navy-light/80" strokeWidth={1.75} />
                   </Link>
                 ) : (
                   <>

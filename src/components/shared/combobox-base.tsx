@@ -103,5 +103,5 @@ export function OptionAvatar({ initials, size = 7 }: { initials: string; size?: 
 }
 
 export function NoResults({ children = 'Sin resultados' }: { children?: ReactNode }) {
-  return <p className="px-3 py-3 text-[12px] text-navy-light/70 font-body">{children}</p>
+  return <p className="px-3 py-3 text-[13px] text-navy-light/80 font-body">{children}</p>
 }

@@ -18,7 +18,7 @@ type PaymentOption = { id: string; label: string }
 
 const MIN_REASON = 20
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 disabled:opacity-60'
-const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
+const LABEL_CLS = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 
 export function FinanceRequestActions({ memberId }: { memberId: string }) {
   const toast = useToast()
@@ -124,7 +124,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
 
             {dataLoading || loadedFor !== memberId ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 size={18} className="animate-spin text-navy-light/70" />
+                <Loader2 size={18} className="animate-spin text-navy-light/80" />
               </div>
             ) : (
               <>
@@ -157,7 +157,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                         placeholder="Contanos por qué (mínimo 20 caracteres)…"
                         className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
                       />
-                      <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>
+                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>
                         {reason.trim().length}/{MIN_REASON} caracteres mínimos
                       </p>
                     </div>
@@ -169,7 +169,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                 <div className="flex justify-end gap-2 pt-1">
                   <button
                     onClick={() => setOpenRefund(false)}
-                    className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors"
+                    className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors"
                   >
                     {refundBlocked ? 'Cerrar' : 'Cancelar'}
                   </button>

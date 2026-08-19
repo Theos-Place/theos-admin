@@ -191,7 +191,7 @@ export default function ConfiguracionPage() {
   }
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-  const labelCls = 'text-[12px] text-navy-light/70 mb-1 block font-body'
+  const labelCls = 'text-[13px] text-navy-light/80 mb-1 block font-body'
 
   function SmtpCard({ config }: { config: ChannelConfig }) {
     const result = verifyResult[config.id]
@@ -200,10 +200,10 @@ export default function ConfiguracionPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               {config.smtp_host}:{config.smtp_port} · {config.smtp_user}
             </p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               De: {config.smtp_from_name} &lt;{config.smtp_from_email}&gt;
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ Conexión exitosa' : '✗ No se pudo conectar. Verificá los datos.'}
           </div>
@@ -232,15 +232,15 @@ export default function ConfiguracionPage() {
             type="button"
             onClick={() => handleVerify(config.id)}
             disabled={verifying === config.id}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
           >
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Verificar
           </button>
-          <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/70 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -255,7 +255,7 @@ export default function ConfiguracionPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-navy font-body">{config.name}</p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               {config.wa_phone_number} · ID: {config.wa_account_id}
             </p>
           </div>
@@ -268,7 +268,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ WhatsApp conectado correctamente' : '✗ No se pudo conectar con la API.'}
           </div>
@@ -279,15 +279,15 @@ export default function ConfiguracionPage() {
             type="button"
             onClick={() => handleVerify(config.id)}
             disabled={verifying === config.id}
-            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
           >
             {verifying === config.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Reconectar
           </button>
-          <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/70 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/70 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -306,7 +306,7 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Configuración
         </h1>
-        <p className="mt-1 text-sm text-white/70 font-body">
+        <p className="mt-1 text-sm text-white/80 font-body">
           Configurá los canales de envío de mensajes
         </p>
       </div>
@@ -320,7 +320,7 @@ export default function ConfiguracionPage() {
             onClick={() => setTab(t)}
             className={cn(
               'px-5 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-all font-body',
-              tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/70 hover:text-navy'
+              tab === t ? 'border-coral text-navy' : 'border-transparent text-navy-light/80 hover:text-navy'
             )}
           >
             {t === 'smtp' ? 'SMTP / Correo' : 'WhatsApp'}
@@ -333,7 +333,7 @@ export default function ConfiguracionPage() {
         <div className="space-y-4">
           <EmailSection />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {smtpConfigs.length} cuenta{smtpConfigs.length !== 1 ? 's' : ''} configurada{smtpConfigs.length !== 1 ? 's' : ''}
             </p>
             <button
@@ -381,7 +381,7 @@ export default function ConfiguracionPage() {
                       value={smtpForm.password}
                       onChange={e => setSmtpForm(p => ({ ...p, password: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/70">
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/80">
                       {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -397,7 +397,7 @@ export default function ConfiguracionPage() {
                 <div className="sm:col-span-2 flex items-center justify-between p-3 rounded-xl bg-surface-low">
                   <div>
                     <p className="text-sm text-navy font-body">Usar SSL/TLS</p>
-                    <p className="text-[12px] text-navy-light/70 font-body">Recomendado para mayor seguridad</p>
+                    <p className="text-[13px] text-navy-light/80 font-body">Recomendado para mayor seguridad</p>
                   </div>
                   <button type="button" onClick={() => setSmtpForm(p => ({ ...p, ssl: !p.ssl }))} role="switch" aria-checked={smtpForm.ssl} aria-label="Usar SSL/TLS" className={cn('relative h-6 w-11 rounded-full transition-colors', smtpForm.ssl ? 'bg-coral' : 'bg-navy/20')}>
                     <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', smtpForm.ssl ? 'translate-x-5' : 'translate-x-0')} />
@@ -427,19 +427,19 @@ export default function ConfiguracionPage() {
               <p className="text-[13px] font-semibold text-navy font-body">
                 Para conectar WhatsApp Business API necesitás:
               </p>
-              <ol className="text-[12px] text-navy-light/70 space-y-0.5 list-decimal list-inside font-body">
+              <ol className="text-[13px] text-navy-light/80 space-y-0.5 list-decimal list-inside font-body">
                 <li>Una cuenta de Meta Business verificada</li>
                 <li>Un número de teléfono dedicado</li>
                 <li>El token de acceso de la API de WhatsApp Cloud</li>
               </ol>
-              <p className="text-[12px] text-blue-500 mt-2 font-body">
+              <p className="text-[13px] text-blue-500 mt-2 font-body">
                 Más info en: developers.facebook.com/docs/whatsapp
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {waConfigs.length} cuenta{waConfigs.length !== 1 ? 's' : ''} configurada{waConfigs.length !== 1 ? 's' : ''}
             </p>
             <button
@@ -479,7 +479,7 @@ export default function ConfiguracionPage() {
                       value={waForm.token}
                       onChange={e => setWaForm(p => ({ ...p, token: e.target.value }))}
                     />
-                    <button type="button" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/70">
+                    <button type="button" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/80">
                       {showToken ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -528,7 +528,7 @@ export default function ConfiguracionPage() {
               <label className={labelCls}>Contraseña (dejar en blanco para no cambiar)</label>
               <div className="relative">
                 <input aria-label="Contraseña" type={showEditPwd ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="••••••••" value={editSmtpForm.password} onChange={e => setEditSmtpForm(p => ({ ...p, password: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditPwd(v => !v)} aria-label={showEditPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/70">
+                <button type="button" onClick={() => setShowEditPwd(v => !v)} aria-label={showEditPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/80">
                   {showEditPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -572,7 +572,7 @@ export default function ConfiguracionPage() {
               <label className={labelCls}>Token (dejar en blanco para no cambiar)</label>
               <div className="relative">
                 <input aria-label="Token de acceso" type={showEditToken ? 'text' : 'password'} className={cn(inputCls, 'pr-10')} placeholder="EAABs..." value={editWaForm.token} onChange={e => setEditWaForm(p => ({ ...p, token: e.target.value }))} />
-                <button type="button" onClick={() => setShowEditToken(v => !v)} aria-label={showEditToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/70">
+                <button type="button" onClick={() => setShowEditToken(v => !v)} aria-label={showEditToken ? 'Ocultar token' : 'Mostrar token'} className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-light/80">
                   {showEditToken ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -646,9 +646,9 @@ function EmailSection() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-sm font-semibold text-navy font-body">Email — AWS SES (SMTP)</p>
-          <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+          <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
             Proveedor del envío real. Las credenciales se configuran en el servidor
-            (variables <code className="font-mono text-[12px]">SES_SMTP_*</code> / <code className="font-mono text-[12px]">SES_FROM_*</code>), nunca en la base de datos.
+            (variables <code className="font-mono text-[13px]">SES_SMTP_*</code> / <code className="font-mono text-[13px]">SES_FROM_*</code>), nunca en la base de datos.
           </p>
         </div>
         <span className={cn(
@@ -664,10 +664,10 @@ function EmailSection() {
           {/* Uso del día */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Hoy: <strong className="text-navy">{status.sentToday}</strong> / {status.dailyLimit} emails enviados
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Límite diario: {status.dailyLimit} (env <code className="font-mono text-[11px]">EMAIL_DAILY_LIMIT</code>)
               </p>
             </div>
@@ -684,18 +684,18 @@ function EmailSection() {
               type="button"
               onClick={sendTest}
               disabled={testing || !user?.email}
-              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-[12px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
+              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-[13px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
             >
               {testing ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
               {testing ? 'Enviando…' : `Enviar email de prueba a ${user?.email ?? 'tu cuenta'}`}
             </button>
             {testResult === 'ok' && (
-              <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep font-body">
+              <span className="inline-flex items-center gap-1 text-[13px] text-teal-deep font-body">
                 <CheckCircle2 size={13} /> Enviado — revisá tu bandeja
               </span>
             )}
             {testResult && testResult !== 'ok' && (
-              <span className="inline-flex items-center gap-1 text-[12px] text-coral font-body">
+              <span className="inline-flex items-center gap-1 text-[13px] text-coral font-body">
                 <XCircle size={13} /> {testResult}
               </span>
             )}
@@ -704,7 +704,7 @@ function EmailSection() {
       ) : (
         <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
           <p className="text-[13px] text-coral font-body">
-            Configurá las variables <code className="font-mono text-[12px]">SES_SMTP_*</code> y <code className="font-mono text-[12px]">SES_FROM_*</code> en el servidor
+            Configurá las variables <code className="font-mono text-[13px]">SES_SMTP_*</code> y <code className="font-mono text-[13px]">SES_FROM_*</code> en el servidor
             (Vercel → Settings → Environment Variables) para habilitar el envío de emails.
             Los envíos están bloqueados hasta entonces.
           </p>

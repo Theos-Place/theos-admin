@@ -72,14 +72,14 @@ export function TemplatePreviewBody({
                 <button
                   type="button"
                   onClick={onBack}
-                  className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                  className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                 >
                   Volver
                 </button>
               )}
               <Link
                 href={`/comunicaciones/plantillas/${template.id}/editar`}
-                className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
               >
                 <Pencil size={11} /> Editar
               </Link>
@@ -87,7 +87,7 @@ export function TemplatePreviewBody({
                 <button
                   type="button"
                   onClick={() => onUse(template)}
-                  className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+                  className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
                 >
                   Usar
                 </button>
@@ -99,7 +99,7 @@ export function TemplatePreviewBody({
         <div className="p-5 space-y-4">
           {showEmail && (
             <>
-              <p className="text-[12px] text-navy-light/70 font-body leading-relaxed">
+              <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
                 {emailKindNotice(kind)}
               </p>
               {/* maxHeight alto: el modal ya scrollea, y con el default (1200)
@@ -116,12 +116,12 @@ export function TemplatePreviewBody({
 
           {showWhatsApp && (
             <div className="space-y-2">
-              <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">WhatsApp</p>
+              <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">WhatsApp</p>
               <WhatsAppPreview fromName="Theos Place" body={template.body} />
             </div>
           )}
 
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Es una vista previa: el nombre y las fechas son de ejemplo, y los links de baja o de
             formulario se resuelven al enviar.
           </p>

@@ -46,7 +46,7 @@ export default async function ContinuarPage({
         <h1 className="mt-6 text-xl font-extrabold text-navy font-display tracking-[-0.02em]">
           {esInvitacion ? 'Definí tu contraseña' : 'Cambiá tu contraseña'}
         </h1>
-        <p className="mt-2 text-sm text-navy-light/70 font-body leading-relaxed">
+        <p className="mt-2 text-sm text-navy-light/80 font-body leading-relaxed">
           {esInvitacion
             ? 'Tocá el botón para continuar y elegir tu contraseña.'
             : 'Tocá el botón para continuar y elegir tu contraseña nueva.'}
@@ -65,7 +65,7 @@ export default async function ContinuarPage({
           </p>
         )}
 
-        <p className="mt-5 text-[12px] text-navy-light/70 font-body leading-relaxed">
+        <p className="mt-5 text-[13px] text-navy-light/80 font-body leading-relaxed">
           El enlace sirve una sola vez. Si ya definiste tu contraseña, entrá directo desde{' '}
           <a href="/login" className="text-teal-deep underline">la pantalla de inicio</a>.
         </p>

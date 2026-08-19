@@ -46,7 +46,7 @@ export function FormHero({ hero, fallbackTitle }: {
             </h1>
           )}
           {hero.hero_subtitle && (
-            <p className="text-sm text-navy-light/70 leading-relaxed font-body whitespace-pre-line">
+            <p className="text-sm text-navy-light/80 leading-relaxed font-body whitespace-pre-line">
               {hero.hero_subtitle}
             </p>
           )}

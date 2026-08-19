@@ -61,18 +61,18 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-navy" />
-            <span className="text-[12px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
+            <span className="text-[13px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-teal-deep" />
-            <span className="text-[12px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
+            <span className="text-[13px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
           </div>
           {presentes.length > 1 && (
             <select
               value={cur}
               onChange={e => setMoneda(e.target.value as Currency)}
               aria-label="Moneda del gráfico"
-              className="rounded-lg border border-[var(--outline-variant)] bg-surface-card px-2 py-1 text-[12px] text-navy font-body"
+              className="rounded-lg border border-[var(--outline-variant)] bg-surface-card px-2 py-1 text-[13px] text-navy font-body"
             >
               {presentes.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -120,7 +120,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                     title={`Donaciones: ${formatMoney(dv, cur)}`}
                   />
                 </div>
-                <span className="text-[12px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
+                <span className="text-[13px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
                   {label}
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 rounded-xl px-3 py-2 text-[12px] pointer-events-none -translate-x-1/2 bg-navy text-white shadow-[0_8px_24px_rgba(22,20,64,0.25)] font-body"
+          className="fixed z-50 rounded-xl px-3 py-2 text-[13px] pointer-events-none -translate-x-1/2 bg-navy text-white shadow-[0_8px_24px_rgba(22,20,64,0.25)] font-body"
           style={{
             left: tooltip.x,
             top: tooltip.y - 80,

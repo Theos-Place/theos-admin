@@ -38,12 +38,12 @@ function GroupRestrictionNote({ groupId }: { groupId: string }) {
   }, [groupId])
   if (!info) return null
   return (
-    <p className="flex items-start gap-1.5 text-[13px] text-navy-light/70 font-body">
+    <p className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
       <Lock size={13} className="mt-0.5 shrink-0" />
       <span>
         Solo para: <strong className="text-navy">{info.summary}</strong>
         {info.count !== null && (
-          <span className="text-navy-light/70"> · {info.count.toLocaleString('es-CR')} {info.count === 1 ? 'persona cumple' : 'personas cumplen'}</span>
+          <span className="text-navy-light/80"> · {info.count.toLocaleString('es-CR')} {info.count === 1 ? 'persona cumple' : 'personas cumplen'}</span>
         )}
       </span>
     </p>
@@ -57,7 +57,7 @@ function AttendanceBar({ pct }: { pct: number }) {
       <div className="h-1.5 w-20 rounded-full bg-surface-low overflow-hidden">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[12px] text-navy-light/70 font-body">{pct}%</span>
+      <span className="text-[13px] text-navy-light/80 font-body">{pct}%</span>
     </div>
   )
 }
@@ -155,7 +155,7 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
           <h3 id="override-restriccion-title" className="text-base font-bold text-navy font-display">
             {restriccion.nombre} no cumple la restricción del grupo
           </h3>
-          <p className="text-[13px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             {restriccion.motivo} ¿Matricularla de todas formas? Queda registrado quién lo autorizó.
           </p>
           <div className="flex gap-2">
@@ -208,10 +208,10 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
                   <p className="text-sm text-navy font-body">
                     {m.first_name} {m.last_name}
                   </p>
-                  <p className="text-[12px] text-navy-light/70">{m.cedula ?? 'Sin cédula'}</p>
+                  <p className="text-[13px] text-navy-light/80">{m.cedula ?? 'Sin cédula'}</p>
                 </div>
-                {already && <span className="text-[12px] text-navy-light/70">Ya inscrito</span>}
-                {adding === m.id && <span className="text-[12px] text-navy-light/70">…</span>}
+                {already && <span className="text-[13px] text-navy-light/80">Ya inscrito</span>}
+                {adding === m.id && <span className="text-[13px] text-navy-light/80">…</span>}
               </button>
             )
           })}
@@ -290,7 +290,7 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
         <div className="p-6 text-center space-y-3">
           <Send size={32} className="text-teal-deep mx-auto" />
           <p id="mensaje-enviado-title" className="font-semibold text-navy font-display">Mensaje enviado</p>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             Se envió a {memberIds.length} participante{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
             Podés ver el estado en Comunicaciones.
           </p>
@@ -306,7 +306,7 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
     <Modal onClose={onClose} titleId="enviar-mensaje-grupo-title" width={384}>
       <div className="p-5 space-y-4">
         <h3 id="enviar-mensaje-grupo-title" className="font-semibold text-navy font-display">Enviar mensaje al grupo</h3>
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Va por correo y notificación interna a {memberIds.length} participante{memberIds.length !== 1 ? 's' : ''} activo{memberIds.length !== 1 ? 's' : ''}.
         </p>
         <input
@@ -449,7 +449,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="py-16 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/70">Cargando…</p>
+        <p className="text-sm text-navy-light/80">Cargando…</p>
       </div>
     )
   }
@@ -457,10 +457,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   if (!group) {
     return (
       <div className="space-y-4">
-        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
+        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/70 font-body">Grupo no encontrado.</p>
+        <p className="text-navy-light/80 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -494,7 +494,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
         <Modal onClose={() => setWithdrawTarget(null)} titleId="desinscribir-titulo" width={400}>
           <div className="p-5 space-y-4">
             <h3 id="desinscribir-titulo" className="font-semibold text-navy font-display">Desinscribir participante</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               ¿Desinscribir a <strong>{withdrawTarget.member_name}</strong> de este grupo?
               Quedará como retirado y conservará su historial.
             </p>
@@ -548,7 +548,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {/* Back */}
       <Link
         href="/estudios/grupos"
-        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Grupos
       </Link>
@@ -564,7 +564,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               {group.is_virtual && <VirtualGroupBadge />}
               {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
             </div>
-            <div className="flex flex-wrap gap-4 text-sm text-navy-light/70 font-body">
+            <div className="flex flex-wrap gap-4 text-sm text-navy-light/80 font-body">
               {/* GRU-3: con contacto, el nombre se muestra en LeaderContact
                   (abajo) junto al teléfono y el correo — no dos veces. */}
               {!hayContactoDirigente && (
@@ -636,7 +636,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px shrink-0 whitespace-nowrap',
               activeTab === t
                 ? 'border-coral text-coral font-medium'
-                : 'border-transparent text-navy-light/70 hover:text-navy',
+                : 'border-transparent text-navy-light/80 hover:text-navy',
               'font-body',
             )}
           >
@@ -649,7 +649,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {activeTab === 'participantes' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {enrolled.length} inscritos de {group.max_capacity} lugares
             </p>
             {/* REU-2 · Para el estudiante que abre SU grupo y se da cuenta de
@@ -661,7 +661,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             {!readOnly && (
             <button
               onClick={() => setShowAddMember(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors"
             >
               <Plus size={12} /> Añadir miembro
             </button>
@@ -675,7 +675,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   {['Nombre', 'Estado', 'Asistencia', studyType?.requires_grade ? 'Nota' : '', 'Acciones'].filter(Boolean).map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                     >
                       {h}
                     </th>
@@ -702,7 +702,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       {group.status === 'finalizado' ? (
                         <span className={cn(
                           'rounded-md px-2 py-0.5 text-[11px] font-medium',
-                          p.status === 'withdrawn' ? 'bg-surface-low text-navy-light/70'
+                          p.status === 'withdrawn' ? 'bg-surface-low text-navy-light/80'
                             : p.result === 'reprobado' ? 'bg-coral/15 text-coral'
                             : 'bg-teal-soft/30 text-teal-deep'
                         )}>
@@ -713,7 +713,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                           'rounded-md px-2 py-0.5 text-[11px] font-medium',
                           p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-deep' :
                           p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-surface-low text-navy-light/70'
+                          'bg-surface-low text-navy-light/80'
                         )}>
                           {p.status === 'enrolled' ? 'Inscrito' : p.status === 'pending' ? 'Pendiente' : 'Retirado'}
                         </span>
@@ -723,7 +723,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       <AttendanceBar pct={p.attendance_pct} />
                     </td>
                     {studyType?.requires_grade && (
-                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
+                      <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                         {p.grade ?? '—'}
                       </td>
                     )}
@@ -756,7 +756,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           {/* WhatsApp section */}
           <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <h3
-              className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display"
+              className="text-[11px] tracking-widest uppercase text-navy-light/80 mb-3 font-display"
             >
               Grupo de WhatsApp
             </h3>
@@ -769,12 +769,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 </a>
               </div>
             ) : group.status === 'finalizado' || readOnly ? (
-              <p className="text-sm text-navy-light/70 font-body">
+              <p className="text-sm text-navy-light/80 font-body">
                 {group.status === 'finalizado' ? 'Grupo finalizado — sin grupo de WhatsApp.' : 'Sin grupo de WhatsApp todavía.'}
               </p>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-navy-light/70 font-body">
+                <p className="text-sm text-navy-light/80 font-body">
                   Crea el grupo en WhatsApp y pega el link de invitación aquí.
                 </p>
                 <div className="flex gap-2">
@@ -819,7 +819,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
             {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <p className="text-sm text-navy-light/70 font-body">
+                <p className="text-sm text-navy-light/80 font-body">
                   No tenemos asistencia registrada para este grupo.
                 </p>
               </div>
@@ -830,7 +830,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     {['Sesión', 'Fecha', 'Asistencia'].map(h => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                        className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                       >
                         {h}
                       </th>
@@ -846,7 +846,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       <td className="px-4 py-3 text-sm text-navy font-body">
                         Sesión {i + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
+                      <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                         {new Date(s.date).toLocaleDateString('es-CR')}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy font-body">
@@ -905,7 +905,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ].map(({ label, value }) => (
               <div key={label} className="space-y-0.5">
                 <p
-                  className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                  className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   {label}
                 </p>

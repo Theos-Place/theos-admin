@@ -82,18 +82,18 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
       >
         <span>
           <span className="text-sm text-navy font-display">Restringir este grupo a… (opcional)</span>
-          <span className="block text-[12px] text-navy-light/70 font-body mt-0.5">
+          <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">
             {resumen
               ? `Solo para: ${resumen}`
               : 'Sin restricción: se le ofrece a cualquiera que califique para esta etapa.'}
           </span>
         </span>
-        {open ? <ChevronUp size={18} className="text-navy-light/70 shrink-0" /> : <ChevronDown size={18} className="text-navy-light/70 shrink-0" />}
+        {open ? <ChevronUp size={18} className="text-navy-light/80 shrink-0" /> : <ChevronDown size={18} className="text-navy-light/80 shrink-0" />}
       </button>
 
       {open && (
         <div className="px-5 pb-5 space-y-3">
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Esto <strong>se suma</strong> a los requisitos de la etapa (donador, servidor,
             asistencia, estudios previos), no los reemplaza. Quien no cumpla la restricción
             no verá este grupo entre sus opciones.

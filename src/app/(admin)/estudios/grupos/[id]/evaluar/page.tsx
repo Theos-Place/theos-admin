@@ -76,10 +76,10 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
   }
 
   if (cargando) {
-    return <PageContainer width="form"><p className="py-16 text-center text-sm text-navy-light/70 font-body">Cargando…</p></PageContainer>
+    return <PageContainer width="form"><p className="py-16 text-center text-sm text-navy-light/80 font-body">Cargando…</p></PageContainer>
   }
   if (!data) {
-    return <PageContainer width="form"><p className="py-16 text-center text-sm text-navy-light/70 font-body">No se encontró el grupo.</p></PageContainer>
+    return <PageContainer width="form"><p className="py-16 text-center text-sm text-navy-light/80 font-body">No se encontró el grupo.</p></PageContainer>
   }
 
   const estudio = data.group.plan_name ?? data.group.name ?? 'tu estudio'
@@ -92,7 +92,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             <Check size={26} className="text-teal-deep" />
           </div>
           <p className="text-lg font-bold text-navy font-display">¡Gracias!</p>
-          <p className="text-[13px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Tu evaluación quedó registrada. Le llega a la coordinación sin tu nombre.
           </p>
           <Link href="/matricula" className="inline-flex rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">
@@ -108,7 +108,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
       <PageContainer width="form">
         <div className="rounded-2xl bg-surface-card p-8 text-center space-y-3 shadow-[var(--shadow-md)]">
           <p className="text-base font-bold text-navy font-display">{estudio}</p>
-          <p className="text-[13px] text-navy-light/70 font-body">{data.reason}</p>
+          <p className="text-[13px] text-navy-light/80 font-body">{data.reason}</p>
           <Link href="/matricula" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light hover:text-navy transition-colors font-body">
             <ChevronLeft size={14} /> Volver
           </Link>
@@ -125,11 +125,11 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             ¿Cómo te fue en {estudio}?
           </h1>
           {data.group.leader_name && (
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Dirigido por <strong className="text-navy">{data.group.leader_name}</strong>
             </p>
           )}
-          <p className="flex items-start gap-1.5 text-[12px] text-navy-light/70 font-body pt-1">
+          <p className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body pt-1">
             <ShieldCheck size={13} className="mt-0.5 shrink-0 text-teal-deep" />
             <span>Es <strong>anónimo para tu dirigente</strong>: ve el promedio y los comentarios, nunca quién los escribió.</span>
           </p>
@@ -152,7 +152,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
                 <legend className="text-[13px] text-navy font-body">
                   {c.label} {c.is_required && <span className="text-coral">*</span>}
                 </legend>
-                {c.help_text && <p className="text-[12px] text-navy-light/70 font-body">{c.help_text}</p>}
+                {c.help_text && <p className="text-[13px] text-navy-light/80 font-body">{c.help_text}</p>}
                 <div className="space-y-1.5">
                   {c.options.map(o => (
                     <button
@@ -184,7 +184,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
                 <legend className="text-[13px] text-navy font-body">
                   {c.label} {c.is_required && <span className="text-coral">*</span>}
                 </legend>
-                {c.help_text && <p className="text-[12px] text-navy-light/70 font-body">{c.help_text}</p>}
+                {c.help_text && <p className="text-[13px] text-navy-light/80 font-body">{c.help_text}</p>}
                 <ScaleField
                   min={c.scale_min}
                   max={c.scale_max}
@@ -201,9 +201,9 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             return (
               <div key={c.id} className="space-y-1.5">
                 <label htmlFor={`f-${c.id}`} className="text-[13px] text-navy font-body block">
-                  {c.label} {!c.is_required && <span className="text-navy-light/70">(opcional)</span>}
+                  {c.label} {!c.is_required && <span className="text-navy-light/80">(opcional)</span>}
                 </label>
-                {c.help_text && <p className="text-[12px] text-navy-light/70 font-body">{c.help_text}</p>}
+                {c.help_text && <p className="text-[13px] text-navy-light/80 font-body">{c.help_text}</p>}
                 <textarea
                   id={`f-${c.id}`}
                   rows={3}
@@ -229,7 +229,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
           {enviando ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar evaluación'}
         </button>
         {faltante && (
-          <p className="text-[12px] text-navy-light/70 font-body text-center">
+          <p className="text-[13px] text-navy-light/80 font-body text-center">
             Falta responder: {faltante.label}
           </p>
         )}

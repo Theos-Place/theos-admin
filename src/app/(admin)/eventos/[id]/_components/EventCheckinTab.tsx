@@ -68,7 +68,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
             const seCheckins = event.checkins.filter(c => c.sub_event_id === se.id).length
             return (
               <div key={se.id} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{se.name}</p>
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{se.name}</p>
                 <p className="mt-1 text-3xl font-extrabold text-navy tabular-nums font-display">{seCheckins}</p>
                 <CapacityBar current={seCheckins} max={se.max_capacity} />
               </div>
@@ -78,14 +78,14 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
       )}
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           {checkinCount} check-ins registrados
         </p>
       </div>
 
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
-          <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Check-ins registrados</p>
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Check-ins registrados</p>
         </div>
         {event.checkins.length === 0 ? (
           <EmptyState icon={QrCode} title="Aún no hay check-ins registrados" />
@@ -101,7 +101,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{ci.member_name}</p>
-                  <p className="text-[12px] text-navy-light/70 font-body">
+                  <p className="text-[13px] text-navy-light/80 font-body">
                     {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     {ci.sub_event_id && ` · ${ci.sub_event_id}`}
                   </p>
@@ -144,7 +144,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
             <h2 id="undo-checkin-title" className="text-base font-display font-extrabold text-navy">
               ¿Deshacer el check-in de {toUndo.member_name}?
             </h2>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               Esto quita el registro de asistencia a este evento. Se puede volver a hacer check-in.
             </p>
             <div className="flex gap-3 pt-1">

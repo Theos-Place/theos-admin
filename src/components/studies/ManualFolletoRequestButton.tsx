@@ -10,7 +10,7 @@ import { STUDY_CATALOG } from '@/data/study-catalog'
 import { cn } from '@/lib/utils'
 
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30'
-const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
+const LABEL_CLS = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 
 type Sede = { id: string; name: string; is_active?: boolean }
 
@@ -80,7 +80,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
           <div className="p-6 space-y-4">
             <div>
               <h2 id="manual-folleto-title" className="text-lg font-semibold text-navy font-display">Solicitud de folletos manual</h2>
-              <p className="mt-1 text-[13px] text-navy-light/70 font-body">Caso especial, fuera del flujo automático de cierre. Entra a la misma cola de impresión/entrega.</p>
+              <p className="mt-1 text-[13px] text-navy-light/80 font-body">Caso especial, fuera del flujo automático de cierre. Entra a la misma cola de impresión/entrega.</p>
             </div>
 
             <div>
@@ -115,7 +115,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
                 placeholder="Buscá un dirigente o escribí un nombre…"
                 ariaLabel="Dirigente a quien entregar"
               />
-              <p className="mt-1 text-[12px] text-navy-light/70 font-body">Escribí para buscar; si no aparece, podés agregar el nombre igual.</p>
+              <p className="mt-1 text-[13px] text-navy-light/80 font-body">Escribí para buscar; si no aparece, podés agregar el nombre igual.</p>
             </div>
 
             <div>
@@ -126,7 +126,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button onClick={() => setOpen(false)} className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors">Cancelar</button>
+              <button onClick={() => setOpen(false)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">Cancelar</button>
               <button onClick={submit} disabled={submitting} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
                 {submitting ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><Check size={14} /> Crear solicitud</>}
               </button>

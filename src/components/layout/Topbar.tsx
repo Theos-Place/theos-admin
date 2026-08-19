@@ -90,7 +90,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
         href="/ayuda"
         title="Centro de ayuda"
         aria-label="Centro de ayuda"
-        className="flex h-9 w-9 items-center justify-center rounded-full text-navy-light/70 hover:bg-surface-low hover:text-navy transition-colors"
+        className="flex h-9 w-9 items-center justify-center rounded-full text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors"
       >
         <CircleQuestionMark size={18} />
       </Link>
@@ -113,7 +113,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
           </div>
           <ChevronDown
             size={14}
-            className={`hidden sm:block text-navy-light/70 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
+            className={`hidden sm:block text-navy-light/80 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
@@ -135,11 +135,11 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                   <p className="text-sm font-semibold text-navy truncate font-body">
                     {user?.name ?? 'Usuario'}
                   </p>
-                  <p className="text-[12px] text-navy-light/70 truncate font-body">
+                  <p className="text-[13px] text-navy-light/80 truncate font-body">
                     {user?.email ?? ''}
                   </p>
                   {roleLabel && (
-                    <p className="text-[12px] text-teal-deep mt-0.5 truncate font-body">
+                    <p className="text-[13px] text-teal-deep mt-0.5 truncate font-body">
                       {roleLabel}
                     </p>
                   )}
@@ -154,7 +154,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <User size={15} className="text-navy-light/70 shrink-0" />
+                <User size={15} className="text-navy-light/80 shrink-0" />
                 Mi perfil
               </Link>
               <Link
@@ -162,7 +162,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <Settings size={15} className="text-navy-light/70 shrink-0" />
+                <Settings size={15} className="text-navy-light/80 shrink-0" />
                 Configuración
               </Link>
               <Link
@@ -170,7 +170,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
               >
-                <Shield size={15} className="text-navy-light/70 shrink-0" />
+                <Shield size={15} className="text-navy-light/80 shrink-0" />
                 Seguridad
               </Link>
             </div>
@@ -261,11 +261,11 @@ function GlobalMemberSearch() {
   // Lista de resultados — reutilizada en el dropdown desktop y en el panel mobile.
   const resultsList = (
     searching ? (
-      <div className="flex items-center justify-center gap-2 px-4 py-4 text-[13px] text-navy-light/70 font-body">
+      <div className="flex items-center justify-center gap-2 px-4 py-4 text-[13px] text-navy-light/80 font-body">
         <Loader2 size={14} className="animate-spin" /> Buscando…
       </div>
     ) : results.length === 0 ? (
-      <p className="px-4 py-4 text-center text-[13px] text-navy-light/70 font-body">
+      <p className="px-4 py-4 text-center text-[13px] text-navy-light/80 font-body">
         No se encontraron miembros
       </p>
     ) : (
@@ -285,7 +285,7 @@ function GlobalMemberSearch() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm text-navy font-body">{m.first_name} {m.last_name}</span>
-                {m.cedula && <span className="text-[12px] text-navy-light/70 font-mono">{m.cedula}</span>}
+                {m.cedula && <span className="text-[13px] text-navy-light/80 font-mono">{m.cedula}</span>}
               </span>
             </button>
           </li>
@@ -299,7 +299,7 @@ function GlobalMemberSearch() {
       {/* Desktop: input inline */}
       <div className="relative hidden sm:block" ref={boxRef}>
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-56 lg:w-72 transition-all focus-within:ring-1 focus-within:ring-coral/30">
-          <Search size={16} className="text-navy-light/70 shrink-0" strokeWidth={1.75} />
+          <Search size={16} className="text-navy-light/80 shrink-0" strokeWidth={1.75} />
           <input
             type="search"
             role="combobox"
@@ -339,7 +339,7 @@ function GlobalMemberSearch() {
           <div className="absolute inset-0 bg-navy/20" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-2 right-2 top-2 rounded-2xl bg-surface-card shadow-card-lg border border-outline overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
-              <Search size={18} className="text-navy-light/70 shrink-0" strokeWidth={1.75} />
+              <Search size={18} className="text-navy-light/80 shrink-0" strokeWidth={1.75} />
               <input
                 ref={mobileInputRef}
                 type="search"
@@ -353,7 +353,7 @@ function GlobalMemberSearch() {
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Cerrar búsqueda"
-                className="rounded-lg px-2 py-1 text-[13px] text-navy-light/70 hover:bg-surface-low transition-colors font-body shrink-0"
+                className="rounded-lg px-2 py-1 text-[13px] text-navy-light/80 hover:bg-surface-low transition-colors font-body shrink-0"
               >
                 Cerrar
               </button>

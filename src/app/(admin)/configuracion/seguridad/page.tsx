@@ -19,10 +19,10 @@ const INPUT = [
   'border-[rgba(22,20,64,0.15)]',
 ].join(' ')
 
-const LABEL = 'block text-[12px] font-medium text-navy-light/70 mb-1.5 font-body'
+const LABEL = 'block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body'
 const CARD = 'rounded-2xl p-6 space-y-4'
 const CARD_STYLE = { background: 'var(--surface-card)', boxShadow: 'var(--shadow-md)' } as const
-const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/70 font-display'
+const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 
 const REQS = [
   { label: 'Mínimo 8 caracteres',    test: (v: string) => v.length >= 8 },
@@ -50,7 +50,7 @@ export default function SeguridadPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Seguridad
         </h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Gestioná tu contraseña, métodos de acceso y sesiones
         </p>
       </div>
@@ -122,7 +122,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
       <p className={SECTION_TITLE}>Cambiar contraseña</p>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[12px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
@@ -140,7 +140,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={`${INPUT} pr-11 font-body`}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80" tabIndex={-1}>
+            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80" tabIndex={-1}>
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -148,7 +148,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
             {reqs.map(req => (
               <div
                 key={req.label}
-                className="flex items-center gap-2 text-[12px] transition-colors font-body"
+                className="flex items-center gap-2 text-[13px] transition-colors font-body"
                 style={{ color: newPass.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#519DA2' : 'rgba(239,85,84,0.7)' }}
               >
                 {req.met && newPass.length > 0
@@ -173,12 +173,12 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={cn(`${INPUT} pr-11 font-body`, confirmErr ? 'border-coral/50 focus:ring-coral/10' : '')}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/70 hover:text-navy-light/80" tabIndex={-1}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80" tabIndex={-1}>
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
           {confirmErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[12px] text-coral font-body">
+            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" /> {confirmErr}
             </p>
           )}
@@ -272,7 +272,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="flex items-center gap-2.5">
           <p className={SECTION_TITLE}>Passkeys · huella / Face ID</p>
           {!loading && passkeys.length > 0 && (
-            <span className="flex items-center gap-1 text-[12px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
+            <span className="flex items-center gap-1 text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
               <Check size={11} /> Activado
             </span>
           )}
@@ -280,7 +280,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         <button
           onClick={handleRegister}
           disabled={registering || !supported}
-          className="flex items-center gap-1.5 rounded-xl bg-coral px-3.5 py-2 text-[12px] font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
+          className="flex items-center gap-1.5 rounded-xl bg-coral px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
         >
           {registering
             ? <><Loader2 size={13} className="animate-spin" /> Registrando...</>
@@ -289,19 +289,19 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       </div>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[12px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
       {!supported && !error && (
-        <p className="flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
           <AlertCircle size={12} className="shrink-0" />
           Tu dispositivo no soporta passkeys. Podés usarlas desde un dispositivo compatible.
         </p>
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-[13px] text-navy-light/70 py-2 font-body">
+        <div className="flex items-center gap-2 text-[13px] text-navy-light/80 py-2 font-body">
           <Loader2 size={14} className="animate-spin" /> Cargando...
         </div>
       ) : passkeys.length === 0 ? (
@@ -309,7 +309,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
           <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-teal/12">
             <Fingerprint size={16} className="text-teal-deep" />
           </div>
-          <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
+          <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
             No tenés passkeys configuradas. Agregá una para ingresar más fácil la próxima vez.
           </p>
         </div>
@@ -319,18 +319,18 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
             <div key={pk.id} className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-navy/6">
-                  <Fingerprint size={15} className="text-navy-light/70" />
+                  <Fingerprint size={15} className="text-navy-light/80" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-medium text-navy truncate font-body">
                     {pk.friendly_name?.trim() || 'Passkey sin nombre'}
                   </p>
-                  <p className="text-[12px] text-navy-light/70 font-body">Registrada el {fmtDate(pk.created_at)}</p>
+                  <p className="text-[13px] text-navy-light/80 font-body">Registrada el {fmtDate(pk.created_at)}</p>
                 </div>
               </div>
               <button
                 onClick={() => setToDelete(pk)}
-                className="flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
+                className="flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
                 aria-label="Eliminar passkey"
               >
                 <Trash2 size={13} /> Eliminar
@@ -473,13 +473,13 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
       <p className={SECTION_TITLE}>Autenticación en dos pasos</p>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[12px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-[13px] text-navy-light/70 py-2 font-body">
+        <div className="flex items-center gap-2 text-[13px] text-navy-light/80 py-2 font-body">
           <Loader2 size={14} className="animate-spin" /> Cargando...
         </div>
       ) : factor ? (
@@ -495,18 +495,18 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
                   <p className="text-sm font-medium text-navy font-body">
                     {factor.friendly_name?.trim() || 'App de autenticación'}
                   </p>
-                  <span className="text-[12px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
+                  <span className="text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
                     Activa
                   </span>
                 </div>
-                <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+                <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
                   Activada el {fmtDate(factor.updated_at || factor.created_at)}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowDisable(true)}
-              className="text-[12px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
+              className="text-[13px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
             >
               Desactivar
             </button>
@@ -515,7 +515,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
       ) : enroll ? (
         /* ── Flujo de activación ── */
         <div className="space-y-4">
-          <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
+          <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
             Escaneá este código QR con Google Authenticator, Authy, 1Password o Apple Keychain.
           </p>
           <div className="flex flex-col sm:flex-row gap-5 items-start">
@@ -525,8 +525,8 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
             </div>
             <div className="flex-1 min-w-0 space-y-3">
               <div>
-                <p className="text-[12px] uppercase tracking-widest text-navy-light/70 mb-1 font-display">¿No podés escanear?</p>
-                <p className="text-[12px] text-navy-light/70 mb-1.5 font-body">Ingresá este código manualmente:</p>
+                <p className="text-[13px] uppercase tracking-widest text-navy-light/80 mb-1 font-display">¿No podés escanear?</p>
+                <p className="text-[13px] text-navy-light/80 mb-1.5 font-body">Ingresá este código manualmente:</p>
                 <code className="block rounded-xl bg-surface-low px-3 py-2.5 text-[13px] text-navy break-all font-mono select-all">
                   {enroll.secret}
                 </code>
@@ -568,9 +568,9 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-xl px-4 py-4 bg-surface-low">
             <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-navy/6">
-              <Shield size={16} className="text-navy-light/70" />
+              <Shield size={16} className="text-navy-light/80" />
             </div>
-            <p className="text-[13px] text-navy-light/70 leading-relaxed font-body">
+            <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
               Agregá una capa extra de seguridad pidiendo un código de tu app de autenticación
               (Google Authenticator, Authy, 1Password) cada vez que ingresás.
             </p>
@@ -623,19 +623,19 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
       <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-surface-low">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-navy/6">
-            <Monitor size={15} className="text-navy-light/70" />
+            <Monitor size={15} className="text-navy-light/80" />
           </div>
           <div>
             <p className="text-[13px] font-medium text-navy font-body">Este dispositivo</p>
-            <p className="text-[12px] text-navy-light/70 font-body">Sesión actual</p>
+            <p className="text-[13px] text-navy-light/80 font-body">Sesión actual</p>
           </div>
         </div>
-        <span className="text-[12px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success">
+        <span className="text-[13px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success">
           Esta sesión
         </span>
       </div>
 
-      <p className="flex items-start gap-1.5 text-[12px] text-navy-light/70 font-body">
+      <p className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
         <Smartphone size={13} className="shrink-0 mt-0.5" />
         Si ingresaste desde otro dispositivo y querés revocar ese acceso, cerrá las demás sesiones.
       </p>

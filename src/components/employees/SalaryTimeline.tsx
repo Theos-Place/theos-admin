@@ -56,22 +56,22 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
             </div>
             {/* Content */}
             <div className={cn('pb-5', idx === items.length - 1 && 'pb-0')}>
-              <p className="text-[12px] text-navy-light/70 mb-0.5 font-mono">
+              <p className="text-[13px] text-navy-light/80 mb-0.5 font-mono">
                 {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
               </p>
               <p className="text-sm font-semibold text-navy font-display">
                 {item.salary != null ? `${formatCRC(item.salary)}` : '₡ ••••••'}
                 {pct && (
-                  <span className="ml-2 text-[12px] font-medium text-teal-deep">
+                  <span className="ml-2 text-[13px] font-medium text-teal-deep">
                     +{pct}%
                   </span>
                 )}
               </p>
-              <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+              <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
                 {item.reason}
               </p>
               {item.approvedBy && (
-                <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+                <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
                   Aprobado por {item.approvedBy}
                 </p>
               )}

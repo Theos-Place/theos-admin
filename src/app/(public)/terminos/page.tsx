@@ -43,7 +43,7 @@ export default function TerminosPage() {
               className="h-9 w-auto"
             />
           </Link>
-          <Link href="/login" className="text-[13px] text-navy-light/70 hover:text-navy transition-colors font-body">
+          <Link href="/login" className="text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
             Ingresar →
           </Link>
         </PageContainer>
@@ -54,8 +54,8 @@ export default function TerminosPage() {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-navy font-display tracking-[-0.02em] leading-tight">
           Términos y Condiciones y Política de Privacidad
         </h1>
-        <p className="mt-2 text-sm text-navy-light/70 font-body">Theos</p>
-        <p className="mt-1 text-[13px] text-navy-light/70 font-body">
+        <p className="mt-2 text-sm text-navy-light/80 font-body">Theos</p>
+        <p className="mt-1 text-[13px] text-navy-light/80 font-body">
           Última actualización: {LAST_UPDATED}
         </p>
 
@@ -68,7 +68,7 @@ export default function TerminosPage() {
 
         {/* Índice */}
         <nav aria-label="Contenido" className="mt-6 rounded-2xl bg-surface-card shadow-[var(--shadow-sm)] p-5">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mb-3">Contenido</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-3">Contenido</p>
           <ol className="space-y-1.5">
             {SECTIONS.map(s => (
               <li key={s.id}>
@@ -276,7 +276,7 @@ export default function TerminosPage() {
         </article>
 
         {/* Pie */}
-        <footer className="mt-12 border-t border-[var(--outline-variant)] pt-6 text-[13px] text-navy-light/70 font-body flex flex-col sm:flex-row items-center justify-between gap-3">
+        <footer className="mt-12 border-t border-[var(--outline-variant)] pt-6 text-[13px] text-navy-light/80 font-body flex flex-col sm:flex-row items-center justify-between gap-3">
           <span>© {new Date().getFullYear()} Theos</span>
           <Link href="/login" className="hover:text-navy transition-colors">Volver a ingresar</Link>
         </footer>

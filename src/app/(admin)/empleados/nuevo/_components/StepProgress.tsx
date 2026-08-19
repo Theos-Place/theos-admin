@@ -21,24 +21,24 @@ export function StepProgress({ steps, currentStep }: StepProgressProps) {
           <div className="flex items-center gap-2.5 shrink-0">
             <div
               className={cn(
-                'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-colors font-display',
+                'h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors font-display',
                 currentStep > s.num
                   ? 'bg-teal-deep text-white'
                   : currentStep === s.num
                   ? 'bg-coral text-white'
-                  : 'bg-navy/10 text-navy-light/70'
+                  : 'bg-navy/10 text-navy-light/80'
               )}
             >
               {currentStep > s.num ? <Check size={13} /> : s.num}
             </div>
             <span
               className={cn(
-                'text-[12px] font-medium whitespace-nowrap font-display',
+                'text-[13px] font-medium whitespace-nowrap font-display',
                 currentStep === s.num
                   ? 'text-navy'
                   : currentStep > s.num
                   ? 'text-teal-deep'
-                  : 'text-navy-light/70'
+                  : 'text-navy-light/80'
               )}
             >
               {s.label}

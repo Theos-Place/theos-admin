@@ -51,7 +51,7 @@ export default function CheckinPickerPage() {
     <div className="space-y-5">
       {/* Header */}
       <div className="rounded-2xl bg-navy px-5 py-5 shadow-[var(--shadow-md)]">
-        <Link href="/eventos" className="inline-flex items-center gap-1 text-[12px] text-white/70 hover:text-white mb-2 font-body">
+        <Link href="/eventos" className="inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
           <ChevronLeft size={14} /> Eventos
         </Link>
         <div className="flex items-center gap-3">
@@ -60,14 +60,14 @@ export default function CheckinPickerPage() {
           </div>
           <div>
             <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Check-in</h1>
-            <p className="mt-0.5 text-sm text-white/70 font-body">Elegí el evento para registrar asistencia</p>
+            <p className="mt-0.5 text-sm text-white/80 font-body">Elegí el evento para registrar asistencia</p>
           </div>
         </div>
       </div>
 
       {/* Buscador */}
       <div className="flex items-center gap-2 rounded-2xl bg-surface-card px-4 py-3 shadow-[var(--shadow-md)]">
-        <Search size={18} className="text-navy-light/70 shrink-0" />
+        <Search size={18} className="text-navy-light/80 shrink-0" />
         <input
           autoFocus
           value={search}
@@ -79,17 +79,17 @@ export default function CheckinPickerPage() {
       </div>
 
       {!q && (
-        <p className="px-1 text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="px-1 text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
           Eventos de hoy
         </p>
       )}
 
       {/* Lista */}
       {loading ? (
-        <p className="px-1 py-8 text-center text-sm text-navy-light/70 font-body">Cargando…</p>
+        <p className="px-1 py-8 text-center text-sm text-navy-light/80 font-body">Cargando…</p>
       ) : results.length === 0 ? (
         <div className="rounded-2xl bg-surface-card p-8 text-center shadow-[var(--shadow-md)]">
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             {q ? 'Ningún evento con ese nombre.' : 'No hay eventos de hoy en ventana de check-in. Buscá por nombre para registros de otro día.'}
           </p>
         </div>
@@ -105,13 +105,13 @@ export default function CheckinPickerPage() {
               >
                 <div className="min-w-0">
                   <p className="text-base text-navy font-body truncate">{ev.name}</p>
-                  <p className="text-[12px] text-navy-light/70 font-body mt-0.5">
+                  <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
                     {new Date(ev.start_at).toLocaleString('es-CR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {status && (
-                    <span className={cn('rounded-full px-2.5 py-1 text-[12px] font-medium font-display', STATUS_STYLE[status])}>
+                    <span className={cn('rounded-full px-2.5 py-1 text-[13px] font-medium font-display', STATUS_STYLE[status])}>
                       {CHECKIN_STATUS_LABEL[status]}
                     </span>
                   )}

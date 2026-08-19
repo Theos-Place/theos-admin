@@ -163,7 +163,7 @@ export default function CommitteeDetailPage() {
   if (!committee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Comité no encontrado.
         </p>
       </div>
@@ -332,7 +332,7 @@ export default function CommitteeDetailPage() {
                 'shrink-0 whitespace-nowrap px-5 py-3 text-sm capitalize transition-colors border-b-2 -mb-px font-display',
                 tab === t
                   ? 'border-coral text-navy font-semibold'
-                  : 'border-transparent text-navy-light/70 hover:text-navy'
+                  : 'border-transparent text-navy-light/80 hover:text-navy'
               )}
             >
               {t === 'miembros' ? `Miembros` : t === 'vacantes' ? `Puestos de Servicio (${committeeVacancies.length})` : t === 'metas' ? 'Metas' : 'Estudios'}
@@ -468,7 +468,7 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
     return (
       <div className="py-12 text-center font-body">
         <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-        <p className="text-sm text-navy-light/70">Cargando estudios…</p>
+        <p className="text-sm text-navy-light/80">Cargando estudios…</p>
       </div>
     )
   }
@@ -482,7 +482,7 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
 
   return (
     <div className="p-4 sm:p-5">
-      <p className="text-sm text-navy-light/70 font-body mb-3">
+      <p className="text-sm text-navy-light/80 font-body mb-3">
         Resumen de estudios liderados por cada servidor del comité.
       </p>
       <div className="space-y-1">
@@ -493,14 +493,14 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors"
           >
             <span className="min-w-0 flex-1 text-sm text-navy font-body truncate">{r.name}</span>
-            <span className="shrink-0 text-xs text-navy-light/70 font-body">
+            <span className="shrink-0 text-xs text-navy-light/80 font-body">
               {r.total} grupo{r.total === 1 ? '' : 's'} · {r.activos} activo{r.activos === 1 ? '' : 's'}
             </span>
             <span className="shrink-0 inline-flex items-center gap-1 text-xs text-coral font-body">Ver dirigente →</span>
           </Link>
         ))}
         {rows.length === 0 && (
-          <p className="py-8 text-center text-sm text-navy-light/70 font-body">Sin servidores en el comité.</p>
+          <p className="py-8 text-center text-sm text-navy-light/80 font-body">Sin servidores en el comité.</p>
         )}
       </div>
     </div>

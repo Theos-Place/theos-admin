@@ -164,7 +164,7 @@ export default function BecasPage() {
             </div>
             <div>
               <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Becas</h1>
-              <p className="mt-0.5 text-sm text-white/70 font-body">Cupones genéricos y solicitudes asignadas</p>
+              <p className="mt-0.5 text-sm text-white/80 font-body">Cupones genéricos y solicitudes asignadas</p>
             </div>
           </div>
           {canEdit && tab === 'cupones' && (
@@ -185,7 +185,7 @@ export default function BecasPage() {
             onClick={() => setTab(id)}
             className={cn(
               'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
-              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
+              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
             )}
           >
             {label}
@@ -201,8 +201,8 @@ export default function BecasPage() {
                 key={id}
                 onClick={() => setStatusFilter(id)}
                 className={cn(
-                  'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent hover:border-navy/20',
+                  'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
+                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
                 )}
               >
                 {label}
@@ -215,7 +215,7 @@ export default function BecasPage() {
               <button
                 onClick={bulkRevoke}
                 disabled={bulkRevoking}
-                className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[12px] hover:bg-white/10 transition-colors font-body disabled:opacity-50"
+                className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[13px] hover:bg-white/10 transition-colors font-body disabled:opacity-50"
               >
                 {bulkRevoking ? 'Revocando…' : 'Revocar seleccionados'}
               </button>
@@ -224,7 +224,7 @@ export default function BecasPage() {
 
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             {couponsLoading ? (
-              <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+              <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
             ) : filteredCoupons.length === 0 ? (
               <EmptyState icon={GraduationCap} title="No hay cupones" />
             ) : (
@@ -239,7 +239,7 @@ export default function BecasPage() {
                         </th>
                       )}
                       {['Código', 'Destino', 'Descuento', 'Vencimiento', 'Usos', 'Estado', ''].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -256,10 +256,10 @@ export default function BecasPage() {
                         <td className="px-4 py-3 text-sm font-mono font-medium text-navy">{c.code}</td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.entity_name}</td>
                         <td className="px-4 py-3 text-sm text-navy font-body">{formatDiscount(c.discount_type, c.discount_value, c.currency)}</td>
-                        <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
-                        <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body">{c.used_count}</td>
+                        <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
+                        <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.used_count}</td>
                         <td className="px-4 py-3">
-                          <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display', STATUS_BADGE[c.status])}>{STATUS_LABEL[c.status]}</span>
+                          <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display', STATUS_BADGE[c.status])}>{STATUS_LABEL[c.status]}</span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           {canEdit && c.status === 'active' && (
@@ -268,13 +268,13 @@ export default function BecasPage() {
                               <button
                                 onClick={() => { setSendMember(null); setSendTarget(c) }}
                                 title={c.email_sent_at ? `Último envío: ${formatDateTime(c.email_sent_at)} a ${c.email_sent_to ?? '—'}` : undefined}
-                                className="rounded-full border border-navy/20 text-navy px-3 py-1 text-[12px] hover:bg-navy/5 transition-colors font-body whitespace-nowrap"
+                                className="rounded-full border border-navy/20 text-navy px-3 py-1 text-[13px] hover:bg-navy/5 transition-colors font-body whitespace-nowrap"
                               >
                                 {c.email_sent_at ? 'Reenviar correo' : 'Enviar por correo'}
                               </button>
                               <button
                                 onClick={() => requestRevoke(c)}
-                                className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[12px] hover:bg-coral/5 transition-colors font-body"
+                                className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[13px] hover:bg-coral/5 transition-colors font-body"
                               >
                                 Revocar
                               </button>
@@ -294,7 +294,7 @@ export default function BecasPage() {
       {tab === 'solicitudes' && (
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           {requestsLoading ? (
-            <p className="px-4 py-10 text-center text-sm text-navy-light/70 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
+            <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : requests.length === 0 ? (
             <EmptyState icon={GraduationCap} title="No hay solicitudes de beca" />
           ) : (
@@ -303,7 +303,7 @@ export default function BecasPage() {
                 <thead>
                   <tr>
                     {['Persona', 'Destino', 'Motivo', 'Estado', ''].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -312,9 +312,9 @@ export default function BecasPage() {
                     <tr key={r.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.entity_name ?? '—'}</td>
-                      <td className="px-4 py-3 text-[13px] text-navy-light/70 font-body max-w-xs truncate" title={r.reason}>{r.reason}</td>
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body max-w-xs truncate" title={r.reason}>{r.reason}</td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display',
+                        <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display',
                           r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-deep'
                           : r.status === 'rejected' ? 'bg-coral-soft/20 text-coral'
                           : 'bg-amber-50 text-amber-700')}>
@@ -325,7 +325,7 @@ export default function BecasPage() {
                         {canEdit && (r.status === 'open' || r.status === 'in_review') && (
                           <button
                             onClick={() => setReviewTarget(r)}
-                            className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:opacity-90 transition-opacity font-body"
+                            className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
                           >
                             Revisar
                           </button>
@@ -369,12 +369,12 @@ export default function BecasPage() {
             <h3 id="send-coupon-title" className="text-base font-bold text-navy font-display">
               Enviar cupón por correo · <span className="font-mono">{sendTarget.code}</span>
             </h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               Se le enviará el código, el descuento ({formatDiscount(sendTarget.discount_type, sendTarget.discount_value, sendTarget.currency)})
               y el destino ({sendTarget.entity_name}) al correo registrado de la persona.
             </p>
             {sendTarget.email_sent_at && (
-              <p className="rounded-xl bg-amber-50 text-amber-700 px-3 py-2 text-[12px] font-body">
+              <p className="rounded-xl bg-amber-50 text-amber-700 px-3 py-2 text-[13px] font-body">
                 Este cupón ya se envió el {formatDateTime(sendTarget.email_sent_at)}
                 {sendTarget.email_sent_to ? ` a ${sendTarget.email_sent_to}` : ''}. Confirmá solo si querés reenviarlo.
               </p>
@@ -383,9 +383,9 @@ export default function BecasPage() {
               <div className="flex items-center justify-between gap-3 rounded-xl border border-outline px-4 py-2.5">
                 <p className="text-sm text-navy font-body">
                   {sendMember.first_name} {sendMember.last_name}
-                  {sendMember.email ? <span className="text-navy-light/70"> · {sendMember.email}</span> : null}
+                  {sendMember.email ? <span className="text-navy-light/80"> · {sendMember.email}</span> : null}
                 </p>
-                <button onClick={() => setSendMember(null)} className="text-[12px] text-navy-light/70 hover:text-navy font-body">
+                <button onClick={() => setSendMember(null)} className="text-[13px] text-navy-light/80 hover:text-navy font-body">
                   Cambiar
                 </button>
               </div>
@@ -400,7 +400,7 @@ export default function BecasPage() {
               />
             )}
             {sendMember && !sendMember.email && (
-              <p className="text-[12px] text-coral font-body">Esa persona no tiene correo registrado en su perfil.</p>
+              <p className="text-[13px] text-coral font-body">Esa persona no tiene correo registrado en su perfil.</p>
             )}
             <div className="flex gap-2 pt-1">
               <button
@@ -463,10 +463,10 @@ function ReviewRequestModal({ request, onClose, onDone }: {
     <Modal onClose={() => !busy && onClose()} titleId="review-request-title" width={460}>
       <div className="p-6 space-y-4">
         <h3 id="review-request-title" className="text-base font-bold text-navy font-display">Revisar solicitud de beca</h3>
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           <strong className="text-navy">{request.member_name}</strong> solicitó una beca para <strong className="text-navy">{request.entity_name ?? '—'}</strong>.
         </p>
-        <p className="text-[13px] text-navy-light/70 font-body italic">&quot;{request.reason}&quot;</p>
+        <p className="text-[13px] text-navy-light/80 font-body italic">&quot;{request.reason}&quot;</p>
 
         {!action && (
           <div className="grid grid-cols-1 gap-2 pt-1">
@@ -481,7 +481,7 @@ function ReviewRequestModal({ request, onClose, onDone }: {
             {action === 'approve_parcial' && (
               <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-amber-50 border border-amber-200">
                 <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" />
-                <p className="text-[12px] text-amber-800 font-body">Estás marcando esta aprobación como <strong>parcial</strong> — el miembro recibirá el email correspondiente.</p>
+                <p className="text-[13px] text-amber-800 font-body">Estás marcando esta aprobación como <strong>parcial</strong> — el miembro recibirá el email correspondiente.</p>
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
@@ -532,7 +532,7 @@ function ReviewRequestModal({ request, onClose, onDone }: {
 
         {!action && (
           <div className="flex justify-end pt-1">
-            <button onClick={onClose} className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors">Cerrar</button>
+            <button onClick={onClose} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">Cerrar</button>
           </div>
         )}
       </div>

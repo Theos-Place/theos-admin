@@ -78,7 +78,7 @@ export function Combobox({
       {open && (
         <ComboPanel>
           <div className="flex items-center gap-2 border-b border-[var(--outline-variant)] px-3 py-2">
-            <Search size={14} className="shrink-0 text-navy-light/70" />
+            <Search size={14} className="shrink-0 text-navy-light/80" />
             <input
               ref={inputRef}
               value={query}
@@ -91,7 +91,7 @@ export function Combobox({
           </div>
           <div className="max-h-60 overflow-y-auto py-1">
             {allowEmpty && (
-              <ComboOption onPick={pickEmpty} className="text-sm text-navy-light/70 font-body">
+              <ComboOption onPick={pickEmpty} className="text-sm text-navy-light/80 font-body">
                 <span className="flex-1">{emptyLabel}</span>
                 {value.kind === 'empty' && <Check size={14} className="text-coral" />}
               </ComboOption>

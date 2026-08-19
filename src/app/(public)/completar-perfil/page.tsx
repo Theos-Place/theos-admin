@@ -99,14 +99,14 @@ export default function CompletarPerfilPage() {
 
         <div className="p-7 space-y-5">
           {!ready ? (
-            <p className="text-sm text-navy-light/70 py-6 text-center font-body">Verificando tu enlace…</p>
+            <p className="text-sm text-navy-light/80 py-6 text-center font-body">Verificando tu enlace…</p>
           ) : done ? (
             <div className="py-6 text-center space-y-3">
               <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto">
                 <Check size={26} className="text-teal-deep" />
               </div>
               <p className="text-base font-bold text-navy font-display">¡Cuenta activada!</p>
-              <p className="text-sm text-navy-light/70 font-body">Tu contraseña quedó guardada. Te estamos llevando al inicio…</p>
+              <p className="text-sm text-navy-light/80 font-body">Tu contraseña quedó guardada. Te estamos llevando al inicio…</p>
             </div>
           ) : !hasSession ? (
             <div className="py-2 space-y-4 text-center">
@@ -117,7 +117,7 @@ export default function CompletarPerfilPage() {
                 <p className="text-base font-bold text-navy font-display">
                   {linkMsg?.titulo ?? 'Este enlace ya se usó o venció'}
                 </p>
-                <p className="text-sm text-navy-light/70 font-body leading-relaxed">
+                <p className="text-sm text-navy-light/80 font-body leading-relaxed">
                   {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya definiste tu contraseña, entrá con ella.'}
                 </p>
               </div>
@@ -145,20 +145,20 @@ export default function CompletarPerfilPage() {
             <form onSubmit={submit} className="space-y-4">
               <div className="space-y-1">
                 <h1 className="text-xl font-extrabold text-navy font-display tracking-[-0.02em]">{title}</h1>
-                <p className="text-sm text-navy-light/70 font-body">{subtitle}</p>
+                <p className="text-sm text-navy-light/80 font-body">{subtitle}</p>
               </div>
 
               {email && (
                 <div className="flex items-center gap-2 rounded-2xl bg-surface-low px-3 py-2.5">
-                  <Mail size={15} className="shrink-0 text-navy-light/70" />
+                  <Mail size={15} className="shrink-0 text-navy-light/80" />
                   <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{email}</span>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Contraseña nueva</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Contraseña nueva</label>
                 <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
                   <input
                     type="password"
                     value={password}
@@ -170,7 +170,7 @@ export default function CompletarPerfilPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Repetir contraseña</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Repetir contraseña</label>
                 <input
                   type="password"
                   value={confirm}
@@ -180,7 +180,7 @@ export default function CompletarPerfilPage() {
                 />
               </div>
 
-              {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+              {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
               <button
                 type="submit"

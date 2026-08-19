@@ -136,7 +136,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
 
   const btn = (active: boolean) => cn(
     'inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors',
-    active ? 'bg-navy text-white' : 'text-navy-light/70 hover:bg-surface-low',
+    active ? 'bg-navy text-white' : 'text-navy-light/80 hover:bg-surface-low',
   )
 
   return (
@@ -156,7 +156,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
               setMode(m)
             }}
             className={cn('px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors',
-              mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/70 hover:text-navy')}
+              mode === m ? 'border-coral text-navy font-semibold' : 'border-transparent text-navy-light/80 hover:text-navy')}
           >
             {m === 'visual' ? 'Visual' : 'HTML'}
           </button>
@@ -164,26 +164,26 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
       </div>
 
       {soloHtml && (
-        <p className="px-3 py-2 text-[12px] text-navy-light/70 font-body bg-amber-50 border-b border-[var(--outline-variant)]">
+        <p className="px-3 py-2 text-[13px] text-navy-light/80 font-body bg-amber-50 border-b border-[var(--outline-variant)]">
           {htmlOnlyNotice ?? 'Esta plantilla tiene diseño avanzado; se edita en modo código para no perder el formato.'}
         </p>
       )}
 
       {confirmarVisual && (
         <div role="alertdialog" aria-label="Confirmar edición visual" className="px-4 py-3 border-b border-[var(--outline-variant)] bg-coral-soft/20 space-y-2">
-          <p className="text-[12px] text-navy font-body">{FORCE_VISUAL_WARNING}</p>
+          <p className="text-[13px] text-navy font-body">{FORCE_VISUAL_WARNING}</p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => { setConfirmarVisual(false); setVisualForzado(true); setMode('visual') }}
-              className="rounded-full bg-coral px-3 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="rounded-full bg-coral px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               Editar en visual y perder el diseño
             </button>
             <button
               type="button"
               onClick={() => setConfirmarVisual(false)}
-              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Cancelar
             </button>
@@ -220,7 +220,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
           <div className="max-h-[460px] overflow-auto bg-white [&_.ProseMirror]:break-words [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_a]:text-[#519DA2] [&_.ProseMirror_a]:underline [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:my-2 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:my-1.5 [&_.ProseMirror_p]:my-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2">
             <EditorContent editor={editor} />
           </div>
-          {uploadError && <p className="px-4 py-2 text-[12px] text-coral font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
+          {uploadError && <p className="px-4 py-2 text-[13px] text-coral font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
         </>
       ) : (
         <textarea
@@ -230,21 +230,21 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
           rows={16}
           spellCheck={false}
           placeholder="<p>Hola {nombre},</p>"
-          className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[12px] font-mono text-navy outline-none block overflow-auto"
+          className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[13px] font-mono text-navy outline-none block overflow-auto"
         />
       )}
 
       {/* Variables insertables: clic → se mete en el cuerpo (en el cursor). */}
       {variables.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-[var(--outline-variant)] bg-surface-low/40">
-          <span className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display mr-1">Insertar variable</span>
+          <span className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mr-1">Insertar variable</span>
           {variables.map(v => (
             <button
               key={v.key}
               type="button"
               title={v.description}
               onClick={() => insertVariable(v.key)}
-              className="rounded-full border px-2.5 py-0.5 text-[12px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
+              className="rounded-full border px-2.5 py-0.5 text-[13px] font-mono text-navy-light hover:bg-navy hover:text-white hover:border-navy transition-all border-[var(--outline-variant)]"
             >
               {v.key}
             </button>

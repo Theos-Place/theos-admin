@@ -25,7 +25,7 @@ export default function Error({
         <p className="mb-1 font-display text-base font-semibold text-navy">
           Algo salió mal
         </p>
-        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/70">
+        <p className="mb-5 max-w-xs font-body text-sm text-navy-light/80">
           Ocurrió un error inesperado. Podés intentar de nuevo; si persiste,
           avisale al equipo de TI.
         </p>
@@ -39,7 +39,7 @@ export default function Error({
           </button>
           <a
             href="/dashboard"
-            className="rounded-full px-4 py-2 font-body text-sm font-medium text-navy-light/70 transition-colors hover:text-navy"
+            className="rounded-full px-4 py-2 font-body text-sm font-medium text-navy-light/80 transition-colors hover:text-navy"
           >
             Ir al dashboard
           </a>

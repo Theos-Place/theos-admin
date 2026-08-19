@@ -43,7 +43,7 @@ function Section({ title, open, onToggle, children }: {
     <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
       <button type="button" onClick={onToggle} className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-low transition-colors">
         <span className="text-sm font-semibold text-navy font-display">{title}</span>
-        {open ? <ChevronUp size={16} className="text-navy-light/70" /> : <ChevronDown size={16} className="text-navy-light/70" />}
+        {open ? <ChevronUp size={16} className="text-navy-light/80" /> : <ChevronDown size={16} className="text-navy-light/80" />}
       </button>
       {open && (
         <div className="px-5 pb-5 space-y-4 border-t border-t-[var(--outline-variant)]">
@@ -78,7 +78,7 @@ function RecurringSaveModal({
           <h3 id="guardar-cambios-recurrente-titulo" className="text-sm font-semibold text-navy font-display">
             Guardar cambios
           </h3>
-          <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+          <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
             Este es un evento recurrente. ¿A cuántas instancias aplicar los cambios?
           </p>
         </div>
@@ -109,7 +109,7 @@ function RecurringSaveModal({
                       </span>
                     )}
                   </div>
-                  <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">{opt.desc}</p>
+                  <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{opt.desc}</p>
                 </div>
               </div>
             </div>
@@ -117,7 +117,7 @@ function RecurringSaveModal({
 
           <label className="flex items-center gap-2 cursor-pointer pt-1">
             <input type="checkbox" className="accent-coral" checked={notify} onChange={e => setNotify(e.target.checked)} />
-            <span className="text-sm text-navy-light/70 font-body">
+            <span className="text-sm text-navy-light/80 font-body">
               Notificar a los {registrationCount} inscritos
             </span>
           </label>
@@ -248,10 +248,10 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   if (!event) {
     return (
       <div className="space-y-4">
-        <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
+        <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
-        <p className="text-navy-light/70 font-body">{loading ? 'Cargando…' : 'Evento no encontrado.'}</p>
+        <p className="text-navy-light/80 font-body">{loading ? 'Cargando…' : 'Evento no encontrado.'}</p>
       </div>
     )
   }
@@ -353,7 +353,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           <p className="text-xl font-bold text-navy font-display">
             Cambios guardados
           </p>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             El evento fue actualizado correctamente.
           </p>
           <Link
@@ -389,17 +389,17 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href={`/eventos/${id}`}
-            className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+            className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
           >
             <ChevronLeft size={16} />
             Volver
           </Link>
-          <span className="text-navy-light/70">|</span>
+          <span className="text-navy-light/80">|</span>
           <span className="text-sm font-semibold text-navy font-display">
             Editar evento
           </span>
           {event.is_recurring && (
-            <span className="rounded-md bg-navy/10 px-2 py-0.5 text-[11px] text-navy-light/70 font-display">
+            <span className="rounded-md bg-navy/10 px-2 py-0.5 text-[11px] text-navy-light/80 font-display">
               Recurrente
             </span>
           )}
@@ -407,14 +407,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="flex items-center gap-2">
           <Link
             href={`/eventos/${id}`}
-            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Descartar
           </Link>
           <button
             onClick={handleSave}
             disabled={saving || endBeforeStart}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+            className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>
@@ -433,7 +433,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Tipo</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Tipo</label>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {activeEventTypes.map(t => {
                 const Icon = ICON_MAP[t.icon] ?? Mic
@@ -444,25 +444,25 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                     onClick={() => setSelectedType(t.id as EventType)}
                     className={cn(
                       'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
-                      selectedType === t.id ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/70 hover:bg-surface-low'
+                      selectedType === t.id ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/80 hover:bg-surface-low'
                     )}
                     style={{ borderColor: selectedType === t.id ? undefined : 'var(--outline-variant)' }}
                   >
                     <Icon size={18} />
-                    <span className="text-[12px] font-medium font-display">{t.name}</span>
+                    <span className="text-[13px] font-medium font-display">{t.name}</span>
                   </button>
                 )
               })}
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Comités organizadores</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Comités organizadores</label>
             <CommitteeMultiSelect value={committeeIds} onChange={setCommitteeIds} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Descripción</label>
-              <span className="text-[11px] text-navy-light/70 font-mono">{description.length}/500</span>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Descripción</label>
+              <span className="text-[11px] text-navy-light/80 font-mono">{description.length}/500</span>
             </div>
             <textarea
               className={cn(inputCls, 'resize-none', 'font-body')}
@@ -480,24 +480,24 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Fecha inicio</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha inicio</label>
               <DatePicker value={startDate} onChange={setStartDate} />
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Hora inicio</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora inicio</label>
               <TimePicker value={startTime} onChange={setStartTime} />
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Fecha fin</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha fin</label>
               <DatePicker value={endDate} onChange={setEndDate} min={startDate || undefined} error={endBeforeStart} />
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Hora fin</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora fin</label>
               <TimePicker value={endTime} onChange={setEndTime} error={endBeforeStart} min={endDate && endDate === startDate ? startTime || undefined : undefined} />
             </div>
           </div>
           {endBeforeStart && (
-            <p className="text-[12px] text-coral font-body" role="alert">
+            <p className="text-[13px] text-coral font-body" role="alert">
               La fecha y hora de fin no pueden ser anteriores a las de inicio.
             </p>
           )}
@@ -507,13 +507,13 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </label>
           {!isVirtual && (
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Dirección</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Dirección</label>
               <input className={cn(inputCls, 'font-body')} value={location} onChange={e => setLocation(e.target.value)} />
             </div>
           )}
           {isVirtual && (
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Link de la reunión virtual (opcional)</label>
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Link de la reunión virtual (opcional)</label>
               <input className={cn(inputCls, 'font-body')} placeholder="https://zoom.us/... o https://meet.google.com/..." value={virtualLink} onChange={e => setVirtualLink(e.target.value)} />
             </div>
           )}
@@ -544,9 +544,9 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             <div key={se.id} className="flex items-center justify-between rounded-xl px-3 py-2.5 bg-surface-low">
               <div>
                 <p className="text-sm font-medium text-navy font-body">{se.name}</p>
-                <p className="text-[12px] text-navy-light/70">Cap. {se.max_capacity}</p>
+                <p className="text-[13px] text-navy-light/80">Cap. {se.max_capacity}</p>
               </div>
-              <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/70 hover:text-coral hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
+              <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
                 <X size={14} />
               </button>
             </div>
@@ -558,12 +558,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <input type="number" className={cn(inputCls, 'font-body')} placeholder="Capacidad" value={newSubCap} onChange={e => setNewSubCap(e.target.value)} />
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={addSubEvent} className="rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy/80 transition-colors font-body">Agregar</button>
-                <button type="button" onClick={() => setShowSubEventForm(false)} className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+                <button type="button" onClick={addSubEvent} className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:bg-navy/80 transition-colors font-body">Agregar</button>
+                <button type="button" onClick={() => setShowSubEventForm(false)} className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
               </div>
             </div>
           ) : (
-            <button type="button" onClick={() => setShowSubEventForm(true)} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body">
+            <button type="button" onClick={() => setShowSubEventForm(true)} className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">
               <Plus size={13} /> Añadir sub-evento
             </button>
           )}
@@ -580,7 +580,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresRegistration && (
             <div className="space-y-2 pl-1">
               <div className="space-y-1">
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Capacidad máxima</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Capacidad máxima</label>
                 <input type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
               </div>
               {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en la
@@ -598,7 +598,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             <span className="text-sm text-navy font-body">Evento con cobro</span>
           </label>
           <div className="space-y-1 max-w-[280px]">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display" htmlFor="edit-event-sede">Sede</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display" htmlFor="edit-event-sede">Sede</label>
             <select
               id="edit-event-sede"
               className={cn(inputCls, 'font-body')}
@@ -617,28 +617,28 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresPayment && (
             <div className="space-y-3 pl-1">
               <div className="space-y-1">
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display" htmlFor="edit-event-currency">Moneda</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display" htmlFor="edit-event-currency">Moneda</label>
                 <select id="edit-event-currency" className={cn(inputCls, 'font-body', 'max-w-[160px]')} value={currency} onChange={e => setCurrency(e.target.value)}>
                   {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
                 {sedeDesajuste && (
-                  <p className="text-[12px] text-coral font-body">
+                  <p className="text-[13px] text-coral font-body">
                     {sedeSel?.name} cobra normalmente en {sedeSel?.currency}. Revisá la moneda.
                   </p>
                 )}
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Costo</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">{currencySymbol(currency)}</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Costo para servidores (opcional)</label>
+                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo para servidores (opcional)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">{currencySymbol(currency)}</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />
                 </div>
-                <p className="text-[12px] text-navy-light/70 font-body">Se aplica a servidores activos de los comités organizadores.</p>
+                <p className="text-[13px] text-navy-light/80 font-body">Se aplica a servidores activos de los comités organizadores.</p>
               </div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <button type="button" role="switch" aria-checked={!serversPay} aria-label="Servidores exentos de pago" onClick={() => setServersPay(s => !s)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', !serversPay ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', !serversPay ? 'translate-x-4' : 'translate-x-0.5')} /></button>

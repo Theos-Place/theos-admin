@@ -38,7 +38,7 @@ export function SaveListModal({
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+            <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Nombre de la lista *
             </label>
             <input
@@ -50,7 +50,7 @@ export function SaveListModal({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+            <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Descripción (opcional)
             </label>
             <input
@@ -61,7 +61,7 @@ export function SaveListModal({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+            <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Tags (separados por coma)
             </label>
             <input
@@ -73,7 +73,7 @@ export function SaveListModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+            <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Tipo de lista
             </label>
             {[
@@ -91,7 +91,7 @@ export function SaveListModal({
                 </div>
                 <div>
                   <p className="text-[13px] font-medium text-navy font-body">{opt.label}</p>
-                  <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">{opt.desc}</p>
+                  <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{opt.desc}</p>
                 </div>
               </button>
             ))}
@@ -99,7 +99,7 @@ export function SaveListModal({
         </div>
 
         <div
-          className="rounded-xl px-3 py-2.5 text-[12px] text-navy-light/70 bg-surface-low font-body"
+          className="rounded-xl px-3 py-2.5 text-[13px] text-navy-light/80 bg-surface-low font-body"
         >
           Resumen: <strong className="text-navy">{total.toLocaleString('es-CR')} miembros</strong>
           {' · '}{summaryLabel}

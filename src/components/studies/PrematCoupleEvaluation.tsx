@@ -18,7 +18,7 @@ import {
 
 export type Pair = { request_id: string; requester_name: string; spouse_name: string }
 
-const LABEL = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
+const LABEL = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 const INPUT = 'w-full rounded-xl border border-navy/15 bg-white px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body'
 
 function emptyEval(requestId: string): PrematEvaluationInput {
@@ -114,7 +114,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
   if (pairs === null) {
     return (
-      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/70 font-body inline-flex items-center gap-2">
+      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/80 font-body inline-flex items-center gap-2">
         <Loader2 size={14} className="animate-spin" /> Cargando parejas del grupo…
       </p>
     )
@@ -122,7 +122,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
   if (error) return <p className="rounded-2xl bg-coral/5 p-5 text-[13px] text-coral-deep font-body">{error}</p>
   if (pairs.length === 0) {
     return (
-      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/70 font-body">
+      <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/80 font-body">
         Este grupo prematrimonial no tiene parejas registradas desde la cola de solicitudes, así que no hay evaluación por llenar.
       </p>
     )
@@ -141,7 +141,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                 {p.requester_name} &amp; {p.spouse_name}
               </h3>
             </div>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Evaluación de mentores. Es información pastoral: solo la ve la coordinación de estudios y dirección.
             </p>
 
@@ -243,7 +243,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                 ))}
               </div>
               {e.action_plan && needsFollowUp(e.action_plan) && (
-                <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-800 font-body">
+                <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-[13px] text-amber-800 font-body">
                   La pareja queda marcada para <strong>seguimiento</strong>: aparece en la cola prematrimonial y en su ficha administrativa (solo para coordinación y dirección). El grupo se cierra igual.
                 </p>
               )}

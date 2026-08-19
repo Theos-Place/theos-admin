@@ -79,11 +79,11 @@ export default function ReporteDiscipulosPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/70 hover:text-navy transition-colors font-body">
+        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
           <ChevronLeft size={15} /> Reportes
         </Link>
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Discípulos Multiplicadores</h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Personas que cumplen los 3 criterios a la vez: asistencia comprometida, sirven y donan activamente.
         </p>
       </div>
@@ -177,7 +177,7 @@ export default function ReporteDiscipulosPage() {
       <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] space-y-4">
         <div>
           <h3 className="text-sm font-bold text-navy font-display">Fotografía por cohorte</h3>
-          <p className="text-[12px] text-navy-light/70 font-body mt-0.5">
+          <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
             Personas cuya primera charla fue en el año elegido, y cuántas son Discípulos Multiplicadores hoy.
           </p>
         </div>
@@ -190,7 +190,7 @@ export default function ReporteDiscipulosPage() {
               onClick={() => onCohortYear(y)}
               className={cn(
                 'shrink-0 rounded-full px-4 py-1.5 text-sm font-medium font-body transition-colors',
-                y === cohortYear ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/70 hover:bg-surface-high',
+                y === cohortYear ? 'bg-coral text-white' : 'bg-surface-low text-navy-light/80 hover:bg-surface-high',
               )}
             >
               {y}
@@ -213,7 +213,7 @@ export default function ReporteDiscipulosPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] font-body">
             <thead>
-              <tr className="text-navy-light/70 text-left border-b border-outline">
+              <tr className="text-navy-light/80 text-left border-b border-outline">
                 <th className="py-2 pr-3 font-medium">Cohorte</th>
                 <th className="py-2 px-3 font-medium text-right">Nuevos</th>
                 <th className="py-2 px-3 font-medium text-right">DM hoy</th>
@@ -229,7 +229,7 @@ export default function ReporteDiscipulosPage() {
                   <td className="py-2 pr-3 text-navy font-medium tabular-nums">{r.year}</td>
                   <td className="py-2 px-3 text-right text-navy tabular-nums">{fmt(r.nuevos)}</td>
                   <td className="py-2 px-3 text-right text-navy tabular-nums">{fmt(r.dmHoy)}</td>
-                  <td className="py-2 px-3 text-right text-navy-light/70 tabular-nums">
+                  <td className="py-2 px-3 text-right text-navy-light/80 tabular-nums">
                     {r.nuevos > 0 ? `${Math.round((r.dmHoy / r.nuevos) * 1000) / 10}%` : '—'}
                   </td>
                 </tr>
@@ -286,9 +286,9 @@ function VennNum({ x, y, n, big }: { x: number; y: number; n: number; big?: bool
 function CohortStat({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
     <div className={cn('rounded-xl p-3', highlight ? 'bg-coral/10' : 'bg-surface-low')}>
-      <p className="text-[12px] text-navy-light/70 font-body">{label}</p>
+      <p className="text-[13px] text-navy-light/80 font-body">{label}</p>
       <p className={cn('mt-1 text-xl font-extrabold tabular-nums font-display leading-none', highlight ? 'text-coral' : 'text-navy')}>{value}</p>
-      {sub && <p className="mt-1 text-[12px] text-navy-light/70 font-body">{sub}</p>}
+      {sub && <p className="mt-1 text-[13px] text-navy-light/80 font-body">{sub}</p>}
     </div>
   )
 }

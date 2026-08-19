@@ -33,10 +33,10 @@ export function MessagePreview({ channel, subject, waBody, emailBody, marketing 
               <p className="text-sm font-semibold text-navy font-body">
                 {subject || 'Título de la alerta'}
               </p>
-              <p className="text-[13px] text-navy-light/70 font-body whitespace-pre-wrap mt-0.5">
+              <p className="text-[13px] text-navy-light/80 font-body whitespace-pre-wrap mt-0.5">
                 {waBody}
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body mt-1.5">
+              <p className="text-[13px] text-navy-light/80 font-body mt-1.5">
                 Así se verá en la campana de notificaciones
               </p>
             </div>
@@ -49,7 +49,7 @@ export function MessagePreview({ channel, subject, waBody, emailBody, marketing 
       )}
 
       {channel === 'both' && (
-        <div className="flex items-center gap-2 my-4 text-[var(--fg-muted)] text-[12px]">
+        <div className="flex items-center gap-2 my-4 text-[var(--fg-muted)] text-[13px]">
           <div className="flex-1 h-px bg-[var(--outline)]" />
           <span className="font-display tracking-[0.08em] text-[var(--navy-light)] opacity-40">
             Y TAMBIÉN

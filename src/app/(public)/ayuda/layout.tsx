@@ -51,7 +51,7 @@ export default async function AyudaLayout({ children }: { children: React.ReactN
           </Link>
           <Link
             href="/login"
-            className="rounded-full border border-white/20 px-3.5 py-1.5 text-[12px] text-white/90 hover:bg-white/10 transition-colors font-body"
+            className="rounded-full border border-white/20 px-3.5 py-1.5 text-[13px] text-white/90 hover:bg-white/10 transition-colors font-body"
           >
             Iniciar sesión
           </Link>

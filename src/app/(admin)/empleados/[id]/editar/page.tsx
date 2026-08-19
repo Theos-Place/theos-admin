@@ -74,7 +74,7 @@ export default function EditarEmpleadoPage() {
   if (loading && !employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">Cargando empleado...</p>
+        <p className="text-sm text-navy-light/80 font-body">Cargando empleado...</p>
       </div>
     )
   }
@@ -82,7 +82,7 @@ export default function EditarEmpleadoPage() {
   if (!employee) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Empleado no encontrado.
         </p>
       </div>
@@ -119,12 +119,12 @@ export default function EditarEmpleadoPage() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href={`/empleados/${id}`}
-            className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body min-w-0"
+            className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body min-w-0"
           >
             <ChevronLeft size={16} className="shrink-0" />
             <span className="truncate">{employee.member_name}</span>
           </Link>
-          <span className="text-navy-light/70 hidden sm:inline">|</span>
+          <span className="text-navy-light/80 hidden sm:inline">|</span>
           <span className="text-sm font-semibold text-navy font-display shrink-0">
             Editar
           </span>
@@ -132,7 +132,7 @@ export default function EditarEmpleadoPage() {
         <div className="flex items-center gap-2">
           <Link
             href={`/empleados/${id}`}
-            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </Link>
@@ -140,7 +140,7 @@ export default function EditarEmpleadoPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+            className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
@@ -154,16 +154,16 @@ export default function EditarEmpleadoPage() {
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         {/* Info no editable */}
         <div className="rounded-xl p-4 space-y-1 bg-surface-low">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Persona</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Persona</p>
           <p className="text-sm font-semibold text-navy font-display">{employee.member_name}</p>
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Inicio: {new Date(employee.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 
         {/* Email */}
         <div className="space-y-1">
-          <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Correo de contacto
           </label>
           <input
@@ -176,7 +176,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Puesto */}
         <div className="space-y-1">
-          <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Puesto
           </label>
           <select
@@ -194,7 +194,7 @@ export default function EditarEmpleadoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Tipo de contrato
           </label>
           <div className="flex gap-4">
@@ -216,7 +216,7 @@ export default function EditarEmpleadoPage() {
         {/* Días de vacaciones (solo planilla) */}
         {contractType === 'planilla' && (
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Días de vacaciones por año
             </label>
             <input
@@ -233,10 +233,10 @@ export default function EditarEmpleadoPage() {
         {/* Notas */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Notas internas
             </label>
-            <span className="text-[11px] text-navy-light/70 font-mono">
+            <span className="text-[11px] text-navy-light/80 font-mono">
               {notes.length}/500
             </span>
           </div>

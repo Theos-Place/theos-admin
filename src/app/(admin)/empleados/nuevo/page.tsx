@@ -185,7 +185,7 @@ export default function NuevoEmpleadoPage() {
       <StepProgress steps={STEPS} currentStep={step} />
 
       {!canAdvanceCurrent && missingForStep.length > 0 && (
-        <p className="text-[12px] text-navy-light/70 font-body" role="status">
+        <p className="text-[13px] text-navy-light/80 font-body" role="status">
           Para continuar, falta {missingForStep.join(', ')}.
         </p>
       )}
@@ -240,7 +240,7 @@ export default function NuevoEmpleadoPage() {
         <button
           type="button"
           onClick={() => setStep(s => s - 1)}
-          className="flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+          className="flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
         >
           <ChevronLeft size={15} />
           Volver al paso anterior

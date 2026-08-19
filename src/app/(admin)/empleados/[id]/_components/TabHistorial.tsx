@@ -33,9 +33,9 @@ export function TabHistorial({ timeline }: TabHistorialProps) {
                 {item.label}
               </p>
               {item.sub && (
-                <p className="text-[12px] text-navy-light/70 font-body">{item.sub}</p>
+                <p className="text-[13px] text-navy-light/80 font-body">{item.sub}</p>
               )}
-              <p className="text-[11px] text-navy-light/70 mt-0.5 font-mono">
+              <p className="text-[11px] text-navy-light/80 mt-0.5 font-mono">
                 {new Date(item.date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>

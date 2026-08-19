@@ -196,7 +196,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   if (loadingForm) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-low">
-        <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
+        <p className="text-sm text-navy-light/80 font-body">Cargando…</p>
       </div>
     )
   }
@@ -204,7 +204,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">Formulario no encontrado.</p>
+        <p className="text-sm text-navy-light/80 font-body">Formulario no encontrado.</p>
       </div>
     )
   }
@@ -215,12 +215,12 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       <div className="min-h-screen flex items-center justify-center p-4 bg-surface-low">
         <div className="w-full max-w-md text-center space-y-4">
           <div className="h-16 w-16 rounded-full bg-surface-card flex items-center justify-center mx-auto shadow-[var(--shadow-md)]">
-            <AlertTriangle size={26} className="text-navy-light/70" />
+            <AlertTriangle size={26} className="text-navy-light/80" />
           </div>
           <h1 className="text-xl font-extrabold text-navy font-display tracking-[-0.02em]">
             {form.name}
           </h1>
-          <p className="text-sm text-navy-light/70 font-body leading-relaxed">{sinAcceso}</p>
+          <p className="text-sm text-navy-light/80 font-body leading-relaxed">{sinAcceso}</p>
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-full bg-navy px-5 py-2.5 text-sm text-white hover:bg-navy/80 transition-colors font-body"
@@ -240,7 +240,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             <Check size={28} className="text-teal-deep" />
           </div>
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">Ya respondiste este formulario</h2>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             Tu respuesta quedó registrada. Si necesitás corregir algo, escribinos y lo revisamos.
           </p>
         </div>
@@ -354,7 +354,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             ¡Respuesta enviada!
           </h2>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             Gracias por completar el formulario. Tu respuesta fue registrada correctamente.
           </p>
           {(isPreview || form.allow_multiple_responses) && (
@@ -380,13 +380,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
         <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-2 bg-amber-500">
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="text-white" />
-            <span className="text-[12px] font-semibold text-white font-display">
+            <span className="text-[13px] font-semibold text-white font-display">
               VISTA PREVIA — las respuestas no se guardan
             </span>
           </div>
           <Link
             href={`/formularios/${id}`}
-            className="flex items-center gap-1 text-[12px] text-white/80 hover:text-white transition-colors font-body"
+            className="flex items-center gap-1 text-[13px] text-white/80 hover:text-white transition-colors font-body"
           >
             <ChevronLeft size={13} />
             Volver al editor
@@ -416,7 +416,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
               </>
             )}
             {form.description && (
-              <p className="text-sm text-navy-light/70 mt-2 text-center leading-relaxed font-body">
+              <p className="text-sm text-navy-light/80 mt-2 text-center leading-relaxed font-body">
                 {form.description}
               </p>
             )}
@@ -425,10 +425,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {isMultiStep && (
               <div className="mt-5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-navy-light/70 font-body">
+                  <span className="text-[13px] font-semibold text-navy-light/80 font-body">
                     Página {currentPage + 1} de {totalPages}
                   </span>
-                  <span className="text-[12px] font-semibold text-coral font-mono">
+                  <span className="text-[13px] font-semibold text-coral font-mono">
                     {progress}%
                   </span>
                 </div>
@@ -444,7 +444,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   </p>
                 )}
                 {currentPageBreak?.description && (
-                  <p className="text-[12px] text-navy-light/70 font-body">
+                  <p className="text-[13px] text-navy-light/80 font-body">
                     {currentPageBreak.description}
                   </p>
                 )}
@@ -474,13 +474,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                             Tus datos personales
                           </span>
                         </div>
-                        <div className="text-[12px] text-[var(--fg-muted,#8c8fb0)] font-body">
+                        <div className="text-[13px] text-[var(--fg-muted,#8c8fb0)] font-body">
                           Tomados de tu perfil — no editables acá
                         </div>
                       </div>
                       <button
                         type="button"
-                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                         onClick={() => toast('Redirigir al perfil del miembro para editar datos', 'info')}
                       >
                         <Pencil size={11} />
@@ -525,7 +525,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                         {field.is_required && <span className="ml-1 text-coral">*</span>}
                       </span>
                       {field.helper_text && (
-                        <span className="block text-[12px] text-navy-light/70 mt-0.5">{field.helper_text}</span>
+                        <span className="block text-[13px] text-navy-light/80 mt-0.5">{field.helper_text}</span>
                       )}
                     </label>
                   )}
@@ -537,7 +537,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   />
 
                   {hasError && (
-                    <p className="text-[12px] text-coral font-body">
+                    <p className="text-[13px] text-coral font-body">
                       Este campo es obligatorio.
                     </p>
                   )}
@@ -567,7 +567,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {submitError && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
                 <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[12px] text-coral font-body">
+                <p className="text-[13px] text-coral font-body">
                   {submitError}
                 </p>
               </div>
@@ -576,7 +576,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {errors.length > 0 && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
                 <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[12px] text-coral font-body">
+                <p className="text-[13px] text-coral font-body">
                   Por favor completá los campos obligatorios marcados en rojo.
                 </p>
               </div>
@@ -623,7 +623,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
               </button>
             )}
 
-            <p className="text-center text-[12px] text-navy-light/70 mt-3 font-body">
+            <p className="text-center text-[13px] text-navy-light/80 mt-3 font-body">
               Theos Place · {form.name}
             </p>
           </div>

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { Check, X } from 'lucide-react'
 import type { CommunicationMessage } from '@/types/communication'
 
-const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/70 font-display'
+const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 const PREVIEW_COUNT = 20
 
 type Props = {
@@ -57,7 +57,7 @@ export function RecipientsSection({
       </p>
 
       {reenviarMsg && (
-        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-[12px] bg-[rgba(112,189,194,0.1)] font-body">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] bg-[rgba(112,189,194,0.1)] font-body">
           <Check size={13} className="text-teal-deep shrink-0" />
           <span className="text-teal-deep">Reenviando: &ldquo;{reenviarMsg.subject || reenviarMsg.body.slice(0, 60)}&rdquo;</span>
         </div>
@@ -74,7 +74,7 @@ export function RecipientsSection({
                   Destinatarios ({recipients.count.toLocaleString('es-CR')})
                 </p>
                 <div className="h-px my-1.5 bg-[var(--outline-variant)]" />
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   Importado desde lista de miembros
                 </p>
                 {initialSegmentLabel && (
@@ -89,7 +89,7 @@ export function RecipientsSection({
                   setIsImported(false)
                   setRecipients({ mode: 'manual', manualMemberIds: [], groupEntity: null, groupId: '', label: '', count: 0 })
                 }}
-                className="flex items-center gap-1 text-[12px] text-navy-light/70 hover:text-coral transition-colors shrink-0 font-body"
+                className="flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors shrink-0 font-body"
               >
                 <X size={12} />
                 Limpiar
@@ -99,7 +99,7 @@ export function RecipientsSection({
             <button
               type="button"
               onClick={() => setShowExpandedList(v => !v)}
-              className="text-[12px] text-coral hover:underline transition-colors font-body"
+              className="text-[13px] text-coral hover:underline transition-colors font-body"
             >
               {showExpandedList ? 'Ocultar lista ↑' : 'Ver lista completa ↓'}
             </button>
@@ -107,7 +107,7 @@ export function RecipientsSection({
             {showExpandedList && (
               <div className="space-y-1.5 pt-1">
                 {previewMembers.map(m => (
-                  <div key={m.id} className="flex items-center gap-2 text-[12px] text-navy-light/70 font-body">
+                  <div key={m.id} className="flex items-center gap-2 text-[13px] text-navy-light/80 font-body">
                     <div className="h-5 w-5 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
                       {m.first_name[0]}{m.last_name[0]}
                     </div>
@@ -115,7 +115,7 @@ export function RecipientsSection({
                   </div>
                 ))}
                 {recipients.count > previewMembers.length && (
-                  <p className="text-[12px] text-navy-light/70 pt-0.5 font-body">
+                  <p className="text-[13px] text-navy-light/80 pt-0.5 font-body">
                     y {(recipients.count - previewMembers.length).toLocaleString('es-CR')} más
                   </p>
                 )}

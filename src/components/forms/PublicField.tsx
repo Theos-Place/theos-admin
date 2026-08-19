@@ -35,7 +35,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
       <div className="pt-4">
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-          <span className="text-[12px] uppercase tracking-widest font-semibold text-navy-light/70 font-display">
+          <span className="text-[13px] uppercase tracking-widest font-semibold text-navy-light/80 font-display">
             {field.label}
           </span>
           <div className="flex-1 h-px bg-[var(--outline-variant)]" />
@@ -181,7 +181,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
               'flex-1 rounded-xl border py-3 text-sm font-semibold transition-all font-body',
               stringVal === v
                 ? v === 'Sí' ? 'bg-teal-deep text-white border-teal-deep' : 'bg-coral text-white border-coral'
-                : 'text-navy-light/70 hover:bg-surface-low'
+                : 'text-navy-light/80 hover:bg-surface-low'
             )}
             style={{
               borderColor: stringVal === v ? undefined : 'var(--outline-variant)',

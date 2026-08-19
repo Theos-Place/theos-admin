@@ -24,8 +24,8 @@ export function KpiCard({
       highlight ? 'bg-coral/[0.06] ring-2 ring-coral/40' : 'bg-surface-card',
     )}>
       <p className={cn(
-        'text-[12px] tracking-widest uppercase font-display flex items-center gap-1',
-        highlight ? 'text-coral' : 'text-navy-light/70',
+        'text-[13px] tracking-widest uppercase font-display flex items-center gap-1',
+        highlight ? 'text-coral' : 'text-navy-light/80',
       )}>
         {label}
         {info && (
@@ -42,7 +42,7 @@ export function KpiCard({
                 `title` nativo, que no aparece en móvil y es lento). */}
             <span
               role="tooltip"
-              className="pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 w-48 -translate-x-1/2 rounded-lg bg-navy px-2.5 py-1.5 text-[12px] font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-[var(--shadow-lg)] transition-opacity duration-150 font-body group-hover/info:opacity-100 group-focus-within/info:opacity-100"
+              className="pointer-events-none absolute left-1/2 top-full z-30 mt-1.5 w-48 -translate-x-1/2 rounded-lg bg-navy px-2.5 py-1.5 text-[13px] font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-[var(--shadow-lg)] transition-opacity duration-150 font-body group-hover/info:opacity-100 group-focus-within/info:opacity-100"
             >
               {info}
             </span>
@@ -51,11 +51,11 @@ export function KpiCard({
       </p>
       <p className="mt-1.5 text-2xl font-extrabold text-navy tabular-nums font-display leading-none">{value}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
-        {sublabel && <p className="text-[12px] text-navy-light/70 font-body">{sublabel}</p>}
+        {sublabel && <p className="text-[13px] text-navy-light/80 font-body">{sublabel}</p>}
         {changePct != null && (
           <span className={cn(
-            'inline-flex items-center gap-0.5 text-[12px] font-medium font-body shrink-0',
-            up ? 'text-teal-deep' : down ? 'text-coral' : 'text-navy-light/70',
+            'inline-flex items-center gap-0.5 text-[13px] font-medium font-body shrink-0',
+            up ? 'text-teal-deep' : down ? 'text-coral' : 'text-navy-light/80',
           )}>
             <Icon size={13} />
             {changePct > 0 ? '+' : ''}{changePct}%

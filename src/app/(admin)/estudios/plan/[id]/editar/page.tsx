@@ -14,7 +14,7 @@ import type { StudyType } from '@/types/study'
 import { CURRENCIES, currencySymbol } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[12px] text-navy-light/70 font-display'
+const labelCls = 'text-[13px] text-navy-light/80 font-display'
 
 function Toggle({ checked, onChange, label, sublabel }: {
   checked: boolean
@@ -26,7 +26,7 @@ function Toggle({ checked, onChange, label, sublabel }: {
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-sm text-navy font-body">{label}</p>
-        {sublabel && <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">{sublabel}</p>}
+        {sublabel && <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{sublabel}</p>}
       </div>
       <label className="toggle shrink-0 cursor-pointer">
         <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} aria-label={label} />
@@ -63,7 +63,7 @@ export default function EditarEstudioPage({ params }: { params: Promise<{ id: st
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Editar estudio
         </h1>
-        <p className="text-navy-light/70 font-body">Estudio no encontrado.</p>
+        <p className="text-navy-light/80 font-body">Estudio no encontrado.</p>
       </div>
     )
   }
@@ -143,7 +143,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
       {/* Back */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver
       </button>
@@ -154,7 +154,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             Editar estudio
           </h1>
-          <p className="mt-1 text-sm text-navy-light/70 font-body">
+          <p className="mt-1 text-sm text-navy-light/80 font-body">
             {studyType.code} · {STAGE_LABEL[studyType.stage]}
           </p>
         </div>
@@ -213,7 +213,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
                   <button
                     type="button"
                     onClick={() => setForm(p => ({ ...p, mentor_id: '', mentor_name: '' }))}
-                    className="inline-flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+                    className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
                   >
                     <X size={13} /> Quitar
                   </button>

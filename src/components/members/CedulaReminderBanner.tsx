@@ -32,7 +32,7 @@ export function CedulaReminderBanner() {
       <IdCard size={18} className="mt-0.5 shrink-0 text-coral-deep" aria-hidden />
       <div className="flex-1 text-sm text-navy font-body">
         <p className="font-medium">Falta tu cédula</p>
-        <p className="mt-0.5 text-navy-light/70">
+        <p className="mt-0.5 text-navy-light/80">
           Registrá tu número de cédula para completar tu perfil. Es necesario para algunos trámites
           (como la inscripción al curso prematrimonial).
         </p>

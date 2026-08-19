@@ -18,17 +18,17 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <Link
           href="/empleados"
-          className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body shrink-0"
+          className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body shrink-0"
         >
           <ChevronLeft size={16} />
           Empleados
         </Link>
-        <span className="text-navy-light/70 hidden sm:inline">|</span>
+        <span className="text-navy-light/80 hidden sm:inline">|</span>
         <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
           Contratar empleado
         </span>
         <span
-          className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[12px] font-semibold text-navy-light/70 lg:hidden font-display"
+          className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[13px] font-semibold text-navy-light/80 lg:hidden font-display"
         >
           {step}/{totalSteps}
         </span>
@@ -36,7 +36,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
       <div className="flex items-center gap-2">
         <Link
           href="/empleados"
-          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
         >
           Cancelar
         </Link>
@@ -46,7 +46,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
             onClick={onNext}
             disabled={!canAdvance}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors font-body',
+              'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
               canAdvance ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
@@ -58,7 +58,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
             onClick={onFinish}
             disabled={!canAdvance}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors font-body',
+              'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
               canAdvance ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >

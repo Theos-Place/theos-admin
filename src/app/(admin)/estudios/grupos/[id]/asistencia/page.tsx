@@ -47,16 +47,16 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
   const enrolled = group?.participants.filter(p => p.status === 'enrolled') ?? []
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/70 font-body">Cargando…</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/80 font-body">Cargando…</p></div>
   }
 
   if (!group) {
     return (
       <div className="space-y-4">
-        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
+        <Link href="/estudios/grupos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy">
           <ChevronLeft size={16} /> Grupos
         </Link>
-        <p className="text-navy-light/70 font-body">Grupo no encontrado.</p>
+        <p className="text-navy-light/80 font-body">Grupo no encontrado.</p>
       </div>
     )
   }
@@ -102,7 +102,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           <p className="text-xl font-bold text-navy font-display">
             Asistencia guardada
           </p>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             {presentCount} de {enrolled.length} participantes presentes.
           </p>
           <Link
@@ -120,7 +120,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
     <div className="space-y-5">
       <Link
         href={`/estudios/grupos/${id}`}
-        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} /> Volver al grupo
       </Link>
@@ -132,12 +132,12 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
         >
           Pasar lista
         </h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           {group.study_type_id} — {sedeLabel(group.zone)}
         </p>
         {/* Fecha editable (default hoy, sin futuro): permite registrar una
             sesión pasada que quedó sin pasar lista ese día. */}
-        <label className="mt-1 flex items-center gap-2 text-sm text-navy-light/70 font-body">
+        <label className="mt-1 flex items-center gap-2 text-sm text-navy-light/80 font-body">
           Fecha de la sesión
           <input
             type="date"
@@ -173,10 +173,10 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                   <button
                     onClick={() => setAttendance(prev => ({ ...prev, [p.member_id]: !prev[p.member_id] }))}
                     className={cn(
-                      'rounded-full px-4 py-1.5 text-[12px] font-medium transition-all',
+                      'rounded-full px-4 py-1.5 text-[13px] font-medium transition-all',
                       present
                         ? 'bg-teal-deep text-white'
-                        : 'bg-surface-low text-navy-light/70 hover:bg-surface-card',
+                        : 'bg-surface-low text-navy-light/80 hover:bg-surface-card',
                       'font-display',
                     )}
                   >
@@ -195,7 +195,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p
-                  className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                  className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   Sesión {sessionNum} de {studyType?.weeks ?? '?'}
                 </p>
@@ -207,7 +207,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                   >
                     {presentCount} / {enrolled.length}
                   </p>
-                  <p className="text-[12px] text-navy-light/70 font-body">presentes</p>
+                  <p className="text-[13px] text-navy-light/80 font-body">presentes</p>
                 </div>
                 <button
                   onClick={markAll}
@@ -222,7 +222,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           {/* Notes */}
           <div className="space-y-1">
             <label
-              className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display"
+              className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
             >
               Notas de la sesión
             </label>
@@ -235,7 +235,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
             />
           </div>
 
-          {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+          {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
           <button
             onClick={handleSave}

@@ -53,7 +53,7 @@ function Field({
     <div>
       <label
         htmlFor={htmlFor}
-        className="block text-[12px] font-medium text-navy-light/70 mb-1.5 uppercase tracking-wider font-display"
+        className="block text-[13px] font-medium text-navy-light/80 mb-1.5 uppercase tracking-wider font-display"
       >
         {label}
         {required && <span className="text-coral ml-1">*</span>}
@@ -150,7 +150,7 @@ export function NewMemberStep1({
             <Loader2
               size={15}
               strokeWidth={2}
-              className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-navy-light/70"
+              className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-navy-light/80"
             />
           )}
         </div>

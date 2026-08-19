@@ -55,13 +55,13 @@ export function ModalAjusteSalarial({
           <>
             <h2 id="modal-ajuste-salarial" className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
             <div className="space-y-1">
-              <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Salario actual</label>
+              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Salario actual</label>
               <p className="text-sm text-navy font-mono">{currentSalary != null ? `${formatCRC(currentSalary)}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Nuevo salario <span className="text-coral">*</span></label>
+              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Nuevo salario <span className="text-coral">*</span></label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">₡</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">₡</span>
                 <input
                   type="number"
                   className={cn(inputCls, 'pl-7 font-body')}
@@ -71,11 +71,11 @@ export function ModalAjusteSalarial({
                 />
               </div>
               {raiseAmount && parseFloat(raiseAmount) <= (currentSalary ?? 0) && (
-                <p className="text-[12px] text-coral font-body">El nuevo salario debe ser mayor al actual.</p>
+                <p className="text-[13px] text-coral font-body">El nuevo salario debe ser mayor al actual.</p>
               )}
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Motivo <span className="text-coral">*</span></label>
+              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo <span className="text-coral">*</span></label>
               <input
                 className={cn(inputCls, 'font-body')}
                 placeholder="Ej: Ajuste por desempeño"
@@ -84,7 +84,7 @@ export function ModalAjusteSalarial({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">Fecha efectiva <span className="text-coral">*</span></label>
+              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral">*</span></label>
               <input
                 type="date"
                 className={cn(inputCls, 'font-body')}

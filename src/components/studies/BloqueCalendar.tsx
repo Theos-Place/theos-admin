@@ -48,7 +48,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
           {ticks.map(t => (
             <span
               key={t.mes}
-              className="absolute text-[11px] uppercase tracking-widest text-navy-light/70 font-display"
+              className="absolute text-[11px] uppercase tracking-widest text-navy-light/80 font-display"
               style={{ left: `${t.pct}%` }}
             >
               {t.mes}
@@ -82,7 +82,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
 
           <div className="relative space-y-2 py-2">
             {barras.length === 0 && (
-              <p className="text-[13px] text-navy-light/70 font-body py-6 text-center">
+              <p className="text-[13px] text-navy-light/80 font-body py-6 text-center">
                 No hay bloques en {year}.
               </p>
             )}
@@ -127,7 +127,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
 
                 {/* Nombre: al lado de la barra, para que se lea aunque sea corta */}
                 <span
-                  className={cn('absolute top-2 text-[12px] font-body whitespace-nowrap', color.text)}
+                  className={cn('absolute top-2 text-[13px] font-body whitespace-nowrap', color.text)}
                   style={
                     bar.leftPct + bar.widthPct > 80
                       ? { right: `${100 - bar.leftPct}%`, paddingRight: 6 }
@@ -142,7 +142,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
             {/* Carril de ventanas de matrícula por grupo (GRU-1) */}
             {ventanasVisibles.length > 0 && (
               <div className="pt-3 mt-1 border-t border-[var(--outline-variant)] space-y-1">
-                <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+                <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
                   Ventanas de matrícula por grupo ({ventanasVisibles.length})
                 </p>
                 <div className="relative h-3">
@@ -161,7 +161,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
         </div>
 
         {/* Leyenda */}
-        <div className="flex flex-wrap items-center gap-4 pt-1 text-[12px] text-navy-light/70 font-body">
+        <div className="flex flex-wrap items-center gap-4 pt-1 text-[13px] text-navy-light/80 font-body">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-[3px] rounded-full bg-navy/70" /> Hito de folleto
           </span>
@@ -171,7 +171,7 @@ export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: 
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-coral" /> Hoy
           </span>
-          <span className="text-navy-light/70">
+          <span className="text-navy-light/80">
             La barra cubre el bloque completo, del primer folleto al cierre del bloque (cierre de matrícula + 3 meses); el tramo oscuro es la ventana de matrícula.
           </span>
         </div>

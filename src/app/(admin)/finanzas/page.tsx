@@ -104,7 +104,7 @@ export default function FinanzasPage() {
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Finanzas
               </h1>
-              <p className="text-[12px] text-white/70 mt-0.5 font-body">
+              <p className="text-[13px] text-white/80 mt-0.5 font-body">
                 Gestión financiera de Theos Place
               </p>
             </div>
@@ -116,7 +116,7 @@ export default function FinanzasPage() {
                 <button
                   key={opt.value}
                   onClick={() => setPeriod(opt.value)}
-                  className="rounded-full px-3 py-1.5 text-[12px] transition-all font-body"
+                  className="rounded-full px-3 py-1.5 text-[13px] transition-all font-body"
                   style={{
                     background: period === opt.value ? 'rgba(255,255,255,0.20)' : 'transparent',
                     color: period === opt.value ? 'white' : 'rgba(255,255,255,0.55)',
@@ -130,7 +130,7 @@ export default function FinanzasPage() {
             {/* Eye toggle */}
             <button
               onClick={() => setRevealAll(r => !r)}
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-all font-body border border-transparent"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] transition-all font-body border border-transparent"
               style={{
                 background: revealAll ? 'rgba(81,157,162,0.25)' : 'rgba(255,255,255,0.10)',
                 color: revealAll ? '#70BDC2' : 'rgba(255,255,255,0.60)',
@@ -164,7 +164,7 @@ export default function FinanzasPage() {
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}
             </p>
-            <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">Donaron en los últimos 2 trimestres</p>
+            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">Donaron en los últimos 2 trimestres</p>
           </div>
 
           {/* Pagos pendientes */}
@@ -214,7 +214,7 @@ export default function FinanzasPage() {
           <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
               <p className="text-sm font-bold font-display text-navy">Pagos recientes</p>
-              <Link href="/finanzas/pagos" className="text-[12px] font-medium text-teal-deep font-body">
+              <Link href="/finanzas/pagos" className="text-[13px] font-medium text-teal-deep font-body">
                 Ver todos →
               </Link>
             </div>
@@ -242,7 +242,7 @@ export default function FinanzasPage() {
                         <p className="text-[13px] font-medium font-body text-navy">
                           {p.member_name.split(' ')[0]}
                         </p>
-                        <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body">
+                        <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body">
                           {p.member_cedula}
                         </p>
                       </td>
@@ -261,7 +261,7 @@ export default function FinanzasPage() {
                         <PaymentStatusBadge status={p.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-[12px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
+                        <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
                           {formatDate(p.created_at)}
                         </p>
                       </td>
@@ -283,8 +283,8 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-medium font-body text-navy truncate">
                       {p.member_name.split(' ')[0]} <span className="text-[rgba(22,20,64,0.45)] font-normal">{p.member_cedula}</span>
                     </p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
-                    <p className="text-[12px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
+                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -301,7 +301,7 @@ export default function FinanzasPage() {
           <div className="space-y-4">
             {/* Quick access */}
             <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[12px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
+              <p className="text-[13px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
                 Accesos rápidos
               </p>
               <div className="space-y-2">
@@ -338,7 +338,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                       {sinpePendingRefunds.length} devoluci{sinpePendingRefunds.length === 1 ? 'ón' : 'ones'} SINPE pendiente{sinpePendingRefunds.length !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-[12px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
+                    <p className="text-[13px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                       Requieren procesamiento manual →
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#C41A1A]">
                       {failedRecent7.length} pago{failedRecent7.length !== 1 ? 's' : ''} fallido{failedRecent7.length !== 1 ? 's' : ''} (7 días)
                     </p>
-                    <p className="text-[12px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
+                    <p className="text-[13px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
                       Revisar en módulo de pagos →
                     </p>
                   </div>
@@ -372,7 +372,7 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#1E6B42]">
                       {unusedScholarships} beca{unusedScholarships !== 1 ? 's' : ''} sin usar
                     </p>
-                    <p className="text-[12px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
+                    <p className="text-[13px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
                       Ver módulo de becas →
                     </p>
                   </div>

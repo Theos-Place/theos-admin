@@ -285,13 +285,13 @@ function NuevaComunicacionContent() {
           <h2 className="text-2xl font-extrabold text-navy font-display tracking-[-0.02em]">
             {scheduledIso ? '¡Mensaje programado!' : '¡Mensaje enviado!'}
           </h2>
-          <p className="text-sm text-navy-light/70 mt-1 font-body">
+          <p className="text-sm text-navy-light/80 mt-1 font-body">
             {scheduledIso
               ? `Sale el ${scheduleSummary(scheduledIso, timezone)} a ${recipients.count.toLocaleString('es-CR')} personas`
               : `Enviado a ${recipients.count.toLocaleString('es-CR')} personas`}
           </p>
           {scheduledIso && (
-            <p className="text-[12px] text-navy-light/70 mt-2 font-body max-w-sm">
+            <p className="text-[13px] text-navy-light/80 mt-2 font-body max-w-sm">
               El envío se revisa cada {TICK_MINUTES} minutos, así que puede salir hasta
               {' '}{TICK_MINUTES} minutos después de esa hora. Podés cancelarlo desde el
               historial mientras no haya salido.
@@ -323,7 +323,7 @@ function NuevaComunicacionContent() {
       <div>
         <Link
           href="/comunicaciones"
-          className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body"
+          className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors mb-2 font-body"
         >
           <ChevronLeft size={15} />
           Comunicaciones
@@ -375,7 +375,7 @@ function NuevaComunicacionContent() {
 
           {(channel === 'email' || channel === 'both') && (
             <div className="rounded-2xl bg-surface-card p-4 sm:p-5 shadow-[var(--shadow-md)] space-y-3">
-              <p className="text-[13px] text-navy-light/70 font-body leading-relaxed">
+              <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
                 {emailKindNotice(emailKind)}
               </p>
               <label className="flex items-start gap-2.5 cursor-pointer">
@@ -387,7 +387,7 @@ function NuevaComunicacionContent() {
                 />
                 <span>
                   <span className="block text-sm text-navy font-body">{NOTICE_OVERRIDE_LABEL}</span>
-                  <span className="block text-[12px] text-navy-light/70 font-body mt-0.5">{NOTICE_OVERRIDE_HINT}</span>
+                  <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">{NOTICE_OVERRIDE_HINT}</span>
                 </span>
               </label>
             </div>
@@ -427,7 +427,7 @@ function NuevaComunicacionContent() {
 
         {/* Right: Preview */}
         <div className="space-y-3 xl:sticky xl:top-4">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
             Vista previa
           </p>
           <MessagePreview
@@ -479,7 +479,7 @@ export default function NuevaComunicacionPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/80 font-body">Cargando...</div>
       </div>
     }>
       <NuevaComunicacionContent />

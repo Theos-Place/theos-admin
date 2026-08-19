@@ -20,7 +20,7 @@ function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
   return (
     <span className={cn(
       'rounded-full px-2 py-0.5 text-[11px] font-medium font-body shrink-0',
-      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/70',
+      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/80',
     )}>
       {status === 'activo' ? 'Activo' : 'Inactivo'}
     </span>
@@ -81,19 +81,19 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
         />
         {selected && !open ? <StatusBadge status={selected.status} /> : null}
         {value ? (
-          <button type="button" onClick={() => { onChange(null); setQ('') }} className="text-navy-light/70 hover:text-coral shrink-0" aria-label="Limpiar">
+          <button type="button" onClick={() => { onChange(null); setQ('') }} className="text-navy-light/80 hover:text-coral shrink-0" aria-label="Limpiar">
             <X size={14} />
           </button>
         ) : (
-          <ChevronDown size={15} className="text-navy-light/70 shrink-0" />
+          <ChevronDown size={15} className="text-navy-light/80 shrink-0" />
         )}
       </div>
 
       {open && (
         <ComboPanel rounded="2xl">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
-            <Search size={14} className="text-navy-light/70 shrink-0" />
-            <span className="text-xs text-navy-light/70 font-body">Buscá por nombre…</span>
+            <Search size={14} className="text-navy-light/80 shrink-0" />
+            <span className="text-xs text-navy-light/80 font-body">Buscá por nombre…</span>
           </div>
           <div className="max-h-64 overflow-y-auto py-1">
             {options.length === 0 ? (

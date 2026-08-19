@@ -97,7 +97,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
         <div className="p-6 text-center space-y-3">
           <Send size={32} className="text-teal-deep mx-auto" />
           <p id="enviar-mensaje-titulo" className="font-semibold text-navy font-display">Mensaje enviado</p>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             Se envió a {memberIds.length} inscrito{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
             Podés ver el estado en Comunicaciones.
           </p>
@@ -110,7 +110,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
     <Modal onClose={onClose} titleId="enviar-mensaje-titulo" width={384}>
       <div className="p-5 space-y-4">
         <h3 id="enviar-mensaje-titulo" className="font-semibold text-navy font-display">Enviar mensaje a los inscritos</h3>
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Va por correo y notificación interna a {memberIds.length} inscrito{memberIds.length !== 1 ? 's' : ''} con miembro asociado.
         </p>
         <input
@@ -289,16 +289,16 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   if (!event) {
     return (
       <div className="space-y-4">
-        <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy">
+        <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy">
           <ChevronLeft size={16} /> Eventos
         </Link>
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-24 text-navy-light/70">
+          <div className="flex flex-col items-center justify-center gap-3 py-24 text-navy-light/80">
             <div className="h-8 w-8 rounded-full border-2 border-coral/30 border-t-coral animate-spin" aria-hidden />
             <p className="text-sm font-body">Cargando evento…</p>
           </div>
         ) : (
-          <p className="text-navy-light/70 font-body">Evento no encontrado.</p>
+          <p className="text-navy-light/80 font-body">Evento no encontrado.</p>
         )}
       </div>
     )
@@ -554,8 +554,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 key={t}
                 onClick={() => setActiveTab(t)}
                 className={cn(
-                  'flex-1 whitespace-nowrap px-2 py-2.5 text-[12px] transition-colors',
-                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/70 hover:text-navy',
+                  'flex-1 whitespace-nowrap px-2 py-2.5 text-[13px] transition-colors',
+                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/80 hover:text-navy',
                   'font-body'
                 )}
               >
@@ -662,7 +662,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           )}
 
           <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)] text-center">
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               {canSendMessage
                 ? 'Los mensajes enviados desde acá quedan registrados en el módulo de Comunicaciones.'
                 : 'El envío de mensajes requiere el rol de comunicaciones.'}
@@ -677,7 +677,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Gauge tasa de asistencia */}
             <div className="rounded-2xl p-5 flex flex-col items-center bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-4 self-start font-display">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/80 mb-4 self-start font-display">
                 Tasa de asistencia
               </p>
               <svg viewBox="0 0 100 60" className="w-40 h-24">
@@ -696,7 +696,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   {attendanceRate}%
                 </text>
               </svg>
-              <p className="text-[12px] text-navy-light/70 mt-2 font-body">
+              <p className="text-[13px] text-navy-light/80 mt-2 font-body">
                 {checkinCount} de {registrationCount} inscritos asistieron
               </p>
             </div>
@@ -704,22 +704,22 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             {/* Ingresos */}
             {event.requires_payment && event.payment_amount && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[11px] tracking-widest uppercase text-navy-light/70 mb-3 font-display">
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/80 mb-3 font-display">
                   Ingresos estimados
                 </p>
                 <p className="text-4xl font-extrabold text-navy tabular-nums font-display">
                   {formatMoney(incomeEstimate, event.currency)}
                 </p>
-                <p className="text-[12px] text-navy-light/70 mt-2 font-body">
+                <p className="text-[13px] text-navy-light/80 mt-2 font-body">
                   {checkinCount} asistentes × {formatMoney(event.payment_amount, event.currency)}
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[11px] text-navy-light/70 font-display">Pagados</p>
+                    <p className="text-[11px] text-navy-light/80 font-display">Pagados</p>
                     <p className="font-semibold text-navy font-body">{event.registrations.filter(r => r.payment_status === 'paid').length}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-navy-light/70 font-display">Pendientes</p>
+                    <p className="text-[11px] text-navy-light/80 font-display">Pendientes</p>
                     <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending').length}</p>
                   </div>
                 </div>
@@ -766,7 +766,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         <div className="rounded-2xl bg-teal-soft/20 px-4 py-3 text-sm text-teal-deep font-body flex items-center gap-2">
           <Check size={16} />
           Quedaste inscrito/a en {successEvent}.
-          <button onClick={clearSuccess} className="ml-auto text-navy-light/70 hover:text-navy" aria-label="Cerrar aviso">
+          <button onClick={clearSuccess} className="ml-auto text-navy-light/80 hover:text-navy" aria-label="Cerrar aviso">
             <X size={16} />
           </button>
         </div>
@@ -796,7 +796,7 @@ function DeleteEventModal({ busy, onConfirm, onClose }: {
     <Modal onClose={onClose} titleId="del-evento-title" width={448}>
       <div className="px-5 py-4 border-b border-b-[var(--outline-variant)]">
         <h3 id="del-evento-title" className="text-sm font-semibold text-navy font-display">Eliminar evento</h3>
-        <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+        <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
           Este es un evento recurrente. ¿Qué querés eliminar?
         </p>
       </div>
@@ -816,7 +816,7 @@ function DeleteEventModal({ busy, onConfirm, onClose }: {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-navy font-body">{opt.title}</p>
-                <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">{opt.desc}</p>
+                <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{opt.desc}</p>
               </div>
             </div>
           </div>

@@ -83,12 +83,12 @@ export default function NuevoPuestoPage() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/empleados/puestos"
-            className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body shrink-0"
+            className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body shrink-0"
           >
             <ChevronLeft size={16} />
             Puestos
           </Link>
-          <span className="text-navy-light/70 hidden sm:inline">|</span>
+          <span className="text-navy-light/80 hidden sm:inline">|</span>
           <span className="text-sm font-semibold text-navy font-display truncate hidden sm:inline">
             Nuevo puesto
           </span>
@@ -96,7 +96,7 @@ export default function NuevoPuestoPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/empleados/puestos"
-            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Cancelar
           </Link>
@@ -105,7 +105,7 @@ export default function NuevoPuestoPage() {
             onClick={handleSave}
             disabled={!canSave()}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] text-white transition-colors font-body',
+              'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
               canSave() ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
@@ -122,7 +122,7 @@ export default function NuevoPuestoPage() {
         {/* Nombre + Comité */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Nombre del puesto <span className="text-coral">*</span>
             </label>
             <input
@@ -134,7 +134,7 @@ export default function NuevoPuestoPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Comité asociado <span className="text-coral">*</span>
             </label>
             <select
@@ -157,10 +157,10 @@ export default function NuevoPuestoPage() {
         {/* Descripción */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Descripción de funciones
             </label>
-            <span className="text-[11px] text-navy-light/70 font-mono">
+            <span className="text-[11px] text-navy-light/80 font-mono">
               {description.length}/600
             </span>
           </div>
@@ -177,7 +177,7 @@ export default function NuevoPuestoPage() {
         {/* Tipo de contrato + Rango salarial */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Tipo de contrato
             </label>
             <div className="flex gap-4">
@@ -198,18 +198,18 @@ export default function NuevoPuestoPage() {
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Rango salarial aprobado
               </label>
               <span
-                className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/70 font-display"
+                className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/80 font-display"
               >
                 Confidencial
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">₡</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">₡</span>
                 <input
                   type="number"
                   className={cn(inputCls, 'pl-7 font-body')}
@@ -219,7 +219,7 @@ export default function NuevoPuestoPage() {
                 />
               </div>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/70 font-mono">₡</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">₡</span>
                 <input
                   type="number"
                   className={cn(inputCls, 'pl-7 font-body')}
@@ -238,7 +238,7 @@ export default function NuevoPuestoPage() {
         >
           <div>
             <p className="text-sm font-medium text-navy font-body">Puesto activo</p>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Los puestos inactivos no aparecen en el proceso de contratación
             </p>
           </div>

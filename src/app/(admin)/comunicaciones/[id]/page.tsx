@@ -28,7 +28,7 @@ type QueueStats = {
 type RecipientFilter = 'all' | 'sent' | 'failed' | 'skipped'
 
 const STATUS_STYLE: Record<CommunicationStatus, string> = {
-  draft:     'bg-navy/10 text-navy-light/70',
+  draft:     'bg-navy/10 text-navy-light/80',
   scheduled: 'bg-teal-soft/20 text-teal-deep',
   sending:   'bg-amber-50 text-amber-700',
   sent:    'bg-teal-soft/30 text-teal-deep',
@@ -57,20 +57,20 @@ type RecipientRow = {
 function RecipientStatus({ status }: { status: RecipientRow['status'] }) {
   if (status === 'sent') {
     return (
-      <span className="inline-flex items-center gap-1 text-[12px] text-teal-deep font-body">
+      <span className="inline-flex items-center gap-1 text-[13px] text-teal-deep font-body">
         <CheckCircle2 size={12} /> Enviado
       </span>
     )
   }
   if (status === 'skipped') {
     return (
-      <span className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 font-body">
+      <span className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 font-body">
         <MinusCircle size={12} /> No se envió
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[12px] text-coral font-body">
+    <span className="inline-flex items-center gap-1 text-[13px] text-coral font-body">
       <XCircle size={12} /> Fallido
     </span>
   )
@@ -186,7 +186,7 @@ export default function ComunicacionDetallePage() {
   if (!message) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">Mensaje no encontrado.</p>
+        <p className="text-sm text-navy-light/80 font-body">Mensaje no encontrado.</p>
       </div>
     )
   }
@@ -206,7 +206,7 @@ export default function ComunicacionDetallePage() {
         <div>
           <Link
             href="/comunicaciones"
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors mb-2 font-body"
           >
             <ChevronLeft size={15} />
             Comunicaciones
@@ -217,12 +217,12 @@ export default function ComunicacionDetallePage() {
             </h1>
             <ChannelBadge channel={message.channel} />
             <span
-              className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-semibold font-display', STATUS_STYLE[message.status])}
+              className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display', STATUS_STYLE[message.status])}
             >
               {STATUS_LABEL[message.status]}
             </span>
           </div>
-          <p className="text-sm text-navy-light/70 mt-1 font-body">
+          <p className="text-sm text-navy-light/80 mt-1 font-body">
             {message.sent_at
               ? `Enviado el ${new Date(message.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} por ${message.sent_by}`
               : `Creado el ${new Date(message.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })} por ${message.sent_by}`
@@ -259,7 +259,7 @@ export default function ComunicacionDetallePage() {
       {queue && queue.total > 0 && (queue.pending > 0 || queue.failed > 0) && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-card">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
               Progreso del envío
             </p>
             <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function ComunicacionDetallePage() {
                   onClick={() => runQueueAction(false)}
                   disabled={processing || !queue.emailConfigured}
                   title={queue.emailConfigured ? undefined : 'El proveedor de email (SES) no está configurado'}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-1.5 text-[12px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:bg-navy-ink transition-colors disabled:opacity-50 font-body"
                 >
                   <Zap size={12} />
                   {processing ? 'Procesando…' : 'Procesar ahora'}
@@ -284,7 +284,7 @@ export default function ComunicacionDetallePage() {
               <p className="text-sm font-semibold text-navy font-display">
                 {queue.sent.toLocaleString('es-CR')} / {queue.total.toLocaleString('es-CR')} enviados
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Hoy: {queue.sentToday} / {queue.dailyLimit} del cupo diario
               </p>
             </div>
@@ -302,54 +302,54 @@ export default function ComunicacionDetallePage() {
               <CheckCircle2 size={13} /> {queue.sent.toLocaleString('es-CR')} enviados
             </span>
             {queue.pending > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-navy-light/70">
+              <span className="inline-flex items-center gap-1.5 text-navy-light/80">
                 <Clock size={13} /> {queue.pending.toLocaleString('es-CR')} en cola
               </span>
             )}
-            <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral font-medium' : 'text-navy-light/70')}>
+            <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral font-medium' : 'text-navy-light/80')}>
               <XCircle size={13} /> {queue.failed.toLocaleString('es-CR')} fallidos
             </span>
             {message.stats.skipped > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-navy-light/70" title="Excluidos por baja de newsletter, rebote o queja">
+              <span className="inline-flex items-center gap-1.5 text-navy-light/80" title="Excluidos por baja de newsletter, rebote o queja">
                 {message.stats.skipped.toLocaleString('es-CR')} saltados
               </span>
             )}
             {queue.pending > 0 && lastBatchLabel && (
-              <span className="text-navy-light/70 ml-auto">
+              <span className="text-navy-light/80 ml-auto">
                 Completado el {lastBatchLabel}
               </span>
             )}
           </div>
 
           {actionMsg && (
-            <p className="text-[12px] text-navy-light/70 font-body">{actionMsg}</p>
+            <p className="text-[13px] text-navy-light/80 font-body">{actionMsg}</p>
           )}
         </div>
       )}
 
       {/* Message content */}
       <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
           Contenido del mensaje
         </p>
         {message.subject && (
           <div>
-            <p className="text-[12px] text-navy-light/70 mb-1 font-display">Asunto</p>
+            <p className="text-[13px] text-navy-light/80 mb-1 font-display">Asunto</p>
             <p className="text-sm font-semibold text-navy font-body">{message.subject}</p>
           </div>
         )}
         <div>
-          {message.subject && <p className="text-[12px] text-navy-light/70 mb-1 font-display">Cuerpo</p>}
+          {message.subject && <p className="text-[13px] text-navy-light/80 mb-1 font-display">Cuerpo</p>}
           <p className="text-sm text-navy leading-relaxed whitespace-pre-line font-body">
             {message.body}
           </p>
         </div>
         {/* Segment */}
         <div className="rounded-xl px-4 py-3 flex items-center gap-3 bg-surface-low">
-          <Users size={15} className="text-navy-light/70 shrink-0" />
+          <Users size={15} className="text-navy-light/80 shrink-0" />
           <div>
-            <p className="text-[12px] font-medium text-navy font-body">{message.segment.label}</p>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] font-medium text-navy font-body">{message.segment.label}</p>
+            <p className="text-[13px] text-navy-light/80 font-body">
               {message.segment.total_recipients} destinatarios en el segmento
             </p>
           </div>
@@ -360,11 +360,11 @@ export default function ComunicacionDetallePage() {
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-5 py-4 border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-[var(--outline-variant)]">
           <div>
-            <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+            <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Destinatarios ({recipTotal})
             </p>
             {exportMsg && (
-              <p className="mt-1 text-[12px] text-navy-light/70 font-body" role="status">{exportMsg}</p>
+              <p className="mt-1 text-[13px] text-navy-light/80 font-body" role="status">{exportMsg}</p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-1">
@@ -372,7 +372,7 @@ export default function ComunicacionDetallePage() {
               type="button"
               onClick={handleExport}
               disabled={exporting || recipTotal === 0}
-              className="mr-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[12px] font-medium text-navy-light/70 transition-all hover:text-navy disabled:opacity-50 font-display"
+              className="mr-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[13px] font-medium text-navy-light/80 transition-all hover:text-navy disabled:opacity-50 font-display"
             >
               <Download size={12} /> {exporting ? 'Exportando…' : 'Exportar'}
             </button>
@@ -382,8 +382,8 @@ export default function ComunicacionDetallePage() {
                 type="button"
                 onClick={() => setRecipientFilter(f)}
                 className={cn(
-                  'rounded-full px-3 py-1 text-[12px] font-medium transition-all font-display',
-                  recipientFilter === f ? 'bg-navy text-white' : 'text-navy-light/70 hover:text-navy'
+                  'rounded-full px-3 py-1 text-[13px] font-medium transition-all font-display',
+                  recipientFilter === f ? 'bg-navy text-white' : 'text-navy-light/80 hover:text-navy'
                 )}
               >
                 {f === 'all' ? 'Todos' : f === 'sent' ? 'Exitosos' : f === 'failed' ? 'Fallidos' : 'Saltados'}
@@ -396,7 +396,7 @@ export default function ComunicacionDetallePage() {
             <thead>
               <tr>
                 {['Miembro', 'Canal', 'Estado', 'Entrega', 'Motivo'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
                     {h}
                   </th>
                 ))}
@@ -419,19 +419,19 @@ export default function ComunicacionDetallePage() {
                   <td className="px-4 py-3">
                     <RecipientStatus status={r.status} />
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                     {r.delivered_at
                       ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
                       : '—'}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                     {r.status === 'sent' ? (
                       <span className="text-navy-light/40">—</span>
                     ) : (
                       <>
                         {reasonText(r)}
                         {skipReasonAction(r.reason) && (
-                          <span className="block text-[12px] text-navy-light/70">{skipReasonAction(r.reason)}</span>
+                          <span className="block text-[13px] text-navy-light/80">{skipReasonAction(r.reason)}</span>
                         )}
                       </>
                     )}
@@ -451,7 +451,7 @@ export default function ComunicacionDetallePage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] text-navy font-body">{r.name}</p>
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   {r.status === 'sent'
                     ? (r.delivered_at
                         ? new Date(r.delivered_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })
@@ -467,7 +467,7 @@ export default function ComunicacionDetallePage() {
         </ul>
 
         {filtered.length === 0 && (
-          <p className="px-5 py-8 text-center text-[13px] text-navy-light/70 font-body">
+          <p className="px-5 py-8 text-center text-[13px] text-navy-light/80 font-body">
             {recipLoading ? 'Cargando destinatarios…' : 'Sin destinatarios para este filtro.'}
           </p>
         )}

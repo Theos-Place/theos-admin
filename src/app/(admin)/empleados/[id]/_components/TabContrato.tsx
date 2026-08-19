@@ -14,12 +14,12 @@ export function TabContrato({ employee, onOpenRaiseModal }: TabContratoProps) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Historial salarial</p>
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Historial salarial</p>
         {employee.status === 'active' && (
           <button
             type="button"
             onClick={onOpenRaiseModal}
-            className="flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+            className="flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
           >
             <TrendingUp size={13} />
             Registrar ajuste
@@ -34,15 +34,15 @@ export function TabContrato({ employee, onOpenRaiseModal }: TabContratoProps) {
 
       {employee.position_history.length > 0 && (
         <div className="pt-4 border-t border-[var(--outline-variant)] space-y-3">
-          <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">Historial de puestos</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Historial de puestos</p>
           {employee.position_history.map((p, i) => (
             <div key={i} className="flex items-start gap-3 rounded-xl p-3 bg-surface-low">
               <div className="h-7 w-7 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 mt-0.5">
-                <Briefcase size={13} className="text-navy-light/70" />
+                <Briefcase size={13} className="text-navy-light/80" />
               </div>
               <div>
                 <p className="text-[13px] font-medium text-navy font-body">{p.position_name}</p>
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   {new Date(p.start_date + 'T00:00:00').toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
                   {' — '}
                   {p.end_date

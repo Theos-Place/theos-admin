@@ -12,7 +12,7 @@ import { SURVEY_OFFSETS, computeSurveySendAt, surveyScheduleError } from '@/lib/
 import { cn } from '@/lib/utils'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[12px] text-navy-light/70 font-display mb-1 block'
+const labelCls = 'text-[13px] text-navy-light/80 font-display mb-1 block'
 
 export type SurveyFieldsValue = {
   survey_form_id: string | null
@@ -86,7 +86,7 @@ export function EventSurveyFields({ value, onChange, endsAt }: {
               onClick={() => onChange(m === 'form'
                 ? { survey_template_id: null }
                 : { survey_form_id: null })}
-              className={cn('rounded-full px-3 py-1.5 text-[12px] transition-colors font-body border',
+              className={cn('rounded-full px-3 py-1.5 text-[13px] transition-colors font-body border',
                 modo === m
                   ? 'bg-navy text-white border-navy'
                   : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low')}
@@ -139,7 +139,7 @@ export function EventSurveyFields({ value, onChange, endsAt }: {
               key={o.hours}
               type="button"
               onClick={() => elegirOffset(o.hours)}
-              className={cn('rounded-full px-3 py-1.5 text-[12px] transition-colors font-body border',
+              className={cn('rounded-full px-3 py-1.5 text-[13px] transition-colors font-body border',
                 value.survey_offset_hours === o.hours
                   ? 'bg-coral text-white border-coral'
                   : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low')}
@@ -150,7 +150,7 @@ export function EventSurveyFields({ value, onChange, endsAt }: {
           <button
             type="button"
             onClick={() => elegirOffset(null)}
-            className={cn('rounded-full px-3 py-1.5 text-[12px] transition-colors font-body border',
+            className={cn('rounded-full px-3 py-1.5 text-[13px] transition-colors font-body border',
               usaFechaExacta
                 ? 'bg-coral text-white border-coral'
                 : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low')}
@@ -176,20 +176,20 @@ export function EventSurveyFields({ value, onChange, endsAt }: {
         )}
 
         {value.survey_send_at && !error && (
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             Se enviará el <strong className="text-navy">{formatoLargo(value.survey_send_at)}</strong>.
           </p>
         )}
       </div>
 
       {/* A QUIÉNES — fijo, pero visible */}
-      <p className="flex items-start gap-1.5 text-[12px] text-navy-light/70 font-body">
+      <p className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
         <Users size={13} className="mt-0.5 shrink-0" />
         <span>Se le manda a <strong className="text-navy">quienes hicieron check-in</strong>. Quien se inscribió y no llegó no la recibe.</span>
       </p>
 
       {error && (
-        <p className="flex items-start gap-1.5 text-[12px] text-coral font-body" role="alert">
+        <p className="flex items-start gap-1.5 text-[13px] text-coral font-body" role="alert">
           <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {error}
         </p>
       )}

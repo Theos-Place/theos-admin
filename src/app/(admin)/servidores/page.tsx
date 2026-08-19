@@ -44,7 +44,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
             {committee.leader.initials}
           </span>
         </div>
-        <p className="text-[12px] text-navy-light/70 truncate font-body">
+        <p className="text-[13px] text-navy-light/80 truncate font-body">
           {committee.leader.name}
         </p>
       </div>
@@ -65,13 +65,13 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
           ))}
           {activeMembers.length > 4 && (
             <div className="h-7 w-7 rounded-full bg-surface-low flex items-center justify-center ring-2 ring-white">
-              <span className="text-[10px] font-medium text-navy-light/70 font-display">
+              <span className="text-[10px] font-medium text-navy-light/80 font-display">
                 +{activeMembers.length - 4}
               </span>
             </div>
           )}
         </div>
-        <span className="text-[12px] text-navy-light/70 font-body">
+        <span className="text-[13px] text-navy-light/80 font-body">
           {activeMembers.length} activo{activeMembers.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -146,7 +146,7 @@ export default function ServidoresPage() {
           >
             Servidores
           </h1>
-          <p className="mt-1 text-sm text-white/70 font-body">
+          <p className="mt-1 text-sm text-white/80 font-body">
             {personasUnicas} personas en {puestosOcupados} puestos · {totalCommittees} comités
           </p>
         </div>
@@ -173,10 +173,10 @@ export default function ServidoresPage() {
             className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
                 {label}
               </p>
-              <Icon size={14} className="text-navy-light/70" />
+              <Icon size={14} className="text-navy-light/80" />
             </div>
             <p className={cn('text-4xl font-extrabold tabular-nums font-display', color)}>
               {value}
@@ -192,10 +192,10 @@ export default function ServidoresPage() {
             key={f.key}
             onClick={() => setAreaFilter(f.key)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all duration-150 font-display',
+              'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
               areaFilter === f.key
                 ? 'bg-navy text-white border-navy'
-                : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent'
+                : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent'
             )}
           >
             {f.label}
@@ -222,12 +222,12 @@ export default function ServidoresPage() {
           <div key={area.code} className="space-y-3">
             <div className="flex items-center gap-3">
               <p
-                className="text-[12px] tracking-widest uppercase font-semibold text-navy-light/70 font-display"
+                className="text-[13px] tracking-widest uppercase font-semibold text-navy-light/80 font-display"
               >
                 {area.name}
               </p>
               <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-              <span className="text-[12px] text-navy-light/70 font-mono">
+              <span className="text-[13px] text-navy-light/80 font-mono">
                 {area.committees.length}
               </span>
             </div>

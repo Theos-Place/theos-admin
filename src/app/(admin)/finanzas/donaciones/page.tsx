@@ -102,7 +102,7 @@ export default function DonacionesPage() {
               <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
                 Donaciones
               </h1>
-              <p className="text-[12px] text-white/70 mt-0.5 font-body">
+              <p className="text-[13px] text-white/80 mt-0.5 font-body">
                 Historial y gestión de donaciones importadas
               </p>
             </div>
@@ -110,7 +110,7 @@ export default function DonacionesPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => setRevealAll(r => !r)}
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] transition-all bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] transition-all bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
             >
               {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
               {revealAll ? 'Ocultar montos' : 'Mostrar montos'}
@@ -158,14 +158,14 @@ export default function DonacionesPage() {
                 <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                   {unidentifiedCount} donación{unidentifiedCount !== 1 ? 'es' : ''} sin identificar — <TotalsDisplay totals={unidentifiedTotal} defaultHidden={false} revealed={revealAll} /> en total
                 </p>
-                <p className="text-[12px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
+                <p className="text-[13px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
                   Vinculalas manualmente a un miembro para que queden registradas correctamente.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowUnidentifiedModal(true)}
-              className="shrink-0 rounded-full px-4 py-2 text-[12px] font-medium transition-all bg-[rgba(233,185,73,0.20)] text-[#9B7200] font-body border border-[rgba(233,185,73,0.30)]"
+              className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-all bg-[rgba(233,185,73,0.20)] text-[#9B7200] font-body border border-[rgba(233,185,73,0.30)]"
             >
               Resolver manualmente →
             </button>
@@ -246,13 +246,13 @@ export default function DonacionesPage() {
                       </p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-[12px] font-body text-[rgba(22,20,64,0.55)]">
+                      <p className="text-[13px] font-body text-[rgba(22,20,64,0.55)]">
                         {d.source_file}
                       </p>
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium"
+                        className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
                         style={{
                           color: d.is_identified ? '#3DB97A' : '#EF5554',
                           background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
@@ -288,7 +288,7 @@ export default function DonacionesPage() {
                   <p className={`text-[13px] font-medium font-body truncate ${d.is_identified ? 'text-navy' : 'text-coral'}`}>
                     {d.member_name || 'Sin identificar'}
                   </p>
-                  <p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body truncate">
+                  <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">
                     {d.member_cedula} · {formatDate(d.donation_date)}
                   </p>
                 </div>
@@ -321,7 +321,7 @@ export default function DonacionesPage() {
         {/* Paginación / contador */}
         {donations.length > 0 && (
           <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               Mostrando {donations.length.toLocaleString('es-CR')} de {total.toLocaleString('es-CR')} donaciones
               {filteredSum != null && (
                 <> · Total filtrado: <TotalsDisplay totals={filteredSum} defaultHidden={false} revealed={revealAll} /></>
@@ -360,13 +360,13 @@ export default function DonacionesPage() {
                       <p className="text-[13px] font-medium font-body text-navy">
                         {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} />
                       </p>
-                      <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
+                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
                         {d.source_file}
                       </p>
                     </div>
                     <button
                       onClick={() => setLinkingId(linkingId === d.id ? null : d.id)}
-                      className="rounded-full px-3 py-1.5 text-[12px] font-medium transition-all bg-[rgba(81,157,162,0.10)] text-teal-deep font-body border border-[rgba(81,157,162,0.20)]"
+                      className="rounded-full px-3 py-1.5 text-[13px] font-medium transition-all bg-[rgba(81,157,162,0.10)] text-teal-deep font-body border border-[rgba(81,157,162,0.20)]"
                     >
                       {linkingId === d.id ? 'Cancelar' : 'Vincular a miembro'}
                     </button>
@@ -382,7 +382,7 @@ export default function DonacionesPage() {
                 </div>
               ))}
               {unidentified.length === 0 && (
-                <p className="px-6 py-8 text-center text-sm text-navy-light/70 font-body">
+                <p className="px-6 py-8 text-center text-sm text-navy-light/80 font-body">
                   No hay donaciones sin identificar.
                 </p>
               )}
@@ -395,7 +395,7 @@ export default function DonacionesPage() {
         <Modal onClose={() => setLinkConfirm(null)} titleId="vincular-donacion-titulo" width={400}>
           <div className="p-5 space-y-4">
             <h3 id="vincular-donacion-titulo" className="font-semibold text-navy font-display">Vincular donación</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               ¿Vincular esta donación a <strong>{linkConfirm.memberName}</strong>?
               La donación quedará identificada a su nombre.
             </p>

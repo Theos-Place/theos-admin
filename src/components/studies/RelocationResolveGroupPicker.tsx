@@ -82,11 +82,11 @@ export function RelocationResolveGroupPicker({
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor="relocation-target-group" className="block text-[12px] font-medium text-navy-light/70 font-body">
+      <label htmlFor="relocation-target-group" className="block text-[13px] font-medium text-navy-light/80 font-body">
         Grupo destino <span className="text-coral">*</span>
       </label>
       {loading ? (
-        <p className="text-[13px] text-navy-light/70 font-body inline-flex items-center gap-1.5">
+        <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-1.5">
           <Loader2 size={13} className="animate-spin" /> Cargando grupos disponibles…
         </p>
       ) : groups.length === 0 ? (
@@ -114,7 +114,7 @@ export function RelocationResolveGroupPicker({
         </select>
       )}
       {request.wants_folleto && (
-        <p className="text-[12px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           Marcó &quot;Ocupo folleto&quot;: la matrícula va a quedar pendiente de pago (costo del folleto) y se va a generar el tiquete en la cola de folletos.
         </p>
       )}

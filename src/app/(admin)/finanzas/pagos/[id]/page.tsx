@@ -32,7 +32,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
           {loading ? (
             <>
               <div className="h-7 w-7 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-              <p className="text-sm text-navy-light/70 font-body">Cargando pago…</p>
+              <p className="text-sm text-navy-light/80 font-body">Cargando pago…</p>
             </>
           ) : (
             <>
@@ -86,7 +86,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
             <Link href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]">
               <ArrowLeft size={18} />
             </Link>
-            <span className="text-[12px] text-[rgba(255,255,255,0.70)] font-body">
+            <span className="text-[13px] text-[rgba(255,255,255,0.70)] font-body">
               Pagos / Detalle
             </span>
           </div>
@@ -95,7 +95,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               <h1 className="text-2xl text-white mb-1 font-display font-extrabold tracking-[-0.02em]">
                 {payment.entity_name}
               </h1>
-              <p className="text-[14px] text-white/70 font-body">
+              <p className="text-[14px] text-white/80 font-body">
                 {payment.member_name}
               </p>
             </div>
@@ -116,7 +116,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Left */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[12px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[13px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Información del pago
             </p>
             {[
@@ -136,31 +136,31 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Right */}
           <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[12px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[13px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
               Detalles de la transacción
             </p>
             {payment.gateway_ref && (
               <div className="flex justify-between text-sm gap-4">
                 <span className="font-body text-[rgba(22,20,64,0.60)]">Ref. pasarela</span>
-                <span className="font-medium font-mono text-right text-[12px] text-navy">{payment.gateway_ref}</span>
+                <span className="font-medium font-mono text-right text-[13px] text-navy">{payment.gateway_ref}</span>
               </div>
             )}
             {payment.sinpe_confirmation && (
               <div className="flex justify-between text-sm gap-4">
                 <span className="font-body text-[rgba(22,20,64,0.60)]">Confirmación SINPE</span>
-                <span className="font-medium font-mono text-right text-[12px] text-teal-deep">{payment.sinpe_confirmation}</span>
+                <span className="font-medium font-mono text-right text-[13px] text-teal-deep">{payment.sinpe_confirmation}</span>
               </div>
             )}
             {payment.scholarship_id && (
               <div className="rounded-xl p-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
-                <p className="text-[12px] font-medium text-[#1E6B42] font-body">
+                <p className="text-[13px] font-medium text-[#1E6B42] font-body">
                   Beca aplicada — ID: {payment.scholarship_id}
                 </p>
               </div>
             )}
             {payment.notes && (
               <div className="rounded-xl p-3 bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">
-                <p className="text-[12px] text-[rgba(22,20,64,0.65)] font-body">
+                <p className="text-[13px] text-[rgba(22,20,64,0.65)] font-body">
                   {payment.notes}
                 </p>
               </div>
@@ -175,7 +175,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Timeline */}
         <div className="rounded-2xl p-6 bg-surface-card shadow-[var(--shadow-md)]">
-          <p className="text-[12px] uppercase tracking-widest mb-5 font-display text-[rgba(22,20,64,0.60)]">
+          <p className="text-[13px] uppercase tracking-widest mb-5 font-display text-[rgba(22,20,64,0.60)]">
             Línea de tiempo
           </p>
           <div className="relative">
@@ -255,7 +255,7 @@ function TimelineItem({ label, date, color, active }: { label: string; date: str
       </div>
       <div className="pt-0.5">
         <p className="text-sm font-medium font-body text-navy">{label}</p>
-        <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{date}</p>
+        <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{date}</p>
       </div>
     </div>
   )

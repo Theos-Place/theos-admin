@@ -31,7 +31,7 @@ const MIN_REASON = 20
 /** WhatsApp de estudios (+506 7261 1001) — destino del enlace de cambio de grupo. */
 const ESTUDIOS_WHATSAPP = '50672611001'
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 disabled:opacity-60'
-const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
+const LABEL_CLS = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 
 export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   memberId: string
@@ -184,7 +184,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
             </h2>
 
             {(openModal === 'relocation' && (dataLoading || !eligibility)) || (openModal === 'study_interest' && !optionsLoaded) ? (
-              <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-navy-light/70" /></div>
+              <div className="flex items-center justify-center py-8"><Loader2 size={18} className="animate-spin text-navy-light/80" /></div>
             ) : (
               <>
                 {/* Disclaimer de interés — al inicio, tono cálido. */}
@@ -253,7 +253,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={wantsFolleto} onChange={e => setWantsFolleto(e.target.checked)} className="accent-coral h-3.5 w-3.5" />
-                      <span className="text-sm text-navy-light/70 font-body">Ocupo folleto</span>
+                      <span className="text-sm text-navy-light/80 font-body">Ocupo folleto</span>
                     </label>
                     <div>
                       <label className={LABEL_CLS}>Día(s) que te sirven</label>
@@ -291,7 +291,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
                       <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')} />
-                      <p className={cn('mt-1 text-[12px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/70' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
+                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
                     </div>
                   </>
                 )}
@@ -304,7 +304,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                         <option value="">Seleccionar estudio…</option>
                         {options.map(o => <option key={o.plan_id} value={o.plan_id}>{o.code} — {o.name}{o.is_eligible ? '' : ' (aún no elegible)'}</option>)}
                       </select>
-                      <p className="mt-1 text-[12px] text-navy-light/70 font-body">Se muestran los estudios que aún no has llevado.</p>
+                      <p className="mt-1 text-[13px] text-navy-light/80 font-body">Se muestran los estudios que aún no has llevado.</p>
                     </div>
 
                     {/* Aviso de elegibilidad: informa qué falta, pero permite enviar igual. */}
@@ -312,11 +312,11 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
                         <p className="text-[13px] text-amber-800 font-body font-medium">Todavía no cumplís los requisitos de este estudio.</p>
                         {selectedOption.missing.length > 0 && (
-                          <ul className="mt-1 list-disc pl-4 text-[12px] text-amber-700 font-body">
+                          <ul className="mt-1 list-disc pl-4 text-[13px] text-amber-700 font-body">
                             {selectedOption.missing.map((m, i) => <li key={i}>{m}</li>)}
                           </ul>
                         )}
-                        <p className="mt-1 text-[12px] text-amber-700 font-body">Podés enviar la solicitud igual: nos sirve para medir el interés.</p>
+                        <p className="mt-1 text-[13px] text-amber-700 font-body">Podés enviar la solicitud igual: nos sirve para medir el interés.</p>
                       </div>
                     )}
 
@@ -357,7 +357,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                 {error && <p className="text-[13px] text-coral font-body">{error}</p>}
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <button onClick={() => setOpenModal(null)} className="rounded-full px-4 py-2 text-sm text-navy-light/70 font-body hover:text-navy transition-colors">{blocked ? 'Cerrar' : 'Cancelar'}</button>
+                  <button onClick={() => setOpenModal(null)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">{blocked ? 'Cerrar' : 'Cancelar'}</button>
                   {!blocked && (
                     <button onClick={submit} disabled={submitting} className="rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
                       {submitting ? 'Enviando…' : 'Enviar solicitud'}
@@ -384,7 +384,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
           href={`https://wa.me/${ESTUDIOS_WHATSAPP}?text=${encodeURIComponent('Hola, me matriculé en el grupo equivocado y necesito un cambio de grupo.')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy underline underline-offset-2 transition-colors font-body"
+          className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy underline underline-offset-2 transition-colors font-body"
         >
           <ArrowLeftRight size={12} />
           ¿Te matriculaste en el grupo equivocado? Escribinos al WhatsApp de estudios
@@ -395,7 +395,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
       <>
         <button
           onClick={() => open('study_interest')}
-          className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy underline underline-offset-2 transition-colors font-body"
+          className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy underline underline-offset-2 transition-colors font-body"
         >
           <ArrowLeftRight size={12} />
           ¿Buscás otro estudio? Contanos cuál
@@ -428,7 +428,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
         )}
       </div>
       {muestra('study_interest') && hasOpenReq && (
-        <p className="mt-1.5 text-[12px] text-navy-light/70 font-body">
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
           Ya registraste una solicitud de estudio (una a la vez). Revisá la página de Matrícula: ahí aparecen los grupos nuevos cuando se abren.
         </p>
       )}

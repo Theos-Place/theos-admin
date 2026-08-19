@@ -60,7 +60,7 @@ export function ScaleField({
               <div
                 key={n}
                 aria-hidden
-                className={cn(base, 'flex items-center justify-center border-[var(--outline-variant)] text-navy-light/70')}
+                className={cn(base, 'flex items-center justify-center border-[var(--outline-variant)] text-navy-light/80')}
               >
                 {n}
               </div>
@@ -93,10 +93,10 @@ export function ScaleField({
           pisarse gracias al tope del 45%. */}
       {(minLabel || maxLabel) && (
         <div className="flex w-full items-start justify-between gap-3">
-          <span className="max-w-[45%] text-[12px] leading-tight text-navy-light/70 font-body">
+          <span className="max-w-[45%] text-[13px] leading-tight text-navy-light/80 font-body">
             {minLabel}
           </span>
-          <span className="max-w-[45%] text-[12px] leading-tight text-navy-light/70 font-body text-right">
+          <span className="max-w-[45%] text-[13px] leading-tight text-navy-light/80 font-body text-right">
             {maxLabel}
           </span>
         </div>

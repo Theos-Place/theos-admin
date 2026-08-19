@@ -179,7 +179,7 @@ export default function FormulariosPage() {
           >
             Formularios
           </h1>
-          <p className="mt-1 text-sm text-white/70 font-body">
+          <p className="mt-1 text-sm text-white/80 font-body">
             Constructor de formularios de inscripción y encuestas
           </p>
         </div>
@@ -201,7 +201,7 @@ export default function FormulariosPage() {
           { label: 'Promedio respuestas',       value: stats.avg,                color: 'text-navy' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
               {label}
             </p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>
@@ -227,7 +227,7 @@ export default function FormulariosPage() {
           ariaLabel="Filtrar formularios por estado"
         />
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             className="rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full sm:w-56 font-body"
             placeholder="Buscar formulario..."
@@ -247,7 +247,7 @@ export default function FormulariosPage() {
             <h2 id="del-form-title" className="pr-6 text-lg font-display font-extrabold text-navy">
               Eliminar “{deleteTarget.name}”
             </h2>
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               {deleteWarning(deleteTarget)}
             </p>
             <div className="flex justify-end gap-2">
@@ -284,7 +284,7 @@ export default function FormulariosPage() {
                   {['Formulario', 'Categoría', 'Respuestas', 'Última respuesta', 'Estado', ''].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                      className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                     >
                       {h}
                     </th>
@@ -307,14 +307,14 @@ export default function FormulariosPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-surface-low">
-                            <CatIcon size={15} className="text-navy-light/70" />
+                            <CatIcon size={15} className="text-navy-light/80" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-navy font-body">
                               {form.name}
                             </p>
                             {form.entity_name && (
-                              <span className="text-[12px] text-navy-light/70 font-body">
+                              <span className="text-[13px] text-navy-light/80 font-body">
                                 {form.entity_name}
                               </span>
                             )}
@@ -324,7 +324,7 @@ export default function FormulariosPage() {
 
                       {/* Categoría */}
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-navy-light/70 font-body">
+                        <span className="text-[13px] text-navy-light/80 font-body">
                           {CATEGORY_LABELS[form.category] ?? form.category}
                         </span>
                       </td>
@@ -332,7 +332,7 @@ export default function FormulariosPage() {
                       {/* Respuestas */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <MessageSquare size={12} className="text-navy-light/70" />
+                          <MessageSquare size={12} className="text-navy-light/80" />
                           <span className="text-sm text-navy tabular-nums font-mono">
                             {form.responses_count}
                           </span>
@@ -341,7 +341,7 @@ export default function FormulariosPage() {
 
                       {/* Última respuesta */}
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                        <span className="text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                           {form.last_response_at
                             ? new Date(form.last_response_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
                             : '—'}
@@ -353,7 +353,7 @@ export default function FormulariosPage() {
                         <span
                           className={cn(
                             'rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
-                            form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/70'
+                            form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
                           )}
                         >
                           {form.is_active ? 'Activo' : 'Inactivo'}
@@ -365,13 +365,13 @@ export default function FormulariosPage() {
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             href={`/formularios/${form.id}`}
-                            className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             Editar
                           </Link>
                           <Link
                             href={`/formularios/${form.id}/respuestas`}
-                            className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             Respuestas
                           </Link>
@@ -396,16 +396,16 @@ export default function FormulariosPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleDuplicate(form.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                                 >
-                                  <Copy size={13} className="text-navy-light/70" />
+                                  <Copy size={13} className="text-navy-light/80" />
                                   Duplicar
                                 </button>
                                 {canPublishForm(form) ? (
                                   <button
                                     type="button"
                                     onClick={() => handleToggleActive(form.id, true)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-teal-deep hover:bg-teal-soft/20 transition-colors font-body"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-teal-deep hover:bg-teal-soft/20 transition-colors font-body"
                                   >
                                     <Send size={13} className="text-teal-deep/60" />
                                     Publicar
@@ -414,9 +414,9 @@ export default function FormulariosPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleToggleActive(form.id, false)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                                   >
-                                    <Archive size={13} className="text-navy-light/70" />
+                                    <Archive size={13} className="text-navy-light/80" />
                                     Desactivar
                                   </button>
                                 )}
@@ -434,7 +434,7 @@ export default function FormulariosPage() {
                                       title={motivo ? FORM_ACTION_MESSAGES[motivo] : undefined}
                                       onClick={() => { setMenuOpen(null); setDeleteTarget(form) }}
                                       className={cn(
-                                        'w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors font-body',
+                                        'w-full flex items-center gap-2 px-3 py-2 text-[13px] transition-colors font-body',
                                         motivo
                                           ? 'text-navy-light/40 cursor-not-allowed'
                                           : 'text-coral hover:bg-coral/5',
@@ -470,18 +470,18 @@ export default function FormulariosPage() {
                   className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
                 >
                   <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0 bg-surface-low">
-                    <CatIcon size={16} className="text-navy-light/70" />
+                    <CatIcon size={16} className="text-navy-light/80" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{form.name}</p>
-                    <p className="truncate text-[12px] text-navy-light/70 font-body">
+                    <p className="truncate text-[13px] text-navy-light/80 font-body">
                       {CATEGORY_LABELS[form.category] ?? form.category} · {form.responses_count} respuesta{form.responses_count !== 1 ? 's' : ''}
                     </p>
                   </div>
                   <span
                     className={cn(
                       'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
-                      form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/70'
+                      form.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
                     )}
                   >
                     {form.is_active ? 'Activo' : 'Inactivo'}

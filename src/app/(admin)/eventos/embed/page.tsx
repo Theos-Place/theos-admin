@@ -11,7 +11,7 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
-const labelCls = 'text-[12px] tracking-widest uppercase text-navy-light/70'
+const labelCls = 'text-[13px] tracking-widest uppercase text-navy-light/80'
 
 export default function EmbedPage() {
   // EVE-3: compartir/embeber el calendario es SOLO admin y comunicaciones —
@@ -79,7 +79,7 @@ export default function EmbedPage() {
   return (
     <div className="space-y-5">
       {/* Back + header */}
-      <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body">
+      <Link href="/eventos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
         <ChevronLeft size={16} /> Eventos
       </Link>
 
@@ -87,7 +87,7 @@ export default function EmbedPage() {
         <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
           Compartir calendario
         </h1>
-        <p className="mt-1 text-sm text-white/70 font-body">
+        <p className="mt-1 text-sm text-white/80 font-body">
           Generá el código para embeber el calendario de eventos en tu sitio web o app.
         </p>
       </div>
@@ -95,7 +95,7 @@ export default function EmbedPage() {
       <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
         {/* Left: Configurator */}
         <div className="rounded-2xl p-5 space-y-5 overflow-y-auto bg-surface-card shadow-[var(--shadow-md)] max-h-[80vh]">
-          <h2 className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+          <h2 className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Configuración
           </h2>
 
@@ -111,10 +111,10 @@ export default function EmbedPage() {
                     type="button"
                     onClick={() => setCfg(prev => ({ ...prev, view: v }))}
                     className={cn(
-                      'flex-1 rounded-xl border py-2 text-[12px] font-medium transition-all',
+                      'flex-1 rounded-xl border py-2 text-[13px] font-medium transition-all',
                       cfg.view === v
                         ? 'border-coral bg-coral/5 text-coral'
-                        : 'text-navy-light/70 hover:bg-surface-low',
+                        : 'text-navy-light/80 hover:bg-surface-low',
                       'font-body'
                     )}
                     style={{ borderColor: cfg.view === v ? undefined : 'var(--outline-variant)' }}
@@ -161,8 +161,8 @@ export default function EmbedPage() {
                     className="h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent"
                   />
                   <div className="flex-1">
-                    <p className="text-[12px] text-navy-light/70 font-body">{label}</p>
-                    <p className="text-[12px] text-navy font-mono">{cfg[key]}</p>
+                    <p className="text-[13px] text-navy-light/80 font-body">{label}</p>
+                    <p className="text-[13px] text-navy font-mono">{cfg[key]}</p>
                   </div>
                   <button
                     type="button"
@@ -170,7 +170,7 @@ export default function EmbedPage() {
                       const defaults = { primary: '#161440', accent: '#EF5554', bg: '#FFFFFF' }
                       setCfg(prev => ({ ...prev, [key]: defaults[key] }))
                     }}
-                    className="text-[11px] text-navy-light/70 hover:text-navy transition-colors font-body"
+                    className="text-[11px] text-navy-light/80 hover:text-navy transition-colors font-body"
                   >
                     restablecer
                   </button>
@@ -215,7 +215,7 @@ export default function EmbedPage() {
                 max={1200}
                 step={50}
               />
-              <span className="text-sm text-navy-light/70 font-body">px</span>
+              <span className="text-sm text-navy-light/80 font-body">px</span>
             </div>
           </div>
         </div>
@@ -225,14 +225,14 @@ export default function EmbedPage() {
           {/* Preview */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between px-4 py-3 border-b border-b-[var(--outline-variant)]">
-              <span className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Vista previa
               </span>
               <a
                 href={previewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+                className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
               >
                 <ExternalLink size={12} />
                 Abrir en nueva pestaña
@@ -252,15 +252,15 @@ export default function EmbedPage() {
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-b-[var(--outline-variant)]">
               {/* Solo iFrame: los snippets de JavaScript/React referenciaban
                   calendar.js y @theosplace/calendar-widget, que no existen. */}
-              <span className="rounded-lg px-3 py-1.5 text-[12px] font-medium bg-navy text-white font-body">iFrame</span>
+              <span className="rounded-lg px-3 py-1.5 text-[13px] font-medium bg-navy text-white font-body">iFrame</span>
               <button
                 type="button"
                 onClick={handleCopy}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all',
+                  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all',
                   copied
                     ? 'bg-teal-soft/20 text-teal-deep'
-                    : 'bg-surface-low text-navy-light/70 hover:text-navy',
+                    : 'bg-surface-low text-navy-light/80 hover:text-navy',
                   'font-body'
                 )}
               >
@@ -269,7 +269,7 @@ export default function EmbedPage() {
               </button>
             </div>
             <pre
-              className="p-4 text-[12px] leading-relaxed overflow-x-auto font-[var(--font-mono,monospace)] bg-surface-low text-[var(--navy)] whitespace-pre-wrap break-all"
+              className="p-4 text-[13px] leading-relaxed overflow-x-auto font-[var(--font-mono,monospace)] bg-surface-low text-[var(--navy)] whitespace-pre-wrap break-all"
             >
               {currentCode}
             </pre>

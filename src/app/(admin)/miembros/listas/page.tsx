@@ -140,7 +140,7 @@ export default function ListasGuardadasPage() {
         <div>
           <Link
             href="/miembros"
-            className="inline-flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors mb-1 font-body"
+            className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors mb-1 font-body"
           >
             <ChevronLeft size={14} />
             Miembros
@@ -150,7 +150,7 @@ export default function ListasGuardadasPage() {
           >
             Listas guardadas
           </h1>
-          <p className="mt-1 text-sm text-navy-light/70 font-body">
+          <p className="mt-1 text-sm text-navy-light/80 font-body">
             {loading ? '—' : lists.length} lista{lists.length !== 1 ? 's' : ''} · Segmentos para comunicaciones y reportes
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function ListasGuardadasPage() {
       {/* Filtros */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={14} className="text-navy-light/70 shrink-0" />
+          <Search size={14} className="text-navy-light/80 shrink-0" />
           <input
             type="search"
             value={search}
@@ -179,8 +179,8 @@ export default function ListasGuardadasPage() {
         <button
           onClick={() => setActiveTag(null)}
           className={cn(
-            'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-            !activeTag ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent'
+            'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
+            !activeTag ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent'
           )}
         >
           Todas
@@ -190,8 +190,8 @@ export default function ListasGuardadasPage() {
             key={tag}
             onClick={() => setActiveTag(activeTag === tag ? null : tag)}
             className={cn(
-              'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
-              activeTag === tag ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:text-navy border-transparent'
+              'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
+              activeTag === tag ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent'
             )}
           >
             {tag}
@@ -202,7 +202,7 @@ export default function ListasGuardadasPage() {
       {/* Grid */}
       {loading ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] py-16 text-center">
-          <p className="text-sm text-navy-light/70 font-body">Cargando listas…</p>
+          <p className="text-sm text-navy-light/80 font-body">Cargando listas…</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
@@ -231,7 +231,7 @@ export default function ListasGuardadasPage() {
                     <p className="text-sm font-bold text-navy leading-snug font-display">
                       {list.name}
                     </p>
-                    <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+                    <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
                       {list.member_count.toLocaleString('es-CR')} miembros
                     </p>
                   </div>
@@ -241,7 +241,7 @@ export default function ListasGuardadasPage() {
                 <div className="relative shrink-0">
                   <button
                     onClick={() => setOpenMenu(openMenu === list.id ? null : list.id)}
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/70 hover:bg-surface-low hover:text-navy transition-colors"
+                    className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors"
                   >
                     <MoreHorizontal size={14} />
                   </button>
@@ -276,7 +276,7 @@ export default function ListasGuardadasPage() {
 
               {/* Segment label */}
               <div
-                className="rounded-lg px-3 py-2 text-[12px] text-navy-light/70 bg-surface-low font-mono"
+                className="rounded-lg px-3 py-2 text-[13px] text-navy-light/80 bg-surface-low font-mono"
               >
                 {list.segment_label}
               </div>
@@ -286,7 +286,7 @@ export default function ListasGuardadasPage() {
                 <span
                   className={cn(
                     'rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
-                    list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/70'
+                    list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80'
                   )}
                 >
                   {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
@@ -294,7 +294,7 @@ export default function ListasGuardadasPage() {
                 {list.tags.map(tag => (
                   <span
                     key={tag}
-                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[11px] text-navy-light/70 font-body border-[0.5px] border-[var(--outline-variant)]"
+                    className="rounded-full bg-surface-low px-2.5 py-0.5 text-[11px] text-navy-light/80 font-body border-[0.5px] border-[var(--outline-variant)]"
                   >
                     {tag}
                   </span>
@@ -302,7 +302,7 @@ export default function ListasGuardadasPage() {
               </div>
 
               {/* Meta */}
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 {list.last_used_at && ` · Último uso: ${timeAgo(list.last_used_at)}`}
               </p>
@@ -311,14 +311,14 @@ export default function ListasGuardadasPage() {
               <div className="flex items-center gap-2 pt-1 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={() => handleComunicar(list.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[12px] font-medium text-coral hover:bg-coral/20 transition-colors font-body"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[13px] font-medium text-coral hover:bg-coral/20 transition-colors font-body"
                 >
                   <MessageCircle size={13} />
                   Comunicar
                 </button>
                 <Link
                   href={`/miembros/listas/${list.id}`}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[var(--outline-variant)] py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[var(--outline-variant)] py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                 >
                   <Users size={13} />
                   Ver lista
@@ -338,7 +338,7 @@ export default function ListasGuardadasPage() {
             </p>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                   Nombre
                 </label>
                 <input
@@ -349,7 +349,7 @@ export default function ListasGuardadasPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                   Tags (separados por coma)
                 </label>
                 <input

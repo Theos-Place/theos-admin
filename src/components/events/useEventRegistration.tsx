@@ -128,14 +128,14 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
             { label: 'Costo', value: requiresPayment ? formatCRC(event.price) : 'Gratuito' },
           ].map(({ label, value }, i) => (
             <div key={label} className={cn('flex items-center gap-3 px-4 py-2.5', i > 0 && 'border-t', 'border-outline')}>
-              <span className="w-24 text-[12px] text-navy-light/70 uppercase tracking-wider shrink-0 font-display">{label}</span>
+              <span className="w-24 text-[13px] text-navy-light/80 uppercase tracking-wider shrink-0 font-display">{label}</span>
               <span className="text-[13px] font-medium text-navy font-body">{value}</span>
             </div>
           ))}
         </div>
         <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-coral/7 border border-coral/20">
           <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
-          <p className="text-[12px] text-navy-light/70 font-body">
+          <p className="text-[13px] text-navy-light/80 font-body">
             {requiresPayment
               ? 'Al confirmar, tu cupo queda reservado mientras subís el comprobante y un revisor lo aprueba.'
               : 'Al confirmar, tu inscripción queda lista de una vez.'}
@@ -148,12 +148,12 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
                 <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
                 <span className="text-[13px] text-navy font-body">
                   Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `${formatCRC(applicable.discount_value)}`} de descuento)
-                  {discountedAmount != null && <span className="block text-[12px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
+                  {discountedAmount != null && <span className="block text-[13px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
                 </span>
               </label>
             ) : (
               <div className="space-y-1">
-                <label htmlFor="coupon-code-evento" className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">¿Tenés un código de descuento?</label>
+                <label htmlFor="coupon-code-evento" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">¿Tenés un código de descuento?</label>
                 <input
                   id="coupon-code-evento" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="Opcional"
@@ -210,7 +210,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
               </div>
             </div>
             <p className="text-base font-bold text-navy font-display">Comprobante enviado</p>
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Tu inscripción a {eventTitle} quedó pendiente de aprobación de pago. Te avisamos si hay algún problema.
             </p>
             <button onClick={onDone} className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
@@ -218,21 +218,21 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
         ) : (
           <>
             <h3 id="comprobante-evento-title" className="text-base font-bold text-navy font-display">Pagar inscripción</h3>
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               {eventTitle} — {`${formatCRC(amount)}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Comprobante (imagen)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input
                 type="file"
                 accept="image/*"
                 aria-label="Comprobante de pago"
                 onChange={e => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[12px] file:text-navy"
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="ev-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Número de referencia</label>
+              <label htmlFor="ev-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
               <input
                 id="ev-pay-ref"
                 value={reference}
@@ -241,7 +241,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
-            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={submit}

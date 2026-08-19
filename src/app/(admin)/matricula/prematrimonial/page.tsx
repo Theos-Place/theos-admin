@@ -222,7 +222,7 @@ export default function PrematrimonialWizardPage() {
         <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
           <AlertCircle className="mx-auto mb-3 text-coral-deep" size={28} />
           <h2 className="text-lg font-bold text-navy font-display">No se pudo cargar el miembro</h2>
-          <p className="mt-2 text-sm text-navy-light/70 font-body">{enrolleeError}</p>
+          <p className="mt-2 text-sm text-navy-light/80 font-body">{enrolleeError}</p>
           <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
             <ArrowLeft size={14} /> Volver a matrícula
           </Link>
@@ -241,7 +241,7 @@ export default function PrematrimonialWizardPage() {
           <div className="text-center">
             <IdCard className="mx-auto mb-3 text-coral-deep" size={28} />
             <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? `${enrolleeName} no tiene documento registrado` : 'Necesitás registrar tu documento de identidad'}</h2>
-            <p className="mt-2 text-sm text-navy-light/70 font-body">
+            <p className="mt-2 text-sm text-navy-light/80 font-body">
               {onBehalf
                 ? 'Esta persona no tiene documento registrado. Ingresá su cédula o número de documento de identidad para continuar — queda guardado en su perfil.'
                 : 'La inscripción al prematrimonial requiere tu documento de identidad. Ingresalo acá para continuar — queda guardado en tu perfil.'}
@@ -249,14 +249,14 @@ export default function PrematrimonialWizardPage() {
           </div>
           <div className="mx-auto mt-4 max-w-sm space-y-3">
             <div>
-              <label htmlFor="doc-type" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">Tipo de documento</label>
+              <label htmlFor="doc-type" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">Tipo de documento</label>
               <select id="doc-type" value={docType} onChange={e => setDocType(e.target.value as DocumentType)}
                 className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body bg-white">
                 {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="doc-number" className="block text-[12px] font-medium text-navy-light/70 font-body mb-1.5">Número de documento</label>
+              <label htmlFor="doc-number" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">Número de documento</label>
               <input id="doc-number" value={docNumber} onChange={e => setDocNumber(e.target.value)}
                 className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
             </div>
@@ -281,7 +281,7 @@ export default function PrematrimonialWizardPage() {
         <div className="rounded-2xl border border-coral/25 bg-coral/5 p-6 text-center">
           <Heart className="mx-auto mb-3 text-coral-deep" size={28} />
           <h2 className="text-lg font-bold text-navy font-display">{onBehalf ? 'El miembro aún no cumple el requisito' : 'Aún no cumplís el requisito'}</h2>
-          <p className="mt-2 text-sm text-navy-light/70 font-body">
+          <p className="mt-2 text-sm text-navy-light/80 font-body">
             El curso prematrimonial requiere <strong>{PREMAT_REQUIREMENT_LABEL}</strong>{onBehalf ? ` — ${enrolleeName} todavía no lo cumple.` : '. Matriculate en Nivel 2 y volvé.'}
           </p>
           <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
@@ -298,7 +298,7 @@ export default function PrematrimonialWizardPage() {
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15"><Heart size={20} className="text-teal-deep" /></div>
         <div>
           <h1 className="text-xl font-bold text-navy font-display">Inscripción al Curso Prematrimonial</h1>
-          <p className="text-[13px] text-navy-light/70 font-body">Paso {step} de 3</p>
+          <p className="text-[13px] text-navy-light/80 font-body">Paso {step} de 3</p>
         </div>
       </div>
 
@@ -314,7 +314,7 @@ export default function PrematrimonialWizardPage() {
               </div>
             )}
             <h2 className="font-semibold text-navy font-display">La pareja</h2>
-            <p className="text-sm text-navy-light/70 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con <strong>{PREMAT_REQUIREMENT_LABEL}</strong> — buscala por nombre, documento, correo o teléfono.</p>
+            <p className="text-sm text-navy-light/80 font-body">El curso son <strong>10 sesiones</strong> y debe iniciar <strong>mínimo 6 meses antes</strong> de la boda. {onBehalf ? 'La pareja' : 'Tu pareja'} debe ser miembro con <strong>{PREMAT_REQUIREMENT_LABEL}</strong> — buscala por nombre, documento, correo o teléfono.</p>
             <div className="flex gap-2">
               <input value={spouseQuery} onChange={e => setSpouseQuery(e.target.value)} placeholder="Nombre, cédula, correo o teléfono"
                 className="flex-1 rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
@@ -325,7 +325,7 @@ export default function PrematrimonialWizardPage() {
             </div>
             {spouseMatches.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[13px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   Encontramos varias personas con ese nombre. Elegí a tu pareja:
                 </p>
                 {spouseMatches.map(m => (
@@ -337,11 +337,11 @@ export default function PrematrimonialWizardPage() {
                   >
                     {m.name}
                     {!m.meets_requirement && (
-                      <span className="ml-2 text-[12px] text-coral-deep">· aún no cumple el requisito</span>
+                      <span className="ml-2 text-[13px] text-coral-deep">· aún no cumple el requisito</span>
                     )}
                   </button>
                 ))}
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   ¿No está en la lista? Buscala por cédula o correo.
                 </p>
               </div>
@@ -367,11 +367,11 @@ export default function PrematrimonialWizardPage() {
         {step === 2 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-navy font-display">Disponibilidad y logística</h2>
-            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Días disponibles</p>
+            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">Días disponibles</p>
               <div className="flex flex-wrap gap-2">{DAYS.map(d => <Chip key={d} active={days.includes(d)} onClick={() => toggle(days, setDays, d)}>{d}</Chip>)}</div></div>
-            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Horario</p>
+            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">Horario</p>
               <div className="flex flex-wrap gap-2">{TIMES.map(t => <Chip key={t} active={times.includes(t)} onClick={() => toggle(times, setTimes, t)}>{t}</Chip>)}</div></div>
-            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Zonas donde pueden llevarlo <span className="text-navy-light/70">(Madrid = Virtual)</span></p>
+            <div><p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">Zonas donde pueden llevarlo <span className="text-navy-light/80">(Madrid = Virtual)</span></p>
               <div className="flex flex-wrap gap-2">{ZONES.map(z => <Chip key={z} active={zones.includes(z)} onClick={() => toggle(zones, setZones, z)}>{z}</Chip>)}</div></div>
             <label className="flex items-center gap-2 text-sm text-navy font-body"><input type="checkbox" checked={canHost} onChange={e => setCanHost(e.target.checked)} /> Podemos ofrecer nuestra casa para impartirlo</label>
             {canHost && (
@@ -384,7 +384,7 @@ export default function PrematrimonialWizardPage() {
             <div className="mt-2 space-y-4 border-t border-navy/10 pt-4">
               <h3 className="font-semibold text-navy font-display">Antecedentes de la pareja</h3>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{DATING_TIME_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{DATING_TIME_QUESTION} <span className="text-coral">*</span></p>
                 <div className="flex flex-wrap gap-2">
                   {DATING_TIME_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={datingTime === o.value} onClick={() => setDatingTime(o.value)}
@@ -394,7 +394,7 @@ export default function PrematrimonialWizardPage() {
                 </div>
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{FIRST_MARRIAGE_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{FIRST_MARRIAGE_QUESTION} <span className="text-coral">*</span></p>
                 <div className="flex gap-2">
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={firstMarriage === o.v} onClick={() => setFirstMarriage(o.v)}
@@ -409,7 +409,7 @@ export default function PrematrimonialWizardPage() {
                 )}
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CHILDREN_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CHILDREN_QUESTION} <span className="text-coral">*</span></p>
                 <div className="flex gap-2">
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={hasChildren === o.v} onClick={() => setHasChildren(o.v)}
@@ -424,7 +424,7 @@ export default function PrematrimonialWizardPage() {
                 )}
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{LIVING_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{LIVING_QUESTION} <span className="text-coral">*</span></p>
                 <div className="flex flex-wrap gap-2">
                   {LIVING_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={living === o.value} onClick={() => setLiving(o.value)}
@@ -443,7 +443,7 @@ export default function PrematrimonialWizardPage() {
                   también — Theos dejó de ofrecer ese servicio. Queda la fecha,
                   con su regla y su copy exacto (mínimo hoy + 6 meses). */}
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">{CEREMONY_DATE_QUESTION}</p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CEREMONY_DATE_QUESTION}</p>
                 <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
                 <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
               </div>
@@ -458,7 +458,7 @@ export default function PrematrimonialWizardPage() {
             {/* PRE-9: diagnóstico (opcional) antes del pago. */}
             <div className="space-y-2 border-b border-navy/10 pb-4">
               <h2 className="font-semibold text-navy font-display">Diagnóstico</h2>
-              <label htmlFor="premat-diagnostic" className="block text-[13px] text-navy-light/70 font-body">{DIAGNOSTIC_QUESTION}</label>
+              <label htmlFor="premat-diagnostic" className="block text-[13px] text-navy-light/80 font-body">{DIAGNOSTIC_QUESTION}</label>
               <textarea id="premat-diagnostic" value={diagnostic} onChange={e => setDiagnostic(e.target.value)} rows={3}
                 placeholder="Opcional — lo que escribas lo ve solo la coordinación de estudios."
                 className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
@@ -469,9 +469,9 @@ export default function PrematrimonialWizardPage() {
               <p><strong>IBAN:</strong> CR36010200009089215706</p>
               <p><strong>SINPE Móvil:</strong> 87267406</p>
               <p><strong>A nombre de:</strong> Asociación Theos Place (céd. jurídica 3-002-563360)</p>
-              <p className="text-navy-light/70">Luego de pagar, notificá a mariajose@theosplace.org.</p>
+              <p className="text-navy-light/80">Luego de pagar, notificá a mariajose@theosplace.org.</p>
             </div>
-            <p className="text-[13px] text-navy-light/70 font-body">El pago se hace <strong>antes</strong> de completar la inscripción: subí el comprobante y el número para que finanzas lo revise.</p>
+            <p className="text-[13px] text-navy-light/80 font-body">El pago se hace <strong>antes</strong> de completar la inscripción: subí el comprobante y el número para que finanzas lo revise.</p>
             {/* PRE-6: solicitud de beca — mismo flujo que la matrícula normal
                 (finance_requests tipo scholarship sobre el plan PREMAT). La
                 solicitud queda abierta y el pago sigue pendiente hasta que
@@ -486,12 +486,12 @@ export default function PrematrimonialWizardPage() {
               </button>
             )}
             <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Número de comprobante</p>
+              <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">Número de comprobante</p>
               <input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ej: 123456789" className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm outline-none focus:border-navy/30 font-body" />
             </div>
             <div>
-              <p className="mb-1.5 text-[13px] font-medium text-navy-light/70 font-body">Comprobante (imagen o PDF)</p>
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-navy/25 px-4 py-3 text-sm text-navy-light/70 font-body hover:border-navy/40">
+              <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">Comprobante (imagen o PDF)</p>
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-navy/25 px-4 py-3 text-sm text-navy-light/80 font-body hover:border-navy/40">
                 <Upload size={16} /> {file ? file.name : 'Seleccionar archivo'}
                 <input type="file" accept="image/*,application/pdf" className="hidden" onChange={e => setFile(e.target.files?.[0] ?? null)} />
               </label>
@@ -513,7 +513,7 @@ export default function PrematrimonialWizardPage() {
         {/* Navegación */}
         <div className="mt-6 flex items-center justify-between">
           <button type="button" onClick={() => step === 1 ? router.push('/matricula') : setStep(s => s - 1)}
-            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-navy-light/70 hover:bg-navy/5 font-body">
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-navy-light/80 hover:bg-navy/5 font-body">
             <ArrowLeft size={15} /> {step === 1 ? 'Salir' : 'Atrás'}
           </button>
           {step < 3 ? (

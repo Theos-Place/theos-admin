@@ -46,7 +46,7 @@ const TRI_LABEL = (v: boolean | null) => v === null ? 'Sin responder' : v ? 'Sí
 
 function StatusPill({ status }: { status: SelectionStatus }) {
   return (
-    <span className={cn('rounded-full px-2.5 py-0.5 text-[12px] font-body font-semibold', STATUS_STYLE[status])}>
+    <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-body font-semibold', STATUS_STYLE[status])}>
       {SELECTION_STATUS_LABEL[status]}
     </span>
   )
@@ -172,13 +172,13 @@ export default function SeleccionPage() {
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-60">
-      <p className="text-sm text-navy-light/70 font-body">Cargando…</p>
+      <p className="text-sm text-navy-light/80 font-body">Cargando…</p>
     </div>
   }
 
   if (denied) {
     return <div className="flex items-center justify-center min-h-60 px-6">
-      <p className="text-sm text-navy-light/70 font-body text-center max-w-md">
+      <p className="text-sm text-navy-light/80 font-body text-center max-w-md">
         Esta pantalla es solo del comité de dirigentes: las respuestas incluyen información personal
         sensible. Pedile acceso al coordinador de dirigentes o al de estudios.
       </p>
@@ -187,7 +187,7 @@ export default function SeleccionPage() {
 
   if (!data) {
     return <div className="flex items-center justify-center min-h-60">
-      <p className="text-sm text-navy-light/70 font-body">Formulario no encontrado.</p>
+      <p className="text-sm text-navy-light/80 font-body">Formulario no encontrado.</p>
     </div>
   }
 
@@ -198,7 +198,7 @@ export default function SeleccionPage() {
         <div>
           <Link
             href={`/formularios/${id}/respuestas`}
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors mb-2 font-body"
+            className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors mb-2 font-body"
           >
             <ChevronLeft size={15} />
             Respuestas
@@ -206,7 +206,7 @@ export default function SeleccionPage() {
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
             Selección del comité
           </h1>
-          <p className="text-sm text-navy-light/70 mt-0.5 font-body">
+          <p className="text-sm text-navy-light/80 mt-0.5 font-body">
             {data.form.title}
             {data.form.plan_code && <> · Plan {data.form.plan_code}</>}
           </p>
@@ -244,7 +244,7 @@ export default function SeleccionPage() {
           ['Ya invitados', counts.invitados],
         ] as Array<[string, number]>).map(([label, value]) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">{label}</p>
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">{label}</p>
             <p className="text-2xl text-navy font-display font-extrabold mt-1">{value}</p>
           </div>
         ))}
@@ -253,7 +253,7 @@ export default function SeleccionPage() {
       {/* Filtros */}
       <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             value={filters.q ?? ''}
             onChange={e => setFilters(f => ({ ...f, q: e.target.value }))}
@@ -318,7 +318,7 @@ export default function SeleccionPage() {
       {/* Lista */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {filtered.length === 0 ? (
-          <p className="px-5 py-12 text-center text-sm text-navy-light/70 font-body">
+          <p className="px-5 py-12 text-center text-sm text-navy-light/80 font-body">
             {rows.length === 0 ? 'Todavía no hay preinscripciones.' : 'Ninguna preinscripción coincide con los filtros.'}
           </p>
         ) : (
@@ -332,23 +332,23 @@ export default function SeleccionPage() {
                       <p className="text-sm text-navy font-body font-semibold">{row.member_name}</p>
                       <StatusPill status={row.status} />
                       {row.invited_at && (
-                        <span className="rounded-full bg-teal/10 px-2.5 py-0.5 text-[12px] text-teal font-body font-semibold">
+                        <span className="rounded-full bg-teal/10 px-2.5 py-0.5 text-[13px] text-teal font-body font-semibold">
                           Invitado
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] text-navy-light/70 font-body">
+                    <p className="text-[13px] text-navy-light/80 font-body">
                       Doctrina: {TRI_LABEL(row.agrees_doctrine)} · Disponibilidad: {TRI_LABEL(row.available)}
                       {row.chosen_group && <> · Grupo: {row.chosen_group}</>}
                     </p>
                     {row.recommendation && (
-                      <p className="text-[12px] text-navy-light/70 font-body">
+                      <p className="text-[13px] text-navy-light/80 font-body">
                         Recomendación del cierre (EST-9):{' '}
                         <span className="text-navy">{RECOMMENDATION_LABEL_BY_VALUE[row.recommendation] ?? row.recommendation}</span>
                       </p>
                     )}
                     {row.notes && (
-                      <p className="text-[12px] text-navy-light/70 font-body italic">Nota interna: {row.notes}</p>
+                      <p className="text-[13px] text-navy-light/80 font-body italic">Nota interna: {row.notes}</p>
                     )}
                   </div>
 
@@ -357,7 +357,7 @@ export default function SeleccionPage() {
                       type="button"
                       onClick={() => setStatus(row, 'aprobado')}
                       disabled={saving === row.response_id || row.status === 'aprobado'}
-                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-emerald-700 hover:bg-emerald-50 transition-colors font-body disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-emerald-700 hover:bg-emerald-50 transition-colors font-body disabled:opacity-40"
                     >
                       <Check size={12} /> Aprobar
                     </button>
@@ -365,7 +365,7 @@ export default function SeleccionPage() {
                       type="button"
                       onClick={() => setStatus(row, 'lista_espera')}
                       disabled={saving === row.response_id || row.status === 'lista_espera'}
-                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-amber-700 hover:bg-amber-50 transition-colors font-body disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-amber-700 hover:bg-amber-50 transition-colors font-body disabled:opacity-40"
                     >
                       <Clock size={12} /> Lista de espera
                     </button>
@@ -373,19 +373,19 @@ export default function SeleccionPage() {
                       type="button"
                       onClick={() => setStatus(row, 'rechazado')}
                       disabled={saving === row.response_id || row.status === 'rechazado'}
-                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-rose-700 hover:bg-rose-50 transition-colors font-body disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-rose-700 hover:bg-rose-50 transition-colors font-body disabled:opacity-40"
                     >
                       <X size={12} /> No seleccionar
                     </button>
                     <button
                       type="button"
                       onClick={() => { setDetail(row); setNotesDraft(row.notes ?? '') }}
-                      className="flex items-center gap-1 rounded-full bg-navy px-3 py-1.5 text-[12px] text-white hover:bg-navy-light transition-colors font-body"
+                      className="flex items-center gap-1 rounded-full bg-navy px-3 py-1.5 text-[13px] text-white hover:bg-navy-light transition-colors font-body"
                     >
                       Ver respuestas <ChevronRight size={12} />
                     </button>
                     {block && row.status === 'aprobado' && (
-                      <p className="w-full text-right text-[12px] text-navy-light/70 font-body">{block}</p>
+                      <p className="w-full text-right text-[13px] text-navy-light/80 font-body">{block}</p>
                     )}
                   </div>
                 </li>
@@ -412,7 +412,7 @@ export default function SeleccionPage() {
               <p id="detalle-preinscripcion" className="text-sm font-bold text-navy font-display">
                 {detail.member_name}
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 Preinscrito el {new Date(detail.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
@@ -420,15 +420,15 @@ export default function SeleccionPage() {
             <div className="p-5 space-y-4">
               {detail.answers.map((a, i) => (
                 <div key={`${a.label}-${i}`} className="space-y-1">
-                  <p className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">{a.label}</p>
+                  <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">{a.label}</p>
                   <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
-                    {a.value || <span className="italic text-navy-light/70">Sin respuesta</span>}
+                    {a.value || <span className="italic text-navy-light/80">Sin respuesta</span>}
                   </p>
                 </div>
               ))}
 
               <div className="pt-2 border-t border-[var(--outline-variant)] space-y-2">
-                <label htmlFor="notas-comite" className="block text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+                <label htmlFor="notas-comite" className="block text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                   Notas internas del comité
                 </label>
                 <textarea
@@ -443,7 +443,7 @@ export default function SeleccionPage() {
                   type="button"
                   onClick={() => saveNotes(detail)}
                   disabled={saving === detail.response_id}
-                  className="rounded-full bg-navy px-4 py-2 text-[12px] text-white hover:bg-navy-light transition-colors font-body disabled:opacity-40"
+                  className="rounded-full bg-navy px-4 py-2 text-[13px] text-white hover:bg-navy-light transition-colors font-body disabled:opacity-40"
                 >
                   {saving === detail.response_id ? 'Guardando…' : 'Guardar notas'}
                 </button>
@@ -461,7 +461,7 @@ export default function SeleccionPage() {
               <p id="convocar-preinscripcion" className="text-sm font-bold text-navy font-display">
                 Convocar a preinscribirse
               </p>
-              <p className="text-[13px] text-navy-light/70 font-body mt-1 max-w-prose">
+              <p className="text-[13px] text-navy-light/80 font-body mt-1 max-w-prose">
                 Se le manda el link de este formulario a {data.convocation.length}{' '}
                 persona{data.convocation.length === 1 ? '' : 's'} con recomendación positiva del
                 cierre de su estudio (EST-9) que todavía no se ha preinscrito. En la plantilla,
@@ -470,7 +470,7 @@ export default function SeleccionPage() {
             </div>
 
             <label className="block space-y-1">
-              <span className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                 Plantilla de correo
               </span>
               <select
@@ -483,7 +483,7 @@ export default function SeleccionPage() {
               </select>
             </label>
 
-            <ul className="max-h-40 overflow-y-auto text-[12px] text-navy-light/70 font-body space-y-1">
+            <ul className="max-h-40 overflow-y-auto text-[13px] text-navy-light/80 font-body space-y-1">
               {data.convocation.map(c => <li key={c.member_id}>· {c.member_name}</li>)}
             </ul>
 
@@ -516,7 +516,7 @@ export default function SeleccionPage() {
               <p id="invitar-seleccionados" className="text-sm font-bold text-navy font-display">
                 Invitar a los aprobados
               </p>
-              <p className="text-[13px] text-navy-light/70 font-body mt-1 max-w-prose">
+              <p className="text-[13px] text-navy-light/80 font-body mt-1 max-w-prose">
                 Se le crea la invitación al plan {data.form.plan_code ?? ''} a {pendingInvites.length}{' '}
                 persona{pendingInvites.length === 1 ? '' : 's'} y se les manda la plantilla que elijas.
                 Quien ya fue invitado no se repite.
@@ -524,7 +524,7 @@ export default function SeleccionPage() {
             </div>
 
             <label className="block space-y-1">
-              <span className="text-[12px] uppercase tracking-widest text-navy-light/70 font-display">
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                 Plantilla de correo
               </span>
               <select
@@ -535,12 +535,12 @@ export default function SeleccionPage() {
                 <option value="">Elegí una plantilla…</option>
                 {data.templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <span className="block text-[12px] text-navy-light/70 font-body">
+              <span className="block text-[13px] text-navy-light/80 font-body">
                 Las fechas y el horario del curso se editan en la plantilla, en Comunicaciones.
               </span>
             </label>
 
-            <ul className="max-h-40 overflow-y-auto text-[12px] text-navy-light/70 font-body space-y-1">
+            <ul className="max-h-40 overflow-y-auto text-[13px] text-navy-light/80 font-body space-y-1">
               {pendingInvites.map(r => <li key={r.response_id}>· {r.member_name}</li>)}
             </ul>
 

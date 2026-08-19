@@ -8,7 +8,7 @@ interface FieldPreviewProps {
 }
 
 export function FieldPreview({ field, compact }: FieldPreviewProps) {
-  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/70 cursor-not-allowed border-[var(--outline-variant)]'
+  const inputBase = 'w-full rounded-xl bg-white/60 border px-3 py-2 text-sm text-navy-light/80 cursor-not-allowed border-[var(--outline-variant)]'
 
   // EST-10: bloque de TEXTO INFORMATIVO — sin input. El cuerpo va en
   // `description` (el label es el título opcional del bloque).
@@ -20,7 +20,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
   if (field.type === 'info') {
     if (!field.description) {
       return (
-        <p className="text-[12px] text-navy-light/70 italic font-body">
+        <p className="text-[13px] text-navy-light/80 italic font-body">
           Sin texto. Escribilo en “Descripción”.
         </p>
       )
@@ -38,7 +38,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
     return (
       <div className="flex items-center gap-3 py-1">
         <div className="flex-1 h-px bg-[var(--outline-variant)]" />
-        <span className="text-[12px] uppercase tracking-widest font-semibold text-navy-light/70 font-display">
+        <span className="text-[13px] uppercase tracking-widest font-semibold text-navy-light/80 font-display">
           {field.label || 'Sección'}
         </span>
         <div className="flex-1 h-px bg-[var(--outline-variant)]" />
@@ -108,11 +108,11 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {opts.slice(0, compact ? 3 : opts.length).map(o => (
           <label key={o} className="flex items-center gap-2 cursor-not-allowed opacity-60">
             <input type="radio" disabled className="accent-coral" />
-            <span className="text-sm text-navy-light/70 font-body">{o}</span>
+            <span className="text-sm text-navy-light/80 font-body">{o}</span>
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[12px] text-navy-light/70 font-body">
+          <span className="text-[13px] text-navy-light/80 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -127,11 +127,11 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {opts.slice(0, compact ? 3 : opts.length).map(o => (
           <label key={o} className="flex items-center gap-2 cursor-not-allowed opacity-60">
             <input type="checkbox" disabled className="accent-coral" />
-            <span className="text-sm text-navy-light/70 font-body">{o}</span>
+            <span className="text-sm text-navy-light/80 font-body">{o}</span>
           </label>
         ))}
         {compact && opts.length > 3 && (
-          <span className="text-[12px] text-navy-light/70 font-body">
+          <span className="text-[13px] text-navy-light/80 font-body">
             +{opts.length - 3} más...
           </span>
         )}
@@ -157,7 +157,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
         {['Sí', 'No'].map(v => (
           <div
             key={v}
-            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/70 cursor-not-allowed border-[var(--outline-variant)] font-body"
+            className="flex-1 rounded-xl border py-2 text-center text-sm text-navy-light/80 cursor-not-allowed border-[var(--outline-variant)] font-body"
           >
             {v}
           </div>

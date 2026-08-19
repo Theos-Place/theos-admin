@@ -100,8 +100,8 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               key={m}
               onClick={() => { setMode(m); setError(null) }}
               className={cn(
-                'flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-medium border transition-all font-body',
-                mode === m ? 'bg-navy text-white border-navy' : 'text-navy-light/70 hover:bg-surface-low',
+                'flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-medium border transition-all font-body',
+                mode === m ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:bg-surface-low',
               )}
               style={{ borderColor: mode === m ? undefined : 'var(--outline-variant)' }}
             >
@@ -120,26 +120,26 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               placeholder="Cédula del integrante…"
               className={cn(inputCls, 'font-mono')}
             />
-            {searching && <p className="text-[12px] text-navy-light/70 font-body">Buscando…</p>}
+            {searching && <p className="text-[13px] text-navy-light/80 font-body">Buscando…</p>}
 
             {found && (
               <div className="rounded-xl bg-teal-soft/15 p-3 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-teal-deep flex items-center justify-center text-[12px] font-bold text-white font-display">
+                  <div className="h-9 w-9 rounded-full bg-teal-deep flex items-center justify-center text-[13px] font-bold text-white font-display">
                     {(found.first_name[0] + found.last_name[0]).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-navy flex items-center gap-1 font-body">
                       <UserCheck size={13} className="text-teal-deep" /> {found.first_name} {found.last_name}
                     </p>
-                    <p className="text-[12px] text-navy-light/70">{found.cedula}</p>
+                    <p className="text-[13px] text-navy-light/80">{found.cedula}</p>
                   </div>
                 </div>
                 <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
                   <option value="">Relación…</option>
                   {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
                 <button onClick={addLinked} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
                   Vincular integrante
                 </button>
@@ -148,10 +148,10 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
 
             {searched && !found && !searching && cedula.trim().length >= 4 && (
               <div className="rounded-xl bg-surface-low p-3 text-center space-y-2">
-                <p className="text-[12px] text-navy-light/70 font-body">
+                <p className="text-[13px] text-navy-light/80 font-body">
                   No se encontró a nadie con esa cédula.
                 </p>
-                <button onClick={() => { setMode('new'); setError(null) }} className="text-[12px] font-medium text-coral hover:underline font-body">
+                <button onClick={() => { setMode('new'); setError(null) }} className="text-[13px] font-medium text-coral hover:underline font-body">
                   Crear integrante nuevo →
                 </button>
               </div>
@@ -185,7 +185,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               <option value="">Relación…</option>
               {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
             <button onClick={addNew} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
               Agregar integrante
             </button>

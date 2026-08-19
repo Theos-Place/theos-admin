@@ -99,7 +99,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               {cap > 0 ? Math.round((registrationCount / cap) * 100) : 0}%
             </text>
           </svg>
-          <p className="text-[12px] text-navy-light/70 mt-1 font-body">Ocupación</p>
+          <p className="text-[13px] text-navy-light/80 mt-1 font-body">Ocupación</p>
           <p className="text-sm font-medium text-navy font-display">
             {registrationCount}/{cap || '∞'}
           </p>
@@ -107,23 +107,23 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         {[
           { label: 'Pagados', value: event.registrations.filter(r => r.payment_status === 'paid').length, color: 'text-teal-deep' },
           { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending').length, color: 'text-amber-600' },
-          { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/70' },
+          { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/80' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{label}</p>
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{label}</p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>{value}</p>
           </div>
         ))}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           {registrationCount} inscritos
         </p>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setShowInscribir(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             <UserPlus size={13} /> Inscribir
           </button>
@@ -141,14 +141,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
               )
             }}
             disabled={event.registrations.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40"
           >
             <Download size={13} /> Exportar
           </button>
           {onSendMessage && (
             <button
               onClick={onSendMessage}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={13} /> Enviar recordatorio
             </button>
@@ -162,14 +162,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <thead>
               <tr>
                 {['Nombre', 'Fecha inscripción', 'Pago', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {event.registrations.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-navy-light/80 font-body">
                     Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
                   </td>
                 </tr>
@@ -184,7 +184,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       <span className="text-sm text-navy font-body">{reg.member_name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                     {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                   </td>
                   <td className="px-4 py-3">
@@ -192,7 +192,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       value={reg.payment_status}
                       disabled={busyMember === reg.member_id}
                       onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
-                      className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[12px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
+                      className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[13px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
                     >
                       {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
                     </select>
@@ -201,7 +201,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     <button
                       onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                       disabled={busyMember === reg.member_id}
-                      className="inline-flex items-center gap-1 text-[12px] text-navy-light/70 hover:text-coral transition-colors font-body"
+                      className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
                     >
                       <Trash2 size={13} /> Quitar
                     </button>
@@ -215,7 +215,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         {/* Mobile: tarjetas */}
         <div className="md:hidden">
           {event.registrations.length === 0 ? (
-            <div className="px-4 py-8 text-center text-[13px] text-navy-light/70 font-body">
+            <div className="px-4 py-8 text-center text-[13px] text-navy-light/80 font-body">
               Nadie inscrito todavía. Usá «Inscribir» para agregar miembros.
             </div>
           ) : (
@@ -230,7 +230,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{reg.member_name}</p>
-                    <p className="text-[12px] text-navy-light/70 font-body">
+                    <p className="text-[13px] text-navy-light/80 font-body">
                       {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                     </p>
                   </div>
@@ -238,14 +238,14 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     value={reg.payment_status}
                     disabled={busyMember === reg.member_id}
                     onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
-                    className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[12px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body shrink-0"
+                    className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[13px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body shrink-0"
                   >
                     {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
                   </select>
                   <button
                     onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                     disabled={busyMember === reg.member_id}
-                    className="text-navy-light/70 hover:text-coral transition-colors shrink-0"
+                    className="text-navy-light/80 hover:text-coral transition-colors shrink-0"
                     aria-label="Quitar inscripción"
                   >
                     <Trash2 size={15} />
@@ -261,7 +261,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         <Modal onClose={() => { if (busyMember !== toRemove.id) setToRemove(null) }} titleId="quitar-inscripcion-titulo" width={448}>
           <div className="p-6 space-y-4">
             <h3 id="quitar-inscripcion-titulo" className="text-lg font-extrabold text-navy font-display">Quitar inscripción</h3>
-            <p className="text-sm text-navy-light/70 font-body">
+            <p className="text-sm text-navy-light/80 font-body">
               ¿Quitar la inscripción de <span className="font-semibold text-navy">{toRemove.name}</span>? Si tiene pago asociado, el registro del pago se conserva.
             </p>
             <div className="flex gap-2 pt-1">
@@ -377,29 +377,29 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
           <div className="rounded-2xl border border-coral/30 bg-coral/5 p-4 space-y-3">
             <p className="text-sm text-navy font-body">
               <span className="font-semibold">{payFor.name}</span> — evento con cobro.
-              {payFor.pricing.isServer && <span className="text-[12px] text-navy-light/70"> (precio servidor)</span>}
+              {payFor.pricing.isServer && <span className="text-[13px] text-navy-light/80"> (precio servidor)</span>}
             </p>
             <p className="text-2xl font-extrabold text-coral font-display">{formatCRC(payFor.pricing.price)}</p>
-            <p className="text-[12px] text-navy-light/70 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
+            <p className="text-[13px] text-navy-light/80 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => inscribir(payFor.id, 'paid')}
                 disabled={adding === payFor.id}
-                className="rounded-full bg-coral px-4 py-2 text-[12px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                className="rounded-full bg-coral px-4 py-2 text-[13px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
               >
                 Registrar pago {formatCRC(payFor.pricing.price)}
               </button>
               <button
                 onClick={() => inscribir(payFor.id, 'exempted')}
                 disabled={adding === payFor.id}
-                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-[12px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
               >
                 Marcar exento
               </button>
               <button
                 onClick={() => setPayFor(null)}
                 disabled={adding === payFor.id}
-                className="rounded-full px-4 py-2 text-[12px] text-navy-light/70 hover:text-navy transition-colors font-body"
+                className="rounded-full px-4 py-2 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
               >
                 Cancelar
               </button>
@@ -408,7 +408,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
         )}
 
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             autoFocus
             value={query}
@@ -420,9 +420,9 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
         </div>
 
         <div className="max-h-72 overflow-y-auto space-y-1">
-          {loading && <p className="text-[12px] text-navy-light/70 py-2 text-center font-body">Buscando…</p>}
+          {loading && <p className="text-[13px] text-navy-light/80 py-2 text-center font-body">Buscando…</p>}
           {!loading && query.trim().length >= 2 && results.length === 0 && (
-            <p className="text-[12px] text-navy-light/70 py-2 text-center font-body">Sin resultados.</p>
+            <p className="text-[13px] text-navy-light/80 py-2 text-center font-body">Sin resultados.</p>
           )}
           {results.map(m => {
             const name = `${m.first_name} ${m.last_name}`
@@ -434,15 +434,15 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-navy truncate font-body">{name}</p>
-                  {m.cedula && <p className="text-[12px] text-navy-light/70">{m.cedula}</p>}
+                  {m.cedula && <p className="text-[13px] text-navy-light/80">{m.cedula}</p>}
                 </div>
                 {already ? (
-                  <span className="text-[12px] text-navy-light/70 font-body">Ya inscrito</span>
+                  <span className="text-[13px] text-navy-light/80 font-body">Ya inscrito</span>
                 ) : (
                   <button
                     onClick={() => startInscribir(m.id, name)}
                     disabled={adding === m.id}
-                    className="rounded-full bg-coral px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                    className="rounded-full bg-coral px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                   >
                     {adding === m.id ? '…' : 'Inscribir'}
                   </button>

@@ -48,14 +48,14 @@ export function DisconnectModal({
           <p id="desvincular-servidor" className="text-base font-bold text-navy font-display">
             Desvincular servidor
           </p>
-          <p className="text-sm text-navy-light/70 mt-0.5 font-body">
+          <p className="text-sm text-navy-light/80 mt-0.5 font-body">
             {target.name}
           </p>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Motivo
             </label>
             <select
@@ -71,7 +71,7 @@ export function DisconnectModal({
 
           {reason === 'otro' && (
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Especificar motivo
               </label>
               <input
@@ -84,7 +84,7 @@ export function DisconnectModal({
           )}
 
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha efectiva de salida
             </label>
             <input
@@ -97,7 +97,7 @@ export function DisconnectModal({
         </div>
 
         <div
-          className="rounded-xl px-3 py-2.5 text-[12px] text-amber-700 bg-amber-50 font-body"
+          className="rounded-xl px-3 py-2.5 text-[13px] text-amber-700 bg-amber-50 font-body"
         >
           Esta acción moverá al servidor al historial del comité.
         </div>
@@ -147,25 +147,25 @@ export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel
         <p id="editar-comite" className="text-base font-bold text-navy font-display">Editar comité</p>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Nombre</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
             <input className={inputCls} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Área padre</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Área padre</label>
             <select className={inputCls} value={form.parent_id} onChange={e => onFormChange(p => ({ ...p, parent_id: e.target.value }))}>
               <option value="">Sin área</option>
               {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Encargado de comité</label>
+            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Encargado de comité</label>
             {form.leader_id ? (
               <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
                 <span className="flex-1 text-sm text-navy font-body">{form.leader_name || 'Encargado asignado'}</span>
                 <button
                   type="button"
                   onClick={() => onFormChange(p => ({ ...p, leader_id: '', leader_name: '' }))}
-                  className="text-[12px] text-coral hover:text-coral-deep transition-colors font-body"
+                  className="text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
                 >
                   Quitar
                 </button>
@@ -223,7 +223,7 @@ export function AddServerModal({
       <div className="p-6 space-y-4">
         <p id="anadir-servidor" className="text-base font-bold text-navy font-display">Añadir servidor</p>
         <div className="space-y-1">
-          <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Puesto</label>
+          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Puesto</label>
           <select
             className={inputCls}
             value={positionId}
@@ -234,7 +234,7 @@ export function AddServerModal({
           </select>
         </div>
         <div className={positionId ? 'relative' : 'relative opacity-50 pointer-events-none'}>
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/70" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input
             className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder="Buscar por nombre..."
@@ -258,16 +258,16 @@ export function AddServerModal({
                 </div>
                 <div>
                   <p className="text-[13px] font-medium text-navy font-body">{m.first_name} {m.last_name}</p>
-                  <p className="text-[12px] text-navy-light/70 font-body">{m.email}</p>
+                  <p className="text-[13px] text-navy-light/80 font-body">{m.email}</p>
                 </div>
                 <Plus size={14} className="ml-auto text-coral shrink-0" />
               </button>
             ))}
           </div>
         ) : serverSearch.trim() ? (
-          <p className="text-center text-sm text-navy-light/70 py-4 font-body">No se encontraron miembros.</p>
+          <p className="text-center text-sm text-navy-light/80 py-4 font-body">No se encontraron miembros.</p>
         ) : (
-          <p className="text-center text-[12px] text-navy-light/70 py-4 font-body">Escribí un nombre para buscar</p>
+          <p className="text-center text-[13px] text-navy-light/80 py-4 font-body">Escribí un nombre para buscar</p>
         )}
       </div>
     </Modal>
@@ -298,10 +298,10 @@ export function ChangePositionModal({
       <div className="p-6 space-y-4">
         <div>
           <p id="cambiar-puesto" className="text-base font-bold text-navy font-display">Cambiar puesto</p>
-          <p className="text-sm text-navy-light/70 mt-0.5 font-body">{target.name}</p>
+          <p className="text-sm text-navy-light/80 mt-0.5 font-body">{target.name}</p>
         </div>
         <div className="space-y-1">
-          <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">Nuevo puesto</label>
+          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nuevo puesto</label>
           <select
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             value={newPosition}

@@ -18,7 +18,7 @@ export function PaymentMethodBadge({ method }: { method: PaymentMethod }) {
   const cfg = METHOD_CONFIG[method] ?? { ...FALLBACK, label: String(method || '—') }
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium"
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-medium"
       style={{ color: cfg.color, background: cfg.bg }}
     >
       <cfg.Icon size={11} strokeWidth={2} />

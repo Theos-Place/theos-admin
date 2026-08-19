@@ -21,7 +21,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
       <div className="flex justify-end">
         <Link
           href={`/servidores/vacantes/solicitar?comite=${committeeId}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={13} />
           Solicitar nuevo puesto
@@ -45,12 +45,12 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
               <p className="text-sm font-semibold text-navy font-display">
                 {v.title}
               </p>
-              <p className="text-[12px] text-navy-light/70 font-body">
+              <p className="text-[13px] text-navy-light/80 font-body">
                 {v.position}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[12px] text-navy-light/70 font-mono">
+              <span className="text-[13px] text-navy-light/80 font-mono">
                 {v.slots_filled}/{v.slots_total} cupos
               </span>
               <span

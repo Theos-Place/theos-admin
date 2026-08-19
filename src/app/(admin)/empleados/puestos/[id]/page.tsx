@@ -20,7 +20,7 @@ export default function PuestoDetailPage() {
   if (!position) {
     return (
       <div className="flex items-center justify-center min-h-60">
-        <p className="text-sm text-navy-light/70 font-body">
+        <p className="text-sm text-navy-light/80 font-body">
           Puesto no encontrado.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function PuestoDetailPage() {
     <div className="space-y-4">
       <Link
         href="/empleados/puestos"
-        className="inline-flex items-center gap-1.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={15} />
         Puestos
@@ -45,7 +45,7 @@ export default function PuestoDetailPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/70 font-display"
+                className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/80 font-display"
               >
                 {position.committee_name}
               </span>
@@ -66,13 +66,13 @@ export default function PuestoDetailPage() {
           </div>
           <Link
             href={`/empleados/puestos/${id}/editar`}
-            className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
             Editar
           </Link>
         </div>
 
-        <p className="text-sm text-navy-light/70 leading-relaxed font-body">
+        <p className="text-sm text-navy-light/80 leading-relaxed font-body">
           {position.description}
         </p>
       </div>
@@ -82,19 +82,19 @@ export default function PuestoDetailPage() {
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
         <div className="flex items-center gap-2">
-          <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+          <p className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Rango salarial aprobado
           </p>
-          <Lock size={11} className="text-navy-light/70" />
+          <Lock size={11} className="text-navy-light/80" />
         </div>
         <div className="flex items-center gap-3">
           <div className="space-y-0.5">
-            <p className="text-[11px] text-navy-light/70 font-display">Mínimo</p>
+            <p className="text-[11px] text-navy-light/80 font-display">Mínimo</p>
             <SalaryBadge amount={position.salary_min} size="md" />
           </div>
-          <span className="text-navy-light/70 text-lg">—</span>
+          <span className="text-navy-light/80 text-lg">—</span>
           <div className="space-y-0.5">
-            <p className="text-[11px] text-navy-light/70 font-display">Máximo</p>
+            <p className="text-[11px] text-navy-light/80 font-display">Máximo</p>
             <SalaryBadge amount={position.salary_max} size="md" />
           </div>
         </div>
@@ -104,14 +104,14 @@ export default function PuestoDetailPage() {
       <div
         className="rounded-2xl p-5 space-y-3 bg-surface-card shadow-[var(--shadow-md)]"
       >
-        <p className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+        <p className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
           Persona asignada
         </p>
         {assigned ? (
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
-                <span className="text-[12px] font-bold text-white font-display">
+                <span className="text-[13px] font-bold text-white font-display">
                   {assigned.member_initials}
                 </span>
               </div>
@@ -119,14 +119,14 @@ export default function PuestoDetailPage() {
                 <p className="truncate text-sm font-semibold text-navy font-display">
                   {assigned.member_name}
                 </p>
-                <p className="truncate text-[12px] text-navy-light/70 font-body">
+                <p className="truncate text-[13px] text-navy-light/80 font-body">
                   {assigned.member_email}
                 </p>
               </div>
             </div>
             <Link
               href={`/empleados/${assigned.id}`}
-              className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[12px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              className="shrink-0 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               Ver expediente
             </Link>
@@ -134,13 +134,13 @@ export default function PuestoDetailPage() {
         ) : (
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <span
-              className="rounded-full bg-navy-light/10 px-3 py-1 text-[12px] text-navy-light/70 font-display"
+              className="rounded-full bg-navy-light/10 px-3 py-1 text-[13px] text-navy-light/80 font-display"
             >
               Sin asignar
             </span>
             <Link
               href="/empleados/nuevo"
-              className="rounded-full bg-coral px-3.5 py-1.5 text-[12px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               Contratar empleado
             </Link>

@@ -19,13 +19,13 @@ export function SalaryBadge({ amount, className, size = 'md' }: SalaryBadgeProps
   const formatted = restricted ? '₡ ••••••' : `${formatCRC(amount)}`
   const hidden = '₡ ••••••'
 
-  const textSize = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-[12px]' : 'text-sm'
+  const textSize = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-[13px]' : 'text-sm'
   const iconSize = size === 'lg' ? 16 : 13
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <span
-        className={cn(textSize, 'font-semibold tabular-nums font-mono', visible && !restricted ? 'text-navy' : 'text-navy-light/70')}
+        className={cn(textSize, 'font-semibold tabular-nums font-mono', visible && !restricted ? 'text-navy' : 'text-navy-light/80')}
       >
         {visible && !restricted ? formatted : hidden}
       </span>
@@ -33,7 +33,7 @@ export function SalaryBadge({ amount, className, size = 'md' }: SalaryBadgeProps
         <button
           type="button"
           onClick={() => setVisible(v => !v)}
-          className="text-navy-light/70 hover:text-navy transition-colors"
+          className="text-navy-light/80 hover:text-navy transition-colors"
           aria-label={visible ? 'Ocultar salario' : 'Mostrar salario'}
           title={visible ? 'Ocultar salario' : 'Mostrar salario'}
         >

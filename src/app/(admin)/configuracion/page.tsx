@@ -40,7 +40,7 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Configuración de mi cuenta
         </h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Gestioná tus preferencias de notificación
         </p>
       </div>
@@ -148,14 +148,14 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
       {/* Toggles */}
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-card">
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
           Preferencias de notificación
         </p>
         {INTERNAL_ITEMS.map(({ key, label, desc }) => (
           <div key={key} className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-navy font-body">{label}</p>
-              <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">{desc}</p>
+              <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{desc}</p>
             </div>
             <Toggle checked={prefs[key]} onChange={() => toggle(key)} />
           </div>
@@ -165,9 +165,9 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
         <div className="flex items-start justify-between gap-4 pt-1 border-t border-[var(--outline-variant)]">
           <div>
             <p className="text-sm font-medium text-navy font-body">Suscripción por email</p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">Newsletters, invitaciones a eventos y campañas</p>
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">Newsletters, invitaciones a eventos y campañas</p>
             {emailBlocked && (
-              <p className="text-[12px] text-coral mt-1 font-body">
+              <p className="text-[13px] text-coral mt-1 font-body">
                 Tu correo presentó problemas de entrega. Contacta a Theos Place para reactivarlo.
               </p>
             )}
@@ -182,7 +182,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
 
       {/* Canal preferido */}
       <div className="rounded-2xl p-6 space-y-4 bg-surface-card shadow-card">
-        <p className="text-[11px] uppercase tracking-widest text-navy-light/70 font-display">
+        <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
           Canal preferido
         </p>
         <div className="flex gap-2">
@@ -200,13 +200,13 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
               className={cn(
                 'flex-1 flex flex-col items-center gap-0.5 rounded-xl border py-3 text-[13px] font-medium transition-all font-body',
                 opt.disabled
-                  ? 'opacity-50 cursor-not-allowed text-navy-light/70'
-                  : prefs.canal_preferido === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/70 hover:text-navy'
+                  ? 'opacity-50 cursor-not-allowed text-navy-light/80'
+                  : prefs.canal_preferido === opt.key ? 'bg-navy border-navy text-white' : 'text-navy-light/80 hover:text-navy'
               )}
               style={{ borderColor: !opt.disabled && prefs.canal_preferido === opt.key ? undefined : 'var(--outline-variant)' }}
             >
               {opt.label}
-              {opt.disabled && <span className="text-[11px] font-normal text-navy-light/70">Próximamente</span>}
+              {opt.disabled && <span className="text-[11px] font-normal text-navy-light/80">Próximamente</span>}
             </button>
           ))}
         </div>

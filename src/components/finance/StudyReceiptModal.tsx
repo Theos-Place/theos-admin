@@ -58,7 +58,7 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
               </div>
             </div>
             <p className="text-base font-bold text-navy font-display">Comprobante enviado</p>
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Ya quedaste matriculado en {studyName}. Finanzas revisa el comprobante
               aparte; te avisamos si hay algún problema con el pago.
             </p>
@@ -67,24 +67,24 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
         ) : (
           <>
             <h3 id="comprobante-matricula-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
-            <p className="text-[13px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               <strong className="text-navy">La matrícula de {studyName} ya quedó hecha.</strong>{' '}
               Falta el pago de {formatCRC(amount)}: subí acá el comprobante (screenshot del
               SINPE o transferencia) y el número de referencia. Hacelo ahora, con el pago
               recién hecho — es el momento en que tenés la captura a mano.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Comprobante (imagen)</label>
+              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input
                 type="file"
                 accept="image/*"
                 aria-label="Comprobante de pago"
                 onChange={e => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[12px] file:text-navy"
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="mat-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Número de referencia</label>
+              <label htmlFor="mat-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
               <input
                 id="mat-pay-ref"
                 value={reference}
@@ -93,7 +93,7 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
-            {error && <p className="text-[12px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
             <div className="pt-1">
               <button
                 onClick={submit}

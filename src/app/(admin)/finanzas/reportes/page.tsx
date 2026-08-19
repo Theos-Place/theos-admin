@@ -136,7 +136,7 @@ export default function ReportesPage() {
             <h1 className="text-xl text-white font-display font-extrabold tracking-[-0.02em]">
               Reportes financieros
             </h1>
-            <p className="text-[12px] text-white/70 mt-0.5 font-body">
+            <p className="text-[13px] text-white/80 mt-0.5 font-body">
               Análisis y exportación de datos financieros
             </p>
           </div>
@@ -158,12 +158,12 @@ export default function ReportesPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Desde</span>
+                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Desde</span>
                 <input type="date" value={donDateFrom} onChange={e => setDonDateFrom(e.target.value)}
                   className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Hasta</span>
+                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Hasta</span>
                 <input type="date" value={donDateTo} onChange={e => setDonDateTo(e.target.value)}
                   className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
@@ -192,7 +192,7 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
                             {d.is_identified ? 'Identificado' : 'Sin identificar'}
                           </span>
                         </td>
@@ -253,9 +253,9 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} defaultHidden={false} /></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
                       </tr>
                     ))}
                   </tbody>
@@ -270,7 +270,7 @@ export default function ReportesPage() {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-[12px] text-[rgba(22,20,64,0.55)] font-body">Año</span>
+                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Año</span>
                 <select value={yearFilter} onChange={e => setYearFilter(e.target.value)}
                   className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                   {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(2024 + i)).map(y => <option key={y} value={y}>{y}</option>)}
@@ -286,14 +286,14 @@ export default function ReportesPage() {
             {/* Top months */}
             {topMonths.length > 0 && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[12px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
+                <p className="text-[13px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
                   Top meses {yearFilter}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {topMonths.map((m, i) => (
                     <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
-                      <p className="text-[12px] font-medium font-body text-navy">{m.name}</p>
-                      <p className="text-[12px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
+                      <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
+                      <p className="text-[13px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
                         {formatTotalsInline(m.total)}
                       </p>
                     </div>
@@ -320,7 +320,7 @@ export default function ReportesPage() {
                           <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/70'}`}>
+                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/80'}`}>
                             {barra(m) > 0 ? formatTotalsInline(m.total) : '—'}
                           </p>
                         </td>
@@ -361,7 +361,7 @@ export default function ReportesPage() {
             </div>
             <div>
               <p className="text-sm font-bold font-display text-navy">Exportar para QuickBooks</p>
-              <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">
+              <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
                 Formatos compatibles para importar en QuickBooks
               </p>
             </div>
@@ -374,7 +374,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-teal-deep shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar donaciones</p>
-                <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
             <button
@@ -384,7 +384,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-[#3DB97A] shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
-                <p className="text-[12px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
               </div>
             </button>
           </div>

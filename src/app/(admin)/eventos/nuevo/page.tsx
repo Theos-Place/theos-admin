@@ -285,7 +285,7 @@ function NuevoEventoForm() {
             Evento publicado
           </p>
           <p
-            className="text-sm text-navy-light/70 mb-6 font-body"
+            className="text-sm text-navy-light/80 mb-6 font-body"
           >
             El evento quedó disponible para inscripciones.
           </p>
@@ -327,7 +327,7 @@ function NuevoEventoForm() {
           </div>
         </div>
         {step < STEPS_COUNT && !canProceed() && missingForStep().length > 0 && (
-          <p className="text-[12px] text-navy-light/70 mt-1.5 text-right font-body" role="status">
+          <p className="text-[13px] text-navy-light/80 mt-1.5 text-right font-body" role="status">
             Para continuar, completá {missingForStep().join(' y ')}.
           </p>
         )}

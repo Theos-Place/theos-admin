@@ -71,7 +71,7 @@ export default function EmpleadosPage() {
           >
             Empleados
           </h1>
-          <p className="mt-1 text-sm text-white/70 font-body">
+          <p className="mt-1 text-sm text-white/80 font-body">
             Personal remunerado de Theos Place
           </p>
         </div>
@@ -98,7 +98,7 @@ export default function EmpleadosPage() {
             key={label}
             className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]"
           >
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
               {label}
             </p>
             <p className={cn('mt-2 text-4xl font-extrabold tabular-nums font-display', color)}>
@@ -147,7 +147,7 @@ export default function EmpleadosPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[12px] font-bold text-white font-display">
+                        <span className="text-[13px] font-bold text-white font-display">
                           {emp.member_initials}
                         </span>
                       </div>
@@ -155,32 +155,32 @@ export default function EmpleadosPage() {
                         <p className="text-sm font-medium text-navy font-body">
                           {emp.member_name}
                         </p>
-                        <p className="text-[12px] text-navy-light/70 font-body">
+                        <p className="text-[13px] text-navy-light/80 font-body">
                           {emp.member_email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                     {emp.position_name}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                     {emp.committee_name}
                   </td>
                   <td className="px-4 py-3">
                     <ContractTypeBadge type={emp.contract_type} size="sm" />
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {new Date(emp.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {calcularAntiguedad(emp.start_date)}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
-                        'rounded-full px-2.5 py-0.5 text-[12px] font-medium font-display',
-                        emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/70'
+                        'rounded-full px-2.5 py-0.5 text-[13px] font-medium font-display',
+                        emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
                       )}
                     >
                       {emp.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -189,7 +189,7 @@ export default function EmpleadosPage() {
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <Link
                       href={`/empleados/${emp.id}`}
-                      className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                      className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                     >
                       →
                     </Link>
@@ -210,7 +210,7 @@ export default function EmpleadosPage() {
               style={i < sortedEmployees.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
             >
               <div className="h-9 w-9 rounded-full bg-navy flex items-center justify-center shrink-0">
-                <span className="text-[12px] font-bold text-white font-display">
+                <span className="text-[13px] font-bold text-white font-display">
                   {emp.member_initials}
                 </span>
               </div>
@@ -218,7 +218,7 @@ export default function EmpleadosPage() {
                 <p className="truncate text-sm font-medium text-navy font-body">
                   {emp.member_name}
                 </p>
-                <p className="truncate text-[12px] text-navy-light/70 font-body">
+                <p className="truncate text-[13px] text-navy-light/80 font-body">
                   {emp.position_name}
                 </p>
               </div>
@@ -226,7 +226,7 @@ export default function EmpleadosPage() {
                 <span
                   className={cn(
                     'rounded-full px-2 py-0.5 text-[11px] font-medium font-display',
-                    emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/70'
+                    emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
                   )}
                 >
                   {emp.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -251,12 +251,12 @@ export default function EmpleadosPage() {
             onClick={() => setHistoryOpen(o => !o)}
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-low transition-colors"
           >
-            <span className="text-sm font-semibold text-navy-light/70 font-display">
+            <span className="text-sm font-semibold text-navy-light/80 font-display">
               Historial de personal ({inactive.length})
             </span>
             {historyOpen
-              ? <ChevronUp size={16} className="text-navy-light/70" />
-              : <ChevronDown size={16} className="text-navy-light/70" />
+              ? <ChevronUp size={16} className="text-navy-light/80" />
+              : <ChevronDown size={16} className="text-navy-light/80" />
             }
           </button>
 
@@ -269,7 +269,7 @@ export default function EmpleadosPage() {
                       {['Empleado', 'Puesto', 'Comité', 'Tipo', 'Período', ''].map(h => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+                          className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
                         >
                           {h}
                         </th>
@@ -289,25 +289,25 @@ export default function EmpleadosPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-navy-light/20 flex items-center justify-center shrink-0">
-                              <span className="text-[11px] font-bold text-navy-light/70 font-display">
+                              <span className="text-[11px] font-bold text-navy-light/80 font-display">
                                 {emp.member_initials}
                               </span>
                             </div>
-                            <p className="text-sm text-navy-light/70 font-body">
+                            <p className="text-sm text-navy-light/80 font-body">
                               {emp.member_name}
                             </p>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-navy-light/70 font-body">
+                        <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                           {emp.position_name}
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-navy-light/70 font-body">
+                        <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                           {emp.committee_name}
                         </td>
                         <td className="px-4 py-3">
                           <ContractTypeBadge type={emp.contract_type} size="sm" />
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-navy-light/70 whitespace-nowrap font-body">
+                        <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                           {new Date(emp.start_date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
                           {' — '}
                           {emp.end_date
@@ -318,7 +318,7 @@ export default function EmpleadosPage() {
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           <Link
                             href={`/empleados/${emp.id}`}
-                            className="rounded-lg px-2.5 py-1 text-[12px] text-navy-light/70 border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light/80 border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
                           >
                             →
                           </Link>
@@ -339,13 +339,13 @@ export default function EmpleadosPage() {
                     style={i < inactive.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                   >
                     <div className="h-8 w-8 rounded-full bg-navy-light/20 flex items-center justify-center shrink-0">
-                      <span className="text-[11px] font-bold text-navy-light/70 font-display">
+                      <span className="text-[11px] font-bold text-navy-light/80 font-display">
                         {emp.member_initials}
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-navy-light/70 font-body">{emp.member_name}</p>
-                      <p className="truncate text-[12px] text-navy-light/70 font-body">{emp.position_name}</p>
+                      <p className="truncate text-sm text-navy-light/80 font-body">{emp.member_name}</p>
+                      <p className="truncate text-[13px] text-navy-light/80 font-body">{emp.position_name}</p>
                     </div>
                     <ContractTypeBadge type={emp.contract_type} size="sm" />
                   </li>
