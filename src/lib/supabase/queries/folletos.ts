@@ -73,16 +73,18 @@ export async function getLeaderSedeForGroup(groupId: string): Promise<string | n
   return one?.name ?? null
 }
 
-/** Sede resuelta para un grupo: primero el perfil del dirigente (líder); si no
- *  tiene sede, la zona propia del grupo. Usado para folletos generados fuera
- *  del cierre de grupo (ej. reubicación individual), donde no hay un grupo
- *  "de origen" cuyo líder mirar por defecto. */
+/** Sede resuelta para un grupo, en orden: 1) la sede de ENTREGA DE FOLLETOS
+ *  elegida al crear el grupo (folletos_sede, si no es TBD); 2) el perfil del
+ *  dirigente (líder); 3) la zona propia del grupo. Usado por todo folleto
+ *  generado a partir de un grupo (automáticos y reubicación individual). */
 export async function getSedeForGroup(groupId: string): Promise<string | null> {
+  const supabase = createAdminClient()
+  const { data: g } = await supabase.from('study_groups').select('zone, folletos_sede').eq('id', groupId).maybeSingle()
+  const row = g as { zone: string | null; folletos_sede: string | null } | null
+  if (row?.folletos_sede && row.folletos_sede !== 'TBD') return row.folletos_sede
   const leaderSede = await getLeaderSedeForGroup(groupId)
   if (leaderSede) return leaderSede
-  const supabase = createAdminClient()
-  const { data: g } = await supabase.from('study_groups').select('zone').eq('id', groupId).maybeSingle()
-  const zoneCode = (g as { zone: string | null } | null)?.zone
+  const zoneCode = row?.zone
   if (!zoneCode) return null
   const { data: s } = await supabase.from('sedes').select('name').eq('code', zoneCode).maybeSingle()
   return (s as { name: string } | null)?.name ?? null
@@ -136,10 +138,9 @@ export async function createAutoFolletoIfNeeded(
     return { created: false, reason: 'umbral_no_alcanzado' }
   }
 
-  // La sede de envío elegida en el grupo manda; TBD (o vacío) cae a la del
-  // dirigente y por último a la zona del grupo.
-  const sedeElegida = row.folletos_sede && row.folletos_sede !== 'TBD' ? row.folletos_sede : null
-  const sede = sedeElegida ?? (await getLeaderSedeForGroup(groupId)) ?? (await getSedeForGroup(groupId))
+  // Resolución única (getSedeForGroup): sede de entrega del grupo → sede del
+  // dirigente → zona del grupo.
+  const sede = await getSedeForGroup(groupId)
   const { error } = await supabase.from('folleto_requests').insert({
     tipo,
     source_group_id: groupId,
