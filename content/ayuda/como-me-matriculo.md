@@ -64,12 +64,12 @@ te la aprueban completa, la matrícula no requiere pago; si es parcial, pagás l
 
 ## Si te matriculaste en el grupo equivocado
 
-Se pide un **cambio de grupo** desde el sistema, sin escribirle a nadie. El enlace está en
-tres lugares: la pantalla de confirmación apenas te matriculás, la ficha de tu grupo y
-**Pagos pendientes**.
+Escribinos al **WhatsApp de estudios: [7261-1001](https://wa.me/50672611001)** y te ayudamos
+con el cambio de grupo. El enlace directo también está en tres lugares: la pantalla de
+confirmación apenas te matriculás, la ficha de tu grupo y **Pagos pendientes**.
 
-Lo revisa el coordinador de estudios: **no es automático**. Mientras tanto seguís matriculado
-en tu grupo actual, así que no dejes de ir a clases.
+El cambio lo hace el equipo de estudios: **no es automático**. Mientras tanto seguís
+matriculado en tu grupo actual, así que no dejes de ir a clases.
 
-> Si te matriculaste y ya no vas a poder llevar el estudio, avisale a tu dirigente o al
-> comité de estudios. El cupo le sirve a otra persona.
+> Si te matriculaste y ya no vas a poder llevar el estudio, avisá al mismo WhatsApp
+> ([7261-1001](https://wa.me/50672611001)) o a tu dirigente. El cupo le sirve a otra persona.
