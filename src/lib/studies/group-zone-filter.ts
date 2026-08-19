@@ -5,10 +5,12 @@
 // cambio NO tenía opción para los grupos sin zona específica, que son 2.167 de
 // 2.169. O sea: casi todo el listado era imposible de filtrar.
 //
-// Regla (pedido de TI): las mismas zonas que al CREAR un grupo — las activas más
-// "Todas las zonas" — y además cualquier zona HISTÓRICA que de verdad aparezca en
-// algún grupo. Una zona histórica sin grupos no se ofrece: filtrar por ella
-// devuelve una tabla vacía y no le sirve a nadie.
+// Regla (pedido de TI): las mismas zonas que al CREAR un grupo (desde 2026-08-19
+// son las sedes con is_zone, no las activas) más "Todas las zonas", y además
+// cualquier otra sede/zona legada que de verdad aparezca en algún grupo. Una
+// zona sin grupos no se ofrece: filtrar por ella devuelve una tabla vacía y no
+// le sirve a nadie. La página pasa las zonas como `activeSedes` y el resto del
+// catálogo como `historicalSedes` (nombres históricos del parámetro).
 
 /** Valor del filtro para los grupos cuya zona es NULL ("Todas las zonas" al
  *  crearlos). No puede ser '' porque eso significa "sin filtro". */

@@ -101,7 +101,7 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
 export default function GruposPage() {
   // studyTypes: catálogo liviano (34 filas), NO trae los ~1.680 grupos.
   const { studyTypes: STUDY_TYPES, error: typesError } = useStudyPlans()
-  const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
+  const { zoneSedes: ZONE_SEDES, sedes: ALL_SEDES } = useSedes()
   const { user: actor } = useAuth()
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
@@ -177,12 +177,15 @@ export default function GruposPage() {
     )
   }
 
+  // Mismas zonas que al crear un grupo (is_zone), más las sedes/zonas legadas
+  // que de verdad aparecen en grupos (para que sigan siendo filtrables).
   const zoneOptions = useMemo(
     () => groupZoneFilterOptions({
-      activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES,
+      activeSedes: ZONE_SEDES,
+      historicalSedes: ALL_SEDES.filter(s => !s.is_zone),
       zonesInGroups, hasGroupsWithoutZone,
     }),
-    [ACTIVE_SEDES, HISTORICAL_SEDES, zonesInGroups, hasGroupsWithoutZone],
+    [ZONE_SEDES, ALL_SEDES, zonesInGroups, hasGroupsWithoutZone],
   )
 
   // Filtros → query string. Viajan al servidor; nada se filtra en memoria.
@@ -367,7 +370,7 @@ export default function GruposPage() {
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
               {zoneOptions.some(o => o.historical) && (
-                <optgroup label="── Sedes históricas (con grupos) ──">
+                <optgroup label="── Otras zonas/sedes (con grupos) ──">
                   {zoneOptions.filter(o => o.historical).map(o => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
