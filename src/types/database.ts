@@ -220,6 +220,7 @@ export type Database = {
           passion_notes: string | null
           passion_score: string | null
           recommendation: string | null
+          recommended_prior_study: string | null
           speech_notes: string | null
           speech_score: string | null
           status: string
@@ -242,6 +243,7 @@ export type Database = {
           passion_notes?: string | null
           passion_score?: string | null
           recommendation?: string | null
+          recommended_prior_study?: string | null
           speech_notes?: string | null
           speech_score?: string | null
           status?: string
@@ -264,6 +266,7 @@ export type Database = {
           passion_notes?: string | null
           passion_score?: string | null
           recommendation?: string | null
+          recommended_prior_study?: string | null
           speech_notes?: string | null
           speech_score?: string | null
           status?: string
@@ -1805,6 +1808,7 @@ export type Database = {
           authorized_virtual_studies_at: string | null
           authorized_virtual_studies_by: string | null
           member_id: string
+          not_recommended_reason: string | null
           not_recommended_to_lead_studies: boolean
           not_recommended_to_lead_studies_at: string | null
           not_recommended_to_lead_studies_by: string | null
@@ -1818,6 +1822,7 @@ export type Database = {
           authorized_virtual_studies_at?: string | null
           authorized_virtual_studies_by?: string | null
           member_id: string
+          not_recommended_reason?: string | null
           not_recommended_to_lead_studies?: boolean
           not_recommended_to_lead_studies_at?: string | null
           not_recommended_to_lead_studies_by?: string | null
@@ -1831,6 +1836,7 @@ export type Database = {
           authorized_virtual_studies_at?: string | null
           authorized_virtual_studies_by?: string | null
           member_id?: string
+          not_recommended_reason?: string | null
           not_recommended_to_lead_studies?: boolean
           not_recommended_to_lead_studies_at?: string | null
           not_recommended_to_lead_studies_by?: string | null
@@ -3742,6 +3748,7 @@ export type Database = {
           feedback_released_at: string | null
           feedback_released_by: string | null
           feedback_requested_at: string | null
+          folletos_sede: string | null
           survey_enabled: boolean
           survey_offset_hours: number
           survey_send_at: string | null
@@ -3778,6 +3785,7 @@ export type Database = {
           feedback_released_at?: string | null
           feedback_released_by?: string | null
           feedback_requested_at?: string | null
+          folletos_sede?: string | null
           survey_enabled?: boolean
           survey_offset_hours?: number
           survey_send_at?: string | null
@@ -3814,6 +3822,7 @@ export type Database = {
           feedback_released_at?: string | null
           feedback_released_by?: string | null
           feedback_requested_at?: string | null
+          folletos_sede?: string | null
           survey_enabled?: boolean
           survey_offset_hours?: number
           survey_send_at?: string | null

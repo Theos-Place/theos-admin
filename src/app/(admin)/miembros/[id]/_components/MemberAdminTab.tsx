@@ -19,6 +19,7 @@ type AdminData = {
   not_recommended_to_lead_studies: boolean
   marked_at: string | null
   marked_by_name: string | null
+  not_recommended_reason: string | null
   can_edit: boolean
   authorized_virtual_studies: boolean
   authorized_virtual_studies_at: string | null
@@ -115,23 +116,43 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
 
   useEffect(() => { loadAdmin() }, [loadAdmin])
 
-  async function toggleNotRecommended() {
+  // Marcar exige justificación: el toggle no activa directo — abre el textbox
+  // y se confirma con la razón (la fecha la sella el API sola).
+  const [reasonOpen, setReasonOpen] = useState(false)
+  const [reason, setReason] = useState('')
+
+  async function saveNotRecommended(value: boolean, reasonText?: string) {
     if (!admin || busy || !admin.can_edit) return
     setBusy(true)
     setSaved(false)
+    setError(null)
     try {
       const res = await fetch(`/api/members/${memberId}/admin-data`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ not_recommended_to_lead_studies: !admin.not_recommended_to_lead_studies }),
+        body: JSON.stringify({ not_recommended_to_lead_studies: value, ...(value ? { reason: reasonText } : {}) }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error)
       await loadAdmin()
+      setReasonOpen(false)
+      setReason('')
       setSaved(true)
-    } catch {
-      setError('No se pudo actualizar la marca.')
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'No se pudo actualizar la marca.')
     } finally {
       setBusy(false)
+    }
+  }
+
+  function toggleNotRecommended() {
+    if (!admin || busy || !admin.can_edit) return
+    if (admin.not_recommended_to_lead_studies) {
+      void saveNotRecommended(false) // desmarcar no pide razón
+    } else if (reasonOpen) {
+      setReasonOpen(false) // segundo toque sin confirmar = cancelar
+      setReason('')
+    } else {
+      setReasonOpen(true)
     }
   }
 
@@ -199,17 +220,17 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       {/* Cuenta y acceso */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
-          <KeyRound size={15} className="text-navy-light/70" />
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Cuenta y acceso</p>
+          <KeyRound size={15} className="text-navy-light/80" />
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Cuenta y acceso</p>
         </div>
 
         {accountLoading ? (
-          <p className="text-[12px] text-navy-light/70 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
+          <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
         ) : !account || account.state === 'none' ? (
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">
-              <UserX size={14} className="text-navy-light/70" />
-              <span className="text-[12px] text-navy-light/70 font-body">Este miembro no tiene cuenta de acceso.</span>
+              <UserX size={14} className="text-navy-light/80" />
+              <span className="text-[13px] text-navy-light/80 font-body">Este miembro no tiene cuenta de acceso.</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -222,14 +243,14 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 {createBusy ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><UserPlus size={14} /> Crear cuenta de acceso</>}
               </button>
               {!account?.email && (
-                <span className="text-[12px] text-navy-light/70 font-body">Requiere un correo registrado en el perfil.</span>
+                <span className="text-[13px] text-navy-light/80 font-body">Requiere un correo registrado en el perfil.</span>
               )}
             </div>
-            <p className="text-[12px] text-navy-light/70 font-body">
+            <p className="text-[13px] text-navy-light/80 font-body">
               Crea el usuario de acceso y le manda el correo con el paso a paso para crear su contraseña. El correo NO lleva un enlace que venza: la persona lo pide desde la pantalla de ingreso cuando lo va a usar.
             </p>
             {createMsg && (
-              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
                 {createMsg.ok && <Check size={12} />}{createMsg.text}
               </p>
             )}
@@ -239,23 +260,23 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             {/* Indicador de estado */}
             <div className="flex items-center gap-2 flex-wrap">
               {account.state === 'active' ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[12px] font-medium text-teal-deep font-body">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[13px] font-medium text-teal-deep font-body">
                   <UserCheck size={13} /> {ACCOUNT_STATE_LABEL.active}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[12px] font-medium text-amber-700 font-body">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[13px] font-medium text-amber-700 font-body">
                   <Clock size={13} /> {ACCOUNT_STATE_LABEL.never_entered}
                 </span>
               )}
               {account.email && (
-                <span className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 font-body">
+                <span className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
                   <Mail size={13} className="text-navy-light/50" /> {account.email}
                 </span>
               )}
             </div>
 
             {/* Detalle de fechas */}
-            <div className="text-[12px] text-navy-light/70 font-body space-y-0.5">
+            <div className="text-[13px] text-navy-light/80 font-body space-y-0.5">
               {account.email_confirmed_at && (
                 <p>Contraseña definida el {formatDate(account.email_confirmed_at)}</p>
               )}
@@ -287,12 +308,12 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             </div>
 
             {resendMsg && (
-              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
                 {resendMsg.ok && <Check size={12} />}{resendMsg.text}
               </p>
             )}
             {pwMsg && (
-              <p className={`text-[12px] font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
                 {pwMsg.ok && <Check size={12} />}{pwMsg.text}
               </p>
             )}
@@ -305,12 +326,12 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <BookOpen size={15} className="text-teal-deep" />
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios — administrativo</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Estudios — administrativo</p>
         </div>
 
         {/* Acciones de estudios (movidas desde Participación) */}
         <div className="pb-4 border-b border-[var(--outline-variant)]">
-          <p className="text-[12px] text-navy-light/70 font-display mb-2">Acciones de estudios</p>
+          <p className="text-[13px] text-navy-light/80 font-display mb-2">Acciones de estudios</p>
           <div className="flex gap-2 flex-wrap">
             <InviteToStudyButton memberId={memberId} blocked={!!admin?.not_recommended_to_lead_studies} />
             <StudyExceptionButton memberId={memberId} />
@@ -325,14 +346,19 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
           <Ban size={15} className="text-coral mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-navy font-body">No recomendado para dar estudios</p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               {admin?.can_edit
                 ? 'Marca a esta persona para que no reciba invitación a la formación de dirigentes (CDEB).'
                 : 'Solo coordinación de estudios o admin puede cambiarlo.'}
             </p>
             {admin?.not_recommended_to_lead_studies && admin.marked_by_name && (
-              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
+              <p className="text-[13px] text-navy-light/80 mt-1 font-body">
                 Marcado por {admin.marked_by_name}{admin.marked_at ? ` · ${formatDate(admin.marked_at)}` : ''}
+              </p>
+            )}
+            {admin?.not_recommended_to_lead_studies && admin.not_recommended_reason && (
+              <p className="text-[13px] text-navy-light/80 mt-1 font-body">
+                Razón: “{admin.not_recommended_reason}”
               </p>
             )}
           </div>
@@ -353,8 +379,42 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', admin?.not_recommended_to_lead_studies ? 'translate-x-5' : 'translate-x-0')} />
           </button>
         </div>
-        {saved && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {error && <p className="text-[12px] text-coral mt-2 font-body">{error}</p>}
+        {/* Justificación obligatoria antes de confirmar la marca */}
+        {reasonOpen && !admin?.not_recommended_to_lead_studies && (
+          <div className="mt-3 space-y-2">
+            <label htmlFor="not-recommended-reason" className="block text-[13px] font-medium text-navy-light/80 font-body">
+              Razón (obligatoria) — la fecha se guarda automáticamente
+            </label>
+            <textarea
+              id="not-recommended-reason"
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              rows={2}
+              placeholder="¿Por qué no debe recibir la invitación a CDEB?"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/50"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void saveNotRecommended(true, reason)}
+                disabled={!reason.trim() || busy}
+                className={cn('rounded-full bg-coral px-4 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body inline-flex items-center gap-1.5', (!reason.trim() || busy) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busy ? <><Loader2 size={13} className="animate-spin" /> Guardando…</> : 'Marcar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setReasonOpen(false); setReason('') }}
+                disabled={busy}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+        {saved && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
+        {error && <p className="text-[13px] text-coral mt-2 font-body">{error}</p>}
         </div>
 
         {/* Autorizado para estudios virtuales */}
@@ -364,11 +424,11 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
           <Video size={15} className="text-teal-deep mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-navy font-body">Autorizado para estudios virtuales</p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               {admin?.can_edit_virtual ? 'Habilita a esta persona a ver y matricularse en grupos virtuales.' : 'Solo coordinación de estudios, coordinación de dirigentes o admin puede cambiarlo.'}
             </p>
             {admin?.authorized_virtual_studies && admin.authorized_virtual_studies_by_name && (
-              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
+              <p className="text-[13px] text-navy-light/80 mt-1 font-body">
                 Autorizado por {admin.authorized_virtual_studies_by_name}{admin.authorized_virtual_studies_at ? ` · ${formatDate(admin.authorized_virtual_studies_at)}` : ''}
               </p>
             )}
@@ -390,8 +450,8 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', admin?.authorized_virtual_studies ? 'translate-x-5' : 'translate-x-0')} />
           </button>
         </div>
-        {savedVirtual && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {errorVirtual && <p className="text-[12px] text-coral mt-2 font-body">{errorVirtual}</p>}
+        {savedVirtual && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
+        {errorVirtual && <p className="text-[13px] text-coral mt-2 font-body">{errorVirtual}</p>}
         </div>
       </div>
       </>}
@@ -401,23 +461,23 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
           <GraduationCap size={15} className="text-teal-deep" />
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Servidores</p>
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Servidores</p>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-navy font-body">
               Llevó el onboarding de servidores
               {admin?.servers_onboarding && admin.servers_onboarding_at && (
-                <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[12px] font-semibold text-teal-deep font-display">
+                <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-deep font-display">
                   {formatDate(admin.servers_onboarding_at)}
                 </span>
               )}
             </p>
-            <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
+            <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
               Al marcarlo se guarda automáticamente la fecha.
             </p>
             {admin?.servers_onboarding && admin.servers_onboarding_by_name && (
-              <p className="text-[12px] text-navy-light/70 mt-1 font-body">
+              <p className="text-[13px] text-navy-light/80 mt-1 font-body">
                 Marcado por {admin.servers_onboarding_by_name}
               </p>
             )}
@@ -438,8 +498,8 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
             <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', admin?.servers_onboarding ? 'translate-x-5' : 'translate-x-0')} />
           </button>
         </div>
-        {savedOnboarding && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {errorOnboarding && <p className="text-[12px] text-coral mt-2 font-body">{errorOnboarding}</p>}
+        {savedOnboarding && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
+        {errorOnboarding && <p className="text-[13px] text-coral mt-2 font-body">{errorOnboarding}</p>}
       </div>
       )}
 
@@ -490,8 +550,8 @@ function PrematEvaluationPanel({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
       <div>
-        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Evaluación del prematrimonial</h3>
-        <p className="mt-1 text-[12px] text-navy-light/70 font-body">
+        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Evaluación del prematrimonial</h3>
+        <p className="mt-1 text-[13px] text-navy-light/80 font-body">
           Información pastoral confidencial: visible solo para coordinación de estudios, dirección y admin. No la ve el miembro ni su pareja.
         </p>
       </div>
@@ -501,23 +561,23 @@ function PrematEvaluationPanel({ memberId }: { memberId: string }) {
         return (
           <div key={e.id} className="rounded-xl border border-outline p-4 space-y-2 text-[13px] font-body">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-navy-light/70">{formatDate(e.created_at)}</span>
+              <span className="text-navy-light/80">{formatDate(e.created_at)}</span>
               {needsFollowUp(e.action_plan) && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[12px] font-semibold text-amber-800 font-display">⚑ En seguimiento</span>
+                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[13px] font-semibold text-amber-800 font-display">⚑ En seguimiento</span>
               )}
             </div>
             <p className="text-navy"><strong>Plan de acción:</strong> {plan?.label ?? e.action_plan}</p>
             <p className="text-navy-light/80"><strong className="text-navy">Compromiso:</strong> {commitment?.label ?? e.commitment}</p>
             {e.strengths.length > 0 && <p className="text-navy-light/80"><strong className="text-navy">Fortalezas:</strong> {e.strengths.join(' · ')}</p>}
-            {e.strengths_notes && <p className="text-navy-light/70">{e.strengths_notes}</p>}
+            {e.strengths_notes && <p className="text-navy-light/80">{e.strengths_notes}</p>}
             {e.topics_to_work.length > 0 && <p className="text-navy-light/80"><strong className="text-navy">A profundizar:</strong> {e.topics_to_work.join(' · ')}</p>}
-            {e.observations && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Observaciones:</strong> {e.observations}</p>}
+            {e.observations && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Observaciones:</strong> {e.observations}</p>}
             {e.blind_spot && (
               <p className="rounded-lg bg-coral/5 px-3 py-2 text-coral-deep">
                 <strong>Punto ciego / tema no resuelto:</strong> {e.blind_spot_notes ?? '(sin descripción)'}
               </p>
             )}
-            {e.blessing && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Bendición:</strong> {e.blessing}</p>}
+            {e.blessing && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Bendición:</strong> {e.blessing}</p>}
           </div>
         )
       })}
@@ -541,6 +601,7 @@ type CdebRow = {
   commitment_notes: string | null
   committee_notes: string | null
   recommendation: string | null
+  recommended_prior_study: string | null
   created_at: string
   group?: { name: string | null; plan?: { code: string | null } | null } | null
   /** member_id de quien la escribió (se enlaza a su perfil). */
@@ -566,8 +627,8 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
       <div>
-        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">Evaluación para la formación de dirigentes (CDEB)</h3>
-        <p className="mt-1 text-[12px] text-navy-light/70 font-body">
+        <h3 className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Evaluación para la formación de dirigentes (CDEB)</h3>
+        <p className="mt-1 text-[13px] text-navy-light/80 font-body">
           Evaluación de dirigentes para el comité. Confidencial: no la ve el miembro ni quien la escribió.
         </p>
       </div>
@@ -585,22 +646,26 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
                   ? <PersonaLink id={r.filled_by ?? null} nombre={leader} />
                   : <strong>un dirigente</strong>}
               </p>
-              <span className="text-[12px] text-navy-light/70">{formatDate(r.created_at)}</span>
+              <span className="text-[13px] text-navy-light/80">{formatDate(r.created_at)}</span>
             </div>
-            <p className="text-[12px] text-navy-light/70">
+            <p className="text-[13px] text-navy-light/80">
               Al cerrar {r.group?.plan?.code ?? 'el grupo'}{r.group?.name ? ` · ${r.group.name}` : ''}
             </p>
-            <p className="text-navy"><strong>Recomendación:</strong> {rec?.label ?? r.recommendation ?? '—'}</p>
+            <p className="text-navy"><strong>Recomendación:</strong> {rec?.label ?? r.recommendation ?? '—'}
+              {r.recommendation === 'si_otro_estudio' && r.recommended_prior_study && (
+                <span> — primero: <strong>{r.recommended_prior_study}</strong></span>
+              )}
+            </p>
             <p className="text-navy-light/80">
               <strong className="text-navy">{TESTIMONY_LABEL}:</strong> {scale(r.testimony_score)}
               {' · '}<strong className="text-navy">Pasión:</strong> {scale(r.passion_score)}
               {' · '}<strong className="text-navy">{BIBLE_LABEL}:</strong> {scale(r.bible_knowledge_score)}
               {' · '}<strong className="text-navy">{SPEECH_LABEL}:</strong> {scale(r.speech_score)}
             </p>
-            {r.testimony_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Testimonio:</strong> {r.testimony_notes}</p>}
-            {r.passion_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Comparte su fe:</strong> {r.passion_notes}</p>}
-            {r.speech_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Expresión:</strong> {r.speech_notes}</p>}
-            {r.commitment_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Compromiso:</strong> {r.commitment_notes}</p>}
+            {r.testimony_notes && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Testimonio:</strong> {r.testimony_notes}</p>}
+            {r.passion_notes && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Comparte su fe:</strong> {r.passion_notes}</p>}
+            {r.speech_notes && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Expresión:</strong> {r.speech_notes}</p>}
+            {r.commitment_notes && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Compromiso:</strong> {r.commitment_notes}</p>}
             {r.convictions?.length > 0 && (
               <div className="rounded-lg bg-coral/5 px-3 py-2 space-y-1">
                 <p className="text-coral-deep font-semibold">Convicciones a trabajar</p>
@@ -613,7 +678,7 @@ function CdebRecommendationsPanel({ memberId }: { memberId: string }) {
                 ))}
               </div>
             )}
-            {r.committee_notes && <p className="text-navy-light/70 whitespace-pre-line"><strong className="text-navy">Para el comité:</strong> {r.committee_notes}</p>}
+            {r.committee_notes && <p className="text-navy-light/80 whitespace-pre-line"><strong className="text-navy">Para el comité:</strong> {r.committee_notes}</p>}
           </div>
         )
       })}

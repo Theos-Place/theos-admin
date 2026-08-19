@@ -48,6 +48,7 @@ export async function saveCdebRecommendation(input: {
     commitment_notes: clean.commitment_notes,
     committee_notes: clean.committee_notes,
     recommendation: clean.recommendation,
+    recommended_prior_study: clean.recommended_prior_study,
   }, { onConflict: 'member_id,group_id' }).select('id').single()
   if (error) throw error
   return data as { id: string }

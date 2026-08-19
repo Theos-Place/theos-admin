@@ -20,6 +20,9 @@ import { KNOWN_CATEGORIES, categoryLabel } from '@/lib/communications/categories
 
 type CategoryFilter = 'all' | string
 
+/** Normaliza para buscar por nombre sin distinguir tildes ni mayúsculas. */
+const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
 const CHANNEL_FILTERS: { key: 'all' | CommunicationChannel; label: string }[] = [
   { key: 'all',       label: 'Canal: Todos' },
   { key: 'whatsapp',  label: 'WhatsApp' },
@@ -33,6 +36,7 @@ export default function PlantillasPage() {
   const { templates, error, refetch } = useCommunications('templates')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [channelFilter, setChannelFilter] = useState<'all' | CommunicationChannel>('all')
+  const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null)
   const [previewTarget, setPreviewTarget] = useState<MessageTemplate | null>(null)
 
@@ -43,12 +47,14 @@ export default function PlantillasPage() {
   }, [templates])
 
   const filtered = useMemo(() => {
+    const q = norm(search.trim())
     return templates.filter(t => {
       if (categoryFilter !== 'all' && t.category !== categoryFilter) return false
       if (channelFilter !== 'all' && t.channel !== channelFilter) return false
+      if (q && !norm(t.name).includes(q)) return false
       return true
     })
-  }, [templates, categoryFilter, channelFilter])
+  }, [templates, categoryFilter, channelFilter, search])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
 
@@ -110,7 +116,7 @@ export default function PlantillasPage() {
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
             Plantillas
           </h1>
-          <p className="mt-1 text-sm text-white/70 font-body">
+          <p className="mt-1 text-sm text-white/80 font-body">
             {templates.filter(t => t.is_active).length} plantillas activas
           </p>
         </div>
@@ -132,16 +138,24 @@ export default function PlantillasPage() {
               type="button"
               onClick={() => setCategoryFilter(f.key)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 text-[12px] font-medium border transition-all font-display',
+                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
                 categoryFilter === f.key
                   ? 'bg-navy text-white border-navy'
-                  : 'text-navy-light/70 hover:text-navy hover:bg-surface-low border-transparent'
+                  : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent'
               )}
             >
               {f.label}
             </button>
           ))}
         </div>
+        <input
+          type="search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar por nombre…"
+          aria-label="Buscar plantilla por nombre"
+          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 self-start font-body min-w-[220px] placeholder:text-navy-light/50"
+        />
         <select
           className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 self-start font-body"
           value={channelFilter}

@@ -6,6 +6,7 @@ import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
+import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -89,7 +90,9 @@ export type MemberFilters = {
   is_active?: boolean
   is_donor?: boolean
   is_server?: boolean
-  active_attendance?: boolean
+  /** true = criterio general (6 charlas/6 meses + 1 en 60 días);
+   *  'estudios' = reforzado de Etapa Intermedia (12 charlas). */
+  active_attendance?: boolean | 'estudios'
   gender?: string
   ids?: string[]
   /** Condiciones de los filtros avanzados (se resuelven server-side). */
@@ -637,7 +640,8 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
   // .in('id', [...]) en la query (un array de cientos/miles revienta la URL).
   const intersectSets: Array<Set<string>> = []
   if (active_attendance) {
-    const aids = await getActiveAttendanceMemberIds()
+    const aids = await getActiveAttendanceMemberIds(
+      active_attendance === 'estudios' ? ATTENDANCE_MIN_CHARLAS_INTERMEDIA : undefined)
     if (aids.length === 0) return { ids: [], total: 0 }
     intersectSets.push(new Set(aids))
   }
@@ -1008,12 +1012,17 @@ export async function searchMembersForLookup(
   const q = search.trim()
   if (q.length < 2) return []
   const supabase = createAdminClient()
-  const like = `%${q}%`
-  const { data, error } = await supabase
-    .from('members')
-    .select('id, first_name, last_name, cedula, email')
-    .or(`first_name.ilike.${like},last_name.ilike.${like},cedula.ilike.${like},email.ilike.${like}`)
-    .eq('is_active', true)
+  // search_text: nombre + apellidos + cédula + correo + teléfono, normalizado
+  // (sin tildes). Tokeniza por espacios con AND, así "maria rodriguez"
+  // (nombre + apellido juntos) SÍ encuentra — el .or() por columna separada
+  // no podía (2026-08-19).
+  const { data, error } = await applyMemberSearch(
+    supabase
+      .from('members')
+      .select('id, first_name, last_name, cedula, email')
+      .eq('is_active', true),
+    q,
+  )
     .order('first_name')
     .limit(Math.min(limit, 20))
   if (error) throw error

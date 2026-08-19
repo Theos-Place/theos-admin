@@ -17,7 +17,7 @@ import {
   Info,
   AlertTriangle,
 } from 'lucide-react'
-import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
+import { ATTENDANCE_GENERAL_TOOLTIP, ATTENDANCE_ESTUDIOS_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
 import { useMembers } from '@/hooks/useMembers'
@@ -56,6 +56,8 @@ function MiembrosContent() {
   const [showDonors,  setShowDonors]  = useUrlFlag('donadores')
   const [showServers, setShowServers] = useUrlFlag('servidores')
   const [showActive,  setShowActive]  = useUrlFlag('activos')
+  // Criterio reforzado de estudios: 12 charlas / 6 meses + 1 en 60 días.
+  const [showStudyAttendance, setShowStudyAttendance] = useUrlFlag('asistencia_estudios')
   const [urlQ, setUrlQ] = useUrlFilter('q')
   const [search,         setSearch]         = useState(urlQ)
   const [debouncedSearch, setDebouncedSearch] = useState(urlQ)
@@ -75,19 +77,20 @@ function MiembrosContent() {
   // con miembros reales de Supabase.
   const filters = useMemberFilters([])
   const searchActive = debouncedSearch.trim().length >= 2
-  const shouldFetch  = searchActive || showDonors || showServers || showActive || filters.conditions.length > 0
+  const shouldFetch  = searchActive || showDonors || showServers || showActive || showStudyAttendance || filters.conditions.length > 0
   const conditionsKey = JSON.stringify([filters.conditions, filters.groups, filters.topLevelOps])
   const searchParams = useMemo(() => ({
     search: searchActive ? debouncedSearch.trim() : undefined,
     is_donor: showDonors || undefined,
     is_server: showServers || undefined,
-    active_attendance: showActive || undefined,
+    // 'estudios' pisa al general si ambos están puestos (es el más estricto).
+    active_attendance: showStudyAttendance ? ('estudios' as const) : (showActive || undefined),
     conditions: filters.conditions.length ? filters.conditions : undefined,
     // FIL-3: los grupos AND/OR del QueryBar viajan al server.
     groups: filters.groups.length ? filters.groups : undefined,
     topLevelOps: Object.keys(filters.topLevelOps).length ? filters.topLevelOps : undefined,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [searchActive, debouncedSearch, showDonors, showServers, showActive, conditionsKey])
+  }), [searchActive, debouncedSearch, showDonors, showServers, showActive, showStudyAttendance, conditionsKey])
 
   const { members: loadedMembers, total: resultTotal, loading, error, hasMore, loadMore } = useMembers(searchParams, shouldFetch)
 
@@ -106,7 +109,8 @@ function MiembrosContent() {
     if (searchActive) u.set('search', debouncedSearch.trim())
     if (showDonors)  u.set('is_donor', 'true')
     if (showServers) u.set('is_server', 'true')
-    if (showActive)  u.set('active_attendance', 'true')
+    if (showStudyAttendance) u.set('active_attendance', 'estudios')
+    else if (showActive) u.set('active_attendance', 'true')
     if (filters.conditions.length) {
       u.set('conditions', JSON.stringify(filters.conditions))
       if (filters.groups.length) u.set('groups', JSON.stringify(filters.groups))
@@ -120,8 +124,8 @@ function MiembrosContent() {
     setTimeout(() => setToast(''), TOAST_LONG_MS)
   }
 
-  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || searchActive
-  const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0)
+  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || showStudyAttendance || searchActive
+  const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0) + (showStudyAttendance ? 1 : 0)
 
   async function handleComunicarLista() {
     // Todos los ids que cumplen el filtro (no solo la página cargada).
@@ -228,7 +232,7 @@ function MiembrosContent() {
           >
             Miembros
           </h1>
-          <p className="mt-1 text-sm text-navy-light/70 font-body">
+          <p className="mt-1 text-sm text-navy-light/80 font-body">
             {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : countsFailed ? '— registrados' : 'Cargando…'}
             {error && <span className="text-coral"> · {error}</span>}
           </p>
@@ -288,46 +292,49 @@ function MiembrosContent() {
         <div className="flex items-center gap-1.5 flex-wrap">
           {QUICK_CHIPS.map(({ key, label }) => {
             const active =
-              key === 'todos'      ? (!showDonors && !showServers && !showActive) :
+              key === 'todos'      ? (!showDonors && !showServers && !showActive && !showStudyAttendance) :
               key === 'donadores'  ? showDonors :
               key === 'servidores' ? showServers :
-              showActive
+              key === 'activo'     ? showActive :
+              showStudyAttendance
             const count =
               key === 'todos'      ? counts?.total :
               key === 'donadores'  ? counts?.donadores :
               key === 'servidores' ? counts?.servidores :
-              counts?.activos_asistencia
+              key === 'activo'     ? counts?.activos_asistencia :
+              undefined
             const labelWithCount = count !== undefined ? `${label} · ${count.toLocaleString('es-CR')}` : label
             return (
               <button
                 key={key}
                 onClick={() => {
-                  if (key === 'todos') { setShowDonors(false); setShowServers(false); setShowActive(false) }
+                  if (key === 'todos') { setShowDonors(false); setShowServers(false); setShowActive(false); setShowStudyAttendance(false) }
                   else if (key === 'donadores') setShowDonors(!showDonors)
                   else if (key === 'servidores') setShowServers(!showServers)
-                  else setShowActive(!showActive)
+                  else if (key === 'activo') setShowActive(!showActive)
+                  else setShowStudyAttendance(!showStudyAttendance)
                 }}
                 className={cn(
                   'rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
                   active
                     ? 'bg-navy text-white'
-                    : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
+                    : 'bg-surface-low text-navy-light/80 hover:bg-surface-card hover:text-navy'
                 )}
               >
                 {labelWithCount}
-                {key === 'activo' && (
+                {(key === 'activo' || key === 'asistencia_estudios') && (
                   <span
                     tabIndex={0}
                     role="img"
-                    aria-label={ATTENDANCE_GENERAL_TOOLTIP}
+                    aria-label={key === 'activo' ? ATTENDANCE_GENERAL_TOOLTIP : ATTENDANCE_ESTUDIOS_TOOLTIP}
                     className="group/info relative ml-1 inline-flex align-[-2px] opacity-70 outline-none"
                   >
                     <Info size={13} strokeWidth={2} />
                     <span
                       role="tooltip"
-                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[12px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
+                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[13px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
                     >
-                      {ATTENDANCE_GENERAL_TOOLTIP}
+                      {key === 'activo' ? ATTENDANCE_GENERAL_TOOLTIP : ATTENDANCE_ESTUDIOS_TOOLTIP}
                     </span>
                   </span>
                 )}
@@ -342,7 +349,7 @@ function MiembrosContent() {
               'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-all duration-150 font-body',
               filtersOpen || activeFilterCount > 0
                 ? 'bg-navy text-white'
-                : 'bg-surface-low text-navy-light/70 hover:bg-surface-card hover:text-navy'
+                : 'bg-surface-low text-navy-light/80 hover:bg-surface-card hover:text-navy'
             )}
           >
             <SlidersHorizontal size={13} strokeWidth={1.75} />
@@ -358,7 +365,7 @@ function MiembrosContent() {
 
         {/* Search */}
         <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 w-full sm:w-64 focus-within:ring-1 focus-within:ring-coral/30 transition-all">
-          <Search size={15} className="text-navy-light/70 shrink-0" strokeWidth={1.75} />
+          <Search size={15} className="text-navy-light/80 shrink-0" strokeWidth={1.75} />
           <input
             type="search"
             value={search}
@@ -404,7 +411,7 @@ function MiembrosContent() {
       {/* ── Summary bar ── */}
       {activeFilterCount > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             <span className="font-medium text-navy">
               {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
             </span>
@@ -444,7 +451,7 @@ function MiembrosContent() {
           {!allFilteredSelected && (
             <button
               onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
-              className="text-[12px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body bg-transparent border-0"
+              className="text-[13px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body bg-transparent border-0"
             >
               Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
             </button>
@@ -469,7 +476,7 @@ function MiembrosContent() {
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="flex items-center gap-1 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/70 hover:bg-surface-low transition-colors font-body"
+              className="flex items-center gap-1 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light/80 hover:bg-surface-low transition-colors font-body"
             >
               <X size={13} />
               Cancelar
@@ -515,16 +522,16 @@ function MiembrosContent() {
               {!shouldFetch ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
-                    <Search size={26} className="text-navy-light/70 mx-auto mb-3" strokeWidth={1.75} />
-                    <p className="text-sm font-semibold text-navy-light/70">Usá el buscador o aplicá un filtro para ver miembros</p>
-                    <p className="text-[13px] text-navy-light/70 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
+                    <Search size={26} className="text-navy-light/80 mx-auto mb-3" strokeWidth={1.75} />
+                    <p className="text-sm font-semibold text-navy-light/80">Usá el buscador o aplicá un filtro para ver miembros</p>
+                    <p className="text-[13px] text-navy-light/80 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
                   </td>
                 </tr>
               ) : loading && visibleMembers.length === 0 ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-                    <p className="text-sm text-navy-light/70">Buscando miembros…</p>
+                    <p className="text-sm text-navy-light/80">Buscando miembros…</p>
                   </td>
                 </tr>
               ) : visibleMembers.length === 0 ? (
@@ -569,20 +576,20 @@ function MiembrosContent() {
                                     <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
                                     {member.is_dirigente && <DirigenteLink id={member.id} />}
                                   </div>
-                                  <p className="truncate text-xs text-navy-light/70 font-body">{member.email}</p>
+                                  <p className="truncate text-xs text-navy-light/80 font-body">{member.email}</p>
                                 </div>
                               </div>
                             </td>
                           )
                         case 'cedula':
                           return (
-                            <td key="cedula" className="px-4 py-3.5 text-navy-light/70 tabular-nums font-mono text-[12px]">
-                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[11px] text-navy-light/70 font-sans">Sin cédula</span>}
+                            <td key="cedula" className="px-4 py-3.5 text-navy-light/80 tabular-nums font-mono text-[13px]">
+                              {member.cedula ?? <span className="rounded-full bg-surface-low px-2 py-0.5 text-[11px] text-navy-light/80 font-sans">Sin cédula</span>}
                             </td>
                           )
                         case 'age':
                           return (
-                            <td key="age" className="px-4 py-3.5 text-navy-light/70 tabular-nums whitespace-nowrap font-mono text-[12px]">
+                            <td key="age" className="px-4 py-3.5 text-navy-light/80 tabular-nums whitespace-nowrap font-mono text-[13px]">
                               {member.birth_date ? `${calcAge(member.birth_date)} años` : '—'}
                             </td>
                           )
@@ -599,7 +606,7 @@ function MiembrosContent() {
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
                                 ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
-                                : <span className="text-sm text-navy-light/70 font-body">—</span>
+                                : <span className="text-sm text-navy-light/80 font-body">—</span>
                               }
                             </td>
                           )
@@ -618,7 +625,7 @@ function MiembrosContent() {
                             ? col.exportValue(member)
                             : Array.isArray(rawVal) ? (rawVal as string[]).join(', ') : String(rawVal ?? '')
                           return (
-                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/70 max-w-[180px] truncate font-body">
+                            <td key={String(col.key)} className="px-4 py-3.5 text-sm text-navy-light/80 max-w-[180px] truncate font-body">
                               {display || '—'}
                             </td>
                           )
@@ -629,7 +636,7 @@ function MiembrosContent() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => router.push(`/miembros/${member.id}`)}
-                        className="rounded-lg p-1.5 text-navy-light/70 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/70"
+                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/80"
                         aria-label={`Ver perfil de ${member.first_name}`}
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
@@ -646,14 +653,14 @@ function MiembrosContent() {
         <div className="md:hidden">
           {!shouldFetch ? (
             <div className="px-4 py-14 text-center font-body">
-              <Search size={26} className="text-navy-light/70 mx-auto mb-3" strokeWidth={1.75} />
-              <p className="text-sm font-semibold text-navy-light/70">Usá el buscador o aplicá un filtro</p>
-              <p className="text-[13px] text-navy-light/70 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
+              <Search size={26} className="text-navy-light/80 mx-auto mb-3" strokeWidth={1.75} />
+              <p className="text-sm font-semibold text-navy-light/80">Usá el buscador o aplicá un filtro</p>
+              <p className="text-[13px] text-navy-light/80 mt-1">Escribí al menos 2 caracteres o activá un chip</p>
             </div>
           ) : loading && visibleMembers.length === 0 ? (
             <div className="px-4 py-14 text-center font-body">
               <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
-              <p className="text-sm text-navy-light/70">Buscando miembros…</p>
+              <p className="text-sm text-navy-light/80">Buscando miembros…</p>
             </div>
           ) : visibleMembers.length === 0 ? (
             <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
@@ -685,7 +692,7 @@ function MiembrosContent() {
                       <p className="truncate text-navy font-body">{member.first_name} {member.last_name}</p>
                       {member.is_dirigente && <DirigenteLink id={member.id} />}
                     </div>
-                    <p className="truncate text-xs text-navy-light/70 font-body">
+                    <p className="truncate text-xs text-navy-light/80 font-body">
                       {member.cedula ?? 'Sin cédula'}{member.email ? ` · ${member.email}` : ''}
                     </p>
                   </div>
@@ -707,7 +714,7 @@ function MiembrosContent() {
           <div
             className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap border-t border-[var(--outline-variant)]"
           >
-            <span className="text-xs text-navy-light/70 font-body">
+            <span className="text-xs text-navy-light/80 font-body">
               Mostrando <strong className="text-navy">{visibleMembers.length.toLocaleString('es-CR')}</strong> de{' '}
               <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
@@ -770,7 +777,7 @@ export default function MiembrosPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-sm text-navy-light/70 font-body">Cargando...</div>
+        <div className="text-sm text-navy-light/80 font-body">Cargando...</div>
       </div>
     }>
       <MiembrosContent />

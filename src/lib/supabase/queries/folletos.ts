@@ -119,13 +119,13 @@ export async function createAutoFolletoIfNeeded(
   const supabase = createAdminClient()
   const [{ data: g }, { count }] = await Promise.all([
     supabase.from('study_groups')
-      .select('id, max_students, plan:study_plans(code)')
+      .select('id, max_students, folletos_sede, plan:study_plans(code)')
       .eq('id', groupId).maybeSingle(),
     supabase.from('study_enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId).eq('status', 'enrolled'),
   ])
-  const row = g as { id: string; max_students: number | null; plan: { code: string | null } | { code: string | null }[] | null } | null
+  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
   if (!row) return { created: false, reason: 'grupo_no_encontrado' }
   const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan
   const code = plan?.code ?? null
@@ -136,7 +136,10 @@ export async function createAutoFolletoIfNeeded(
     return { created: false, reason: 'umbral_no_alcanzado' }
   }
 
-  const sede = (await getLeaderSedeForGroup(groupId)) ?? (await getSedeForGroup(groupId))
+  // La sede de envío elegida en el grupo manda; TBD (o vacío) cae a la del
+  // dirigente y por último a la zona del grupo.
+  const sedeElegida = row.folletos_sede && row.folletos_sede !== 'TBD' ? row.folletos_sede : null
+  const sede = sedeElegida ?? (await getLeaderSedeForGroup(groupId)) ?? (await getSedeForGroup(groupId))
   const { error } = await supabase.from('folleto_requests').insert({
     tipo,
     source_group_id: groupId,

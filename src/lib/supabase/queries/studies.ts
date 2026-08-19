@@ -726,6 +726,8 @@ export type GroupWriteInput = {
   schedule_time?: string | null
   location?: string | null
   sede?: string | null
+  /** Sede a la que se envían los folletos ('TBD' | sede activa | 'Otro: …'). */
+  folletos_sede?: string | null
   max_students?: number | null
   starts_at?: string | null
   ends_at?: string | null

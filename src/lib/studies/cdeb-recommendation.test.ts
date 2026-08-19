@@ -98,8 +98,15 @@ describe('validateCdebRecommendation (EST-9) — solo al ENVIAR', () => {
     expect(validateCdebRecommendation(complete({ recommendation: null }), 'DIS3')).toBeTruthy()
     expect(validateCdebRecommendation(complete({ recommendation: 'quizas' }), 'DIS3')).toBeTruthy()
     for (const o of RECOMMENDATION_OPTIONS) {
-      expect(validateCdebRecommendation(complete({ recommendation: o.value }), 'DIS3')).toBeNull()
+      // 'si_otro_estudio' pide además indicar cuál estudio (ver test aparte).
+      const extra = o.value === 'si_otro_estudio' ? { recommended_prior_study: 'PAN' } : {}
+      expect(validateCdebRecommendation(complete({ recommendation: o.value, ...extra }), 'DIS3')).toBeNull()
     }
+  })
+
+  it('con "otro estudio primero" es obligatorio indicar cuál', () => {
+    expect(validateCdebRecommendation(complete({ recommendation: 'si_otro_estudio' }), 'DIS3')).toBeTruthy()
+    expect(validateCdebRecommendation(complete({ recommendation: 'si_otro_estudio', recommended_prior_study: 'PAN' }), 'DIS3')).toBeNull()
   })
 })
 

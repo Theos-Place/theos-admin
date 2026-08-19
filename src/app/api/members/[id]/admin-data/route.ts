@@ -38,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { data, error } = await supabase
       .from('member_admin_data')
       .select(`
-        not_recommended_to_lead_studies, not_recommended_to_lead_studies_at,
+        not_recommended_to_lead_studies, not_recommended_to_lead_studies_at, not_recommended_reason,
         marker:members!member_admin_data_not_recommended_to_lead_studies_by_fkey(first_name, last_name),
         authorized_virtual_studies, authorized_virtual_studies_at,
         virtual_approver:members!member_admin_data_authorized_virtual_studies_by_fkey(first_name, last_name),
@@ -51,6 +51,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const row = data as {
       not_recommended_to_lead_studies: boolean
       not_recommended_to_lead_studies_at: string | null
+      not_recommended_reason: string | null
       marker: { first_name: string | null; last_name: string | null } | null
       authorized_virtual_studies: boolean
       authorized_virtual_studies_at: string | null
@@ -66,6 +67,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       can_view_studies: viewStudies,
       not_recommended_to_lead_studies: viewStudies ? (row?.not_recommended_to_lead_studies ?? false) : false,
       marked_at: viewStudies ? (row?.not_recommended_to_lead_studies_at ?? null) : null,
+      not_recommended_reason: viewStudies ? (row?.not_recommended_reason ?? null) : null,
       marked_by_name: viewStudies && row?.marker
         ? [row.marker.first_name, row.marker.last_name].filter(Boolean).join(' ') || null
         : null,
@@ -97,6 +99,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const body = (await req.json().catch(() => ({}))) as {
       not_recommended_to_lead_studies?: boolean
+      reason?: string
       authorized_virtual_studies?: boolean
       servers_onboarding?: boolean
     }
@@ -112,6 +115,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (!canApprove) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
       if (typeof body.not_recommended_to_lead_studies !== 'boolean') {
         return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
+      }
+      // Marcar exige justificación (quedan registradas razón, fecha y quién).
+      if (body.not_recommended_to_lead_studies && !(typeof body.reason === 'string' && body.reason.trim())) {
+        return NextResponse.json({ error: 'Indicá la razón para marcar a esta persona' }, { status: 400 })
       }
     }
     // Autorizar estudios virtuales: coordinador_estudios, coordinador_dirigentes y admin.
@@ -135,6 +142,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       update.not_recommended_to_lead_studies = body.not_recommended_to_lead_studies
       update.not_recommended_to_lead_studies_by = auth.ctx.memberId
       update.not_recommended_to_lead_studies_at = now
+      // La razón viaja al marcar; al desmarcar se limpia.
+      update.not_recommended_reason = body.not_recommended_to_lead_studies ? body.reason!.trim() : null
     }
     if (hasVirtual) {
       update.authorized_virtual_studies = body.authorized_virtual_studies

@@ -64,6 +64,10 @@ export function meetsAttendanceCriteria(
 export const ATTENDANCE_GENERAL_TOOLTIP =
   `Se considera asistencia activa con al menos ${ATTENDANCE_MIN_CHARLAS} check-ins de charla en los últimos ${ATTENDANCE_MONTHS} meses, con al menos uno en los últimos ${ATTENDANCE_RECENCY_DAYS} días.`
 
+/** Criterio reforzado para estudios (Etapa Intermedia). */
+export const ATTENDANCE_ESTUDIOS_TOOLTIP =
+  `Al menos ${ATTENDANCE_MIN_CHARLAS_INTERMEDIA} charlas con check-in en los últimos ${ATTENDANCE_MONTHS} meses, con al menos una en los últimos ${ATTENDANCE_RECENCY_DAYS} días.`
+
 /** Criterio "sigue asistiendo hoy" (más laxo que el comprometido): al menos
  *  ACTIVE_ATTENDANCE_MIN check-ins de charla en los últimos ACTIVE_ATTENDANCE_MONTHS
  *  meses. Se usa en el reporte de retención para distinguir a quien sigue viniendo

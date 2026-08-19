@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<Req['status'], string> = {
 }
 const STATUS_STYLE: Record<Req['status'], string> = {
   pago_en_revision: 'bg-amber-100 text-amber-700', pendiente: 'bg-teal/15 text-teal-deep',
-  grupo_creado: 'bg-emerald-100 text-emerald-700', cancelada: 'bg-navy/10 text-navy-light/70',
+  grupo_creado: 'bg-emerald-100 text-emerald-700', cancelada: 'bg-navy/10 text-navy-light/80',
 }
 const nm = (m: Req['requester']) => m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : '—'
 
@@ -49,6 +49,7 @@ export function PrematrimonialQueue() {
   const [panel, setPanel] = useState<{ id: string; mode: 'group' | 'cancel' } | null>(null)
   // form crear grupo
   const [gName, setGName] = useState(''); const [leader, setLeader] = useState<MemberHit | null>(null)
+  const [coLeader, setCoLeader] = useState<MemberHit | null>(null)
   const [gZone, setGZone] = useState(''); const [gTime, setGTime] = useState(''); const [gStart, setGStart] = useState('')
   const [cancelReason, setCancelReason] = useState(''); const [withRefund, setWithRefund] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -63,7 +64,7 @@ export function PrematrimonialQueue() {
   function openGroup(r: Req) {
     setPanel({ id: r.id, mode: 'group' })
     setGName(`Prematrimonial · ${nm(r.requester)} y ${nm(r.spouse)}`)
-    setLeader(null); setGZone(r.zones[0] ?? ''); setGTime(r.available_times[0] ?? ''); setGStart('')
+    setLeader(null); setCoLeader(null); setGZone(r.zones[0] ?? ''); setGTime(r.available_times[0] ?? ''); setGStart('')
   }
 
   async function createGroup(id: string) {
@@ -72,7 +73,7 @@ export function PrematrimonialQueue() {
     try {
       const res = await fetch(`/api/studies/prematrimonial/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create_group', group: { name: gName.trim(), leader_id: leader.id, zone: gZone || null, schedule_time: gTime || null, starts_at: gStart || null } }),
+        body: JSON.stringify({ action: 'create_group', group: { name: gName.trim(), leader_id: leader.id, co_leader_id: coLeader?.id ?? null, zone: gZone || null, schedule_time: gTime || null, starts_at: gStart || null } }),
       })
       const d = await res.json().catch(() => null)
       if (!res.ok) throw new Error(d?.error || 'Error')
@@ -98,19 +99,19 @@ export function PrematrimonialQueue() {
 
   return (
     <div>
-      <p className="mb-4 text-sm text-navy-light/70 font-body">
+      <p className="mb-4 text-sm text-navy-light/80 font-body">
         Solicitudes de curso prematrimonial. Tomá una pendiente y armá el grupo con la pareja.
       </p>
 
-      {loading && <p className="py-12 text-center text-sm text-navy-light/70 font-body">Cargando…</p>}
-      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/70 font-body">No hay solicitudes.</p>}
+      {loading && <p className="py-12 text-center text-sm text-navy-light/80 font-body">Cargando…</p>}
+      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/80 font-body">No hay solicitudes.</p>}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {items.map(r => (
           <article key={r.id} className="rounded-2xl bg-white p-5 ring-1 ring-navy/10">
             <div className="flex items-start justify-between gap-2">
-              <h2 className="text-sm font-semibold text-navy font-display inline-flex items-center gap-1.5"><Users size={15} className="text-teal-deep" /> {nm(r.requester)} <span className="text-navy-light/70">y</span> {nm(r.spouse)}</h2>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium font-body ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+              <h2 className="text-sm font-semibold text-navy font-display inline-flex items-center gap-1.5"><Users size={15} className="text-teal-deep" /> {nm(r.requester)} <span className="text-navy-light/80">y</span> {nm(r.spouse)}</h2>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[13px] font-medium font-body ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
             </div>
 
             <div className="mt-3 space-y-1.5 text-[13px] text-navy-light/80 font-body">
@@ -118,10 +119,10 @@ export function PrematrimonialQueue() {
               {r.zones.length > 0 && <p className="flex items-center gap-1.5"><MapPin size={13} /> {r.zones.join(', ')}</p>}
               {r.can_host && <p className="flex items-center gap-1.5"><Home size={13} /> Ofrece casa{r.host_address ? `: ${r.host_address}` : ''}{r.host_maps_url ? ` · ${r.host_maps_url}` : ''}</p>}
               {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{/* PRE-10: solo las solicitudes viejas traen oficiante. */}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
-              {r.comments && <p className="text-navy-light/70">“{r.comments}”</p>}
+              {r.comments && <p className="text-navy-light/80">“{r.comments}”</p>}
               {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
                   los tienen → se muestran con "—". */}
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-light/70">
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-light/80">
                 <Heart size={13} className="text-coral" />
                 <span>Novios: {DATING_TIME_OPTIONS.find(o => o.value === r.dating_time)?.label ?? '—'}</span>
                 <span className="text-navy-light/40">·</span>
@@ -139,12 +140,12 @@ export function PrematrimonialQueue() {
                 <p className="rounded-lg bg-amber-50 px-3 py-2 text-amber-800"><strong>A conversar con los dirigentes:</strong> {r.diagnostic_notes}</p>
               )}
               {r.status === 'pago_en_revision' && <p className="text-amber-700">Esperando que finanzas apruebe el pago.</p>}
-              {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/70">Motivo: {r.cancel_reason}</p>}
+              {r.status === 'cancelada' && r.cancel_reason && <p className="text-navy-light/80">Motivo: {r.cancel_reason}</p>}
             </div>
 
             {/* PRE-8: marca de seguimiento pastoral tras el cierre. */}
             {r.needs_follow_up && (
-              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-800 font-body">
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[13px] text-amber-800 font-body">
                 ⚑ En seguimiento tras el cierre
                 {r.follow_up_plan === 'consejeria' ? ': consejería/mentoría recomendada' : r.follow_up_plan === 'posponer' ? ': se sugirió posponer la boda' : ''}
               </p>
@@ -157,7 +158,7 @@ export function PrematrimonialQueue() {
             {r.status === 'pendiente' && panel?.id !== r.id && (
               <div className="mt-4 flex gap-2">
                 <button onClick={() => openGroup(r)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-white font-body"><Check size={13} /> Crear grupo</button>
-                <button onClick={() => setPanel({ id: r.id, mode: 'cancel' })} className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-3.5 py-1.5 text-[13px] text-navy-light/70 font-body"><X size={13} /> Cancelar</button>
+                <button onClick={() => setPanel({ id: r.id, mode: 'cancel' })} className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body"><X size={13} /> Cancelar</button>
               </div>
             )}
 
@@ -165,8 +166,10 @@ export function PrematrimonialQueue() {
             {panel?.id === r.id && panel.mode === 'group' && (
               <div className="mt-4 space-y-2 rounded-xl bg-surface-low p-3">
                 <input value={gName} onChange={e => setGName(e.target.value)} placeholder="Nombre del grupo" className="w-full rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
-                <div><p className="mb-1 text-[12px] text-navy-light/70 font-body">Dirigente {leader && <span className="text-teal-deep">· {leader.first_name} {leader.last_name}</span>}</p>
+                <div><p className="mb-1 text-[13px] text-navy-light/80 font-body">Dirigente {leader && <span className="text-teal-deep">· {leader.first_name} {leader.last_name}</span>}</p>
                   <MemberCombobox onSelect={setLeader} placeholder="Buscar dirigente…" dropdown /></div>
+                <div><p className="mb-1 text-[13px] text-navy-light/80 font-body">Co-dirigente (opcional) {coLeader && <span className="text-teal-deep">· {coLeader.first_name} {coLeader.last_name}</span>}</p>
+                  <MemberCombobox onSelect={setCoLeader} placeholder="Buscar co-dirigente…" dropdown /></div>
                 <div className="flex gap-2">
                   <input value={gZone} onChange={e => setGZone(e.target.value)} placeholder="Zona" className="flex-1 rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                   <input value={gTime} onChange={e => setGTime(e.target.value)} placeholder="Horario" className="flex-1 rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
@@ -174,7 +177,7 @@ export function PrematrimonialQueue() {
                 <input type="date" value={gStart} onChange={e => setGStart(e.target.value)} className="rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                 <div className="flex gap-2 pt-1">
                   <button onClick={() => createGroup(r.id)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-white disabled:opacity-50 font-body">{busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Crear y asignar</button>
-                  <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/70 font-body">Cerrar</button>
+                  <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body">Cerrar</button>
                 </div>
               </div>
             )}
@@ -186,7 +189,7 @@ export function PrematrimonialQueue() {
                 <label className="flex items-center gap-2 text-[13px] text-navy font-body"><input type="checkbox" checked={withRefund} onChange={e => setWithRefund(e.target.checked)} /> Generar solicitud de devolución (₡25.000) a finanzas</label>
                 <div className="flex gap-2 pt-1">
                   <button onClick={() => cancel(r.id)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] font-medium text-white disabled:opacity-50 font-body">{busy ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />} Confirmar cancelación</button>
-                  <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/70 font-body">Cerrar</button>
+                  <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body">Cerrar</button>
                 </div>
               </div>
             )}

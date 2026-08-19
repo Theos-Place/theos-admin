@@ -51,7 +51,7 @@ type Step1 = {
 
 export default function NuevoGrupoPage() {
   const toast = useToast()
-  const { zoneSedes: SEDES } = useSedes()
+  const { zoneSedes: SEDES, activeSedes: ACTIVE_SEDES } = useSedes()
   const { studyTypes } = useStudies('plans')
   const { dirigentes } = useDirigentes()
   const [step, setStep] = useState(1)
@@ -77,6 +77,9 @@ export default function NuevoGrupoPage() {
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [pendingLeader, setPendingLeader] = useState(false)
+  // Sede de envío de folletos: TBD por defecto; '__otro__' abre el detalle.
+  const [folletosSedeSel, setFolletosSedeSel] = useState('TBD')
+  const [folletosSedeOtro, setFolletosSedeOtro] = useState('')
   const [confirmed, setConfirmed] = useState(false)
 
   // Regla del paso 2 (pura y testeada): se avanza con el dirigente confirmado o
@@ -164,6 +167,9 @@ export default function NuevoGrupoPage() {
           schedule_time: step1.time || null,
           location: step1.location || null,
           max_students: step1.capacity ? Number(step1.capacity) : null,
+          folletos_sede: folletosSedeSel === '__otro__'
+            ? (folletosSedeOtro.trim() ? `Otro: ${folletosSedeOtro.trim()}` : 'TBD')
+            : folletosSedeSel,
           age_min: step1.age_from ? Number(step1.age_from) : null,
           age_max: step1.age_to ? Number(step1.age_to) : null,
           starts_at: step1.start_date || null,
@@ -191,7 +197,7 @@ export default function NuevoGrupoPage() {
           <p className="text-xl font-bold text-navy font-display">
             ¡Grupo creado!
           </p>
-          <p className="text-sm text-navy-light/70 font-body">
+          <p className="text-sm text-navy-light/80 font-body">
             El grupo quedó en estado «{STATUS_OPTIONS.find(o => o.value === initialStatus)?.label}».
             {pendingLeader && ' Se notificó al equipo de estudios para asignar dirigente.'}
           </p>
@@ -218,7 +224,7 @@ export default function NuevoGrupoPage() {
       {/* Back */}
       <Link
         href="/estudios/grupos"
-        className="flex items-center gap-1 text-sm text-navy-light/70 hover:text-navy transition-colors font-body"
+        className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"
       >
         <ChevronLeft size={16} />
         Volver a grupos
@@ -230,7 +236,7 @@ export default function NuevoGrupoPage() {
         >
           Nuevo grupo
         </h1>
-        <p className="mt-1 text-sm text-navy-light/70 font-body">
+        <p className="mt-1 text-sm text-navy-light/80 font-body">
           Completa los 3 pasos para crear el grupo
         </p>
       </div>
@@ -241,17 +247,17 @@ export default function NuevoGrupoPage() {
           <div key={n} className="flex items-center gap-2">
             <div
               className={cn(
-                'h-7 w-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all',
+                'h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold transition-all',
                 step >= n
                   ? 'bg-coral text-white'
-                  : 'bg-surface-low text-navy-light/70',
+                  : 'bg-surface-low text-navy-light/80',
                 'font-display',
               )}
             >
               {n}
             </div>
             <span
-              className={cn('text-[12px]', step >= n ? 'text-navy' : 'text-navy-light/70', 'font-body')}
+              className={cn('text-[13px]', step >= n ? 'text-navy' : 'text-navy-light/80', 'font-body')}
             >
               {n === 1 ? 'Configuración' : n === 2 ? 'Dirigente' : 'Confirmación'}
             </span>
@@ -264,14 +270,14 @@ export default function NuevoGrupoPage() {
       {step === 1 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Paso 1 — Configuración
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Tipo de estudio *
               </label>
               <select
@@ -296,12 +302,12 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Zona *
               </label>
               {step1.is_virtual ? (
                 // EST-4: en grupos virtuales la zona queda fija en "Virtual".
-                <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/70 font-body" aria-label="Zona fijada: Virtual">
+                <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/80 font-body" aria-label="Zona fijada: Virtual">
                   Virtual (fijada por ser grupo virtual)
                 </p>
               ) : (
@@ -319,7 +325,7 @@ export default function NuevoGrupoPage() {
                   el monto vive ahí y convertirlo sería inventar un tipo de
                   cambio. Se avisa para que se use un plan con el precio correcto. */}
               {monedaZonaDistinta && (
-                <p className="text-[12px] text-coral font-body">
+                <p className="text-[13px] text-coral font-body">
                   {zonaSede?.name} cobra en {zonaSede?.currency} y este estudio está en{' '}
                   {studyType?.currency ?? 'CRC'}: la matrícula se cobraría en{' '}
                   {studyType?.currency ?? 'CRC'}. Si el precio es en {zonaSede?.currency},
@@ -329,7 +335,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Edad desde
               </label>
               <input
@@ -341,7 +347,7 @@ export default function NuevoGrupoPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Edad hasta
               </label>
               <input
@@ -354,7 +360,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Día preferido
               </label>
               <div className="flex gap-1.5 flex-wrap">
@@ -364,7 +370,7 @@ export default function NuevoGrupoPage() {
                     type="button"
                     onClick={() => toggleDay(d)}
                     className={cn(
-                      'rounded-lg px-3 py-1.5 text-[12px] font-medium border transition-all',
+                      'rounded-lg px-3 py-1.5 text-[13px] font-medium border transition-all',
                       step1.days.includes(d)
                         ? 'bg-navy text-white border-navy'
                         : 'text-navy-light hover:bg-surface-low',
@@ -378,14 +384,14 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Horario preferido
               </label>
               <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Capacidad máxima
               </label>
               <input
@@ -398,7 +404,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Ubicación exacta
               </label>
               <input
@@ -410,7 +416,7 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Fecha de inicio estimada
               </label>
               <input
@@ -425,7 +431,7 @@ export default function NuevoGrupoPage() {
                 dentro del rango; al vencer, el cron lo pasa a en_curso si ya
                 inició. Vacías = modo manual (comportamiento histórico). */}
             <div className="space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Inicio de matrícula
               </label>
               <input
@@ -440,7 +446,7 @@ export default function NuevoGrupoPage() {
                 tope es el arranque del grupo SOLO si es futuro (acotar por un
                 arranque pasado dejaba el campo inservible). */}
             <div className="space-y-1">
-              <label className="text-[12px] text-navy-light/70 font-display">
+              <label className="text-[13px] text-navy-light/80 font-display">
                 Fin de matrícula
               </label>
               <input
@@ -465,7 +471,7 @@ export default function NuevoGrupoPage() {
                     setZoneSel(prev => zoneOnVirtualToggle(e.target.checked, prev, { kind: 'existing', value: 'all', label: 'Todas las zonas' }))
                   }}
                 />
-                <span className="text-sm text-navy-light/70 font-body">
+                <span className="text-sm text-navy-light/80 font-body">
                   Grupo <strong>virtual</strong> (solo lo ven miembros autorizados para estudios virtuales)
                 </span>
               </label>
@@ -477,7 +483,7 @@ export default function NuevoGrupoPage() {
 
           <div className="flex flex-col items-end gap-1.5 pt-2">
             {!step1.study_type_id && (
-              <p className="text-[12px] text-navy-light/70 font-body" role="status">
+              <p className="text-[13px] text-navy-light/80 font-body" role="status">
                 Para continuar, seleccioná el tipo de estudio.
               </p>
             )}
@@ -496,7 +502,7 @@ export default function NuevoGrupoPage() {
       {step === 2 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Paso 2 — Seleccionar dirigente
           </h2>
@@ -505,7 +511,7 @@ export default function NuevoGrupoPage() {
               casillas. Antes la casilla de disponibilidad quedaba DESPUÉS del
               co-dirigente y parecía referirse a él (bug 2026-08-04). */}
           <fieldset className="rounded-xl border border-[var(--outline-variant)] bg-surface-low/60 p-4 space-y-3">
-            <legend className="px-1 text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+            <legend className="px-1 text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Dirigente {pendingLeader ? '' : '*'}
             </legend>
 
@@ -525,7 +531,7 @@ export default function NuevoGrupoPage() {
                   checked={confirmed}
                   onChange={e => setConfirmed(e.target.checked)}
                 />
-                <span className="text-sm text-navy-light/70 font-body">
+                <span className="text-sm text-navy-light/80 font-body">
                   El <strong>dirigente</strong> ya fue contactado y confirmó su disponibilidad
                 </span>
               </label>
@@ -538,7 +544,7 @@ export default function NuevoGrupoPage() {
                 checked={pendingLeader}
                 onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
               />
-              <span className="text-sm text-navy-light/70 font-body">
+              <span className="text-sm text-navy-light/80 font-body">
                 Dejar dirigente <strong>pendiente</strong> (asignar después)
               </span>
             </label>
@@ -547,7 +553,7 @@ export default function NuevoGrupoPage() {
           {/* El co-dirigente va aparte, fuera del bloque del dirigente. */}
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
-              <label className="text-[12px] tracking-widest uppercase text-navy-light/70 font-display">
+              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Co-dirigente (opcional)
               </label>
               <DirigentesCombobox
@@ -560,8 +566,35 @@ export default function NuevoGrupoPage() {
             </div>
           )}
 
+          {/* Sede de envío de folletos: sedes ACTIVAS del catálogo, TBD por
+              defecto, u "Otro" con detalle libre. */}
+          <div className="space-y-1">
+            <label htmlFor="folletos-sede" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+              Sede a la que se envían los folletos
+            </label>
+            <select
+              id="folletos-sede"
+              value={folletosSedeSel}
+              onChange={e => setFolletosSedeSel(e.target.value)}
+              className={inputCls}
+            >
+              <option value="TBD">TBD (por definir)</option>
+              {ACTIVE_SEDES.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              <option value="__otro__">Otro…</option>
+            </select>
+            {folletosSedeSel === '__otro__' && (
+              <input
+                value={folletosSedeOtro}
+                onChange={e => setFolletosSedeOtro(e.target.value)}
+                placeholder="Detalle de la entrega (lugar, persona, indicaciones)"
+                aria-label="Detalle de la sede de folletos"
+                className={cn(inputCls, 'mt-1 placeholder:text-navy-light/50')}
+              />
+            )}
+          </div>
+
           {leaderHint && (
-            <p className="text-[12px] text-navy-light/70 text-right font-body" role="status">
+            <p className="text-[13px] text-navy-light/80 text-right font-body" role="status">
               Para continuar, {leaderHint}.
             </p>
           )}
@@ -587,7 +620,7 @@ export default function NuevoGrupoPage() {
       {step === 3 && (
         <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
           <h2
-            className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display"
+            className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Paso 3 — Confirmación
           </h2>
@@ -595,39 +628,39 @@ export default function NuevoGrupoPage() {
           <div className="rounded-xl p-4 space-y-3 bg-surface-low">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Tipo</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Tipo</p>
                 <StudyTypeBadge code={studyType?.code ?? ''} name={studyType?.name} size="sm" />
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Zona</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Zona</p>
                 <p className="text-navy font-body">{zoneSel.kind === 'empty' ? '—' : zoneSel.label}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Día</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Día</p>
                 <p className="text-navy font-body">{step1.days.length > 0 ? step1.days.map(d => DAY_LABELS[d]).join(', ') : '—'}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Horario</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Horario</p>
                 <p className="text-navy font-body">{step1.time || '—'}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Dirigente</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Dirigente</p>
                 <p className="text-navy font-body">{leaderData?.member_name ?? (pendingLeader ? 'Pendiente' : '—')}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Inicio estimado</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Inicio estimado</p>
                 <p className="text-navy font-body">{step1.start_date || '—'}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Capacidad</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Capacidad</p>
                 <p className="text-navy font-body">{step1.capacity} personas</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display">Modalidad</p>
+                <p className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display">Modalidad</p>
                 <p className="text-navy font-body">{step1.is_virtual ? 'Virtual' : 'Presencial'}</p>
               </div>
               <div>
-                <label className="text-[11px] uppercase text-navy-light/70 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>
+                <label className="text-[11px] uppercase text-navy-light/80 mb-0.5 font-display block" htmlFor="nuevo-grupo-estado">Estado inicial</label>
                 <select
                   id="nuevo-grupo-estado"
                   className={inputCls}

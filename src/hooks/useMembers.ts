@@ -8,7 +8,8 @@ export type MemberSearchParams = {
   search?: string
   is_donor?: boolean
   is_server?: boolean
-  active_attendance?: boolean
+  /** true = criterio general (6 charlas); 'estudios' = reforzado (12). */
+  active_attendance?: boolean | 'estudios'
   /** Filtros avanzados — viajan al servidor serializados como JSON. */
   conditions?: FilterCondition[]
   /** FIL-3: grupos AND/OR y operador top-level por unidad. */
@@ -24,7 +25,7 @@ function buildQuery(params: MemberSearchParams, page: number): string {
   if (params.search && params.search.trim().length >= 2) u.set('search', params.search.trim())
   if (params.is_donor)          u.set('is_donor', 'true')
   if (params.is_server)         u.set('is_server', 'true')
-  if (params.active_attendance) u.set('active_attendance', 'true')
+  if (params.active_attendance) u.set('active_attendance', params.active_attendance === 'estudios' ? 'estudios' : 'true')
   if (params.conditions?.length) {
     u.set('conditions', JSON.stringify(params.conditions))
     if (params.groups?.length) u.set('groups', JSON.stringify(params.groups))

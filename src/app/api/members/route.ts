@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       is_active: is_active !== null ? is_active === 'true' : true,
       is_donor:  is_donor  !== null ? is_donor  === 'true' : undefined,
       is_server: is_server === 'true' ? true : undefined,
-      active_attendance: active_attendance === 'true' ? true : undefined,
+      active_attendance: active_attendance === 'estudios' ? 'estudios' as const : active_attendance === 'true' ? true : undefined,
       page,
       pageSize,
     })

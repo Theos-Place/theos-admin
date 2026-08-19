@@ -91,6 +91,8 @@ export type CdebRecommendationInput = {
   commitment_notes?: string | null
   committee_notes?: string | null
   recommendation?: string | null
+  /** Con 'si_otro_estudio': code del plan que debería llevar primero. */
+  recommended_prior_study?: string | null
 }
 
 const SCALES = new Set(['1', '2', '3', '4', '5'])
@@ -131,6 +133,9 @@ export function validateCdebRecommendation(
   }
 
   if (!RECOMMENDATION_OPTIONS.some(o => o.value === r.recommendation)) return `Elegí la ${RECOMMENDATION_LABEL.toLowerCase()}.`
+  if (r.recommendation === 'si_otro_estudio' && !filled(r.recommended_prior_study)) {
+    return 'Indicá cuál estudio debería llevar primero.'
+  }
   return null
 }
 
@@ -162,5 +167,7 @@ export function sanitizeCdebRecommendation(
     commitment_notes: text(r.commitment_notes),
     committee_notes: text(r.committee_notes),
     recommendation: RECOMMENDATION_OPTIONS.some(o => o.value === r.recommendation) ? r.recommendation! : null,
+    // El estudio previo solo tiene sentido con 'si_otro_estudio'.
+    recommended_prior_study: r.recommendation === 'si_otro_estudio' ? text(r.recommended_prior_study) : null,
   }
 }

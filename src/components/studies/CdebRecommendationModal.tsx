@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { Loader2, Save, Send, Sparkles } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { cn } from '@/lib/utils'
 import {
   HEADER_TEXT, COMPLETION_DATE_LABEL, COMPLETION_DATE_HINT,
@@ -22,7 +23,7 @@ import {
   type CdebRecommendationInput, type ConvictionFlag,
 } from '@/lib/studies/cdeb-recommendation'
 
-const LABEL = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
+const LABEL = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 const INPUT = 'w-full rounded-xl border border-navy/15 bg-white px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body'
 
 /** Escala 1-5 en fila (+ X opcional), con la etiqueta del nivel al elegir. */
@@ -54,7 +55,7 @@ function ScaleRow({ label, value, onChange, allowX }: {
           </button>
         ))}
       </div>
-      {value && <p className="mt-1 text-[12px] text-navy-light/70 font-body">{SCALE_LABELS[value]}</p>}
+      {value && <p className="mt-1 text-[13px] text-navy-light/80 font-body">{SCALE_LABELS[value]}</p>}
     </div>
   )
 }
@@ -74,6 +75,7 @@ export function CdebRecommendationModal({
   onSaved: (status: 'borrador' | 'enviada') => void
 }) {
   const toast = useToast()
+  const { studyTypes } = useStudyPlans()
   const allowX = allowsNoInfoOption(planCode)
   const [f, setF] = useState<CdebRecommendationInput>({
     member_id: member.id,
@@ -89,6 +91,7 @@ export function CdebRecommendationModal({
     commitment_notes: initial?.commitment_notes ?? '',
     committee_notes: initial?.committee_notes ?? '',
     recommendation: initial?.recommendation ?? null,
+    recommended_prior_study: initial?.recommended_prior_study ?? null,
   })
   const [busy, setBusy] = useState<'borrador' | 'enviada' | null>(null)
   const [error, setError] = useState('')
@@ -144,7 +147,7 @@ export function CdebRecommendationModal({
           </h2>
           <div className="rounded-xl bg-teal/8 border border-teal/20 px-4 py-3 space-y-1">
             {HEADER_TEXT.map((t, i) => (
-              <p key={i} className="text-[12px] text-navy font-body">{t}</p>
+              <p key={i} className="text-[13px] text-navy font-body">{t}</p>
             ))}
           </div>
         </div>
@@ -153,13 +156,13 @@ export function CdebRecommendationModal({
         <div>
           <label htmlFor="cdeb-date" className={LABEL}>{COMPLETION_DATE_LABEL}</label>
           <input id="cdeb-date" type="date" value={f.completion_date ?? ''} onChange={e => set('completion_date', e.target.value)} className={INPUT} />
-          <p className="mt-1 text-[12px] text-navy-light/70 font-body">{COMPLETION_DATE_HINT}</p>
+          <p className="mt-1 text-[13px] text-navy-light/80 font-body">{COMPLETION_DATE_HINT}</p>
         </div>
 
         {/* Convicciones POR EXCEPCIÓN */}
         <div className="space-y-2">
           <label className={LABEL}>Convicciones</label>
-          <p className="text-[12px] text-navy-light/70 font-body">{CONVICTIONS_INSTRUCTION}</p>
+          <p className="text-[13px] text-navy-light/80 font-body">{CONVICTIONS_INSTRUCTION}</p>
           <div className="space-y-2">
             {CONVICTION_TOPICS.map(t => {
               const flag = flagOf(t.value)
@@ -172,8 +175,8 @@ export function CdebRecommendationModal({
                         type="button"
                         aria-pressed={!flag}
                         onClick={() => setStance(t.value, null)}
-                        className={cn('rounded-full px-2.5 py-1 text-[12px] font-body border transition-colors',
-                          !flag ? 'bg-teal/15 text-teal-deep border-teal/40' : 'bg-white text-navy-light/70 border-navy/15')}
+                        className={cn('rounded-full px-2.5 py-1 text-[13px] font-body border transition-colors',
+                          !flag ? 'bg-teal/15 text-teal-deep border-teal/40' : 'bg-white text-navy-light/80 border-navy/15')}
                       >
                         Convicción firme
                       </button>
@@ -183,7 +186,7 @@ export function CdebRecommendationModal({
                           type="button"
                           aria-pressed={flag?.stance === sOpt.value}
                           onClick={() => setStance(t.value, sOpt.value)}
-                          className={cn('rounded-full px-2.5 py-1 text-[12px] font-body border transition-colors',
+                          className={cn('rounded-full px-2.5 py-1 text-[13px] font-body border transition-colors',
                             flag?.stance === sOpt.value ? 'bg-coral text-white border-coral' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}
                         >
                           {sOpt.label}
@@ -229,7 +232,7 @@ export function CdebRecommendationModal({
         </div>
 
         <div>
-          <label htmlFor="cdeb-commitment" className={LABEL}>{COMMITMENT_TEXT_LABEL} <span className="text-navy-light/70">(opcional)</span></label>
+          <label htmlFor="cdeb-commitment" className={LABEL}>{COMMITMENT_TEXT_LABEL} <span className="text-navy-light/80">(opcional)</span></label>
           <textarea id="cdeb-commitment" value={f.commitment_notes ?? ''} onChange={e => set('commitment_notes', e.target.value)} rows={2} className={cn(INPUT, 'resize-none')} />
         </div>
 
@@ -255,6 +258,21 @@ export function CdebRecommendationModal({
               </button>
             ))}
           </div>
+          {/* Con "otro estudio primero" el dirigente indica CUÁL (obligatorio al enviar). */}
+          {f.recommendation === 'si_otro_estudio' && (
+            <div className="mt-2">
+              <label htmlFor="cdeb-prior-study" className={LABEL}>¿Cuál estudio debería llevar primero? <span className="text-coral">*</span></label>
+              <select
+                id="cdeb-prior-study"
+                value={f.recommended_prior_study ?? ''}
+                onChange={e => set('recommended_prior_study', e.target.value || null)}
+                className="w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
+              >
+                <option value="">Seleccionar estudio…</option>
+                {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
+              </select>
+            </div>
+          )}
         </div>
 
         {error && <p className="rounded-xl bg-coral/5 px-4 py-3 text-[13px] text-coral-deep font-body" role="alert">{error}</p>}
@@ -274,11 +292,11 @@ export function CdebRecommendationModal({
           >
             {busy === 'borrador' ? <><Loader2 size={15} className="animate-spin" /> Guardando…</> : <><Save size={14} /> Guardar borrador</>}
           </button>
-          <button onClick={onClose} disabled={!!busy} className="rounded-full px-4 py-2.5 text-sm text-navy-light/70 hover:text-navy transition-colors font-body">
+          <button onClick={onClose} disabled={!!busy} className="rounded-full px-4 py-2.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
             Cancelar
           </button>
         </div>
-        <p className="text-[12px] text-navy-light/70 font-body">
+        <p className="text-[13px] text-navy-light/80 font-body">
           El borrador no bloquea el cierre del grupo: podés completarlo después desde el grupo.
         </p>
       </div>

@@ -15,6 +15,8 @@ export const groupWriteSchema = z
     schedule_time: z.string().trim().nullish(),
     location: z.string().trim().nullish(),
     sede: z.string().trim().nullish(),
+    // Sede de envío de folletos: sede activa, 'TBD' u 'Otro: <detalle>'.
+    folletos_sede: z.string().trim().max(200).nullish(),
     max_students: z.number().int().min(0).nullish(),
     starts_at: z.string().trim().min(1).nullish(),
     ends_at: z.string().trim().min(1).nullish(),

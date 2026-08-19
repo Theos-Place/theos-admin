@@ -44,6 +44,7 @@ const bodySchema = z
     commitment_notes: z.string().nullish(),
     committee_notes: z.string().nullish(),
     recommendation: z.string().nullish(),
+    recommended_prior_study: z.string().nullish(),
   })
   .strict()
 
