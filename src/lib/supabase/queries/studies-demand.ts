@@ -45,7 +45,8 @@ export type StudyDemandResult = {
  *   inicial    → asistencia activa (NO pide donador)
  *   intermedia → donador + asistencia activa + servidor activo en comité
  *
- * Zona: sede del miembro; si no tiene, su provincia.
+ * Zona: provincia (dirección) del miembro; si no tiene, la sede a la que
+ * asiste (decisión 2026-08-19 — antes era al revés).
  */
 export async function getStudyDemand(studyCode: string, now: Date = new Date()): Promise<StudyDemandResult> {
   const supabase = createAdminClient()
@@ -158,7 +159,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       for (const m of (data ?? []) as Array<{ id: string; is_donor: boolean; is_active: boolean; province: string | null; sede: { code: string } | null }>) {
         if (!m.is_active) continue
         if (requirements.includes('donador') && !m.is_donor) continue
-        const zoneKey = m.sede?.code ?? m.province ?? 'Sin zona'
+        const zoneKey = m.province ?? m.sede?.code ?? 'Sin zona'
         const zone = zonesFallback.get(zoneKey) ?? { graduating: [], eligible: [] }
         zone.eligible.push(m.id)
         zonesFallback.set(zoneKey, zone)
@@ -236,7 +237,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     const code = r.group?.plan?.code ?? r.plan_direct?.code
     if (!code) continue
     const entry = byMember.get(r.member_id) ?? {
-      zone: r.member?.sede?.code ?? r.member?.province ?? 'Sin zona',
+      zone: r.member?.province ?? r.member?.sede?.code ?? 'Sin zona',
       isDonor: r.member?.is_donor ?? false,
       isActive: r.member?.is_active ?? true,
       completedPrereq: false,
