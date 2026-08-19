@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Ban, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
+import { Ban, BookOpen, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
@@ -300,23 +300,29 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         )}
       </div>
 
-      {/* Acciones de estudios (movidas desde Participación) */}
-      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display mb-3">Acciones de estudios</p>
-        <div className="flex gap-2 flex-wrap">
-          <InviteToStudyButton memberId={memberId} blocked={!!admin?.not_recommended_to_lead_studies} />
-          <StudyExceptionButton memberId={memberId} />
-        </div>
-      </div>
-
-      {/* No recomendado para dar estudios (lista de excepciones — nadie
-          marcado por defecto) */}
+      {/* Estudios — administrativo: acciones, excepciones y autorizaciones,
+          todo en una sola tarjeta (pedido 2026-08-19). */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-2 mb-3">
-          <Ban size={15} className="text-coral" />
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios: excepciones</p>
+          <BookOpen size={15} className="text-teal-deep" />
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios — administrativo</p>
         </div>
+
+        {/* Acciones de estudios (movidas desde Participación) */}
+        <div className="pb-4 border-b border-[var(--outline-variant)]">
+          <p className="text-[12px] text-navy-light/70 font-display mb-2">Acciones de estudios</p>
+          <div className="flex gap-2 flex-wrap">
+            <InviteToStudyButton memberId={memberId} blocked={!!admin?.not_recommended_to_lead_studies} />
+            <StudyExceptionButton memberId={memberId} />
+          </div>
+        </div>
+
+        {/* No recomendado para dar estudios (lista de excepciones — nadie
+            marcado por defecto) */}
+        <div className="py-4 border-b border-[var(--outline-variant)]">
         <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-2">
+          <Ban size={15} className="text-coral mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-navy font-body">No recomendado para dar estudios</p>
             <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
@@ -329,6 +335,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 Marcado por {admin.marked_by_name}{admin.marked_at ? ` · ${formatDate(admin.marked_at)}` : ''}
               </p>
             )}
+          </div>
           </div>
           <button
             type="button"
@@ -348,15 +355,13 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         </div>
         {saved && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
         {error && <p className="text-[12px] text-coral mt-2 font-body">{error}</p>}
-      </div>
-
-      {/* Autorizado para estudios virtuales */}
-      <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <div className="flex items-center gap-2 mb-3">
-          <Video size={15} className="text-teal-deep" />
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/70 font-display">Estudios virtuales</p>
         </div>
+
+        {/* Autorizado para estudios virtuales */}
+        <div className="pt-4">
         <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-2">
+          <Video size={15} className="text-teal-deep mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-navy font-body">Autorizado para estudios virtuales</p>
             <p className="text-[12px] text-navy-light/70 mt-0.5 font-body">
@@ -367,6 +372,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
                 Autorizado por {admin.authorized_virtual_studies_by_name}{admin.authorized_virtual_studies_at ? ` · ${formatDate(admin.authorized_virtual_studies_at)}` : ''}
               </p>
             )}
+          </div>
           </div>
           <button
             type="button"
@@ -386,6 +392,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
         </div>
         {savedVirtual && <p className="text-[12px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
         {errorVirtual && <p className="text-[12px] text-coral mt-2 font-body">{errorVirtual}</p>}
+        </div>
       </div>
       </>}
 
