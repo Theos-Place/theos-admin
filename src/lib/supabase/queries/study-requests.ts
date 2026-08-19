@@ -342,6 +342,30 @@ export async function assignStudyRequest(
   })
   if (nErr) console.warn('assignStudyRequest: notificación falló:', nErr.message)
 
+  // Y correo (2026-08-20): la campana sola no alcanza — la gente no entra al
+  // sistema. Best-effort: si falla, la asignación ya quedó hecha.
+  try {
+    const { data: asignado } = await supabase
+      .from('members').select('email, first_name, last_name').eq('id', assigneeMemberId).maybeSingle()
+    const a = asignado as { email: string | null; first_name: string; last_name: string } | null
+    if (a?.email) {
+      const { sendSystemEmail } = await import('@/lib/email/system-templates')
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
+      await sendSystemEmail({
+        systemKey: 'solicitud_asignada',
+        to: { email: a.email, name: `${a.first_name} ${a.last_name}`.trim() },
+        data: {
+          nombre: a.first_name,
+          tipo_solicitud: TYPE_LABEL_NOTIF[result.request_type],
+          nombre_solicitante: result.member_name ?? 'un miembro',
+          link_solicitud: `${siteUrl}${requestDeepLink(result.request_type, result.id)}`,
+        },
+      })
+    }
+  } catch (e) {
+    console.warn('assignStudyRequest: correo falló:', e)
+  }
+
   // El select corrió antes del insert del historial: reflejarlo en la respuesta.
   result.history = [...result.history, {
     from_status: fromStatus,

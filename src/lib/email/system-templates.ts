@@ -20,10 +20,12 @@ export type SystemTemplateKey =
   | 'cupon_asignado'
   | 'encuesta_evento'
   | 'retro_dirigente' | 'retro_dirigente_resumen'
+  | 'solicitud_asignada'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
 const FALLBACK: Record<string, { subject: string; html: string }> = {
+  solicitud_asignada: { subject: 'Te asignaron una solicitud', html: '<p>Hola {{nombre}}, te asignaron una solicitud de {{tipo_solicitud}} de {{nombre_solicitante}}. <a href="{{link_solicitud}}">Verla en el sistema</a>.</p>' },
   form_asignado: { subject: 'Tenés un formulario pendiente', html: '<p>Hola {{nombre}}, te asignaron el formulario "{{nombre_form}}". <a href="{{link_form}}">Completarlo</a>.</p>' },
   form_completado: { subject: 'Recibimos tus respuestas', html: '<p>Hola {{nombre}}, recibimos tus respuestas del formulario "{{nombre_form}}".</p>' },
   matricula_estudiante: { subject: 'Tu matrícula fue confirmada', html: '<p>Hola {{nombre}}, tu matrícula en "{{nombre_capacitacion}}" fue confirmada. Inicia el {{fecha_inicio}}.</p>' },
