@@ -28,6 +28,8 @@ type Eligibility = {
 type StudyOption = { plan_id: string; code: string; name: string; stage: string; is_eligible: boolean; missing: string[] }
 
 const MIN_REASON = 20
+/** WhatsApp de estudios (+506 7261 1001) — destino del enlace de cambio de grupo. */
+const ESTUDIOS_WHATSAPP = '50672611001'
 const SELECT_CLS = 'w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 disabled:opacity-60'
 const LABEL_CLS = 'block text-[12px] font-medium text-navy-light/70 font-body mb-1.5'
 
@@ -370,20 +372,33 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
 
   const muestra = (t: StudyRequestType) => !only || only === t
 
-  // REU-2 · Enlace discreto: el mismo modal, pero puesto donde la persona se da
-  // cuenta del error (su grupo, la confirmación de matrícula) y no enterrado en
-  // una pestaña del perfil.
+  // REU-2 · Enlace discreto, puesto donde la persona se da cuenta del error
+  // (su grupo, la confirmación de matrícula) y no enterrado en una pestaña del
+  // perfil. Para cambio de grupo ya NO abre el flujo de reubicaciones: lleva al
+  // WhatsApp de estudios (decisión 2026-08-19); el interés de estudio sigue
+  // abriendo su modal.
   if (variant === 'link') {
-    return (
-      <>
-        <button
-          onClick={() => open(only ?? 'relocation')}
+    if (only !== 'study_interest') {
+      return (
+        <a
+          href={`https://wa.me/${ESTUDIOS_WHATSAPP}?text=${encodeURIComponent('Hola, me matriculé en el grupo equivocado y necesito un cambio de grupo.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy underline underline-offset-2 transition-colors font-body"
         >
           <ArrowLeftRight size={12} />
-          {only === 'study_interest'
-            ? '¿Buscás otro estudio? Contanos cuál'
-            : '¿Te matriculaste en el grupo equivocado? Pedí un cambio de grupo'}
+          ¿Te matriculaste en el grupo equivocado? Escribinos al WhatsApp de estudios
+        </a>
+      )
+    }
+    return (
+      <>
+        <button
+          onClick={() => open('study_interest')}
+          className="inline-flex items-center gap-1.5 text-[12px] text-navy-light/70 hover:text-navy underline underline-offset-2 transition-colors font-body"
+        >
+          <ArrowLeftRight size={12} />
+          ¿Buscás otro estudio? Contanos cuál
         </button>
         {modal}
       </>
