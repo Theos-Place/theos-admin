@@ -4,7 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { studiesViewScope } from '@/lib/auth/studies-scope'
 import {
-  getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode, getStudyGroupZones,
+  getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode, getStudyGroupZones, getStudyGroupBloques,
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
@@ -51,6 +51,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(await getStudyGroupZones({ leaderMemberId }))
     }
 
+    // ?facet=bloques → bloques de capacitación con grupos, para el filtro.
+    if (searchParams.get('facet') === 'bloques') {
+      return NextResponse.json({ bloques: await getStudyGroupBloques({ leaderMemberId }) })
+    }
+
     // Filtros del listado — viajan al servidor (status[], plan, zona, día, búsqueda).
     const statuses = searchParams.getAll('status')
     const filters = {
@@ -63,8 +68,10 @@ export async function GET(req: NextRequest) {
       search: searchParams.get('search') ?? undefined,
       noLeader: searchParams.get('no_leader') === '1' || undefined,
       closingSoon: searchParams.get('closing_soon') === '1' || undefined,
+      // Validado como uuid: valor malformado → sin filtro (no revienta la query).
+      bloqueId: z.uuid().safeParse(searchParams.get('bloque')).success ? searchParams.get('bloque') : undefined,
     }
-    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon
+    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon || filters.bloqueId
 
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {

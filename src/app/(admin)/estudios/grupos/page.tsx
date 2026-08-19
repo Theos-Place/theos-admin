@@ -127,6 +127,17 @@ export default function GruposPage() {
     return () => { alive = false }
   }, [])
   const [selectedDay, setSelectedDay] = useState('')
+  // Bloques de capacitación con grupos (facet), para buscar grupos por bloque.
+  const [selectedBloque, setSelectedBloque] = useState('')
+  const [bloqueOptions, setBloqueOptions] = useState<Array<{ id: string; nombre: string }>>([])
+  useEffect(() => {
+    let alive = true
+    fetch('/api/studies/groups?facet=bloques')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d && Array.isArray(d.bloques)) setBloqueOptions(d.bloques) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   // Filtros activables por deep-link desde las alertas del dashboard:
@@ -184,11 +195,12 @@ export default function GruposPage() {
     if (zoneParam.zone) u.set('zone', zoneParam.zone)
     if (zoneParam.zoneNull) u.set('zone_null', '1')
     if (selectedDay)  u.set('day', selectedDay)
+    if (selectedBloque) u.set('bloque', selectedBloque)
     if (search.trim()) u.set('search', search.trim())
     if (noLeaderOnly) u.set('no_leader', '1')
     if (closingSoonOnly) u.set('closing_soon', '1')
     return u
-  }, [selectedStatuses, selectedType, selectedZone, selectedDay, search, noLeaderOnly, closingSoonOnly])
+  }, [selectedStatuses, selectedType, selectedZone, selectedDay, selectedBloque, search, noLeaderOnly, closingSoonOnly])
 
   const buildUrl = (page: number) => {
     const u = filterQS()
@@ -363,6 +375,26 @@ export default function GruposPage() {
               )}
             </select>
           </div>
+
+          {/* Bloque de capacitación (solo si hay grupos asociados a bloques) */}
+          {bloqueOptions.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[11px] tracking-widest uppercase text-navy-light/70 font-display">
+                Bloque
+              </p>
+              <select
+                className={cn(inputCls, 'font-body')}
+                aria-label="Filtrar por bloque de capacitación"
+                value={selectedBloque}
+                onChange={e => setSelectedBloque(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {bloqueOptions.map(b => (
+                  <option key={b.id} value={b.id}>{b.nombre}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Day */}
           <div className="space-y-1.5">

@@ -210,6 +210,8 @@ export type GroupFilters = {
   /** Solo grupos "prontos a cerrar": ends_at entre hoy y +30 días (mismo criterio
    *  que el conteo del dashboard `closing_soon`). */
   closingSoon?: boolean
+  /** Solo grupos del bloque de capacitación (study_groups.bloque_id). */
+  bloqueId?: string | null
   /** SEC-1: scope 'own' del dirigente — solo grupos donde es leader o co-leader.
    *  Viene del ctx del guard (uuid confiable), nunca del query string. */
   leaderMemberId?: string | null
@@ -276,6 +278,33 @@ export async function getStudyGroupZones(opts?: { leaderMemberId?: string | null
   return { zones: [...zones].sort(), hasGroupsWithoutZone: sinZona }
 }
 
+/** Bloques de capacitación que de verdad tienen grupos, para el filtro del
+ *  listado (mismo criterio que getStudyGroupZones). Ordenados del más nuevo
+ *  al más viejo. Respeta el scope del dirigente. */
+export async function getStudyGroupBloques(opts?: { leaderMemberId?: string | null }): Promise<Array<{ id: string; nombre: string }>> {
+  const supabase = createAdminClient()
+  const usados = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    let q = supabase.from('study_groups').select('bloque_id').not('bloque_id', 'is', null).order('id').range(from, from + 999)
+    if (opts?.leaderMemberId) {
+      q = q.or(`leader_id.eq.${opts.leaderMemberId},co_leader_id.eq.${opts.leaderMemberId}`)
+    }
+    const { data, error } = await q
+    if (error) throw error
+    const batch = (data ?? []) as Array<{ bloque_id: string | null }>
+    for (const r of batch) if (r.bloque_id) usados.add(r.bloque_id)
+    if (batch.length < 1000) break
+  }
+  if (usados.size === 0) return []
+  const { data: bloques, error } = await supabase
+    .from('capacitacion_bloques')
+    .select('id, nombre, fecha_apertura')
+    .in('id', [...usados])
+    .order('fecha_apertura', { ascending: false })
+  if (error) throw error
+  return ((bloques ?? []) as Array<{ id: string; nombre: string }>).map(b => ({ id: b.id, nombre: b.nombre }))
+}
+
 export async function getStudyGroups(
   opts: { page?: number; pageSize?: number; filters?: GroupFilters } = {},
 ): Promise<{ data: DbGroupListItem[]; total: number }> {
@@ -302,6 +331,7 @@ export async function getStudyGroups(
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
+    if (f.bloqueId) query = query.eq('bloque_id', f.bloqueId)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
@@ -324,6 +354,7 @@ export async function getStudyGroups(
     if (f.day)   query = query.contains('schedule_days', [f.day])
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
+    if (f.bloqueId) query = query.eq('bloque_id', f.bloqueId)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
