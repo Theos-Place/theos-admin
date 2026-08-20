@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "tutorial:primera-vez": "tsx scripts/tutoriales/run.ts primera-vez",
     "tutorial:matricula": "tsx scripts/tutoriales/run.ts matricula",
-    "tutorial:all": "tsx scripts/tutoriales/run.ts all"
+    "tutorial:all": "tsx scripts/tutoriales/run.ts all",
+    "tutorial:cierre": "tsx scripts/tutoriales/run.ts cierre"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.65.0",

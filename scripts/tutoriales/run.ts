@@ -8,6 +8,7 @@ import { runTutorial, publishFlow, type TutorialFlow } from './lib'
 const FLUJOS: Record<string, () => Promise<{ flujo: TutorialFlow }>> = {
   'primera-vez': () => import('./primera-vez'),
   'matricula': () => import('./matricula'),
+  'cierre': () => import('./cierre'),
   // Siguientes (stubs, mismo patrón — implementar como un archivo más):
   'perfil': () => import('./stubs/03-perfil'),
   'eventos': () => import('./stubs/04-eventos'),
@@ -23,7 +24,7 @@ async function main() {
   }
   // 'all' corre solo los implementados (los stubs avisan y no cuentan).
   const soloPublicar = process.argv.includes('--publicar')
-  const nombres = arg === 'all' ? ['primera-vez', 'matricula'] : [arg]
+  const nombres = arg === 'all' ? ['primera-vez', 'matricula', 'cierre'] : [arg]
   for (const nombre of nombres) {
     const { flujo } = await FLUJOS[nombre]()
     if (soloPublicar) publishFlow(flujo)
