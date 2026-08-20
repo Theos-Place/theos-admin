@@ -220,7 +220,9 @@ function postprocess(slug: string, viewport: Viewport, pieces: Piece[], size: { 
   const listFile = join(vpDir, 'segments', 'concat.txt')
   writeFileSync(listFile, norm.map(f => `file '${f}'`).join('\n'))
   const mp4 = join(vpDir, `${slug}-${viewport}.mp4`)
-  ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', mp4])
+  // +faststart: el índice (moov) va al inicio → el navegador reproduce
+  // mientras descarga, en vez de esperar el archivo completo.
+  ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', mp4])
 
   if (viewport === 'mobile') {
     // GIF apto WhatsApp: 15fps, ancho máx 800 (el móvil ya es 390), <5MB.
