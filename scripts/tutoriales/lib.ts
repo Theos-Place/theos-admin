@@ -65,6 +65,18 @@ export function adminClient(): SupabaseClient {
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
 }
 
+/** Renderiza un HTML a PNG (para archivos auxiliares como el comprobante
+ *  SINPE falso que se sube en el tutorial de matrícula). */
+export async function htmlToPng(html: string, outPath: string, size = { width: 390, height: 700 }): Promise<string> {
+  mkdirSync(resolve(outPath, '..'), { recursive: true })
+  const browser = await chromium.launch()
+  const page = await (await browser.newContext({ viewport: size })).newPage()
+  await page.setContent(html, { waitUntil: 'networkidle' })
+  await page.screenshot({ path: outPath })
+  await browser.close()
+  return outPath
+}
+
 // ── Definición de un flujo ────────────────────────────────────────────────────
 
 export type Viewport = 'mobile' | 'desktop'
@@ -83,7 +95,19 @@ export type Tools = {
   newSegment: () => Promise<Page>
   /** Renderiza un HTML (p. ej. el correo) y lo mete como captura + clip de
    *  ~2.5s ENTRE los segmentos de video, en el punto actual. */
-  insertHtmlAsStep: (name: string, html: string, seconds?: number) => Promise<void>
+  insertHtmlAsStep: (name: string, html: string, seconds?: number, badgeN?: number) => Promise<void>
+  /** Número de paso flotante (como la infografía): aparece en el video, el GIF
+   *  y las capturas. Se re-inyecta tras cada navegación; null lo quita. */
+  badge: (n: number | null) => Promise<void>
+}
+
+/** Marcado del badge de paso (se inyecta en la página / en los HTML aux).
+ *  Abajo a la derecha: no tapa el header ni los botones de los modales. */
+export function badgeHtml(n: number): string {
+  return `<div id="tutorial-paso" style="position:fixed;bottom:18px;right:16px;z-index:2147483647;
+    width:46px;height:46px;border-radius:50%;background:#EF5554;color:#fff;border:3px solid #fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;
+    font:800 24px -apple-system,'Segoe UI',Roboto,sans-serif">${n}</div>`
 }
 
 export type MdImage = {
@@ -170,13 +194,19 @@ async function runViewport(flow: TutorialFlow, viewport: Viewport): Promise<void
       await page!.screenshot({ path: join(vpDir, `${name}.png`) })
     },
     newSegment: openSegment,
-    insertHtmlAsStep: async (name, html, seconds = 2.5) => {
+    badge: async (n) => {
+      await page!.evaluate((markup) => {
+        document.getElementById('tutorial-paso')?.remove()
+        if (markup) document.body.insertAdjacentHTML('beforeend', markup)
+      }, n == null ? '' : badgeHtml(n))
+    },
+    insertHtmlAsStep: async (name, html, seconds = 2.5, badgeN) => {
       // Página aparte (sin video) solo para la captura del HTML.
       const aux = await browser.newContext(viewport === 'mobile'
         ? { ...devices['iPhone 12'], viewport: size, deviceScaleFactor: 2 }
         : { viewport: size, deviceScaleFactor: 1 })
       const auxPage = await aux.newPage()
-      await auxPage.setContent(html, { waitUntil: 'networkidle' })
+      await auxPage.setContent(badgeN != null ? html.replace('</body>', `${badgeHtml(badgeN)}</body>`) : html, { waitUntil: 'networkidle' })
       const png = join(vpDir, `${name}.png`)
       await auxPage.screenshot({ path: png })
       await aux.close()
@@ -244,8 +274,14 @@ function publish(flow: TutorialFlow) {
   const pubDir = join(ROOT, 'public/ayuda/tutoriales', flow.slug)
   mkdirSync(pubDir, { recursive: true })
 
+  // A public/ solo va lo que el artículo referencia: el GIF, el mp4 y —si el
+  // flujo define mdImages— sus capturas. El resto queda en out/.
   for (const f of readdirSync(mobileDir)) {
-    if (f.endsWith('.png') || f.endsWith('.gif')) copyFileSync(join(mobileDir, f), join(pubDir, f))
+    if (f.endsWith('.gif')) copyFileSync(join(mobileDir, f), join(pubDir, f))
+  }
+  for (const img of flow.mdImages) {
+    const src = join(mobileDir, `${img.shot}.png`)
+    if (existsSync(src)) copyFileSync(src, join(pubDir, `${img.shot}.png`))
   }
   // El mp4 móvil también va al centro de ayuda (el render lo pinta como video
   // plegado); el desktop queda en out/ para las sesiones en vivo.
@@ -259,11 +295,16 @@ function publish(flow: TutorialFlow) {
   let md = readFileSync(mdPath, 'utf8')
   const base = `/ayuda/tutoriales/${flow.slug}`
 
+  // GIF junto a la infografía (infografía PRIMERO): dos imágenes en una línea
+  // salen en dos columnas en desktop y apiladas en móvil (.media-duo del
+  // renderer). Si el artículo no tiene infografía, el GIF va solo tras el H1.
   const gifRef = `![${flow.gifAlt}](${base}/${flow.slug}.gif)`
   if (!md.includes(`${base}/${flow.slug}.gif`)) {
     const lines = md.split('\n')
     const h1 = lines.findIndex(l => l.startsWith('# '))
-    lines.splice(h1 + 1, 0, '', gifRef)
+    const infografia = lines.findIndex((l, i) => i > h1 && /^!\[[^\]]*\]\(\/ayuda\/infografias\/[^)\s]+\)$/.test(l.trim()))
+    if (infografia !== -1) lines[infografia] = `${lines[infografia].trim()} ${gifRef}`
+    else lines.splice(h1 + 1, 0, '', gifRef)
     md = lines.join('\n')
   }
 

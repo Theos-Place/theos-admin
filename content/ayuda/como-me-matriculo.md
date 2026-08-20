@@ -9,9 +9,7 @@ resumen: Desde ver qué estudios te tocan hasta quedar matriculado, con lo que h
 
 # Cómo me matriculo en un estudio
 
-![El flujo completo de matrícula, de inicio a fin](/ayuda/tutoriales/matricula/matricula.gif)
-
-![Los cinco pasos para matricularse y las cinco razones por las que un estudio puede no aparecer](/ayuda/infografias/como-me-matriculo.svg)
+![Los cinco pasos para matricularse y las cinco razones por las que un estudio puede no aparecer](/ayuda/infografias/como-me-matriculo.svg) ![El flujo completo de matrícula, de inicio a fin](/ayuda/tutoriales/matricula/matricula.gif)
 
 Todo pasa en una sola pantalla: **Matrícula**. Ahí aparecen los estudios que podés llevar
 ahora, con los grupos abiertos de cada uno.
@@ -19,13 +17,9 @@ ahora, con los grupos abiertos de cada uno.
 ## Los pasos
 
 1. Entrá al sistema y andá a **Matrícula**.
-   ![La pantalla de matrícula con tus estudios disponibles](/ayuda/tutoriales/matricula/02-matricula.png)
 2. Elegí el estudio. Si hay varios grupos, elegí el que te sirva por día, hora y zona.
-   ![Los grupos abiertos del estudio, con día, hora y zona](/ayuda/tutoriales/matricula/03-grupo.png)
 3. Confirmá. Si el estudio tiene costo, el sistema te lo dice antes.
-   ![La confirmación con el detalle del grupo y el costo](/ayuda/tutoriales/matricula/04-confirmar.png)
 4. Listo: **ya quedaste matriculado**. El lugar es tuyo.
-   ![Listo: quedaste matriculado](/ayuda/tutoriales/matricula/05-confirmacion.png)
 5. Si el estudio tiene costo, el sistema te **pide el comprobante en el momento** — el
    screenshot del SINPE o la transferencia, y el número de referencia. Es a propósito: es
    cuando tenés la captura a mano.

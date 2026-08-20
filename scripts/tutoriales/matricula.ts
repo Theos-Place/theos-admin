@@ -5,10 +5,33 @@
  * (matrícula + su pago) vía service role. Sin esto, la segunda corrida graba
  * "ya estás matriculado" en vez del flujo.
  */
+import { existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { credenciales, type TutorialFlow, type Tools } from './lib'
+import { credenciales, htmlToPng, type TutorialFlow, type Tools } from './lib'
 
 const { email, password } = credenciales()
+
+/** Comprobante SINPE de mentira (para el paso de subirlo). */
+const COMPROBANTE_PATH = join(resolve(__dirname), 'out', 'comprobante-sinpe.png')
+const COMPROBANTE_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0d5c46;color:#fff;padding:24px 20px}
+  .ok{width:64px;height:64px;border-radius:50%;background:#fff;color:#0d5c46;font-size:34px;
+      display:flex;align-items:center;justify-content:center;margin:24px auto 12px}
+  h1{font-size:18px;text-align:center;margin:0 0 4px}
+  .monto{font-size:34px;font-weight:800;text-align:center;margin:10px 0 22px}
+  .fila{display:flex;justify-content:space-between;font-size:13px;padding:10px 0;border-top:1px solid rgba(255,255,255,.25)}
+  .fila span:first-child{opacity:.75}
+</style></head><body>
+  <div class="ok">✓</div>
+  <h1>Transferencia SINPE realizada</h1>
+  <div class="monto">₡15 000,00</div>
+  <div class="fila"><span>Destino</span><span>Theos Place</span></div>
+  <div class="fila"><span>Motivo</span><span>Matrícula Discípulos 1</span></div>
+  <div class="fila"><span>Referencia</span><span>2026082012345</span></div>
+  <div class="fila"><span>Fecha</span><span>20/08/2026 · 10:14 a.m.</span></div>
+  <div class="fila"><span>Estado</span><span>Aplicada</span></div>
+</body></html>`
 
 async function danielId(admin: SupabaseClient): Promise<string> {
   const { data } = await admin.from('members').select('id').eq('email', email).maybeSingle()
@@ -71,6 +94,7 @@ export const flujo: TutorialFlow = {
   async run(t: Tools) {
     // 1 · Login que aterriza directo en /matricula (?redirect= ya funciona)
     await t.goto('/login?redirect=/matricula')
+    await t.badge(1) // paso 1 de la guía: entrá al sistema y andá a Matrícula
     await t.shot('01-login')
     await t.fill('input[placeholder*="ejemplo@correo"]', email)
     await t.fill('input[type="password"]', password)
@@ -79,6 +103,7 @@ export const flujo: TutorialFlow = {
     // Esperar el contenido REAL (hay un flash de carga sin datos del miembro).
     await t.page.getByText('PORTAL DE MATRÍCULA').first().waitFor({ timeout: 30_000 })
     await t.page.getByText('Ver grupos y matricular').first().waitFor({ timeout: 30_000 })
+    await t.badge(1)
     await t.pause(1200)
 
     // 2 · La pantalla de matrícula, con las etapas y compromisos en verde
@@ -91,12 +116,14 @@ export const flujo: TutorialFlow = {
       .last()
     await cardDis1.scrollIntoViewIfNeeded()
     await t.click(cardDis1.getByText('Ver grupos y matricular'))
+    await t.badge(2) // paso 2: elegí el estudio y el grupo
     await t.pause(600)
     await t.shot('03-grupo')
 
     // 4 · Matricular en el grupo [prueba] y confirmar
     await t.click(t.page.getByRole('button', { name: 'Matricular', exact: true }))
     await t.page.getByText('Confirmar matrícula').first().waitFor()
+    await t.badge(3) // paso 3: confirmá
     await t.shot('04-confirmar')
     await t.click(t.page.getByRole('button', { name: /confirmar matrícula/i }))
 
@@ -104,14 +131,27 @@ export const flujo: TutorialFlow = {
     // navegar aparece el modal "Pagar matrícula": la matrícula YA quedó hecha
     // y ahí mismo se pide el comprobante (es exactamente el paso 5 de la guía).
     await t.page.getByText('Pagar matrícula').first().waitFor({ timeout: 60_000 })
+    await t.badge(4) // paso 4: ya quedaste matriculado
     await t.pause(1200)
     await t.shot('05-confirmacion')
+
+    // 6 · Subir el comprobante + número de referencia y enviar.
+    if (!existsSync(COMPROBANTE_PATH)) await htmlToPng(COMPROBANTE_HTML, COMPROBANTE_PATH)
+    await t.pause()
+    await t.badge(5) // paso 5: subí el comprobante
+    await t.page.locator('input[type="file"]').setInputFiles(COMPROBANTE_PATH)
+    await t.fill('#mat-pay-ref', '2026082012345')
+    await t.shot('06-comprobante-listo')
+    await t.click(t.page.getByRole('button', { name: 'Enviar comprobante' }))
+
+    // 7 · Enviado: "ya quedaste matriculado, finanzas lo revisa aparte".
+    await t.page.getByText('Comprobante enviado').first().waitFor({ timeout: 60_000 })
+    await t.pause(1000)
+    await t.shot('07-comprobante-enviado')
   },
 
-  mdImages: [
-    { shot: '02-matricula', alt: 'La pantalla de matrícula con tus estudios disponibles', anchor: 'Entrá al sistema y andá a **Matrícula**' },
-    { shot: '03-grupo', alt: 'Los grupos abiertos del estudio, con día, hora y zona', anchor: 'Elegí el estudio' },
-    { shot: '04-confirmar', alt: 'La confirmación con el detalle del grupo y el costo', anchor: 'Confirmá. Si el estudio tiene costo' },
-    { shot: '05-confirmacion', alt: 'Listo: quedaste matriculado', anchor: 'ya quedaste matriculado' },
-  ],
+  // Decisión UX 2026-08-20: en el artículo solo van la infografía + GIF
+  // (y el video al final) — las capturas por paso saturaban la página.
+  // Quedan en scripts/tutoriales/out/ por si se ocupan.
+  mdImages: [],
 }

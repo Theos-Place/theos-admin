@@ -500,6 +500,11 @@ body {
 .help-prose tbody td:first-child { font-weight: 600; color: var(--color-navy); }
 .help-prose table code { white-space: nowrap; }
 
+/* Par de medios (infografía + GIF del tutorial): dos columnas en desktop,
+   apilado en el celular. */
+.help-prose .media-duo { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+.help-prose .media-duo img { flex: 1 1 280px; min-width: 0; }
+
 /* Imágenes e infografías: nunca se desbordan y se pueden tocar para ampliar. */
 .help-prose img {
   display: block;

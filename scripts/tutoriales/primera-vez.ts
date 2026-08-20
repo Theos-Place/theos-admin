@@ -67,14 +67,17 @@ export const flujo: TutorialFlow = {
 
     // 1 · Login
     await t.goto('/login')
+    await t.badge(1) // paso 1 de la guía: entrá a admin.theosplace.org
     await t.shot('01-login')
 
     // 2 · "Creá tu contraseña acá"
     await t.click(t.page.getByText('Creá tu contraseña acá'))
     await t.page.waitForURL('**/recuperar**')
+    await t.badge(2) // paso 2: "Creá tu contraseña acá"
     await t.shot('02-crear-contrasena')
 
     // 3 · Ingresar el correo y enviar
+    await t.badge(3) // paso 3: escribí tu correo y tocá enviar
     await t.fill('input[type="email"], input[placeholder*="theosplace"]', email)
     await t.shot('03-correo-ingresado')
     await t.click(t.page.getByRole('button', { name: /enviarme el enlace|enviar instrucciones/i }))
@@ -82,7 +85,7 @@ export const flujo: TutorialFlow = {
     await t.shot('04-revisa-tu-correo')
 
     // 5 · El correo en la bandeja (recreación del template; el miembro SÍ pasa por acá)
-    await t.insertHtmlAsStep('05-correo', CORREO_HTML, 2.5)
+    await t.insertHtmlAsStep('05-correo', CORREO_HTML, 2.5, 4) // paso 4: abrí el enlace del correo
 
     // 6 · Abrir el enlace del correo. Se genera con la API admin y se navega a
     // la MISMA pantalla intermedia del correo real (/auth/continuar con el
@@ -94,10 +97,12 @@ export const flujo: TutorialFlow = {
 
     const page2 = await t.newSegment()
     await page2.goto(`${SITE}/auth/continuar?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`, { waitUntil: 'networkidle' })
+    await t.badge(4)
     await t.shot('06-continuar')
     await t.click(page2.getByRole('link', { name: 'Continuar' }))
     await page2.waitForURL('**/nueva-contrasena**', { timeout: 30_000 })
     await page2.getByText('Nueva contraseña').first().waitFor({ timeout: 15_000 })
+    await t.badge(4)
     await t.pause(1000)
     await t.shot('07-nueva-contrasena')
 
@@ -111,6 +116,7 @@ export const flujo: TutorialFlow = {
     await t.shot('08-contrasena-escrita')
     await t.click(page2.locator('button[type="submit"]'))
     await page2.getByText(/cambiada exitosamente/i).waitFor({ timeout: 15_000 })
+    await t.badge(4)
     await t.shot('09-exito')
 
     // 8 · Adentro del sistema. El enlace de recuperación deja la sesión
@@ -124,6 +130,7 @@ export const flujo: TutorialFlow = {
       await t.click(page2.getByRole('button', { name: 'Iniciar sesión' }))
       await page2.waitForURL(u => !String(u).includes('/login'), { timeout: 30_000 })
     }
+    await t.badge(null) // adentro del sistema: sin número, ya no es un paso
     await t.pause(1500)
     await t.shot('10-adentro')
   },
@@ -136,11 +143,8 @@ export const flujo: TutorialFlow = {
     if (error) console.warn('No se pudo restaurar la contraseña del seed:', error.message)
   },
 
-  mdImages: [
-    { shot: '01-login', alt: 'La pantalla de inicio de sesión', anchor: 'Entrá a [admin.theosplace.org' },
-    { shot: '02-crear-contrasena', alt: 'La pantalla de crear tu contraseña', anchor: 'Tocá **"Creá tu contraseña acá"**' },
-    { shot: '03-correo-ingresado', alt: 'Escribí tu correo y tocá enviar', anchor: 'Escribí **el mismo correo**' },
-    { shot: '05-correo', alt: 'Así se ve el correo que te llega', anchor: 'Abrí el enlace que te llega al correo' },
-    { shot: '07-nueva-contrasena', alt: 'La pantalla para definir tu contraseña', anchor: 'Abrí el enlace que te llega al correo' },
-  ],
+  // Decisión UX 2026-08-20: en el artículo solo van la infografía + GIF
+  // (y el video al final) — las capturas por paso saturaban la página.
+  // Quedan en scripts/tutoriales/out/ por si se ocupan.
+  mdImages: [],
 }
