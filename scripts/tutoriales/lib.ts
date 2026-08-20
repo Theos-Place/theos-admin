@@ -245,6 +245,10 @@ function publish(flow: TutorialFlow) {
   for (const f of readdirSync(mobileDir)) {
     if (f.endsWith('.png') || f.endsWith('.gif')) copyFileSync(join(mobileDir, f), join(pubDir, f))
   }
+  // El mp4 móvil también va al centro de ayuda (el render lo pinta como video
+  // plegado); el desktop queda en out/ para las sesiones en vivo.
+  const mp4Src = join(mobileDir, `${flow.slug}-mobile.mp4`)
+  if (existsSync(mp4Src)) copyFileSync(mp4Src, join(pubDir, `${flow.slug}.mp4`))
 
   // .md: el GIF completo arriba (tras el H1) y cada captura DENTRO de su paso
   // numerado (línea indentada = continuación del ítem para el renderer).
@@ -276,7 +280,18 @@ function publish(flow: TutorialFlow) {
     lines.splice(end + 1, 0, ref)
     md = lines.join('\n')
   }
+
+  // Video plegado AL FINAL del artículo (idempotente).
+  if (!md.includes(`${base}/${flow.slug}.mp4`)) {
+    md = `${md.trimEnd()}\n\n![Ver el video del flujo completo](${base}/${flow.slug}.mp4)\n`
+  }
   writeFileSync(mdPath, md)
+}
+
+/** Solo re-publicar lo ya grabado en out/ (sin volver a grabar). */
+export function publishFlow(flow: TutorialFlow) {
+  publish(flow)
+  console.log(`  ✓ re-publicado public/ayuda/tutoriales/${flow.slug}/ y ${flow.mdFile}`)
 }
 
 // ── Entrada principal ─────────────────────────────────────────────────────────

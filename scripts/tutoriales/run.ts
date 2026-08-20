@@ -1,9 +1,9 @@
 /**
  * CLI de los tutoriales grabados:
- *   npx tsx scripts/tutoriales/run.ts <flujo|all>
- * (o npm run tutorial:<flujo> / tutorial:all)
+ *   npx tsx scripts/tutoriales/run.ts <flujo|all> [--publicar]
+ * (--publicar: solo re-publica lo ya grabado en out/, sin volver a grabar)
  */
-import { runTutorial, type TutorialFlow } from './lib'
+import { runTutorial, publishFlow, type TutorialFlow } from './lib'
 
 const FLUJOS: Record<string, () => Promise<{ flujo: TutorialFlow }>> = {
   'primera-vez': () => import('./primera-vez'),
@@ -22,10 +22,12 @@ async function main() {
     process.exit(1)
   }
   // 'all' corre solo los implementados (los stubs avisan y no cuentan).
+  const soloPublicar = process.argv.includes('--publicar')
   const nombres = arg === 'all' ? ['primera-vez', 'matricula'] : [arg]
   for (const nombre of nombres) {
     const { flujo } = await FLUJOS[nombre]()
-    await runTutorial(flujo)
+    if (soloPublicar) publishFlow(flujo)
+    else await runTutorial(flujo)
   }
 }
 

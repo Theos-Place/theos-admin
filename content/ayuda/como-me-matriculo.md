@@ -79,3 +79,5 @@ matriculado en tu grupo actual, así que no dejes de ir a clases.
 
 > Si te matriculaste y ya no vas a poder llevar el estudio, avisá al mismo WhatsApp
 > ([7261-1001](https://wa.me/50672611001)) o a tu dirigente. El cupo le sirve a otra persona.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/matricula/matricula.mp4)

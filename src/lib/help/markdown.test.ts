@@ -195,3 +195,20 @@ describe('tablas', () => {
     expect(html).toContain('<h2>Otra sección</h2>')
   })
 })
+
+describe('videos de tutoriales (.mp4 plegado)', () => {
+  it('una línea de imagen .mp4 sale como <details> con <video> sin autodescarga', () => {
+    const html = renderMarkdown('![Ver el flujo completo](/ayuda/tutoriales/matricula/matricula.mp4)')
+    expect(html).toContain('<details class="video-tutorial">')
+    expect(html).toContain('<summary>Ver el flujo completo</summary>')
+    expect(html).toContain('preload="none"')
+    expect(html).toContain('src="/ayuda/tutoriales/matricula/matricula.mp4"')
+  })
+  it('las imágenes normales siguen saliendo como <img>', () => {
+    expect(renderMarkdown('![foto](/x.png)')).toContain('<img src="/x.png"')
+  })
+  it('un .mp4 DENTRO de un párrafo no se convierte (solo como bloque propio)', () => {
+    const html = renderMarkdown('texto antes ![v](/x.mp4) texto después')
+    expect(html).not.toContain('<video')
+  })
+})

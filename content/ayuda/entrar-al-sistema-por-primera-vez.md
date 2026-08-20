@@ -58,3 +58,5 @@ el correo te explica cómo pedirlo vos, y así lo usás recién hecho.
 Tu perfil, con tus datos, tus estudios y tus pagos pendientes. Si servís en un comité o
 dirigís un grupo, vas a ver además las pantallas de eso — el sistema te muestra únicamente
 lo que te toca.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/primera-vez/primera-vez.mp4)
