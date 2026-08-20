@@ -1,4 +1,5 @@
 import { createAdminClient, type TableName } from '@/lib/supabase/admin'
+import { STUDY_ADMIN_ROLES, SERVICE_ADMIN_ROLES, type RoleId } from '@/lib/auth/roles'
 
 export type AlertType = 'alert' | 'info' | 'warning'
 export type Alert = {
@@ -20,6 +21,9 @@ type AlertDef = {
   refine?: (q: any) => any
   url: string
   message: (n: number) => string
+  /** Quién ve esta alerta (admin siempre). Antes las veía CUALQUIER sesión —
+   *  un dirigente recibía "solicitudes de estudios abiertas" que no le tocan. */
+  roles: readonly RoleId[]
 }
 
 const ALERT_DEFS: AlertDef[] = [
@@ -29,26 +33,41 @@ const ALERT_DEFS: AlertDef[] = [
     refine: q => q.is('leader_id', null).neq('status', 'finalizado'),
     url: '/estudios/grupos?sin_dirigente=1',
     message: n => `${n} grupo${n !== 1 ? 's' : ''} de estudio sin dirigente asignado`,
+    roles: [...STUDY_ADMIN_ROLES, 'editor_grupos_estudio'],
+  },
+  // Solicitudes de estudios, separadas por tipo para que la campana abra el
+  // TAB correcto de /estudios/solicitudes (antes era una sola sin tab).
+  {
+    id: 'study-requests-relocation', type: 'info', table: 'study_requests',
+    refine: q => q.eq('status', 'open').eq('request_type', 'relocation'),
+    url: '/estudios/solicitudes?tab=relocation',
+    message: n => `${n} cambio${n !== 1 ? 's' : ''} de grupo por atender`,
+    roles: STUDY_ADMIN_ROLES,
   },
   {
-    id: 'study-requests', type: 'info', table: 'study_requests',
-    filter: { column: 'status', value: 'open' }, url: '/estudios/solicitudes',
-    message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de estudios abierta${n !== 1 ? 's' : ''}`,
+    id: 'study-requests-interest', type: 'info', table: 'study_requests',
+    refine: q => q.eq('status', 'open').eq('request_type', 'study_interest'),
+    url: '/estudios/solicitudes?tab=study_interest',
+    message: n => `${n} interés${n !== 1 ? 'es' : ''} de estudio abierto${n !== 1 ? 's' : ''}`,
+    roles: STUDY_ADMIN_ROLES,
   },
   {
     id: 'applications', type: 'info', table: 'applications',
     filter: { column: 'status', value: 'pending' }, url: '/servidores/aplicaciones',
     message: n => `${n} aplicación${n !== 1 ? 'es' : ''} de servicio por revisar`,
+    roles: SERVICE_ADMIN_ROLES,
   },
   {
     id: 'refunds', type: 'alert', table: 'refunds',
     filter: { column: 'status', value: 'pending' }, url: '/finanzas/devoluciones',
     message: n => `${n} devolución${n !== 1 ? 'es' : ''} pendiente${n !== 1 ? 's' : ''} de procesar`,
+    roles: ['finanzas', 'direccion'],
   },
   {
     id: 'vacations', type: 'warning', table: 'vacation_records',
     filter: { column: 'status', value: 'pendiente' }, url: '/empleados',
     message: n => `${n} solicitud${n !== 1 ? 'es' : ''} de vacaciones por aprobar`,
+    roles: ['encargado_staff', 'direccion'],
   },
   // QA 2026-07-17: la alerta de family_unlink_requests se quitó — la tabla no
   // tenía write-path en la app (0 filas siempre) y se eliminó en la mig 135.
@@ -56,10 +75,14 @@ const ALERT_DEFS: AlertDef[] = [
 
 export type ActiveAlert = { id: string; type: AlertType; message: string; url: string; count: number }
 
-export async function getAlerts(): Promise<ActiveAlert[]> {
+export async function getAlerts(viewerRoles: readonly string[]): Promise<ActiveAlert[]> {
   const supabase = createAdminClient()
+  // Cada quien ve SOLO las alertas de su rol (admin ve todas).
+  const visibles = viewerRoles.includes('admin')
+    ? ALERT_DEFS
+    : ALERT_DEFS.filter(def => def.roles.some(r => viewerRoles.includes(r)))
   const results = await Promise.all(
-    ALERT_DEFS.map(async def => {
+    visibles.map(async def => {
       try {
         // def.table es una unión de nombres de tabla; fijar un literal evita que
         // TS expanda toda la unión (instanciación excesiva) — el valor real es
