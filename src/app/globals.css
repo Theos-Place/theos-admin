@@ -505,6 +505,11 @@ body {
 .help-prose .media-duo { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
 .help-prose .media-duo img { flex: 1 1 280px; min-width: 0; }
 
+/* Los GIF de tutoriales son capturas de celular (verticales): a tamaño
+   natural de teléfono, nunca más altos que la pantalla — estirados a lo
+   ancho se ven gigantes y pixelados. */
+.help-prose img[src$=".gif"] { flex: 0 0 auto; width: auto; max-height: 100vh; max-width: 100%; }
+
 /* Imágenes e infografías: nunca se desbordan y se pueden tocar para ampliar. */
 .help-prose img {
   display: block;
