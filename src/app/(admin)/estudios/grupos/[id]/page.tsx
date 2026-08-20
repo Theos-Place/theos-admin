@@ -597,8 +597,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <WeekProgressBar current={group.current_week} total={studyType.weeks} className="w-48" />
             )}
           </div>
-          {canManageGroups && (
+          {(canManageGroups || group.viewer_scope === 'leader') && (
             <div className="flex gap-2">
+              {/* El cierre también es del DIRIGENTE del grupo (2026-08-20);
+                  editar/eliminar siguen siendo solo de gestión. */}
               {group.status === 'en_curso' && (
                 <Link
                   href={`/estudios/grupos/${id}/cierre`}
@@ -607,6 +609,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   Cierre de estudio
                 </Link>
               )}
+              {canManageGroups && (<>
               <Link
                 href={`/estudios/grupos/${id}/editar`}
                 className="rounded-xl border px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors flex items-center border-[var(--outline-variant)] font-body"
@@ -621,6 +624,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               >
                 <Trash2 size={14} />
               </button>
+              </>)}
             </div>
           )}
         </div>

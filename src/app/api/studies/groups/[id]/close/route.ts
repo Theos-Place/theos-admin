@@ -14,10 +14,26 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+  // Cierra quien gestiona grupos O el dirigente/co-dirigente DE ESTE grupo
+  // (2026-08-20: el cierre es parte del trabajo del dirigente — el flujo de
+  // recomendaciones a CDEB ya lo anticipaba así).
+  const auth = await requireRoles()
   if (auth.res) return auth.res
   // Body y params fuera del try: el catch de YA_CERRADO los necesita para reconciliar.
   const { id } = await params
+  {
+    const closerRoles = ['coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin']
+    const isCloser = auth.ctx.roles.some(r => closerRoles.includes(r))
+    if (!isCloser) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const { data: g } = await createAdminClient()
+        .from('study_groups').select('leader_id, co_leader_id').eq('id', id).maybeSingle()
+      const row = g as { leader_id: string | null; co_leader_id: string | null } | null
+      const isLeader = !!auth.ctx.memberId && !!row
+        && (row.leader_id === auth.ctx.memberId || row.co_leader_id === auth.ctx.memberId)
+      if (!isLeader) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+  }
   const body = (await req.json().catch(() => ({}))) as { results?: CloseResult[]; evaluations?: PrematEvaluationInput[] }
   const results = body.results ?? []
   try {

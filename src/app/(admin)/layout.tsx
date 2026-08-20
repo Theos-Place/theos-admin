@@ -148,7 +148,9 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // cualquier sesión — decisión 2026-07-29; el detalle/edición de un plan
   // sigue gateado en su propia página (STUDY_ADMIN).
   if (prefix === '/estudios' && getScope('estudios') === 'own') {
-    const groupDetail = /^\/estudios\/grupos\/[0-9a-f-]{36}(\/asistencia)?$/i.test(pathname)
+    // El dirigente también cierra SUS grupos (2026-08-20): /cierre entra acá;
+    // el API del grupo y el del cierre validan que sea el dirigente de ESE grupo.
+    const groupDetail = /^\/estudios\/grupos\/[0-9a-f-]{36}(\/asistencia|\/cierre)?$/i.test(pathname)
     const isDirigente = (user.roles ?? []).includes('dirigente')
     const isPlanCurriculum = pathname === '/estudios/plan'
     // (El resumen /estudios ya quedó bloqueado arriba: exige alcance 'all'.)
