@@ -3,7 +3,7 @@ titulo: Cómo cierro mi grupo de estudio
 seccion: Estudios
 tipo: infografia
 visibilidad: roles
-roles: [dirigente, coordinador_dirigentes, coordinador_estudios, direccion]
+roles: [dirigente, coordinador_estudios, coordinador_dirigentes, direccion]
 orden: 3
 resumen: El paso a paso del dirigente para cerrar su grupo, evaluar a cada estudiante y llenar las recomendaciones a CDEB.
 ---

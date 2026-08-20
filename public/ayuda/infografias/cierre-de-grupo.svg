@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1140" role="img" aria-labelledby="t-cie d-cie" font-family="Arial, Helvetica, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1010" role="img" aria-labelledby="t-cie d-cie" font-family="Arial, Helvetica, sans-serif">
   <title id="t-cie">Cierre de un grupo de estudio</title>
   <desc id="d-cie">Los cinco pasos que sigue el dirigente para cerrar su grupo, y lo que hay que saber antes de confirmar el cierre.</desc>
 
-  <rect width="720" height="1140" fill="#F6F5F2"/>
+  <rect width="720" height="1010" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Cierre de un grupo de estudio</text>
   <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
@@ -33,7 +33,8 @@
     <rect x="48" y="460" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
     <circle cx="88" cy="493" r="18" fill="#161440"/>
     <text x="88" y="500" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
-    <text x="122" y="500" fill="#161440">Confirmá: el grupo queda <tspan font-weight="bold">finalizado</tspan> y los aprobados, con el estudio completado</text>
+    <text x="122" y="492" fill="#161440">Confirmá: el grupo queda <tspan font-weight="bold">finalizado</tspan></text>
+    <text x="122" y="512" font-size="13.5" fill="#5B5975">y los aprobados quedan con el estudio completado</text>
   </g>
 
   <!-- Antes de confirmar -->
@@ -53,14 +54,9 @@
 
     <rect x="48" y="826" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
     <circle cx="82" cy="860" r="10" fill="#EF5554"/>
-    <text x="106" y="856" font-weight="bold" fill="#161440">Podés guardar la recomendación como borrador.</text>
-    <text x="106" y="878" fill="#5B5975">Y terminarla con calma — pero el cierre exige enviarla completa.</text>
-
-    <rect x="48" y="926" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <circle cx="82" cy="960" r="10" fill="#EF5554"/>
-    <text x="106" y="956" font-weight="bold" fill="#161440">El cierre no se deshace desde el sistema.</text>
-    <text x="106" y="978" fill="#5B5975">Si algo quedó mal, avisá al coordinador de estudios para corregirlo.</text>
+    <text x="106" y="856" font-weight="bold" fill="#161440">El cierre no se deshace desde el sistema.</text>
+    <text x="106" y="878" fill="#5B5975">Si algo quedó mal, avisá al coordinador de estudios para corregirlo.</text>
   </g>
 
-  <text x="48" y="1076" font-size="13" fill="#8B89A0">Después del cierre te llega una encuesta corta de retroalimentación — es anónima para el equipo.</text>
+  <text x="48" y="972" font-size="13" fill="#8B89A0">Después del cierre, a tus estudiantes les llega una encuesta corta sobre cómo les fue — es anónima para vos.</text>
 </svg>
