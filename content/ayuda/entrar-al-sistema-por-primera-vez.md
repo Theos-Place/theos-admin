@@ -9,6 +9,8 @@ resumen: Cómo creás tu contraseña y entrás a tu cuenta, incluso si nunca usa
 
 # Entrar al sistema por primera vez
 
+![El flujo completo: crear tu contraseña y entrar al sistema](/ayuda/tutoriales/primera-vez/primera-vez.gif)
+
 ![Los cuatro pasos para crear tu contraseña y entrar al sistema](/ayuda/infografias/primera-vez-en-el-sistema.svg)
 
 Ya tenés una cuenta: la creamos con el correo que está en tu perfil de Theos Place.
@@ -17,9 +19,14 @@ Lo que falta es que le pongas una contraseña, y eso lo hacés vos — nadie má
 ## Los cuatro pasos
 
 1. Entrá a [admin.theosplace.org](https://admin.theosplace.org).
+   ![La pantalla de inicio de sesión](/ayuda/tutoriales/primera-vez/01-login.png)
 2. Tocá **"Creá tu contraseña acá"**, debajo del botón de iniciar sesión.
+   ![La pantalla de crear tu contraseña](/ayuda/tutoriales/primera-vez/02-crear-contrasena.png)
 3. Escribí **el mismo correo** con el que te llegan los mensajes de Theos y tocá enviar.
+   ![Escribí tu correo y tocá enviar](/ayuda/tutoriales/primera-vez/03-correo-ingresado.png)
 4. Abrí el enlace que te llega al correo y elegí tu contraseña.
+   ![Así se ve el correo que te llega](/ayuda/tutoriales/primera-vez/05-correo.png)
+   ![La pantalla para definir tu contraseña](/ayuda/tutoriales/primera-vez/07-nueva-contrasena.png)
 
 Listo. Desde ahí en adelante entrás con tu correo y esa contraseña.
 

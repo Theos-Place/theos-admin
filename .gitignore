@@ -54,3 +54,4 @@ scripts/output/
 # Videos de referencia: viven en Storage (bucket email-media), no en el repo
 docs/referencias/*.mp4
 docs/referencias/*.mov
+scripts/tutoriales/out/

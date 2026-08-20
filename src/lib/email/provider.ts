@@ -101,6 +101,13 @@ export type SendEmailInput = {
  * El remitente es siempre SES_FROM_EMAIL (verificado).
  */
 export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers }: SendEmailInput): Promise<{ messageId: string }> {
+  // Dominios .invalid (cuentas [prueba] del seed): jamás se intenta enviar —
+  // cada intento rebota en SES y castiga la reputación del remitente. Los
+  // tutoriales grabados y las corridas de QA matriculan con estas cuentas.
+  if (/\.invalid$/i.test(to.email.trim())) {
+    console.warn(`sendEmail omitido (dominio .invalid): ${to.email}`)
+    return { messageId: 'skipped-invalid-domain' }
+  }
   assertEmailConfigured()
   const marketingHeaders = kind === 'marketing' && unsubscribeToken ? listUnsubscribeHeader(unsubscribeToken) : undefined
   const transport = getTransport()
