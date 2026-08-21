@@ -61,6 +61,6 @@ export function isValidCedula(raw: string | null | undefined): boolean {
 export const CEDULA_FORMAT_MESSAGE =
   'Cédula inválida: debe tener 9 dígitos (nacional) u 11-12 (DIMEX), solo números.'
 
-/** Códigos de plan de estudio que EXIGEN cédula para inscribirse (trámite que
- *  la requiere). El gate es bloqueante en server (enrollMember) y UX (matrícula). */
-export const REQUIRES_CEDULA_CODES = new Set(['PREMAT'])
+// FIN-2: ya no hay lista de planes que exigen documento — lo exige TODA
+// matrícula (guard en enrollMember). La vieja REQUIRES_CEDULA_CODES (solo
+// PREMAT) se eliminó junto con su test.

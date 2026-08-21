@@ -37,7 +37,11 @@ export async function GET(
   }
 }
 
-export async function PUT(
+// Update PARCIAL de la ficha (allowlist con `k in body`). Se expone como PUT y
+// como PATCH: la convención del repo es PATCH para updates parciales, y varios
+// clientes ya lo llamaban así (el guardado de documento del prematrimonial
+// pegaba a PATCH y recibía 405 — la ruta solo exportaba PUT).
+async function handleUpdate(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -121,7 +125,10 @@ export async function PUT(
         { status: 409 },
       )
     }
-    console.error('PUT /api/members/[id]:', error)
+    console.error('PUT/PATCH /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
+
+export const PUT = handleUpdate
+export const PATCH = handleUpdate

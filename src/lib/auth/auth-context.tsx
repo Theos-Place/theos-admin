@@ -14,6 +14,9 @@ export interface AuthUser {
   family_member_ids: string[]
   /** ¿El miembro tiene cédula registrada? false → recordatorio (banner). */
   has_cedula: boolean
+  /** FIN-2: fecha del último descarte del aviso de documento (ISO) o null.
+   *  El aviso reaparece a los 14 días — regla en lib/members/document-prompt. */
+  document_prompt_dismissed_at?: string | null
   /** Perfil de sistema (cuenta institucional): excluido del recordatorio de cédula. */
   is_system: boolean
   /** Puesto activo en el comité de estudios bíblicos: habilita

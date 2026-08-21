@@ -2528,6 +2528,32 @@ export type Database = {
         }
         Relationships: []
       }
+      notice_dismissals: {
+        Row: {
+          dismissed_at: string
+          member_id: string
+          notice_key: string
+        }
+        Insert: {
+          dismissed_at?: string
+          member_id: string
+          notice_key: string
+        }
+        Update: {
+          dismissed_at?: string
+          member_id?: string
+          notice_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_dismissals_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paid_positions: {
         Row: {
           committee_id: string | null

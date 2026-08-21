@@ -17,7 +17,7 @@ import { SedesProvider } from '@/lib/sedes'
 import { OrgProvider } from '@/lib/org'
 import { AuthProvider } from '@/lib/auth/auth-context'
 import { ToastProvider } from '@/components/shared/Toast'
-import { CedulaReminderBanner } from '@/components/members/CedulaReminderBanner'
+import { DocumentPromptModal } from '@/components/members/DocumentPromptModal'
 import { PAGE_WIDTH } from './PageContainer'
 import { cn } from '@/lib/utils'
 
@@ -53,7 +53,7 @@ export function AppShell({
                     <PageContainer width="reading|form"> (ver layout.md). */}
                 <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
                   <div className={cn('mx-auto w-full min-w-0', PAGE_WIDTH.work)}>
-                    {showCedulaReminder && <CedulaReminderBanner />}
+                    {showCedulaReminder && <DocumentPromptModal />}
                     <ErrorBoundary>{children}</ErrorBoundary>
                   </div>
                 </main>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Heart, Search, Check, IdCard, ArrowLeft, ArrowRight, Loader2, AlertCircle, Upload, UserCog } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, isValidDocument, documentFormatMessage, type DocumentType } from '@/lib/cedula'
+import { DocumentCapture } from '@/components/members/DocumentCapture'
 import {
   DATING_TIME_QUESTION, DATING_TIME_OPTIONS, FIRST_MARRIAGE_QUESTION, PREVIOUS_MARRIAGE_LABEL,
   CHILDREN_QUESTION, CHILDREN_AGES_LABEL, LIVING_QUESTION, LIVING_OPTIONS,
@@ -84,28 +84,9 @@ export default function PrematrimonialWizardPage() {
   }, [onBehalf, requestedMemberId])
 
   // PRE-7: captura inline del documento cuando el inscrito no tiene cédula.
-  const [docType, setDocType] = useState<DocumentType>('cedula')
-  const [docNumber, setDocNumber] = useState('')
-  const [docSaving, setDocSaving] = useState(false)
+  // FIN-2: la captura del documento vive en <DocumentCapture> (compartida
+  // con el aviso de ingreso y el check-in). Acá solo interesa si ya se guardó.
   const [docSaved, setDocSaved] = useState(false)
-  const [docError, setDocError] = useState('')
-  async function saveDocument() {
-    if (docSaving) return
-    if (!isValidDocument(docType, docNumber)) { setDocError(documentFormatMessage(docType)); return }
-    setDocError(''); setDocSaving(true)
-    try {
-      const targetId = onBehalf ? requestedMemberId : user?.member_id
-      const res = await fetch(`/api/members/${targetId}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ document_type: docType, cedula: docNumber.trim() }),
-      })
-      const d = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(d?.error || 'No se pudo guardar el documento.')
-      setDocSaved(true)
-    } catch (e) {
-      setDocError(e instanceof Error ? e.message : 'No se pudo guardar el documento.')
-    } finally { setDocSaving(false) }
-  }
 
   // Paso 2 — pareja
   const [spouseQuery, setSpouseQuery] = useState('')
@@ -247,24 +228,13 @@ export default function PrematrimonialWizardPage() {
                 : 'La inscripción al prematrimonial requiere tu documento de identidad. Ingresalo acá para continuar — queda guardado en tu perfil.'}
             </p>
           </div>
-          <div className="mx-auto mt-4 max-w-sm space-y-3">
-            <div>
-              <label htmlFor="doc-type" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">Tipo de documento</label>
-              <select id="doc-type" value={docType} onChange={e => setDocType(e.target.value as DocumentType)}
-                className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body bg-white">
-                {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{DOCUMENT_TYPE_LABEL[t]}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="doc-number" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">Número de documento</label>
-              <input id="doc-number" value={docNumber} onChange={e => setDocNumber(e.target.value)}
-                className="w-full rounded-xl border border-navy/15 px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body" />
-            </div>
-            {docError && <p className="text-[13px] text-coral-deep font-body" role="alert">{docError}</p>}
-            <button type="button" onClick={saveDocument} disabled={docSaving || !docNumber.trim()}
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 font-body">
-              {docSaving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : <><IdCard size={14} /> Guardar documento y continuar</>}
-            </button>
+          <div className="mx-auto mt-4 max-w-sm">
+            <DocumentCapture
+              memberId={(onBehalf ? requestedMemberId : user?.member_id) ?? ''}
+              idPrefix="premat-doc"
+              submitLabel="Guardar documento y continuar"
+              onSaved={() => setDocSaved(true)}
+            />
           </div>
         </div>
       </div>

@@ -111,6 +111,9 @@ export type MemberStudyProfile = {
   /** Autorización administrativa para ver/matricularse en grupos virtuales
    *  (member_admin_data.authorized_virtual_studies). Por defecto false. */
   authorized_virtual_studies?: boolean
+  /** FIN-2: ¿tiene documento de identidad registrado? Toda matrícula lo exige
+   *  (guard bloqueante en enrollMember); la UI lo pide antes de confirmar. */
+  has_document?: boolean
 }
 
 const DAY_LABELS: Record<string, string> = {

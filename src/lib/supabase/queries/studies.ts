@@ -7,7 +7,6 @@ import { countBlockingStudyPayments } from '@/lib/supabase/queries/payments'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getGroupRestriction, memberPassesRestriction } from '@/lib/supabase/queries/group-restrictions'
 import { hasRestriction, restrictionBlockedMessage, type GroupRestriction } from '@/lib/studies/group-restrictions'
-import { REQUIRES_CEDULA_CODES } from '@/lib/cedula'
 import { ymdCR, formatMoney } from '@/lib/format'
 import type { Json } from '@/types/database'
 
@@ -1135,9 +1134,11 @@ export async function enrollMember(
   // (ahí es estudiante), por eso el criterio es por-grupo, no "es dirigente".
   const esDirigenteDelGrupo = !!group && (memberId === group.leader_id || memberId === group.co_leader_id)
 
-  // Guard: planes que EXIGEN cédula (ej. PREMAT). Bloqueante server-side: no se
-  // puede matricular sin cédula registrada. La UI avisa antes (matrícula).
-  if (plan?.code && REQUIRES_CEDULA_CODES.has(plan.code)) {
+  // Guard: el documento de identidad es OBLIGATORIO para matricularse en
+  // cualquier estudio (FIN-2 — antes solo lo exigían los planes de
+  // REQUIRES_CEDULA_CODES, ej. PREMAT). Bloqueante server-side; la UI lo pide
+  // antes, en el propio wizard de matrícula.
+  {
     const { data: mem } = await supabase.from('members').select('cedula').eq('id', memberId).maybeSingle()
     const ced = (mem as { cedula?: string | null } | null)?.cedula
     if (!ced || !String(ced).trim()) throw new Error('CEDULA_REQUERIDA')

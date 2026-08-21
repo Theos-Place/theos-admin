@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeCedula, isValidCedula, REQUIRES_CEDULA_CODES } from './cedula'
+import { normalizeCedula, isValidCedula } from './cedula'
 
 describe('normalizeCedula', () => {
   it('quita guiones y espacios', () => {
@@ -25,13 +25,6 @@ describe('isValidCedula', () => {
     expect(isValidCedula('12345')).toBe(false)      // muy corta
     expect(isValidCedula('1234567890')).toBe(false) // 10 dígitos (jurídica, no persona)
     expect(isValidCedula('11-abc-678')).toBe(false) // con letras
-  })
-})
-
-describe('REQUIRES_CEDULA_CODES', () => {
-  it('PREMAT exige cédula', () => {
-    expect(REQUIRES_CEDULA_CODES.has('PREMAT')).toBe(true)
-    expect(REQUIRES_CEDULA_CODES.has('N1')).toBe(false)
   })
 })
 

@@ -12,6 +12,7 @@ import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { PaymentMethodSelector, type PaymentMethodValue } from '@/components/shared/PaymentMethodSelector'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
+import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -69,6 +70,9 @@ export default function MatriculaPage() {
   const [search, setSearch]               = useState('')
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null)
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
+  // FIN-2: matrícula pedida por alguien sin documento — se captura antes de
+  // confirmar y luego sigue con la confirmación que quedó pendiente.
+  const [docGate, setDocGate]             = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
   const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number } | null>(null)
@@ -516,9 +520,16 @@ export default function MatriculaPage() {
                         expandedStudy === result.study_code ? null : result.study_code
                       )}
                       onEnroll={group => {
-                        setConfirmModal({ group, study: result })
                         setPaymentMethod('sinpe')
                         setEnrollError(null)
+                        // FIN-2: sin documento no se puede matricular (guard
+                        // server-side en enrollMember). Se pide ACÁ como paso
+                        // previo, en vez de dejar que el POST falle después.
+                        if (profile && profile.has_document === false) {
+                          setDocGate({ group, study: result })
+                          return
+                        }
+                        setConfirmModal({ group, study: result })
                       }}
                       onRequestScholarship={() => {
                         const plan = studyTypes.find(s => s.code === result.study_code)
@@ -557,6 +568,44 @@ export default function MatriculaPage() {
                 Cancelar
               </button>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* FIN-2: paso previo obligatorio — documento de identidad. */}
+      {docGate && effectiveMemberId && (
+        <Modal onClose={() => setDocGate(null)} titleId="matricula-doc-title" width={440}>
+          <div className="p-6">
+            <h2 id="matricula-doc-title" className="text-lg font-bold text-navy font-display">
+              {selectedMember ? 'Falta el documento de identidad' : 'Necesitás registrar tu documento de identidad'}
+            </h2>
+            <p className="mt-2 text-sm text-navy-light/80 font-body">
+              {selectedMember
+                ? 'Esta persona no tiene documento registrado. Ingresá su cédula o número de documento de identidad para continuar — queda guardado en su perfil.'
+                : 'Ingresá tu cédula o número de documento de identidad para continuar — queda guardado en tu perfil.'}
+            </p>
+            <div className="mt-4">
+              <DocumentCapture
+                memberId={effectiveMemberId}
+                idPrefix="matricula-doc"
+                submitLabel="Guardar documento y continuar"
+                autoFocus
+                onSaved={() => {
+                  // El perfil local ya tiene documento: seguimos con la
+                  // confirmación que disparó el gate.
+                  setProfile(p => (p ? { ...p, has_document: true } : p))
+                  setConfirmModal(docGate)
+                  setDocGate(null)
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setDocGate(null)}
+              className="mt-2 w-full rounded-full px-4 py-2 text-[13px] text-navy-light/80 transition-colors hover:bg-navy/5 hover:text-navy font-body"
+            >
+              Cancelar
+            </button>
           </div>
         </Modal>
       )}

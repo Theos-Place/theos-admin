@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
+import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { Modal } from '@/components/shared/Modal'
 import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -91,7 +92,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
-  const [memberResults, setMemberResults] = useState<{ id: string; name: string }[]>([])
+  const [memberResults, setMemberResults] = useState<{ id: string; name: string; has_document?: boolean }[]>([])
+  // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
+  // flujo de la fila: se puede ignorar y seguir registrando gente.
+  const [docCapture, setDocCapture] = useState<{ id: string; name: string } | null>(null)
   const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
@@ -138,8 +142,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return
-          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string }>
-          setMemberResults(list.map(m => ({ id: m.id, name: `${m.first_name} ${m.last_name}`.trim() })))
+          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula?: string | null }>
+          // FIN-2: el lookup ya trae el documento; se conserva para marcar a
+          // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
+          setMemberResults(list.map(m => ({
+            id: m.id,
+            name: `${m.first_name} ${m.last_name}`.trim(),
+            has_document: !!String(m.cedula ?? '').trim(),
+          })))
         })
         .catch(() => { if (alive) setMemberResults([]) })
         .finally(() => { if (alive) setSearching(false) })
@@ -305,10 +315,16 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   async function handleConfirm(type: AttendanceType) {
     if (!selectedMember) return
     const member = selectedMember
+    // FIN-2 (3): ¿le faltaba documento? Se resuelve ANTES de limpiar la
+    // búsqueda, que es de donde viene el dato.
+    const faltaDocumento = memberResults.find(m => m.id === member.id)?.has_document === false
     setSelectedMember(null)
     setQuery('')
     const r = await persistCheckin(member, type)
     if (r === 'not_registered') requestCobro(member)
+    // Captura al vuelo, opcional y después del registro: el check-in nunca se
+    // bloquea ni se retrasa por esto.
+    if (faltaDocumento && r === 'ok') setDocCapture(member)
   }
 
   // Registra varios miembros (familia) al evento. Cada entrada lleva su subevento.
@@ -471,6 +487,40 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
+          {/* FIN-2 (3): captura opcional de documento, ya registrado el
+              check-in. Es un panel al costado de la fila: se puede cerrar y
+              seguir registrando gente sin llenarlo. */}
+          {docCapture && (
+            <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-sm)]">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  <span className="font-medium text-navy">{docCapture.name}</span> no tiene documento
+                  registrado. Si lo tenés a mano, podés agregarlo — es opcional.
+                </p>
+                <button
+                  onClick={() => setDocCapture(null)}
+                  aria-label="Cerrar captura de documento"
+                  className="shrink-0 rounded-lg p-1 text-navy-light/80 transition-colors hover:bg-navy/5 hover:text-navy"
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+              <div className="mt-3">
+                <DocumentCapture
+                  memberId={docCapture.id}
+                  idPrefix="checkin-doc"
+                  submitLabel="Guardar documento"
+                  onSaved={() => {
+                    setMemberResults(prev => prev.map(m => (
+                      m.id === docCapture.id ? { ...m, has_document: true } : m
+                    )))
+                    setDocCapture(null)
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Búsqueda manual */}
           <input
             className="w-full rounded-2xl bg-surface-card px-5 py-4 text-base text-navy placeholder-navy-light/60 outline-none focus:ring-2 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
@@ -505,7 +555,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="min-w-0">
                     <p className="text-navy font-medium font-body truncate">{r.name}</p>
-                    <p className="text-navy-light/80 text-[13px] font-body">{registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}</p>
+                    <p className="text-navy-light/80 text-[13px] font-body">
+                      {registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}
+                      {r.has_document === false && (
+                        <span className="ml-2 rounded-md bg-navy/5 px-1.5 py-0.5 text-[11px] text-navy-light/80">
+                          sin documento
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </button>
               ))}

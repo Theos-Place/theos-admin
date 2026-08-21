@@ -89,6 +89,23 @@ export async function GET() {
       console.warn('auth/me: eventos a cargo:', e instanceof Error ? e.message : e)
     }
 
+    // FIN-2: fecha del último descarte del aviso de documento. El aviso
+    // reaparece a los 14 días (la regla vive en lib/members/document-prompt).
+    let documentPromptDismissedAt: string | null = null
+    try {
+      const { DOCUMENT_PROMPT_NOTICE } = await import('@/lib/members/document-prompt')
+      const { data: dis } = await admin
+        .from('notice_dismissals')
+        .select('dismissed_at')
+        .eq('member_id', member.id)
+        .eq('notice_key', DOCUMENT_PROMPT_NOTICE)
+        .maybeSingle()
+      documentPromptDismissedAt = (dis as { dismissed_at?: string } | null)?.dismissed_at ?? null
+    } catch (e) {
+      // Best-effort: si falla, el aviso simplemente se muestra.
+      console.warn('auth/me: descarte del aviso de documento:', e instanceof Error ? e.message : e)
+    }
+
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
     return NextResponse.json({
@@ -102,6 +119,7 @@ export async function GET() {
         // Recordatorio de cédula: has_cedula=false dispara el banner (salvo
         // perfiles de sistema, que nunca tienen cédula por diseño).
         has_cedula: !!(member.cedula && String(member.cedula).trim()),
+        document_prompt_dismissed_at: documentPromptDismissedAt,
         is_system: !!member.is_system,
         in_study_committee: inStudyCommittee,
         granted_form_ids: grantedFormIds,

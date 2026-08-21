@@ -2071,8 +2071,51 @@ totales separados y correctos. Reportame qué encontraste que sumaba mal.
 
 ### De la reunión con Finanzas
 
-### [ ] FIN-2 · Pedir el documento de identidad donde falta (login, matrícula, check-in)
+### [x] FIN-2 · Pedir el documento de identidad donde falta (login, matrícula, check-in) — HECHO 2026-08-21
 Archivos: `src/lib/auth/auth-context.tsx`, wizard de matrícula, `/eventos/[id]/checkin`, perfil
+
+Contexto medido antes de arrancar: **21 665 de 23 777 miembros (91%) no tienen documento**, y
+16 398 de ellos tienen login — o sea el aviso del punto 1 alcanza a ~16 400 personas y el
+bloqueo del punto 2 frena a casi todo el que se matricule hasta que lo complete (es la
+intención de finanzas, pero conviene saberlo antes de un despliegue).
+
+**BUG encontrado y arreglado de paso:** PRE-7 guardaba el documento con `PATCH
+/api/members/[id]`, pero la ruta solo exportaba `GET` y `PUT` → **405**. La captura del
+prematrimonial nunca funcionó. La ruta ahora expone `PATCH` además de `PUT` (el handler ya
+era un update parcial; PATCH es la convención del repo). Verificado: `PATCH` → 401 (antes
+405), `PUT` → 401 sin cambios, `DELETE` sigue 405.
+
+Implementado:
+- Módulo puro `lib/members/document-prompt.ts` (`shouldShowDocumentPrompt`,
+  `DOCUMENT_PROMPT_SNOOZE_DAYS = 14`) con **9 tests**, incluidos el formato `timestamptz`
+  de Postgres (`+00:00`), fecha corrupta y fecha futura.
+- Migración `20260821120000_notice_dismissals` (aplicada): tabla genérica
+  `notice_dismissals (member_id, notice_key, dismissed_at)` con PK compuesta, RLS y política
+  self vía `private.is_own_member`. Genérica a propósito, para no agregar una columna a
+  `members` por cada aviso futuro. El descarte se guarda **con fecha**, no booleano.
+- (1) Login: `DocumentPromptModal` en el AppShell, descartable, reaparece a los 14 días.
+  **Reemplaza** al viejo `CedulaReminderBanner` (descartaba en `sessionStorage`, sin fecha —
+  archivo eliminado). `/api/auth/me` ahora devuelve `document_prompt_dismissed_at`;
+  `POST /api/members/notice-dismissals` registra el descarte (member_id de la sesión, nunca
+  del body, así nadie silencia el aviso de otro).
+- (2) Matrícula: bloqueante. Server: el guard de `enrollMember` pasó de exigir documento solo
+  a los planes de `REQUIRES_CEDULA_CODES` (PREMAT) a exigirlo en **toda** matrícula. UI: al
+  darle "matricularse" sin documento se pide primero y luego sigue con la confirmación que
+  quedó pendiente (`profile.has_document`, nuevo en el perfil de elegibilidad).
+- (3) Check-in: **nunca bloquea**. El lookup ya traía la cédula y el cliente la tiraba; ahora
+  se conserva, la fila muestra un chip discreto "sin documento", y **después** de registrar
+  el check-in aparece un panel opcional y cerrable para capturarlo al vuelo.
+- Componente compartido `DocumentCapture` (tipo + número, validación por tipo de INT-1,
+  guardado por PATCH con el dedup 409 existente) usado en los 3 puntos **y** en el
+  prematrimonial, que quedó unificado (antes tenía su propia copia del bloque).
+- Limpieza: `REQUIRES_CEDULA_CODES` quedó huérfano y se eliminó junto con su test, que
+  afirmaba que N1 *no* exige documento — ahora falso y activamente engañoso.
+
+Verificación: typecheck limpio, **965 tests** en verde, lint sin errores nuevos (los 9 de
+`scripts/` son preexistentes; 96 warnings ≤ 107). Ciclo del descarte probado contra la BD
+real: el upsert no duplica (1 fila por miembro+aviso) y el re-descarte actualiza la fecha.
+Los tests de "matrícula bloqueada" y "check-in nunca bloqueado" no son unitarios: el guard es
+server-side inline y el repo solo testea módulos puros (vitest incluye `.ts`, no `.tsx`).
 
 ```
 Para finanzas, que todos tengan documento registrado es prioritario. Hoy solo el

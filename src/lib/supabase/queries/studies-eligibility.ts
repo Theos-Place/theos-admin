@@ -24,13 +24,15 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   invited_codes: string[]
   member_age: number | null
   authorized_virtual_studies: boolean
+  /** FIN-2: ¿tiene documento de identidad registrado? La matrícula lo exige. */
+  has_document: boolean
 }> {
   const supabase = createAdminClient()
   const { attendanceWindowStart, meetsAttendanceCriteria, ATTENDANCE_MIN_CHARLAS_INTERMEDIA } = await import('@/lib/attendance')
   const oldest = attendanceWindowStart()
   const { activeInvitationCodesForMember } = await import('./study-invitations')
   const [memberRes, enrRes, volRes, chkRes, invitedCodes, adminDataRes] = await Promise.all([
-    supabase.from('members').select('is_donor, birth_date').eq('id', memberId).maybeSingle(),
+    supabase.from('members').select('is_donor, birth_date, cedula').eq('id', memberId).maybeSingle(),
     supabase
       .from('study_enrollments')
       .select('status, study_groups!study_enrollments_group_id_fkey(plan:study_plans(code)), plan_direct:study_plans!study_enrollments_plan_id_fkey(code)')
@@ -83,6 +85,7 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
     invited_codes: invitedCodes,
     member_age: birth ? calcAge(birth) : null,
     authorized_virtual_studies: Boolean((adminDataRes.data as { authorized_virtual_studies?: boolean } | null)?.authorized_virtual_studies),
+    has_document: !!String((memberRes.data as { cedula?: string | null } | null)?.cedula ?? '').trim(),
   }
 }
 
