@@ -116,6 +116,9 @@ export type FinanceRequest = {
   plan_id: string | null
   event_id: string | null
   entity_name: string | null
+  /** FIN-5: costo del destino, para la vista previa de la aprobación. */
+  entity_cost: number | null
+  entity_currency: string | null
 }
 
 export type FinanceRequestWriteInput = {

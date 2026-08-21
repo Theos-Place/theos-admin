@@ -33,8 +33,8 @@ const REQUEST_SELECT = `
   member:members!finance_requests_member_id_fkey(first_name, last_name),
   reviewer:members!finance_requests_reviewed_by_fkey(first_name, last_name),
   study_group:study_groups(name),
-  plan:study_plans!finance_requests_plan_id_fkey(name),
-  event:events!finance_requests_event_id_fkey(title),
+  plan:study_plans!finance_requests_plan_id_fkey(name, cost, currency),
+  event:events!finance_requests_event_id_fkey(title, payment_amount, currency),
   payment:payments(amount, paid_at, description, entity_type),
   history:finance_request_status_history(from_status, to_status, notes, created_at, actor:members(first_name, last_name))
 `
@@ -59,8 +59,8 @@ type DbRow = {
   member: { first_name: string | null; last_name: string | null } | null
   reviewer: { first_name: string | null; last_name: string | null } | null
   study_group: { name: string | null } | null
-  plan: { name: string | null } | { name: string | null }[] | null
-  event: { title: string | null } | { title: string | null }[] | null
+  plan: PlanEmbed | PlanEmbed[] | null
+  event: EventEmbed | EventEmbed[] | null
   payment: { amount: number | null; paid_at: string | null; description: string | null; entity_type: string | null } | null
   history: Array<{
     from_status: string | null
@@ -70,6 +70,11 @@ type DbRow = {
     actor: { first_name: string | null; last_name: string | null } | null
   }> | null
 }
+
+// FIN-5: el costo del destino alimenta la vista previa de la aprobación
+// ("con un 50% quedan ₡7 500 por pagar").
+type PlanEmbed = { name: string | null; cost: number | null; currency: string | null }
+type EventEmbed = { title: string | null; payment_amount: number | null; currency: string | null }
 
 function one<T>(v: T | T[] | null): T | null {
   return Array.isArray(v) ? (v[0] ?? null) : v
@@ -113,6 +118,8 @@ function toDomain(r: DbRow): FinanceRequest {
     plan_id: r.plan_id,
     event_id: r.event_id,
     entity_name: plan?.name ?? event?.title ?? null,
+    entity_cost: plan ? (plan.cost ?? null) : event ? (event.payment_amount ?? null) : null,
+    entity_currency: (plan?.currency ?? event?.currency) ?? null,
     history: (r.history ?? [])
       .map(h => ({
         from_status: h.from_status as FinanceRequestStatus | null,

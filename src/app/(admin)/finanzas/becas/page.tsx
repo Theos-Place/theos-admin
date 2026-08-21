@@ -13,8 +13,9 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { formatDate, formatDateTime } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
+import { previewApproval, QUICK_PERCENTAGES, quickLabel } from '@/lib/finance/scholarship-approval'
 // MEMBER_LOOKUP_URL: el rol 'becas' no tiene el módulo miembros y el
 // buscador quedaba vacío (bug 2026-08-04).
 import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
@@ -429,11 +430,22 @@ function ReviewRequestModal({ request, onClose, onDone }: {
   request: FinanceRequest; onClose: () => void; onDone: () => void
 }) {
   const toast = useToast()
-  const [action, setAction] = useState<'approve_total' | 'approve_parcial' | 'reject' | null>(null)
+  // FIN-5: 'approve' es un solo camino — el tipo (total/parcial) lo DERIVA la
+  // cobertura, no una elección aparte que podía contradecir el monto.
+  const [action, setAction] = useState<'approve' | 'reject' | null>(null)
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [discountValue, setDiscountValue] = useState('')
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // Vista previa: cuánto cubre y cuánto queda. Misma cuenta que usa el server
+  // al aprobar, así que lo que finanzas ve es lo que se guarda.
+  const preview = previewApproval({
+    cost: request.entity_cost,
+    currency: request.entity_currency,
+    discountType,
+    discountValue,
+  })
 
   async function submit() {
     if (busy || !action) return
@@ -441,7 +453,7 @@ function ReviewRequestModal({ request, onClose, onDone }: {
     try {
       const body = action === 'reject'
         ? { action: 'reject', reason: reason.trim() }
-        : { action: 'approve', discount_type: discountType, discount_value: Number(discountValue), approval_type: action === 'approve_parcial' ? 'parcial' : 'total' }
+        : { action: 'approve', discount_type: discountType, discount_value: Number(discountValue), approval_type: preview.approval_type }
       const res = await fetch(`/api/scholarships/requests/${request.id}/review`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       })
@@ -466,21 +478,31 @@ function ReviewRequestModal({ request, onClose, onDone }: {
         <p className="text-[13px] text-navy-light/80 font-body italic">&quot;{request.reason}&quot;</p>
 
         {!action && (
-          <div className="grid grid-cols-1 gap-2 pt-1">
-            <button onClick={() => setAction('approve_total')} className="rounded-xl bg-teal-deep px-4 py-2.5 text-sm text-white hover:opacity-90 transition-opacity font-body">Aprobar total</button>
-            <button onClick={() => setAction('approve_parcial')} className="rounded-xl border border-teal-deep text-teal-deep px-4 py-2.5 text-sm hover:bg-teal-deep/5 transition-colors font-body">Aprobar parcial</button>
-            <button onClick={() => setAction('reject')} className="rounded-xl border border-coral/40 text-coral px-4 py-2.5 text-sm hover:bg-coral/5 transition-colors font-body">Rechazar</button>
+          <div className="space-y-2 pt-1">
+            {/* FIN-5: atajos. El tipo (total/parcial) sale de la cobertura. */}
+            <div className="grid grid-cols-2 gap-2">
+              {QUICK_PERCENTAGES.map(pct => (
+                <button
+                  key={pct}
+                  onClick={() => { setDiscountType('percentage'); setDiscountValue(String(pct)); setAction('approve') }}
+                  className="rounded-xl bg-teal-deep px-4 py-2.5 text-sm text-white hover:opacity-90 transition-opacity font-body"
+                >
+                  {quickLabel(pct)}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setDiscountValue(''); setAction('approve') }}
+              className="w-full rounded-xl border border-teal-deep text-teal-deep px-4 py-2.5 text-sm hover:bg-teal-deep/5 transition-colors font-body"
+            >
+              Otro porcentaje o monto
+            </button>
+            <button onClick={() => setAction('reject')} className="w-full rounded-xl border border-coral/40 text-coral px-4 py-2.5 text-sm hover:bg-coral/5 transition-colors font-body">Rechazar</button>
           </div>
         )}
 
-        {(action === 'approve_total' || action === 'approve_parcial') && (
+        {action === 'approve' && (
           <div className="space-y-3">
-            {action === 'approve_parcial' && (
-              <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-amber-50 border border-amber-200">
-                <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" />
-                <p className="text-[13px] text-amber-800 font-body">Estás marcando esta aprobación como <strong>parcial</strong> — el miembro recibirá el email correspondiente.</p>
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setDiscountType('percentage')}
@@ -494,15 +516,58 @@ function ReviewRequestModal({ request, onClose, onDone }: {
             <input
               type="number" min={0} value={discountValue} onChange={e => setDiscountValue(e.target.value)}
               placeholder={discountType === 'percentage' ? 'Ej. 50' : 'Ej. 10000'}
+              aria-label={discountType === 'percentage' ? 'Porcentaje de descuento' : 'Monto del descuento'}
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             />
+
+            {/* FIN-5: vista previa — cuánto cubre sobre el costo real. Es la
+                misma cuenta que hace el server al aprobar. */}
+            {preview.breakdown && (
+              <div className="rounded-xl border border-outline px-3 py-2.5 space-y-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[13px] text-navy-light/80 font-body">Costo</span>
+                  <span className="text-[13px] text-navy font-body">{formatMoney(preview.breakdown.price, preview.breakdown.currency)}</span>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[13px] text-teal-deep font-body">Cubre la beca</span>
+                  <span className="text-[13px] text-teal-deep font-body">−{formatMoney(preview.breakdown.discount, preview.breakdown.currency)}</span>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 border-t border-outline pt-1.5">
+                  <span className="text-[13px] uppercase tracking-wider text-navy-light/80 font-display">Queda por pagar</span>
+                  <span className="text-base font-bold text-navy font-display">{formatMoney(preview.breakdown.final, preview.breakdown.currency)}</span>
+                </div>
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Se registra como <strong className="text-navy">{preview.approval_type === 'total' ? 'aprobación total' : 'aprobación parcial'}</strong>
+                  {preview.approval_type === 'parcial' && ' — se le envía el correo de beca parcial con el monto a pagar.'}
+                </p>
+              </div>
+            )}
+            {preview.error === 'sin_costo' && Number(discountValue) > 0 && (
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Este destino no tiene costo registrado, así que no se puede mostrar el residual.
+                Un porcentaje se aplica igual cuando exista el costo.
+              </p>
+            )}
+            {preview.error === 'porcentaje_fuera_de_rango' && (
+              <p className="text-[13px] text-coral-deep font-body" role="alert">El porcentaje no puede pasar de 100.</p>
+            )}
+            {preview.error === 'monto_mayor_al_costo' && (
+              <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-amber-50 border border-amber-200">
+                <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" />
+                <p className="text-[13px] text-amber-800 font-body">
+                  El monto supera el costo, así que la beca cubre el total. Revisá que no sea un cero de más.
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-1">
               <button onClick={() => setAction(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Atrás</button>
               <button
-                onClick={submit} disabled={busy || !discountValue || Number(discountValue) <= 0}
+                onClick={submit}
+                disabled={busy || !discountValue || Number(discountValue) <= 0 || preview.error === 'porcentaje_fuera_de_rango'}
                 className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body bg-teal-deep hover:opacity-90', (busy || !discountValue) && 'opacity-50 cursor-not-allowed')}
               >
-                {busy ? 'Aprobando…' : `Aprobar ${action === 'approve_parcial' ? 'parcial' : 'total'}`}
+                {busy ? 'Aprobando…' : preview.approval_type === 'total' ? 'Aprobar beca completa' : 'Aprobar parcial'}
               </button>
             </div>
           </div>

@@ -3,13 +3,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { updateFinanceRequestStatus } from '@/lib/supabase/queries/finance-requests'
 import { approvePayment } from '@/lib/supabase/queries/payments'
 import { sendSystemEmail } from '@/lib/email/system-templates'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatMoney } from '@/lib/format'
 import { toCurrency } from '@/lib/money'
 import {
   checkPaymentScholarshipEligibility, computeApplication, currencyMismatch,
   checkCouponEmailSendable,
 } from '@/lib/finance/scholarship-payment-rules'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
+import { previewApproval } from '@/lib/finance/scholarship-approval'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -335,17 +336,23 @@ export async function revokeScholarship(id: string): Promise<boolean> {
 /** INT-3 · La moneda de una beca sale de LO QUE SE BECA (el plan o el evento).
  *  Un descuento de monto fijo en otra moneda no se puede aplicar, así que nacer
  *  en colones por defecto la volvería inservible para Madrid. */
-async function resolveEntityCurrency(entityType: ScholarshipEntityType, planId: string | null, eventId: string | null): Promise<string> {
+/** FIN-5: costo Y moneda del destino. El costo se usa para derivar si la beca
+ *  cubre todo y para congelar el monto al aprobar. */
+async function resolveEntityPricing(
+  entityType: ScholarshipEntityType, planId: string | null, eventId: string | null,
+): Promise<{ currency: string; cost: number | null }> {
   const supabase = createAdminClient()
   if (entityType === 'study_plan' && planId) {
-    const { data } = await supabase.from('study_plans').select('currency').eq('id', planId).maybeSingle()
-    return toCurrency((data as { currency: string | null } | null)?.currency)
+    const { data } = await supabase.from('study_plans').select('currency, cost').eq('id', planId).maybeSingle()
+    const row = data as { currency: string | null; cost: number | null } | null
+    return { currency: toCurrency(row?.currency), cost: row?.cost != null ? Number(row.cost) : null }
   }
   if (entityType === 'event' && eventId) {
-    const { data } = await supabase.from('events').select('currency').eq('id', eventId).maybeSingle()
-    return toCurrency((data as { currency: string | null } | null)?.currency)
+    const { data } = await supabase.from('events').select('currency, payment_amount').eq('id', eventId).maybeSingle()
+    const row = data as { currency: string | null; payment_amount: number | null } | null
+    return { currency: toCurrency(row?.currency), cost: row?.payment_amount != null ? Number(row.payment_amount) : null }
   }
-  return 'CRC'
+  return { currency: 'CRC', cost: null }
 }
 
 async function resolveEntityName(entityType: ScholarshipEntityType, planId: string | null, eventId: string | null): Promise<string> {
@@ -387,7 +394,19 @@ export async function approveScholarshipRequest(
   if (!['open', 'in_review'].includes(req.status)) throw new Error('La solicitud ya fue resuelta')
   if (!req.entity_type) throw new Error('La solicitud no tiene un destino definido')
 
-  const becaCurrency = await resolveEntityCurrency(req.entity_type, req.plan_id, req.event_id)
+  const { currency: becaCurrency, cost: entityCost } =
+    await resolveEntityPricing(req.entity_type, req.plan_id, req.event_id)
+
+  // FIN-5: el tipo de aprobación se DERIVA de la cobertura real, no de lo que
+  // mande el cliente: antes se podía guardar 'total' con un 50%. Y el monto
+  // queda CONGELADO en la moneda del destino al momento de aprobar (el
+  // porcentaje es portable, el monto no).
+  const preview = previewApproval({
+    cost: entityCost, currency: becaCurrency,
+    discountType: input.discount_type, discountValue: input.discount_value,
+  })
+  const approvalType = preview.breakdown ? preview.approval_type : input.approval_type
+
   const { data: created, error: insErr } = await supabase.from('scholarships').insert({
     kind: 'asignada',
     member_id: req.member_id,
@@ -397,7 +416,10 @@ export async function approveScholarshipRequest(
     currency: becaCurrency,
     discount_type: input.discount_type,
     discount_value: input.discount_value,
-    approval_type: input.approval_type,
+    approval_type: approvalType,
+    // Congelados al aprobar: costo del destino y saldo que queda por pagar.
+    original_amount: preview.breakdown?.price ?? null,
+    final_amount: preview.breakdown?.final ?? null,
     status: 'active',
     request_id: requestId,
     approved_by: input.reviewerUserId,
@@ -418,15 +440,22 @@ export async function approveScholarshipRequest(
     await supabase.from('internal_notifications').insert({
       recipient_member_id: req.member_id,
       type: 'scholarship_approved',
-      title: input.approval_type === 'parcial' ? 'Tu beca fue aprobada parcialmente' : '¡Tu beca fue aprobada!',
+      title: approvalType === 'parcial' ? 'Tu beca fue aprobada parcialmente' : '¡Tu beca fue aprobada!',
       body: `Se te asignó un descuento de ${discount} para ${entityName}.`,
       link: null,
     })
     if (member?.email) {
       const sent = await sendSystemEmail({
-        systemKey: input.approval_type === 'parcial' ? 'beca_aprobada_parcial' : 'beca_aprobada',
+        systemKey: approvalType === 'parcial' ? 'beca_aprobada_parcial' : 'beca_aprobada',
         to: { email: member.email, name: `${member.first_name} ${member.last_name}`.trim() },
-        data: { nombre: member.first_name, nombre_estudio_evento: entityName, descuento: discount },
+        data: {
+          nombre: member.first_name,
+          nombre_estudio_evento: entityName,
+          descuento: discount,
+          // FIN-5: en la parcial, decir cuánto queda por pagar. Sin esto la
+          // persona sabía el descuento pero no el monto a transferir.
+          monto_final: preview.breakdown ? formatMoney(preview.breakdown.final, becaCurrency) : '',
+        },
       })
       // BEC-1: registrar el envío en la beca (mismo tracking que el botón manual).
       if (sent.ok) {

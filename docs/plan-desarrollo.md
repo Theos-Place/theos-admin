@@ -2287,8 +2287,46 @@ Tests: crear arreglo parte el pago en tractos que suman el total; tracto vencido
 matrícula y evento; tracto al día no bloquea.
 ```
 
-### [ ] FIN-5 · Aprobación parcial de becas: 100%, 50%, porcentaje libre, o rechazo
+### [x] FIN-5 · Aprobación parcial de becas: 100%, 50%, porcentaje libre, o rechazo — HECHO 2026-08-21
 Archivos: revisión de solicitudes de beca (`/finanzas/becas`, `finance_requests`), `scholarships`, plantillas `beca_aprobada` / `beca_aprobada_parcial` / `beca_rechazada`
+
+Punto de partida: el backend ya aceptaba `discount_type`/`discount_value`/`approval_type` y ya
+mandaba las tres plantillas. Los huecos reales eran otros tres.
+
+**Hueco 1 — `approval_type` se elegía a mano.** La UI pedía primero "Aprobar total" o "Aprobar
+parcial" y DESPUÉS el valor, así que se podía guardar `total` con un 50%: un dato que se
+contradice a sí mismo. Ahora el tipo se **deriva de la cobertura** (`covered` ⇒ total) en el
+server, que **ignora** lo que manda el cliente cuando puede calcular el costo. Verificado
+contra la BD: mandando `approval_type: 'total'` con 50%, se guardó `parcial`.
+
+**Hueco 2 — no se guardaba el monto.** El porcentaje sí quedaba (`discount_value`), pero no el
+monto calculado. Ahora se congelan `original_amount` (costo del destino al aprobar) y
+`final_amount` (residual), usando las dos columnas que ya existían sin uso. El porcentaje es
+portable entre monedas; el monto se congela en la del destino (INT-3).
+
+**Hueco 3 — la plantilla parcial no decía cuánto pagar.** Decía "El resto del monto quedaría a
+tu cargo" sin el número — el mismo problema que FIN-3 arregló en el modal. Migración
+`20260821220000` (aplicada): agrega `{{monto_final}}`, que `approveScholarshipRequest` manda ya
+formateado en la moneda del destino.
+
+Además:
+- Módulo puro `lib/finance/scholarship-approval.ts` con **11 tests**: `previewApproval` reusa
+  el desglose de FIN-3, así que **la vista previa y lo que se guarda son la misma cuenta**.
+  Cubre 100%/50%/porcentaje libre/monto fijo, deriva el tipo, y avisa cuando el monto fijo
+  supera el costo (el típico cero de más al teclear).
+- UI de revisión: atajos **100% / 50% / "otro"** y **vista previa** con costo, lo que cubre la
+  beca y lo que queda por pagar, más la advertencia de qué correo se va a enviar. Antes se
+  escribía el número a ciegas.
+- `finance_requests` ahora expone `entity_cost` y `entity_currency` (del plan o del evento),
+  que es lo que alimenta la vista previa.
+
+Puntos 3 y 4 de la spec ya estaban cubiertos y se verificaron: el residual se paga por el flujo
+normal (FIN-3 lo muestra), una beca por pago lo garantiza el guard `pago_ya_con_beca` de BEC-1,
+y el rechazo ya mandaba `beca_rechazada` con el motivo.
+
+Verificación: typecheck limpio, **1011 tests**, lint 94/94 sin errores. Contra la BD real: las
+becas creadas antes del cambio se siguen leyendo (los campos nuevos son aditivos y nullables) y
+la aprobación al 50% congela costo y residual correctos.
 
 ```
 Al resolver una solicitud de beca, finanzas puede: aprobar al 100%, al 50%, definir un
