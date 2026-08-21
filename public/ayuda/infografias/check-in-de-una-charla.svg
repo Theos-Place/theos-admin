@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 870" role="img" aria-labelledby="t-ci d-ci" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-ci">Check-in de una charla</title>
+  <desc id="d-ci">Los cinco pasos para registrar la asistencia: elegir la charla del día, escanear el QR o buscar por nombre, y confirmar como participante.</desc>
+
+  <rect width="720" height="870" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Check-in de una charla</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Si alguien vino y no quedó registrado, para el sistema no vino.</text>
+
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">Entrá a <tspan font-weight="bold">Eventos</tspan> y tocá <tspan font-weight="bold">Check-in</tspan></text>
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Elegí la charla de hoy — sale como <tspan font-weight="bold">En curso</tspan></text>
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">Escaneá el <tspan font-weight="bold">QR</tspan> del pase digital…</text>
+    <rect x="48" y="382" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="415" r="18" fill="#161440"/>
+    <text x="88" y="422" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="422" fill="#161440">…o buscá a la persona por <tspan font-weight="bold">nombre o cédula</tspan></text>
+    <rect x="48" y="460" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="493" r="18" fill="#161440"/>
+    <text x="88" y="500" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="122" y="500" fill="#161440">Confirmá como <tspan font-weight="bold">Participante</tspan> — queda en la lista</text>
+  </g>
+
+  <text x="48" y="582" font-size="20" font-weight="bold" fill="#161440">Bueno saber</text>
+  <rect x="48" y="594" width="44" height="4" rx="2" fill="#EF5554"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="602" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="636" r="10" fill="#EF5554"/>
+    <text x="106" y="632" font-weight="bold" fill="#161440">¿Primera visita?</text>
+    <text x="106" y="654" fill="#5B5975">«Agregar persona nueva» la crea ahí mismo, sin salir del check-in.</text>
+    <rect x="48" y="702" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="736" r="10" fill="#EF5554"/>
+    <text x="106" y="732" font-weight="bold" fill="#161440">¿Te equivocaste?</text>
+    <text x="106" y="754" fill="#5B5975">El basurero elimina el check-in y se puede volver a registrar.</text>
+  </g>
+
+  <text x="48" y="830" font-size="13" fill="#8B89A0">La ventana dura hasta 4 horas después del fin; para registros tardíos buscá el evento por nombre.</text>
+</svg>

@@ -16,7 +16,8 @@
     "tutorial:cierre": "tsx scripts/tutoriales/run.ts cierre",
     "tutorial:perfil": "tsx scripts/tutoriales/run.ts perfil",
     "tutorial:eventos": "tsx scripts/tutoriales/run.ts eventos",
-    "tutorial:mis-pagos": "tsx scripts/tutoriales/run.ts mis-pagos"
+    "tutorial:mis-pagos": "tsx scripts/tutoriales/run.ts mis-pagos",
+    "tutorial:checkin": "tsx scripts/tutoriales/run.ts checkin"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.65.0",
