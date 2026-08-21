@@ -13,7 +13,10 @@
     "tutorial:primera-vez": "tsx scripts/tutoriales/run.ts primera-vez",
     "tutorial:matricula": "tsx scripts/tutoriales/run.ts matricula",
     "tutorial:all": "tsx scripts/tutoriales/run.ts all",
-    "tutorial:cierre": "tsx scripts/tutoriales/run.ts cierre"
+    "tutorial:cierre": "tsx scripts/tutoriales/run.ts cierre",
+    "tutorial:perfil": "tsx scripts/tutoriales/run.ts perfil",
+    "tutorial:eventos": "tsx scripts/tutoriales/run.ts eventos",
+    "tutorial:mis-pagos": "tsx scripts/tutoriales/run.ts mis-pagos"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.65.0",

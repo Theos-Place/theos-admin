@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 870" role="img" aria-labelledby="t-x d-x" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-x">Inscribirme a un evento</title>
+  <desc id="d-x">Los eventos abiertos aparecen en la pantalla de Eventos.</desc>
+
+  <rect width="720" height="870" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Inscribirme a un evento</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Los eventos abiertos aparecen en la pantalla de Eventos.</text>
+
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">Entrá al sistema y andá a <tspan font-weight="bold">Eventos</tspan></text>
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Elegí el evento y tocá <tspan font-weight="bold">Inscribirme</tspan></text>
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">Confirmá tu inscripción — si tiene costo, te lo dice antes</text>
+    <rect x="48" y="382" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="415" r="18" fill="#161440"/>
+    <text x="88" y="422" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="422" fill="#161440">Con costo: subí el comprobante en el momento</text>
+    <rect x="48" y="460" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="493" r="18" fill="#161440"/>
+    <text x="88" y="500" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="122" y="500" fill="#161440">¡Listo! Quedaste inscrito/a</text>
+  </g>
+
+  <text x="48" y="582" font-size="20" font-weight="bold" fill="#161440">Bueno saber</text>
+  <rect x="48" y="594" width="44" height="4" rx="2" fill="#EF5554"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="602" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="636" r="10" fill="#EF5554"/>
+    <text x="106" y="632" font-weight="bold" fill="#161440">El cupo se reserva al confirmar.</text>
+    <text x="106" y="654" fill="#5B5975">Si el evento tiene cupo máximo, tu lugar queda apartado con la inscripción.</text>
+    <rect x="48" y="702" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="736" r="10" fill="#EF5554"/>
+    <text x="106" y="732" font-weight="bold" fill="#161440">¿No podés ir?</text>
+    <text x="106" y="754" fill="#5B5975">Avisá a quien organiza para liberar tu lugar — a alguien más le sirve.</text>
+  </g>
+
+  <text x="48" y="830" font-size="13" fill="#8B89A0">El día del evento, tu entrada es tu pase digital: lo escanean al llegar.</text>
+</svg>
