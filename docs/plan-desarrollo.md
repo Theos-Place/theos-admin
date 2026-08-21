@@ -2719,7 +2719,7 @@ ocultado igual le llegaba al dirigente si la respuesta venía por formulario —
 agujero exacto que la moderación existe para tapar. Ahora se excluyen sus textos y su nota
 sigue contando en el promedio.
 
-### [ ] DIR-6 · Estados administrativos del dirigente: "en pausa" y "en revisión"
+### [x] DIR-6 · Estados administrativos del dirigente: "en pausa" y "en revisión" — HECHO 2026-08-21
 Archivos: `src/app/api/studies/leaders/schema.ts` (`availability_status`), `/estudios/dirigentes`, migración si hace falta CHECK
 
 ```
@@ -2742,6 +2742,35 @@ activo: "en pausa" (descanso acordado) o "en revisión" (situación bajo evaluac
 Tests: etiquetas visibles solo para los roles correctos; asignar grupo a un en_revision se
 bloquea; el dirigente no ve su propio matiz.
 ```
+
+**Cómo quedó** (migración `20260822150000_leader_en_revision.sql`):
+
+- Se reusó `availability_status`, como pedía la ficha. Dato del arranque: la columna tenía
+  4 valores pero solo 2 en uso (126 `available`, 359 `inactive`, **0** en `assigned` y
+  `resting`) porque ninguna pantalla la editaba — era un espejo de `is_active`. `resting`
+  solo cambió de etiqueta a "En pausa"; lo único nuevo en el CHECK es `en_revision`.
+- La regla vive en `src/lib/studies/leader-admin-status.ts` (puro, 13 tests).
+  `LEADER_ADMIN_ROLES` = coordinador_dirigentes + coordinador_estudios + admin. `direccion`
+  afuera, aunque tenga el módulo estudios completo.
+- **El colapso ocurre en el API, no en la UI**: `GET /api/studies/leaders` y el de
+  disponibilidad devuelven `inactive` en lugar del matiz para quien no lo administra. Así
+  el dato no sale del servidor y no depende de que cada pantalla se acuerde de esconderlo
+  (el dirigente tampoco ve el suyo, por la misma vía).
+- `assigned` NO es elegible a mano: lo derivaría el sistema de tener un grupo activo y
+  elegirlo crearía un estado que contradice la realidad.
+- Coherencia con EST-1: el guard de asignación corta ANTES de escribir el grupo (verificado:
+  0 grupos creados en el intento). Activar, asignar y el bulk quedan bloqueados; el bulk los
+  devuelve en `skipped` junto a los "no recomendado".
+- Desactivar NO borra el matiz: quien estaba en pausa sigue en pausa. Sin eso, el toggle
+  normal habría borrado justamente el porqué que DIR-6 agrega.
+- Salir de revisión limpia el matiz antes de activar, porque el guard rechaza a los en
+  revisión y si no nadie podría salir nunca.
+
+**Aceptado, no resuelto**: las tres auto-activaciones best-effort (import de grupos,
+prematrimonial, grupo sucesor de un pago) ahora simplemente no activan a un dirigente en
+revisión y siguen. En el caso del sucesor eso puede dejar un grupo activo con dirigente
+inactivo — la misma excepción que ya estaba aceptada para "no recomendado" y que su propio
+comentario documenta como gestión manual.
 
 ### [ ] DIR-7 · Reporte de dirigentes
 Archivos: `/reportes` (página/bloque nuevo), `report_snapshots`, cron `report-snapshots`

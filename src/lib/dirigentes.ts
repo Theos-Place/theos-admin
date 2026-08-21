@@ -7,6 +7,7 @@
 // planes, y los ids de dirigentes activos del comité) y arma la lista enriquecida.
 
 import type { StudyGroup, StudyType } from '@/types/study'
+import type { LeaderStatus } from '@/lib/studies/leader-admin-status'
 
 export type DirigenteEstado = 'activo' | 'inactivo'
 
@@ -38,6 +39,9 @@ export type Dirigente = {
   member_id: string
   member_name: string
   status: DirigenteEstado
+  /** DIR-6: estado administrativo. Llega YA SANEADO del API: para quien no
+   *  administra dirigentes, 'resting'/'en_revision' vienen como 'inactive'. */
+  availability_status: LeaderStatus
   /** Códigos de estudio que el dirigente ha impartido (distintos, derivado de grupos). */
   estudios_habilitados: string[]
   /** Formación: estudios para los que está capacitado (study_leaders, editable). */
@@ -65,7 +69,7 @@ export function buildDirigentes(
    *  liderado grupos. Quedan INACTIVO salvo que estén en el comité activo. */
   designated: ActiveDirigente[] = [],
   /** Config por dirigente (formación + disponibilidad), desde study_leaders. */
-  config: Map<string, { formacion: string[]; disponibilidad: string[] }> = new Map(),
+  config: Map<string, { formacion: string[]; disponibilidad: string[]; availability_status?: LeaderStatus }> = new Map(),
 ): Dirigente[] {
   const planNames = new Map(plans.map(p => [p.code, p.name]))
   const planName = (code: string) => planNames.get(code) ?? code
@@ -116,6 +120,7 @@ export function buildDirigentes(
       member_id: id,
       member_name: name,
       status: activeMap.has(id) ? 'activo' : 'inactivo',
+      availability_status: config.get(id)?.availability_status ?? (activeMap.has(id) ? 'available' : 'inactive'),
       estudios_habilitados: [...(acc?.codes ?? [])],
       formacion: config.get(id)?.formacion ?? [],
       disponibilidad: config.get(id)?.disponibilidad ?? [],

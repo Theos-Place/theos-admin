@@ -4,6 +4,7 @@ import { isUuid } from '@/lib/validate'
 import {
   getAvailabilityForms, getLeaderAvailabilityResponses,
 } from '@/lib/supabase/queries/leader-availability'
+import { canSeeLeaderAdminStatus, visibleLeaderStatus } from '@/lib/studies/leader-admin-status'
 
 // DIR-1 · Insumo del coordinador de dirigentes: las respuestas del formulario de
 // disponibilidad con el estado actual de cada dirigente. SOLO LECTURA — nada de
@@ -20,7 +21,16 @@ export async function GET(req: NextRequest) {
     // Sin form_id se usa el más reciente: es el ciclo en curso.
     const target = formId && isUuid(formId) ? formId : forms[0]?.id ?? null
     const rows = target ? await getLeaderAvailabilityResponses(target) : []
-    return NextResponse.json({ forms, form_id: target, rows })
+    // DIR-6: 'direccion' entra a esta pantalla pero NO ve el matiz — para ella
+    // un dirigente en pausa o en revisión es simplemente inactivo.
+    const verMatiz = canSeeLeaderAdminStatus(auth.ctx.roles)
+    const saneadas = verMatiz ? rows : rows.map(r => ({
+      ...r,
+      leader: r.leader
+        ? { ...r.leader, availability_status: visibleLeaderStatus(r.leader.availability_status, false) }
+        : r.leader,
+    }))
+    return NextResponse.json({ forms, form_id: target, rows: saneadas })
   } catch (error) {
     console.error('GET /api/studies/dirigentes/disponibilidad:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

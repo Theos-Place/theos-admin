@@ -134,6 +134,7 @@ const AVAIL_MAP: Record<DbLeaderEnriched['availability_status'], StudyLeader['av
   available: 'available',
   assigned: 'assigned',
   resting: 'resting',
+  en_revision: 'en_revision',
   inactive: 'inactive',
 }
 

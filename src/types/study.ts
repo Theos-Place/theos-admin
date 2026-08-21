@@ -107,7 +107,7 @@ export type StudyLeader = {
   member_id: string
   member_name: string
   zone_preference: string[]
-  availability_status: 'available' | 'assigned' | 'resting' | 'inactive'
+  availability_status: 'available' | 'assigned' | 'resting' | 'en_revision' | 'inactive'
   is_active: boolean
   /** Disponibilidad: estudios que está dispuesto a dar ahora (qualified_study_codes). */
   qualified_studies: string[]

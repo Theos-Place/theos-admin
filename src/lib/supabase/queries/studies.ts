@@ -1,4 +1,5 @@
 import { toCurrency } from '@/lib/money'
+import { ADMIN_ONLY_STATUSES, type LeaderStatus } from '@/lib/studies/leader-admin-status'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { isGroupFull, occupiesSpot, OCCUPYING_STATUSES } from '@/lib/studies/enrollment-capacity'
@@ -148,7 +149,7 @@ export type DbLeaderEnriched = {
   id: string
   member_id: string
   zone_preference: string[] | null
-  availability_status: 'available' | 'assigned' | 'resting' | 'inactive'
+  availability_status: 'available' | 'assigned' | 'resting' | 'en_revision' | 'inactive'
   is_active: boolean
   qualified_study_codes: string[] | null
   formation_study_codes: string[] | null
@@ -605,27 +606,56 @@ async function notRecommendedIds(
   return new Set(((data ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
 }
 
+/** DIR-6: ids (de `memberIds`) con availability_status = 'en_revision'.
+ *  Espejo de notRecommendedIds: guard antes de activar o de asignar grupo. */
+async function enRevisionIds(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberIds: string[],
+): Promise<Set<string>> {
+  if (memberIds.length === 0) return new Set()
+  const { data, error } = await supabase
+    .from('study_leaders')
+    .select('member_id')
+    .in('member_id', memberIds)
+    .eq('availability_status', 'en_revision')
+  if (error) throw error
+  return new Set(((data ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
+}
+
 /** Activa/desactiva manualmente a un dirigente. Estado = servidor activo en el
  *  Comité de Dirigentes. ACTIVAR: study_leaders.is_active + voluntario activo del
  *  comité + rol 'dirigente'. DESACTIVAR: study_leaders inactivo + sale del comité
  *  (voluntariado inactive) + se revoca el rol 'dirigente'. No pisa su config.
  *  Guard: no se puede ACTIVAR a alguien marcado "no recomendado para dar
  *  estudios" (member_admin_data.not_recommended_to_lead_studies) — lanza
- *  'DIRIGENTE_NO_RECOMENDADO'. Desactivar siempre está permitido. */
+ *  'DIRIGENTE_NO_RECOMENDADO'. Desactivar siempre está permitido.
+ *  DIR-6: tampoco se puede activar a alguien EN REVISIÓN — lanza
+ *  'DIRIGENTE_EN_REVISION'. Sacarlo de revisión es una decisión explícita del
+ *  coordinador, no algo que ocurra de rebote al asignarle un grupo. */
 export async function setDirigenteActive(memberId: string, active: boolean): Promise<void> {
   const supabase = createAdminClient()
 
   if (active) {
     const blocked = await notRecommendedIds(supabase, [memberId])
     if (blocked.has(memberId)) throw new Error('DIRIGENTE_NO_RECOMENDADO')
+    const enRevision = await enRevisionIds(supabase, [memberId])
+    if (enRevision.has(memberId)) throw new Error('DIRIGENTE_EN_REVISION')
   }
 
   // study_leaders: actualizar estado sin tocar el resto (o crear si no existe).
   const { data: existing } = await supabase
-    .from('study_leaders').select('member_id').eq('member_id', memberId).maybeSingle()
+    .from('study_leaders').select('member_id, availability_status').eq('member_id', memberId).maybeSingle()
   if (existing) {
+    // DIR-6: desactivar NO borra el matiz. Si estaba EN PAUSA, sigue en pausa —
+    // pisarlo con 'inactive' perdería justamente el porqué que DIR-6 agrega.
+    // (En revisión no llega acá al activar: lo cortó el guard de arriba.)
+    const previo = (existing as { availability_status: string | null }).availability_status
+    const conserva = !active && (ADMIN_ONLY_STATUSES as readonly string[]).includes(previo ?? '')
     const { error } = await supabase.from('study_leaders')
-      .update({ is_active: active, availability_status: active ? 'available' : 'inactive' })
+      .update({
+        is_active: active,
+        availability_status: conserva ? previo : (active ? 'available' : 'inactive'),
+      })
       .eq('member_id', memberId)
     if (error) throw error
   } else {
@@ -667,9 +697,47 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
   else await revokeMemberRole(memberId, 'dirigente')
 }
 
-/** Cambio de estado masivo de dirigentes. Los marcados "no recomendado para dar
- *  estudios" se omiten (solo aplica al ACTIVAR) y se devuelven en `skipped`, sin
- *  abortar el resto del lote. */
+/**
+ * DIR-6 · Fija el estado administrativo del dirigente.
+ *
+ * Mantiene is_active coherente con el matiz, porque si no quedarían diciendo
+ * cosas distintas: 'available' es "está dando" y los otros tres son "no está
+ * dando". Nadie tiene que acordarse de mover los dos.
+ *
+ * Salir de revisión limpia el matiz ANTES de activar, a propósito: el guard de
+ * setDirigenteActive rechaza a los en revisión, así que sin esto no se podría
+ * sacar a nadie de revisión nunca.
+ *
+ * Lanza 'DIRIGENTE_CON_GRUPO_ACTIVO' si se lo quiere pausar/revisar teniendo un
+ * grupo abierto — misma regla que ya bloquea desactivarlo (EST-1).
+ */
+export async function setLeaderAdminStatus(
+  memberId: string, status: LeaderStatus,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  if (status === 'available') {
+    await supabase.from('study_leaders')
+      .update({ availability_status: 'available' }).eq('member_id', memberId)
+    await setDirigenteActive(memberId, true)
+    return
+  }
+
+  const conGrupo = await membersWithActiveGroups([memberId])
+  if (conGrupo.has(memberId)) throw new Error('DIRIGENTE_CON_GRUPO_ACTIVO')
+
+  // Primero desactivar (asegura la fila y lo saca del comité), después sellar el
+  // matiz: al revés, una fila que no existía se crearía en 'inactive' y perdería
+  // el estado que se pidió.
+  await setDirigenteActive(memberId, false)
+  const { error } = await supabase.from('study_leaders')
+    .update({ availability_status: status }).eq('member_id', memberId)
+  if (error) throw error
+}
+
+/** Cambio de estado masivo de dirigentes. Se omiten (solo al ACTIVAR) los
+ *  marcados "no recomendado para dar estudios" y los que están EN REVISIÓN
+ *  (DIR-6); vuelven en `skipped` sin abortar el resto del lote. */
 export async function bulkSetDirigenteActive(
   memberIds: string[], active: boolean,
 ): Promise<{ updated: number; skipped: string[] }> {
@@ -680,7 +748,7 @@ export async function bulkSetDirigenteActive(
       await setDirigenteActive(id, active)
       updated++
     } catch (e) {
-      if (e instanceof Error && e.message === 'DIRIGENTE_NO_RECOMENDADO') skipped.push(id)
+      if (e instanceof Error && (e.message === 'DIRIGENTE_NO_RECOMENDADO' || e.message === 'DIRIGENTE_EN_REVISION')) skipped.push(id)
       else throw e
     }
   }
@@ -801,6 +869,10 @@ async function assertLeadersRecommended(
   if (ids.length === 0) return
   const blocked = await notRecommendedIds(supabase, ids)
   if (blocked.size > 0) throw new Error('DIRIGENTE_NO_RECOMENDADO')
+  // DIR-6: asignarle un grupo a alguien en revisión lo activaría en silencio
+  // (EST-1), que es exactamente lo que la revisión tiene que impedir.
+  const enRevision = await enRevisionIds(supabase, ids)
+  if (enRevision.size > 0) throw new Error('DIRIGENTE_EN_REVISION')
 }
 
 /** Miembros (de `ids`) que son leader o co-líder de un grupo en curso/abierto.

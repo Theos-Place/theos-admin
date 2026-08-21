@@ -9,6 +9,7 @@ import {
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
+import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
 
 // Roles que pueden listar grupos: los que gestionan grupos (STUDY_ADMIN +
 // editor_grupos_estudio) + dirigentes, más los consumidores cross-módulo del
@@ -136,6 +137,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'El dirigente o co-dirigente elegido está marcado como no recomendado para dar estudios.' },
         { status: 400 },
+      )
+    }
+    if (error instanceof Error && error.message === 'DIRIGENTE_EN_REVISION') {
+      return NextResponse.json(
+        { error: EN_REVISION_BLOCK_MESSAGE, code: 'dirigente_en_revision' },
+        { status: 409 },
       )
     }
     console.error('POST /api/studies/groups:', error)

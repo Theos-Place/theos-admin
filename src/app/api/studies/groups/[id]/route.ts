@@ -9,6 +9,7 @@ import { groupWriteSchema } from '../schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import type { GroupWriteInput } from '@/lib/supabase/queries/studies'
+import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
 
 export async function GET(
   _req: NextRequest,
@@ -88,6 +89,12 @@ export async function PUT(
       return NextResponse.json(
         { error: 'El dirigente o co-dirigente elegido está marcado como no recomendado para dar estudios.' },
         { status: 400 },
+      )
+    }
+    if (error instanceof Error && error.message === 'DIRIGENTE_EN_REVISION') {
+      return NextResponse.json(
+        { error: EN_REVISION_BLOCK_MESSAGE, code: 'dirigente_en_revision' },
+        { status: 409 },
       )
     }
     console.error('PUT /api/studies/groups/[id]:', error)

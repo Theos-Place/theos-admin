@@ -15,6 +15,7 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { LEADER_STATUS_LABEL, type LeaderStatus } from '@/lib/studies/leader-admin-status'
 
 const VIEW_ROLES = ['coordinador_dirigentes', 'coordinador_estudios', 'direccion', 'admin'] as const
 
@@ -34,10 +35,6 @@ type Row = {
 }
 
 type FormOption = { id: string; title: string; responses: number }
-
-const ESTADO_LABEL: Record<string, string> = {
-  available: 'Disponible', assigned: 'Asignado', resting: 'En descanso', inactive: 'Inactivo',
-}
 
 export default function DisponibilidadDirigentesPage() {
   const { user, loaded } = useAuth()
@@ -169,7 +166,7 @@ export default function DisponibilidadDirigentesPage() {
                             'rounded-full px-2 py-0.5 text-[13px] font-medium',
                             r.leader.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light',
                           )}>
-                            {ESTADO_LABEL[r.leader.availability_status] ?? r.leader.availability_status}
+                            {LEADER_STATUS_LABEL[r.leader.availability_status as LeaderStatus] ?? r.leader.availability_status}
                             {!r.leader.is_active && ' · inactivo'}
                           </span>
                         </dd>

@@ -21,12 +21,22 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { getInitials } from '@/lib/format'
+import {
+  LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, type LeaderStatus,
+} from '@/lib/studies/leader-admin-status'
 
 const ESTADO_FILTERS = [
   { key: 'todos', label: 'Todos' },
   { key: 'activo', label: 'Activos' },
   { key: 'inactivo', label: 'Inactivos' },
 ] as const
+
+/** DIR-6: los dos matices son un filtro más, pero solo para quien los ve. */
+const ESTADO_ADMIN_FILTERS = ADMIN_ONLY_STATUSES.map(s => ({
+  key: s, label: LEADER_STATUS_LABEL[s],
+}))
+
+type EstadoFiltro = 'todos' | 'activo' | 'inactivo' | LeaderStatus
 
 type StudyBulk = { field: 'formation' | 'availability'; action: 'add' | 'remove' }
 
@@ -64,6 +74,13 @@ function DirigenteRow({
             )}>
               {d.status === 'activo' ? 'Activo' : 'Inactivo'}
             </span>
+            {/* DIR-6: el matiz solo llega a quien lo administra (el API lo
+                colapsa para el resto), y solo se pinta cuando lo hay. */}
+            {(ADMIN_ONLY_STATUSES as readonly string[]).includes(d.availability_status) && (
+              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-[rgba(233,185,73,0.15)] text-[#A8821F] font-body">
+                {LEADER_STATUS_LABEL[d.availability_status]}
+              </span>
+            )}
             {d.estudios_activos.length > 0 && (
               <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-coral/10 text-coral font-body">
                 Dando ahora
@@ -93,7 +110,9 @@ export default function DirigentesPage() {
   const canAdd = hasRole('admin', 'direccion', 'coordinador_dirigentes')
   const canBulk = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const canExport = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
-  const [estado, setEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos')
+  const [estado, setEstado] = useState<EstadoFiltro>('todos')
+  // DIR-6: los filtros de matiz solo para la coordinación de dirigentes.
+  const canAdminStatus = hasRole(...LEADER_ADMIN_ROLES)
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
   const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio
   const [formadoTipo, setFormadoTipo] = useState('')  // capacitado/formado para darlo
@@ -109,7 +128,11 @@ export default function DirigentesPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return dirigentes.filter(d => {
-      if (estado !== 'todos' && d.status !== estado) return false
+      // 'activo'/'inactivo' miran el estado derivado; los matices, el
+      // administrativo (que para quien no lo ve nunca viene con esos valores).
+      if (estado === 'activo' || estado === 'inactivo') {
+        if (d.status !== estado) return false
+      } else if (estado !== 'todos' && d.availability_status !== estado) return false
       if (dandoTipo && !matchesStudyFilter(d.estudios_activos.map(g => g.plan_code), dandoTipo)) return false
       if (formadoTipo && !matchesStudyFilter(d.formacion, formadoTipo)) return false
       if (dispTipo && !matchesStudyFilter(d.disponibilidad, dispTipo)) return false
@@ -244,7 +267,7 @@ export default function DirigentesPage() {
       {/* Filtros */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-1.5">
-          {ESTADO_FILTERS.map(f => (
+          {[...ESTADO_FILTERS, ...(canAdminStatus ? ESTADO_ADMIN_FILTERS : [])].map(f => (
             <button
               key={f.key}
               onClick={() => setEstado(f.key)}

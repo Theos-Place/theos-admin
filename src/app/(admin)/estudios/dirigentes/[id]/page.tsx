@@ -12,9 +12,13 @@ import { cn } from '@/lib/utils'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Users, X, Pencil, Info, Loader2 } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { getInitials } from '@/lib/format'
+import {
+  LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, SETTABLE_STATUSES,
+  type LeaderStatus,
+} from '@/lib/studies/leader-admin-status'
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -70,6 +74,52 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
  *  explicando el efecto (activar = agrega al Comité de Dirigentes + rol dirigente;
  *  desactivar = lo saca del comité + quita el rol). No permite desactivar a quien
  *  tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
+/** DIR-6 · Estado administrativo. Solo para quien lo gestiona; el resto ni
+ *  siquiera recibe el matiz del API, así que ni ve este control. */
+function AdminStatusSelect({ memberId, status, onChanged }: {
+  memberId: string; status: LeaderStatus; onChanged: () => void
+}) {
+  const toast = useToast()
+  const [saving, setSaving] = useState(false)
+
+  async function cambiar(nuevo: string) {
+    if (nuevo === status) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/studies/dirigentes/${memberId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ availability_status: nuevo }),
+      })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(body?.error ?? 'No se pudo cambiar el estado')
+      onChanged()
+      toast(`Estado: ${LEADER_STATUS_LABEL[nuevo as LeaderStatus]}`, 'success')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo cambiar el estado', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <label className="inline-flex items-center gap-2">
+      <span className="text-[11px] uppercase tracking-wide text-navy-light/80 font-body">Estado administrativo</span>
+      <select
+        value={status}
+        disabled={saving}
+        onChange={e => cambiar(e.target.value)}
+        aria-label="Estado administrativo del dirigente"
+        className="rounded-xl border border-navy/20 bg-surface-card px-3 py-1.5 text-[13px] text-navy font-body disabled:opacity-60"
+      >
+        {SETTABLE_STATUSES.map(s => (
+          <option key={s} value={s}>{LEADER_STATUS_LABEL[s]}</option>
+        ))}
+      </select>
+      {saving && <Loader2 size={13} className="animate-spin text-navy-light/80" aria-hidden="true" />}
+    </label>
+  )
+}
+
 function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: string; memberName: string; active: boolean; onChanged: () => void }) {
   const toast = useToast()
   const [saving, setSaving] = useState(false)
@@ -150,6 +200,8 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
   const { dirigentes, loading, refetch } = useDirigentes()
   const { hasRole } = useAuth()
   const canToggle = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
+  // DIR-6: el matiz lo maneja la coordinación de dirigentes; dirección no.
+  const canAdminStatus = hasRole(...LEADER_ADMIN_ROLES)
   const d = dirigentes.find(x => x.member_id === id)
 
   if (loading) {
@@ -199,7 +251,19 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
                   {d.status === 'activo' ? 'Activo' : 'Inactivo'}
                 </span>
               )}
+              {/* El matiz solo aparece cuando LO HAY: para un dirigente
+                  disponible, "Disponible" al lado de "Activo" no agrega nada. */}
+              {(ADMIN_ONLY_STATUSES as readonly string[]).includes(d.availability_status) && (
+                <span className="rounded-full bg-[rgba(233,185,73,0.15)] px-2.5 py-0.5 text-[13px] font-medium text-[#A8821F] font-body">
+                  {LEADER_STATUS_LABEL[d.availability_status]}
+                </span>
+              )}
             </div>
+            {canAdminStatus && (
+              <div className="mt-2">
+                <AdminStatusSelect memberId={d.member_id} status={d.availability_status} onChanged={refetch} />
+              </div>
+            )}
             <p className="text-sm text-navy-light/80 font-body mt-1">
               {d.total_grupos} grupos liderados · {d.total_activos} activos · {totalStudents} estudiantes en total
             </p>
