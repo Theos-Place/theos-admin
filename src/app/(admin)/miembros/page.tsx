@@ -255,16 +255,21 @@ function MiembrosContent() {
                 confirmMessage={exportConfirm}
                 label={hasAnyFilter && resultTotal > 0 ? `Exportar ${resultTotal.toLocaleString('es-CR')}` : undefined}
               />
-              <button
-                onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
-                disabled={!hasAnyFilter}
-                title={!hasAnyFilter ? 'Aplicá filtros primero para guardar una lista' : ''}
-                className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
-              >
-                <Bookmark size={13} strokeWidth={1.75} />
-                Guardar lista
-              </button>
             </>
+          )}
+          {/* Guardar lista tiene su propio gate: comunicaciones arma listas
+             para sus envíos aunque no exporte el padrón (2026-08-21). Espejo
+             del POST /api/member-lists, que ya acepta ese rol. */}
+          {(can('miembros', 'export') || can('comunicaciones', 'create')) && (
+            <button
+              onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
+              disabled={!hasAnyFilter}
+              title={!hasAnyFilter ? 'Aplicá filtros primero para guardar una lista' : ''}
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
+            >
+              <Bookmark size={13} strokeWidth={1.75} />
+              Guardar lista
+            </button>
           )}
           {can('comunicaciones', 'create') && (
             <button
