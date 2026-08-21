@@ -2537,6 +2537,88 @@ leer". Es transversal, no de una pantalla.
 Mostrame antes/después de 3 pantallas para aprobar antes de aplicarlo en masa.
 ```
 
+### [ ] AUD-1 · Auditoría de accesibilidad, legibilidad y UX
+Archivos: transversal — `src/components/**`, `src/app/(admin)/**`, `src/app/(public)/**`, design system
+Absorbe **UI-1** (que era solo tamaño y contraste): correr AUD-1 primero, y UI-1 queda como el subconjunto que se arregla en la primera tanda.
+
+```
+Auditoría transversal de accesibilidad, legibilidad y experiencia de uso. Contexto que
+define las prioridades: el sistema lo usan ~23 000 miembros de todas las edades, la mayoría
+DESDE EL CELULAR y muchos con poca familiaridad tecnológica; el staff lo usa a diario en
+escritorio. Ya hay un reporte de uso real: "la letra está pequeña y con bajo contraste".
+
+ENTREGABLE: un informe en docs/auditoria-ux-2026-08.md con hallazgos priorizados
+(bloqueante / importante / menor), cada uno con: dónde ocurre, por qué importa, y la
+corrección propuesta. NO arregles nada todavía — primero el informe, yo priorizo, después
+implementamos por tandas. Excepción: los arreglos triviales y sin riesgo (un aria-label
+faltante, un alt vacío) los podés hacer sobre la marcha y listarlos aparte.
+
+────────────────────────────────────────
+1) ACCESIBILIDAD — contra WCAG 2.2 nivel AA
+   - CONTRASTE: 4.5:1 texto normal, 3:1 texto grande y elementos de interfaz. Sospechosos
+     conocidos: las opacidades sobre navy que se repiten en todo el sistema
+     (text-navy-light/60, /70), los textos de 11-12px en etiquetas y ayudas, los placeholders,
+     y el texto sobre los fondos coral y teal. Listá cada combinación que falle con su ratio
+     real y dónde se usa.
+   - TECLADO: se puede completar sin mouse los flujos críticos (login, matrícula, check-in,
+     revisión de pagos). Foco visible siempre, orden de tabulación lógico, sin trampas de
+     foco en modales, Escape cierra.
+   - LECTORES DE PANTALLA: labels asociados a cada input, mensajes de error anunciados
+     (aria-live), botones de solo ícono con aria-label, tablas con encabezados correctos,
+     imágenes con alt útil (o alt="" si son decorativas), landmarks y jerarquía de headings
+     sin saltos.
+   - ÁREA TÁCTIL: mínimo 44x44 px en móvil. Revisá los íconos de acción en tablas y los
+     checkboxes.
+   - FORMULARIOS: el error dice QUÉ pasó y CÓMO arreglarlo, está junto al campo, y no
+     depende solo del color para comunicarse.
+   Usá una herramienta automatizada (axe-core / Lighthouse) sobre las pantallas principales
+   como primer barrido, PERO no te quedes ahí: lo automatizado detecta ~30% de los
+   problemas. Revisá a mano los flujos críticos.
+
+2) LEGIBILIDAD
+   - Piso de tamaño: nada por debajo de 12px, y 14-16px para texto que se lee de corrido.
+     Hoy hay 11px en etiquetas.
+   - Longitud de línea en textos largos (ayuda, términos, descripciones): 50-75 caracteres.
+   - Jerarquía visual clara: que se distinga de un vistazo título, dato y ayuda. Hoy varias
+     pantallas resuelven la jerarquía solo con opacidad, que es justo lo que falla en
+     contraste.
+   - LENGUAJE: buscá jerga técnica filtrada a la interfaz (nombres de estados del código,
+     "409", "enrollment", "payload"). El miembro debe leer palabras de Theos, no del
+     esquema. Listá los textos a reescribir.
+
+3) UX / UI
+   - CONSISTENCIA: mismo componente para el mismo propósito (botones, modales, tablas,
+     estados vacíos, confirmaciones). Listá las divergencias — hay pantallas construidas en
+     momentos distintos.
+   - ANCHOS DE PÁGINA: ya se detectó que conviven max-w-2xl, 3xl, 5xl, 6xl, prose y anchos
+     arbitrarios. Incluí la convención de tres anchos (lectura / formulario / trabajo) como
+     hallazgo con su propuesta.
+   - ESTADOS: cada pantalla debe resolver cargando, vacío y error. Un estado vacío que solo
+     dice "sin resultados" es una oportunidad perdida: debe decir qué hacer.
+   - MÓVIL: recorré los flujos del miembro en 390px de ancho (matrícula, /mis-pagos, perfil,
+     eventos, /ayuda). Tablas que se desbordan, botones fuera de pantalla, modales que no
+     dejan ver el botón de confirmar.
+   - FRICCIÓN: contá los pasos de los tres flujos más usados (matricularse, hacer check-in,
+     revisar un pago) y señalá pasos eliminables.
+   - CONFIRMACIONES DESTRUCTIVAS: que las acciones irreversibles (cerrar un grupo, aprobar
+     un pago, borrar) pidan confirmación y digan qué va a pasar exactamente.
+
+4) PROPUESTA SISTÉMICA, NO PARCHES
+   Las correcciones de contraste y tamaño deben resolverse en el design system (tokens de
+   color y escala tipográfica), no pantalla por pantalla, y quedar documentadas para que lo
+   nuevo no repita el problema. Si una corrección exige tocar 40 archivos, proponé el
+   reemplazo global.
+   NO cambies la identidad visual: mismos colores de marca (navy #161440, coral #EF5554,
+   teal #70BDC2), solo sus usos, niveles y tamaños.
+
+5) PRIORIZACIÓN sugerida en el informe: primero lo que afecta al MIEMBRO en celular
+   (son 23 000 personas y es su única vía), después las pantallas de uso diario del staff,
+   al final lo administrativo de uso esporádico.
+
+Cerrá el informe con las 3 acciones de mayor impacto por esfuerzo, y con 3 pantallas de
+antes/después para que yo apruebe el criterio antes de aplicarlo en masa.
+```
+
 ### [ ] FRM-4 · Llenar un formulario o una solicitud a nombre de otra persona
 ```
 Que comunicaciones (y quien gestione formularios) pueda llenar un formulario A NOMBRE DE
