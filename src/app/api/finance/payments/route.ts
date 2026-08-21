@@ -61,7 +61,9 @@ export async function GET(req: NextRequest) {
     const method = searchParams.get('method')
     const status = searchParams.get('status')
     const currency = searchParams.get('currency')
-    const hasFilter = !!(search || entity || method || status || currency)
+    // FIN-4: ?in_plan=1 → solo tractos de arreglos de pago.
+    const inPlan = searchParams.get('in_plan') === '1'
+    const hasFilter = !!(search || entity || method || status || currency || inPlan)
 
     // Sin paginación ni filtros: array completo (back-compat: dashboard, etc.).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -74,6 +76,7 @@ export async function GET(req: NextRequest) {
       method: method ?? undefined,
       status: status ?? undefined,
       currency: currency === 'CRC' || currency === 'USD' || currency === 'EUR' ? currency : undefined,
+      inPaymentPlan: inPlan || undefined,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     })

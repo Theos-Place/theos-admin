@@ -109,6 +109,8 @@ export type PaymentFilters = {
   status?: string
   /** INT-3: filtro por moneda. Los históricos no tienen valor: coinciden con CRC. */
   currency?: string
+  /** FIN-4: solo los pagos que son TRACTOS de un arreglo de pago. */
+  inPaymentPlan?: boolean
   page?: number
   pageSize?: number
 }
@@ -128,6 +130,8 @@ export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ r
     .range((page - 1) * pageSize, page * pageSize - 1)
 
   if (filters.entity_type) q = q.eq('entity_type', filters.entity_type)
+  // FIN-4: "en arreglo de pago" = el pago es un tracto (tiene plan).
+  if (filters.inPaymentPlan) q = q.not('payment_plan_id', 'is', null)
   if (filters.method) q = q.eq('payment_method', filters.method)
   if (filters.status) q = q.eq('status', filters.status)
   // Los pagos viejos pueden tener currency NULL: 'CRC' también los trae.

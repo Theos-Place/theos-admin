@@ -113,3 +113,24 @@ export function overdueBlockMessage(
   return `${sujeto} ${n} tracto${n > 1 ? 's' : ''} vencido${n > 1 ? 's' : ''} por ${totales} `
     + `(el más antiguo venció el ${formatDate(masViejo)}). ${accion} el arreglo de pago antes de continuar.`
 }
+
+/**
+ * Resumen para el aviso INTERNO a finanzas: cuánta gente y cuántos tractos hay
+ * vencidos, y por cuánto. Igual que en el mensaje del bloqueo, los montos van
+ * por moneda — un total mezclando ₡ y € sería mentira.
+ */
+export function financeOverdueSummary(
+  items: Array<{ member_id: string; amount: number; currency: string }>,
+): { members: number; installments: number; totals: string } {
+  const porMoneda = new Map<string, number>()
+  const miembros = new Set<string>()
+  for (const i of items) {
+    porMoneda.set(i.currency, (porMoneda.get(i.currency) ?? 0) + i.amount)
+    miembros.add(i.member_id)
+  }
+  return {
+    members: miembros.size,
+    installments: items.length,
+    totals: [...porMoneda.entries()].map(([cur, amount]) => formatMoney(amount, cur)).join(' + '),
+  }
+}

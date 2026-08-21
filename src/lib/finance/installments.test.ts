@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   splitAmount, monthlyDueDates, planInstallments, isOverdue, overdueBlockMessage,
+  financeOverdueSummary,
 } from './installments'
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
@@ -150,5 +151,35 @@ describe('overdueBlockMessage', () => {
       { amount: 20, currency: 'EUR', due_date: '2026-08-15' },
     ])
     expect(msg).toContain('+')
+  })
+})
+
+describe('financeOverdueSummary', () => {
+  it('cuenta personas y tractos, y suma el total', () => {
+    const r = financeOverdueSummary([
+      { member_id: 'a', amount: 5000, currency: 'CRC' },
+      { member_id: 'a', amount: 3000, currency: 'CRC' },
+      { member_id: 'b', amount: 2000, currency: 'CRC' },
+    ])
+    // 2 personas (a aparece dos veces), 3 tractos.
+    expect(r.members).toBe(2)
+    expect(r.installments).toBe(3)
+    expect(r.totals).toContain('10')   // 5000+3000+2000 = 10 000
+  })
+
+  it('sin tractos vencidos queda en cero', () => {
+    const r = financeOverdueSummary([])
+    expect(r.members).toBe(0)
+    expect(r.installments).toBe(0)
+    expect(r.totals).toBe('')
+  })
+
+  it('no mezcla monedas en un total único', () => {
+    const r = financeOverdueSummary([
+      { member_id: 'a', amount: 5000, currency: 'CRC' },
+      { member_id: 'b', amount: 20, currency: 'EUR' },
+    ])
+    expect(r.totals).toContain('+')
+    expect(r.members).toBe(2)
   })
 })

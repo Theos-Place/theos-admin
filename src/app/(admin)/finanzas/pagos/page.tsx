@@ -94,6 +94,8 @@ function PagosContent() {
   // INT-3: filtro por moneda. Solo aparece si hay más de una en los totales —
   // mientras todo sea en colones, un chip de moneda sería ruido.
   const [currencyFilter, setCurrencyFilter] = useState<'all' | Currency>('all')
+  // FIN-4: ver solo los tractos de arreglos de pago.
+  const [planFilter, setPlanFilter] = useState<'all' | 'in_plan'>('all')
   // Listado paginado server-side (filtros + búsqueda viajan al servidor).
   const buildUrl = (page: number) => {
     const u = new URLSearchParams()
@@ -102,6 +104,7 @@ function PagosContent() {
     if (methodFilter !== 'all') u.set('method', methodFilter)
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (currencyFilter !== 'all') u.set('currency', currencyFilter)
+    if (planFilter === 'in_plan') u.set('in_plan', '1')
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/finance/payments?${u.toString()}`
@@ -352,6 +355,18 @@ function PagosContent() {
               { key: 'pending', label: 'Pendiente' },
               { key: 'failed', label: 'Fallido' },
               { key: 'refunded', label: 'Devuelto' },
+            ]}
+          />
+
+          {/* FIN-4: los tractos son pagos normales, así que se mezclan con el
+              resto; este chip los aísla para darles seguimiento. */}
+          <FilterChips
+            ariaLabel="Filtrar por arreglo de pago"
+            activeKey={planFilter}
+            onSelect={k => setPlanFilter(k as 'all' | 'in_plan')}
+            chips={[
+              { key: 'all', label: 'Todos los pagos' },
+              { key: 'in_plan', label: 'En arreglo de pago' },
             ]}
           />
         </div>

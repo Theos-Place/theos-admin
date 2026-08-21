@@ -2209,7 +2209,7 @@ Tests: modal con beca del 50% muestra el residual correcto; beca 100% sin compro
 monto declarado distinto genera aviso.
 ```
 
-### [~] FIN-4 · Arreglo de pago en tractos (uso interno de finanzas) — NÚCLEO HECHO 2026-08-21
+### [x] FIN-4 · Arreglo de pago en tractos (uso interno de finanzas) — HECHO 2026-08-21
 Archivos: migración (tabla nueva), `/finanzas/pagos`, `src/lib/supabase/queries/payments.ts`, guard de matrícula/inscripción
 
 **Decisiones tomadas antes de migrar** (el punto pedía proponer el esquema):
@@ -2258,11 +2258,21 @@ Verificado contra la BD real (los 3 tests que pedía el punto): partir un pago d
 suman el total, el tracto vencido bloquea, el futuro al día no bloquea, y cancelar deja los
 tractos pendientes. Typecheck limpio, 995 tests, lint 94/94 sin errores.
 
-**Falta de este punto (2 sub-items del punto 4):**
-- [ ] Filtro "en arreglo de pago" en la página de pagos (necesita param nuevo en
-      `GET /api/finance/payments`).
-- [ ] Notificación interna a finanzas cuando un tracto se vence (extender el cron de
-      `payment-reminders`, que hoy solo notifica al miembro).
+**Punto 4 cerrado (2026-08-21, segunda tanda):**
+- [x] Filtro **"En arreglo de pago"** en la página de pagos: chip nuevo + `?in_plan=1` en
+      `GET /api/finance/payments` (`inPaymentPlan` en `PaymentFilters` → `payment_plan_id NOT
+      NULL`). Los tractos son pagos normales, así que se mezclaban con el resto.
+- [x] **Aviso interno a finanzas de tractos vencidos**, en el cron de `payment-reminders`
+      (`notifyFinanceOverdueInstallments`): consolidado por corrida (cuánta gente, cuántos
+      tractos y por cuánto, sin mezclar monedas), a los roles finanzas/dirección/admin con rol
+      activo en miembro activo, con dedupe diario en hora CR. Best-effort: si falla, el
+      recordatorio al miembro no se cae. Decisión documentada: NO pasa por la preferencia
+      `mensajes_sistema` porque es cola de trabajo del staff, no un mensaje al miembro sobre
+      lo suyo. Hacía falta porque el bloqueo es pasivo — actúa cuando la persona intenta
+      matricularse, así que sin el aviso nadie se enteraba.
+
+Verificado contra la BD real: el filtro aísla exactamente los tractos creados (y todas las
+filas traen `payment_plan_id`), el aviso se genera y la segunda corrida del mismo día dedupea.
 
 ```
 Excepción manejada internamente (NUNCA visible como opción de autoservicio): finanzas puede

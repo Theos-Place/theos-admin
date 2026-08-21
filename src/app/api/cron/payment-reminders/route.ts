@@ -47,8 +47,21 @@ export async function POST(req: NextRequest) {
       [...counts.entries()].map(([memberId, count]) => ({ memberId, count })),
     )
 
+    // FIN-4: además del recordatorio al miembro, aviso INTERNO a finanzas de
+    // los tractos vencidos. El bloqueo por sí solo es pasivo (actúa cuando la
+    // persona intenta matricularse), así que sin esto nadie se enteraba.
+    // Best-effort: si falla, el recordatorio al miembro no se cae.
+    let overdue = { overdue: 0, members: 0, notified: 0, skipped_dup: 0 }
+    try {
+      const { notifyFinanceOverdueInstallments } = await import('@/lib/supabase/queries/payment-plans')
+      const { ymdCR } = await import('@/lib/format')
+      overdue = await notifyFinanceOverdueInstallments(ymdCR())
+    } catch (e) {
+      console.warn('aviso de tractos vencidos a finanzas:', e)
+    }
+
     await pingHealthcheck('HEALTHCHECK_URL_PAYMENT_REMINDERS')
-    return NextResponse.json({ members_with_pending: counts.size, ...result })
+    return NextResponse.json({ members_with_pending: counts.size, ...result, tractos_vencidos: overdue })
   } catch (error) {
     console.error('POST /api/cron/payment-reminders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

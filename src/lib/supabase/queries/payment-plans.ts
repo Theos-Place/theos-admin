@@ -264,3 +264,83 @@ export async function getOverdueInstallments(
     }
   })
 }
+
+/** Roles que reciben el aviso interno de tractos vencidos. */
+export const OVERDUE_NOTIFY_ROLES = ['finanzas', 'direccion', 'admin'] as const
+
+const OVERDUE_NOTIF_TYPE = 'installment_overdue'
+
+/**
+ * Aviso INTERNO a finanzas de los tractos vencidos (FIN-4 punto 4). Lo dispara
+ * el cron de recordatorios: el bloqueo por sí solo es pasivo (actúa cuando la
+ * persona intenta matricularse), así que sin este aviso nadie se enteraba.
+ *
+ * Es un aviso de TRABAJO, no un mensaje al miembro sobre lo suyo, así que no
+ * pasa por la preferencia 'mensajes_sistema' (esa silencia lo propio, no la
+ * cola de trabajo). Dedupea por día en hora CR, igual que los recordatorios.
+ */
+export async function notifyFinanceOverdueInstallments(
+  todayYmd: string,
+): Promise<{ overdue: number; members: number; notified: number; skipped_dup: number }> {
+  const supabase = createAdminClient()
+
+  const { data: vencidos, error } = await supabase
+    .from('payments')
+    .select('id, member_id, amount, currency, due_date')
+    .eq('status', 'pending')
+    .not('payment_plan_id', 'is', null)
+    .not('due_date', 'is', null)
+    .lt('due_date', todayYmd)
+  if (error) throw error
+
+  const items = ((vencidos ?? []) as Array<{ member_id: string | null; amount: number; currency: string | null }>)
+    .filter(r => !!r.member_id)
+    .map(r => ({ member_id: r.member_id as string, amount: Number(r.amount), currency: r.currency ?? 'CRC' }))
+
+  if (items.length === 0) return { overdue: 0, members: 0, notified: 0, skipped_dup: 0 }
+
+  const { financeOverdueSummary } = await import('@/lib/finance/installments')
+  const resumen = financeOverdueSummary(items)
+
+  // Destinatarios: rol activo EN miembro activo (mismo criterio que los avisos
+  // de estudios, para no notificar a alguien dado de baja).
+  const { data: roleRows } = await supabase
+    .from('member_roles')
+    .select('member_id, role, is_active, member:members!member_roles_member_id_fkey(is_active)')
+    .in('role', OVERDUE_NOTIFY_ROLES as unknown as string[])
+    .eq('is_active', true)
+  const recipients = [...new Set(
+    ((roleRows ?? []) as Array<{ member_id: string; member: { is_active: boolean } | null }>)
+      .filter(r => r.member?.is_active === true)
+      .map(r => r.member_id),
+  )]
+  if (recipients.length === 0) return { overdue: items.length, members: resumen.members, notified: 0, skipped_dup: 0 }
+
+  // Dedupe diario (hora CR: UTC-6 fijo, sin DST).
+  const { data: yaHoy } = await supabase
+    .from('internal_notifications')
+    .select('recipient_member_id')
+    .eq('type', OVERDUE_NOTIF_TYPE)
+    .gte('created_at', `${todayYmd}T00:00:00-06:00`)
+    .in('recipient_member_id', recipients)
+  const notificados = new Set(
+    ((yaHoy ?? []) as Array<{ recipient_member_id: string }>).map(r => r.recipient_member_id),
+  )
+
+  let notified = 0
+  let skipped_dup = 0
+  for (const memberId of recipients) {
+    if (notificados.has(memberId)) { skipped_dup++; continue }
+    const { error: insErr } = await supabase.from('internal_notifications').insert({
+      recipient_member_id: memberId,
+      type: OVERDUE_NOTIF_TYPE,
+      title: resumen.installments === 1 ? 'Hay 1 tracto vencido' : `Hay ${resumen.installments} tractos vencidos`,
+      body: `${resumen.members} persona${resumen.members === 1 ? '' : 's'} con tractos vencidos por ${resumen.totals}. `
+        + 'Mientras estén vencidos no pueden matricularse ni inscribirse a eventos pagos.',
+      link: '/finanzas/pagos?tab=todos',
+    })
+    if (insErr) { console.warn('aviso de tracto vencido:', insErr.message); continue }
+    notified++
+  }
+  return { overdue: items.length, members: resumen.members, notified, skipped_dup }
+}
