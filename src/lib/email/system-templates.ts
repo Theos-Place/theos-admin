@@ -22,10 +22,12 @@ export type SystemTemplateKey =
   | 'retro_dirigente' | 'retro_dirigente_resumen'
   | 'solicitud_asignada'
   | 'cumpleanos'
+  | 'cierre_pendiente'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */
 const FALLBACK: Record<string, { subject: string; html: string }> = {
+  cierre_pendiente: { subject: 'Te toca cerrar {{nombre_estudio}}', html: '<p>Hola {{nombre}}, tu grupo de {{nombre_estudio}} ({{nombre_grupo}}) termina el {{fecha_fin}}. <a href="{{link_cierre}}">Hacer el cierre</a>.</p>' },
   cumpleanos: { subject: '¡Feliz cumpleaños, {{nombre}}!', html: '<p>Hola {{nombre}},</p><p>Hoy es tu día y queríamos saludarte. <strong>¡Feliz cumpleaños!</strong></p><p>Gracias por servir en Theos Place.</p>' },
   solicitud_asignada: { subject: 'Te asignaron una solicitud', html: '<p>Hola {{nombre}}, te asignaron una solicitud de {{tipo_solicitud}} de {{nombre_solicitante}}. <a href="{{link_solicitud}}">Verla en el sistema</a>.</p>' },
   form_asignado: { subject: 'Tenés un formulario pendiente', html: '<p>Hola {{nombre}}, te asignaron el formulario "{{nombre_form}}". <a href="{{link_form}}">Completarlo</a>.</p>' },
