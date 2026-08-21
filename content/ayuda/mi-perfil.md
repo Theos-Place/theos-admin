@@ -9,7 +9,7 @@ resumen: Dónde ver tus datos, tus estudios y tus pagos, y cómo corregir lo que
 
 # Mi perfil y mis datos
 
-![Los cuatro pasos para revisar y corregir tus datos](/ayuda/infografias/mi-perfil.svg) ![El flujo completo: ver tu perfil y corregir tus datos](/ayuda/tutoriales/perfil/perfil.gif)
+![Los cuatro pasos para revisar y corregir tus datos](/ayuda/infografias/mi-perfil.svg) ![El flujo completo: ver tu perfil, completar tu cédula y corregir tus datos](/ayuda/tutoriales/perfil/perfil.gif)
 
 Tu perfil es tu ficha en Theos Place: tus datos personales, tus estudios (los que llevás y
 los que completaste) y tus pagos, todo en un solo lugar.

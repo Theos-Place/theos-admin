@@ -44,6 +44,9 @@ export const flujo: TutorialFlow = {
   gifAlt: 'El flujo completo: ver tu cobro, pagar y subir el comprobante',
 
   async setup(admin) {
+    // Cédula de prueba de Pablo: sin ella, el banner "Falta tu cédula" sale en
+    // todas las tomas.
+    await admin.from('members').update({ cedula: '9-9999-9004' }).eq('email', PABLO).is('cedula', null)
     const pagoId = await pagoDePablo(admin)
     await admin.from('payments').update({
       status: 'pending', receipt_path: null, review_status: null,

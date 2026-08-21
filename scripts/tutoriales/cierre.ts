@@ -32,6 +32,9 @@ export const flujo: TutorialFlow = {
   // Devolver el caso a su estado inicial: grupo en curso, 3 matriculados,
   // sin recomendaciones ni retro pendiente de la corrida anterior.
   async setup(admin) {
+    // Cédula de prueba de Dora: sin ella, el banner "Falta tu cédula" sale en
+    // todas las tomas.
+    await admin.from('members').update({ cedula: '9-9999-9003' }).eq('email', DORA_EMAIL).is('cedula', null)
     const gid = await grupoId(admin)
     await admin.from('cdeb_recommendations').delete().eq('group_id', gid)
     await admin.from('study_enrollments').delete().eq('group_id', gid)

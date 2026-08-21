@@ -61,6 +61,9 @@ export const flujo: TutorialFlow = {
   // DIS1 exige SCJ completado y el seed no se lo daba a Daniel (lo matriculaba
   // directo por BD, saltándose la elegibilidad).
   async setup(admin) {
+    // Cédula de prueba: sin ella, el banner "Falta tu cédula" sale en todas
+    // las tomas (misma cédula que asegura el tutorial de perfil).
+    await admin.from('members').update({ cedula: '9-9999-9002' }).eq('email', email).is('cedula', null)
     const [memberId, groupId] = await Promise.all([danielId(admin), grupoDis1(admin)])
     const { data: enrs } = await admin
       .from('study_enrollments').select('id').eq('member_id', memberId).eq('group_id', groupId)

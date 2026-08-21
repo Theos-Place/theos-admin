@@ -28,6 +28,9 @@ export const flujo: TutorialFlow = {
   gifAlt: 'El flujo completo: ver los eventos e inscribirte',
 
   async setup(admin) {
+    // Cédula de prueba: sin ella, el banner "Falta tu cédula" sale en todas
+    // las tomas (misma cédula que asegura el tutorial de perfil).
+    await admin.from('members').update({ cedula: '9-9999-9002' }).eq('email', email).is('cedula', null)
     const eventId = await ensureEvento(admin)
     const { data: m } = await admin.from('members').select('id').eq('email', email).maybeSingle()
     await admin.from('event_registrations').delete().eq('event_id', eventId).eq('member_id', (m as { id: string }).id)
