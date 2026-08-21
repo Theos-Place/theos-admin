@@ -13,9 +13,8 @@ const FLUJOS: Record<string, () => Promise<{ flujo: TutorialFlow }>> = {
   'eventos': () => import('./eventos'),
   'mis-pagos': () => import('./mis-pagos'),
   'checkin': () => import('./checkin'),
-  // Pendiente (stub): el flujo formal de reubicación cambió (el atajo es el
-  // WhatsApp de estudios) — definir alcance antes de grabarlo.
-  'reubicacion': () => import('./stubs/06-reubicacion'),
+  'folletos': () => import('./folletos'),
+  'reubicacion': () => import('./reubicacion'),
 }
 
 async function main() {
@@ -26,7 +25,7 @@ async function main() {
   }
   // 'all' corre solo los implementados (los stubs avisan y no cuentan).
   const soloPublicar = process.argv.includes('--publicar')
-  const nombres = arg === 'all' ? ['primera-vez', 'matricula', 'cierre', 'perfil', 'eventos', 'mis-pagos', 'checkin'] : [arg]
+  const nombres = arg === 'all' ? ['primera-vez', 'matricula', 'cierre', 'perfil', 'eventos', 'mis-pagos', 'checkin', 'folletos', 'reubicacion'] : [arg]
   for (const nombre of nombres) {
     const { flujo } = await FLUJOS[nombre]()
     if (soloPublicar) publishFlow(flujo)

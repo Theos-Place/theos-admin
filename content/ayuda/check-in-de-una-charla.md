@@ -10,7 +10,7 @@ resumen: Cómo registrar la asistencia de una charla — elegir el evento del d�
 
 # Check-in de una charla
 
-![Los cinco pasos del check-in y las dos maneras de registrar a alguien](/ayuda/infografias/check-in-de-una-charla.svg) ![El flujo completo: elegir la charla, buscar a la persona y registrarla](/ayuda/tutoriales/checkin/checkin.gif)
+![Los cinco pasos del check-in y las dos maneras de registrar a alguien](/ayuda/infografias/check-in-de-una-charla.svg) ![El flujo completo: registrar a una persona y a una familia con subevento](/ayuda/tutoriales/checkin/checkin.gif)
 
 El check-in es el registro de quién llegó. En las charlas importa doble: la asistencia
 registrada es la que cuenta para los compromisos de matrícula de cada persona y para su
@@ -40,6 +40,11 @@ cuando alguien no anda el teléfono o el QR no lee.
 
 Al elegir a alguien que tiene familia registrada, el sistema ofrece **registrar a varios de
 una vez**: marcás quiénes llegaron y todos quedan con su check-in.
+
+Si el evento tiene **subeventos** (por ejemplo el cuidado de niños), ahí mismo elegís el
+destino de cada quien: el adulto al evento general y el hijo al subevento, en un solo paso.
+Arriba de la pantalla, los chips de destino cambian qué lista y qué contador estás viendo —
+si "no aparece" alguien que acabás de registrar, seguro está en el otro destino.
 
 ## Si es una persona nueva
 

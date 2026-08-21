@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 870" role="img" aria-labelledby="t-ci d-ci" font-family="Arial, Helvetica, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 970" role="img" aria-labelledby="t-ci d-ci" font-family="Arial, Helvetica, sans-serif">
   <title id="t-ci">Check-in de una charla</title>
-  <desc id="d-ci">Los cinco pasos para registrar la asistencia: elegir la charla del día, escanear el QR o buscar por nombre, y confirmar como participante.</desc>
+  <desc id="d-ci">Los cinco pasos para registrar la asistencia: elegir la charla del día, escanear el QR o buscar por nombre, y confirmar como participante. Con familia se registra a varios de una vez, cada quien a su destino.</desc>
 
-  <rect width="720" height="870" fill="#F6F5F2"/>
+  <rect width="720" height="970" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Check-in de una charla</text>
   <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
@@ -41,9 +41,13 @@
     <text x="106" y="654" fill="#5B5975">«Agregar persona nueva» la crea ahí mismo, sin salir del check-in.</text>
     <rect x="48" y="702" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
     <circle cx="82" cy="736" r="10" fill="#EF5554"/>
-    <text x="106" y="732" font-weight="bold" fill="#161440">¿Te equivocaste?</text>
-    <text x="106" y="754" fill="#5B5975">El basurero elimina el check-in y se puede volver a registrar.</text>
+    <text x="106" y="732" font-weight="bold" fill="#161440">¿Viene con familia?</text>
+    <text x="106" y="754" fill="#5B5975">Se registran todos de una vez — el adulto al evento y el hijo al subevento.</text>
+    <rect x="48" y="802" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="836" r="10" fill="#EF5554"/>
+    <text x="106" y="832" font-weight="bold" fill="#161440">¿Te equivocaste?</text>
+    <text x="106" y="854" fill="#5B5975">El basurero elimina el check-in y se puede volver a registrar.</text>
   </g>
 
-  <text x="48" y="830" font-size="13" fill="#8B89A0">La ventana dura hasta 4 horas después del fin; para registros tardíos buscá el evento por nombre.</text>
+  <text x="48" y="930" font-size="13" fill="#8B89A0">La ventana dura hasta 4 horas después del fin; para registros tardíos buscá el evento por nombre.</text>
 </svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 970" role="img" aria-labelledby="t-fo d-fo" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-fo">Un tiquete de folletos</title>
+  <desc id="d-fo">Cómo entra un tiquete a la cola de folletos y cómo avanza por sus cuatro estados: creada, en impresión, enviado o entregado, y cerrada.</desc>
+
+  <rect width="720" height="970" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Un tiquete de folletos</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Cada fila de la cola es una cantidad de folletos por imprimir y entregar.</text>
+
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">Entrá a <tspan font-weight="bold">Estudios → Folletos</tspan></text>
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Los tiquetes entran solos (cierres y preapertura)…</text>
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">…o crealo con <tspan font-weight="bold">Solicitud de folletos manual</tspan></text>
+    <rect x="48" y="382" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="415" r="18" fill="#161440"/>
+    <text x="88" y="422" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="422" fill="#161440">Filtrá por sede, tipo o estado para trabajar la cola</text>
+    <rect x="48" y="460" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="493" r="18" fill="#161440"/>
+    <text x="88" y="500" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+    <text x="122" y="500" fill="#161440">El botón de la fila avanza el tiquete al estado siguiente</text>
+  </g>
+
+  <text x="48" y="582" font-size="20" font-weight="bold" fill="#161440">Los cuatro estados</text>
+  <rect x="48" y="594" width="44" height="4" rx="2" fill="#EF5554"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="606" width="302" height="84" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="640" font-weight="bold" fill="#161440">1 · Creada</text>
+    <text x="76" y="662" fill="#5B5975">Existe y espera impresión.</text>
+    <rect x="370" y="606" width="302" height="84" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="398" y="640" font-weight="bold" fill="#B45309">2 · En impresión</text>
+    <text x="398" y="662" fill="#5B5975">Ya está en la imprenta.</text>
+    <rect x="48" y="702" width="302" height="84" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="736" font-weight="bold" fill="#2C7A7F">3 · Enviado / Entregado</text>
+    <text x="76" y="758" fill="#5B5975">Va hacia la sede o al dirigente.</text>
+    <rect x="370" y="702" width="302" height="84" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="398" y="736" font-weight="bold" fill="#2C7A7F">4 · Cerrada</text>
+    <text x="398" y="758" fill="#5B5975">Trámite terminado.</text>
+  </g>
+
+  <g font-size="14.5">
+    <rect x="48" y="812" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="846" r="10" fill="#EF5554"/>
+    <text x="106" y="842" font-weight="bold" fill="#161440">La fecha estimada es un compromiso.</text>
+    <text x="106" y="864" fill="#5B5975">Cierre del grupo + 2 semanas: es la fecha de entrega para el grupo que arranca.</text>
+  </g>
+
+  <text x="48" y="940" font-size="13" fill="#8B89A0">Solo los niveles con continuación (N1→N2… DIS2→DIS3) generan folleto al cerrar.</text>
+</svg>
