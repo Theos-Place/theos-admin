@@ -34,7 +34,13 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
   if (!grupo?.leader_id) return { sent: 0, skipped: 'grupo sin dirigente' }
 
   // Las evaluaciones del grupo, con su respuesta detallada. Los comentarios
-  // ocultados por la coordinación se excluyen acá y no viajan al correo.
+  // ocultados por la coordinación NO viajan al correo — ni los de las
+  // evaluaciones viejas ni los que vinieron por formulario.
+  //
+  // Ojo: hasta 2026-08-21 el filtro solo cubría el ramo viejo, así que un
+  // comentario ocultado desde el panel igual le llegaba al dirigente si su
+  // respuesta venía del formulario. Era el agujero exacto que la moderación
+  // existe para tapar.
   const { data: evals } = await sb
     .from('leader_evaluations')
     .select('response_id, comments, hidden_at')
@@ -43,6 +49,11 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
   if (!shouldSendReport(filas.length)) return { sent: 0, skipped: 'sin respuestas' }
 
   const responseIds = filas.map(f => f.response_id).filter((x): x is string => !!x)
+  // Las respuestas ocultadas: su NOTA sigue contando en el promedio (esconder un
+  // comentario no borra la calificación), pero sus textos no se muestran.
+  const ocultas = new Set(
+    filas.filter(f => f.hidden_at && f.response_id).map(f => f.response_id as string),
+  )
 
   // Detalle por pregunta desde el formulario.
   let resumenPreguntas: ReturnType<typeof perQuestionSummary> = []
@@ -66,7 +77,7 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
         const lista = porRespuesta.get(r.response_id) ?? []
         lista.push(cerrada)
         porRespuesta.set(r.response_id, lista)
-      } else if (r.field.field_type === 'textarea' && r.value_text?.trim()) {
+      } else if (r.field.field_type === 'textarea' && r.value_text?.trim() && !ocultas.has(r.response_id)) {
         // El primer textarea es sobre el dirigente; el segundo, sobre el folleto.
         if (/folleto/i.test(r.field.label)) abiertosFolleto.push(r.value_text)
         else abiertosDirigente.push(r.value_text)

@@ -7,6 +7,8 @@ import {
   type RespuestaCerrada, type CampoCerrado,
 } from '@/lib/studies/study-survey'
 import { currentSurveyFormId } from '@/lib/email/leader-feedback-notify'
+import { evaluationWindowStatus } from '@/lib/studies/evaluation-window'
+import { ensureEvaluationTicket } from '@/lib/supabase/queries/evaluation-tickets'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type GrupoRef = {
@@ -19,6 +21,8 @@ type GrupoRef = {
   leader_name: string | null
   /** Cuándo la coordinación compartió la retroalimentación con el dirigente. */
   feedback_released_at: string | null
+  /** DIR-5: cuándo se pidió la evaluación. Es el inicio de la ventana. */
+  feedback_requested_at: string | null
 }
 
 /** Datos del grupo que necesita la evaluación (dirigente, estado, nombres). */
@@ -26,7 +30,7 @@ export async function feedbackGroupRef(groupId: string): Promise<GrupoRef | null
   const sb = createAdminClient() as unknown as SupabaseClient
   const { data } = await sb
     .from('study_groups')
-    .select('id, name, status, leader_id, co_leader_id, feedback_released_at, plan:study_plans(name), leader:members!study_groups_leader_id_fkey(first_name, last_name)')
+    .select('id, name, status, leader_id, co_leader_id, feedback_released_at, feedback_requested_at, plan:study_plans(name), leader:members!study_groups_leader_id_fkey(first_name, last_name)')
     .eq('id', groupId)
     .maybeSingle()
   if (!data) return null
@@ -34,6 +38,7 @@ export async function feedbackGroupRef(groupId: string): Promise<GrupoRef | null
     id: string; name: string | null; status: string | null
     leader_id: string | null; co_leader_id: string | null
     feedback_released_at: string | null
+    feedback_requested_at: string | null
     plan: { name: string | null } | null
     leader: { first_name: string; last_name: string } | null
   }
@@ -46,6 +51,7 @@ export async function feedbackGroupRef(groupId: string): Promise<GrupoRef | null
     plan_name: g.plan?.name ?? null,
     leader_name: g.leader ? `${g.leader.first_name} ${g.leader.last_name}`.trim() : null,
     feedback_released_at: g.feedback_released_at,
+    feedback_requested_at: g.feedback_requested_at,
   }
 }
 
@@ -68,6 +74,7 @@ export async function memberCanEvaluate(groupId: string, memberId: string) {
       groupClosed: grupo.status === 'finalizado',
       alreadyAnswered: ((yaResp ?? []) as unknown[]).length > 0,
       isLeader: memberId === grupo.leader_id || memberId === grupo.co_leader_id,
+      windowClosed: evaluationWindowStatus({ requestedAt: grupo.feedback_requested_at }) === 'cerrada',
     }),
   }
 }
@@ -172,6 +179,10 @@ export async function saveSurveyResponse(input: {
     await sb.from('form_responses').delete().eq('id', responseId)
     throw projErr
   }
+
+  // DIR-5: la primera respuesta del grupo abre su tiquete de revisión.
+  // Idempotente y best-effort: que falle no puede tumbar la respuesta.
+  await ensureEvaluationTicket(input.groupId)
 }
 
 /** Guarda la evaluación. El `leader_id` de la tabla apunta a study_leaders, no a
@@ -201,6 +212,8 @@ export async function saveLeaderFeedback(input: {
   })
   // 23505 = el índice único: ya había respondido (carrera con doble clic).
   if (error && (error as { code?: string }).code !== '23505') throw error
+
+  await ensureEvaluationTicket(input.groupId)
 }
 
 /** Las respuestas crudas de un grupo, con su estado de moderación. */

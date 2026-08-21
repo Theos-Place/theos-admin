@@ -2660,7 +2660,7 @@ encuesta ya solicitada y 2 programadas.
 Lo único que se sumó en esta tanda fue de tono, no de mecánica: el correo `retro_dirigente` se
 emparejó con el resto de las plantillas del cierre (migración `20260822120000`).
 
-### [ ] DIR-5 · Página "Evaluaciones": tiquete por grupo, rol nuevo y flujo de revisión
+### [x] DIR-5 · Página "Evaluaciones": tiquete por grupo, rol nuevo y flujo de revisión — HECHO 2026-08-21
 Archivos: página nueva, migración (tiquetes + rol), `src/components/shared/RequestBoard.tsx`, `src/lib/auth/roles.ts`
 Depende de: EST-12 (las evaluaciones tienen que existir). Se integra con EST-13 (el correo al dirigente sale de acá).
 
@@ -2694,6 +2694,30 @@ Tests: gate del rol (403 para direccion y para miembro); estados incluida la esc
 nombres de respondentes visibles solo en la lista de participación, nunca junto a una
 respuesta; envío manual dispara el correo de EST-13 una sola vez.
 ```
+
+**Cómo quedó** (migración `20260822140000_evaluation_tickets.sql`):
+
+- Rol `evaluaciones` en el CHECK (21 roles). `EVALUATION_ROLES` en `roles.ts` es la lista
+  única — la usan la página, el sidebar, el ModuleGuard y los 4 handlers. `direccion`
+  queda afuera, como pedía la ficha.
+- `evaluation_tickets` (UNIQUE por `group_id`) + `evaluation_ticket_status_history`, mismo
+  esquema que finance/study requests. Backfill: los grupos ya compartidos entraron como
+  resueltos, no a la cola.
+- `RequestBoard` ganó dos props opcionales, `allowEscalate` y `closeBlockedReason`.
+  Estudios y finanzas no cambian de comportamiento.
+- **La ventana NO salió de `forms.starts_at/ends_at`**, aunque la ficha lo sugería: la
+  encuesta es UN formulario compartido por todos los grupos, así que una ventana ahí los
+  cerraría todos a la vez. Es por grupo, 14 días desde `feedback_requested_at`
+  (`src/lib/studies/evaluation-window.ts`), y se valida dentro de `canEvaluate`, así que
+  vale igual para el GET que decide qué ve el estudiante y para el POST.
+- La participación vive en su propio endpoint, aparte del compilado: nombres y respuestas
+  nunca viajan en el mismo payload.
+
+**Bug arreglado de paso**: `leader-feedback-report-send.ts` filtraba los comentarios
+ocultados solo en el ramo de evaluaciones viejas. Un comentario que la coordinación había
+ocultado igual le llegaba al dirigente si la respuesta venía por formulario — o sea, el
+agujero exacto que la moderación existe para tapar. Ahora se excluyen sus textos y su nota
+sigue contando en el promedio.
 
 ### [ ] DIR-6 · Estados administrativos del dirigente: "en pausa" y "en revisión"
 Archivos: `src/app/api/studies/leaders/schema.ts` (`availability_status`), `/estudios/dirigentes`, migración si hace falta CHECK

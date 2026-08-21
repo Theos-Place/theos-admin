@@ -21,6 +21,7 @@ export type RoleId =
   | 'becas'
   | 'editor_grupos_estudio'
   | 'forms'
+  | 'evaluaciones'
 
 export type Permission = {
   module: string

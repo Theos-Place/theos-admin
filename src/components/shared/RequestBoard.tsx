@@ -12,7 +12,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
-  Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, History, Search, UserPlus,
+  Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, ArrowUp, History, Search, UserPlus,
 } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
@@ -21,7 +21,10 @@ import { RequestTabs } from '@/components/shared/RequestTabs'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateNumeric, getInitials } from '@/lib/format'
 
-export type RequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
+// 'escalated' lo usa hoy solo el tablero de evaluaciones (DIR-5) y aparece
+// únicamente si el consumidor pasa `allowEscalate`. Estudios y finanzas no lo
+// tienen en el CHECK de su tabla, así que para ellos no existe.
+export type RequestStatus = 'open' | 'in_review' | 'escalated' | 'resolved' | 'rejected'
 
 export type BaseRequest = {
   id: string
@@ -47,6 +50,7 @@ export type BaseRequest = {
 export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: string }> = {
   open:      { label: 'Abierta',     cls: 'bg-coral/10 text-coral' },
   in_review: { label: 'En revisión', cls: 'bg-[rgba(233,185,73,0.15)] text-[#A8821F]' },
+  escalated: { label: 'Escalada',    cls: 'bg-[rgba(155,127,212,0.18)] text-[#6B4FA0]' },
   resolved:  { label: 'Resuelta',    cls: 'bg-success/12 text-success' },
   rejected:  { label: 'Rechazada',   cls: 'bg-surface-low text-navy-light/80' },
 }
@@ -59,6 +63,21 @@ const STATUS_FILTERS: { key: RequestStatus | 'all'; label: string }[] = [
   { key: 'rejected', label: 'Rechazadas' },
   { key: 'all', label: 'Todas' },
 ]
+
+/** Los filtros del tablero. "Escaladas" solo aparece donde el estado existe:
+ *  va después de "En revisión" porque es la continuación de ese camino. */
+function statusFiltersFor(allowEscalate?: boolean): { key: RequestStatus | 'all'; label: string }[] {
+  if (!allowEscalate) return STATUS_FILTERS
+  const i = STATUS_FILTERS.findIndex(f => f.key === 'in_review') + 1
+  return [
+    ...STATUS_FILTERS.slice(0, i),
+    { key: 'escalated' as const, label: 'Escaladas' },
+    ...STATUS_FILTERS.slice(i),
+  ]
+}
+
+/** Estados en los que la solicitud sigue pidiendo trabajo. */
+const ACTIVE_STATUSES: RequestStatus[] = ['open', 'in_review', 'escalated']
 
 function statusLabel(s: string | null): string {
   return s ? (REQUEST_STATUS_BADGE[s as RequestStatus]?.label ?? s) : '—'
@@ -85,10 +104,18 @@ type Props<R extends BaseRequest> = {
   readOnly?: boolean
   /** Habilita "Asignar a un coordinador": URL que lista los asignables. */
   assigneesUrl?: string
+  /** DIR-5: habilita el estado `escalated` — botón "Escalar" y su filtro. Solo
+   *  para tableros cuya tabla lo acepta en el CHECK de status. */
+  allowEscalate?: boolean
+  /** Bloquea Resolver/Rechazar con una razón visible (DIR-5: no se puede cerrar
+   *  un tiquete mientras la ventana de respuestas sigue abierta). Devolver null
+   *  = se puede cerrar. */
+  closeBlockedReason?: (r: R) => string | null
 }
 
 export function RequestBoard<R extends BaseRequest>({
   requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl, readOnly,
+  allowEscalate, closeBlockedReason,
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
@@ -193,7 +220,7 @@ export function RequestBoard<R extends BaseRequest>({
   const countByTab = useMemo(() => {
     const m: Record<string, number> = {}
     for (const key of tabKeys.split(',')) m[key] = 0
-    for (const r of requests) if (r.status === 'open' || r.status === 'in_review') m[r.request_type] = (m[r.request_type] ?? 0) + 1
+    for (const r of requests) if (ACTIVE_STATUSES.includes(r.status)) m[r.request_type] = (m[r.request_type] ?? 0) + 1
     return m
   }, [requests, tabKeys])
 
@@ -228,7 +255,7 @@ export function RequestBoard<R extends BaseRequest>({
     }
   }
 
-  async function doAction(req: R, action: 'take' | 'resolve' | 'reject', reviewNotes?: string, extra?: Record<string, unknown> | null) {
+  async function doAction(req: R, action: 'take' | 'escalate' | 'resolve' | 'reject', reviewNotes?: string, extra?: Record<string, unknown> | null) {
     setSubmitting(true)
     try {
       const res = await fetch(`${endpointBase}/${req.id}`, {
@@ -243,6 +270,7 @@ export function RequestBoard<R extends BaseRequest>({
       onUpdated(await res.json())
       toast(
         action === 'take' ? 'Solicitud tomada — quedó a tu nombre'
+        : action === 'escalate' ? 'Solicitud escalada'
         : action === 'resolve' ? 'Solicitud marcada como resuelta'
         : 'Solicitud rechazada',
         'success',
@@ -265,7 +293,7 @@ export function RequestBoard<R extends BaseRequest>({
       {/* Filtros: estado + rango de fechas + orden */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map(f => (
+          {statusFiltersFor(allowEscalate).map(f => (
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
@@ -436,8 +464,8 @@ export function RequestBoard<R extends BaseRequest>({
                               {r.status === 'resolved' && renderResolveHint?.(r)}
 
                               {/* Acciones (ocultas en tableros de solo lectura, EST-6) */}
-                              {!readOnly && (r.status === 'open' || r.status === 'in_review') && (
-                                <div className="flex gap-2 flex-wrap pt-1">
+                              {!readOnly && ACTIVE_STATUSES.includes(r.status) && (
+                                <div className="flex gap-2 flex-wrap pt-1 items-center">
                                   {r.status === 'open' && (
                                     <button
                                       onClick={() => doAction(r, 'take')}
@@ -457,20 +485,37 @@ export function RequestBoard<R extends BaseRequest>({
                                       Asignar
                                     </button>
                                   )}
+                                  {allowEscalate && r.status !== 'escalated' && (
+                                    <button
+                                      onClick={() => doAction(r, 'escalate')}
+                                      disabled={submitting}
+                                      className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(155,127,212,0.18)] px-4 py-1.5 text-[13px] text-[#6B4FA0] font-body font-medium hover:bg-[rgba(155,127,212,0.3)] transition-colors disabled:opacity-60"
+                                    >
+                                      <ArrowUp size={13} />
+                                      Escalar
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => { setActionTarget({ req: r, action: 'resolve' }); setNotes(''); setResolveExtra(null) }}
-                                    disabled={submitting}
+                                    disabled={submitting || !!closeBlockedReason?.(r)}
                                     className="rounded-full bg-success/12 px-4 py-1.5 text-[13px] text-success font-body font-medium hover:bg-success/20 transition-colors disabled:opacity-60"
                                   >
                                     Resolver
                                   </button>
                                   <button
                                     onClick={() => { setActionTarget({ req: r, action: 'reject' }); setNotes('') }}
-                                    disabled={submitting}
+                                    disabled={submitting || !!closeBlockedReason?.(r)}
                                     className="rounded-full bg-coral/10 px-4 py-1.5 text-[13px] text-coral font-body font-medium hover:bg-coral/20 transition-colors disabled:opacity-60"
                                   >
                                     Rechazar
                                   </button>
+                                  {/* Por qué no se puede cerrar todavía: un botón
+                                      deshabilitado sin explicación es una pared. */}
+                                  {closeBlockedReason?.(r) && (
+                                    <p className="text-[13px] text-navy-light/80 font-body">
+                                      {closeBlockedReason(r)}
+                                    </p>
+                                  )}
                                 </div>
                               )}
                             </div>

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { AppShell } from '@/components/layout/AppShell'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
-import { isStudyGroupsOnly } from '@/lib/auth/roles'
+import { isStudyGroupsOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
 import { studyGroupsOnlyAllows } from '@/lib/auth/studies-scope'
 import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 
@@ -127,6 +127,14 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // bíblicos (sin rol): la pantalla y la API le muestran solo lo que le
   // asignaron. Espejo de requestQueueScope.
   if (pathname === '/estudios/solicitudes' && user.in_study_committee) return <>{children}</>
+  // Excepción (DIR-5): la cola de evaluaciones se gatea por ROL, no por módulo.
+  // El rol acotado 'evaluaciones' no tiene el módulo estudios y aun así entra;
+  // 'direccion' sí lo tiene y NO entra. La propia página repite el chequeo.
+  if (pathname === '/estudios/evaluaciones') {
+    return (user.roles ?? []).some(r => (EVALUATION_ROLES as string[]).includes(r))
+      ? <>{children}</>
+      : <AccessDenied />
+  }
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El rol acotado de grupos (editor_grupos_estudio) tiene el módulo estudios
   // con alcance 'all' pero SOLO para grupos: nada de resumen, plan, bloques,

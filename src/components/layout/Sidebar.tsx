@@ -36,6 +36,7 @@ import {
   Shield,
   Wrench,
   CalendarRange,
+  ClipboardCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -96,7 +97,7 @@ interface SidebarProps {
 
 // Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
 // solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
-import { ROLES, isStudyGroupsOnly } from '@/lib/auth/roles'
+import { ROLES, isStudyGroupsOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
 import { formsNavPlacement } from '@/lib/auth/forms-scope'
 import type { RoleId } from '@/types/auth'
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
@@ -177,6 +178,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         ...(user?.in_study_committee
           ? [{ href: '/estudios/solicitudes', label: 'Solicitudes', icon: Inbox, badge: openRequests }] : []),
       ]
+  // DIR-5: la cola de evaluaciones vive dentro de Estudios, pero se gatea por
+  // ROL y no por el módulo — el criterio es el mismo de la página y del API
+  // (EVALUATION_ROLES), donde coordinador_dirigentes entra sin tener el permiso
+  // 'evaluaciones' y 'direccion' no entra aunque sí tenga el módulo estudios.
+  if (userRoles.some(r => (EVALUATION_ROLES as string[]).includes(r))) {
+    estudiosSub.push({ href: '/estudios/evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck })
+  }
+
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
     // solas NO destapan donaciones/devoluciones/reportes/solicitudes).

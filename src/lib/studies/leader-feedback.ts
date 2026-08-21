@@ -5,6 +5,7 @@
 // ANONIMATO: la respuesta guarda member_id, pero SOLO para que nadie responda
 // dos veces. Al dirigente se le muestra el promedio y los comentarios sin
 // nombres. Es la única forma de que los comentarios sirvan de algo.
+import { EVALUATION_WINDOW_CLOSED_MESSAGE } from './evaluation-window'
 
 export const SCORE_MIN = 1
 export const SCORE_MAX = 5
@@ -45,6 +46,9 @@ export function canEvaluate(input: {
   alreadyAnswered: boolean
   /** Es el propio dirigente o co-dirigente del grupo. */
   isLeader: boolean
+  /** DIR-5: la ventana de dos semanas ya venció. Las respuestas tardías se
+   *  rechazan para que un compilado ya revisado no cambie después. */
+  windowClosed?: boolean
 }): { allowed: true } | { allowed: false; reason: string } {
   if (input.isLeader) {
     return { allowed: false, reason: 'No podés evaluarte a vos mismo.' }
@@ -57,6 +61,11 @@ export function canEvaluate(input: {
   }
   if (input.alreadyAnswered) {
     return { allowed: false, reason: 'Ya enviaste tu evaluación de este grupo. ¡Gracias!' }
+  }
+  // Va de última entre las que dependen de la persona: si igual no le tocaba,
+  // "ya cerró" sería una explicación equivocada.
+  if (input.windowClosed) {
+    return { allowed: false, reason: EVALUATION_WINDOW_CLOSED_MESSAGE }
   }
   return { allowed: true }
 }

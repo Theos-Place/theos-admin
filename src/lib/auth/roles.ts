@@ -15,6 +15,14 @@ export const STUDY_ADMIN_ROLES: RoleId[] = [
  *  Reutilizar en los guards de UI y de API de grupos (crear/editar/eliminar). */
 export const GROUP_ADMIN_ROLES: RoleId[] = [...STUDY_ADMIN_ROLES, 'editor_grupos_estudio']
 
+/** DIR-5 · Quiénes entran a la cola de evaluaciones del dirigente.
+ *
+ *  Lista corta y a propósito: 'direccion' NO está, aunque sí esté en
+ *  STUDY_ADMIN_ROLES. La retro de un dirigente es material sensible y quién la
+ *  ve se decide explícito, no se hereda por ser el rol más alto de estudios.
+ *  Tampoco 'coordinador_estudios': el dueño de este proceso es dirigentes. */
+export const EVALUATION_ROLES: RoleId[] = ['evaluaciones', 'coordinador_dirigentes', 'admin']
+
 /**
  * ¿Estos roles alcanzan SOLO la sección de grupos dentro de estudios?
  * El rol 'editor_grupos_estudio' tiene el módulo `estudios` con alcance 'all'
@@ -213,6 +221,16 @@ export const ROLES: Role[] = [
     // detrás) sigue siendo de comunicaciones/staff/dirección/admin.
     permissions: [
       { module: 'formularios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
+    ],
+  },
+  {
+    id: 'evaluaciones',
+    name: 'Evaluaciones de dirigentes',
+    description: 'Revisar el compilado de las evaluaciones y compartirlo con el dirigente',
+    color: '#7FA8D4',
+    // Rol acotado: solo la cola de evaluaciones. No abre el resto de estudios.
+    permissions: [
+      { module: 'evaluaciones', actions: ['view', 'edit'], scope: 'all' },
     ],
   },
   {

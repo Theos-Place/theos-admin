@@ -59,6 +59,27 @@ describe('quién puede evaluar', () => {
     const r = canEvaluate({ ...base, alreadyAnswered: true })
     expect(r.allowed === false && r.reason).toMatch(/ya enviaste/i)
   })
+
+  // DIR-5: pasadas las dos semanas se cierra, para que un compilado ya revisado
+  // no cambie después.
+  it('tarde, no: la ventana de respuestas ya cerró', () => {
+    const r = canEvaluate({ ...base, windowClosed: true })
+    expect(r.allowed).toBe(false)
+    expect(r.allowed === false && r.reason).toMatch(/ya cerró/i)
+  })
+
+  it('la ventana abierta no estorba', () => {
+    expect(canEvaluate({ ...base, windowClosed: false }).allowed).toBe(true)
+  })
+
+  // El orden importa: a quien igual no le tocaba, "ya cerró" le explicaría mal
+  // por qué no puede.
+  it('la razón de fondo gana sobre la ventana', () => {
+    const r = canEvaluate({ ...base, isLeader: true, windowClosed: true })
+    expect(r.allowed === false && r.reason).toMatch(/vos mismo/i)
+    const r2 = canEvaluate({ ...base, alreadyAnswered: true, windowClosed: true })
+    expect(r2.allowed === false && r2.reason).toMatch(/ya enviaste/i)
+  })
 })
 
 describe('resumen', () => {
