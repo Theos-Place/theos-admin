@@ -19,9 +19,15 @@ export async function GET(
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
     // Sin permiso de padrón, solo la familia propia (id propio o de un familiar).
+    // Excepción: quien registra asistencia (eventos:edit, p. ej. encargado_eventos)
+    // necesita la familia de cualquier miembro para el check-in en familia — no
+    // tiene el módulo miembros, igual que el caso de /lookup (2026-08-04).
     if (!(await canViewMemberProfile(auth.ctx, id))) {
       const mod = await requireModuleView('miembros', { beyondOwn: true })
-      if (mod.res) return mod.res
+      if (mod.res) {
+        const checkin = await requireModuleView('eventos', { action: 'edit' })
+        if (checkin.res) return mod.res
+      }
     }
     return NextResponse.json(await getMemberFamily(id))
   } catch (error) {
