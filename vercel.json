@@ -33,6 +33,7 @@
       "path": "/api/cron/report-snapshots",
       "schedule": "0 6 * * *"
     },
+    { "path": "/api/cron/birthday-greetings", "schedule": "0 12 * * *" },
     {
       "path": "/api/cron/event-surveys",
       "schedule": "0 17 * * *"

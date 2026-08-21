@@ -2518,8 +2518,46 @@ COM-2 (link al form + bloque de primera vez).
 Tests: prellenado; condicionales de disponibilidad; responder NO cambia availability_status.
 ```
 
-### [ ] DIR-2 · Correos de cumpleaños automáticos a servidores y dirigentes
+### [x] DIR-2 · Correos de cumpleaños automáticos a servidores y dirigentes — HECHO 2026-08-21
 Archivos: cron nuevo `/api/cron/birthday-greetings`, `vercel.json`, `message_templates`
+
+Audiencia real medida antes de construir: **677** personas (dirigentes activos + servidores
+activos, deduplicados — un miembro tiene una fila de `volunteers` por puesto), de las cuales
+**652** tienen fecha de nacimiento y correo. El día más cargado del año tiene 6 cumpleaños.
+
+Cron diario `0 12 * * *` UTC = **6:00am CR** (hueco libre; los demás arrancan 12:30 UTC).
+Patrón idéntico a los existentes: `CRON_SECRET` o sesión, `pingHealthcheck`, `export const GET = POST`.
+
+- Módulo puro `lib/notifications/birthday-rules.ts` con **12 tests**.
+- Migración `20260822100000` (aplicada): tabla `birthday_greetings` con **UNIQUE (member_id,
+  year)** y la plantilla `cumpleanos`.
+- **Dedupe anual por la BD, no por consulta.** La fila se inserta ANTES de enviar: si dos
+  corridas coinciden, la segunda choca con el UNIQUE y no saluda dos veces. Si el envío falla,
+  se libera la reserva para reintentar mañana. Verificado contra la BD: el segundo insert del
+  mismo año da 23505 y el del año siguiente pasa.
+- **29 de febrero**: en años no bisiestos se felicita el 28 (`birthdayMatchDays` devuelve los dos
+  días). **El caso es real**: hay 8 miembros nacidos el 29/2 en el padrón (0 hoy en la
+  audiencia, pero basta que uno entre a servir).
+- **Rebotados y quejas quedan fuera** — `sendSystemEmail` no filtra nada de eso por su cuenta,
+  así que el cron lo hace: seguir escribiéndole a una dirección que rebotó quema la reputación
+  del dominio.
+- Respeta la preferencia `mensajes_sistema` (un saludo es lo más silenciable que hay).
+- Plantilla **editable** (`is_system = false`, como pedía el punto) con fallback en código.
+- **BONUS**: el día 1 de cada mes, notificación interna a coordinación de dirigentes/estudios
+  con los dirigentes que cumplen ese mes, ordenados por día.
+
+**Ojo con el límite diario de correos:** `sendSystemEmail` NO pasa por la cola de broadcasts, así
+que no consume ni respeta `EMAIL_DAILY_LIMIT` — ese techo solo aplica a los envíos masivos. Como
+protección propia, el cron tiene `MAX_GREETINGS_PER_RUN = 100`: con ~2 saludos por día es
+holgadísimo, y frena un disparo accidental (una fecha mal migrada que ponga a medio padrón el
+mismo día).
+
+Un test del repo (`health.test.ts`) exigía documentar la variable nueva en `.env.example` —
+buen guardarraíl, agregada.
+
+Typecheck limpio, **1044 tests**, lint 94/94.
+
+**Falta configurar (vos):** `HEALTHCHECK_URL_BIRTHDAYS` en Vercel, como los otros crons.
 
 ```
 Cron DIARIO (patrón exacto de los existentes: CRON_SECRET, healthcheck, horario UTC
