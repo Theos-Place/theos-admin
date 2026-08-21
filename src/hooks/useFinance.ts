@@ -53,7 +53,12 @@ export function useFinance(...slices: FinanceSlice[]) {
         const res = await fetch(ENDPOINT[slice])
         if (!res.ok) throw new Error('Error cargando finanzas')
         const json = await res.json()
-        const rows: unknown[] = Array.isArray(json) ? json : (json.donations ?? [])
+        // Algunos endpoints devuelven el array pelado y otros lo envuelven con
+        // metadata (donations con su total; refunds con can_resolve desde
+        // FIN-6). La clave del sobre coincide con el nombre del slice.
+        const rows: unknown[] = Array.isArray(json)
+          ? json
+          : (json[slice] ?? json.donations ?? [])
         cache.set(slice, { data: rows, ts: Date.now() })
         return [slice, rows]
       }))

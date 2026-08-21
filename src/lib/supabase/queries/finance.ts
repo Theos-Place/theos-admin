@@ -61,6 +61,11 @@ export type DbRefund = {
   requested_at: string
   processed_at: string | null
   processed_by: string | null
+  /** FIN-6: tipo derivado del pago original y sus referencias, para filtrar. */
+  kind: string | null
+  plan_id: string | null
+  event_id: string | null
+  plan: { name: string | null } | { name: string | null }[] | null
 }
 
 export type DbImportBatch = {
@@ -284,17 +289,44 @@ export async function getDonationStats(): Promise<DonationStats> {
   }
 }
 
-export async function getRefunds(): Promise<DbRefund[]> {
+/** FIN-6: filtros de la cola de devoluciones y ALCANCE por responsable.
+ *  `onlyEventIds` acota a las devoluciones de esos eventos (encargado de
+ *  evento); `onlyStudyKinds` deja solo las que salen de un plan (coordinación
+ *  de estudios). Sin ninguno de los dos, se ve todo (finanzas). */
+export type RefundFilters = {
+  kind?: string
+  planId?: string
+  status?: RefundStatus
+  onlyEventIds?: string[]
+  onlyStudyKinds?: boolean
+}
+
+export async function getRefunds(filters: RefundFilters = {}): Promise<DbRefund[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase
+  let q = supabase
     .from('refunds')
     .select(`
       id, payment_id, member_id, amount, currency, method, status, reason, sinpe_pending, notes,
-      requested_at, processed_at, processed_by,
+      requested_at, processed_at, processed_by, kind, plan_id, event_id,
       member:members(first_name, last_name),
+      plan:study_plans!refunds_plan_id_fkey(name),
       payment:payments(event:events(title), study_group:study_groups(name))
     `)
     .order('requested_at', { ascending: false })
+
+  if (filters.kind) q = q.eq('kind', filters.kind)
+  if (filters.planId) q = q.eq('plan_id', filters.planId)
+  if (filters.status) q = q.eq('status', filters.status)
+  // Alcance del encargado de evento: solo SUS eventos. Con la lista vacía no
+  // ve nada (mejor que ver todo por un array mal armado).
+  if (filters.onlyEventIds) {
+    q = filters.onlyEventIds.length > 0
+      ? q.in('event_id', filters.onlyEventIds)
+      : q.eq('event_id', '00000000-0000-0000-0000-000000000000')
+  }
+  if (filters.onlyStudyKinds) q = q.in('kind', ['estudio', 'campana', 'prematrimonial'])
+
+  const { data, error } = await q
   if (error) throw error
   return (data ?? []) as DbRefund[]
 }
@@ -440,7 +472,68 @@ export async function createRefund(input: RefundWriteInput): Promise<CreateRefun
     p_notes: input.notes ?? undefined,
   })
   if (error) throw error
-  return data as unknown as CreateRefundResult
+  const result = data as unknown as CreateRefundResult
+
+  // FIN-6: el TIPO se deriva del pago y se guarda (con el plan y el evento,
+  // que son lo que permite filtrar después). Va acá y no en el RPC para no
+  // duplicar la regla en SQL: la derivación vive en refund-kind.ts, con tests.
+  // Best-effort: si esto falla la devolución ya existe y kind queda null —
+  // degradado, no roto (la pantalla lo muestra como "Otro").
+  if (result.code === 'ok') {
+    try {
+      await stampRefundKind(result.id, input.payment_id)
+    } catch (e) {
+      console.warn('createRefund: no se pudo derivar el tipo:', e)
+    }
+  }
+  return result
+}
+
+/** Deriva tipo/plan/evento del pago original y los graba en la devolución. */
+async function stampRefundKind(refundId: string, paymentId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: pay } = await supabase
+    .from('payments')
+    .select(`
+      concept, entity_type, event_id, study_group_id,
+      group:study_groups!payments_study_group_id_fkey(plan_id, plan:study_plans(level)),
+      enrollment:study_enrollments!payments_enrollment_id_fkey(
+        plan_id,
+        group:study_groups!study_enrollments_group_id_fkey(plan_id, plan:study_plans(level))
+      )
+    `)
+    .eq('id', paymentId)
+    .maybeSingle()
+  if (!pay) return
+
+  const p = pay as Record<string, unknown>
+  const first = <T>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+
+  // El plan puede venir por el grupo del pago o por el de la matrícula (los
+  // pagos de campañas suelen colgar de la inscripción, sin grupo).
+  const grupoPago = first(p.group as unknown) as { plan_id?: string | null; plan?: unknown } | null
+  const enr = first(p.enrollment as unknown) as { plan_id?: string | null; group?: unknown } | null
+  const grupoEnr = enr ? first(enr.group) as { plan_id?: string | null; plan?: unknown } | null : null
+
+  const planId = grupoPago?.plan_id ?? grupoEnr?.plan_id ?? enr?.plan_id ?? null
+  const planNode = first((grupoPago?.plan ?? grupoEnr?.plan) as unknown) as { level?: string | null } | null
+
+  const { refundKindFromPayment } = await import('@/lib/finance/refund-kind')
+  const kind = refundKindFromPayment({
+    concept: p.concept as string | null,
+    entity_type: p.entity_type as string | null,
+    event_id: p.event_id as string | null,
+    study_group_id: p.study_group_id as string | null,
+    plan_level: planNode?.level ?? null,
+  })
+
+  const { error } = await supabase.from('refunds').update({
+    kind,
+    plan_id: planId,
+    event_id: (p.event_id as string | null) ?? null,
+  }).eq('id', refundId)
+  if (error) throw error
 }
 
 /** Procesa la devolución vía RPC TRANSACCIONAL (migración 116): máquina de

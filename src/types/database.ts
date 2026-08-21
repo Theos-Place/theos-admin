@@ -399,6 +399,7 @@ export type Database = {
           amount: number
           created_at: string | null
           currency: string
+          refund_id: string | null
           donation_date: string
           family_unit_id: string | null
           id: string
@@ -411,6 +412,7 @@ export type Database = {
           amount: number
           created_at?: string | null
           currency?: string
+          refund_id?: string | null
           donation_date: string
           family_unit_id?: string | null
           id?: string
@@ -423,6 +425,7 @@ export type Database = {
           amount?: number
           created_at?: string | null
           currency?: string
+          refund_id?: string | null
           donation_date?: string
           family_unit_id?: string | null
           id?: string
@@ -3278,11 +3281,53 @@ export type Database = {
           },
         ]
       }
+      refund_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          member_id: string | null
+          refund_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          refund_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          refund_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_comments_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refunds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_comments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refunds: {
         Row: {
           amount: number
           created_at: string | null
           currency: string
+          kind: string | null
+          plan_id: string | null
+          event_id: string | null
           id: string
           member_id: string | null
           method: string | null
@@ -3300,6 +3345,9 @@ export type Database = {
           amount: number
           created_at?: string | null
           currency?: string
+          kind?: string | null
+          plan_id?: string | null
+          event_id?: string | null
           id?: string
           member_id?: string | null
           method?: string | null
@@ -3317,6 +3365,9 @@ export type Database = {
           amount?: number
           created_at?: string | null
           currency?: string
+          kind?: string | null
+          plan_id?: string | null
+          event_id?: string | null
           id?: string
           member_id?: string | null
           method?: string | null
@@ -3331,6 +3382,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "refunds_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "refunds_member_id_fkey"
             columns: ["member_id"]

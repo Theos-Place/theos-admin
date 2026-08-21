@@ -2,13 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getRefunds, createRefund, type RefundWriteInput } from '@/lib/supabase/queries/finance'
+import { resolveRefundScope, scopeToRefundFilters } from '@/lib/auth/refunds-scope'
+import type { RefundStatus } from '@/types/finance'
 import { formatCRC } from '@/lib/format'
 
-export async function GET() {
+// FIN-6: la cola ya no es solo de finanzas. El responsable del ORIGEN también
+// la ve, acotada a lo suyo (encargado de evento → sus eventos; coordinación de
+// estudios → las que salen de un plan). Resolver sigue siendo de finanzas: eso
+// lo gatean el PUT y los endpoints de acción, no este GET.
+export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('finanzas')
+    const auth = await requireRoles()
     if (auth.res) return auth.res
-    return NextResponse.json(await getRefunds())
+
+    const { getManagedEventIds } = await import('@/lib/supabase/queries/events')
+    const managedEventIds = auth.ctx.memberId ? await getManagedEventIds(auth.ctx.memberId) : []
+    const scope = resolveRefundScope({ roles: auth.ctx.roles, managedEventIds })
+    if (scope.access === 'none') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    const { searchParams } = req.nextUrl
+    const kind = searchParams.get('kind')
+    const planId = searchParams.get('plan_id')
+    const status = searchParams.get('status')
+
+    const refunds = await getRefunds({
+      ...scopeToRefundFilters(scope),
+      kind: kind ?? undefined,
+      planId: planId && isUuid(planId) ? planId : undefined,
+      status: (status as RefundStatus | null) ?? undefined,
+    })
+    // El cliente necesita saber si puede resolver para no mostrar acciones que
+    // el server va a rechazar con 403.
+    return NextResponse.json({ refunds, can_resolve: scope.canResolve, scope: scope.access })
   } catch (error) {
     console.error('GET /api/finance/refunds:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

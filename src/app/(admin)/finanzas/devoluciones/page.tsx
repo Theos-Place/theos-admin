@@ -3,11 +3,16 @@
 import { useState, useMemo, useEffect } from 'react'
 import { ArrowLeftRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
-import { FinanceGuard } from '@/components/finance/FinanceGuard'
+import { AccessDenied } from '@/components/shared/AccessDenied'
+import { useAuth } from '@/hooks/useAuth'
+import { resolveRefundScope } from '@/lib/auth/refunds-scope'
 import { sumByCurrency } from '@/lib/money'
 import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { type Refund, type RefundStatus } from '@/types/finance'
-import { useFinance } from '@/hooks/useFinance'
+import { toDomainRefund } from '@/lib/finance/adapter'
+import type { DbRefund } from '@/lib/supabase/queries/finance'
+import { refundKindLabel, REFUND_KINDS, kindHasPlan, type RefundKind } from '@/lib/finance/refund-kind'
+import { FilterChips } from '@/components/shared/FilterChips'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate, formatMoney } from '@/lib/format'
 
@@ -17,6 +22,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
     processing: { label: 'En proceso',  color: '#519DA2', bg: 'rgba(81,157,162,0.12)'  },
     completed:  { label: 'Completada',  color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
     rejected:   { label: 'Rechazada',   color: '#EF5554', bg: 'rgba(239,85,84,0.10)'   },
+    convertida_donacion: { label: 'Convertida en donación', color: '#7C5EC2', bg: 'rgba(155,127,212,0.15)' },
   }
   const c = cfg[status]
   return (
@@ -28,10 +34,57 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
 }
 
 export default function DevolucionesPage() {
-  const { refunds: allRefunds, refetch, loading } = useFinance('refunds')
+  const { user, loaded: authLoaded } = useAuth()
+  const scope = resolveRefundScope({
+    roles: user?.roles ?? [],
+    managedEventIds: user?.managed_event_ids ?? [],
+  })
+  // FIN-6: fetch propio en vez de useFinance porque ahora la cola lleva FILTROS
+  // server-side (tipo y plan) y necesita saber si esta persona puede resolver
+  // (finanzas) o solo ver y comentar (responsable del origen).
   const [refunds, setRefunds] = useState<Refund[]>([])
-  useEffect(() => { setRefunds(allRefunds) }, [allRefunds])
+  const [canResolve, setCanResolve] = useState(false)
+  const [kindFilter, setKindFilter] = useState<'all' | RefundKind>('all')
+  const [planFilter, setPlanFilter] = useState<'all' | string>('all')
+  const [reloadKey, setReloadKey] = useState(0)
+  const refetch = () => { setReloadKey(k => k + 1); return Promise.resolve() }
+
+  // `loading` se DERIVA (qué pedimos vs qué ya cargó) en vez de setearse dentro
+  // del efecto: así el estado solo se toca en callbacks y no hay renders en
+  // cascada.
+  const queryKey = `${kindFilter}|${planFilter}|${reloadKey}`
+  const [loadedKey, setLoadedKey] = useState<string | null>(null)
+  const loading = loadedKey !== queryKey
+
+  useEffect(() => {
+    let alive = true
+    const u = new URLSearchParams()
+    if (kindFilter !== 'all') u.set('kind', kindFilter)
+    if (planFilter !== 'all') u.set('plan_id', planFilter)
+    fetch(`/api/finance/refunds?${u.toString()}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(d => {
+        if (!alive) return
+        setRefunds(((d.refunds ?? []) as DbRefund[]).map(toDomainRefund))
+        setCanResolve(!!d.can_resolve)
+      })
+      .catch(() => { if (alive) setRefunds([]) })
+      .finally(() => { if (alive) setLoadedKey(queryKey) })
+    return () => { alive = false }
+  }, [kindFilter, planFilter, queryKey])
+
+  // Planes presentes en la cola: el filtro por plan solo tiene sentido con los
+  // tipos que salen de un plan, y solo con los que realmente hay.
+  const planesEnCola = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const r of refunds) if (r.plan_id && r.plan_name) m.set(r.plan_id, r.plan_name)
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+  }, [refunds])
+
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)
+  // FIN-6 (4): conversión en donación, con confirmación explícita del monto.
+  const [convertTarget, setConvertTarget] = useState<Refund | null>(null)
+  const [converting, setConverting] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<Refund | null>(null)
   const [completionDate, setCompletionDate] = useState('')
   const [completionConf, setCompletionConf] = useState('')
@@ -98,8 +151,44 @@ export default function DevolucionesPage() {
     }
   }
 
+  async function handleConvert() {
+    if (!convertTarget || converting) return
+    const target = convertTarget
+    setConverting(true)
+    try {
+      const res = await fetch(`/api/finance/refunds/${target.id}/convert-to-donation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // El monto confirmado viaja para que el server rechace la conversión si
+        // cambió desde que se abrió la pantalla.
+        body: JSON.stringify({ confirm_amount: target.amount }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo convertir la devolución.')
+      setConvertTarget(null)
+      await refetch()
+      toast(`Convertida en donación: ${formatMoney(target.amount, target.currency)} de ${target.member_name}.`, 'success')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo convertir la devolución.', 'error')
+    } finally {
+      setConverting(false)
+    }
+  }
+
+  // FIN-6: la página ya no es solo de finanzas — también entra el responsable
+  // del origen. El gate real es el 403 del GET; esto es UX.
+  if (!authLoaded) {
+    return (
+      <div className="py-16 text-center font-body">
+        <div className="h-7 w-7 mx-auto mb-3 rounded-full border-2 border-navy-light/20 border-t-coral animate-spin" />
+        <p className="text-sm text-navy-light/80">Cargando…</p>
+      </div>
+    )
+  }
+  if (scope.access === 'none') return <AccessDenied />
+
   return (
-    <FinanceGuard>
+    <>
       <div className="space-y-6">
 
         {/* Header */}
@@ -115,6 +204,39 @@ export default function DevolucionesPage() {
               Gestión de reembolsos y devoluciones
             </p>
           </div>
+        </div>
+
+        {/* FIN-6: filtros por tipo (derivado del pago) y, si el tipo sale de un
+            plan, por plan de estudio. Antes la cola no tenía ningún filtro. */}
+        <div className="space-y-2">
+          <FilterChips
+            ariaLabel="Filtrar por tipo"
+            activeKey={kindFilter}
+            onSelect={k => { setKindFilter(k as 'all' | RefundKind); setPlanFilter('all') }}
+            chips={[
+              { key: 'all', label: 'Todos los tipos' },
+              ...REFUND_KINDS.map(k => ({ key: k, label: refundKindLabel(k) })),
+            ]}
+          />
+          {kindHasPlan(kindFilter) && planesEnCola.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="plan-filter" className="text-[13px] text-navy-light/80 font-body">Estudio:</label>
+              <select
+                id="plan-filter"
+                value={planFilter}
+                onChange={e => setPlanFilter(e.target.value)}
+                className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              >
+                <option value="all">Todos</option>
+                {planesEnCola.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+              </select>
+            </div>
+          )}
+          {!canResolve && (
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Ves las devoluciones de lo que tenés a cargo y podés comentarlas. Resolverlas es de finanzas.
+            </p>
+          )}
         </div>
 
         {/* Stats */}
@@ -183,8 +305,8 @@ export default function DevolucionesPage() {
                       <p className="text-[13px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      {(r.status === 'pending' || r.status === 'processing') && (
-                        <div className="flex items-center gap-2">
+                      {canResolve && (r.status === 'pending' || r.status === 'processing') && (
+                        <div className="flex items-center gap-2 flex-wrap">
                           <button
                             onClick={() => setCompleteTarget(r)}
                             className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
@@ -196,6 +318,13 @@ export default function DevolucionesPage() {
                             className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
                           >
                             Rechazar
+                          </button>
+                          {/* FIN-6 (4): la persona no quiere el reembolso. */}
+                          <button
+                            onClick={() => setConvertTarget(r)}
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(155,127,212,0.35)] text-[#7C5EC2] font-body"
+                          >
+                            Convertir en donación
                           </button>
                         </div>
                       )}
@@ -292,6 +421,49 @@ export default function DevolucionesPage() {
         </Modal>
       )}
 
+      {/* FIN-6 (4): confirmación de la conversión, con el monto a la vista.
+          Contabilidad confirmó la mecánica (2026-08-21). */}
+      {convertTarget && (
+        <Modal onClose={() => !converting && setConvertTarget(null)} titleId="convertir-donacion" width={448}>
+          <div className="p-6 space-y-4">
+            <p id="convertir-donacion" className="text-base font-bold text-navy font-display">
+              Convertir en donación
+            </p>
+            <p className="text-sm text-navy-light/80 font-body">
+              <strong className="text-navy">{convertTarget.member_name}</strong> no quiere el reembolso:
+              el monto queda como donación a su nombre.
+            </p>
+            <div className="rounded-xl border border-outline px-3 py-2.5">
+              <p className="text-[13px] uppercase tracking-wider text-navy-light/80 font-display">Monto</p>
+              <p className="text-2xl font-bold text-navy font-display">
+                {formatMoney(convertTarget.amount, convertTarget.currency)}
+              </p>
+            </div>
+            <ul className="space-y-1 text-[13px] text-navy-light/80 font-body list-disc pl-5">
+              <li>Se crea la donación con la fecha de hoy, ligada a la persona.</li>
+              <li>La devolución queda resuelta como <strong className="text-navy">convertida en donación</strong> (no se borra).</li>
+              <li>El pago original deja de contar como cobrado, para no contar la plata dos veces.</li>
+            </ul>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConvertTarget(null)}
+                disabled={converting}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConvert}
+                disabled={converting}
+                className="flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 font-body bg-[#7C5EC2]"
+              >
+                {converting ? 'Convirtiendo…' : `Convertir ${formatMoney(convertTarget.amount, convertTarget.currency)} en donación`}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Reject modal */}
       {rejectTarget && (
         <Modal onClose={() => setRejectTarget(null)} titleId="rechazar-devolucion" width={448}>
@@ -323,6 +495,6 @@ export default function DevolucionesPage() {
         </Modal>
       )}
 
-    </FinanceGuard>
+    </>
   )
 }

@@ -2357,8 +2357,57 @@ Tests: 50% calcula bien el residual; rechazo manda el correo correcto; beca exis
 pre-cambio se sigue leyendo.
 ```
 
-### [ ] FIN-6 · Devoluciones: tipo, filtros, visibilidad compartida y convertir en donación
+### [x] FIN-6 · Devoluciones: tipo, filtros, visibilidad compartida y convertir en donación — HECHO 2026-08-21
 Archivos: `/finanzas/devoluciones` y solicitudes, `refunds`, RPC `create_refund`, `donations`
+
+Contexto: la tabla `refunds` estaba **vacía** (0 filas), así que el esquema se pudo ajustar sin
+backfill. La pantalla **no tenía ningún filtro** y la visibilidad era puramente por rol global.
+
+Migración `20260821230000` (aplicada y verificada).
+
+**1) TIPO derivado.** `refunds` gana `kind` + `plan_id` + `event_id`, que se llenan solos al
+crear la devolución desde el pago original — nunca se piden a mano. La derivación vive en el
+módulo puro `lib/finance/refund-kind.ts` (**10 tests**) y NO se duplicó en SQL, a propósito:
+es el mismo error de las tres copias que arreglamos en FIN-3.
+- Hallazgo de alcance: la spec pedía los tipos "estudio, evento, **campaña**, **actividad**",
+  pero `payments.concept` solo tiene 4 valores y ninguno es campaña ni actividad. **Campaña sí
+  es derivable** (matrícula cuyo plan tiene `level='campanas'`) y quedó implementada.
+  **"Actividad" no existe en el modelo** — no hay concepto ni entidad que la represente, así
+  que quedó fuera y documentado en el módulo. Si aparece, se agrega ahí y al CHECK.
+
+**2) FILTROS.** Chips por tipo y, cuando el tipo sale de un plan, select de plan de estudio
+(solo con los planes que realmente están en la cola). Van server-side (`kind`, `plan_id`,
+`status` en `getRefunds`), no filtrando en memoria.
+
+**3) VISIBILIDAD COMPARTIDA.** Módulo puro `lib/auth/refunds-scope.ts` (**8 tests**):
+finanzas/dirección/admin ven todo y resuelven; coordinación de estudios ve las que salen de un
+plan; el encargado de un evento ve **solo las de sus eventos** (vía `event_managers`). Los dos
+últimos **ven y comentan, no resuelven** — tabla nueva `refund_comments` con sus endpoints, y
+el PUT de resolver sigue con `requireRoles('finanzas','direccion')`. La página dejó de usar
+`FinanceGuard` (que la cerraba a finanzas) por un guard de alcance; el gate real es el 403 del
+GET.
+
+**4) CONVERTIR EN DONACIÓN.** Contabilidad lo confirmó (2026-08-21, confirmado por el usuario).
+Estado nuevo `convertida_donacion` (resuelta, **no se borra**), se crea la donación con la fecha
+de conversión y `donations.refund_id` como referencia cruzada (columna nueva: donations no tenía
+dónde guardar procedencia). Gateado a finanzas+dirección, con confirmación explícita del monto
+—y el server rechaza si el monto cambió desde que se abrió la pantalla—.
+- **Decisión clave para no duplicar plata:** el pago original pasa a `refunded`/`partial_refund`.
+  Si siguiera `paid`, los totales mostrarían el ingreso del estudio Y la donación por el mismo
+  dinero. Idempotente: índice único en `donations.refund_id`, así que un reintento no crea dos
+  donaciones.
+
+Verificado contra la BD real (los 4 tests que pedía el punto), con pago temporal propio y
+restaurando `is_donor`: el tipo sale `campana` desde el nivel del plan, el filtro por plan
+encuentra la devolución y la excluye con otro plan, la conversión crea la donación y deja el
+pago en `refunded`, y convertir dos veces falla dejando **una sola** donación.
+
+Typecheck limpio, **1032 tests**, lint 94/94 sin errores.
+
+**Nota de alcance:** los filtros se agregaron a la cola de `/finanzas/devoluciones` (que es
+donde vive el tipo). La pantalla de `/finanzas/solicitudes` (tab Devoluciones, sobre
+`finance_requests`) quedó igual: son solicitudes previas, sin devolución creada todavía, así que
+no tienen tipo derivado que filtrar.
 
 ```
 Cuatro mejoras al flujo de devoluciones:

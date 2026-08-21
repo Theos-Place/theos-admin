@@ -2,7 +2,9 @@
 
 export type PaymentMethod = 'card' | 'sinpe' | 'scholarship' | 'cash' | 'comprobante'
 export type PaymentStatus = 'paid' | 'pending' | 'refunded' | 'partial_refund' | 'failed'
-export type RefundStatus = 'pending' | 'processing' | 'completed' | 'rejected'
+// 'convertida_donacion' (FIN-6): la persona no quiso el reembolso y la plata
+// quedó como donación. Es un estado RESUELTO, como completed/rejected.
+export type RefundStatus = 'pending' | 'processing' | 'completed' | 'rejected' | 'convertida_donacion'
 
 export type Payment = {
   id: string
@@ -63,6 +65,13 @@ export type Refund = {
   processed_by: string | null
   sinpe_pending: boolean
   notes: string | null
+  /** FIN-6: tipo derivado del pago original ('estudio'|'campana'|'evento'|…). */
+  kind: string | null
+  /** Plan de estudio del origen (para filtrar por tipo de estudio). */
+  plan_id: string | null
+  plan_name: string | null
+  /** Evento del origen (alcance del encargado del evento). */
+  event_id: string | null
 }
 
 export type ImportBatch = {

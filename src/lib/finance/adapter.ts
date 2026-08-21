@@ -91,6 +91,10 @@ export function toDomainRefund(db: DbRefund): Refund {
     processed_by: db.processed_by,
     sinpe_pending: db.sinpe_pending,
     notes: db.notes,
+    kind: db.kind ?? null,
+    plan_id: db.plan_id ?? null,
+    plan_name: (Array.isArray(db.plan) ? db.plan[0]?.name : db.plan?.name) ?? null,
+    event_id: db.event_id ?? null,
   }
 }
 
