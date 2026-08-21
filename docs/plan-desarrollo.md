@@ -2445,6 +2445,143 @@ Correr en STAGING primero de punta a punta; a producción solo con el reporte ap
 
 ---
 
+## Fase 9 — Feedback de uso (2026-08-20)
+
+### [ ] EST-14 · Motivo de retiro obligatorio: verificar por qué no se aplica
+```
+Se reporta que en el cierre el motivo de retiro sigue siendo opcional, PERO la regla ya
+existe: hay un test que dice "un retirado SIN motivo bloquea (obligatorio desde
+2026-08-04)" en src/lib/studies/close-payload.test.ts:77, y el payload usa withdraw_reason
+(campo distinto de fail_reason, que es el de reprobado).
+Diagnosticá por qué no se cumple en la práctica. Sospechas en orden:
+ a) La UI del cierre sigue mostrando el campo como opcional (sin asterisco) o no bloquea
+    el submit — la regla pura está bien pero el formulario no la aplica.
+ b) La UI escribe fail_reason en vez de withdraw_reason para los retirados, así que la
+    validación mira un campo vacío… o al revés, valida uno que la UI no llena.
+ c) Hay un camino de cierre (masivo, o desde otra pantalla) que no pasa por la validación.
+Arreglá la causa raíz y dejá los tres puntos consistentes: UI (asterisco + bloqueo con
+mensaje que diga de cuál estudiante falta), regla pura y validación server-side del POST.
+Reportame cuál era la causa.
+```
+
+### [ ] EST-15 · Recomendación CDEB: el dropdown de "otro estudio primero" solo con capacitaciones
+```
+En el formulario de recomendación a CDEB (EST-9), la opción "Sí, pero debería llevar otro
+estudio primero" abre un dropdown de estudios. Hoy lista todo; debe listar SOLO
+capacitaciones — quitá niveles (N1-N4) y campañas.
+Filtrá por etapa del plan: incluí inicial, intermedia y avanzada; excluí 'niveles' y
+'campaña' (LEVEL_TO_STAGE en src/lib/studies/eligibility.ts). Ojo con los planes inactivos:
+no ofrezcas estudios desactivados.
+Validá también server-side: si llega un plan de niveles o campaña en ese campo, rechazalo.
+```
+
+### [ ] REU-3 · El enlace de "¿grupo equivocado?" también en Matrícula
+```
+El enlace "¿Te matriculaste en el grupo equivocado?" (REU-2) quedó solo en /mis-pagos.
+Ese no es el momento de dolor: la persona se da cuenta del error justo después de
+matricularse, no cuando va a pagar.
+Agregalo (SIN quitarlo de /mis-pagos) en:
+ - la pantalla de CONFIRMACIÓN de matrícula, que es donde se ve el error de inmediato;
+ - la ficha del grupo en la vista del estudiante y en su historial de estudios del perfil.
+Mismo modal de reubicación que ya existe. Que el texto explique que lo revisa el
+coordinador y que mientras tanto sigue matriculado en su grupo actual.
+```
+
+### [ ] FRM-3 · Exportar respuestas de formularios también en Excel
+```
+Hoy las respuestas de un formulario se bajan solo en CSV. Agregá export en XLSX además del
+CSV (dos botones, o un selector de formato).
+El XLSX debe salir usable, no un CSV renombrado: encabezados en negrita, ancho de columna
+razonable, panel congelado en la fila 1 y autofiltro. Una fila por respuesta, una columna
+por campo del formulario, más las columnas de contexto (quién respondió si el form no es
+anónimo, fecha).
+Cuidado con Excel y los datos: cédulas y teléfonos como TEXTO (si no, Excel se come los
+ceros iniciales y convierte números largos a notación científica) y fechas como fecha real,
+no string. Respetá el mismo gate de permisos que el CSV (rol forms, o acceso puntual al
+formulario).
+```
+
+### [ ] PRE-11 · Grupo prematrimonial: dirigente Y co-dirigente obligatorios (pareja)
+```
+Al crear un grupo de prematrimonial solo se puede elegir UN dirigente. El prematrimonial
+siempre lo dan en PAREJA, así que dirigente y co-dirigente deben ser AMBOS obligatorios en
+ese tipo de grupo.
+1) Detectá el tipo de grupo por su plan (PREMAT) y, en ese caso: co-dirigente pasa de
+   "(opcional)" a obligatorio, y no se puede guardar sin los dos. Para el resto de grupos
+   nada cambia.
+2) El dropdown debe listar SOLO personas aprobadas para dar prematrimonial — no cualquier
+   dirigente. Revisá cómo se marca esa habilitación hoy (study_leaders.qualified_study_codes
+   con el código del plan es lo más probable); si no existe la marca para PREMAT, decímelo
+   antes de inventar un campo.
+3) Validación server-side también, no solo en el form.
+4) Coordiná con GRU-2/EST-4: el checkbox de disponibilidad y el orden de los campos del
+   dirigente ya se reordenaron; no rompas eso.
+```
+
+### [ ] UI-1 · Legibilidad: tamaño de letra y contraste
+```
+Reporte de uso real: "la letra está un poco pequeña y con bajo contraste, a veces cuesta
+leer". Es transversal, no de una pantalla.
+1) Auditá los estilos de texto contra WCAG AA: contraste mínimo 4.5:1 para texto normal y
+   3:1 para texto grande. Los sospechosos son las clases con opacidad sobre navy que se
+   repiten en todo el sistema (text-navy-light/60, /70, text-[11px], text-[12px] en
+   etiquetas y ayudas). Listame las combinaciones que no pasan, con dónde se usan.
+2) Proponeme una corrección SISTÉMICA, no parche por pantalla: subir el piso de tamaño de
+   los textos secundarios (nada por debajo de 12px, y 13-14px para texto que se lee de
+   corrido) y reemplazar las opacidades bajas por colores sólidos del design system que sí
+   pasen contraste. Que quede documentado en el design system para que las pantallas
+   nuevas no repitan el problema.
+3) Aplicalo primero en las pantallas que usa el MIEMBRO desde el celular (matrícula,
+   /mis-pagos, perfil, eventos, /ayuda) y después en las de gestión.
+4) No cambies la identidad visual: mismos colores de marca, solo tamaños y niveles.
+Mostrame antes/después de 3 pantallas para aprobar antes de aplicarlo en masa.
+```
+
+### [ ] FRM-4 · Llenar un formulario o una solicitud a nombre de otra persona
+```
+Que comunicaciones (y quien gestione formularios) pueda llenar un formulario A NOMBRE DE
+otra persona — caso real: alguien responde por teléfono o en papel y el staff lo registra.
+1) En el formulario, para los roles habilitados, un selector "Llenar a nombre de…" con
+   búsqueda de miembro. La respuesta se guarda con el miembro seleccionado como autor
+   Y con quién la registró realmente (dos campos: member_id y submitted_by). Nunca
+   sobreescribas al autor sin dejar rastro de quién la digitó.
+2) Permisos: rol forms, comunicaciones, direccion, admin — y quien tenga acceso puntual a
+   ESE formulario (FRM-1). Nadie más.
+3) La respuesta queda marcada visiblemente como "registrada por [staff]" en la vista de
+   respuestas y en el export, para que nadie la confunda con una respuesta directa.
+4) ALCANCE — decidí conmigo antes de ampliar: ¿esto aplica también a SOLICITUDES (interés
+   de estudio, reubicación, beca)? Ahí ya existe resolveTargetMemberId con anti-
+   suplantación, que permite a ciertos roles actuar sobre terceros — puede que ya funcione
+   para algunas. Revisá cuáles solicitudes ya lo permiten y cuáles no, y proponeme el
+   alcance. La matrícula a nombre de otro YA existe para STUDY_ADMIN_ROLES.
+```
+
+### [ ] AYU-1 · Dos artículos nuevos en el centro de ayuda
+```
+Agregar dos artículos a content/ayuda/ (frontmatter como los existentes):
+
+A) "¿Y si me matriculo en el grupo equivocado?" — PÚBLICO (visibilidad: publica), sección
+   Estudios. Responde la pregunta que la gente hace apenas se equivoca: qué hacer, dónde
+   está el botón de pedir cambio de grupo, que lo revisa el coordinador de estudios, que
+   no es automático, y que mientras tanto sigue matriculada en su grupo actual. Enlazalo
+   desde el tutorial de matrícula. Depende de REU-3 (el enlace tiene que existir donde el
+   artículo dice que está).
+
+B) "Cómo se calcula el análisis de estudios" — INTERNO (roles de estudios: dirigente,
+   coordinador_estudios, coordinador_dirigentes, direccion). Antes de escribirlo, LEÉ EL
+   CÓDIGO y respondeme la duda concreta que originó esto: en /estudios/analisis, ¿las
+   personas se agrupan por la SEDE a la que asisten (calculada por check-ins,
+   refresh_member_sedes) o por la ZONA donde viven (dirección del perfil)? Mirá
+   src/lib/supabase/queries/studies-demand.ts y la regla de sede.
+   El artículo debe explicar en lenguaje claro: de dónde sale cada número, qué significa
+   "demanda", cómo se cuenta a alguien que asiste a dos sedes, qué ventana de tiempo usa,
+   y qué NO mide (para que nadie tome una decisión con un número que significa otra cosa).
+   Si al leer el código encontrás que la agrupación es ambigua o inconsistente, decímelo:
+   sería un bug, no solo falta de documentación.
+```
+
+---
+
 ## Backlog (fases siguientes, requieren definición de producto)
 
 - **CAM-1 · Matrículas de estudios tipo campaña** — no urge. Definir: ¿sin prerequisitos? ¿cupos? ¿pago? La etapa 'campaña' ya existe en la elegibilidad (campañas sin compromisos) y la excepción de campaña queda implementada en EST-1.
