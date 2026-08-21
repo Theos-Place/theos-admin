@@ -87,7 +87,7 @@ export function useServers(...slices: ServersSlice[]) {
     [dbCommittees, openByCommittee],
   )
 
-  // Metas agrupadas por committee_id (igual que MOCK_COMMITTEE_GOALS).
+  // Metas agrupadas por committee_id.
   const goalsByCommittee: Record<string, CommitteeGoal[]> = useMemo(() => {
     const m: Record<string, CommitteeGoal[]> = {}
     for (const g of dbGoals) {

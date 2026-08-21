@@ -13,8 +13,8 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -22,10 +22,11 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint (ratchet)
-        # errores = 0 SIEMPRE. Warnings: 107 es la deuda actual (2026-07-20:
-        # limpiados los 42 no-unused-vars y 3 no-img-element; el resto son
-        # react-hooks/* degradados a warn) — bajar este número conforme se
-        # migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=107
+        # errores = 0 SIEMPRE. Warnings: 94 es la deuda actual (2026-08-21:
+        # arreglados los 13 exhaustive-deps de finanzas/empleados/plan y el
+        # new Date() impuro del dashboard de finanzas; el resto son
+        # react-hooks/set-state-in-effect + purity/refs) — bajar este número
+        # conforme se migren casos; NUNCA subirlo.
+        run: npx eslint src --max-warnings=94
       - name: Tests
         run: npm test --if-present

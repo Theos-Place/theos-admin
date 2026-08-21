@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { StudyType } from '@/types/study'
@@ -175,6 +175,28 @@ function StageDivider({ label }: { label: string }) {
 
 type PlanTab = 'curricula' | 'detalles'
 
+// Orden de la lista. Todo esto es puro (no toca estado ni props), así que vive
+// a nivel de módulo: las referencias son estables y los useMemo de abajo pueden
+// depender de ellas sin recalcular en cada render.
+// Archivados (descontinuados) al final de su categoría.
+const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
+// Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
+// final (antes de los descontinuados), el resto alfabético.
+const HEAD: Record<string, string[]> = { inicial: ['SCJ', 'BUS'], intermedia: ['DIS1', 'DIS2', 'DIS3'] }
+const TAIL: Record<string, string[]> = { avanzada: ['CDEB', 'CDC'] }
+// CTBD debe ir justo debajo de DIS3 en el listado por código.
+const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
+const withinStage = (stage: string) => (a: StudyType, b: StudyType) => {
+  const al = archLast(a, b); if (al) return al
+  const head = HEAD[stage] ?? [], tail = TAIL[stage] ?? []
+  const grp = (c: string) => (head.includes(c) ? 0 : tail.includes(c) ? 2 : 1)
+  const ga = grp(a.code), gb = grp(b.code)
+  if (ga !== gb) return ga - gb
+  if (ga === 0) return head.indexOf(a.code) - head.indexOf(b.code)
+  if (ga === 2) return tail.indexOf(a.code) - tail.indexOf(b.code)
+  return sortKey(a.code).localeCompare(sortKey(b.code))
+}
+
 export default function PlanDeEstudiosPage() {
   const { studyTypes } = useStudyPlans()
   const [tab, setTab] = useState<PlanTab>('curricula')
@@ -187,24 +209,6 @@ export default function PlanDeEstudiosPage() {
   const canEdit = hasRole('coordinador_estudios', 'direccion', 'admin')
   // Dirigente referente (mentor_id) resuelto a nombre por la query de planes.
   const mentorName = (s: StudyType) => s.mentor_name ?? null
-  // Archivados (descontinuados) al final de su categoría.
-  const archLast = (a: { is_archived: boolean }, b: { is_archived: boolean }) => Number(a.is_archived) - Number(b.is_archived)
-  // Orden manual dentro de cada etapa: HEAD van primero (en ese orden), TAIL al
-  // final (antes de los descontinuados), el resto alfabético.
-  const HEAD: Record<string, string[]> = { inicial: ['SCJ', 'BUS'], intermedia: ['DIS1', 'DIS2', 'DIS3'] }
-  const TAIL: Record<string, string[]> = { avanzada: ['CDEB', 'CDC'] }
-  // CTBD debe ir justo debajo de DIS3 en el listado por código.
-  const sortKey = (code: string) => (code === 'CTBD' ? 'DIS3~' : code)
-  const withinStage = (stage: string) => (a: StudyType, b: StudyType) => {
-    const al = archLast(a, b); if (al) return al
-    const head = HEAD[stage] ?? [], tail = TAIL[stage] ?? []
-    const grp = (c: string) => (head.includes(c) ? 0 : tail.includes(c) ? 2 : 1)
-    const ga = grp(a.code), gb = grp(b.code)
-    if (ga !== gb) return ga - gb
-    if (ga === 0) return head.indexOf(a.code) - head.indexOf(b.code)
-    if (ga === 2) return tail.indexOf(a.code) - tail.indexOf(b.code)
-    return sortKey(a.code).localeCompare(sortKey(b.code))
-  }
   // Solo se ocultan las charlas NO curriculares (ej. BUS "¿Adónde va este bus?").
   // Los estudios reales desactivados sí son curriculares → se muestran marcados
   // como inactivos (is_archived: gris + badge "Desactivado", ordenados al final).
@@ -215,13 +219,15 @@ export default function PlanDeEstudiosPage() {
     () => visiblePlans(studyTypes.filter(s => s.is_curricular !== false), canManage),
     [studyTypes, canManage],
   )
-  const byStage = (stage: string) => [...curricular.filter(s => s.stage === stage)].sort(withinStage(stage))
-  const niveles    = useMemo(() => byStage('niveles'), [curricular])
-  const inicial    = useMemo(() => byStage('inicial'), [curricular])
-  const intermedia = useMemo(() => byStage('intermedia'), [curricular])
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- mismo patrón que las etapas de arriba (byStage es estable por render)
-  const avanzada   = useMemo(() => byStage('avanzada'), [curricular])
-  const campana    = useMemo(() => byStage('campaña'), [curricular])
+  const byStage = useCallback(
+    (stage: string) => [...curricular.filter(s => s.stage === stage)].sort(withinStage(stage)),
+    [curricular],
+  )
+  const niveles    = useMemo(() => byStage('niveles'), [byStage])
+  const inicial    = useMemo(() => byStage('inicial'), [byStage])
+  const intermedia = useMemo(() => byStage('intermedia'), [byStage])
+  const avanzada   = useMemo(() => byStage('avanzada'), [byStage])
+  const campana    = useMemo(() => byStage('campaña'), [byStage])
   // Listado final ordenado por etapa (stageRank: campañas SIEMPRE al final).
   //
   // BUG EST-11 que arregla esto: antes había un `isInvTail` que empujaba CDEB y
