@@ -2634,11 +2634,31 @@ Tests: dispara a -7 días y no antes; dedupe; segundo recordatorio a +7; grupo c
 tiempo no recibe el segundo.
 ```
 
-### [ ] DIR-4 · Envío automático de la evaluación al cerrar el grupo
+### [x] DIR-4 · Envío automático de la evaluación al cerrar el grupo — YA CUBIERTO POR EST-12 (verificado 2026-08-21)
 Ya especificado en **EST-12** (cron study-surveys copiando el de eventos) y desbloqueado con
 la decisión de confidencialidad. Según la reunión, el formulario y la plantilla ya existen
 en el sistema: verificá al implementar EST-12 si sirven tal cual (seed ya corrido) y en ese
 caso el trabajo se reduce al cron + la asociación al dirigente. Sin punto aparte.
+
+**No hizo falta escribir código.** EST-12 quedó hecho el 2026-08-06 y la cadena está completa
+y **ya corrió en producción**. Verificado eslabón por eslabón:
+
+1. **El cierre programa el envío** — `close/route.ts:119` llama `scheduleLeaderFeedback(id)`,
+   que setea `study_groups.survey_send_at` (por defecto, el día siguiente). Best-effort: el
+   cierre no se cae si esto falla.
+2. **El cron despacha** — `/api/cron/study-surveys` (17:30 UTC, ya en `vercel.json`) toma los
+   grupos con `survey_send_at` vencido y `feedback_requested_at` nulo, y manda `retro_dirigente`
+   a los estudiantes. Dedupe en `feedback_requested_at`.
+3. **El formulario existe y está activo**: "Encuesta de satisfacción — Estudio bíblico", 14
+   campos.
+4. **La asociación grupo → dirigente existe**: `leader_evaluations` con `group_id`, `leader_id`,
+   `co_leader_id`, `score`, `comments`, `response_id`, más los `hidden_*` de moderación.
+
+Evidencia de que funciona con datos reales: **5 filas en `leader_evaluations`**, 1 grupo con la
+encuesta ya solicitada y 2 programadas.
+
+Lo único que se sumó en esta tanda fue de tono, no de mecánica: el correo `retro_dirigente` se
+emparejó con el resto de las plantillas del cierre (migración `20260822120000`).
 
 ### [ ] DIR-5 · Página "Evaluaciones": tiquete por grupo, rol nuevo y flujo de revisión
 Archivos: página nueva, migración (tiquetes + rol), `src/components/shared/RequestBoard.tsx`, `src/lib/auth/roles.ts`
