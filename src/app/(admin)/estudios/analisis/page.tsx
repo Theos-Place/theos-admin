@@ -201,6 +201,9 @@ export default function AnalisisPage() {
         <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
           Seleccionar estudio a analizar
         </p>
+        {/* DIS2/DIS3 no se analizan por separado: son continuos a Discípulos 1
+            (la MISMA cohorte sigue en el mismo grupo), así que la demanda real
+            es la de DIS1 (decisión 2026-08-21). */}
         <select
           className={cn(inputCls, 'max-w-md w-full')}
           value={selectedStudyId}
@@ -216,14 +219,14 @@ export default function AnalisisPage() {
             ))}
           </optgroup>
           <optgroup label="Etapa Intermedia (requiere: donador + asistencia + servidor)">
-            {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived && s.is_curricular !== false).map(s => (
+            {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived && s.is_curricular !== false && !['DIS2', 'DIS3'].includes(s.code)).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
               </option>
             ))}
           </optgroup>
           <optgroup label="Etapa Avanzada (compromisos de intermedia + invitación)">
-            {STUDY_TYPES.filter(s => s.stage === 'avanzada' && !s.is_archived && s.is_curricular !== false).map(s => (
+            {STUDY_TYPES.filter(s => s.stage === 'avanzada' && !s.is_archived && s.is_curricular !== false && !['DIS2', 'DIS3'].includes(s.code)).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}
               </option>
