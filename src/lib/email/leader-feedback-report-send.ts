@@ -14,7 +14,7 @@ import {
   perQuestionSummary, toRespuestaCerrada,
   type RespuestaCerrada, type CampoCerrado,
 } from '@/lib/studies/study-survey'
-import { tablesHtml, commentsHtml, shouldSendReport } from '@/lib/email/leader-feedback-report'
+import { tablesHtml, commentsHtml, overallHtml, shouldSendReport } from '@/lib/email/leader-feedback-report'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type Campo = CampoCerrado & { field_type: string }
@@ -43,9 +43,9 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
   // existe para tapar.
   const { data: evals } = await sb
     .from('leader_evaluations')
-    .select('response_id, comments, hidden_at')
+    .select('response_id, comments, hidden_at, score')
     .eq('group_id', groupId)
-  const filas = (evals ?? []) as Array<{ response_id: string | null; comments: string | null; hidden_at: string | null }>
+  const filas = (evals ?? []) as Array<{ response_id: string | null; comments: string | null; hidden_at: string | null; score: number | null }>
   if (!shouldSendReport(filas.length)) return { sent: 0, skipped: 'sin respuestas' }
 
   const responseIds = filas.map(f => f.response_id).filter((x): x is string => !!x)
@@ -91,7 +91,14 @@ export async function sendLeaderFeedbackReport(groupId: string): Promise<{ sent:
     if (!f.response_id && !f.hidden_at && f.comments?.trim()) abiertosDirigente.push(f.comments)
   }
 
+  // Si no hay detalle por pregunta, va el promedio general en su lugar: un
+  // correo sin un solo número no le dice nada al dirigente.
+  const notas = filas.map(f => Number(f.score)).filter(n => Number.isFinite(n))
+  const promedio = notas.length > 0
+    ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10
+    : null
   const tablas = tablesHtml(resumenPreguntas)
+    || overallHtml({ count: filas.length, average: promedio })
   const comentarios = commentsHtml({
     count: filas.length,
     sobreDirigente: abiertosDirigente,

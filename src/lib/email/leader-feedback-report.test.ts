@@ -1,7 +1,7 @@
 // EST-13 · El correo de retroalimentación al dirigente.
 import { describe, it, expect } from 'vitest'
 import {
-  tablesHtml, commentsHtml, cleanComment, shouldSendReport, buildReportBody,
+  tablesHtml, commentsHtml, cleanComment, shouldSendReport, buildReportBody, overallHtml,
   REPORT_SECTIONS,
 } from './leader-feedback-report'
 import type { PreguntaResumen } from '@/lib/studies/study-survey'
@@ -157,5 +157,51 @@ describe('confidencialidad', () => {
       count: 5, sobreDirigente: ['Muy claro'], sobreFolleto: [],
     })
     expect(html).not.toMatch(/member|nombre|@/i)
+  })
+})
+
+// 2026-08-21 · El correo llegaba con cinco grids en blanco: las preguntas con
+// conteo 0 se pintaban igual, fila por fila, con las cinco celdas vacías.
+describe('tablas sin datos', () => {
+  const vacia = (label: string) => ({
+    fieldId: label, label, average: null, count: 0,
+    breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  })
+
+  it('una pregunta sin respuestas no se pinta', () => {
+    expect(tablesHtml([vacia('¿Demostró el dirigente un buen conocimiento del material?')]))
+      .toBe('')
+  })
+
+  it('sin ninguna pregunta con datos no hay tablas', () => {
+    const todas = REPORT_SECTIONS.flatMap(s => s.questions).map(vacia)
+    expect(tablesHtml(todas)).toBe('')
+  })
+
+  it('las que sí tienen datos salen, las vacías no', () => {
+    const html = tablesHtml([
+      { fieldId: 'a', label: '¿Demostró el dirigente un buen conocimiento del material?',
+        average: 4.5, count: 2, breakdown: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 1 } },
+      vacia('¿Cómo trató el dirigente los temas sensibles con el grupo?'),
+    ])
+    expect(html).toContain('Conocimiento del material')
+    expect(html).not.toContain('Temas sensibles')
+  })
+})
+
+describe('promedio general de respaldo', () => {
+  it('da un número cuando no hay detalle por pregunta', () => {
+    const html = overallHtml({ count: 5, average: 4.2 })
+    expect(html).toContain('4.2 de 5')
+    expect(html).toContain('5 evaluaciones')
+  })
+
+  it('singular con una sola', () => {
+    expect(overallHtml({ count: 1, average: 3 })).toContain('1 evaluación')
+  })
+
+  it('sin datos no inventa nada', () => {
+    expect(overallHtml({ count: 0, average: null })).toBe('')
+    expect(overallHtml({ count: 5, average: null })).toBe('')
   })
 })

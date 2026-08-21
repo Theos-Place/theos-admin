@@ -111,13 +111,40 @@ function sectionHtml(title: string, preguntas: PreguntaResumen[]): string {
 </table>`
 }
 
-/** Todas las tablas, en el orden de REPORT_SECTIONS. */
+/** Todas las tablas, en el orden de REPORT_SECTIONS.
+ *
+ *  Una pregunta SIN respuestas usables no entra, y una sección que se queda sin
+ *  preguntas tampoco. Antes solo se descartaba la sección cuyas preguntas no
+ *  existieran en el formulario, así que una pregunta con conteo 0 salía igual:
+ *  una fila con las cinco celdas en blanco. Cuando NINGUNA pregunta tenía datos
+ *  —pasa si las respuestas quedaron en un formato que ya no se puede leer— el
+ *  correo llegaba con cinco grids vacíos y ni un número. */
 export function tablesHtml(resumen: readonly PreguntaResumen[]): string {
   const porLabel = new Map(resumen.map(r => [r.label, r]))
   return REPORT_SECTIONS
-    .map(s => sectionHtml(s.title, s.questions.map(q => porLabel.get(q)).filter((p): p is PreguntaResumen => !!p)))
+    .map(s => sectionHtml(
+      s.title,
+      s.questions
+        .map(q => porLabel.get(q))
+        .filter((p): p is PreguntaResumen => !!p && p.count > 0),
+    ))
     .filter(Boolean)
     .join('\n')
+}
+
+/** Bloque de respaldo cuando no hay detalle por pregunta pero sí notas.
+ *
+ *  El promedio general vive en `leader_evaluations.score` y existe aunque el
+ *  detalle no se pueda armar (evaluaciones viejas sin formulario, o respuestas
+ *  guardadas en un formato que el cuestionario de hoy ya no interpreta). Es
+ *  poco, pero es un número real: mejor que una tabla en blanco. */
+export function overallHtml(input: { count: number; average: number | null }): string {
+  if (input.count <= 0 || input.average === null) return ''
+  return `<div class="info-box">
+<p class="info-title">Promedio general</p>
+<p><strong>${input.average.toFixed(1)} de 5</strong>, sobre ${input.count} evaluaci${input.count === 1 ? 'ón' : 'ones'}.</p>
+<p class="scale-legend">El detalle por criterio no está disponible para este grupo.</p>
+</div>`
 }
 
 /** Los dos bloques de comentarios abiertos, en viñetas.
