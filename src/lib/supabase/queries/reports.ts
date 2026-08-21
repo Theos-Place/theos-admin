@@ -6,6 +6,11 @@ import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/r
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
 import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
 import {
+  buildDirigentesReport, collapseAdminBuckets,
+  type LeaderRow, type ActiveGroupRow, type PlanRow, type LeaderHistoryPoint,
+  type DirigentesReport,
+} from '@/lib/reports/dirigentes'
+import {
   attendanceWindowStart, attendanceRecencyStart,
   ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
   ACTIVE_ATTENDANCE_MONTHS, ACTIVE_ATTENDANCE_MIN,
@@ -26,6 +31,7 @@ type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance' | 
 // los pesados = payload final ya construido.
 const KEY_DISCIPULOS = 'discipulos_payload'
 const KEY_RETENCION = 'retencion_payload'
+const KEY_DIRIGENTES = 'dirigentes_payload'
 
 /** Trae TODAS las filas de un RPC paginando (.range corta en 1000). */
 async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: AggRpc | HeavyRpc, params?: Record<string, unknown>): Promise<T[]> {
@@ -91,6 +97,66 @@ async function computeRetencion(supabase: SupabaseClient): Promise<RetencionRepo
   return buildRetencionReport(rows, activeToday)
 }
 
+/**
+ * DIR-7 · Pulso de dirigentes. Tres consultas chicas (487 dirigentes, los grupos
+ * abiertos y los planes): entra al snapshot por consistencia con el módulo, no
+ * porque pese.
+ *
+ * La historia se lee de leader_report_history, que empezó a acumular el
+ * 2026-08-21 — antes de eso el reporte muestra "sin dato" y no lo estima.
+ */
+async function computeDirigentes(supabase: SupabaseClient): Promise<DirigentesReport> {
+  const [leaders, groups, plans, history] = await Promise.all([
+    supabase.from('study_leaders')
+      .select('member_id, is_active, availability_status, formation_study_codes, qualified_study_codes, zone_preference'),
+    supabase.from('study_groups')
+      .select('leader_id, co_leader_id').in('status', ['en_matricula', 'en_curso']),
+    supabase.from('study_plans').select('code, name'),
+    supabase.from('leader_report_history')
+      .select('captured_on, activos, dando_ahora, disponibles_sin_grupo')
+      .order('captured_on', { ascending: false }).limit(400),
+  ])
+  if (leaders.error) throw leaders.error
+  if (groups.error) throw groups.error
+
+  return buildDirigentesReport(
+    (leaders.data ?? []) as unknown as LeaderRow[],
+    (groups.data ?? []) as unknown as ActiveGroupRow[],
+    ((plans.data ?? []) as Array<{ code: string | null; name: string | null }>)
+      .filter((p): p is PlanRow => !!p.code && !!p.name),
+    (history.data ?? []) as unknown as LeaderHistoryPoint[],
+  )
+}
+
+/** Anota el punto de HOY en la historia. Upsert por día: si el cron corre dos
+ *  veces, la segunda corrige la primera en vez de duplicar el día. */
+async function appendLeaderHistory(supabase: SupabaseClient, r: DirigentesReport): Promise<void> {
+  const { error } = await supabase.from('leader_report_history').upsert({
+    captured_on: new Date().toISOString().slice(0, 10),
+    activos: r.activos,
+    dando_ahora: r.dando_ahora,
+    disponibles_sin_grupo: r.disponibles_sin_grupo,
+    en_pausa: r.en_pausa,
+    en_revision: r.en_revision,
+    total: r.total,
+  })
+  // Best-effort: perder un punto de la serie no puede tumbar el refresco de los
+  // otros reportes.
+  if (error) console.warn('appendLeaderHistory:', error.message)
+}
+
+/**
+ * Reporte de dirigentes. `verMatiz` decide si el desglose de "en pausa" y "en
+ * revisión" viaja o se colapsa a inactivos (DIR-6): el colapso ocurre acá, no en
+ * la UI, para que el número no salga del servidor.
+ */
+export async function getDirigentesReport(verMatiz: boolean): Promise<DirigentesReport> {
+  const supabase = createAdminClient()
+  const full = (await readSnapshot<DirigentesReport>(supabase, KEY_DIRIGENTES))
+    ?? await computeDirigentes(supabase)
+  return verMatiz ? full : collapseAdminBuckets(full)
+}
+
 /** Refresca toda la caché de reportes. La usa el cron nocturno. */
 export async function refreshReportSnapshots(): Promise<Record<string, number>> {
   const supabase = createAdminClient()
@@ -108,6 +174,12 @@ export async function refreshReportSnapshots(): Promise<Record<string, number>> 
   const ret = await computeRetencion(supabase)
   await writeSnapshot(supabase, KEY_RETENCION, ret, ret.years.length)
   counts[KEY_RETENCION] = ret.years.length
+
+  // DIR-7: el snapshot del día Y su punto en la serie histórica.
+  const dir = await computeDirigentes(supabase)
+  await writeSnapshot(supabase, KEY_DIRIGENTES, dir, dir.total)
+  await appendLeaderHistory(supabase, dir)
+  counts[KEY_DIRIGENTES] = dir.total
 
   return counts
 }

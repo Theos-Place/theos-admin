@@ -2740,6 +2740,39 @@ export type Database = {
           },
         ]
       }
+      leader_report_history: {
+        Row: {
+          activos: number
+          captured_on: string
+          created_at: string
+          dando_ahora: number
+          disponibles_sin_grupo: number
+          en_pausa: number
+          en_revision: number
+          total: number
+        }
+        Insert: {
+          activos: number
+          captured_on?: string
+          created_at?: string
+          dando_ahora: number
+          disponibles_sin_grupo: number
+          en_pausa?: number
+          en_revision?: number
+          total?: number
+        }
+        Update: {
+          activos?: number
+          captured_on?: string
+          created_at?: string
+          dando_ahora?: number
+          disponibles_sin_grupo?: number
+          en_pausa?: number
+          en_revision?: number
+          total?: number
+        }
+        Relationships: []
+      }
       payment_plans: {
         Row: {
           created_at: string

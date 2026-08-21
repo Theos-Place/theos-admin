@@ -2772,7 +2772,7 @@ revisión y siguen. En el caso del sucesor eso puede dejar un grupo activo con d
 inactivo — la misma excepción que ya estaba aceptada para "no recomendado" y que su propio
 comentario documenta como gestión manual.
 
-### [ ] DIR-7 · Reporte de dirigentes
+### [x] DIR-7 · Reporte de dirigentes — HECHO 2026-08-21
 Archivos: `/reportes` (página/bloque nuevo), `report_snapshots`, cron `report-snapshots`
 
 ```
@@ -2791,6 +2791,39 @@ Página o bloque nuevo en Reportes con el pulso del cuerpo de dirigentes:
 Tests: los conteos cuadran con un caso armado (dirigente con grupo, sin grupo, en pausa);
 capacitados por tipo suma bien con códigos múltiples.
 ```
+
+**Cómo quedó** (`/reportes/dirigentes`, migración `20260822160000_leader_report_history.sql`):
+
+- Cálculo puro en `src/lib/reports/dirigentes.ts` (27 tests). Cinco buckets EXCLUYENTES que
+  suman el total (hay test de la invariante); "dando ahora" gana sobre el estado configurado,
+  porque dar un estudio es un hecho y el estado una intención.
+- **Se reportan DOS columnas, no una.** La ficha decía "capacitadas ... de
+  qualified_study_codes", pero en el esquema son dos cosas distintas que la UI ya nombra
+  distinto: `formation_study_codes` = formación (para qué está capacitado) y
+  `qualified_study_codes` = disponibilidad (qué está dispuesto a dar). Dan números
+  diferentes en producción (N4: 311 capacitados vs 267 dispuestos), y la brecha es
+  capacidad que existe y no está ofrecida — justo lo accionable.
+- **La evolución necesitó tabla nueva.** `report_snapshots` tiene PK (report_key) y el cron
+  hace upsert: solo existe la foto más reciente. Y no se puede reconstruir hacia atrás —
+  `volunteers.start_date` está poblado (951/998) pero `end_date` tiene UNA fila, así que se
+  perdería a quienes ya no sirven y el pasado saldría subestimado, mostrando crecimiento
+  falso. Se creó `leader_report_history` (un punto por día, upsert por fecha) que empezó a
+  acumular el 2026-08-21; hasta que haya datos el reporte dice "todavía sin dato" con la
+  fecha de arranque, y `nearestPoint` tolera ±45 días antes de rendirse.
+- DIR-6: el colapso de pausa/revisión a inactivos ocurre en `getDirigentesReport(verMatiz)`,
+  o sea antes de serializar. El conteo real no viaja en el JSON.
+
+**Hallazgos en producción, expuestos en el propio reporte** (bloque "Datos por revisar"):
+
+- **15 dirigentes llevan un grupo abierto estando inactivos** — contradice EST-1 ("nunca un
+  dirigente inactivo con grupo activo"). Probablemente el residuo de las activaciones
+  best-effort documentadas en DIR-6.
+- **4 personas llevan un grupo abierto sin fila en `study_leaders`**, así que no aparecen en
+  ningún conteo. (Ojo: una consulta con LEFT JOIN los suma a los anteriores y da 19; son
+  dos problemas distintos y el reporte los separa.)
+- **`zone_preference` está vacío para los 126 activos**, así que el desglose por zona no
+  tiene nada que mostrar y la tarjeta lo dice. El formulario de DIR-1 recoge la zona pero
+  es de solo lectura: nada escribe esa columna todavía. Queda como pendiente real.
 
 ### [ ] MIG-1 · Limpieza de datos de prueba + reimportación del histórico reciente (CCB)
 Archivos: `scripts/limpiar-datos-de-prueba.ts` (ya existe), scripts de import existentes (`import-study-history.ts`, `import-charla-attendance.cjs`, `import-active-students.ts`, `import-grupos.ts`), exports de CCB que aporta Floriana
