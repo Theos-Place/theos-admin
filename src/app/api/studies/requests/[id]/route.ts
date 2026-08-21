@@ -107,6 +107,17 @@ export async function PATCH(
         if (error instanceof Error && error.message === 'YA_MATRICULADO') {
           return NextResponse.json({ error: 'El miembro ya está matriculado en ese grupo.' }, { status: 409 })
         }
+        // Guards de enrollMember (la resolución matricula de verdad): antes
+        // caían al catch final como "Error interno" (2026-08-20).
+        if (error instanceof Error && error.message.startsWith('PAGO_ESTUDIOS_PENDIENTE')) {
+          return NextResponse.json({ error: 'El miembro tiene pagos de estudios pendientes; hay que resolverlos antes de matricularlo.' }, { status: 409 })
+        }
+        if (error instanceof Error && error.message.startsWith('CUPO_LLENO')) {
+          return NextResponse.json({ error: 'El grupo destino ya está lleno.' }, { status: 409 })
+        }
+        if (error instanceof Error && error.message.startsWith('RESTRICCION_GRUPO')) {
+          return NextResponse.json({ error: error.message.split(':').slice(1).join(':') || 'El miembro no cumple la restricción de audiencia del grupo destino.' }, { status: 409 })
+        }
         throw error
       }
     }
