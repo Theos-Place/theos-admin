@@ -50,3 +50,14 @@ describe('conditionLabel — attendance (FIL-1)', () => {
       .toBe('No asistió: Charla ≥3×')
   })
 })
+
+// El chip rápido "Servidores" solo sabe afirmar; esta condición además niega.
+describe('server', () => {
+  const cond = (value: 'yes' | 'no') =>
+    ({ id: 9, group: 'server', type: 'server', value }) as FilterCondition
+
+  it('distingue sirve de no sirve', () => {
+    expect(conditionLabel(cond('yes'))).toBe('Sirve actualmente')
+    expect(conditionLabel(cond('no'))).toBe('No sirve actualmente')
+  })
+})

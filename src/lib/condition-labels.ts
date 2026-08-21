@@ -46,6 +46,7 @@ export function conditionLabel(c: FilterCondition): string {
       return 'Edad'
     case 'status': return c.value === 'active' ? 'Perfil activo' : 'Perfil inactivo'
     case 'leader': return c.value === 'yes' ? 'Dirigente' : 'No dirigente'
+    case 'server': return c.value === 'yes' ? 'Sirve actualmente' : 'No sirve actualmente'
     case 'marital': return `Estado civil: ${c.value}`
     case 'account':
       return ACCOUNT_STATE_FILTER_LABEL[c.value]

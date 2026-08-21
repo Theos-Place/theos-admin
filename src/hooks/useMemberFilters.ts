@@ -87,6 +87,13 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     }
     case 'status': return c.value === 'active' ? m.is_active : !m.is_active
     case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
+    case 'server': {
+      // En el listado, service_history trae SOLO el servicio activo (ver
+      // adapter.ts), así que "tiene algo" ya significa que sirve hoy. Mismo
+      // criterio que el chip rápido y que el server: voluntariado activo.
+      const sirve = m.service_history.some(r => r.status === 'activo')
+      return c.value === 'yes' ? sirve : !sirve
+    }
     case 'marital': return m.marital_status === c.value
     case 'created': {
       const d = (m.created_at ?? '').slice(0, 10)

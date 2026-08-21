@@ -535,8 +535,11 @@ function RegistrationPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   )
 }
 
-function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
+function ServicePanel({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
+  const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
   const { areas: AREAS, positions: POSITIONS } = useOrg()
+  const serverCond = conditions.find(c => c.type === 'server') as Extract<FilterCondition, { type: 'server' }> | undefined
+  const serverVal = serverCond ? serverCond.value : 'any'
   const [area, setArea]         = useState('')
   const [committee, setComm]    = useState('')
   const [position, setPosition] = useState('')
@@ -556,6 +559,22 @@ function ServicePanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
   return (
     <div className="space-y-4">
+      {/* Sirve o no sirve, sin importar dónde. Va arriba y aparte del buscador
+          de abajo: ese arma "sirvió en tal comité", esto responde otra pregunta
+          —quién está sirviendo hoy y quién no—, y es la única de las dos que se
+          puede negar. */}
+      {permite('server') && <div className="pb-4 border-b border-navy/10">
+        <Label>Sirve actualmente</Label>
+        <Sel value={serverVal} onChange={v => {
+          if (serverCond) removeCondition(serverCond.id)
+          if (v !== 'any') addCondition({ group: 'server', type: 'server', value: v as 'yes' | 'no' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="yes">Sí, es servidor</option>
+          <option value="no">No es servidor</option>
+        </Sel>
+      </div>}
+
       <div>
         <Label>Área</Label>
         <Sel value={area} onChange={handleAreaChange}>
@@ -861,7 +880,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
   const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
     study:   (['study'] as const).filter(permite),
     attend:  (['attendance', 'registration'] as const).filter(permite),
-    service: (['service'] as const).filter(permite),
+    service: (['service', 'server'] as const).filter(permite),
     form:    (['form'] as const).filter(permite),
     profile: (['donor', 'age', 'status', 'leader', 'marital', 'account', 'created'] as const).filter(permite),
   }
@@ -915,7 +934,14 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
               </div>
             </div>
           )}
-          {activeTab === 'service' && <ServicePanel addCondition={addCondition} />}
+          {activeTab === 'service' && (
+            <ServicePanel
+              conditions={conditions}
+              addCondition={addCondition}
+              removeCondition={removeCondition}
+              allowedTypes={allowedTypes}
+            />
+          )}
           {activeTab === 'form'    && <FormPanel   addCondition={addCondition} />}
           {activeTab === 'profile' && (
             <ProfilePanel

@@ -532,6 +532,17 @@ export async function resolveAdvancedConditions(
         else res.exclude.push(set)
         break
       }
+      case 'server': {
+        // Servidor = al menos un voluntariado ACTIVO, sin importar el comité.
+        // Mismo criterio que getServerMemberIds() y que el chip rápido; la
+        // diferencia es que acá 'no' manda el set a exclude y sí se puede negar.
+        const set = await pagedIds(
+          q => q.eq('status', 'active'), 'volunteers', 'member_id', 'member_id', scopeIds,
+        )
+        if (c.value === 'yes') res.include.push(set)
+        else res.exclude.push(set)
+        break
+      }
       case 'marital': {
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id', scopeIds))
         break

@@ -19,6 +19,9 @@ export type FilterCondition =
   | { id: number; group: 'age'; type: 'age'; min: string; max: string }
   | { id: number; group: 'status'; type: 'status'; value: 'active' | 'inactive' }
   | { id: number; group: 'leader'; type: 'leader'; value: 'yes' | 'no' }
+  // Sirve o no sirve, sin importar dónde. El chip rápido "Servidores" solo sabe
+  // afirmar; esto además permite negarlo (quién NO está sirviendo hoy).
+  | { id: number; group: 'server'; type: 'server'; value: 'yes' | 'no' }
   | { id: number; group: 'marital'; type: 'marital'; value: string }
   | { id: number; group: 'account'; type: 'account'; value: 'none' | 'never_entered' | 'active' }
   | { id: number; group: 'created'; type: 'created'; from: string; to: string }
