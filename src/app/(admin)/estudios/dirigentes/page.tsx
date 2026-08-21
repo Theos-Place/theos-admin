@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useClientPagination } from '@/hooks/useClientPagination'
@@ -206,6 +207,13 @@ export default function DirigentesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {/* DIR-1: insumo del formulario de disponibilidad, al lado del estado actual. */}
+          <Link
+            href="/estudios/dirigentes/disponibilidad"
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+          >
+            Disponibilidad
+          </Link>
           {canExport && (
             <>
               <ColumnSelector<DirigenteExportRow>

@@ -2433,8 +2433,53 @@ evento; conversión crea la donación y no duplica plata.
 
 ### De la reunión con Dirigentes
 
-### [ ] DIR-1 · Migrar el formulario de disponibilidad de dirigentes desde CCB
+### [x] DIR-1 · Migrar el formulario de disponibilidad de dirigentes desde CCB — HECHO 2026-08-21
 Archivos: builder de formularios, `study_leaders` (`availability_status`, `zone_preference`), cola del coordinador
+
+Seed en `scripts/seed-leader-availability-form.mjs` (mismo patrón que el de CDEB), corrido:
+formulario **`disponibilidad-dirigentes`** con **11 campos** y las **23 zonas del catálogo real**
+(no una lista escrita a mano). Idempotente por título — verificado: re-correrlo conserva el id.
+
+Contenido según el original de CCB: encabezado + versículo de Daniel 12:3 (TLA); nombre y
+teléfono NO se preguntan (campo `personal_data`, que prellena del perfil de verdad); las tres
+preguntas obligatorias; y el comentario libre. La **nota de fechas va como `help_text`
+editable**, no quemada — cambia cada ciclo.
+
+**Mejora sobre el original** (bloque condicional que aparece si respondió Sí a dar estudio **o**
+a ser suplente): días, horarios, zonas y modalidad, todo estructurado y por lo tanto filtrable.
+Verificado en BD: las 5 condiciones son `show`/`OR` y apuntan a los dos `yes_no` con valor `Sí`.
+
+Tres cosas que aparecieron y hay que saber:
+- **El seed de CDEB no escribía `conditions`**, así que cualquier campo condicional habría
+  quedado siempre visible. Mi seed lo escribe, y le agregué la línea al de CDEB también para
+  quitar la trampa (hoy no usa condicionales, así que no cambia nada).
+- **`multiselect` está en el CHECK de la BD pero el builder no lo ofrece** y el adapter lo
+  degrada a `select` (una sola opción). Para los multi se usó **`checkbox`**, que sí funciona de
+  punta a punta.
+- **Re-correr el seed borra las respuestas** (los campos van en cascada). Documentado en el
+  encabezado del script: para un ciclo nuevo se pasa otro título y se crea un formulario aparte,
+  conservando el histórico.
+
+**Vista del coordinador** (`/estudios/dirigentes/disponibilidad`, enlazada desde Dirigentes):
+cada respuesta al lado del **estado actual** del dirigente (`availability_status`, `is_active`,
+zonas, estudios que da, en formación), con link a la ficha para aplicar cambios. Roles
+coordinador de dirigentes / coordinador de estudios / dirección / admin. **Solo lectura: nada
+actualiza al dirigente automáticamente**, según la decisión del punto. Si hay varias
+convocatorias, un selector elige el ciclo (se encuentran por el prefijo del slug).
+
+Verificado contra la BD real (con respuesta simulada de un dirigente real y limpieza después):
+el formulario se encuentra por slug, las respuestas se leen legibles (el multi-select como
+"Lunes, Miércoles", no JSON crudo), el estado del dirigente aparece al lado, y los bloques sin
+input (info/section/personal_data) no se cuelan como preguntas.
+
+Typecheck limpio, 1032 tests, lint 94/94.
+
+**Pendiente de decisión (audiencia):** hoy no existe un "este formulario es solo para
+dirigentes" — las audiencias que soporta `formFillAccess` son evento, grupo, lista de
+convocados, o link enviado por correo. Se resolvió como el CDEB: **se distribuye por
+convocatoria (broadcast) y solo quien la recibe puede llenarlo**. Si se prefiere que el link
+circule libre y siga cerrado a dirigentes, hay que agregar una rama `isActiveLeader` en
+`fill-access.ts` y su resolución — es chico, pero no estaba pedido en el punto.
 
 ```
 Traer al sistema el formulario de disponibilidad de dirigentes que hoy vive en CCB.

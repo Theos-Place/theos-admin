@@ -189,6 +189,9 @@ const rows = FIELDS.map((f, i) => ({
   options: f.options ?? null,
   options_source: f.options_source ?? null,
   options_source_param: f.options_source_param ?? null,
+  // Los campos de este form no usan lógica condicional, pero si se le agrega
+  // desde acá tiene que viajar: sin esta línea quedaban siempre visibles.
+  conditions: f.conditions ?? null,
 }))
 const { error: insErr } = await db.from('form_fields').insert(rows)
 if (insErr) throw insErr
