@@ -2825,7 +2825,7 @@ capacitados por tipo suma bien con códigos múltiples.
   tiene nada que mostrar y la tarjeta lo dice. El formulario de DIR-1 recoge la zona pero
   es de solo lectura: nada escribe esa columna todavía. Queda como pendiente real.
 
-### [ ] MIG-1 · Limpieza de datos de prueba + reimportación del histórico reciente (CCB)
+### [~] MIG-1 · Limpieza de datos de prueba + reimportación del histórico reciente (CCB) — ETAPA 1 HECHA 2026-08-21
 Archivos: `scripts/limpiar-datos-de-prueba.ts` (ya existe), scripts de import existentes (`import-study-history.ts`, `import-charla-attendance.cjs`, `import-active-students.ts`, `import-grupos.ts`), exports de CCB que aporta Floriana
 
 ```
@@ -2877,6 +2877,47 @@ b) Grupos de prueba NO marcados, y pagos y matrículas hechos después del 1 de 
    - Borrado en orden de dependencias (check-ins → asistencias → pagos → matrículas →
      grupos), como hace el script de limpieza existente. Sin tocar members reales ni sus
      cuentas de auth.
+
+**ETAPA 1 · EJECUTADA el 2026-08-21.** Respaldo previo en
+`~/theos-backups/mig1-pre-borrado-2026-08-21.json` (128 KB, incluye todo lo borrado).
+
+Lo importante que salió del inventario: **`created_at` NO sirve para separar prueba de
+real.** La ficha proponía borrar "lo transaccional posterior al 1 de junio", pero TODO tiene
+created_at posterior a esa fecha —los 2,183 grupos, las 40,493 matrículas, los 3,509
+eventos— porque las importaciones históricas corrieron después. Y no hay columna de
+procedencia en study_groups ni study_enrollments: nada dice "esto vino de un import".
+
+El discriminador que sí sirvió fue la **huella de las cargas masivas**: un import crea miles
+de filas en el mismo minuto, lo hecho a mano queda aislado. Los 2,167 grupos del histórico
+entraron el 18-jul a las 18:53, todos en un minuto. Eso partió el universo en tres lotes
+limpios, y solo 16 grupos quedaron fuera del histórico.
+
+Borrado (aprobado por el usuario, lote por lote):
+
+| | Antes | Después |
+|---|---|---|
+| study_groups | 2,183 | **2,167** (−14 `[prueba]`, −2 a mano) |
+| study_enrollments | 40,493 | **40,451** |
+| payments | 12 | **0** |
+| members | 23,777 | **23,736** (−41 `PRUEBA-`) |
+| event_checkins | 168,653 | **168,565** |
+
+- Los 2 grupos sin marcar eran `N3 — Casona Escalante` y `N1 — Alajuela` (20-jul, pruebas
+  del flujo de creación). De ellos solo colgaban 1 matrícula y 1 pago; las otras 13 FKs a
+  study_groups estaban en 0.
+- Los 12 pagos se fueron completos, incluidos los 3 de personas reales — el usuario confirmó
+  que los tres fueron pruebas de proceso, incluido el que estaba en `paid`.
+- GOTCHA repetido: `auth.admin.deleteUser` falló con `{}` en los 18 usuarios (mismo problema
+  de AUTH-1). Se borraron con SQL directo sobre `auth.users`, guardado por el dominio
+  `@prueba.theosplace.invalid` — TLD reservado, no puede ser de una persona real.
+- Snapshots de reportes refrescados después: el de dirigentes pasó de 485 a 483 designados.
+  Los hallazgos de calidad de DIR-7 (15 con grupo estando inactivos, 4 sin ficha) SIGUEN
+  ahí, o sea que eran del histórico y no artefactos de la prueba.
+
+**PENDIENTE de MIG-1**: la Etapa 0 (modo silencioso de correos, `EMAIL_SILENT_MODE`) NUNCA
+se implementó — no existe en el código. La Etapa 1 no la necesitaba (borrar no dispara
+correos), pero cualquier reimportación de la Etapa 2 sí, y ahí es obligatoria antes de
+tocar nada. La asistencia (Etapa 2c) ya la importó el usuario por su cuenta.
 
 ────────────────────────────────────────
 ETAPA 2 · REIMPORTACIÓN desde CCB (los exports los paso yo — pedímelos por tipo)
