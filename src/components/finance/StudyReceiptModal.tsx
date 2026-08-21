@@ -11,19 +11,31 @@
 // caminos: el autoservicio de /matricula y el staff agregando a alguien desde
 // la ficha del grupo.
 import { useState } from 'react'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, AlertCircle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
-import { formatCRC } from '@/lib/format'
+import { formatMoney, amountStep } from '@/lib/format'
+import { declaredAmountMismatch } from '@/lib/finance/payment-breakdown'
 import { cn } from '@/lib/utils'
 
-export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
-  enrollmentId: string; studyName: string; amount: number; onDone: () => void
+export function StudyReceiptModal({ enrollmentId, studyName, amount, currency = 'CRC', onDone }: {
+  enrollmentId: string
+  studyName: string
+  /** Monto FINAL a pagar (ya con la beca aplicada, si había). */
+  amount: number
+  /** Moneda del cobro (INT-3). Sin esto el monto se mostraba siempre en colones. */
+  currency?: string | null
+  onDone: () => void
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
+  // FIN-3: el monto declarado es solo para AVISAR si no coincide con el
+  // calculado — nunca bloquea; finanzas decide al revisar el comprobante.
+  const [declared, setDeclared] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const mismatch = declaredAmountMismatch(declared, amount, currency)
 
   async function submit() {
     if (busy || !file) return
@@ -69,9 +81,10 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
             <h3 id="comprobante-matricula-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
             <p className="text-[13px] text-navy-light/80 font-body">
               <strong className="text-navy">La matrícula de {studyName} ya quedó hecha.</strong>{' '}
-              Falta el pago de {formatCRC(amount)}: subí acá el comprobante (screenshot del
-              SINPE o transferencia) y el número de referencia. Hacelo ahora, con el pago
-              recién hecho — es el momento en que tenés la captura a mano.
+              Falta el pago de <strong className="text-navy">{formatMoney(amount, currency)}</strong>:
+              subí acá el comprobante (screenshot del SINPE o transferencia) y el número de
+              referencia. Hacelo ahora, con el pago recién hecho — es el momento en que tenés
+              la captura a mano.
             </p>
             <div className="space-y-1">
               <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
@@ -92,6 +105,35 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, onDone }: {
                 placeholder="Ej. 2026070212345"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="mat-pay-amount" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+                Monto que transferiste
+              </label>
+              <input
+                id="mat-pay-amount"
+                type="number"
+                min={0}
+                step={amountStep(currency)}
+                value={declared}
+                onChange={e => setDeclared(e.target.value)}
+                placeholder={String(amount)}
+                aria-describedby={mismatch ? 'mat-pay-amount-aviso' : undefined}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+              {mismatch && (
+                <p
+                  id="mat-pay-amount-aviso"
+                  className="flex items-start gap-1.5 text-[13px] text-coral-deep font-body"
+                  role="alert"
+                >
+                  <AlertCircle size={13} className="mt-0.5 shrink-0" aria-hidden />
+                  <span>
+                    Nos da <strong>{formatMoney(amount, currency)}</strong> a pagar. Podés enviarlo
+                    igual: finanzas lo revisa con el comprobante.
+                  </span>
+                </p>
+              )}
             </div>
             {error && <p className="text-[13px] text-coral font-body">{error}</p>}
             <div className="pt-1">

@@ -13,7 +13,8 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
-import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
+import { formatDate, formatDateTime } from '@/lib/format'
+import { formatDiscount } from '@/lib/finance/payment-breakdown'
 // MEMBER_LOOKUP_URL: el rol 'becas' no tiene el módulo miembros y el
 // buscador quedaba vacío (bug 2026-08-04).
 import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
@@ -39,10 +40,6 @@ type Scholarship = {
   /** BEC-1: último envío por correo del código. */
   email_sent_at: string | null
   email_sent_to: string | null
-}
-
-function formatDiscount(type: 'percentage' | 'fixed', value: number, currency?: string | null): string {
-  return type === 'percentage' ? `${value}%` : formatMoney(value, currency)
 }
 
 const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Revocada' }

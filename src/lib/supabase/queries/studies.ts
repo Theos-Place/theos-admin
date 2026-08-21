@@ -1094,7 +1094,7 @@ export async function enrollMember(
      *  lo confirma y queda en la bitácora — nunca silencioso). */
     allowRestrictionOverride?: boolean
   },
-): Promise<{ status: 'enrolled'; enrollment_id: string; amount: number; requires_payment: boolean }> {
+): Promise<{ status: 'enrolled'; enrollment_id: string; amount: number; currency: string | null; requires_payment: boolean }> {
   const supabase = createAdminClient()
   // La columna del cupo en study_groups es `max_students` (no max_capacity: eso
   // es el nombre del TIPO DE DOMINIO). BUG 2026-08-06: se pedía `max_capacity`,
@@ -1302,7 +1302,9 @@ export async function enrollMember(
     await markExceptionUsed(memberId, plan.id)
   }
 
-  return { status, enrollment_id: enrollmentId, amount: finalAmount, requires_payment: requiresPaymentFinal }
+  // La moneda viaja con el monto: el modal de comprobante la necesita para no
+  // mostrar un cobro en euros formateado como colones (INT-3).
+  return { status, enrollment_id: enrollmentId, amount: finalAmount, currency: planCurrency, requires_payment: requiresPaymentFinal }
 }
 
 /** Retira una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist).

@@ -22,6 +22,7 @@ import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { formatDateLong, formatCRC, formatMoney } from '@/lib/format'
 import { studyCostLabel } from '@/lib/studies/cost-label'
+import { buildPaymentBreakdown, formatDiscount } from '@/lib/finance/payment-breakdown'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 
 // 'prematrimonial' NO es una etapa: es una pestaña propia (pedido 2026-07-31),
@@ -75,7 +76,7 @@ export default function MatriculaPage() {
   const [docGate, setDocGate]             = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
-  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number } | null>(null)
+  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number; currency: string | null } | null>(null)
   const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'study_plan'; id: string; name: string } | null>(null)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
@@ -193,6 +194,7 @@ export default function MatriculaPage() {
           enrollmentId: data.enrollment_id,
           studyName: study.study_name,
           amount: data.amount,
+          currency: data.currency ?? group.currency ?? null,
         })
         setEnrolling(false)
       } else {
@@ -631,6 +633,7 @@ export default function MatriculaPage() {
           enrollmentId={pendingReceipt.enrollmentId}
           studyName={pendingReceipt.studyName}
           amount={pendingReceipt.amount}
+          currency={pendingReceipt.currency}
           onDone={() => setPendingReceipt(null)}
         />
       )}
@@ -1019,7 +1022,15 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
   )
 }
 
-type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }
+// `currency` importa para las becas de MONTO FIJO: solo aplican en su propia
+// moneda (INT-2). Sin ese dato el modal mostraría un descuento que el server
+// después niega.
+type ApplicableScholarship = {
+  id: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  currency?: string | null
+}
 
 function ConfirmModal({
   study, group, paymentMethod, onPaymentChange, onCancel, onConfirm, enrolling, error, memberId, planId,
@@ -1047,11 +1058,13 @@ function ConfirmModal({
       .catch(() => setApplicable(null))
   }, [memberId, planId, group.requires_payment, group.cost])
 
-  const discountedAmount = applicable && group.cost
-    ? Math.max(0, applicable.discount_type === 'percentage'
-      ? Math.round(group.cost * (1 - applicable.discount_value / 100))
-      : Math.round(group.cost - applicable.discount_value))
-    : null
+  // FIN-3: el desglose sale del módulo puro compartido (mismo cálculo y mismo
+  // redondeo por moneda que usa el server al cobrar).
+  const breakdown = buildPaymentBreakdown({
+    price: group.cost,
+    currency: group.currency,
+    scholarship: applicable && useScholarship ? applicable : null,
+  })
 
   function handleConfirm() {
     if (applicable && useScholarship) onConfirm({ scholarship_id: applicable.id })
@@ -1075,7 +1088,8 @@ function ConfirmModal({
             { label: 'Dirigente', value: group.leader_name },
             { label: 'Inicio',    value: formatDateLong(group.start_date) },
             { label: 'Duración',  value: `${study.weeks} semanas` },
-            { label: 'Costo',     value: group.requires_payment && group.cost ? formatCRC(group.cost) : 'Gratuito' },
+            // La moneda sale del plan (INT-3); antes se formateaba siempre en colones.
+            { label: 'Costo',     value: group.requires_payment && group.cost ? formatMoney(group.cost, group.currency) : 'Gratuito' },
           ].map(({ label, value }, i) => (
             <div
               key={label}
@@ -1107,11 +1121,20 @@ function ConfirmModal({
         {group.requires_payment && group.cost && (
           <div className="space-y-2">
             {applicable ? (
-              <label className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 bg-teal-soft/10 border border-teal-deep/20 cursor-pointer">
-                <input type="checkbox" checked={useScholarship} onChange={e => setUseScholarship(e.target.checked)} />
+              <label className="flex items-start gap-2.5 rounded-xl px-3 py-2.5 bg-teal-soft/10 border border-teal-deep/20 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={useScholarship}
+                  onChange={e => setUseScholarship(e.target.checked)}
+                />
                 <span className="text-[13px] text-navy font-body">
-                  Usar mi beca ({applicable.discount_type === 'percentage' ? `${applicable.discount_value}%` : `${formatCRC(applicable.discount_value)}`} de descuento)
-                  {discountedAmount != null && <span className="block text-[13px] text-teal-deep font-semibold">Nuevo total: {formatCRC(discountedAmount)}</span>}
+                  Usar mi beca ({formatDiscount(applicable.discount_type, applicable.discount_value, applicable.currency ?? group.currency)} de descuento)
+                  {breakdown?.blockedByCurrency && (
+                    <span className="mt-0.5 block text-[13px] text-coral-deep">
+                      Esta beca está en otra moneda que el cobro, así que no se puede aplicar acá.
+                    </span>
+                  )}
                 </span>
               </label>
             ) : (
@@ -1122,6 +1145,44 @@ function ConfirmModal({
                   placeholder="Opcional"
                   className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 />
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  El descuento se calcula al confirmar.
+                </p>
+              </div>
+            )}
+
+            {/* FIN-3: desglose explícito. El reclamo de finanzas es que la
+                gente transfiere montos equivocados, así que el monto final va
+                grande y sin ambigüedad. */}
+            {breakdown && (
+              <div className="rounded-xl border border-outline px-3 py-2.5 space-y-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[13px] text-navy-light/80 font-body">Precio</span>
+                  <span className="text-[13px] text-navy font-body">{formatMoney(breakdown.price, breakdown.currency)}</span>
+                </div>
+                {breakdown.discount > 0 && (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] text-teal-deep font-body">
+                      Beca{breakdown.discountLabel ? ` (${breakdown.discountLabel})` : ''}
+                    </span>
+                    <span className="text-[13px] text-teal-deep font-body">
+                      −{formatMoney(breakdown.discount, breakdown.currency)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-baseline justify-between gap-3 border-t border-outline pt-1.5">
+                  <span className="text-[13px] uppercase tracking-wider text-navy-light/80 font-display">
+                    {breakdown.covered ? 'Total' : 'Total a pagar'}
+                  </span>
+                  <span className="text-lg font-bold text-navy font-display">
+                    {formatMoney(breakdown.final, breakdown.currency)}
+                  </span>
+                </div>
+                {breakdown.covered && (
+                  <p className="text-[13px] text-teal-deep font-body">
+                    La beca cubre el total: no hay que subir comprobante.
+                  </p>
+                )}
               </div>
             )}
           </div>

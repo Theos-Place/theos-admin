@@ -3,12 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { updateFinanceRequestStatus } from '@/lib/supabase/queries/finance-requests'
 import { approvePayment } from '@/lib/supabase/queries/payments'
 import { sendSystemEmail } from '@/lib/email/system-templates'
-import { formatDate, formatMoney, currencyDecimals } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { toCurrency } from '@/lib/money'
 import {
   checkPaymentScholarshipEligibility, computeApplication, currencyMismatch,
   checkCouponEmailSendable,
 } from '@/lib/finance/scholarship-payment-rules'
+import { formatDiscount } from '@/lib/finance/payment-breakdown'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -75,18 +76,18 @@ export type Scholarship = {
 /** Redondea al colón (CRC no usa decimales en la práctica de este sistema). */
 /** INT-3: el redondeo va según la moneda. Antes era Math.round fijo, que asume
  *  colones y se comería los céntimos de un cobro en euros. */
+// Delega en la función pura: es el MISMO cálculo que ve la persona en el modal
+// antes de pagar. Tenerlo duplicado era la vía directa a cobrar un monto
+// distinto al que se mostró.
 export function computeDiscountedAmount(
   original: number, type: DiscountType, value: number, currency: string | null = 'CRC',
 ): number {
-  const bruto = type === 'percentage' ? original * (1 - value / 100) : original - value
-  const f = 10 ** currencyDecimals(currency)
-  return Math.max(0, Math.round(bruto * f) / f)
+  return computeApplication(original, type, value, currency).amount
 }
 
-export function formatDiscount(type: DiscountType, value: number, currency: string | null = 'CRC'): string {
-  if (type === 'percentage') return `${value}%`
-  return formatMoney(value, currency)
-}
+// La etiqueta del descuento vive en el módulo puro (usable desde el cliente);
+// acá se re-exporta para los llamadores del server. Antes había dos copias.
+export { formatDiscount }
 
 const SELECT = `
   id, kind, member_id, entity_type, plan_id, event_id, discount_type, discount_value,
@@ -195,6 +196,10 @@ export async function findApplicableScholarship(
   let q = supabase.from('scholarships').select(SELECT)
     .eq('kind', 'asignada').eq('member_id', memberId).eq('status', 'active').eq('entity_type', entityType)
   q = entityType === 'study_plan' ? q.eq('plan_id', entityId) : q.eq('event_id', entityId)
+  // Una beca VENCIDA no aplica. Los cupones genéricos ya lo validaban
+  // (validateGenericCode → 'expired'), pero las asignadas no: una beca con
+  // expires_at pasado se mostraba en el modal y se aplicaba igual.
+  q = q.or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
   const { data, error } = await q.limit(1).maybeSingle()
   if (error) throw error
   return data ? toDomain(data as DbRow) : null
@@ -578,7 +583,19 @@ export async function applyScholarshipToPayment(
     // Mismo RPC transaccional de la cola de revisión: paid + libera el objeto
     // (matrícula/inscripción). Si otra revisión lo procesó en paralelo, el
     // guard devuelve false y el estado real ya quedó resuelto por esa vía.
-    approved = await approvePayment(paymentId, reviewerMemberId)
+    //
+    // Si el RPC REVIENTA no se puede revertir: la beca ya se consumió. Antes la
+    // excepción subía y el llamador recibía un 500 genérico, aunque la beca sí
+    // se había aplicado — el pago quedaba en la cola con monto 0 y nadie sabía
+    // por qué. Ahora se responde `approved: false`: el estado queda consistente
+    // (beca consumida, pago en 0 esperando aprobación) y finanzas lo ve en la
+    // cola para cerrarlo a mano.
+    try {
+      approved = await approvePayment(paymentId, reviewerMemberId)
+    } catch (e) {
+      console.error('applyScholarshipToPayment: falló approve_payment tras aplicar la beca', paymentId, e)
+      approved = false
+    }
   }
   return { amount: newAmount, covered, approved }
 }

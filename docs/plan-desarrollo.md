@@ -2137,8 +2137,56 @@ Tests: modal reaparece a los 14 días; matrícula bloqueada sin documento; check
 bloqueado; dedup.
 ```
 
-### [ ] FIN-3 · Beca descontada visible en el modal de pago + comprobante requerido para el pago
+### [x] FIN-3 · Beca descontada visible en el modal de pago + comprobante requerido para el pago — HECHO 2026-08-21
 Archivos: modal de pago/matrícula, `src/lib/supabase/queries/scholarships.ts`, flujo de comprobantes
+
+**Causa raíz del reclamo de finanzas** ("la gente paga montos equivocados"): había **tres
+copias distintas del cálculo del descuento** — el módulo puro, `computeDiscountedAmount` en
+el server, y una inline en el ConfirmModal con `Math.round` fijo — y **dos del formato**
+(`formatDiscount` en el server y otra reimplementada en `finanzas/becas/page.tsx`, porque el
+cliente no puede importar del server). La copia del modal redondeaba a entero: un 10% sobre
+€25,50 mostraba €23 en vez de €22,95. Además el modal formateaba con `formatCRC`, así que un
+plan en euros se mostraba en colones.
+
+Implementado:
+- Módulo puro nuevo `lib/finance/payment-breakdown.ts`, **client-safe** y única fuente:
+  `buildPaymentBreakdown` (precio / descuento / final / `covered` / `blockedByCurrency`),
+  `formatDiscount` y `declaredAmountMismatch`. **12 tests** (50% → residual, 100% → covered,
+  beca fija mayor al precio, beca fija en otra moneda no aplica, céntimos en euros).
+  `computeDiscountedAmount` ahora **delega** en la función pura y `scholarships.ts`
+  re-exporta `formatDiscount`: se acabaron las copias.
+- (1) Desglose en el modal de matrícula: precio, línea de beca con el descuento en negativo
+  y **TOTAL A PAGAR** grande. Respeta la moneda del plan (`group.currency`, que ya existía
+  por INT-3 y no se usaba). Si la beca es fija y está en otra moneda, se dice que no aplica
+  en vez de mostrar un descuento que el server niega. Con beca del 100% avisa que no hay que
+  subir comprobante.
+- (3) El comprobante ahora pide **"Monto que transferiste"** y avisa si no coincide con el
+  calculado — **no bloquea** (finanzas decide en revisión, según la spec). El modal también
+  recibe `currency`; `enrollMember` la devuelve para eso.
+- Bug arreglado: **las becas asignadas no validaban vencimiento**. Los cupones genéricos sí
+  (`validateGenericCode` → `expired`), pero `findApplicableScholarship` filtraba solo por
+  `status='active'`, así que una beca con `expires_at` pasado se mostraba en el modal **y el
+  server la aplicaba**. Verificado contra la BD: la query vieja la encontraba, la nueva la
+  excluye, y una vigente sigue apareciendo.
+- Bug arreglado: si `approve_payment` reventaba tras aplicar una beca del 100%, la excepción
+  subía como 500 genérico y el pago quedaba en `en_revision` con monto 0 y la beca ya
+  consumida — nadie sabía que la beca sí se había aplicado. Ahora se responde
+  `approved: false`: el estado queda consistente y finanzas lo ve en la cola para cerrarlo.
+
+**(2) Auditoría de "en revisión sin comprobante" — pedía verificar, y hay DOS caminos:**
+1. `transitionPaymentQueue(id, 'start_review')` (`payments.ts:750`, vía
+   `POST /api/payments/[id]/review`): finanzas marca "empiezo a gestionar este cobro" sin
+   comprobante, y **queda así**. **NO lo cambié**: es una acción deliberada del staff, no de
+   alguien pagando, y cerrarlo rompería la cola de revisión. **Necesita tu decisión** si
+   querés que también exija comprobante.
+2. Beca del 100% (`scholarships.ts`): transitorio de un tick para habilitar el guard del RPC
+   — es el caso que BEC-1 define como "aprobado sin comprobante"; su falla quedó arreglada.
+
+Los 5 caminos de comprobante (`createComprobantePayment`, `submitEnrollment/EventComprobante`
+× UPDATE/INSERT) sí exigen `receipt_path`.
+
+Verificación: typecheck limpio, **977 tests** en verde, y el lint queda en **110 warnings,
+los mismos que `main`** (FIN-3 no suma ninguno).
 
 ```
 CONTEXTO — no romper una decisión ya tomada: la matrícula es EFECTIVA DE INMEDIATO y el
