@@ -2631,6 +2631,80 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          enrollment_id: string | null
+          event_registration_id: string | null
+          id: string
+          installments: number
+          member_id: string
+          notes: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          enrollment_id?: string | null
+          event_registration_id?: string | null
+          id?: string
+          installments: number
+          member_id: string
+          notes?: string | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          enrollment_id?: string | null
+          event_registration_id?: string | null
+          id?: string
+          installments?: number
+          member_id?: string
+          notes?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_plans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_plans_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "study_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_plans_event_registration_id_fkey"
+            columns: ["event_registration_id"]
+            isOneToOne: false
+            referencedRelation: "event_registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -2649,6 +2723,9 @@ export type Database = {
           member_id: string | null
           paid_at: string | null
           payment_date: string
+          payment_plan_id: string | null
+          due_date: string | null
+          installment_number: number | null
           payment_method: string | null
           receipt_path: string | null
           recorded_by: string | null
@@ -2682,6 +2759,9 @@ export type Database = {
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
+          payment_plan_id?: string | null
+          due_date?: string | null
+          installment_number?: number | null
           payment_method?: string | null
           receipt_path?: string | null
           recorded_by?: string | null
@@ -2715,6 +2795,9 @@ export type Database = {
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
+          payment_plan_id?: string | null
+          due_date?: string | null
+          installment_number?: number | null
           payment_method?: string | null
           receipt_path?: string | null
           recorded_by?: string | null

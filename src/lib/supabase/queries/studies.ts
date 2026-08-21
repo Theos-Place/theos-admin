@@ -1129,6 +1129,16 @@ export async function enrollMember(
     const pendientes = await countBlockingStudyPayments(memberId, plan?.id ?? null)
     if (pendientes > 0) throw new Error(`PAGO_ESTUDIOS_PENDIENTE:${pendientes}`)
   }
+  // FIN-4: un TRACTO VENCIDO impago bloquea matricularse en otro estudio. Es un
+  // guard aparte del de PAG-2 porque un arreglo puede ser de un evento (no de
+  // matrícula) y aun así debe bloquear; y porque el mensaje lleva el detalle de
+  // lo que se debe. Mismo override del staff.
+  if (!opts?.allowPendingStudyPayments) {
+    const { getOverdueInstallments } = await import('./payment-plans')
+    const { overdueBlockMessage } = await import('@/lib/finance/installments')
+    const vencidos = await getOverdueInstallments(memberId, ymdCR())
+    if (vencidos.length > 0) throw new Error(`TRACTO_VENCIDO:${overdueBlockMessage(vencidos)}`)
+  }
   // El DIRIGENTE del grupo (dirigente/co-dirigente) no paga matrícula del grupo
   // que dirige. Un dirigente que se inscribe como ALUMNO en otro grupo sí paga
   // (ahí es estudiante), por eso el criterio es por-grupo, no "es dirigente".

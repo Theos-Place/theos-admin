@@ -30,6 +30,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (error instanceof PaymentRequiredError) return NextResponse.json({ error: error.message }, { status: 422 })
     if (error instanceof AlreadyRegisteredError) return NextResponse.json({ error: error.message }, { status: 409 })
     if (error instanceof EventFullError) return NextResponse.json({ error: error.message }, { status: 409 })
+    if (error instanceof Error && error.message.startsWith('TRACTO_VENCIDO:')) {
+      return NextResponse.json(
+        { error: error.message.slice('TRACTO_VENCIDO:'.length), code: 'tracto_vencido' },
+        { status: 409 },
+      )
+    }
     const scholarshipRes = scholarshipErrorResponse(error)
     if (scholarshipRes) return scholarshipRes
     console.error('POST /api/events/[id]/register:', error)

@@ -74,8 +74,14 @@ type PaymentReviewQueueProps = {
   /** Tras una acción que cambia pagos (aprobar/rechazar/cerrar/lote): el padre
    *  recarga el listado general y el contador de la pestaña. */
   onMutated?: () => void
+  /** FIN-4: puede convertir un pago pendiente en arreglo de tractos
+   *  (finanzas/dirección/admin — espejo del requireRoles del endpoint). */
+  canPlan?: boolean
   ref?: Ref<PaymentReviewQueueHandle>
 }
+
+// FIN-4: estado del panel "Convertir en arreglo de pago".
+type PlanPanel = { installments: number; firstDue: string; notes: string; busy: boolean }
 
 // BEC-1: estado del panel "Aplicar beca / cupón" dentro del detalle.
 type ScholarshipPanel = {
@@ -85,7 +91,7 @@ type ScholarshipPanel = {
   busy: boolean
 }
 
-export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = false, onMutated, ref }: PaymentReviewQueueProps) {
+export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = false, canPlan = false, onMutated, ref }: PaymentReviewQueueProps) {
   const toast = useToast()
 
   const [rows, setRows] = useState<QueueRow[]>([])
@@ -111,6 +117,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   const [closeTarget, setCloseTarget] = useState<QueueRow | null>(null)
   const [closeReason, setCloseReason] = useState('')
   const [scholPanel, setScholPanel] = useState<ScholarshipPanel | null>(null)
+  // FIN-4: panel de arreglo de pago (null = cerrado).
+  const [planPanel, setPlanPanel] = useState<PlanPanel | null>(null)
 
   const refetch = useCallback(() => {
     setLoading(true)
@@ -284,6 +292,32 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo aplicar la beca.', 'error')
       setScholPanel(p => p ? { ...p, busy: false } : p)
+    }
+  }
+
+  // FIN-4: parte el pago pendiente en tractos. El primero puede vencer hoy o
+  // más adelante; los siguientes van mes a mes.
+  async function createPlan(row: QueueRow, panel: PlanPanel) {
+    setPlanPanel(p => p ? { ...p, busy: true } : p)
+    try {
+      const res = await fetch(`/api/payments/${row.id}/payment-plan`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          installments: panel.installments,
+          first_due: panel.firstDue,
+          notes: panel.notes.trim() || undefined,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo crear el arreglo de pago.')
+      toast(
+        `Arreglo creado para ${row.member_name}: ${panel.installments} tractos que suman ${money(Number(data?.plan?.total_amount ?? 0), row.currency)}.`,
+        'success',
+      )
+      setPlanPanel(null); setDetail(null); mutated()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo crear el arreglo de pago.', 'error')
+      setPlanPanel(p => p ? { ...p, busy: false } : p)
     }
   }
 
@@ -610,6 +644,88 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     </div>
                     <p className="text-[13px] text-navy-light/80 font-body">
                       Beca completa: el pago queda aprobado sin comprobante. Parcial: queda pendiente por el resto.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* FIN-4: convertir en arreglo de pago. Solo sobre un pago PENDIENTE
+                (partir algo ya cobrado o en revisión no tiene sentido). */}
+            {canPlan && detail.queue_status === 'pendiente' && (
+              <div className="rounded-xl border border-navy/15 p-3 space-y-2">
+                {!planPanel ? (
+                  <button
+                    onClick={() => setPlanPanel({
+                      installments: 2,
+                      // Por defecto el primer tracto vence hoy: finanzas suele
+                      // acordar el arreglo con el primer pago en el momento.
+                      firstDue: new Date().toISOString().slice(0, 10),
+                      notes: '',
+                      busy: false,
+                    })}
+                    className="text-[13px] text-navy underline decoration-navy/30 hover:decoration-navy font-body"
+                  >
+                    Convertir en arreglo de pago
+                  </button>
+                ) : (
+                  <>
+                    <p className="text-[13px] font-semibold text-navy font-display">Arreglo de pago</p>
+                    <p className="text-[13px] text-navy-light/80 font-body">
+                      Se parte {money(detail.amount, detail.currency)} en tractos que suman ese mismo monto.
+                      El primer tracto reusa este pago.
+                    </p>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <div className="space-y-1">
+                        <label htmlFor="plan-tractos" className="block text-[13px] text-navy-light/80 font-display">Tractos</label>
+                        <input
+                          id="plan-tractos"
+                          type="number" min={2} max={24}
+                          value={planPanel.installments}
+                          onChange={e => setPlanPanel(p => p ? { ...p, installments: Number(e.target.value) } : p)}
+                          className="w-20 rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label htmlFor="plan-primer" className="block text-[13px] text-navy-light/80 font-display">Vence el primero</label>
+                        <input
+                          id="plan-primer"
+                          type="date"
+                          value={planPanel.firstDue}
+                          onChange={e => setPlanPanel(p => p ? { ...p, firstDue: e.target.value } : p)}
+                          className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="plan-notas" className="block text-[13px] text-navy-light/80 font-display">Notas (opcional)</label>
+                      <input
+                        id="plan-notas"
+                        value={planPanel.notes}
+                        onChange={e => setPlanPanel(p => p ? { ...p, notes: e.target.value } : p)}
+                        placeholder="Ej. acordado por teléfono con la persona"
+                        className="w-full rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => createPlan(detail, planPanel)}
+                        disabled={planPanel.busy || planPanel.installments < 2 || planPanel.installments > 24 || !planPanel.firstDue}
+                        className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
+                      >
+                        {planPanel.busy ? '…' : 'Crear arreglo'}
+                      </button>
+                      <button
+                        onClick={() => setPlanPanel(null)}
+                        disabled={planPanel.busy}
+                        className="rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                    <p className="text-[13px] text-navy-light/80 font-body">
+                      Los siguientes tractos vencen mes a mes. Un tracto vencido impago le bloquea
+                      matricularse y inscribirse a eventos pagos.
                     </p>
                   </>
                 )}

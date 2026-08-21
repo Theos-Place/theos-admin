@@ -52,6 +52,13 @@ export async function POST(
     if (error instanceof EventFullError) {
       return NextResponse.json({ error: error.message }, { status: 409 })
     }
+    // FIN-4: el mensaje ya trae el detalle de los tractos vencidos.
+    if (error instanceof Error && error.message.startsWith('TRACTO_VENCIDO:')) {
+      return NextResponse.json(
+        { error: error.message.slice('TRACTO_VENCIDO:'.length), code: 'tracto_vencido' },
+        { status: 409 },
+      )
+    }
     console.error('POST /api/events/[id]/registrations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

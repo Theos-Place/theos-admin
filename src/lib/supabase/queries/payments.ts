@@ -487,6 +487,10 @@ export type MemberPaymentRow = {
   reviewed_at: string | null
   enrollment_id: string | null
   event_registration_id: string | null
+  /** FIN-4: si el pago es un TRACTO, su vencimiento y su número. */
+  due_date: string | null
+  installment_number: number | null
+  payment_plan_id: string | null
 }
 
 /** Pagos/cobros de UN miembro (para la sección "Pagos y cobros" del perfil).
@@ -535,7 +539,7 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
     .from('payments')
     .select(`
       id, amount, currency, concept, receipt_path, created_at, status, review_status, reviewed_at,
-      enrollment_id, event_registration_id,
+      enrollment_id, event_registration_id, due_date, installment_number, payment_plan_id,
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
       enrollment:study_enrollments!payments_enrollment_id_fkey(
         group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
@@ -576,6 +580,9 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
       reviewed_at: (r.reviewed_at as string | null) ?? null,
       enrollment_id: (r.enrollment_id as string | null) ?? null,
       event_registration_id: (r.event_registration_id as string | null) ?? null,
+      due_date: (r.due_date as string | null) ?? null,
+      installment_number: (r.installment_number as number | null) ?? null,
+      payment_plan_id: (r.payment_plan_id as string | null) ?? null,
     }
   })
 }

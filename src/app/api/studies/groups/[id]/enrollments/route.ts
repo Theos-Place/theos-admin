@@ -92,6 +92,14 @@ export async function POST(
         { status: 409 },
       )
     }
+    // FIN-4: tracto vencido. El mensaje ya viene armado con el detalle de la
+    // deuda (cuántos tractos, cuánto suman y desde cuándo).
+    if (error instanceof Error && error.message.startsWith('TRACTO_VENCIDO:')) {
+      return NextResponse.json(
+        { error: error.message.slice('TRACTO_VENCIDO:'.length), code: 'tracto_vencido' },
+        { status: 409 },
+      )
+    }
     // GRU-2: el mensaje dice POR QUÉ ("Este grupo es solo para: Dirigente"),
     // no un error genérico — llega igual por deep link que desde el staff.
     if (error instanceof Error && error.message.startsWith('RESTRICCION_GRUPO:')) {

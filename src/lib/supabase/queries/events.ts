@@ -418,6 +418,18 @@ export async function createRegistration(
   const forced = input.payment_status === 'paid' || input.payment_status === 'exempted'
   const hasScholarshipInput = !!(input.scholarship_id || input.coupon_code)
 
+  // FIN-4: con un TRACTO VENCIDO impago no se puede inscribir a un evento PAGO
+  // (los gratuitos no se bloquean). Antes de FIN-4 los eventos no tenían ningún
+  // guard de deuda. Se salta cuando el staff fuerza 'paid'/'exempted': ahí la
+  // decisión de cobro ya la tomó una persona.
+  if (!forced && pricing.requiresPayment && !pricing.exempt) {
+    const { getOverdueInstallments } = await import('./payment-plans')
+    const { overdueBlockMessage } = await import('@/lib/finance/installments')
+    const { ymdCR } = await import('@/lib/format')
+    const vencidos = await getOverdueInstallments(input.member_id, ymdCR())
+    if (vencidos.length > 0) throw new Error(`TRACTO_VENCIDO:${overdueBlockMessage(vencidos)}`)
+  }
+
   // Beca/cupón (opcional): recalcula el precio ANTES de reservar/insertar. Se
   // consume incluso si el resultado queda en ₡0 (mismo criterio que matrícula).
   let appliedScholarship: { id: string; kind: 'asignada' | 'generica' } | null = null

@@ -48,7 +48,7 @@ function toLabel(p: { concept?: string | null; entity_type?: string | null; enti
 }
 
 function PagosContent() {
-  const { loaded } = useAuth()
+  const { loaded, hasRole } = useAuth()
   const { can } = usePermissions()
   // Ver la página: módulo finanzas O permiso de revisión (espejo del guard de
   // GET /api/finance/payments y de la excepción del ModuleGuard del layout).
@@ -58,6 +58,9 @@ function PagosContent() {
   const canFinanceEdit = can('finanzas', 'edit')
   // BEC-1: aplicar beca/cupón desde el modal (espejo del guard del endpoint).
   const canApplyScholarship = can('becas', 'edit') || canReview
+  // FIN-4: crear arreglos de pago. Por ROL (no por módulo) para que coincida
+  // con requireRoles del endpoint: dirección tiene finanzas solo en view.
+  const canPlan = hasRole('finanzas', 'direccion', 'admin')
 
   const [revealAll, setRevealAll] = useState(false)
   // Pestañas: 'todos' (listado general) | 'revision' (cola de revisión).
@@ -264,6 +267,7 @@ function PagosContent() {
             ref={queueRef}
             visible={tab === 'revision'}
             canReview={canReview}
+            canPlan={canPlan}
             canApplyScholarship={canApplyScholarship}
             onMutated={refetch}
           />

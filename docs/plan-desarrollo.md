@@ -2209,8 +2209,60 @@ Tests: modal con beca del 50% muestra el residual correcto; beca 100% sin compro
 monto declarado distinto genera aviso.
 ```
 
-### [ ] FIN-4 · Arreglo de pago en tractos (uso interno de finanzas)
+### [~] FIN-4 · Arreglo de pago en tractos (uso interno de finanzas) — NÚCLEO HECHO 2026-08-21
 Archivos: migración (tabla nueva), `/finanzas/pagos`, `src/lib/supabase/queries/payments.ts`, guard de matrícula/inscripción
+
+**Decisiones tomadas antes de migrar** (el punto pedía proponer el esquema):
+- **El primer tracto aprobado libera el objeto pagado** → `approve_payment` queda intacto.
+- **Cancelar el arreglo solo marca el plan**: los tractos impagos siguen `pending`, así que
+  siguen bloqueando y siguen entrando a los recordatorios. Cancelar ≠ condonar; para condonar
+  está el "Cerrar sin cobrar" que ya existe por pago. Calza con "no automatices consecuencias
+  más allá del bloqueo".
+
+Migración `20260821200000_payment_plans` (aplicada y verificada):
+- Tabla `payment_plans` (member, objeto pagado con CHECK de exactamente uno, total, moneda,
+  cantidad de tractos 2–24, status activo/completado/cancelado, notas, created_by), RLS con
+  policy self+finanzas y trigger `set_updated_at`.
+- `payments` gana `payment_plan_id`, `due_date` e `installment_number`. `due_date` es columna
+  NUEVA a propósito: `payment_date` ya existe con otro significado (NOT NULL con default hoy
+  = fecha de registro, poblada incluso en pagos impagos).
+- **Dos índices únicos redefinidos**: `payments_comprobante_en_revision_uniq` y su gemelo de
+  eventos permitían UN solo pago en revisión por matrícula/inscripción; con tractos, subir el
+  comprobante del tracto 2 mientras el 1 estaba en revisión chocaba. Ahora se limitan a los
+  pagos SIN plan (`payment_plan_id IS NULL`), que es donde la regla tenía sentido.
+- `payments_plan_installment_uniq`: un tracto por número dentro del arreglo (idempotencia si
+  el POST se reintenta).
+
+Hecho:
+- Módulo puro `lib/finance/installments.ts` con **23 tests**: `splitAmount` garantiza que los
+  tractos **suman exacto** el total (₡10 000 en 3 → 3 334 + 3 333 + 3 333, no 3×3 333 =
+  ₡9 999), `monthlyDueDates` no corre el calendario (31 ene → 28 feb, no 3 mar), `isOverdue`
+  y `overdueBlockMessage` (mensaje con el detalle, sin sumar monedas distintas).
+- `queries/payment-plans.ts`: `createPaymentPlan` (reusa el pago original como tracto 1, así
+  conserva beca/comprobante/vínculos, y revierte todo si falla), `cancelPaymentPlan`,
+  `settlePlanIfPaid`, `getOverdueInstallments`.
+- **Guard (punto 3)**: tracto vencido impago → 409 `tracto_vencido` con el detalle, en
+  matrícula (`enrollMember`) **y en eventos pagos** (`createRegistration`) — los eventos no
+  tenían NINGÚN guard de deuda antes de esto. Se salta con el override del staff / cuando
+  finanzas fuerza paid/exempted.
+- **UI (punto 2)**: panel "Convertir en arreglo de pago" en el modal de la cola, solo sobre un
+  pago pendiente y solo para finanzas/dirección/admin — por ROL, no por módulo, porque
+  dirección tiene `finanzas` solo en view y el endpoint usa `requireRoles`.
+- **Seguimiento (punto 4, parcial)**: los tractos muestran su vencimiento en `/mis-pagos` y
+  marcan en rojo los vencidos (corte en hora CR). Los recordatorios de PAG-3 los toman
+  automáticamente: un tracto es `status='pending'`, que es justo lo que busca el cron.
+- Rutas: `GET/POST /api/payments/[id]/payment-plan` y `PATCH /api/payment-plans/[id]`
+  (`action: 'cancelar'`), ambas con `requireRoles('finanzas','direccion','admin')` y auditoría.
+
+Verificado contra la BD real (los 3 tests que pedía el punto): partir un pago da tractos que
+suman el total, el tracto vencido bloquea, el futuro al día no bloquea, y cancelar deja los
+tractos pendientes. Typecheck limpio, 995 tests, lint 94/94 sin errores.
+
+**Falta de este punto (2 sub-items del punto 4):**
+- [ ] Filtro "en arreglo de pago" en la página de pagos (necesita param nuevo en
+      `GET /api/finance/payments`).
+- [ ] Notificación interna a finanzas cuando un tracto se vence (extender el cron de
+      `payment-reminders`, que hoy solo notifica al miembro).
 
 ```
 Excepción manejada internamente (NUNCA visible como opción de autoservicio): finanzas puede

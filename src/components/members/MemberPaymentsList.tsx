@@ -8,7 +8,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Check, CreditCard, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDate, formatMoney } from '@/lib/format'
+import { formatDate, formatMoney, ymdCR } from '@/lib/format'
+import { isOverdue } from '@/lib/finance/installments'
 import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 import { Modal } from '@/components/shared/Modal'
 
@@ -58,6 +59,9 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
     return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
   }
 
+  // Corte en hora de Costa Rica: con UTC un tracto podía verse vencido de noche.
+  const todayYmd = ymdCR()
+
   return (
     <div className="divide-y divide-[var(--outline-variant)]">
       {visible.map(p => {
@@ -75,6 +79,20 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
               <p className="text-[13px] text-navy-light/80 font-body">
                 {formatMoney(p.amount, p.currency)} · {formatDate(p.created_at)}
               </p>
+              {/* FIN-4: un tracto muestra SU vencimiento, y avisa si ya pasó —
+                  un tracto vencido bloquea matricularse y otros eventos. */}
+              {p.due_date && (
+                <p className={cn(
+                  'text-[13px] font-body',
+                  isOverdue({ due_date: p.due_date, status: p.status }, todayYmd)
+                    ? 'text-coral-deep font-medium'
+                    : 'text-navy-light/80',
+                )}>
+                  {isOverdue({ due_date: p.due_date, status: p.status }, todayYmd)
+                    ? `Venció el ${formatDate(p.due_date)}`
+                    : `Vence el ${formatDate(p.due_date)}`}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display', badge.cls)}>{badge.label}</span>
