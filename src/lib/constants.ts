@@ -4,8 +4,8 @@
  */
 
 // ─── UI feedback delays ───────────────────────────────────────────────────────
-/** "Guardado" banner disappears after this (ms) */
-export const MOCK_SAVE_DELAY_MS = 2000
+/** "Guardado"/"Copiado" banner disappears after this (ms) */
+export const SAVE_FEEDBACK_MS = 2000
 
 // ─── Toast / notification auto-dismiss ───────────────────────────────────────
 /** Short toast dismiss — configuración page (ms) */

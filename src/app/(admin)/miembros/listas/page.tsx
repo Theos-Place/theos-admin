@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { MemberList } from '@/types/member-list'
@@ -41,7 +41,9 @@ export default function ListasGuardadasPage() {
   const [editTags, setEditTags]   = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
-  async function loadLists() {
+  // useCallback: `toast` viene del contexto y es estable, así que loadLists
+  // tampoco cambia entre renders y el efecto corre una sola vez.
+  const loadLists = useCallback(async () => {
     try {
       const res = await fetch('/api/member-lists')
       if (res.ok) setLists(await res.json())
@@ -52,8 +54,8 @@ export default function ListasGuardadasPage() {
     } finally {
       setLoading(false)
     }
-  }
-  useEffect(() => { loadLists() }, [])
+  }, [toast])
+  useEffect(() => { loadLists() }, [loadLists])
 
   const allTags = Array.from(new Set(lists.flatMap(l => l.tags))).sort()
 

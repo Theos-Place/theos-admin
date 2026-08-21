@@ -9,7 +9,7 @@ import { useOrg } from '@/lib/org'
 import { Plus, Lock } from 'lucide-react'
 
 export default function PuestosPage() {
-  const { employees: MOCK_EMPLOYEES, positions: MOCK_PAID_POSITIONS } = useEmployees()
+  const { employees, positions: paidPositions } = useEmployees()
   const { areas: AREAS } = useOrg()
   const [areaFilter, setAreaFilter] = useState('all')
 
@@ -19,21 +19,21 @@ export default function PuestosPage() {
   ]
 
   const assignedByPosition = useMemo(() => {
-    const map: Record<string, typeof MOCK_EMPLOYEES[0] | undefined> = {}
-    MOCK_EMPLOYEES.filter(e => e.status === 'active').forEach(e => {
+    const map: Record<string, typeof employees[0] | undefined> = {}
+    employees.filter(e => e.status === 'active').forEach(e => {
       map[e.position_id] = e
     })
     return map
-  }, [])
+  }, [employees])
 
   const grouped = useMemo(() => {
     return AREAS.map(area => ({
       ...area,
-      positions: MOCK_PAID_POSITIONS.filter(
+      positions: paidPositions.filter(
         p => p.area === area.name && (areaFilter === 'all' || p.area === areaFilter)
       ),
     })).filter(a => a.positions.length > 0)
-  }, [areaFilter])
+  }, [AREAS, areaFilter, paidPositions])
 
   return (
     <div className="space-y-6">

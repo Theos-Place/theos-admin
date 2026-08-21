@@ -38,7 +38,7 @@ export default function ReportesPage() {
       const matchTo = !donDateTo || dt <= new Date(donDateTo)
       return matchFrom && matchTo
     })
-  }, [donDateFrom, donDateTo])
+  }, [donations, donDateFrom, donDateTo])
 
   // Payments tab
   const entities = useMemo(() => {
@@ -63,7 +63,7 @@ export default function ReportesPage() {
   const yearDonations = useMemo(() => {
     const year = Number(yearFilter)
     return donations.filter(d => new Date(d.donation_date).getFullYear() === year)
-  }, [yearFilter])
+  }, [donations, yearFilter])
 
   const monthlyData = useMemo(() => {
     return MONTH_NAMES.map((name, i) => {

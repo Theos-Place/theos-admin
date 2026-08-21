@@ -8,7 +8,7 @@ import { useEventTypes } from '@/hooks/useEventTypes'
 import { useAuth } from '@/hooks/useAuth'
 import { eventPageActions } from '@/lib/events/page-actions'
 import { AccessDenied } from '@/components/shared/AccessDenied'
-import { MOCK_SAVE_DELAY_MS } from '@/lib/constants'
+import { SAVE_FEEDBACK_MS } from '@/lib/constants'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 const labelCls = 'text-[13px] tracking-widest uppercase text-navy-light/80'
@@ -72,7 +72,7 @@ export default function EmbedPage() {
   function handleCopy() {
     navigator.clipboard.writeText(currentCode).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), MOCK_SAVE_DELAY_MS)
+      setTimeout(() => setCopied(false), SAVE_FEEDBACK_MS)
     })
   }
 

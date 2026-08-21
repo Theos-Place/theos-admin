@@ -20,7 +20,10 @@ export default function FinanzasPage() {
   const [period, setPeriod] = useState<'month' | 'prev_month' | 'year'>('month')
   const [revealAll, setRevealAll] = useState(false)
 
-  const now = new Date()
+  // "Ahora" se fija al montar. Llamar new Date() en el cuerpo del render es
+  // impuro: el compilador de React no puede memoizar nada que dependa de eso
+  // (react-hooks/purity + preserve-manual-memoization).
+  const [now] = useState(() => new Date())
   const thisMonth = now.getMonth()
   const thisYear = now.getFullYear()
 
@@ -36,7 +39,7 @@ export default function FinanzasPage() {
       }
       return d.getFullYear() === thisYear
     })
-  }, [period, thisMonth, thisYear])
+  }, [payments, period, thisMonth, thisYear])
 
   const filteredDonations = useMemo(() => {
     return donations.filter(d => {
@@ -49,7 +52,7 @@ export default function FinanzasPage() {
       }
       return dt.getFullYear() === thisYear
     })
-  }, [period, thisMonth, thisYear])
+  }, [donations, period, thisMonth, thisYear])
 
   // INT-3: pagos y donaciones se juntan SIN mezclar monedas.
   const totalIngresos = addTotals(sumByCurrency(filteredPayments), sumByCurrency(filteredDonations))

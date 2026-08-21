@@ -166,7 +166,7 @@ export default function MiembroDetailPage() {
       grade: s.grade ?? null,
       notes: s.notes ?? null,
     }))
-  }, [member])
+  }, [member, studyTypes])
 
   const servicioRows: ServiceRow[] = useMemo(() =>
     (member?.service_history ?? []).map(s => ({
