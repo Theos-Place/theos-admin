@@ -79,9 +79,9 @@ personas, no a puestos. Puede faltarte uno.
 
 ## Cómo se pide un acceso
 
-Se le pide a `admin`. El coordinador de estudios puede delegar por su cuenta tres roles
-acotados — editor de perfiles, editor de grupos de estudio y folletos — sin pasar por
-administración.
+Escribí a **soporte@theosplace.org**. El coordinador de estudios puede delegar por su cuenta
+tres roles acotados — editor de perfiles, editor de grupos de estudio y folletos — sin pasar
+por administración.
 
 > Si vas a pedir un acceso, pedí el más acotado que resuelva tu trabajo. Es más fácil de
 > aprobar y más fácil de auditar después.

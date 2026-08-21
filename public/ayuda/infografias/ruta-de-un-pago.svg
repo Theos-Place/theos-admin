@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1000" role="img" aria-labelledby="t-pago d-pago" font-family="Arial, Helvetica, sans-serif">
   <title id="t-pago">La ruta de un pago</title>
-  <desc id="d-pago">Los cuatro estados de un pago: pendiente, en revisión, aprobado o rechazado; que el pago va por un carril aparte de la matrícula, y el plazo de 72 horas que sí aplica a los eventos.</desc>
+  <desc id="d-pago">Los cuatro estados de un pago: pendiente, en revisión, aprobado o rechazado; que la matrícula incluye su pago y el comprobante completa el trámite, y el plazo de 72 horas que aplica a los eventos.</desc>
 
   <rect width="720" height="1000" fill="#F6F5F2"/>
 
@@ -61,10 +61,10 @@
   <g>
     <rect x="48" y="606" width="624" height="164" rx="14" fill="#161440"/>
     <text x="76" y="640" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">LO QUE MÁS CONFUNDE</text>
-    <text x="76" y="686" font-size="34" font-weight="bold" fill="#FFFFFF">Tu matrícula no depende del pago</text>
-    <text x="76" y="716" font-size="15" fill="#FFFFFF">Te matriculás y ya estás adentro; el comprobante lo revisa finanzas aparte.</text>
+    <text x="76" y="686" font-size="34" font-weight="bold" fill="#FFFFFF">La matrícula incluye su pago</text>
+    <text x="76" y="716" font-size="15" fill="#FFFFFF">Al matricularte nace el cobro: subí el comprobante para completar el trámite.</text>
     <text x="76" y="742" font-size="14" fill="#9FA8C7">Con un pago de estudios sin resolver no podés matricular OTRO estudio.</text>
-    <text x="76" y="762" font-size="14" fill="#9FA8C7">En eventos sí: 72 horas sin comprobante nuevo y se libera el lugar.</text>
+    <text x="76" y="762" font-size="14" fill="#9FA8C7">En eventos, 72 horas sin comprobante nuevo y se libera el lugar.</text>
   </g>
 
   <!-- Atajos -->

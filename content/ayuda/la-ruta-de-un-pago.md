@@ -28,18 +28,17 @@ Todos tus cobros están en **Pagos pendientes**, en el menú de tu cuenta.
 Hacés el SINPE o la transferencia por fuera, y después subís la **captura o el PDF** del
 comprobante en el sistema. Que se lea el monto, la fecha y la referencia.
 
-## El pago va por su carril; la matrícula, por el suyo
+## La matrícula incluye su pago
 
-Esto es lo que más confunde: **el pago y la matrícula son dos cosas separadas.** Cuando te
-matriculás, quedás matriculado — con costo o sin costo. El cobro nace aparte y finanzas lo
-revisa por su cuenta.
+Cuando te matriculás en algo con costo, el cobro nace en ese momento y **el trámite se
+completa subiendo el comprobante.** No des la matrícula por lista sin subirlo.
 
-**Si te rechazan el comprobante, no perdés el lugar.** Subís otro y sigue el trámite. Nadie
-queda desmatriculado por un pago sin resolver.
+**Finanzas siempre revisa cada comprobante.** Si está correcto, el cobro queda saldado. Si
+está incorrecto o incompleto, el pago se rechaza y te llega la notificación con el motivo.
 
-Lo que sí pasa mientras el pago no se resuelve: no vas a poder matricularte en OTRO estudio
-hasta ponerte al día. Si te rechazaron y no entendés por qué, escribí de una vez en lugar de
-esperar.
+**Si te rechazan el comprobante, no perdés el lugar.** Subís otro y sigue el trámite. Pero el
+pago hay que resolverlo: mientras esté sin resolver no vas a poder matricularte en OTRO
+estudio. Si te rechazaron y no entendés por qué, escribí de una vez en lugar de esperar.
 
 **En eventos es distinto:** ahí el cupo sí se reserva contra el pago, y si el comprobante se
 rechaza y pasan 72 horas sin uno nuevo, la inscripción al evento se vence y el lugar vuelve a
