@@ -2578,8 +2578,42 @@ coherente) que felicite a los cumpleañeros del día.
 Tests: dedupe anual, exclusión de rebotados, caso 29/2.
 ```
 
-### [ ] DIR-3 · Recordatorio de cierre de grupo una semana antes
+### [x] DIR-3 · Recordatorio de cierre de grupo una semana antes — HECHO 2026-08-21
 Archivos: cron (extender `start-reminders` o crear `close-reminders`), `study_groups`, correo nuevo
+
+Cron nuevo `/api/cron/close-reminders`, diario `30 14 * * *` UTC = **8:30am CR**. Molde de
+`start-reminders` (CRON_SECRET, healthcheck, `export const GET = POST`).
+
+**Nombres reales, distintos a los de la spec:** las columnas son `study_groups.ends_at` (no
+`end_date`) y `study_plans.duration_weeks` (no `weeks`).
+
+- Módulo puro `lib/studies/close-reminder.ts` con **16 tests**: cálculo de la fecha de fin,
+  qué aviso toca, y los casos de la spec (dispara a −7 y no antes, dedupe, segundo a +7, grupo
+  cerrado a tiempo no recibe nada).
+- **`ends_at` manda** sobre el cálculo; solo si falta se usa inicio + semanas del plan. Importa:
+  de los 101 grupos en curso hay **1 sin fecha de fin**, que sin el cálculo quedaría mudo.
+- Ventana **"≤ 7 días", no "exactamente 7"**: si un día el cron no corre, el aviso sale al
+  siguiente en vez de perderse. El dedupe evita que se repita.
+- Migración `20260822130000` (aplicada): `close_reminder_sent_at` y `close_overdue_notified_at`
+  (patrón de `start_notified_at`), índice parcial sobre los grupos en curso, y la plantilla
+  `cierre_vencido`. La del primer aviso (`cierre_pendiente`) ya venía de la tanda de plantillas.
+- Va al **dirigente y al co-dirigente**, deduplicando por correo (si son la misma persona o
+  comparten dirección, un solo envío).
+- **Segundo aviso a +7 días** con texto propio (el grupo ya terminó y traba la matrícula de los
+  estudiantes al siguiente nivel) + notificación interna a coordinación. Y ahí para: el correo
+  lo dice explícito ("este es el último recordatorio automático").
+- La marca de dedupe se sella SIEMPRE al terminar el grupo, aunque un correo falle: si no, al
+  día siguiente le vuelve a escribir a quien sí lo recibió.
+
+**Ojo con la primera corrida:** hoy hay **36 grupos "próximos" y 35 "vencidos"** = ~142 correos
+de una. Verificado que los 35 vencidos terminaron hace **entre 8 y 30 días** (el más viejo,
+25) — o sea son cierres realmente pendientes, no deuda histórica, y el aviso corresponde. Aun
+así el cron lleva `MAX_CLOSE_REMINDERS_PER_RUN = 60`: lo que no entra hoy sale mañana (no se
+sella lo que no se avisó), y un dato malo no se vuelve un bombardeo.
+
+Typecheck limpio, **1060 tests**, lint 94/94.
+
+**Falta configurar (vos):** `HEALTHCHECK_URL_CLOSE_REMINDERS` en Vercel.
 
 ```
 Cuando a un grupo en_curso le falta UNA SEMANA para terminar, correo al dirigente Y al
