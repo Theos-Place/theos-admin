@@ -3052,7 +3052,7 @@ Contra el catálogo real el dropdown pasó de **32 planes activos a 19**. Los 13
 
 Si no quedaran capacitaciones activas, el dropdown lo dice en vez de aparecer vacío.
 
-### [ ] REU-3 · El enlace de "¿grupo equivocado?" también en Matrícula
+### [x] REU-3 · El enlace de "¿grupo equivocado?" también en Matrícula — YA ESTABA HECHO (verificado 2026-08-21)
 ```
 El enlace "¿Te matriculaste en el grupo equivocado?" (REU-2) quedó solo en /mis-pagos.
 Ese no es el momento de dolor: la persona se da cuenta del error justo después de
@@ -3064,7 +3064,14 @@ Mismo modal de reubicación que ya existe. Que el texto explique que lo revisa e
 coordinador y que mientras tanto sigue matriculado en su grupo actual.
 ```
 
-### [ ] FRM-3 · Exportar respuestas de formularios también en Excel
+**Ya estaba, y con tests que lo fijan.** `src/lib/studies/relocation-entry.test.ts` verifica
+los cuatro accesos y el copy del modal, y los 9 tests pasan:
+`matricula/confirmacion` (línea 154), `estudios/grupos/[id]` (690), `mis-pagos` (199, no se
+quitó) y `MemberParticipationTab` (165, el historial del perfil). El modal ya dice que lo
+revisa el coordinador, que no es automático y que sigue matriculado en su grupo actual.
+Se hizo junto con REU-2; no hacía falta tocar nada.
+
+### [x] FRM-3 · Exportar respuestas de formularios también en Excel — HECHO 2026-08-21
 ```
 Hoy las respuestas de un formulario se bajan solo en CSV. Agregá export en XLSX además del
 CSV (dos botones, o un selector de formato).
@@ -3078,7 +3085,28 @@ no string. Respetá el mismo gate de permisos que el CSV (rol forms, o acceso pu
 formulario).
 ```
 
-### [ ] PRE-11 · Grupo prematrimonial: dirigente Y co-dirigente obligatorios (pareja)
+**Cómo quedó.** Dos botones (CSV / Excel), no un selector: son dos clics, no una
+configuración. El CSV se sigue armando en el cliente (ya tiene los datos); el XLSX sale de
+`GET /api/forms/[id]/responses/export` porque ExcelJS no cabe en el bundle de una pantalla.
+Mismo gate que el CSV: se repite `formViewerScope` (módulo, grant puntual, encargado del
+evento) en vez de heredarlo.
+
+Reglas puras y testeadas en `src/lib/forms/xlsx-export.ts`: el formato de columna se declara
+**antes** de escribir (`'@'` para texto), que es lo que de verdad evita que Excel se coma el
+cero de una cédula — mandar un string no alcanza. Solo `number` y `scale` van como número;
+un `select` con opciones "1".."5" es una etiqueta, no una cantidad. Las fechas van como Date
+ancladas a mediodía UTC para que no se corran de día en Costa Rica.
+
+Verificado generando el archivo y volviéndolo a leer con datos reales (8 respuestas de la
+preinscripción a CDEB): encabezado en negrita, panel congelado, autofiltro, anchos acotados
+entre 12 y 42, fechas como Date y los checkbox múltiples unidos con coma igual que el CSV.
+
+**Extra**: `personal_data` NO genera columna. Parece un campo (pide cédula y teléfono) pero
+es un bloque que actualiza el perfil y nunca guarda nada — 3 campos de ese tipo y 0 valores
+en la base. El CSV lo incluía junto con `info` y `page_break`, así que traía columnas siempre
+vacías; ahora los dos exports usan el mismo `isDataField` y salen con las mismas columnas.
+
+### [x] PRE-11 · Grupo prematrimonial: dirigente Y co-dirigente obligatorios (pareja) — HECHO 2026-08-21
 ```
 Al crear un grupo de prematrimonial solo se puede elegir UN dirigente. El prematrimonial
 siempre lo dan en PAREJA, así que dirigente y co-dirigente deben ser AMBOS obligatorios en
@@ -3094,6 +3122,25 @@ ese tipo de grupo.
 4) Coordiná con GRU-2/EST-4: el checkbox de disponibilidad y el orden de los campos del
    dirigente ya se reordenaron; no rompas eso.
 ```
+
+**La marca EXISTÍA, no hubo que inventar nada** (era la pregunta del punto 2). PREMAT
+aparece en `study_leaders.formation_study_codes` (32 dirigentes) y en `qualified_study_codes`
+(30). Se acepta **cualquiera de las dos**: los datos están repartidos —28 en las dos, 4 solo
+en formación, 2 solo en disponibilidad— y dejar fuera del dropdown a alguien realmente
+habilitado es peor que ofrecer un conjunto algo más amplio, porque el coordinador igual
+elige. Da 34 personas, 17 activas.
+
+Regla pura en `src/lib/studies/premat-group.ts` (14 tests), usada por las dos pantallas
+(crear y editar) y por `createGroup`/`updateGroup`. Además:
+
+- En PREMAT se quitó el checkbox de **"dejar dirigente pendiente"**: si los dos son
+  obligatorios, "pendiente" era la puerta de atrás.
+- `updateGroup` lee el plan y el dirigente que el patch NO trae desde el grupo actual — si no,
+  editar el horario de un PREMAT parecería dejarlo sin co-dirigente y se bloquearía solo.
+- Si no se puede resolver la habilitación de alguien, NO bloquea: ese guard es una ayuda, no
+  una barrera de seguridad, y un dato que falta no puede impedir crear el grupo.
+- El checkbox de disponibilidad y el orden de los campos de GRU-2/EST-4 quedaron intactos:
+  el co-dirigente sigue en su bloque aparte, solo cambia su etiqueta y su obligatoriedad.
 
 ### [ ] UI-1 · Legibilidad: tamaño de letra y contraste
 ```
