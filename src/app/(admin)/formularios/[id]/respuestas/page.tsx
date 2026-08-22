@@ -9,6 +9,7 @@ import { ResponseSummaryChart } from '@/components/forms/ResponseSummaryChart'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
+import { isDataField } from '@/lib/forms/xlsx-export'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { generateCSV } from '@/lib/export'
@@ -18,7 +19,10 @@ import { usePermissions } from '@/hooks/usePermissions'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
-  const dataFields = form.fields.filter(f => f.type !== 'section')
+  // Mismas columnas que el XLSX (isDataField): antes el CSV solo descartaba
+  // 'section', así que traía columnas siempre vacías de info/page_break y del
+  // bloque de datos personales.
+  const dataFields = form.fields.filter(f => isDataField(f.type))
   const headers = ['Miembro', 'Fecha', ...dataFields.map(f => f.label)]
   const rows = responses.map(r => [
     r.member_name,
@@ -57,7 +61,7 @@ export default function RespuestasPage() {
     return () => { alive = false }
   }, [id])
 
-  const dataFields = (form?.fields ?? []).filter(f => f.type !== 'section')
+  const dataFields = (form?.fields ?? []).filter(f => isDataField(f.type))
 
   type ChartData = { field: FormTemplate['fields'][number]; items: { label: string; count: number; total: number }[]; average: number | undefined }
 
@@ -180,14 +184,29 @@ export default function RespuestasPage() {
               Editar formulario
             </Link>
           )}
+          {/* FRM-3 · Dos botones y no un selector: son dos clics distintos, no
+              una configuración. El CSV se arma en el cliente (ya tiene los datos);
+              el XLSX sale de la ruta, porque ExcelJS no cabe en el bundle. */}
           <button
             type="button"
             onClick={() => exportToCSV(form, responses)}
-            className="flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+            disabled={responses.length === 0}
+            className="flex items-center gap-1.5 rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-40 font-body"
           >
             <Download size={13} />
-            Exportar CSV
+            CSV
           </button>
+          <a
+            href={`/api/forms/${id}/responses/export`}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body',
+              responses.length === 0 && 'pointer-events-none opacity-40',
+            )}
+            aria-disabled={responses.length === 0 || undefined}
+          >
+            <Download size={13} />
+            Excel
+          </a>
         </div>
       </div>
 
