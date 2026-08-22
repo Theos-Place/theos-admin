@@ -14,7 +14,7 @@ import type { PasskeyListItem, Factor } from '@supabase/supabase-js'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
-  'outline-none transition-all placeholder:text-navy-light/50',
+  'outline-none transition-all placeholder:text-navy-light/80',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
   'border-[rgba(22,20,64,0.15)]',
 ].join(' ')
@@ -149,7 +149,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               <div
                 key={req.label}
                 className="flex items-center gap-2 text-[13px] transition-colors font-body"
-                style={{ color: newPass.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#519DA2' : 'rgba(239,85,84,0.7)' }}
+                style={{ color: newPass.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#3B7579' : 'rgba(239,85,84,0.7)' }}
               >
                 {req.met && newPass.length > 0
                   ? <Check size={12} className="shrink-0" />

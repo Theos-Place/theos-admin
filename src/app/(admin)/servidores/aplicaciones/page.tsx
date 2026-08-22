@@ -189,7 +189,7 @@ export default function AplicacionesPage() {
           >
             {f.label}
             {f.key === 'pending' && pending > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5 font-display">
+              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[11px] px-1.5 py-0.5 font-display">
                 {pending}
               </span>
             )}

@@ -15,8 +15,8 @@ import {
 } from '@/lib/reports/retencion'
 
 const NAVY = '#161440'
-const CORAL = '#EF5554'
-const TEAL = '#519DA2'
+const CORAL = '#D63E3D'
+const TEAL = '#3B7579'
 const G1_COLORS: Record<string, string> = { G1a: TEAL, G1b: NAVY, G1c: CORAL }
 
 const tooltipStyle = {

@@ -910,7 +910,7 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
           >
             {tab.label}
             {conditionTypes[tab.key].some(t => conditions.some(c => c.type === t)) && (
-              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-coral text-[10px] text-white">
+              <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-coral text-[11px] text-white">
                 {conditions.filter(c => conditionTypes[tab.key].includes(c.type)).length}
               </span>
             )}

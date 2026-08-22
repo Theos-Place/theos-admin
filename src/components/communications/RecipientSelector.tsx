@@ -353,7 +353,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-low transition-colors border-b last:border-b-0 border-[var(--outline-variant)]"
                 >
                   <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-white">{m.first_name[0]}{m.last_name[0]}</span>
+                    <span className="text-[11px] font-bold text-white">{m.first_name[0]}{m.last_name[0]}</span>
                   </div>
                   <div>
                     <p className="text-[13px] font-medium text-navy font-body">

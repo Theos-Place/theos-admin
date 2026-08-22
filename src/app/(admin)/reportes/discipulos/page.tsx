@@ -13,8 +13,8 @@ import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
 
 const NAVY = '#161440'
-const CORAL = '#EF5554'
-const TEAL = '#519DA2'
+const CORAL = '#D63E3D'
+const TEAL = '#3B7579'
 
 const tooltipStyle = {
   borderRadius: 12,

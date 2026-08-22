@@ -19,7 +19,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 const ICON_OPTIONS = Object.keys(ICON_MAP)
 
 const COLOR_SWATCHES = [
-  '#161440', '#70BDC2', '#EF5554', '#519DA2',
+  '#161440', '#70BDC2', '#D63E3D', '#3B7579',
   '#29365C', '#F59E0B', '#10B981', '#8B5CF6',
 ]
 

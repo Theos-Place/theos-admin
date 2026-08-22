@@ -270,7 +270,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
               )}
               {account.email && (
                 <span className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
-                  <Mail size={13} className="text-navy-light/50" /> {account.email}
+                  <Mail size={13} className="text-navy-light/80" /> {account.email}
                 </span>
               )}
             </div>
@@ -391,7 +391,7 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
               onChange={e => setReason(e.target.value)}
               rows={2}
               placeholder="¿Por qué no debe recibir la invitación a CDEB?"
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/50"
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
             />
             <div className="flex gap-2">
               <button

@@ -868,7 +868,7 @@ export default function ServidoresAdminPage() {
                         aria-label={`${open ? 'Ocultar' : 'Ver'} detalle de ${p.title}`}
                       >
                         {hasDetail
-                          ? (open ? <ChevronDown size={14} className="text-navy-light/50 shrink-0" /> : <ChevronRight size={14} className="text-navy-light/50 shrink-0" />)
+                          ? (open ? <ChevronDown size={14} className="text-navy-light/80 shrink-0" /> : <ChevronRight size={14} className="text-navy-light/80 shrink-0" />)
                           : <span className="w-3.5 shrink-0" />}
                         <span className="flex-1 text-[13px] text-navy font-body truncate">{p.title}</span>
                         {p.study_requirement && (

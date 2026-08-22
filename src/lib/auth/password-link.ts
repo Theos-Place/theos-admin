@@ -108,7 +108,7 @@ function body(kind: PasswordLinkKind, link: string, nombre: string | null): stri
 
 <p style="font-size:13px; color:#777; line-height:1.7;">
   ¿Problemas para entrar? Escribinos a
-  <a href="mailto:soporte@theosplace.org" style="color:#519DA2;">soporte@theosplace.org</a>.
+  <a href="mailto:soporte@theosplace.org" style="color:#3B7579;">soporte@theosplace.org</a>.
 </p>`
 }
 

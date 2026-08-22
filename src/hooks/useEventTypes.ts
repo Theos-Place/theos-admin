@@ -10,8 +10,8 @@ export type EventTypeOption = { id: string; name: string; color: string; icon: s
 const FALLBACK_TYPES: Record<string, { label: string; color: string }> = {
   charla:       { label: 'Charla',           color: '#161440' },
   campamento:   { label: 'Campamento',       color: '#F59E0B' },
-  social:       { label: 'Actividad Social', color: '#EF5554' },
-  capacitacion: { label: 'Capacitación',     color: '#519DA2' },
+  social:       { label: 'Actividad Social', color: '#C43635' },
+  capacitacion: { label: 'Capacitación',     color: '#3B7579' },
   taller:       { label: 'Taller',           color: '#8B5CF6' },
 }
 

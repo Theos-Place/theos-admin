@@ -21,7 +21,7 @@ const STYLES = `
   .greeting { font-size: 22px; font-weight: 700; color: #161440; margin-bottom: 16px; }
   .body p { font-size: 15px; color: #555; line-height: 1.75; margin-bottom: 14px; }
   .divider { height: 1px; background: linear-gradient(to right, transparent, #e0e0e0, transparent); margin: 32px 0; }
-  .cta-button { display: inline-block; background-color: #EF5554; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 40px; border-radius: 50px; }
+  .cta-button { display: inline-block; background-color: #C43635; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 40px; border-radius: 50px; }
   .cta-wrapper { text-align: center; margin: 28px 0 8px; }
   .cta-secondary { display: inline-block; background-color: #161440; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 16px 40px; border-radius: 50px; }
   .info-box { background: #f4f4f0; border-radius: 12px; padding: 24px 28px; margin: 28px 0; }
@@ -36,7 +36,7 @@ const STYLES = `
   .highlight-box .hl-label, .hl-label { font-size: 11px; font-weight: 600; color: #70BDC2; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
   .highlight-box .hl-value, .hl-value { font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: 6px; }
   .highlight-box .hl-sub, .hl-sub { font-size: 12px; color: #70BDC2; margin-top: 6px; }
-  .tag { display: inline-block; background: #EF5554; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 50px; margin-bottom: 16px; }
+  .tag { display: inline-block; background: #D63E3D; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 50px; margin-bottom: 16px; }
   .tag-blue { background: #161440; }
   .tag-teal { background: #70BDC2; }
   /* EST-13 · Tabla de conteos de la retroalimentación al dirigente. Va acá y no
@@ -63,7 +63,7 @@ const STYLES = `
   .footer { background-color: #161440; padding: 30px 48px; text-align: center; }
   .footer p { font-size: 12px; color: #aeb9d4; line-height: 1.75; }
   .footer a { color: #70BDC2; text-decoration: underline; }
-  .footer-divider { height: 2px; width: 40px; margin: 0 auto 16px; background: #EF5554; border-radius: 2px; }
+  .footer-divider { height: 2px; width: 40px; margin: 0 auto 16px; background: #D63E3D; border-radius: 2px; }
   .footer-legal { font-size: 11px; color: #8593b4; }
   /* Baja FUERA del footer azul: bloque tenue sobre el fondo de la página. */
   .subfooter { max-width: 620px; margin: 16px auto 40px; padding: 0 24px; text-align: center; }

@@ -210,7 +210,7 @@ function SolicitarVacantesContent() {
         <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Comité</p>
         {lockedCommittee ? (
           <div className="inline-flex items-center gap-2 rounded-xl bg-surface-low px-3.5 py-2.5">
-            <Lock size={14} className="text-navy-light/50" />
+            <Lock size={14} className="text-navy-light/80" />
             <span className="text-sm font-medium text-navy font-body">{lockedCommittee.name}</span>
           </div>
         ) : (

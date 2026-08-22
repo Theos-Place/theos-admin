@@ -4,10 +4,10 @@ import type { PaymentMethod } from '@/types/finance'
 
 const METHOD_CONFIG: Record<PaymentMethod, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   card:        { label: 'Tarjeta',     color: '#161440', bg: 'rgba(22,20,64,0.08)',    Icon: CreditCard    },
-  sinpe:       { label: 'SINPE',       color: '#519DA2', bg: 'rgba(81,157,162,0.12)',  Icon: Smartphone    },
+  sinpe:       { label: 'SINPE',       color: '#3B7579', bg: 'rgba(81,157,162,0.12)',  Icon: Smartphone    },
   scholarship: { label: 'Beca',        color: '#3DB97A', bg: 'rgba(61,185,122,0.12)', Icon: GraduationCap },
   cash:        { label: 'Efectivo',    color: '#E9B949', bg: 'rgba(233,185,73,0.15)', Icon: Banknote      },
-  comprobante: { label: 'Comprobante', color: '#519DA2', bg: 'rgba(81,157,162,0.12)', Icon: Receipt       },
+  comprobante: { label: 'Comprobante', color: '#3B7579', bg: 'rgba(81,157,162,0.12)', Icon: Receipt       },
 }
 
 // Fallback neutro: un método no mapeado NO debe tumbar la pantalla; muestra su

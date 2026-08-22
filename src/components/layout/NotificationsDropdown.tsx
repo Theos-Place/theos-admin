@@ -8,8 +8,8 @@ import type { ActiveAlert, AlertType } from '@/lib/supabase/queries/alerts'
 import type { InternalNotification } from '@/types/notification'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string }> = {
-  alert:   { Icon: AlertCircle,   color: '#EF5554', bg: 'rgba(239,85,84,0.10)'   },
-  info:    { Icon: Info,          color: '#519DA2', bg: 'rgba(81,157,162,0.10)'  },
+  alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
+  info:    { Icon: Info,          color: '#3B7579', bg: 'rgba(81,157,162,0.10)'  },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)'  },
 }
 
@@ -92,7 +92,7 @@ export function NotificationsBell() {
         <Bell size={20} strokeWidth={1.75} />
         {count > 0 && (
           <span
-            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white px-1 bg-coral font-display"
+            className="absolute top-0.5 right-0.5 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[11px] font-bold text-white px-1 bg-coral font-display"
           >
             {count}
           </span>

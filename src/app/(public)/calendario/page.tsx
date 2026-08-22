@@ -16,7 +16,7 @@ function CalendarioWidget() {
   // Sin ?types= → todos los tipos (equivalente a la BD); con param, solo esos.
   const types = typesParam ? typesParam.split(',') : null
   const primary = searchParams.get('primary') || '#161440'
-  const accent = searchParams.get('accent') || '#EF5554'
+  const accent = searchParams.get('accent') || '#D63E3D'
   const bg = searchParams.get('bg') || '#FFFFFF'
   const showDesc = searchParams.get('showDesc') !== 'false'
   const showLoc = searchParams.get('showLoc') !== 'false'
@@ -214,14 +214,14 @@ function CalendarioWidget() {
                           <div className="text-[13px] mb-0.5 leading-none" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
                           {dayEvents.slice(0, 2).map(ev => (
                             <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
-                              className="text-[10px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
+                              className="text-[11px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
                               {ev.flyer_url ? '🖼 ' : ''}{ev.name}
                             </div>
                           ))}
                           {dayEvents.length > 2 && (
                             <button
                               onClick={() => setDayModal({ date: day, events: dayEvents })}
-                              className="text-[10px] text-[rgba(0,0,0,0.5)] hover:underline"
+                              className="text-[11px] text-[rgba(0,0,0,0.65)] hover:underline"
                             >
                               +{dayEvents.length - 2} más
                             </button>
@@ -299,7 +299,7 @@ function CalendarioWidget() {
                   Inscribirse
                 </button>
               )}
-              <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.5)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
+              <div className="flex-1 border border-[rgba(0,0,0,0.15)] rounded-lg py-2.5 text-center text-[13px] cursor-pointer text-[rgba(0,0,0,0.65)]" onClick={() => setSelectedEvent(null)}>Cerrar</div>
             </div>
           </div>
         </Modal>

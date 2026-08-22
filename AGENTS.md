@@ -6,7 +6,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Accesibilidad
 
-Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de la marca, meta WCAG 2.1 AA). Resumen: texto informativo mínimo `text-navy-light/80` (los `/60` y `/70` se eliminaron del código — no reintroducirlos; nada de `text-gray-400` ni hexes grises), nunca `/20`–`/30` para texto; tamaño mínimo de texto informativo `text-[13px]` (micro-labels uppercase pueden ser 11px; nunca 9px); `aria-label` en botones solo-ícono y en inputs sin label visible; modales solo con el `Modal.tsx` compartido; todo operable con teclado.
+Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de la marca, meta WCAG 2.1 AA). Resumen: texto informativo mínimo `text-navy-light/80` (`/50`, `/60` y `/70` se eliminaron del código — no reintroducirlos; nada de `text-gray-400` ni hexes grises), nunca `/20`–`/30` para texto; `/40` SOLO para decorativo (separadores, íconos con `aria-hidden`) y controles deshabilitados, que están exentos de AA; tamaño mínimo de texto informativo `text-[13px]` (micro-labels uppercase pueden ser 11px; nunca 10px ni 9px); `aria-label` en botones solo-ícono y en inputs sin label visible; modales solo con el `Modal.tsx` compartido; todo operable con teclado.
+
+**Texto sobre fondos de marca** (UI-1, medido el 2026-08-21 y fijado por `src/lib/contrast.test.ts`): `bg-coral` y `bg-teal-deep` llevan texto **blanco**; `bg-teal` lleva texto **navy**, nunca blanco (daría 2.15:1). Sobre un tinte coral, el texto va en `coral-deep`, no en `coral`. Los ratios no se estiman: se calculan con `src/lib/contrast.ts` y el test falla si un par baja de 4.5:1.
 
 # Ancho y layout
 

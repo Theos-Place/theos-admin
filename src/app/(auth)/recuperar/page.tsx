@@ -8,7 +8,7 @@ import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-rea
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/50',
+  'placeholder:text-navy-light/80',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 

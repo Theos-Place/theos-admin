@@ -66,13 +66,13 @@ export function Combobox({
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => setOpen(o => !o)} className={triggerCls} aria-haspopup="listbox" aria-expanded={open} aria-label={ariaLabel}>
-        <span className={cn('flex-1 truncate text-sm font-body', display ? 'text-navy' : 'text-navy-light/50')}>
+        <span className={cn('flex-1 truncate text-sm font-body', display ? 'text-navy' : 'text-navy-light/80')}>
           {display || placeholder}
         </span>
         {value.kind === 'new' && (
           <span className="shrink-0 rounded-full bg-coral/15 px-2 py-0.5 text-[11px] font-medium text-coral font-body">nueva</span>
         )}
-        <ChevronDown size={15} className="shrink-0 text-navy-light/50" />
+        <ChevronDown size={15} className="shrink-0 text-navy-light/80" />
       </button>
 
       {open && (
@@ -86,7 +86,7 @@ export function Combobox({
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (filtered.length) pickExisting(filtered[0]); else if (showCreate) pickNew() } else if (e.key === 'Escape') setOpen(false) }}
               placeholder={placeholder}
               aria-label={ariaLabel ?? placeholder}
-              className="min-w-0 flex-1 bg-transparent text-sm text-navy placeholder:text-navy-light/50 outline-none font-body"
+              className="min-w-0 flex-1 bg-transparent text-sm text-navy placeholder:text-navy-light/80 outline-none font-body"
             />
           </div>
           <div className="max-h-60 overflow-y-auto py-1">

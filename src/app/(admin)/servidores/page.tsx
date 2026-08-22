@@ -40,7 +40,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
       {/* Leader */}
       <div className="flex items-center gap-2">
         <div className="h-6 w-6 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-navy font-display">
+          <span className="text-[11px] font-bold text-navy font-display">
             {committee.leader.initials}
           </span>
         </div>
@@ -58,14 +58,14 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
               className="h-7 w-7 rounded-full bg-navy flex items-center justify-center ring-2 ring-white"
               title={m.name}
             >
-              <span className="text-[10px] font-bold text-white font-display">
+              <span className="text-[11px] font-bold text-white font-display">
                 {m.initials}
               </span>
             </div>
           ))}
           {activeMembers.length > 4 && (
             <div className="h-7 w-7 rounded-full bg-surface-low flex items-center justify-center ring-2 ring-white">
-              <span className="text-[10px] font-medium text-navy-light/80 font-display">
+              <span className="text-[11px] font-medium text-navy-light/80 font-display">
                 +{activeMembers.length - 4}
               </span>
             </div>

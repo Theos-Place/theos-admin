@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils'
 import type { DirigentesReport, LeaderHistoryPoint } from '@/lib/reports/dirigentes'
 
 const NAVY = '#161440'
-const TEAL = '#519DA2'
+const TEAL = '#3B7579'
 
 const tooltipStyle = {
   borderRadius: 12, border: '1px solid var(--outline-variant)',

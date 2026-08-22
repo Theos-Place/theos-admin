@@ -204,7 +204,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                     refunds.find(r => r.payment_id === payment.id && r.status === 'completed')?.processed_at
                       ?? payment.paid_at,
                   )}
-                  color="#519DA2"
+                  color="#3B7579"
                   active
                 />
               )}

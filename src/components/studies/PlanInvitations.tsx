@@ -106,7 +106,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
                 onClick={() => revoke(inv.id)}
                 aria-label={`Revocar invitación de ${inv.member_name}`}
                 title="Revocar"
-                className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
+                className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"
               >
                 <X size={14} />
               </button>

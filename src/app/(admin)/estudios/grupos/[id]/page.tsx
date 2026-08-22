@@ -517,7 +517,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 placeholder="Ej.: se mudó de zona, cambió de horario de trabajo, motivos de salud…"
                 aria-required="true"
                 aria-invalid={!!motivoInvalido && withdrawReason.length > 0 ? true : undefined}
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/80"
               />
               {/* La razón por la que no se puede seguir, visible antes de
                   apretar: un botón gris sin explicación es una pared. */}

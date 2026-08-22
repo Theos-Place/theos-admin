@@ -27,7 +27,7 @@ function ActivityIcon({ active, icon: Icon, label, tooltip, activeColor }: {
           </div>
         )}
       </div>
-      <span className={cn('text-[10px] font-body', active ? 'text-navy-light/80' : 'text-navy-light/80')}>{label}</span>
+      <span className={cn('text-[11px] font-body', active ? 'text-navy-light/80' : 'text-navy-light/80')}>{label}</span>
     </div>
   )
 }

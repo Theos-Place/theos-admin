@@ -349,7 +349,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           <div className="p-3 space-y-4">
             {FIELD_GROUPS.map(group => (
               <div key={group.label} className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-navy-light/80 px-1 mb-2 font-display">
+                <p className="text-[11px] uppercase tracking-widest font-semibold text-navy-light/80 px-1 mb-2 font-display">
                   {group.label}
                 </p>
                 <div className="grid grid-cols-2 gap-1 md:grid-cols-1">
@@ -583,7 +583,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                             {rc > 0 && (
                               <span className="shrink-0 flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5">
                                 <Zap size={9} className="text-amber-600" />
-                                <span className="text-[10px] font-bold text-amber-600">{rc}</span>
+                                <span className="text-[11px] font-bold text-amber-600">{rc}</span>
                               </span>
                             )}
                           </button>

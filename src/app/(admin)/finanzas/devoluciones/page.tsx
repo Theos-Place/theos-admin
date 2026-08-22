@@ -19,9 +19,9 @@ import { formatDate, formatMoney } from '@/lib/format'
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
     pending:    { label: 'Pendiente',   color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
-    processing: { label: 'En proceso',  color: '#519DA2', bg: 'rgba(81,157,162,0.12)'  },
+    processing: { label: 'En proceso',  color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
     completed:  { label: 'Completada',  color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
-    rejected:   { label: 'Rechazada',   color: '#EF5554', bg: 'rgba(239,85,84,0.10)'   },
+    rejected:   { label: 'Rechazada',   color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
     convertida_donacion: { label: 'Convertida en donación', color: '#7C5EC2', bg: 'rgba(155,127,212,0.15)' },
   }
   const c = cfg[status]
@@ -243,7 +243,7 @@ export default function DevolucionesPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Pendientes',    value: stats.pending,    color: '#E9B949' },
-            { label: 'En proceso',    value: stats.processing, color: '#519DA2' },
+            { label: 'En proceso',    value: stats.processing, color: '#3B7579' },
             { label: 'Completadas',   value: stats.completed,  color: '#3DB97A' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">

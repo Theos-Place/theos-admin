@@ -59,8 +59,8 @@ const HEADER_THETAS: ThetaPosition[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
-  charla:      '#EF5554',
-  campamento:  '#519DA2',
+  charla:      '#D63E3D',
+  campamento:  '#3B7579',
   social:      '#E9B949',
   capacitacion:'#161440',
 }
@@ -142,7 +142,7 @@ function AlertRow({
   level: 'red' | 'yellow' | 'green'; text: string; href?: string
 }) {
   const colors = {
-    red:    { dot: '#EF5554', bg: 'rgba(239,85,84,0.06)' },
+    red:    { dot: '#D63E3D', bg: 'rgba(239,85,84,0.06)' },
     yellow: { dot: '#E9B949', bg: 'rgba(233,185,73,0.06)' },
     green:  { dot: '#3DB97A', bg: 'rgba(61,185,122,0.06)' },
   }
@@ -187,7 +187,7 @@ function ModuleCard({
           const valueEl = row.badge ? (
             <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full font-body"
               style={{
-                color: row.badge === 'coral' ? '#EF5554' : '#C08A00',
+                color: row.badge === 'coral' ? '#D63E3D' : '#C08A00',
                 background: row.badge === 'coral' ? 'rgba(239,85,84,0.10)' : 'rgba(233,185,73,0.15)',
               }}>
               {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
@@ -337,10 +337,10 @@ export default function DashboardPage() {
       {isAdminOrDir && (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
-          <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_estudios} label="Estudios activos" sub="Niveles N1–N4" color="#519DA2" href="/estudios/grupos" />
+          <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_estudios} label="Estudios activos" sub="Niveles N1–N4" color="#3B7579" href="/estudios/grupos" />
           <StatCard icon={GraduationCap} value={DASHBOARD_STATS.studies.active_capacitaciones} label="Capacitaciones activas" sub="Resto de grupos" color="#9B7FD4" href="/estudios/grupos" />
           <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
-          <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#EF5554" href="/servidores" />
+          <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#D63E3D" href="/servidores" />
         </div>
       )}
 
@@ -608,7 +608,7 @@ export default function DashboardPage() {
                         <span className="font-semibold text-navy">{item.actor}</span>{' '}
                         {item.action}{' '}
                         {item.resource_url ? (
-                          <Link href={item.resource_url} className="text-[#519DA2] hover:underline">
+                          <Link href={item.resource_url} className="text-[#3B7579] hover:underline">
                             {item.resource}
                           </Link>
                         ) : item.resource}
@@ -674,7 +674,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           {[
             { label: 'Activos',         value: '47', color: '#3DB97A' },
             { label: 'En descanso',     value: '8',  color: '#E9B949' },
-            { label: 'Disponibles',     value: '3',  color: '#519DA2' },
+            { label: 'Disponibles',     value: '3',  color: '#3B7579' },
           ].map((s, i) => (
             <div key={i} className="text-center p-3 rounded-xl bg-[rgba(22,20,64,0.02)]">
               <div className="text-2xl font-bold mb-0.5 font-display" style={{ color: s.color }}>{s.value}</div>

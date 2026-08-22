@@ -416,7 +416,7 @@ export function RequestBoard<R extends BaseRequest>({
                             </span>
                             {r.reviewed_by_name && r.status !== 'open' && (
                               <span className="hidden sm:inline-flex items-center gap-1.5 shrink-0" title={`Asignada a ${r.reviewed_by_name}`}>
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[10px] font-display font-extrabold">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[11px] font-display font-extrabold">
                                   {getInitials(r.reviewed_by_name)}
                                 </span>
                                 <span className="text-[13px] text-navy-light/80 font-body max-w-[110px] truncate">{r.reviewed_by_name}</span>
@@ -553,7 +553,7 @@ export function RequestBoard<R extends BaseRequest>({
                   onChange={e => setAssigneeSearch(e.target.value)}
                   placeholder="Buscar coordinador…"
                   aria-label="Buscar coordinador"
-                  className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/50"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/80"
                 />
               </div>
             )}
@@ -631,7 +631,7 @@ export function RequestBoard<R extends BaseRequest>({
               placeholder={actionTarget.action === 'resolve'
                 ? 'Ej: Aprobada y registrada.'
                 : 'Ej: No cumple los requisitos.'}
-              className="w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 resize-none placeholder:text-navy-light/50"
+              className="w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30 resize-none placeholder:text-navy-light/80"
             />
             <div className="mt-5 flex justify-end gap-2">
               <button

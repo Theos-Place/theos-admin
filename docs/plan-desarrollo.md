@@ -3142,7 +3142,7 @@ Regla pura en `src/lib/studies/premat-group.ts` (14 tests), usada por las dos pa
 - El checkbox de disponibilidad y el orden de los campos de GRU-2/EST-4 quedaron intactos:
   el co-dirigente sigue en su bloque aparte, solo cambia su etiqueta y su obligatoriedad.
 
-### [ ] UI-1 · Legibilidad: tamaño de letra y contraste
+### [x] UI-1 · Legibilidad: tamaño de letra y contraste — HECHO 2026-08-21
 ```
 Reporte de uso real: "la letra está un poco pequeña y con bajo contraste, a veces cuesta
 leer". Es transversal, no de una pantalla.
@@ -3160,6 +3160,53 @@ leer". Es transversal, no de una pantalla.
 4) No cambies la identidad visual: mismos colores de marca, solo tamaños y niveles.
 Mostrame antes/después de 3 pantallas para aprobar antes de aplicarlo en masa.
 ```
+
+**Primero: la premisa de la ficha estaba en buena parte vencida.** Lo que señalaba como
+sospechoso ya no existía — `text-navy-light/60` y `/70`: **0 usos**; `text-gray-400`: **0**;
+9px: **0**. Y el `/80`, que se usa **2,092 veces**, da **6.41:1** sobre blanco y 6.01 sobre
+surface-low: pasa AA cómodo. El "bajo contraste" reportado NO venía de ahí.
+
+**Lo que sí fallaba, medido:**
+
+| Combinación | Ratio | Alcance |
+|---|---|---|
+| blanco sobre `coral` #EF5554 | **3.44** ✗ | ~192 botones con texto de 10-14px (ninguno califica como "texto grande") |
+| blanco sobre `teal` #70BDC2 | **2.15** ✗ | 13 chips + 3 botones |
+| blanco sobre `teal-deep` #519DA2 | **3.14** ✗ | ~30 botones de confirmar/aprobar |
+| `coral` como texto sobre blanco | **3.44** ✗ | mensajes de error |
+| placeholders `/50` | **2.78** ✗ | 30 |
+| texto en `/50` | **2.78** ✗ | 18 |
+| negro 50% hardcodeado | **3.95** ✗ | 2 (calendario público) |
+
+**Corrección sistémica, en tokens.** Se oscurecieron los DOS tonos derivados —los que
+existen justamente para llevar texto encima— y la identidad no se tocó: navy #161440 y teal
+#70BDC2 siguen iguales.
+
+- `coral` #EF5554 → **#D63E3D** (4.55:1). Arregla los botones Y los mensajes de error de una.
+- `coral-deep` #D94241 → **#C43635** (5.35:1); el `#D94241` daba 4.37 y no alcanzaba.
+- `teal-deep` #519DA2 → **#3B7579** (5.24:1, y 4.59 como texto sobre su propio tinte).
+- `bg-teal` pasa a texto **navy** (8.07:1) en vez de blanco: no se toca el color, se cambia
+  el texto.
+- Texto sobre tinte coral usa `coral-deep` (4.75) y no `coral` (4.04, no alcanzaba).
+- `/50` → `/80`; los 34 `text-[10px]` → 11px; el negro 50% → 65%.
+- Se reemplazaron los **40 hexes hardcodeados** de coral que se saltaban el token.
+
+**Un error propio, corregido:** el reemplazo en masa de `/50` y `/40` tocó 14 casos que
+estaban BIEN — separadores «·», íconos con `aria-hidden`, y controles deshabilitados, todos
+exentos de AA. Oscurecerlos empeoraba la jerarquía visual sin que nadie leyera mejor. Se
+revirtieron uno por uno y quedó documentado en el design system para no repetirlo.
+
+**Queda fijado por test, no por acuerdo:** `src/lib/contrast.ts` calcula los ratios (con
+composición de opacidad, porque medir el color puro da un número falso) y
+`contrast.test.ts` (17 tests) falla si un par baja de 4.5:1 o si vuelve una clase retirada.
+Documentado en `Theos Place Design System/accessibility.md` y en AGENTS.md.
+
+**Decisión abierta**: la ficha pide "nada por debajo de 12px", lo que dejaría fuera los 429
+micro-labels de 11px que AGENTS.md permite. AA no fija tamaños mínimos, solo contraste, así
+que no es un incumplimiento — es una decisión de diseño que quedó anotada sin resolver.
+
+**No cubierto** (fuera del alcance acordado, sigue en AUD-1): teclado, lectores de pantalla,
+área táctil, móvil a 390px, estados vacíos, jerga filtrada y conteo de fricción.
 
 ### [ ] AUD-1 · Auditoría de accesibilidad, legibilidad y UX
 Archivos: transversal — `src/components/**`, `src/app/(admin)/**`, `src/app/(public)/**`, design system

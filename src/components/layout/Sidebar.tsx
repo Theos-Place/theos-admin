@@ -339,7 +339,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         />
         <span className="flex-1 font-body font-light">{sub.label}</span>
         {(sub.badge ?? 0) > 0 && (
-          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white font-display">
+          <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[11px] font-bold text-white font-display">
             {sub.badge}
           </span>
         )}
@@ -473,7 +473,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   />
                   <span className="flex-1 truncate font-body font-light">{mod.label}</span>
                   {(mod.badge ?? 0) > 0 && (
-                    <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white font-display">
+                    <span className="inline-flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-coral px-1 text-[11px] font-bold text-white font-display">
                       {mod.badge}
                     </span>
                   )}

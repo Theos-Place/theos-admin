@@ -408,7 +408,7 @@ export default function ComunicacionDetallePage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
+                        <span className="text-[11px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
                       </div>
                       <p className="text-[13px] text-navy font-body">{r.name}</p>
                     </div>
@@ -447,7 +447,7 @@ export default function ComunicacionDetallePage() {
           {filtered.map((r) => (
             <li key={r.id} className="flex items-center gap-3 px-4 py-3">
               <div className="h-8 w-8 rounded-full bg-navy flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
+                <span className="text-[11px] font-bold text-white">{r.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] text-navy font-body">{r.name}</p>

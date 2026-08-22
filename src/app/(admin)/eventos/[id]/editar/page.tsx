@@ -104,7 +104,7 @@ function RecurringSaveModal({
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-navy font-body">{opt.title}</p>
                     {opt.warn && (
-                      <span className="rounded-md bg-coral/10 px-1.5 py-0.5 text-[10px] font-semibold text-coral uppercase font-display">
+                      <span className="rounded-md bg-coral/10 px-1.5 py-0.5 text-[11px] font-semibold text-coral uppercase font-display">
                         Atención
                       </span>
                     )}
@@ -427,7 +427,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div>
             <input
-              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/50 transition-colors font-display"
+              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/80 transition-colors font-display"
               value={name}
               onChange={e => setName(e.target.value)}
             />

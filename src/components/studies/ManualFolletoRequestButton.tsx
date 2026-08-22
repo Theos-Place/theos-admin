@@ -120,7 +120,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
 
             <div>
               <label htmlFor="mf-note" className={LABEL_CLS}>Nota (opcional)</label>
-              <textarea id="mf-note" value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Explicá el caso especial para quien imprime…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')} />
+              <textarea id="mf-note" value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Explicá el caso especial para quien imprime…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')} />
             </div>
 
             {error && <p className="text-[13px] text-coral font-body">{error}</p>}

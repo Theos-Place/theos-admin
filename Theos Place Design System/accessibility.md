@@ -8,13 +8,26 @@ gana la regla: la marca se ve bien *y* se lee.
 
 Sobre fondo claro (blanco / `--surface`), usando navy con opacidad:
 
-| Uso | Mínimo | Contraste aprox. |
+| Uso | Mínimo | Contraste medido |
 |---|---|---|
-| Texto normal (< 18px) | `text-navy-light/80` o color sólido | 6.4:1 ✓ AA, cerca de AAA |
-| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/80` | 6.4:1 |
-| Metadata secundaria pequeña | `text-navy-light/80` | 6.4:1 |
-| Placeholders | `placeholder:text-navy-light/50` mínimo | — |
-| Decorativo puro (íconos de empty state, adornos, separadores «·») | `/40` mínimo | exento de AA |
+| Texto normal (< 18px) | `text-navy-light/80` o color sólido | **6.41:1** ✓ |
+| Texto grande (≥ 18px o ≥ 14px bold) | `text-navy-light/80` | **6.41:1** ✓ |
+| Metadata secundaria pequeña | `text-navy-light/80` | **6.41:1** ✓ |
+| Placeholders | `placeholder:text-navy-light/80` | **6.41:1** ✓ |
+| Decorativo puro (íconos de empty state, adornos, separadores «·») y controles DESHABILITADOS | `/40` | exento de AA |
+
+**Los números son medidos, no estimados** (`src/lib/contrast.ts`, fijados por
+`contrast.test.ts`). Sobre `--surface-low` #F2F4F5 el `/80` da 6.01:1, también AA.
+
+`/50`, `/60` y `/70` NO se usan para texto: dan 2.78, 3.62 y 4.78. El `/70` pasaría
+raspando, pero se retiró para no tener dos niveles que hacen lo mismo. Los
+placeholders estaban en `/50` (2.78, falla) hasta el 2026-08-21 — un placeholder es
+texto y cuenta para AA; sigue distinguiéndose del valor real porque el valor va en
+`text-navy` sólido.
+
+Cuidado con el impulso de "arreglar" el `/40`: lo decorativo y lo deshabilitado
+están exentos, y subirlos solo oscurece la jerarquía visual sin que nadie lea
+mejor. Pasó al aplicar este cambio y hubo que revertir 14 casos.
 
 **Nunca** `/20` o `/30` para texto que comunica algo — a ese nivel el contraste
 ronda 2:1 y es ilegible para mucha gente. Estado deshabilitado: usá `/40` *y*
@@ -27,13 +40,44 @@ otra señal además del color (cursor, opacidad del contenedor). Nada de
 > 4.8:1 → 6.4:1) y los `text-gray-400`/hexes grises pasaron a tokens o grises
 > ≥ gray-600. No reintroducir `/60` ni `/70` en texto nuevo.
 
+## Texto sobre los colores de marca
+
+Ningún color de marca aguanta texto blanco por sí solo: hay que usar el tono
+correcto. Medido el 2026-08-21.
+
+| Fondo | Texto | Ratio | |
+|---|---|---|---|
+| `coral` #D63E3D | blanco | **4.55:1** | ✓ AA |
+| `coral-deep` #C43635 (hover) | blanco | **5.35:1** | ✓ AA |
+| `teal` #70BDC2 | **navy**, no blanco | **8.07:1** | ✓ AA |
+| `teal` #70BDC2 | blanco | 2.15:1 | ✗ nunca |
+| `teal-deep` #3B7579 | blanco | **5.24:1** | ✓ AA |
+| `navy` #161440 | blanco | **17.38:1** | ✓ AAA |
+| tinte coral al 10% | `coral-deep` | **4.75:1** | ✓ AA |
+
+Dos tonos DERIVADOS se oscurecieron el 2026-08-21 para que el botón primario
+pasara AA: coral pasó de #EF5554 (3.44:1, fallaba en los ~192 botones del sistema)
+a #D63E3D, y teal-deep de #519DA2 (3.14:1) a #3B7579. **La identidad no cambió**:
+el navy #161440 y el teal #70BDC2 son los de siempre; lo que se movió son sus
+variantes profundas, que existen justamente para llevar texto encima.
+
+El teal claro es fondo de chips y estados seleccionados, y va con texto **navy**.
+Con blanco daba 2.15:1, que es ilegible.
+
 ## Tamaño de texto
 
 Piso de la marca (2026-08-19): **13px** para texto que comunica (metadata,
 notas, celdas) — el barrido subió todo `text-[12px]` a 13px. Los micro-labels
 uppercase con tracking (encabezados de tabla, chips) pueden usar `text-[11px]`.
-`text-[10px]` solo para adornos contados (iniciales de avatar, contadores);
-**nunca** 9px.
+
+**El piso duro es 11px** (actualizado 2026-08-21): los 34 usos de `text-[10px]`
+que quedaban —incluidas las iniciales de avatar y los contadores— subieron a 11px.
+`contrast.test.ts` falla si vuelve a aparecer un 10px o un 9px, así que el piso
+está fijado por un test y no por acuerdo.
+
+PENDIENTE de decidir: la ficha de UI-1 pide "nada por debajo de 12px", lo que
+dejaría fuera los 429 micro-labels de 11px. Es una decisión de diseño abierta,
+no un incumplimiento — AA no fija tamaños mínimos, solo contraste.
 
 ## Botones e inputs
 

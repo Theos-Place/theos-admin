@@ -134,7 +134,7 @@ export function MemberCombobox({
           aria-label={placeholder}
           className={cn(
             'min-w-0 flex-1 bg-transparent text-sm outline-none font-body',
-            onDark ? 'text-white placeholder-white/40' : 'text-navy placeholder:text-navy-light/50',
+            onDark ? 'text-white placeholder-white/40' : 'text-navy placeholder:text-navy-light/80',
           )}
         />
         {searching && <Loader2 size={13} className={cn('animate-spin', onDark ? 'text-white/80' : 'text-navy-light/80')} />}

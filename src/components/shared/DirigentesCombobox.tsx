@@ -82,7 +82,7 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           placeholder={selected ? selected.member_name : placeholder}
-          className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/50"
+          className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/80"
         />
         {selected && !open ? <StatusBadge status={selected.status} /> : null}
         {value ? (

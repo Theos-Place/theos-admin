@@ -14,10 +14,10 @@ import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 
 const NAVY = '#161440'
-const CORAL = '#EF5554'
+const CORAL = '#D63E3D'
 const CORAL_DIM = 'rgba(239,85,84,0.55)' // coral apagado: semanas no destacadas
 const CORAL_SOFT = '#F4B6B5' // coral claro: semanas parciales
-const TEAL = '#519DA2'
+const TEAL = '#3B7579'
 // Color por posición de año en el comparativo (más viejo → más nuevo). El AÑO
 // SELECCIONADO es siempre el último ⇒ CORAL, y se usa el mismo coral en todos
 // los gráficos del año seleccionado (semanal, crecimiento) para consistencia.

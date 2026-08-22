@@ -635,7 +635,7 @@ export default function NuevoGrupoPage() {
                 onChange={e => setFolletosSedeOtro(e.target.value)}
                 placeholder="Detalle de la entrega (lugar, persona, indicaciones)"
                 aria-label="Detalle de la sede de folletos"
-                className={cn(inputCls, 'mt-1 placeholder:text-navy-light/50')}
+                className={cn(inputCls, 'mt-1 placeholder:text-navy-light/80')}
               />
             )}
           </div>

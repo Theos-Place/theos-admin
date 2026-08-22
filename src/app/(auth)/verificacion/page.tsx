@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 const LABEL = 'block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
-  'outline-none transition-all placeholder:text-navy-light/50',
+  'outline-none transition-all placeholder:text-navy-light/80',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
   'border-[rgba(22,20,64,0.15)]',
 ].join(' ')

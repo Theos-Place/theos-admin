@@ -135,7 +135,7 @@ export function ScholarshipRequestModal({
             onChange={e => setReason(e.target.value)}
             rows={3}
             placeholder="Contanos por qué (mínimo 20 caracteres)…"
-            className={cn(FIELD_CLS, 'resize-none placeholder:text-navy-light/50')}
+            className={cn(FIELD_CLS, 'resize-none placeholder:text-navy-light/80')}
           />
           <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>
             {reason.trim().length}/{MIN_REASON} caracteres mínimos

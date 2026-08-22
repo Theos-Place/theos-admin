@@ -46,7 +46,7 @@ export function Step1Informacion({
       {/* Nombre */}
       <div className="mb-5">
         <input
-          className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/50 transition-colors font-display"
+          className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/80 transition-colors font-display"
           placeholder="Nombre del evento..."
           value={name}
           onChange={e => onNameChange(e.target.value)}

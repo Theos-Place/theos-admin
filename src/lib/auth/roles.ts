@@ -203,7 +203,7 @@ export const ROLES: Role[] = [
     id: 'editor_grupos_estudio',
     name: 'Editor de Grupos de Estudio',
     description: 'Ver, crear, editar y eliminar grupos de estudio',
-    color: '#519DA2',
+    color: '#3B7579',
     // Solo 'view' a nivel módulo (para ver la sección/detalle de grupos). El
     // crear/editar/eliminar se autoriza por rol explícito (GROUP_ADMIN_ROLES) en
     // los endpoints de grupos, así el poder queda acotado a grupos y no se
@@ -250,7 +250,7 @@ export const ROLES: Role[] = [
     id: 'lider_comite',
     name: 'Líder de Comité',
     description: 'Su comité y sus miembros',
-    color: '#EF5554',
+    color: '#C43635',
     permissions: [
       { module: 'servidores', actions: ['view', 'edit'], scope: 'committee' },
       { module: 'miembros',   actions: ['view'],         scope: 'committee' },
@@ -282,7 +282,7 @@ export const ROLES: Role[] = [
     id: 'coordinador_estudios',
     name: 'Coordinador de Estudios',
     description: 'Estudios, dirigentes y grupos',
-    color: '#519DA2',
+    color: '#3B7579',
     permissions: [
       { module: 'estudios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },

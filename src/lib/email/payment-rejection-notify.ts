@@ -33,7 +33,7 @@ export async function notifyRejection(
         html: `
           <p>Hola ${member.first_name},</p>
           <p>${label[0].toUpperCase()}${label.slice(1)} fue <strong>rechazado</strong> por el siguiente motivo:</p>
-          <blockquote style="border-left:3px solid #EF5554;padding-left:12px;color:#444">${reason}</blockquote>
+          <blockquote style="border-left:3px solid #D63E3D;padding-left:12px;color:#444">${reason}</blockquote>
           <p>Por favor volvé a subir un comprobante válido para completar tu pago.</p>
         `,
       }).catch(e => console.warn('sendEmail rechazo falló:', e))

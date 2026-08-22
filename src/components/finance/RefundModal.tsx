@@ -95,9 +95,9 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                   onClick={() => setType(t)}
                   className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
                   style={{
-                    borderColor: type === t ? '#EF5554' : 'var(--outline-variant)',
+                    borderColor: type === t ? '#D63E3D' : 'var(--outline-variant)',
                     background: type === t ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)',
-                    color: type === t ? '#EF5554' : 'rgba(22,20,64,0.70)',
+                    color: type === t ? '#D63E3D' : 'rgba(22,20,64,0.70)',
                   }}
                 >
                   {t === 'full' ? 'Devolución completa' : 'Devolución parcial'}

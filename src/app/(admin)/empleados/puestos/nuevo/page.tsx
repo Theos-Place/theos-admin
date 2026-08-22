@@ -202,7 +202,7 @@ export default function NuevoPuestoPage() {
                 Rango salarial aprobado
               </label>
               <span
-                className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-semibold text-navy-light/80 font-display"
+                className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy-light/80 font-display"
               >
                 Confidencial
               </span>

@@ -232,7 +232,7 @@ export function CalendarGrid({
                     {dayEvents.length > 3 && (
                       <button
                         onClick={e => openDay(day, dayEvents, e)}
-                        className="text-[10px] text-navy-light/80 px-1 font-body hover:text-navy hover:underline"
+                        className="text-[11px] text-navy-light/80 px-1 font-body hover:text-navy hover:underline"
                       >
                         +{dayEvents.length - 3} más
                       </button>

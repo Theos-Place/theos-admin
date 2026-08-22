@@ -24,7 +24,7 @@ export default function EmbedPage() {
     view: 'monthly' as 'monthly' | 'weekly' | 'list' | 'grid',
     types: [] as string[],
     primary: '#161440',
-    accent: '#EF5554',
+    accent: '#D63E3D',
     bg: '#FFFFFF',
     showDesc: true,
     showLoc: true,
@@ -167,7 +167,7 @@ export default function EmbedPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const defaults = { primary: '#161440', accent: '#EF5554', bg: '#FFFFFF' }
+                      const defaults = { primary: '#161440', accent: '#D63E3D', bg: '#FFFFFF' }
                       setCfg(prev => ({ ...prev, [key]: defaults[key] }))
                     }}
                     className="text-[11px] text-navy-light/80 hover:text-navy transition-colors font-body"

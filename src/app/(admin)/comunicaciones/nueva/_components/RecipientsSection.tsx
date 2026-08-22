@@ -108,7 +108,7 @@ export function RecipientsSection({
               <div className="space-y-1.5 pt-1">
                 {previewMembers.map(m => (
                   <div key={m.id} className="flex items-center gap-2 text-[13px] text-navy-light/80 font-body">
-                    <div className="h-5 w-5 rounded-full bg-navy/10 flex items-center justify-center text-[10px] font-bold text-navy shrink-0">
+                    <div className="h-5 w-5 rounded-full bg-navy/10 flex items-center justify-center text-[11px] font-bold text-navy shrink-0">
                       {m.first_name[0]}{m.last_name[0]}
                     </div>
                     {m.first_name} {m.last_name}

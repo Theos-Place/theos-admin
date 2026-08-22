@@ -55,7 +55,7 @@ function Chips({ options, selected, onToggle, ariaLabel }: {
             onClick={() => onToggle(o)}
             className={cn(
               'rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors text-left',
-              on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30',
+              on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30',
             )}
           >
             {o}
@@ -174,7 +174,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                 rows={2}
                 placeholder="Notas adicionales sobre las fortalezas (opcional)…"
                 aria-label="Notas sobre las fortalezas"
-                className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/50')}
+                className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/80')}
               />
             </div>
 
@@ -220,7 +220,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                   rows={2}
                   placeholder="Describilo brevemente (obligatorio)…"
                   aria-label="Descripción del punto ciego"
-                  className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/50')}
+                  className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/80')}
                 />
               )}
             </div>
@@ -258,7 +258,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
                 onChange={ev => patch(p.request_id, { blessing: ev.target.value })}
                 rows={3}
                 placeholder="Palabras de bendición para la pareja…"
-                className={cn(INPUT, 'resize-none placeholder:text-navy-light/50')}
+                className={cn(INPUT, 'resize-none placeholder:text-navy-light/80')}
               />
             </div>
           </div>

@@ -144,7 +144,7 @@ export default function PuestosPage() {
                       {assigned ? (
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-white font-display">
+                            <span className="text-[11px] font-bold text-white font-display">
                               {assigned.member_initials}
                             </span>
                           </div>

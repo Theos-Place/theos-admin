@@ -171,7 +171,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               <div className="relative">
                 <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={cn(inputCls, 'font-body')} />
                 {isMinor && (
-                  <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white font-display">Menor</span>
+                  <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-white font-display">Menor</span>
                 )}
               </div>
             </div>

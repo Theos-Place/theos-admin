@@ -4,9 +4,9 @@ import type { PaymentStatus } from '@/types/finance'
 const STATUS_CONFIG: Record<PaymentStatus, { label: string; color: string; bg: string }> = {
   paid:           { label: 'Pagado',       color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
   pending:        { label: 'Pendiente',    color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
-  refunded:       { label: 'Devuelto',     color: '#519DA2', bg: 'rgba(81,157,162,0.12)'  },
+  refunded:       { label: 'Devuelto',     color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
   partial_refund: { label: 'Dev. parcial', color: '#70BDC2', bg: 'rgba(112,189,194,0.15)' },
-  failed:         { label: 'Fallido',      color: '#EF5554', bg: 'rgba(239,85,84,0.10)'   },
+  failed:         { label: 'Fallido',      color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

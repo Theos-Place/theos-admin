@@ -12,9 +12,9 @@ import type { InternalNotification } from '@/types/notification'
 import { formatDateTime } from '@/lib/format'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string; label: string }> = {
-  alert:   { Icon: AlertCircle,   color: '#EF5554', bg: 'rgba(239,85,84,0.10)',  label: 'Urgente' },
+  alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(239,85,84,0.10)',  label: 'Urgente' },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)', label: 'Atención' },
-  info:    { Icon: Info,          color: '#519DA2', bg: 'rgba(81,157,162,0.10)', label: 'Informativo' },
+  info:    { Icon: Info,          color: '#3B7579', bg: 'rgba(81,157,162,0.10)', label: 'Informativo' },
 }
 
 export default function NotificacionesPage() {
@@ -256,7 +256,7 @@ export default function NotificacionesPage() {
                     onClick={() => deleteOne(n.id)}
                     aria-label={`Eliminar ${n.title}`}
                     title="Eliminar"
-                    className="shrink-0 self-center rounded-lg p-2 text-navy-light/50 hover:bg-coral/5 hover:text-coral transition-colors"
+                    className="shrink-0 self-center rounded-lg p-2 text-navy-light/80 hover:bg-coral/5 hover:text-coral transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>

@@ -117,7 +117,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                     onClick={() => setToUndo(ci)}
                     aria-label={`Deshacer check-in de ${ci.member_name}`}
                     title="Deshacer check-in"
-                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/50 hover:text-coral hover:bg-coral/5 transition-colors"
+                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>

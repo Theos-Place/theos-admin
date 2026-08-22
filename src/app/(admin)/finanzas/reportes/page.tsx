@@ -226,7 +226,7 @@ export default function ReportesPage() {
                 // INT-3: totales por moneda, nunca sumados entre sí.
                 { label: 'Total cobrado', value: sumByCurrency(paidPayments), color: '#3DB97A' },
                 { label: 'Pendiente', value: sumByCurrency(pendingPayments), color: '#E9B949' },
-                { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#519DA2' },
+                { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#3B7579' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
                   <p className="text-[11px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>

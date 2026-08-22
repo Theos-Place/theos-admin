@@ -9,7 +9,7 @@ import { useToast } from '@/components/shared/Toast'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, todayCR, getInitials } from '@/lib/format'
 
-const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
+const AVATAR_COLORS = ['#161440', '#D63E3D', '#3B7579', '#9B7FD4', '#E9B949', '#3DB97A']
 function avatarBg(id: string) {
   return AVATAR_COLORS[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length]
 }

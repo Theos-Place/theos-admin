@@ -40,7 +40,7 @@ export function PaymentMethodSelector({
             <o.icon size={16} className="mb-1 text-navy" />
             <span className="block text-[13px] text-navy">{o.label}</span>
             {o.disabled && (
-              <span className="absolute top-1.5 right-1.5 rounded-full bg-surface-low px-1.5 py-0.5 text-[10px] font-display text-navy-light/80">
+              <span className="absolute top-1.5 right-1.5 rounded-full bg-surface-low px-1.5 py-0.5 text-[11px] font-display text-navy-light/80">
                 Próximamente
               </span>
             )}

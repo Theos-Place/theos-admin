@@ -105,7 +105,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
           onClick={openRefundModal}
           title="Próximamente"
           aria-label="Solicitar devolución (próximamente)"
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/50 font-body opacity-50 cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3.5 py-2 text-[13px] text-navy-light/40 font-body opacity-50 cursor-not-allowed"
         >
           <RotateCcw size={13} />
           Solicitar devolución
@@ -155,7 +155,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                         onChange={e => setReason(e.target.value)}
                         rows={3}
                         placeholder="Contanos por qué (mínimo 20 caracteres)…"
-                        className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')}
+                        className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')}
                       />
                       <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>
                         {reason.trim().length}/{MIN_REASON} caracteres mínimos

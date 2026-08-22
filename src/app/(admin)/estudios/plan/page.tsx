@@ -97,7 +97,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
               {study.code}
             </span>
             {study.is_archived && (
-              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
+              <span className="rounded-full px-1.5 py-0.5 text-[11px] font-bold uppercase font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
                 Desactivado
               </span>
             )}
@@ -325,7 +325,7 @@ export default function PlanDeEstudiosPage() {
                   <td className="px-4 py-3 text-sm text-navy font-body">
                     {s.name}
                     {s.is_archived && (
-                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
+                      <span className="ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-bold uppercase align-middle font-display bg-[rgba(120,120,130,0.18)] text-[#4b5563]">
                         Desactivado
                       </span>
                     )}

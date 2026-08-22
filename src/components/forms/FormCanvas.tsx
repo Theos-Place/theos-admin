@@ -269,7 +269,7 @@ export function FormCanvas({
                           className="shrink-0 flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5"
                         >
                           <Zap size={9} className="text-amber-600" />
-                          <span className="text-[10px] font-bold text-amber-600">{logicCount} regla{logicCount !== 1 ? 's' : ''}</span>
+                          <span className="text-[11px] font-bold text-amber-600">{logicCount} regla{logicCount !== 1 ? 's' : ''}</span>
                         </button>
                       )}
                     </div>

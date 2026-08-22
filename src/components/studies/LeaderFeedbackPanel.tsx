@@ -107,7 +107,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
         </p>
         {filas.filter(f => (f.comments ?? '').trim()).map(f => (
           <div key={f.id} className={cn('rounded-xl px-3 py-2.5 text-[13px] font-body',
-            f.hidden ? 'bg-surface-low text-navy-light/50 line-through' : 'bg-surface-low text-navy')}>
+            f.hidden ? 'bg-surface-low text-navy-light/80 line-through' : 'bg-surface-low text-navy')}>
             <div className="flex items-start justify-between gap-3">
               <span className="flex-1">{f.comments}</span>
               <button

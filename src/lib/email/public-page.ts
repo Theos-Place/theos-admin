@@ -13,7 +13,7 @@ export function emailPublicPage(
   opts?: { actionHref?: string; actionLabel?: string },
 ): Response {
   const button = opts?.actionHref && opts?.actionLabel
-    ? `<a href="${escapeHtml(opts.actionHref)}" style="display:inline-block;margin-top:20px;background:#EF5554;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 22px;border-radius:999px">${escapeHtml(opts.actionLabel)}</a>`
+    ? `<a href="${escapeHtml(opts.actionHref)}" style="display:inline-block;margin-top:20px;background:#D63E3D;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 22px;border-radius:999px">${escapeHtml(opts.actionLabel)}</a>`
     : ''
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />

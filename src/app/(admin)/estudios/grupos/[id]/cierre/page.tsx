@@ -332,7 +332,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                         onChange={e => setResult(r.member_id, 'fail_reason', e.target.value)}
                         placeholder="Justificación del reprobado…"
                         className={cn(
-                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50',
+                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/80',
                           triedNext && !r.fail_reason.trim() && 'ring-1 ring-coral',
                         )}
                       />
@@ -358,7 +358,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                         aria-required="true"
                         aria-invalid={triedNext && !r.withdraw_reason.trim() ? true : undefined}
                         className={cn(
-                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50',
+                          'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/80',
                           triedNext && !r.withdraw_reason.trim() && 'ring-1 ring-coral',
                         )}
                       />
@@ -418,7 +418,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                           onChange={e => setResult(r.member_id, 'rec_justification', e.target.value)}
                           placeholder="Justificación de la recomendación (opcional)…"
                           aria-label={`Justificación de la recomendación de ${r.member_name}`}
-                          className="w-full rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
+                          className="w-full rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/80"
                         />
                       )}
                     </div>

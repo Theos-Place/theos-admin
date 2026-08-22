@@ -170,7 +170,7 @@ export default function VacantesPage() {
                     <span>{g.items.length} puesto{g.items.length !== 1 ? 's' : ''} disponible{g.items.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                <ChevronDown size={18} className={cn('shrink-0 text-navy-light/50 transition-transform', isOpen && 'rotate-180')} aria-hidden />
+                <ChevronDown size={18} className={cn('shrink-0 text-navy-light/80 transition-transform', isOpen && 'rotate-180')} aria-hidden />
               </button>
 
               {isOpen && (

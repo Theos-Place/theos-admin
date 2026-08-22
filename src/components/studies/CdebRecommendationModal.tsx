@@ -47,7 +47,7 @@ function ScaleRow({ label, value, onChange, allowX }: {
             title={SCALE_LABELS[o]}
             className={cn(
               'h-10 min-w-10 rounded-xl border text-sm font-semibold font-display transition-colors',
-              value === o ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30',
+              value === o ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30',
               o === 'x' && 'px-3',
             )}
           >
@@ -202,7 +202,7 @@ export function CdebRecommendationModal({
                       rows={2}
                       placeholder="¿Qué viste? (obligatorio)"
                       aria-label={`Explicación sobre ${t.label}`}
-                      className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/50')}
+                      className={cn(INPUT, 'mt-2 resize-none placeholder:text-navy-light/80')}
                     />
                   )}
                 </div>
@@ -215,13 +215,13 @@ export function CdebRecommendationModal({
         <ScaleRow label={TESTIMONY_LABEL} value={f.testimony_score} onChange={v => set('testimony_score', v)} allowX={allowX} />
         <div>
           <label htmlFor="cdeb-testimony" className={LABEL}>{TESTIMONY_TEXT_LABEL} <span className="text-coral">*</span></label>
-          <textarea id="cdeb-testimony" value={f.testimony_notes ?? ''} onChange={e => set('testimony_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/50')} />
+          <textarea id="cdeb-testimony" value={f.testimony_notes ?? ''} onChange={e => set('testimony_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/80')} />
         </div>
 
         <ScaleRow label={PASSION_LABEL} value={f.passion_score} onChange={v => set('passion_score', v)} allowX={allowX} />
         <div>
           <label htmlFor="cdeb-passion" className={LABEL}>{PASSION_TEXT_LABEL} <span className="text-coral">*</span></label>
-          <textarea id="cdeb-passion" value={f.passion_notes ?? ''} onChange={e => set('passion_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/50')} />
+          <textarea id="cdeb-passion" value={f.passion_notes ?? ''} onChange={e => set('passion_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/80')} />
         </div>
 
         <ScaleRow label={BIBLE_LABEL} value={f.bible_knowledge_score} onChange={v => set('bible_knowledge_score', v)} allowX={false} />

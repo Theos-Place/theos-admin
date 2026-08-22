@@ -17,7 +17,7 @@ describe('isAdvancedHtml — lo que el editor visual NO puede representar', () =
   })
 
   it('estilos en línea — EL HUECO VIEJO: esto pasaba como "simple"', () => {
-    const html = '<p style="color:#EF5554;font-size:18px">Importante</p>'
+    const html = '<p style="color:#D63E3D;font-size:18px">Importante</p>'
     expect(isAdvancedHtml(html)).toBe(true)
     expect(advancedHtmlReason(html)).toBe('estilos en línea')
   })
@@ -68,7 +68,7 @@ describe('isAdvancedHtml — lo que SÍ es simple', () => {
     // Si estos contaran como avanzados, centrar un párrafo dejaría al usuario
     // encerrado en modo código a mitad de escribir.
     expect(isAdvancedHtml('<p style="text-align: center">Centrado</p>')).toBe(false)
-    expect(isAdvancedHtml('<a href="#" style="color:#519DA2">link</a>')).toBe(false)
+    expect(isAdvancedHtml('<a href="#" style="color:#3B7579">link</a>')).toBe(false)
     expect(isAdvancedHtml('<img src="/x.png" style="max-width:100%;height:auto">')).toBe(false)
   })
 

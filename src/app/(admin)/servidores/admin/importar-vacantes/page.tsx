@@ -159,7 +159,7 @@ export default function ImportarVacantesPage() {
               <div
                 className="h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold font-display"
                 style={{
-                  background: step > s ? '#3DB97A' : step === s ? '#EF5554' : 'rgba(255,255,255,0.15)',
+                  background: step > s ? '#3DB97A' : step === s ? '#D63E3D' : 'rgba(255,255,255,0.15)',
                   color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
                 }}
               >
@@ -274,7 +274,7 @@ export default function ImportarVacantesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { label: 'Importadas', count: result.inserted, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)' },
-              { label: 'Filas con error (no importadas)', count: result.errors.length, color: '#EF5554', bg: 'rgba(239,85,84,0.10)' },
+              { label: 'Filas con error (no importadas)', count: result.errors.length, color: '#C43635', bg: 'rgba(239,85,84,0.10)' },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
                 <p className="text-2xl font-extrabold font-display" style={{ color }}>{count}</p>

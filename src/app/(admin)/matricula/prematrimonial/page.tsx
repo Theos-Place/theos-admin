@@ -30,7 +30,7 @@ const ZONES = ['Este de San José', 'Oeste de San José', 'Alajuela', 'Cartago',
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors ${active ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30'}`}>
+      className={`rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors ${active ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30'}`}>
       {children}
     </button>
   )
@@ -359,7 +359,7 @@ export default function PrematrimonialWizardPage() {
                   {DATING_TIME_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={datingTime === o.value} onClick={() => setDatingTime(o.value)}
                       className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors',
-                        datingTime === o.value ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
+                        datingTime === o.value ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
                   ))}
                 </div>
               </div>
@@ -369,7 +369,7 @@ export default function PrematrimonialWizardPage() {
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={firstMarriage === o.v} onClick={() => setFirstMarriage(o.v)}
                       className={cn('rounded-full px-4 py-1.5 text-[13px] font-body border transition-colors',
-                        firstMarriage === o.v ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
+                        firstMarriage === o.v ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
                   ))}
                 </div>
                 {firstMarriage === false && (
@@ -384,7 +384,7 @@ export default function PrematrimonialWizardPage() {
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={hasChildren === o.v} onClick={() => setHasChildren(o.v)}
                       className={cn('rounded-full px-4 py-1.5 text-[13px] font-body border transition-colors',
-                        hasChildren === o.v ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
+                        hasChildren === o.v ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.l}</button>
                   ))}
                 </div>
                 {hasChildren === true && (
@@ -399,7 +399,7 @@ export default function PrematrimonialWizardPage() {
                   {LIVING_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={living === o.value} onClick={() => setLiving(o.value)}
                       className={cn('rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-colors',
-                        living === o.value ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
+                        living === o.value ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{o.label}</button>
                   ))}
                 </div>
               </div>
@@ -492,7 +492,7 @@ export default function PrematrimonialWizardPage() {
               || (step === 2 && backgroundError !== null)
             }
               onClick={() => setStep(s => s + 1)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-teal px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
+              className="inline-flex items-center gap-1.5 rounded-full bg-teal px-5 py-2 text-sm font-medium text-navy disabled:opacity-50 font-body">
               Continuar <ArrowRight size={15} />
             </button>
           ) : (

@@ -17,7 +17,7 @@ const LABEL = 'block text-[13px] font-medium text-navy-light/80 mb-1.5'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/50',
+  'placeholder:text-navy-light/80',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 const INPUT_ERROR = 'border-coral/50 focus:border-coral/60 focus:ring-coral/10'

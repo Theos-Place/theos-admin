@@ -11,7 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
   'outline-none transition-all',
-  'placeholder:text-navy-light/50',
+  'placeholder:text-navy-light/80',
   'focus:border-navy/30 focus:ring-2 focus:ring-navy/10',
 ].join(' ')
 
@@ -107,7 +107,7 @@ export default function NuevaContrasenaPage() {
   if (recoveryReady === null) {
     return (
       <div className="w-full max-w-[400px] text-center py-10">
-        <Loader2 size={22} className="animate-spin text-navy-light/50 mx-auto mb-3" />
+        <Loader2 size={22} className="animate-spin text-navy-light/80 mx-auto mb-3" />
         <p className="text-sm text-navy-light/80 font-body">Verificando el enlace…</p>
       </div>
     )
@@ -204,7 +204,7 @@ export default function NuevaContrasenaPage() {
 
         <div className="space-y-1.5 px-1">
           {reqs.map(req => (
-            <div key={req.label} className="flex items-center gap-2 text-[13px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#519DA2' : 'rgba(239,85,84,0.7)' }}>
+            <div key={req.label} className="flex items-center gap-2 text-[13px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#3B7579' : 'rgba(239,85,84,0.7)' }}>
               {req.met && password.length > 0 ? <Check size={12} className="shrink-0" /> : <span className="h-3 w-3 rounded-full border shrink-0 border-current inline-block" />}
               {req.label}
             </div>

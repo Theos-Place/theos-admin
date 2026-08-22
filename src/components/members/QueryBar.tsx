@@ -52,7 +52,7 @@ function OpToggle({ op, onToggle }: { op: 'AND' | 'OR'; onToggle: () => void }) 
     <button
       onClick={onToggle}
       className={cn(
-        'rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
+        'rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
         op === 'AND'
           ? 'bg-navy text-white hover:bg-navy/80'
           : 'bg-coral text-white hover:bg-coral/80',
@@ -118,7 +118,7 @@ function GroupBracket({
     <span
       className="flex items-center gap-1 rounded-xl px-2 py-1 text-xs border-[1.5px] border-dashed border-[var(--outline-variant)] font-body"
     >
-      <span className="text-[10px] text-navy-light/80 mr-0.5">(</span>
+      <span className="text-[11px] text-navy-light/80 mr-0.5">(</span>
       {conditions.map((c, i) => (
         <Fragment key={c.id}>
           {i > 0 && (
@@ -138,10 +138,10 @@ function GroupBracket({
           <span className="text-navy-light/80">{conditionLabel(c)}</span>
         </Fragment>
       ))}
-      <span className="text-[10px] text-navy-light/80 ml-0.5">)</span>
+      <span className="text-[11px] text-navy-light/80 ml-0.5">)</span>
       <button
         onClick={onUngroup}
-        className="ml-0.5 rounded px-1 py-0.5 text-[10px] text-navy-light/80 hover:text-navy-light transition-colors"
+        className="ml-0.5 rounded px-1 py-0.5 text-[11px] text-navy-light/80 hover:text-navy-light transition-colors"
         title="Disolver grupo"
         aria-label="Disolver grupo"
       >
@@ -235,7 +235,7 @@ export function QueryBar({
               <button
                 onClick={() => setNewGroupOp('AND')}
                 className={cn(
-                  'px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
+                  'px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
                   newGroupOp === 'AND' ? 'bg-navy text-white' : 'text-navy-light/80 hover:bg-surface-card',
                   'font-display',
                 )}
@@ -245,7 +245,7 @@ export function QueryBar({
               <button
                 onClick={() => setNewGroupOp('OR')}
                 className={cn(
-                  'px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-colors',
+                  'px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
                   newGroupOp === 'OR' ? 'bg-coral text-white' : 'text-navy-light/80 hover:bg-surface-card',
                   'font-display',
                 )}

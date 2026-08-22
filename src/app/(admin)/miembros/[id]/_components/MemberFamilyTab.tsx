@@ -157,7 +157,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                     onClick={() => setUnlinkTarget(fm)}
                     aria-label={`Desvincular a ${fm.name}`}
                     title="Desvincular"
-                    className="shrink-0 rounded-lg p-2 text-navy-light/50 hover:text-coral hover:bg-coral/10 transition-colors"
+                    className="shrink-0 rounded-lg p-2 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
                   >
                     <UserMinus size={15} strokeWidth={1.75} />
                   </button>

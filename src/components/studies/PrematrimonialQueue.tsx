@@ -157,7 +157,7 @@ export function PrematrimonialQueue() {
 
             {r.status === 'pendiente' && panel?.id !== r.id && (
               <div className="mt-4 flex gap-2">
-                <button onClick={() => openGroup(r)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-white font-body"><Check size={13} /> Crear grupo</button>
+                <button onClick={() => openGroup(r)} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-navy font-body"><Check size={13} /> Crear grupo</button>
                 <button onClick={() => setPanel({ id: r.id, mode: 'cancel' })} className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body"><X size={13} /> Cancelar</button>
               </div>
             )}
@@ -176,7 +176,7 @@ export function PrematrimonialQueue() {
                 </div>
                 <input type="date" value={gStart} onChange={e => setGStart(e.target.value)} className="rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                 <div className="flex gap-2 pt-1">
-                  <button onClick={() => createGroup(r.id)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-white disabled:opacity-50 font-body">{busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Crear y asignar</button>
+                  <button onClick={() => createGroup(r.id)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-navy disabled:opacity-50 font-body">{busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Crear y asignar</button>
                   <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body">Cerrar</button>
                 </div>
               </div>

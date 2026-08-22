@@ -688,7 +688,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 {checkinCount > 0 && (
                   <path
                     d="M 10 55 A 40 40 0 0 1 90 55"
-                    fill="none" stroke="#EF5554" strokeWidth="8" strokeLinecap="round"
+                    fill="none" stroke="#D63E3D" strokeWidth="8" strokeLinecap="round"
                     strokeDasharray={`${arcPct * 125.6} 125.6`}
                   />
                 )}

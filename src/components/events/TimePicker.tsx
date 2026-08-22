@@ -69,7 +69,7 @@ export function TimePicker({ value, onChange, error, min, step = 15, placeholder
           'w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-left outline-none transition-all font-body',
           'focus:ring-1 focus:ring-coral/30',
           error ? 'ring-1 ring-coral border-coral' : 'border border-transparent',
-          value ? 'text-navy' : 'text-navy-light/50',
+          value ? 'text-navy' : 'text-navy-light/80',
         )}
       >
         <span className="truncate">{value ? label12(value) : placeholder}</span>

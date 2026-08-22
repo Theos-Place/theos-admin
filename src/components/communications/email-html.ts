@@ -12,7 +12,7 @@
  * que obligar a alguien a editar en modo código.
  *
  * Hueco que tenía esta función hasta el 2026-08-06: buscaba `style` como TAG,
- * así que un `<p style="color:#EF5554;font-size:18px">` pasaba por "simple" y el
+ * así que un `<p style="color:#D63E3D;font-size:18px">` pasaba por "simple" y el
  * editor lo aplanaba.
  *
  * Vive en su propio módulo (sin dependencias) para que importarlo NO arrastre

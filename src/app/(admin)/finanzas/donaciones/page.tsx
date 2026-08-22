@@ -254,7 +254,7 @@ export default function DonacionesPage() {
                       <span
                         className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
                         style={{
-                          color: d.is_identified ? '#3DB97A' : '#EF5554',
+                          color: d.is_identified ? '#3DB97A' : '#D63E3D',
                           background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
                         }}
                       >
@@ -299,7 +299,7 @@ export default function DonacionesPage() {
                   <span
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                     style={{
-                      color: d.is_identified ? '#3DB97A' : '#EF5554',
+                      color: d.is_identified ? '#3DB97A' : '#D63E3D',
                       background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
                     }}
                   >

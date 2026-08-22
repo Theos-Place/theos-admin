@@ -34,7 +34,7 @@ export function KpiCard({
               tabIndex={0}
               role="button"
               aria-label={info}
-              className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
+              className="cursor-help text-navy-light/80 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
             >
               <Info size={12} />
             </span>

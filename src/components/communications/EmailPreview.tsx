@@ -29,7 +29,7 @@ function srcDocFor(html: string): string {
   body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#333;background:#fff;font-size:14px;line-height:1.5;word-wrap:break-word}
   .wrap{max-width:600px;margin:0 auto;padding:20px}
   img{max-width:100%;height:auto}
-  a{color:#519DA2}
+  a{color:#3B7579}
 </style></head>
 <body><div class="wrap">${html}</div></body></html>`
 }

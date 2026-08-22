@@ -163,7 +163,7 @@ export default function ImportarDonacionesPage() {
                 <div
                   className="h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold transition-all font-display"
                   style={{
-                    background: step > s ? '#3DB97A' : step === s ? '#EF5554' : 'rgba(255,255,255,0.15)',
+                    background: step > s ? '#3DB97A' : step === s ? '#D63E3D' : 'rgba(255,255,255,0.15)',
                     color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
                   }}
                 >
@@ -240,7 +240,7 @@ export default function ImportarDonacionesPage() {
               {[
                 { label: 'Filas en el archivo', count: rows.length, color: '#161440', bg: 'rgba(22,20,64,0.06)', Icon: CheckCircle2 },
                 { label: 'Con cédula', count: conCedula, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)', Icon: CheckCircle2 },
-                { label: 'Sin cédula', count: sinCedula, color: '#EF5554', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
+                { label: 'Sin cédula', count: sinCedula, color: '#C43635', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
               ].map(({ label, count, color, bg, Icon }) => (
                 <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
                   <Icon size={20} className="shrink-0" style={{ color }} />

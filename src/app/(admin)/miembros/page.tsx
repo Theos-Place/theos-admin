@@ -456,7 +456,7 @@ function MiembrosContent() {
           {!allFilteredSelected && (
             <button
               onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
-              className="text-[13px] font-semibold underline transition-colors text-[var(--coral,#EF5554)] cursor-pointer font-body bg-transparent border-0"
+              className="text-[13px] font-semibold underline transition-colors text-[var(--coral,#D63E3D)] cursor-pointer font-body bg-transparent border-0"
             >
               Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
             </button>

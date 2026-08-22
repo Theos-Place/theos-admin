@@ -26,7 +26,7 @@ function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   )
 }
 
-const AVATAR_COLORS = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949', '#3DB97A']
+const AVATAR_COLORS = ['#161440', '#D63E3D', '#3B7579', '#9B7FD4', '#E9B949', '#3DB97A']
 function avatarBg(id: string) {
   return AVATAR_COLORS[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length]
 }
@@ -498,7 +498,7 @@ function DarAccesoModal({
   const [selected, setSelected]       = useState<MemberHit | null>(null)
   const [selectedRoles, setSelectedRoles] = useState<Set<RoleId>>(new Set())
 
-  const AVATAR_COLORS2 = ['#161440', '#EF5554', '#519DA2', '#9B7FD4', '#E9B949']
+  const AVATAR_COLORS2 = ['#161440', '#D63E3D', '#3B7579', '#9B7FD4', '#E9B949']
   function aBg(id: string) { return AVATAR_COLORS2[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS2.length] }
 
   function toggleRole(id: RoleId) {
@@ -575,7 +575,7 @@ function DarAccesoModal({
                     onClick={() => toggleRole(role.id)}
                     className="text-left rounded-xl p-3.5 border transition-all"
                     style={{
-                      borderColor: isSelected ? '#EF5554' : 'var(--outline-variant)',
+                      borderColor: isSelected ? '#D63E3D' : 'var(--outline-variant)',
                       background: isSelected ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)',
                     }}
                   >

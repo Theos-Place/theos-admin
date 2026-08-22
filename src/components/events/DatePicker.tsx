@@ -83,7 +83,7 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
           'w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-left outline-none transition-all font-body',
           'focus:ring-1 focus:ring-coral/30',
           error ? 'ring-1 ring-coral border-coral' : 'border border-transparent',
-          selected ? 'text-navy' : 'text-navy-light/50',
+          selected ? 'text-navy' : 'text-navy-light/80',
         )}
       >
         <span className="truncate">{selected ? labelOf(selected) : placeholder}</span>

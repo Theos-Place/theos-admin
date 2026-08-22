@@ -82,7 +82,7 @@ export function accountReadyBody(
 <div class="info-box">
   <p class="info-title">${t.pasosTitulo}</p>
   <p style="font-size:14px; color:#555; line-height:1.9; margin:0;">
-    <strong>1.</strong> Abrí <a href="${loginUrl}" style="color:#519DA2;">${loginUrl.replace(/^https?:\/\//, '')}</a><br />
+    <strong>1.</strong> Abrí <a href="${loginUrl}" style="color:#3B7579;">${loginUrl.replace(/^https?:\/\//, '')}</a><br />
     <strong>2.</strong> Tocá <strong>${t.enlaceDeLogin}</strong><br />
     <strong>3.</strong> Escribí tu correo: <strong>${correo}</strong><br />
     <strong>4.</strong> ${t.ultimoPaso}
@@ -96,7 +96,7 @@ export function accountReadyBody(
 
 <p style="font-size:13px; color:#777; line-height:1.7;">
   ¿Problemas para entrar? Escribinos a
-  <a href="mailto:soporte@theosplace.org" style="color:#519DA2;">soporte@theosplace.org</a>.
+  <a href="mailto:soporte@theosplace.org" style="color:#3B7579;">soporte@theosplace.org</a>.
 </p>`
 }
 

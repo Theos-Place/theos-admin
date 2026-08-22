@@ -34,8 +34,8 @@ const STAGE_ORDER: FilterTab[] = ['niveles', 'inicial', 'intermedia', 'avanzada'
 
 const STAGE_META: Record<string, { label: string; bg: string; text: string }> = {
   niveles:    { label: 'Niveles',          bg: 'rgba(41,54,92,0.08)',      text: '#29365C' },
-  inicial:    { label: 'Etapa Inicial',    bg: 'rgba(181,221,224,0.35)',   text: '#519DA2' },
-  intermedia: { label: 'Etapa Intermedia', bg: 'rgba(239,85,84,0.12)',     text: '#D94241' },
+  inicial:    { label: 'Etapa Inicial',    bg: 'rgba(181,221,224,0.35)',   text: '#3B7579' },
+  intermedia: { label: 'Etapa Intermedia', bg: 'rgba(239,85,84,0.12)',     text: '#C43635' },
   avanzada:   { label: 'Etapa Avanzada',   bg: 'rgba(233,185,73,0.18)',    text: '#9B7200' },
   'campaña':  { label: 'Campañas',         bg: 'rgba(155,127,212,0.15)',   text: '#7C5EC2' },
 }
@@ -791,7 +791,7 @@ function CommitmentRow({ met, label, info }: { met: boolean; label: string; info
           tabIndex={0}
           title={info}
           aria-label={info}
-          className="cursor-help text-navy-light/50 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
+          className="cursor-help text-navy-light/80 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"
         >
           <Info size={12} />
         </span>

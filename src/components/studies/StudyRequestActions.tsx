@@ -263,7 +263,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                           return (
                             <button key={d} type="button" onClick={() => toggleDay(d)}
                               className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors',
-                                on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{d}</button>
+                                on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{d}</button>
                           )
                         })}
                       </div>
@@ -283,14 +283,14 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                           return (
                             <button key={z} type="button" onClick={() => toggleZone(z)}
                               className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors',
-                                on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{z}</button>
+                                on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{z}</button>
                           )
                         })}
                       </div>
                     </div>
                     <div>
                       <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
-                      <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/50')} />
+                      <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')} />
                       <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
                     </div>
                   </>
@@ -328,7 +328,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                           return (
                             <button key={d} type="button" onClick={() => toggleDay(d)} disabled={!on && days.length >= 2}
                               className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors disabled:opacity-40',
-                                on ? 'bg-teal text-white border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{d}</button>
+                                on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{d}</button>
                           )
                         })}
                       </div>
@@ -348,7 +348,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                         <option value="otra">Otra (escribir)</option>
                       </select>
                       {zoneSel === 'otra' && (
-                        <input value={zoneOther} onChange={e => setZoneOther(e.target.value)} placeholder="Escribí la zona" className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/50')} />
+                        <input value={zoneOther} onChange={e => setZoneOther(e.target.value)} placeholder="Escribí la zona" className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/80')} />
                       )}
                     </div>
                   </>
