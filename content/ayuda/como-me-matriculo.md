@@ -64,9 +64,12 @@ te la aprueban completa, la matrícula no requiere pago; si es parcial, pagás l
 
 ## Si te matriculaste en el grupo equivocado
 
-Escribinos al **WhatsApp de estudios: [7261-1001](https://wa.me/50672611001)** y te ayudamos
-con el cambio de grupo. El enlace directo también está en tres lugares: la pantalla de
-confirmación apenas te matriculás, la ficha de tu grupo y **Pagos pendientes**.
+Se arregla, y hay una guía completa: **[¿Y si me matriculé en el grupo equivocado?](/ayuda/grupo-equivocado)**.
+
+En corto: el enlace «¿Te matriculaste en el grupo equivocado?» está en cuatro lugares —la
+pantalla de confirmación apenas te matriculás, la ficha de tu grupo, tu perfil (en el
+historial de estudios) y **Pagos pendientes**—. También podés escribirnos al **WhatsApp de
+estudios: [7261-1001](https://wa.me/50672611001)**.
 
 El cambio lo hace el equipo de estudios: **no es automático**. Mientras tanto seguís
 matriculado en tu grupo actual, así que no dejes de ir a clases.

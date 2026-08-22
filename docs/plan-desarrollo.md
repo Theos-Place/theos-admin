@@ -3405,7 +3405,7 @@ DURANTE toda la navegación y no se descubra al confirmar.
 registrar quién lo hizo. No es "llenar a nombre de otro" —es otra acción— y `recorded_by` ahí
 sobreescribiría quién matriculó. Necesitaría su propia columna; queda anotado.
 
-### [ ] AYU-1 · Dos artículos nuevos en el centro de ayuda
+### [x] AYU-1 · Dos artículos nuevos en el centro de ayuda — HECHO 2026-08-21
 ```
 Agregar dos artículos a content/ayuda/ (frontmatter como los existentes):
 
@@ -3428,6 +3428,47 @@ B) "Cómo se calcula el análisis de estudios" — INTERNO (roles de estudios: d
    Si al leer el código encontrás que la agrupación es ambigua o inconsistente, decímelo:
    sería un bug, no solo falta de documentación.
 ```
+
+**Los dos artículos**: `content/ayuda/grupo-equivocado.md` (público, orden 4) y
+`content/ayuda/analisis-de-estudios-como-se-calcula.md` (roles de estudios, orden 11).
+Verificado que la visibilidad funciona: el público lo ve el rol `miembro`, el interno lo ven
+los cuatro roles de estudios y el `miembro` NO. Enlazado desde el tutorial de matrícula, que
+de paso decía "tres lugares" cuando REU-3 dejó **cuatro** (faltaba el historial del perfil).
+
+**RESPUESTA A LA DUDA QUE ORIGINÓ ESTO.** La agrupación NO es una ni la otra: es una cadena
+de respaldo, `province ?? sede.code ?? 'Sin zona'` — provincia de la dirección primero, si no
+la sede calculada por check-ins. Está **consistente en los dos lugares** del código
+(studies-demand.ts líneas 162 y 240), así que no es un bug de inconsistencia.
+
+**Pero el dato real dice algo más útil.** Sobre 23.723 miembros activos:
+
+| De dónde sale la zona | Personas |
+|---|---|
+| Provincia de la dirección | **6** |
+| Sede donde asiste | 11.215 |
+| **Sin zona** | **12.502** (53%) |
+
+Dos conclusiones que quedaron escritas en el artículo:
+
+1. **La decisión del 2026-08-19 de preferir la provincia sobre la sede es inerte**: aplica a 6
+   personas, porque el perfil casi nunca tiene la provincia llena. En la práctica la columna
+   es sede de asistencia, no lugar de residencia — y así se está leyendo mal si alguien la usa
+   para decidir dónde abrir un grupo en una zona sin charlas.
+2. **Más de la mitad del padrón cae en "Sin zona"**, y no es un error de cálculo: son los
+   11.475 activos que **nunca hicieron check-in**. Sin check-in no hay sede, y sin dirección
+   tampoco hay provincia.
+
+No es un bug, pero sí un dato que cambia cómo hay que leer la pantalla. Si se quiere que la
+columna signifique "dónde vive", hay que llenar la dirección del padrón primero; si se quiere
+que signifique "dónde asiste", conviene quitar la provincia de la cadena para que no queden
+6 filas midiendo otra cosa.
+
+El artículo además documenta: qué es "demanda" (las dos categorías y por qué se calculan
+distinto), los compromisos por etapa con los números reales (6 charlas/6 meses/60 días, o 12
+en reforzada), que alguien que asiste a dos sedes cuenta en UNA (gana la de más check-ins en
+6 meses, empate por la más reciente, y la ventana se ancla a la última visita si dejó de ir),
+y una lista de **qué NO mide** — que es lo que evita decidir con un número que significa
+otra cosa.
 
 ---
 
