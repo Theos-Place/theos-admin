@@ -273,7 +273,7 @@ function NuevoEventoForm() {
     return (
       <div className="page">
         <div className="ph">
-          <div className="ptitle">Crear evento</div>
+          <h1 className="ptitle">Crear evento</h1>
         </div>
         <div className="card p-10 text-center">
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto mb-4">
@@ -309,7 +309,7 @@ function NuevoEventoForm() {
       <div className="ph">
         <div className="ph-row">
           <div>
-            <div className="ptitle">Crear evento</div>
+            <h1 className="ptitle">Crear evento</h1>
             <div className="psub">Completá los pasos para publicar un nuevo evento</div>
           </div>
           <div className="ph-actions">

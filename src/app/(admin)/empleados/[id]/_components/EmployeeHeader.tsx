@@ -34,7 +34,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="ptitle">{employee.member_name}</div>
+              <h1 className="ptitle">{employee.member_name}</h1>
               {employee.status === 'inactive' && (
                 <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display">Inactivo</span>
               )}

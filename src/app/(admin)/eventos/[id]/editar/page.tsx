@@ -374,6 +374,10 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="space-y-4">
+      {/* AUD-1 · Encabezado para lectores de pantalla: esta pantalla no
+          tiene un título visible (se identifica por la barra superior y las
+          insignias), y sin <h1> no hay punto de entrada para orientarse. */}
+      <h1 className="sr-only">{`Editar ${event.name ?? 'el evento'}`}</h1>
       {showRecurringModal && (
         <RecurringSaveModal
           registrationCount={event.registrations.length}

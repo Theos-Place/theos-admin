@@ -100,7 +100,7 @@ export default function EditarVacantePage() {
         <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.push(`/servidores/vacantes/${id}`)}>← Volver a la vacante</button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">Editar vacante</div>
+            <h1 className="ptitle">Editar vacante</h1>
             <div className="psub">{vacancy.title} · {vacancy.committee_name}</div>
           </div>
           <div className="ph-actions">

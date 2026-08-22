@@ -113,7 +113,7 @@ export default function EditarPuestoPage() {
         </button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">Editar puesto</div>
+            <h1 className="ptitle">Editar puesto</h1>
             <div className="psub">{position.committee_name}</div>
           </div>
           <div className="ph-actions">

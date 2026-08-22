@@ -33,7 +33,7 @@ export function CommitteeHeader({
       </button>
       <div className="ph-row">
         <div>
-          <div className="ptitle">{committeeOverride.name ?? committee.name}</div>
+          <h1 className="ptitle">{committeeOverride.name ?? committee.name}</h1>
           <div className="psub">
             {committeeOverride.area ?? committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
           </div>

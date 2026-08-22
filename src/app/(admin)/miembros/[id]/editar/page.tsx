@@ -98,7 +98,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     return (
       <div className="page">
         <div className="ph">
-          <div className="ptitle">Editar perfil</div>
+          <h1 className="ptitle">Editar perfil</h1>
         </div>
         <div className="card p-[22px]">
           <p className="text-sm text-navy-light/80 text-center py-8 font-body">
@@ -187,7 +187,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         </button>
         <div className="ph-row">
           <div>
-            <div className="ptitle">Editar perfil</div>
+            <h1 className="ptitle">Editar perfil</h1>
             <div className="psub">{member.first_name} {member.last_name}</div>
           </div>
           <div className="ph-actions">

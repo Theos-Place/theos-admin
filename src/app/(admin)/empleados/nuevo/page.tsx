@@ -174,6 +174,9 @@ export default function NuevoEmpleadoPage() {
 
   return (
     <div className="space-y-4">
+      {/* AUD-1 · Encabezado para lectores de pantalla: esta pantalla no tiene
+          un título visible, y sin <h1> no hay punto de entrada. */}
+      <h1 className="sr-only">Nuevo empleado</h1>
       <TopBar
         step={step}
         totalSteps={STEPS.length}

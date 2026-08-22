@@ -488,6 +488,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-5">
+      {/* AUD-1 · Encabezado para lectores de pantalla: esta pantalla no
+          tiene un título visible (se identifica por la barra superior y las
+          insignias), y sin <h1> no hay punto de entrada para orientarse. */}
+      <h1 className="sr-only">{group.name ?? 'Detalle del grupo'}</h1>
       {showAddMember && (
         <AddMemberModal
           groupId={id}

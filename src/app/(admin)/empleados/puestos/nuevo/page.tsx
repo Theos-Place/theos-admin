@@ -76,6 +76,10 @@ export default function NuevoPuestoPage() {
 
   return (
     <div className="space-y-4">
+      {/* AUD-1 · Encabezado para lectores de pantalla: esta pantalla no
+          tiene un título visible (se identifica por la barra superior y las
+          insignias), y sin <h1> no hay punto de entrada para orientarse. */}
+      <h1 className="sr-only">Nuevo puesto pagado</h1>
       {/* Top bar */}
       <div
         className="sticky top-0 z-10 rounded-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-surface-card shadow-[var(--shadow-md)]"

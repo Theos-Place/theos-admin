@@ -162,7 +162,7 @@ export default function VacanteDetailPage() {
                 </span>
               )}
             </div>
-            <div className="ptitle">{vacancy.title}</div>
+            <h1 className="ptitle">{vacancy.title}</h1>
             <div className="psub">{vacancy.position} · {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}</div>
           </div>
           <div className="ph-actions">

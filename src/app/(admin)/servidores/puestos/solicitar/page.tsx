@@ -133,7 +133,7 @@ function SolicitarPuestoContent() {
           <ChevronLeft size={16} /> Puestos de Servicio
         </Link>
         <span className="text-navy-light/80">|</span>
-        <span className="text-sm font-semibold text-navy font-display">Solicitar puesto nuevo</span>
+        <h1 className="text-sm font-semibold text-navy font-display">Solicitar puesto nuevo</h1>
       </div>
 
       <div className="rounded-2xl px-4 py-3 bg-amber-50 border border-amber-200">

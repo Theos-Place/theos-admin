@@ -189,7 +189,7 @@ El mensaje existe en la pantalla pero no en el recorrido del campo.
 `id`. Conviene resolverlo en un componente de campo compartido en vez de en cada
 formulario — hoy no existe uno.
 
-## 5. 21 de 95 pantallas de administración no tienen `<h1>`
+## 5. 21 de 95 pantallas de administración no tienen `<h1>` — CERRADO 2026-08-21
 
 **Qué pasa:** el 22% de las páginas no declara su encabezado principal.
 
@@ -197,8 +197,33 @@ formulario — hoy no existe uno.
 pantalla se orienta en una página. Sin `h1` no hay punto de entrada, y la persona
 tiene que tabular desde el principio para saber dónde está.
 
-**Corrección:** una por una, pero es mecánico: casi todas ya tienen un título
-visual pintado con `<p>` o `<div>`. Es cambiar la etiqueta, no el diseño.
+**CERRADO: 94 de 95 pantallas declaran su `<h1>`.** La única exenta es
+`pagos/revision`, que es un `redirect()` de tres líneas y no renderiza nada.
+
+**Corrección al número: eran 14, no 21.** Siete de las 21 SÍ tenían `h1`, solo que
+lo aporta un componente (`EventHeader`, `MemberHeader`, y los de formularios y
+reportes). Mi conteo original solo miró el archivo de la página; el chequeo bueno
+sigue los imports locales.
+
+Cómo se cerraron las 14:
+
+- **7 con un cambio de clase a etiqueta.** Existía la convención `.ptitle` —el
+  estilo de título de página, 22px extrabold— usada en 9 lugares como `<div>`.
+  Pasaron a `<h1 className="ptitle">`: **visualmente idéntico**, porque la clase
+  carga todo el estilo. Cubrió vacantes, comités, editar perfil, crear evento y
+  editar puesto.
+- **1 con un `<span>` que ya era el título** (`servidores/puestos/solicitar`),
+  convertido a `h1` conservando su clase.
+- **5 con un `<h1 className="sr-only">`.** Esas pantallas NO tienen título visible
+  —se identifican por la barra superior y las insignias— así que no había etiqueta
+  que cambiar. Un encabezado invisible da el punto de entrada al lector de
+  pantalla sin tocar el diseño, que es lo que pedía la ficha de UI-1. Donde se
+  pudo, el texto es dinámico ("Editar el expediente de Ana Pérez") y no genérico.
+- **1 exenta**: el redirect.
+
+Queda fijado por `src/lib/help/page-headings.test.ts`, que sigue los imports (para
+no volver a contar los 7 falsos positivos) y verifica además que la exenta siga
+siendo un `redirect()`.
 
 ## 6. Cinco pantallas borran sin confirmar
 
