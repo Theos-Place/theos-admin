@@ -89,7 +89,7 @@ de que su acción falló.
 
 **Corrección:** `role={kind === 'error' ? 'alert' : 'status'}`.
 
-## 3. 168 inputs no tienen su label asociado — CORRECCIÓN a la primera versión de este informe
+## 3. 168 inputs no tenían su label asociado — CERRADO 2026-08-21
 
 **Esto se me pasó en la primera pasada y es más grave que el hallazgo siguiente.** Lo
 encontré al implementar las correcciones: al tocar `completar-perfil` vi que sus labels no
@@ -115,9 +115,40 @@ miembro y **ya se arreglaron**. Los peores concentrados:
 `comunicaciones/configuracion` (22), `eventos/[id]/editar` (18),
 `estudios/grupos/[id]/editar` (13), `FieldInspector` (13), `estudios/grupos/nuevo` (12).
 
-**Corrección:** mecánica pero son ~168 lugares, así que es una tanda propia. El patrón está
-ya resuelto y probado en `src/lib/forms/field-a11y.ts`: `fieldA11y(nombre)` genera el id y
-devuelve `labelFor` para el label y `input` para el campo, en dos líneas por campo.
+**CERRADO el 2026-08-21: 175 asociados, quedan 0.** Se hizo con un script (dry-run primero,
+diff revisado a mano) que inyecta `htmlFor` en el label e `id` en el input, sobre 48 archivos.
+
+**Precisión del número, que en la primera versión estaba de más:** de los 175 tocados, **143
+no tenían NINGÚN nombre accesible** (esa es la falla de nivel A) y **32 ya traían
+`aria-label`** — esos ya tenían nombre, y la asociación es una mejora, no un arreglo. Vale
+la aclaración porque "168 inputs sin nombre" era más grave de lo que el dato aguanta.
+
+Tres cosas que el script tuvo que resolver, y que costaron descubrir:
+
+1. **Comentarios.** Un comentario JSX de `FormFiller.tsx` contiene el texto literal
+   `<label>`, y la regex lo leyó como etiqueta real extendiéndose hasta el `</label>` de 12
+   líneas después. Sin enmascarar comentarios se inyectaba `htmlFor` DENTRO de un comentario.
+2. **`.map()`.** Un id fijo dentro de un bucle se duplica en cada iteración y rompe la
+   asociación en vez de arreglarla. La primera versión contaba paréntesis a lo bruto y daba
+   falsos positivos (el JSX intermedio trae paréntesis desbalanceados, p. ej.
+   `(['a','b'] as T[]).map(`): descartaba 75 casos que eran seguros. Emparejándolos de verdad,
+   resultó que ninguno de los 175 estaba dentro de un bucle.
+3. **Un error de offset propio.** La primera corrida escribió `<selec id="…" t>` porque la
+   aritmética insertaba un carácter antes del final del nombre de la etiqueta. Lo cazó
+   `tsc`; se revirtió todo con `git checkout` y se reaplicó.
+
+Queda fijado por `src/lib/forms/label-association.test.ts`, que además verifica que no haya
+**ids duplicados** dentro de un archivo — dos inputs con el mismo id dejan al segundo anónimo.
+
+**Lo que NO se cerró y por qué:** 17 labels antes de un componente propio (Combobox y
+similares: pueden traer su propio `aria-label`, hay que mirar cada componente) y 51 antes de
+un `<div>` o grupo de radios (esos no se arreglan con `htmlFor`: necesitan `fieldset` +
+`legend`, que es un cambio de estructura, no de atributo). Son dos tandas distintas.
+
+**Seguimiento menor:** los 32 que ya tenían `aria-label` ahora lo tienen redundante. No
+molesta hoy porque el texto coincide, pero `aria-label` GANA sobre el label asociado: si
+alguien edita el texto visible, el lector va a seguir diciendo el viejo. Conviene quitarlos
+en algún momento.
 
 ## 4. Los errores de campo se ven pero no se vinculan al input
 

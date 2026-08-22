@@ -221,12 +221,12 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
 
           {/* Notes */}
           <div className="space-y-1">
-            <label
+            <label htmlFor="notas-de-la-sesion"
               className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
             >
               Notas de la sesión
             </label>
-            <textarea
+            <textarea id="notas-de-la-sesion"
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
               rows={3}
               placeholder="Temas tratados, observaciones del grupo, etc."

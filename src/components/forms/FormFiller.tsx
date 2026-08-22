@@ -594,10 +594,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {/* Correo obligatorio para invitados (sin sesión) — identifica la respuesta */}
             {isGuest && isLastPage && (
               <div className="mb-5">
-                <label className="block text-sm font-semibold text-navy mb-1.5 font-body">
+                <label htmlFor="correo-electronico" className="block text-sm font-semibold text-navy mb-1.5 font-body">
                   Correo electrónico <span className="text-coral">*</span>
                 </label>
-                <input
+                <input id="correo-electronico"
                   type="email"
                   value={guestEmail}
                   onChange={e => { setGuestEmail(e.target.value); setSubmitError(null) }}

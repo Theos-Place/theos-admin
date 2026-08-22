@@ -296,31 +296,31 @@ function EditarForm({ group, studyType, refetch }: {
           {/* Capacidad + Horario: mitad y mitad. */}
           <div className="col-span-2 grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className={labelCls}>Capacidad máxima</label>
-              <input type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
+              <label htmlFor="capacidad-maxima" className={labelCls}>Capacidad máxima</label>
+              <input id="capacidad-maxima" type="number" min={1} className={inputCls} value={capacity} onChange={e => setCapacity(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>Horario</label>
-              <input className={inputCls} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
+              <label htmlFor="horario" className={labelCls}>Horario</label>
+              <input id="horario" className={inputCls} placeholder="7:30pm" value={time} onChange={e => setTime(e.target.value)} />
             </div>
           </div>
 
           {/* Rango de edad (opcional): filtra a quién se le ofrece en matrícula. Mitad y mitad. */}
           <div className="col-span-2 grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className={labelCls}>Edad desde</label>
-              <input type="number" min={0} className={inputCls} placeholder="Sin mínimo" value={ageMin} onChange={e => setAgeMin(e.target.value)} />
+              <label htmlFor="edad-desde" className={labelCls}>Edad desde</label>
+              <input id="edad-desde" type="number" min={0} className={inputCls} placeholder="Sin mínimo" value={ageMin} onChange={e => setAgeMin(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>Edad hasta</label>
-              <input type="number" min={0} className={inputCls} placeholder="Sin máximo" value={ageMax} onChange={e => setAgeMax(e.target.value)} />
+              <label htmlFor="edad-hasta" className={labelCls}>Edad hasta</label>
+              <input id="edad-hasta" type="number" min={0} className={inputCls} placeholder="Sin máximo" value={ageMax} onChange={e => setAgeMax(e.target.value)} />
             </div>
           </div>
 
           {/* Ubicación */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls}>Ubicación</label>
-            <input className={inputCls} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
+            <label htmlFor="ubicacion" className={labelCls}>Ubicación</label>
+            <input id="ubicacion" className={inputCls} placeholder="Edificio Meridiano, Escazú" value={location} onChange={e => setLocation(e.target.value)} />
           </div>
 
           {/* Modalidad virtual */}
@@ -344,28 +344,28 @@ function EditarForm({ group, studyType, refetch }: {
 
           {/* Fechas */}
           <div className="space-y-1">
-            <label className={labelCls}>Fecha de inicio</label>
-            <input type="date" className={inputCls} value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <label htmlFor="fecha-de-inicio" className={labelCls}>Fecha de inicio</label>
+            <input id="fecha-de-inicio" type="date" className={inputCls} value={startDate} onChange={e => setStartDate(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Fecha de cierre</label>
-            <input type="date" className={inputCls} value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <label htmlFor="fecha-de-cierre" className={labelCls}>Fecha de cierre</label>
+            <input id="fecha-de-cierre" type="date" className={inputCls} value={endDate} onChange={e => setEndDate(e.target.value)} />
           </div>
 
           {/* GRU-1: ventana de matrícula (vacías = modo manual). */}
           <div className="space-y-1">
-            <label className={labelCls}>Inicio de matrícula</label>
-            <input type="date" className={inputCls} value={enrollStart} max={enrollEnd || undefined} onChange={e => setEnrollStart(e.target.value)} />
+            <label htmlFor="inicio-de-matricula" className={labelCls}>Inicio de matrícula</label>
+            <input id="inicio-de-matricula" type="date" className={inputCls} value={enrollStart} max={enrollEnd || undefined} onChange={e => setEnrollStart(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Fin de matrícula</label>
-            <input type="date" className={inputCls} value={enrollEnd} min={minEnrollmentEnd(enrollStart, toYmdLocal(new Date()))} max={maxEnrollmentEnd(startDate, toYmdLocal(new Date()))} onChange={e => setEnrollEnd(e.target.value)} />
+            <label htmlFor="fin-de-matricula" className={labelCls}>Fin de matrícula</label>
+            <input id="fin-de-matricula" type="date" className={inputCls} value={enrollEnd} min={minEnrollmentEnd(enrollStart, toYmdLocal(new Date()))} max={maxEnrollmentEnd(startDate, toYmdLocal(new Date()))} onChange={e => setEnrollEnd(e.target.value)} />
           </div>
 
           {/* WhatsApp */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls}>Enlace de grupo de WhatsApp</label>
-            <input className={inputCls} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
+            <label htmlFor="enlace-de-grupo-de-whatsapp" className={labelCls}>Enlace de grupo de WhatsApp</label>
+            <input id="enlace-de-grupo-de-whatsapp" className={inputCls} placeholder="https://chat.whatsapp.com/..." value={waUrl} onChange={e => setWaUrl(e.target.value)} />
           </div>
         </div>
 

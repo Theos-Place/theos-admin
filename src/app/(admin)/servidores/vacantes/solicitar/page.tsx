@@ -291,20 +291,20 @@ function SolicitarVacantesContent() {
           <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Detalles de la vacante</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className={labelCls}>Ubicación / sede</label>
-              <input className={inputCls} placeholder="Sede / lugar (opcional)" value={location} onChange={e => setLocation(e.target.value)} />
+              <label htmlFor="ubicacion-sede" className={labelCls}>Ubicación / sede</label>
+              <input id="ubicacion-sede" className={inputCls} placeholder="Sede / lugar (opcional)" value={location} onChange={e => setLocation(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>Horario</label>
-              <input className={inputCls} placeholder="Ej. Domingos 8am–12pm" value={schedule} onChange={e => setSchedule(e.target.value)} />
+              <label htmlFor="horario" className={labelCls}>Horario</label>
+              <input id="horario" className={inputCls} placeholder="Ej. Domingos 8am–12pm" value={schedule} onChange={e => setSchedule(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>Compromiso esperado</label>
-              <input className={inputCls} placeholder="Ej. 2 domingos al mes" value={commitment} onChange={e => setCommitment(e.target.value)} />
+              <label htmlFor="compromiso-esperado" className={labelCls}>Compromiso esperado</label>
+              <input id="compromiso-esperado" className={inputCls} placeholder="Ej. 2 domingos al mes" value={commitment} onChange={e => setCommitment(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className={labelCls}>Expira</label>
-              <input type="date" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+              <label htmlFor="expira" className={labelCls}>Expira</label>
+              <input id="expira" type="date" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
             </div>
             <label className="flex items-center gap-2 pb-1 self-end cursor-pointer">
               <input type="checkbox" className="accent-coral" checked={featured} onChange={e => setFeatured(e.target.checked)} />
@@ -312,8 +312,8 @@ function SolicitarVacantesContent() {
             </label>
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Justificación / notas internas (opcional)</label>
-            <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="¿Por qué se necesita?" value={notes} onChange={e => setNotes(e.target.value)} />
+            <label htmlFor="justificacion-notas-internas-opcional" className={labelCls}>Justificación / notas internas (opcional)</label>
+            <textarea id="justificacion-notas-internas-opcional" className={cn(inputCls, 'resize-none')} rows={3} placeholder="¿Por qué se necesita?" value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
         </section>
       )}

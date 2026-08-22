@@ -199,16 +199,16 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           Bloque / Página
         </p>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+          <label htmlFor="titulo-de-la-pagina" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
             Título de la página
           </label>
-          <input className={inputCls} placeholder="ej. Información de emergencia" value={field.label} onChange={e => set('label', e.target.value)} />
+          <input id="titulo-de-la-pagina" className={inputCls} placeholder="ej. Información de emergencia" value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+          <label htmlFor="descripcion-opcional" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
             Descripción (opcional)
           </label>
-          <textarea
+          <textarea id="descripcion-opcional"
             rows={2}
             className={cn(inputCls, 'resize-none')}
             placeholder="Aparece al inicio de esta página"
@@ -233,12 +233,12 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           declaraciones largas.
         </p>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Título (opcional)</label>
-          <input className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
+          <label htmlFor="titulo-opcional" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Título (opcional)</label>
+          <input id="titulo-opcional" className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto</label>
-          <textarea
+          <label htmlFor="texto" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto</label>
+          <textarea id="texto"
             rows={10}
             className={cn(inputCls, 'resize-y')}
             placeholder="Escribí el texto que verá la persona. Los saltos de línea se respetan."
@@ -258,12 +258,12 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           Separador de sección
         </p>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Título</label>
-          <input className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
+          <label htmlFor="titulo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Título</label>
+          <input id="titulo" className={inputCls} value={field.label} onChange={e => set('label', e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto de ayuda</label>
-          <input className={inputCls} value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
+          <label htmlFor="texto-de-ayuda" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto de ayuda</label>
+          <input id="texto-de-ayuda" className={inputCls} value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
         </div>
       </div>
     )
@@ -314,10 +314,10 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {activeSection === 'general' && (
           <div className="p-4 space-y-3">
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+              <label htmlFor="etiqueta-pregunta" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                 Etiqueta / Pregunta <span className="text-coral">*</span>
               </label>
-              <textarea
+              <textarea id="etiqueta-pregunta"
                 rows={2}
                 className={cn(inputCls, 'resize-none')}
                 value={field.label}
@@ -326,14 +326,14 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
 
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto de ayuda</label>
-              <input className={inputCls} placeholder="Aparece debajo del campo" value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
+              <label htmlFor="texto-de-ayuda-2" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Texto de ayuda</label>
+              <input id="texto-de-ayuda-2" className={inputCls} placeholder="Aparece debajo del campo" value={field.helper_text ?? ''} onChange={e => set('helper_text', e.target.value || undefined)} />
             </div>
 
             {(field.type === 'text' || field.type === 'textarea' || field.type === 'number') && (
               <div className="space-y-1">
-                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Placeholder</label>
-                <input className={inputCls} value={field.placeholder ?? ''} onChange={e => set('placeholder', e.target.value || undefined)} />
+                <label htmlFor="placeholder" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Placeholder</label>
+                <input id="placeholder" className={inputCls} value={field.placeholder ?? ''} onChange={e => set('placeholder', e.target.value || undefined)} />
               </div>
             )}
 
@@ -403,8 +403,8 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
               </label>
               {field.options_source === 'study_groups_open' && (
                 <div className="space-y-1 pl-6">
-                  <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Código del plan</label>
-                  <input
+                  <label htmlFor="codigo-del-plan" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Código del plan</label>
+                  <input id="codigo-del-plan"
                     className={inputCls}
                     placeholder="ej. CDEB"
                     value={field.options_source_param ?? ''}
@@ -438,12 +438,12 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Etiq. mínimo</label>
-                <input className={inputCls} placeholder="Ej: Muy malo" value={field.scale_min_label ?? ''} onChange={e => set('scale_min_label', e.target.value || undefined)} />
+                <label htmlFor="etiq-minimo" className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Etiq. mínimo</label>
+                <input id="etiq-minimo" className={inputCls} placeholder="Ej: Muy malo" value={field.scale_min_label ?? ''} onChange={e => set('scale_min_label', e.target.value || undefined)} />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Etiq. máximo</label>
-                <input className={inputCls} placeholder="Ej: Excelente" value={field.scale_max_label ?? ''} onChange={e => set('scale_max_label', e.target.value || undefined)} />
+                <label htmlFor="etiq-maximo" className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Etiq. máximo</label>
+                <input id="etiq-maximo" className={inputCls} placeholder="Ej: Excelente" value={field.scale_max_label ?? ''} onChange={e => set('scale_max_label', e.target.value || undefined)} />
               </div>
             </div>
           </div>

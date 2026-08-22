@@ -55,10 +55,10 @@ export function DisconnectModal({
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="motivo" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Motivo
             </label>
-            <select
+            <select id="motivo"
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={reason}
               onChange={e => onReasonChange(e.target.value as DisconnectReason)}
@@ -71,10 +71,10 @@ export function DisconnectModal({
 
           {reason === 'otro' && (
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+              <label htmlFor="especificar-motivo" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Especificar motivo
               </label>
-              <input
+              <input id="especificar-motivo"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 placeholder="Describe el motivo..."
                 value={otherReason}
@@ -84,10 +84,10 @@ export function DisconnectModal({
           )}
 
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="fecha-efectiva-de-salida" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha efectiva de salida
             </label>
-            <input
+            <input id="fecha-efectiva-de-salida"
               type="date"
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={date}
@@ -147,12 +147,12 @@ export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel
         <p id="editar-comite" className="text-base font-bold text-navy font-display">Editar comité</p>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
-            <input className={inputCls} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
+            <label htmlFor="nombre" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
+            <input id="nombre" className={inputCls} value={form.name} onChange={e => onFormChange(p => ({ ...p, name: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Área padre</label>
-            <select className={inputCls} value={form.parent_id} onChange={e => onFormChange(p => ({ ...p, parent_id: e.target.value }))}>
+            <label htmlFor="area-padre" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Área padre</label>
+            <select id="area-padre" className={inputCls} value={form.parent_id} onChange={e => onFormChange(p => ({ ...p, parent_id: e.target.value }))}>
               <option value="">Sin área</option>
               {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
@@ -223,8 +223,8 @@ export function AddServerModal({
       <div className="p-6 space-y-4">
         <p id="anadir-servidor" className="text-base font-bold text-navy font-display">Añadir servidor</p>
         <div className="space-y-1">
-          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Puesto</label>
-          <select
+          <label htmlFor="puesto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Puesto</label>
+          <select id="puesto"
             className={inputCls}
             value={positionId}
             onChange={e => onPositionChange(e.target.value)}
@@ -301,8 +301,8 @@ export function ChangePositionModal({
           <p className="text-sm text-navy-light/80 mt-0.5 font-body">{target.name}</p>
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nuevo puesto</label>
-          <select
+          <label htmlFor="nuevo-puesto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Nuevo puesto</label>
+          <select id="nuevo-puesto"
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             value={newPosition}
             onChange={e => onPositionChange(e.target.value)}

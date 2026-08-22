@@ -51,10 +51,10 @@ export function DeleteConfirmModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+          <label htmlFor="escribi-para-confirmar" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Escribí <span className="text-coral font-semibold">{keyword}</span> para confirmar
           </label>
-          <input
+          <input id="escribi-para-confirmar"
             autoFocus
             className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
             placeholder={keyword}

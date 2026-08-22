@@ -204,9 +204,9 @@ export default function EmbedPage() {
 
           {/* Altura */}
           <div className="space-y-2">
-            <label className={`${labelCls} font-display`}>Altura del widget</label>
+            <label htmlFor="altura-del-widget" className={`${labelCls} font-display`}>Altura del widget</label>
             <div className="flex items-center gap-2">
-              <input
+              <input id="altura-del-widget"
                 type="number"
                 value={cfg.height}
                 onChange={e => setCfg(prev => ({ ...prev, height: e.target.value }))}

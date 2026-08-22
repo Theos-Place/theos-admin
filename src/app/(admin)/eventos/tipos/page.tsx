@@ -62,10 +62,10 @@ function TypeModal({
 
         {/* Name */}
         <div className="space-y-1.5">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+          <label htmlFor="nombre" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Nombre *
           </label>
-          <input
+          <input id="nombre"
             className={cn(inputCls, 'font-body')}
             placeholder="Ej. Conferencia"
             value={form.name}
@@ -75,10 +75,10 @@ function TypeModal({
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+          <label htmlFor="descripcion" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Descripción
           </label>
-          <input
+          <input id="descripcion"
             className={cn(inputCls, 'font-body')}
             placeholder="Breve descripción del tipo"
             value={form.description}

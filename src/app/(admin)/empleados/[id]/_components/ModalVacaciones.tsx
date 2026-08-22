@@ -64,8 +64,8 @@ export function ModalVacaciones({
           <>
             <h2 id="modal-vacaciones" className="text-base font-bold text-navy font-display">Registrar solicitud</h2>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Tipo</label>
-              <select
+              <label htmlFor="tipo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Tipo</label>
+              <select id="tipo"
                 className={cn(inputCls, 'font-body')}
                 value={vacType}
                 onChange={e => onVacTypeChange(e.target.value as VacationRecordType)}
@@ -77,8 +77,8 @@ export function ModalVacaciones({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Desde</label>
-                <input
+                <label htmlFor="desde" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Desde</label>
+                <input id="desde"
                   type="date"
                   className={cn(inputCls, 'font-body')}
                   value={vacFrom}
@@ -86,8 +86,8 @@ export function ModalVacaciones({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Hasta</label>
-                <input
+                <label htmlFor="hasta" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Hasta</label>
+                <input id="hasta"
                   type="date"
                   className={cn(inputCls, 'font-body')}
                   value={vacTo}
@@ -104,8 +104,8 @@ export function ModalVacaciones({
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Notas</label>
-              <textarea
+              <label htmlFor="notas" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Notas</label>
+              <textarea id="notas"
                 className={cn(inputCls, 'resize-none font-body')}
                 rows={2}
                 placeholder="Descripción de la solicitud..."

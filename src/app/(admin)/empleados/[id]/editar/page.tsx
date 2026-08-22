@@ -163,10 +163,10 @@ export default function EditarEmpleadoPage() {
 
         {/* Email */}
         <div className="space-y-1">
-          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+          <label htmlFor="correo-de-contacto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Correo de contacto
           </label>
-          <input
+          <input id="correo-de-contacto"
             type="email"
             className={cn(inputCls, 'font-body')}
             value={email}
@@ -176,10 +176,10 @@ export default function EditarEmpleadoPage() {
 
         {/* Puesto */}
         <div className="space-y-1">
-          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+          <label htmlFor="puesto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Puesto
           </label>
-          <select
+          <select id="puesto"
             className={cn(inputCls, 'font-body')}
             value={positionId}
             onChange={e => setPositionId(e.target.value)}
@@ -216,10 +216,10 @@ export default function EditarEmpleadoPage() {
         {/* Días de vacaciones (solo planilla) */}
         {contractType === 'planilla' && (
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="dias-de-vacaciones-por-ano" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Días de vacaciones por año
             </label>
-            <input
+            <input id="dias-de-vacaciones-por-ano"
               type="number"
               min="0"
               max="30"

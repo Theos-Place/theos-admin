@@ -340,10 +340,10 @@ export default function ListasGuardadasPage() {
             </p>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+                <label htmlFor="nombre" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                   Nombre
                 </label>
-                <input
+                <input id="nombre"
                   autoFocus
                   className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={editName}
@@ -351,10 +351,10 @@ export default function ListasGuardadasPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+                <label htmlFor="tags-separados-por-coma" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                   Tags (separados por coma)
                 </label>
-                <input
+                <input id="tags-separados-por-coma"
                   className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={editTags}
                   onChange={e => setEditTags(e.target.value)}

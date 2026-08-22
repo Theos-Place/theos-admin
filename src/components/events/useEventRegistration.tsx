@@ -222,8 +222,8 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
               {eventTitle} — {`${formatCRC(amount)}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input
+              <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
+              <input id="comprobante-imagen"
                 type="file"
                 accept="image/*"
                 aria-label="Comprobante de pago"

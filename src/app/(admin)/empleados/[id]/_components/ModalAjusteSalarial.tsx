@@ -75,8 +75,8 @@ export function ModalAjusteSalarial({
               )}
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo <span className="text-coral">*</span></label>
-              <input
+              <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo <span className="text-coral">*</span></label>
+              <input id="motivo"
                 className={cn(inputCls, 'font-body')}
                 placeholder="Ej: Ajuste por desempeño"
                 value={raiseReason}
@@ -84,8 +84,8 @@ export function ModalAjusteSalarial({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral">*</span></label>
-              <input
+              <label htmlFor="fecha-efectiva" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral">*</span></label>
+              <input id="fecha-efectiva"
                 type="date"
                 className={cn(inputCls, 'font-body')}
                 value={raiseDate}

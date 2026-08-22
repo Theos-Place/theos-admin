@@ -57,12 +57,12 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               </div>
 
               <div className="space-y-1.5">
-                <label
+                <label htmlFor="motivo-de-cancelacion"
                   className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   Motivo de cancelación *
                 </label>
-                <textarea
+                <textarea id="motivo-de-cancelacion"
                   className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
                   rows={3}
                   placeholder="Explica el motivo para los registros internos..."
@@ -72,12 +72,12 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               </div>
 
               <div className="space-y-1.5">
-                <label
+                <label htmlFor="escribi-quot-cancelar-quot-para-confirma"
                   className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
                 >
                   Escribí &quot;CANCELAR&quot; para confirmar
                 </label>
-                <input
+                <input id="escribi-quot-cancelar-quot-para-confirma"
                   className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   placeholder="CANCELAR"
                   value={confirmText}

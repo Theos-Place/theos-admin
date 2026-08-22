@@ -593,10 +593,10 @@ function PagosContent() {
                 <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.description_label ?? sinpeTarget.entity_name}
               </p>
               <div>
-                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label htmlFor="numero-de-confirmacion-sinpe" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Número de confirmación SINPE
                 </label>
-                <input
+                <input id="numero-de-confirmacion-sinpe"
                   type="text"
                   value={sinpeConf}
                   onChange={e => setSinpeConf(e.target.value)}
@@ -605,10 +605,10 @@ function PagosContent() {
                 />
               </div>
               <div>
-                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                   Fecha de transferencia
                 </label>
-                <input
+                <input id="fecha-de-transferencia"
                   type="date"
                   value={sinpeDate}
                   onChange={e => setSinpeDate(e.target.value)}

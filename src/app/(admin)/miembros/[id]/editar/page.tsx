@@ -388,8 +388,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
           <div className="py-[18px] px-[22px] flex flex-col gap-[14px]">
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Provincia</label>
-                <select
+                <label htmlFor="provincia" className="form-label">Provincia</label>
+                <select id="provincia"
                   className="form-select"
                   value={province}
                   onChange={e => setProvince(e.target.value)}
@@ -405,8 +405,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Cantón</label>
-                <input
+                <label htmlFor="canton" className="form-label">Cantón</label>
+                <input id="canton"
                   className="form-input"
                   value={canton}
                   onChange={e => setCanton(e.target.value)}
@@ -414,8 +414,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Distrito</label>
-                <input
+                <label htmlFor="distrito" className="form-label">Distrito</label>
+                <input id="distrito"
                   className="form-input"
                   value={district}
                   onChange={e => setDistrict(e.target.value)}
@@ -575,8 +575,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             {/* Motivo obligatorio */}
             <div className="form-group mb-5">
-              <label className="form-label">Motivo de desactivación *</label>
-              <select
+              <label htmlFor="motivo-de-desactivacion" className="form-label">Motivo de desactivación *</label>
+              <select id="motivo-de-desactivacion"
                 className="form-select"
                 value={deactivateReason}
                 onChange={e => setDeactivateReason(e.target.value)}

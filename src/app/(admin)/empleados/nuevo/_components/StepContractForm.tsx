@@ -51,12 +51,12 @@ export function StepContractForm({
 
       {/* Puesto */}
       <div className="space-y-1">
-        <label
+        <label htmlFor="puesto"
           className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
           Puesto <span className="text-coral">*</span>
         </label>
-        <select
+        <select id="puesto"
           className={cn(inputCls, 'font-body')}
           value={positionId}
           onChange={e => onPositionChange(e.target.value)}
@@ -145,12 +145,12 @@ export function StepContractForm({
 
         {/* Fecha de inicio */}
         <div className="space-y-1">
-          <label
+          <label htmlFor="fecha-de-inicio"
             className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Fecha de inicio <span className="text-coral">*</span>
           </label>
-          <input
+          <input id="fecha-de-inicio"
             type="date"
             className={cn(inputCls, 'font-body')}
             value={startDate}
@@ -161,12 +161,12 @@ export function StepContractForm({
 
       {/* Notas */}
       <div className="space-y-1">
-        <label
+        <label htmlFor="notas-internas"
           className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
           Notas internas
         </label>
-        <textarea
+        <textarea id="notas-internas"
           className={cn(inputCls, 'resize-none font-body')}
           rows={3}
           placeholder="Observaciones, acuerdos especiales, etc."

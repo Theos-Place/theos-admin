@@ -135,18 +135,18 @@ export default function EditarPuestoPage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Nombre del puesto</label>
-              <input className="form-input" value={name} onChange={e => setName(e.target.value)} />
+              <label htmlFor="nombre-del-puesto" className="form-label">Nombre del puesto</label>
+              <input id="nombre-del-puesto" className="form-input" value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Área</label>
-              <input className="form-input" value={area} onChange={e => setArea(e.target.value)} />
+              <label htmlFor="area" className="form-label">Área</label>
+              <input id="area" className="form-input" value={area} onChange={e => setArea(e.target.value)} />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Descripción</label>
-            <textarea className="form-textarea" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
+            <label htmlFor="descripcion" className="form-label">Descripción</label>
+            <textarea id="descripcion" className="form-textarea" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
           </div>
 
           <div className="form-group">
@@ -163,12 +163,12 @@ export default function EditarPuestoPage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Salario mínimo (₡)</label>
-              <input type="number" className="form-input" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="550000" />
+              <label htmlFor="salario-minimo" className="form-label">Salario mínimo (₡)</label>
+              <input id="salario-minimo" type="number" className="form-input" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="550000" />
             </div>
             <div className="form-group">
-              <label className="form-label">Salario máximo (₡)</label>
-              <input type="number" className="form-input" value={salaryMax} onChange={e => setSalaryMax(e.target.value)} placeholder="750000" />
+              <label htmlFor="salario-maximo" className="form-label">Salario máximo (₡)</label>
+              <input id="salario-maximo" type="number" className="form-input" value={salaryMax} onChange={e => setSalaryMax(e.target.value)} placeholder="750000" />
             </div>
           </div>
 

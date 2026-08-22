@@ -507,14 +507,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </label>
           {!isVirtual && (
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Dirección</label>
-              <input className={cn(inputCls, 'font-body')} value={location} onChange={e => setLocation(e.target.value)} />
+              <label htmlFor="direccion" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Dirección</label>
+              <input id="direccion" className={cn(inputCls, 'font-body')} value={location} onChange={e => setLocation(e.target.value)} />
             </div>
           )}
           {isVirtual && (
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Link de la reunión virtual (opcional)</label>
-              <input className={cn(inputCls, 'font-body')} placeholder="https://zoom.us/... o https://meet.google.com/..." value={virtualLink} onChange={e => setVirtualLink(e.target.value)} />
+              <label htmlFor="link-de-la-reunion-virtual-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Link de la reunión virtual (opcional)</label>
+              <input id="link-de-la-reunion-virtual-opcional" className={cn(inputCls, 'font-body')} placeholder="https://zoom.us/... o https://meet.google.com/..." value={virtualLink} onChange={e => setVirtualLink(e.target.value)} />
             </div>
           )}
           <div className="space-y-2">
@@ -580,8 +580,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           {requiresRegistration && (
             <div className="space-y-2 pl-1">
               <div className="space-y-1">
-                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Capacidad máxima</label>
-                <input type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
+                <label htmlFor="capacidad-maxima" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Capacidad máxima</label>
+                <input id="capacidad-maxima" type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
               </div>
               {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en la
                   BD y el select no estaba conectado a nada. */}

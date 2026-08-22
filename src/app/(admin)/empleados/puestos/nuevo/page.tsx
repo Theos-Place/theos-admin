@@ -122,10 +122,10 @@ export default function NuevoPuestoPage() {
         {/* Nombre + Comité */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="nombre-del-puesto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Nombre del puesto <span className="text-coral">*</span>
             </label>
-            <input
+            <input id="nombre-del-puesto"
               className={cn(inputCls, 'font-body')}
               placeholder="Ej: Coordinador de Estudios Bíblicos"
               value={name}
@@ -134,10 +134,10 @@ export default function NuevoPuestoPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="comite-asociado" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Comité asociado <span className="text-coral">*</span>
             </label>
-            <select
+            <select id="comite-asociado"
               className={cn(inputCls, 'font-body')}
               value={committee}
               onChange={e => setCommittee(e.target.value)}

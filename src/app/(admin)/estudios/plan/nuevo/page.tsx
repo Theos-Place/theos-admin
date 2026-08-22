@@ -190,18 +190,18 @@ export default function NuevoTipoPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="sm:col-span-2 lg:col-span-2 space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Nombre *</label>
-            <input className={inputCls} placeholder="Ej. Discípulos 4" value={form.nombre} onChange={e => set('nombre', e.target.value)} />
+            <label htmlFor="nombre" className="text-[13px] text-navy-light/80 font-display">Nombre *</label>
+            <input id="nombre" className={inputCls} placeholder="Ej. Discípulos 4" value={form.nombre} onChange={e => set('nombre', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Código *</label>
-            <input className={inputCls} placeholder="Ej. DIS4" maxLength={6} value={form.codigo} onChange={e => set('codigo', e.target.value.toUpperCase())} />
+            <label htmlFor="codigo" className="text-[13px] text-navy-light/80 font-display">Código *</label>
+            <input id="codigo" className={inputCls} placeholder="Ej. DIS4" maxLength={6} value={form.codigo} onChange={e => set('codigo', e.target.value.toUpperCase())} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Tipo</label>
-            <select className={inputCls} value={form.tipo} onChange={e => set('tipo', e.target.value)}>
+            <label htmlFor="tipo" className="text-[13px] text-navy-light/80 font-display">Tipo</label>
+            <select id="tipo" className={inputCls} value={form.tipo} onChange={e => set('tipo', e.target.value)}>
               <option value="niveles">Niveles</option>
               <option value="etapa_inicial">Etapa Inicial</option>
               <option value="etapa_intermedia">Etapa Intermedia</option>
@@ -211,13 +211,13 @@ export default function NuevoTipoPage() {
           </div>
 
           <div className="sm:col-span-2 lg:col-span-3 space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Descripción</label>
-            <textarea className={cn(inputCls, 'resize-none')} rows={3} placeholder="Describe el contenido y objetivo del estudio..." value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
+            <label htmlFor="descripcion" className="text-[13px] text-navy-light/80 font-display">Descripción</label>
+            <textarea id="descripcion" className={cn(inputCls, 'resize-none')} rows={3} placeholder="Describe el contenido y objetivo del estudio..." value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Duración en semanas</label>
-            <input type="number" min={1} max={52} className={inputCls} placeholder="10" value={form.semanas} onChange={e => set('semanas', e.target.value)} />
+            <label htmlFor="duracion-en-semanas" className="text-[13px] text-navy-light/80 font-display">Duración en semanas</label>
+            <input id="duracion-en-semanas" type="number" min={1} max={52} className={inputCls} placeholder="10" value={form.semanas} onChange={e => set('semanas', e.target.value)} />
           </div>
         </div>
       </div>
@@ -277,8 +277,8 @@ export default function NuevoTipoPage() {
           <Toggle checked={form.req_pago} onChange={v => set('req_pago', v)} label="¿Requiere pago?" />
           {form.req_pago && (
             <div className="ml-4 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">Costo (₡)</label>
-              <input type="number" min={0} className={cn(inputCls, 'max-w-xs')} placeholder="15000" value={form.costo} onChange={e => set('costo', e.target.value)} />
+              <label htmlFor="costo" className="text-[13px] text-navy-light/80 font-display">Costo (₡)</label>
+              <input id="costo" type="number" min={0} className={cn(inputCls, 'max-w-xs')} placeholder="15000" value={form.costo} onChange={e => set('costo', e.target.value)} />
             </div>
           )}
 
@@ -287,8 +287,8 @@ export default function NuevoTipoPage() {
 
           {form.transicion_auto && (
             <div className="ml-4 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">Siguiente estudio</label>
-              <select className={cn(inputCls, 'max-w-xs')} value={form.siguiente_estudio} onChange={e => set('siguiente_estudio', e.target.value)}>
+              <label htmlFor="siguiente-estudio" className="text-[13px] text-navy-light/80 font-display">Siguiente estudio</label>
+              <select id="siguiente-estudio" className={cn(inputCls, 'max-w-xs')} value={form.siguiente_estudio} onChange={e => set('siguiente_estudio', e.target.value)}>
                 <option value="">Seleccionar...</option>
                 {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
               </select>

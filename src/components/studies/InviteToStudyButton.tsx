@@ -88,8 +88,8 @@ export function InviteToStudyButton({
                   Estos estudios son solo por invitación. Al invitar a {memberName}, podrá matricularse.
                 </p>
                 <div className="space-y-1">
-                  <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Estudio</label>
-                  <select
+                  <label htmlFor="estudio" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Estudio</label>
+                  <select id="estudio"
                     value={planId}
                     onChange={e => setPlanId(e.target.value)}
                     className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
@@ -99,8 +99,8 @@ export function InviteToStudyButton({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nota (opcional)</label>
-                  <textarea
+                  <label htmlFor="nota-opcional" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nota (opcional)</label>
+                  <textarea id="nota-opcional"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     rows={2}

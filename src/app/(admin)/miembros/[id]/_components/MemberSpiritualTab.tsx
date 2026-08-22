@@ -75,18 +75,18 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>Fecha de bautizo</label>
-          <input type="date" className={inputCls} value={data?.baptism_date ?? ''} onChange={e => set('baptism_date', e.target.value || null)} />
+          <label htmlFor="fecha-de-bautizo" className={labelCls}>Fecha de bautizo</label>
+          <input id="fecha-de-bautizo" type="date" className={inputCls} value={data?.baptism_date ?? ''} onChange={e => set('baptism_date', e.target.value || null)} />
         </div>
         <div>
-          <label className={labelCls}>Lugar de bautizo</label>
-          <input type="text" className={inputCls} placeholder="ej. Theos Place, San José" value={data?.baptism_place ?? ''} onChange={e => set('baptism_place', e.target.value)} />
+          <label htmlFor="lugar-de-bautizo" className={labelCls}>Lugar de bautizo</label>
+          <input id="lugar-de-bautizo" type="text" className={inputCls} placeholder="ej. Theos Place, San José" value={data?.baptism_place ?? ''} onChange={e => set('baptism_place', e.target.value)} />
         </div>
       </div>
 
       <div>
-        <label className={labelCls}>Dones espirituales</label>
-        <textarea rows={4} className={`${inputCls} resize-none`} placeholder="Dones, talentos o áreas de servicio…" value={data?.spiritual_gifts ?? ''} onChange={e => set('spiritual_gifts', e.target.value)} />
+        <label htmlFor="dones-espirituales" className={labelCls}>Dones espirituales</label>
+        <textarea id="dones-espirituales" rows={4} className={`${inputCls} resize-none`} placeholder="Dones, talentos o áreas de servicio…" value={data?.spiritual_gifts ?? ''} onChange={e => set('spiritual_gifts', e.target.value)} />
       </div>
 
       <div className="flex items-center gap-3">

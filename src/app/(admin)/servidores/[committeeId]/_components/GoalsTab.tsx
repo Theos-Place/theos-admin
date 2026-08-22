@@ -89,10 +89,10 @@ export function GoalsTab({
             autoFocus
           />
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <label htmlFor="fecha-limite-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha límite (opcional)
             </label>
-            <input
+            <input id="fecha-limite-opcional"
               type="date"
               className={inputCls}
               value={newGoalDate}

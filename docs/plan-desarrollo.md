@@ -3316,6 +3316,14 @@ imágenes sin alt, 0 de las 43 tablas se desborda en móvil, y 0 jerga técnica 
 5. Cinco pantallas con `DELETE` y sin confirmación aparente — marcado como A VERIFICAR, la
    detección es un proxy y ninguno está confirmado.
 
+**Las 3 acciones de mayor impacto: HECHAS 2026-08-21** (commits `f3b6949c` y siguiente).
+El Modal devuelve el foco (un archivo, 64 pantallas), el Toast usa `role="alert"` en los
+errores, y los **175 labels quedaron asociados** — de 168 huérfanos a **0**, fijado por
+`label-association.test.ts`. Precisión sobre el número: de los 175, 143 no tenían ningún
+nombre accesible (falla de nivel A) y 32 ya traían `aria-label`. Quedan 17 labels antes de
+un componente propio y 51 antes de grupos de radios, que necesitan `fieldset`/`legend` y son
+otra tanda.
+
 **Corrección a la ficha:** pide 44×44 de área táctil, pero eso es WCAG 2.2 nivel AAA
 (2.5.5); el mínimo AA es 24×24 (2.5.8). Con ese criterio no hay incumplimiento de AA — los 5
 botones más chicos están en ~24px y en pantallas de STAFF, no del miembro. La prioridad real

@@ -113,8 +113,8 @@ export default function NuevaPlantillaPage() {
       <div className="rounded-2xl p-6 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>Nombre de la plantilla</label>
-            <input className={inputCls} placeholder="ej. Bienvenida nueva persona" value={name} onChange={e => setName(e.target.value)} />
+            <label htmlFor="nombre-de-la-plantilla" className={labelCls}>Nombre de la plantilla</label>
+            <input id="nombre-de-la-plantilla" className={inputCls} placeholder="ej. Bienvenida nueva persona" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div>
             <label className={labelCls}>Categoría</label>
@@ -154,8 +154,8 @@ export default function NuevaPlantillaPage() {
         </div>
 
         <div>
-          <label className={labelCls}>Asunto del correo</label>
-          <input className={inputCls} placeholder="Asunto con variables: Hola {nombre}..." value={subject} onChange={e => setSubject(e.target.value)} />
+          <label htmlFor="asunto-del-correo" className={labelCls}>Asunto del correo</label>
+          <input id="asunto-del-correo" className={inputCls} placeholder="Asunto con variables: Hola {nombre}..." value={subject} onChange={e => setSubject(e.target.value)} />
         </div>
 
         <div>

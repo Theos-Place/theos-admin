@@ -130,9 +130,9 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
       <form onSubmit={handleSave} className="space-y-4">
         {/* Nueva contraseña */}
         <div>
-          <label className={LABEL}>Nueva contraseña</label>
+          <label htmlFor="nueva-contrasena" className={LABEL}>Nueva contraseña</label>
           <div className="relative">
-            <input
+            <input id="nueva-contrasena"
               type={showNew ? 'text' : 'password'}
               value={newPass}
               onChange={e => setNewPass(e.target.value)}
@@ -162,9 +162,9 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
 
         {/* Confirmar */}
         <div>
-          <label className={LABEL}>Confirmar contraseña</label>
+          <label htmlFor="confirmar-contrasena" className={LABEL}>Confirmar contraseña</label>
           <div className="relative">
-            <input
+            <input id="confirmar-contrasena"
               type={showConfirm ? 'text' : 'password'}
               value={confirm}
               onChange={e => { setConfirm(e.target.value); if (confirmErr) setConfirmErr('') }}
@@ -532,8 +532,8 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
                 </code>
               </div>
               <div>
-                <label className={LABEL}>Código de 6 dígitos</label>
-                <input
+                <label htmlFor="codigo-de-6-digitos" className={LABEL}>Código de 6 dígitos</label>
+                <input id="codigo-de-6-digitos"
                   value={code}
                   onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   inputMode="numeric"

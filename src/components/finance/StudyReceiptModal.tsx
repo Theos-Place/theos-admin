@@ -87,8 +87,8 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, currency = 
               la captura a mano.
             </p>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input
+              <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
+              <input id="comprobante-imagen"
                 type="file"
                 accept="image/*"
                 aria-label="Comprobante de pago"

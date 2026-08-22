@@ -109,10 +109,10 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Partial amount input */}
           {type === 'partial' && (
             <div>
-              <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+              <label htmlFor="monto-a-devolver" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
                 Monto a devolver (₡)
               </label>
-              <input
+              <input id="monto-a-devolver"
                 type="number"
                 min={1}
                 max={payment.amount}
@@ -126,10 +126,10 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Reason */}
           <div>
-            <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+            <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
               Motivo
             </label>
-            <select
+            <select id="motivo"
               value={reason}
               onChange={e => setReason(e.target.value)}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"

@@ -42,10 +42,10 @@ export function ModalDarDeBaja({
           </p>
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+          <label htmlFor="escribi-para-confirmar" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
             Escribí “<span className="font-semibold text-navy">{memberName}</span>” para confirmar
           </label>
-          <input
+          <input id="escribi-para-confirmar"
             className={cn(inputCls, 'font-body')}
             placeholder={memberName}
             value={terminateConfirm}
@@ -53,8 +53,8 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha de baja</label>
-          <input
+          <label htmlFor="fecha-de-baja" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha de baja</label>
+          <input id="fecha-de-baja"
             type="date"
             className={cn(inputCls, 'font-body')}
             value={terminateDate}
@@ -62,8 +62,8 @@ export function ModalDarDeBaja({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo</label>
-          <textarea
+          <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo</label>
+          <textarea id="motivo"
             className={cn(inputCls, 'resize-none font-body')}
             rows={2}
             placeholder="Motivo de la baja..."

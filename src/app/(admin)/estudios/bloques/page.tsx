@@ -283,22 +283,22 @@ export default function BloquesPage() {
           <div className="p-6 space-y-4">
             <h3 id="bloque-title" className="text-base font-bold text-navy font-display">{editing ? 'Editar bloque' : 'Nuevo bloque'}</h3>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
-              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Bloque 1 2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+              <label htmlFor="nombre" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Nombre</label>
+              <input id="nombre" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Bloque 1 2026" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Año</label>
-              <input type="number" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+              <label htmlFor="ano" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Año</label>
+              <input id="ano" type="number" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: Number(e.target.value) }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               <p className="text-[13px] text-navy-light/80 font-body">El estado (en apertura / activo / archivado) se calcula solo según las fechas. El bloque cierra 3 meses después del cierre de matrícula (~3.5 meses de duración).</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Fecha de apertura</label>
-                <input type="date" value={form.fecha_apertura} onChange={e => setForm(f => ({ ...f, fecha_apertura: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+                <label htmlFor="fecha-de-apertura" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Fecha de apertura</label>
+                <input id="fecha-de-apertura" type="date" value={form.fecha_apertura} onChange={e => setForm(f => ({ ...f, fecha_apertura: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cierre de matrícula</label>
-                <input type="date" value={form.fecha_cierre_matricula} onChange={e => setForm(f => ({ ...f, fecha_cierre_matricula: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+                <label htmlFor="cierre-de-matricula" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cierre de matrícula</label>
+                <input id="cierre-de-matricula" type="date" value={form.fecha_cierre_matricula} onChange={e => setForm(f => ({ ...f, fecha_cierre_matricula: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
             </div>
             {milestones && (

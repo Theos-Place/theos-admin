@@ -43,8 +43,8 @@ function AreaModal({
         </h2>
 
         <div className="space-y-1.5">
-          <label className={labelCls}>Nombre *</label>
-          <input
+          <label htmlFor="nombre" className={labelCls}>Nombre *</label>
+          <input id="nombre"
             autoFocus
             aria-label="Nombre del área"
             className={inputCls}
@@ -103,8 +103,8 @@ function CommitteeModal({
         </h2>
 
         <div className="space-y-1.5">
-          <label className={labelCls}>Nombre *</label>
-          <input
+          <label htmlFor="nombre-2" className={labelCls}>Nombre *</label>
+          <input id="nombre-2"
             autoFocus
             aria-label="Nombre del comité"
             className={inputCls}
@@ -115,8 +115,8 @@ function CommitteeModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className={labelCls}>Área *</label>
-          <select
+          <label htmlFor="area" className={labelCls}>Área *</label>
+          <select id="area"
             aria-label="Área del comité"
             className={inputCls}
             value={areaCode}
@@ -222,28 +222,28 @@ function PositionEditModal({
       <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
         <h2 id="pos-edit-title" className="text-base font-bold text-navy font-display">Editar puesto</h2>
         <div className="space-y-1.5">
-          <label className={labelCls}>Nombre del puesto *</label>
-          <input autoFocus aria-label="Nombre del puesto" className={inputCls} value={f.title} onChange={e => set('title', e.target.value)} />
+          <label htmlFor="nombre-del-puesto" className={labelCls}>Nombre del puesto *</label>
+          <input id="nombre-del-puesto" autoFocus aria-label="Nombre del puesto" className={inputCls} value={f.title} onChange={e => set('title', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Nivel de estudio</label>
-          <input aria-label="Nivel de estudio" className={inputCls} placeholder="Ej. Discípulos 2" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
+          <label htmlFor="nivel-de-estudio" className={labelCls}>Nivel de estudio</label>
+          <input id="nivel-de-estudio" aria-label="Nivel de estudio" className={inputCls} placeholder="Ej. Discípulos 2" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Descripción</label>
-          <textarea aria-label="Descripción" className={cn(inputCls, 'resize-y')} rows={2} value={f.description} onChange={e => set('description', e.target.value)} />
+          <label htmlFor="descripcion" className={labelCls}>Descripción</label>
+          <textarea id="descripcion" aria-label="Descripción" className={cn(inputCls, 'resize-y')} rows={2} value={f.description} onChange={e => set('description', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Funciones (una por línea, con •)</label>
-          <textarea aria-label="Funciones" className={cn(inputCls, 'resize-y font-mono text-[13px]')} rows={8} value={f.functions} onChange={e => set('functions', e.target.value)} />
+          <label htmlFor="funciones-una-por-linea-con" className={labelCls}>Funciones (una por línea, con •)</label>
+          <textarea id="funciones-una-por-linea-con" aria-label="Funciones" className={cn(inputCls, 'resize-y font-mono text-[13px]')} rows={8} value={f.functions} onChange={e => set('functions', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Perfil (una por línea, con •)</label>
-          <textarea aria-label="Perfil" className={cn(inputCls, 'resize-y font-mono text-[13px]')} rows={8} value={f.profile} onChange={e => set('profile', e.target.value)} />
+          <label htmlFor="perfil-una-por-linea-con" className={labelCls}>Perfil (una por línea, con •)</label>
+          <textarea id="perfil-una-por-linea-con" aria-label="Perfil" className={cn(inputCls, 'resize-y font-mono text-[13px]')} rows={8} value={f.profile} onChange={e => set('profile', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className={labelCls}>Habilidades</label>
-          <textarea aria-label="Habilidades" className={cn(inputCls, 'resize-y')} rows={2} value={f.skills} onChange={e => set('skills', e.target.value)} />
+          <label htmlFor="habilidades" className={labelCls}>Habilidades</label>
+          <textarea id="habilidades" aria-label="Habilidades" className={cn(inputCls, 'resize-y')} rows={2} value={f.skills} onChange={e => set('skills', e.target.value)} />
         </div>
         <div className="flex gap-2 pt-1">
           <button disabled={!valid}

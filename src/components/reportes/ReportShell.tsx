@@ -64,8 +64,8 @@ export function ReportShell({
 
       {/* Selector de sede en mobile */}
       <div className="lg:hidden">
-        <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display block mb-1">Sede</label>
-        <select
+        <label htmlFor="sede" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display block mb-1">Sede</label>
+        <select id="sede"
           value={sede}
           onChange={e => onSede(e.target.value)}
           aria-label="Filtrar por sede"

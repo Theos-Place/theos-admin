@@ -189,9 +189,9 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">4. Código</label>
+            <label htmlFor="4-codigo" className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">4. Código</label>
             <div className="flex gap-2">
-              <input
+              <input id="4-codigo"
                 value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Ej. BECA2026"
                 className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none font-mono border-[var(--outline-variant)] text-navy"
               />

@@ -131,28 +131,28 @@ export default function EditarVacantePage() {
         <div className="flex flex-col gap-4">
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Horario</label>
-              <input aria-label="Horario" className={inputCls} value={schedule} onChange={e => setSchedule(e.target.value)} placeholder="Ej. Domingos 8am – 12pm" />
+              <label htmlFor="horario" className="form-label">Horario</label>
+              <input id="horario" aria-label="Horario" className={inputCls} value={schedule} onChange={e => setSchedule(e.target.value)} placeholder="Ej. Domingos 8am – 12pm" />
             </div>
             <div className="form-group">
-              <label className="form-label">Compromiso</label>
-              <input aria-label="Compromiso" className={inputCls} value={commitment} onChange={e => setCommitment(e.target.value)} placeholder="Ej. 4 horas semanales" />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Cupos disponibles</label>
-              <input type="number" min="1" max="50" aria-label="Cupos disponibles" className={inputCls} value={slotsTotal} onChange={e => setSlotsTotal(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Ubicación / sede</label>
-              <input aria-label="Ubicación" className={inputCls} value={location} onChange={e => setLocation(e.target.value)} placeholder="Sede / lugar (opcional)" />
+              <label htmlFor="compromiso" className="form-label">Compromiso</label>
+              <input id="compromiso" aria-label="Compromiso" className={inputCls} value={commitment} onChange={e => setCommitment(e.target.value)} placeholder="Ej. 4 horas semanales" />
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Expira</label>
-              <input type="date" aria-label="Expira" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+              <label htmlFor="cupos-disponibles" className="form-label">Cupos disponibles</label>
+              <input id="cupos-disponibles" type="number" min="1" max="50" aria-label="Cupos disponibles" className={inputCls} value={slotsTotal} onChange={e => setSlotsTotal(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="ubicacion-sede" className="form-label">Ubicación / sede</label>
+              <input id="ubicacion-sede" aria-label="Ubicación" className={inputCls} value={location} onChange={e => setLocation(e.target.value)} placeholder="Sede / lugar (opcional)" />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="expira" className="form-label">Expira</label>
+              <input id="expira" type="date" aria-label="Expira" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
             </div>
             <div className="form-group flex items-end">
               <label className="flex items-center gap-2 cursor-pointer pb-2">
@@ -162,8 +162,8 @@ export default function EditarVacantePage() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Justificación / notas internas</label>
-            <textarea aria-label="Notas" className="form-textarea" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas internas (opcional)" />
+            <label htmlFor="justificacion-notas-internas" className="form-label">Justificación / notas internas</label>
+            <textarea id="justificacion-notas-internas" aria-label="Notas" className="form-textarea" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas internas (opcional)" />
           </div>
         </div>
       </div>

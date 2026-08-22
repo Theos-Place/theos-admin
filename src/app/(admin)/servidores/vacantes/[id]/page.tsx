@@ -490,10 +490,10 @@ export default function VacanteDetailPage() {
               <strong>{vacancy.position}</strong> en {vacancy.committee_name}.
             </p>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+              <label htmlFor="fecha-de-inicio" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Fecha de inicio
               </label>
-              <input
+              <input id="fecha-de-inicio"
                 type="date"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none font-body"
                 value={assignDate}
@@ -529,8 +529,8 @@ export default function VacanteDetailPage() {
               La vacante <strong>{vacancy.title}</strong> será marcada como cerrada y dejará de recibir aplicaciones.
             </p>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Motivo de cierre (opcional)</label>
-              <textarea
+              <label htmlFor="motivo-de-cierre-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Motivo de cierre (opcional)</label>
+              <textarea id="motivo-de-cierre-opcional"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none font-body"
                 rows={2}
                 placeholder="¿Por qué se cierra este puesto?"
@@ -557,10 +557,10 @@ export default function VacanteDetailPage() {
               {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
             </p>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+              <label htmlFor="motivo-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Motivo (opcional)
               </label>
-              <textarea
+              <textarea id="motivo-opcional"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none font-body"
                 rows={2}
                 placeholder="¿Por qué no fue seleccionado?"

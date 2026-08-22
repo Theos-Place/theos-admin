@@ -186,9 +186,9 @@ export default function NuevaContrasenaPage() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <div>
-          <label className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Nueva contraseña</label>
+          <label htmlFor="nueva-contrasena" className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Nueva contraseña</label>
           <div className="relative">
-            <input
+            <input id="nueva-contrasena"
               type={showPass ? 'text' : 'password'}
               autoComplete="new-password"
               value={password}
@@ -212,9 +212,9 @@ export default function NuevaContrasenaPage() {
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Confirmar contraseña</label>
+          <label htmlFor="confirmar-contrasena" className="block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body">Confirmar contraseña</label>
           <div className="relative">
-            <input
+            <input id="confirmar-contrasena"
               type={showConfirm ? 'text' : 'password'}
               autoComplete="new-password"
               value={confirm}

@@ -146,41 +146,41 @@ function SolicitarPuestoContent() {
         {/* Cascada: Área → Comité → (nombre del puesto, libre porque es nuevo) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label className={labelCls}>Área</label>
-            <select className={inputCls} value={areaCode} onChange={e => onAreaChange(e.target.value)}>
+            <label htmlFor="area" className={labelCls}>Área</label>
+            <select id="area" className={inputCls} value={areaCode} onChange={e => onAreaChange(e.target.value)}>
               <option value="">Seleccionar área…</option>
               {areas.map(a => <option key={a.code} value={a.code}>{a.name}</option>)}
             </select>
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Comité</label>
-            <select className={inputCls} value={committeeId} onChange={e => setCommitteeId(e.target.value)} disabled={!areaCode}>
+            <label htmlFor="comite" className={labelCls}>Comité</label>
+            <select id="comite" className={inputCls} value={committeeId} onChange={e => setCommitteeId(e.target.value)} disabled={!areaCode}>
               <option value="">{areaCode ? 'Seleccionar comité…' : 'Elegí un área primero'}</option>
               {committeesOfArea.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Nombre del puesto nuevo</label>
-            <input className={inputCls} placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} disabled={!committeeId} />
+            <label htmlFor="nombre-del-puesto-nuevo" className={labelCls}>Nombre del puesto nuevo</label>
+            <input id="nombre-del-puesto-nuevo" className={inputCls} placeholder="Ej. Colaborador de Bienvenida" value={title} onChange={e => setTitle(e.target.value)} disabled={!committeeId} />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className={labelCls}>Nivel de estudio requerido</label>
-          <input className={inputCls} placeholder="Ej. Discípulos 2" value={studyReq} onChange={e => setStudyReq(e.target.value)} />
+          <label htmlFor="nivel-de-estudio-requerido" className={labelCls}>Nivel de estudio requerido</label>
+          <input id="nivel-de-estudio-requerido" className={inputCls} placeholder="Ej. Discípulos 2" value={studyReq} onChange={e => setStudyReq(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className={labelCls}>Descripción</label>
-          <textarea className={cn(inputCls, 'resize-y')} rows={2} value={description} onChange={e => setDescription(e.target.value)} />
+          <label htmlFor="descripcion" className={labelCls}>Descripción</label>
+          <textarea id="descripcion" className={cn(inputCls, 'resize-y')} rows={2} value={description} onChange={e => setDescription(e.target.value)} />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className={labelCls}>Funciones (una por línea, con •)</label>
-            <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={functions} onChange={e => setFunctions(e.target.value)} />
+            <label htmlFor="funciones-una-por-linea-con" className={labelCls}>Funciones (una por línea, con •)</label>
+            <textarea id="funciones-una-por-linea-con" className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={functions} onChange={e => setFunctions(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className={labelCls}>Perfil (una por línea, con •)</label>
-            <textarea className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={profile} onChange={e => setProfile(e.target.value)} />
+            <label htmlFor="perfil-una-por-linea-con" className={labelCls}>Perfil (una por línea, con •)</label>
+            <textarea id="perfil-una-por-linea-con" className={cn(inputCls, 'resize-y')} rows={6} placeholder={'• …\n• …'} value={profile} onChange={e => setProfile(e.target.value)} />
           </div>
         </div>
 

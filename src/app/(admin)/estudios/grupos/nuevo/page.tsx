@@ -298,10 +298,10 @@ export default function NuevoGrupoPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="tipo-de-estudio" className="text-[13px] text-navy-light/80 font-display">
                 Tipo de estudio *
               </label>
-              <select
+              <select id="tipo-de-estudio"
                 className={inputCls}
                 value={step1.study_type_id}
                 onChange={e => setS1('study_type_id', e.target.value)}
@@ -356,10 +356,10 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="edad-desde" className="text-[13px] text-navy-light/80 font-display">
                 Edad desde
               </label>
-              <input
+              <input id="edad-desde"
                 type="number"
                 className={inputCls}
                 placeholder="18"
@@ -368,10 +368,10 @@ export default function NuevoGrupoPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="edad-hasta" className="text-[13px] text-navy-light/80 font-display">
                 Edad hasta
               </label>
-              <input
+              <input id="edad-hasta"
                 type="number"
                 className={inputCls}
                 placeholder="35"
@@ -412,10 +412,10 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="capacidad-maxima" className="text-[13px] text-navy-light/80 font-display">
                 Capacidad máxima
               </label>
-              <input
+              <input id="capacidad-maxima"
                 type="number"
                 min={1}
                 className={inputCls}
@@ -425,10 +425,10 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="ubicacion-exacta" className="text-[13px] text-navy-light/80 font-display">
                 Ubicación exacta
               </label>
-              <input
+              <input id="ubicacion-exacta"
                 className={inputCls}
                 placeholder="Edificio Meridiano, Escazú"
                 value={step1.location}
@@ -437,10 +437,10 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="fecha-de-inicio-estimada" className="text-[13px] text-navy-light/80 font-display">
                 Fecha de inicio estimada
               </label>
-              <input
+              <input id="fecha-de-inicio-estimada"
                 type="date"
                 className={inputCls}
                 value={step1.start_date}
@@ -452,10 +452,10 @@ export default function NuevoGrupoPage() {
                 dentro del rango; al vencer, el cron lo pasa a en_curso si ya
                 inició. Vacías = modo manual (comportamiento histórico). */}
             <div className="space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="inicio-de-matricula" className="text-[13px] text-navy-light/80 font-display">
                 Inicio de matrícula
               </label>
-              <input
+              <input id="inicio-de-matricula"
                 type="date"
                 className={inputCls}
                 value={step1.enrollment_start}
@@ -467,10 +467,10 @@ export default function NuevoGrupoPage() {
                 tope es el arranque del grupo SOLO si es futuro (acotar por un
                 arranque pasado dejaba el campo inservible). */}
             <div className="space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <label htmlFor="fin-de-matricula" className="text-[13px] text-navy-light/80 font-display">
                 Fin de matrícula
               </label>
-              <input
+              <input id="fin-de-matricula"
                 type="date"
                 className={inputCls}
                 value={step1.enrollment_end}

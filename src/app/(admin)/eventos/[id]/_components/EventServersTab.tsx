@@ -272,10 +272,10 @@ export function EventServersTab({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+                    <label htmlFor="rol-en-este-evento" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                       Rol en este evento
                     </label>
-                    <select
+                    <select id="rol-en-este-evento"
                       className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                       value={assignRole}
                       onChange={e => onAssignRoleChange(e.target.value)}

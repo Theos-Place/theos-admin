@@ -55,10 +55,10 @@ export function ScheduleSection({
       {scheduled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
+            <label htmlFor="fecha-y-hora" className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
               <Clock size={13} className="text-navy-light/80 shrink-0" /> Fecha y hora
             </label>
-            <input
+            <input id="fecha-y-hora"
               type="datetime-local"
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
               value={scheduledAt}
@@ -69,8 +69,8 @@ export function ScheduleSection({
             </p>
           </div>
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-body">Zona horaria</label>
-            <select
+            <label htmlFor="zona-horaria" className="text-[13px] text-navy-light/80 font-body">Zona horaria</label>
+            <select id="zona-horaria"
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={timezone}
               onChange={e => setTimezone(e.target.value)}

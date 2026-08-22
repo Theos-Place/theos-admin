@@ -396,13 +396,13 @@ export default function DevolucionesPage() {
                 Devolución de <strong>{formatMoney(completeTarget.amount, completeTarget.currency)}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
-                <input type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
+                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
+                <input id="fecha-de-transferencia" type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
-                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
-                <input type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
+                <label htmlFor="numero-de-confirmacion" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
+                <input id="numero-de-confirmacion" type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
@@ -475,8 +475,8 @@ export default function DevolucionesPage() {
                 Rechazando devolución de <strong>{rejectTarget.member_name}</strong>
               </p>
               <div>
-                <label className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
-                <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                <label htmlFor="motivo-del-rechazo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
+                <textarea id="motivo-del-rechazo" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
