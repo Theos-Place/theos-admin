@@ -9,6 +9,7 @@ import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
 import { RESTRICTION_ERROR_CODE } from '@/lib/studies/group-restrictions'
 import { logAudit } from '@/lib/audit'
+import { withdrawReasonError } from '@/lib/studies/close-payload'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -145,7 +146,13 @@ export async function PATCH(
   }
 }
 
-// DELETE: retira un miembro. Body: { member_id, reason? }
+// DELETE: retira un miembro. Body: { member_id?, reason }
+//
+// EST-14: `reason` es OBLIGATORIO. Antes era opcional y la UI mandaba
+// 'Desinscrito desde el grupo' hardcodeado, así que los retiros quedaban sin
+// rastro de por qué — que es justo el dato que se necesita después para
+// reubicar a la persona o darle seguimiento. Se valida acá y no solo en la UI:
+// el endpoint lo puede llamar cualquiera con sesión.
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -162,7 +169,11 @@ export async function DELETE(
     const { member_id, reason } = await req.json()
     const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
-    await withdrawMember(id, targetMemberId, reason)
+    const malMotivo = withdrawReasonError(typeof reason === 'string' ? reason : null)
+    if (malMotivo) {
+      return NextResponse.json({ error: malMotivo, code: 'motivo_requerido' }, { status: 400 })
+    }
+    await withdrawMember(id, targetMemberId, (reason as string).trim())
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'NO_RETIRABLE') {

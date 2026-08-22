@@ -343,8 +343,11 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                       elegir "Retirado". Queda en drop_reason de la inscripción. */}
                   {r.status_result === 'retirado' && (
                     <div>
-                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[13px] font-medium text-navy-light/80 font-body mb-1">
-                        Motivo del retiro *
+                      {/* Coral y con el asterisco fuera del texto, igual que la
+                          justificación del reprobado: eran las dos obligatorias
+                          pero solo una se veía como tal (EST-14). */}
+                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[13px] font-medium text-coral font-body mb-1">
+                        Motivo del retiro <span aria-hidden>*</span>
                       </label>
                       <textarea
                         id={`withdraw-${r.member_id}`}

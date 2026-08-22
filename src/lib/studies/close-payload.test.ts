@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
-  toClosePayloadItem, toClosePayload, missingReasons, missingReasonsMessage, type CloseRow,
+  toClosePayloadItem, toClosePayload, missingReasons, missingReasonsMessage,
+  withdrawReasonError, WITHDRAW_REASON_MIN, type CloseRow,
 } from './close-payload'
 
 const row = (over: Partial<CloseRow> = {}): CloseRow => ({
@@ -111,5 +112,34 @@ describe('missingReasonsMessage', () => {
     expect(msg).toContain('faltan 2 motivos')
     expect(msg).toContain('Ana Ruiz (falta el motivo del retiro)')
     expect(msg).toContain('Beto Mora (falta la justificación de la reprobación)')
+  })
+})
+
+// EST-14 · La causa raíz no era la validación del cierre (esa estaba bien) sino
+// el botón "Desinscribir" de la ficha del grupo, que mandaba el motivo
+// hardcodeado 'Desinscrito desde el grupo'. Un obligatorio que acepta cualquier
+// cosa se llena con cualquier cosa.
+describe('withdrawReasonError', () => {
+  it('vacío no pasa', () => {
+    expect(withdrawReasonError('')).toMatch(/escribí el motivo/i)
+    expect(withdrawReasonError(null)).toMatch(/escribí el motivo/i)
+    expect(withdrawReasonError(undefined)).toMatch(/escribí el motivo/i)
+    expect(withdrawReasonError('    ')).toMatch(/escribí el motivo/i)
+  })
+
+  it('un tecleo tampoco', () => {
+    expect(withdrawReasonError('x')).toMatch(/muy corto/i)
+    expect(withdrawReasonError('asdf')).toMatch(/muy corto/i)
+    expect(withdrawReasonError('no sé')).toMatch(/muy corto/i)
+  })
+
+  it('un motivo de verdad pasa', () => {
+    expect(withdrawReasonError('Se mudó de zona')).toBeNull()
+    expect(withdrawReasonError('Cambió de horario en el trabajo')).toBeNull()
+  })
+
+  it('el mínimo se mide sin los espacios de los extremos', () => {
+    expect(withdrawReasonError(`  ${'a'.repeat(WITHDRAW_REASON_MIN)}  `)).toBeNull()
+    expect(withdrawReasonError(`  ${'a'.repeat(WITHDRAW_REASON_MIN - 1)}  `)).toMatch(/muy corto/i)
   })
 })

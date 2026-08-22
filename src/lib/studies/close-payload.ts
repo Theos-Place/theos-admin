@@ -63,6 +63,27 @@ export function toClosePayload(rows: readonly CloseRow[], canRecommend: boolean)
   return rows.filter(r => r.status_result !== '').map(r => toClosePayloadItem(r, canRecommend))
 }
 
+/**
+ * EST-14 · Largo mínimo de un motivo de retiro.
+ *
+ * Existe porque el agujero real no era la falta de validación sino un motivo de
+ * relleno: el botón "Desinscribir" de la ficha del grupo mandaba hardcodeado
+ * 'Desinscrito desde el grupo' sin preguntarle nada a nadie. Un campo
+ * obligatorio que acepta cualquier cosa se llena con cualquier cosa, así que el
+ * mínimo es lo que separa un motivo de un tecleo.
+ */
+export const WITHDRAW_REASON_MIN = 10
+
+/** ¿Sirve este texto como motivo de retiro? */
+export function withdrawReasonError(reason: string | null | undefined): string | null {
+  const v = (reason ?? '').trim()
+  if (!v) return 'Escribí el motivo del retiro.'
+  if (v.length < WITHDRAW_REASON_MIN) {
+    return `El motivo es muy corto: contá en una frase qué pasó (mínimo ${WITHDRAW_REASON_MIN} caracteres).`
+  }
+  return null
+}
+
 /** Qué motivo exige cada resultado. 'aprobado' no pide ninguno. */
 export type MissingReason = { member_id: string; status: 'reprobado' | 'retirado' }
 

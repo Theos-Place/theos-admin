@@ -23,6 +23,7 @@ import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
+import { withdrawReasonError } from '@/lib/studies/close-payload'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -366,6 +367,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
   const [withdrawing, setWithdrawing] = useState(false)
   const [withdrawError, setWithdrawError] = useState(false)
+  // EST-14: el motivo del retiro es obligatorio. Antes se mandaba hardcodeado
+  // 'Desinscrito desde el grupo', así que los retiros quedaban sin el porqué.
+  const [withdrawReason, setWithdrawReason] = useState('')
+  const motivoInvalido = withdrawReasonError(withdrawReason)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [activeWarn, setActiveWarn] = useState<string | null>(null)
@@ -389,13 +394,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
 
   async function confirmWithdraw() {
     if (!withdrawTarget || withdrawing) return
+    if (withdrawReasonError(withdrawReason)) return
     setWithdrawing(true)
     setWithdrawError(false)
     try {
       const res = await fetch(`/api/studies/groups/${id}/enrollments`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: withdrawTarget.member_id, reason: 'Desinscrito desde el grupo' }),
+        body: JSON.stringify({ member_id: withdrawTarget.member_id, reason: withdrawReason.trim() }),
       })
       if (!res.ok) throw new Error()
       setWithdrawTarget(null)
@@ -499,6 +505,26 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               ¿Desinscribir a <strong>{withdrawTarget.member_name}</strong> de este grupo?
               Quedará como retirado y conservará su historial.
             </p>
+            <div>
+              <label htmlFor="withdraw-reason" className="block text-[13px] font-medium text-coral font-body mb-1">
+                Motivo del retiro <span aria-hidden>*</span>
+              </label>
+              <textarea
+                id="withdraw-reason"
+                rows={2}
+                value={withdrawReason}
+                onChange={e => setWithdrawReason(e.target.value)}
+                placeholder="Ej.: se mudó de zona, cambió de horario de trabajo, motivos de salud…"
+                aria-required="true"
+                aria-invalid={!!motivoInvalido && withdrawReason.length > 0 ? true : undefined}
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/50"
+              />
+              {/* La razón por la que no se puede seguir, visible antes de
+                  apretar: un botón gris sin explicación es una pared. */}
+              {motivoInvalido && withdrawReason.length > 0 && (
+                <p className="mt-1 text-[13px] text-coral font-body">{motivoInvalido}</p>
+              )}
+            </div>
             {withdrawError && (
               <p className="text-sm text-coral font-body" role="alert">
                 No se pudo desinscribir. Intentá de nuevo.
@@ -507,7 +533,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex gap-2">
               <button
                 onClick={confirmWithdraw}
-                disabled={withdrawing}
+                disabled={withdrawing || !!motivoInvalido}
                 className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
               >
                 {withdrawing ? 'Desinscribiendo…' : 'Desinscribir'}
@@ -736,7 +762,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="flex items-center gap-1">
                         {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
-                            onClick={() => { setWithdrawError(false); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}
+                            onClick={() => { setWithdrawError(false); setWithdrawReason(''); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}
                             className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
                             Desinscribir

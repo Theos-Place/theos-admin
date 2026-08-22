@@ -2975,7 +2975,7 @@ Correr en STAGING primero de punta a punta; a producción solo con el reporte ap
 
 ## Fase 9 — Feedback de uso (2026-08-20)
 
-### [ ] EST-14 · Motivo de retiro obligatorio: verificar por qué no se aplica
+### [x] EST-14 · Motivo de retiro obligatorio: verificar por qué no se aplica — HECHO 2026-08-21
 ```
 Se reporta que en el cierre el motivo de retiro sigue siendo opcional, PERO la regla ya
 existe: hay un test que dice "un retirado SIN motivo bloquea (obligatorio desde
@@ -2991,6 +2991,38 @@ Arreglá la causa raíz y dejá los tres puntos consistentes: UI (asterisco + bl
 mensaje que diga de cuál estudiante falta), regla pura y validación server-side del POST.
 Reportame cuál era la causa.
 ```
+
+**La causa era (c), y ninguna de las sospechas de (a) o (b).** El asistente de cierre estaba
+BIEN en los tres puntos: la regla pura (`missingReasons`), la UI (asterisco, `aria-required`,
+borde coral y bloqueo real del paso 2 en la línea 448) y la validación del POST usan todas
+`withdraw_reason`. Nada de eso había que arreglar.
+
+El agujero era **otro camino de retiro**: el botón "Desinscribir" de la ficha del grupo
+(`estudios/grupos/[id]/page.tsx`), que llamaba `DELETE /enrollments` con el motivo
+**hardcodeado** `'Desinscrito desde el grupo'` sin preguntarle nada a nadie. Y el endpoint
+declaraba `reason?` — opcional. O sea que se podía retirar gente sin motivo real por ahí,
+mientras el cierre lo exigía.
+
+Arreglado:
+- Regla pura nueva `withdrawReasonError` + `WITHDRAW_REASON_MIN = 10` en close-payload.ts.
+  El mínimo NO es la defensa principal (el placeholder viejo tenía 26 caracteres y habría
+  pasado); es para que un obligatorio no se llene con un punto.
+- `DELETE /api/studies/groups/[id]/enrollments` ahora exige el motivo → 400
+  `motivo_requerido`. Se valida server-side porque el endpoint lo puede llamar cualquiera
+  con sesión.
+- El modal de "Desinscribir" pide el motivo, con el error visible ANTES de apretar y el
+  botón bloqueado hasta que sirva.
+- De paso: en el cierre, "Motivo del retiro" era la única de las dos obligatorias que NO se
+  veía como tal (gris en vez de coral). Ahora las dos se ven igual — plausiblemente parte de
+  por qué se percibía como opcional.
+
+Sin daño en los datos: 0 matrículas retiradas en la base al momento del arreglo.
+
+Alcance verificado: la regla pura con tests, y que los otros dos llamadores del endpoint de
+matrículas son POST (no DELETE), así que exigir el motivo no rompe ningún flujo existente.
+NO se probó el round-trip HTTP con sesión. Nota: el endpoint permite que un miembro cancele
+su propia matrícula, y hoy exigirle 10 caracteres aplicaría también ahí — no hay UI para ese
+caso todavía, pero si se construye conviene revisar si corresponde la misma exigencia.
 
 ### [ ] EST-15 · Recomendación CDEB: el dropdown de "otro estudio primero" solo con capacitaciones
 ```
