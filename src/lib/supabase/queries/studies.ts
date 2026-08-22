@@ -1228,6 +1228,8 @@ export async function enrollMember(
   opts?: {
     enforceEnrollmentWindow?: boolean
     allowPendingStudyPayments?: boolean
+    /** FRM-4: quién matriculó, si no fue la propia persona. NULL en el caso normal. */
+    recordedBy?: string | null
     /** GRU-2: el staff puede matricular a alguien que NO cumple la restricción
      *  de audiencia del grupo, pero solo con este override explícito (la UI se
      *  lo confirma y queda en la bitácora — nunca silencioso). */
@@ -1395,7 +1397,7 @@ export async function enrollMember(
 
   const { data: enr, error } = await supabase
     .from('study_enrollments')
-    .upsert({ group_id: groupId, member_id: memberId, status }, { onConflict: 'group_id,member_id' })
+    .upsert({ group_id: groupId, member_id: memberId, status, recorded_by: opts?.recordedBy ?? null }, { onConflict: 'group_id,member_id' })
     .select('id').single()
   if (error) throw error
   const enrollmentId = (enr as { id: string }).id

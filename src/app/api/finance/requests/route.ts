@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView, resolveTargetMemberId } from '@/lib/auth/guard'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { resolveOnBehalf, FINANCE_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import {
   getFinanceRequests, countOpenFinanceRequests, createFinanceRequest, notifyFinanceRolesOfRequest,
 } from '@/lib/supabase/queries/finance-requests'
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
     if (auth.res) return auth.res
     const body = await req.json()
     const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
-    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, ['finanzas', 'direccion'])
+    // FRM-4: quién la digitó, si no fue la propia persona.
+    const { memberId, recordedBy } = resolveOnBehalf(auth.ctx, body?.member_id, FINANCE_ON_BEHALF_ROLES)
     if (typeof body?.member_id === 'string' && body.member_id && body.member_id !== memberId) {
       return NextResponse.json(
         { error: 'No podés crear solicitudes a nombre de otro miembro' },
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
     }
 
     const request = await createFinanceRequest({
+      recorded_by: recordedBy,
       member_id: memberId,
       request_type: body.request_type,
       study_group_id: body.study_group_id ?? null,

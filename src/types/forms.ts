@@ -113,4 +113,8 @@ export interface FormResponse {
   member_name: string
   submitted_at: string
   answers: Record<string, string | string[] | number>
+  /** FRM-4: nombre de quien la DIGITÓ, si no fue la propia persona. Vacío en el
+   *  caso normal — así "tiene valor" significa "la registró el staff", sin
+   *  comparar con member_name. */
+  recorded_by_name: string
 }

@@ -738,6 +738,7 @@ export type Database = {
       }
       event_registrations: {
         Row: {
+          recorded_by?: string | null
           event_id: string
           form_response_id: string | null
           id: string
@@ -746,6 +747,7 @@ export type Database = {
           registered_at: string | null
         }
         Insert: {
+          recorded_by?: string | null
           event_id: string
           form_response_id?: string | null
           id?: string
@@ -754,6 +756,7 @@ export type Database = {
           registered_at?: string | null
         }
         Update: {
+          recorded_by?: string | null
           event_id?: string
           form_response_id?: string | null
           id?: string
@@ -1118,6 +1121,7 @@ export type Database = {
       }
       finance_requests: {
         Row: {
+          recorded_by?: string | null
           amount: number | null
           created_at: string | null
           entity_type: string | null
@@ -1136,6 +1140,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          recorded_by?: string | null
           amount?: number | null
           created_at?: string | null
           entity_type?: string | null
@@ -1154,6 +1159,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          recorded_by?: string | null
           amount?: number | null
           created_at?: string | null
           entity_type?: string | null
@@ -1550,6 +1556,7 @@ export type Database = {
       }
       form_responses: {
         Row: {
+          recorded_by?: string | null
           form_id: string
           guest_email: string | null
           guest_name: string | null
@@ -1559,6 +1566,7 @@ export type Database = {
           submitted_at: string | null
         }
         Insert: {
+          recorded_by?: string | null
           form_id: string
           guest_email?: string | null
           guest_name?: string | null
@@ -1568,6 +1576,7 @@ export type Database = {
           submitted_at?: string | null
         }
         Update: {
+          recorded_by?: string | null
           form_id?: string
           guest_email?: string | null
           guest_name?: string | null
@@ -3995,6 +4004,7 @@ export type Database = {
       }
       study_enrollments: {
         Row: {
+          recorded_by?: string | null
           completed_at: string | null
           created_at: string | null
           drop_reason: string | null
@@ -4011,6 +4021,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          recorded_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4027,6 +4038,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          recorded_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4460,6 +4472,7 @@ export type Database = {
       }
       study_requests: {
         Row: {
+          recorded_by?: string | null
           created_at: string | null
           current_group_id: string | null
           eligibility_note: string | null
@@ -4489,6 +4502,7 @@ export type Database = {
           was_eligible: boolean | null
         }
         Insert: {
+          recorded_by?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null
@@ -4518,6 +4532,7 @@ export type Database = {
           was_eligible?: boolean | null
         }
         Update: {
+          recorded_by?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null

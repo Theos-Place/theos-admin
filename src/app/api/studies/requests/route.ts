@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
+import { resolveOnBehalf } from '@/lib/auth/on-behalf'
 import {
   getStudyRequests, countOpenStudyRequests, createStudyRequest, notifyRecipientsOfRequest, hasOpenStudyInterest,
   isStudyCommitteeMember,
@@ -73,7 +74,9 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
-    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, ['coordinador_estudios', 'coordinador_dirigentes'])
+    // FRM-4: además de a nombre de quién, se guarda QUIÉN la digitó. Esto ya
+    // se podía hacer desde la pantalla de solicitudes y no dejaba rastro.
+    const { memberId, recordedBy } = resolveOnBehalf(auth.ctx, body?.member_id, ['coordinador_estudios', 'coordinador_dirigentes'])
     if (typeof body?.member_id === 'string' && body.member_id && body.member_id !== memberId) {
       return NextResponse.json(
         { error: 'No podés crear solicitudes a nombre de otro miembro' },
@@ -145,6 +148,7 @@ export async function POST(req: NextRequest) {
     }
 
     const request = await createStudyRequest({
+      recorded_by: recordedBy,
       member_id: memberId,
       request_type: body.request_type,
       plan_id: body.plan_id ?? null,

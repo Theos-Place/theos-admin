@@ -181,6 +181,7 @@ export async function createStudyRequest(input: StudyRequestWriteInput): Promise
     .from('study_requests')
     .insert({
       member_id: input.member_id,
+      recorded_by: input.recorded_by ?? null,
       request_type: input.request_type,
       plan_id: input.plan_id ?? null,
       existing_group_id: input.existing_group_id ?? null,

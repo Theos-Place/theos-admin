@@ -4,9 +4,9 @@ import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
+import { EVENT_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 
 // Mismos roles que gestionan event_registrations desde el panel de staff.
-const EVENT_REGISTRATION_STAFF_ROLES = ['direccion', 'encargado_staff', 'comunicaciones', 'admin']
 
 // POST (multipart): sube el comprobante de una inscripción a evento. Dueño de
 // la inscripción o staff (mismo patrón anti-suplantación que /api/payments).
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!reg) return NextResponse.json({ error: 'Inscripción no encontrada.' }, { status: 404 })
 
     const isOwner = auth.ctx.memberId === (reg as { member_id: string }).member_id
-    const isStaff = EVENT_REGISTRATION_STAFF_ROLES.some(r => auth.ctx.roles.includes(r as never))
+    const isStaff = auth.ctx.roles.includes('admin')
+      || EVENT_ON_BEHALF_ROLES.some(r => auth.ctx.roles.includes(r))
     if (!isOwner && !isStaff) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
     const form = await req.formData()

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
+import { resolveOnBehalf, EVENT_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import {
   createRegistration, registrationPricing,
   PaymentRequiredError, EventFullError, AlreadyRegisteredError,
@@ -8,7 +9,6 @@ import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 
 // Quién puede inscribir A OTRO desde acá (mismos roles que gestionan
 // event_registrations en la ruta de staff, /api/events/[id]/registrations).
-const EVENT_REGISTRATION_STAFF_ROLES = ['direccion', 'encargado_staff', 'comunicaciones'] as const
 
 // POST /api/events/[id]/register — autoservicio: cualquier autenticado se
 // inscribe a sí mismo; staff puede inscribir a otro pasando member_id.
@@ -20,11 +20,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const body = await req.json().catch(() => ({}))
-    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, [...EVENT_REGISTRATION_STAFF_ROLES])
+    // FRM-4: quién inscribió, si no fue la propia persona.
+    const { memberId, recordedBy } = resolveOnBehalf(auth.ctx, body?.member_id, EVENT_ON_BEHALF_ROLES)
     if (!memberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
 
     const pricing = await registrationPricing(id, memberId)
-    const res = await createRegistration(id, { member_id: memberId, scholarship_id: body?.scholarship_id, coupon_code: body?.coupon_code })
+    const res = await createRegistration(id, { member_id: memberId, scholarship_id: body?.scholarship_id, coupon_code: body?.coupon_code, recorded_by: recordedBy })
     return NextResponse.json({ ...res, pricing }, { status: 201 })
   } catch (error) {
     if (error instanceof PaymentRequiredError) return NextResponse.json({ error: error.message }, { status: 422 })

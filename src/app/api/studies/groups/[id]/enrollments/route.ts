@@ -10,6 +10,7 @@ import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
 import { RESTRICTION_ERROR_CODE } from '@/lib/studies/group-restrictions'
 import { logAudit } from '@/lib/audit'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
+import { resolveOnBehalf } from '@/lib/auth/on-behalf'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -24,12 +25,14 @@ export async function POST(
   try {
     const { id } = await params
     const { member_id, scholarship_id, coupon_code, override_pago_pendiente, override_restriccion } = await req.json()
-    const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
+    // FRM-4: quién matriculó, si no fue la propia persona.
+    const { memberId: targetMemberId, recordedBy } = resolveOnBehalf(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
     // GRU-1: la ventana de matrícula aplica al autoservicio; el staff con
     // STUDY_ADMIN_ROLES puede matricular fuera de la ventana.
     const isStaff = auth.ctx.roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
     const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code }, {
+      recordedBy,
       enforceEnrollmentWindow: !isStaff,
       // PAG-2: el bloqueo por pago de estudios pendiente aplica a TODOS; el
       // staff puede saltarlo solo con el override EXPLÍCITO del body (la UI

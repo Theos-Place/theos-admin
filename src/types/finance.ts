@@ -132,6 +132,8 @@ export type FinanceRequest = {
 
 export type FinanceRequestWriteInput = {
   member_id: string
+  /** FRM-4: quién la digitó, si no fue la propia persona. NULL en el caso normal. */
+  recorded_by?: string | null
   request_type: FinanceRequestType
   study_group_id?: string | null
   payment_id?: string | null

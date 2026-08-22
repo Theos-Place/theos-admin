@@ -9,6 +9,7 @@ import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
+import { FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import type { Member } from '@/types/member'
 import { PublicField } from '@/components/forms/PublicField'
 import { FormHero, hasHero } from '@/components/forms/FormHero'
@@ -132,9 +133,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   const id = formId
   const isPreview = mode === 'preview'
   const { user } = useAuth()
-  // Llenar A NOMBRE DE otro miembro: solo comunicaciones/dirección (y admin) —
-  // mismo criterio que el anti-suplantación del POST (auditoría S2).
-  const canFillForOther = !isPreview && (user?.roles ?? []).some(r => ['comunicaciones', 'direccion', 'admin'].includes(r))
+  // Llenar A NOMBRE DE otro miembro. FRM-4 sumó el rol `forms` a la lista, que
+  // antes era solo comunicaciones/dirección. La fuente es FORM_ON_BEHALF_ROLES,
+  // la misma que valida el POST — el gate de la UI y el del API no pueden
+  // divergir. (El acceso PUNTUAL a un formulario también habilita, pero eso lo
+  // resuelve el POST: depende del formulario, no del rol.)
+  const canFillForOther = !isPreview
+    && (user?.roles ?? []).some(r => r === 'admin' || (FORM_ON_BEHALF_ROLES as string[]).includes(r))
   const [onBehalf, setOnBehalf] = useState<MemberHit | null>(null)
   // Prellenado REAL del perfil (los campos personal_data): en preview se usa el
   // miembro de ejemplo; al llenar de verdad, el perfil de quien responde.

@@ -52,6 +52,9 @@ export type DbFormResponse = {
   member: { first_name: string; last_name: string } | null
   guest_name: string | null
   submitted_at: string
+  /** FRM-4: quién la digitó, si no fue la propia persona. NULL en el caso normal. */
+  recorded_by: string | null
+  recorder: { first_name: string; last_name: string } | null
   values: Array<{ field_id: string; value_text: string | null; value_json: unknown }>
 }
 
@@ -93,14 +96,22 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
   const { data, error } = await supabase
     .from('form_responses')
     .select(`
-      id, form_id, member_id, guest_name, submitted_at,
-      member:members(first_name, last_name),
+      id, form_id, member_id, guest_name, submitted_at, recorded_by,
+      member:members!form_responses_member_id_fkey(first_name, last_name),
+      recorder:members!form_responses_recorded_by_fkey(first_name, last_name),
       values:form_response_values(field_id, value_text, value_json)
     `)
     .eq('form_id', formId)
     .order('submitted_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as DbFormResponse[]
+  // `recorder` llega como array porque los tipos generados todavía no declaran
+  // esa relación; se normaliza acá para que el resto vea un objeto o null.
+  return ((data ?? []) as unknown as Array<Omit<DbFormResponse, 'recorder'> & {
+    recorder: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+  }>).map(r => ({
+    ...r,
+    recorder: Array.isArray(r.recorder) ? (r.recorder[0] ?? null) : r.recorder,
+  }))
 }
 
 // ── Mutaciones ─────────────────────────────────────────────
@@ -333,6 +344,8 @@ export async function submitResponse(
     guest_name?: string | null
     guest_email?: string | null
     answers: Record<string, string | string[] | number>
+    /** FRM-4: quién la digitó, si no fue la propia persona. NULL en el caso normal. */
+    recorded_by?: string | null
   },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
@@ -345,6 +358,7 @@ export async function submitResponse(
     p_member_id: (input.member_id ?? null) as unknown as string,
     p_guest_name: (input.guest_name ?? null) as unknown as string,
     p_guest_email: (input.guest_email ?? null) as unknown as string,
+    p_recorded_by: (input.recorded_by ?? null) as unknown as string,
     p_answers: input.answers,
   })
   if (error) throw error

@@ -207,6 +207,8 @@ export type StudyRequest = {
 
 export type StudyRequestWriteInput = {
   member_id: string
+  /** FRM-4: quién la digitó, si no fue la propia persona. NULL en el caso normal. */
+  recorded_by?: string | null
   request_type: StudyRequestType
   plan_id?: string | null
   existing_group_id?: string | null

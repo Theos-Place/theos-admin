@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, resolveTargetMemberId, getAuthContext } from '@/lib/auth/guard'
+import { requireRoles, getAuthContext } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import {
   getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant,
 } from '@/lib/supabase/queries/forms'
 import { formViewerScope, hasFormsModule } from '@/lib/auth/forms-scope'
+import { resolveOnBehalf, FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
+import type { RoleId } from '@/types/auth'
 import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
 
@@ -62,11 +64,20 @@ export async function POST(
     const { id } = await params
     const body = await req.json()
 
-    // Anti-suplantación (auditoría S2): solo comunicaciones/dirección (y admin)
-    // registran respuestas a nombre de OTRO miembro; el resto queda en su propio
-    // perfil (o invitado si su sesión no tiene miembro vinculado).
-    // El constraint response_member_or_guest exige member_id O guest_email.
-    const memberId = resolveTargetMemberId(auth.ctx, body?.member_id, ['comunicaciones', 'direccion'])
+    // Anti-suplantación (auditoría S2): solo los roles habilitados registran
+    // respuestas a nombre de OTRO miembro; el resto queda en su propio perfil (o
+    // invitado si su sesión no tiene miembro vinculado). El constraint
+    // response_member_or_guest exige member_id O guest_email.
+    //
+    // FRM-4: además del gate por rol, entra el acceso PUNTUAL a este formulario
+    // (form_access_grants) — se resuelve por formulario y no por rol, así que no
+    // puede vivir en FORM_ON_BEHALF_ROLES. Y se guarda `recordedBy`: quién lo
+    // digitó, para que nadie confunda esto con una respuesta directa.
+    const conGrant = await hasFormAccessGrant(id, auth.ctx.memberId)
+    const rolesPorOtro = conGrant
+      ? [...FORM_ON_BEHALF_ROLES, ...(auth.ctx.roles as RoleId[])]  // el grant habilita a esta sesión
+      : FORM_ON_BEHALF_ROLES
+    const { memberId, recordedBy } = resolveOnBehalf(auth.ctx, body?.member_id, rolesPorOtro)
     if (typeof body?.member_id === 'string' && body.member_id && body.member_id !== memberId) {
       return NextResponse.json(
         { error: 'No podés registrar respuestas a nombre de otro miembro' },
@@ -105,7 +116,10 @@ export async function POST(
       return NextResponse.json({ error: acceso.reason, code: 'formulario_no_asignado' }, { status: 403 })
     }
 
-    const res = await submitResponse(id, { ...body, member_id: memberId, guest_email: memberId ? body.guest_email ?? null : guestEmail })
+    const res = await submitResponse(id, {
+      ...body, member_id: memberId, recorded_by: recordedBy,
+      guest_email: memberId ? body.guest_email ?? null : guestEmail,
+    })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
     console.error('POST /api/forms/[id]/responses:', error)

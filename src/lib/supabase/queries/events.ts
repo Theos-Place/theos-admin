@@ -410,7 +410,11 @@ export class AlreadyRegisteredError extends Error {
  *  pendiente de comprobante, sin condición de carrera en el conteo de cupo. */
 export async function createRegistration(
   eventId: string,
-  input: { member_id: string; payment_status?: PaymentStatus; scholarship_id?: string; coupon_code?: string },
+  input: {
+    member_id: string; payment_status?: PaymentStatus; scholarship_id?: string; coupon_code?: string
+    /** FRM-4: quién inscribió, si no fue la propia persona. NULL en el caso normal. */
+    recorded_by?: string | null
+  },
 ): Promise<{ id: string; amount: number }> {
   const supabase = createAdminClient()
   const pricing = await registrationPricing(eventId, input.member_id)
@@ -445,7 +449,7 @@ export async function createRegistration(
     // Descuento total: inscripción directa, sin comprobante ni reserva RPC.
     const { data, error } = await supabase
       .from('event_registrations')
-      .insert({ event_id: eventId, member_id: input.member_id, payment_status: 'paid' })
+      .insert({ event_id: eventId, member_id: input.member_id, payment_status: 'paid', recorded_by: input.recorded_by ?? null })
       .select('id').single()
     if (error) {
       if ((error as { code?: string }).code === '23505') throw new AlreadyRegisteredError()
@@ -508,7 +512,7 @@ export async function createRegistration(
 
   const { data, error } = await supabase
     .from('event_registrations')
-    .insert({ event_id: eventId, member_id: input.member_id, payment_status: status })
+    .insert({ event_id: eventId, member_id: input.member_id, payment_status: status, recorded_by: input.recorded_by ?? null })
     .select('id')
     .single()
   if (error) {

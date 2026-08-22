@@ -14,6 +14,8 @@ import { toDomainEvent } from '@/lib/events/adapter'
 import type { DbEventEnriched } from '@/lib/supabase/queries/events'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { useEventRegistration } from '@/components/events/useEventRegistration'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { EVENT_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
@@ -122,7 +124,13 @@ function EventosContent() {
   // Elegibilidad de inscripción del propio usuario — disponible para
   // cualquiera con member_id, gestione o no el módulo (un miembro del staff
   // también puede inscribirse a un evento como cualquier otro miembro).
-  const memberId = user?.member_id ?? null
+  // FRM-4 · Inscribir a OTRA persona (caso real: lo pide por teléfono). El
+  // endpoint ya lo permitía y no había forma de llegar desde la pantalla; ahora
+  // además queda el rastro de quién inscribió (recorded_by).
+  const puedeInscribirAOtro = (user?.roles ?? [])
+    .some(r => r === 'admin' || (EVENT_ON_BEHALF_ROLES as string[]).includes(r))
+  const [inscribirA, setInscribirA] = useState<{ id: string; name: string } | null>(null)
+  const memberId = inscribirA?.id ?? user?.member_id ?? null
   const [eligibility, setEligibility] = useState<EventEligibilityResult[]>([])
   const [eligRefresh, setEligRefresh] = useState(0)
   useEffect(() => {
@@ -326,7 +334,39 @@ function EventosContent() {
           </h1>
           <p className="mt-1 text-sm text-white/80 font-body">
             {loading ? 'Cargando…' : `${headerCount.toLocaleString('es-CR')} ${headerNoun}`}
+            {inscribirA && <> · inscribiendo a <span className="text-white font-medium">{inscribirA.name}</span></>}
           </p>
+
+          {/* FRM-4 · Inscribir a otra persona. Queda en el header y no dentro del
+              modal a propósito: así se ve DURANTE toda la navegación a nombre de
+              quién se está actuando, y no se descubre al confirmar. */}
+          {puedeInscribirAOtro && (
+            <div className="mt-3 flex flex-col gap-1 w-full sm:w-72">
+              <span className="text-[11px] uppercase tracking-widest text-white/80 font-display">
+                Inscribir a otra persona
+              </span>
+              {inscribirA ? (
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
+                  <span className="truncate font-body">{inscribirA.name}</span>
+                  <button
+                    onClick={() => setInscribirA(null)}
+                    aria-label="Volver a inscribirme a mí"
+                    className="text-white/80 hover:text-white shrink-0"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <MemberCombobox
+                  dropdown
+                  variant="onDark"
+                  pageSize={6}
+                  placeholder="Buscar miembro…"
+                  onSelect={m => setInscribirA({ id: m.id, name: `${m.first_name} ${m.last_name}`.trim() })}
+                />
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
           <button

@@ -3337,7 +3337,7 @@ a mano — los botones de solo ícono (41 aparentes → 3 reales) y los estados 
 aparentes → varios ya resueltos con el patrón `data === null`). Está anotado en el informe:
 cualquier conteo que se use para priorizar hay que verificarlo en los archivos que lista.
 
-### [ ] FRM-4 · Llenar un formulario o una solicitud a nombre de otra persona
+### [x] FRM-4 · Llenar un formulario o una solicitud a nombre de otra persona — HECHO 2026-08-21
 ```
 Que comunicaciones (y quien gestione formularios) pueda llenar un formulario A NOMBRE DE
 otra persona — caso real: alguien responde por teléfono o en papel y el staff lo registra.
@@ -3355,6 +3355,55 @@ otra persona — caso real: alguien responde por teléfono o en papel y el staff
    para algunas. Revisá cuáles solicitudes ya lo permiten y cuáles no, y proponeme el
    alcance. La matrícula a nombre de otro YA existe para STUDY_ADMIN_ROLES.
 ```
+
+**RESPUESTA AL PUNTO 4** (el alcance que la ficha pedía decidir). El relevamiento dio algo
+distinto de lo que la ficha asumía: **actuar a nombre de otro ya funcionaba en los CINCO
+flujos**, y **ninguno guardaba quién lo hizo**.
+
+| Flujo | El API lo permitía | UI | Rastro (antes) |
+|---|---|---|---|
+| Formularios | ✓ comunicaciones/dirección | ✓ ya existía en `FormFiller` (`onBehalf`) | ✗ |
+| Solicitudes de estudio | ✓ coord. estudios/dirigentes | ✓ `createFor` en /estudios/solicitudes | ✗ |
+| Solicitudes financieras | ✓ finanzas/dirección | ✓ ya existía, en el PERFIL del miembro | ✗ |
+| Matrícula | ✓ STUDY_ADMIN_ROLES | ✓ selector de miembro | ✗ |
+| Inscripción a evento | ✓ staff de eventos | **✗ la única que faltaba** | ✗ |
+
+O sea que la ficha pedía construir una UI que **ya estaba** (punto 1) y el hueco real era otro:
+un coordinador podía crear una solicitud o matricular a alguien y **no quedaba registro de
+quién lo hizo**. `reviewed_by` no sirve — es quien la revisó. Decisión del usuario: cerrar el
+rastro en los cinco y agregar las UI faltantes.
+
+**Cómo quedó** (migración `20260822180000_recorded_by.sql`):
+
+- Columna `recorded_by` en las cinco tablas, con **el mismo nombre en todas** — la ficha decía
+  `submitted_by` solo para formularios, pero cinco nombres para el mismo concepto es lo que
+  después obliga a recordar cuál va en cada tabla. (Bonus: `payments` y `study_attendance` ya
+  usaban `recorded_by`, así que era la convención de la casa.)
+- **La convención que simplifica todo**: `recorded_by` es NULL cuando la persona lo hizo ella
+  misma. Solo se llena cuando el actor es distinto. Así `NOT NULL` responde exactamente la
+  pregunta de la pantalla —"¿esto lo registró el staff?"— sin comparar dos columnas.
+- Regla pura en `src/lib/auth/on-behalf.ts` (11 tests): `resolveOnBehalf` es el espejo de
+  `resolveTargetMemberId` con la misma regla anti-suplantación, pero devuelve además el
+  rastro. Se hizo aparte para no cambiar la firma de una función que usan cinco endpoints.
+- El RPC `submit_form_response` se reemplazó con un parámetro `p_recorded_by DEFAULT NULL`
+  (la firma es fija, así que había que recrear la función; el default deja funcionando
+  cualquier llamada de 5 argumentos).
+- Marca visible: "Registrada por X" en la fila, la tarjeta y el detalle de respuestas, más
+  una columna nueva en el CSV **y** en el XLSX — los dos exports salen iguales.
+- El gate de la UI de formularios ahora sale de `FORM_ON_BEHALF_ROLES`, la misma constante que
+  valida el POST: antes eran dos listas separadas que podían divergir. Se sumó el rol `forms`
+  que la ficha pedía, y el acceso PUNTUAL a un formulario (form_access_grants) habilita
+  también — eso se resuelve en el POST porque depende del formulario, no del rol.
+- Se centralizaron dos constantes que estaban **duplicadas con contenidos distintos** en dos
+  rutas (`EVENT_REGISTRATION_STAFF_ROLES`: una incluía 'admin' y la otra no).
+
+**UI agregada**: solo la de inscripción a eventos, que era la única que faltaba de verdad.
+Va en el header y no dentro del modal, para que se vea a nombre de quién se está actuando
+DURANTE toda la navegación y no se descubra al confirmar.
+
+**Hueco relacionado que NO se cerró**: el DELETE de matrículas (retirar a alguien) sigue sin
+registrar quién lo hizo. No es "llenar a nombre de otro" —es otra acción— y `recorded_by` ahí
+sobreescribiría quién matriculó. Necesitaría su propia columna; queda anotado.
 
 ### [ ] AYU-1 · Dos artículos nuevos en el centro de ayuda
 ```

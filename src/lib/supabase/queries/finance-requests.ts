@@ -167,6 +167,7 @@ export async function createFinanceRequest(input: FinanceRequestWriteInput): Pro
     .from('finance_requests')
     .insert({
       member_id: input.member_id,
+      recorded_by: input.recorded_by ?? null,
       request_type: input.request_type,
       study_group_id: input.study_group_id ?? null,
       payment_id: input.payment_id ?? null,

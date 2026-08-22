@@ -10,6 +10,7 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { isDataField } from '@/lib/forms/xlsx-export'
+import { recordedByLabel } from '@/lib/auth/on-behalf'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { generateCSV } from '@/lib/export'
@@ -23,9 +24,10 @@ function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   // 'section', así que traía columnas siempre vacías de info/page_break y del
   // bloque de datos personales.
   const dataFields = form.fields.filter(f => isDataField(f.type))
-  const headers = ['Miembro', 'Fecha', ...dataFields.map(f => f.label)]
+  const headers = ['Miembro', 'Registrada por', 'Fecha', ...dataFields.map(f => f.label)]
   const rows = responses.map(r => [
     r.member_name,
+    r.recorded_by_name,
     new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
     ...dataFields.map(f => {
       const ans = r.answers[f.id]
@@ -281,6 +283,9 @@ export default function RespuestasPage() {
                             </span>
                           </div>
                           <p className="text-sm text-navy font-body">{resp.member_name}</p>
+                          {resp.recorded_by_name && (
+                            <p className="text-[13px] text-navy-light/80 font-body">{recordedByLabel(resp.recorded_by_name)}</p>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
@@ -317,6 +322,9 @@ export default function RespuestasPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{resp.member_name}</p>
+                    {resp.recorded_by_name && (
+                      <p className="truncate text-[13px] text-navy-light/80 font-body">{recordedByLabel(resp.recorded_by_name)}</p>
+                    )}
                     <p className="truncate text-[13px] text-navy-light/80 font-body">
                       {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -346,6 +354,11 @@ export default function RespuestasPage() {
               <div>
                 <p id="detalle-respuesta-title" className="text-sm font-bold text-navy font-display">
                   {detailResponse.member_name}
+                  {detailResponse.recorded_by_name && (
+                    <span className="ml-2 rounded-full bg-[rgba(233,185,73,0.15)] px-2 py-0.5 text-[13px] font-medium text-[#A8821F] font-body">
+                      {recordedByLabel(detailResponse.recorded_by_name)}
+                    </span>
+                  )}
                 </p>
                 <p className="text-[13px] text-navy-light/80 font-body">
                   {new Date(detailResponse.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}

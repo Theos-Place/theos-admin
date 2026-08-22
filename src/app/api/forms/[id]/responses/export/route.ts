@@ -43,6 +43,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     // Contexto primero, respuestas después: es el orden en que uno lee una fila.
     const CONTEXTO = [
       { header: 'Quién respondió', width: 28 },
+      // FRM-4: vacío en el caso normal. Con valor = la digitó el staff, no la
+      // propia persona. Va junto al nombre para que nadie las confunda.
+      { header: 'Registrada por', width: 24 },
       { header: 'Fecha', width: 14 },
     ]
     ws.columns = [
@@ -66,7 +69,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       if (fmt) ws.getColumn(CONTEXTO.length + 1 + i).numFmt = fmt
     })
     ws.getColumn(1).numFmt = '@'          // el nombre, texto
-    ws.getColumn(2).numFmt = 'dd/mm/yyyy' // la fecha, fecha real
+    ws.getColumn(2).numFmt = '@'          // quién la registró, texto
+    ws.getColumn(3).numFmt = 'dd/mm/yyyy' // la fecha, fecha real
 
     for (const r of responses) {
       // Las respuestas vienen como lista de valores, no como objeto por campo.
@@ -77,9 +81,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       const nombre = r.member
         ? `${r.member.first_name ?? ''} ${r.member.last_name ?? ''}`.trim()
         : (r.guest_name ?? '')
+      const digitador = r.recorder
+        ? `${r.recorder.first_name ?? ''} ${r.recorder.last_name ?? ''}`.trim()
+        : ''
       const fila: Array<string | number | Date | null> = [
         // Un formulario anónimo no trae nombre: se dice, no se deja en blanco.
         nombre || 'Anónimo',
+        digitador || null,
         r.submitted_at ? new Date(r.submitted_at) : null,
         ...campos.map(f => answerToCell(porCampo.get(f.id), excelCellKind(f.field_type))),
       ]
