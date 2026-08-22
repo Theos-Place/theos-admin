@@ -131,6 +131,9 @@ export async function sendPasswordLink(input: {
       html: renderEmail(body(link.kind, link.url, input.nombre ?? null)),
       // Transaccional: es un correo pedido por la persona, no una campaña.
       kind: 'transactional',
+      // Sale IGUAL con el modo silencioso (MIG-1 Etapa 0): alguien está pidiendo
+      // entrar. Nunca lo dispara un cron ni un import.
+      authCritical: true,
     })
     return { sent: true, kind: link.kind }
   } catch (e) {

@@ -12,6 +12,7 @@
 import nodemailer from 'nodemailer'
 import { listUnsubscribeHeader } from '@/lib/email/footer'
 import { providerMessageId } from '@/lib/email/ses-message-id'
+import { isEmailSilentMode, silentDecision, silentLogLine } from '@/lib/email/silent-mode'
 
 /** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
 export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
@@ -90,6 +91,28 @@ export type SendEmailInput = {
   unsubscribeToken?: string
   /** Headers extra. El config set y el List-Unsubscribe los maneja el helper. */
   headers?: Record<string, string>
+  /** MIG-1 Etapa 0: este correo sale IGUAL con el modo silencioso encendido.
+   *  Solo para los correos de ACCESO (definir/restablecer contraseña, reenviar
+   *  activación): sin ellos el staff no puede entrar a trabajar, y no los
+   *  dispara ningún cron ni ningún import. `grep authCritical` lista la
+   *  excepción completa — no agregar nada acá sin pensarlo dos veces. */
+  authCritical?: boolean
+}
+
+/** Deja constancia de lo que el modo silencioso no envió. Best-effort y con
+ *  import dinámico: provider.ts lo usan rutas donde no queremos arrastrar el
+ *  cliente de Supabase si el modo está apagado (el caso normal). */
+async function registrarSilenciado(to: string, subject: string, kind?: string): Promise<void> {
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    await createAdminClient().from('silenced_emails').insert({
+      recipient: to, subject, kind: kind ?? null,
+    })
+  } catch (e) {
+    // Que falle el registro no puede convertirse en un envío: el correo YA no
+    // se mandó. Solo se pierde la línea del reporte.
+    console.warn('registrarSilenciado:', e instanceof Error ? e.message : e)
+  }
 }
 
 /**
@@ -100,7 +123,7 @@ export type SendEmailInput = {
  * el pie de baja dentro cuando es marketing — acá NO se modifica el HTML.
  * El remitente es siempre SES_FROM_EMAIL (verificado).
  */
-export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers }: SendEmailInput): Promise<{ messageId: string }> {
+export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers, authCritical }: SendEmailInput): Promise<{ messageId: string }> {
   // Dominios .invalid (cuentas [prueba] del seed): jamás se intenta enviar —
   // cada intento rebota en SES y castiga la reputación del remitente. Los
   // tutoriales grabados y las corridas de QA matriculan con estas cuentas.
@@ -108,6 +131,15 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
     console.warn(`sendEmail omitido (dominio .invalid): ${to.email}`)
     return { messageId: 'skipped-invalid-domain' }
   }
+  // MIG-1 Etapa 0 · Modo silencioso. Va ANTES de assertEmailConfigured a
+  // propósito: con el modo encendido el correo no sale, así que no importa si
+  // SES está configurado — y así el modo también sirve en local sin SES.
+  if (silentDecision({ silent: isEmailSilentMode(), authCritical }) === 'silenciar') {
+    console.warn(silentLogLine(to.email, subject))
+    await registrarSilenciado(to.email, subject, kind)
+    return { messageId: 'skipped-silent-mode' }
+  }
+
   assertEmailConfigured()
   const marketingHeaders = kind === 'marketing' && unsubscribeToken ? listUnsubscribeHeader(unsubscribeToken) : undefined
   const transport = getTransport()

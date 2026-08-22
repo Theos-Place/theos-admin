@@ -2773,6 +2773,30 @@ export type Database = {
         }
         Relationships: []
       }
+      silenced_emails: {
+        Row: {
+          attempted_at: string
+          id: string
+          kind: string | null
+          recipient: string
+          subject: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          kind?: string | null
+          recipient: string
+          subject: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          kind?: string | null
+          recipient?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       payment_plans: {
         Row: {
           created_at: string

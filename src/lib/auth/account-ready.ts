@@ -117,6 +117,10 @@ export async function sendAccountReadyEmail(input: {
       html: renderEmail(accountReadyBody(input.nombre ?? null, loginUrl, input.email, kind)),
       // Transaccional: es el aviso de acceso a su cuenta, no una campaña.
       kind: 'transactional',
+      // Sale IGUAL con el modo silencioso (MIG-1 Etapa 0). Sus dos callers son
+      // botones del staff para UN miembro (/password-reset y
+      // /resend-activation): nada masivo ni automático.
+      authCritical: true,
     })
     return { sent: true }
   } catch (e) {

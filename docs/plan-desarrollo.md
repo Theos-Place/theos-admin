@@ -2914,10 +2914,34 @@ Borrado (aprobado por el usuario, lote por lote):
   Los hallazgos de calidad de DIR-7 (15 con grupo estando inactivos, 4 sin ficha) SIGUEN
   ahí, o sea que eran del histórico y no artefactos de la prueba.
 
-**PENDIENTE de MIG-1**: la Etapa 0 (modo silencioso de correos, `EMAIL_SILENT_MODE`) NUNCA
-se implementó — no existe en el código. La Etapa 1 no la necesitaba (borrar no dispara
-correos), pero cualquier reimportación de la Etapa 2 sí, y ahí es obligatoria antes de
-tocar nada. La asistencia (Etapa 2c) ya la importó el usuario por su cuenta.
+**ETAPA 0 · HECHA el 2026-08-21** (después de la Etapa 1, que no la necesitaba porque
+borrar no dispara correos).
+
+- `EMAIL_SILENT_MODE=1` y el guard en **un solo lugar**: `sendEmail()` de
+  `src/lib/email/provider.ts`, por donde pasa todo. Un camino de envío nuevo queda cubierto
+  sin que nadie se acuerde. La regla es pura y testeada en `src/lib/email/silent-mode.ts`.
+- El guard va ANTES de `assertEmailConfigured()`: con el modo encendido el correo no sale,
+  así que da igual si SES está configurado — y el modo también sirve en local sin SES.
+- **La excepción son 2 call sites y nada más**, marcados `authCritical: true` para que
+  `grep authCritical` liste la lista completa: `sendPasswordLink` (alguien pide entrar) y
+  `sendAccountReadyEmail` (botón del staff para UN miembro, desde `/password-reset` y
+  `/resend-activation`). Ninguno lo dispara un cron ni un import. Se marca en el call site
+  a propósito y no adivinando por el asunto, que se rompería al cambiar el copy.
+- Lo silenciado queda en la tabla `silenced_emails` (destinatario + asunto + kind, NO el
+  cuerpo). Sin tabla el modo es ciego: los logs de Vercel rotan y no se pueden agrupar.
+- Reporte: `npx tsx scripts/reporte-correos-silenciados.ts` (`--horas N`, `--todo`,
+  `--purgar`). Agrupa por asunto, que es lo que dice QUÉ disparador se activó.
+- Verificado de punta a punta contra SES: correo normal con el modo encendido devuelve
+  `skipped-silent-mode` y no sale; el `authCritical` sí sale (llega con message-id real de
+  SES); solo el silenciado queda registrado; con el modo apagado vuelve a enviar.
+
+**PENDIENTE de la Etapa 0**: el punto 2 de la ficha — sellar las marcas de "ya notificado"
+(`survey_sent_at`, `start_notified_at`, `close_reminder_sent_at`, `assignment_notified_key`…)
+al importar, para que al apagar el modo silencioso no salga una ola retroactiva. Eso se hace
+DENTRO de cada import de la Etapa 2, así que va cuando se corra esa etapa, no antes.
+
+**PENDIENTE de MIG-1**: Etapa 2a (grupos cerrados) y 2b (personas que pasaron). La asistencia
+(2c) ya la importó el usuario por su cuenta.
 
 ────────────────────────────────────────
 ETAPA 2 · REIMPORTACIÓN desde CCB (los exports los paso yo — pedímelos por tipo)
