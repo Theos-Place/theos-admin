@@ -211,7 +211,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
         member_id, status,
         group:study_groups!study_enrollments_group_id_fkey(starts_at, plan:study_plans(code)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code),
-        member:members(is_donor, province, is_active, sede:sedes(code))
+        member:members!study_enrollments_member_id_fkey(is_donor, province, is_active, sede:sedes(code))
       `)
       .in('status', ['enrolled', 'completed'])
       .order('id')

@@ -401,7 +401,7 @@ const GROUP_SELECT = `
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone, email),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
     member_id, status, grade, notes,
-    member:members(first_name, last_name)
+    member:members!study_enrollments_member_id_fkey(first_name, last_name)
   )
 `
 

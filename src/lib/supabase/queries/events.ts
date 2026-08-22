@@ -98,7 +98,7 @@ const SELECT = `
     member_id,
     payment_status,
     registered_at,
-    member:members(first_name, last_name)
+    member:members!event_registrations_member_id_fkey(first_name, last_name)
   ),
   checkins:event_checkins(
     id,

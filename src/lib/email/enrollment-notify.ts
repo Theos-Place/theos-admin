@@ -50,7 +50,7 @@ export async function notifyEnrollment(
           plan:study_plans!study_groups_plan_id_fkey(name),
           leader:members!study_groups_leader_id_fkey(first_name, last_name, email),
           co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, email),
-          enrollments:study_enrollments!study_enrollments_group_id_fkey(status, member:members(first_name, last_name))
+          enrollments:study_enrollments!study_enrollments_group_id_fkey(status, member:members!study_enrollments_member_id_fkey(first_name, last_name))
         `)
         .eq('id', groupId).maybeSingle(),
       supabase.from('members').select('first_name, last_name, email').eq('id', memberId).maybeSingle(),

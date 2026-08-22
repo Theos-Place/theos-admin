@@ -83,7 +83,7 @@ export async function getLeaderAvailabilityResponses(formId: string): Promise<Le
     .from('form_responses')
     .select(`
       id, member_id, submitted_at,
-      member:members(first_name, last_name),
+      member:members!form_responses_member_id_fkey(first_name, last_name),
       values:form_response_values(field_id, value_text, value_json)
     `)
     .eq('form_id', formId)

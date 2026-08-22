@@ -53,7 +53,7 @@ export async function notifyUpcomingStudyStarts(now: Date = new Date(), daysAhea
       plan:study_plans!study_groups_plan_id_fkey(name, description),
       leader:members!study_groups_leader_id_fkey(first_name, last_name),
       co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
-      enrollments:study_enrollments!study_enrollments_group_id_fkey(status, member:members(first_name, last_name, email))
+      enrollments:study_enrollments!study_enrollments_group_id_fkey(status, member:members!study_enrollments_member_id_fkey(first_name, last_name, email))
     `)
     .neq('status', 'finalizado')
     .is('start_notified_at', null)
