@@ -443,8 +443,8 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
         </p>
 
         <div className="space-y-1">
-          <label className="text-[13px] text-navy-light/80 font-display">Estudio *</label>
-          <select className={inputCls} value={code} onChange={e => setCode(e.target.value)}>
+          <label htmlFor="hist-estudio" className="text-[13px] text-navy-light/80 font-display">Estudio *</label>
+          <select id="hist-estudio" aria-required="true" className={inputCls} value={code} onChange={e => setCode(e.target.value)}>
             <option value="">Seleccionar…</option>
             {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
           </select>
@@ -452,12 +452,12 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Fecha</label>
-            <input type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
+            <label htmlFor="hist-fecha" className="text-[13px] text-navy-light/80 font-display">Fecha</label>
+            <input id="hist-fecha" type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <label className="text-[13px] text-navy-light/80 font-display">Estado</label>
-            <select className={inputCls} value={status} onChange={e => setStatus(e.target.value)}>
+            <label htmlFor="hist-estado" className="text-[13px] text-navy-light/80 font-display">Estado</label>
+            <select id="hist-estado" className={inputCls} value={status} onChange={e => setStatus(e.target.value)}>
               <option value="completed">Aprobado</option>
               <option value="dropped">Reprobó</option>
               <option value="enrolled">En curso</option>

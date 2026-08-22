@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import { fieldA11y } from '@/lib/forms/field-a11y'
 import { useSearchParams } from 'next/navigation'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
 
@@ -20,6 +21,8 @@ function RecuperarContent() {
   const isFirstTime = useSearchParams().get('nueva') === '1'
   const [email, setEmail]       = useState('')
   const [emailErr, setEmailErr] = useState('')
+  // AUD-1 · id explícito para no romper el autocompletado del navegador.
+  const a11yEmail = fieldA11y('correo', emailErr, { required: true, id: 'recuperar-email' })
   const [loading, setLoading]   = useState(false)
   const [sent, setSent]         = useState(false)
   const [error, setError]       = useState('')
@@ -142,7 +145,7 @@ function RecuperarContent() {
             Correo electrónico
           </label>
           <input
-            id="recuperar-email"
+            {...a11yEmail.input}
             type="email"
             autoComplete="email"
             value={email}
@@ -151,7 +154,7 @@ function RecuperarContent() {
             className={`${INPUT} font-body ${emailErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
           />
           {emailErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -159,7 +162,7 @@ function RecuperarContent() {
         </div>
 
         {error && (
-          <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
+          <p role="alert" className="flex items-center gap-1.5 text-[13px] text-coral font-body">
             <AlertCircle size={12} className="shrink-0" />
             {error}
           </p>

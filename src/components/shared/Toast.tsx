@@ -41,7 +41,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={t.id}
-              role="status"
+              // AUD-1 · Un ERROR interrumpe; lo demás espera su turno.
+              // 'status' implica aria-live="polite": el lector termina lo que
+              // está diciendo, y el toast se va en 4 s, así que un error podía
+              // desaparecer sin llegar a anunciarse nunca.
+              role={t.type === 'error' ? 'alert' : 'status'}
               className={cn('flex items-start gap-2.5 rounded-2xl border bg-surface-card px-4 py-3 shadow-[var(--shadow-lg)] w-80 max-w-full animate-[fadeIn_0.15s_ease-out]', cls)}
             >
               <Icon size={18} strokeWidth={2} className="shrink-0 mt-0.5" />

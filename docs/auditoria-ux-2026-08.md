@@ -89,7 +89,37 @@ de que su acción falló.
 
 **Corrección:** `role={kind === 'error' ? 'alert' : 'status'}`.
 
-## 3. Los errores de campo se ven pero no se vinculan al input
+## 3. 168 inputs no tienen su label asociado — CORRECCIÓN a la primera versión de este informe
+
+**Esto se me pasó en la primera pasada y es más grave que el hallazgo siguiente.** Lo
+encontré al implementar las correcciones: al tocar `completar-perfil` vi que sus labels no
+tenían `htmlFor` ni sus inputs `id`, medí si era general, y lo es.
+
+**Medido:** 100 labels con `htmlFor` (bien) · 65 que envuelven su input (válido sin
+`htmlFor`) · y **246 sin ninguna asociación**. De esos 246, verificado uno por uno por lo
+que les sigue:
+
+| Situación | Cantidad | Veredicto |
+|---|---|---|
+| Label pegado a un `<input>`/`<select>`/`<textarea>` nativo | **168** | **bug confirmado** |
+| Label antes de un componente propio (Combobox, etc.) | 17 | a revisar: puede traer su `aria-label` |
+| Label antes de un `<div>`/grupo de radios | 61 | a revisar: probablemente necesita `fieldset`/`legend` |
+
+**Por qué importa más que el hallazgo 4:** un input sin label no tiene nombre accesible. Al
+tabular, el lector de pantalla anuncia "cuadro de edición" y nada más — ni "Correo" ni
+"Puerto" ni "Fecha". El placeholder NO cuenta como label (desaparece al escribir y no todos
+los lectores lo leen). Es incumplimiento directo de WCAG 1.3.1 y 4.1.2, nivel A.
+
+**Dónde:** 165 de los 168 están en pantallas de **staff**; solo 3 caían cerca de flujos del
+miembro y **ya se arreglaron**. Los peores concentrados:
+`comunicaciones/configuracion` (22), `eventos/[id]/editar` (18),
+`estudios/grupos/[id]/editar` (13), `FieldInspector` (13), `estudios/grupos/nuevo` (12).
+
+**Corrección:** mecánica pero son ~168 lugares, así que es una tanda propia. El patrón está
+ya resuelto y probado en `src/lib/forms/field-a11y.ts`: `fieldA11y(nombre)` genera el id y
+devuelve `labelFor` para el label y `input` para el campo, en dos líneas por campo.
+
+## 4. Los errores de campo se ven pero no se vinculan al input
 
 **Dónde:** transversal. Medido: 20 usos de `role="alert"`, pero solo **5**
 `aria-invalid` y **2** `aria-describedby`.
@@ -107,7 +137,7 @@ El mensaje existe en la pantalla pero no en el recorrido del campo.
 `id`. Conviene resolverlo en un componente de campo compartido en vez de en cada
 formulario — hoy no existe uno.
 
-## 4. 21 de 95 pantallas de administración no tienen `<h1>`
+## 5. 21 de 95 pantallas de administración no tienen `<h1>`
 
 **Qué pasa:** el 22% de las páginas no declara su encabezado principal.
 
@@ -118,7 +148,7 @@ tiene que tabular desde el principio para saber dónde está.
 **Corrección:** una por una, pero es mecánico: casi todas ya tienen un título
 visual pintado con `<p>` o `<div>`. Es cambiar la etiqueta, no el diseño.
 
-## 5. Cinco pantallas borran sin confirmar
+## 6. Cinco pantallas borran sin confirmar
 
 **Dónde:** archivos con `method: 'DELETE'` y sin modal ni confirmación aparente:
 
@@ -140,7 +170,7 @@ como bug todavía.**
 
 # MENOR
 
-## 6. Área táctil: la ficha pide AAA, no AA
+## 7. Área táctil: la ficha pide AAA, no AA
 
 La ficha dice "mínimo 44×44 px". Eso es WCAG 2.2 **2.5.5, nivel AAA**. El mínimo
 de **nivel AA** es **24×24** (2.5.8). Con ese criterio:
@@ -158,7 +188,7 @@ hay 7 por debajo de 44px y ninguno por debajo de 34px.
 O sea: **no hay incumplimiento de AA**, y la prioridad real es más baja de lo que
 la ficha sugiere. Si se quiere llegar a AAA, empezar por esos 5.
 
-## 7. Dos formas distintas de decir "cargando"
+## 8. Dos formas distintas de decir "cargando"
 
 Medido: **28** pantallas usan un booleano `loading`; **73** usan
 `useState<T | null>(null)` y tratan `null` como cargando.
@@ -171,7 +201,7 @@ cualquier búsqueda — de hecho me dio 22 falsos positivos en esta misma audito
 **Corrección:** elegir uno y documentarlo. No urge; sí conviene antes de que
 alguien "arregle" una pantalla que no está rota.
 
-## 8. Estados vacíos: 32 con el componente, 65 escritos a mano
+## 9. Estados vacíos: 32 con el componente, 65 escritos a mano
 
 `EmptyState` existe y se usa en 32 archivos, pero hay 65 textos del tipo "Sin
 resultados" escritos directo. Los escritos a mano son los que suelen quedarse en
@@ -181,7 +211,7 @@ oportunidad perdida.
 **Corrección:** pasar los de las pantallas del miembro a `EmptyState` con una
 acción sugerida. No hace falta tocar los 65.
 
-## 9. Doce anchos sueltos fuera de la convención
+## 10. Doce anchos sueltos fuera de la convención
 
 `PageContainer` existe con los tres anchos y se usa en 8 pantallas (el resto
 hereda `work` del AppShell, que es lo correcto). Quedan **12** `max-w-*` a mano:
@@ -191,7 +221,7 @@ La inconsistencia que describe la ficha ya está en buena parte resuelta; esto e
 la cola. Revisar si cada uno es un ancho de página (debería ser `PageContainer`) o
 el ancho de un elemento interno (se queda como está, según `layout.md`).
 
-## 10. Prosa un poco más ancha de lo ideal
+## 11. Prosa un poco más ancha de lo ideal
 
 `width="reading"` es `max-w-3xl` = 768px. A 16px eso da ~85-95 caracteres por
 línea; la ficha pide 50-75. Afecta `/terminos` y las guías de `/ayuda`.
@@ -199,14 +229,14 @@ línea; la ficha pide 50-75. Afecta `/terminos` y las guías de `/ayuda`.
 **Corrección:** bajar `reading` a `max-w-2xl` (672px, ~75 caracteres) en
 `PageContainer.tsx`. Un valor, dos pantallas afectadas.
 
-## 11. Tablas sin `scope` en los encabezados
+## 12. Tablas sin `scope` en los encabezados
 
 43 tablas, 110 `<th>`, **1** con `scope=`. Para una tabla simple con una sola
 fila de encabezados, `<th>` sin `scope` suele bastar: los lectores de pantalla lo
 infieren. Vale revisarlo solo en las tablas con encabezados de fila y columna, si
 hay alguna.
 
-## 12. Un `focus:outline-none` sin reemplazo
+## 13. Un `focus:outline-none` sin reemplazo
 
 En el editor de correo (`prose-email`, contenteditable). Los otros 8 tienen
 `focus:ring` o `focus-visible`.
@@ -219,26 +249,60 @@ En el editor de correo (`prose-email`, contenteditable). Los otros 8 tienen
    arregladas. Es el mejor cambio disponible por lejos.
 2. **`role="alert"` para los toast de error** — una línea, y hace que los errores
    existan para quien usa lector de pantalla.
-3. **`aria-invalid` + `aria-describedby` en un componente de campo compartido** —
-   más trabajo que los dos anteriores, pero es el que convierte los formularios
-   en algo usable sin ver la pantalla, y evita repetir el problema en cada
-   formulario nuevo.
+3. **Asociar los 168 labels con su input** — es la más grande de las tres en
+   trabajo, pero es la única que es incumplimiento de nivel **A** (no AA): un
+   input sin label no tiene nombre accesible. La herramienta ya está hecha
+   (`fieldA11y`), así que es aplicar un patrón conocido, no diseñarlo.
 
-Los tres son de accesibilidad, no de estética. Después de esos, el `<h1>` en las
+Las tres son de accesibilidad, no de estética. Después de esas, el `<h1>` en las
 21 pantallas: mecánico y mejora la orientación de inmediato.
+
+**Estado al 2026-08-21:** las tres se implementaron parcialmente — ver el bloque
+siguiente. La 1 y la 2 quedaron COMPLETAS; la 3 quedó con la herramienta lista y
+aplicada a los flujos de entrada del miembro, con 165 casos de staff pendientes.
 
 ---
 
-# Arreglado en esta pasada
+# Arreglado
 
-Solo lo trivial y sin riesgo, como autoriza la ficha:
+## En la pasada de auditoría (solo lo trivial, como autoriza la ficha)
 
 - `aria-label` en los 3 botones de solo ícono que no lo tenían:
   - `eventos/[id]/_components/EventHeader.tsx:173` → "Cerrar opciones de exportar"
   - `eventos/[id]/_components/EventHeader.tsx:242` → "Más acciones del evento" (+ `aria-haspopup="menu"`)
   - `eventos/page.tsx:385` → "Cerrar aviso de inscripción"
 
-Nada más se tocó: el resto son decisiones de priorización.
+## En la tanda de las 3 acciones de mayor impacto
+
+**Hallazgo 1 · COMPLETO.** `Modal.tsx` guarda el elemento con foco al abrir y lo
+devuelve al cerrar. Con guarda de `isConnected`: si ese elemento se fue del DOM
+junto con el modal (una fila borrada), no se intenta enfocarlo. **64 pantallas.**
+
+**Hallazgo 2 · COMPLETO.** `Toast.tsx` usa `role="alert"` cuando el tipo es
+`error` y `role="status"` para el resto.
+
+**Hallazgo 4 · herramienta lista + aplicada a la entrada del miembro.** Se creó
+`src/lib/forms/field-a11y.ts` (8 tests). Es una función y no un componente
+`<Field>` a propósito: hay más de 20 formularios escritos y un componente
+obligaría a reescribirlos para adoptarlo — lo que no se adopta no arregla nada.
+Acepta un `id` explícito para no cambiar ids existentes, porque el navegador y el
+gestor de contraseñas se acuerdan de un campo por su id.
+
+Aplicado a las tres pantallas por donde pasa todo miembro:
+
+| Pantalla | Qué se arregló |
+|---|---|
+| `login` | `aria-invalid` + `aria-describedby` en correo y contraseña; `role="alert"` en el banner de error |
+| `recuperar` | ídem en el correo; `role="alert"` en el error de envío |
+| `completar-perfil` | **los labels no estaban asociados** — ahora sí, más los aria y el ícono decorativo con `aria-hidden` |
+
+**Hallazgo 3 · los 3 casos cercanos al miembro**, en `miembros/[id]/page.tsx`
+(Estudio / Fecha / Estado del historial).
+
+## Pendiente de esta tanda
+
+Los **165** labels sin asociar de pantallas de staff (hallazgo 3). Es mecánico y
+la herramienta está lista; es una tanda propia por volumen, no por dificultad.
 
 ---
 

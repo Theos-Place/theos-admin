@@ -35,10 +35,15 @@ export function Modal({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  // Focus trap
+  // Focus trap + devolución del foco al cerrar (AUD-1)
   useEffect(() => {
     const panel = panelRef.current
     if (!panel) return
+
+    // A dónde volver al cerrar. Sin esto el foco cae al <body> y quien navega
+    // con teclado pierde el lugar: cerrar un modal abierto desde la fila 40 de
+    // una tabla obligaba a tabular desde el principio otra vez.
+    const origen = document.activeElement as HTMLElement | null
 
     // Move focus inside on mount
     const firstFocusable = panel.querySelector<HTMLElement>(FOCUSABLE)
@@ -59,7 +64,13 @@ export function Modal({
     }
 
     panel.addEventListener('keydown', handleTab)
-    return () => panel.removeEventListener('keydown', handleTab)
+    return () => {
+      panel.removeEventListener('keydown', handleTab)
+      // `isConnected`: si lo que tenía el foco se fue del DOM con el modal (una
+      // fila que se borró, por ejemplo), enfocarlo no hace nada y además tira el
+      // foco al body. En ese caso es mejor no tocar nada.
+      if (origen?.isConnected) origen.focus()
+    }
   }, [])
 
   // Prevent body scroll while modal is open

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { fieldA11y } from '@/lib/forms/field-a11y'
 import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { shouldSuggestPasskey } from '@/lib/auth/passkey-suggestion'
@@ -34,6 +35,10 @@ export default function LoginPage() {
   const [authError, setAuthError]     = useState('')
   const [emailErr, setEmailErr]       = useState('')
   const [passErr, setPassErr]         = useState('')
+  // AUD-1 · aria-invalid + aria-describedby. `id` explícito para NO cambiar los
+  // ids: el navegador y el gestor de contraseñas se acuerdan del campo por su id.
+  const a11yEmail = fieldA11y('correo', emailErr, { required: true, id: 'login-identifier' })
+  const a11yPass  = fieldA11y('contrasena', passErr, { required: true, id: 'login-password' })
 
   // Passkeys: solo mostramos el botón si el dispositivo soporta WebAuthn con
   // autenticador de plataforma (huella / Face ID). Si no, queda oculto en
@@ -284,9 +289,12 @@ export default function LoginPage() {
         </p>
       </div>
 
+      {/* AUD-1 · Los aria del campo (invalid + describedby) salen de fieldA11y,
+          que respeta los ids existentes para no romper el autocompletado. */}
       {/* Auth error banner */}
       {authError && (
         <div
+          role="alert"
           className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body"
         >
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
@@ -302,7 +310,7 @@ export default function LoginPage() {
             Correo electrónico o cédula
           </label>
           <input
-            id="login-identifier"
+            {...a11yEmail.input}
             type="text"
             autoComplete="username"
             inputMode="email"
@@ -312,7 +320,7 @@ export default function LoginPage() {
             className={`${INPUT} font-body ${emailErr ? INPUT_ERROR : INPUT_NORMAL}`}
           />
           {emailErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -326,7 +334,7 @@ export default function LoginPage() {
           </label>
           <div className="relative">
             <input
-              id="login-password"
+              {...a11yPass.input}
               type={showPass ? 'text' : 'password'}
               autoComplete="current-password"
               value={password}
@@ -345,7 +353,7 @@ export default function LoginPage() {
             </button>
           </div>
           {passErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yPass.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
               <AlertCircle size={12} className="shrink-0" />
               {passErr}
             </p>

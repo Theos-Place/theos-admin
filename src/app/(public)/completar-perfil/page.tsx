@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Check, Lock, Mail, AlertTriangle } from 'lucide-react'
 import { readAuthLinkError, authLinkMessage, type AuthLinkMessage } from '@/lib/auth/link-error'
+import { fieldA11y } from '@/lib/forms/field-a11y'
 
 // Primer ingreso: el usuario llega desde el correo de invitación de Supabase Auth
 // con los tokens en el FRAGMENTO (#access_token=…&type=invite). El fragmento no se
@@ -22,6 +23,10 @@ export default function CompletarPerfilPage() {
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // AUD-1 · Los labels de esta pantalla no estaban asociados a su input (sin
+  // htmlFor ni id): quien tabulaba al campo no escuchaba nada. Acá se atan.
+  const a11yPass = fieldA11y('contrasena-nueva', null, { required: true })
+  const a11yConfirm = fieldA11y('contrasena-repetir', error, { required: true })
   const [done, setDone] = useState(false)
 
   // El tipo de link (invite vs recovery) viaja en el fragmento → cambia el mensaje.
@@ -156,10 +161,11 @@ export default function CompletarPerfilPage() {
               )}
 
               <div className="space-y-1.5">
-                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Contraseña nueva</label>
+                <label htmlFor={a11yPass.labelFor} className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Contraseña nueva</label>
                 <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" aria-hidden="true" />
                   <input
+                    {...a11yPass.input}
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -170,8 +176,9 @@ export default function CompletarPerfilPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Repetir contraseña</label>
+                <label htmlFor={a11yConfirm.labelFor} className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Repetir contraseña</label>
                 <input
+                  {...a11yConfirm.input}
                   type="password"
                   value={confirm}
                   onChange={e => setConfirm(e.target.value)}
@@ -180,7 +187,9 @@ export default function CompletarPerfilPage() {
                 />
               </div>
 
-              {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+              {/* El error es del par de campos (no coinciden / muy corta), así que
+                  lo describe el segundo: es donde uno está cuando falla. */}
+              {error && <p {...a11yConfirm.error} className="text-[13px] text-coral font-body">{error}</p>}
 
               <button
                 type="submit"
