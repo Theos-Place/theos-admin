@@ -36,7 +36,7 @@ function ScaleRow({ label, value, onChange, allowX }: {
   const options = ['1', '2', '3', '4', '5', ...(allowX ? ['x'] : [])]
   return (
     <div>
-      <label className={LABEL}>{label} <span className="text-coral">*</span></label>
+      <span className={LABEL}>{label} <span className="text-coral">*</span></span>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label={label}>
         {options.map(o => (
           <button
@@ -162,7 +162,7 @@ export function CdebRecommendationModal({
 
         {/* Convicciones POR EXCEPCIÓN */}
         <div className="space-y-2">
-          <label className={LABEL}>Convicciones</label>
+          <span className={LABEL}>Convicciones</span>
           <p className="text-[13px] text-navy-light/80 font-body">{CONVICTIONS_INSTRUCTION}</p>
           <div className="space-y-2">
             {CONVICTION_TOPICS.map(t => {
@@ -244,7 +244,7 @@ export function CdebRecommendationModal({
 
         {/* Recomendación final */}
         <div>
-          <label className={LABEL}>{RECOMMENDATION_LABEL} <span className="text-coral">*</span></label>
+          <span className={LABEL}>{RECOMMENDATION_LABEL} <span className="text-coral">*</span></span>
           <div className="space-y-2">
             {RECOMMENDATION_OPTIONS.map(o => (
               <button

@@ -28,6 +28,24 @@ describe('asociación de labels', () => {
   const archivos = execSync("grep -rl '<label' src --include='*.tsx'", { encoding: 'utf8' })
     .trim().split('\n').filter(Boolean)
 
+  // Endurecido el 2026-08-21 al cerrar las dos tandas: ya no queda NINGÚN label
+  // sin asociación, ni pegado a un input nativo ni suelto. Un <label> sin control
+  // es HTML inválido — se convirtieron 56 a <span>, que es lo que eran.
+  it('ningún <label> queda sin asociación', () => {
+    const huerfanos: string[] = []
+    for (const f of archivos) {
+      const txt = sinComentarios(readFileSync(f, 'utf8'))
+      for (const m of txt.matchAll(/<label\b([^>]*)>([\s\S]*?)<\/label>/g)) {
+        const [, attrs, inner] = m
+        if (attrs.includes('htmlFor')) continue
+        // Un label que ENVUELVE su control es válido sin htmlFor.
+        if (/<input|<select|<textarea|<button/.test(inner)) continue
+        huerfanos.push(`${f}:${txt.slice(0, m.index!).split('\n').length}`)
+      }
+    }
+    expect(huerfanos).toEqual([])
+  })
+
   it('ningún <label> queda pegado a un input nativo sin asociar', () => {
     const huerfanos: string[] = []
     for (const f of archivos) {

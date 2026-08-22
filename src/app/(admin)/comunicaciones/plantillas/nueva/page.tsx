@@ -117,7 +117,7 @@ export default function NuevaPlantillaPage() {
             <input id="nombre-de-la-plantilla" className={inputCls} placeholder="ej. Bienvenida nueva persona" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div>
-            <label className={labelCls}>Categoría</label>
+            <span className={labelCls}>Categoría</span>
             {creatingCategory ? (
               <div className="flex items-center gap-2">
                 <input
@@ -159,7 +159,7 @@ export default function NuevaPlantillaPage() {
         </div>
 
         <div>
-          <label className={labelCls}>Cuerpo del correo</label>
+          <span className={labelCls}>Cuerpo del correo</span>
           <EmailEditor
             value={emailBody}
             onChange={onBodyChange}

@@ -437,7 +437,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
             {/* Sede — calculada automáticamente por asistencia a charlas (no editable) */}
             <div className="form-group">
-              <label className="form-label">Sede</label>
+              <span className="form-label">Sede</span>
               <p className="text-sm text-navy-light/80 py-2 font-body">
                 {sede ? sedeLabel(sede) : 'Sin sede asignada'}
               </p>

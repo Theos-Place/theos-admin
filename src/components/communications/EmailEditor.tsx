@@ -23,7 +23,7 @@ import { FORCE_VISUAL_WARNING } from './email-html'
  * La fuente de verdad es el string HTML (value/onChange). El pie de baja NO va
  * acá: lo inyecta el envío de marketing.
  */
-export function EmailEditor({ value, onChange, variables = [], htmlOnly = false, htmlOnlyNotice }: {
+export function EmailEditor({ value, onChange, variables = [], htmlOnly = false, htmlOnlyNotice, ariaLabel = 'Cuerpo del correo' }: {
   value: string
   onChange: (html: string) => void
   /** Variables insertables (ej. [{ key: '{nombre}' }]) — botones que las meten en el cuerpo. */
@@ -34,6 +34,8 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
   htmlOnly?: boolean
   /** Aviso que explica POR QUÉ quedó en modo código. */
   htmlOnlyNotice?: string
+  /** AUD-1 · Nombre accesible del área editable. Default 'Cuerpo del correo'. */
+  ariaLabel?: string
 }) {
   const [mode, setMode] = useState<'visual' | 'html'>(htmlOnly ? 'html' : 'visual')
   // Bug 2026-08-06: alguien podía forzar Visual y perder el diseño sin enterarse.
@@ -63,6 +65,11 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
       // Se edita con el MISMO look del correo: fuente del sistema, 14px, color
       // #333, ancho 600px centrado sobre blanco (igual que el iframe del preview).
       attributes: {
+        // AUD-1 · El área editable es un contenteditable, no un <input>: un
+        // <label> de al lado no la alcanza. Su nombre accesible va acá.
+        'aria-label': ariaLabel,
+        role: 'textbox',
+        'aria-multiline': 'true',
         class: 'prose-email focus:outline-none min-h-[260px] py-5 px-5 mx-auto w-full max-w-[600px]',
         style: "font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; color: #333;",
       },

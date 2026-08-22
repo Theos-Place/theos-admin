@@ -73,9 +73,9 @@ export function SaveListModal({
           </div>
 
           <div className="space-y-2">
-            <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
+            <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
               Tipo de lista
-            </label>
+            </span>
             {[
               { val: true,  label: 'Dinámica', desc: 'Se recalcula con los filtros actuales cada vez que la abrís' },
               { val: false, label: 'Snapshot', desc: `Guarda los ${total.toLocaleString('es-CR')} miembros exactos de ahora` },

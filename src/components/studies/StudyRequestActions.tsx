@@ -240,7 +240,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       </select>
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Último dirigente <span className="text-coral">*</span></label>
+                      <span className={LABEL_CLS}>Último dirigente <span className="text-coral">*</span></span>
                       <Combobox
                         items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
                         value={lastLeader}
@@ -256,7 +256,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       <span className="text-sm text-navy-light/80 font-body">Ocupo folleto</span>
                     </label>
                     <div>
-                      <label className={LABEL_CLS}>Día(s) que te sirven</label>
+                      <span className={LABEL_CLS}>Día(s) que te sirven</span>
                       <div className="flex flex-wrap gap-2">
                         {WEEK_DAYS.map(d => {
                           const on = days.includes(d)
@@ -276,7 +276,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       </select>
                     </div>
                     <div>
-                      <label className={LABEL_CLS}>Zona(s) que te sirven</label>
+                      <span className={LABEL_CLS}>Zona(s) que te sirven</span>
                       <div className="flex flex-wrap gap-2">
                         {[...zoneSedes.map(sd => sd.name), 'Cualquiera'].map(z => {
                           const on = zones.includes(z)
@@ -321,7 +321,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     )}
 
                     <div>
-                      <label className={LABEL_CLS}>Día(s) que podés — hasta 2</label>
+                      <span className={LABEL_CLS}>Día(s) que podés — hasta 2</span>
                       <div className="flex flex-wrap gap-2">
                         {WEEK_DAYS.map(d => {
                           const on = days.includes(d)

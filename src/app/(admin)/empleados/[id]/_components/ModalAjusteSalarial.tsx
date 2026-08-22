@@ -55,11 +55,11 @@ export function ModalAjusteSalarial({
           <>
             <h2 id="modal-ajuste-salarial" className="text-base font-bold text-navy font-display">Registrar ajuste salarial</h2>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Salario actual</label>
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Salario actual</span>
               <p className="text-sm text-navy font-mono">{currentSalary != null ? `${formatCRC(currentSalary)}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Nuevo salario <span className="text-coral">*</span></label>
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Nuevo salario <span className="text-coral">*</span></span>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">₡</span>
                 <input

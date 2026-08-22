@@ -323,9 +323,9 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <span className="text-[13px] text-navy-light/80 font-display">
                 Zona *
-              </label>
+              </span>
               {step1.is_virtual ? (
                 // EST-4: en grupos virtuales la zona queda fija en "Virtual".
                 <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/80 font-body" aria-label="Zona fijada: Virtual">
@@ -381,9 +381,9 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 sm:col-span-2 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <span className="text-[13px] text-navy-light/80 font-display">
                 Día preferido
-              </label>
+              </span>
               <div className="flex gap-1.5 flex-wrap">
                 {DAYS.map(d => (
                   <button
@@ -405,10 +405,10 @@ export default function NuevoGrupoPage() {
             </div>
 
             <div className="col-span-1 space-y-1">
-              <label className="text-[13px] text-navy-light/80 font-display">
+              <span className="text-[13px] text-navy-light/80 font-display">
                 Horario preferido
-              </label>
-              <TimePicker value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
+              </span>
+              <TimePicker ariaLabel="Horario preferido" value={step1.time} onChange={v => setS1('time', v)} placeholder="Hora" />
             </div>
 
             <div className="col-span-1 space-y-1">
@@ -542,7 +542,7 @@ export default function NuevoGrupoPage() {
               excludeId={selectedCoLeader || undefined}
               filter={filtroPremat}
               placeholder={pendingLeader ? 'Pendiente de asignar' : 'Buscar dirigente…'}
-              aria-label="Buscar dirigente"
+              ariaLabel="Buscar dirigente"
             />
             {esPremat && (
               <p className="text-[13px] text-navy-light/80 font-body">
@@ -584,19 +584,23 @@ export default function NuevoGrupoPage() {
           {/* El co-dirigente va aparte, fuera del bloque del dirigente. */}
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
-              <label className={cn(
+              <label htmlFor="grupo-co-dirigente" className={cn(
                 'text-[13px] tracking-widest uppercase font-display',
                 esPremat ? 'text-coral' : 'text-navy-light/80',
               )}>
                 {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
               </label>
+              {/* AUD-1 · `aria-label` acá no hacía nada: DirigentesCombobox no
+                  la acepta como prop, así que se descartaba en silencio y el
+                  campo quedaba sin nombre. Con inputId + htmlFor la asociación
+                  es real y el nombre sale del texto visible. */}
               <DirigentesCombobox
+                inputId="grupo-co-dirigente"
                 value={selectedCoLeader || null}
                 onChange={id => setSelectedCoLeader(id ?? '')}
                 excludeId={selectedLeader || undefined}
                 filter={filtroPremat}
                 placeholder="Buscar co-dirigente…"
-                aria-label="Buscar co-dirigente"
               />
               {esPremat && (
                 <p className="text-[13px] text-navy-light/80 font-body">

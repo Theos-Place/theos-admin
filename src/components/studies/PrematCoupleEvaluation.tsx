@@ -147,7 +147,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 1) compromiso */}
             <div>
-              <label className={LABEL}>{COMMITMENT_QUESTION} <span className="text-coral">*</span></label>
+              <span className={LABEL}>{COMMITMENT_QUESTION} <span className="text-coral">*</span></span>
               <div className="flex flex-wrap gap-2">
                 {COMMITMENT_OPTIONS.map(o => (
                   <button
@@ -166,7 +166,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 2) fortalezas */}
             <div>
-              <label className={LABEL}>{STRENGTHS_QUESTION}</label>
+              <span className={LABEL}>{STRENGTHS_QUESTION}</span>
               <Chips options={STRENGTH_OPTIONS} selected={e.strengths} onToggle={v => toggleIn(p.request_id, 'strengths', v)} ariaLabel="Fortalezas de la pareja" />
               <textarea
                 value={e.strengths_notes ?? ''}
@@ -180,7 +180,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 3) temas a profundizar */}
             <div>
-              <label className={LABEL}>{TOPICS_QUESTION}</label>
+              <span className={LABEL}>{TOPICS_QUESTION}</span>
               <Chips options={TOPIC_OPTIONS} selected={e.topics_to_work} onToggle={v => toggleIn(p.request_id, 'topics_to_work', v)} ariaLabel="Temas a profundizar" />
             </div>
 
@@ -198,7 +198,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 5) punto ciego */}
             <div>
-              <label className={LABEL}>{BLIND_SPOT_QUESTION} <span className="text-coral">*</span></label>
+              <span className={LABEL}>{BLIND_SPOT_QUESTION} <span className="text-coral">*</span></span>
               <div className="flex gap-2">
                 {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                   <button
@@ -227,7 +227,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 6) plan de acción */}
             <div>
-              <label className={LABEL}>{ACTION_PLAN_LABEL} <span className="text-coral">*</span></label>
+              <span className={LABEL}>{ACTION_PLAN_LABEL} <span className="text-coral">*</span></span>
               <div className="space-y-2">
                 {ACTION_PLAN_OPTIONS.map(o => (
                   <button

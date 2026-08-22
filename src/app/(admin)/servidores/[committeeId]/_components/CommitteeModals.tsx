@@ -158,7 +158,7 @@ export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Encargado de comité</label>
+            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Encargado de comité</span>
             {form.leader_id ? (
               <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
                 <span className="flex-1 text-sm text-navy font-body">{form.leader_name || 'Encargado asignado'}</span>

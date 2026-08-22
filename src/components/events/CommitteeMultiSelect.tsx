@@ -10,10 +10,13 @@ interface CommitteeMultiSelectProps {
   value: string[]
   onChange: (ids: string[]) => void
   placeholder?: string
+  /** AUD-1 · id del input de búsqueda, para que un <label htmlFor> de afuera
+   *  quede asociado de verdad. */
+  inputId?: string
 }
 
 /** Buscador de comités con selección múltiple (chips). value = ids de áreas-comité. */
-export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar comité…' }: CommitteeMultiSelectProps) {
+export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar comité…', inputId }: CommitteeMultiSelectProps) {
   const { adminCommittees } = useOrg()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -67,6 +70,7 @@ export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar co
       <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
         <Search size={15} className="text-navy-light/80 shrink-0" />
         <input
+          id={inputId}
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}

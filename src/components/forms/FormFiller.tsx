@@ -561,8 +561,11 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                       PublicField DENTRO del recuadro. Pintarlo también acá lo
                       duplicaba (bug 2026-08-07). Además un <label> ahí sería
                       semánticamente falso: el bloque no tiene ningún input. */}
+                  {/* AUD-1 · El htmlFor apunta al control que pinta PublicField
+                      (`campo-<id>`). En los grupos de opciones ese id está en la
+                      primera, así que el label le da el foco al grupo. */}
                   {field.type !== 'section' && field.type !== 'info' && (
-                    <label className="block font-body">
+                    <label htmlFor={`campo-${field.id}`} className="block font-body">
                       <span className="text-sm font-semibold text-navy">
                         {field.label}
                         {field.is_required && <span className="ml-1 text-coral">*</span>}

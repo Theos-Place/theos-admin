@@ -105,7 +105,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             </div>
 
             <div>
-              <label className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></label>
+              <span className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></span>
               <Combobox
                 items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
                 value={leader}

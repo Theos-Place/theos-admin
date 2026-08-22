@@ -206,7 +206,7 @@ function EditarForm({ group, studyType, refetch }: {
               excludeId={coLeaderId || undefined}
               filter={filtroPremat}
               placeholder="Buscar dirigente…"
-              aria-label="Buscar dirigente"
+              ariaLabel="Buscar dirigente"
             />
             {esPremat && (
               <p className="text-[13px] text-navy-light/80 font-body">
@@ -216,16 +216,16 @@ function EditarForm({ group, studyType, refetch }: {
           </fieldset>
 
           <div className="col-span-2 sm:col-span-1 space-y-1 sm:pt-4">
-            <label className={cn(labelCls, esPremat && 'text-coral')}>
+            <label htmlFor="editar-co-dirigente" className={cn(labelCls, esPremat && 'text-coral')}>
               {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
             </label>
             <DirigentesCombobox
+              inputId="editar-co-dirigente"
               value={coLeaderId || null}
               onChange={id => setCoLeaderId(id ?? '')}
               excludeId={leaderId || undefined}
               filter={filtroPremat}
               placeholder="Buscar co-dirigente…"
-              aria-label="Buscar co-dirigente"
             />
             {errorPremat && (
               <p className="text-[13px] text-coral-deep font-body" role="alert">{errorPremat}</p>
@@ -252,7 +252,7 @@ function EditarForm({ group, studyType, refetch }: {
 
           {/* Zona */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls}>Zona</label>
+            <span className={labelCls}>Zona</span>
             {isVirtual ? (
               // EST-4: en grupos virtuales la zona queda fija en "Virtual".
               <p className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy-light/80 font-body" aria-label="Zona fijada: Virtual">
@@ -274,7 +274,7 @@ function EditarForm({ group, studyType, refetch }: {
 
           {/* Día */}
           <div className="col-span-2 space-y-1">
-            <label className={labelCls}>Día</label>
+            <span className={labelCls}>Día</span>
             <div className="flex gap-1.5 flex-wrap">
               {DAYS.map(d => (
                 <button

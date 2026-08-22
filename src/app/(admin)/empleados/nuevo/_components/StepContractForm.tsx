@@ -83,11 +83,11 @@ export function StepContractForm({
 
       {/* Tipo de contrato */}
       <div className="space-y-2">
-        <label
+        <span
           className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
           Tipo de contrato
-        </label>
+        </span>
         <div className="flex gap-4">
           {([['planilla', 'Planilla'], ['servicios_profesionales', 'Servicios profesionales']] as const).map(
             ([val, label]) => (
@@ -112,11 +112,11 @@ export function StepContractForm({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Salario */}
         <div className="space-y-1">
-          <label
+          <span
             className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
           >
             Salario mensual <span className="text-coral">*</span>
-          </label>
+          </span>
           <div className="relative">
             <span
               className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono"

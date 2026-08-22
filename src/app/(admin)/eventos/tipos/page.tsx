@@ -88,9 +88,9 @@ function TypeModal({
 
         {/* Color */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+          <span className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Color
-          </label>
+          </span>
           <div className="flex flex-wrap gap-2">
             {COLOR_SWATCHES.map(c => (
               <button
@@ -137,9 +137,9 @@ function TypeModal({
 
         {/* Icon */}
         <div className="space-y-2">
-          <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+          <span className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
             Ícono
-          </label>
+          </span>
           <div className="grid grid-cols-6 gap-1.5">
             {ICON_OPTIONS.map(ico => {
               const Icon = ICON_MAP[ico]

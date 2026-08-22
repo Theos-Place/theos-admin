@@ -150,7 +150,7 @@ export default function EditarPuestoPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Tipo de contrato</label>
+            <span className="form-label">Tipo de contrato</span>
             <div className="flex gap-5 mt-1">
               {CONTRACT_TYPES.map(({ value, label }) => (
                 <label key={value} className="flex items-center gap-2 cursor-pointer">

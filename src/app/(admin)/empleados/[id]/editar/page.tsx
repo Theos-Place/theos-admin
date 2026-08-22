@@ -194,9 +194,9 @@ export default function EditarEmpleadoPage() {
 
         {/* Tipo de contrato */}
         <div className="space-y-2">
-          <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+          <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
             Tipo de contrato
-          </label>
+          </span>
           <div className="flex gap-4">
             {([['planilla', 'Planilla'], ['servicios_profesionales', 'Servicios profesionales']] as const).map(([val, label]) => (
               <label key={val} className="flex items-center gap-2 cursor-pointer">
@@ -233,9 +233,9 @@ export default function EditarEmpleadoPage() {
         {/* Notas */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Notas internas
-            </label>
+            </span>
             <span className="text-[11px] text-navy-light/80 font-mono">
               {notes.length}/500
             </span>

@@ -433,7 +433,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Tipo</label>
+            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Tipo</span>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {activeEventTypes.map(t => {
                 const Icon = ICON_MAP[t.icon] ?? Mic
@@ -456,12 +456,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Comités organizadores</label>
-            <CommitteeMultiSelect value={committeeIds} onChange={setCommitteeIds} />
+            <label htmlFor="ev-comites" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Comités organizadores</label>
+            <CommitteeMultiSelect inputId="ev-comites" value={committeeIds} onChange={setCommitteeIds} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Descripción</label>
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Descripción</span>
               <span className="text-[11px] text-navy-light/80 font-mono">{description.length}/500</span>
             </div>
             <textarea
@@ -480,20 +480,20 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha inicio</label>
-              <DatePicker value={startDate} onChange={setStartDate} />
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha inicio</span>
+              <DatePicker ariaLabel="Fecha inicio" value={startDate} onChange={setStartDate} />
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora inicio</label>
-              <TimePicker value={startTime} onChange={setStartTime} />
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora inicio</span>
+              <TimePicker ariaLabel="Hora inicio" value={startTime} onChange={setStartTime} />
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha fin</label>
-              <DatePicker value={endDate} onChange={setEndDate} min={startDate || undefined} error={endBeforeStart} />
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Fecha fin</span>
+              <DatePicker ariaLabel="Fecha fin" value={endDate} onChange={setEndDate} min={startDate || undefined} error={endBeforeStart} />
             </div>
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora fin</label>
-              <TimePicker value={endTime} onChange={setEndTime} error={endBeforeStart} min={endDate && endDate === startDate ? startTime || undefined : undefined} />
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Hora fin</span>
+              <TimePicker ariaLabel="Hora fin" value={endTime} onChange={setEndTime} error={endBeforeStart} min={endDate && endDate === startDate ? startTime || undefined : undefined} />
             </div>
           </div>
           {endBeforeStart && (
@@ -626,14 +626,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                     {sedeSel?.name} cobra normalmente en {sedeSel?.currency}. Revisá la moneda.
                   </p>
                 )}
-                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo</label>
+                <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo</span>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo para servidores (opcional)</label>
+                <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo para servidores (opcional)</span>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">{currencySymbol(currency)}</span>
                   <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} placeholder="Igual al costo" value={serverPrice} onChange={e => setServerPrice(e.target.value)} disabled={!serversPay} />

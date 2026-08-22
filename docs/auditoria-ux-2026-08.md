@@ -140,10 +140,31 @@ Tres cosas que el script tuvo que resolver, y que costaron descubrir:
 Queda fijado por `src/lib/forms/label-association.test.ts`, que además verifica que no haya
 **ids duplicados** dentro de un archivo — dos inputs con el mismo id dejan al segundo anónimo.
 
-**Lo que NO se cerró y por qué:** 17 labels antes de un componente propio (Combobox y
-similares: pueden traer su propio `aria-label`, hay que mirar cada componente) y 51 antes de
-un `<div>` o grupo de radios (esos no se arreglan con `htmlFor`: necesitan `fieldset` +
-`legend`, que es un cambio de estructura, no de atributo). Son dos tandas distintas.
+**Las dos tandas restantes también se cerraron el 2026-08-21. Quedan 0 labels sin
+asociación, de 246.**
+
+**Tanda A · 17 labels antes de un componente propio.** No se arreglaban con `htmlFor` porque
+el control no era un input nativo. Se resolvió componente por componente:
+
+| Componente | Qué pasaba | Solución |
+|---|---|---|
+| `DirigentesCombobox` | recibía `aria-label` **y la ignoraba** (no estaba en sus props): el campo quedaba anónimo y nadie lo notaba | props `inputId` y `ariaLabel` reales |
+| `CommitteeMultiSelect` | su input de búsqueda no tenía id | prop `inputId` → asociación real |
+| `DatePicker` / `TimePicker` | el control es un `<button>`: ningún `<label>` lo alcanza | prop `ariaLabel` + `aria-haspopup`/`aria-expanded` |
+| `EmailEditor` | el área editable es un contenteditable | `role="textbox"` + `aria-label` (default "Cuerpo del correo") |
+| `PhoneInput` | dos controles (código y número), **ninguno con nombre** | el label apunta al número (`useId`), y el select lleva "Código de país" |
+| `PublicField` | sus inputs no tenían id, así que el label de `FormFiller` no podía alcanzarlos | id `campo-<field.id>`; en los grupos va en la primera opción |
+| `Combobox` (×2) | ya tenía `ariaLabel` correcto | nada — falso positivo |
+
+El hallazgo más incómodo de esta tanda: **un `aria-label` pasado a un componente que no lo
+acepta se descarta en silencio**. Parecía resuelto y no lo estaba.
+
+**Tanda B · 51 labels antes de un `<div>` o grupo de botones.** Estos no necesitaban
+`fieldset`/`legend` como suponía la primera versión: son **`<label>` que no etiquetan ningún
+control**, lo cual es HTML inválido —un `<label>` exige un control asociado— y los grupos ya
+traían su propio nombre (`ariaLabel` en `Chips`, `aria-pressed` + `title` en los botones de
+escala). Se convirtieron **56 a `<span>`**, que es lo que eran. Visualmente no cambia nada:
+los dos son inline y conservan su `className`.
 
 **Seguimiento menor:** los 32 que ya tenían `aria-label` ahora lo tienen redundante. No
 molesta hoy porque el texto coincide, pero `aria-label` GANA sobre el label asociado: si

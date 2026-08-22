@@ -110,7 +110,7 @@ export default function NuevoCuponPage() {
         <div className="lg:col-span-2 rounded-2xl p-6 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
 
           <div>
-            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">1. Destino</label>
+            <span className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">1. Destino</span>
             <div className="grid grid-cols-2 gap-2">
               {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => { setEntityType(v); setSelectedEntity(null); setEntityQuery('') }}
@@ -122,9 +122,9 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">
+            <span className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">
               2. {entityType === 'study_plan' ? 'Estudio' : 'Evento'}
-            </label>
+            </span>
             {selectedEntity ? (
               <div className="flex items-center gap-3 rounded-xl p-3.5 bg-teal-soft/10 border border-teal-deep/25">
                 <div className="flex-1">
@@ -163,7 +163,7 @@ export default function NuevoCuponPage() {
           </div>
 
           <div>
-            <label className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">3. Tipo de descuento</label>
+            <span className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">3. Tipo de descuento</span>
             <div className="grid grid-cols-2 gap-2 mb-4">
               {([['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => setDiscountType(v)}

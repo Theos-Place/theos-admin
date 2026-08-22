@@ -17,6 +17,10 @@ interface DatePickerProps {
   min?: string
   error?: boolean
   placeholder?: string
+  /** AUD-1 · Nombre accesible del disparador. Hace falta porque el control es un
+   *  <button>, no un <input>: un <label> de al lado no lo alcanza ni con htmlFor.
+   *  Pasale el mismo texto del label visible. */
+  ariaLabel?: string
 }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
@@ -34,7 +38,7 @@ function labelOf(d: Date | undefined): string {
   return `${d.getDate()} de ${MESES[d.getMonth()]} ${d.getFullYear()}`
 }
 
-export function DatePicker({ value, onChange, min, error, placeholder = 'Seleccionar fecha' }: DatePickerProps) {
+export function DatePicker({ value, onChange, min, error, placeholder = 'Seleccionar fecha', ariaLabel }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -79,6 +83,9 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
       <button
         type="button"
         onClick={openPicker}
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className={cn(
           'w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-left outline-none transition-all font-body',
           'focus:ring-1 focus:ring-coral/30',

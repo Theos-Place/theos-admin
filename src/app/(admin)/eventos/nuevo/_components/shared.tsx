@@ -84,10 +84,10 @@ export function SummaryRow({
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label
+    <span
       className="text-[13px] tracking-widest uppercase text-navy-light/80 block mb-1 font-display"
     >
       {children}
-    </label>
+    </span>
   )
 }

@@ -14,6 +14,10 @@ interface TimePickerProps {
   /** Paso en minutos. Default 15. */
   step?: number
   placeholder?: string
+  /** AUD-1 · Nombre accesible del disparador. Hace falta porque el control es un
+   *  <button>, no un <input>: un <label> de al lado no lo alcanza ni con htmlFor.
+   *  Pasale el mismo texto del label visible. */
+  ariaLabel?: string
 }
 
 function buildTimes(step: number): string[] {
@@ -35,7 +39,7 @@ function label12(t: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
 }
 
-export function TimePicker({ value, onChange, error, min, step = 15, placeholder = 'Hora' }: TimePickerProps) {
+export function TimePicker({ value, onChange, error, min, step = 15, placeholder = 'Hora', ariaLabel }: TimePickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -65,6 +69,9 @@ export function TimePicker({ value, onChange, error, min, step = 15, placeholder
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         className={cn(
           'w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-left outline-none transition-all font-body',
           'focus:ring-1 focus:ring-coral/30',

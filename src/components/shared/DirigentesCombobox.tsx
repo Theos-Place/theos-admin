@@ -18,6 +18,14 @@ type DirigentesComboboxProps = {
   /** PRE-11: acota la lista (ej. solo habilitados para prematrimonial). Sin
    *  esto se ofrecen todos, que es el comportamiento de siempre. */
   filter?: (d: Dirigente) => boolean
+  /** AUD-1 · id del input de búsqueda, para que un <label htmlFor> de afuera
+   *  quede asociado de verdad (mejor que un aria-label: el nombre accesible sale
+   *  del texto visible y no puede divergir de él). */
+  inputId?: string
+  /** AUD-1 · Nombre accesible del input cuando NO hay un <label> propio (p. ej.
+   *  dentro de un <fieldset> que solo tiene <legend>). Si hay label visible,
+   *  preferí `inputId` + `htmlFor`: el nombre sale del texto y no puede divergir. */
+  ariaLabel?: string
 }
 
 function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
@@ -31,7 +39,7 @@ function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
   )
 }
 
-export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar dirigente…', excludeId, filter }: DirigentesComboboxProps) {
+export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar dirigente…', excludeId, filter, inputId, ariaLabel }: DirigentesComboboxProps) {
   const { dirigentes } = useDirigentes()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -76,6 +84,8 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
           <OptionAvatar initials={getInitials(selected.member_name)} />
         )}
         <input
+          id={inputId}
+          aria-label={ariaLabel}
           ref={inputRef}
           value={open ? q : (selected?.member_name ?? '')}
           onChange={e => { setQ(e.target.value); if (!open) setOpen(true) }}

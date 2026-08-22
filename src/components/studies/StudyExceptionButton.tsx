@@ -162,7 +162,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Requisitos a eximir</label>
+                <span className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Requisitos a eximir</span>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="accent-coral" checked={waiveAll} onChange={e => setWaiveAll(e.target.checked)} />
                   <span className="text-[13px] text-navy font-body font-medium">Eximir de todos los requisitos</span>

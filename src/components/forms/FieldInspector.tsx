@@ -421,7 +421,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           <div className="p-4 space-y-3">
             <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Escala</p>
             <div className="space-y-1">
-              <label className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Rango</label>
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Rango</span>
               <div className="flex gap-2">
                 {([[1, 5], [1, 10]] as const).map(([min, max]) => (
                   <button

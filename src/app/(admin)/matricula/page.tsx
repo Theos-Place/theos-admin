@@ -658,9 +658,9 @@ function MemberPicker({ selected, onSelect }: {
 }) {
   return (
     <div className="flex flex-col gap-1 w-64">
-      <label className="text-[11px] uppercase tracking-widest text-white/80 font-display">
+      <span className="text-[11px] uppercase tracking-widest text-white/80 font-display">
         Ver disponibilidad como:
-      </label>
+      </span>
       {selected ? (
         <div className="flex items-center justify-between gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white">
           <span className="truncate font-body">{selected.name}</span>

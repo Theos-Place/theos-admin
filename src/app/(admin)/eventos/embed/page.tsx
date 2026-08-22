@@ -101,7 +101,7 @@ export default function EmbedPage() {
 
           {/* Vista */}
           <div className="space-y-2">
-            <label className={`${labelCls} font-display`}>Vista</label>
+            <span className={`${labelCls} font-display`}>Vista</span>
             <div className="flex gap-2">
               {(['monthly', 'weekly', 'list', 'grid'] as const).map(v => {
                 const labels = { monthly: 'Mensual', weekly: 'Semanal', list: 'Lista', grid: 'Cuadrícula' }
@@ -128,7 +128,7 @@ export default function EmbedPage() {
 
           {/* Tipos de evento */}
           <div className="space-y-2">
-            <label className={`${labelCls} font-display`}>Tipos de evento</label>
+            <span className={`${labelCls} font-display`}>Tipos de evento</span>
             <div className="space-y-2">
               {eventTypes.map(t => (
                 <label key={t.id} className="flex items-center gap-2.5 cursor-pointer">
@@ -146,7 +146,7 @@ export default function EmbedPage() {
 
           {/* Colores */}
           <div className="space-y-2">
-            <label className={`${labelCls} font-display`}>Colores</label>
+            <span className={`${labelCls} font-display`}>Colores</span>
             <div className="space-y-2.5">
               {[
                 { key: 'primary' as const, label: 'Color primario' },
@@ -181,7 +181,7 @@ export default function EmbedPage() {
 
           {/* Opciones */}
           <div className="space-y-2">
-            <label className={`${labelCls} font-display`}>Opciones</label>
+            <span className={`${labelCls} font-display`}>Opciones</span>
             <div className="space-y-2">
               {[
                 { key: 'showDesc' as const, label: 'Mostrar descripción' },

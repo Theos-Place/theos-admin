@@ -157,9 +157,9 @@ export default function NuevoPuestoPage() {
         {/* Descripción */}
         <div className="space-y-1">
           <div className="flex justify-between">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Descripción de funciones
-            </label>
+            </span>
             <span className="text-[11px] text-navy-light/80 font-mono">
               {description.length}/600
             </span>
@@ -177,9 +177,9 @@ export default function NuevoPuestoPage() {
         {/* Tipo de contrato + Rango salarial */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Tipo de contrato
-            </label>
+            </span>
             <div className="flex gap-4">
               {([['planilla', 'Planilla'], ['servicios_profesionales', 'Servicios profesionales']] as const).map(([val, label]) => (
                 <label key={val} className="flex items-center gap-2 cursor-pointer">
@@ -198,9 +198,9 @@ export default function NuevoPuestoPage() {
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
+              <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                 Rango salarial aprobado
-              </label>
+              </span>
               <span
                 className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-semibold text-navy-light/80 font-display"
               >

@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 
 type Props = {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   label?: string
+  /** AUD-1 · id del input del número, si hace falta apuntarle desde afuera. Si
+   *  no se pasa, se genera con useId (dos PhoneInput no comparten id). */
+  inputId?: string
 }
 
 const COUNTRY_CODES = [
@@ -31,7 +34,10 @@ function getNumber(val: string): string {
   return match ? val.slice(match.code.length).trim() : val
 }
 
-export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }: Props) {
+export function PhoneInput({ value, onChange, placeholder = '8888-0000', label, inputId: idProp }: Props) {
+  // useId para que dos PhoneInput en la misma pantalla no compartan id.
+  const auto = useId()
+  const inputId = idProp ?? `tel-${auto}`
   const [countryCode, setCountryCode] = useState(() => getCountryCode(value))
   const [number, setNumber]           = useState(() => getNumber(value))
 
@@ -55,10 +61,14 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
   return (
     <div>
       {label && (
-        <label className="form-label">{label}</label>
+        <label htmlFor={inputId} className="form-label">{label}</label>
       )}
       <div className="flex">
+        {/* AUD-1 · El select del código y el input del número son dos controles.
+            El label visible apunta al NÚMERO (es lo que se escribe) y el select
+            lleva su propio nombre: antes ninguno de los dos tenía nombre. */}
         <select
+          aria-label="Código de país"
           value={countryCode}
           onChange={e => handleCodeChange(e.target.value)}
           className="py-[9px] px-[10px] border border-[rgba(22,20,64,0.15)] border-r-0 rounded-l-xl rounded-r-none bg-[rgba(22,20,64,0.03)] text-[13px] text-[var(--fg,#161440)] cursor-pointer outline-none shrink-0 font-body"
@@ -71,6 +81,7 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label }
         </select>
 
         <input
+          id={inputId}
           type="tel"
           value={number}
           onChange={e => handleNumberChange(e.target.value)}

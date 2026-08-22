@@ -47,10 +47,15 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   const stringVal = typeof value === 'string' ? value : ''
   const numVal = typeof value === 'number' ? value : undefined
   const arrayVal = Array.isArray(value) ? value : []
+  // AUD-1 · id del control, para que el <label> de FormFiller lo alcance con
+  // htmlFor. En los grupos (radio/checkbox) va en la PRIMERA opción: apuntar al
+  // primer control de un grupo es válido y hace que el label le dé el foco.
+  const controlId = `campo-${field.id}`
 
   if (field.type === 'text' || field.type === 'number') {
     return (
       <input
+        id={controlId}
         type={field.type === 'number' ? 'number' : 'text'}
         placeholder={field.placeholder || ''}
         value={field.type === 'number' ? (numVal ?? '') : stringVal}
@@ -63,6 +68,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   if (field.type === 'date') {
     return (
       <input
+        id={controlId}
         type="date"
         value={stringVal}
         onChange={e => onChange(e.target.value)}
@@ -74,6 +80,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   if (field.type === 'textarea') {
     return (
       <textarea
+        id={controlId}
         rows={4}
         placeholder={field.placeholder || ''}
         value={stringVal}
@@ -86,6 +93,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   if (field.type === 'select') {
     return (
       <select
+        id={controlId}
         value={stringVal}
         onChange={e => onChange(e.target.value)}
         className={inputBase}
@@ -99,7 +107,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   if (field.type === 'radio') {
     return (
       <div className="space-y-2">
-        {field.options?.map(o => (
+        {field.options?.map((o, i) => (
           <label
             key={o}
             className={cn(
@@ -111,6 +119,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
             style={{ borderColor: stringVal === o ? undefined : 'var(--outline-variant)' }}
           >
             <input
+              id={i === 0 ? controlId : undefined}
               type="radio"
               className="accent-coral"
               checked={stringVal === o}
@@ -126,7 +135,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
   if (field.type === 'checkbox') {
     return (
       <div className="space-y-2">
-        {field.options?.map(o => {
+        {field.options?.map((o, i) => {
           const checked = arrayVal.includes(o)
           return (
             <label
@@ -138,6 +147,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
               style={{ borderColor: checked ? undefined : 'var(--outline-variant)' }}
             >
               <input
+                id={i === 0 ? controlId : undefined}
                 type="checkbox"
                 className="accent-coral"
                 checked={checked}

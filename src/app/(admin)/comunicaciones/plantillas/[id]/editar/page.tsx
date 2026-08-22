@@ -137,7 +137,7 @@ export default function EditarPlantillaPage() {
               <input id="nombre-de-la-plantilla" className={inputCls} value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div>
-              <label className={labelCls}>Categoría</label>
+              <span className={labelCls}>Categoría</span>
               {creatingCategory ? (
                 <div className="flex items-center gap-2">
                   <input autoFocus className={inputCls} placeholder="Nombre de la categoría nueva" value={category} onChange={e => setCategory(e.target.value)} aria-label="Nombre de la categoría nueva" />
@@ -158,7 +158,7 @@ export default function EditarPlantillaPage() {
           </div>
 
           <div>
-            <label className={labelCls}>Cuerpo del correo</label>
+            <span className={labelCls}>Cuerpo del correo</span>
             <EmailEditor value={emailBody} onChange={setEmailBody} htmlOnly={htmlOnly} htmlOnlyNotice={htmlOnlyNotice} />
             <div className="mt-1.5 flex items-center justify-between gap-3 flex-wrap">
               <p className="text-[13px] text-navy-light/80 font-body">El pie de baja se agrega solo al enviar como marketing.</p>
