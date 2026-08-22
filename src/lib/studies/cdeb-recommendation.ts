@@ -6,6 +6,8 @@
 // cierre → convicciones por excepción (cero toques si no hay observaciones) y
 // escalas como botones en fila.
 import type { RoleId } from '@/types/auth'
+import type { StudyType } from '@/types/study'
+import { isArchivedPlan } from '@/lib/studies/plan-visibility'
 
 /** Planes con cierre especial de recomendación a CDEB. */
 const CDEB_SOURCE_PLANS = new Set(['DIS3', 'PAN'])
@@ -76,6 +78,57 @@ export const RECOMMENDATION_OPTIONS = [
   { value: 'si_con_reservas', label: 'Sí, con reservas (ver comentarios)' },
   { value: 'no', label: 'No lo recomiendo' },
 ] as const
+
+/**
+ * EST-15 · Qué estudios puede recomendar el comité como "llevá esto primero".
+ *
+ * Solo CAPACITACIONES: inicial, intermedia y avanzada. Quedan afuera los NIVELES
+ * (N1-N4) y las CAMPAÑAS, y no por gusto —
+ *  · los niveles son la cadena base con su propio prerequisito encadenado: no se
+ *    "recomiendan", se llevan en orden y el sistema ya lo exige;
+ *  · una campaña es un evento puntual, no una preparación para nada.
+ * El dropdown listaba las cinco etapas, así que se podía recomendar "llevá N1
+ * primero" a alguien que ya venía de DIS3 — un consejo imposible de seguir.
+ */
+export const PRIOR_STUDY_STAGES: ReadonlyArray<StudyType['stage']> =
+  ['inicial', 'intermedia', 'avanzada']
+
+/** El estudio al que se está recomendando: no puede ser su propio requisito. */
+export const CDEB_TARGET_PLAN = 'CDEB'
+
+/** ¿Se puede ofrecer este plan como "otro estudio primero"? */
+export function isPriorStudyOption(plan: {
+  stage: StudyType['stage']
+  code?: string
+  is_archived?: boolean | null
+  is_active?: boolean | null
+  is_curricular?: boolean
+}): boolean {
+  if (!PRIOR_STUDY_STAGES.includes(plan.stage)) return false
+  // CDEB es el destino de esta recomendación: ofrecerlo como paso previo era
+  // decir "para entrar a CDEB, llevá CDEB". Salió al revisar el catálogo real —
+  // es de etapa avanzada, así que el filtro por etapa solo no lo saca.
+  if (plan.code === CDEB_TARGET_PLAN) return false
+  // Un estudio desactivado no se puede llevar, así que no se ofrece.
+  if (isArchivedPlan(plan)) return false
+  // Las charlas introductorias (BUS) no son un estudio: is_curricular === false.
+  if (plan.is_curricular === false) return false
+  return true
+}
+
+/** Las opciones del dropdown, ya filtradas y ordenadas por etapa. */
+export function priorStudyOptions<T extends {
+  stage: StudyType['stage']
+  code: string
+  is_archived?: boolean | null
+  is_active?: boolean | null
+  is_curricular?: boolean
+}>(plans: readonly T[]): T[] {
+  const orden = (s: StudyType['stage']) => PRIOR_STUDY_STAGES.indexOf(s)
+  return plans
+    .filter(isPriorStudyOption)
+    .sort((a, b) => orden(a.stage) - orden(b.stage) || a.code.localeCompare(b.code, 'es'))
+}
 
 export type CdebRecommendationInput = {
   member_id: string

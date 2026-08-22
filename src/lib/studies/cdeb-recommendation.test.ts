@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import {
   allowsCdebRecommendation, allowsNoInfoOption, validateCdebRecommendation,
   sanitizeCdebRecommendation, CDEB_REC_VIEW_ROLES, CONVICTION_TOPICS,
-  RECOMMENDATION_OPTIONS, type CdebRecommendationInput,
+  RECOMMENDATION_OPTIONS, isPriorStudyOption, priorStudyOptions,
+  type CdebRecommendationInput,
 } from './cdeb-recommendation'
+import type { StudyType } from '@/types/study'
 import { allowsCloseRecommendations } from './close-recommendations'
 
 function complete(over: Partial<CdebRecommendationInput> = {}): CdebRecommendationInput {
@@ -153,5 +155,60 @@ describe('catálogo de convicciones (EST-9)', () => {
     expect(CONVICTION_TOPICS.map(t => t.value)).toEqual([
       'sexualidad', 'mayordomia', 'autoridad_biblia', 'salvacion_gracia', 'identidad_genero',
     ])
+  })
+})
+
+// EST-15 · El dropdown de "otro estudio primero" listaba las cinco etapas, así
+// que se podía recomendar "llevá N1 primero" a alguien que venía de DIS3.
+describe('priorStudyOptions (EST-15)', () => {
+  const plan = (code: string, stage: StudyType['stage'], over: Partial<StudyType> = {}) =>
+    ({ id: code, code, name: code, stage, ...over }) as StudyType
+
+  it('acepta las tres etapas de capacitación', () => {
+    for (const st of ['inicial', 'intermedia', 'avanzada'] as const) {
+      expect(isPriorStudyOption(plan('X', st))).toBe(true)
+    }
+  })
+
+  // El punto de la ficha: los niveles son la cadena base y una campaña no
+  // prepara para nada.
+  it('rechaza niveles y campañas', () => {
+    expect(isPriorStudyOption(plan('N1', 'niveles'))).toBe(false)
+    expect(isPriorStudyOption(plan('TRANS', 'campaña'))).toBe(false)
+  })
+
+  it('no ofrece estudios desactivados', () => {
+    expect(isPriorStudyOption(plan('X', 'inicial', { is_archived: true }))).toBe(false)
+    expect(isPriorStudyOption({ stage: 'inicial', is_active: false })).toBe(false)
+  })
+
+  it('no ofrece charlas introductorias', () => {
+    expect(isPriorStudyOption(plan('BUS', 'inicial', { is_curricular: false }))).toBe(false)
+  })
+
+  it('filtra y ordena por etapa', () => {
+    const out = priorStudyOptions([
+      plan('AV', 'avanzada'), plan('N2', 'niveles'), plan('IN', 'inicial'),
+      plan('CAMP', 'campaña'), plan('MED', 'intermedia'),
+    ])
+    expect(out.map(p => p.code)).toEqual(['IN', 'MED', 'AV'])
+  })
+
+  it('sin capacitaciones devuelve vacío en vez de reventar', () => {
+    expect(priorStudyOptions([plan('N1', 'niveles')])).toEqual([])
+    expect(priorStudyOptions([])).toEqual([])
+  })
+})
+
+// Salió al revisar el catálogo real: CDEB es etapa avanzada, así que el filtro
+// por etapa solo NO lo saca, y el formulario se ofrecía a sí mismo.
+describe('CDEB no es su propio requisito', () => {
+  it('no se ofrece CDEB como estudio previo para entrar a CDEB', () => {
+    expect(isPriorStudyOption({ stage: 'avanzada', code: 'CDEB' })).toBe(false)
+  })
+
+  it('los otros avanzados sí se ofrecen', () => {
+    expect(isPriorStudyOption({ stage: 'avanzada', code: 'HER' })).toBe(true)
+    expect(isPriorStudyOption({ stage: 'avanzada', code: 'CDC' })).toBe(true)
   })
 })

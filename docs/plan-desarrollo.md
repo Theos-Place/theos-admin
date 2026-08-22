@@ -3024,7 +3024,7 @@ NO se probó el round-trip HTTP con sesión. Nota: el endpoint permite que un mi
 su propia matrícula, y hoy exigirle 10 caracteres aplicaría también ahí — no hay UI para ese
 caso todavía, pero si se construye conviene revisar si corresponde la misma exigencia.
 
-### [ ] EST-15 · Recomendación CDEB: el dropdown de "otro estudio primero" solo con capacitaciones
+### [x] EST-15 · Recomendación CDEB: el dropdown de "otro estudio primero" solo con capacitaciones — HECHO 2026-08-21
 ```
 En el formulario de recomendación a CDEB (EST-9), la opción "Sí, pero debería llevar otro
 estudio primero" abre un dropdown de estudios. Hoy lista todo; debe listar SOLO
@@ -3034,6 +3034,23 @@ Filtrá por etapa del plan: incluí inicial, intermedia y avanzada; excluí 'niv
 no ofrezcas estudios desactivados.
 Validá también server-side: si llega un plan de niveles o campaña en ese campo, rechazalo.
 ```
+
+**Cómo quedó.** Regla pura `isPriorStudyOption` / `priorStudyOptions` en
+`cdeb-recommendation.ts`, usada por el dropdown y por el POST (el dropdown filtrado no impide
+mandar cualquier code al endpoint). Se valida también en BORRADOR: un code inválido lo es
+igual. Reutiliza `isArchivedPlan` de plan-visibility en vez de duplicar la dualidad
+is_archived/is_active.
+
+Contra el catálogo real el dropdown pasó de **32 planes activos a 19**. Los 13 que salieron:
+
+- las **7 campañas** (CAMP, PQET, PRETRANS, REDESC, TPS, TRANS, UFA) y los **4 niveles**
+  (N1-N4) — lo que pedía la ficha;
+- **BUS**, que es charla introductoria (`is_curricular = false`), no un estudio;
+- **CDEB**, que no pedía la ficha y salió al revisar el catálogo: es de etapa avanzada, así
+  que el filtro por etapa NO lo saca, y el formulario "¿debería ir a CDEB?" se ofrecía a sí
+  mismo como paso previo. Mensaje propio en el API ("CDEB no puede ser su propio requisito").
+
+Si no quedaran capacitaciones activas, el dropdown lo dice en vez de aparecer vacío.
 
 ### [ ] REU-3 · El enlace de "¿grupo equivocado?" también en Matrícula
 ```

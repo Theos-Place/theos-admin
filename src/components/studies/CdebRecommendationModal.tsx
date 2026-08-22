@@ -7,7 +7,7 @@
 //  · fecha prellenada con la del cierre.
 // Guarda borrador (no valida) o envía (valida completo, server-side también).
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Loader2, Save, Send, Sparkles } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
@@ -19,7 +19,7 @@ import {
   SCALE_LABELS, TESTIMONY_LABEL, TESTIMONY_TEXT_LABEL, PASSION_LABEL, PASSION_TEXT_LABEL,
   BIBLE_LABEL, SPEECH_LABEL, SPEECH_TEXT_LABEL, COMMITMENT_TEXT_LABEL, COMMITTEE_TEXT_LABEL,
   NA_HINT, RECOMMENDATION_LABEL, RECOMMENDATION_OPTIONS,
-  allowsNoInfoOption, validateCdebRecommendation,
+  allowsNoInfoOption, validateCdebRecommendation, priorStudyOptions,
   type CdebRecommendationInput, type ConvictionFlag,
 } from '@/lib/studies/cdeb-recommendation'
 
@@ -76,6 +76,7 @@ export function CdebRecommendationModal({
 }) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
+  const opcionesPrevias = useMemo(() => priorStudyOptions(studyTypes), [studyTypes])
   const allowX = allowsNoInfoOption(planCode)
   const [f, setF] = useState<CdebRecommendationInput>({
     member_id: member.id,
@@ -269,8 +270,17 @@ export function CdebRecommendationModal({
                 className="w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
               >
                 <option value="">Seleccionar estudio…</option>
-                {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
+                {/* EST-15: solo CAPACITACIONES activas. Los niveles son la cadena
+                    base (el sistema ya encadena su prerequisito) y una campaña no
+                    prepara para nada, así que ofrecerlos era ofrecer un consejo
+                    imposible de seguir. El API rechaza igual lo que no aplique. */}
+                {opcionesPrevias.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
               </select>
+              {opcionesPrevias.length === 0 && (
+                <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+                  No hay capacitaciones activas para ofrecer. Avisá a la coordinación de estudios.
+                </p>
+              )}
             </div>
           )}
         </div>

@@ -5,8 +5,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isUuid } from '@/lib/validate'
 import {
   allowsCdebRecommendation, validateCdebRecommendation, CDEB_REC_VIEW_ROLES,
+  isPriorStudyOption, CDEB_TARGET_PLAN,
   type CdebRecommendationInput,
 } from '@/lib/studies/cdeb-recommendation'
+import { LEVEL_TO_STAGE } from '@/lib/studies/eligibility'
 import {
   saveCdebRecommendation, getCdebRecommendationsByGroup, getCdebRecommendationsByMember,
   getCdebRecommendationQueue,
@@ -47,6 +49,32 @@ const bodySchema = z
     recommended_prior_study: z.string().nullish(),
   })
   .strict()
+
+/**
+ * EST-15 · ¿Sirve este code como "otro estudio primero"?
+ *
+ * Se valida acá y no solo filtrando el dropdown, porque el dropdown filtrado no
+ * impide mandar cualquier code al endpoint. Devuelve el mensaje de error o null.
+ */
+async function priorStudyError(code: string | null | undefined): Promise<string | null> {
+  const c = (code ?? '').trim()
+  if (!c) return null   // La obligatoriedad la valida validateCdebRecommendation.
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('study_plans').select('code, level, is_active, is_curricular').eq('code', c).maybeSingle()
+  if (!data) return 'Ese estudio no existe.'
+  const row = data as { code: string; level: string | null; is_active: boolean | null; is_curricular: boolean | null }
+  const ok = isPriorStudyOption({
+    stage: LEVEL_TO_STAGE[row.level ?? ''] ?? 'niveles',
+    code: row.code,
+    is_active: row.is_active,
+    is_curricular: row.is_curricular ?? undefined,
+  })
+  if (ok) return null
+  return row.code === CDEB_TARGET_PLAN
+    ? 'CDEB no puede ser su propio requisito: elegí otra capacitación.'
+    : 'Como estudio previo solo se pueden recomendar capacitaciones activas: los niveles y las campañas no aplican.'
+}
 
 /** Plan + dirigentes del grupo (para el gate de escritura y la opción X de PAN). */
 async function groupContext(groupId: string) {
@@ -117,6 +145,13 @@ export async function POST(req: NextRequest) {
     const isCloser = auth.ctx.roles.some(r => ['coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin'].includes(r))
     const isLeader = !!auth.ctx.memberId && (ctx.leaderId === auth.ctx.memberId || ctx.coLeaderId === auth.ctx.memberId)
     if (!isCloser && !isLeader) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+
+    // EST-15: el estudio previo tiene que ser una capacitación activa. Se
+    // valida también en borrador: un code inválido es inválido igual.
+    const malPrevio = await priorStudyError(body.recommended_prior_study)
+    if (malPrevio) {
+      return NextResponse.json({ error: malPrevio, code: 'estudio_previo_invalido' }, { status: 400 })
+    }
 
     const data: CdebRecommendationInput = { ...body, member_id: body.member_id }
     // El BORRADOR no se valida (guardado parcial); el ENVÍO sí.
