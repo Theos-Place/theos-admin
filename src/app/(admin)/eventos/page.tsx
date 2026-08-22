@@ -382,7 +382,7 @@ function EventosContent() {
             <p className="text-sm font-semibold text-navy font-body">¡Inscripción confirmada!</p>
             <p className="text-[13px] text-navy-light/80 font-body">Quedaste inscrito/a en {successEvent}.</p>
           </div>
-          <button onClick={clearSuccess} className="ml-auto text-navy-light/80 hover:text-navy"><X size={16} /></button>
+          <button onClick={clearSuccess} aria-label="Cerrar aviso de inscripción" className="ml-auto text-navy-light/80 hover:text-navy"><X size={16} /></button>
         </div>
       )}
 

@@ -3208,7 +3208,7 @@ que no es un incumplimiento — es una decisión de diseño que quedó anotada s
 **No cubierto** (fuera del alcance acordado, sigue en AUD-1): teclado, lectores de pantalla,
 área táctil, móvil a 390px, estados vacíos, jerga filtrada y conteo de fricción.
 
-### [ ] AUD-1 · Auditoría de accesibilidad, legibilidad y UX
+### [x] AUD-1 · Auditoría de accesibilidad, legibilidad y UX — INFORME ENTREGADO 2026-08-21
 Archivos: transversal — `src/components/**`, `src/app/(admin)/**`, `src/app/(public)/**`, design system
 Absorbe **UI-1** (que era solo tamaño y contraste): correr AUD-1 primero, y UI-1 queda como el subconjunto que se arregla en la primera tanda.
 
@@ -3289,6 +3289,45 @@ faltante, un alt vacío) los podés hacer sobre la marcha y listarlos aparte.
 Cerrá el informe con las 3 acciones de mayor impacto por esfuerzo, y con 3 pantallas de
 antes/después para que yo apruebe el criterio antes de aplicarlo en masa.
 ```
+
+**Informe en `docs/auditoria-ux-2026-08.md`.** Contraste y tamaños salieron aparte en UI-1
+(commit `5af7e946`), así que el informe cubre el resto: teclado, lectores de pantalla, área
+táctil, estados, consistencia, anchos, jerga y confirmaciones destructivas.
+
+**Alcance real, dicho de frente:** es análisis estático medido sobre el código. NO incluye
+pasada con lector de pantalla, ni recorrido a mano a 390px, ni prueba de tabulación de los
+flujos completos. Eso queda pendiente y es donde está el valor no cubierto.
+
+**Cero hallazgos bloqueantes.** El sistema está bastante mejor de lo que la ficha asumía: 0
+modales propios (los 64 usan el compartido, con trampa de foco que cicla y Escape), 0
+imágenes sin alt, 0 de las 43 tablas se desborda en móvil, y 0 jerga técnica filtrada — ni
+`enrollment`, ni `payload`, ni códigos HTTP.
+
+**Los 5 hallazgos importantes**, en orden de impacto por esfuerzo:
+
+1. El `Modal.tsx` no devuelve el foco al cerrar. **Un archivo arregla 64 pantallas** — es el
+   mejor cambio disponible.
+2. El Toast usa `role="status"` para todo, incluidos los errores. Un error necesita
+   `role="alert"` o el lector no interrumpe y el toast desaparece antes de anunciarse.
+3. Los errores de campo se pintan pero no se vinculan al input: 20 `role="alert"` contra
+   solo 5 `aria-invalid` y 2 `aria-describedby`.
+4. 21 de 95 pantallas admin sin `<h1>`: sin encabezado no hay punto de entrada para un
+   lector de pantalla.
+5. Cinco pantallas con `DELETE` y sin confirmación aparente — marcado como A VERIFICAR, la
+   detección es un proxy y ninguno está confirmado.
+
+**Corrección a la ficha:** pide 44×44 de área táctil, pero eso es WCAG 2.2 nivel AAA
+(2.5.5); el mínimo AA es 24×24 (2.5.8). Con ese criterio no hay incumplimiento de AA — los 5
+botones más chicos están en ~24px y en pantallas de STAFF, no del miembro. La prioridad real
+es más baja de lo que la ficha sugiere.
+
+**Arreglado sobre la marcha** (solo lo trivial, como autoriza la ficha): `aria-label` en los
+3 botones de solo ícono que no lo tenían.
+
+**Honestidad sobre el método:** dos mediciones dieron falsos positivos que hubo que corregir
+a mano — los botones de solo ícono (41 aparentes → 3 reales) y los estados de carga (22
+aparentes → varios ya resueltos con el patrón `data === null`). Está anotado en el informe:
+cualquier conteo que se use para priorizar hay que verificarlo en los archivos que lista.
 
 ### [ ] FRM-4 · Llenar un formulario o una solicitud a nombre de otra persona
 ```

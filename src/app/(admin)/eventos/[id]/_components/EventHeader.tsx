@@ -170,7 +170,7 @@ export function EventHeader({
                     <p className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
                       Exportar evento
                     </p>
-                    <button onClick={onCalendarPopoverClose} className="text-navy-light/80 hover:text-navy transition-colors">
+                    <button onClick={onCalendarPopoverClose} aria-label="Cerrar opciones de exportar" className="text-navy-light/80 hover:text-navy transition-colors">
                       <XIcon size={14} />
                     </button>
                   </div>
@@ -241,6 +241,8 @@ export function EventHeader({
             <div className="relative">
               <button
                 onClick={onMenuToggle}
+                aria-label="Más acciones del evento"
+                aria-haspopup="menu"
                 className="h-9 w-9 rounded-full border border-white/20 flex items-center justify-center text-white/80 hover:bg-white/10 transition-all"
               >
                 <MoreHorizontal size={16} />
