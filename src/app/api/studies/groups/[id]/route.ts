@@ -85,6 +85,12 @@ export async function PUT(
     await updateGroup(id, patch)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith('PREMAT_PAREJA: ')) {
+      return NextResponse.json(
+        { error: error.message.replace('PREMAT_PAREJA: ', ''), code: 'premat_pareja' },
+        { status: 400 },
+      )
+    }
     if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {
       return NextResponse.json(
         { error: 'El dirigente o co-dirigente elegido está marcado como no recomendado para dar estudios.' },

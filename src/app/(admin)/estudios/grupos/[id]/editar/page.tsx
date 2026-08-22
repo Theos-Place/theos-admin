@@ -8,6 +8,8 @@ import { useToast } from '@/components/shared/Toast'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
+import type { Dirigente } from '@/lib/dirigentes'
+import { isPrematGroup, canLeadPremat, prematGroupError } from '@/lib/studies/premat-group'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { resolveZoneCode } from '@/lib/zones'
 import { zoneOnVirtualToggle } from '@/lib/studies/virtual-zone'
@@ -88,6 +90,15 @@ function EditarForm({ group, studyType, refetch }: {
   const [enrollEnd, setEnrollEnd] = useState(group.enrollment_end_date ?? '')
   const [leaderId, setLeaderId] = useState(group.leader_id ?? '')
   const [coLeaderId, setCoLeaderId] = useState(group.co_leader_id ?? '')
+  // PRE-11 · En un grupo de prematrimonial los dos son obligatorios y solo se
+  // ofrecen los habilitados. Mismo criterio que al crear.
+  const esPremat = isPrematGroup(studyType?.code)
+  const filtroPremat = esPremat
+    ? (d: Dirigente) => canLeadPremat({ formacion: d.formacion, disponibilidad: d.disponibilidad })
+    : undefined
+  const errorPremat = prematGroupError({
+    planCode: studyType?.code, leaderId, coLeaderId,
+  })
   const [waUrl, setWaUrl] = useState(group.whatsapp_group_url ?? '')
   const [status, setStatus] = useState<GroupStatus>(group.status)
   const [isVirtual, setIsVirtual] = useState(group.is_virtual ?? false)
@@ -116,6 +127,8 @@ function EditarForm({ group, studyType, refetch }: {
   }
 
   async function handleSave() {
+    // El API valida igual; esto evita el viaje y muestra el mensaje al instante.
+    if (errorPremat) { setError(errorPremat); return }
     setSaving(true)
     setError(null)
     try {
@@ -191,20 +204,32 @@ function EditarForm({ group, studyType, refetch }: {
               value={leaderId || null}
               onChange={id => setLeaderId(id ?? '')}
               excludeId={coLeaderId || undefined}
+              filter={filtroPremat}
               placeholder="Buscar dirigente…"
               aria-label="Buscar dirigente"
             />
+            {esPremat && (
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Solo se listan las personas habilitadas para dar prematrimonial.
+              </p>
+            )}
           </fieldset>
 
           <div className="col-span-2 sm:col-span-1 space-y-1 sm:pt-4">
-            <label className={labelCls}>Co-dirigente (opcional)</label>
+            <label className={cn(labelCls, esPremat && 'text-coral')}>
+              {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
+            </label>
             <DirigentesCombobox
               value={coLeaderId || null}
               onChange={id => setCoLeaderId(id ?? '')}
               excludeId={leaderId || undefined}
+              filter={filtroPremat}
               placeholder="Buscar co-dirigente…"
               aria-label="Buscar co-dirigente"
             />
+            {errorPremat && (
+              <p className="text-[13px] text-coral-deep font-body" role="alert">{errorPremat}</p>
+            )}
           </div>
 
           {/* Estado */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
 import { Search, X, ChevronDown } from 'lucide-react'
 import { getInitials } from '@/lib/format'
@@ -14,6 +15,9 @@ type DirigentesComboboxProps = {
   onChange: (id: string | null) => void
   placeholder?: string
   excludeId?: string                // member_id a excluir (el del otro campo)
+  /** PRE-11: acota la lista (ej. solo habilitados para prematrimonial). Sin
+   *  esto se ofrecen todos, que es el comportamiento de siempre. */
+  filter?: (d: Dirigente) => boolean
 }
 
 function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
@@ -27,7 +31,7 @@ function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
   )
 }
 
-export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar dirigente…', excludeId }: DirigentesComboboxProps) {
+export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar dirigente…', excludeId, filter }: DirigentesComboboxProps) {
   const { dirigentes } = useDirigentes()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -40,9 +44,10 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
     const term = q.trim().toLowerCase()
     return dirigentes
       .filter(d => d.member_id !== excludeId)
+      .filter(d => !filter || filter(d))
       .filter(d => !term || d.member_name.toLowerCase().includes(term))
       .slice(0, 50)
-  }, [dirigentes, q, excludeId])
+  }, [dirigentes, q, excludeId, filter])
 
   useDismissOnOutsideClick(ref, open, () => setOpen(false))
 

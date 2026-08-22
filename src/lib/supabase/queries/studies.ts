@@ -1,5 +1,6 @@
 import { toCurrency } from '@/lib/money'
 import { ADMIN_ONLY_STATUSES, type LeaderStatus } from '@/lib/studies/leader-admin-status'
+import { isPrematGroup, prematGroupError } from '@/lib/studies/premat-group'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { isGroupFull, occupiesSpot, OCCUPYING_STATUSES } from '@/lib/studies/enrollment-capacity'
@@ -970,9 +971,58 @@ async function planLevelById(supabase: ReturnType<typeof createAdminClient>, pla
   return (data as { level: string | null } | null)?.level ?? null
 }
 
+/** El CODE de un plan por su id. PRE-11 decide por code (PREMAT), pero el input
+ *  de escritura trae plan_id. */
+async function planCodeOf(
+  supabase: ReturnType<typeof createAdminClient>,
+  planId: string | null | undefined,
+): Promise<string | null> {
+  if (!planId) return null
+  const { data } = await supabase.from('study_plans').select('code').eq('id', planId).maybeSingle()
+  return (data as { code: string | null } | null)?.code ?? null
+}
+
+/**
+ * PRE-11 · Guard de los grupos de prematrimonial: dirigente Y co-dirigente
+ * obligatorios, y los dos habilitados. Lanza 'PREMAT_PAREJA: <mensaje>' para que
+ * el handler devuelva el texto tal cual — es un mensaje para una persona, no un
+ * código que la UI tenga que traducir.
+ */
+async function assertPrematPair(
+  supabase: ReturnType<typeof createAdminClient>,
+  planCode: string | null | undefined,
+  leaderId: string | null | undefined,
+  coLeaderId: string | null | undefined,
+): Promise<void> {
+  if (!isPrematGroup(planCode)) return
+
+  const ids = [leaderId, coLeaderId].filter((x): x is string => !!x)
+  const caps = new Map<string, { formacion: string[]; disponibilidad: string[] }>()
+  if (ids.length > 0) {
+    const { data } = await supabase
+      .from('study_leaders')
+      .select('member_id, formation_study_codes, qualified_study_codes')
+      .in('member_id', ids)
+    for (const r of (data ?? []) as Array<{
+      member_id: string; formation_study_codes: string[] | null; qualified_study_codes: string[] | null
+    }>) {
+      caps.set(r.member_id, {
+        formacion: r.formation_study_codes ?? [],
+        disponibilidad: r.qualified_study_codes ?? [],
+      })
+    }
+  }
+  const err = prematGroupError({
+    planCode, leaderId, coLeaderId,
+    capabilityOf: id => caps.get(id) ?? null,
+  })
+  if (err) throw new Error(`PREMAT_PAREJA: ${err}`)
+}
+
 export async function createGroup(input: GroupWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
   await assertLeadersRecommended(supabase, [input.leader_id, input.co_leader_id])
+  await assertPrematPair(supabase, await planCodeOf(supabase, input.plan_id), input.leader_id, input.co_leader_id)
   const { data, error } = await supabase.from('study_groups').insert(toGroupRow(input) as Insertable<'study_groups'>).select('id').single()
   if (error) throw error
   // EST-1: asignar dirigente lo activa automáticamente — salvo campañas.
@@ -987,6 +1037,23 @@ export async function updateGroup(id: string, patch: Partial<GroupWriteInput>): 
   // Solo valida/activa si el patch trae una asignación de dirigente.
   if ('leader_id' in patch || 'co_leader_id' in patch) {
     await assertLeadersRecommended(supabase, [patch.leader_id, patch.co_leader_id])
+    // El patch puede no traer el plan: se lee el del grupo. Y puede traer solo
+    // uno de los dos dirigentes, así que el otro sale del grupo actual — si no,
+    // editar el horario de un PREMAT parecería dejarlo sin co-dirigente.
+    const { data: actual } = await supabase
+      .from('study_groups')
+      .select('leader_id, co_leader_id, plan:study_plans!study_groups_plan_id_fkey(code)')
+      .eq('id', id).maybeSingle()
+    const row = actual as {
+      leader_id: string | null; co_leader_id: string | null
+      plan: { code: string | null } | { code: string | null }[] | null
+    } | null
+    const planCode = (Array.isArray(row?.plan) ? row?.plan[0] : row?.plan)?.code ?? null
+    await assertPrematPair(
+      supabase, planCode,
+      'leader_id' in patch ? patch.leader_id : row?.leader_id,
+      'co_leader_id' in patch ? patch.co_leader_id : row?.co_leader_id,
+    )
   }
   const { error } = await supabase.from('study_groups').update(toGroupRow(patch) as Insertable<'study_groups'>).eq('id', id)
   if (error) throw error

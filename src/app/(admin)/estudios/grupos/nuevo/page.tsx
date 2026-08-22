@@ -5,6 +5,8 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
 import { useDirigentes } from '@/hooks/useDirigentes'
+import type { Dirigente } from '@/lib/dirigentes'
+import { isPrematGroup, canLeadPremat, prematGroupError } from '@/lib/studies/premat-group'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { DirigentesCombobox } from '@/components/shared/DirigentesCombobox'
@@ -141,12 +143,31 @@ export default function NuevoGrupoPage() {
   const leaderData = dirigentes.find(d => d.member_id === selectedLeader)
   const coLeaderData = dirigentes.find(d => d.member_id === selectedCoLeader)
 
+  // PRE-11 · El prematrimonial se da EN PAREJA: los dos son obligatorios y solo
+  // se ofrecen los habilitados. En cualquier otro plan nada de esto aplica.
+  const esPremat = isPrematGroup(studyType?.code)
+  const capacityOf = (memberId: string) => {
+    const d = dirigentes.find(x => x.member_id === memberId)
+    return d ? { formacion: d.formacion, disponibilidad: d.disponibilidad } : null
+  }
+  const filtroPremat = esPremat
+    ? (d: Dirigente) => canLeadPremat({ formacion: d.formacion, disponibilidad: d.disponibilidad })
+    : undefined
+  const errorPremat = prematGroupError({
+    planCode: studyType?.code,
+    leaderId: pendingLeader ? null : selectedLeader,
+    coLeaderId: selectedCoLeader,
+    capabilityOf: capacityOf,
+  })
+
   // Estado inicial: el usuario puede elegirlo; por defecto En matrícula.
   // "Sin dirigente" ya no es estado: es un flag derivado de leader_id null.
   const initialStatus: GroupStatus = statusOverride || 'en_matricula'
 
   async function handleCreate() {
     if (!studyType) return
+    // El API valida igual; esto evita el viaje y da el mensaje al instante.
+    if (errorPremat) { toast(errorPremat, 'error'); return }
     setSubmitting(true)
     try {
       // Resolver la zona: 'all'/vacío → null (todas); existente → su code; nueva →
@@ -519,9 +540,15 @@ export default function NuevoGrupoPage() {
               value={selectedLeader || null}
               onChange={id => setSelectedLeader(id ?? '')}
               excludeId={selectedCoLeader || undefined}
+              filter={filtroPremat}
               placeholder={pendingLeader ? 'Pendiente de asignar' : 'Buscar dirigente…'}
               aria-label="Buscar dirigente"
             />
+            {esPremat && (
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Solo se listan las personas habilitadas para dar prematrimonial.
+              </p>
+            )}
 
             {!pendingLeader && selectedLeader && (
               <label className="flex items-center gap-2 cursor-pointer">
@@ -537,33 +564,53 @@ export default function NuevoGrupoPage() {
               </label>
             )}
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="accent-coral"
-                checked={pendingLeader}
-                onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
-              />
-              <span className="text-sm text-navy-light/80 font-body">
-                Dejar dirigente <strong>pendiente</strong> (asignar después)
-              </span>
-            </label>
+            {/* PRE-11: en PREMAT no se puede dejar pendiente — si los dos son
+                obligatorios, "pendiente" sería la puerta de atrás. */}
+            {!esPremat && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-coral"
+                  checked={pendingLeader}
+                  onChange={e => { setPendingLeader(e.target.checked); if (e.target.checked) { setSelectedLeader(''); setConfirmed(false) } }}
+                />
+                <span className="text-sm text-navy-light/80 font-body">
+                  Dejar dirigente <strong>pendiente</strong> (asignar después)
+                </span>
+              </label>
+            )}
           </fieldset>
 
           {/* El co-dirigente va aparte, fuera del bloque del dirigente. */}
           {!pendingLeader && selectedLeader && (
             <div className="space-y-1">
-              <label className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
-                Co-dirigente (opcional)
+              <label className={cn(
+                'text-[13px] tracking-widest uppercase font-display',
+                esPremat ? 'text-coral' : 'text-navy-light/80',
+              )}>
+                {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
               </label>
               <DirigentesCombobox
                 value={selectedCoLeader || null}
                 onChange={id => setSelectedCoLeader(id ?? '')}
                 excludeId={selectedLeader || undefined}
+                filter={filtroPremat}
                 placeholder="Buscar co-dirigente…"
                 aria-label="Buscar co-dirigente"
               />
+              {esPremat && (
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  El prematrimonial se da en pareja: hacen falta los dos.
+                </p>
+              )}
             </div>
+          )}
+
+          {/* Por qué no se puede seguir, visible antes de apretar. */}
+          {errorPremat && (selectedLeader || pendingLeader) && (
+            <p className="rounded-xl bg-coral/5 px-3 py-2 text-[13px] text-coral-deep font-body" role="alert">
+              {errorPremat}
+            </p>
           )}
 
           {/* Sede de envío de folletos: sedes ACTIVAS del catálogo, TBD por
