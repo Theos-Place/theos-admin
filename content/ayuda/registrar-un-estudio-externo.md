@@ -1,7 +1,7 @@
 ---
 titulo: Registrar un estudio que alguien llevó por fuera
 seccion: Estudios
-tipo: tutorial
+tipo: infografia
 visibilidad: roles
 roles: [coordinador_estudios, direccion]
 orden: 12
@@ -10,11 +10,11 @@ resumen: Alguien llegó a Theos habiendo llevado un estudio en otra iglesia. Có
 
 # Registrar un estudio que alguien llevó por fuera
 
+![Los cinco pasos para registrar un estudio llevado por fuera](/ayuda/infografias/registrar-un-estudio-externo.svg) ![Registrar un estudio llevado fuera de Theos, desde el tab Administrativo](/ayuda/tutoriales/estudio-externo/estudio-externo.gif)
+
 El caso: Ana llega a Theos y ya llevó Nivel 2 en otra iglesia. Quiere matricularse
 en Nivel 3, pero el sistema no la deja porque no tiene el prerequisito. Lo que hay
 que hacer es registrarle ese Nivel 2 a mano.
-
-![Registrar un estudio llevado fuera de Theos, desde el tab Administrativo](/ayuda/tutoriales/estudio-externo/estudio-externo.gif)
 
 ## Antes de empezar: quién puede hacerlo
 

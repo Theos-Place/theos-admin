@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       applications: {
@@ -161,6 +156,35 @@ export type Database = {
           old_data?: Json | null
         }
         Relationships: []
+      }
+      birthday_greetings: {
+        Row: {
+          id: string
+          member_id: string
+          sent_at: string
+          year: number
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          sent_at?: string
+          year: number
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          sent_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_greetings_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       capacitacion_bloques: {
         Row: {
@@ -399,39 +423,39 @@ export type Database = {
           amount: number
           created_at: string | null
           currency: string
-          refund_id: string | null
           donation_date: string
           family_unit_id: string | null
           id: string
           imported_at: string | null
           is_identified: boolean | null
           member_id: string | null
+          refund_id: string | null
           source_file: string | null
         }
         Insert: {
           amount: number
           created_at?: string | null
           currency?: string
-          refund_id?: string | null
           donation_date: string
           family_unit_id?: string | null
           id?: string
           imported_at?: string | null
           is_identified?: boolean | null
           member_id?: string | null
+          refund_id?: string | null
           source_file?: string | null
         }
         Update: {
           amount?: number
           created_at?: string | null
           currency?: string
-          refund_id?: string | null
           donation_date?: string
           family_unit_id?: string | null
           id?: string
           imported_at?: string | null
           is_identified?: boolean | null
           member_id?: string | null
+          refund_id?: string | null
           source_file?: string | null
         }
         Relationships: [
@@ -447,6 +471,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refunds"
             referencedColumns: ["id"]
           },
         ]
@@ -609,6 +640,112 @@ export type Database = {
           },
         ]
       }
+      evaluation_ticket_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          notes: string | null
+          ticket_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          ticket_id: string
+          to_status: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          ticket_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_ticket_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_ticket_status_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_tickets: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_tickets_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_tickets_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_tickets_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_checkins: {
         Row: {
           checked_in_at: string | null
@@ -706,6 +843,52 @@ export type Database = {
           },
         ]
       }
+      event_managers: {
+        Row: {
+          event_id: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          member_id: string
+        }
+        Insert: {
+          event_id: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          member_id: string
+        }
+        Update: {
+          event_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_managers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_managers_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_managers_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_organizing_committees: {
         Row: {
           committee_id: string
@@ -738,30 +921,30 @@ export type Database = {
       }
       event_registrations: {
         Row: {
-          recorded_by?: string | null
           event_id: string
           form_response_id: string | null
           id: string
           member_id: string
           payment_status: string
+          recorded_by: string | null
           registered_at: string | null
         }
         Insert: {
-          recorded_by?: string | null
           event_id: string
           form_response_id?: string | null
           id?: string
           member_id: string
           payment_status?: string
+          recorded_by?: string | null
           registered_at?: string | null
         }
         Update: {
-          recorded_by?: string | null
           event_id?: string
           form_response_id?: string | null
           id?: string
           member_id?: string
           payment_status?: string
+          recorded_by?: string | null
           registered_at?: string | null
         }
         Relationships: [
@@ -773,8 +956,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_registrations_form_response_id_fkey"
+            columns: ["form_response_id"]
+            isOneToOne: false
+            referencedRelation: "form_responses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "event_registrations_member_id_fkey"
             columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registrations_recorded_by_fkey"
+            columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -881,22 +1078,22 @@ export type Database = {
           payment_amount: number | null
           recurrence_end: string | null
           recurrence_rule: string | null
+          registration_form_id: string | null
           requires_checkin: boolean | null
           requires_payment: boolean | null
           requires_registration: boolean | null
           requires_survey: boolean | null
-          registration_form_id: string | null
+          sede_id: string | null
+          server_price: number | null
+          servers_pay: boolean
+          starts_at: string
+          status: string | null
           survey_form_id: string | null
           survey_offset_hours: number | null
           survey_send_at: string | null
           survey_sent_at: string | null
           survey_sent_count: number
           survey_template_id: string | null
-          sede_id: string | null
-          server_price: number | null
-          servers_pay: boolean
-          starts_at: string
-          status: string | null
           title: string
           updated_at: string | null
           virtual_url: string | null
@@ -922,22 +1119,22 @@ export type Database = {
           payment_amount?: number | null
           recurrence_end?: string | null
           recurrence_rule?: string | null
+          registration_form_id?: string | null
           requires_checkin?: boolean | null
           requires_payment?: boolean | null
           requires_registration?: boolean | null
           requires_survey?: boolean | null
-          registration_form_id?: string | null
+          sede_id?: string | null
+          server_price?: number | null
+          servers_pay?: boolean
+          starts_at: string
+          status?: string | null
           survey_form_id?: string | null
           survey_offset_hours?: number | null
           survey_send_at?: string | null
           survey_sent_at?: string | null
           survey_sent_count?: number
           survey_template_id?: string | null
-          sede_id?: string | null
-          server_price?: number | null
-          servers_pay?: boolean
-          starts_at: string
-          status?: string | null
           title: string
           updated_at?: string | null
           virtual_url?: string | null
@@ -963,22 +1160,22 @@ export type Database = {
           payment_amount?: number | null
           recurrence_end?: string | null
           recurrence_rule?: string | null
+          registration_form_id?: string | null
           requires_checkin?: boolean | null
           requires_payment?: boolean | null
           requires_registration?: boolean | null
           requires_survey?: boolean | null
-          registration_form_id?: string | null
+          sede_id?: string | null
+          server_price?: number | null
+          servers_pay?: boolean
+          starts_at?: string
+          status?: string | null
           survey_form_id?: string | null
           survey_offset_hours?: number | null
           survey_send_at?: string | null
           survey_sent_at?: string | null
           survey_sent_count?: number
           survey_template_id?: string | null
-          sede_id?: string | null
-          server_price?: number | null
-          servers_pay?: boolean
-          starts_at?: string
-          status?: string | null
           title?: string
           updated_at?: string | null
           virtual_url?: string | null
@@ -999,10 +1196,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_registration_form_id_fkey"
+            columns: ["registration_form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "events_sede_id_fkey"
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_survey_form_id_fkey"
+            columns: ["survey_form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_survey_template_id_fkey"
+            columns: ["survey_template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -1121,7 +1339,6 @@ export type Database = {
       }
       finance_requests: {
         Row: {
-          recorded_by?: string | null
           amount: number | null
           created_at: string | null
           entity_type: string | null
@@ -1131,6 +1348,7 @@ export type Database = {
           payment_id: string | null
           plan_id: string | null
           reason: string
+          recorded_by: string | null
           request_type: string
           review_notes: string | null
           reviewed_at: string | null
@@ -1140,7 +1358,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          recorded_by?: string | null
           amount?: number | null
           created_at?: string | null
           entity_type?: string | null
@@ -1150,6 +1367,7 @@ export type Database = {
           payment_id?: string | null
           plan_id?: string | null
           reason: string
+          recorded_by?: string | null
           request_type: string
           review_notes?: string | null
           reviewed_at?: string | null
@@ -1159,7 +1377,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          recorded_by?: string | null
           amount?: number | null
           created_at?: string | null
           entity_type?: string | null
@@ -1169,6 +1386,7 @@ export type Database = {
           payment_id?: string | null
           plan_id?: string | null
           reason?: string
+          recorded_by?: string | null
           request_type?: string
           review_notes?: string | null
           reviewed_at?: string | null
@@ -1204,6 +1422,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_requests_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
           {
@@ -1556,33 +1781,33 @@ export type Database = {
       }
       form_responses: {
         Row: {
-          recorded_by?: string | null
           form_id: string
           guest_email: string | null
           guest_name: string | null
           id: string
           ip_address: unknown
           member_id: string | null
+          recorded_by: string | null
           submitted_at: string | null
         }
         Insert: {
-          recorded_by?: string | null
           form_id: string
           guest_email?: string | null
           guest_name?: string | null
           id?: string
           ip_address?: unknown
           member_id?: string | null
+          recorded_by?: string | null
           submitted_at?: string | null
         }
         Update: {
-          recorded_by?: string | null
           form_id?: string
           guest_email?: string | null
           guest_name?: string | null
           id?: string
           ip_address?: unknown
           member_id?: string | null
+          recorded_by?: string | null
           submitted_at?: string | null
         }
         Relationships: [
@@ -1596,6 +1821,13 @@ export type Database = {
           {
             foreignKeyName: "form_responses_member_id_fkey"
             columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_recorded_by_fkey"
+            columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -1753,56 +1985,70 @@ export type Database = {
       }
       leader_evaluations: {
         Row: {
-          comments: string | null
           co_leader_id: string | null
-          hidden_at: string | null
-          hidden_by: string | null
-          hidden_reason: string | null
-          member_id: string | null
-          response_id: string | null
+          comments: string | null
           created_at: string | null
           evaluation_date: string
           group_id: string | null
+          hidden_at: string | null
+          hidden_by: string | null
+          hidden_reason: string | null
           id: string
           leader_id: string
+          member_id: string | null
+          response_id: string | null
           score: number
         }
         Insert: {
-          comments?: string | null
           co_leader_id?: string | null
-          hidden_at?: string | null
-          hidden_by?: string | null
-          hidden_reason?: string | null
-          member_id?: string | null
-          response_id?: string | null
+          comments?: string | null
           created_at?: string | null
           evaluation_date?: string
           group_id?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
           id?: string
           leader_id: string
+          member_id?: string | null
+          response_id?: string | null
           score: number
         }
         Update: {
-          comments?: string | null
           co_leader_id?: string | null
-          hidden_at?: string | null
-          hidden_by?: string | null
-          hidden_reason?: string | null
-          member_id?: string | null
-          response_id?: string | null
+          comments?: string | null
           created_at?: string | null
           evaluation_date?: string
           group_id?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
           id?: string
           leader_id?: string
+          member_id?: string | null
+          response_id?: string | null
           score?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "leader_evaluations_co_leader_id_fkey"
+            columns: ["co_leader_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leader_evaluations_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leader_evaluations_hidden_by_fkey"
+            columns: ["hidden_by"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
           {
@@ -1812,7 +2058,54 @@ export type Database = {
             referencedRelation: "study_leaders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leader_evaluations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leader_evaluations_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "form_responses"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      leader_report_history: {
+        Row: {
+          activos: number
+          captured_on: string
+          created_at: string
+          dando_ahora: number
+          disponibles_sin_grupo: number
+          en_pausa: number
+          en_revision: number
+          total: number
+        }
+        Insert: {
+          activos: number
+          captured_on?: string
+          created_at?: string
+          dando_ahora: number
+          disponibles_sin_grupo: number
+          en_pausa?: number
+          en_revision?: number
+          total?: number
+        }
+        Update: {
+          activos?: number
+          captured_on?: string
+          created_at?: string
+          dando_ahora?: number
+          disponibles_sin_grupo?: number
+          en_pausa?: number
+          en_revision?: number
+          total?: number
+        }
+        Relationships: []
       }
       member_admin_data: {
         Row: {
@@ -1859,13 +2152,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "member_admin_data_servers_onboarding_by_fkey"
-            columns: ["servers_onboarding_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "member_admin_data_authorized_virtual_studies_by_fkey"
             columns: ["authorized_virtual_studies_by"]
             isOneToOne: false
@@ -1882,6 +2168,13 @@ export type Database = {
           {
             foreignKeyName: "member_admin_data_not_recommended_to_lead_studies_by_fkey"
             columns: ["not_recommended_to_lead_studies_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_admin_data_servers_onboarding_by_fkey"
+            columns: ["servers_onboarding_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -2643,169 +2936,6 @@ export type Database = {
         }
         Relationships: []
       }
-      evaluation_tickets: {
-        Row: {
-          created_at: string
-          group_id: string
-          id: string
-          review_notes: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          sent_at: string | null
-          sent_by: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          group_id: string
-          id?: string
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sent_at?: string | null
-          sent_by?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          group_id?: string
-          id?: string
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sent_at?: string | null
-          sent_by?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "evaluation_tickets_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: true
-            referencedRelation: "study_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evaluation_tickets_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evaluation_tickets_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      evaluation_ticket_status_history: {
-        Row: {
-          changed_by: string | null
-          created_at: string
-          from_status: string | null
-          id: string
-          notes: string | null
-          ticket_id: string
-          to_status: string
-        }
-        Insert: {
-          changed_by?: string | null
-          created_at?: string
-          from_status?: string | null
-          id?: string
-          notes?: string | null
-          ticket_id: string
-          to_status: string
-        }
-        Update: {
-          changed_by?: string | null
-          created_at?: string
-          from_status?: string | null
-          id?: string
-          notes?: string | null
-          ticket_id?: string
-          to_status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "evaluation_ticket_status_history_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "evaluation_tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evaluation_ticket_status_history_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      leader_report_history: {
-        Row: {
-          activos: number
-          captured_on: string
-          created_at: string
-          dando_ahora: number
-          disponibles_sin_grupo: number
-          en_pausa: number
-          en_revision: number
-          total: number
-        }
-        Insert: {
-          activos: number
-          captured_on?: string
-          created_at?: string
-          dando_ahora: number
-          disponibles_sin_grupo: number
-          en_pausa?: number
-          en_revision?: number
-          total?: number
-        }
-        Update: {
-          activos?: number
-          captured_on?: string
-          created_at?: string
-          dando_ahora?: number
-          disponibles_sin_grupo?: number
-          en_pausa?: number
-          en_revision?: number
-          total?: number
-        }
-        Relationships: []
-      }
-      silenced_emails: {
-        Row: {
-          attempted_at: string
-          id: string
-          kind: string | null
-          recipient: string
-          subject: string
-        }
-        Insert: {
-          attempted_at?: string
-          id?: string
-          kind?: string | null
-          recipient: string
-          subject: string
-        }
-        Update: {
-          attempted_at?: string
-          id?: string
-          kind?: string | null
-          recipient?: string
-          subject?: string
-        }
-        Relationships: []
-      }
       payment_plans: {
         Row: {
           created_at: string
@@ -2851,8 +2981,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "payment_plans_member_id_fkey"
-            columns: ["member_id"]
+            foreignKeyName: "payment_plans_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -2872,8 +3002,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payment_plans_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "payment_plans_member_id_fkey"
+            columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -2888,6 +3018,7 @@ export type Database = {
           created_at: string | null
           currency: string | null
           description: string | null
+          due_date: string | null
           enrollment_id: string | null
           entity_type: string | null
           event_id: string | null
@@ -2895,13 +3026,12 @@ export type Database = {
           folleto_request_id: string | null
           gateway_ref: string | null
           id: string
+          installment_number: number | null
           member_id: string | null
           paid_at: string | null
           payment_date: string
-          payment_plan_id: string | null
-          due_date: string | null
-          installment_number: number | null
           payment_method: string | null
+          payment_plan_id: string | null
           receipt_path: string | null
           recorded_by: string | null
           reference_code: string | null
@@ -2924,6 +3054,7 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          due_date?: string | null
           enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
@@ -2931,13 +3062,12 @@ export type Database = {
           folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
+          installment_number?: number | null
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
-          payment_plan_id?: string | null
-          due_date?: string | null
-          installment_number?: number | null
           payment_method?: string | null
+          payment_plan_id?: string | null
           receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null
@@ -2960,6 +3090,7 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          due_date?: string | null
           enrollment_id?: string | null
           entity_type?: string | null
           event_id?: string | null
@@ -2967,13 +3098,12 @@ export type Database = {
           folleto_request_id?: string | null
           gateway_ref?: string | null
           id?: string
+          installment_number?: number | null
           member_id?: string | null
           paid_at?: string | null
           payment_date?: string
-          payment_plan_id?: string | null
-          due_date?: string | null
-          installment_number?: number | null
           payment_method?: string | null
+          payment_plan_id?: string | null
           receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null
@@ -3030,6 +3160,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_plan_id_fkey"
+            columns: ["payment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
             referencedColumns: ["id"]
           },
           {
@@ -3477,17 +3614,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "refund_comments_refund_id_fkey"
-            columns: ["refund_id"]
-            isOneToOne: false
-            referencedRelation: "refunds"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "refund_comments_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_comments_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refunds"
             referencedColumns: ["id"]
           },
         ]
@@ -3497,14 +3634,14 @@ export type Database = {
           amount: number
           created_at: string | null
           currency: string
-          kind: string | null
-          plan_id: string | null
           event_id: string | null
           id: string
+          kind: string | null
           member_id: string | null
           method: string | null
           notes: string | null
           payment_id: string
+          plan_id: string | null
           processed_at: string | null
           processed_by: string | null
           reason: string | null
@@ -3517,14 +3654,14 @@ export type Database = {
           amount: number
           created_at?: string | null
           currency?: string
-          kind?: string | null
-          plan_id?: string | null
           event_id?: string | null
           id?: string
+          kind?: string | null
           member_id?: string | null
           method?: string | null
           notes?: string | null
           payment_id: string
+          plan_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
           reason?: string | null
@@ -3537,14 +3674,14 @@ export type Database = {
           amount?: number
           created_at?: string | null
           currency?: string
-          kind?: string | null
-          plan_id?: string | null
           event_id?: string | null
           id?: string
+          kind?: string | null
           member_id?: string | null
           method?: string | null
           notes?: string | null
           payment_id?: string
+          plan_id?: string | null
           processed_at?: string | null
           processed_by?: string | null
           reason?: string | null
@@ -3554,13 +3691,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "refunds_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "study_plans"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "refunds_event_id_fkey"
             columns: ["event_id"]
@@ -3580,6 +3710,13 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -3832,6 +3969,7 @@ export type Database = {
           age_group: string | null
           code: string
           created_at: string | null
+          currency: string
           day: string | null
           id: string
           is_active: boolean | null
@@ -3842,13 +3980,12 @@ export type Database = {
           time: string | null
           updated_at: string | null
           waze_url: string | null
-          /** INT-3: moneda por defecto de la sede. */
-          currency: string
         }
         Insert: {
           age_group?: string | null
           code: string
           created_at?: string | null
+          currency?: string
           day?: string | null
           id?: string
           is_active?: boolean | null
@@ -3859,12 +3996,12 @@ export type Database = {
           time?: string | null
           updated_at?: string | null
           waze_url?: string | null
-          currency?: string
         }
         Update: {
           age_group?: string | null
           code?: string
           created_at?: string | null
+          currency?: string
           day?: string | null
           id?: string
           is_active?: boolean | null
@@ -3875,7 +4012,6 @@ export type Database = {
           time?: string | null
           updated_at?: string | null
           waze_url?: string | null
-          currency?: string
         }
         Relationships: []
       }
@@ -3957,6 +4093,30 @@ export type Database = {
           },
         ]
       }
+      silenced_emails: {
+        Row: {
+          attempted_at: string
+          id: string
+          kind: string | null
+          recipient: string
+          subject: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          kind?: string | null
+          recipient: string
+          subject: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          kind?: string | null
+          recipient?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       study_attendance: {
         Row: {
           created_at: string | null
@@ -4004,7 +4164,6 @@ export type Database = {
       }
       study_enrollments: {
         Row: {
-          recorded_by?: string | null
           completed_at: string | null
           created_at: string | null
           drop_reason: string | null
@@ -4018,12 +4177,12 @@ export type Database = {
           member_id: string
           notes: string | null
           plan_id: string | null
+          recorded_by: string | null
           status: string | null
           transferred_to: string | null
           updated_at: string | null
         }
         Insert: {
-          recorded_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4037,12 +4196,12 @@ export type Database = {
           member_id: string
           notes?: string | null
           plan_id?: string | null
+          recorded_by?: string | null
           status?: string | null
           transferred_to?: string | null
           updated_at?: string | null
         }
         Update: {
-          recorded_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4056,6 +4215,7 @@ export type Database = {
           member_id?: string
           notes?: string | null
           plan_id?: string | null
+          recorded_by?: string | null
           status?: string | null
           transferred_to?: string | null
           updated_at?: string | null
@@ -4083,6 +4243,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "study_enrollments_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "study_enrollments_transferred_to_fkey"
             columns: ["transferred_to"]
             isOneToOne: false
@@ -4096,20 +4263,19 @@ export type Database = {
           age_max: number | null
           age_min: number | null
           bloque_id: string | null
+          close_overdue_notified_at: string | null
+          close_reminder_sent_at: string | null
           co_leader_id: string | null
           created_at: string | null
           current_week: number | null
           ends_at: string | null
+          enrollment_end_date: string | null
+          enrollment_restrictions: Json | null
+          enrollment_start_date: string | null
           feedback_released_at: string | null
           feedback_released_by: string | null
           feedback_requested_at: string | null
           folletos_sede: string | null
-          survey_enabled: boolean
-          survey_offset_hours: number
-          survey_send_at: string | null
-          enrollment_end_date: string | null
-          enrollment_restrictions: Json | null
-          enrollment_start_date: string | null
           id: string
           is_leader_training: boolean | null
           is_virtual: boolean
@@ -4124,6 +4290,10 @@ export type Database = {
           start_notified_at: string | null
           starts_at: string | null
           status: string | null
+          survey_enabled: boolean
+          survey_form_id: string | null
+          survey_offset_hours: number
+          survey_send_at: string | null
           training_modality: string | null
           updated_at: string | null
           whatsapp_group_url: string | null
@@ -4133,20 +4303,19 @@ export type Database = {
           age_max?: number | null
           age_min?: number | null
           bloque_id?: string | null
+          close_overdue_notified_at?: string | null
+          close_reminder_sent_at?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          enrollment_end_date?: string | null
+          enrollment_restrictions?: Json | null
+          enrollment_start_date?: string | null
           feedback_released_at?: string | null
           feedback_released_by?: string | null
           feedback_requested_at?: string | null
           folletos_sede?: string | null
-          survey_enabled?: boolean
-          survey_offset_hours?: number
-          survey_send_at?: string | null
-          enrollment_end_date?: string | null
-          enrollment_restrictions?: Json | null
-          enrollment_start_date?: string | null
           id?: string
           is_leader_training?: boolean | null
           is_virtual?: boolean
@@ -4161,6 +4330,10 @@ export type Database = {
           start_notified_at?: string | null
           starts_at?: string | null
           status?: string | null
+          survey_enabled?: boolean
+          survey_form_id?: string | null
+          survey_offset_hours?: number
+          survey_send_at?: string | null
           training_modality?: string | null
           updated_at?: string | null
           whatsapp_group_url?: string | null
@@ -4170,20 +4343,19 @@ export type Database = {
           age_max?: number | null
           age_min?: number | null
           bloque_id?: string | null
+          close_overdue_notified_at?: string | null
+          close_reminder_sent_at?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
           ends_at?: string | null
+          enrollment_end_date?: string | null
+          enrollment_restrictions?: Json | null
+          enrollment_start_date?: string | null
           feedback_released_at?: string | null
           feedback_released_by?: string | null
           feedback_requested_at?: string | null
           folletos_sede?: string | null
-          survey_enabled?: boolean
-          survey_offset_hours?: number
-          survey_send_at?: string | null
-          enrollment_end_date?: string | null
-          enrollment_restrictions?: Json | null
-          enrollment_start_date?: string | null
           id?: string
           is_leader_training?: boolean | null
           is_virtual?: boolean
@@ -4198,6 +4370,10 @@ export type Database = {
           start_notified_at?: string | null
           starts_at?: string | null
           status?: string | null
+          survey_enabled?: boolean
+          survey_form_id?: string | null
+          survey_offset_hours?: number
+          survey_send_at?: string | null
           training_modality?: string | null
           updated_at?: string | null
           whatsapp_group_url?: string | null
@@ -4219,6 +4395,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "study_groups_feedback_released_by_fkey"
+            columns: ["feedback_released_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "study_groups_leader_id_fkey"
             columns: ["leader_id"]
             isOneToOne: false
@@ -4230,6 +4413,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "study_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_survey_form_id_fkey"
+            columns: ["survey_form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
             referencedColumns: ["id"]
           },
         ]
@@ -4478,7 +4668,6 @@ export type Database = {
       }
       study_requests: {
         Row: {
-          recorded_by?: string | null
           created_at: string | null
           current_group_id: string | null
           eligibility_note: string | null
@@ -4495,6 +4684,7 @@ export type Database = {
           proposed_time: string | null
           proposed_zones: string[]
           reason: string | null
+          recorded_by: string | null
           request_type: string
           resolved_group_id: string | null
           resulting_enrollment_id: string | null
@@ -4508,7 +4698,6 @@ export type Database = {
           was_eligible: boolean | null
         }
         Insert: {
-          recorded_by?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null
@@ -4525,6 +4714,7 @@ export type Database = {
           proposed_time?: string | null
           proposed_zones?: string[]
           reason?: string | null
+          recorded_by?: string | null
           request_type: string
           resolved_group_id?: string | null
           resulting_enrollment_id?: string | null
@@ -4538,7 +4728,6 @@ export type Database = {
           was_eligible?: boolean | null
         }
         Update: {
-          recorded_by?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null
@@ -4555,6 +4744,7 @@ export type Database = {
           proposed_time?: string | null
           proposed_zones?: string[]
           reason?: string | null
+          recorded_by?: string | null
           request_type?: string
           resolved_group_id?: string | null
           resulting_enrollment_id?: string | null
@@ -4597,6 +4787,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "study_requests_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "study_requests_resolved_group_id_fkey"
             columns: ["resolved_group_id"]
             isOneToOne: false
@@ -4633,7 +4830,7 @@ export type Database = {
           id: string
           member_id: string
           plan_id: string
-          reason: string | null
+          reason: string
           revoked_at: string | null
           status: string
           waived_requirements: string[]
@@ -4644,7 +4841,7 @@ export type Database = {
           id?: string
           member_id: string
           plan_id: string
-          reason?: string | null
+          reason: string
           revoked_at?: string | null
           status?: string
           waived_requirements?: string[]
@@ -4655,7 +4852,7 @@ export type Database = {
           id?: string
           member_id?: string
           plan_id?: string
-          reason?: string | null
+          reason?: string
           revoked_at?: string | null
           status?: string
           waived_requirements?: string[]
@@ -4992,7 +5189,6 @@ export type Database = {
       dashboard_sums: {
         Args: { p_month_start: string; p_month_start_date: string }
         Returns: {
-          /** INT-3: total POR MONEDA ({"CRC": 25000}), no un escalar. */
           income_this_month: Json
           servers_unique: number
           total_recipients: number
@@ -5122,6 +5318,7 @@ export type Database = {
           p_guest_email: string
           p_guest_name: string
           p_member_id: string
+          p_recorded_by?: string
         }
         Returns: string
       }
@@ -5257,3 +5454,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
