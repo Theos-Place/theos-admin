@@ -15,6 +15,7 @@ const FLUJOS: Record<string, () => Promise<{ flujo: TutorialFlow }>> = {
   'checkin': () => import('./checkin'),
   'folletos': () => import('./folletos'),
   'reubicacion': () => import('./reubicacion'),
+  'estudio-externo': () => import('./estudio-externo'),
 }
 
 async function main() {

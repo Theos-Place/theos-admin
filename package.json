@@ -19,7 +19,8 @@
     "tutorial:mis-pagos": "tsx scripts/tutoriales/run.ts mis-pagos",
     "tutorial:checkin": "tsx scripts/tutoriales/run.ts checkin",
     "tutorial:folletos": "tsx scripts/tutoriales/run.ts folletos",
-    "tutorial:reubicacion": "tsx scripts/tutoriales/run.ts reubicacion"
+    "tutorial:reubicacion": "tsx scripts/tutoriales/run.ts reubicacion",
+    "tutorial:estudio-externo": "tsx scripts/tutoriales/run.ts estudio-externo"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.65.0",

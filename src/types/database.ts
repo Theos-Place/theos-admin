@@ -4010,6 +4010,8 @@ export type Database = {
           drop_reason: string | null
           dropped_at: string | null
           enrolled_at: string | null
+          es_externo: boolean
+          fuente_externa: string | null
           grade: number | null
           group_id: string | null
           id: string
@@ -4027,6 +4029,8 @@ export type Database = {
           drop_reason?: string | null
           dropped_at?: string | null
           enrolled_at?: string | null
+          es_externo?: boolean
+          fuente_externa?: string | null
           grade?: number | null
           group_id?: string | null
           id?: string
@@ -4044,6 +4048,8 @@ export type Database = {
           drop_reason?: string | null
           dropped_at?: string | null
           enrolled_at?: string | null
+          es_externo?: boolean
+          fuente_externa?: string | null
           grade?: number | null
           group_id?: string | null
           id?: string

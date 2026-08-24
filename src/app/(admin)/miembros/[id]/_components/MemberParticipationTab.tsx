@@ -74,7 +74,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -219,6 +219,21 @@ export function MemberParticipationTab({
                           {row.code}
                         </span>
                         <span className="text-navy-light/80 font-body">{row.name}</span>
+                        {/* Llevado FUERA de Theos y registrado a mano. Se marca
+                            porque cuenta como prerrequisito igual que uno
+                            interno: quien lea el expediente tiene que poder
+                            distinguirlo sin abrir la base. */}
+                        {row.esExterno && (
+                          <span
+                            className="rounded px-1.5 py-0.5 text-[11px] bg-teal-soft/30 text-teal-deep font-body whitespace-nowrap"
+                            title={[
+                              row.fuenteExterna ? `Lo llevó en: ${row.fuenteExterna}` : 'No se registró dónde lo llevó',
+                              row.registradoPor ? `Registrado por ${row.registradoPor}` : null,
+                            ].filter(Boolean).join(' · ')}
+                          >
+                            Externo
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-navy-light/80 text-xs font-body">

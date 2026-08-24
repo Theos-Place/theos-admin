@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
+import { AddExternalStudyButton } from '@/components/studies/AddExternalStudyButton'
 import { MemberRecommendations, PersonaLink } from './MemberRecommendations'
 import { ACTION_PLAN_OPTIONS, COMMITMENT_OPTIONS, needsFollowUp } from '@/lib/studies/premat-evaluation'
 import {
@@ -43,7 +44,11 @@ type AccountStatus = {
  *  el tab ni los datos). Acciones de estudios + "No recomendado para dar
  *  estudios" (lista de excepciones, no de aprobados) + recomendaciones de
  *  cierres (todas). */
-export function MemberAdminTab({ memberId }: { memberId: string }) {
+export function MemberAdminTab({ memberId, onChanged }: {
+  memberId: string
+  /** Refresca el expediente cuando una acción de acá cambia sus datos. */
+  onChanged?: () => void
+}) {
   const [admin, setAdmin] = useState<AdminData | null>(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -335,6 +340,9 @@ export function MemberAdminTab({ memberId }: { memberId: string }) {
           <div className="flex gap-2 flex-wrap">
             <InviteToStudyButton memberId={memberId} blocked={!!admin?.not_recommended_to_lead_studies} />
             <StudyExceptionButton memberId={memberId} />
+            {/* Registrar a mano un estudio llevado por fuera. Se gatea solo
+                (admin + coordinador de estudios): si no corresponde, no pinta. */}
+            <AddExternalStudyButton memberId={memberId} onAdded={onChanged} />
           </div>
         </div>
 

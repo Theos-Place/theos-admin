@@ -1100,19 +1100,39 @@ export async function deleteGroup(id: string): Promise<void> {
 
 /** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,
  *  cuando el sistema no existía). group_id queda nulo; el plan va directo. */
+/** Registra a mano un estudio en el expediente: el que la persona llevó por
+ *  fuera de Theos, o uno viejo que no quedó en el sistema.
+ *
+ *  `es_externo` NO se deduce de `group_id IS NULL`: al 2026-08-24 hay 25.610
+ *  matrículas sin grupo de 40.474 (el import histórico de CCB), así que esa
+ *  señal no distingue nada. Se marca explícito o no se marca.
+ *
+ *  `recorded_by` es quién lo digitó, que acá SIEMPRE es alguien distinto de la
+ *  persona (el rol base no puede registrar estudios). Sin ese rastro no se
+ *  puede auditar por qué alguien quedó habilitado para un estudio avanzado. */
 export async function addMemberStudy(input: {
   member_id: string
   plan_id: string
   completed_at: string | null
   status?: string
+  es_externo?: boolean
+  fuente_externa?: string | null
+  recorded_by?: string | null
 }): Promise<void> {
   const supabase = createAdminClient()
+  const esExterno = input.es_externo ?? false
   const { error } = await supabase.from('study_enrollments').insert({
     member_id: input.member_id,
     plan_id: input.plan_id,
     group_id: null,
     status: input.status ?? 'completed',
     completed_at: input.completed_at,
+    es_externo: esExterno,
+    // La procedencia solo se guarda si es externo — igual que el CHECK de la
+    // base. Así el 400 lo da zod con un mensaje claro y no el motor con uno
+    // ilegible, pero si algo se escapa la base tampoco lo acepta.
+    fuente_externa: esExterno ? (input.fuente_externa?.trim() || null) : null,
+    recorded_by: input.recorded_by ?? null,
   })
   if (error) throw error
 }

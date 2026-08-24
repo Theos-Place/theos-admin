@@ -93,7 +93,7 @@ export type DbMemberFull = DbMemberEnriched & {
    *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
    *  los 6 meses previos a su última asistencia. null = nunca asistió. */
   attendance_sede: MemberSedeResult | null
-  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
   event_registration_history: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string
     requires_payment: boolean; cost: number
@@ -135,6 +135,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       ),
       study_enrollments!study_enrollments_member_id_fkey(
         id, status, completed_at, enrolled_at, grade, notes,
+        es_externo, fuente_externa,
+        registrado_por:members!study_enrollments_recorded_by_fkey(first_name, last_name),
         study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks, cost, requires_payment)
       ),
@@ -284,6 +286,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     enrolled_at: string | null
     grade: number | null
     notes: string | null
+    es_externo: boolean | null
+    fuente_externa: string | null
+    registrado_por: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
     study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: PlanEmbed } | null
     plan_direct: PlanEmbed
   }>
@@ -365,6 +370,15 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     }
   })
 
+  // PostgREST devuelve un embed to-one como objeto o como arreglo de uno según
+  // el caso; se normaliza acá en vez de repetir el ternario en cada uso.
+  const nombreDe = (p: unknown): string | null => {
+    const x = (Array.isArray(p) ? p[0] : p) as { first_name?: string; last_name?: string } | null
+    if (!x) return null
+    const n = `${x.first_name ?? ''} ${x.last_name ?? ''}`.trim()
+    return n || null
+  }
+
   // Historial de estudios con fecha real (del grupo si existe; si no, de la inscripción).
   const studyHistory = enrollments
     .filter(e => planOf(e)?.code && !ledByMember(e))
@@ -389,6 +403,13 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         // EST-8: nota numérica y resultado del cierre ('aprobado' | 'reprobado: motivo').
         grade: e.grade ?? null,
         notes: e.notes ?? null,
+        // Llevado FUERA de Theos y registrado a mano. Va con quién lo registró:
+        // un estudio externo cuenta como prerrequisito, así que si hay que
+        // auditar por qué alguien entró a un estudio avanzado, la respuesta
+        // tiene que estar acá y no en la memoria de nadie.
+        es_externo: !!e.es_externo,
+        fuente_externa: e.fuente_externa ?? null,
+        registrado_por: nombreDe(e.registrado_por),
       }
     })
     .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')) // más reciente primero (igual que eventos y donaciones)

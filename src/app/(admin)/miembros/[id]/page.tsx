@@ -5,10 +5,9 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { openSectionsFromParam } from '@/lib/members/profile-deeplink'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
-import { useStudies } from '@/hooks/useStudies'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
-import { STUDY_ADMIN_ROLES, EXTERNAL_STUDY_ROLES } from '@/lib/auth/roles'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -68,12 +67,6 @@ export default function MiembroDetailPage() {
   const { hasRole, member: viewer } = useAuth()
 
   const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
-  // Registrar a mano un estudio (el que se llevó por fuera) es más restringido
-  // que administrar estudios: cuenta como prerrequisito, así que habilita a la
-  // persona para todo lo que venga después. Espejo del guard de la API — antes
-  // el botón se mostraba a CUALQUIER sesión, incluido el rol base 'miembro',
-  // que al enviarlo recibía un 403 y un error genérico.
-  const puedeAgregarEstudio = hasRole(...EXTERNAL_STUDY_ROLES)
   // Onboarding de servidores: estos roles también entran al tab Administrativo,
   // pero ahí solo ven su sección (el API no les da los datos de estudios).
   const isServersOnboardingAdmin = hasRole('admin', 'encargado_staff', 'coordinador_servidores')
@@ -89,7 +82,6 @@ export default function MiembroDetailPage() {
   const [showDeactivate, setShowDeactivate] = useState(false)
   const [deactivating, setDeactivating] = useState(false)
   const [revealDonations, setRevealDonations] = useState(false)
-  const [showAddStudy, setShowAddStudy] = useState(false)
   const [showMerge, setShowMerge] = useState(false)
   // PAG-4: ?open=<sección> (p. ej. "Ver historial de pagos" de /mis-pagos usa
   // ?tab=participacion&open=pagos) arranca con ese acordeón expandido.
@@ -171,6 +163,9 @@ export default function MiembroDetailPage() {
       cost: s.cost,
       grade: s.grade ?? null,
       notes: s.notes ?? null,
+      esExterno: s.es_externo,
+      fuenteExterna: s.fuente_externa,
+      registradoPor: s.registrado_por,
     }))
   }, [member, studyTypes])
 
@@ -341,7 +336,6 @@ export default function MiembroDetailPage() {
           onToggleRevealDonations={() => setRevealDonations(r => !r)}
           donationsCount={member.donations.length}
           ledStudies={member.led_studies ?? []}
-          onAddStudy={puedeAgregarEstudio ? () => setShowAddStudy(true) : undefined}
         />
         {/* Dirigente sin rol administrativo: recomendaciones SOLO de sus miembros
             (el backend filtra; vacío → no se pinta). No ve el resto del tab Admin. */}
@@ -351,13 +345,6 @@ export default function MiembroDetailPage() {
         </div>
       )}
 
-      {showAddStudy && (
-        <AddStudyModal
-          memberId={id}
-          onClose={() => setShowAddStudy(false)}
-          onAdded={() => { setShowAddStudy(false); refetch() }}
-        />
-      )}
 
       {showMerge && member && (
         <MergeMemberModal
@@ -380,7 +367,7 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Administrativo (solo roles administrativos) */}
       {activeTab === 'administrativo' && (isStudyAdmin || isServersOnboardingAdmin) && (
-        <MemberAdminTab memberId={member.id} />
+        <MemberAdminTab memberId={member.id} onChanged={refetch} />
       )}
 
       {/* TAB: Pase Digital */}
@@ -402,87 +389,6 @@ export default function MiembroDetailPage() {
         onCancel={() => setShowDeactivate(false)}
       />
     </div>
-  )
-}
-
-// ─── Modal: agregar estudio al historial (sin grupo) ────────────────────────────
-
-function AddStudyModal({ memberId, onClose, onAdded }: {
-  memberId: string
-  onClose: () => void
-  onAdded: () => void
-}) {
-  const { studyTypes } = useStudies('plans')
-  const [code, setCode] = useState('')
-  const [date, setDate] = useState('')
-  const [status, setStatus] = useState('completed')
-  const [saving, setSaving] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-
-  const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-
-  async function handleSave() {
-    if (!code) { setErr('Seleccioná un estudio'); return }
-    setSaving(true)
-    setErr(null)
-    try {
-      const res = await fetch(`/api/members/${memberId}/studies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan_code: code, date: date || null, status }),
-      })
-      if (!res.ok) throw new Error('Error guardando el estudio')
-      onAdded()
-    } catch (e) {
-      console.error(e)
-      setErr('No se pudo agregar el estudio. Intentá de nuevo.')
-      setSaving(false)
-    }
-  }
-
-  return (
-    <Modal onClose={onClose} titleId="agregar-estudio-title" width={384}>
-      <div className="p-6 space-y-4">
-        <p id="agregar-estudio-title" className="text-base font-bold text-navy font-display">Agregar estudio</p>
-        <p className="text-[13px] text-navy-light/80 font-body -mt-2">
-          Para estudios que la persona llevó sin un grupo en el sistema.
-        </p>
-
-        <div className="space-y-1">
-          <label htmlFor="hist-estudio" className="text-[13px] text-navy-light/80 font-display">Estudio *</label>
-          <select id="hist-estudio" aria-required="true" className={inputCls} value={code} onChange={e => setCode(e.target.value)}>
-            <option value="">Seleccionar…</option>
-            {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="hist-fecha" className="text-[13px] text-navy-light/80 font-display">Fecha</label>
-            <input id="hist-fecha" type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="hist-estado" className="text-[13px] text-navy-light/80 font-display">Estado</label>
-            <select id="hist-estado" className={inputCls} value={status} onChange={e => setStatus(e.target.value)}>
-              <option value="completed">Aprobado</option>
-              <option value="dropped">Reprobó</option>
-              <option value="enrolled">En curso</option>
-            </select>
-          </div>
-        </div>
-
-        {err && <p className="text-sm text-coral font-body">{err}</p>}
-
-        <div className="flex gap-2 pt-1">
-          <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
-            Cancelar
-          </button>
-          <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
-            {saving ? 'Guardando…' : 'Agregar'}
-          </button>
-        </div>
-      </div>
-    </Modal>
   )
 }
 

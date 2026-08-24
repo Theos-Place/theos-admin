@@ -82,7 +82,7 @@ export type Member = {
   is_server: boolean
   roles: MemberRole[]
   completed_studies: string[]
-  study_history?: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; payments_count?: number; cost: number; grade: number | null; notes: string | null }>
+  study_history?: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; payments_count?: number; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
   /** Inscripciones a eventos con pago (comprobante). Solo viene del detalle. */
   event_registration_history?: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string

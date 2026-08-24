@@ -14,7 +14,11 @@ import { readFileSync } from 'node:fs'
 import { EXTERNAL_STUDY_ROLES, STUDY_ADMIN_ROLES } from './roles'
 
 const RUTA = 'src/app/api/members/[id]/studies/route.ts'
-const PANTALLA = 'src/app/(admin)/miembros/[id]/page.tsx'
+// El botón vive en su propio componente desde el 2026-08-24, dentro del tab de
+// Administración (antes estaba suelto en Participación).
+const BOTON = 'src/components/studies/AddExternalStudyButton.tsx'
+const TAB_ADMIN = 'src/app/(admin)/miembros/[id]/_components/MemberAdminTab.tsx'
+const TAB_PARTICIPACION = 'src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx'
 
 describe('quién puede registrar un estudio a mano', () => {
   it('solo admin y coordinador de estudios', () => {
@@ -37,15 +41,17 @@ describe('la UI y el API deciden con la misma lista', () => {
     expect(txt).not.toMatch(/requireRoles\(\s*'/)
   })
 
-  it('el botón usa la misma constante', () => {
-    const txt = readFileSync(PANTALLA, 'utf8')
+  it('el botón se gatea a sí mismo con la misma constante', () => {
+    const txt = readFileSync(BOTON, 'utf8')
     expect(txt).toContain('hasRole(...EXTERNAL_STUDY_ROLES)')
+    // Devuelve null si no corresponde: el gate no puede quedar solo en quien lo
+    // usa, porque el próximo lugar que lo monte se olvidaría de ponerlo.
+    expect(txt).toMatch(/if \(!loaded \|\| !hasRole\(\.\.\.EXTERNAL_STUDY_ROLES\)\) return null/)
   })
 
-  it('el botón NO se pasa sin condición', () => {
-    // `onAddStudy={() => ...}` suelto es exactamente el bug que había.
-    const txt = readFileSync(PANTALLA, 'utf8')
-    expect(txt).not.toMatch(/onAddStudy=\{\(\) =>/)
-    expect(txt).toMatch(/onAddStudy=\{puedeAgregarEstudio \?/)
+  it('vive en el tab de Administración, no en Participación', () => {
+    expect(readFileSync(TAB_ADMIN, 'utf8')).toContain('<AddExternalStudyButton')
+    // En Participación quedó el historial, sin el botón ni su prop.
+    expect(readFileSync(TAB_PARTICIPACION, 'utf8')).not.toContain('AddExternalStudyButton')
   })
 })
