@@ -408,9 +408,16 @@ const GROUP_SELECT = `
 // Versión liviana para el LISTADO de grupos: enrollments con solo `status`
 // (lo único necesario para CONTAR; los conteos se calculan en toListItem).
 // Los nombres/notas se cargan en el detalle (getGroupById).
+// OJO: la pantalla de EDITAR un grupo se alimenta de esta lista, no del detalle
+// (useStudies('groups') → groups.find(...)). Todo campo que el formulario de
+// edición escriba TIENE que venir acá, o el input arranca vacío y al guardar
+// manda null: no es que no guarde, es que BORRA lo que había. Pasó con la
+// ventana de matrícula, que faltaba en este select (2026-08-24).
+// `group-edit-fields.test.ts` lo fija.
 const LIST_GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
-  max_students, starts_at, ends_at, status, current_week, whatsapp_group_url,
+  max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
+  status, current_week, whatsapp_group_url,
   is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
