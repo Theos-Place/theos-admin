@@ -8,7 +8,7 @@ import { useMember } from '@/hooks/useMember'
 import { useStudies } from '@/hooks/useStudies'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
-import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { STUDY_ADMIN_ROLES, EXTERNAL_STUDY_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -68,6 +68,12 @@ export default function MiembroDetailPage() {
   const { hasRole, member: viewer } = useAuth()
 
   const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
+  // Registrar a mano un estudio (el que se llevó por fuera) es más restringido
+  // que administrar estudios: cuenta como prerrequisito, así que habilita a la
+  // persona para todo lo que venga después. Espejo del guard de la API — antes
+  // el botón se mostraba a CUALQUIER sesión, incluido el rol base 'miembro',
+  // que al enviarlo recibía un 403 y un error genérico.
+  const puedeAgregarEstudio = hasRole(...EXTERNAL_STUDY_ROLES)
   // Onboarding de servidores: estos roles también entran al tab Administrativo,
   // pero ahí solo ven su sección (el API no les da los datos de estudios).
   const isServersOnboardingAdmin = hasRole('admin', 'encargado_staff', 'coordinador_servidores')
@@ -335,7 +341,7 @@ export default function MiembroDetailPage() {
           onToggleRevealDonations={() => setRevealDonations(r => !r)}
           donationsCount={member.donations.length}
           ledStudies={member.led_studies ?? []}
-          onAddStudy={() => setShowAddStudy(true)}
+          onAddStudy={puedeAgregarEstudio ? () => setShowAddStudy(true) : undefined}
         />
         {/* Dirigente sin rol administrativo: recomendaciones SOLO de sus miembros
             (el backend filtra; vacío → no se pinta). No ve el resto del tab Admin. */}

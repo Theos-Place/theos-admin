@@ -15,6 +15,18 @@ export const STUDY_ADMIN_ROLES: RoleId[] = [
  *  Reutilizar en los guards de UI y de API de grupos (crear/editar/eliminar). */
 export const GROUP_ADMIN_ROLES: RoleId[] = [...STUDY_ADMIN_ROLES, 'editor_grupos_estudio']
 
+/** Quién puede REGISTRAR A MANO un estudio en el expediente de alguien — el
+ *  caso de quien lo llevó por fuera de Theos.
+ *
+ *  Es la lista más corta del módulo a propósito: un estudio registrado a mano
+ *  cuenta como prerrequisito, así que quien puede escribirlo puede habilitar a
+ *  cualquiera para cualquier estudio posterior. No es edición de perfil, es
+ *  decidir la ruta de formación de una persona.
+ *
+ *  Antes lo permitían además editor_perfiles, encargado_staff y direccion; se
+ *  acotó a admin + coordinador de estudios por decisión del 2026-08-24. */
+export const EXTERNAL_STUDY_ROLES: RoleId[] = ['coordinador_estudios', 'admin']
+
 /** DIR-5 · Quiénes entran a la cola de evaluaciones del dirigente.
  *
  *  Lista corta y a propósito: 'direccion' NO está, aunque sí esté en

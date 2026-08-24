@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { EXTERNAL_STUDY_ROLES } from '@/lib/auth/roles'
 import { addMemberStudy, getPlanIdByCode } from '@/lib/supabase/queries/studies'
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    const auth = await requireRoles(...EXTERNAL_STUDY_ROLES)
     if (auth.res) return auth.res
   try {
     const { id } = await params
