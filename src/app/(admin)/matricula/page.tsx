@@ -410,8 +410,8 @@ export default function MatriculaPage() {
               </p>
               <p className="text-sm text-navy-light/80 font-body">
                 No {selectedMember ? 'perdió' : 'perdiste'} nada: {selectedMember ? 'su' : 'tu'} lugar y{' '}
-                {selectedMember ? 'su' : 'tu'} avance siguen ahí. En cuanto el pago quede registrado, los
-                estudios se habilitan solos.
+                {selectedMember ? 'su' : 'tu'} avance siguen ahí. En cuanto confirmemos{' '}
+                {selectedMember ? 'su' : 'tu'} pago, los estudios se habilitan solos.
               </p>
               <Link
                 href="/mis-pagos"
@@ -954,7 +954,7 @@ function StudyCard({
                       <>
                         {' — '}
                         <Link href="/mis-pagos" className="text-coral underline decoration-dotted hover:text-coral-deep">
-                          pagalo acá y este estudio se habilita
+                          pagalo acá y se habilita al confirmarlo
                         </Link>
                       </>
                     )}

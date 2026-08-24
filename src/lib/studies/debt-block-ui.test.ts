@@ -28,6 +28,14 @@ describe('el motivo de deuda lo comparten servidor y pantalla', () => {
     expect(PANTALLA).not.toContain(`"${DEBT_BLOCK_REASON}"`)
   })
 
+  // La regla es que el comprobante NO desbloquea: desbloquea la confirmación de
+  // finanzas (decisión del 2026-08-24). El texto tiene que prometer eso y no
+  // "en cuanto se registre", que sonaba a inmediato y no lo es.
+  it('el texto promete la CONFIRMACIÓN, no el registro del comprobante', () => {
+    expect(PANTALLA).toContain('En cuanto confirmemos')
+    expect(PANTALLA).not.toContain('el pago quede registrado')
+  })
+
   it('el motivo lleva a donde se resuelve', () => {
     // Sin el enlace, el bloqueo es un callejón: la persona lee que debe algo y
     // no sabe adónde ir.
