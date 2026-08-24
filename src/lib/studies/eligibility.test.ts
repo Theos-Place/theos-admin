@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeEligibility, isRelocationEligibleCode, type MemberStudyProfile } from './eligibility'
+import { DEBT_BLOCK_REASON, computeEligibility, isRelocationEligibleCode, type MemberStudyProfile } from './eligibility'
 import type { StudyType, StudyGroup } from '@/types/study'
 
 // ── Factories mínimas ─────────────────────────────────────────────────────────
@@ -89,6 +89,46 @@ describe('computeEligibility — prerequisitos y estados', () => {
     const res = computeEligibility(plans, [], profile({ current_code: 'N1' }))
     expect(of(res, 'N1').is_eligible).toBe(false)
     expect(of(res, 'N1').reasons_blocked.join(' ')).toContain('Ya estás matriculado')
+  })
+
+  // PAG-2 · La deuda entra al MISMO cálculo que arma la lista de la pantalla.
+  // Antes vivía solo como un aviso arriba: las tarjetas seguían ofreciendo
+  // estudios y la persona se enteraba cuando la matrícula fallaba.
+  describe('deuda de matrícula', () => {
+    const deuda = (planCodes: string[]) => ({
+      blocking_debt: { count: 1, total: 5000, currency: 'CRC', planCodes },
+    })
+
+    it('con deuda, un estudio de OTRO plan queda bloqueado', () => {
+      const res = computeEligibility(plans, [], profile({ completed_codes: ['N1'], ...deuda(['N3']) }))
+      expect(of(res, 'N2').is_eligible).toBe(false)
+      expect(of(res, 'N2').reasons_blocked).toContain(DEBT_BLOCK_REASON)
+    })
+
+    // El borde que importa: quien debe N3 tiene que poder pagar SU N3. Si la
+    // deuda bloqueara también su propio estudio, la persona quedaría trabada
+    // sin salida.
+    it('NO bloquea el estudio de la propia deuda', () => {
+      const res = computeEligibility(plans, [], profile({ completed_codes: ['N1', 'N2'], ...deuda(['N3']) }))
+      expect(of(res, 'N3').reasons_blocked).not.toContain(DEBT_BLOCK_REASON)
+    })
+
+    it('sin deuda no bloquea nada', () => {
+      const res = computeEligibility(plans, [], profile({ completed_codes: ['N1'] }))
+      expect(of(res, 'N2').reasons_blocked).not.toContain(DEBT_BLOCK_REASON)
+      const cero = computeEligibility(plans, [], profile({
+        completed_codes: ['N1'],
+        blocking_debt: { count: 0, total: 0, currency: 'CRC', planCodes: [] },
+      }))
+      expect(of(cero, 'N2').reasons_blocked).not.toContain(DEBT_BLOCK_REASON)
+    })
+
+    // Si el mensaje cambia, la pantalla deja de reconocerlo y pierde el enlace
+    // «pagalo acá». Por eso el texto es una constante y no un string suelto.
+    it('el motivo es la constante que la pantalla reconoce', () => {
+      const res = computeEligibility(plans, [], profile({ completed_codes: ['N1'], ...deuda([]) }))
+      expect(of(res, 'N2').reasons_blocked).toContain(DEBT_BLOCK_REASON)
+    })
   })
 
   it('descendiente completado: quien llevó N3 no puede re-matricular N1', () => {

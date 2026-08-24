@@ -87,6 +87,12 @@ export type MemberStudyProfile = {
   current_code: string | null
   /** Todos los códigos con matrícula 'enrolled' (PRE-5: requisito prematrimonial). */
   enrolled_codes?: string[]
+  /** PAG-2 · Deuda de matrícula que bloquea. Se calcula desde la tabla
+   *  `payments` (no desde el estado de la matrícula), así que refleja lo mismo
+   *  que el guard del servidor. `planCodes` son los estudios de la propia
+   *  deuda: esos NO se bloquean, porque el camino de quien debe N3 es pagar su
+   *  N3, no quedarse sin poder tocar nada. */
+  blocking_debt?: { count: number; total: number; currency: string; planCodes: string[] }
   is_donor: boolean
   is_server: boolean
   /** Check-ins de charla en los últimos ATTENDANCE_MONTHS meses (solo informativo). */
@@ -144,6 +150,10 @@ function completedDescendant(code: string, plans: StudyType[], completedCodes: s
   return false
 }
 
+/** El motivo de bloqueo por deuda. Se exporta para que la pantalla lo detecte y
+ *  muestre su tarjeta explicativa con el enlace, en vez de repetir el string. */
+export const DEBT_BLOCK_REASON = 'Tenés un pago de matrícula pendiente'
+
 export function computeEligibility(
   plans: StudyType[],
   groups: StudyGroup[],
@@ -187,6 +197,17 @@ export function computeEligibility(
       }
     } else {
       reasons_met.push('No requiere estudios previos')
+    }
+
+    // 1.b PAG-2 · Deuda de matrícula pendiente. Va acá, en el MISMO cálculo que
+    // usa la pantalla, para que la lista no ofrezca un estudio que el servidor
+    // va a rechazar: antes el aviso salía arriba pero las tarjetas seguían con
+    // su botón, y la persona se enteraba al fallar la matrícula.
+    // Espejo exacto de countBlockingStudyPayments: el plan de la propia deuda
+    // queda exento.
+    const deuda = profile.blocking_debt
+    if (deuda && deuda.count > 0 && !deuda.planCodes.includes(study.code)) {
+      reasons_blocked.push(DEBT_BLOCK_REASON)
     }
 
     // 2. No está cursándolo.

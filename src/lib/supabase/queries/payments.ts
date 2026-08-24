@@ -502,6 +502,66 @@ export type MemberPaymentRow = {
  *  ligados al plan que se está matriculando: el pago del propio flujo en curso
  *  no debe bloquearse a sí mismo (ese caso ya lo maneja el guard
  *  PAGO_PENDIENTE con su mensaje específico). */
+/** El DETALLE de la deuda que bloquea, para poder explicarla en vez de solo
+ *  contarla: cuánto debe, y de qué estudios. Los códigos importan porque el
+ *  bloqueo NO aplica al plan de la propia deuda — quien debe N2 sigue pudiendo
+ *  matricular N2 (subir su comprobante); lo que no puede es avanzar a N3.
+ *
+ *  Ojo con el pago SUELTO (sin enrollment_id): no tiene plan al cual atribuirse,
+ *  así que no exime a ninguno y bloquea todo. Es correcto —no hay forma de saber
+ *  a qué estudio corresponde— pero conviene saberlo al crear cobros a mano. */
+/** PostgREST devuelve un embed to-one como objeto o como arreglo de uno. */
+function uno(x: unknown): unknown {
+  return Array.isArray(x) ? x[0] ?? null : x ?? null
+}
+
+export type BlockingStudyDebt = {
+  count: number
+  total: number
+  currency: string
+  /** Códigos de plan de la deuda; esos estudios NO quedan bloqueados. */
+  planCodes: string[]
+}
+
+export async function getBlockingStudyDebt(memberId: string): Promise<BlockingStudyDebt> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('payments')
+    .select(`
+      concept, status, amount, currency,
+      enrollment:study_enrollments!payments_enrollment_id_fkey(
+        plan:study_plans!study_enrollments_plan_id_fkey(code),
+        group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(code))
+      )
+    `)
+    .eq('member_id', memberId)
+    .eq('concept', 'matricula')
+    .eq('status', 'pending')
+  if (error) throw error
+  const codes = new Set<string>()
+  let count = 0, total = 0, currency = 'CRC'
+  for (const r of (data ?? []) as Array<{
+    concept: string | null; status: string; amount: number | null; currency: string | null
+    enrollment: unknown
+  }>) {
+    if (!isBlockingStudyPayment(r)) continue
+    count++
+    total += Number(r.amount ?? 0)
+    if (r.currency) currency = r.currency
+    // El plan sale del grupo si la matrícula tiene grupo; si no, del plan_id
+    // directo de la matrícula. PostgREST devuelve el embed como objeto o como
+    // arreglo de uno según el caso, de ahí el `uno()`.
+    const enr = uno(r.enrollment) as {
+      plan?: unknown
+      group?: { plan?: unknown } | { plan?: unknown }[] | null
+    } | null
+    const grupo = uno(enr?.group) as { plan?: unknown } | null
+    const plan = (uno(grupo?.plan) ?? uno(enr?.plan)) as { code?: string | null } | null
+    if (plan?.code) codes.add(plan.code)
+  }
+  return { count, total, currency, planCodes: [...codes] }
+}
+
 export async function countBlockingStudyPayments(memberId: string, excludePlanId?: string | null): Promise<number> {
   const supabase = createAdminClient()
   const { data, error } = await supabase

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
   XCircle, Calendar, DollarSign, X, AlertCircle,
-  BookOpen, ArrowRight, Sparkles, Info, Heart,
+  BookOpen, ArrowRight, Sparkles, Info, Heart, CreditCard,
 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
+import { DEBT_BLOCK_REASON } from '@/lib/studies/eligibility'
 import { summarizeStageRequirements } from '@/lib/studies/stage-requirements-summary'
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
@@ -87,6 +88,9 @@ export default function MatriculaPage() {
   const [prematOk, setPrematOk] = useState(false)
   // PAG-2: pagos de estudios pendientes → banner y bloqueo (con override staff).
   const [pendingPayments, setPendingPayments] = useState(0)
+  // El DETALLE de la deuda (cuánto y de qué estudio), para poder explicarla en
+  // vez de solo contarla.
+  const [deuda, setDeuda] = useState<{ count: number; total: number; currency: string; planCodes: string[] } | null>(null)
   const [overridePrompt, setOverridePrompt] = useState<{ count: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -106,6 +110,7 @@ export default function MatriculaPage() {
         setProfile(d?.profile ?? null)
         setPrematOk(!!d?.premat_ok)
         setPendingPayments(Number(d?.pending_study_payments ?? 0))
+        setDeuda(d?.blocking_debt ?? null)
         setLoading(false)
       })
       .catch(() => { if (alive) { setLoadError(true); setLoading(false) } })
@@ -377,15 +382,46 @@ export default function MatriculaPage() {
           eso solo se muestra en el tab "Todos" o "Etapa Inicial". Flujo propio
           (pareja + logística + ceremonia + pago por comprobante). PRE-5: solo
           aparece si el miembro cumple el requisito (flag server-side). */}
-      {/* PAG-2: aviso de pagos de estudios pendientes (bloquean matricular). */}
+      {/* PAG-2 · La deuda no es un regaño: es un trámite pendiente y hay que
+          decirlo así. Explica QUÉ falta, POR QUÉ no hay estudios disponibles y
+          CÓMO se resuelve, en ese orden. El aviso viejo era una línea que solo
+          contaba pagos, y las tarjetas de abajo seguían ofreciendo estudios que
+          el servidor iba a rechazar. */}
       {pendingPayments > 0 && (
-        <div className="flex items-start gap-3 rounded-2xl border border-coral/25 bg-coral/5 px-5 py-4">
-          <AlertCircle size={18} className="mt-0.5 shrink-0 text-coral-deep" aria-hidden />
-          <p className="text-[13px] text-navy font-body">
-            {selectedMember ? `${selectedMember.name} tiene` : 'Tenés'} <strong>{pendingPayments} pago{pendingPayments !== 1 ? 's' : ''} de estudios pendiente{pendingPayments !== 1 ? 's' : ''}</strong>;
-            para matricular {selectedMember ? 'otro estudio debe completarlos' : 'debés completarlos'} primero.{' '}
-            <Link href="/mis-pagos" className="text-coral underline decoration-dotted hover:text-coral-deep">Ir a mis pagos</Link>
-          </p>
+        <div className="rounded-2xl border border-coral/25 bg-coral/[0.06] px-5 py-5 sm:px-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={20} className="mt-0.5 shrink-0 text-coral-deep" aria-hidden />
+            <div className="space-y-2.5">
+              <p className="text-base font-bold text-navy font-display">
+                {selectedMember
+                  ? `A ${selectedMember.name} le falta un pago`
+                  : 'Te falta un pago para seguir matriculándote'}
+              </p>
+              <p className="text-sm text-navy-light/80 font-body">
+                {selectedMember ? 'Tiene' : 'Tenés'}{' '}
+                <strong className="text-navy">
+                  {deuda && deuda.total > 0
+                    ? `${formatMoney(deuda.total, deuda.currency)} de matrícula sin pagar`
+                    : `${pendingPayments} pago${pendingPayments !== 1 ? 's' : ''} de matrícula sin completar`}
+                </strong>
+                {deuda?.planCodes.length ? ` (${deuda.planCodes.join(', ')})` : ''}. Mientras ese pago
+                esté pendiente no {selectedMember ? 'puede' : 'podés'} matricular estudios nuevos — por eso
+                la lista de abajo aparece bloqueada.
+              </p>
+              <p className="text-sm text-navy-light/80 font-body">
+                No {selectedMember ? 'perdió' : 'perdiste'} nada: {selectedMember ? 'su' : 'tu'} lugar y{' '}
+                {selectedMember ? 'su' : 'tu'} avance siguen ahí. En cuanto el pago quede registrado, los
+                estudios se habilitan solos.
+              </p>
+              <Link
+                href="/mis-pagos"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
+              >
+                <CreditCard size={15} aria-hidden="true" />
+                {selectedMember ? 'Ver sus pagos pendientes' : 'Ir a pagar'}
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
@@ -909,7 +945,20 @@ function StudyCard({
               {result.reasons_blocked.map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5">
                   <XCircle size={12} className="text-red-400 shrink-0 mt-0.5" />
-                  <span className="text-[13px] text-navy-light/80 font-body">{r}</span>
+                  <span className="text-[13px] text-navy-light/80 font-body">
+                    {r}
+                    {/* La deuda es el único motivo que la persona puede
+                        resolver sola y ya mismo: se le pone el camino al lado
+                        en vez de dejarla adivinando adónde ir. */}
+                    {r === DEBT_BLOCK_REASON && (
+                      <>
+                        {' — '}
+                        <Link href="/mis-pagos" className="text-coral underline decoration-dotted hover:text-coral-deep">
+                          pagalo acá y este estudio se habilita
+                        </Link>
+                      </>
+                    )}
+                  </span>
                 </div>
               ))}
             </>
