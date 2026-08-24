@@ -108,22 +108,39 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const { user } = useAuth()
   const { can, getScope } = usePermissions()
 
-  // Conteos de solicitudes abiertas para los badges. Los endpoints exigen rol:
-  // con 403 simplemente no hay badge.
+  // Conteos de solicitudes abiertas para los badges.
+  //
+  // Antes se pedían siempre y el 403 se descartaba en silencio. Con el rol base
+  // 'miembro' —que es casi todo el padrón— eso son DOS 403 por navegación que
+  // nunca podían dar un badge: ruido en la consola de la persona y en el
+  // monitoreo de errores, multiplicado por 18 mil cuentas. Se piden solo si el
+  // rol puede llegar a verlos, con el mismo permiso que decide si el badge se
+  // dibuja (medido en navegador el 2026-08-24).
   const [openRequests, setOpenRequests] = useState(0)
   const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
+  // La condición tiene que cubrir TODOS los casos donde el badge se dibuja, no
+  // solo el obvio: el comité de estudios bíblicos también lo ve, y tiene alcance
+  // 'own'. Gatear solo por alcance le apagaba el badge (encontrado al revisar
+  // los tres sitios que usan openRequests, no al escribir la condición).
+  const puedeVerEstudios = (can('estudios', 'view') && getScope('estudios') !== 'own')
+    || !!user?.in_study_committee
+  const puedeVerFinanzas = can('finanzas', 'view')
   useEffect(() => {
     let alive = true
-    fetch('/api/studies/requests?count=open')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
-      .catch(() => {})
-    fetch('/api/finance/requests?count=open')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
-      .catch(() => {})
+    if (puedeVerEstudios) {
+      fetch('/api/studies/requests?count=open')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
+        .catch(() => {})
+    }
+    if (puedeVerFinanzas) {
+      fetch('/api/finance/requests?count=open')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
+        .catch(() => {})
+    }
     return () => { alive = false }
-  }, [pathname])
+  }, [pathname, puedeVerEstudios, puedeVerFinanzas])
 
   const userName  = user?.name ?? ''
   const userRole  = user?.role ?? ''

@@ -79,6 +79,24 @@ export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_ser
  *  distinguir "cualquier persona con sesión" de "cualquier persona que gestiona". */
 export const SELF_SERVICE_ROLES: RoleId[] = ['miembro']
 
+/** El rol MÍNIMO de cualquier persona con ficha: ver su propio perfil, el de su
+ *  familia y el currículo (/estudios/plan). Nadie lo tiene escrito en
+ *  member_roles —el alta de cuentas no asigna roles— así que la garantía no
+ *  puede vivir en los datos: se aplica acá, al leer.
+ *
+ *  Por qué una función y no la expresión suelta: el default estaba copiado en
+ *  getAuthContext() y en /api/auth/me, sin test. Dos copias de un invariante es
+ *  tenerlo mal en una de las dos en cuanto alguien agregue un tercer lector.
+ *  Este es el único lugar donde se decide, y `base-role.test.ts` lo fija.
+ *
+ *  Ojo con el caso que NO cubre, y es a propósito: una sesión de Auth sin ficha
+ *  de miembro no recibe el rol base. Sin ficha no hay perfil propio que ver, y
+ *  darle 'miembro' la dejaría entrar a una pantalla sin datos. */
+export function withBaseRole(roles: readonly RoleId[] | null | undefined): RoleId[] {
+  const explicitos = (roles ?? []).filter(Boolean)
+  return explicitos.length ? [...explicitos] : ['miembro']
+}
+
 /** ¿Alguno de estos roles es de gestión (algo más que el autoservicio)? */
 export function hasManagementRole(roleIds: readonly RoleId[] | null | undefined): boolean {
   return (roleIds ?? []).some(r => !SELF_SERVICE_ROLES.includes(r))

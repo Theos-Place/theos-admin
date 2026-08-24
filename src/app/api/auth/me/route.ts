@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
+import { withBaseRole } from '@/lib/auth/roles'
 
 /**
  * Devuelve el usuario autenticado actual con sus roles activos.
@@ -55,8 +56,11 @@ export async function GET() {
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
     // por defecto (solo ve su propio perfil) si no tiene otros roles activos.
+    // La decide withBaseRole, igual que getAuthContext: el servidor y el cliente
+    // TIENEN que coincidir — si el layout cree que no hay rol y la API cree que
+    // sí, la pantalla queda denegada con datos que sí llegaron.
     const explicitRoles = (roleRows ?? []).map(r => r.role as RoleId)
-    const roles: RoleId[] = explicitRoles.length ? explicitRoles : ['miembro']
+    const roles: RoleId[] = withBaseRole(explicitRoles)
     // ¿Está en el comité de estudios bíblicos? Habilita /estudios/solicitudes
     // con alcance acotado (solo lo asignado) para gente SIN rol en el sistema.
     let inStudyCommittee = false
