@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 970" role="img" aria-labelledby="t-pp d-pp" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-pp">Un pago pendiente bloquea la matrícula</title>
+  <desc id="d-pp">Por qué un pago de matrícula sin completar impide matricularse en estudios nuevos, los cuatro pasos para resolverlo, y por qué subir el comprobante no habilita al instante sino cuando finanzas lo confirma.</desc>
+
+  <rect width="720" height="970" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Te falta un pago</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Por qué no podés matricular estudios nuevos, y cómo se destraba.</text>
+
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">En Matrícula, tocá <tspan font-weight="bold">Ir a pagar</tspan></text>
+
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Mirá qué debés y de qué estudio</text>
+
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">Transferí y <tspan font-weight="bold">subí el comprobante</tspan></text>
+
+    <rect x="48" y="382" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="415" r="18" fill="#161440"/>
+    <text x="88" y="422" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="122" y="422" fill="#161440">Finanzas lo confirma y los estudios <tspan font-weight="bold">se habilitan solos</tspan></text>
+  </g>
+
+  <g>
+    <rect x="48" y="488" width="624" height="150" rx="14" fill="#161440"/>
+    <text x="76" y="522" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">LO QUE MÁS CONFUNDE</text>
+    <text x="76" y="562" font-size="27" font-weight="bold" fill="#FFFFFF">Subir el comprobante no es el final</text>
+    <text x="76" y="590" font-size="14.5" fill="#FFFFFF">Queda EN REVISIÓN hasta que finanzas lo confirma; hasta ahí sigue</text>
+    <text x="76" y="612" font-size="14.5" fill="#FFFFFF">bloqueado. Si tenés una fecha de cierre encima, pagá con tiempo.</text>
+  </g>
+
+  <text x="48" y="686" font-size="20" font-weight="bold" fill="#161440">Bueno saber</text>
+  <rect x="48" y="698" width="44" height="4" rx="2" fill="#EF5554"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="708" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="738" r="10" fill="#EF5554"/>
+    <text x="106" y="734" font-weight="bold" fill="#161440">No perdiste nada</text>
+    <text x="106" y="756" fill="#5B5975">Tu lugar y tu avance siguen ahí. Esto pausa lo nuevo, no borra lo que tenés.</text>
+
+    <rect x="48" y="796" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="826" r="10" fill="#EF5554"/>
+    <text x="106" y="822" font-weight="bold" fill="#161440">El estudio que debés NO está bloqueado</text>
+    <text x="106" y="844" fill="#5B5975">Si debés Nivel 1, podés completar ese pago sin problema. Lo bloqueado es lo nuevo.</text>
+
+    <rect x="48" y="884" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="914" r="10" fill="#EF5554"/>
+    <text x="106" y="910" font-weight="bold" fill="#161440">Si no podés pagar ahora, hablalo</text>
+    <text x="106" y="932" fill="#5B5975">Hay becas y arreglos de pago. El bloqueo evita que la deuda crezca, no te castiga.</text>
+  </g>
+</svg>

@@ -119,8 +119,15 @@ export default function MatriculaPage() {
 
   // Solo se ofrecen los estudios con grupos abiertos y matriculables para el
   // miembro. El plan completo (con descripciones) vive en /estudios/plan.
+  // Lo que se lista: lo que se puede matricular MÁS lo que está bloqueado solo
+  // por la deuda. Esos últimos se muestran como tarjeta bloqueada (con su
+  // motivo y el enlace a pagar) en vez de desaparecer: si se esconden, la
+  // pantalla dice "no hay grupos abiertos" cuando sí los hay, y contradice el
+  // aviso de arriba que acaba de decir que la lista está bloqueada.
   const availableResults = useMemo(
-    () => eligibilityResults.filter(r => r.is_eligible && r.available_groups.length > 0),
+    () => eligibilityResults.filter(r =>
+      r.available_groups.length > 0
+      && (r.is_eligible || r.reasons_blocked.every(m => m === DEBT_BLOCK_REASON))),
     [eligibilityResults],
   )
 

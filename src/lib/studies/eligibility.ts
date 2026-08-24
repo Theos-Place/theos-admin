@@ -266,8 +266,14 @@ export function computeEligibility(
 
     const is_eligible = reasons_blocked.length === 0
 
-    const available_groups: EligibleGroup[] = is_eligible
-      ? groups
+    // Los grupos se calculan SIEMPRE, no solo si la persona es elegible.
+    // `available_groups` significa "grupos abiertos de este estudio que te
+    // calzan" (edad, virtual, restricción) — una propiedad del grupo, no de si
+    // cumplís los requisitos. Antes salía vacío al estar bloqueado, y eso hacía
+    // que la pantalla escondiera el estudio por completo: con una deuda la
+    // lista quedaba vacía y decía "no hay grupos abiertos", que era falso.
+    // Todo lo que MATRICULA sigue detrás de is_eligible.
+    const available_groups: EligibleGroup[] = groups
           .filter(g => {
             const active = g.participants.filter(p => p.status !== 'withdrawn').length
             // Rango de edad del grupo: solo se ofrece si la edad del miembro encaja
@@ -306,7 +312,6 @@ export function computeEligibility(
               is_virtual: !!g.is_virtual,
             }
           })
-      : []
 
     return {
       study_code: study.code,

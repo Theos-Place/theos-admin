@@ -173,8 +173,13 @@ describe('elegibilidad con restricción de grupo', () => {
       { passedRestrictedGroups: new Set(['g1']) },
     )
     expect(r.is_eligible).toBe(false)
-    expect(r.available_groups).toHaveLength(0)
     expect(r.reasons_blocked.join(' ')).toMatch(/asistencia/i)
+    // El grupo SÍ aparece en available_groups: desde el 2026-08-24 ese campo
+    // significa "grupos abiertos que te calzan", no "grupos donde podés
+    // matricularte". Lo que decide la matrícula es is_eligible, arriba. El
+    // cambio salió de que esconder los grupos al estar bloqueado hacía que la
+    // pantalla dijera "no hay grupos abiertos" cuando sí los había.
+    expect(r.available_groups).toHaveLength(1)
   })
 
   it('sin el dato calculado, un grupo restringido se OCULTA (default conservador)', () => {
