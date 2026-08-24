@@ -91,12 +91,6 @@ describe('computeEligibility — prerequisitos y estados', () => {
     expect(of(res, 'N1').reasons_blocked.join(' ')).toContain('Ya estás matriculado')
   })
 
-  it('pendiente de pago: bloqueado con mensaje de comprobante (fix 1.2, cierra bypass)', () => {
-    const res = computeEligibility(plans, [], profile({ completed_codes: ['N1'], pending_payment_codes: ['N2'] }))
-    expect(of(res, 'N2').is_eligible).toBe(false)
-    expect(of(res, 'N2').reasons_blocked.join(' ')).toContain('pendiente de pago')
-  })
-
   it('descendiente completado: quien llevó N3 no puede re-matricular N1', () => {
     const res = computeEligibility(plans, [], profile({ completed_codes: ['N3'] }))
     expect(of(res, 'N1').is_eligible).toBe(false)

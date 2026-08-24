@@ -13,7 +13,6 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   current_code: string | null
   /** Todos los códigos con matrícula 'enrolled' (no solo el primero). */
   enrolled_codes: string[]
-  pending_payment_codes: string[]
   is_donor: boolean
   is_server: boolean
   charla_count: number
@@ -64,19 +63,12 @@ export async function getMemberStudyProfile(memberId: string): Promise<{
   const enrolled_codes = enrollments
     .filter(e => e.status === 'enrolled' && codeOf(e))
     .map(e => codeOf(e)!)
-  // Niveles con matrícula pendiente de pago (auto-matrícula al cerrar el nivel
-  // anterior): bloquean la re-matrícula — el camino es pagar, no re-inscribirse.
-  const pending_payment_codes = enrollments
-    .filter(e => e.status === 'pendiente_de_pago' && codeOf(e))
-    .map(e => codeOf(e)!)
-
   const birth = (memberRes.data as { birth_date?: string | null } | null)?.birth_date ?? null
   const charlaDates = ((chkRes.data ?? []) as Array<{ checked_in_at: string | null }>).map(c => c.checked_in_at ?? '')
   return {
     completed_codes,
     current_code,
     enrolled_codes,
-    pending_payment_codes,
     is_donor: Boolean((memberRes.data as { is_donor?: boolean } | null)?.is_donor),
     is_server: (volRes.data ?? []).length > 0,
     charla_count: charlaDates.filter(Boolean).length,

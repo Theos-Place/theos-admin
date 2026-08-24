@@ -87,9 +87,6 @@ export type MemberStudyProfile = {
   current_code: string | null
   /** Todos los códigos con matrícula 'enrolled' (PRE-5: requisito prematrimonial). */
   enrolled_codes?: string[]
-  /** Códigos con matrícula automática pendiente de pago: bloquean la
-   *  re-matrícula (el camino es subir el comprobante, no re-inscribirse). */
-  pending_payment_codes?: string[]
   is_donor: boolean
   is_server: boolean
   /** Check-ins de charla en los últimos ATTENDANCE_MONTHS meses (solo informativo). */
@@ -192,11 +189,19 @@ export function computeEligibility(
       reasons_met.push('No requiere estudios previos')
     }
 
-    // 2. No está cursándolo ni tiene la matrícula pendiente de pago
+    // 2. No está cursándolo.
+    //
+    // Acá vivía además una rama para el estado 'pendiente_de_pago', del modelo
+    // viejo en que la matrícula quedaba retenida hasta el pago. Ese estado se
+    // retiró el 2026-08-04 (matrícula y pago en carriles separados: la
+    // matrícula es efectiva de inmediato) y ya no se escribe — al 2026-08-24
+    // hay 0 filas con ese estado, así que la rama no podía dispararse nunca.
+    //
+    // La deuda SÍ bloquea, pero en otro lado y mejor: los guards PAG-2 y FIN-4
+    // de enrollMember() miran la tabla `payments`, no el estado de la
+    // matrícula, así que también agarran los tractos vencidos.
     if (profile.current_code === study.code) {
       reasons_blocked.push('Ya estás matriculado en este estudio')
-    } else if (profile.pending_payment_codes?.includes(study.code)) {
-      reasons_blocked.push('Ya tenés una matrícula pendiente de pago para este estudio — subí tu comprobante desde tu perfil para activarla')
     }
 
     // 3. No lo completó
