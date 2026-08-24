@@ -133,7 +133,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
           area:areas!service_positions_area_id_fkey(id, name)
         )
       ),
-      study_enrollments(
+      study_enrollments!study_enrollments_member_id_fkey(
         id, status, completed_at, enrolled_at, grade, notes,
         study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks, cost, requires_payment)

@@ -873,7 +873,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       sede:sedes(code, name),
       member_roles!member_roles_member_id_fkey(role, is_active, status_detail),
       ${volunteersEmbed},
-      study_enrollments(
+      study_enrollments!study_enrollments_member_id_fkey(
         status,
         study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
       ),
