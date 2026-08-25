@@ -70,6 +70,19 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // a matricularse, no gestión. La decisión venía del 2026-07-29 pero solo se
   // había aplicado al sidebar del dirigente: la página seguía cerrada.
   // El DETALLE (/estudios/plan/[id]) es el editor y sigue exigiendo el módulo.
+  // /matricula es el AUTOSERVICIO de la persona: es donde se inscribe a sí
+  // misma. Tiene que estar abierta a cualquier sesión, no al módulo de estudios.
+  //
+  // El bug que arregla (2026-08-25): mapeaba al módulo 'estudios', así que 12 de
+  // los 21 roles la tenían cerrada — finanzas, comunicaciones, encargado_staff,
+  // lider_comite, forms y demás. 88 personas reales no podían matricularse en un
+  // estudio por tener un rol de staff que no es de estudios, siendo que también
+  // son miembros. El rol base 'miembro' sí pasaba, y por eso no se notó antes:
+  // solo fallaba para quien tiene un rol explícito.
+  //
+  // Las APIs ya estaban bien (requireRoles() sin roles = solo sesión), así que
+  // esto era puramente el guard de la pantalla.
+  if (pathname === '/matricula' || pathname.startsWith('/matricula/')) return <>{children}</>
   if (pathname === '/estudios/plan') return <>{children}</>
   // Excepción: /estudios/grupos/[id]/evaluar es la encuesta del ESTUDIANTE
   // sobre su dirigente al cerrar el grupo — cualquier sesión entra; el endpoint

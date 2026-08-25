@@ -258,7 +258,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const ALL_NAV: NavModule[] = [
     homeItem,
     { href: '/miembros',       label: 'Miembros',       icon: Users,           subs: miembrosSub,        module: 'miembros', summaryLabel: 'Buscar miembros' },
-    { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: 'estudios' },
+    // Matrícula: autoservicio, visible para CUALQUIER sesión. module: null
+    // porque no depende del módulo de estudios — ver el guard del layout.
+    { href: '/matricula',      label: 'Matrícula',      icon: GraduationCap,   subs: [],                 module: null },
     // PAG-1/PAG-4: pagos pendientes propios (y de la familia) — cualquier
     // sesión con perfil de miembro (el endpoint gatea a self/familia/staff);
     // va debajo de Matrícula a propósito.
