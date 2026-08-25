@@ -168,7 +168,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // El currículo: mismo ítem para todos los casos de abajo.
   const CURRICULO: SubItem = { href: '/estudios/plan', label: 'Plan de Estudios', icon: BookText }
   const estudiosSub: SubItem[] = groupsOnly
-    ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }]
+    // El CURRÍCULO va en TODAS las ramas: es información para quien se va a
+    // matricular, no gestión, y la página está abierta a cualquier sesión.
+    // El rol acotado de grupos era el único que se quedaba sin el enlace
+    // (2026-08-25): la página le abría, pero no había cómo llegar desde el menú.
+    ? [{ href: '/estudios/grupos', label: 'Grupos', icon: LayoutList }, CURRICULO]
     : studiesBeyondOwn
     ? [
       ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
