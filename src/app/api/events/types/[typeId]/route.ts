@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { updateEventType } from '@/lib/supabase/queries/events'
 
 // PATCH: actualiza un tipo. Body: campos parciales { name?, color?, icon?, description?, is_active? }
@@ -7,7 +8,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ typeId: string }> },
 ) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    const auth = await requireRoles(...EVENT_WRITE_ROLES)
     if (auth.res) return auth.res
   try {
     const { typeId } = await params

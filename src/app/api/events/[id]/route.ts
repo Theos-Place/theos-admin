@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { EVENT_DELETE_ROLES } from '@/lib/auth/roles'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { canSeeEventManagementData } from '@/lib/events/detail-access'
 import {
@@ -100,7 +101,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+  const auth = await requireRoles(...EVENT_DELETE_ROLES)
   if (auth.res) return auth.res
   try {
     const { id } = await params

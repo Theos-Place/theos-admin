@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEventTypes, createEventType } from '@/lib/supabase/queries/events'
 
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
 
 // POST: crea un tipo. Body: { id, name, color?, icon?, description?, is_active? }
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('direccion', 'encargado_staff', 'comunicaciones')
+    const auth = await requireRoles(...EVENT_WRITE_ROLES)
     if (auth.res) return auth.res
   try {
     const body = await req.json()

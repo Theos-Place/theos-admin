@@ -598,7 +598,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           comunicar el evento, y solo tiene sentido si el evento pide inscripción.
           Visible para quien gestiona eventos (criterio del 2026-08-26), no solo
           para admin y comunicaciones como el compartir del calendario. */}
-      {activeTab === 'inscripciones' && canManage && event.requires_registration && (
+      {activeTab === 'inscripciones' && event.requires_registration && (
         <div className="mb-4">
           <CompartirInscripcion eventId={id} />
         </div>

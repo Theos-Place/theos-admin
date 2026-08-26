@@ -119,6 +119,34 @@ export function hasManagementRole(roleIds: readonly RoleId[] | null | undefined)
  *  API (requireRoles) de eventos/check-in/reportes. */
 export const EVENT_CHECKIN_ROLES: RoleId[] = ['encargado_eventos', 'direccion', 'admin']
 
+/** Quién puede CREAR y EDITAR eventos (y sus tipos y flyers).
+ *
+ *  Estaba escrito a mano en cinco rutas como
+ *  requireRoles('direccion','encargado_staff','comunicaciones'), y por eso el
+ *  2026-08-26 casi quedó un callejón sin salida: al darle `create` a
+ *  'encargado_eventos' la pantalla le mostraba los botones y la API los
+ *  rechazaba con 403. Centralizado acá para que el permiso y el guard no puedan
+ *  volver a discrepar.
+ *
+ *  'admin' no va en la lista: requireRoles ya lo trata aparte. */
+export const EVENT_WRITE_ROLES: RoleId[] = [
+  'encargado_eventos', 'direccion', 'encargado_staff', 'comunicaciones',
+]
+
+/** Quién puede BORRAR un evento. Es MÁS corto que EVENT_WRITE_ROLES a propósito.
+ *
+ *  Se separó el 2026-08-26 después de un error propio: la lista escrita a mano
+ *  que se centralizó era la de DELETE, no la de editar (editar usa
+ *  requireEventAccess, y cancelar es solo direccion). Al unificarlas le quedó
+ *  permiso de borrar a 'encargado_eventos', que no era la intención — el propio
+ *  PUT lo dice en un comentario: "Borrarlo y cancelarlo NO".
+ *
+ *  Cancelar un evento conserva el historial; borrarlo no. Por eso son listas
+ *  distintas y no una sola. */
+export const EVENT_DELETE_ROLES: RoleId[] = [
+  'direccion', 'encargado_staff', 'comunicaciones',
+]
+
 /**
  * Alcance efectivo de un módulo para un set de roles (espejo server-side de
  * getScope() del cliente): el más amplio gana. null = sin el módulo.
@@ -346,12 +374,18 @@ export const ROLES: Role[] = [
   },
   {
     id: 'encargado_eventos',
-    name: 'Encargado de Eventos / Check-in',
-    description: 'Check-in de eventos, reportes y detalle. Sin otros módulos',
+    name: 'Encargado de Eventos',
+    description: 'Gestión completa de eventos: crear, editar, inscripciones, check-in y reportes',
     color: '#E0823D',
     permissions: [
-      // view = ver detalle/check-in/reportes; edit = hacer check-in; export = reportes.
-      { module: 'eventos', actions: ['view', 'edit', 'export'], scope: 'all' },
+      // 2026-08-26: se agregó 'create'. Antes tenía view/edit/export, y los tabs
+      // de gestión (Inscripciones, Servidores, Comunicaciones) cuelgan de
+      // 'create' — así que la persona a cargo de los eventos veía solo
+      // Información, Check-in y Reportes. Los DATOS ya le llegaban del API
+      // (canSeeEventManagementData es true con edit u export): lo único oculto
+      // eran los tabs. Con 'create' también puede crear y editar eventos, que es
+      // lo que corresponde al rol (decisión del usuario).
+      { module: 'eventos', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
     ],
   },
   {
