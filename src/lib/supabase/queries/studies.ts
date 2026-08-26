@@ -1100,6 +1100,39 @@ export async function deleteGroup(id: string): Promise<void> {
 
 /** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,
  *  cuando el sistema no existía). group_id queda nulo; el plan va directo. */
+/** Los estudios que una persona ya tiene registrados, en la forma mínima que
+ *  necesita el aviso de "Agregar estudio": qué plan, en qué estado, cuándo y de
+ *  qué grupo. No trae el expediente completo — para eso está el detalle. */
+export async function getMemberStudyCodes(memberId: string): Promise<Array<{
+  code: string; status: string; date: string | null; group: string | null; es_externo: boolean
+}>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select(`
+      status, completed_at, enrolled_at, es_externo,
+      plan:study_plans!study_enrollments_plan_id_fkey(code),
+      group:study_groups!study_enrollments_group_id_fkey(name, plan:study_plans(code))
+    `)
+    .eq('member_id', memberId)
+  if (error) throw error
+  const uno = (x: unknown) => (Array.isArray(x) ? x[0] : x) as Record<string, unknown> | null
+  return (data ?? []).map(r => {
+    const row = r as Record<string, unknown>
+    const grupo = uno(row.group)
+    // El código sale del plan directo o, si la matrícula va por grupo, del plan
+    // del grupo — igual que en el resto del sistema.
+    const code = (uno(row.plan)?.code ?? uno(grupo?.plan)?.code ?? null) as string | null
+    return {
+      code: code ?? '',
+      status: String(row.status ?? ''),
+      date: ((row.completed_at ?? row.enrolled_at) as string | null)?.slice(0, 10) ?? null,
+      group: (grupo?.name as string | null) ?? null,
+      es_externo: !!row.es_externo,
+    }
+  }).filter(x => x.code)
+}
+
 /** Registra a mano un estudio en el expediente: el que la persona llevó por
  *  fuera de Theos, o uno viejo que no quedó en el sistema.
  *

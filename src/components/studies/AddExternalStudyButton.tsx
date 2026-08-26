@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { GraduationCap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { GraduationCap, AlertTriangle } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { useStudies } from '@/hooks/useStudies'
@@ -68,6 +68,20 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
   const [fuente, setFuente] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  // Lo que la persona YA tiene registrado, para avisar antes de duplicar.
+  // Sin esto, el 2026-08-25 se registró el mismo SCJ dos veces (con orígenes
+  // distintos) sin que nada lo advirtiera. Se avisa, NO se bloquea: repetir un
+  // estudio es legítimo y quien registra tiene que poder decidirlo.
+  type Ya = { code: string; status: string; date: string | null; group: string | null; es_externo: boolean }
+  const [yaTiene, setYaTiene] = useState<Ya[]>([])
+  useEffect(() => {
+    let vivo = true
+    fetch(`/api/members/${memberId}/studies`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo && d?.items) setYaTiene(d.items as Ya[]) })
+      .catch(() => {}) // el aviso es una ayuda: si falla, el formulario sigue
+    return () => { vivo = false }
+  }, [memberId])
 
   const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 
@@ -114,6 +128,35 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
             {studyTypes.map(s => <option key={s.id} value={s.code}>{s.code} — {s.name}</option>)}
           </select>
         </div>
+
+        {(() => {
+          const repes = yaTiene.filter(y => y.code === code)
+          if (!repes.length) return null
+          const ESTADO: Record<string, string> = {
+            completed: 'aprobado', reprobado: 'reprobado', enrolled: 'en curso', dropped: 'retirado',
+          }
+          return (
+            <div className="flex items-start gap-2.5 rounded-xl border border-coral/30 bg-coral/[0.06] px-3 py-2.5">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-coral-deep" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="text-[13px] font-medium text-navy font-body">
+                  Esta persona ya tiene {code} registrado
+                </p>
+                {repes.map((r, i) => (
+                  <p key={i} className="text-[13px] text-navy-light/80 font-body">
+                    {ESTADO[r.status] ?? r.status}
+                    {r.date ? ` · ${r.date}` : ''}
+                    {r.group ? ` · ${r.group}` : ' · sin grupo'}
+                    {r.es_externo ? ' · externo' : ''}
+                  </p>
+                ))}
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Si de verdad lo llevó otra vez, seguí. Si no, cancelá para no duplicarlo.
+                </p>
+              </div>
+            </div>
+          )
+        })()}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
