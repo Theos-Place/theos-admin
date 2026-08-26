@@ -93,35 +93,49 @@ async function main() {
   const heredarFecha: Array<{ id: string; completed_at: string }> = []
   for (const [, filas] of porClave) {
     if (filas.length < 2) continue
-    // Repetición REAL: más de seis meses entre completados.
+    // Se agrupan las filas en TANDAS por cercanía: dos completados a menos de
+    // seis meses son el mismo hecho; a más de seis meses, dos hechos distintos.
     //
-    // Se mide solo con las filas QUE TIENEN fecha. Las que no la tienen no son
-    // una repetición: son la misma cosa cargada sin ese dato, y no aportan nada
-    // que la fechada no tenga. La primera versión mandaba todo el par a
-    // "repetición real" en cuanto una fecha faltaba, y así protegía cientos de
-    // duplicados obvios (misma persona, mismo plan, una con fecha y otra sin).
-    const fechas = filas.map(f => f.completed_at ? new Date(f.completed_at).getTime() : null)
-      .filter((x): x is number => x !== null).sort((a, b) => a - b)
-    if (fechas.length >= 2 && fechas[fechas.length - 1] - fechas[0] > SEIS_MESES_MS) {
-      repeticionReal.push(filas
-        .sort((a, b) => String(a.completed_at).localeCompare(String(b.completed_at)))
-        .map(f => `${nombreDe.get(f.group_id) ?? '(sin grupo)'} (${String(f.completed_at).slice(0, 10)})`).join('  ·  '))
-      continue
+    // Agrupar importa, no alcanza con mirar el primero y el último. Ingrid Ling
+    // tenía BUS cuatro veces: 2018-05-21, 06-11, 06-18 y 2019-04-08. Tres en un
+    // mes y una al año siguiente. Midiendo solo el extremo a extremo (11 meses)
+    // se protegían las CUATRO; agrupando quedan dos tandas y se borran dos
+    // filas, que es lo correcto.
+    //
+    // Las filas sin fecha van a la primera tanda: no son una repetición, son la
+    // misma cosa cargada sin ese dato.
+    const ordenadas = [...filas].sort((a, b) =>
+      String(a.completed_at ?? '0000').localeCompare(String(b.completed_at ?? '0000')))
+    const tandas: any[][] = []
+    for (const f of ordenadas) {
+      const actual = tandas[tandas.length - 1]
+      const t = f.completed_at ? new Date(f.completed_at).getTime() : null
+      const ultima = actual?.map(x => x.completed_at ? new Date(x.completed_at).getTime() : null)
+        .filter((x: number | null): x is number => x !== null).pop() ?? null
+      if (!actual || (t !== null && ultima !== null && t - ultima > SEIS_MESES_MS)) tandas.push([f])
+      else actual.push(f)
     }
-    const orden = [...filas].sort((a, b) =>
-      (a.group_id ? 0 : 1) - (b.group_id ? 0 : 1)
-      || String(a.completed_at ?? '9999').localeCompare(String(b.completed_at ?? '9999')))
-    const [queda, ...sobran] = orden
-    // Si el que se queda es el del GRUPO pero no tiene fecha, y una de las que
-    // se van sí la tiene, se la hereda. Si no, quedarse con el grupo costaría
-    // perder la fecha — y las dos cosas son datos reales del mismo hecho.
-    if (!queda.completed_at) {
-      const conFecha = sobran.map(f => f.completed_at).filter(Boolean).sort()[0]
-      if (conFecha) heredarFecha.push({ id: queda.id, completed_at: conFecha })
+    if (tandas.length > 1) {
+      repeticionReal.push(tandas.map(t =>
+        t.map(f => `${nombreDe.get(f.group_id) ?? '(sin grupo)'} (${String(f.completed_at ?? 'sin fecha').slice(0, 10)})`).join(' + ')
+      ).join('  ·  '))
     }
-    for (const s of sobran) {
-      if (conPago.has(s.id)) { bloqueadasPorPago.push(s.id); continue }
-      borrar.push(s)
+    // Se depura DENTRO de cada tanda: una repetición real no impide limpiar los
+    // duplicados de carga que tenga adentro.
+    for (const tanda of tandas) {
+      if (tanda.length < 2) continue
+      const orden = [...tanda].sort((a, b) =>
+        (a.group_id ? 0 : 1) - (b.group_id ? 0 : 1)
+        || String(a.completed_at ?? '9999').localeCompare(String(b.completed_at ?? '9999')))
+      const [queda, ...sobran] = orden
+      if (!queda.completed_at) {
+        const conFecha = sobran.map(f => f.completed_at).filter(Boolean).sort()[0]
+        if (conFecha) heredarFecha.push({ id: queda.id, completed_at: conFecha })
+      }
+      for (const s of sobran) {
+        if (conPago.has(s.id)) { bloqueadasPorPago.push(s.id); continue }
+        borrar.push(s)
+      }
     }
   }
 
