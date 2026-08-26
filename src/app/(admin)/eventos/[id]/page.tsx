@@ -26,6 +26,7 @@ import {
   type EventTab,
 } from '@/lib/events/detail-access'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
+import { CompartirInscripcion } from '@/components/events/CompartirInscripcion'
 import { EventRegistrationsTab } from './_components/EventRegistrationsTab'
 import { EventCheckinTab } from './_components/EventCheckinTab'
 import { EventServersTab } from './_components/EventServersTab'
@@ -593,6 +594,15 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Tab: Inscripciones */}
+      {/* El link público va arriba del tab: es lo que se busca cuando hay que
+          comunicar el evento, y solo tiene sentido si el evento pide inscripción.
+          Visible para quien gestiona eventos (criterio del 2026-08-26), no solo
+          para admin y comunicaciones como el compartir del calendario. */}
+      {activeTab === 'inscripciones' && canManage && event.requires_registration && (
+        <div className="mb-4">
+          <CompartirInscripcion eventId={id} />
+        </div>
+      )}
       {activeTab === 'inscripciones' && (
         <EventRegistrationsTab
           event={event}
