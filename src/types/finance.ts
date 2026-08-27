@@ -31,6 +31,14 @@ export type Payment = {
   description_label?: string
   created_at: string
   notes: string | null
+  /** Hay comprobante subido. Se expone como booleano y no como ruta: la ruta es
+   *  interna del bucket privado y la pantalla no debe verla ni intentar armar
+   *  una URL con ella. */
+  has_receipt?: boolean
+  /** Número de referencia que puso la persona al subir el comprobante. */
+  reference_code?: string | null
+  /** Estado de revisión de finanzas: 'en_revision' | 'aprobado' | 'rechazado'. */
+  review_status?: string | null
 }
 
 export type Donation = {

@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Image as ImageIcon } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -19,6 +19,23 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
   const [toast, setToast] = useState('')
+
+  const [abriendo, setAbriendo] = useState(false)
+
+  /** Abre el comprobante en otra pestaña con una URL firmada de corta duración. */
+  async function verComprobante() {
+    setAbriendo(true)
+    try {
+      const res = await fetch(`/api/payments/${id}/receipt`)
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.url) throw new Error(data?.error || 'No se pudo abrir el comprobante.')
+      window.open(data.url, '_blank', 'noopener,noreferrer')
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'No se pudo abrir el comprobante.')
+    } finally {
+      setAbriendo(false)
+    }
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -151,6 +168,34 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="font-medium font-mono text-right text-[13px] text-teal-deep">{payment.sinpe_confirmation}</span>
               </div>
             )}
+            {payment.reference_code && (
+              <div className="flex justify-between text-sm gap-4">
+                <span className="font-body text-[rgba(22,20,64,0.60)]">Referencia</span>
+                <span className="font-medium font-mono text-right text-[13px] text-navy">{payment.reference_code}</span>
+              </div>
+            )}
+            {/* EL COMPROBANTE. Faltaba en ESTA pantalla: la cola de revisión sí
+                lo tenía, así que se veía como si existiera en el sistema, pero
+                quien entraba al detalle de un pago no tenía cómo verlo — y es
+                justo donde finanzas decide si aprueba. Reportado 2026-08-27.
+                La URL se pide firmada al hacer clic: el bucket es privado y la
+                firma dura dos minutos, así que no se guarda ni se precarga. */}
+            <div className="pt-1">
+              {payment.has_receipt ? (
+                <button
+                  onClick={verComprobante}
+                  disabled={abriendo}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-50"
+                >
+                  <ImageIcon size={13} aria-hidden="true" />
+                  {abriendo ? 'Abriendo…' : 'Ver comprobante'}
+                </button>
+              ) : (
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Sin comprobante: la persona todavía no lo ha subido.
+                </p>
+              )}
+            </div>
             {payment.scholarship_id && (
               <div className="rounded-xl p-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <p className="text-[13px] font-medium text-[#1E6B42] font-body">
@@ -165,11 +210,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               </div>
             )}
-            {!payment.gateway_ref && !payment.sinpe_confirmation && !payment.scholarship_id && !payment.notes && (
-              <p className="text-sm text-[rgba(22,20,64,0.35)] font-body">
-                Sin detalles adicionales
-              </p>
-            )}
+
           </div>
         </div>
 

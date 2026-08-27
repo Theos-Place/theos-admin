@@ -27,6 +27,12 @@ export type DbPayment = {
   scholarship_id: string | null
   paid_at: string | null
   description: string | null
+  /** Ruta del comprobante en el bucket privado. La pantalla NO la usa para
+   *  construir una URL: pide una firmada a /api/payments/[id]/receipt. Acá solo
+   *  sirve para saber SI hay comprobante. */
+  receipt_path: string | null
+  reference_code: string | null
+  review_status: string | null
   /** Concepto del cobro: 'matricula' | 'evento' | 'prematrimonial' | 'folletos'. */
   concept: string | null
   created_at: string
@@ -88,7 +94,7 @@ export type DbImportBatch = {
 const PAYMENT_SELECT = `
   id, member_id, entity_type, event_id, study_group_id, amount, currency, payment_method,
   status, gateway_ref, sinpe_confirmation, scholarship_id, paid_at, description, created_at,
-  concept,
+  concept, receipt_path, reference_code, review_status,
   member:members!payments_member_id_fkey(first_name, last_name, cedula),
   event:events(title),
   study_group:study_groups(name, plan:study_plans(code, name))
