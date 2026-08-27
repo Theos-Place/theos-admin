@@ -6,11 +6,11 @@ import {
   isStudyCommitteeMember,
 } from '@/lib/supabase/queries/study-requests'
 import { requestQueueScope } from '@/lib/studies/request-assignment'
+import { isRelocationCode, textoFalta } from '@/lib/studies/relocation'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 
 const TYPES = new Set(['relocation', 'study_interest'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
-const NEEDED_STUDY_CODES = new Set(['N2', 'N3', 'N4', 'DIS2', 'DIS3'])
 const CLASS_OPTIONS = new Set([...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'])
 
 // GET: la cola. Coordinadores/dirección/admin ven TODO; el comité de estudios
@@ -132,8 +132,27 @@ export async function POST(req: NextRequest) {
       if (reason.length < 20) {
         return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
       }
-      if (!NEEDED_STUDY_CODES.has(body?.needed_study_code)) {
+      if (!isRelocationCode(body?.needed_study_code)) {
         return NextResponse.json({ error: 'Seleccioná el estudio que necesitás (N2, N3, N4, Discípulos 2 o Discípulos 3)' }, { status: 400 })
+      }
+      /**
+       * Los COMPROMISOS de la etapa se validan acá, no solo en la pantalla
+       * (pedido 2026-08-27: "que la de Disc. solo le permita a la gente con los
+       * compromisos"). En la práctica solo restringe la cadena Discípulos:
+       * N2/N3/N4 son etapa "niveles" y no piden nada.
+       *
+       * Tiene que estar en el servidor: el <option> deshabilitado del dropdown
+       * es una cortesía, no un control — un POST directo se lo salta.
+       */
+      const { getEligibleStudiesForMember } = await import('@/lib/supabase/queries/studies-eligibility')
+      const elig = await getEligibleStudiesForMember(memberId)
+      const opcion = elig.relocation_options.find(o => o.code === body.needed_study_code)
+      if (opcion && !opcion.is_eligible) {
+        return NextResponse.json({
+          error: textoFalta(opcion.name, opcion.missing),
+          code: 'compromisos_incompletos',
+          missing: opcion.missing,
+        }, { status: 422 })
       }
       if (!CLASS_OPTIONS.has(body?.last_class_attended)) {
         return NextResponse.json({ error: 'Seleccioná en cuál clase quedaste' }, { status: 400 })

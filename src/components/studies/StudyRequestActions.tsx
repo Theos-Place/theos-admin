@@ -4,24 +4,25 @@ import { useState, useEffect } from 'react'
 import { ArrowLeftRight, BookOpen, Loader2, Info } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
+import { textoFalta } from '@/lib/studies/relocation'
 
-const NEEDED_STUDY_CODES = ['N2', 'N3', 'N4', 'DIS2', 'DIS3'] as const
 const CLASS_OPTIONS = [...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'] as const
 const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] as const
 const TIME_SLOTS = ['mañana', 'tarde', 'noche'] as const
 
 type EligiblePlan = { id: string; code: string; name: string; stage: string }
 type ActiveEnrollment = { group_id: string; group_name: string; plan_code: string | null }
+type RelocationOption = { code: string; name: string; is_eligible: boolean; missing: string[] }
 type Eligibility = {
   active_enrollments: ActiveEnrollment[]
   eligible_plans: EligiblePlan[]
   commitments: { is_donor: boolean; attendance_active: boolean; is_server: boolean }
+  relocation_options: RelocationOption[]
 }
 /** Opción del dropdown de interés: TODOS los estudios no llevados, con su
  *  elegibilidad y (si no es elegible) qué le falta al miembro. */
@@ -42,7 +43,6 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   variant?: 'buttons' | 'link'
 }) {
   const toast = useToast()
-  const { studyTypes } = useStudyPlans()
   const { dirigentes } = useDirigentes()
   const { zoneSedes } = useSedes()
   const [openModal, setOpenModal] = useState<StudyRequestType | null>(null)
@@ -102,12 +102,23 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   // Grupo de origen: el primer estudio activo del miembro (ya no se elige a mano).
   const effectiveCurrentGroup = activeEnrollments[0]?.group_id ?? ''
 
-  const relocationBlocked = !dataLoading && eligibility !== null && activeEnrollments.length === 0
+  /**
+   * La reubicación YA NO se bloquea por no tener un estudio activo.
+   *
+   * Antes se exigía tenerlo, y eso dejaba afuera justo a quien la necesita: la
+   * persona que pausó un mes y quiere volver no tiene matrícula activa. Pedido
+   * del 2026-08-27. El servidor ya aceptaba current_group_id nulo, así que el
+   * bloqueo era solo de esta pantalla.
+   */
+  const relocationBlocked = false
   // Interés: se bloquea solo si no hay NINGÚN estudio no llevado (nada que pedir).
   const interestBlocked = optionsLoaded && options.length === 0
   const blocked = openModal === 'relocation' ? relocationBlocked : interestBlocked
 
   const selectedOption = options.find(o => o.plan_id === planId) ?? null
+  const relocationOptions = eligibility?.relocation_options ?? []
+  /** Las que se muestran apagadas: hay que decir por qué. */
+  const opcionesBloqueadas = relocationOptions.filter(o => !o.is_eligible)
 
   function toggleDay(d: string) {
     // El tope de 2 días aplica solo al interés; la reubicación es libre (REU-1).
@@ -206,8 +217,12 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <Info size={15} className="mt-0.5 shrink-0 text-teal-deep" aria-hidden />
                     <p className="text-[13px] text-navy font-body">
                       Lo revisa el <strong>coordinador de estudios</strong>: no es automático.
-                      Mientras tanto <strong>seguís matriculado en tu grupo actual</strong> — no
-                      pierdas las clases. Te avisamos cuando esté resuelto.
+                      {activeEnrollments.length > 0
+                        ? <> Mientras tanto <strong>seguís matriculado en tu grupo actual</strong> — no
+                            pierdas las clases.</>
+                        : <> Como no tenés un grupo activo, no hay clases que perder mientras
+                            se resuelve.</>}
+                      {' '}Te avisamos cuando esté resuelto.
                     </p>
                   </div>
                 )}
@@ -229,8 +244,25 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       <label htmlFor="relocation-needed-study" className={LABEL_CLS}>Estudio que necesito <span className="text-coral">*</span></label>
                       <select id="relocation-needed-study" value={neededStudyCode} onChange={e => setNeededStudyCode(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar…</option>
-                        {NEEDED_STUDY_CODES.map(code => <option key={code} value={code}>{code} — {studyTypes.find(s => s.code === code)?.name ?? code}</option>)}
+                        {relocationOptions.map(o => (
+                          <option key={o.code} value={o.code} disabled={!o.is_eligible}>
+                            {o.code} — {o.name}{o.is_eligible ? '' : ' (no disponible todavía)'}
+                          </option>
+                        ))}
                       </select>
+                      {/* Qué le falta, si eligió uno que no puede. El <option>
+                          deshabilitado no se puede elegir, así que este mensaje
+                          es para los que se muestran apagados: sin él la persona
+                          ve una opción en gris y no sabe por qué. */}
+                      {opcionesBloqueadas.length > 0 && (
+                        <div className="mt-2 rounded-xl bg-coral/7 border border-coral/20 px-3 py-2.5 space-y-1">
+                          {opcionesBloqueadas.map(o => (
+                            <p key={o.code} className="text-[13px] text-coral-deep font-body">
+                              {textoFalta(o.name, o.missing)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label htmlFor="relocation-last-class" className={LABEL_CLS}>En cuál clase quedé <span className="text-coral">*</span></label>

@@ -5,6 +5,7 @@ import { calcAge } from '@/lib/format'
 // Mapa nivel→etapa y compromisos por etapa: fuente única en
 // @/lib/studies/eligibility (QA 2026-07-17, antes duplicados acá).
 import { LEVEL_TO_STAGE, requirementsForStage } from '@/lib/studies/eligibility'
+import { RELOCATION_CODES, puedeReubicarseA } from '@/lib/studies/relocation'
 
 /** Perfil académico de un miembro para calcular elegibilidad de matrícula.
  *  Devuelve los CÓDIGOS de plan (no nombres) y los compromisos reales. */
@@ -90,6 +91,10 @@ export type MemberStudyEligibility = {
   /** Compromisos del miembro (para mensajes de la UI). `attendance_active_intermedia`
    *  es el criterio reforzado que aplica específicamente a Etapa Intermedia. */
   commitments: { is_donor: boolean; attendance_active: boolean; attendance_active_intermedia: boolean; is_server: boolean }
+  /** Opciones del dropdown de reubicación con lo que le falta para cada una.
+   *  A diferencia de `eligible_plans`, NO excluye los estudios que ya lleva:
+   *  reubicarse es justamente volver al que se pausó. */
+  relocation_options: Array<{ code: string; name: string; is_eligible: boolean; missing: string[] }>
 }
 
 /**
@@ -225,5 +230,22 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
     active_enrollments,
     eligible_plans,
     commitments: { is_donor, attendance_active, attendance_active_intermedia, is_server },
+    // Opciones del dropdown de REUBICACIÓN, con lo que le falta a esta persona
+    // para cada una. Se calcula acá y no en la pantalla para que la pantalla y
+    // la validación del POST usen exactamente el mismo criterio: la misma regla
+    // escrita dos veces se separa, y acá el síntoma sería ofrecer una opción que
+    // el servidor después rechaza.
+    //
+    // NO se excluyen los estudios que ya lleva: quien pide reubicación venía en
+    // ese estudio y lo pausó. Filtrarlos dejaría el dropdown vacío justo para
+    // quien necesita volver.
+    relocation_options: RELOCATION_CODES.map(code => {
+      const plan = plans.find(p => p.code === code)
+      const { is_eligible, missing } = puedeReubicarseA(
+        code, plan?.level, { is_donor, is_server, attendance_active, attendance_active_intermedia },
+        plan ? waivedFor(plan.id) : undefined,
+      )
+      return { code, name: plan?.name ?? code, is_eligible, missing }
+    }),
   }
 }
