@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Download, Send, UserPlus, Search, Trash2 } from 'lucide-react'
+import { Download, Send, UserPlus, Search, Trash2, Image as ImageIcon } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import type { AdminEvent } from '@/data/event-config'
 import { getInitials, formatCRC } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
+import { usePermissions } from '@/hooks/usePermissions'
 
 type Event = AdminEvent
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
@@ -52,6 +53,30 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
   const toast = useToast()
   const [showInscribir, setShowInscribir] = useState(false)
   const [busyMember, setBusyMember] = useState<string | null>(null)
+  const [abriendo, setAbriendo] = useState<string | null>(null)
+  const { can } = usePermissions()
+  /** El endpoint del comprobante exige ser dueño del pago o tener
+   *  'revision_pagos'. Sin este chequeo, a quien solo gestiona eventos le
+   *  saldría un botón que responde 403 — el mismo callejón sin salida de otras
+   *  pantallas. */
+  const puedeRevisarPagos = can('revision_pagos', 'view')
+
+  /** Abre el comprobante en una pestaña nueva. La URL viene FIRMADA y dura poco
+   *  (el bucket es privado), así que se pide en el momento del clic y no se
+   *  guarda. */
+  async function verComprobante(paymentId: string) {
+    setAbriendo(paymentId)
+    try {
+      const res = await fetch(`/api/payments/${paymentId}/receipt`)
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.url) throw new Error(data?.error || 'No se pudo abrir el comprobante.')
+      window.open(data.url, '_blank', 'noopener,noreferrer')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo abrir el comprobante.', 'error')
+    } finally {
+      setAbriendo(null)
+    }
+  }
   // Confirmación antes de quitar una inscripción.
   const [toRemove, setToRemove] = useState<{ id: string; name: string } | null>(null)
 
@@ -210,9 +235,20 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                           de ellos, es un sub-estado de pendiente) y la marca dice
                           lo que falta de verdad: que finanzas lo apruebe. */}
                       {reg.payment_status === 'pending' && reg.payment_in_review && (
-                        <span className="rounded-full bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep font-display">
-                          Comprobante en revisión
-                        </span>
+                        puedeRevisarPagos && reg.payment_in_review_id ? (
+                          <button
+                            onClick={() => verComprobante(reg.payment_in_review_id!)}
+                            disabled={abriendo === reg.payment_in_review_id}
+                            className="inline-flex items-center gap-1 rounded-full border border-teal-deep/30 bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep hover:bg-teal-soft/40 transition-colors font-display disabled:opacity-50"
+                          >
+                            <ImageIcon size={11} aria-hidden="true" />
+                            {abriendo === reg.payment_in_review_id ? 'Abriendo…' : 'Ver comprobante'}
+                          </button>
+                        ) : (
+                          <span className="rounded-full bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep font-display">
+                            Comprobante en revisión
+                          </span>
+                        )
                       )}
                     </div>
                   </td>

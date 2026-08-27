@@ -63,6 +63,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
       // Sin este campo, "pendiente" y "en revisión" no se pueden separar: los
       // dos son payment_status 'pending'.
       payment_in_review: r.payment_in_review ?? false,
+      payment_in_review_id: r.payment_in_review_id ?? null,
     })),
 
     checkins: db.checkins.map((c) => ({

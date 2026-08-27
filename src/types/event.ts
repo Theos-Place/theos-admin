@@ -32,6 +32,8 @@ export type EventRegistration = {
    * dos casos fue un reclamo real (2026-08-27).
    */
   payment_in_review: boolean
+  /** Id del pago en revisión, para abrir su comprobante. null si no hay. */
+  payment_in_review_id: string | null
 }
 
 export type EventCheckin = {

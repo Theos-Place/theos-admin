@@ -69,6 +69,10 @@ export type DbEventEnriched = {
      *  finanzas aprueba, así que "no subió comprobante" y "está en revisión"
      *  son el mismo valor. */
     payment_in_review?: boolean
+    /** Id del pago en revisión, para pedir la URL firmada del comprobante
+     *  (/api/payments/[id]/receipt). Sin esto la lista sabe que hay comprobante
+     *  pero no puede mostrarlo, que es justo lo que finanzas necesita. */
+    payment_in_review_id?: string | null
   }>
   checkins: Array<{
     id: string
@@ -256,16 +260,19 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
   if (ids.length > 0) {
     const { data: pagos } = await supabase
       .from('payments')
-      .select('event_registration_id')
+      .select('id, event_registration_id')
       .in('event_registration_id', ids)
       .eq('concept', 'evento')
       .eq('review_status', 'en_revision')
-    const enRevision = new Set(
-      ((pagos ?? []) as Array<{ event_registration_id: string | null }>)
-        .map(p => p.event_registration_id)
-        .filter((x): x is string => !!x),
+    const enRevision = new Map(
+      ((pagos ?? []) as Array<{ id: string; event_registration_id: string | null }>)
+        .filter(p => !!p.event_registration_id)
+        .map(p => [p.event_registration_id as string, p.id]),
     )
-    for (const r of ev.registrations) r.payment_in_review = enRevision.has(r.id)
+    for (const r of ev.registrations) {
+      r.payment_in_review = enRevision.has(r.id)
+      r.payment_in_review_id = enRevision.get(r.id) ?? null
+    }
   }
   return ev
 }
