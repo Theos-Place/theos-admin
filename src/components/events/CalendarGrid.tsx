@@ -348,9 +348,11 @@ export function CalendarGrid({
                   )
                 }
                 if (elig.already_registered) {
+                  // Mismo criterio que EventCard: 'pending' no significa "no
+                  // pagó" — se queda así hasta que finanzas aprueba.
                   return (
                     <span className="block text-center rounded-full bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
-                      Ya inscrito/a
+                      {elig.payment_in_review ? 'Inscrito/a · pago en revisión' : 'Ya inscrito/a'}
                     </span>
                   )
                 }

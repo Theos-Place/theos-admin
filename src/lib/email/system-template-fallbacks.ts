@@ -31,8 +31,9 @@ export const FALLBACK: Record<string, { subject: string; html: string }> = {
   },
   inscripcion_evento: {
     subject: 'Quedaste inscrito/a en {{nombre_evento}}',
-    html: '<p>Hola {{nombre}},</p><p>Confirmamos tu inscripción a <strong>{{nombre_evento}}</strong>.</p><p><strong>Cuándo:</strong> {{fecha_evento}}<br><strong>Dónde:</strong> {{lugar_evento}}</p>{{#pago_pendiente}}<p>Queda pendiente el pago de <strong>{{monto}}</strong>. Tu cupo está reservado mientras subís el comprobante y lo revisamos. <a href="{{link_pago}}">Subir el comprobante</a></p>{{/pago_pendiente}}{{#sin_pago}}<p>No hay nada más que hacer: te esperamos.</p>{{/sin_pago}}',
+    html: '<p>Hola {{nombre}},</p><p>Confirmamos tu inscripción a <strong>{{nombre_evento}}</strong>.</p><p><strong>Cuándo:</strong> {{fecha_evento}}<br><strong>Dónde:</strong> {{lugar_evento}}</p>{{#en_revision}}<p>Recibimos tu comprobante de <strong>{{monto}}</strong>. No tenés que hacer nada más: finanzas lo revisa y te avisamos si hiciera falta algo.</p>{{/en_revision}}{{#sin_pago}}<p>No hay nada más que hacer: te esperamos.</p>{{/sin_pago}}',
   },
+
   // EVE-4: encuesta de satisfacción de un evento (destino = formulario).
   encuesta_evento: {
     subject: '¿Cómo te fue en {{nombre_evento}}?',

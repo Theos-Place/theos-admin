@@ -16,6 +16,17 @@ export type EventEligibilityResult = {
   /** Id de MI inscripción (null si no estoy inscrito). Permite reabrir el modal
    *  del comprobante desde la tarjeta cuando el pago quedó pendiente. */
   registration_id: string | null
+  /**
+   * Mi comprobante está subido y esperando a finanzas.
+   *
+   * Hace falta porque `registration_status` NO alcanza para saberlo: se queda en
+   * 'pending' desde que la persona se inscribe hasta que finanzas aprueba, así
+   * que "todavía no subió el comprobante" y "ya lo subió y está en revisión" se
+   * ven IDÉNTICOS. Mostrar "falta el pago" a quien acaba de pagar es el reclamo
+   * que llegó el 2026-08-27. Lo que marca la diferencia vive en otra tabla:
+   * payments.review_status = 'en_revision'.
+   */
+  payment_in_review: boolean
   is_full: boolean
   spots_available: number | null
   is_eligible: boolean
@@ -41,6 +52,9 @@ export function computeEventEligibility(
   events: DbEventEnriched[],
   memberId: string,
   pricingByEvent: Map<string, EventPricing>,
+  /** Ids de inscripción con comprobante en revisión. Se pasa desde afuera porque
+   *  vive en `payments` y esta función es pura (no consulta nada). */
+  comprobantesEnRevision: Set<string> = new Set(),
 ): EventEligibilityResult[] {
   return events.map(e => {
     const occupied = e.registrations.filter(
@@ -66,6 +80,7 @@ export function computeEventEligibility(
       already_registered: alreadyRegistered,
       registration_status: mine?.payment_status ?? null,
       registration_id: mine?.id ?? null,
+      payment_in_review: !!mine?.id && comprobantesEnRevision.has(mine.id),
       is_full: isFull,
       spots_available: e.max_capacity != null && e.max_capacity > 0 ? Math.max(0, e.max_capacity - occupied) : null,
       is_eligible: !alreadyRegistered && !isFull,

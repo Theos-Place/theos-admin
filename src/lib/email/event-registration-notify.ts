@@ -1,20 +1,22 @@
 /**
  * Confirmación de inscripción a un evento (transaccional). Se dispara SIEMPRE al
- * inscribirse — es lo que pidió el usuario el 2026-08-27 y sigue el criterio de
- * notifyEnrollment: quien acaba de inscribirse recibe confirmación, tenga pago
- * pendiente o no.
+ * inscribirse.
  *
- * Con pago pendiente el texto lo dice y lleva al comprobante, en vez de callarse:
- * la inscripción YA reservó el cupo, así que no avisar dejaría a la persona sin
- * saber si quedó o no.
+ * OJO CON EL TEXTO DEL PAGO. Desde que el comprobante es obligatorio para
+ * inscribirse, cuando este correo sale el comprobante YA ESTÁ ADENTRO. Decir
+ * "queda pendiente el pago" —como decía la primera versión— es falso y peor que
+ * no decir nada: la persona acaba de pagar y el correo le dice que no pagó, así
+ * que vuelve a pagar o escribe preguntando.
+ *
+ * Lo que falta no es el pago, es que FINANZAS lo revise, y eso se resuelve
+ * adentro. El correo lo dice así: recibimos el comprobante, no tenés que hacer
+ * nada más.
  *
  * Best-effort: si el correo falla se loguea y NO rompe la inscripción.
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { formatCRC } from '@/lib/format'
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
 
 /** La fecha del evento en hora de COSTA RICA. Acá sí va zona fija: un correo no
  *  tiene visitante ni navegador del cual sacar la zona, y el evento ocurre en la
@@ -32,7 +34,7 @@ function fmtFechaHora(iso: string | null): string {
 export async function notifyEventRegistration(
   memberId: string,
   eventId: string,
-  opts: { requiresPayment: boolean; amount: number },
+  opts: { comprobanteRecibido: boolean; amount: number },
 ): Promise<void> {
   try {
     const supabase = createAdminClient()
@@ -61,14 +63,14 @@ export async function notifyEventRegistration(
         // array, así que un array vacío borra el bloque y uno de un elemento lo
         // muestra. Los campos de adentro viajan EN el objeto: dentro de una
         // sección las variables se resuelven contra el item, no contra la raíz.
-        pago_pendiente: opts.requiresPayment
-          // /eventos, NO /mis-eventos (esa ruta ya no existe) ni /mis-pagos (que
-          // está vacía hasta que se sube el comprobante, porque el pago nace en
-          // ese momento). En /eventos la tarjeta del evento ahora tiene el botón
-          // "Subir comprobante".
-          ? [{ monto: formatCRC(opts.amount), link_pago: `${SITE_URL}/eventos` }]
-          : [],
-        sin_pago: opts.requiresPayment ? [] : [{}],
+        // Secciones como condicional: el motor de {{#...}} ignora lo que no es
+        // array, así que un array vacío borra el bloque y uno de un elemento lo
+        // muestra. Los campos de adentro viajan EN el objeto: dentro de una
+        // sección las variables se resuelven contra el item, no contra la raíz.
+        // Ya no hay bloque de "falta pagar": si el evento tenía costo, el
+        // comprobante entró junto con la inscripción.
+        en_revision: opts.comprobanteRecibido ? [{ monto: formatCRC(opts.amount) }] : [],
+        sin_pago: opts.comprobanteRecibido ? [] : [{}],
       },
     })
   } catch (err) {

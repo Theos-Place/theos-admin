@@ -117,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { notifyEventRegistration } = await import('@/lib/email/event-registration-notify')
-    await notifyEventRegistration(memberId, id, { requiresPayment: comprobanteRequerido(aPagar), amount: aPagar })
+    await notifyEventRegistration(memberId, id, { comprobanteRecibido: comprobanteRequerido(aPagar), amount: aPagar })
 
     return NextResponse.json({ ...res, pricing, comprobante_recibido: comprobanteRequerido(aPagar) }, { status: 201 })
   } catch (error) {

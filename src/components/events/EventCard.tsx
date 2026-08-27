@@ -107,9 +107,18 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
               Inscribirme
             </button>
           ) : eligibility.already_registered ? (
-            eligibility.registration_status === 'pending' && eligibility.registration_id && onUploadReceipt ? (
-              // Inscrito pero falta el comprobante. Antes acá solo decía "Ya
-              // inscrito/a" y no había forma de subirlo.
+            // Tres estados distintos, y confundirlos fue un reclamo real: a quien
+            // acababa de pagar le decía "falta el pago". `registration_status`
+            // se queda en 'pending' hasta que finanzas aprueba, así que el dato
+            // que separa "ya pagué" de "no pagué" es payment_in_review.
+            eligibility.payment_in_review ? (
+              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+                Inscrito/a · pago en revisión
+              </span>
+            ) : eligibility.registration_status === 'pending' && eligibility.registration_id && onUploadReceipt ? (
+              // Inscrito y de verdad sin comprobante (una inscripción vieja, o una
+              // que hizo el staff, o un comprobante que se rechazó). Antes acá
+              // solo decía "Ya inscrito/a" y no había forma de subirlo.
               <button
                 type="button"
                 onClick={onUploadReceipt}
@@ -119,7 +128,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
               </button>
             ) : (
               <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
-                {eligibility.registration_status === 'pending' ? 'Inscrito/a · falta el pago' : 'Ya inscrito/a'}
+                Ya inscrito/a
               </span>
             )
           ) : (

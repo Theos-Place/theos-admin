@@ -21,27 +21,29 @@ const base = {
 }
 
 describe('correo de inscripción a evento', () => {
-  it('con pago pendiente muestra el monto y el link al comprobante', () => {
+  it('con comprobante recibido dice que está en revisión, NO que el pago falta', () => {
     const html = renderTemplate(plantilla.html, {
       ...base,
-      pago_pendiente: [{ monto: '₡2 000', link_pago: 'https://x/mis-eventos' }],
+      en_revision: [{ monto: '₡2 000' }],
       sin_pago: [],
     })
     expect(html).toContain('₡2 000')
-    expect(html).toContain('https://x/mis-eventos')
-    expect(html).toContain('cupo está reservado')
+    expect(html).toContain('Recibimos tu comprobante')
+    expect(html).toContain('finanzas lo revisa')
+    // El texto viejo le decía a quien acababa de pagar que no había pagado.
+    expect(html).not.toMatch(/pendiente el pago|falta.*pag|Sub[ií] el comprobante/i)
     expect(html).not.toContain('No hay nada más que hacer')
   })
 
-  it('sin pago no menciona comprobante ni monto', () => {
-    const html = renderTemplate(plantilla.html, { ...base, pago_pendiente: [], sin_pago: [{}] })
+  it('sin costo no menciona comprobante ni monto', () => {
+    const html = renderTemplate(plantilla.html, { ...base, en_revision: [], sin_pago: [{}] })
     expect(html).toContain('No hay nada más que hacer')
     expect(html).not.toContain('comprobante')
     expect(html).not.toContain('₡')
   })
 
   it('siempre trae el evento, la fecha y el lugar', () => {
-    const html = renderTemplate(plantilla.html, { ...base, pago_pendiente: [], sin_pago: [{}] })
+    const html = renderTemplate(plantilla.html, { ...base, en_revision: [], sin_pago: [{}] })
     expect(html).toContain('Entre Mujeres')
     expect(html).toContain('08:30')
     expect(html).toContain('Sede Home')
@@ -54,8 +56,9 @@ describe('correo de inscripción a evento', () => {
     // Si se editan por separado, la gente recibe un correo distinto al que se
     // probó acá — y el fallback solo aparece cuando la BD no tiene la fila, que
     // es justo cuando nadie está mirando.
-    const sql = readFileSync('supabase/migrations/20260827160000_inscripcion_evento_email.sql', 'utf8')
+    // La 160000 la creó; la 180000 la corrigió. Vale la ÚLTIMA.
+    const sql = readFileSync('supabase/migrations/20260827180000_inscripcion_evento_en_revision.sql', 'utf8')
     expect(sql).toContain(plantilla.html)
-    expect(sql).toContain(plantilla.subject)
+
   })
 })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getEvents, registrationPricing } from '@/lib/supabase/queries/events'
 import { computeEventEligibility } from '@/lib/events/eligibility'
 
@@ -30,7 +31,28 @@ export async function GET(req: NextRequest) {
       openEvents.map(async e => [e.id, await registrationPricing(e.id, memberId)] as const),
     )
     const pricingByEvent = new Map(pricingEntries)
-    const eligibility = computeEventEligibility(openEvents, memberId, pricingByEvent)
+
+    // Qué comprobantes de esta persona están esperando a finanzas. Sin esto la
+    // pantalla no puede distinguir "no subió comprobante" de "ya lo subió", que
+    // en event_registrations se ven igual (las dos son 'pending').
+    const misInscripciones = openEvents
+      .flatMap(e => e.registrations.filter(r => r.member_id === memberId).map(r => r.id))
+    let enRevision = new Set<string>()
+    if (misInscripciones.length > 0) {
+      const { data: pagos } = await createAdminClient()
+        .from('payments')
+        .select('event_registration_id')
+        .in('event_registration_id', misInscripciones)
+        .eq('concept', 'evento')
+        .eq('review_status', 'en_revision')
+      enRevision = new Set(
+        ((pagos ?? []) as Array<{ event_registration_id: string | null }>)
+          .map(p => p.event_registration_id)
+          .filter((id): id is string => !!id),
+      )
+    }
+
+    const eligibility = computeEventEligibility(openEvents, memberId, pricingByEvent, enRevision)
     return NextResponse.json({ eligibility })
   } catch (error) {
     console.error('GET /api/eventos/elegibilidad:', error)
