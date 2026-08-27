@@ -281,11 +281,11 @@ export default function LoginPage() {
         <h1
           className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]"
         >
-          Bienvenido de vuelta
+          Bienvenido
         </h1>
         <p className="text-sm text-navy-light/80 leading-relaxed font-body">
-          Ingresá tu correo y contraseña para<br />
-          acceder al sistema administrativo.
+          Ingresá tu correo y contraseña para acceder al sistema
+          administrativo de Theos.
         </p>
       </div>
 

@@ -77,8 +77,24 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Panel del formulario */}
       <div
-        className="flex-1 flex items-center justify-center py-12 px-8 bg-[#F8FAFB] min-h-screen"
+        className="flex-1 flex flex-col items-center justify-center py-12 px-8 bg-[#F8FAFB] min-h-screen"
       >
+        {/* Logo para MÓVIL/TABLET. El panel decorativo de arriba es `hidden
+            lg:flex`, así que abajo de lg no había logo en ninguna parte: la
+            pantalla de entrar no decía de quién era. Este es `lg:hidden`, el
+            complemento exacto, así que nunca se muestran los dos a la vez.
+            Va la versión oscura (logo-theos-original) porque este panel tiene
+            fondo claro; la blanca del otro panel desaparecería. */}
+        <div className="mb-10 flex justify-center lg:hidden">
+          <Image
+            src="/logo-theos-original.png"
+            alt="Theos Place"
+            width={661}
+            height={337}
+            priority
+            className="h-auto w-[180px]"
+          />
+        </div>
         {children}
       </div>
 
