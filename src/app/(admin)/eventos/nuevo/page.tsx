@@ -27,6 +27,8 @@ interface FormData {
   event_type: EventType | ''
   organizing_committee_ids: string[]
   description: string
+  /** Mostrar en el calendario público y en el de los miembros. */
+  is_public: boolean
   start_date: string
   start_time: string
   end_date: string
@@ -116,6 +118,9 @@ function NuevoEventoForm() {
     event_type: '',
     organizing_committee_ids: [],
     description: '',
+    // Público por default: es lo que hacían todos los eventos hasta ahora, así
+    // que marcar la casilla es una decisión y no marcarla no cambia nada.
+    is_public: true,
     start_date: initialDate,
     start_time: initialStart,
     end_date: initialDate,
@@ -349,6 +354,7 @@ function NuevoEventoForm() {
               event_type={form.event_type}
               organizing_committee_ids={form.organizing_committee_ids}
               description={form.description}
+              is_public={form.is_public}
               flyer={flyer}
               flyerDragOver={flyerDragOver}
               flyerInputRef={flyerInputRef}
@@ -356,6 +362,7 @@ function NuevoEventoForm() {
               onEventTypeChange={v => set('event_type', v)}
               onCommitteesChange={v => set('organizing_committee_ids', v)}
               onDescriptionChange={v => set('description', v)}
+              onIsPublicToggle={() => set('is_public', !form.is_public)}
               onFlyerSelect={handleFlyerSelect}
               onFlyerDragOver={setFlyerDragOver}
               onFlyerRemove={() => setFlyer(null)}

@@ -5,9 +5,11 @@ import { getEvents, type DbEventEnriched } from '@/lib/supabase/queries/events'
 // GET público para el widget /calendario (embebible en el sitio de la iglesia).
 // Decisión documentada: NO lleva requireRoles — expone los eventos con campos de
 // cartelera (sin inscripciones ni check-ins, que sí viajan en /api/events).
-// La tabla events NO tiene columna is_public; "hoy todos son públicos", así que
-// lee la MISMA fuente que el calendario interno (is_active=all menos
-// cancelados/archivados) para que ambos coincidan. Rate limit por IP.
+// Desde 2026-08-27 la tabla tiene `is_public` y esta ruta filtra por ella: un
+// evento INTERNO no se lista acá. Ojo con la asimetría, es a propósito:
+// /api/public/events/[id] (el detalle) NO filtra, porque un evento interno se
+// comparte justamente por su link directo. Lo que cambia es que no aparezca en
+// la cartelera embebida del sitio. Rate limit por IP.
 export async function GET(req: Request) {
   try {
     if (!rateLimit(`public-events:${clientIp(req)}`, 60, 60_000)) {
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
     }
     const publicEvents = events
       .filter(e => e.status !== 'cancelled' && e.status !== 'archived')
+      .filter(e => e.is_public !== false)
       .map((e: DbEventEnriched) => ({
       id: e.id,
       title: e.title,

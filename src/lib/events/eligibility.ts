@@ -41,6 +41,10 @@ export type EventEligibilityResult = {
   recurrence_rule: string | null
   max_capacity: number | null
   status: DbEventEnriched['status']
+  /** false = interno. La elegibilidad SÍ lo devuelve (si no, el link de
+   *  inscripción de un evento interno no encontraría nada y el botón volvería a
+   *  no hacer nada); son las LISTAS del calendario las que lo esconden. */
+  is_public: boolean
   registrations_count: number
 }
 
@@ -93,6 +97,7 @@ export function computeEventEligibility(
       recurrence_rule: e.recurrence_rule,
       max_capacity: e.max_capacity,
       status: e.status,
+      is_public: e.is_public !== false,
       registrations_count: occupied,
     }
   })

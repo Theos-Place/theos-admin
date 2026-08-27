@@ -22,6 +22,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     is_virtual: db.is_virtual,
     virtual_url: db.virtual_url ?? null,
     requires_registration: db.requires_registration,
+    is_public: db.is_public ?? true,
     max_capacity: db.max_capacity, // null = sin límite
     requires_payment: db.requires_payment,
     payment_amount: db.payment_amount,

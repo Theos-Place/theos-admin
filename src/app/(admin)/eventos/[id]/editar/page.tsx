@@ -180,6 +180,9 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [newSubName, setNewSubName] = useState('')
   const [newSubCap, setNewSubCap] = useState('')
   const [requiresRegistration, setRequiresRegistration] = useState(event?.requires_registration ?? false)
+  // Los eventos anteriores a la columna no traen el campo: se asumen públicos,
+  // que es lo que venían siendo.
+  const [isPublic, setIsPublic] = useState(event?.is_public ?? true)
   const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity ?? '') : '')
   const [requiresPayment, setRequiresPayment] = useState(event?.requires_payment ?? false)
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
@@ -232,6 +235,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setRecurrenceEnd(event.recurrence_end ? ymdCR(new Date(event.recurrence_end)) : '')
     setSubEvents(event.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })))
     setRequiresRegistration(event.requires_registration ?? false)
+    setIsPublic(event.is_public ?? true)
     setMaxCapacity(String(event.max_capacity ?? ''))
     setRequiresPayment(event.requires_payment ?? false)
     setPaymentAmount(event.payment_amount ? String(event.payment_amount) : '')
@@ -309,6 +313,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule, recurrence_end: recurrenceEnd,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
+      is_public: isPublic,
       requires_payment: requiresPayment, payment_amount: paymentAmount, currency, sede_id: sedeId,
       server_price: serverPrice, servers_pay: serversPay,
       sub_events: subEvents,
@@ -486,6 +491,27 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       </Section>
 
       {/* Sección 2 */}
+      <Section id="visibilidad" title="Visibilidad" open={openSections.has('visibilidad')} onToggle={() => toggleSection('visibilidad')}>
+        <div className="flex items-start gap-3">
+          <button
+            type="button" role="switch" aria-checked={isPublic}
+            aria-label="Mostrar en el calendario público"
+            onClick={() => setIsPublic(v => !v)}
+            className={cn('relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-all duration-200 cursor-pointer', isPublic ? 'bg-coral' : 'bg-navy-light/20')}
+          >
+            <span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', isPublic ? 'translate-x-4' : 'translate-x-0.5')} />
+          </button>
+          <div>
+            <p className="text-sm text-navy font-body">Mostrar en el calendario público</p>
+            <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+              {isPublic
+                ? 'Aparece en el calendario del sitio y en el de todos los miembros.'
+                : 'Evento interno: no aparece en ningún calendario. Solo lo ven quienes gestionan eventos, y quien reciba el link para compartir — que sigue funcionando igual.'}
+            </p>
+          </div>
+        </div>
+      </Section>
+
       <Section id="schedule" title="② Programación y ubicación" open={openSections.has('schedule')} onToggle={() => toggleSection('schedule')}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">

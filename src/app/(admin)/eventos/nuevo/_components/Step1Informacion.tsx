@@ -3,13 +3,14 @@ import { cn } from '@/lib/utils'
 import { type EventType } from '@/data/event-config'
 import { useEventTypes } from '@/hooks/useEventTypes'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
-import { inputCls, ICON_MAP, FieldLabel } from './shared'
+import { inputCls, ICON_MAP, FieldLabel, Toggle } from './shared'
 
 interface Step1Props {
   name: string
   event_type: EventType | ''
   organizing_committee_ids: string[]
   description: string
+  is_public: boolean
   flyer: string | null
   flyerDragOver: boolean
   flyerInputRef: React.RefObject<HTMLInputElement | null>
@@ -17,6 +18,7 @@ interface Step1Props {
   onEventTypeChange: (v: EventType) => void
   onCommitteesChange: (ids: string[]) => void
   onDescriptionChange: (v: string) => void
+  onIsPublicToggle: () => void
   onFlyerSelect: (file: File) => void
   onFlyerDragOver: (v: boolean) => void
   onFlyerRemove: () => void
@@ -27,6 +29,7 @@ export function Step1Informacion({
   event_type,
   organizing_committee_ids,
   description,
+  is_public,
   flyer,
   flyerDragOver,
   flyerInputRef,
@@ -34,6 +37,7 @@ export function Step1Informacion({
   onEventTypeChange,
   onCommitteesChange,
   onDescriptionChange,
+  onIsPublicToggle,
   onFlyerSelect,
   onFlyerDragOver,
   onFlyerRemove,
@@ -111,6 +115,20 @@ export function Step1Informacion({
             onChange={e => onDescriptionChange(e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Visibilidad */}
+      <div className="mt-6 border-t border-outline pt-5">
+        <Toggle
+          checked={is_public}
+          onToggle={onIsPublicToggle}
+          label="Mostrar en el calendario público"
+        />
+        <p className="mt-2 pl-14 text-[13px] text-navy-light/80 font-body">
+          {is_public
+            ? 'Va a aparecer en el calendario del sitio y en el de todos los miembros.'
+            : 'Evento interno: no aparece en ningún calendario. Solo lo ven quienes gestionan eventos, y quien reciba el link para compartir — que sigue funcionando igual.'}
+        </p>
       </div>
 
       {/* Flyer */}

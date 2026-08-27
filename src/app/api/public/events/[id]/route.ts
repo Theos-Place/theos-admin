@@ -29,7 +29,7 @@ export async function GET(
     const { data, error } = await supabase
       .from('events')
       .select(`
-        id, title, description, event_type, status, starts_at, ends_at,
+        id, title, description, event_type, status, starts_at, ends_at, is_public,
         location, location_url, is_virtual, requires_registration,
         max_capacity, requires_payment, payment_amount, currency, flyer_url
       `)
@@ -37,6 +37,11 @@ export async function GET(
       .maybeSingle()
     if (error) throw error
     const e = data as Record<string, unknown> | null
+    // A PROPÓSITO no se filtra por is_public: un evento interno se comparte por
+    // este link (WhatsApp, QR) y tiene que abrir. "Interno" quiere decir que no
+    // se LISTA, no que sea secreto. El filtro va en /api/public/events (la
+    // cartelera) y en las listas del calendario de los miembros.
+    //
     // Cancelado o archivado: para quien llega de afuera no existe. Se responde
     // 404 y no "cancelado" a propósito — un link viejo no debería anunciar nada.
     if (!e || e.status === 'cancelled' || e.status === 'archived') {

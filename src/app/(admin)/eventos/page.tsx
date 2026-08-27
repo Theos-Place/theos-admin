@@ -266,9 +266,17 @@ function EventosContent() {
 
   // Fallback: si el endpoint público no trae nada, al menos los eventos a los
   // que la persona puede inscribirse (comportamiento anterior).
+  //
+  // Se filtran los INTERNOS. La elegibilidad los trae a propósito —sin ellos el
+  // link de inscripción de un evento interno no encontraría nada y el botón
+  // volvería a no hacer nada— pero LISTARLOS sería justo lo que "interno" no
+  // debe hacer. El deep link no pasa por acá: usa eligibilityByEventId, que sí
+  // los tiene. Quien gestiona eventos ve todo.
   const memberEvents: AdminEvent[] = useMemo(
-    () => eligibility.map(eligibilityToStubEvent),
-    [eligibility],
+    () => eligibility
+      .filter(e => canManage || e.is_public)
+      .map(eligibilityToStubEvent),
+    [eligibility, canManage],
   )
   const merged = useMemo(() => {
     if (!canManage) {

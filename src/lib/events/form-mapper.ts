@@ -69,6 +69,9 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     recurrence_rule: (body.recurrence_rule as string) || null,
     recurrence_end: endOfDayCR(body.recurrence_end as string),
     requires_registration: Boolean(body.requires_registration),
+    // Sin el campo en el body se asume PÚBLICO, que es el default de la columna
+    // y lo que hacían todos los eventos hasta ahora.
+    is_public: body.is_public === undefined ? true : Boolean(body.is_public),
     max_capacity: num(body.max_capacity),
     requires_payment: Boolean(body.requires_payment),
     payment_amount: num(body.payment_amount),
@@ -130,6 +133,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
     virtual_link: 'virtual_url',
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule', recurrence_end: 'recurrence_end',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
+    is_public: 'is_public',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',
     currency: 'currency', sede_id: 'sede_id',
     server_price: 'server_price', servers_pay: 'servers_pay',

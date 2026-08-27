@@ -28,6 +28,9 @@ export type DbEventEnriched = {
   is_virtual: boolean
   virtual_url: string | null
   requires_registration: boolean
+  /** false = interno: no se lista en el calendario público ni en el de los
+   *  miembros. Se sigue pudiendo compartir por su link directo. */
+  is_public: boolean
   requires_payment: boolean
   payment_amount: number | null
   /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */
@@ -299,6 +302,7 @@ export type EventWriteInput = {
   is_virtual?: boolean
   virtual_url?: string | null
   requires_registration?: boolean
+  is_public?: boolean
   requires_payment?: boolean
   payment_amount?: number | null
   currency?: string
@@ -1019,6 +1023,7 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
     is_virtual: e.is_virtual,
     virtual_url: e.virtual_url,
     requires_registration: e.requires_registration,
+    is_public: e.is_public ?? true,
     requires_payment: e.requires_payment,
     payment_amount: e.payment_amount,
     currency: e.currency,

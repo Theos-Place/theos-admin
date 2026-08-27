@@ -66,6 +66,8 @@ export type AdminEvent = {
   is_virtual: boolean
   virtual_url: string | null
   requires_registration: boolean
+  /** false = interno: solo por link directo o para quien gestiona eventos. */
+  is_public: boolean
   /** null = sin límite de cupo (default). */
   max_capacity: number | null
   requires_payment: boolean
