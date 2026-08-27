@@ -5,6 +5,7 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
+import { useSedes } from '@/lib/sedes'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -166,6 +167,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
    * para esto y nadie lo llamaba) y queda editable: quien cierra sabe mejor
    * dónde hay que dejarlos.
    */
+  const { activeSedes: sedesEntrega } = useSedes()
   const [folletosSede, setFolletosSede] = useState('')
   useEffect(() => {
     let vivo = true
@@ -531,13 +533,28 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                 Al cerrar se pide el tiquete de folletos para los {aprobados} que pasan al
                 nivel siguiente. Decinos dónde hay que dejarlos.
               </p>
-              <input
+              {/* Lista de sedes, no texto libre (2026-08-27). El valor que se
+                  guarda es el NOMBRE y no el código: es lo que espera
+                  folletos_sede y lo que devuelve getLeaderSedeForGroup, así que
+                  el prellenado calza con una opción sin traducir nada en medio. */}
+              <select
                 id="folletos-sede"
                 value={folletosSede}
                 onChange={e => setFolletosSede(e.target.value)}
-                placeholder="Ej. Sede Heredia, recepción"
                 className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
+              >
+                <option value="">Seleccionar sede…</option>
+                {sedesEntrega.map(s => (
+                  <option key={s.id} value={s.name}>{s.name}</option>
+                ))}
+                {/* Si la sede del dirigente no está entre las activas, se
+                    conserva como opción para no perderla al abrir la pantalla
+                    (pasa con Heredia y United, que hoy están inactivas aunque
+                    se usan). */}
+                {folletosSede && !sedesEntrega.some(s => s.name === folletosSede) && (
+                  <option value={folletosSede}>{folletosSede} (sede del dirigente)</option>
+                )}
+              </select>
             </div>
           )}
 
