@@ -24,6 +24,30 @@ export function toYmdLocal(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** Un timestamp guardado → la fecha y la hora que hay que MOSTRAR EN LOS INPUTS
+ *  del formulario, en hora de Costa Rica.
+ *
+ *  Es el espejo de combineDateTime (events/form-mapper): ahí se guarda
+ *  interpretando los inputs como hora CR, así que acá hay que devolverlos a CR.
+ *  Antes la pantalla de editar hacía `start_at.split('T')`, que parte la cadena
+ *  CRUDA: un evento guardado como 2026-08-28T04:00Z se mostraba como "28 de
+ *  agosto, 04:00" cuando en CR ese instante es el 27 a las 22:00. Y al guardar
+ *  mandaba de vuelta esos valores, que se reinterpretan como CR — así que el
+ *  evento se CORRÍA SEIS HORAS cada vez que alguien lo abría y guardaba. Los dos
+ *  lados tienen que hablar la misma zona o el error se acumula.
+ */
+export function crFormParts(iso: string | null | undefined): { date: string; time: string } {
+  if (!iso) return { date: '', time: '' }
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return { date: '', time: '' }
+  return {
+    // en-CA formatea como YYYY-MM-DD, que es lo que espera un <input type="date">.
+    date: d.toLocaleDateString('en-CA', { timeZone: CR_TZ }),
+    // en-GB da 24h ("22:00"), que es lo que espera un <input type="time">.
+    time: d.toLocaleTimeString('en-GB', { timeZone: CR_TZ, hour: '2-digit', minute: '2-digit', hour12: false }),
+  }
+}
+
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
 
 /** Parsea una fecha respetando las fechas PURAS (YYYY-MM-DD, columnas `date`) como

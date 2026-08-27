@@ -12,7 +12,7 @@ import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
-import { ymdCR, CURRENCIES, currencySymbol, amountStep } from '@/lib/format'
+import { ymdCR, crFormParts, CURRENCIES, currencySymbol, amountStep } from '@/lib/format'
 import { useSedes } from '@/lib/sedes'
 import { cn } from '@/lib/utils'
 import { EventManagersPanel } from '../_components/EventManagersPanel'
@@ -157,10 +157,16 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [selectedType, setSelectedType] = useState<EventType | ''>(event?.event_type ?? '')
   const [committeeIds, setCommitteeIds] = useState<string[]>(event?.organizing_committee_ids ?? [])
   const [description, setDescription] = useState(event?.description ?? '')
-  const [startDate, setStartDate] = useState(event ? event.start_at.split('T')[0] : '')
-  const [startTime, setStartTime] = useState(event ? event.start_at.split('T')[1]?.slice(0, 5) : '')
-  const [endDate, setEndDate] = useState(event ? event.end_at.split('T')[0] : '')
-  const [endTime, setEndTime] = useState(event ? event.end_at.split('T')[1]?.slice(0, 5) : '')
+  // Los inputs muestran la hora de COSTA RICA, no la cadena cruda del
+  // timestamp. Ver crFormParts: partir el ISO con split('T') mostraba la hora
+  // UTC y, al guardar, la reinterpretaba como CR — el evento se corría 6 horas
+  // en cada edición.
+  const inicioCR = crFormParts(event?.start_at)
+  const finCR = crFormParts(event?.end_at)
+  const [startDate, setStartDate] = useState(inicioCR.date)
+  const [startTime, setStartTime] = useState(inicioCR.time)
+  const [endDate, setEndDate] = useState(finCR.date)
+  const [endTime, setEndTime] = useState(finCR.time)
   const [isVirtual, setIsVirtual] = useState(event?.is_virtual ?? false)
   const [virtualLink, setVirtualLink] = useState(event?.virtual_url ?? '')
   const [location, setLocation] = useState(event?.location ?? '')
