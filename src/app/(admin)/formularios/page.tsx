@@ -16,6 +16,7 @@ import {
   BarChart2,
   UserCheck,
   MoreHorizontal,
+  Link2,
   Eye,
   Copy,
   Archive,
@@ -31,6 +32,7 @@ import {
 } from '@/lib/forms/form-actions'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
+import { sePuedeCompartir, formShareUrl } from '@/lib/forms/share-link'
 import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
@@ -70,6 +72,25 @@ function thisMonth(dateStr: string | null) {
 export default function FormulariosPage() {
   const { forms, refetch } = useForms()
   const toast = useToast()
+
+  /** Copia el link del formulario al portapapeles.
+   *
+   *  Se usa window.location.origin y no una constante: así un deployment de
+   *  preview copia SU propio link y no el de producción (mismo criterio que el
+   *  compartir de eventos).
+   *
+   *  El clipboard puede fallar sin permiso o sin HTTPS; en ese caso se muestra
+   *  el link para copiarlo a mano, en vez de fallar en silencio. */
+  async function copiarLink(formId: string) {
+    setMenuOpen(null)
+    const url = formShareUrl(formId, window.location.origin)
+    try {
+      await navigator.clipboard.writeText(url)
+      toast('Link copiado. Ojo: para responder hay que entrar con cuenta.', 'success')
+    } catch {
+      toast(`No se pudo copiar solo. El link es: ${url}`, 'error')
+    }
+  }
   const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
   useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
@@ -394,6 +415,20 @@ export default function FormulariosPage() {
                               <div
                                 className="absolute right-0 top-8 z-20 rounded-xl border py-1 min-w-36 shadow-lg bg-surface-card border-[var(--outline-variant)]"
                               >
+                                {/* Compartir: solo en los formularios ABIERTOS
+                                    ("cualquiera con el link") y activos. En los
+                                    demás, formFillAccess rechaza a quien llegue
+                                    y el link sería una puerta cerrada. */}
+                                {sePuedeCompartir(form) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copiarLink(form.id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                  >
+                                    <Link2 size={13} className="text-navy-light/80" />
+                                    Compartir link
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => handleDuplicate(form.id)}
