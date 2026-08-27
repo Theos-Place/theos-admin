@@ -354,8 +354,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           {rows.length} pago{rows.length !== 1 ? 's' : ''} · {STATUS_TABS.find(t => t.key === statusFilter)?.label.toLowerCase()}
         </p>
 
-        {/* Filtro por estado de la cola */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Los filtros venían como tres grupos de pastillas idénticas, en fila,
+            sin decir a qué correspondía cada uno: no se entendía que la primera
+            fila era el ESTADO y la segunda el CONCEPTO. Cada grupo lleva su
+            rótulo (2026-08-27). */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display w-16 shrink-0">Estado</span>
           {STATUS_TABS.map(t => (
             <button
               key={t.key}
@@ -370,8 +374,9 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           ))}
         </div>
 
-        {/* Filtro por concepto + filtros de matrícula (plan/dirigente, REV-1) */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Filtro por concepto */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display w-16 shrink-0">Concepto</span>
           {([['all', 'Todos'], ['matricula', 'Matrícula'], ['evento', 'Evento'], ['folletos', 'Folletos']] as [ConceptFilter, string][]).map(([id, label]) => (
             <button
               key={id}
@@ -384,6 +389,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               {label}
             </button>
           ))}
+        </div>
+
+        {/* Filtros que SOLO aplican a matrícula (REV-1). Se rotulan aparte para
+            que se entienda por qué se deshabilitan con otro concepto. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display w-16 shrink-0">Matrícula</span>
           <select
             aria-label="Filtrar por estudio o capacitación"
             value={planFilter}
@@ -486,13 +497,23 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => openReceipt(r)}
-                          disabled={!r.receipt_path}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 font-body"
-                        >
-                          <ImageIcon size={12} /> Ver comprobante
-                        </button>
+                        {/* Sin comprobante NO va un botón gris: se lee como que
+                            la función no existe. Pasó el 2026-08-27 — las 15
+                            filas de la cola eran 'pendiente' (nadie había subido
+                            nada) y el botón salía apagado en todas, así que
+                            parecía que faltaba el link. Se dice qué pasa. */}
+                        {r.receipt_path ? (
+                          <button
+                            onClick={() => openReceipt(r)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                          >
+                            <ImageIcon size={12} /> Ver comprobante
+                          </button>
+                        ) : (
+                          <span className="text-[13px] text-navy-light/80 font-body" title="El comprobante lo sube la persona; hasta entonces no hay nada que revisar.">
+                            Sin subir aún
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">

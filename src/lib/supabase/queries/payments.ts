@@ -125,7 +125,17 @@ async function findOrCreateSuccessorGroup(
       max_students: src.max_students,
       age_min: src.age_min,
       age_max: src.age_max,
-      status: 'en_matricula',
+      /**
+       * 'en_curso', NO 'en_matricula' (decisión 2026-08-27).
+       *
+       * La cohorte que aprobó avanza JUNTA y ya está adentro: el grupo arranca
+       * corriendo, no abriendo matrícula. Dejarlo 'en_matricula' era engañoso en
+       * dos frentes: aparecía como grupo con cupo disponible en las pantallas de
+       * matrícula, y quedaba esperando una ventana de matrícula que nunca se
+       * define — que es justo por lo que las reglas de folletos de FOL-1 no se
+       * disparaban nunca para estos grupos.
+       */
+      status: 'en_curso',
       current_week: 0,
       // GRU-2 · A PROPÓSITO no se copia enrollment_restrictions: la cohorte que
       // avanza no arrastra la restricción de audiencia del grupo anterior. Si
