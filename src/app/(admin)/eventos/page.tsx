@@ -30,7 +30,7 @@ import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
 import { eventPageActions } from '@/lib/events/page-actions'
 import { downloadBlob } from '@/lib/export'
-import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X } from 'lucide-react'
+import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X, AlertCircle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
 
@@ -132,14 +132,18 @@ function EventosContent() {
   const [inscribirA, setInscribirA] = useState<{ id: string; name: string } | null>(null)
   const memberId = inscribirA?.id ?? user?.member_id ?? null
   const [eligibility, setEligibility] = useState<EventEligibilityResult[]>([])
+  // Hace falta saber si la lista YA CARGÓ, no solo si está vacía: sin esto,
+  // "cargando" y "cargó y no está" se ven igual (las dos son []) y el deep link
+  // no puede decidir si esperar o avisar.
+  const [eligLoaded, setEligLoaded] = useState(false)
   const [eligRefresh, setEligRefresh] = useState(0)
   useEffect(() => {
     if (!memberId) return
     let alive = true
     fetch(`/api/eventos/elegibilidad?member_id=${memberId}`)
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive) setEligibility(d?.eligibility ?? []) })
-      .catch(() => {})
+      .then(d => { if (alive) { setEligibility(d?.eligibility ?? []); setEligLoaded(true) } })
+      .catch(() => { if (alive) setEligLoaded(true) })
     return () => { alive = false }
   }, [memberId, eligRefresh])
   const eligibilityByEventId = useMemo(
@@ -154,15 +158,41 @@ function EventosContent() {
   // ese evento — mismo flujo y misma verificación que el botón normal.
   const registerParam = registerSearchParams.get('register')
   const registerHandled = useRef(false)
+  /** Por qué no se pudo abrir la inscripción del deep link. */
+  const [registerFallo, setRegisterFallo] = useState<string | null>(null)
   useEffect(() => {
     if (registerHandled.current || !registerParam) return
     const elig = eligibilityByEventId.get(registerParam)
-    if (!elig) return
+    if (elig) {
+      registerHandled.current = true
+      openRegister(elig)
+      router.replace('/eventos', { scroll: false })
+      return
+    }
+    // NO estaba en la lista. Antes acá había un `return` pelado y eso era el
+    // bug: la persona venía del link público, entraba, y la pantalla no abría
+    // nada NI decía nada — parecía que el botón no funcionaba. Puede pasar por
+    // varias razones legítimas (ya empezó, cupo lleno, ya está inscrita), así
+    // que se le pregunta al endpoint público y se explica.
+    if (!eligLoaded) return
     registerHandled.current = true
-    openRegister(elig)
     router.replace('/eventos', { scroll: false })
+    fetch(`/api/public/events/${registerParam}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { event?: { title?: string; requires_registration?: boolean; cupo_lleno?: boolean; starts_at?: string } } | null) => {
+        const ev = d?.event
+        const nombre = ev?.title ? `«${ev.title}»` : 'este evento'
+        if (!ev) return setRegisterFallo(`No encontramos ${nombre}. Puede que el enlace ya no sirva.`)
+        if (ev.requires_registration === false) return setRegisterFallo(`${nombre} no necesita inscripción: te esperamos.`)
+        if (ev.cupo_lleno) return setRegisterFallo(`Ya no hay cupo en ${nombre}. Escribinos si querés quedar en lista de espera.`)
+        if (ev.starts_at && new Date(ev.starts_at).getTime() < Date.now()) {
+          return setRegisterFallo(`La inscripción a ${nombre} ya cerró: el evento empezó.`)
+        }
+        setRegisterFallo(`No pudimos abrir la inscripción a ${nombre}. Puede ser que ya estés inscrito/a — revisá la lista de abajo.`)
+      })
+      .catch(() => setRegisterFallo('No pudimos abrir la inscripción. Probá de nuevo en un momento.'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerParam, eligibilityByEventId])
+  }, [registerParam, eligibilityByEventId, eligLoaded])
   // Filtros de tipo desde la BD (no el mock): si se agrega un tipo, aparece solo.
   const eventTypes = useEventTypes()
   const typeStyle = useEventTypeStyle()
@@ -423,6 +453,19 @@ function EventosContent() {
             <p className="text-[13px] text-navy-light/80 font-body">Quedaste inscrito/a en {successEvent}.</p>
           </div>
           <button onClick={clearSuccess} aria-label="Cerrar aviso de inscripción" className="ml-auto text-navy-light/80 hover:text-navy"><X size={16} /></button>
+        </div>
+      )}
+
+      {/* El deep link del calendario público no pudo abrir la inscripción. Se
+          explica en vez de no hacer nada, que era lo que pasaba antes. */}
+      {registerFallo && (
+        <div className="rounded-2xl p-5 flex items-start gap-3 bg-coral/[0.07] border border-coral/20" role="status">
+          <AlertCircle size={20} className="text-coral-deep shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-navy font-body">No se abrió la inscripción</p>
+            <p className="text-[13px] text-navy-light/80 font-body">{registerFallo}</p>
+          </div>
+          <button onClick={() => setRegisterFallo(null)} aria-label="Cerrar aviso" className="ml-auto text-navy-light/80 hover:text-navy"><X size={16} /></button>
         </div>
       )}
 

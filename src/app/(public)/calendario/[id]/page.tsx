@@ -38,6 +38,7 @@ type EventoPublico = {
   currency: string
   flyer_url: string | null
   cupo_lleno: boolean
+  inscripcion_cerrada: boolean
 }
 
 export default function EventoPublicoPage() {
@@ -74,6 +75,11 @@ export default function EventoPublicoPage() {
   }
 
   const destino = loginRedirectTo(registerDeepLink(evento.id))
+  /** Lo decide el servidor (`inscripcion_cerrada`), no esta pantalla: el reloj
+   *  del visitante puede estar mal y `Date.now()` en render es impuro. Sin esto
+   *  la página seguía ofreciendo "Inscribirme" para un evento que la app ya no
+   *  acepta: la persona entraba, no pasaba nada, y no sabía por qué. */
+  const yaEmpezo = evento.inscripcion_cerrada === true
   const precio = evento.requires_payment && evento.payment_amount
     ? formatMoney(evento.payment_amount, evento.currency)
     : null
@@ -111,7 +117,17 @@ export default function EventoPublicoPage() {
         )}
       </dl>
 
-      {!evento.requires_registration ? (
+      {yaEmpezo ? (
+        <div className="flex items-start gap-2.5 rounded-2xl border border-outline bg-surface-low px-4 py-3.5">
+          <CalendarDays size={18} className="mt-0.5 shrink-0 text-navy-light/40" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-navy font-body">La inscripción ya cerró</p>
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Este evento ya empezó. Escribinos si necesitás algo.
+            </p>
+          </div>
+        </div>
+      ) : !evento.requires_registration ? (
         <p className="text-sm text-navy-light/80 font-body">
           Este evento no necesita inscripción: te esperamos.
         </p>

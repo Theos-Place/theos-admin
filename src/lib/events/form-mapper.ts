@@ -3,17 +3,36 @@
 import type { EventWriteInput } from '@/lib/supabase/queries/events'
 import { computeSurveySendAt } from '@/lib/events/survey-schedule'
 
-/** Combina fecha (YYYY-MM-DD) + hora (HH:mm) en un ISO timestamptz, o null. */
+/** Combina fecha (YYYY-MM-DD) + hora (HH:mm) en un ISO timestamptz, o null.
+ *
+ *  La zona va EXPLÍCITA (-06:00, Costa Rica, que no tiene horario de verano).
+ *  Antes se hacía `new Date("2026-08-27T10:00")`, sin zona: eso lo interpreta
+ *  como hora LOCAL DEL SERVIDOR. En la máquina de desarrollo el servidor está
+ *  en CR y salía bien; en Vercel corre en UTC, así que un evento puesto a las
+ *  10:00 quedaba guardado como 10:00Z = 4:00 a.m. de Costa Rica. SEIS HORAS
+ *  ANTES.
+ *
+ *  Y no era solo la hora mostrada: la inscripción se cierra cuando el evento
+ *  empieza, así que se cerraba seis horas antes de lo que la gente esperaba —
+ *  el evento desaparecía de la lista de elegibilidad y el botón "Inscribirme"
+ *  no hacía nada. Por eso el bug era invisible en local y en los tests: solo
+ *  se manifiesta cuando el servidor no está en la zona de Costa Rica.
+ *
+ *  El hermano `endOfDayCR` de abajo ya lo hacía bien; esta función se había
+ *  quedado atrás. */
+const ZONA_CR = '-06:00'
+
 function combineDateTime(date?: string, time?: string): string | null {
   if (!date) return null
-  return new Date(`${date}T${time || '00:00'}`).toISOString()
+  const hhmm = (time && /^\d{2}:\d{2}/.test(time) ? time : '00:00').slice(0, 5)
+  return new Date(`${date}T${hhmm}:00${ZONA_CR}`).toISOString()
 }
 
 /** Fin de la recurrencia: último día completo en que aplica (23:59:59 hora CR
  *  fija, UTC-6), para que la ocurrencia de ese día no quede excluida. */
 function endOfDayCR(date?: string): string | null {
   if (!date) return null
-  return new Date(`${date}T23:59:59-06:00`).toISOString()
+  return new Date(`${date}T23:59:59${ZONA_CR}`).toISOString()
 }
 
 const num = (v: unknown) => (v === '' || v == null ? null : Number(v))

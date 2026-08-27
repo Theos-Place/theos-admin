@@ -75,6 +75,12 @@ export async function GET(
       currency: e.currency ?? 'CRC',
       flyer_url: e.flyer_url,
       cupo_lleno,
+      /** La inscripción se cierra cuando el evento empieza — MISMO criterio que
+       *  /api/eventos/elegibilidad, para que la página pública no ofrezca algo
+       *  que la app va a rechazar. Se calcula acá y no en el cliente: el reloj
+       *  del visitante puede estar mal, y `Date.now()` en render es impuro. */
+      inscripcion_cerrada: typeof e.starts_at === 'string'
+        && new Date(e.starts_at).getTime() < Date.now(),
     })
   } catch (error) {
     console.error('GET /api/public/events/[id]:', error)
