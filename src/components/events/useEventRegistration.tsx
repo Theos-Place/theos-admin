@@ -8,8 +8,8 @@ import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequest
 import { cn } from '@/lib/utils'
 import { formatDateLong, formatCRC } from '@/lib/format'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
+import { montoAPagar, comprobanteRequerido } from '@/lib/events/registration-payment'
 
-type RegisterResult = { id: string; amount: number; pricing: { requiresPayment: boolean; exempt: boolean } }
 type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }
 
 /** Confirmar + comprobante + beca de un evento, disponible desde cualquier
@@ -21,24 +21,41 @@ export function useEventRegistration(memberId: string | null, onRegistered?: () 
   const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'event'; id: string; name: string } | null>(null)
   const [registerError, setRegisterError] = useState<string | null>(null)
 
-  async function handleRegister(scholarship?: { scholarship_id?: string; coupon_code?: string }) {
+  /** Inscribe. Si el evento tiene costo, el COMPROBANTE VIAJA EN ESTA MISMA
+   *  llamada (multipart): la inscripción no existe sin él. Antes se creaba la
+   *  inscripción y el comprobante se pedía en un segundo modal que se podía
+   *  cerrar con "Más tarde", así que quedaba gente con el cupo tomado sin pagar. */
+  async function handleRegister(extra?: {
+    scholarship_id?: string; coupon_code?: string
+    file?: File | null; reference?: string
+  }) {
     if (!confirmEvent || !memberId) return
     setRegisterError(null)
     try {
-      const res = await fetch(`/api/events/${confirmEvent.event_id}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: memberId, ...scholarship }),
-      })
+      let res: Response
+      if (extra?.file) {
+        const fd = new FormData()
+        fd.append('member_id', memberId)
+        if (extra.scholarship_id) fd.append('scholarship_id', extra.scholarship_id)
+        if (extra.coupon_code) fd.append('coupon_code', extra.coupon_code)
+        fd.append('file', extra.file)
+        fd.append('reference', extra.reference ?? '')
+        res = await fetch(`/api/events/${confirmEvent.event_id}/register`, { method: 'POST', body: fd })
+      } else {
+        res = await fetch(`/api/events/${confirmEvent.event_id}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            member_id: memberId,
+            scholarship_id: extra?.scholarship_id,
+            coupon_code: extra?.coupon_code,
+          }),
+        })
+      }
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo completar la inscripción.')
-      const result = data as RegisterResult
       setConfirmEvent(null)
-      if (result.pricing.requiresPayment && !result.pricing.exempt) {
-        setPendingReceipt({ registrationId: result.id, eventTitle: confirmEvent.title, amount: result.amount })
-      } else {
-        setSuccessEvent(confirmEvent.title)
-      }
+      setSuccessEvent(confirmEvent.title)
       onRegistered?.()
     } catch (err) {
       setRegisterError(err instanceof Error ? err.message : 'No se pudo completar la inscripción.')
@@ -97,11 +114,13 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
   memberId: string | null
   error: string | null
   onCancel: () => void
-  onConfirm: (scholarship?: { scholarship_id?: string; coupon_code?: string }) => void
+  onConfirm: (extra?: { scholarship_id?: string; coupon_code?: string; file?: File | null; reference?: string }) => void
 }) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const requiresPayment = event.requires_payment && !event.exempt
 
+  const [comprobante, setComprobante] = useState<File | null>(null)
+  const [referencia, setReferencia] = useState('')
   const [applicable, setApplicable] = useState<ApplicableScholarship | null>(null)
   const [useScholarship, setUseScholarship] = useState(true)
   const [couponCode, setCouponCode] = useState('')
@@ -120,10 +139,24 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
       : Math.round(event.price - applicable.discount_value))
     : null
 
+  /** Lo que la persona realmente paga: si tiene beca marcada, el monto con
+   *  descuento. Si eso queda en ₡0 no se pide comprobante — y el servidor aplica
+   *  el mismo criterio, así que la pantalla no puede pedir algo que la API no
+   *  exige, ni al revés. */
+  const montoEfectivo = montoAPagar(
+    { requiresPayment: event.requires_payment, exempt: event.exempt, price: event.price },
+    applicable && useScholarship
+      ? { discount_type: applicable.discount_type, discount_value: applicable.discount_value }
+      : null,
+  )
+  const pideComprobante = comprobanteRequerido(montoEfectivo)
+
   function handleConfirm() {
-    if (applicable && useScholarship) onConfirm({ scholarship_id: applicable.id })
-    else if (couponCode.trim()) onConfirm({ coupon_code: couponCode.trim() })
-    else onConfirm()
+    if (pideComprobante && !comprobante) return
+    const pago = pideComprobante ? { file: comprobante, reference: referencia.trim() } : {}
+    if (applicable && useScholarship) onConfirm({ scholarship_id: applicable.id, ...pago })
+    else if (couponCode.trim()) onConfirm({ coupon_code: couponCode.trim(), ...pago })
+    else onConfirm(pago)
   }
 
   return (
@@ -145,8 +178,8 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
         <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-coral/7 border border-coral/20">
           <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
           <p className="text-[13px] text-navy-light/80 font-body">
-            {requiresPayment
-              ? 'Al confirmar, tu cupo queda reservado mientras subís el comprobante y un revisor lo aprueba.'
+            {pideComprobante
+              ? 'Este evento tiene costo: la inscripción se completa con el comprobante. Al confirmar queda hecha y un revisor aprueba el pago.'
               : 'Al confirmar, tu inscripción queda lista de una vez.'}
           </p>
         </div>
@@ -173,10 +206,39 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
           </div>
         )}
         {requiresPayment && <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />}
+        {pideComprobante && (
+          <div className="space-y-3 rounded-xl border border-outline p-3">
+            <div className="space-y-1">
+              <label htmlFor="insc-comprobante" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+                Comprobante de {formatCRC(montoEfectivo)} (imagen)
+              </label>
+              <input
+                id="insc-comprobante" type="file" accept="image/*"
+                aria-label="Comprobante de pago"
+                onChange={e => setComprobante(e.target.files?.[0] ?? null)}
+                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="insc-referencia" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
+              <input
+                id="insc-referencia" value={referencia} onChange={e => setReferencia(e.target.value)}
+                placeholder="Ej. 2026070212345"
+                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+          </div>
+        )}
         {error && <p className="text-[13px] text-coral font-body">{error}</p>}
         <div className="flex gap-2 pt-1">
           <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body">Cancelar</button>
-          <button onClick={handleConfirm} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body">Confirmar inscripción</button>
+          <button
+            onClick={handleConfirm}
+            disabled={pideComprobante && !comprobante}
+            className={cn('flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', pideComprobante && !comprobante && 'opacity-50 cursor-not-allowed')}
+          >
+            {pideComprobante ? 'Confirmar y enviar comprobante' : 'Confirmar inscripción'}
+          </button>
         </div>
       </div>
     </Modal>
