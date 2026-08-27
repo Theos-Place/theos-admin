@@ -59,6 +59,10 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
       member_name: fullName(r.member),
       payment_status: r.payment_status,
       registered_at: r.registered_at,
+      // Solo lo llena el DETALLE (getEventById); en la lista viene undefined.
+      // Sin este campo, "pendiente" y "en revisión" no se pueden separar: los
+      // dos son payment_status 'pending'.
+      payment_in_review: r.payment_in_review ?? false,
     })),
 
     checkins: db.checkins.map((c) => ({

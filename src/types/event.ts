@@ -22,6 +22,16 @@ export type EventRegistration = {
   member_name: string
   payment_status: EventPaymentStatus
   registered_at: string
+  /**
+   * El comprobante está subido esperando a finanzas. Solo lo llena el DETALLE
+   * de un evento; en la lista viene false.
+   *
+   * No se puede deducir de payment_status: ese se queda en 'pending' desde que
+   * la persona se inscribe hasta que finanzas aprueba, así que "no subió
+   * comprobante" y "ya lo subió" son el mismo valor. Mostrar "Pendiente" en los
+   * dos casos fue un reclamo real (2026-08-27).
+   */
+  payment_in_review: boolean
 }
 
 export type EventCheckin = {

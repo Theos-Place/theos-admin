@@ -15,6 +15,13 @@ type PaymentStatus = 'pending' | 'paid' | 'exempted'
 const PAYMENT_LABEL: Record<string, string> = {
   paid: 'Pagado', pending: 'Pendiente', exempted: 'Exento',
 }
+
+/** "Pendiente" a secas es engañoso cuando el comprobante YA entró: lo que falta
+ *  es que finanzas lo apruebe, no que la persona pague. */
+function etiquetaPago(r: { payment_status: string; payment_in_review?: boolean }): string {
+  if (r.payment_status === 'pending' && r.payment_in_review) return 'En revisión'
+  return PAYMENT_LABEL[r.payment_status] ?? r.payment_status
+}
 const PAYMENT_OPTIONS: PaymentStatus[] = ['pending', 'paid', 'exempted']
 
 const AVATAR_COLORS: Record<string, string> = {
@@ -106,7 +113,8 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
         </div>
         {[
           { label: 'Pagados', value: event.registrations.filter(r => r.payment_status === 'paid').length, color: 'text-teal-deep' },
-          { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending').length, color: 'text-amber-600' },
+          { label: 'En revisión', value: event.registrations.filter(r => r.payment_status === 'pending' && r.payment_in_review).length, color: 'text-teal-deep' },
+          { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending' && !r.payment_in_review).length, color: 'text-amber-600' },
           { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/80' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
@@ -129,13 +137,12 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           </button>
           <button
             onClick={() => {
-              const labels: Record<string, string> = { paid: 'Pagado', pending: 'Pendiente', exempted: 'Exento' }
               generateCSV(
                 ['Nombre', 'Fecha de inscripción', 'Pago'],
                 event.registrations.map(r => [
                   r.member_name,
                   new Date(r.registered_at).toLocaleDateString('es-CR'),
-                  labels[r.payment_status] ?? r.payment_status,
+                  etiquetaPago(r),
                 ]),
                 'inscritos',
               )
@@ -188,14 +195,26 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                   </td>
                   <td className="px-4 py-3">
-                    <select
-                      value={reg.payment_status}
-                      disabled={busyMember === reg.member_id}
-                      onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
-                      className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[13px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
-                    >
-                      {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
-                    </select>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={reg.payment_status}
+                        disabled={busyMember === reg.member_id}
+                        onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
+                        className="rounded-md border border-[var(--outline-variant)] px-2 py-1 text-[13px] text-navy bg-white focus:outline-none focus:ring-2 focus:ring-coral/30 font-body"
+                      >
+                        {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
+                      </select>
+                      {/* "Pendiente" a secas no distingue a quien no pagó de quien
+                          ya subió el comprobante. El select se queda con los
+                          estados que SÍ se pueden cambiar ('En revisión' no es uno
+                          de ellos, es un sub-estado de pendiente) y la marca dice
+                          lo que falta de verdad: que finanzas lo apruebe. */}
+                      {reg.payment_status === 'pending' && reg.payment_in_review && (
+                        <span className="rounded-full bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep font-display">
+                          Comprobante en revisión
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button

@@ -62,6 +62,13 @@ export type DbEventEnriched = {
     payment_status: EventPaymentStatus
     registered_at: string
     member: { first_name: string; last_name: string } | null
+    /** Su comprobante está subido esperando a finanzas. Solo lo llena
+     *  getEventById (el detalle); en la LISTA de eventos viene undefined, para
+     *  no pagar una consulta de pagos por cada evento del calendario.
+     *  payment_status no puede decir esto: se queda en 'pending' hasta que
+     *  finanzas aprueba, así que "no subió comprobante" y "está en revisión"
+     *  son el mismo valor. */
+    payment_in_review?: boolean
   }>
   checkins: Array<{
     id: string
@@ -238,7 +245,29 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
 
   if (error) throw error
   if (!data) return null
-  return normalize(data as Record<string, unknown>)
+  const ev = normalize(data as Record<string, unknown>)
+
+  // Cuáles inscripciones tienen comprobante esperando a finanzas. Va como
+  // consulta APARTE y no como embed en SELECT: SELECT lo comparte la lista de
+  // eventos (miles de filas) y, sobre todo, agregar un embed más entre estas
+  // tablas es cómo se rompió antes la lista de miembros — dos FK hacia la misma
+  // tabla y PostgREST deja de resolver el embed, en las dos direcciones.
+  const ids = ev.registrations.map(r => r.id).filter(Boolean)
+  if (ids.length > 0) {
+    const { data: pagos } = await supabase
+      .from('payments')
+      .select('event_registration_id')
+      .in('event_registration_id', ids)
+      .eq('concept', 'evento')
+      .eq('review_status', 'en_revision')
+    const enRevision = new Set(
+      ((pagos ?? []) as Array<{ event_registration_id: string | null }>)
+        .map(p => p.event_registration_id)
+        .filter((x): x is string => !!x),
+    )
+    for (const r of ev.registrations) r.payment_in_review = enRevision.has(r.id)
+  }
+  return ev
 }
 
 // ── Mutaciones ─────────────────────────────────────────────

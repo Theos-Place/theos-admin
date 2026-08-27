@@ -729,8 +729,14 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                     <p className="font-semibold text-navy font-body">{event.registrations.filter(r => r.payment_status === 'paid').length}</p>
                   </div>
                   <div>
+                    {/* "Pendientes" ya no mete en la misma bolsa a quien no pagó
+                        y a quien ya subió el comprobante. */}
+                    <p className="text-[11px] text-navy-light/80 font-display">En revisión</p>
+                    <p className="font-semibold text-teal-deep font-body">{event.registrations.filter(r => r.payment_status === 'pending' && r.payment_in_review).length}</p>
+                  </div>
+                  <div>
                     <p className="text-[11px] text-navy-light/80 font-display">Pendientes</p>
-                    <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending').length}</p>
+                    <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending' && !r.payment_in_review).length}</p>
                   </div>
                 </div>
               </div>
@@ -758,7 +764,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 ['Nombre', 'Estado de pago', 'Fecha de inscripción'],
                 event.registrations.map(r => [
                   r.member_name,
-                  r.payment_status === 'paid' ? 'Pagado' : r.payment_status === 'pending' ? 'Pendiente' : (r.payment_status ?? ''),
+                  r.payment_status === 'paid' ? 'Pagado'
+                    : r.payment_status === 'pending' ? (r.payment_in_review ? 'En revisión' : 'Pendiente')
+                    : (r.payment_status ?? ''),
                   r.registered_at ? new Date(r.registered_at).toLocaleDateString('es-CR') : '',
                 ]),
                 `inscritos-${event.name}`,
