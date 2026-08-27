@@ -76,6 +76,15 @@ export function useEventRegistration(memberId: string | null, onRegistered?: () 
 
   return {
     openRegister: (ev: EventEligibilityResult) => setConfirmEvent(ev),
+    /** Reabre el modal del comprobante de una inscripción YA hecha que quedó con
+     *  el pago pendiente. Existe porque el botón "Más tarde" del modal dejaba a
+     *  la persona sin ninguna salida: la tarjeta solo decía "Ya inscrito/a" y el
+     *  pago no aparece en /mis-pagos hasta que se sube el comprobante — o sea
+     *  que "más tarde" era en realidad "nunca". */
+    openReceipt: (ev: EventEligibilityResult) => {
+      if (!ev.registration_id) return
+      setPendingReceipt({ registrationId: ev.registration_id, eventTitle: ev.title, amount: ev.price })
+    },
     requestScholarship: (ev: EventEligibilityResult) => setScholarshipTarget({ entity_type: 'event', id: ev.event_id, name: ev.title }),
     successEvent,
     clearSuccess: () => setSuccessEvent(null),

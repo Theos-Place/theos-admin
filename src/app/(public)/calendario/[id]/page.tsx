@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CalendarDays, MapPin, Video, Ticket, Users } from 'lucide-react'
 import { registerDeepLink, loginRedirectTo } from '@/lib/events/public-register-link'
 import { formatDateLong, formatMoney } from '@/lib/format'
+import { createClient } from '@/lib/supabase/client'
 
 /**
  * Página PÚBLICA de un evento: lo que ve quien llega por el link compartido o
@@ -56,6 +57,24 @@ export default function EventoPublicoPage() {
     return () => { vivo = false }
   }, [id])
 
+  const router = useRouter()
+
+  /** Con sesión se va DIRECTO al deep link; sin sesión, por el login. Mismo
+   *  patrón que /calendario (la lista). Mandar SIEMPRE al login era el bug: el
+   *  proxy botaba el ?redirect= de quien ya tenía sesión y lo soltaba en su
+   *  pantalla de inicio, así que el botón parecía no hacer nada. El proxy ya
+   *  quedó arreglado; esto evita además la vuelta innecesaria. */
+  async function irAInscribirse() {
+    if (!evento) return
+    const dest = registerDeepLink(evento.id)
+    try {
+      const { data: { session } } = await createClient().auth.getSession()
+      router.push(session ? dest : loginRedirectTo(dest))
+    } catch {
+      router.push(loginRedirectTo(dest))
+    }
+  }
+
   if (estado === 'cargando') {
     return <p className="p-8 text-center text-sm text-navy-light/80 font-body">Cargando…</p>
   }
@@ -74,7 +93,6 @@ export default function EventoPublicoPage() {
     )
   }
 
-  const destino = loginRedirectTo(registerDeepLink(evento.id))
   /** Lo decide el servidor (`inscripcion_cerrada`), no esta pantalla: el reloj
    *  del visitante puede estar mal y `Date.now()` en render es impuro. Sin esto
    *  la página seguía ofreciendo "Inscribirme" para un evento que la app ya no
@@ -143,12 +161,13 @@ export default function EventoPublicoPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          <a
-            href={destino}
-            className="block rounded-xl bg-coral px-5 py-3 text-center text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
+          <button
+            type="button"
+            onClick={irAInscribirse}
+            className="block w-full rounded-xl bg-coral px-5 py-3 text-center text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
           >
             Inscribirme
-          </a>
+          </button>
           <p className="text-[13px] text-navy-light/80 font-body text-center">
             Para inscribirte necesitás entrar con tu cuenta. Después de entrar,
             la inscripción se abre sola.

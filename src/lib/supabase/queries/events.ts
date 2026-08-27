@@ -54,6 +54,10 @@ export type DbEventEnriched = {
   organizing_committees: Array<{ committee_id: string }>
   sub_events: Array<{ id: string; name: string; max_capacity: number }>
   registrations: Array<{
+    // `id` hace falta para poder volver a abrir el modal del comprobante desde
+    // la tarjeta del evento: sin él, quien cerraba el modal con "Más tarde" no
+    // tenía NINGUNA forma de subirlo después.
+    id: string
     member_id: string
     payment_status: EventPaymentStatus
     registered_at: string
@@ -95,6 +99,7 @@ const SELECT = `
   organizing_committees:event_organizing_committees(committee_id),
   sub_events(id, name, max_capacity),
   registrations:event_registrations(
+    id,
     member_id,
     payment_status,
     registered_at,

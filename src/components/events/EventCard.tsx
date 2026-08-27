@@ -21,10 +21,12 @@ interface EventCardProps {
   eligibility?: EventEligibilityResult
   onRegister?: () => void
   onRequestScholarship?: () => void
+  /** Reabrir el comprobante de una inscripción con pago pendiente. */
+  onUploadReceipt?: () => void
 }
 
 /** Card grande y visual de un evento para la vista Grid. */
-export function EventCard({ event, linkToDetail = true, eligibility, onRegister, onRequestScholarship }: EventCardProps) {
+export function EventCard({ event, linkToDetail = true, eligibility, onRegister, onRequestScholarship, onUploadReceipt }: EventCardProps) {
   const typeColor = useEventTypeStyle()(event.event_type).color
   const past = isPastEvent(event)
   const start = new Date(event.start_at)
@@ -105,9 +107,21 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
               Inscribirme
             </button>
           ) : eligibility.already_registered ? (
-            <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
-              Ya inscrito/a
-            </span>
+            eligibility.registration_status === 'pending' && eligibility.registration_id && onUploadReceipt ? (
+              // Inscrito pero falta el comprobante. Antes acá solo decía "Ya
+              // inscrito/a" y no había forma de subirlo.
+              <button
+                type="button"
+                onClick={onUploadReceipt}
+                className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral transition-colors font-body"
+              >
+                Subir comprobante
+              </button>
+            ) : (
+              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+                {eligibility.registration_status === 'pending' ? 'Inscrito/a · falta el pago' : 'Ya inscrito/a'}
+              </span>
+            )
           ) : (
             <span className="block text-center text-[13px] text-navy-light/80 font-body">
               {eligibility.reasons_blocked[0] ?? 'No disponible'}

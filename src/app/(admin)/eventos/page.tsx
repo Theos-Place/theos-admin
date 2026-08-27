@@ -150,7 +150,7 @@ function EventosContent() {
     () => new Map(eligibility.map(e => [e.event_id, e])),
     [eligibility],
   )
-  const { openRegister, requestScholarship, successEvent, clearSuccess, modals: registrationModals } =
+  const { openRegister, openReceipt, requestScholarship, successEvent, clearSuccess, modals: registrationModals } =
     useEventRegistration(memberId, () => setEligRefresh(k => k + 1))
 
   // EVE-1: deep link ?register=<eventId> (viene del calendario público, con o
@@ -738,6 +738,7 @@ function EventosContent() {
                     eligibility={eligibilityByEventId.get(event.id)}
                     onRegister={() => { const e = eligibilityByEventId.get(event.id); if (e) openRegister(e) }}
                     onRequestScholarship={() => { const e = eligibilityByEventId.get(event.id); if (e) requestScholarship(e) }}
+                    onUploadReceipt={() => { const e = eligibilityByEventId.get(event.id); if (e) openReceipt(e) }}
                   />
                 ))}
               </div>

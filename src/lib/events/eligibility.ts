@@ -13,6 +13,9 @@ export type EventEligibilityResult = {
   exempt: boolean
   already_registered: boolean
   registration_status: EventPaymentStatus | null
+  /** Id de MI inscripción (null si no estoy inscrito). Permite reabrir el modal
+   *  del comprobante desde la tarjeta cuando el pago quedó pendiente. */
+  registration_id: string | null
   is_full: boolean
   spots_available: number | null
   is_eligible: boolean
@@ -62,6 +65,7 @@ export function computeEventEligibility(
       exempt: pricing.exempt,
       already_registered: alreadyRegistered,
       registration_status: mine?.payment_status ?? null,
+      registration_id: mine?.id ?? null,
       is_full: isFull,
       spots_available: e.max_capacity != null && e.max_capacity > 0 ? Math.max(0, e.max_capacity - occupied) : null,
       is_eligible: !alreadyRegistered && !isFull,

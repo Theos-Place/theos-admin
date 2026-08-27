@@ -26,6 +26,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const pricing = await registrationPricing(id, memberId)
     const res = await createRegistration(id, { member_id: memberId, scholarship_id: body?.scholarship_id, coupon_code: body?.coupon_code, recorded_by: recordedBy })
+    // Confirmación por correo, SIEMPRE (pedido 2026-08-27). Best-effort por
+    // dentro: si el correo falla se loguea y la inscripción igual se responde
+    // creada — la persona ya tiene el cupo.
+    const { notifyEventRegistration } = await import('@/lib/email/event-registration-notify')
+    await notifyEventRegistration(memberId, id, {
+      requiresPayment: !!pricing.requiresPayment && !pricing.exempt,
+      amount: res.amount,
+    })
     return NextResponse.json({ ...res, pricing }, { status: 201 })
   } catch (error) {
     if (error instanceof PaymentRequiredError) return NextResponse.json({ error: error.message }, { status: 422 })

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { buildCsp, newNonce } from '@/lib/csp'
-import { loginUrlWithDest } from '@/lib/auth/redirect-target'
+import { loginUrlWithDest, safeDest } from '@/lib/auth/redirect-target'
 
 // Rutas accesibles sin sesión.
 // '/ayuda' es público a propósito: los correos de invitación linkean ahí y el
@@ -68,8 +68,18 @@ export async function proxy(request: NextRequest) {
     }
 
     // Con sesión completa intentando entrar al login o a la raíz → al dashboard.
+    //
+    // PERO si el login trae un ?redirect= válido, se HONRA en vez de botarlo.
+    // Antes esta rama redirigía con search='' siempre, así que a quien YA tenía
+    // sesión y abría un deep link con login-gate (el link público de un evento,
+    // los enlaces de las notificaciones) lo soltaba en el dashboard y el destino
+    // se perdía sin dejar rastro: la pantalla no abría nada ni decía nada.
+    // Reproducido el 2026-08-27 con el link de inscripción a un evento.
     if (!needsMfa && (pathname === '/login' || pathname === '/')) {
-      return redirectTo(request, response, '/dashboard')
+      const pedido = pathname === '/login' ? request.nextUrl.searchParams.get('redirect') : null
+      const destino = safeDest(pedido, '/dashboard')
+      const [ruta, query] = destino.split('?')
+      return redirectTo(request, response, ruta, query ? `?${query}` : '')
     }
   }
 
