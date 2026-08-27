@@ -34,7 +34,12 @@ export async function POST(
       if (!isLeader) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
   }
-  const body = (await req.json().catch(() => ({}))) as { results?: CloseResult[]; evaluations?: PrematEvaluationInput[] }
+  const body = (await req.json().catch(() => ({}))) as {
+    results?: CloseResult[]
+    evaluations?: PrematEvaluationInput[]
+    /** Lugar de entrega de los folletos del grupo sucesor, dicho por quien cierra. */
+    folletos_sede?: string
+  }
   const results = body.results ?? []
   try {
     const supabase = createAdminClient()
@@ -100,16 +105,44 @@ export async function POST(
     // Matrícula automática al siguiente nivel para los aprobados, en estado
     // 'pendiente_de_pago' + pago pendiente (concepto matricula). Best-effort.
     let autoEnrolled = 0
+    let successorGroupId: string | null = null
     try {
       const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
-      const { enrolled } = await autoEnrollApprovedToNextLevel(id, approvedIds)
+      const { enrolled, next_group_id } = await autoEnrollApprovedToNextLevel(id, approvedIds)
       autoEnrolled = enrolled
+      successorGroupId = next_group_id
     } catch (e) {
       console.warn('No se pudo matricular automáticamente al siguiente nivel:', e)
     }
 
-    // FOL-1: el cierre YA NO genera folletos — las reglas nuevas son cupo
-    // lleno / fin de matrícula (durante la matrícula, no al cerrar) + manual.
+    /**
+     * FOLLETOS DEL GRUPO SUCESOR (2026-08-27).
+     *
+     * FOL-1 había quitado la generación por cierre y la dejó en dos reglas que
+     * corren DURANTE la matrícula: cupo lleno y fin de la ventana. Pero el grupo
+     * que crea la auto-matrícula nace SIN cupo y SIN ventana, así que ninguna de
+     * las dos puede dispararse nunca para él: quien aprueba N3 pasa a N4 y ese
+     * N4 se queda sin folletos para siempre. Verificado en producción: había 0
+     * tiquetes de folleto en TODA la base.
+     *
+     * El tiquete se pide para el grupo SUCESOR, no para el que se cerró: los
+     * folletos son del estudio que la gente va a cursar, no del que terminó.
+     *
+     * Idempotente por el índice único parcial (una fila automática por grupo):
+     * si después ese mismo grupo llena el cupo, no se duplica.
+     */
+    let folletoCreado = false
+    if (successorGroupId) {
+      try {
+        const { createAutoFolletoIfNeeded } = await import('@/lib/supabase/queries/folletos')
+        const { ymdCR } = await import('@/lib/format')
+        const r = await createAutoFolletoIfNeeded(successorGroupId, 'cierre', ymdCR(), body.folletos_sede)
+        folletoCreado = r.created
+        if (!r.created) console.warn('folleto de cierre no creado:', r.reason)
+      } catch (e) {
+        console.warn('No se pudo crear el tiquete de folletos del grupo sucesor:', e)
+      }
+    }
 
     // EST-12: la encuesta al dirigente se PROGRAMA (por defecto el día
     // siguiente) y la despacha el cron study-surveys. Best-effort: el cierre no
@@ -121,7 +154,7 @@ export async function POST(
       console.warn('No se pudo programar la encuesta del dirigente:', e)
     }
 
-    return NextResponse.json({ ok: true, autoEnrolled, surveyAt })
+    return NextResponse.json({ ok: true, autoEnrolled, surveyAt, folletoCreado, successorGroupId })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_CERRADO') {
       // A9 (reconciliación): si el cierre original murió DESPUÉS de finalizar

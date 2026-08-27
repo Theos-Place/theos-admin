@@ -693,7 +693,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             {readOnly && actor?.member_id && (
               <StudyRequestActions memberId={actor.member_id} only="relocation" variant="link" />
             )}
-            {!readOnly && (
+            {/* Matricular a OTRA persona es de los perfiles de estudios, no del
+                dirigente (decisión 2026-08-27). Y no era solo un botón de más:
+                sin STUDY_ADMIN_ROLES, resolveOnBehalf IGNORA el member_id que se
+                manda y se queda con el del actor — así que el dirigente elegía a
+                alguien y el servidor lo matriculaba a ÉL, sin error. */}
+            {canManageGroups && (
             <button
               onClick={() => setShowAddMember(true)}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors"
@@ -951,7 +956,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          {group.status !== 'finalizado' && (
+          {/* Cambiar dirigente también es de estudios: un dirigente no se
+              reasigna su propio grupo. Además el link lleva a /editar, que ya
+              exige el permiso — así que al dirigente lo mandaba a una pantalla
+              donde no puede hacer nada. */}
+          {canManageGroups && group.status !== 'finalizado' && (
             <div className="flex gap-2 pt-2 border-t border-[var(--outline-variant)]">
               <Link
                 href={`/estudios/grupos/${id}/editar`}

@@ -164,8 +164,10 @@ async function findOrCreateSuccessorGroup(
 export async function autoEnrollApprovedToNextLevel(
   sourceGroupId: string,
   approvedMemberIds: string[],
-): Promise<{ enrolled: number; next_level: string | null; amount: number }> {
-  if (approvedMemberIds.length === 0) return { enrolled: 0, next_level: null, amount: 0 }
+): Promise<{ enrolled: number; next_level: string | null; amount: number; next_group_id: string | null }> {
+  // next_group_id: lo necesita el cierre para pedir los folletos DEL GRUPO
+  // SUCESOR, que es quien los va a usar.
+  if (approvedMemberIds.length === 0) return { enrolled: 0, next_level: null, amount: 0, next_group_id: null }
   const supabase = createAdminClient()
 
   // Grupo origen completo (para heredar dirigente/horario/zona) + nivel siguiente.
@@ -183,11 +185,11 @@ export async function autoEnrollApprovedToNextLevel(
   const planEmbed = src?.plan
   const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
   const next = nextLevelCode(sourceCode)
-  if (!src || !next) return { enrolled: 0, next_level: null, amount: 0 }
+  if (!src || !next) return { enrolled: 0, next_level: null, amount: 0, next_group_id: null }
 
   const { data: nextPlan } = await supabase.from('study_plans').select('id, cost, currency').eq('code', next).maybeSingle()
   const np = nextPlan as { id: string; cost: number | null; currency: string | null } | null
-  if (!np) return { enrolled: 0, next_level: next, amount: 0 }
+  if (!np) return { enrolled: 0, next_level: next, amount: 0, next_group_id: null }
   const amount = Number(np.cost ?? 0)
   // INT-2: el pago hereda la moneda del costo del plan.
   const currency = np.currency ?? 'CRC'
@@ -277,7 +279,7 @@ export async function autoEnrollApprovedToNextLevel(
     }
     enrolled++
   }
-  return { enrolled, next_level: next, amount }
+  return { enrolled, next_level: next, amount, next_group_id: successorGroupId ?? null }
 }
 
 /** Sube el comprobante de una matrícula: si ya existe un pago pendiente para esa

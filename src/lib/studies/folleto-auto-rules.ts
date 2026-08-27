@@ -9,7 +9,12 @@
 
 export const FIN_MATRICULA_MIN_ENROLLED = 5
 
-export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula'
+/** 'cierre' volvió el 2026-08-27: al cerrar un grupo, quienes aprobaron pasan
+ *  automáticamente al nivel siguiente y ESE grupo necesita folletos. Las dos
+ *  reglas de FOL-1 no lo cubrían — el grupo sucesor nace sin cupo y sin ventana
+ *  de matrícula, así que ni 'cupo_lleno' ni 'fin_matricula' pueden dispararse
+ *  nunca para él. */
+export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula' | 'cierre'
 
 /** Planes con folleto propio: las cadenas de niveles y discípulos, y
  *  prematrimonial (la pareja recibe su folleto al crearse el grupo). */
@@ -21,6 +26,10 @@ export function shouldCreateAutoFolleto(
   tipo: AutoFolletoTipo,
   g: { enrolled: number; max_students: number | null },
 ): boolean {
+  // 'cierre': SIN umbral. Quien aprobó y avanzó necesita su folleto, sean 2 o
+  // 20. El mínimo de 5 existe para no pedir folletos de un grupo que quizá no
+  // arranca; acá el grupo ya arrancó y la gente ya pasó.
+  if (tipo === 'cierre') return g.enrolled > 0
   if (tipo === 'cupo_lleno') return g.max_students != null && g.max_students > 0 && g.enrolled >= g.max_students
   return g.enrolled >= FIN_MATRICULA_MIN_ENROLLED
 }

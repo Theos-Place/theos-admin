@@ -117,15 +117,21 @@ export async function createAutoFolletoIfNeeded(
   groupId: string,
   tipo: AutoFolletoTipo,
   todayIso: string,
+  /** Lugar de entrega dicho por quien cierra. Si no viene, se resuelve solo
+   *  (grupo → dirigente → zona) como siempre. */
+  sedeExplicita?: string | null,
 ): Promise<{ created: boolean; reason?: string }> {
   const supabase = createAdminClient()
   const [{ data: g }, { count }] = await Promise.all([
     supabase.from('study_groups')
       .select('id, max_students, folletos_sede, plan:study_plans(code)')
       .eq('id', groupId).maybeSingle(),
+    // 'pendiente_de_pago' cuenta: los que avanzan por cierre entran así (la
+    // matrícula es efectiva de inmediato y el cobro va aparte), y si no se
+    // contaran, el grupo sucesor tendría 0 y nunca pediría folletos.
     supabase.from('study_enrollments')
       .select('id', { count: 'exact', head: true })
-      .eq('group_id', groupId).eq('status', 'enrolled'),
+      .eq('group_id', groupId).in('status', ['enrolled', 'pendiente_de_pago']),
   ])
   const row = g as { id: string; max_students: number | null; folletos_sede: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
   if (!row) return { created: false, reason: 'grupo_no_encontrado' }
@@ -140,7 +146,7 @@ export async function createAutoFolletoIfNeeded(
 
   // Resolución única (getSedeForGroup): sede de entrega del grupo → sede del
   // dirigente → zona del grupo.
-  const sede = await getSedeForGroup(groupId)
+  const sede = (sedeExplicita ?? '').trim() || await getSedeForGroup(groupId)
   const { error } = await supabase.from('folleto_requests').insert({
     tipo,
     source_group_id: groupId,

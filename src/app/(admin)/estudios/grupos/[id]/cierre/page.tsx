@@ -155,8 +155,26 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
     evals.length < pairsCount || evals.some(e => validatePrematEvaluation(e) !== null)
   )
 
-  // FOL-1: el cierre ya no genera folletos (reglas nuevas: cupo lleno /
-  // fin de matrícula durante la matrícula + manual).
+  /**
+   * Lugar de entrega de los folletos del grupo SUCESOR (2026-08-27).
+   *
+   * Vuelve al cierre porque las reglas de FOL-1 no podían cubrir este caso: el
+   * grupo que se crea con la auto-matrícula nace sin cupo y sin ventana, así que
+   * ni "cupo lleno" ni "fin de matrícula" se disparan nunca para él.
+   *
+   * Se prellena con la sede del dirigente (el endpoint leader-sede existía justo
+   * para esto y nadie lo llamaba) y queda editable: quien cierra sabe mejor
+   * dónde hay que dejarlos.
+   */
+  const [folletosSede, setFolletosSede] = useState('')
+  useEffect(() => {
+    let vivo = true
+    fetch(`/api/studies/groups/${group.id}/leader-sede`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo && d?.sede) setFolletosSede(String(d.sede)) })
+      .catch(() => {})
+    return () => { vivo = false }
+  }, [group.id])
 
   async function handleClose() {
     if (submitting) return
@@ -170,6 +188,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           results: payload,
+          folletos_sede: folletosSede.trim() || undefined,
           ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
@@ -500,6 +519,27 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </div>
           </div>
 
+
+          {/* Folletos del grupo sucesor: dónde entregarlos. Solo tiene sentido
+              si hay aprobados que van a pasar al nivel siguiente. */}
+          {autoPromotable && aprobados > 0 && (
+            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
+              <label htmlFor="folletos-sede" className="block text-sm font-semibold text-navy font-body">
+                ¿Dónde entregamos los folletos?
+              </label>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Al cerrar se pide el tiquete de folletos para los {aprobados} que pasan al
+                nivel siguiente. Decinos dónde hay que dejarlos.
+              </p>
+              <input
+                id="folletos-sede"
+                value={folletosSede}
+                onChange={e => setFolletosSede(e.target.value)}
+                placeholder="Ej. Sede Heredia, recepción"
+                className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+          )}
 
           {/* Advertencia: el cierre es irreversible. */}
           <div className="rounded-2xl p-5 bg-coral/5 border border-coral/20 flex items-start gap-3">
