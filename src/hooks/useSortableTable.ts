@@ -1,3 +1,5 @@
+import { STUDY_CATALOG } from '@/data/study-catalog'
+import { claveAlfabetica } from '@/lib/utils'
 import { useState, useMemo } from 'react'
 
 export type SortDirection = 'asc' | 'desc'
@@ -30,6 +32,11 @@ export function useSortableTable<T>(data: T[]) {
 
   return { sorted, sortKey, sortDir, toggleSort }
 }
+
+/** código → nombre del estudio, para ordenar por lo que la gente lee. */
+const NOMBRE_POR_CODIGO: Record<string, string> = Object.fromEntries(
+  STUDY_CATALOG.map(s => [s.code, s.name]),
+)
 
 function getSortValue(row: Record<string, unknown>, key: string): string {
   switch (key) {
@@ -78,8 +85,15 @@ function getSortValue(row: Record<string, unknown>, key: string): string {
       return String(row.leader_name ?? 'zzz').toLowerCase()
     case 'zone':
       return String(row.zone ?? '').toLowerCase()
-    case 'study_type_id':
-      return String(row.study_type_id ?? '').toLowerCase()
+    case 'study_type_id': {
+      // Ordena por el NOMBRE del estudio, no por el código. Con el código,
+      // "Apocalipsis" (APO) cae antes que "Amor sin Fronteras" (ASF) y la lista
+      // se lee desordenada — quien ordena está buscando por nombre. El código
+      // queda de desempate para los que no están en el catálogo (planes viejos
+      // que solo viven en la BD).
+      const code = String(row.study_type_id ?? '')
+      return `${claveAlfabetica(NOMBRE_POR_CODIGO[code] ?? code)}|${code.toLowerCase()}`
+    }
     default:
       return String(row[key] ?? '').toLowerCase()
   }

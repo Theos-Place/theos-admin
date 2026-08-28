@@ -18,7 +18,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { useSortableTable } from '@/hooks/useSortableTable'
-import { cn } from '@/lib/utils'
+import { cn, claveAlfabetica } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
@@ -223,6 +223,11 @@ export default function GruposPage() {
   })
   const error = typesError || groupsError
 
+  const tiposPorNombre = useMemo(
+    () => [...STUDY_TYPES].sort((a, b) => claveAlfabetica(a.name).localeCompare(claveAlfabetica(b.name), 'es')),
+    [STUDY_TYPES],
+  )
+
   // El sort reordena solo las filas ya cargadas (in-page). El orden base lo da
   // el servidor (fecha de fin desc).
   const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(groups)
@@ -349,7 +354,12 @@ export default function GruposPage() {
               onChange={e => setSelectedType(e.target.value)}
             >
               <option value="">Todos</option>
-              {STUDY_TYPES.map(s => (
+              {/* Ordenado por NOMBRE, no por código. El catálogo viene por
+                  código y la lista se leía desordenada: "AED — Administrando el
+                  Dinero, APO — Apocalipsis, ASF — Amor sin Fronteras" está
+                  alfabético por la izquierda, pero quien busca lee la derecha y
+                  ve Apocalipsis antes que Amor sin Fronteras. */}
+              {tiposPorNombre.map(s => (
                 <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
               ))}
             </select>
