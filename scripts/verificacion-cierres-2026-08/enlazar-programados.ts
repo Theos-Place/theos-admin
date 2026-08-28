@@ -27,7 +27,13 @@ const APLICAR = process.argv.includes('--aplicar')
 const ENLACES: Array<{ asunto: string; lista: string; congelados: number }> = [
   { asunto: '¡Te invitamos a Discípulos!', lista: 'Invitación Discípulos', congelados: 13 },
   { asunto: '¡Te invitamos a Panorama!', lista: 'Invitación Panorama', congelados: 22 },
-  { asunto: 'Fuiste seleccionado para Cómo Interpretar la Biblia', lista: 'Invitación Hermenéutica', congelados: 16 },
+  // FUERA a propósito (decisión del usuario, 2026-08-28): "Invitación
+  // Hermenéutica" pasaría de 16 a 35 destinatarios, más del doble, y es una de
+  // las tres listas cuyo chip de asistencia se completó POR ANALOGÍA con sus
+  // hermanas y no midiendo. Las otras cinco vienen de listas medidas con 72-99%
+  // de coincidencia. Si la analogía está mal, acá son 19 personas recibiendo
+  // una invitación que no les tocaba, y este comunicado sale el 31 de agosto.
+  // Se enlaza cuando alguien confirme que 35 es el número correcto.
   { asunto: '¡Te invitamos a los cursos de la Etapa Inicial!', lista: 'Invitación Iniciales', congelados: 75 },
   { asunto: '¡Te invitamos a Sirviendo como Jesús!', lista: 'Invitación SCJ', congelados: 194 },
   { asunto: '¡Te invitamos a los cursos de la Etapa Intermedia!', lista: 'Invitación Intermedias', congelados: 138 },
