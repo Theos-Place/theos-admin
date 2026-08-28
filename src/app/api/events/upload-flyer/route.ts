@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { anchoDestino, valeLaPena, resumenOptimizacion, CALIDAD } from '@/lib/events/flyer-optimize'
+import { anchoDestino, valeLaPena, resumenOptimizacion, CALIDAD } from '@/lib/images/optimize'
 
 export const runtime = 'nodejs'
 

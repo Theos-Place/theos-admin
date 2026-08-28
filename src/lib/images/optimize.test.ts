@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { anchoDestino, valeLaPena, resumenOptimizacion, MAX_ANCHO } from './flyer-optimize'
+import { anchoDestino, valeLaPena, resumenOptimizacion, MAX_ANCHO } from './optimize'
 
 describe('anchoDestino', () => {
   it('achica lo que se pasa del máximo', () => {

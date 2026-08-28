@@ -11,10 +11,11 @@
 // como fecha real, porque si va como texto no se puede ordenar ni filtrar por
 // rango, que es la mitad de para qué alguien baja un Excel.
 
+import { esPathDeAdjunto, urlDeAdjunto } from './attachment'
 import type { FieldType } from '@/types/forms'
 
 /** Cómo entra el valor de este campo a la celda. */
-export type CellKind = 'text' | 'number' | 'date'
+export type CellKind = 'text' | 'number' | 'date' | 'link'
 
 /**
  * Tipo de celda para un campo del formulario.
@@ -26,12 +27,15 @@ export type CellKind = 'text' | 'number' | 'date'
 export function excelCellKind(type: FieldType | string): CellKind {
   if (type === 'date') return 'date'
   if (type === 'number' || type === 'scale') return 'number'
+  // La respuesta guarda un path del bucket privado, que solo no sirve de nada:
+  // en el export se escribe el link que lo abre (ver lib/forms/attachment).
+  if (type === 'image' || type === 'file') return 'link'
   return 'text'
 }
 
 /** Formato numérico de Excel para el tipo de celda. '@' fuerza TEXTO. */
 export function excelNumFmt(kind: CellKind): string | undefined {
-  if (kind === 'text') return '@'
+  if (kind === 'text' || kind === 'link') return '@'
   if (kind === 'date') return 'dd/mm/yyyy'
   return undefined
 }
@@ -75,9 +79,15 @@ export function answerToText(ans: unknown): string {
 
 /** El valor listo para la celda, según el tipo. Devuelve null cuando está vacío
  *  (una celda vacía es mejor que un 0 o un 1970 inventado). */
-export function answerToCell(ans: unknown, kind: CellKind): string | number | Date | null {
+export function answerToCell(ans: unknown, kind: CellKind, origin?: string): string | number | Date | null {
   const txt = answerToText(ans).trim()
   if (!txt) return null
+
+  if (kind === 'link') {
+    // Se escribe el link a NUESTRA ruta y no una URL firmada: la firmada dura
+    // minutos y el Excel se abre cuando alguien puede, no cuando se generó.
+    return esPathDeAdjunto(txt) ? urlDeAdjunto(txt, origin) : txt
+  }
 
   if (kind === 'number') {
     const n = Number(txt)

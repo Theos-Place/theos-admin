@@ -11,7 +11,10 @@ const FIELD_TYPE_MAP: Record<string, FieldType> = {
   yes_no: 'yes_no', personal_data: 'personal_data', page_break: 'page_break',
   section: 'section', section_header: 'section', info: 'info',
   // aproximaciones de tipos que el builder no tiene:
-  email: 'text', phone: 'text', multiselect: 'select', file: 'text',
+  email: 'text', phone: 'text', multiselect: 'select',
+  // 'file' era una aproximación a texto porque no había con qué subir nada.
+  // Ahora sí: los dos apuntan al campo de imagen.
+  file: 'image', image: 'image',
 }
 
 function toOptions(raw: unknown): string[] | undefined {

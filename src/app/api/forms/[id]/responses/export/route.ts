@@ -17,8 +17,12 @@ import {
 // (módulo formularios, acceso puntual por form_access_grants, o encargado del
 // evento del formulario) — el CSV se genera sobre datos que ya pasaron por ahí,
 // así que acá se repite el chequeo en vez de heredarlo.
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // El origen real de la request: el link del adjunto tiene que apuntar a
+    // este mismo despliegue y no a una constante (Preview y producción son
+    // dominios distintos).
+    const origin = new URL(req.url).origin
     const { id } = await params
     const ctx = await getAuthContext()
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
@@ -89,7 +93,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         nombre || 'Anónimo',
         digitador || null,
         r.submitted_at ? new Date(r.submitted_at) : null,
-        ...campos.map(f => answerToCell(porCampo.get(f.id), excelCellKind(f.field_type))),
+        ...campos.map(f => answerToCell(porCampo.get(f.id), excelCellKind(f.field_type), origin)),
       ]
       ws.addRow(fila)
     }

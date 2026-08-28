@@ -109,20 +109,20 @@ function CalendarioWidget() {
                 onClick={() => setSelectedEvent(ev)}>
                 <div className="text-center min-w-[44px] pt-0.5">
                   <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
-                  <div className="text-[13px] uppercase text-[rgba(0,0,0,0.4)] mt-0.5">{month}</div>
-                  <div className="text-[11px] text-[rgba(0,0,0,0.3)] mt-px">{dow}</div>
+                  <div className="text-[13px] uppercase text-[rgba(0,0,0,0.65)] mt-0.5">{month}</div>
+                  <div className="text-[11px] text-[rgba(0,0,0,0.65)] mt-px">{dow}</div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm mb-1" style={{ color: primary }}>{ev.name}</div>
                   {showDesc && ev.description && (
-                    <div className="text-xs text-[rgba(0,0,0,0.55)] mb-1 overflow-hidden line-clamp-2">
+                    <div className="text-xs text-[rgba(0,0,0,0.65)] mb-1 overflow-hidden line-clamp-2">
                       {ev.description}
                     </div>
                   )}
                   {showLoc && ev.location && (
-                    <div className="text-[13px] text-[rgba(0,0,0,0.4)]">📍 {ev.location}</div>
+                    <div className="text-[13px] text-[rgba(0,0,0,0.65)]">📍 {ev.location}</div>
                   )}
-                  <div className="text-[13px] text-[rgba(0,0,0,0.4)] mt-0.5">🕐 {formatEventTime(ev.start_at)}</div>
+                  <div className="text-[13px] text-[rgba(0,0,0,0.65)] mt-0.5">🕐 {formatEventTime(ev.start_at)}</div>
                 </div>
                 {showBtn && ev.requires_registration && (
                   <div className="flex items-center">
@@ -140,7 +140,7 @@ function CalendarioWidget() {
             )
           })}
           {rangedEvents.length === 0 && (
-            <p className="text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos próximos.</p>
+            <p className="text-center text-sm py-8 text-[rgba(0,0,0,0.65)]">No hay eventos próximos.</p>
           )}
         </div>
       )}
@@ -168,20 +168,20 @@ function CalendarioWidget() {
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
                   <div className="font-bold text-sm" style={{ color: primary }}>{ev.name}</div>
                   {showDesc && ev.description && (
-                    <div className="text-xs text-[rgba(0,0,0,0.55)] line-clamp-2">{ev.description}</div>
+                    <div className="text-xs text-[rgba(0,0,0,0.65)] line-clamp-2">{ev.description}</div>
                   )}
                   <div className="mt-auto pt-1 space-y-0.5">
                     {showLoc && ev.location && (
-                      <div className="text-[13px] text-[rgba(0,0,0,0.4)]">📍 {ev.location}</div>
+                      <div className="text-[13px] text-[rgba(0,0,0,0.65)]">📍 {ev.location}</div>
                     )}
-                    <div className="text-[13px] text-[rgba(0,0,0,0.4)]">🕐 {formatDate(ev.start_at).day} {formatDate(ev.start_at).month} · {formatEventTime(ev.start_at)}</div>
+                    <div className="text-[13px] text-[rgba(0,0,0,0.65)]">🕐 {formatDate(ev.start_at).day} {formatDate(ev.start_at).month} · {formatEventTime(ev.start_at)}</div>
                   </div>
                 </div>
               </div>
             )
           })}
           {rangedEvents.length === 0 && (
-            <p className="col-span-full text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos próximos.</p>
+            <p className="col-span-full text-center text-sm py-8 text-[rgba(0,0,0,0.65)]">No hay eventos próximos.</p>
           )}
         </div>
       )}
@@ -206,7 +206,7 @@ function CalendarioWidget() {
           {/* Day headers */}
           <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5 mb-1">
             {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => (
-              <div key={d} className="text-center text-[11px] text-[rgba(0,0,0,0.4)] py-1 uppercase tracking-[0.05em]">{d}</div>
+              <div key={d} className="text-center text-[11px] text-[rgba(0,0,0,0.65)] py-1 uppercase tracking-[0.05em]">{d}</div>
             ))}
           </div>
           {/* Days grid */}
@@ -270,7 +270,7 @@ function CalendarioWidget() {
               const dayEvents = weekEvs.filter(e => new Date(e.start_at).toDateString() === d.toDateString())
               return (
                 <div key={i} className="bg-white rounded-xl p-3 border border-[rgba(0,0,0,0.08)]">
-                  <div className="text-[11px] uppercase text-[rgba(0,0,0,0.4)] mb-1">
+                  <div className="text-[11px] uppercase text-[rgba(0,0,0,0.65)] mb-1">
                     {d.toLocaleDateString('es-CR', { weekday: 'short' })}
                   </div>
                   <div className="text-xl font-bold mb-2" style={{ color: primary }}>{d.getDate()}</div>
@@ -278,7 +278,7 @@ function CalendarioWidget() {
                     <div key={`${ev.id}-${ev.start_at}`} className="rounded-lg py-1.5 px-2 mb-1.5 cursor-pointer" style={{ background: `${accent}18`, border: `1px solid ${accent}40` }}
                       onClick={() => setSelectedEvent(ev)}>
                       <div className="text-[13px] font-semibold" style={{ color: primary }}>{ev.name}</div>
-                      <div className="text-[11px] text-[rgba(0,0,0,0.4)] mt-0.5">{formatEventTime(ev.start_at)}</div>
+                      <div className="text-[11px] text-[rgba(0,0,0,0.65)] mt-0.5">{formatEventTime(ev.start_at)}</div>
                     </div>
                   ))}
                 </div>
@@ -298,15 +298,15 @@ function CalendarioWidget() {
             {/* eslint-disable-next-line @next/next/no-img-element -- flyer remoto dentro de un modal de detalle (no es LCP); next/image exigiría remotePatterns + dimensiones fijas para poco beneficio. */}
             {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full aspect-[16/9] object-contain bg-surface-low rounded-lg mb-3" />}
             <h3 id="evento-detalle-title" className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
-            {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
-            {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
+            {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.65)] mb-2">{selectedEvent.description}</p>}
+            {showLoc && <p className="text-xs text-[rgba(0,0,0,0.65)] mb-1">📍 {selectedEvent.location}</p>}
             {/* EVE-1: fecha completa + costo + si requiere inscripción (el
                 endpoint público ya exponía estos campos con whitelist). */}
-            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📅 {formatFullDate(selectedEvent.start_at)} · 🕐 {formatEventTime(selectedEvent.start_at)}</p>
+            <p className="text-xs text-[rgba(0,0,0,0.65)] mb-1">📅 {formatFullDate(selectedEvent.start_at)} · 🕐 {formatEventTime(selectedEvent.start_at)}</p>
             {selectedEvent.requires_payment && (selectedEvent.payment_amount ?? 0) > 0 && (
-              <p className="text-xs text-[rgba(0,0,0,0.55)] mb-1">💰 Costo: ₡{Number(selectedEvent.payment_amount).toLocaleString('es-CR')}</p>
+              <p className="text-xs text-[rgba(0,0,0,0.65)] mb-1">💰 Costo: ₡{Number(selectedEvent.payment_amount).toLocaleString('es-CR')}</p>
             )}
-            <p className="text-xs text-[rgba(0,0,0,0.4)] mb-3">
+            <p className="text-xs text-[rgba(0,0,0,0.65)] mb-3">
               {selectedEvent.requires_registration ? '📝 Requiere inscripción' : 'Entrada libre, sin inscripción'}
             </p>
             <div className="flex gap-2">
@@ -342,7 +342,7 @@ function CalendarioWidget() {
                 <span className="mt-1 h-2 w-2 rounded-full shrink-0" style={{ background: accent }} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-medium" style={{ color: primary }}>{ev.flyer_url && <ImageIcon size={11} className="inline-block mr-1 -mt-px shrink-0 opacity-70" aria-hidden />}{ev.name}</span>
-                  <span className="text-[13px] text-[rgba(0,0,0,0.45)]">🕐 {formatEventTime(ev.start_at)}{ev.location ? ` · 📍 ${ev.location}` : ''}</span>
+                  <span className="text-[13px] text-[rgba(0,0,0,0.65)]">🕐 {formatEventTime(ev.start_at)}{ev.location ? ` · 📍 ${ev.location}` : ''}</span>
                 </span>
               </button>
             ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { ImageAnswerField } from '@/components/forms/ImageAnswerField'
 import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
@@ -73,6 +74,16 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         value={stringVal}
         onChange={e => onChange(e.target.value)}
         className={inputBase}
+      />
+    )
+  }
+
+  if (field.type === 'image') {
+    return (
+      <ImageAnswerField
+        controlId={controlId}
+        value={stringVal}
+        onChange={v => onChange(v)}
       />
     )
   }

@@ -1,19 +1,24 @@
-// Reglas de optimización del flyer de un evento (módulo puro).
+// Reglas de optimización de las imágenes que sube la gente (módulo puro).
 //
-// El procesamiento con sharp vive en la ruta de subida; acá están las
+// El procesamiento con sharp vive en las rutas de subida; acá están las
 // decisiones, que es lo que conviene poder discutir y testear sin binarios.
 //
 // POR QUÉ HACE FALTA. Medido el 2026-08-28 sobre los flyers reales: dos de los
 // cuatro pesan ~1 MB con 3400 y 3000 px de ancho, y se muestran a menos de 800.
-// Es la imagen tal cual sale de Canva o del celular. Cada visita del calendario
-// se baja eso entero.
+// Es la imagen tal cual sale de Canva o del celular.
+//
+// Los MISMOS ajustes para todas las imágenes que sube la gente, incluidos los
+// comprobantes de un formulario (decisión del usuario, 2026-08-28). Se planteó
+// un perfil aparte más conservador para comprobantes —son para LEER, no para
+// mirar, y muchas veces son la foto de un recibo con letra chica— y se
+// descartó a favor de una sola regla. Si algún comprobante llega ilegible, este
+// es el número que hay que subir, y está en un solo lugar.
 
-/** Ancho máximo que se guarda. 1600 cubre una pantalla ancha en 2x sin pasarse:
- *  el flyer nunca se muestra a más de ~800 px de ancho en la app. */
+/** Ancho máximo que se guarda. 1600 cubre una pantalla ancha en 2x. */
 export const MAX_ANCHO = 1600
 
-/** Calidad WebP. 82 es el punto donde el archivo cae fuerte y el texto del
- *  flyer todavía se lee limpio. */
+/** Calidad WebP. 82 es el punto donde el archivo cae fuerte y el texto todavía
+ *  se lee limpio. */
 export const CALIDAD = 82
 
 export type Medidas = { width: number; height: number }

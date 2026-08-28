@@ -104,3 +104,29 @@ describe('las clases retiradas no volvieron al código', () => {
     expect(css).toContain(`--brand-teal:         ${TOKENS.teal};`)
   })
 })
+
+// El calendario público pinta con rgba porque su fondo es configurable (?bg=),
+// así que no usa los tokens: sus alfas se vigilan acá aparte.
+describe('calendario público: el texto informativo pasa AA', () => {
+  const BLANCO = '#FFFFFF'
+
+  it('0.65 es el alfa que se usa, y pasa con margen', () => {
+    expect(ratio('#000000', BLANCO, 0.65)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('los alfas que había NO pasaban: por eso se subieron', () => {
+    // Reportado por el usuario sobre "📍 Theos Pedregal, Belén · 🕐 5 sep".
+    expect(ratio('#000000', BLANCO, 0.4)).toBeLessThan(AA_NORMAL)   // 2.85:1 lugar y hora
+    expect(ratio('#000000', BLANCO, 0.3)).toBeLessThan(AA_NORMAL)   // 2.10:1 día de la semana
+    expect(ratio('#000000', BLANCO, 0.45)).toBeLessThan(AA_NORMAL)  // 3.36:1 hora del modal
+  })
+
+  it('sigue pasando sobre los fondos claros que alguien puede configurar', () => {
+    expect(ratio('#000000', '#FFF8F0', 0.65)).toBeGreaterThanOrEqual(AA_NORMAL) // crema
+    expect(ratio('#000000', '#F5F5F5', 0.65)).toBeGreaterThanOrEqual(AA_NORMAL) // gris claro
+  })
+
+  it('el contador del encabezado, blanco sobre el navy, ya pasaba', () => {
+    expect(ratio('#FFFFFF', TOKENS.navy, 0.6)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+})

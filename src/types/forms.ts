@@ -31,6 +31,9 @@ export type FieldType =
   | 'info'
   | 'page_break'
   | 'personal_data'
+  /** Imagen adjunta a la respuesta (pensado para comprobantes). El valor que se
+   *  guarda es el PATH del bucket privado, no una URL — ver lib/forms/attachment. */
+  | 'image'
 
 export type ConditionOperator =
   | 'eq'

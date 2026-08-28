@@ -1,4 +1,5 @@
 import {
+  Image as ImageIcon,
   AlignLeft,
   AlignJustify,
   Hash,
@@ -30,6 +31,7 @@ const ICON_MAP: Record<FieldType, LucideIcon> = {
   info:          Info,
   page_break:    FileText,
   personal_data: User,
+  image: ImageIcon,
 }
 
 interface FieldTypeIconProps {

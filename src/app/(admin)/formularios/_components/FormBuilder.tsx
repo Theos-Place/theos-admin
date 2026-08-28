@@ -29,6 +29,7 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
       { type: 'textarea', label: 'Párrafo'       },
       { type: 'number',   label: 'Número'        },
       { type: 'date',     label: 'Fecha'         },
+      { type: 'image',    label: 'Imagen / comprobante' },
     ],
   },
   {
