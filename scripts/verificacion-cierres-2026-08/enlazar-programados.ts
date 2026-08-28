@@ -27,13 +27,25 @@ const APLICAR = process.argv.includes('--aplicar')
 const ENLACES: Array<{ asunto: string; lista: string; congelados: number }> = [
   { asunto: '¡Te invitamos a Discípulos!', lista: 'Invitación Discípulos', congelados: 13 },
   { asunto: '¡Te invitamos a Panorama!', lista: 'Invitación Panorama', congelados: 22 },
-  // FUERA a propósito (decisión del usuario, 2026-08-28): "Invitación
-  // Hermenéutica" pasaría de 16 a 35 destinatarios, más del doble, y es una de
-  // las tres listas cuyo chip de asistencia se completó POR ANALOGÍA con sus
-  // hermanas y no midiendo. Las otras cinco vienen de listas medidas con 72-99%
-  // de coincidencia. Si la analogía está mal, acá son 19 personas recibiendo
-  // una invitación que no les tocaba, y este comunicado sale el 31 de agosto.
-  // Se enlaza cuando alguien confirme que 35 es el número correcto.
+  // FUERA, y no por falta de confirmación: NUNCA hay que enlazarlo.
+  //
+  // Su asunto es "Fuiste seleccionado para Cómo Interpretar la Biblia".
+  // Hermenéutica se lleva por invitación: los 16 destinatarios no son el
+  // resultado de un filtro sino una DECISIÓN del comité (EST-10, la pantalla de
+  // selección). Recalcular la lista le diría a 19 personas que fueron
+  // seleccionadas cuando nadie las seleccionó.
+  //
+  // Esto explica además el 46% de coincidencia que dejó a esta lista sin
+  // decidir en la reconstrucción: los 16 congelados son un subconjunto elegido
+  // a mano, no lo que devuelve el filtro. O sea que el chip reconstruido por
+  // analogía no está necesariamente mal — la lista de 35 es "quién puede ser
+  // invitado" y los 16 son "a quién invitaron". Las dos cosas son ciertas.
+  //
+  // La regla general vale para cualquier convocatoria, no solo para esta: si
+  // los destinatarios son una selección, la lista no manda. El flujo lo respeta
+  // solo: convokeSelection arma sus destinatarios de la selección del comité y
+  // no toca scheduleBroadcast ni list_id, y en la pantalla de comunicaciones el
+  // list_id se manda solo si nadie editó los destinatarios a mano.
   { asunto: '¡Te invitamos a los cursos de la Etapa Inicial!', lista: 'Invitación Iniciales', congelados: 75 },
   { asunto: '¡Te invitamos a Sirviendo como Jesús!', lista: 'Invitación SCJ', congelados: 194 },
   { asunto: '¡Te invitamos a los cursos de la Etapa Intermedia!', lista: 'Invitación Intermedias', congelados: 138 },
