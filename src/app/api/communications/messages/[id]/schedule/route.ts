@@ -20,6 +20,10 @@ const scheduleSchema = z
       channel: z.enum(['whatsapp', 'email', 'interna']),
       recipient: z.string().optional(),
     })).default([]),
+    /** Lista guardada de la que salieron los destinatarios, si es que salieron
+     *  de una. El cron la vuelve a resolver al llegar la hora en vez de mandar
+     *  a la foto de hoy (ver scheduleBroadcast). */
+    list_id: z.uuid().nullish(),
   })
   .strict()
 
@@ -45,7 +49,7 @@ export async function POST(
         { status: 400 },
       )
     }
-    await scheduleBroadcast(id, parsed.data.recipients as Recipient[], cuando.iso)
+    await scheduleBroadcast(id, parsed.data.recipients as Recipient[], cuando.iso, parsed.data.list_id)
     return NextResponse.json({ ok: true, scheduled_at: cuando.iso })
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('EMAIL_NOT_CONFIGURED')) {

@@ -445,11 +445,17 @@ async function resolveEmailRecipients(
  * no los correos — así el envío usa el correo vigente ese día y respeta las
  * bajas y los rebotes que hayan pasado entre medio.
  *
+ * `listId`: si los destinatarios salieron de una LISTA GUARDADA, se anota cuál.
+ * Al llegar la hora el cron vuelve a resolverla en vez de usar la foto de hoy —
+ * que es justo lo que hace falta en una invitación como "no ha llevado Nivel 1":
+ * entre que se programa y que sale, hay gente que entra al criterio y gente que
+ * ya no debería recibirla.
+ *
  * Mismo claim atómico que sendBroadcast (draft → scheduled): dos clics no
  * programan dos veces.
  */
 export async function scheduleBroadcast(
-  id: string, recipients: Recipient[], scheduledAt: string,
+  id: string, recipients: Recipient[], scheduledAt: string, listId?: string | null,
 ): Promise<void> {
   const supabase = createAdminClient()
   if (recipients.some(r => r.channel === 'email') && !isEmailConfigured()) {
@@ -460,7 +466,10 @@ export async function scheduleBroadcast(
     .update({
       status: SCHEDULED_STATUS,
       scheduled_at: scheduledAt,
-      recipient_filter: { recipients: recipients.map(r => ({ member_id: r.member_id, channel: r.channel })) },
+      recipient_filter: {
+        recipients: recipients.map(r => ({ member_id: r.member_id, channel: r.channel })),
+        ...(listId ? { list_id: listId } : {}),
+      },
     })
     .eq('id', id)
     .eq('status', 'draft')
@@ -505,7 +514,7 @@ export async function dispatchScheduledBroadcasts(
 
   const filas = (data ?? []) as Array<{
     id: string; status: string; scheduled_at: string | null
-    recipient_filter: { recipients?: Recipient[] } | null
+    recipient_filter: { recipients?: Recipient[]; list_id?: string } | null
   }>
 
   const out: Array<{ id: string; ok: boolean; error?: string }> = []
@@ -513,9 +522,42 @@ export async function dispatchScheduledBroadcasts(
     // La condición canónica es la función pura: si mañana se agrega un caso
     // (cancelado, pausado), vale para el cron y para la pantalla por igual.
     if (!isBroadcastDue(b, now)) continue
-    const recipients = (b.recipient_filter?.recipients ?? []).map(r => ({
+    const congelados = (b.recipient_filter?.recipients ?? []).map(r => ({
       member_id: r.member_id ?? null, channel: r.channel, recipient: '',
     })) as Recipient[]
+
+    /**
+     * Si salió de una lista guardada, la lista MANDA sobre la foto congelada.
+     *
+     * Un comunicado programado se arma hoy y sale dentro de días o semanas. Con
+     * la foto vieja, una invitación a "los que no han llevado Nivel 1" le llega
+     * a quien ya lo llevó en el medio, y NO le llega a quien entró al criterio
+     * después. Los ids se guardan igual y sirven de respaldo.
+     *
+     * El canal se hereda de lo congelado (todos los de un comunicado comparten
+     * canal); a quien entre nuevo se le asigna el del primero.
+     */
+    const listId = b.recipient_filter?.list_id
+    let recalculados: string[] | null = null
+    if (listId) {
+      try {
+        const { recomputeMemberList } = await import('./member-lists')
+        const r = await recomputeMemberList(listId)
+        if (r.ok) recalculados = r.list.member_ids
+        else console.info(`broadcast ${b.id}: la lista no se pudo recalcular (${r.motivo}); se usa la foto guardada`)
+      } catch (e) {
+        console.warn(`broadcast ${b.id}: falló el recálculo de la lista, se usa la foto guardada:`, e)
+      }
+    }
+    const { destinatariosDelEnvio } = await import('@/lib/communications/scheduled-recipients')
+    const elegidos = destinatariosDelEnvio(
+      congelados.map(c => ({ member_id: c.member_id ?? null, channel: c.channel })), recalculados,
+    )
+    if (elegidos.fuente === 'lista' && elegidos.ids.length !== congelados.length) {
+      console.info(`broadcast ${b.id}: la lista pasó de ${congelados.length} a ${elegidos.ids.length} destinatarios`)
+    }
+    const recipients = elegidos.ids.map(mid =>
+      ({ member_id: mid, channel: elegidos.canal, recipient: '' })) as Recipient[]
 
     const { data: liberado } = await supabase
       .from('message_broadcasts')

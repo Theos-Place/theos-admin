@@ -54,6 +54,10 @@ function NuevaComunicacionContent() {
     []
   )
   const reenviarId = searchParams.get('reenviar') ?? ''
+  /** Lista guardada de la que vinieron los destinatarios. Viaja en la URL desde
+   *  /miembros/listas y hasta ahora se ignoraba: al programar se guardaba solo
+   *  la foto de la gente, y el envío salía a esa foto por vieja que fuera. */
+  const listaOrigenId = searchParams.get('list_id') ?? ''
   const reenviarMsg = useMemo(
     () => reenviarId ? messages.find(m => m.id === reenviarId) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -214,6 +218,22 @@ function NuevaComunicacionContent() {
     }
   }
 
+  /**
+   * ¿Los destinatarios siguen siendo los que dio la lista?
+   *
+   * Si alguien los editó a mano en la pantalla, el comunicado va a ESOS y no a
+   * lo que diga la lista el día del envío: la edición manual es una decisión
+   * más reciente que la lista. Se compara contra los ids que llegaron por la
+   * URL, que es lo que la lista entregó.
+   */
+  const listaSigueIntacta = useMemo(() => {
+    if (!listaOrigenId || initialMemberIds.length === 0) return false
+    const actuales = recipients.manualMemberIds
+    if (actuales.length !== initialMemberIds.length) return false
+    const set = new Set(initialMemberIds)
+    return actuales.every(id => set.has(id))
+  }, [listaOrigenId, initialMemberIds, recipients.manualMemberIds])
+
   async function handleSend() {
     // Programado: se valida ANTES de crear nada. Una hora inválida o pasada no
     // debe dejar un borrador huérfano en el historial.
@@ -259,7 +279,13 @@ function NuevaComunicacionContent() {
       const sendRes = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cuando ? { ...cuando, recipients: recips } : { recipients: recips }),
+        // `list_id` solo va al PROGRAMAR: en un envío inmediato no hay nada
+        // que recalcular, la foto es de hace un segundo. Y solo si los
+        // destinatarios siguen siendo los de la lista — si alguien los editó a
+        // mano en la pantalla, mandó esos y no los que diga la lista después.
+        body: JSON.stringify(cuando
+          ? { ...cuando, recipients: recips, list_id: listaSigueIntacta ? listaOrigenId : null }
+          : { recipients: recips }),
       })
       if (!sendRes.ok) {
         const data = await sendRes.json().catch(() => null)
