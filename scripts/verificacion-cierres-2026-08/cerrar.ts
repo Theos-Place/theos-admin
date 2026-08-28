@@ -28,7 +28,26 @@ cargarEnv()
 const APLICAR = process.argv.includes('--aplicar')
 
 /**
- * Los 10 aprobados. Van por NOMBRE EXACTO y a mano: una lista fija de diez se
+ * Nombres que el dirigente escribió distinto y que NO resuelven solos contra la
+ * lista del grupo. Van a mano y confirmados por el usuario, uno por uno.
+ *
+ * No es una lista para ir creciendo con cada caso raro: el punto de tenerla
+ * explícita es que aflojar el match por una letra —"Henrry" por "Henry"— pone
+ * una nota en el expediente de alguien a partir de un parecido. Con seis
+ * personas en el grupo eso casi siempre acierta; casi no alcanza.
+ *
+ * Confirmados por el usuario el 2026-08-28 para el grupo de Valeria Díaz.
+ */
+const ALIAS_POR_GRUPO: Record<string, Record<string, string>> = {
+  'Religiones del mundo. Valeria Díaz. Junio 2026': {
+    'Henrry': 'Henry Fonseca Prado',
+    'Francesca': 'Franchesca Sciamarelli Contrera',
+    'Juan Diego': 'Juan Fernández Torres',
+  },
+}
+
+/**
+ * Los grupos aprobados. Van por NOMBRE EXACTO y a mano: una lista fija de diez se
  * puede leer y discutir; un filtro que los recalcula puede incluir mañana un
  * grupo que nadie revisó.
  *
@@ -51,6 +70,7 @@ const GRUPOS = [
   'Administrando el Dinero.Stanley Benavides.Junio 2026',
   'Panorama. Alex Badilla y Marianela Hernández. Junio 2026',
   'Panorama. Eyleen Alfaro. Junio 2026',
+  'Religiones del mundo. Valeria Díaz. Junio 2026',
 ]
 
 const MOTIVO_REPROBADO = 'Reportado como reprobado por el dirigente en el formulario de fin de capacitación'
@@ -96,7 +116,8 @@ async function main() {
     const decision = new Map<string, { estado: 'aprobado' | 'reprobado'; nota: number | null }>()
     for (const [campo, estado] of [['aprobaron_texto', 'aprobado'], ['reprobaron_texto', 'reprobado']] as const) {
       for (const p of parsearLista(resp[campo], true).personas) {
-        const m = IndiceMiembros.enRoster(p.nombre, roster)
+        const alias = ALIAS_POR_GRUPO[nombre]?.[p.nombre]
+        const m = IndiceMiembros.enRoster(alias ?? p.nombre, roster)
         if (m.miembro) decision.set(m.miembro.id, { estado, nota: p.nota })
       }
     }
