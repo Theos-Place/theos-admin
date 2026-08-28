@@ -41,14 +41,16 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
   const body = (
     <>
       {/* Flyer o placeholder */}
-      <div className="relative h-36 w-full overflow-hidden">
+      {/* aspect-[16/9] en vez de una altura fija: es la proporción real de los
+          flyers (medido), así que la tarjeta ya no los recorta. */}
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-surface-low">
         {event.flyer_url ? (
           <Image
             src={event.flyer_url}
             alt={`Flyer de ${event.name}`}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform group-hover:scale-105"
+            className="object-contain transition-transform group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: typeColor + '1A', color: typeColor }}>

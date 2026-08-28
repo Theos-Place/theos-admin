@@ -143,8 +143,11 @@ function CalendarioWidget() {
               <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
                 className="flex flex-col overflow-hidden rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer">
                 {ev.flyer_url ? (
+                  /* aspect-[16/9] + object-contain: los flyers reales son 16:9
+                     (medido), así que llenan la caja exactos. El que no lo sea se
+                     ve entero con banda a los lados, mejor que perder medio texto. */
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={ev.flyer_url} alt={`Flyer de ${ev.name}`} className="h-32 w-full object-cover" />
+                  <img src={ev.flyer_url} alt={`Flyer de ${ev.name}`} className="aspect-[16/9] w-full object-contain bg-surface-low" />
                 ) : (
                   <div className="flex h-32 w-full flex-col items-center justify-center" style={{ background: `${accent}14` }}>
                     <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
@@ -276,8 +279,10 @@ function CalendarioWidget() {
       {selectedEvent && (
         <Modal onClose={() => setSelectedEvent(null)} titleId="evento-detalle-title" width={400}>
           <div className="p-6">
+            {/* Antes: h-[140px] object-cover. En un modal de ~500 px eso es una
+                banda de 3.5:1 sobre un flyer de 16:9 — se comía la mitad. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- flyer remoto dentro de un modal de detalle (no es LCP); next/image exigiría remotePatterns + dimensiones fijas para poco beneficio. */}
-            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full h-[140px] object-cover rounded-lg mb-3" />}
+            {selectedEvent.flyer_url && <img src={selectedEvent.flyer_url} alt={`Flyer de ${selectedEvent.name}`} className="w-full aspect-[16/9] object-contain bg-surface-low rounded-lg mb-3" />}
             <h3 id="evento-detalle-title" className="font-extrabold text-lg mb-2" style={{ color: primary }}>{selectedEvent.name}</h3>
             {showDesc && <p className="text-[13px] text-[rgba(0,0,0,0.55)] mb-2">{selectedEvent.description}</p>}
             {showLoc && <p className="text-xs text-[rgba(0,0,0,0.4)] mb-1">📍 {selectedEvent.location}</p>}
