@@ -16,6 +16,10 @@ interface Props<T> {
   fetchData?: () => Promise<T[]>
   /** Si se pasa, se confirma con el usuario antes de exportar (p. ej. export sin filtros). */
   confirmMessage?: string
+  /** Exportaciones con OTRA forma de fila (no la tabla de la pantalla): se
+   *  listan aparte en el menú y cada una se arma sola. Ej. "grupos con sus
+   *  participantes", que es una fila por persona y no una por grupo. */
+  extraExports?: Array<{ id: string; label: string; hint?: string; run: () => Promise<void> }>
 }
 
 function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) {
@@ -51,7 +55,7 @@ function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) 
   })
 }
 
-export function ExportButton<T>({ data, columns, allColumns, filename, label, fetchData, confirmMessage }: Props<T>) {
+export function ExportButton<T>({ data, columns, allColumns, filename, label, fetchData, confirmMessage, extraExports }: Props<T>) {
   const [open, setOpen] = useState(false)
   const [onlyVisible, setOnlyVisible] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -144,6 +148,28 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
               CSV (.csv)
             </button>
           </div>
+
+          {/* Exportaciones con otra forma de fila. Van en su propia sección y no
+              mezcladas con los formatos: no son "el mismo dato en otro archivo"
+              sino OTRO dato, y confundirlos hace que alguien baje lo que no
+              esperaba. */}
+          {extraExports && extraExports.length > 0 && (
+            <div className="border-t py-1.5 border-[var(--outline-variant)]">
+              {extraExports.map(x => (
+                <button
+                  key={x.id}
+                  onClick={async () => { setOpen(false); setBusy(true); try { await x.run() } finally { setBusy(false) } }}
+                  className="flex w-full items-start gap-3 px-4 py-2.5 text-left text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+                >
+                  <FileSpreadsheet size={15} className="text-[#1D6F42] shrink-0 mt-0.5" />
+                  <span>
+                    <span className="block text-navy">{x.label}</span>
+                    {x.hint && <span className="block text-[13px] text-navy-light/80">{x.hint}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Column scope toggle */}
           <div className="border-t py-1.5 border-[var(--outline-variant)]">

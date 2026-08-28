@@ -18,6 +18,8 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { useSortableTable } from '@/hooks/useSortableTable'
+import { useRowSelection } from '@/hooks/useRowSelection'
+import { useToast } from '@/components/shared/Toast'
 import { cn, claveAlfabetica } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -100,6 +102,7 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
 
 export default function GruposPage() {
   // studyTypes: catálogo liviano (34 filas), NO trae los ~1.680 grupos.
+  const toast = useToast()
   const { studyTypes: STUDY_TYPES, error: typesError } = useStudyPlans()
   const { zoneSedes: ZONE_SEDES, sedes: ALL_SEDES } = useSedes()
   const { user: actor } = useAuth()
@@ -144,6 +147,8 @@ export default function GruposPage() {
   //  ?filter=without_leader (o ?sin_dirigente=1) → sin dirigente
   //  ?filter=closing_soon → prontos a cerrar (ends_at en los próximos 30 días)
   const [noLeaderOnly, setNoLeaderOnly] = useState(false)
+  const [startFrom, setStartFrom] = useState('')
+  const [startTo, setStartTo] = useState('')
   const [closingSoonOnly, setClosingSoonOnly] = useState(false)
 
   // Debounce de 300ms para no re-filtrar la tabla en cada tecla.
@@ -202,8 +207,10 @@ export default function GruposPage() {
     if (search.trim()) u.set('search', search.trim())
     if (noLeaderOnly) u.set('no_leader', '1')
     if (closingSoonOnly) u.set('closing_soon', '1')
+    if (startFrom) u.set('start_from', startFrom)
+    if (startTo) u.set('start_to', startTo)
     return u
-  }, [selectedStatuses, selectedType, selectedZone, selectedDay, selectedBloque, search, noLeaderOnly, closingSoonOnly])
+  }, [selectedStatuses, selectedType, selectedZone, selectedDay, selectedBloque, search, noLeaderOnly, closingSoonOnly, startFrom, startTo])
 
   const buildUrl = (page: number) => {
     const u = filterQS()
@@ -232,14 +239,55 @@ export default function GruposPage() {
   // el servidor (fecha de fin desc).
   const { sorted: sortedGroups, sortKey, sortDir, toggleSort } = useSortableTable(groups)
 
+  /** Selección para exportar. El universo son las filas CARGADAS: "seleccionar
+   *  todo" marca las que están a la vista, no las 150 del filtro. Por eso el
+   *  menú de exportar dice cuántas van — sin ese número, marcar el encabezado y
+   *  bajar 25 de 150 sería una sorpresa desagradable. */
+  const sel = useRowSelection(sortedGroups.map(g => g.id))
+
   // Export: trae el set COMPLETO filtrado vía endpoint dedicado (?all=1), no
   // depende de lo cargado en pantalla.
   const fetchAllForExport = useCallback(async (): Promise<StudyGroup[]> => {
+    // Con grupos marcados se exportan SOLO esos, y no hace falta ir al servidor:
+    // ya están cargados.
+    if (sel.count > 0) return sortedGroups.filter(g => sel.isSelected(g.id))
     const res = await fetch(`/api/studies/groups?all=1&${filterQS().toString()}`)
     if (!res.ok) throw new Error('Error exportando grupos')
     const rows = (await res.json()) as DbGroupListItem[]
     return rows.map(toDomainStudyGroup)
-  }, [filterQS])
+  }, [filterQS, sel, sortedGroups])
+
+  /** Export "grupos y participantes": una fila por persona, con el grupo
+   *  repetido, su rol y el costo del plan. Se arma en el servidor porque
+   *  necesita nombres, correos y el costo — datos que la tabla no carga. */
+  const exportarParticipantes = useCallback(async () => {
+    const qs = sel.count > 0
+      ? new URLSearchParams({ ids: sel.selectedIds.join(',') })
+      : filterQS()
+    const res = await fetch(`/api/studies/groups/participantes?${qs.toString()}`)
+    if (!res.ok) { toast('No se pudo generar el export de participantes.', 'error'); return }
+    const { filas } = await res.json() as { filas: Array<Record<string, unknown>> }
+    if (!filas.length) { toast('No hay participantes que exportar con esos filtros.', 'error'); return }
+    const COLS: Array<[string, string]> = [
+      ['grupo', 'Grupo'], ['codigo', 'Código'], ['estudio', 'Estudio'],
+      ['costo', 'Costo'], ['moneda', 'Moneda'],
+      ['estado_grupo', 'Estado del grupo'], ['inicio', 'Inicio'], ['fin', 'Fin'],
+      ['persona', 'Persona'], ['rol', 'Rol'], ['estado_inscripcion', 'Estado'],
+      ['correo', 'Correo'], ['telefono', 'Teléfono'], ['cedula', 'Cédula'],
+    ]
+    const XLSX = await import('xlsx')
+    const ws = XLSX.utils.aoa_to_sheet([
+      COLS.map(([, label]) => label),
+      // El costo va como NÚMERO, no como texto: si no, en Excel no se puede
+      // sumar ni hacer tabla dinámica, que es medio motivo del export.
+      ...filas.map(f => COLS.map(([k]) => (k === 'costo' ? Number(f[k] ?? 0) : String(f[k] ?? '')))),
+    ])
+    ws['!cols'] = COLS.map(([, l]) => ({ wch: Math.max(l.length, 16) }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Participantes')
+    XLSX.writeFile(wb, `grupos-participantes-${new Date().toISOString().slice(0, 10)}.xlsx`)
+    toast(`${filas.length} participantes exportados.`, 'success')
+  }, [sel, filterQS, toast])
 
   const inputCls = 'rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -269,6 +317,14 @@ export default function GruposPage() {
             columns={visibleColumns}
             allColumns={STUDY_GROUP_COLUMNS}
             filename="grupos-estudio-theos"
+            extraExports={!canManageGroups ? [] : [{
+              id: 'participantes',
+              label: 'Grupos con sus participantes',
+              hint: sel.count > 0
+                ? `Solo los ${sel.count} grupos marcados · una fila por persona`
+                : 'Una fila por persona, con rol y costo',
+              run: exportarParticipantes,
+            }]}
           />
           {canManageGroups && (
             <Link
@@ -409,6 +465,32 @@ export default function GruposPage() {
             </div>
           )}
 
+          {/* Rango de fecha de inicio */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+              Inicio entre
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                className={cn(inputCls, 'font-body')}
+                aria-label="Fecha de inicio desde"
+                value={startFrom}
+                max={startTo || undefined}
+                onChange={e => setStartFrom(e.target.value)}
+              />
+              <span className="text-[13px] text-navy-light/80">y</span>
+              <input
+                type="date"
+                className={cn(inputCls, 'font-body')}
+                aria-label="Fecha de inicio hasta"
+                value={startTo}
+                min={startFrom || undefined}
+                onChange={e => setStartTo(e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* Day */}
           <div className="space-y-1.5">
             <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
@@ -448,6 +530,16 @@ export default function GruposPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
+                {canManageGroups && <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    aria-label={sel.allSelected ? 'Quitar la selección de todos' : 'Seleccionar todos los grupos cargados'}
+                    checked={sel.allSelected}
+                    ref={el => { if (el) el.indeterminate = sel.someSelected }}
+                    onChange={sel.toggleAll}
+                    className="cursor-pointer"
+                  />
+                </th>}
                 {visibleColumns.map(col => (
                   <SortableHeader
                     key={String(col.key)}
@@ -468,8 +560,17 @@ export default function GruposPage() {
                 return (
                   <tr
                     key={group.id}
-                    className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
+                    className={cn('hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]', sel.isSelected(group.id) && 'bg-coral/[0.04]')}
                   >
+                    {canManageGroups && <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label={`Seleccionar ${group.name}`}
+                        checked={sel.isSelected(group.id)}
+                        onChange={() => sel.toggle(group.id)}
+                        className="cursor-pointer"
+                      />
+                    </td>}
                     {visibleColumns.map(col => {
                       switch (String(col.key)) {
                         case 'study_type_id':

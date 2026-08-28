@@ -11,6 +11,7 @@ import { getGroupRestriction, memberPassesRestriction } from '@/lib/supabase/que
 import { hasRestriction, restrictionBlockedMessage, type GroupRestriction } from '@/lib/studies/group-restrictions'
 import { ymdCR, formatMoney } from '@/lib/format'
 import type { Json } from '@/types/database'
+import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-export'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -216,6 +217,10 @@ export type GroupFilters = {
   /** SEC-1: scope 'own' del dirigente — solo grupos donde es leader o co-leader.
    *  Viene del ctx del guard (uuid confiable), nunca del query string. */
   leaderMemberId?: string | null
+  /** Rango por FECHA DE INICIO (starts_at), inclusive. Cualquiera de los dos
+   *  puede ir solo: "desde marzo" o "hasta junio" son búsquedas válidas. */
+  startFrom?: string | null
+  startTo?: string | null
 }
 
 /** Resuelve las partes de los filtros que viven en tablas relacionadas:
@@ -333,6 +338,8 @@ export async function getStudyGroups(
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
     if (f.bloqueId) query = query.eq('bloque_id', f.bloqueId)
+    if (f.startFrom) query = query.gte('starts_at', f.startFrom)
+    if (f.startTo) query = query.lte('starts_at', f.startTo)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
@@ -356,6 +363,8 @@ export async function getStudyGroups(
     if (f.noLeader) query = query.is('leader_id', null)
     if (f.closingSoon) query = query.not('ends_at', 'is', null).gte('ends_at', closeFrom).lte('ends_at', closeTo).neq('status', 'finalizado')
     if (f.bloqueId) query = query.eq('bloque_id', f.bloqueId)
+    if (f.startFrom) query = query.gte('starts_at', f.startFrom)
+    if (f.startTo) query = query.lte('starts_at', f.startTo)
     if (planId)  query = query.eq('plan_id', planId)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
@@ -1605,4 +1614,57 @@ export async function updateLeader(id: string, patch: Partial<LeaderWriteInput>)
   const supabase = createAdminClient()
   const { error } = await supabase.from('study_leaders').update(patch).eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Grupos con TODA su gente, para el export "grupos y participantes".
+ *
+ * Consulta aparte y no un campo más en la lista: trae nombres, correos y el
+ * costo del plan, que la tabla no necesita y que en 2.196 grupos serían miles de
+ * filas de más en cada carga de pantalla.
+ *
+ * `ids` limita a los grupos marcados con checkbox; sin `ids`, van todos los que
+ * pasen los filtros.
+ */
+export async function getGroupsWithParticipants(
+  opts: { ids?: string[]; filters?: GroupFilters } = {},
+): Promise<{ grupos: GrupoParaExport[]; personas: Map<string, PersonaMin> }> {
+  const supabase = createAdminClient()
+  const SELECT = `
+    id, name, status, starts_at, ends_at, leader_id, co_leader_id,
+    plan:study_plans(code, name, cost, currency),
+    enrollments:study_enrollments!study_enrollments_group_id_fkey(member_id, status)
+  `
+  // PostgREST corta en 1000 filas SIN avisar y acá hay más de 2.000 grupos:
+  // paginar es obligatorio, no una optimización.
+  const grupos: GrupoParaExport[] = []
+  const tam = 500
+  for (let p = 0; ; p++) {
+    let q = supabase.from('study_groups').select(SELECT).order('name').range(p * tam, p * tam + tam - 1)
+    if (opts.ids?.length) q = q.in('id', opts.ids)
+    const f = opts.filters
+    if (f?.statuses?.length) q = q.in('status', f.statuses)
+    if (f?.zone) q = q.eq('zone', f.zone)
+    if (f?.bloqueId) q = q.eq('bloque_id', f.bloqueId)
+    if (f?.startFrom) q = q.gte('starts_at', f.startFrom)
+    if (f?.startTo) q = q.lte('starts_at', f.startTo)
+    const { data, error } = await q
+    if (error) throw error
+    grupos.push(...((data ?? []) as unknown as GrupoParaExport[]))
+    if (!data || data.length < tam) break
+  }
+
+  // Las personas en un solo viaje, troceado: `.in()` con miles de ids revienta
+  // la URL (mismo motivo que en el resto del repo).
+  const ids = [...new Set(grupos.flatMap(g =>
+    [g.leader_id, g.co_leader_id, ...g.enrollments.map(e => e.member_id)].filter(Boolean) as string[]))]
+  const personas = new Map<string, PersonaMin>()
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await supabase
+      .from('members').select('id, first_name, last_name, email, phone, cedula')
+      .in('id', ids.slice(i, i + 300))
+    if (error) throw error
+    for (const m of (data ?? []) as PersonaMin[]) personas.set(m.id, m)
+  }
+  return { grupos, personas }
 }

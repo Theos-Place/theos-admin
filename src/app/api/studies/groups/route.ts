@@ -27,6 +27,11 @@ const GROUPS_LIST_ROLES = [...GROUP_ADMIN_ROLES, 'dirigente', 'finanzas', 'comun
 //  - ?page=N&pageSize=M (tope 200): { groups, total, page, pageSize }.
 //  - ?include=enrollments: todos los grupos con enrollments (member_id, status),
 //    para consumidores que necesitan los IDs (ej. RecipientSelector).
+/** YYYY-MM-DD o nada. Cualquier otra cosa se ignora en vez de romper la query. */
+function fechaValida(v: string | null): string | undefined {
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined
+}
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireRoles(...GROUPS_LIST_ROLES)
@@ -71,8 +76,13 @@ export async function GET(req: NextRequest) {
       closingSoon: searchParams.get('closing_soon') === '1' || undefined,
       // Validado como uuid: valor malformado → sin filtro (no revienta la query).
       bloqueId: z.uuid().safeParse(searchParams.get('bloque')).success ? searchParams.get('bloque') : undefined,
+      // Rango por fecha de inicio. Se valida el formato: una fecha malformada
+      // sin validar se va cruda al filtro y PostgREST responde 400 con un error
+      // ilegible, en vez de simplemente ignorarla.
+      startFrom: fechaValida(searchParams.get('start_from')),
+      startTo: fechaValida(searchParams.get('start_to')),
     }
-    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon || filters.bloqueId
+    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon || filters.bloqueId || filters.startFrom || filters.startTo
 
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {
