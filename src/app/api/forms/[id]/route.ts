@@ -62,7 +62,12 @@ export async function PUT(
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('PUT /api/forms/[id]:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    // Se propaga el mensaje real, como hace el POST de eventos. "Error interno"
+    // dejó a alguien media hora sin saber por qué no guardaba un formulario: el
+    // motivo —un tipo de campo que la base no aceptaba— estaba solo en el log
+    // del servidor. El mensaje de Postgres no expone datos de nadie.
+    const msg = (error as { message?: string })?.message ?? 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 

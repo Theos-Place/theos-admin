@@ -210,19 +210,24 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         const res = await fetch(`/api/forms/${formId}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
-        if (!res.ok) throw new Error()
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error)
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
       } else {
         const res = await fetch('/api/forms', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
         })
-        if (!res.ok) throw new Error()
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error)
         const { id } = await res.json()
         router.push(`/formularios/${id}`)
       }
-    } catch {
-      toast('No se pudo guardar el formulario. Intentá de nuevo.', 'error')
+    } catch (e) {
+      // Se muestra el motivo real si el servidor lo mandó: "no se pudo guardar,
+      // intentá de nuevo" hace intentar de nuevo algo que va a fallar igual.
+      const motivo = e instanceof Error && e.message ? e.message : ''
+      toast(motivo
+        ? `No se pudo guardar el formulario: ${motivo}`
+        : 'No se pudo guardar el formulario. Intentá de nuevo.', 'error')
     } finally {
       setSaving(false)
     }

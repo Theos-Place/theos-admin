@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(form, { status: 201 })
   } catch (error) {
     console.error('POST /api/forms:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    // Mismo criterio que el PUT: el motivo real llega a la pantalla en vez de
+    // quedarse en el log (ver el comentario de PUT /api/forms/[id]).
+    const msg = (error as { message?: string })?.message ?? 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
