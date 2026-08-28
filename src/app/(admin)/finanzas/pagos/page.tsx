@@ -15,7 +15,6 @@ import { ErrorState } from '@/components/shared/ErrorState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { FilterChips } from '@/components/shared/FilterChips'
 import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import type { MoneyTotals } from '@/lib/money'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
@@ -309,66 +308,69 @@ function PagosContent() {
             />
           </div>
 
-          <FilterChips
-            ariaLabel="Filtrar por entidad"
-            activeKey={entityFilter}
-            onSelect={k => setEntityFilter(k)}
-            chips={[
-              { key: 'all', label: 'Todos' },
-              { key: 'event', label: 'Eventos' },
-              { key: 'study_group', label: 'Grupos' },
-            ]}
-          />
-
-          <FilterChips
-            ariaLabel="Filtrar por método de pago"
-            activeKey={methodFilter}
-            onSelect={k => setMethodFilter(k)}
-            chips={[
-              // FASE FUTURA: 'card'/'sinpe' se agregan cuando existan esos métodos.
-              { key: 'all', label: 'Todos' },
-              { key: 'comprobante', label: 'Comprobante' },
-              { key: 'scholarship', label: 'Beca' },
-              { key: 'cash', label: 'Efectivo' },
-            ]}
-          />
-
-          {monedasPresentes.length > 1 && (
-            <FilterChips
-              ariaLabel="Filtrar por moneda"
-              activeKey={currencyFilter}
-              onSelect={k => setCurrencyFilter(k as 'all' | Currency)}
-              chips={[
-                { key: 'all', label: 'Todas' },
-                ...monedasPresentes.map(c => ({ key: c, label: c })),
+          {/* Los filtros eran cinco filas de pastillas idénticas, cada una con
+              su "Todos" y ninguna con rótulo visible: no se entendía a qué
+              categoría pertenecía cada grupo. Pasan a dropdowns rotulados
+              (2026-08-27). El aria-label ya existía —los lectores de pantalla sí
+              sabían— así que lo que faltaba era decírselo a quien mira. */}
+          <div className="flex flex-wrap gap-x-4 gap-y-3">
+            <FiltroSelect
+              label="Concepto"
+              value={entityFilter}
+              onChange={v => setEntityFilter(v as typeof entityFilter)}
+              options={[
+                { value: 'all', label: 'Todos' },
+                { value: 'event', label: 'Eventos' },
+                { value: 'study_group', label: 'Matrícula (grupos)' },
               ]}
             />
-          )}
-
-          <FilterChips
-            ariaLabel="Filtrar por estado"
-            activeKey={statusFilter}
-            onSelect={k => setStatusFilter(k as 'all' | PaymentStatus)}
-            chips={[
-              { key: 'all', label: 'Todos' },
-              { key: 'paid', label: 'Pagado' },
-              { key: 'pending', label: 'Pendiente' },
-              { key: 'failed', label: 'Fallido' },
-              { key: 'refunded', label: 'Devuelto' },
-            ]}
-          />
-
-          {/* FIN-4: los tractos son pagos normales, así que se mezclan con el
-              resto; este chip los aísla para darles seguimiento. */}
-          <FilterChips
-            ariaLabel="Filtrar por arreglo de pago"
-            activeKey={planFilter}
-            onSelect={k => setPlanFilter(k as 'all' | 'in_plan')}
-            chips={[
-              { key: 'all', label: 'Todos los pagos' },
-              { key: 'in_plan', label: 'En arreglo de pago' },
-            ]}
-          />
+            <FiltroSelect
+              label="Forma de pago"
+              value={methodFilter}
+              onChange={v => setMethodFilter(v as typeof methodFilter)}
+              options={[
+                // FASE FUTURA: 'card'/'sinpe' se agregan cuando existan.
+                { value: 'all', label: 'Todas' },
+                { value: 'comprobante', label: 'Comprobante' },
+                { value: 'scholarship', label: 'Beca' },
+                { value: 'cash', label: 'Efectivo' },
+              ]}
+            />
+            <FiltroSelect
+              label="Estado del pago"
+              value={statusFilter}
+              onChange={v => setStatusFilter(v as 'all' | PaymentStatus)}
+              options={[
+                { value: 'all', label: 'Todos' },
+                { value: 'paid', label: 'Pagado' },
+                { value: 'pending', label: 'Pendiente' },
+                { value: 'failed', label: 'Fallido' },
+                { value: 'refunded', label: 'Devuelto' },
+              ]}
+            />
+            {monedasPresentes.length > 1 && (
+              <FiltroSelect
+                label="Moneda"
+                value={currencyFilter}
+                onChange={v => setCurrencyFilter(v as 'all' | Currency)}
+                options={[
+                  { value: 'all', label: 'Todas' },
+                  ...monedasPresentes.map(c => ({ value: c, label: c })),
+                ]}
+              />
+            )}
+            {/* FIN-4: los tractos son pagos normales y se mezclan con el resto;
+                este filtro los aísla para darles seguimiento. */}
+            <FiltroSelect
+              label="Arreglo de pago"
+              value={planFilter}
+              onChange={v => setPlanFilter(v as 'all' | 'in_plan')}
+              options={[
+                { value: 'all', label: 'Todos los pagos' },
+                { value: 'in_plan', label: 'Solo en arreglo' },
+              ]}
+            />
+          </div>
         </div>
 
         {/* Table */}
@@ -656,5 +658,32 @@ export default function PagosPage() {
     }>
       <PagosContent />
     </Suspense>
+  )
+}
+
+/** Un filtro con su rótulo encima. Existe para que se vea a qué categoría
+ *  pertenece cada desplegable: antes eran cinco grupos de pastillas iguales en
+ *  fila y no había forma de saber cuál era cuál. */
+function FiltroSelect({ label, value, onChange, options }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: Array<{ value: string; label: string }>
+}) {
+  const id = `filtro-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="rounded-xl border border-navy/15 bg-surface-card px-3 py-1.5 text-[13px] text-navy outline-none focus:border-navy/30 font-body"
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
   )
 }
