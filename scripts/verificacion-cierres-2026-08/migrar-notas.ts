@@ -31,7 +31,7 @@ import { writeFileSync } from 'node:fs'
 import { parsearLista, capacitacionAPlan } from '../../src/lib/studies/ccb-form-parse'
 import { leerCsv, DIRIGENTES_POR_EXTERNAL_ID } from '../ccb-migracion-2026-08/lib'
 import { norm } from '../../src/lib/studies/ccb-form-parse'
-import { cargarEnv, IndiceMiembros, todo, type Miembro } from './lib'
+import { cargarEnv, leerFormularios, IndiceMiembros, todo, type Miembro } from './lib'
 
 cargarEnv()
 const APLICAR = process.argv.includes('--aplicar')
@@ -69,7 +69,7 @@ async function main() {
   const porGrupo = new Map<string, Enr[]>()
   for (const e of enrolls) if (e.group_id) porGrupo.set(e.group_id, [...(porGrupo.get(e.group_id) ?? []), e])
 
-  const filas = leerCsv('ccb-form-fin-capacitacion.csv')
+  const filas = leerFormularios()
 
   type Escritura = { enrollmentId: string; quien: string; grupo: string; nota: number; fecha: string }
   const escrituras: Escritura[] = []

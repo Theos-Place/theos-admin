@@ -8,6 +8,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { norm } from '../../src/lib/studies/ccb-form-parse'
+import { leerCsv } from '../ccb-migracion-2026-08/lib'
 
 export function cargarEnv(): void {
   for (const f of ['.env', '.env.local']) {
@@ -18,6 +19,25 @@ export function cargarEnv(): void {
       }
     } catch { /* sigue */ }
   }
+}
+
+/**
+ * Las respuestas de LOS DOS formularios juntas.
+ *
+ * Son dos formularios distintos en CCB —"EB · Fin de Capacitación" y "EB · Fin
+ * de Nivel 4"— con las mismas columnas. Se leen juntos porque los cruces son
+ * los mismos: el segundo trae los Niveles, que el primero no cubre y que son la
+ * mitad de las matrículas colgadas.
+ *
+ * `_form` queda en cada fila para poder decir de cuál vino cada hallazgo.
+ */
+export function leerFormularios(): Array<Record<string, string> & { _form: 'capacitacion' | 'nivel4' }> {
+  const cap = leerCsv('ccb-form-fin-capacitacion.csv').map(r => ({ ...r, _form: 'capacitacion' as const }))
+  let niv: Array<Record<string, string> & { _form: 'nivel4' }> = []
+  try {
+    niv = leerCsv('ccb-form-fin-nivel4.csv').map(r => ({ ...r, _form: 'nivel4' as const }))
+  } catch { /* el CSV lo genera convertir-nivel4.ts; si no está, se sigue con uno */ }
+  return [...cap, ...niv]
 }
 
 export type Miembro = { id: string; external_id: string | null; first_name: string; last_name: string }

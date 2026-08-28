@@ -7,14 +7,60 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 
 | | |
 |---|---|
-| Respuestas del formulario en 2025 | 59 |
+| Respuestas del formulario en 2025 | 93 |
 | **Cierres que nos faltan** (cruce 1) | **0** |
 | ↳ cerrables con este formulario | 0 |
 | ↳ con gente que el formulario no menciona | 0 |
 | Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
-| Grupos cerrados sin formulario (cruce 3) | 256 |
+| Grupos cerrados sin formulario (cruce 3) | 222 |
 | Grupos en curso en total | 93 |
+
+### Respuestas que dicen un nivel
+
+Este formulario es de **capacitaciones**: un Nivel 1-4 acá es una anomalía. Se
+reportan y **no** se usan para proponer cierres.
+
+- `Nivel 4` — Jorge Obando, 2025-01-06
+- `Nivel 4` — GUISELLE LOPEZ, 2025-01-14
+- `Nivel 4` — Douglas Montero, 2025-01-27
+- `Nivel 4` — Carlos Artavia, 2025-01-28
+- `Nivel 4` — Pablo Monterroso, 2025-02-11
+- `Nivel 4` — Hilda Diaz, 2025-02-11
+- `Nivel 4` — Guiselle Trejos, 2025-02-17
+- `Nivel 4` — Ariana Gomez, 2025-03-25
+- `Nivel 4` — Benjamín Sasso, 2025-03-25
+- `Nivel 4` — Warren Ocampo, 2025-03-30
+- `Nivel 4` — Vinicio Guillen, 2025-04-02
+- `Nivel 4` — José Pablo Echeverría Chaverri, 2025-04-03
+- `Nivel 4` — Gabriela Hernández Gutiérrez, 2025-04-06
+- `Nivel 4` — Lucía Céspedes, 2025-04-25
+- `Nivel 4` — Kenneth Gómez, 2025-04-30
+- `Nivel 4` — Wilbert Cespedes Chaves, 2025-05-12
+- `Nivel 4` — Amanda Coronado, 2025-06-08
+- `Nivel 4` — William Sibaja, 2025-06-09
+- `Nivel 4` — Monserrat Bonilla, 2025-06-10
+- `Nivel 4` — Guillermo Fonseca, 2025-06-24
+- `Nivel 4` — Jimmy Peraza, 2025-07-10
+- `Nivel 4` — Daniella Sanchez, 2025-08-25
+- `Nivel 4` — Luis Guillermo Alonso, 2025-08-26
+- `Nivel 4` — Fernando Gutierrez, 2025-08-29
+- `Nivel 4` — Maria Fernanda Salazar Flores, 2025-09-15
+- `Nivel 4` — Andres Monzon Rivera, 2025-09-17
+- `Nivel 4` — Daniela Sánchez Barrantes, 2025-10-01
+- `Nivel 4` — Dylana Vincenti, 2025-10-09
+- `Nivel 4` — Laura Jiménez Trejos, 2025-10-13
+- `Nivel 4` — Gloriana Chinchilla Carranza, 2025-10-19
+- `Nivel 4` — Karol Villalobos, 2025-10-25
+- `Nivel 4` — Mariana Alvarado Bermúdez, 2025-11-10
+- `Nivel 4` — ELIZABETH MAINIERI FERNANDEZ, 2025-11-20
+- `Nivel 4` — Andrea Oviedo Sánchez, 2025-12-03
+
+### Lo que no se pudo resolver
+
+**1 respuesta(s) cuyo dirigente no se encontró** (ni por external_id ni por nombre):
+
+- Douglas Montero (id CCB 2904) — Nivel 4, 2025-01-27
 
 ## Cruce 1 · Grupos en curso que ya deberían estar cerrados
 
@@ -66,7 +112,7 @@ Grupos finalizados en 2025 cuyo dirigente **nunca** envió el formulario de esa
 capacitación — en ningún año, porque los formularios llegan con atraso. **No es un
 error del sistema** — es gente que no llenó el form.
 
-**256 grupos.**
+**222 grupos.**
 
 | Grupo | Plan | Dirigente | Cerró |
 |---|---|---|---|
@@ -74,26 +120,15 @@ error del sistema** — es gente que no llenó el form.
 | Discípulos 3. Leticia Obando. Noviembre 2024 | DIS3 | Leticia Obando | 2025-01-10 |
 | Discípulos 3. Adriana Villalobos. Noviembre 2024 | DIS3 | Adriana Villalobos Vargas | 2025-01-10 |
 | Discipulos 3. Maria José Ruiz. Noviembre 2024 | DIS3 | Maria Jose Ruiz Fuentes | 2025-01-10 |
-| Nivel 4. Benjamin Sasso. Noviembre 2024 | N4 | Benjamin Sasso Rojas | 2025-01-17 |
-| Nivel 4. Warren Ocampo.Noviembre 2024 | N4 | Warren Ocampo Benavides | 2025-01-17 |
-| Nivel 4. Hilda Diaz. Noviembre 2024 | N4 | Hilda Diaz Marin | 2025-01-17 |
 | Discípulos 3. Luis Lang. Diciembre 2024 | DIS3 | Luis Roberto Lang Ortiz | 2025-02-09 |
 | Evangelismo. Juan Quesada. Enero 2025 | EVM | Juan Manuel Quesada Arroyo | 2025-02-26 |
 | Religiones del Mundo. Aniri Herrera. Enero 2025 | RDM | Aniri Herrera Sandino | 2025-03-05 |
 | Discipulos 1-2-3. Gustavo Vindas. Enero 2025 | DIS1 | Gustavo Vindas Rodríguez | 2025-03-12 |
 | Discipulos 1-2-3. Nancy Morales. enero 2025 | DIS1 | Nancy Morales Alvarado | 2025-03-12 |
 | Prematrimonial. Ivan Artavia/Guiselle Trejos. Enero 2025 | PREMAT | Ivan Mauricio Artavia Romero | 2025-03-12 |
-| Nivel 4. Gabriela Hernandez. Enero 2025 | N4 | Gabriela Hernandez Gutierrez | 2025-03-19 |
-| Nivel 4. Jimmy Peraza. Enero 2025 | N4 | Daniela Delgado Rojas | 2025-03-19 |
-| Nivel 4. Wilberth Céspedes. Enero 2025 | N4 | Wilbert Céspedes Chaves | 2025-03-19 |
-| Nivel 4. Lucia Cespedes. Enero 2025 | N4 | Lucia Cespedes Gutierrez | 2025-03-19 |
-| Nivel 4. Laura Peralta. Enero 2025 | N4 | Antonio Quiros Rodriguez | 2025-03-19 |
 | Administrando el dinero. Fernando Chavarría. Febrero 2025 | AED | Fernando Chavarria Calvosa | 2025-03-29 |
 | Prematrimonial. Sergio Colombari Andrea Zamora. Febrero 2025 | PREMAT | Andrea Zamora Mora | 2025-04-12 |
 | Prematrimonial. Carlos Oviedo Andrea Blanco. Febrero 2025 | PREMAT | Andrea Blanco Rojas | 2025-04-12 |
-| Nivel 4. Fernando Gutierrez. Febrero 2025 | N4 | Fernando Gutierrez Hernandez | 2025-04-19 |
-| Nivel 4. Ernesto Desanti/Michelle Guier. Febrero 2025 | N4 | Ernesto Desanti Gonzalez | 2025-04-19 |
-| Nivel 4. Daniela Sanchez B. Febrero 2025 | N4 | Daniela Sanchez Barrantes | 2025-04-19 |
 | Sirviendo como Jesus. Andrea Chaves Febrero 2025 | SCJ | Andrea Chaves Castillo | 2025-04-26 |
 | Precampaña. Alex y Nela. Abril 2025 | PRETRANS | Alexander Badilla Guadamuz | 2025-04-29 |
 | Precampaña. Ariana Fonseca. Abril 2025 Virtual | PRETRANS | Ariana Fonseca Pizarro | 2025-04-29 |
@@ -116,26 +151,14 @@ error del sistema** — es gente que no llenó el form.
 | Precampaña. Debbie. Abril 2025 | PRETRANS | Debbie Sasso | 2025-04-29 |
 | Discipulos 3. Esteban Torres. Marzo 2025 | DIS3 | Esteban Torres Pineda | 2025-05-10 |
 | Discipulos 3. Jairo Sáenz/Ale Quesada. Marzo 2025 | DIS3 | Alejandra Quesada Brizuela | 2025-05-10 |
-| Nivel 4. Amanda Coronado. Marzo 2025 | N4 | Amanda Coronado Arauz | 2025-05-17 |
-| Nivel 4. Kenneth Gomez. Marzo 2025 | N4 | Kenneth Gomez Piedra | 2025-05-17 |
-| Nivel 4. William Sibaja. Marzo 2025 | N4 | William Sibaja Oviedo | 2025-05-17 |
-| Nivel 4. Andrés Monzón. Marzo 2025 | N4 | Andres Monzon Rivera | 2025-05-17 |
-| Nivel 4. Monserrat Bonilla. Marzo 2025 | N4 | Monserrat Bonilla Morales | 2025-05-17 |
 | Nivel 4. Luis Guillermo Alonso y Maria Adelia P. Marzo 2025 | N4 | Luis Guillermo Alonso Acuña | 2025-05-17 |
 | Nivel 2. Luisa Quesada. Marzo 2025 | N2 | Lulu Luisa Quesada Vargas | 2025-05-17 |
-| Nivel 4. Guillermo (Memo) Fonseca. Marzo 2025 | N4 | Guillermo (Memo) Fonseca Vargas | 2025-05-17 |
 | Sirviendo Como Jesus Oscar Cordero Marzo 2025 | SCJ | Estudios Europa Theos | 2025-05-24 |
 | Campaña Dir. Transformados Aurelia Rojas Abril 2025 | TRANS | Aurelia Rojas | 2025-05-27 |
 | Campaña Dir. Transformados Camila Artavia Abril 2025 | TRANS | Camila Artavia Trejos | 2025-05-27 |
 | Precampaña Europa. Shirley Corrales. Mayo 2025 | PRETRANS | Shirley Corrales Ramirez | 2025-05-29 |
 | Discipulos 3. Gabriela Gómez. Abril 2025 | DIS3 | Ana Gabriela Gomez Montoya | 2025-06-10 |
 | Discipulos 3. Yohana Montero. Abril 2025 | DIS3 | Yohana Montero Trejos | 2025-06-10 |
-| Nivel 4. Luis Hernández. Abril 2025 | N4 | Luis Javier Hernández Orozco | 2025-06-17 |
-| Nivel 4. Dylana Vincenti. Mayo 2025 | N4 | Dylana Vincenti | 2025-07-17 |
-| Nivel 4. Laura Jimenez. Mayo 2025 | N4 | Laura Jiménez Trejos | 2025-07-17 |
-| Nivel 4. Alonso Araya. Mayo 2025 | N4 | Alonso (Tio) Araya Morales | 2025-07-17 |
-| Nivel 4. Maria Fernanda Salazar. Mayo 2025 | N4 | María Fernanda Salazar Flores | 2025-07-17 |
-| Nivel 4. Mariana Alvarado. Mayo 2025 | N4 | Mariana Alvarado Bermudez | 2025-07-17 |
 | Transformados 2025 G59 - Gloria Vargas Vargas | TRANS | Gloria Vargas Vargas | 2025-07-27 |
 | Transformados 2025 - G05 Alexander Badilla Guadamuz | TRANS | Alexander Badilla Guadamuz | 2025-07-27 |
 | Transformados 2025 - G105 Luis Roberto Aguilar | TRANS | Luis Roberto Aguilar Morales | 2025-07-27 |
@@ -273,11 +296,7 @@ error del sistema** — es gente que no llenó el form.
 | Discípulos 3. Paola Goiri. Junio 2025 | DIS3 | Hernan Ampuero Guillermo | 2025-08-10 |
 | Discipulos 3. Andrey Umaña. Junio 2025 | DIS3 | Andrey Umana Vindas | 2025-08-10 |
 | Nivel 2 Oscar Cordero Junio 2025 | N2 | Ana Laura Vargas Arias | 2025-08-17 |
-| Nivel 4. Gloriana Chinchilla. Junio 2025 | N4 | Gloriana Chinchilla Carranza | 2025-08-17 |
 | Nivel 4 Kevin Barrantes Junio 2025 | N4 | Gabriela Duran Gonzalez | 2025-08-17 |
-| Nivel 4. Henry Fonseca. Junio 2025 | N4 | Henry Fonseca Prado | 2025-08-17 |
-| Nivel 4. Karol Villalobos. Junio 2025 | N4 | Karol Villalobos Garita | 2025-08-17 |
-| Nivel 4. Liza Sánchez. Junio 2025 | N4 | Liza Sanchez Aymerich | 2025-08-17 |
 | Transformados. Luisa Quesada. Julio 2025 | TRANS | Lulu Luisa Quesada Vargas | 2025-08-26 |
 | Transformados. Esteban Torres. Julio 2025 | TRANS | Esteban Torres Pineda | 2025-08-26 |
 | Transformados. Benjamín Sasso. Julio 2025 | TRANS | Benjamin Sasso Rojas | 2025-08-26 |
@@ -308,23 +327,16 @@ error del sistema** — es gente que no llenó el form.
 | Transformados. Maria Ines Barrantes Serrano. Julio 2025 | TRANS | Maria Barrantes Serrano | 2025-08-26 |
 | Discipulos 3. Luis Roberto Lang. Julio 2025 | DIS3 | Luis Roberto Lang Ortiz | 2025-09-09 |
 | Discipulos 3 EU. Lissette Gómez. Julio 2025 (Europa) | DIS3 | Lissette Gomez Montoya | 2025-09-09 |
-| Nivel 4. Andrea Oviedo S. Julio 2025 | N4 | Andrea Oviedo Sánchez | 2025-09-16 |
-| Nivel 4. Elizabeth Mainieri.Julio 2025 | N4 | Elizabeth Mainieri Fernandez | 2025-09-16 |
 | Administrando el dinero.Fernando Chavarría.Setiembre 2025 | AED | Fernando Chavarria Calvosa | 2025-10-27 |
 | Discipulos 3. Estefani Molina. Setiembre 2025 | DIS3 | Estefani Molina Gonzalez | 2025-11-10 |
 | Discipulos 3. Marianela Hernández. Setiembre 2025 | DIS3 | Marianela Hernandez Sanchez | 2025-11-10 |
 | Discipulos 3. Lissette Gómez. Setiembre 2025 | DIS3 | Lissette Gomez Montoya | 2025-11-10 |
-| Nivel 4. Gustavo Zamora. Setiembre 2025 | N4 | Gustavo Zamora | 2025-11-17 |
-| Nivel 4. Pablo Monterroso. Setiembre 2025 | N4 | Pablo Monterroso Pacheco | 2025-11-17 |
-| Nivel 4. Luis Roberto Aguilar. Setiembre 2025 | N4 | Luis Roberto Aguilar Morales | 2025-11-17 |
 | Sirviendo como Jesus.Laura Gutiérrez.Setiembre 2025 | SCJ | Laura Gutierrez Soto | 2025-11-24 |
 | Nivel 1. Luis Guillermo Alonso, Ma. Adelia Piza. Octubre 2025 | N1 | Luis Guillermo Alonso Acuña | 2025-12-10 |
 | Discipulos. Diana Acosta. Octubre 2025 | DIS1 | Diana Acosta Salazar | 2025-12-10 |
 | Nivel 1. Luis Alonso y Maria Adelia Piza. Octubre 2025 | N1 | Luis Guillermo Alonso Acuña | 2025-12-10 |
 | Nivel 1. Luis Alonso/Ma Adelia Piza. Octubre 2025 | N1 | Luis Guillermo Alonso Acuña | 2025-12-10 |
 | Discipulos. Gaby Anchía y Christian Morales. Octubre 2025 | DIS1 | Gabriela Anchia Ureña | 2025-12-10 |
-| Nivel 4. Maria Ines Barrantes.Octubre 2025 | N4 | Maria Barrantes Serrano | 2025-12-17 |
-| Nivel 4. Mirtha Cruz. Octubre 2025 | N4 | Mirtha Cruz Graña | 2025-12-17 |
 | Matrimonios. Alberto Murillo /Lara Aguilar. Octubre 2025 | MAT | Alberto Murillo Zamora | 2025-12-17 |
 
 ---

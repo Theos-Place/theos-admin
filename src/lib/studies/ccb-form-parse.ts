@@ -148,12 +148,21 @@ export function parsearLinea(linea: string, laxo = false): PersonaCruda | null {
   const guion = t.match(/^(.*?[a-zA-ZñÑáéíóúÁÉÍÓÚ])\s*[-–—]\s+(\S.*)$/)
   if (guion) { observacion = observacion ?? guion[2].trim(); t = guion[1] }
 
-  // 5) nombre y apellido pegados sin espacio ("NataliaBlanco"). Solo se parte
+  // 5) La marca "X" que varios dirigentes pegan al final del nombre en el
+  //    formulario de Nivel 4 ("David LizanoX") para señalar lo ya hecho en el
+  //    sistema. Son 146 líneas: sin quitarla, ninguna matchea.
+  //
+  //    Se exige que la X sea MAYÚSCULA y que la letra anterior sea minúscula.
+  //    Así "LizanoX" se limpia y "Felix" —que termina en x minúscula— no se
+  //    toca; tampoco "FELIX", donde la anterior es mayúscula.
+  t = t.replace(/([a-zñáéíóú])X\b/g, '$1')
+
+  // 6) nombre y apellido pegados sin espacio ("NataliaBlanco"). Solo se parte
   //    en el salto minúscula→mayúscula DENTRO de una palabra; pareceNombre
   //    sigue siendo el filtro final.
   t = t.replace(/([a-zñáéíóú])([A-ZÑÁÉÍÓÚ])/g, '$1 $2')
 
-  // 6) restos: puntuación final y el asterisco que algunos usan de marca
+  // 7) restos: puntuación final y el asterisco que algunos usan de marca
   t = t.replace(/[*]+/g, ' ').replace(/[-–—:;.]+\s*$/, '').replace(/\s+/g, ' ').trim()
   t = t.replace(/,\s*$/, '').trim()
 

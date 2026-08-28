@@ -93,6 +93,14 @@ describe('parsearLinea — comentario del dirigente después del nombre', () => 
   it('no parte un apellido con guion', () => {
     expect(parsearLinea('Ana Vargas-Mora')?.nombre).toBe('Ana Vargas-Mora')
   })
+  it('quita la marca X del formulario de Nivel 4', () => {
+    expect(parsearLinea('David LizanoX')?.nombre).toBe('David Lizano')
+    expect(parsearLinea('Luisa Fernanda QuesadaX')?.nombre).toBe('Luisa Fernanda Quesada')
+  })
+  it('no toca un apellido que de verdad termina en x', () => {
+    expect(parsearLinea('Maria Felix')?.nombre).toBe('Maria Felix')
+    expect(parsearLinea('MARIA FELIX')?.nombre).toBe('MARIA FELIX')
+  })
   it('separa nombre y apellido pegados', () => {
     expect(parsearLinea('1. NataliaBlanco - 70')).toMatchObject({ nombre: 'Natalia Blanco', nota: 70 })
   })

@@ -17,7 +17,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { parsearLista, capacitacionAPlan, norm } from '../../src/lib/studies/ccb-form-parse'
 import { leerCsv, DIRIGENTES_POR_EXTERNAL_ID } from '../ccb-migracion-2026-08/lib'
-import { cargarEnv, IndiceMiembros, todo, type Miembro, type Match } from './lib'
+import { cargarEnv, leerFormularios, IndiceMiembros, todo, type Miembro, type Match } from './lib'
 
 cargarEnv()
 
@@ -44,7 +44,7 @@ async function main() {
   const admin = createAdminClient() as never as Parameters<typeof todo>[0]
 
   // ── datos ──────────────────────────────────────────────────────────────────
-  const todasLasFilas = leerCsv('ccb-form-fin-capacitacion.csv')
+  const todasLasFilas = leerFormularios()
   const filas = TODOS ? todasLasFilas : todasLasFilas.filter(r => r.fecha_envio.slice(0, 4) === ANIO)
 
   const { data: planRows } = await (admin as never as { from: (t: string) => { select: (s: string) => Promise<{ data: Array<{ id: string; code: string; name: string }> | null }> } })

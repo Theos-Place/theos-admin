@@ -7,20 +7,66 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 
 | | |
 |---|---|
-| Respuestas del formulario en 2026 | 50 |
+| Respuestas del formulario en 2026 | 86 |
 | **Cierres que nos faltan** (cruce 1) | **0** |
 | ↳ cerrables con este formulario | 0 |
 | ↳ con gente que el formulario no menciona | 0 |
 | Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
-| Grupos cerrados sin formulario (cruce 3) | 56 |
+| Grupos cerrados sin formulario (cruce 3) | 37 |
 | Grupos en curso en total | 93 |
+
+### Respuestas que dicen un nivel
+
+Este formulario es de **capacitaciones**: un Nivel 1-4 acá es una anomalía. Se
+reportan y **no** se usan para proponer cierres.
+
+- `Nivel 4` — Pablo Monterroso Pacheco, 2026-01-09
+- `Nivel 4` — Michelle Guier Fischel, 2026-01-12
+- `Nivel 4` — Laura Peralta, 2026-01-14
+- `Nivel 4` — Mirtha Cruz, 2026-01-17
+- `Nivel 4` — María Ines Barrantes, 2026-01-27
+- `Nivel 4` — Alonso Araya, 2026-01-30
+- `Nivel 4` — Henry Fonseca Prado, 2026-02-09
+- `Nivel 4` — Adrian Castro Montealegre, 2026-03-05
+- `Nivel 4` — Gustavo Zamora, 2026-03-12
+- `Nivel 4` — Luis Roberto Aguilar Morales, 2026-03-16
+- `Nivel 4` — Jana Florian, 2026-03-17
+- `Nivel 4` — Luisa Quesada, 2026-03-24
+- `Nivel 4` — Pablo Rojas, 2026-04-23
+- `Nivel 4` — Liza Sánchez Aymerich, 2026-04-25
+- `Nivel 4` — Viviana Artavia, 2026-05-04
+- `Nivel 4` — Meriam Soto, 2026-05-06
+- `Nivel 4` — Silvia Burgos Alvarez, 2026-05-07
+- `Nivel 4` — Cindy Martínez, 2026-05-13
+- `Nivel 4` — Douglas Montero, 2026-05-17
+- `Nivel 4` — María Fernanda Salazar Flores, 2026-05-25
+- `Nivel 4` — Carlos Artavia, 2026-06-08
+- `Nivel 4` — Esther Ramirez, 2026-06-17
+- `Nivel 4` — VALERIA DIAZ ZAMORA, 2026-06-25
+- `Nivel 4` — Luis Hernandez Orozco, 2026-07-13
+- `Nivel 4` — Cristina Poveda Umaña, 2026-07-14
+- `Nivel 4` — Hilda Diaz, 2026-07-27
+- `Nivel 4` — Carlos Quesada, 2026-08-23
+- `Nivel 4` — Cinthya Ramos, 2026-08-27
+- `Nivel 4` — Diana Madriz Giron, 2026-08-27
+- `Nivel 4` — Cristina Pacheco, 2026-08-27
+- `Nivel 4` — Laura Sandí Gutiérrez, 2026-08-27
+- `Nivel 4` — Vanessa Mena Barrantes, 2026-08-27
+- `Nivel 4` — José Pablo Echeverria Chaverri, 2026-08-27
+- `Nivel 4` — Catalina Esquivel Vargas, 2026-08-27
+- `Nivel 4` — Israel González León, 2026-08-27
+- `Nivel 4` — Carolina Chavarria, 2026-08-27
 
 ### Lo que no se pudo resolver
 
 **1 respuesta(s) con una capacitación que no mapea a ningún plan.** No se adivina el plan más parecido:
 
 - `(vacío)` — Guiselle Trejos, 2026-05-10 · comentario: "El curso era Discípulos 2" → ¿DIS2?
+
+**1 respuesta(s) cuyo dirigente no se encontró** (ni por external_id ni por nombre):
+
+- Cristina Pacheco (id CCB ) — Nivel 4, 2026-08-27
 
 ## Cruce 1 · Grupos en curso que ya deberían estar cerrados
 
@@ -72,42 +118,27 @@ Grupos finalizados en 2026 cuyo dirigente **nunca** envió el formulario de esa
 capacitación — en ningún año, porque los formularios llegan con atraso. **No es un
 error del sistema** — es gente que no llenó el form.
 
-**56 grupos.**
+**37 grupos.**
 
 | Grupo | Plan | Dirigente | Cerró |
 |---|---|---|---|
-| Nivel 4. Adrian Castro. Noviembre 2025 | N4 | Adrián Castro Montealegre | 2026-01-17 |
 | Nivel 3. Roylin Castrillo Sequeira. Diciembre 2025 | N3 | Roylin Castrillo Sequeira | 2026-02-09 |
-| Nivel 4. Luisa Quesada. Diciembre 2025 | N4 | Lulu Luisa Quesada Vargas | 2026-02-16 |
-| Nivel 4. Jana Fallas. Diciembre 2025 | N4 | Jana Fallas Florian | 2026-02-16 |
 | Nivel 1. Eric Arguello. Enero 2026 | N1 | Eric Arguello Ballestero | 2026-03-12 |
-| Nivel 4. Silvia Burgos. Enero 2026 | N4 | Silvia Burgos Alvarez | 2026-03-19 |
-| Nivel 4. Cindy Martinez. Enero 2026 | N4 | Cindy Martinez Quesada | 2026-03-19 |
-| Nivel 4. José Pablo Rojas/Laura Badilla. Enero 2026 | N4 | José Pablo Rojas Villalta | 2026-03-19 |
-| Nivel 4. Meriam Soto. Enero 2026 | N4 | Meriam Soto Jimenez | 2026-03-19 |
 | Panorama. Camila y Seth. Enero 2026 | PAN | Camila Artavia Trejos | 2026-03-26 |
 | Amor Sin Fronteras. Ariana Gómez. Febrero 2026 | ASF | Ariana Gómez Salazar | 2026-03-29 |
 | Administrando el Dinero. Fernando Chavarría. Febrero 2026 | AED | Fernando Chavarria Calvosa | 2026-03-29 |
 | Nivel 1. Shirley Corrales. Febrero 2026 | N1 | Shirley Corrales Ramirez | 2026-04-12 |
 | Discípulos. Jorge Rojas. Febrero 2026 | DIS1 | Jorge Rojas Hidalgo | 2026-04-12 |
-| Nivel 4. Viviana Artavia. Febrero 2026 | N4 | Viviana Artavia Lobo | 2026-04-19 |
 | Nivel 2. Paola Goiri. Febrero 2026 | N2 | Hernan Ampuero Guillermo | 2026-04-19 |
 | Sirviendo como Jesus. Oscar y Maritza. Febrero 2026 | SCJ | Maritza Castillo Torres | 2026-04-26 |
 | Sirviendo como Jesus. Dylana Vincenti.Febrero 2026 | SCJ | Dylana Vincenti | 2026-04-26 |
 | Sirviendo como Jesus. Monserrat Bonilla.Febrero 2026 | SCJ | Monserrat Bonilla Morales | 2026-04-26 |
-| Nivel 4. Carlos Artavia/Fabiola Montero. Marzo 2026 | N4 | Carlos Artavia Martinez | 2026-05-17 |
-| Nivel 4. Cristina Poveda. Marzo 2026 | N4 | Cristina Poveda Umana | 2026-05-17 |
-| Nivel 4. Douglas Montero y Fabiana Artiñano. Marzo 2026 | N4 | Douglas Montero Arguedas | 2026-05-17 |
-| Nivel 4. Ma. Fernanda Salazar Marzo 2026 | N4 | María Fernanda Salazar Flores | 2026-05-17 |
 | Discípulos 2. Guido Chavarría. Abril 2026 | DIS2 | Guido Chavarria Rojas | 2026-06-03 |
 | Discípulos 2. Alberto Murillo. Abril 2026 | DIS2 | Alberto Murillo Zamora | 2026-06-03 |
 | Nivel 3. Keylor Navas. Abril 2026 (Virtual) | N3 | Keylor Navas | 2026-06-10 |
 | Discípulos 3. Camila y Seth. Abril 2026 | DIS3 | Camila Artavia Trejos | 2026-06-10 |
 | Nivel 3. Jose Pablo Echeverría. Abril 2026 | N3 | Jose Pablo Echeverria Chaverri | 2026-06-10 |
 | Nivel 3. Eric Baizán y Karol Arce. Abril 2026 | N3 | Eric Baizan Artavia | 2026-06-10 |
-| Nivel 4. Esther Ramírez. Abril 2026 | N4 | Esther Ramirez Zuniga | 2026-06-17 |
-| Nivel 4. Hilda Diaz. Abril 2026 | N4 | Hilda Diaz Marin | 2026-06-17 |
-| Nivel 4. Valeria Díaz. Abril2026 | N4 | Valeria Diaz Zamora | 2026-06-17 |
 | Nivel 1. Silvia Burgos. Mayo 2026 | N1 | Silvia Burgos Alvarez | 2026-07-10 |
 | Nivel 3. Priscilla Lara. Mayo 2026 | N3 | Priscilla Lara Valverde | 2026-07-10 |
 | Nivel 3. Henry Fonseca. Mayo 2026 | N3 | Henry Fonseca Prado | 2026-07-10 |
@@ -119,17 +150,13 @@ error del sistema** — es gente que no llenó el form.
 | Discípulos 1. Evelyn y Manfred. Mayo 2026 | DIS1 | Evelyn Rivera Gonzalez | 2026-07-10 |
 | Nivel 1. Amanda Coronado A. Mayo 2026 | N1 | Amanda Coronado Arauz | 2026-07-10 |
 | Nivel 1. Hilda Díaz. Mayo 2026 | N1 | Hilda Diaz Marin | 2026-07-10 |
-| Nivel 4. Mirtha Cruz. Mayo 2026 | N4 | Mirtha Cruz Graña | 2026-07-17 |
-| Nivel 4. Carlos Quesada. Mayo 2026 | N4 | Carlos Andres Quesada Brizuela | 2026-07-17 |
 | Nivel 2. Luis Alonso, Ma. Adelia Piza. Mayo 2026 | N2 | Luis Guillermo Alonso Acuña | 2026-07-17 |
 | Nivel 2. Evelia Mercado. Mayo 2026 | N2 | Evelia Mercado Delgado | 2026-07-17 |
 | Nivel 2. Mirtha Cruz. Mayo 2026 | N2 | Mirtha Cruz Graña | 2026-07-17 |
 | Nivel 2. Alonso López.Mayo 2026 | N2 | Alonso Lopez Cajina | 2026-07-17 |
-| Nivel 4. Laura Sandí. Mayo 2026 | N4 | Laura Sandí Gutiérrez | 2026-07-17 |
 | Discípulos 1. Ma. Fernanda Salazar. Junio 2026 | DIS1 | María Fernanda Salazar Flores | 2026-08-10 |
 | Discípulos 1.Fernando Gutiérrez.Junio 2026 | DIS1 | Fernando Gutierrez Hernandez | 2026-08-10 |
 | Nivel 2. Sofía Solís. Junio 2026 | N2 | Sofia Solis Loaiciga | 2026-08-17 |
-| Nivel 4. Cinthya Ramos.Junio 2026 | N4 | Cinthya Ramos Marín | 2026-08-17 |
 | Nivel 4. Juan Gabriel Arguedas. Junio 2026 | N4 | Juan Gabriel Arguedas Solis | 2026-08-17 |
 | Nivel 2 Virtual. Andrea Chaves C.Junio 2026 | N2 | Andrea Chaves Castillo | 2026-08-17 |
 
