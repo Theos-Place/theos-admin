@@ -115,6 +115,13 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   // cuelga de un evento ni de un grupo y no se manda por correo, no hay a quién
   // ofrecérselo, así que queda cerrado hasta que alguien lo abra a propósito.
   const [isPublic, setIsPublic]       = useState(false)
+  /** `requires_auth` en la tabla: si hace falta cuenta para contestar. Existía
+   *  desde el principio, en true en todos los formularios, y nadie la leía. */
+  const [pideCuenta, setPideCuenta]   = useState(true)
+  /** El link que se comparte. Se arma con el origen real y no con una constante
+   *  para que en Preview no se copie el de producción. */
+  const linkPublico = typeof window !== 'undefined' && formId
+    ? `${window.location.origin}/formulario/${formId}` : ''
   // Ventana de vigencia (YYYY-MM-DD, '' = sin límite). Pasada la fecha de fin
   // el estado cambia solo (derivado, sin cron) y deja de aceptar respuestas.
   const [windowStart, setWindowStart] = useState('')
@@ -140,6 +147,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setCategory(f.category)
         setStatus(f.is_active ? 'active' : 'draft')
         setIsPublic(f.is_public)
+        setPideCuenta(f.requires_auth ?? true)
         setWindowStart(isoToWindowYmd(f.starts_at))
         setWindowEnd(isoToWindowYmd(f.ends_at))
         setFields(f.fields)
@@ -199,6 +207,9 @@ export function FormBuilder({ formId }: FormBuilderProps) {
     const isActive = (nextStatus ?? status) === 'active'
     const payload = {
       name, description, category, is_active: isActive, is_public: isPublic, fields,
+      // Solo tiene sentido no pedir cuenta si además está abierto: un
+      // formulario de convocatoria sin cuenta sería expuesto sin filtro.
+      requires_auth: isPublic ? pideCuenta : true,
       starts_at: windowStart || null,
       ends_at: windowEnd || null,
       hero_image_url: hero.hero_image_url ?? null,
@@ -399,6 +410,59 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 </span>
               </span>
             </label>
+
+            {/* Sin cuenta: solo aparece si ya está abierto. Las dos banderas se
+                exigen juntas (ver esFormularioAbierto), y ofrecerla suelta
+                invitaría a dejar un formulario de convocatoria al aire. */}
+            {isPublic && (
+              <label className="mt-2.5 flex items-start gap-2.5 cursor-pointer pl-6">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 accent-coral"
+                  checked={!pideCuenta}
+                  onChange={e => setPideCuenta(!e.target.checked)}
+                />
+                <span>
+                  <span className="block text-sm text-navy font-body">Se puede contestar sin cuenta</span>
+                  <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">
+                    {!pideCuenta
+                      ? 'Cualquiera con el link lo contesta dando su nombre y correo, sin entrar al sistema. La respuesta NO queda ligada a una ficha.'
+                      : 'Hay que entrar con la cuenta de Theos para contestarlo.'}
+                  </span>
+                </span>
+              </label>
+            )}
+
+            {/* El link para compartir: solo cuando de verdad se puede abrir sin
+                cuenta. Mostrarlo antes repartiría un link que pide login. */}
+            {isPublic && !pideCuenta && formId && (
+              <div className="mt-3 pt-3 border-t border-[var(--outline-variant)]">
+                <p className="text-sm text-navy font-body mb-1.5">Link público</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    aria-label="Link público del formulario"
+                    value={linkPublico}
+                    onClick={e => (e.target as HTMLInputElement).select()}
+                    className="min-w-0 flex-1 rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-body outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(linkPublico)
+                        .then(() => toast('Link copiado.', 'success'))
+                        .catch(() => toast('No se pudo copiar; seleccionalo y copialo a mano.', 'error'))
+                    }}
+                    className="shrink-0 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                  >
+                    Copiar
+                  </button>
+                </div>
+                <p className="text-[13px] text-navy-light/80 font-body mt-1.5">
+                  Guardá el formulario para que el link empiece a funcionar.
+                </p>
+              </div>
+            )}
 
             {/* Ventana de vigencia: pasada la fecha de fin, el formulario se
                 cierra solo (estado derivado; no acepta más respuestas). */}

@@ -55,6 +55,10 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   if ('starts_at' in body) out.starts_at = windowFrom(body.starts_at, windowStartToIso)
   if ('ends_at' in body) out.ends_at = windowFrom(body.ends_at, windowEndToIso)
   if ('is_public' in body) out.is_public = Boolean(body.is_public)
+  // requires_auth: si hace falta cuenta para contestar. La columna existía
+  // desde el principio y nadie la mandaba, así que quedaba en true para
+  // siempre y el formulario público no se podía abrir nunca.
+  if ('requires_auth' in body) out.requires_auth = Boolean(body.requires_auth)
   const hero = heroFrom(body)
   if ('hero_image_url' in body) out.hero_image_url = hero.hero_image_url
   if ('hero_title' in body) out.hero_title = hero.hero_title

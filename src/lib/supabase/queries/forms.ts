@@ -201,6 +201,9 @@ export type FormWriteInput = {
   ends_at?: string | null
   /** Abierto a cualquiera con el link (escapatoria del guard de llenado). */
   is_public?: boolean
+  /** ¿Hace falta cuenta para contestar? En false —y solo junto con is_public—
+   *  el formulario se abre en /formulario/<id> sin sesión. */
+  requires_auth?: boolean
   /** FRM-2 · Encabezado. null limpia el campo (quitar el flyer). */
   hero_image_url?: string | null
   hero_title?: string | null

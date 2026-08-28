@@ -10,9 +10,13 @@ import { loginUrlWithDest, safeDest } from '@/lib/auth/redirect-target'
 // '/auth/confirm' canjea el token del correo: por definición se abre SIN sesión
 // (es lo que la crea). Sin esto el proxy lo mandaba al login y el enlace del
 // correo nunca funcionaba.
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm', '/auth/continuar']
+// '/formulario' (SINGULAR) es la página pública de un formulario abierto; el
+// módulo '/formularios' sigue pidiendo sesión. La ruta solo sirve los que están
+// marcados abiertos y sin requerir cuenta — el filtro real está en el API, acá
+// solo se deja pasar el prefijo.
+const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/formulario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm', '/auth/continuar']
 
-function isPublic(pathname: string): boolean {
+export function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
 }
 
