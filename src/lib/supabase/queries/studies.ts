@@ -81,7 +81,7 @@ export type DbGroupEnriched = {
   age_max: number | null
   enrollments: Array<{
     member_id: string
-    status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred' | 'pendiente_de_pago' | 'expirada'
+    status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred' | 'pendiente_de_pago' | 'expirada' | 'reprobado' | 'en_revision'
     grade: number | null
     /** Resultado del cierre: 'aprobado' o 'reprobado: <motivo>'. */
     notes: string | null

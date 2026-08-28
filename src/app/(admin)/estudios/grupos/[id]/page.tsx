@@ -22,6 +22,7 @@ import { getInitials } from '@/lib/format'
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
 
@@ -768,7 +769,17 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       </td>
                     )}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {/* Inscripción que quedó sin resultado al cerrarse el
+                            grupo. Solo lo ven los roles que pueden resolverla. */}
+                        {p.status === 'en_revision' && (
+                          <ResolverInscripcion
+                            groupId={id}
+                            memberId={p.member_id}
+                            memberName={p.member_name}
+                            onResuelto={() => refetch()}
+                          />
+                        )}
                         {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
                             onClick={() => { setWithdrawError(false); setWithdrawReason(''); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}

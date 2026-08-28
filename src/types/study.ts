@@ -41,7 +41,10 @@ export type GroupStatus =
 export type GroupParticipant = {
   member_id: string
   member_name: string
-  status: 'enrolled' | 'pending' | 'withdrawn'
+  /** 'en_revision': el grupo cerró sin registrar el resultado de esta persona.
+   *  Va aparte y NO se mete en 'enrolled': confundirlos es justamente lo que
+   *  hacía que un estudio de 2014 apareciera como si siguiera en curso. */
+  status: 'enrolled' | 'pending' | 'withdrawn' | 'en_revision'
   /** Resultado del cierre (solo en grupos finalizados): derivado de notes. */
   result?: 'aprobado' | 'reprobado' | null
   grade: number | null

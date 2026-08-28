@@ -28,6 +28,23 @@ describe('qué SÍ deja de contar', () => {
   })
 })
 
+describe('quién ve el botón', () => {
+  const COMP = readFileSync('src/components/studies/ResolverInscripcion.tsx', 'utf8')
+
+  it('la lista de la pantalla es la MISMA que exige el endpoint', () => {
+    // Si se separan: o aparece un botón que responde 403, o alguien con acceso
+    // deja de ver el botón sin que nadie lo note.
+    for (const rol of ['coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin']) {
+      expect(COMP, rol).toContain(`'${rol}'`)
+    }
+    expect(RUTA).toMatch(/requireRoles\('coordinador_estudios', 'coordinador_dirigentes', 'direccion'\)/)
+  })
+
+  it('sin rol no se pinta nada', () => {
+    expect(COMP).toContain('if (!puede) return null')
+  })
+})
+
 describe('cómo se resuelve', () => {
   it('solo desde en_revision: no puede pisar un resultado ya puesto', () => {
     const patch = RUTA.slice(RUTA.indexOf('export async function PATCH'))

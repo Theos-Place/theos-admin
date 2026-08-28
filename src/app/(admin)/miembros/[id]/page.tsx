@@ -317,6 +317,8 @@ export default function MiembroDetailPage() {
         <div className="space-y-3">
         <MemberParticipationTab
           memberId={member.id}
+          memberName={`${member.first_name ?? ''} ${member.last_name ?? ''}`.trim()}
+          onResuelto={refetch}
           openSections={openSections}
           onToggleSection={toggleSection}
           estudiosTable={estudiosTable}

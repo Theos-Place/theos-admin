@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Lock, ChevronDown, ChevronUp, Loader2, GraduationCap } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } from '@/components/members/MemberPaymentsList'
 import { cn } from '@/lib/utils'
@@ -105,6 +106,11 @@ type OpenSections = {
 
 type Props = {
   memberId: string
+  /** Nombre para el diálogo de "¿cómo terminó?" — sin él el modal preguntaría
+   *  por alguien sin decir por quién. */
+  memberName: string
+  /** Refrescar tras resolver una inscripción "Por confirmar". */
+  onResuelto?: () => void
   openSections: OpenSections
   onToggleSection: (key: keyof OpenSections) => void
   estudiosTable: SortableTableResult<StudyRow>
@@ -132,6 +138,8 @@ type Props = {
 
 export function MemberParticipationTab({
   memberId,
+  memberName,
+  onResuelto,
   openSections,
   onToggleSection,
   estudiosTable,
@@ -257,7 +265,18 @@ export function MemberParticipationTab({
                       )
                     })()}
                     <td className="px-4 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-3 flex-wrap">
+                        {/* Inscripción que quedó sin resultado al cerrarse el
+                            grupo: se resuelve desde acá o desde el detalle del
+                            grupo, lo que le quede más a mano a quien revisa. */}
+                        {row.rawStatus === 'en_revision' && row.groupId && (
+                          <ResolverInscripcion
+                            groupId={row.groupId}
+                            memberId={memberId}
+                            memberName={memberName}
+                            onResuelto={onResuelto}
+                          />
+                        )}
                         {/* Más de un pago colgando de la misma matrícula: pasa
                             cuando finanzas agrega un cobro de seguimiento. El
                             badge de al lado es el estado del más nuevo. */}
