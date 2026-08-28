@@ -8,7 +8,8 @@ import type { FilterCondition } from '@/types/filters'
 import { initialsFromParts, calcAge } from '@/lib/format'
 import { sedeLabel } from '@/lib/sedes'
 import { formatSedeRecency } from '@/lib/sede-attendance'
-import { ACCOUNT_STATE_LABEL, ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
+import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
+import { conditionLabel } from '@/lib/condition-labels'
 
 export function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -174,33 +175,22 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
 ]
 
+/**
+ * Etiqueta legible de un segmento: los chips rápidos y después las condiciones.
+ *
+ * Delega en conditionLabel, que es el que ya sabía nombrar TODAS las
+ * condiciones. Esta función tenía su propio switch, más pobre, y decía cosas
+ * falsas: solo distinguía 'completed', así que un filtro `not_taken` salía como
+ * "N1 en progreso" —lo contrario de lo que hace— y las condiciones que no
+ * estaban en su switch salían con el nombre crudo del tipo ("age", "leader").
+ *
+ * La etiqueta importa más de lo que parece: se guarda en member_lists.
+ * segment_label y es lo que alguien lee para saber qué es esa lista.
+ */
 export function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, showServers: boolean): string {
   const parts: string[] = []
   if (showDonors)  parts.push('Donadores')
   if (showServers) parts.push('Servidores')
-  for (const c of conditions) {
-    switch (c.type) {
-      case 'study':
-        parts.push(`${c.study} ${c.status === 'completed' ? 'completado' : 'en progreso'}`)
-        break
-      case 'attendance':
-        parts.push(`Asistentes a ${c.eventType}`)
-        break
-      case 'service':
-        parts.push(c.committee ? `Comité ${c.committee}` : c.area ? `Área ${c.area}` : 'Servicio')
-        break
-      case 'donor':
-        parts.push(c.value === 'yes' ? 'Donadores' : 'No donadores')
-        break
-      case 'status':
-        parts.push(c.value === 'active' ? 'Activos' : 'Inactivos')
-        break
-      case 'account':
-        parts.push(ACCOUNT_STATE_FILTER_LABEL[c.value])
-        break
-      default:
-        parts.push(c.type)
-    }
-  }
+  for (const c of conditions) parts.push(conditionLabel(c))
   return parts.length === 0 ? 'Todos los miembros' : parts.join(' · ')
 }
