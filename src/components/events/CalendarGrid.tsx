@@ -9,7 +9,7 @@ import { Popover } from '@/components/shared/Popover'
 import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
-import { MapPin, Clock, ExternalLink, Repeat, ChevronRight } from 'lucide-react'
+import { MapPin, Clock, ExternalLink, Repeat, ChevronRight, Image as ImageIcon } from 'lucide-react'
 
 // Las ocurrencias virtuales de recurrentes traen occurrence_key (mismo id que
 // el padre → el clic lleva al detalle del padre, pero la key de React es única).
@@ -225,7 +225,11 @@ export function CalendarGrid({
                           )}
                           style={{ backgroundColor: typeStyle(ev.event_type).color }}
                         >
-                          {ev.flyer_url ? '🖼 ' : ''}{ev.name}
+                          {/* Ícono y no el emoji 🖼: es de los peor soportados y
+                              en varios sistemas sale como el cuadrito de carácter
+                              faltante — parecía una imagen rota. */}
+                          {ev.flyer_url && <ImageIcon size={10} className="inline-block mr-1 -mt-px shrink-0 opacity-90" aria-hidden />}
+                          {ev.name}
                         </button>
                       )
                     })}
@@ -273,7 +277,8 @@ export function CalendarGrid({
                         )}
                       </span>
                       <span className={cn('block text-[13px] font-medium font-body truncate', past ? 'text-navy-light/80' : 'text-navy')}>
-                        {ev.flyer_url ? '🖼 ' : ''}{ev.name}
+                        {ev.flyer_url && <ImageIcon size={11} className="inline-block mr-1 -mt-px shrink-0 text-navy-light/80" aria-hidden />}
+                        {ev.name}
                       </span>
                       <span className="text-[13px] text-navy-light/80 font-body">{typeStyle(ev.event_type).label}</span>
                     </span>

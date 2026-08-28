@@ -7,6 +7,7 @@ import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { Modal } from '@/components/shared/Modal'
+import { Image as ImageIcon } from 'lucide-react'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -220,7 +221,10 @@ function CalendarioWidget() {
                           {dayEvents.slice(0, 2).map(ev => (
                             <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
                               className="text-[11px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
-                              {ev.flyer_url ? '🖼 ' : ''}{ev.name}
+                              {/* Ver la nota de CalendarGrid: el emoji 🖼 se
+                                  dibujaba como cuadrito en varios sistemas. */}
+                              {ev.flyer_url && <ImageIcon size={10} className="inline-block mr-1 -mt-px shrink-0 opacity-90" aria-hidden />}
+                              {ev.name}
                             </div>
                           ))}
                           {dayEvents.length > 2 && (
@@ -327,7 +331,7 @@ function CalendarioWidget() {
                 className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-[rgba(0,0,0,0.03)]">
                 <span className="mt-1 h-2 w-2 rounded-full shrink-0" style={{ background: accent }} />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-medium" style={{ color: primary }}>{ev.flyer_url ? '🖼 ' : ''}{ev.name}</span>
+                  <span className="block text-[13px] font-medium" style={{ color: primary }}>{ev.flyer_url && <ImageIcon size={11} className="inline-block mr-1 -mt-px shrink-0 opacity-70" aria-hidden />}{ev.name}</span>
                   <span className="text-[13px] text-[rgba(0,0,0,0.45)]">🕐 {formatEventTime(ev.start_at)}{ev.location ? ` · 📍 ${ev.location}` : ''}</span>
                 </span>
               </button>
