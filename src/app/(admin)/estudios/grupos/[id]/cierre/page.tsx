@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { useSedes } from '@/lib/sedes'
+import { OTRO_LUGAR, isFolletoEligible } from '@/lib/studies/folletos'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -169,6 +170,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
    */
   const { activeSedes: sedesEntrega } = useSedes()
   const [folletosSede, setFolletosSede] = useState('')
+  /** Casos especiales (una casa, un retiro, una iglesia aliada): el selector
+   *  cubre el 95%, pero un texto libre puro rompería el agrupado por destino de
+   *  la cola de folletos. Por eso el texto libre es UNA opción del selector, no
+   *  el campo entero. */
+  const [otroLugar, setOtroLugar] = useState('')
+  const esOtroLugar = folletosSede === OTRO_LUGAR
+  const lugarEntrega = esOtroLugar ? otroLugar.trim() : folletosSede
   useEffect(() => {
     let vivo = true
     fetch(`/api/studies/groups/${group.id}/leader-sede`)
@@ -177,6 +185,19 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
       .catch(() => {})
     return () => { vivo = false }
   }, [group.id])
+
+  /** El lugar de entrega es obligatorio SOLO cuando el cierre va a pedir
+   *  folletos. En un cierre que no genera tiquete el campo ni se muestra.
+   *
+   *  Se gatilla con isFolletoEligible y NO con autoPromotable, que era lo que
+   *  había: `auto_promote` está en true solo para N1-N4, mientras que DIS1 y
+   *  DIS2 lo tienen en false aunque SÍ promueven (la promoción usa
+   *  FOLLETO_NEXT_LEVEL, no esa columna). Con el gate viejo, cerrar un DIS1
+   *  generaba tiquete de folletos sin preguntar nunca dónde entregarlos — y
+   *  ahora, además, el servidor lo rechazaría. Los dos lados usan la misma
+   *  regla a propósito. */
+  const pideFolletos = isFolletoEligible(group.study_type_id) && aprobados > 0
+  const faltaLugarEntrega = pideFolletos && !lugarEntrega
 
   async function handleClose() {
     if (submitting) return
@@ -190,7 +211,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           results: payload,
-          folletos_sede: folletosSede.trim() || undefined,
+          folletos_sede: lugarEntrega || undefined,
           ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
@@ -524,10 +545,10 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
 
           {/* Folletos del grupo sucesor: dónde entregarlos. Solo tiene sentido
               si hay aprobados que van a pasar al nivel siguiente. */}
-          {autoPromotable && aprobados > 0 && (
+          {pideFolletos && (
             <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
               <label htmlFor="folletos-sede" className="block text-sm font-semibold text-navy font-body">
-                ¿Dónde entregamos los folletos?
+                ¿Dónde se entregan los folletos? <span className="text-coral-deep">*</span>
               </label>
               <p className="text-[13px] text-navy-light/80 font-body">
                 Al cerrar se pide el tiquete de folletos para los {aprobados} que pasan al
@@ -551,10 +572,28 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                     conserva como opción para no perderla al abrir la pantalla
                     (pasa con Heredia y United, que hoy están inactivas aunque
                     se usan). */}
-                {folletosSede && !sedesEntrega.some(s => s.name === folletosSede) && (
+                {folletosSede && folletosSede !== OTRO_LUGAR && !sedesEntrega.some(s => s.name === folletosSede) && (
                   <option value={folletosSede}>{folletosSede} (sede del dirigente)</option>
                 )}
+                <option value={OTRO_LUGAR}>Otro lugar…</option>
               </select>
+              {esOtroLugar && (
+                <input
+                  type="text"
+                  value={otroLugar}
+                  onChange={e => setOtroLugar(e.target.value)}
+                  maxLength={80}
+                  aria-label="Lugar de entrega de los folletos"
+                  placeholder="¿Dónde hay que dejarlos?"
+                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                />
+              )}
+              {faltaLugarEntrega && (
+                <p className="text-[13px] text-coral-deep font-body">
+                  Decinos dónde entregarlos para poder cerrar: sin eso el tiquete llega a
+                  imprenta sin destino.
+                </p>
+              )}
             </div>
           )}
 
@@ -577,7 +616,8 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </button>
             <button
               onClick={() => setConfirmOpen(true)}
-              disabled={submitting}
+              disabled={submitting || faltaLugarEntrega}
+              title={faltaLugarEntrega ? 'Falta decir dónde se entregan los folletos' : undefined}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {submitting ? 'Cerrando...' : 'Cerrar grupo'}

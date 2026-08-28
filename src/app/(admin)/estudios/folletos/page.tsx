@@ -8,7 +8,8 @@ import { Modal } from '@/components/shared/Modal'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
-import { FileText, Loader2, Check, ChevronRight } from 'lucide-react'
+import { FileText, Loader2, Check, ChevronRight, MapPin } from 'lucide-react'
+import { resumenPagos, RESUMEN_PAGO_BADGE } from '@/lib/studies/folleto-pagos'
 import type { DbFolletoRequest } from '@/lib/supabase/queries/folletos'
 import {
   FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
@@ -186,7 +187,7 @@ export default function FolletosPage() {
                       />
                     </th>
                   )}
-                  {['Tipo', 'Origen', 'Cantidad', 'Sede', 'Fecha estimada', 'Estado', ''].map(h => (
+                  {['Tipo', 'Origen', 'Cantidad', 'Entrega en', 'Pago', 'Fecha estimada', 'Estado', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -220,7 +221,36 @@ export default function FolletosPage() {
                         ) : (r.bloque?.nombre ?? '—')}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-light/80 tabular-nums font-mono text-[13px]">{r.quantity}</td>
-                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.sede ?? '—'}</td>
+                      {/* Destino DESTACADO: es el dato que usa quien organiza
+                          la entrega para armar los paquetes, no un atributo más
+                          de la fila. Un tiquete sin destino se marca en rojo en
+                          vez de mostrar un guion, que se lee como "no aplica". */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {r.sede ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy font-body">
+                            <MapPin size={13} className="text-teal-deep shrink-0" aria-hidden />
+                            {r.sede}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-coral-deep font-body">
+                            <MapPin size={13} className="shrink-0" aria-hidden />
+                            Sin destino
+                          </span>
+                        )}
+                      </td>
+                      {/* Pista de PAGO, paralela a la del folleto: los estados
+                          de impresión no dependen de esta columna. Es lo que el
+                          dirigente mira para saber a quién le falta. */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {(() => {
+                          const rp = resumenPagos(r.pagos)
+                          return (
+                            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', RESUMEN_PAGO_BADGE[rp.tono])}>
+                              {rp.texto}
+                            </span>
+                          )
+                        })()}
+                      </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>
                       <td className="px-4 py-3">
                         <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', FOLLETO_STATE_BADGE[r.status])}>

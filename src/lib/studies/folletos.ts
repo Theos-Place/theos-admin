@@ -29,6 +29,11 @@ export function levelLabel(code: string | null | undefined): string {
   return code
 }
 
+/** Valor centinela del selector de lugar de entrega: "Otro lugar…" abre un
+ *  texto libre. Nunca se guarda — si llega al servidor, es un bug del cliente.
+ *  El prefijo `__` lo hace imposible de confundir con el nombre de una sede. */
+export const OTRO_LUGAR = '__otro__'
+
 /** Semanas de anticipación para la fecha estimada de disponibilidad. */
 export const FOLLETO_LEAD_WEEKS = 2
 

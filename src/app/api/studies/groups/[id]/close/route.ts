@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
 import { PREMAT_PLAN_CODE, getRequestsForGroup, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
+import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 
 // POST: cierra el grupo. Body: { results: CloseResult[] }. (FOL-1: el campo
@@ -94,6 +95,25 @@ export async function POST(
       )
     }
 
+    /**
+     * El lugar de entrega es OBLIGATORIO cuando el cierre va a pedir folletos.
+     *
+     * Se valida acá arriba, antes de closeGroup, y no cuando se crea el
+     * tiquete: el cierre es irreversible y la creación del folleto es
+     * best-effort al final, así que para ese momento ya no hay forma de pedir
+     * el dato. Un tiquete sin destino no se puede repartir y nadie se entera
+     * hasta que llega a imprenta.
+     */
+    const aprobados = (results ?? []).filter(r => r.status_result === 'aprobado').length
+    const pideFolletos = isFolletoEligible(sourceCode) && aprobados > 0
+    const lugarEntrega = (body.folletos_sede ?? '').trim()
+    if (pideFolletos && (!lugarEntrega || lugarEntrega === OTRO_LUGAR)) {
+      return NextResponse.json(
+        { error: 'Falta decir dónde se entregan los folletos.', code: 'lugar_entrega_requerido' },
+        { status: 400 },
+      )
+    }
+
     // EST-3: recomendaciones solo en N4+ o capacitaciones (DIS). Si el cliente
     // las manda para otro plan, se ignoran (el gate de la UI es solo UX).
     const sanitized = allowsCloseRecommendations(sourceCode)
@@ -134,11 +154,19 @@ export async function POST(
     let folletoCreado = false
     if (successorGroupId) {
       try {
-        const { createAutoFolletoIfNeeded } = await import('@/lib/supabase/queries/folletos')
+        const { createAutoFolletoIfNeeded, linkPaymentsToFolletoRequest } = await import('@/lib/supabase/queries/folletos')
         const { ymdCR } = await import('@/lib/format')
-        const r = await createAutoFolletoIfNeeded(successorGroupId, 'cierre', ymdCR(), body.folletos_sede)
+        const r = await createAutoFolletoIfNeeded(successorGroupId, 'cierre', ymdCR(), lugarEntrega)
         folletoCreado = r.created
         if (!r.created) console.warn('folleto de cierre no creado:', r.reason)
+        // Los pagos individuales que acaba de crear la auto-matrícula quedan
+        // colgados del tiquete. Va después de crear el tiquete porque hasta
+        // acá no existe, y se hace también cuando el tiquete YA existía: el
+        // cierre se reintenta y el enlace tiene que ser idempotente.
+        if (r.id) {
+          const { linked } = await linkPaymentsToFolletoRequest(successorGroupId, r.id)
+          if (linked > 0) console.info(`folletos: ${linked} pago(s) enlazados al tiquete ${r.id}`)
+        }
       } catch (e) {
         console.warn('No se pudo crear el tiquete de folletos del grupo sucesor:', e)
       }

@@ -27,6 +27,8 @@ export type DbFolletoRequest = {
   source_group: { name: string | null } | null
   bloque: { nombre: string } | null
   target_leader: { first_name: string | null; last_name: string | null } | null
+  /** Pagos individuales enlazados a este tiquete. Ausente = nivel sin cobro. */
+  pagos: { total: number; pagados: number }
 }
 
 /** Ids de rol que otorgan el módulo 'folletos' (derivado de ROLES, no hardcodeado). */
@@ -120,7 +122,10 @@ export async function createAutoFolletoIfNeeded(
   /** Lugar de entrega dicho por quien cierra. Si no viene, se resuelve solo
    *  (grupo → dirigente → zona) como siempre. */
   sedeExplicita?: string | null,
-): Promise<{ created: boolean; reason?: string }> {
+  // `id` sale también cuando el tiquete YA existía: quien llama lo necesita
+  // para enlazarle los pagos, y ese enlace tiene que ser idempotente igual que
+  // la creación.
+): Promise<{ created: boolean; id?: string; reason?: string }> {
   const supabase = createAdminClient()
   const [{ data: g }, { count }] = await Promise.all([
     supabase.from('study_groups')
@@ -147,7 +152,7 @@ export async function createAutoFolletoIfNeeded(
   // Resolución única (getSedeForGroup): sede de entrega del grupo → sede del
   // dirigente → zona del grupo.
   const sede = (sedeExplicita ?? '').trim() || await getSedeForGroup(groupId)
-  const { error } = await supabase.from('folleto_requests').insert({
+  const { data: creado, error } = await supabase.from('folleto_requests').insert({
     tipo,
     source_group_id: groupId,
     source_plan_code: code,
@@ -156,11 +161,20 @@ export async function createAutoFolletoIfNeeded(
     sede,
     close_date: todayIso,
     available_at: estimatedAvailableDate(todayIso),
-  })
+  }).select('id').single()
   if (error) {
-    if ((error as { code?: string }).code === '23505') return { created: false, reason: 'ya_existe' }
+    if ((error as { code?: string }).code === '23505') {
+      // Los MISMOS tipos del índice único parcial folleto_requests_auto_por_grupo,
+      // no "todo lo que no sea manual": hay tipos fuera del índice (bloque) y
+      // con ellos maybeSingle() podría toparse con dos filas y reventar.
+      const { data: previo } = await supabase.from('folleto_requests')
+        .select('id').eq('source_group_id', groupId)
+        .in('tipo', ['cupo_lleno', 'fin_matricula', 'cierre']).maybeSingle()
+      return { created: false, id: (previo as { id: string } | null)?.id, reason: 'ya_existe' }
+    }
     throw error
   }
+  const folletoId = (creado as { id: string }).id
 
   const label = levelLabel(code)
   const tipoLabel = tipo === 'cupo_lleno' ? 'cupo lleno' : 'fin de matrícula'
@@ -178,7 +192,45 @@ export async function createAutoFolletoIfNeeded(
       <p>Podés seguir el estado en el sistema, en Estudios &rsaquo; Folletos.</p>
     `,
   })
-  return { created: true }
+  return { created: true, id: folletoId }
+}
+
+/** Enlaza al tiquete de folletos los pagos pendientes de los estudiantes de ese
+ *  grupo.
+ *
+ *  Los pagos siguen siendo INDIVIDUALES, uno por estudiante: acá no se crea ni
+ *  se agrupa nada, solo se sella `payments.folleto_request_id`. Es lo que
+ *  sobrevive a Tilopay — cuando entre la pasarela, cada estudiante paga el
+ *  suyo y lo único que desaparece es la capa de comprobantes del dirigente.
+ *
+ *  No toca pagos que ya tengan tiquete: el cierre se puede reintentar
+ *  (reconciliación YA_CERRADO) y esto debe poder correr dos veces.
+ *
+ *  Devuelve 0 sin ruido cuando el nivel es gratis (DIS2, DIS3): ahí no hay
+ *  pagos que enlazar porque el folleto se pagó al matricularse en DIS1. */
+export async function linkPaymentsToFolletoRequest(
+  groupId: string,
+  folletoRequestId: string,
+): Promise<{ linked: number }> {
+  const supabase = createAdminClient()
+  const { data: enr } = await supabase
+    .from('study_enrollments').select('id').eq('group_id', groupId)
+  const ids = ((enr ?? []) as Array<{ id: string }>).map(e => e.id)
+  if (ids.length === 0) return { linked: 0 }
+
+  // .in() por tandas: un grupo grande pasado entero arma una URL que PostgREST
+  // rechaza.
+  let linked = 0
+  for (let i = 0; i < ids.length; i += 200) {
+    const { count, error } = await supabase
+      .from('payments')
+      .update({ folleto_request_id: folletoRequestId }, { count: 'exact' })
+      .in('enrollment_id', ids.slice(i, i + 200))
+      .is('folleto_request_id', null)
+    if (error) throw error
+    linked += count ?? 0
+  }
+  return { linked }
 }
 
 /** Solicitud de folletos MANUAL (caso especial, no ligada a cierre): entra a la
@@ -223,11 +275,32 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   if (filters.tipo) q = q.eq('tipo', filters.tipo)
   const { data, error } = await q
   if (error) throw error
-  return (data ?? []).map((row: Record<string, unknown>) => ({
+  const filas = (data ?? []) as Array<Record<string, unknown>>
+
+  // Pagos individuales colgados de cada tiquete. Una sola query para toda la
+  // lista (no una por fila) y se cuenta en memoria: son decenas de filas, no
+  // vale una vista ni un rpc.
+  const pagos = new Map<string, { total: number; pagados: number }>()
+  if (filas.length > 0) {
+    const { data: pays } = await supabase
+      .from('payments')
+      .select('folleto_request_id, status')
+      .in('folleto_request_id', filas.map(f => String(f.id)))
+    for (const p of (pays ?? []) as Array<{ folleto_request_id: string | null; status: string | null }>) {
+      if (!p.folleto_request_id) continue
+      const acc = pagos.get(p.folleto_request_id) ?? { total: 0, pagados: 0 }
+      acc.total++
+      if (p.status === 'paid') acc.pagados++
+      pagos.set(p.folleto_request_id, acc)
+    }
+  }
+
+  return filas.map(row => ({
     ...row,
     source_group: Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group,
     bloque: Array.isArray(row.bloque) ? (row.bloque[0] ?? null) : row.bloque,
     target_leader: Array.isArray(row.target_leader) ? (row.target_leader[0] ?? null) : row.target_leader,
+    pagos: pagos.get(String(row.id)) ?? { total: 0, pagados: 0 },
   })) as DbFolletoRequest[]
 }
 
