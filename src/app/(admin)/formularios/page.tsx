@@ -32,7 +32,7 @@ import {
 } from '@/lib/forms/form-actions'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
-import { sePuedeCompartir, formShareUrl } from '@/lib/forms/share-link'
+import { sePuedeCompartir, formShareLink } from '@/lib/forms/share-link'
 import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
@@ -81,12 +81,19 @@ export default function FormulariosPage() {
    *
    *  El clipboard puede fallar sin permiso o sin HTTPS; en ese caso se muestra
    *  el link para copiarlo a mano, en vez de fallar en silencio. */
-  async function copiarLink(formId: string) {
+  async function copiarLink(form: { id: string; is_public: boolean; requires_auth?: boolean }) {
     setMenuOpen(null)
-    const url = formShareUrl(formId, window.location.origin)
+    // formShareLink elige: si el formulario se puede contestar sin cuenta,
+    // copia el link público; si no, el de siempre. El aviso cambia con el link
+    // porque no es lo mismo pegar en WhatsApp uno que cualquiera abre que uno
+    // que pide cuenta, y quien comparte tiene que saber cuál mandó.
+    const { url, kind } = formShareLink(form, window.location.origin)
+    const aviso = kind === 'publico'
+      ? 'Link copiado. Se puede contestar sin cuenta.'
+      : 'Link copiado. Ojo: para responder hay que entrar con cuenta.'
     try {
       await navigator.clipboard.writeText(url)
-      toast('Link copiado. Ojo: para responder hay que entrar con cuenta.', 'success')
+      toast(aviso, 'success')
     } catch {
       toast(`No se pudo copiar solo. El link es: ${url}`, 'error')
     }
@@ -418,11 +425,13 @@ export default function FormulariosPage() {
                                 {/* Compartir: solo en los formularios ABIERTOS
                                     ("cualquiera con el link") y activos. En los
                                     demás, formFillAccess rechaza a quien llegue
-                                    y el link sería una puerta cerrada. */}
+                                    y el link sería una puerta cerrada.
+                                    Cuál de los dos links copia lo decide
+                                    formShareLink según requires_auth. */}
                                 {sePuedeCompartir(form) && (
                                   <button
                                     type="button"
-                                    onClick={() => copiarLink(form.id)}
+                                    onClick={() => copiarLink(form)}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                                   >
                                     <Link2 size={13} className="text-navy-light/80" />

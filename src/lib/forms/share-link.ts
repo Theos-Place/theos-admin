@@ -1,15 +1,17 @@
 /**
  * El link para compartir un formulario. Módulo puro.
  *
- * Apunta a /formularios/<id>/responder, que NO es una ruta anónima: exige
- * sesión, igual que la inscripción a un evento. Y está bien que sea así — una
- * respuesta queda ligada a la persona (para no dejar afuera a quien corrige la
- * suya, para saber si estaba convocada), así que no hay a dónde guardar una
- * respuesta sin dueño.
+ * Hay DOS links posibles y el formulario decide cuál:
  *
- * Quien abra el link sin sesión cae en el login y VUELVE al formulario: el proxy
- * conserva el ?redirect= (se arregló el 2026-08-27; antes lo botaba para quien
- * ya tenía sesión y el link terminaba en el dashboard).
+ *  · /formulario/<id>            — público, se contesta sin cuenta. Solo para
+ *    los que están abiertos Y con requires_auth en false.
+ *  · /formularios/<id>/responder — el de siempre: exige sesión. La respuesta
+ *    queda ligada a la persona, que es lo que permite corregirla después y
+ *    saber si estaba convocada.
+ *
+ * Quien abra el segundo sin sesión cae en el login y VUELVE al formulario: el
+ * proxy conserva el ?redirect= (se arregló el 2026-08-27; antes lo botaba para
+ * quien ya tenía sesión y el link terminaba en el dashboard).
  */
 
 /** Solo tiene sentido compartir un formulario ABIERTO y ACTIVO.
@@ -31,4 +33,32 @@ export function formShareUrl(formId: string, origin?: string): string {
     ?? process.env.NEXT_PUBLIC_SITE_URL
     ?? 'https://admin.theosplace.org'
   return `${base.replace(/\/$/, '')}${formPath(formId)}`
+}
+
+/** La ruta pública: se contesta sin cuenta. Singular, para no chocar con el
+ *  módulo /formularios (ver PUBLIC_PREFIXES en el proxy). */
+export function publicFormPath(formId: string): string {
+  return `/formulario/${formId}`
+}
+
+/**
+ * EL link para compartir, y de qué tipo es.
+ *
+ * Si el formulario se puede contestar sin cuenta, ese es el link: repartir el
+ * que pide login cuando existe uno abierto manda a la gente a un trámite que no
+ * hace falta. Si no, el de siempre.
+ *
+ * Devuelve también `kind` para que la pantalla pueda decir cuál copió — no es
+ * lo mismo pegar en WhatsApp un link que cualquiera abre que uno que pide
+ * cuenta, y quien comparte tiene que saber cuál mandó.
+ */
+export function formShareLink(
+  form: { id: string; is_public: boolean; requires_auth?: boolean },
+  origin?: string,
+): { url: string; kind: 'publico' | 'con-cuenta' } {
+  const base = (origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org').replace(/\/$/, '')
+  const abierto = form.is_public && form.requires_auth === false
+  return abierto
+    ? { url: `${base}${publicFormPath(form.id)}`, kind: 'publico' }
+    : { url: `${base}${formPath(form.id)}`, kind: 'con-cuenta' }
 }
