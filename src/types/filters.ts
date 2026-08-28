@@ -35,12 +35,35 @@ export interface ConditionGroup {
 export interface FilterState {
   conditions: FilterCondition[]
   groups: ConditionGroup[]
-  /** Chips rápidos de la pantalla de miembros. Viven fuera de `conditions`, y
-   *  hay que guardarlos para poder recalcular una lista: sin ellos el recálculo
-   *  da un conjunto más ancho que el original. Opcionales porque las listas
-   *  guardadas antes de esto no los tienen. */
+  /**
+   * Operadores AND/OR de nivel superior por unidad. Sin ellos la combinación
+   * cambia (todo se une con AND).
+   */
+  topLevelOps?: Record<string, 'AND' | 'OR'>
+  /**
+   * Lo que la pantalla de miembros manda FUERA de `conditions` y que durante
+   * mucho tiempo no se guardaba con la lista: los chips rápidos, la búsqueda de
+   * texto y el filtro de asistencia.
+   *
+   * Omitirlos no es un detalle. "Invitación N1" se guardó con 260 personas y,
+   * recalculada sin `active_attendance`, da 14.848: la condición es "no ha
+   * llevado Nivel 1" y el chip de asistencia activa era lo único que la
+   * acotaba. Una lista a la que le falta parte de su filtro no se puede
+   * recalcular — se ensancharía sola.
+   */
   is_donor?: boolean
   is_server?: boolean
+  search?: string
+  active_attendance?: boolean | 'estudios'
+  /**
+   * Versión del filtro guardado.
+   *
+   * Ausente = la lista se guardó cuando solo se persistían `conditions` y
+   * `groups`, así que NO se sabe si los otros filtros estaban apagados o
+   * simplemente no se guardaron. Esas listas no se recalculan: hay que volver a
+   * guardarlas desde la pantalla de miembros. `2` = el filtro está completo.
+   */
+  v?: 2
 }
 
 // Distributive Omit — removes 'id' from each union member individually

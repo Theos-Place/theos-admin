@@ -1,7 +1,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { MemberList } from '@/types/member-list'
 import type { FilterState } from '@/types/filters'
-import { sePuedeRecalcular } from '@/lib/members/list-refresh'
+import { motivoNoRecalculable } from '@/lib/members/list-refresh'
 
 type DbRow = {
   id: string
@@ -105,20 +105,17 @@ export async function recomputeMemberList(id: string): Promise<
   const actual = await getMemberListById(id)
   if (!actual) return { ok: false, motivo: 'Lista no encontrada' }
   const f = actual.filters
-  // Una lista sin filtros guardados no se puede recalcular: su membresía es lo
-  // único que la define (ver sePuedeRecalcular, con tests).
-  if (!sePuedeRecalcular(f)) {
-    return { ok: false, motivo: 'La lista no tiene filtros guardados: su contenido es la única definición que tiene.' }
-  }
+  const motivo = motivoNoRecalculable(f)
+  if (motivo) return { ok: false, motivo }
+  // El filtro COMPLETO, igual que lo manda filterQS() en la pantalla de
+  // miembros. Recalcular con un subconjunto ensancha la lista en silencio.
   const { getMemberIds } = await import('./members')
   const { ids, total } = await getMemberIds({
-    conditions: f.conditions, groups: f.groups,
-    // Los chips de Donantes/Servidores viajan aparte de las condiciones. En las
-    // listas viejas no están guardados (se agregaron con el recálculo), y por
-    // eso una lista vieja que los usaba puede recalcular distinto: sin el chip,
-    // el filtro es más ancho. Se avisa en la UI.
+    conditions: f.conditions, groups: f.groups, topLevelOps: f.topLevelOps,
     is_donor: f.is_donor || undefined,
     is_server: f.is_server || undefined,
+    active_attendance: f.active_attendance || undefined,
+    search: (f.search ?? '').trim() || undefined,
   })
   const supabase = createAdminClient()
   const { error } = await supabase.from('member_lists')

@@ -1,25 +1,41 @@
 import { describe, it, expect } from 'vitest'
-import { sePuedeRecalcular, mensajeRecalculo } from './list-refresh'
+import { sePuedeRecalcular, mensajeRecalculo, motivoNoRecalculable } from './list-refresh'
 import type { FilterState } from '@/types/filters'
 
 const cond = [{ id: 1, group: 'study', type: 'study', study: 'N4', status: 'completed', from: null, to: null }] as FilterState['conditions']
 
 describe('sePuedeRecalcular', () => {
-  it('con condiciones, sí', () => {
-    expect(sePuedeRecalcular({ conditions: cond, groups: [] })).toBe(true)
+  it('con el filtro completo (v:2) y condiciones, sí', () => {
+    expect(sePuedeRecalcular({ v: 2, conditions: cond, groups: [] })).toBe(true)
   })
-  it('solo con un chip (Donantes / Servidores), también', () => {
-    expect(sePuedeRecalcular({ conditions: [], groups: [], is_donor: true })).toBe(true)
-    expect(sePuedeRecalcular({ conditions: [], groups: [], is_server: true })).toBe(true)
+  it('solo con un chip, también', () => {
+    expect(sePuedeRecalcular({ v: 2, conditions: [], groups: [], is_donor: true })).toBe(true)
+    expect(sePuedeRecalcular({ v: 2, conditions: [], groups: [], is_server: true })).toBe(true)
+    expect(sePuedeRecalcular({ v: 2, conditions: [], groups: [], active_attendance: 'estudios' })).toBe(true)
   })
   it('sin filtros NO: recalcularla la dejaría vacía', () => {
-    // Listas armadas a mano, y las guardadas antes de persistir los filtros.
-    expect(sePuedeRecalcular({ conditions: [], groups: [] })).toBe(false)
+    expect(sePuedeRecalcular({ v: 2, conditions: [], groups: [] })).toBe(false)
     expect(sePuedeRecalcular(null)).toBe(false)
     expect(sePuedeRecalcular(undefined)).toBe(false)
   })
   it('un chip en false no cuenta como filtro', () => {
-    expect(sePuedeRecalcular({ conditions: [], groups: [], is_donor: false, is_server: false })).toBe(false)
+    expect(sePuedeRecalcular({ v: 2, conditions: [], groups: [], is_donor: false, is_server: false })).toBe(false)
+  })
+})
+
+describe('filtro incompleto (listas guardadas antes de la corrección)', () => {
+  it('sin v:2 NO se recalcula, aunque tenga condiciones', () => {
+    // El caso medido: "Invitación N1" tiene 260 personas guardadas y,
+    // recalculada sin el chip de asistencia que no se guardó, da 14.848.
+    expect(sePuedeRecalcular({ conditions: cond, groups: [] })).toBe(false)
+    expect(motivoNoRecalculable({ conditions: cond, groups: [] }))
+      .toContain('antes de que se guardara el filtro completo')
+  })
+  it('el motivo dice cómo arreglarlo, no solo que no se puede', () => {
+    expect(motivoNoRecalculable({ conditions: cond, groups: [] })).toContain('guardala de nuevo')
+  })
+  it('con v:2 y filtros, no hay motivo', () => {
+    expect(motivoNoRecalculable({ v: 2, conditions: cond, groups: [] })).toBeNull()
   })
 })
 

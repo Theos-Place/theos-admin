@@ -11,12 +11,12 @@ import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import {
-  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink, Users,
+  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink, Users, AlertTriangle,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { initialsFromParts, calcAge } from '@/lib/format'
-import { mensajeRecalculo } from '@/lib/members/list-refresh'
+import { mensajeRecalculo, motivoNoRecalculable } from '@/lib/members/list-refresh'
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -240,8 +240,17 @@ export default function ListaDetailPage() {
         </div>
       </div>
 
+      {/* Aviso de filtro incompleto: va ARRIBA del banner de tipo porque cambia
+          lo que ese banner promete. */}
+      {motivoNoRecalculable(list.filters) && (
+        <div className="rounded-2xl px-5 py-3.5 flex items-start gap-3 bg-amber-50 border border-amber-200">
+          <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" aria-hidden />
+          <p className="text-[13px] text-amber-800 font-body">{motivoNoRecalculable(list.filters)}</p>
+        </div>
+      )}
+
       {/* Dynamic / Snapshot banner */}
-      {list.is_dynamic ? (
+      {list.is_dynamic && !motivoNoRecalculable(list.filters) ? (
         <div
           className="rounded-2xl px-5 py-3.5 flex items-center gap-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.25)]"
         >
@@ -258,13 +267,15 @@ export default function ListaDetailPage() {
           <p className="text-[13px] text-navy-light/80 font-body">
             Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="mx-2">·</span>
-            <button
-              disabled={refrescando}
-              className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0 disabled:opacity-50 disabled:cursor-default"
-              onClick={refrescar}
-            >
-              {refrescando ? 'Actualizando…' : 'Actualizar snapshot'}
-            </button>
+            {!motivoNoRecalculable(list.filters) && (
+              <button
+                disabled={refrescando}
+                className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0 disabled:opacity-50 disabled:cursor-default"
+                onClick={refrescar}
+              >
+                {refrescando ? 'Actualizando…' : 'Actualizar snapshot'}
+              </button>
+            )}
           </p>
         </div>
       )}

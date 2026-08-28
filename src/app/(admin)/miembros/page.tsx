@@ -167,12 +167,19 @@ function MiembrosContent() {
         body: JSON.stringify({
           name: saveListName.trim(),
           description: saveListDesc.trim() || null,
-          // Los chips de Donantes/Servidores van adentro de `filters`: sin
-          // ellos, recalcular la lista después da un conjunto más ancho que el
-          // que se guardó (ver recomputeMemberList).
+          // El filtro COMPLETO, lo mismo que manda filterQS() unas líneas más
+          // arriba para traer los ids. Guardar solo `conditions` era el bug:
+          // los chips, la búsqueda y el filtro de asistencia quedaban afuera, y
+          // recalcular la lista después daba un grupo mucho más grande.
+          // `v: 2` marca que el filtro está completo (ver FilterState).
           filters: {
+            v: 2 as const,
             conditions: filters.conditions, groups: filters.groups,
-            is_donor: showDonors || undefined, is_server: showServers || undefined,
+            topLevelOps: Object.keys(filters.topLevelOps).length ? filters.topLevelOps : undefined,
+            is_donor: showDonors || undefined,
+            is_server: showServers || undefined,
+            active_attendance: showStudyAttendance ? 'estudios' as const : showActive ? true : undefined,
+            search: searchActive ? debouncedSearch.trim() : undefined,
           },
           segment_label: segLabel,
           member_ids: ids,
