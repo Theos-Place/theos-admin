@@ -16,6 +16,9 @@ export type EventEligibilityResult = {
   /** Id de MI inscripción (null si no estoy inscrito). Permite reabrir el modal
    *  del comprobante desde la tarjeta cuando el pago quedó pendiente. */
   registration_id: string | null
+  /** EVE-4: si el evento tiene formulario de inscripción, "Inscribirme" lleva a
+   *  llenarlo en vez de abrir el modal (ver registerDestination). */
+  registration_form_id: string | null
   /**
    * Mi comprobante está subido y esperando a finanzas.
    *
@@ -77,6 +80,7 @@ export function computeEventEligibility(
       event_id: e.id,
       title: e.title,
       starts_at: e.starts_at,
+      registration_form_id: e.registration_form_id ?? null,
       requires_payment: pricing.requiresPayment,
       price: pricing.price,
       is_server: pricing.isServer,

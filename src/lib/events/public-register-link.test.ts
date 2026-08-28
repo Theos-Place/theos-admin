@@ -6,7 +6,7 @@
 // se está inscribiendo es la forma más rápida de perderla.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { registerDeepLink, loginRedirectTo, publicEventPath, publicEventUrl } from './public-register-link'
+import { registerDeepLink, loginRedirectTo, publicEventPath, publicEventUrl, registerDestination, shareRegistrationUrl } from './public-register-link'
 
 const ID = '83b9262b-1f25-400e-bf6d-1e2e0f4c2adf'
 
@@ -63,5 +63,23 @@ describe('la API pública no filtra datos internos', () => {
 
   it('tiene límite por IP: es una ruta sin sesión', () => {
     expect(ruta).toContain('rateLimit(')
+  })
+})
+
+describe('registerDestination — a dónde lleva "Inscribirme"', () => {
+  it('con formulario, al formulario: inscribirse ES llenarlo', () => {
+    expect(registerDestination({ id: 'e1', registration_form_id: 'f9' }))
+      .toBe('/formularios/f9/responder')
+  })
+  it('sin formulario, al modal de siempre', () => {
+    expect(registerDestination({ id: 'e1', registration_form_id: null })).toBe('/eventos?register=e1')
+    expect(registerDestination({ id: 'e1' })).toBe('/eventos?register=e1')
+  })
+  it('coincide con lo que decide el link para compartir', () => {
+    // Las dos aplican la misma regla; si una cambia y la otra no, se reparte un
+    // link que lleva a un lado y un botón que lleva a otro.
+    const ev = { id: 'e1', registration_form_id: 'f9' }
+    expect(shareRegistrationUrl(ev, 'https://x.test').url).toContain('/formularios/f9/responder')
+    expect(registerDestination(ev)).toContain('/formularios/f9/responder')
   })
 })

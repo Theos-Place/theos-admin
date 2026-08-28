@@ -43,6 +43,7 @@ export async function GET(req: Request) {
       location_url: e.location_url,
       is_virtual: e.is_virtual,
       requires_registration: e.requires_registration,
+      registration_form_id: e.registration_form_id ?? null,
       max_capacity: e.max_capacity,
       requires_payment: e.requires_payment,
       payment_amount: e.payment_amount,

@@ -11,6 +11,26 @@ export function loginRedirectTo(dest: string): string {
   return `/login?redirect=${encodeURIComponent(dest)}`
 }
 
+/**
+ * A DÓNDE lleva "Inscribirme" dentro de la app.
+ *
+ * Si el evento tiene formulario de inscripción, inscribirse ES llenarlo: el
+ * botón va al formulario y no al modal. Abrir el modal primero deja a la
+ * persona inscrita SIN haber contestado nada, y después hay que perseguirla —
+ * que es justo lo que el formulario venía a evitar.
+ *
+ * Es la misma regla que shareRegistrationUrl aplica al link para compartir. La
+ * diferencia es que aquélla devuelve una URL absoluta (se copia y se pega) y
+ * ésta una ruta relativa (se navega con el router).
+ */
+export function registerDestination(
+  event: { id: string; registration_form_id?: string | null },
+): string {
+  return event.registration_form_id
+    ? `/formularios/${event.registration_form_id}/responder`
+    : registerDeepLink(event.id)
+}
+
 /** La página PÚBLICA de un evento: lo que se comparte por link o QR.
  *
  *  Vive bajo /calendario porque ese prefijo ya es público en el proxy, así que

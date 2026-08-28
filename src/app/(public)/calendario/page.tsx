@@ -2,7 +2,7 @@
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { registerDeepLink, loginRedirectTo } from '@/lib/events/public-register-link'
+import { registerDestination, loginRedirectTo } from '@/lib/events/public-register-link'
 import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
@@ -61,8 +61,10 @@ function CalendarioWidget() {
   const router = useRouter()
   // EVE-1: botón Inscribirse con login-gate (patrón de /vacantes). Sin sesión →
   // /login con redirect al deep link; con sesión → directo a /eventos?register=.
-  async function goRegister(eventId: string) {
-    const dest = registerDeepLink(eventId)
+  async function goRegister(ev: Pick<AdminEvent, 'id'> & { registration_form_id?: string | null }) {
+    // Con formulario de inscripción el destino ES el formulario: inscribirse es
+    // llenarlo (ver registerDestination).
+    const dest = registerDestination(ev)
     try {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
@@ -115,7 +117,7 @@ function CalendarioWidget() {
                   <div className="flex items-center">
                     <button
                       type="button"
-                      onClick={e => { e.stopPropagation(); goRegister(ev.id) }}
+                      onClick={e => { e.stopPropagation(); goRegister(ev) }}
                       className="text-white rounded-lg py-1.5 px-3 text-xs font-semibold whitespace-nowrap"
                       style={{ background: accent }}
                     >
@@ -292,7 +294,7 @@ function CalendarioWidget() {
               {showBtn && selectedEvent.requires_registration && (
                 <button
                   type="button"
-                  onClick={() => goRegister(selectedEvent.id)}
+                  onClick={() => goRegister(selectedEvent)}
                   className="flex-1 text-white rounded-lg py-2.5 text-center font-semibold text-[13px]"
                   style={{ background: accent }}
                 >

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CalendarDays, MapPin, Video, Ticket, Users } from 'lucide-react'
-import { registerDeepLink, loginRedirectTo } from '@/lib/events/public-register-link'
+import { loginRedirectTo, registerDestination } from '@/lib/events/public-register-link'
 import { formatDateLong, formatMoney } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 
@@ -66,7 +66,8 @@ export default function EventoPublicoPage() {
    *  quedó arreglado; esto evita además la vuelta innecesaria. */
   async function irAInscribirse() {
     if (!evento) return
-    const dest = registerDeepLink(evento.id)
+    // Con formulario, el destino ES el formulario (ver registerDestination).
+    const dest = registerDestination(evento)
     try {
       const { data: { session } } = await createClient().auth.getSession()
       router.push(session ? dest : loginRedirectTo(dest))

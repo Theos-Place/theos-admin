@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { AlertCircle, Check, Loader2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { PaymentMethodSelector, type PaymentMethodValue } from '@/components/shared/PaymentMethodSelector'
@@ -9,12 +10,14 @@ import { cn } from '@/lib/utils'
 import { formatDateLong, formatCRC } from '@/lib/format'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { montoAPagar, comprobanteRequerido } from '@/lib/events/registration-payment'
+import { registerDestination } from '@/lib/events/public-register-link'
 
 type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }
 
 /** Confirmar + comprobante + beca de un evento, disponible desde cualquier
  *  vista (calendario, lista, cuadrícula) — antes vivía solo en /mis-eventos. */
 export function useEventRegistration(memberId: string | null, onRegistered?: () => void) {
+  const router = useRouter()
   const [confirmEvent, setConfirmEvent] = useState<EventEligibilityResult | null>(null)
   const [pendingReceipt, setPendingReceipt] = useState<{ registrationId: string; eventTitle: string; amount: number } | null>(null)
   const [successEvent, setSuccessEvent] = useState<string | null>(null)
@@ -92,7 +95,24 @@ export function useEventRegistration(memberId: string | null, onRegistered?: () 
   )
 
   return {
-    openRegister: (ev: EventEligibilityResult) => setConfirmEvent(ev),
+    /**
+     * Abre la inscripción del evento.
+     *
+     * Con FORMULARIO de inscripción no abre el modal: manda a llenarlo, porque
+     * inscribirse ES llenarlo. El modal dejaba a la persona inscrita sin haber
+     * contestado nada y después había que perseguirla — justo lo que el
+     * formulario venía a evitar.
+     *
+     * Va acá, en el hook, y no en cada botón: por este mismo punto pasan la
+     * tarjeta del evento, la lista de /eventos y el deep link ?register= del
+     * calendario público. Ponerlo en un solo lado es lo que evita que mañana
+     * aparezca una cuarta entrada sin la regla.
+     */
+    openRegister: (ev: EventEligibilityResult) => {
+      const destino = registerDestination({ id: ev.event_id, registration_form_id: ev.registration_form_id })
+      if (ev.registration_form_id) { router.push(destino); return }
+      setConfirmEvent(ev)
+    },
     /** Reabre el modal del comprobante de una inscripción YA hecha que quedó con
      *  el pago pendiente. Existe porque el botón "Más tarde" del modal dejaba a
      *  la persona sin ninguna salida: la tarjeta solo decía "Ya inscrito/a" y el

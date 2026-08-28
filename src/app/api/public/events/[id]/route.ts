@@ -31,7 +31,8 @@ export async function GET(
       .select(`
         id, title, description, event_type, status, starts_at, ends_at, is_public,
         location, location_url, is_virtual, requires_registration,
-        max_capacity, requires_payment, payment_amount, currency, flyer_url
+        max_capacity, requires_payment, payment_amount, currency, flyer_url,
+        registration_form_id
       `)
       .eq('id', id)
       .maybeSingle()
@@ -75,6 +76,10 @@ export async function GET(
       location_url: e.location_url,
       is_virtual: e.is_virtual,
       requires_registration: e.requires_registration,
+      // Con formulario de inscripción, "Inscribirme" lleva a llenarlo en vez de
+      // abrir el modal (ver registerDestination). Es solo un id de formulario:
+      // no expone nada del evento que no se vea ya en esta misma respuesta.
+      registration_form_id: e.registration_form_id ?? null,
       requires_payment: e.requires_payment,
       payment_amount: e.payment_amount,
       currency: e.currency ?? 'CRC',
