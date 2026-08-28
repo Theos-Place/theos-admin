@@ -337,6 +337,36 @@ export async function hasMemberResponded(formId: string, memberId: string): Prom
   return (data ?? []).length > 0
 }
 
+/**
+ * Los estudios APROBADOS de un miembro, para el campo calculado del formulario.
+ *
+ * Cuenta 'completed' con o sin grupo: en esta base 22.343 de las 36.680
+ * matrículas no tienen grupo (estudios viejos, importados), y dejarlas fuera
+ * daría un historial recortado justo para la gente con más trayectoria.
+ *
+ * El nombre sale del plan del grupo o del plan directo, en ese orden — es la
+ * misma resolución que usa el resto del módulo de estudios.
+ */
+export async function estudiosAprobadosDe(memberId: string): Promise<Array<{ nombre: string; fecha: string | null }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select('completed_at, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)), plan_direct:study_plans!study_enrollments_plan_id_fkey(name)')
+    .eq('member_id', memberId)
+    .eq('status', 'completed')
+  if (error) { console.warn('estudiosAprobadosDe:', error.message); return [] }
+  const uno = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v)
+  return ((data ?? []) as Array<Record<string, unknown>>).map(r => {
+    const g = uno(r.group as { plan: unknown } | { plan: unknown }[] | null)
+    const pg = g ? uno(g.plan as { name: string } | { name: string }[] | null) : null
+    const pd = uno(r.plan_direct as { name: string } | { name: string }[] | null)
+    return {
+      nombre: pg?.name ?? pd?.name ?? '',
+      fecha: r.completed_at ? String(r.completed_at).slice(0, 10) : null,
+    }
+  }).filter(e => e.nombre)
+}
+
 export async function submitResponse(
   formId: string,
   input: {

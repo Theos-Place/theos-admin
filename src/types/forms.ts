@@ -34,6 +34,9 @@ export type FieldType =
   /** Imagen adjunta a la respuesta (pensado para comprobantes). El valor que se
    *  guarda es el PATH del bucket privado, no una URL — ver lib/forms/attachment. */
   | 'image'
+  /** CALCULADO por el servidor: los estudios aprobados de quien responde. No se
+   *  le muestra a la persona; sale en el export. Ver lib/forms/computed-fields. */
+  | 'studies_done'
 
 export type ConditionOperator =
   | 'eq'

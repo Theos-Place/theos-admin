@@ -5,6 +5,7 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import Image from 'next/image'
 import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/forms'
+import { esCampoCalculado } from '@/lib/forms/computed-fields'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
@@ -505,6 +506,11 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {fieldsToRender.map(field => {
               if (!isFieldVisible(field, answers)) return null
 
+              // Los campos CALCULADOS no se dibujan: los llena el servidor al
+              // recibir la respuesta y no son una pregunta para quien contesta
+              // (ver lib/forms/computed-fields).
+              if (esCampoCalculado(field.type)) return null
+
               // personal_data → custom card, no label/input wrapper
               if (field.type === 'personal_data') {
                 const selectedFields = PERSONAL_DATA_FIELDS.filter(f => (field.options ?? []).includes(f.key))
@@ -526,14 +532,26 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                           Tomados de tu perfil — no editables acá
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                        onClick={() => toast('Redirigir al perfil del miembro para editar datos', 'info')}
-                      >
-                        <Pencil size={11} />
-                        Editar mis datos
-                      </button>
+                      {/* Va al perfil DE VERDAD. Antes era un placeholder que
+                          mostraba un toast diciendo "redirigir al perfil": el
+                          botón anunciaba lo que iba a hacer en vez de hacerlo.
+
+                          Abre en otra pestaña a propósito: quien está llenando
+                          el formulario perdería lo escrito si lo sacamos de la
+                          página, y después de editar el perfil querrá volver a
+                          donde estaba. En preview no hay a dónde ir, así que se
+                          oculta en vez de llevar a un perfil de mentira. */}
+                      {!isPreview && user?.member_id && (
+                        <a
+                          href={`/miembros/${user.member_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                        >
+                          <Pencil size={11} aria-hidden />
+                          Editar mis datos
+                        </a>
+                      )}
                     </div>
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2.5">
                       {selectedFields.map(f => (

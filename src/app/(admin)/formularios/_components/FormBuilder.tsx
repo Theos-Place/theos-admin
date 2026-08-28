@@ -54,6 +54,7 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
     types: [
       { type: 'page_break',    label: 'Bloque / Página'  },
       { type: 'personal_data', label: 'Datos personales' },
+      { type: 'studies_done',  label: 'Estudios aprobados (oculto)' },
     ],
   },
 ]

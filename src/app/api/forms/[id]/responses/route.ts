@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { esCampoCalculado, textoEstudiosAprobados } from '@/lib/forms/computed-fields'
 import { requireRoles, getAuthContext } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import {
-  getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant,
+  getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant, estudiosAprobadosDe,
 } from '@/lib/supabase/queries/forms'
 import { formViewerScope, hasFormsModule } from '@/lib/auth/forms-scope'
 import { resolveOnBehalf, FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
@@ -116,8 +117,34 @@ export async function POST(
       return NextResponse.json({ error: acceso.reason, code: 'formulario_no_asignado' }, { status: 403 })
     }
 
+    /**
+     * CAMPOS CALCULADOS: los llena el servidor, no el navegador.
+     *
+     * Hoy es uno solo, "estudios aprobados", que existe para el comité que
+     * revisa las respuestas y no se le muestra a quien contesta. Se resuelve
+     * acá y no en el cliente por la razón obvia: mandarlo desde el navegador
+     * sería dejar que quien responde decida qué estudios dice tener.
+     *
+     * Best-effort: si la consulta falla, la respuesta se guarda igual sin ese
+     * dato. Perder una columna del export no puede costar el formulario entero.
+     */
+    const answers = { ...(body?.answers ?? {}) } as Record<string, unknown>
+    try {
+      const { data: campos } = await createAdminClient()
+        .from('form_fields').select('id, field_type').eq('form_id', id)
+      const calculados = ((campos ?? []) as Array<{ id: string; field_type: string }>)
+        .filter(f => esCampoCalculado(f.field_type))
+      if (calculados.length > 0 && memberId) {
+        const estudios = await estudiosAprobadosDe(memberId)
+        const texto = textoEstudiosAprobados(estudios)
+        for (const c of calculados) answers[c.id] = texto
+      }
+    } catch (e) {
+      console.warn('no se pudieron calcular los campos del formulario:', e)
+    }
+
     const res = await submitResponse(id, {
-      ...body, member_id: memberId, recorded_by: recordedBy,
+      ...body, answers, member_id: memberId, recorded_by: recordedBy,
       guest_email: memberId ? body.guest_email ?? null : guestEmail,
     })
     return NextResponse.json(res, { status: 201 })

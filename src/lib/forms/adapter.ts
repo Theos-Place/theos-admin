@@ -14,7 +14,7 @@ const FIELD_TYPE_MAP: Record<string, FieldType> = {
   email: 'text', phone: 'text', multiselect: 'select',
   // 'file' era una aproximación a texto porque no había con qué subir nada.
   // Ahora sí: los dos apuntan al campo de imagen.
-  file: 'image', image: 'image',
+  file: 'image', image: 'image', studies_done: 'studies_done',
 }
 
 function toOptions(raw: unknown): string[] | undefined {
