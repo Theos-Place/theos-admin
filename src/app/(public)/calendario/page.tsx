@@ -6,13 +6,16 @@ import { registerDestination, loginRedirectTo } from '@/lib/events/public-regist
 import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
+import {
+  ventanaProximos, esVistaDeProximos, etiquetaContador, type Vista,
+} from '@/lib/events/calendar-view-window'
 import { Modal } from '@/components/shared/Modal'
 import { Image as ImageIcon } from 'lucide-react'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
   const searchParams = useSearchParams()
-  const view = (searchParams.get('view') || 'monthly') as 'monthly' | 'weekly' | 'list' | 'grid'
+  const view = (searchParams.get('view') || 'monthly') as Vista
   const typesParam = searchParams.get('types')
   // Sin ?types= → todos los tipos (equivalente a la BD); con param, solo esos.
   const types = typesParam ? typesParam.split(',') : null
@@ -32,11 +35,15 @@ function CalendarioWidget() {
     )
   , [allEvents, types])
 
-  // Lista y Grid: desde HOY hasta el fin del mes en curso, recurrentes expandidos.
+  /** Lista y Grid: los PRÓXIMOS eventos, recurrentes expandidos.
+   *
+   *  Antes la ventana era "hoy → fin del mes en curso", y se encogía sola: el
+   *  28 de agosto eran cuatro días y daba cero eventos mientras el encabezado
+   *  decía "33 este mes". Como las flechas de mes solo existen en la vista
+   *  mensual, desde acá no había forma de salir de esa pantalla vacía. */
   const rangedEvents = useMemo(() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-    return eventsInRange(baseEvents, today, endOfMonth)
+    const { desde, hasta } = ventanaProximos(new Date())
+    return eventsInRange(baseEvents, desde, hasta)
   }, [baseEvents])
 
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
@@ -48,6 +55,9 @@ function CalendarioWidget() {
     () => monthEvents(baseEvents, currentMonth, currentYear).length,
     [baseEvents, currentMonth, currentYear],
   )
+  /** El contador sigue a la vista: decir "este mes" arriba de una lista de los
+   *  próximos 60 días es la contradicción que hizo visible el bug. */
+  const contador = etiquetaContador(view, esVistaDeProximos(view) ? rangedEvents.length : monthCount)
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null)
   const [dayModal, setDayModal] = useState<{ date: number; events: AdminEvent[] } | null>(null)
 
@@ -86,7 +96,7 @@ function CalendarioWidget() {
       {/* Header */}
       <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
-        <span className="text-[rgba(255,255,255,0.6)] text-xs">{monthCount} este mes</span>
+        <span className="text-[rgba(255,255,255,0.6)] text-xs">{contador}</span>
       </div>
 
       {/* List view */}
@@ -130,7 +140,7 @@ function CalendarioWidget() {
             )
           })}
           {rangedEvents.length === 0 && (
-            <p className="text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos este mes.</p>
+            <p className="text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos próximos.</p>
           )}
         </div>
       )}
@@ -171,7 +181,7 @@ function CalendarioWidget() {
             )
           })}
           {rangedEvents.length === 0 && (
-            <p className="col-span-full text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos este mes.</p>
+            <p className="col-span-full text-center text-sm py-8 text-[rgba(0,0,0,0.4)]">No hay eventos próximos.</p>
           )}
         </div>
       )}
