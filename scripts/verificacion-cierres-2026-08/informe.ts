@@ -50,6 +50,7 @@ async function main() {
   const miembros = await todo<Miembro>(admin, 'members', 'id, external_id, first_name, last_name')
   const porExternal = new Map(miembros.filter(m => m.external_id).map(m => [String(m.external_id).trim(), m]))
   const porId = new Map(miembros.map(m => [m.id, m]))
+  const miembroPorId = porId
   const indice = new IndiceMiembros(miembros)
 
   const grupos = await todo<Grupo>(admin, 'study_groups',
@@ -92,7 +93,17 @@ async function main() {
         : indice.buscar(r.dirigente_nombre).miembro),
   }))
 
-  const sinPlan = respuestas.filter(r => !r._plan)
+  /**
+   * El formulario es de CAPACITACIONES: un Nivel 1-4 acá es una anomalía, no un
+   * cierre que buscar. Se reporta en vez de usarse — si se usara, el cruce
+   * propondría cerrar un grupo de niveles con evidencia de otro flujo.
+   * (Verificado: 3 de las 522 respuestas dicen un nivel, todas de 2021 y 2024.)
+   */
+  const NIVELES = ['N1', 'N2', 'N3', 'N4']
+  const conNivel = respuestas.filter(r => NIVELES.includes(r._plan ?? ''))
+  for (const r of conNivel) r._plan = null
+
+  const sinPlan = respuestas.filter(r => !r._plan && !conNivel.includes(r))
   const sinLider = respuestas.filter(r => !r._lider)
 
   // ══ CRUCE 1 ════════════════════════════════════════════════════════════════
@@ -111,6 +122,9 @@ async function main() {
      *  calza, el formulario NO alcanza para cerrar: falta gente en una de las
      *  dos puntas y hay que mirarlo a mano. */
     cuadra: boolean
+    /** Quién sigue cursando y NO aparece en el formulario. Vacío = el
+     *  formulario alcanza para cerrar el grupo entero. */
+    sinCubrir: string[]
     aprob: ReturnType<typeof parsearLista>; repro: ReturnType<typeof parsearLista>
   }
   const ESTADO_LABEL: Record<Estado, string> = {
@@ -136,14 +150,35 @@ async function main() {
     // estudio, la que corresponde a un grupo abierto es la última.
     const resp = cand.reduce((a, b) => (b.fecha_finalizacion > a.fecha_finalizacion ? b : a))
     const ins = porGrupo.get(g.id) ?? []
-    const cursando = ins.filter(e => e.status === 'enrolled' || e.status === 'pendiente_de_pago').length
+    const cursandoIns = ins.filter(e => e.status === 'enrolled' || e.status === 'pendiente_de_pago')
+    const cursando = cursandoIns.length
     const calificados = ins.filter(e => ['completed', 'reprobado', 'retirado'].includes(e.status)).length
+    /**
+     * Cobertura contra la LISTA DEL GRUPO, no contra los 23.700 miembros.
+     *
+     * Varios dirigentes llenaron el formulario con el nombre de pila y la nota
+     * pegada ("Fernando101", "Laura78,32"). Eso es inmatcheable en general, y
+     * dentro de un grupo de diez es inequívoco: sin este paso, el grupo de
+     * Valeria Díaz aparecía con 0 de 9 cubiertos cuando en realidad el
+     * formulario los nombra a todos.
+     */
+    const roster = ins.map(e => miembroPorId.get(e.member_id)).filter((m): m is Miembro => !!m)
+    const cubiertos = new Set<string>()
+    for (const campo of ['aprobaron_texto', 'reprobaron_texto'] as const) {
+      for (const p of parsearLista(resp[campo], true).personas) {
+        const m = IndiceMiembros.enRoster(p.nombre, roster)
+        if (m.miembro) cubiertos.add(m.miembro.id)
+      }
+    }
+    const sinCubrir = cursandoIns
+      .filter(e => !cubiertos.has(e.member_id))
+      .map(e => { const m = miembroPorId.get(e.member_id); return m ? `${m.first_name} ${m.last_name}` : '(?)' })
     const estado: Estado = cursando === 0 && calificados > 0 ? 'solo_cerrar_grupo'
       : calificados > 0 ? 'cierre_parcial' : 'cierre_completo'
     const enForm = parsearLista(resp.aprobaron_texto).personas.length + parsearLista(resp.reprobaron_texto).personas.length
     faltantes.push({
       grupo: g, plan: code, resp, estado, cursando, calificados,
-      cuadra: enForm === cursando + calificados,
+      cuadra: enForm === cursando + calificados, sinCubrir,
       aprob: parsearLista(resp.aprobaron_texto), repro: parsearLista(resp.reprobaron_texto),
     })
   }
@@ -208,6 +243,19 @@ async function main() {
    */
   const gruposCcb = new Set<string>(JSON.parse(
     readFileSync('scripts/ccb-migracion-2026-08/grupos-de-esta-migracion.json', 'utf8')))
+  /**
+   * ...pero la exclusión vale solo mientras el grupo SIGA ABIERTO.
+   *
+   * El motivo de la etapa 3 era "esa gente lo está llevando ahora". En cuanto el
+   * grupo se cierra, la matrícula deja de ser una candidata dudosa y pasa a ser
+   * la respuesta: ahí se graduó. Sin esta línea, los cinco de SCJ que resolvió
+   * el cierre de Ariana Chaves seguían saliendo como pendientes después de estar
+   * resueltos.
+   */
+  const ccbAunAbiertos = new Set([...gruposCcb].filter(id => {
+    const g = grupos.find(x => x.id === id)
+    return !g || g.status !== 'finalizado'
+  }))
 
   const VENTANA_DIAS = 180
   const diasEntre = (a: string, b: string) =>
@@ -229,7 +277,7 @@ async function main() {
     // Con cola genérica no hay plan que mirar, así que entra igual.
     const suyas = (enrollsPorMiembro.get(persona.id) ?? [])
       .filter(e => code && codigoPorPlanId.get(e.plan_id ?? '') === code)
-      .filter(e => !e.group_id || !gruposCcb.has(e.group_id))
+      .filter(e => !e.group_id || !ccbAunAbiertos.has(e.group_id))
     if (code && suyas.length > 0) continue
 
     const todas: Evidencia[] = [...menciones.entries()]
@@ -272,20 +320,35 @@ async function main() {
   out(`|---|---|`)
   out(`| Respuestas del formulario en ${ANIO} | ${filas.length} |`)
   out(`| **Cierres que nos faltan** (cruce 1) | **${faltantes.length}** |`)
-  out(`| ↳ de esos, con la lista del formulario cuadrando | ${faltantes.filter(f => f.cuadra).length} |`)
-  out(`| ↳ de esos, descuadrados (van a mano) | ${faltantes.filter(f => !f.cuadra).length} |`)
+  out(`| ↳ cerrables con este formulario | ${faltantes.filter(f => !f.sinCubrir.length).length} |`)
+  out(`| ↳ con gente que el formulario no menciona | ${faltantes.filter(f => f.sinCubrir.length).length} |`)
   out(`| Pendientes de graduación con evidencia fuerte (cruce 2) | ${fuertes.length} |`)
   out(`| ↳ con evidencia solo débil | ${debiles.length} |`)
   out(`| Grupos cerrados sin formulario (cruce 3) | ${sinForm.length} |`)
   out(`| Grupos en curso en total | ${enCurso.length} |`)
   out()
+  if (conNivel.length) {
+    out(`### Respuestas que dicen un nivel`)
+    out()
+    out(`Este formulario es de **capacitaciones**: un Nivel 1-4 acá es una anomalía. Se`)
+    out(`reportan y **no** se usan para proponer cierres.`)
+    out()
+    for (const r of conNivel) out(`- \`${esc(r.capacitacion)}\` — ${esc(r.dirigente_nombre)}, ${r.fecha_envio.slice(0, 10)}`)
+    out()
+  }
   if (sinPlan.length || sinLider.length) {
     out(`### Lo que no se pudo resolver`)
     out()
     if (sinPlan.length) {
       out(`**${sinPlan.length} respuesta(s) con una capacitación que no mapea a ningún plan.** No se adivina el plan más parecido:`)
       out()
-      for (const r of sinPlan) out(`- \`${esc(r.capacitacion) || '(vacío)'}\` — ${esc(r.dirigente_nombre)}, ${r.fecha_envio.slice(0, 10)}`)
+      for (const r of sinPlan) {
+        // El comentario libre a veces dice cuál era ("El curso era Discípulos
+        // 2"). Se muestra como PISTA, no se usa para mapear solo.
+        const pista = capacitacionAPlan(r.comentarios)
+        out(`- \`${esc(r.capacitacion) || '(vacío)'}\` — ${esc(r.dirigente_nombre)}, ${r.fecha_envio.slice(0, 10)}`
+          + (r.comentarios ? ` · comentario: "${esc(r.comentarios)}"${pista ? ` → ¿${pista}?` : ''}` : ''))
+      }
       out()
     }
     if (sinLider.length) {
@@ -312,14 +375,15 @@ async function main() {
       const n = faltantes.filter(f => f.estado === e).length
       if (n) out(`- **${label}:** ${n}`)
     }
-    const noCuadran = faltantes.filter(f => !f.cuadra).length
-    out(`- **De esos, con la cantidad de gente descuadrada:** ${noCuadran} → el formulario no alcanza, van a mano`)
+    const conHuecos = faltantes.filter(f => f.sinCubrir.length)
+    out(`- **Cerrables con este formulario** (nadie queda sin resolver): ${faltantes.length - conHuecos.length}`)
+    out(`- **Con gente que el formulario no menciona** (van a mano): ${conHuecos.length}`)
     out()
-    out(`| Grupo | Plan | Dirigente | Fin reportado | Qué falta | En la base | En el form (ap./rep.) | ¿Cuadra? | Notas |`)
+    out(`| Grupo | Plan | Dirigente | Fin reportado | Qué falta | En la base | En el form (ap./rep.) | Sin resolver | Notas |`)
     out(`|---|---|---|---|---|---|---|---|---|`)
     for (const f of faltantes) {
       const notas = f.aprob.personas.filter(p => p.nota !== null).length
-      out(`| ${esc(f.grupo.name)} | ${f.plan} | ${esc(f.resp.dirigente_nombre)}${f.resp._liderPorNombre ? ' ⚠️' : ''} | ${f.resp.fecha_finalizacion} | ${ESTADO_LABEL[f.estado]} | ${f.cursando} cursando / ${f.calificados} calificados | ${f.aprob.personas.length} / ${f.repro.personas.length} | ${f.cuadra ? 'sí' : `⚠️ ${f.aprob.personas.length + f.repro.personas.length} vs ${f.cursando + f.calificados}`} | ${notas}/${f.aprob.personas.length} |`)
+      out(`| ${esc(f.grupo.name)} | ${f.plan} | ${esc(f.resp.dirigente_nombre)}${f.resp._liderPorNombre ? ' ⚠️' : ''} | ${f.resp.fecha_finalizacion} | ${ESTADO_LABEL[f.estado]} | ${f.cursando} cursando / ${f.calificados} calificados | ${f.aprob.personas.length} / ${f.repro.personas.length} | ${f.sinCubrir.length ? `⚠️ ${esc(f.sinCubrir.join(', '))}` : '—'} | ${notas}/${f.aprob.personas.length} |`)
     }
     out()
     out(`⚠️ = el dirigente se resolvió por **nombre**, no por id de CCB. Verificar antes de cerrar.`)
@@ -330,7 +394,7 @@ async function main() {
       out(`#### ${f.grupo.name}`)
       out()
       out(`- **Qué falta:** ${ESTADO_LABEL[f.estado]} — en la base hay ${f.cursando} cursando y ${f.calificados} ya calificados`)
-      if (!f.cuadra) out(`- ⚠️ **La cantidad no cuadra:** el formulario lista ${f.aprob.personas.length + f.repro.personas.length} personas y el grupo tiene ${f.cursando + f.calificados}. Revisar antes de cerrar.`)
+      if (f.sinCubrir.length) out(`- ⚠️ **Siguen cursando y el formulario no los menciona:** ${esc(f.sinCubrir.join(', '))}. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.`)
       out(`- **Plan:** ${f.plan} · **inicio:** ${String(f.grupo.starts_at ?? '—').slice(0, 10)} · **fin en el sistema:** ${String(f.grupo.ends_at ?? '—').slice(0, 10)} · **fin reportado:** ${f.resp.fecha_finalizacion}`)
       out(`- **Dirigente:** ${esc(f.resp.dirigente_nombre)}${f.resp.codirigente ? ` · co-dirigente en el form: ${esc(f.resp.codirigente)}` : ''}`)
       out(`- **Grupo:** \`/estudios/grupos/${f.grupo.id}\``)

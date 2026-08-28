@@ -72,12 +72,20 @@ export function nombreDerecho(s: string): string {
   return `${s.slice(i + 1).trim()} ${s.slice(0, i).trim()}`.replace(/\s+/g, ' ').trim()
 }
 
-/** ¿El texto limpio parece el nombre de una persona? */
-function pareceNombre(limpio: string): boolean {
+/**
+ * ¿El texto limpio parece el nombre de una persona?
+ *
+ * `laxo` acepta el nombre de pila SOLO ("Fernando", "Laura"). Fuera de contexto
+ * eso es inmatcheable contra 23.700 personas, pero contra la lista de UN grupo
+ * de diez es suficiente — y hay dirigentes que llenaron el formulario así, con
+ * el nombre de pila y la nota pegada. Sin el modo laxo esas listas se perdían
+ * enteras y el grupo parecía no tener evidencia.
+ */
+function pareceNombre(limpio: string, laxo = false): boolean {
   if (!limpio) return false
   if (/\d/.test(limpio)) return false
   const tokens = norm(limpio.replace(/,/g, ' ')).split(' ').filter(Boolean)
-  if (tokens.length < 2 || tokens.length > 6) return false
+  if (tokens.length < (laxo ? 1 : 2) || tokens.length > 6) return false
   if (tokens.some(t => NO_ES_NOMBRE.has(t))) return false
   // Solo letras, apóstrofos y guiones (D'Angelo, Vargas-Mora).
   return tokens.every(t => /^[a-zñ'’-]+$/.test(t))
@@ -101,7 +109,10 @@ function leerNota(t: string): { resto: string; nota: number | null; ambigua: str
   const crudo = m[2]
   const v = Number(crudo.replace(',', '.'))
   const resto = m[1].replace(/[-–—:\s]+$/, '')
-  if (!Number.isFinite(v) || v < 0 || v > 100) return { resto, nota: null, ambigua: crudo }
+  // El tope es 110 y no 100: la base ya tiene notas por encima de 100 (el
+  // máximo real es 105,20 — hay puntos extra), así que cortar en 100 tiraba
+  // notas legítimas como "Fernando101".
+  if (!Number.isFinite(v) || v < 0 || v > 110) return { resto, nota: null, ambigua: crudo }
   // Escala indistinguible: cualquier valor <= 10. Se mira el TEXTO y no el
   // número, porque Number('9.0') es 9 y pasaría por entero — pero "9.0" está
   // escrito en escala 0-10 y vale 90, o 9, según quién lo escribió.
@@ -115,7 +126,7 @@ function leerNota(t: string): { resto: string; nota: number | null; ambigua: str
  * No resuelve la inversión con coma: entrega las dos lecturas en `variantes` y
  * deja que el match contra members decida (ver PersonaCruda.variantes).
  */
-export function parsearLinea(linea: string): PersonaCruda | null {
+export function parsearLinea(linea: string, laxo = false): PersonaCruda | null {
   const crudo = linea.trim()
   if (!crudo) return null
   let t = crudo
@@ -151,20 +162,22 @@ export function parsearLinea(linea: string): PersonaCruda | null {
   // No se parten acá: se descartan y se reportan, porque partirlas bien exige
   // decidir dónde termina cada nombre y eso ya es adivinar.
   if (comas >= 2) return null
-  if (!pareceNombre(t)) return null
+  // La inicial suelta del apellido ("Marielena H.") no aporta y estorba al match.
+  t = t.replace(/\s+[a-zA-ZñÑ]\.?$/, '').trim() || t
+  if (!pareceNombre(t, laxo)) return null
 
   const variantes = comas === 1 ? [nombreDerecho(t), t.replace(/,/g, ' ').replace(/\s+/g, ' ').trim()] : [t]
   return { nombre: variantes[0], variantes, nota, notaAmbigua: ambigua, observacion, crudo }
 }
 
 /** Bloque de texto libre → personas + líneas descartadas. */
-export function parsearLista(texto: string | null | undefined): ListaParseada {
+export function parsearLista(texto: string | null | undefined, laxo = false): ListaParseada {
   const personas: PersonaCruda[] = []
   const descartadas: string[] = []
   for (const linea of (texto ?? '').split(/\r?\n/)) {
     const l = linea.trim()
     if (!l) continue
-    const p = parsearLinea(l)
+    const p = parsearLinea(l, laxo)
     if (p) personas.push(p)
     else descartadas.push(l)
   }

@@ -9,12 +9,12 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 |---|---|
 | Respuestas del formulario en 2025 | 59 |
 | **Cierres que nos faltan** (cruce 1) | **0** |
-| ↳ de esos, con la lista del formulario cuadrando | 0 |
-| ↳ de esos, descuadrados (van a mano) | 0 |
-| Pendientes de graduación con evidencia fuerte (cruce 2) | 5 |
+| ↳ cerrables con este formulario | 0 |
+| ↳ con gente que el formulario no menciona | 0 |
+| Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
 | Grupos cerrados sin formulario (cruce 3) | 263 |
-| Grupos en curso en total | 108 |
+| Grupos en curso en total | 98 |
 
 ## Cruce 1 · Grupos en curso que ya deberían estar cerrados
 
@@ -37,9 +37,9 @@ viene en dos calidades y **no se mezclan**.
 | | |
 |---|---|
 | Procesos `Done` de CCB | 736 |
-| Pendientes con **evidencia fuerte** | 5 |
+| Pendientes con **evidencia fuerte** | 0 |
 | Pendientes con **evidencia débil** | 1 |
-| Pendientes sin ninguna evidencia (quedan manuales) | 43 |
+| Pendientes sin ninguna evidencia (quedan manuales) | 37 |
 
 ### Evidencia fuerte
 
@@ -47,14 +47,7 @@ La cola de CCB nombra una capacitación concreta y un dirigente menciona a la
 persona en el formulario **de esa misma capacitación**. Ese formulario dice en
 qué grupo fue.
 
-| Persona | Cola de CCB | Fecha del proceso | Formulario | ¿Es un grupo del cruce 1? | Lista | Nota | Línea original |
-|---|---|---|---|---|---|---|---|
-| Michelle Alfaro Herrera | Sirviendo como Jesús | 2026-08-17 | Ariana Chaves Duarte, 2026-08-10 (SCJ) | no | aprobados | 95 | `1. MICHELLE ALFARO HERRERA - 95` |
-| Karol Madriz Morales | Sirviendo como Jesús | 2026-08-17 | Ariana Chaves Duarte, 2026-08-10 (SCJ) | no | aprobados | 95 | `6. KAROL MADRIZ - 95` |
-| Maritza Céspedes Martínez | Sirviendo como Jesús | 2026-08-17 | Ariana Chaves Duarte, 2026-08-10 (SCJ) | no | aprobados | 100 | `2. MARITZA CESPEDES MARTÍNEZ- 100` |
-| Sharon Sánchez Cespedes | Sirviendo como Jesús | 2026-08-17 | Ariana Chaves Duarte, 2026-08-10 (SCJ) | no | aprobados | 95 | `4. SHARON SÁNCHEZ CESPEDES - 95` |
-| Kendall Vega Vega | Sirviendo como Jesús | 2026-08-17 | Ariana Chaves Duarte, 2026-08-10 (SCJ) | no | aprobados | 100 | `5. KENDALL VEGA VEGA - 100` |
-
+Ninguna.
 
 ### Evidencia débil
 

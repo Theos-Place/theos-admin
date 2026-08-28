@@ -59,9 +59,10 @@ describe('parsearLinea — la nota no se inventa', () => {
     expect(parsearLinea('Ariana Bonilla - 9')).toMatchObject({ nota: null, notaAmbigua: '9' })
   })
   it('un valor fuera de rango no es nota, pero el nombre se conserva', () => {
-    expect(parsearLinea('Meysi Arias Ledezma - 100.5')).toMatchObject({
-      nombre: 'Meysi Arias Ledezma', nota: null, notaAmbigua: '100.5',
-    })
+    expect(parsearLinea('Ana Mora - 150')).toMatchObject({ nombre: 'Ana Mora', nota: null, notaAmbigua: '150' })
+  })
+  it('acepta por encima de 100 (la base tiene hasta 105,20)', () => {
+    expect(parsearLinea('Meysi Arias Ledezma - 100.5')?.nota).toBe(100.5)
   })
   it('nota pegada sin espacio', () => {
     expect(parsearLinea('Acon Chaves, Melissa97')).toMatchObject({ nota: 97 })
@@ -97,6 +98,24 @@ describe('parsearLinea — comentario del dirigente después del nombre', () => 
   })
   it('ignora el asterisco de marca', () => {
     expect(parsearLinea('Adriana vargas *')?.nombre).toBe('Adriana vargas')
+  })
+})
+
+describe('parsearLinea — modo laxo (contra la lista de UN grupo)', () => {
+  it('estricto rechaza el nombre de pila solo; laxo lo acepta', () => {
+    expect(parsearLinea('Fernando101')).toBeNull()
+    // 101 es una nota válida: la base tiene notas hasta 105,20 (puntos extra).
+    expect(parsearLinea('Fernando101', true)).toMatchObject({ nombre: 'Fernando', nota: 101 })
+  })
+  it('lee el nombre de pila con nota pegada y coma decimal', () => {
+    expect(parsearLinea('Laura78,32', true)).toMatchObject({ nombre: 'Laura', nota: 78.32 })
+  })
+  it('quita la inicial suelta del apellido', () => {
+    expect(parsearLinea('Marielena H. 95,64', true)).toMatchObject({ nombre: 'Marielena', nota: 95.64 })
+  })
+  it('el modo laxo NO relaja lo que no es una persona', () => {
+    expect(parsearLinea('Ninguno', true)).toBeNull()
+    expect(parsearLinea('NA', true)).toBeNull()
   })
 })
 

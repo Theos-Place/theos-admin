@@ -94,6 +94,31 @@ export class IndiceMiembros {
   }
 
   /**
+   * Match contra una lista CHICA y conocida (los matriculados de un grupo).
+   *
+   * Acá sí vale el nombre de pila solo: "Laura" es inmatcheable contra 23.700
+   * personas, pero contra las diez de un grupo es inequívoco. Si dos personas
+   * del grupo comparten el nombre, no se elige — se devuelve ambiguo.
+   */
+  static enRoster(nombre: string, roster: Miembro[]): Match {
+    const n = norm(nombre)
+    if (!n) return NADIE
+    const tokens = n.split(' ').filter(Boolean)
+    const nom = (m: Miembro) => norm(`${m.first_name} ${m.last_name}`).split(' ')
+    const niveles: Array<[number, string, (m: Miembro) => boolean]> = [
+      [1, 'nombre completo exacto', m => nom(m).join(' ') === n],
+      [0.95, 'todos los tokens contra la lista del grupo', m => tokens.every(t => nom(m).includes(t))],
+      [0.85, 'nombre de pila contra la lista del grupo', m => tokens.length === 1 && nom(m)[0] === tokens[0]],
+    ]
+    for (const [score, motivo, test] of niveles) {
+      const hit = roster.filter(test)
+      if (hit.length === 1) return { miembro: hit[0], score, motivo, ambiguo: [] }
+      if (hit.length > 1) return { miembro: null, score, motivo: `${motivo} (varios)`, ambiguo: hit }
+    }
+    return NADIE
+  }
+
+  /**
    * Resuelve las lecturas posibles de una línea (ver PersonaCruda.variantes).
    * Gana la de mejor score; si dos lecturas distintas dan personas distintas
    * con el mismo score, es ambigua y no se elige.
