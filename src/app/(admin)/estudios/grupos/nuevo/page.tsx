@@ -79,9 +79,14 @@ export default function NuevoGrupoPage() {
   const [selectedLeader, setSelectedLeader] = useState('')
   const [selectedCoLeader, setSelectedCoLeader] = useState('')
   const [pendingLeader, setPendingLeader] = useState(false)
-  // Sede de envío de folletos: TBD por defecto; '__otro__' abre el detalle.
+  /** Sede de envío de folletos: SOLO sedes activas del catálogo, o TBD.
+   *
+   *  Antes había un "Otro…" con texto libre, y de ahí salieron valores que no
+   *  corresponden a ninguna sede ("Otro: Virtuales", "Otro: Heredia"). Esa
+   *  columna se guarda por NOMBRE, así que un texto libre queda huérfano: no lo
+   *  alcanza el renombre de sedes, no calza con el dropdown del cierre, y
+   *  getSedeForGroup lo devuelve tal cual al tiquete de folletos. */
   const [folletosSedeSel, setFolletosSedeSel] = useState('TBD')
-  const [folletosSedeOtro, setFolletosSedeOtro] = useState('')
   const [confirmed, setConfirmed] = useState(false)
 
   // Regla del paso 2 (pura y testeada): se avanza con el dirigente confirmado o
@@ -188,9 +193,7 @@ export default function NuevoGrupoPage() {
           schedule_time: step1.time || null,
           location: step1.location || null,
           max_students: step1.capacity ? Number(step1.capacity) : null,
-          folletos_sede: folletosSedeSel === '__otro__'
-            ? (folletosSedeOtro.trim() ? `Otro: ${folletosSedeOtro.trim()}` : 'TBD')
-            : folletosSedeSel,
+          folletos_sede: folletosSedeSel,
           age_min: step1.age_from ? Number(step1.age_from) : null,
           age_max: step1.age_to ? Number(step1.age_to) : null,
           starts_at: step1.start_date || null,
@@ -617,8 +620,8 @@ export default function NuevoGrupoPage() {
             </p>
           )}
 
-          {/* Sede de envío de folletos: sedes ACTIVAS del catálogo, TBD por
-              defecto, u "Otro" con detalle libre. */}
+          {/* Sede de envío de folletos: SOLO las sedes activas del catálogo, o
+              TBD. Sin texto libre — ver el comentario del estado. */}
           <div className="space-y-1">
             <label htmlFor="folletos-sede" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Sede a la que se envían los folletos
@@ -631,17 +634,7 @@ export default function NuevoGrupoPage() {
             >
               <option value="TBD">TBD (por definir)</option>
               {ACTIVE_SEDES.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-              <option value="__otro__">Otro…</option>
             </select>
-            {folletosSedeSel === '__otro__' && (
-              <input
-                value={folletosSedeOtro}
-                onChange={e => setFolletosSedeOtro(e.target.value)}
-                placeholder="Detalle de la entrega (lugar, persona, indicaciones)"
-                aria-label="Detalle de la sede de folletos"
-                className={cn(inputCls, 'mt-1 placeholder:text-navy-light/80')}
-              />
-            )}
           </div>
 
           {leaderHint && (
