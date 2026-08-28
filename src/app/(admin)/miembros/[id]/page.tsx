@@ -157,6 +157,7 @@ export default function MiembroDetailPage() {
       groupId: s.group_id,
       enrollmentId: s.enrollment_id,
       rawStatus: s.status,
+      groupStatus: s.group_status ?? null,
       requiresPayment: s.requires_payment,
       paymentStatus: s.payment_status,
       paymentsCount: s.payments_count ?? 0,

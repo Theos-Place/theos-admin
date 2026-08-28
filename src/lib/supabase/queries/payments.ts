@@ -359,6 +359,13 @@ export async function submitEnrollmentComprobante(input: {
       rejection_reason: null,
     }).eq('id', eid)
     if (error) throw error
+    // REGLA 2026-08-27: el comprobante se acepta al subirlo. Se deja pasar por
+    // review_status=en_revision un instante porque approve_payment exige ese
+    // estado de entrada — así se reusa el MISMO camino que usa finanzas, con la
+    // activación de matrícula/inscripción incluida, en vez de duplicar updates
+    // que después se separarían. Si falla, el pago queda en la cola como antes:
+    // es mejor que quede por revisar a que se pierda.
+    try { await autoAcceptComprobante(eid) } catch (e) { console.warn('autoAcceptComprobante:', e) }
     return { id: eid }
   }
 
@@ -388,6 +395,13 @@ export async function submitEnrollmentComprobante(input: {
     if ((error as { code?: string }).code === '23505') throw new Error('COMPROBANTE_EN_REVISION')
     throw error
   }
+  // REGLA 2026-08-27: el comprobante se acepta al subirlo. Se deja pasar por
+  // review_status=en_revision un instante porque approve_payment exige ese
+  // estado de entrada — así se reusa el MISMO camino que usa finanzas, con la
+  // activación de matrícula/inscripción incluida, en vez de duplicar updates
+  // que después se separarían. Si falla, el pago queda en la cola como antes:
+  // es mejor que quede por revisar a que se pierda.
+  try { await autoAcceptComprobante((data as { id: string }).id) } catch (e) { console.warn('autoAcceptComprobante:', e) }
   return { id: (data as { id: string }).id }
 }
 
@@ -449,6 +463,13 @@ export async function submitEventComprobante(input: {
       rejection_reason: null,
     }).eq('id', eid)
     if (error) throw error
+    // REGLA 2026-08-27: el comprobante se acepta al subirlo. Se deja pasar por
+    // review_status=en_revision un instante porque approve_payment exige ese
+    // estado de entrada — así se reusa el MISMO camino que usa finanzas, con la
+    // activación de matrícula/inscripción incluida, en vez de duplicar updates
+    // que después se separarían. Si falla, el pago queda en la cola como antes:
+    // es mejor que quede por revisar a que se pierda.
+    try { await autoAcceptComprobante(eid) } catch (e) { console.warn('autoAcceptComprobante:', e) }
     return { id: eid }
   }
 
@@ -471,6 +492,13 @@ export async function submitEventComprobante(input: {
     if ((error as { code?: string }).code === '23505') throw new Error('COMPROBANTE_EN_REVISION')
     throw error
   }
+  // REGLA 2026-08-27: el comprobante se acepta al subirlo. Se deja pasar por
+  // review_status=en_revision un instante porque approve_payment exige ese
+  // estado de entrada — así se reusa el MISMO camino que usa finanzas, con la
+  // activación de matrícula/inscripción incluida, en vez de duplicar updates
+  // que después se separarían. Si falla, el pago queda en la cola como antes:
+  // es mejor que quede por revisar a que se pierda.
+  try { await autoAcceptComprobante((data as { id: string }).id) } catch (e) { console.warn('autoAcceptComprobante:', e) }
   return { id: (data as { id: string }).id }
 }
 
@@ -781,6 +809,45 @@ export async function approvePayment(id: string, reviewerMemberId: string | null
   const { data, error } = await supabase.rpc('approve_payment', {
     p_payment_id: id,
     p_reviewer: reviewerMemberId,
+  })
+  if (error) throw error
+  return Boolean(data)
+}
+
+/**
+ * Acepta el comprobante EN EL MISMO MOMENTO en que se sube (regla del
+ * 2026-08-27: los pagos por comprobante se dan por buenos).
+ *
+ * Reusa el RPC approve_payment en vez de escribir los UPDATE a mano, para que la
+ * activación de la matrícula / inscripción / prematrimonial pase EXACTAMENTE
+ * igual que cuando aprueba finanzas. Duplicar esos updates acá era la forma
+ * segura de que los dos caminos se separaran con el tiempo.
+ *
+ * `reviewed_by` queda NULL a propósito: nadie revisó nada. Poner a la propia
+ * persona como su revisora sería mentirle a la auditoría.
+ */
+export async function autoAcceptComprobante(paymentId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  // Sin p_reviewer: la firma lo tiene con DEFAULT NULL justamente para esto.
+  const { data, error } = await supabase.rpc('approve_payment', { p_payment_id: paymentId })
+  if (error) throw error
+  return Boolean(data)
+}
+
+/**
+ * Deshace una aceptación: el caso especial del régimen nuevo. Devuelve el pago a
+ * rechazado y REVIERTE la activación (la matrícula vuelve a pendiente de pago,
+ * la inscripción al evento a pendiente).
+ *
+ * Va por RPC porque son varias tablas y tiene que ser atómico: dejar el pago
+ * rechazado pero la matrícula activa es peor que no haber revertido.
+ */
+export async function revertPaymentApproval(
+  id: string, reviewerMemberId: string | null, reason: string,
+): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('revert_payment_approval', {
+    p_payment_id: id, p_reviewer: reviewerMemberId ?? undefined, p_reason: reason,
   })
   if (error) throw error
   return Boolean(data)

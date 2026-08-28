@@ -93,7 +93,7 @@ export type DbMemberFull = DbMemberEnriched & {
    *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
    *  los 6 meses previos a su última asistencia. null = nunca asistió. */
   attendance_sede: MemberSedeResult | null
-  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; /** Estado del GRUPO (no de la inscripción): 'finalizado' | 'en_curso' | 'en_matricula'. */ group_status: string | null; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
   event_registration_history: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string
     requires_payment: boolean; cost: number
@@ -137,7 +137,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         id, status, completed_at, enrolled_at, grade, notes,
         es_externo, fuente_externa,
         registrado_por:members!study_enrollments_recorded_by_fkey(first_name, last_name),
-        study_groups!study_enrollments_group_id_fkey(id, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
+        study_groups!study_enrollments_group_id_fkey(id, status, current_week, starts_at, leader_id, co_leader_id, plan:study_plans(code, name, duration_weeks, cost, requires_payment)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(code, name, duration_weeks, cost, requires_payment)
       ),
       study_leaders(member_id)
@@ -289,7 +289,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
     es_externo: boolean | null
     fuente_externa: string | null
     registrado_por: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
-    study_groups: { id: string; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: PlanEmbed } | null
+    study_groups: { id: string; status: string | null; current_week: number | null; starts_at: string | null; leader_id: string | null; co_leader_id: string | null; plan: PlanEmbed } | null
     plan_direct: PlanEmbed
   }>
 
@@ -392,6 +392,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         enrollment_id: e.id,
         code: plan.code as string,
         name: plan.name ?? '',
+        group_status: e.study_groups?.status ?? null,
         date: d ? d.slice(0, 10) : null,
         year: d ? Number(d.slice(0, 4)) : null,
         weeks: plan.duration_weeks ?? null,

@@ -5140,7 +5140,7 @@ export type Database = {
       }
       approve_applications: { Args: { app_ids: string[] }; Returns: number }
       approve_payment: {
-        Args: { p_payment_id: string; p_reviewer: string }
+        Args: { p_payment_id: string; p_reviewer?: string }
         Returns: boolean
       }
       block_folletos_by_sede: {
@@ -5287,6 +5287,10 @@ export type Database = {
           new_members: number
           title: string
         }[]
+      }
+      revert_payment_approval: {
+        Args: { p_payment_id: string; p_reason?: string; p_reviewer?: string }
+        Returns: boolean
       }
       revoke_position_role: {
         Args: { p_member_id: string; p_position_id: string; p_role: string }

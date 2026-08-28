@@ -74,7 +74,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; groupStatus: string | null; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -266,7 +266,17 @@ export function MemberParticipationTab({
                             {row.paymentsCount} pagos
                           </span>
                         )}
-                        {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago') && row.requiresPayment && (
+                        {/* NO se pide pago de un estudio cuyo GRUPO ya cerró.
+                            Sin este freno, una inscripción que quedó colgada en
+                            'enrolled' —hay 612 así, de grupos finalizados desde
+                            2014— muestra "Pendiente: ₡X" y un botón de pagar por
+                            un estudio que la persona terminó hace años. Es lo
+                            que se reportó con la Hermenéutica 2024 de Lucía
+                            Porras, que además no tiene NINGÚN pago registrado:
+                            la deuda la inventaba esta pantalla. */}
+                        {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago')
+                          && row.requiresPayment
+                          && row.groupStatus !== 'finalizado' && (
                           row.paymentStatus === 'en_revision' ? (
                             <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[13px] font-semibold font-display">Pago en revisión</span>
                           ) : row.paymentStatus === 'aprobado' ? (
