@@ -27,3 +27,27 @@ export function publicEventUrl(eventId: string, origin?: string): string {
     ?? 'https://admin.theosplace.org'
   return `${base.replace(/\/$/, '')}${publicEventPath(eventId)}`
 }
+
+/**
+ * EL link para compartir la inscripción a un evento.
+ *
+ * Si el evento tiene un FORMULARIO DE INSCRIPCIÓN asociado
+ * (events.registration_form_id), el link es el del formulario: inscribirse ES
+ * llenarlo. Repartir dos links distintos —uno "para inscribirse" y otro "para
+ * llenar el formulario"— manda a la gente por un camino que después le pide lo
+ * mismo otra vez, y deja dos listas que no calzan. Decisión 2026-08-27.
+ *
+ * Sin formulario, sigue el link público del evento de siempre.
+ *
+ * Ojo: el del formulario NO es anónimo (exige entrar con cuenta), igual que el
+ * del evento. La diferencia es a dónde llega, no si pide login.
+ */
+export function shareRegistrationUrl(
+  event: { id: string; registration_form_id?: string | null },
+  origin?: string,
+): { url: string; kind: 'formulario' | 'evento' } {
+  const base = (origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org').replace(/\/$/, '')
+  return event.registration_form_id
+    ? { url: `${base}/formularios/${event.registration_form_id}/responder`, kind: 'formulario' }
+    : { url: `${base}${publicEventPath(event.id)}`, kind: 'evento' }
+}

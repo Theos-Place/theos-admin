@@ -17,9 +17,20 @@ const PAYMENT_LABEL: Record<string, string> = {
   paid: 'Pagado', pending: 'Pendiente', exempted: 'Exento',
 }
 
-/** "Pendiente" a secas es engañoso cuando el comprobante YA entró: lo que falta
- *  es que finanzas lo apruebe, no que la persona pague. */
-function etiquetaPago(r: { payment_status: string; payment_in_review?: boolean }): string {
+/** El estado de pago que se MUESTRA.
+ *
+ *  Dos casos donde el valor crudo miente:
+ *   · Evento SIN costo → la fila se guarda igual como 'pending' (createRegistration
+ *     no distingue), y salía "Pendiente" para gente que no debe nada. Acá manda
+ *     el evento, no la fila: si no cobra, no aplica.
+ *   · Comprobante ya subido → sigue en 'pending' hasta que finanzas aprueba, y
+ *     "Pendiente" se lee como "no pagó". Lo que falta es la revisión.
+ */
+function etiquetaPago(
+  r: { payment_status: string; payment_in_review?: boolean },
+  eventoCobra: boolean,
+): string {
+  if (!eventoCobra) return 'No aplica'
   if (r.payment_status === 'pending' && r.payment_in_review) return 'En revisión'
   return PAYMENT_LABEL[r.payment_status] ?? r.payment_status
 }
@@ -137,10 +148,16 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           </p>
         </div>
         {[
-          { label: 'Pagados', value: event.registrations.filter(r => r.payment_status === 'paid').length, color: 'text-teal-deep' },
-          { label: 'En revisión', value: event.registrations.filter(r => r.payment_status === 'pending' && r.payment_in_review).length, color: 'text-teal-deep' },
-          { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending' && !r.payment_in_review).length, color: 'text-amber-600' },
-          { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/80' },
+          // En un evento sin costo, contar "pagados / pendientes / exentos" no
+          // significa nada: se reemplazan por el total de inscritos.
+          ...(event.requires_payment ? [
+            { label: 'Pagados', value: event.registrations.filter(r => r.payment_status === 'paid').length, color: 'text-teal-deep' },
+            { label: 'En revisión', value: event.registrations.filter(r => r.payment_status === 'pending' && r.payment_in_review).length, color: 'text-teal-deep' },
+            { label: 'Pendientes', value: event.registrations.filter(r => r.payment_status === 'pending' && !r.payment_in_review).length, color: 'text-amber-600' },
+            { label: 'Exentos', value: event.registrations.filter(r => r.payment_status === 'exempted').length, color: 'text-navy/80' },
+          ] : [
+            { label: 'Sin costo', value: event.registrations.length, color: 'text-navy/80' },
+          ]),
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
             <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{label}</p>
@@ -167,7 +184,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                 event.registrations.map(r => [
                   r.member_name,
                   new Date(r.registered_at).toLocaleDateString('es-CR'),
-                  etiquetaPago(r),
+                  etiquetaPago(r, event.requires_payment),
                 ]),
                 'inscritos',
               )
@@ -221,6 +238,12 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
+                      {/* Sin costo no hay estado que fijar: el <select> se
+                          esconde y queda el rótulo. Dejarlo editable invitaba a
+                          marcar "Pagado" un evento gratuito. */}
+                      {!event.requires_payment ? (
+                        <span className="text-[13px] text-navy-light/80 font-body">No aplica</span>
+                      ) : (
                       <select
                         value={reg.payment_status}
                         disabled={busyMember === reg.member_id}
@@ -229,12 +252,13 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       >
                         {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{PAYMENT_LABEL[o]}</option>)}
                       </select>
+                      )}
                       {/* "Pendiente" a secas no distingue a quien no pagó de quien
                           ya subió el comprobante. El select se queda con los
                           estados que SÍ se pueden cambiar ('En revisión' no es uno
                           de ellos, es un sub-estado de pendiente) y la marca dice
                           lo que falta de verdad: que finanzas lo apruebe. */}
-                      {reg.payment_status === 'pending' && reg.payment_in_review && (
+                      {event.requires_payment && reg.payment_status === 'pending' && reg.payment_in_review && (
                         puedeRevisarPagos && reg.payment_in_review_id ? (
                           <button
                             onClick={() => verComprobante(reg.payment_in_review_id!)}

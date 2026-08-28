@@ -600,7 +600,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           para admin y comunicaciones como el compartir del calendario. */}
       {activeTab === 'inscripciones' && event.requires_registration && (
         <div className="mb-4">
-          <CompartirInscripcion eventId={id} />
+          <CompartirInscripcion eventId={id} registrationFormId={event.registration_form_id} />
         </div>
       )}
       {activeTab === 'inscripciones' && (
@@ -723,6 +723,12 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 <p className="text-[13px] text-navy-light/80 mt-2 font-body">
                   {checkinCount} asistentes × {formatMoney(event.payment_amount, event.currency)}
                 </p>
+                {/* Sin costo, "pagados / en revisión / pendientes" no dicen nada. */}
+                {!event.requires_payment ? (
+                  <p className="mt-4 text-[13px] text-navy-light/80 font-body">
+                    Evento sin costo: el pago no aplica.
+                  </p>
+                ) : (
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-[11px] text-navy-light/80 font-display">Pagados</p>
@@ -739,6 +745,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                     <p className="font-semibold text-amber-600 font-body">{event.registrations.filter(r => r.payment_status === 'pending' && !r.payment_in_review).length}</p>
                   </div>
                 </div>
+                )}
               </div>
             )}
           </div>
@@ -764,7 +771,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 ['Nombre', 'Estado de pago', 'Fecha de inscripción'],
                 event.registrations.map(r => [
                   r.member_name,
-                  r.payment_status === 'paid' ? 'Pagado'
+                  !event.requires_payment ? 'No aplica'
+                    : r.payment_status === 'paid' ? 'Pagado'
                     : r.payment_status === 'pending' ? (r.payment_in_review ? 'En revisión' : 'Pendiente')
                     : (r.payment_status ?? ''),
                   r.registered_at ? new Date(r.registered_at).toLocaleDateString('es-CR') : '',

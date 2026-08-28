@@ -3,22 +3,29 @@
 import { useState } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { Copy, Check, QrCode } from 'lucide-react'
-import { publicEventUrl } from '@/lib/events/public-register-link'
+import { shareRegistrationUrl } from '@/lib/events/public-register-link'
 
 /**
- * El link público del evento, para comunicación masiva y QR.
+ * El link para compartir la inscripción, y su QR.
  *
- * Apunta a la página pública (/calendario/<id>), no a /eventos: quien escanea el
- * QR puede no tener cuenta, y así ve el evento antes de que se le pida entrar.
- * El login-gate y el auto-abrir del modal ya los resuelve EVE-1.
+ * Cuál link sale lo decide shareRegistrationUrl: si el evento tiene formulario
+ * de inscripción, ES el del formulario; si no, el público del evento
+ * (/calendario/<id>), que muestra el evento antes de pedir cuenta.
  *
  * La URL se arma con el origin del navegador cuando está disponible, para que en
  * un preview de Vercel se copie el link de ESE deployment y no el de producción.
  */
-export function CompartirInscripcion({ eventId }: { eventId: string }) {
+export function CompartirInscripcion({ eventId, registrationFormId }: {
+  eventId: string
+  /** events.registration_form_id. Si viene, el link compartido es el del form. */
+  registrationFormId?: string | null
+}) {
   const [copiado, setCopiado] = useState(false)
   const [verQr, setVerQr] = useState(false)
-  const url = publicEventUrl(eventId, typeof window !== 'undefined' ? window.location.origin : undefined)
+  const { url, kind } = shareRegistrationUrl(
+    { id: eventId, registration_form_id: registrationFormId },
+    typeof window !== 'undefined' ? window.location.origin : undefined,
+  )
 
   async function copiar() {
     try {
@@ -38,9 +45,9 @@ export function CompartirInscripcion({ eventId }: { eventId: string }) {
           Link para compartir
         </p>
         <p className="text-[13px] text-navy-light/80 font-body">
-          Público: se puede mandar por WhatsApp, correo o QR. Muestra el evento a
-          cualquiera; para inscribirse hay que entrar con cuenta, y al entrar la
-          inscripción se abre sola.
+          {kind === 'formulario'
+            ? 'Este evento se inscribe llenando su formulario, así que ESTE es el único link que hay que repartir. Para llenarlo hay que entrar con cuenta.'
+            : 'Se puede mandar por WhatsApp, correo o QR. Muestra el evento a cualquiera; para inscribirse hay que entrar con cuenta, y al entrar la inscripción se abre sola.'}
         </p>
       </div>
 
@@ -48,7 +55,7 @@ export function CompartirInscripcion({ eventId }: { eventId: string }) {
         <input
           readOnly
           value={url}
-          aria-label="Link público del evento"
+          aria-label={kind === 'formulario' ? 'Link del formulario de inscripción' : 'Link público del evento'}
           onFocus={e => e.currentTarget.select()}
           className="min-w-0 flex-1 rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-mono outline-none focus:ring-1 focus:ring-coral/30"
         />
