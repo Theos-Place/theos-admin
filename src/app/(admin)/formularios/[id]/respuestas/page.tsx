@@ -10,6 +10,8 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { isDataField } from '@/lib/forms/xlsx-export'
+import { esPathDeAdjunto, urlDeAdjunto } from '@/lib/forms/attachment'
+import { encabezadoDeCampo } from '@/lib/forms/computed-fields'
 import { recordedByLabel } from '@/lib/auth/on-behalf'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
@@ -24,14 +26,21 @@ function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   // 'section', así que traía columnas siempre vacías de info/page_break y del
   // bloque de datos personales.
   const dataFields = form.fields.filter(f => isDataField(f.type))
-  const headers = ['Miembro', 'Registrada por', 'Fecha', ...dataFields.map(f => f.label)]
+  // encabezadoDeCampo y no f.label: los campos ocultos no exigen título y su
+  // columna quedaría sin nombre.
+  const headers = ['Miembro', 'Registrada por', 'Fecha', ...dataFields.map(f => encabezadoDeCampo(f.type, f.label))]
   const rows = responses.map(r => [
     r.member_name,
     r.recorded_by_name,
     new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
     ...dataFields.map(f => {
       const ans = r.answers[f.id]
-      return Array.isArray(ans) ? ans.join(', ') : String(ans ?? '')
+      if (Array.isArray(ans)) return ans.join(', ')
+      const txt = String(ans ?? '')
+      // Un adjunto se guarda como PATH del bucket privado. Solo, no sirve de
+      // nada: en el archivo va el link que lo abre. El XLSX ya lo hacía; el CSV
+      // se arma acá aparte y se había quedado sin esto.
+      return esPathDeAdjunto(txt) ? urlDeAdjunto(txt, window.location.origin) : txt
     }),
   ])
   generateCSV(headers, rows, `${form.name.replace(/\s+/g, '-')}-respuestas`)
@@ -369,11 +378,24 @@ export default function RespuestasPage() {
             <div className="p-5 space-y-4">
               {dataFields.map(f => {
                 const ans = detailResponse.answers[f.id]
+                const txt = Array.isArray(ans) ? ans.join(', ') : String(ans ?? '')
                 const displayAns = ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
                   ? <span className="italic text-navy-light/80">Sin respuesta</span>
-                  : Array.isArray(ans)
-                  ? ans.join(', ')
-                  : String(ans)
+                  // Adjunto: se muestra como link y no como el path pelado, que
+                  // es lo que veía quien abría la respuesta. Abre en otra
+                  // pestaña porque el link redirige a una URL firmada.
+                  : esPathDeAdjunto(txt)
+                  ? (
+                    <a
+                      href={urlDeAdjunto(txt, typeof window !== 'undefined' ? window.location.origin : undefined)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-coral hover:underline"
+                    >
+                      Ver imagen adjunta
+                    </a>
+                  )
+                  : txt
 
                 return (
                   <div key={f.id} className="space-y-1">
