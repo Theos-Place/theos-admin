@@ -16,6 +16,7 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { initialsFromParts, calcAge } from '@/lib/format'
+import { mensajeRecalculo } from '@/lib/members/list-refresh'
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -92,6 +93,9 @@ export default function ListaDetailPage() {
   const toast = useToast()
 
   const [list, setList] = useState<MemberList | null>(null)
+  /** Va acá arriba con el resto de los hooks: abajo caía después de los
+   *  early returns de carga y de "lista no encontrada". */
+  const [refrescando, setRefrescando] = useState(false)
   const [listMembers, setListMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -142,6 +146,28 @@ export default function ListaDetailPage() {
         </p>
       </div>
     )
+  }
+
+  /**
+   * Vuelve a correr los filtros guardados y reescribe la membresía.
+   *
+   * Antes este botón solo mandaba un PATCH con `last_used_at`: cambiaba la
+   * fecha que se muestra y dejaba la lista igual, o sea que la hacía PARECER
+   * actualizada sin estarlo.
+   */
+  async function refrescar() {
+    if (refrescando) return
+    setRefrescando(true)
+    try {
+      const res = await fetch(`/api/member-lists/${list!.id}/refresh`, { method: 'POST' })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) { toast(d.error ?? 'No se pudo actualizar la lista.', 'error'); return }
+      toast(mensajeRecalculo(d.antes, d.despues), 'success')
+      router.refresh()
+      location.reload()
+    } catch {
+      toast('No se pudo actualizar la lista.', 'error')
+    } finally { setRefrescando(false) }
   }
 
   function handleComunicar() {
@@ -221,8 +247,8 @@ export default function ListaDetailPage() {
         >
           <RefreshCw size={14} className="text-teal-deep shrink-0" />
           <p className="text-[13px] text-teal-deep font-body">
-            Esta lista se recalcula automáticamente con los filtros guardados
-            <span className="text-teal-deep/60"> · Última actualización: {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            Esta lista se recalcula con los filtros guardados cada vez que se abre
+            <span className="text-teal-deep/60"> · Recalculada el {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           </p>
         </div>
       ) : (
@@ -233,19 +259,11 @@ export default function ListaDetailPage() {
             Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="mx-2">·</span>
             <button
-              className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0"
-              onClick={() => {
-                fetch(`/api/member-lists/${list.id}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ last_used_at: new Date().toISOString() }),
-                })
-                  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`) })
-                  .catch(() => toast('No se pudo actualizar el snapshot', 'error'))
-                router.refresh()
-              }}
+              disabled={refrescando}
+              className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0 disabled:opacity-50 disabled:cursor-default"
+              onClick={refrescar}
             >
-              Actualizar snapshot
+              {refrescando ? 'Actualizando…' : 'Actualizar snapshot'}
             </button>
           </p>
         </div>

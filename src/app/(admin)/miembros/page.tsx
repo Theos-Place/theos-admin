@@ -167,7 +167,13 @@ function MiembrosContent() {
         body: JSON.stringify({
           name: saveListName.trim(),
           description: saveListDesc.trim() || null,
-          filters: { conditions: filters.conditions, groups: filters.groups },
+          // Los chips de Donantes/Servidores van adentro de `filters`: sin
+          // ellos, recalcular la lista después da un conjunto más ancho que el
+          // que se guardó (ver recomputeMemberList).
+          filters: {
+            conditions: filters.conditions, groups: filters.groups,
+            is_donor: showDonors || undefined, is_server: showServers || undefined,
+          },
           segment_label: segLabel,
           member_ids: ids,
           member_count: total,

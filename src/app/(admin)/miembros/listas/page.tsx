@@ -65,12 +65,27 @@ export default function ListasGuardadasPage() {
     return matchSearch && matchTag
   })
 
-  function handleComunicar(listId: string) {
+  /**
+   * Atajo para comunicar sin abrir la lista.
+   *
+   * Si es DINÁMICA se recalcula primero: este listado muestra la membresía
+   * guardada, y mandar desde acá sin refrescar dejaba fuera a quien hubiera
+   * entrado en los filtros después de crearla. Si el recálculo falla se sigue
+   * con la última membresía conocida — mejor mandar a una audiencia vieja que
+   * no dejar mandar.
+   */
+  async function handleComunicar(listId: string) {
     const list = lists.find(l => l.id === listId)
     if (!list) return
-    const ids   = list.member_ids.join(',')
+    let ids = list.member_ids
+    if (list.is_dynamic) {
+      try {
+        const res = await fetch(`/api/member-lists/${list.id}/refresh`, { method: 'POST' })
+        if (res.ok) ids = (await res.json()).list?.member_ids ?? ids
+      } catch { /* se sigue con la conocida */ }
+    }
     const label = encodeURIComponent(list.name)
-    router.push(`/comunicaciones/nueva?mode=manual&members=${ids}&segment_label=${label}&list_id=${list.id}`)
+    router.push(`/comunicaciones/nueva?mode=manual&members=${ids.join(',')}&segment_label=${label}&list_id=${list.id}`)
   }
 
   function requestDelete(id: string, name: string) {

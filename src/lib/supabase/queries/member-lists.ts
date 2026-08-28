@@ -1,6 +1,7 @@
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { MemberList } from '@/types/member-list'
 import type { FilterState } from '@/types/filters'
+import { sePuedeRecalcular } from '@/lib/members/list-refresh'
 
 type DbRow = {
   id: string
@@ -81,6 +82,53 @@ export async function createMemberList(input: ListWriteInput): Promise<MemberLis
     .single()
   if (error) throw error
   return toDomain(data as DbRow)
+}
+
+/**
+ * Vuelve a correr los filtros guardados de una lista y reescribe su membresía.
+ *
+ * Es la pieza que le faltaba a las listas: `filters` se guardaba desde el
+ * principio pero NADA lo volvía a leer, así que `member_ids` quedaba congelado
+ * en el momento de crearla. Una lista marcada "Dinámica" mostraba un banner
+ * diciendo que se recalculaba sola y no era cierto — y el botón "Actualizar
+ * snapshot" de las estáticas solo tocaba `last_used_at`.
+ *
+ * Corre el MISMO getMemberIds que la pantalla de miembros, así que la lista
+ * dice exactamente lo que diría esa búsqueda hoy.
+ *
+ * Devuelve también `antes`/`despues` para poder mostrar qué cambió — que es lo
+ * que le importa a quien aprieta el botón.
+ */
+export async function recomputeMemberList(id: string): Promise<
+  { ok: true; antes: number; despues: number; list: MemberList } | { ok: false; motivo: string }
+> {
+  const actual = await getMemberListById(id)
+  if (!actual) return { ok: false, motivo: 'Lista no encontrada' }
+  const f = actual.filters
+  // Una lista sin filtros guardados no se puede recalcular: su membresía es lo
+  // único que la define (ver sePuedeRecalcular, con tests).
+  if (!sePuedeRecalcular(f)) {
+    return { ok: false, motivo: 'La lista no tiene filtros guardados: su contenido es la única definición que tiene.' }
+  }
+  const { getMemberIds } = await import('./members')
+  const { ids, total } = await getMemberIds({
+    conditions: f.conditions, groups: f.groups,
+    // Los chips de Donantes/Servidores viajan aparte de las condiciones. En las
+    // listas viejas no están guardados (se agregaron con el recálculo), y por
+    // eso una lista vieja que los usaba puede recalcular distinto: sin el chip,
+    // el filtro es más ancho. Se avisa en la UI.
+    is_donor: f.is_donor || undefined,
+    is_server: f.is_server || undefined,
+  })
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('member_lists')
+    .update({ member_ids: ids, member_count: total, updated_at: new Date().toISOString() } as Updatable<'member_lists'>)
+    .eq('id', id)
+  if (error) throw error
+  return {
+    ok: true, antes: actual.member_count, despues: total,
+    list: { ...actual, member_ids: ids, member_count: total, updated_at: new Date().toISOString() },
+  }
 }
 
 export async function updateMemberList(id: string, patch: Partial<ListWriteInput>): Promise<void> {

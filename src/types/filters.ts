@@ -35,6 +35,12 @@ export interface ConditionGroup {
 export interface FilterState {
   conditions: FilterCondition[]
   groups: ConditionGroup[]
+  /** Chips rápidos de la pantalla de miembros. Viven fuera de `conditions`, y
+   *  hay que guardarlos para poder recalcular una lista: sin ellos el recálculo
+   *  da un conjunto más ancho que el original. Opcionales porque las listas
+   *  guardadas antes de esto no los tienen. */
+  is_donor?: boolean
+  is_server?: boolean
 }
 
 // Distributive Omit — removes 'id' from each union member individually
