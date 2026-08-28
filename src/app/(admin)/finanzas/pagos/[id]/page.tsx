@@ -113,7 +113,11 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                 {payment.entity_name}
               </h1>
               <p className="text-[14px] text-white/80 font-body">
-                {payment.member_name}
+                {payment.member_id ? (
+                  <Link href={`/miembros/${payment.member_id}`} className="hover:text-coral transition-colors underline decoration-dotted underline-offset-2">
+                    {payment.member_name}
+                  </Link>
+                ) : payment.member_name}
               </p>
             </div>
             <div className="flex flex-col items-start sm:items-end gap-2">

@@ -12,6 +12,7 @@ import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatMoney } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
@@ -475,7 +476,15 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           )}
                         </td>
                       )}
-                      <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-navy font-body">
+                        {/* Al perfil de la persona: revisando un pago casi
+                            siempre hay que ir a ver quién es. */}
+                        {r.member_id ? (
+                          <Link href={`/miembros/${r.member_id}`} className="hover:text-coral transition-colors underline decoration-dotted underline-offset-2">
+                            {r.member_name}
+                          </Link>
+                        ) : r.member_name}
+                      </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                         {r.concept && (
                           <span className="mr-1.5 inline-flex items-center rounded-md bg-navy/6 px-1.5 py-0.5 text-[11px] font-semibold text-navy font-display align-middle">

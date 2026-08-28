@@ -388,7 +388,19 @@ function PagosContent() {
                 {filtered.map((p, i) => (
                   <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
+                      {/* El nombre lleva al perfil: desde la lista de pagos casi
+                          siempre hay que ir a ver a la persona, y copiarse el
+                          nombre para buscarla en el padrón era el camino largo. */}
+                      {p.member_id ? (
+                        <Link
+                          href={`/miembros/${p.member_id}`}
+                          className="text-[13px] font-medium font-body text-navy hover:text-coral transition-colors underline decoration-dotted underline-offset-2"
+                        >
+                          {p.member_name}
+                        </Link>
+                      ) : (
+                        <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
+                      )}
                       <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
                     </td>
                     <td className="px-5 py-4">
