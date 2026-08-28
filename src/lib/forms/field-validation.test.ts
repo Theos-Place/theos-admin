@@ -65,3 +65,12 @@ describe('el mensaje señala el primer problema', () => {
     expect(p[0].fieldId).toBe('x')
   })
 })
+
+describe('el campo oculto de estudios no exige etiqueta', () => {
+  it('sin etiqueta guarda igual: es oculto, nadie va a leer ese título', () => {
+    expect(fieldProblems([{ id: 'f1', type: 'studies_done', label: '' }])).toEqual([])
+  })
+  it('un campo normal sin etiqueta sigue sin poder guardarse', () => {
+    expect(fieldProblems([{ id: 'f1', type: 'text', label: '' }])).toHaveLength(1)
+  })
+})

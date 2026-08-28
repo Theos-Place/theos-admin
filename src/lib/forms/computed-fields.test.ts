@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { esCampoCalculado, textoEstudiosAprobados } from './computed-fields'
+import { esCampoCalculado, textoEstudiosAprobados, encabezadoDeCampo } from './computed-fields'
 
 describe('esCampoCalculado', () => {
   it('reconoce el de estudios y no los normales', () => {
@@ -32,5 +32,21 @@ describe('textoEstudiosAprobados', () => {
     const xs = [{ nombre: 'B', fecha: '2022-01-01' }, { nombre: 'A', fecha: '2020-01-01' }]
     textoEstudiosAprobados(xs)
     expect(xs[0].nombre).toBe('B')
+  })
+})
+
+describe('encabezadoDeCampo', () => {
+  it('sin etiqueta usa el nombre por defecto: una columna sin encabezado no se entiende', () => {
+    // El campo es OCULTO y por eso no exige título (ver LABEL_OPTIONAL), pero
+    // la columna del Excel necesita nombre igual.
+    expect(encabezadoDeCampo('studies_done', '')).toBe('Estudios aprobados')
+    expect(encabezadoDeCampo('studies_done', null)).toBe('Estudios aprobados')
+    expect(encabezadoDeCampo('studies_done', '   ')).toBe('Estudios aprobados')
+  })
+  it('si alguien le puso etiqueta, manda la suya', () => {
+    expect(encabezadoDeCampo('studies_done', 'Trayectoria')).toBe('Trayectoria')
+  })
+  it('un campo normal sin etiqueta no inventa nombre', () => {
+    expect(encabezadoDeCampo('text', '')).toBe('')
   })
 })

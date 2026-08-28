@@ -34,3 +34,21 @@ export function textoEstudiosAprobados(
     .map(e => e.nombre)
     .join(', ')
 }
+
+/** Nombre por defecto de cada campo calculado, para cuando no tiene etiqueta. */
+export const NOMBRE_POR_DEFECTO: Record<ComputedFieldType, string> = {
+  studies_done: 'Estudios aprobados',
+}
+
+/**
+ * El encabezado de la columna en el export.
+ *
+ * Un campo oculto no necesita título —nadie lo lee al responder— pero la
+ * columna del Excel sí necesita nombre: una columna sin encabezado no se
+ * entiende. Si alguien le puso etiqueta, manda la suya.
+ */
+export function encabezadoDeCampo(tipo: string, label?: string | null): string {
+  const propia = (label ?? '').trim()
+  if (propia) return propia
+  return NOMBRE_POR_DEFECTO[tipo as ComputedFieldType] ?? ''
+}

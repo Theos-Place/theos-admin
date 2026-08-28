@@ -9,10 +9,14 @@
 import type { FieldType } from '@/types/forms'
 
 /** Tipos que NO necesitan etiqueta:
- *  · page_break — es un corte de página, no una pregunta;
- *  · info       — bloque de solo lectura; su contenido es el TEXTO, y el
- *                 título es opcional (así lo dice el propio inspector). */
-export const LABEL_OPTIONAL: FieldType[] = ['page_break', 'info']
+ *  · page_break   — es un corte de página, no una pregunta;
+ *  · info         — bloque de solo lectura; su contenido es el TEXTO, y el
+ *                   título es opcional (así lo dice el propio inspector);
+ *  · studies_done — es OCULTO: no se le muestra a quien responde, así que
+ *                   exigirle un título es pedir un texto que nadie va a leer.
+ *                   En el export la columna sale con su nombre por defecto
+ *                   (ver encabezadoDeCampo). */
+export const LABEL_OPTIONAL: FieldType[] = ['page_break', 'info', 'studies_done']
 
 export type FieldLike = {
   id: string

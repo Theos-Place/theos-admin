@@ -313,12 +313,31 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         {/* GENERAL */}
         {activeSection === 'general' && (
           <div className="p-4 space-y-3">
+            {/* El campo de estudios es OCULTO: no se le muestra a quien
+                responde, así que pedirle un título es pedir un texto que nadie
+                va a leer. El asterisco se saca acá y la regla vive en
+                LABEL_OPTIONAL — la pantalla y el guard tienen que decir lo
+                mismo (ya pasó al revés con el bloque informativo). */}
+            {field.type === 'studies_done' ? (
+              <div className="rounded-xl bg-surface-low px-3 py-2.5 space-y-1">
+                <p className="text-[13px] font-semibold text-navy font-body">Campo oculto</p>
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  No se le muestra a quien responde. Al enviarse el formulario, el sistema
+                  guarda los estudios que esa persona tiene aprobados, y salen como una
+                  columna al bajar las respuestas.
+                </p>
+              </div>
+            ) : null}
+
             <div className="space-y-1">
               <label htmlFor="etiqueta-pregunta" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
-                Etiqueta / Pregunta <span className="text-coral">*</span>
+                {field.type === 'studies_done'
+                  ? 'Nombre de la columna (opcional)'
+                  : <>Etiqueta / Pregunta <span className="text-coral">*</span></>}
               </label>
               <textarea id="etiqueta-pregunta"
                 rows={2}
+                placeholder={field.type === 'studies_done' ? 'Estudios aprobados' : undefined}
                 className={cn(inputCls, 'resize-none')}
                 value={field.label}
                 onChange={e => set('label', e.target.value)}

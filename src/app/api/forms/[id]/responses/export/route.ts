@@ -6,6 +6,7 @@ import {
   getFormResponses, getFormById, hasFormAccessGrant,
 } from '@/lib/supabase/queries/forms'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
+import { encabezadoDeCampo } from '@/lib/forms/computed-fields'
 import {
   excelCellKind, excelNumFmt, isDataField, columnWidthFor, answerToCell, xlsxFileName,
 } from '@/lib/forms/xlsx-export'
@@ -54,7 +55,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     ]
     ws.columns = [
       ...CONTEXTO.map(c => ({ header: c.header, width: c.width })),
-      ...campos.map(f => ({ header: f.label, width: columnWidthFor(f.label) })),
+      // encabezadoDeCampo y no f.label: los campos ocultos no exigen título,
+      // pero su columna necesita nombre igual.
+      ...campos.map(f => {
+        const h = encabezadoDeCampo(f.field_type, f.label)
+        return { header: h, width: columnWidthFor(h) }
+      }),
     ]
 
     // Encabezado: negrita sobre el navy de la marca, congelado y con autofiltro.
