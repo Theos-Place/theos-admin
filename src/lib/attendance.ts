@@ -33,10 +33,16 @@ export function attendanceWindowStart(months = ATTENDANCE_MONTHS, now = new Date
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 }
 
-/** Inicio (ISO) de la ventana de recencia: `days` días atrás de `now`. */
+/** Inicio (ISO) de la ventana de recencia: `days` días atrás de `now`.
+ *
+ *  Aritmética en UTC (setUTCDate), no local. Con setDate/getDate el resultado
+ *  dependía de la zona de la máquina: en UTC y Costa Rica daba un día y en
+ *  Madrid o Tokio daba el anterior. En producción no se notaba porque Vercel
+ *  corre en UTC, pero es la misma trampa que corrió las horas de los eventos
+ *  seis horas — una cuenta de fechas que cambia según dónde se ejecuta. */
 export function attendanceRecencyStart(days = ATTENDANCE_RECENCY_DAYS, now = new Date()): string {
   const d = new Date(now)
-  d.setDate(d.getDate() - days)
+  d.setUTCDate(d.getUTCDate() - days)
   return d.toISOString()
 }
 

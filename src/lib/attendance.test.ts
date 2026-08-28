@@ -8,7 +8,13 @@ import {
   ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA,
 } from './attendance'
 
-const AGOSTO_4 = new Date(2026, 7, 4) // 4 de agosto de 2026, hora local
+/** 4 de agosto de 2026, como INSTANTE fijo (mediodía UTC).
+ *
+ *  Antes era `new Date(2026, 7, 4)` — medianoche LOCAL, que en Madrid o Tokio ya
+ *  cae en el día anterior en UTC, y hacía fallar el test solo en esas zonas. Un
+ *  dato de prueba que cambia según dónde se corre no prueba nada; el mediodía
+ *  deja margen para cualquier huso. */
+const AGOSTO_4 = new Date('2026-08-04T12:00:00Z')
 
 describe('attendanceWindowStart', () => {
   it('arranca el día 1 del mes de hace 6 meses', () => {

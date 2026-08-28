@@ -140,12 +140,20 @@ describe('mapeo del formulario del evento', () => {
     survey_offset_hours: 24,
   }
 
-  it('guarda la regla Y el momento calculado', () => {
+  it('guarda la regla Y el momento calculado, en hora de Costa Rica', () => {
+    // El fin del evento son las 20:00 DE COSTA RICA. La zona va explícita en el
+    // valor esperado, igual que en combineDateTime: antes decía
+    // `new Date('2026-09-09T20:00')` —sin zona, o sea hora local de la máquina—
+    // y el test pasaba en verde acá y fallaba en CI, que corre en UTC. Es el
+    // mismo defecto que se arregló en el mapper: comparar contra la zona de
+    // quien corre el test no prueba nada.
+    const finEnCR = new Date('2026-09-09T20:00:00-06:00').toISOString()
     const out = formToSurvey(cuerpo)
     expect(out.survey_offset_hours).toBe(24)
-    expect(out.survey_send_at).toBe(computeSurveySendAt(
-      new Date('2026-09-09T20:00').toISOString(), 24,
-    ))
+    expect(out.survey_send_at).toBe(computeSurveySendAt(finEnCR, 24))
+    // Y el valor absoluto, para que no se pueda "arreglar" moviendo las dos
+    // puntas a la vez: 20:00 CR + 24 h = 2026-09-11T02:00Z.
+    expect(out.survey_send_at).toBe('2026-09-11T02:00:00.000Z')
   })
 
   it('apagar la encuesta LIMPIA la programación guardada', () => {
