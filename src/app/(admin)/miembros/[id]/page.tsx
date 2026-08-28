@@ -141,7 +141,9 @@ export default function MiembroDetailPage() {
 
   const estudiosRows: StudyRow[] = useMemo(() => {
     if (!member?.study_history) return []
-    const STATUS: Record<string, string> = { completed: 'Aprobado', dropped: 'Reprobó', enrolled: 'En curso', waitlist: 'En espera', transferred: 'Transferido', pendiente_de_pago: 'Pendiente de pago' }
+    // 'en_revision': el grupo cerró y esta inscripción quedó sin resultado. NO
+    // dice aprobado ni reprobado — eso lo confirma el coordinador de estudios.
+    const STATUS: Record<string, string> = { completed: 'Aprobado', dropped: 'Reprobó', reprobado: 'Reprobó', enrolled: 'En curso', en_revision: 'Por confirmar', waitlist: 'En espera', transferred: 'Transferido', pendiente_de_pago: 'Pendiente de pago' }
     const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
     const fmt = (date: string | null, year: number | null) => {
       if (date) { const [y, m] = date.split('-'); return `${MESES[Number(m) - 1] ?? ''} ${y}`.trim() }

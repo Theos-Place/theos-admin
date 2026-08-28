@@ -151,8 +151,17 @@ export async function getEligibleStudiesForMember(memberId: string): Promise<Mem
   )
   // 'pendiente_de_pago' cuenta como cursando: no se puede solicitar un plan
   // cuya matrícula automática ya existe y solo espera el pago.
+  //
+  // 'en_revision' TAMBIÉN cuenta acá, y es a propósito: no sabemos si esa
+  // persona aprobó ese estudio o no — por eso está en revisión. Dejarla pedirlo
+  // de nuevo sería resolver la duda por la vía de asumir que no lo llevó, y
+  // además abre la puerta a una matrícula duplicada. El estado nuevo cambia lo
+  // que se MUESTRA (deja de decir "En curso", deja de pedir el pago), no lo que
+  // se permite: eso se destraba cuando el coordinador lo resuelve.
   const enrolledCodes = new Set(
-    enrollments.filter(e => (e.status === 'enrolled' || e.status === 'pendiente_de_pago') && codeOf(e)).map(e => codeOf(e)!),
+    enrollments
+      .filter(e => (e.status === 'enrolled' || e.status === 'pendiente_de_pago' || e.status === 'en_revision') && codeOf(e))
+      .map(e => codeOf(e)!),
   )
   const active_enrollments = enrollments
     .filter(e => e.status === 'enrolled' && e.group)

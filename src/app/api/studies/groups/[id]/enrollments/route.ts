@@ -140,7 +140,65 @@ export async function PATCH(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const { member_id, grade } = await req.json()
+    const body = await req.json()
+    const { member_id, grade, resultado, motivo } = body as {
+      member_id: string; grade?: unknown
+      resultado?: 'aprobado' | 'reprobado' | 'retirado'; motivo?: string
+    }
+
+    /**
+     * RESOLVER una inscripción 'en_revision' (2026-08-27).
+     *
+     * Son las que quedaron sin resultado cuando su grupo se cerró. Solo se
+     * pueden resolver desde acá —roles de estudios— y solo desde ese estado: si
+     * la inscripción ya tiene un resultado, esto NO lo pisa. Un endpoint que
+     * pudiera reescribir un 'completed' sería una forma silenciosa de regalar o
+     * quitar estudios.
+     *
+     * El motivo es obligatorio para reprobado y retirado, igual que en el
+     * cierre normal: sin él, después nadie sabe por qué.
+     */
+    if (resultado) {
+      const MAPA = { aprobado: 'completed', reprobado: 'reprobado', retirado: 'dropped' } as const
+      if (!(resultado in MAPA)) {
+        return NextResponse.json({ error: 'Resultado inválido.' }, { status: 400 })
+      }
+      const razon = (motivo ?? '').trim()
+      if (resultado !== 'aprobado' && !razon) {
+        return NextResponse.json(
+          { error: 'Indicá el motivo: sin él no queda rastro de por qué no aprobó.', code: 'motivo_requerido' },
+          { status: 400 },
+        )
+      }
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const db = createAdminClient()
+      // La fecha de cierre es la del GRUPO, no la de hoy: el estudio terminó
+      // cuando terminó, y fecharlo hoy le ensucia el expediente a la persona.
+      const { data: g } = await db.from('study_groups').select('ends_at').eq('id', id).maybeSingle()
+      const fecha = (g as { ends_at: string | null } | null)?.ends_at ?? null
+      const { data, error } = await db.from('study_enrollments')
+        .update({
+          status: MAPA[resultado],
+          completed_at: resultado === 'aprobado' ? fecha : null,
+          drop_reason: resultado === 'aprobado' ? null : razon,
+        })
+        .eq('group_id', id).eq('member_id', member_id).eq('status', 'en_revision')
+        .select('id')
+      if (error) throw error
+      if ((data ?? []).length === 0) {
+        return NextResponse.json(
+          { error: 'Esa inscripción ya no está por confirmar (puede que alguien más la resolviera).' },
+          { status: 409 },
+        )
+      }
+      await logAudit({
+        actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'study_enrollments',
+        entityId: (data as Array<{ id: string }>)[0].id,
+        newData: { resuelta_desde: 'en_revision', resultado, motivo: razon || null, group_id: id },
+      })
+      return NextResponse.json({ ok: true, resultado })
+    }
+
     await setEnrollmentGrade(id, member_id, Number(grade))
     return NextResponse.json({ ok: true })
   } catch (error) {
