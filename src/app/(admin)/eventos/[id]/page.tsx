@@ -214,6 +214,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     new Date(),
   ) : { kind: 'ninguno' as const }
   const [showMenu, setShowMenu] = useState(false)
+  const [duplicando, setDuplicando] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showDeleteScope, setShowDeleteScope] = useState(false) // selector de alcance (recurrentes)
   const [confirmScope, setConfirmScope] = useState<'all' | 'future' | 'single' | null>(null) // pendiente de confirmar con "eliminar"
@@ -337,6 +338,30 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   // ¿Tiene asistencia ligada? (bloquea borrado destructivo de la serie/puntual).
   const hasAttendance = event.checkins.length > 0 || event.registrations.length > 0
+
+  /**
+   * Duplica el evento y lleva DIRECTO a editar la copia.
+   *
+   * No se queda en la copia recién creada mostrando un toast: quien duplica lo
+   * hace para cambiarle la fecha, así que el paso siguiente es siempre el
+   * mismo. Y la copia nace INTERNA (is_public en false, ver
+   * lib/events/duplicate.ts), así que hasta que se publique no aparece en
+   * ningún calendario con la fecha vieja.
+   */
+  async function duplicar() {
+    if (duplicando) return
+    setShowMenu(false)
+    setDuplicando(true)
+    try {
+      const res = await fetch(`/api/events/${id}/duplicate`, { method: 'POST' })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) { toast(d.error ?? 'No se pudo duplicar el evento.', 'error'); return }
+      toast('Copia creada. Revisá la fecha y publicala cuando esté lista.', 'success')
+      router.push(`/eventos/${d.id}/editar`)
+    } catch {
+      toast('No se pudo duplicar el evento.', 'error')
+    } finally { setDuplicando(false) }
+  }
 
   // Inicia el flujo de borrado desde el menú.
   function startDelete() {
@@ -536,6 +561,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         onMenuToggle={() => setShowMenu(m => !m)}
         onCancelClick={() => { setShowMenu(false); setShowCancelModal(true) }}
         onDeleteClick={startDelete}
+        onDuplicateClick={duplicar}
+        duplicando={duplicando}
         occParam={occParam}
         showCalendarPopover={showCalendarPopover}
         onCalendarPopoverToggle={() => setShowCalendarPopover(p => !p)}

@@ -56,6 +56,9 @@ type Props = {
   onMenuToggle: () => void
   onCancelClick: () => void
   onDeleteClick: () => void
+  /** Crea una copia del evento y lleva a editarla. */
+  onDuplicateClick: () => void
+  duplicando?: boolean
   /** Fecha ISO de la ocurrencia actual (recurrentes), para propagar a editar/check-in. */
   occParam?: string | null
   showCalendarPopover: boolean
@@ -79,6 +82,8 @@ export function EventHeader({
   onMenuToggle,
   onCancelClick,
   onDeleteClick,
+  onDuplicateClick,
+  duplicando,
   occParam,
   showCalendarPopover,
   onCalendarPopoverToggle,
@@ -251,9 +256,19 @@ export function EventHeader({
                 <div
                   className="absolute right-0 top-full mt-1 rounded-xl overflow-hidden w-44 z-20 bg-surface-card shadow-[var(--shadow-lg)]"
                 >
+                  {/* Duplicar va primero: es la acción de todos los días
+                      —repetir el evento del mes o del año pasado— y las otras
+                      dos son destructivas. */}
+                  <button
+                    onClick={onDuplicateClick}
+                    disabled={duplicando}
+                    className="w-full text-left px-4 py-2.5 text-sm text-navy hover:bg-surface-low transition-colors font-body disabled:opacity-50"
+                  >
+                    {duplicando ? 'Duplicando…' : 'Duplicar evento'}
+                  </button>
                   <button
                     onClick={onCancelClick}
-                    className="w-full text-left px-4 py-2.5 text-sm text-navy hover:bg-surface-low transition-colors font-body"
+                    className="w-full text-left px-4 py-2.5 text-sm text-navy hover:bg-surface-low transition-colors font-body border-t border-t-[var(--outline-variant)]"
                   >
                     Cancelar evento
                   </button>
