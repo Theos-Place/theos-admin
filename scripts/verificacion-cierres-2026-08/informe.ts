@@ -21,10 +21,15 @@ import { cargarEnv, IndiceMiembros, todo, type Miembro, type Match } from './lib
 
 cargarEnv()
 
+/** `--anio 2025`, o `--anio todos` para barrer el archivo completo (2018-2026). */
 const ANIO = (() => {
   const i = process.argv.indexOf('--anio')
   return i >= 0 ? process.argv[i + 1] : '2026'
 })()
+const TODOS = ANIO === 'todos'
+/** Etiqueta del período, para los títulos. */
+const PERIODO = TODOS ? 'todo el archivo (2018-2026)' : ANIO
+const CSV_SIN_FORM = 'scripts/output/grupos-cerrados-sin-formulario.csv'
 
 type Grupo = {
   id: string; name: string; status: string; starts_at: string | null; ends_at: string | null
@@ -40,7 +45,7 @@ async function main() {
 
   // ── datos ──────────────────────────────────────────────────────────────────
   const todasLasFilas = leerCsv('ccb-form-fin-capacitacion.csv')
-  const filas = todasLasFilas.filter(r => r.fecha_envio.slice(0, 4) === ANIO)
+  const filas = TODOS ? todasLasFilas : todasLasFilas.filter(r => r.fecha_envio.slice(0, 4) === ANIO)
 
   const { data: planRows } = await (admin as never as { from: (t: string) => { select: (s: string) => Promise<{ data: Array<{ id: string; code: string; name: string }> | null }> } })
     .from('study_plans').select('id, code, name')
@@ -186,7 +191,7 @@ async function main() {
 
   // ══ CRUCE 3 ════════════════════════════════════════════════════════════════
   const finalizados = grupos.filter(g =>
-    g.status === 'finalizado' && String(g.ends_at ?? '').slice(0, 4) === ANIO)
+    g.status === 'finalizado' && (TODOS ? !!g.ends_at : String(g.ends_at ?? '').slice(0, 4) === ANIO))
   const usadas = new Set(faltantes.map(f => f.resp.response_id))
   const sinForm = finalizados.filter(g => {
     const code = g.plan_id ? codigoPorPlanId.get(g.plan_id) ?? null : null
@@ -311,14 +316,14 @@ async function main() {
   const hoy = new Date().toISOString().slice(0, 10)
   out(`# Verificación de cierres · formulario "EB — Fin de Capacitación"`)
   out()
-  out(`Corrida del ${hoy} sobre **${ANIO}**. Este informe **no cambió nada en la base**:`)
+  out(`Corrida del ${hoy} sobre **${PERIODO}**. Este informe **no cambió nada en la base**:`)
   out(`sale de \`scripts/verificacion-cierres-2026-08/informe.ts\`, que solo lee.`)
   out()
   out(`## Resumen ejecutivo`)
   out()
   out(`| | |`)
   out(`|---|---|`)
-  out(`| Respuestas del formulario en ${ANIO} | ${filas.length} |`)
+  out(`| Respuestas del formulario${TODOS ? '' : ` en ${ANIO}`} | ${filas.length} |`)
   out(`| **Cierres que nos faltan** (cruce 1) | **${faltantes.length}** |`)
   out(`| ↳ cerrables con este formulario | ${faltantes.filter(f => !f.sinCubrir.length).length} |`)
   out(`| ↳ con gente que el formulario no menciona | ${faltantes.filter(f => f.sinCubrir.length).length} |`)
@@ -346,8 +351,11 @@ async function main() {
         // El comentario libre a veces dice cuál era ("El curso era Discípulos
         // 2"). Se muestra como PISTA, no se usa para mapear solo.
         const pista = capacitacionAPlan(r.comentarios)
+        // El comentario se recorta: algunos son párrafos enteros de
+        // recomendaciones y hacen ilegible la lista.
+        const com = r.comentarios.length > 110 ? `${r.comentarios.slice(0, 110)}…` : r.comentarios
         out(`- \`${esc(r.capacitacion) || '(vacío)'}\` — ${esc(r.dirigente_nombre)}, ${r.fecha_envio.slice(0, 10)}`
-          + (r.comentarios ? ` · comentario: "${esc(r.comentarios)}"${pista ? ` → ¿${pista}?` : ''}` : ''))
+          + (r.comentarios ? ` · comentario: "${esc(com)}"${pista ? ` → ¿${pista}?` : ''}` : ''))
       }
       out()
     }
@@ -482,7 +490,7 @@ async function main() {
   // ── CRUCE 3 ────────────────────────────────────────────────────────────────
   out(`## Cruce 3 · Cierres en el sistema sin formulario`)
   out()
-  out(`Grupos finalizados en ${ANIO} cuyo dirigente **nunca** envió el formulario de esa`)
+  out(`Grupos finalizados en ${PERIODO} cuyo dirigente **nunca** envió el formulario de esa`)
   out(`capacitación — en ningún año, porque los formularios llegan con atraso. **No es un`)
   out(`error del sistema** — es gente que no llenó el form.`)
   out()
@@ -490,11 +498,37 @@ async function main() {
   else {
     out(`**${sinForm.length} grupos.**`)
     out()
-    out(`| Grupo | Plan | Dirigente | Cerró |`)
-    out(`|---|---|---|---|`)
-    for (const g of sinForm.sort((a, b) => String(a.ends_at).localeCompare(String(b.ends_at)))) {
-      const l = g.leader_id ? porId.get(g.leader_id) : null
-      out(`| ${esc(g.name)} | ${codigoPorPlanId.get(g.plan_id ?? '') ?? '—'} | ${l ? esc(`${l.first_name} ${l.last_name}`) : '—'} | ${String(g.ends_at ?? '').slice(0, 10)} |`)
+    const ordenados = sinForm.sort((a, b) => String(a.ends_at).localeCompare(String(b.ends_at)))
+    if (TODOS) {
+      // Con todos los años son miles: una tabla así no se lee. Va el resumen
+      // por año —que es lo que muestra si el formulario se empezó a usar y
+      // cuándo— y el detalle completo en un CSV aparte.
+      const porAnio = new Map<string, number>()
+      for (const g of ordenados) {
+        const a = String(g.ends_at ?? '').slice(0, 4)
+        porAnio.set(a, (porAnio.get(a) ?? 0) + 1)
+      }
+      const totalPorAnio = new Map<string, number>()
+      for (const g of finalizados) {
+        const a = String(g.ends_at ?? '').slice(0, 4)
+        totalPorAnio.set(a, (totalPorAnio.get(a) ?? 0) + 1)
+      }
+      out(`| Año | Grupos cerrados | Sin formulario | % |`)
+      out(`|---|---|---|---|`)
+      for (const a of [...totalPorAnio.keys()].sort()) {
+        const tot = totalPorAnio.get(a) ?? 0, sin = porAnio.get(a) ?? 0
+        out(`| ${a} | ${tot} | ${sin} | ${tot ? Math.round(100 * sin / tot) : 0}% |`)
+      }
+      out()
+      out(`El detalle grupo por grupo está en \`${CSV_SIN_FORM}\` — ${sinForm.length} filas no entran`)
+      out(`en una tabla legible.`)
+    } else {
+      out(`| Grupo | Plan | Dirigente | Cerró |`)
+      out(`|---|---|---|---|`)
+      for (const g of ordenados) {
+        const l = g.leader_id ? porId.get(g.leader_id) : null
+        out(`| ${esc(g.name)} | ${codigoPorPlanId.get(g.plan_id ?? '') ?? '—'} | ${l ? esc(`${l.first_name} ${l.last_name}`) : '—'} | ${String(g.ends_at ?? '').slice(0, 10)} |`)
+      }
     }
   }
   out()
@@ -520,6 +554,17 @@ async function main() {
   out(`\`\`\``)
   out()
   out(`El script **solo lee**. Los arreglos van después, caso por caso.`)
+
+  if (TODOS) {
+    const lineasCsv = ['grupo,plan,dirigente,cerro']
+    for (const g of sinForm) {
+      const l = g.leader_id ? porId.get(g.leader_id) : null
+      const cel = (v: string) => `"${v.replace(/"/g, '""')}"`
+      lineasCsv.push([cel(g.name), cel(codigoPorPlanId.get(g.plan_id ?? '') ?? ''),
+        cel(l ? `${l.first_name} ${l.last_name}` : ''), cel(String(g.ends_at ?? '').slice(0, 10))].join(','))
+    }
+    writeFileSync(CSV_SIN_FORM, lineasCsv.join('\n') + '\n')
+  }
 
   const ruta = `docs/verificacion-cierres-${ANIO}.md`
   writeFileSync(ruta, lineas.join('\n') + '\n')

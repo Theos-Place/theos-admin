@@ -150,6 +150,48 @@ describe('capacitacionAPlan — las 38 grafías del campo libre', () => {
     ['Hechos', 'HCH'], ['Hebreos', 'HEB'], ['Romanos', 'ROM'], ['Evangelios', 'EVA'],
   ])('%s → %s', (texto, code) => expect(capacitacionAPlan(texto)).toBe(code))
 
+  it.each([
+    ['Plan Daniel', 'PLANDANIEL'], ['PLAN DANIEL MARTES', 'PLANDANIEL'],
+    ['Transformados', 'TRANS'], ['Campaña Transformados', 'TRANS'],
+    ['Efesios', 'EFE'], ['Defendiendo la fe', 'DLF'], ['Fe Audaz', 'UFA'],
+    ['Quién es Jesús?', 'QEJ'], ['¿Quién es Jesús?', 'QEJ'],
+    ['Interpretación de la Biblia', 'HER'],
+    ['Lecturas con propósito', 'LECTPROP'],
+    ['Como Dar Charlas', 'CDC'], ['Cómo enseñar estudios de Biblia', 'CDEB'],
+    ['Cómo administrar mi dinero', 'AED'], ['ADM del Dinero', 'AED'],
+    ['Capacitación Campaña Madrid', 'CAMP'],
+    // Typos reales de "Discípulos" en el archivo.
+    ['Disipulos 2', 'DIS2'], ['Dicipulos 2', 'DIS2'], ['Discipulos II', 'DIS2'],
+    ['Diacipulos 1', 'DIS1'],
+  ])('%s → %s (del barrido 2018-2026)', (texto, code) => expect(capacitacionAPlan(texto)).toBe(code))
+
+  it('Apologética NO es Apocalipsis', () => {
+    // APO es 'Apocalipsis'. Mapearlas juntas por el prefijo común le registraría
+    // a alguien un estudio que no llevó. Apologética va a DLF, que es lo que
+    // tienen sus 5 grupos en la base.
+    expect(capacitacionAPlan('Apologética')).toBe('DLF')
+    expect(capacitacionAPlan('Apocalipsis')).toBe('APO')
+  })
+
+  it.each([
+    // Nombres viejos. No se dedujeron por parecido: los grupos de esos cursos
+    // ya están en la base con ese plan asignado (ver el comentario del mapeo).
+    ['Liderazgo de Jesús', 'SCJ'], ['Liderazgo de Jesus', 'SCJ'],
+    ['Liderazgo de JEsus', 'SCJ'], ['Liderazgo dde Jesús', 'SCJ'], ['Liderazgo de esús', 'SCJ'],
+    ['Apologética', 'DLF'],
+    ['Ética y Santificación', 'CTBD'], ['Ética Bíblica y Santificación', 'CTBD'],
+    ['Viviendo en Integridad', 'CTBD'],
+    ['Predicación 2018', 'CDC'],
+    ['Bienestar Integral', 'PLANDANIEL'],
+  ])('%s → %s (nombre viejo, confirmado por los grupos de la base)', (t, code) =>
+    expect(capacitacionAPlan(t)).toBe(code))
+
+  it('lo que de verdad no existe sigue sin mapear', () => {
+    expect(capacitacionAPlan('Sí')).toBeNull()
+    expect(capacitacionAPlan('Servidores 2')).toBeNull()
+    expect(capacitacionAPlan('Conociendo a Jesús')).toBeNull()
+  })
+
   it('lo que no calza devuelve null, no el plan más parecido', () => {
     expect(capacitacionAPlan('')).toBeNull()
     expect(capacitacionAPlan('Retiro de mujeres')).toBeNull()

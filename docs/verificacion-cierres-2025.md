@@ -13,7 +13,7 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 | ↳ con gente que el formulario no menciona | 0 |
 | Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
-| Grupos cerrados sin formulario (cruce 3) | 263 |
+| Grupos cerrados sin formulario (cruce 3) | 256 |
 | Grupos en curso en total | 93 |
 
 ## Cruce 1 · Grupos en curso que ya deberían estar cerrados
@@ -66,7 +66,7 @@ Grupos finalizados en 2025 cuyo dirigente **nunca** envió el formulario de esa
 capacitación — en ningún año, porque los formularios llegan con atraso. **No es un
 error del sistema** — es gente que no llenó el form.
 
-**263 grupos.**
+**256 grupos.**
 
 | Grupo | Plan | Dirigente | Cerró |
 |---|---|---|---|
@@ -86,7 +86,6 @@ error del sistema** — es gente que no llenó el form.
 | Nivel 4. Gabriela Hernandez. Enero 2025 | N4 | Gabriela Hernandez Gutierrez | 2025-03-19 |
 | Nivel 4. Jimmy Peraza. Enero 2025 | N4 | Daniela Delgado Rojas | 2025-03-19 |
 | Nivel 4. Wilberth Céspedes. Enero 2025 | N4 | Wilbert Céspedes Chaves | 2025-03-19 |
-| Como Tomar mejores decisiones Dylia Sasso Enero 25 | CTBD | Dylia Sasso | 2025-03-19 |
 | Nivel 4. Lucia Cespedes. Enero 2025 | N4 | Lucia Cespedes Gutierrez | 2025-03-19 |
 | Nivel 4. Laura Peralta. Enero 2025 | N4 | Antonio Quiros Rodriguez | 2025-03-19 |
 | Administrando el dinero. Fernando Chavarría. Febrero 2025 | AED | Fernando Chavarria Calvosa | 2025-03-29 |
@@ -96,7 +95,6 @@ error del sistema** — es gente que no llenó el form.
 | Nivel 4. Ernesto Desanti/Michelle Guier. Febrero 2025 | N4 | Ernesto Desanti Gonzalez | 2025-04-19 |
 | Nivel 4. Daniela Sanchez B. Febrero 2025 | N4 | Daniela Sanchez Barrantes | 2025-04-19 |
 | Sirviendo como Jesus. Andrea Chaves Febrero 2025 | SCJ | Andrea Chaves Castillo | 2025-04-26 |
-| Sirviendo como Jesús. Jorge Obando. Febrero 2025 | SCJ | Jorge Obando | 2025-04-26 |
 | Precampaña. Alex y Nela. Abril 2025 | PRETRANS | Alexander Badilla Guadamuz | 2025-04-29 |
 | Precampaña. Ariana Fonseca. Abril 2025 Virtual | PRETRANS | Ariana Fonseca Pizarro | 2025-04-29 |
 | Precampaña. Yendry. Virtual - Abril 2025 | PRETRANS | Yendry Corrales Quiros | 2025-04-29 |
@@ -165,13 +163,11 @@ error del sistema** — es gente que no llenó el form.
 | Transformados 2025 - G93 - Laura Gutiérrez Soto | TRANS | Laura Gutierrez Soto | 2025-07-27 |
 | Transformados 2025 G62 - Guiselle Lopez Rodriguez | TRANS | Gisselle Lopez Rodriguez | 2025-07-27 |
 | Transformados 2025 - G88 - Karol Villalobos Garita | TRANS | Karol Villalobos Garita | 2025-07-27 |
-| Transformados 2025 G63 - Guiselle Trejos-Ivan Mauricio Artavia | TRANS | Guiselle Trejos Granados | 2025-07-27 |
 | Transformados 2025 G43 - Eduardo Gutierrez | TRANS | Eduardo Gutierrez Carvajal | 2025-07-27 |
 | Transformados 2025 - G72 - Israel González León | TRANS | Israel Gonzalez Leon | 2025-07-27 |
 | Transformados 2025 G61 - Guido Chavarria Rojas | TRANS | Guido Chavarria Rojas | 2025-07-27 |
 | Transformados 2025 - G113 Maria Jose Ruiz | TRANS | Maria Jose Ruiz Fuentes | 2025-07-27 |
 | Transformados 2025 - G02 Daniella Bresciani | TRANS | Andres Monzon Rivera | 2025-07-27 |
-| Transformados 2025 - G82 - Jose Quirós Abarca | TRANS | Jose Quiros Abarca | 2025-07-27 |
 | Transformados 2025 - G138 - Vinicio Guillén y Daniela Conejo | TRANS | Daniela Conejo | 2025-07-27 |
 | Transformados 2025 - G108 Sebastián Venegas | TRANS | Sebastián Venegas Herrera | 2025-07-27 |
 | Transformados 2025 - G154 - Xinia Coto | TRANS | Xinia Coto | 2025-07-27 |
@@ -187,7 +183,6 @@ error del sistema** — es gente que no llenó el form.
 | Transformados 2025 - G11 Andrea Oviedo Sanchez | TRANS | Andrea Oviedo Sánchez | 2025-07-27 |
 | Transformados 2025 - G123 Naomi Sasso | TRANS | Naomi Sasso Kessler | 2025-07-27 |
 | Transformados 2025 - G15 Aniri Herrera Sandino | TRANS | Aniri Herrera Sandino | 2025-07-27 |
-| Transformados 2025 - G147 - Guiselle Trejos | TRANS | Guiselle Trejos Granados | 2025-07-27 |
 | Transformados 2025 G42 - Eddy Gomez Rivera | TRANS | Eddy Gomez Rivera | 2025-07-27 |
 | Transformados 2025 G54 - Fiorella Umana Vindas | TRANS | Fiorella Umaña Vindas | 2025-07-27 |
 | Transformados 2025 G34 - Daniela Sanchez Barrantes | TRANS | Daniela Sanchez Barrantes | 2025-07-27 |
@@ -243,7 +238,6 @@ error del sistema** — es gente que no llenó el form.
 | Transformados 2025 - G96 Laura Paniagua | TRANS | Laura Paniagua Lopez | 2025-07-27 |
 | Transformados 2025 - G116 Marilyn Morales - Allan Campos | TRANS | Allan Campos Sibaja | 2025-07-27 |
 | Transformados 2025 - G103 Luis Guillermo Alonso - Ma Adelia Piza | TRANS | Luis Guillermo Alonso Acuña | 2025-07-27 |
-| Transformados 2025 - G79 - Jorge Elizondo Umana | TRANS | Jorge Elizondo Umaña | 2025-07-27 |
 | Transformados 2025 - G101 Lucia Cespedes | TRANS | Lucia Cespedes Gutierrez | 2025-07-27 |
 | Transformados 2025 - G26 Catalina Esquivel Vargas-José Pablo Echeverria | TRANS | Catalina Esquivel Vargas | 2025-07-27 |
 | Transformados 2025 - G126 - Randall Vega | TRANS | Randall Vega Rodríguez | 2025-07-27 |
@@ -305,7 +299,6 @@ error del sistema** — es gente que no llenó el form.
 | Transformados. Rodrigo Josue Sanchez. Julio 2025 | TRANS | Rodrigo Josue Sanchez Vergara | 2025-08-26 |
 | Transformados. Andrey Umaña. Julio 2025 | TRANS | Andrey Umana Vindas | 2025-08-26 |
 | Transformados. Jana Fallas. Julio 2025 | TRANS | Jana Fallas Florian | 2025-08-26 |
-| Transformados. Roylin Castrillo Sequeira. Julio 2025 | TRANS | Roylin Castrillo Sequeira | 2025-08-26 |
 | Transformados. Jairo Sáenz/Ale Quesada. Julio 2025 | TRANS | Jairo Adrian Saenz Barboza | 2025-08-26 |
 | Transformados. Estefani Molina. Julio 2025 | TRANS | Estefani Molina Gonzalez | 2025-08-26 |
 | Transformados. Esther Ramírez. Julio 2025 | TRANS | Esther Ramirez Zuniga | 2025-08-26 |

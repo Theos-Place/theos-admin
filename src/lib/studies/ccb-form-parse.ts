@@ -194,15 +194,18 @@ export function parsearLista(texto: string | null | undefined, laxo = false): Li
  */
 const CAPACITACIONES: Array<[RegExp, string]> = [
   [/sirviendo como jesus|\bscj\b/, 'SCJ'],
-  [/discipulos?\s*1/, 'DIS1'],
-  [/discipulos?\s*2/, 'DIS2'],
-  [/discipulos?\s*3/, 'DIS3'],
+  // Las grafías de "Discípulos" que aparecen de verdad: disipulos, dicipulos,
+  // diacipulos, y el numeral romano ("Discipulos II").
+  [/d[ii]?[sc]?[ia]?[cs]?ipulos?\s*(1|i)\b/, 'DIS1'],
+  [/d[ii]?[sc]?[ia]?[cs]?ipulos?\s*(2|ii)\b/, 'DIS2'],
+  [/d[ii]?[sc]?[ia]?[cs]?ipulos?\s*(3|iii)\b/, 'DIS3'],
   [/panorama/, 'PAN'],
   [/pre\s*-?\s*matrimonial/, 'PREMAT'],
   [/hermeneutica|como interpretar la biblia/, 'HER'],
   [/religiones del mundo/, 'RDM'],
-  [/administr\w*\s+(el\s+|del\s+)?dinero|admin\.?\s+del dinero/, 'AED'],
-  [/\bcdeb\b|como dar estudios?( de biblia| biblicos)?/, 'CDEB'],
+  [/administr\w*\s+(el\s+|del\s+|mi\s+)?dinero|adm(in)?\.?\s+del dinero/, 'AED'],
+  [/\bcdeb\b|como (dar|ensenar) estudios?( de biblia| biblicos)?/, 'CDEB'],
+  [/como dar charlas/, 'CDC'],
   [/como tomar buenas decisiones/, 'CTBD'],
   [/amor sin fronteras/, 'ASF'],
   [/evangelismo|evagelismo/, 'EVM'],
@@ -212,6 +215,46 @@ const CAPACITACIONES: Array<[RegExp, string]> = [
   [/\bmatrimonios\b/, 'MAT'],
   [/adonde va este bus/, 'BUS'],
   [/\bevangelios\b/, 'EVA'],
+  // Los de abajo salieron de barrer el archivo completo (2018-2026): 119
+  // respuestas no mapeaban y 43 textos distintos. Se agregó SOLO lo que calza
+  // con un plan real de study_plans; lo que no tiene plan sigue reportándose
+  // sin mapear, que es lo que hace visible el caso de "Liderazgo de Jesús".
+  //
+  // OJO con dos parecidos que NO son lo mismo: APO es *Apocalipsis*, no
+  // Apologética (esas dos respuestas quedan sin mapear a propósito), y CDC es
+  // "Cómo Dar Charlas", distinto de CDEB.
+  [/plan daniel/, 'PLANDANIEL'],
+  [/transformados/, 'TRANS'],
+  [/\befesios\b/, 'EFE'],
+  [/defendiendo la fe/, 'DLF'],
+  [/\bgalatas\b/, 'GAL'],
+  [/fe audaz/, 'UFA'],
+  [/quien es jesus/, 'QEJ'],
+  [/interpretacion de la biblia/, 'HER'],
+  [/lecturas con proposito/, 'LECTPROP'],
+  [/\bapocalipsis\b/, 'APO'],
+  [/grupo parejas/, 'PAREJAS'],
+  [/tiempo para sonar/, 'TPS'],
+  [/precampana transformados/, 'PRETRANS'],
+  [/\bcampana\b/, 'CAMP'],
+  /**
+   * Cursos que en el formulario van con su nombre VIEJO. No se dedujeron por
+   * parecido: los grupos de esos cursos ya existen en la base y una migración
+   * anterior ya les asignó plan, así que esto solo pone al parser de acuerdo
+   * con lo que el sistema ya decidió. Verificado el 2026-08-28:
+   *   · "Liderazgo de Jesús" → 5 grupos, los 5 con plan SCJ (es el nombre
+   *     anterior de "Sirviendo como Jesús"); son 66 respuestas del formulario
+   *   · "Apologética"        → 5 grupos, los 5 con plan DLF (Defendiendo la Fe)
+   *   · "Ética y Santificación" y "Viviendo en Integridad" → CTBD (1 c/u)
+   *   · "Predicación"        → CDC (1)
+   *   · "Bienestar Integral" → PLANDANIEL (1)
+   */
+  [/liderazgo (de|con|dde|d)?\s*j?e?sus|liderazgo de esus/, 'SCJ'],
+  [/apologetica/, 'DLF'],
+  [/etica (biblica )?y santificacion/, 'CTBD'],
+  [/viviendo en integridad/, 'CTBD'],
+  [/predicacion/, 'CDC'],
+  [/bienestar integral/, 'PLANDANIEL'],
   [/nivel\s*1|\bn1\b/, 'N1'], [/nivel\s*2|\bn2\b/, 'N2'],
   [/nivel\s*3|\bn3\b/, 'N3'], [/nivel\s*4|\bn4\b/, 'N4'],
 ]
