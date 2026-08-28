@@ -14,7 +14,7 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 | Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
 | Grupos cerrados sin formulario (cruce 3) | 263 |
-| Grupos en curso en total | 98 |
+| Grupos en curso en total | 93 |
 
 ## Cruce 1 · Grupos en curso que ya deberían estar cerrados
 

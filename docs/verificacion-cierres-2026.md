@@ -8,13 +8,13 @@ sale de `scripts/verificacion-cierres-2026-08/informe.ts`, que solo lee.
 | | |
 |---|---|
 | Respuestas del formulario en 2026 | 50 |
-| **Cierres que nos faltan** (cruce 1) | **5** |
+| **Cierres que nos faltan** (cruce 1) | **0** |
 | ↳ cerrables con este formulario | 0 |
-| ↳ con gente que el formulario no menciona | 5 |
+| ↳ con gente que el formulario no menciona | 0 |
 | Pendientes de graduación con evidencia fuerte (cruce 2) | 0 |
 | ↳ con evidencia solo débil | 1 |
 | Grupos cerrados sin formulario (cruce 3) | 56 |
-| Grupos en curso en total | 98 |
+| Grupos en curso en total | 93 |
 
 ### Lo que no se pudo resolver
 
@@ -29,152 +29,7 @@ sistema. Criterio: mismo plan, el dirigente (o co-dirigente) del grupo es quien
 firmó el formulario, y la fecha de finalización reportada es **posterior** a la
 fecha de inicio del grupo.
 
-**5 cierres pendientes.**
-
-- **Cierre a medias:** 3
-- **Cierre completo:** 2
-- **Cerrables con este formulario** (nadie queda sin resolver): 0
-- **Con gente que el formulario no menciona** (van a mano): 5
-
-| Grupo | Plan | Dirigente | Fin reportado | Qué falta | En la base | En el form (ap./rep.) | Sin resolver | Notas |
-|---|---|---|---|---|---|---|---|---|
-| Evangelismo. Ariana Fonseca P. Junio 2026 | EVM | Ariana Fonseca Pizarro | 2026-08-04 | Cierre completo | 7 cursando / 0 calificados | 5 / 0 | ⚠️ Mailyn Ulate Chavez, Carolina Viales Cubillo | 5/5 |
-| Evangelismo. Carlos Quesada y Juan Quesada. Junio 2026 | EVM | Carlos Quesada | 2026-08-14 | Cierre a medias | 1 cursando / 7 calificados | 6 / 0 | ⚠️ Hazel Carvajal Arguello | 6/6 |
-| Sirviendo como Jesús.Gustavo Zamora.Junio 2026 | SCJ | Gustavo Zamora | 2026-08-24 | Cierre a medias | 1 cursando / 12 calificados | 8 / 0 | ⚠️ Lizzeth Gonzalez Blanco | 0/8 |
-| Discípulos 3. Diana Acosta. Junio 2026 | DIS3 | Diana Acosta-Salazar | 2026-08-24 | Cierre completo | 11 cursando / 0 calificados | 11 / 0 | ⚠️ Kattia Alvarado Silva, Massiel Naranjo Hidalgo | 0/11 |
-| Religiones del mundo. Valeria Díaz. Junio 2026 | RDM | Valeria Díaz | 2026-08-25 | Cierre a medias | 9 cursando / 1 calificados | 1 / 0 | ⚠️ Juan Fernández Torres, Henry Fonseca Prado, Franchesca Sciamarelli Contrera | 1/1 |
-
-⚠️ = el dirigente se resolvió por **nombre**, no por id de CCB. Verificar antes de cerrar.
-
-### Detalle para hacer los cierres
-
-#### Evangelismo. Ariana Fonseca P. Junio 2026
-
-- **Qué falta:** Cierre completo — en la base hay 7 cursando y 0 ya calificados
-- ⚠️ **Siguen cursando y el formulario no los menciona:** Mailyn Ulate Chavez, Carolina Viales Cubillo. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.
-- **Plan:** EVM · **inicio:** 2026-06-01 · **fin en el sistema:** 2026-07-27 · **fin reportado:** 2026-08-04
-- **Dirigente:** Ariana Fonseca Pizarro · co-dirigente en el form: Carolina Viales
-- **Grupo:** `/estudios/grupos/378b8eb9-6b45-4e3f-936c-ad73cef9c955`
-- **Comentarios del dirigente:** Carolina Viales preparada para dar el estudi
-
-**Aprobados (5)**
-
-| Nombre en el formulario | Persona en la base | Score | Nota | Observación |
-|---|---|---|---|---|
-| Magdalena Naranjo 95 | Magdalena Naranjo Mata | 0.90 | 95 |  |
-| Cristina Rodríguez Alfaro 80 | Cristina Rodriguez Alfaro | 1.00 | 80 |  |
-| Adriana Venegas 80 | ⚠️ 4 candidatos: Adriana Venegas Vindas / Adriana Venegas Silva / Emilio Venegas Emilio Venegas Bermu / Lizeth Venegas Venegas | — | 80 |  |
-| Mayling Ulate 95 | ⚠️ 2 candidatos: Mayling Ulate Chaves / Annia Ulate Annia Ulate | — | 95 |  |
-| Oldemar Cerdas 95 | Oldemar Cerdas Álvarez | 0.90 | 95 |  |
-
-_Líneas que no son personas y se descartaron:_ `Adrián 87`
-
-**Reprobados (0)**
-
-_(ninguno)_
-
-#### Evangelismo. Carlos Quesada y Juan Quesada. Junio 2026
-
-- **Qué falta:** Cierre a medias — en la base hay 1 cursando y 7 ya calificados
-- ⚠️ **Siguen cursando y el formulario no los menciona:** Hazel Carvajal Arguello. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.
-- **Plan:** EVM · **inicio:** 2026-06-01 · **fin en el sistema:** 2026-07-27 · **fin reportado:** 2026-08-14
-- **Dirigente:** Carlos Quesada · co-dirigente en el form: Juan Quesada
-- **Grupo:** `/estudios/grupos/1827218b-5f74-4fe4-93c0-e1f2d0e2e9df`
-
-**Aprobados (6)**
-
-| Nombre en el formulario | Persona en la base | Score | Nota | Observación |
-|---|---|---|---|---|
-| Gloriana Ross - 90 | Gloriana Ross Guevara | 0.90 | 90 |  |
-| Eileen Rowland - 90 | Eileen Rowland Vargas | 0.90 | 90 |  |
-| Eduardo Fonseca - 85 | Eduardo Fonseca | 1.00 | 85 |  |
-| Ariana Gomez - 90 | ⚠️ 4 candidatos: Ariana Gómez Salazar / Ofelina Gomez Gomez / Luis Gómez Gómez / Andrea Gomez Gomez | — | 90 |  |
-| Cristel Lopez - 85 | ⚠️ 4 candidatos: Cristel Lopez Torres / Cristel López Rodríguez / Juan Rafael Lopez Lopez / Monica Lopez Lopez | — | 85 |  |
-| Mari Ruiz - 90 | ❌ sin match | — | 90 |  |
-
-_Líneas que no son personas y se descartaron:_ `Ivan - 85`
-
-**Reprobados (0)**
-
-_(ninguno)_
-
-#### Sirviendo como Jesús.Gustavo Zamora.Junio 2026
-
-- **Qué falta:** Cierre a medias — en la base hay 1 cursando y 12 ya calificados
-- ⚠️ **Siguen cursando y el formulario no los menciona:** Lizzeth Gonzalez Blanco. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.
-- **Plan:** SCJ · **inicio:** 2026-06-01 · **fin en el sistema:** 2026-08-24 · **fin reportado:** 2026-08-24
-- **Dirigente:** Gustavo Zamora
-- **Grupo:** `/estudios/grupos/952e6b74-358d-4992-9135-7117356bf49b`
-
-**Aprobados (8)**
-
-| Nombre en el formulario | Persona en la base | Score | Nota | Observación |
-|---|---|---|---|---|
-| Silvia Alejandra Arce Víquez | ❌ sin match | — | — |  |
-| María del Rocío Vargas Videche | ⚠️ 38 candidatos: Maria del Mar Desanti / Maria del Carmen Arias Espinoza / Maria del Socorro Zapata / Maria del Pilar Casafont / María del Mar Alpizar Lopez / María Del Mar Córdoba Artavia / Maria del Pilar Rivas / Maria del Rocio Fernandez Fernandez / Maria del Pilar Alvarez / Maria del Carmen Carrion / Maria del Mar Lizano Díaz / Maria del Milagro Solorzano Leon / Maria del Carmen Sandoval Alfaro / María del Rocío Monge / María del Carmen Payes Interiano / Maria del Mar Guzman / Maria del Mar Brenes Corrales / María del Pilar Camacho / Maria del Socorro Gomez Padilla / Maria del Rocio Araya / María del Pilar Mejía / Maria del Mar Flores / Maria del Carmen Araya Sanchez / Maria Del Angel Hernandez Rojas / Maria del Pilar Mora Aiello / Maria del Milagro Solis / Maria del Mar Garcia Zuñiga / Maria del Mar Sanchez Campos / Maria del Socorro fernandez / Maria del Rocio Morera Perez / Maria del Sol Hernandez Castillo / Maria del Carmen Chaves Umana / Maria del Pilar Cardenas Perez / Maria del Mar Umana Soto / María del Mar Chacón Delgado / Maria del Sol Cuadra Quesada / Maria del Carmen Aguilar / María del Rocio Villalta Ortiz | — | — |  |
-| Carmen Mora Aparicio | Carmen Mora Aparicio | 1.00 | — |  |
-| Mario Alberto Marín Villalobos | ⚠️ 2 candidatos: Mario Alberto Vargas Agüero / Mario Alberto Mora Medrano | — | — |  |
-| Mariela González Alpízar | Mariela Gonzalez Alpizar | 1.00 | — |  |
-| María Fernanda Esquivel Ovares | Maria Fernanda Esquivel Ovares | 1.00 | — |  |
-| Erick Buzo Orozco | Erick Buzo Orozco | 1.00 | — |  |
-| Maritza MadrizPicado | Maritza Madriz Picado | 1.00 | — |  |
-
-_Líneas que no son personas y se descartaron:_ `Stephanie Sabrina Villegas Villalobos 401960318`, `604260837`, `Francine Barquero Moncada, cédula 108370650`, `Ced 108490937`, `112340406`, `114750036`, `402040561`, `Oscar Vindas Rodríguez  402040882`, `115910504`, `Henry Morera Madrigal 602480526`, `1-1457-0530`, `1518902`, `Todos aprobaron, no les pongo nota porque no había un sistema de calificación establecido`
-
-**Reprobados (0)**
-
-_(ninguno)_
-
-#### Discípulos 3. Diana Acosta. Junio 2026
-
-- **Qué falta:** Cierre completo — en la base hay 11 cursando y 0 ya calificados
-- ⚠️ **Siguen cursando y el formulario no los menciona:** Kattia Alvarado Silva, Massiel Naranjo Hidalgo. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.
-- **Plan:** DIS3 · **inicio:** 2026-06-01 · **fin en el sistema:** 2026-08-10 · **fin reportado:** 2026-08-24
-- **Dirigente:** Diana Acosta-Salazar
-- **Grupo:** `/estudios/grupos/fe61873a-1cd2-45f8-8bef-24fa665a46ff`
-- **Comentarios del dirigente:** Es un grupo muy comprometido, participativo, y que puede crecer más y muchos de ellos pueden llegar a tener un rol Importante en la dirigencia.
-
-**Aprobados (11)**
-
-| Nombre en el formulario | Persona en la base | Score | Nota | Observación |
-|---|---|---|---|---|
-| Efraín Miranda Carballo | Efrain Miranda Carballo | 1.00 | — |  |
-| Kathia Alvarado Silva | Kathia Munoz Alvarado | 0.75 | — |  |
-| Cristina Guzmán Arias | Cristina Guzmán Arias | 1.00 | — |  |
-| Katherine Rubí Rubí | Katherine Rubi Rubi | 1.00 | — |  |
-| Shirley Fernández Gómez | Shirley Fernández Gómez | 1.00 | — |  |
-| Maciel Naranjo Hidalgo | ❌ sin match | — | — |  |
-| Carolina Fernández Galimany | Carolina Fernandez Galimany | 1.00 | — |  |
-| Melissa Carballo Sandoval | Melissa Carballo Sandoval | 1.00 | — |  |
-| Leonardo Calvo Valverde | Leonardo Calvo Valverde | 1.00 | — |  |
-| Javier Dávila Pérez | Javier Davila Perez | 1.00 | — |  |
-| Patricia Gómez Mata | Patricia Gomez Mata | 1.00 | — |  |
-
-**Reprobados (0)**
-
-_(ninguno)_
-
-#### Religiones del mundo. Valeria Díaz. Junio 2026
-
-- **Qué falta:** Cierre a medias — en la base hay 9 cursando y 1 ya calificados
-- ⚠️ **Siguen cursando y el formulario no los menciona:** Juan Fernández Torres, Henry Fonseca Prado, Franchesca Sciamarelli Contrera. Sin evidencia de qué pasó con ellos, este grupo no se puede cerrar solo.
-- **Plan:** RDM · **inicio:** 2026-06-01 · **fin en el sistema:** 2026-08-03 · **fin reportado:** 2026-08-25
-- **Dirigente:** Valeria Díaz · co-dirigente en el form: Roylin
-- **Grupo:** `/estudios/grupos/0b9e5e60-c394-4098-84d6-6025803b098a`
-- **Comentarios del dirigente:** -
-
-**Aprobados (1)**
-
-| Nombre en el formulario | Persona en la base | Score | Nota | Observación |
-|---|---|---|---|---|
-| Juan Diego84,98 | ⚠️ 11 candidatos: Juan Diego Vargas Guevara / Juan Diego Calvo Alfaro / Juan Diego Martínez / Juan Diego Marín Badilla / Juan Diego Moya / Juan Diego Porras / Juan Diego Fonseca Joses / Juan Diego Ramirez Segura / Juan Diego Solis Vega / Juan Diego Ramírez Segura / Juan Diego Orozco Ugalde | — | 84.98 |  |
-
-_Líneas que no son personas y se descartaron:_ `Marielena H. 95,64`, `Fernando101`, `Carolina 94,64`, `Malena89,54`, `Francesca89,31`, `Roylin 94`, `Mariana 84,64`, `Henrry 99`, `Laura78,32`
-
-**Reprobados (0)**
-
-_(ninguno)_
-
+Ninguno.
 
 ## Cruce 2 · Graduaciones pendientes con evidencia en el formulario
 

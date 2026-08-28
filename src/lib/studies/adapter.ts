@@ -45,7 +45,12 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
 function mapParticipantStatus(
   s: DbGroupEnriched['enrollments'][number]['status'],
 ): GroupParticipant['status'] {
-  if (s === 'enrolled' || s === 'completed') return 'enrolled'
+  // 'reprobado' va con los que SÍ participaron: quien reprueba llevó el
+  //  estudio, y el resultado lo dice `result`, no este campo. Sin esta línea
+  //  caía en el `withdrawn` de abajo y la pantalla del grupo mostraba
+  //  "Retirado" a 152 personas que en realidad reprobaron — que es la
+  //  distinción que el estado existe para hacer.
+  if (s === 'enrolled' || s === 'completed' || s === 'reprobado') return 'enrolled'
   if (s === 'en_revision') return 'en_revision'
   if (s === 'waitlist' || s === 'pendiente_de_pago') return 'pending'
   return 'withdrawn' // dropped | transferred | expirada
@@ -82,8 +87,12 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
         member_id: e.member_id,
         member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
         status: mapParticipantStatus(e.status),
-        // Resultado del cierre según notes ('aprobado' | 'reprobado: <motivo>').
-        result: e.notes?.startsWith('reprobado') ? 'reprobado' as const
+        // Resultado del cierre. Dos convenciones conviven en los datos y las dos
+        // valen: el cierre de la app escribe status 'completed' + notes
+        // ('aprobado' | 'reprobado: <motivo>'), y la resolución individual y las
+        // migraciones escriben status 'reprobado' directo, casi siempre sin
+        // notes. Mirando solo notes, esas 152 quedaban sin resultado.
+        result: e.status === 'reprobado' || e.notes?.startsWith('reprobado') ? 'reprobado' as const
           : e.notes === 'aprobado' || e.status === 'completed' ? 'aprobado' as const
           : null,
         grade: e.grade,
