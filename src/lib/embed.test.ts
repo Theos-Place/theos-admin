@@ -30,6 +30,11 @@ describe('origenesPermitidos', () => {
     expect(origenesPermitidos('https://theosplace.com/calendario')).toEqual([])
     expect(origenesPermitidos('*')).toEqual([])
   })
+  it('acepta comodín de subdominio, que frame-ancestors sí entiende', () => {
+    // Hace falta para la vista previa de Figma Make, que sirve el sitio desde
+    // un subdominio distinto en cada sesión.
+    expect(origenesPermitidos('https://*.figma.site')).toEqual(['https://*.figma.site'])
+  })
   it('vacío o sin definir da lista vacía', () => {
     expect(origenesPermitidos('')).toEqual([])
     expect(origenesPermitidos(undefined)).toEqual([])
