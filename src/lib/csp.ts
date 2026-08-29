@@ -1,3 +1,5 @@
+import { frameAncestors } from '@/lib/embed'
+
 /**
  * CSP con nonce por request (B17, cerrado 2026-07-17). La política se arma en
  * el proxy (middleware) porque el nonce debe ser único por request — un header
@@ -28,7 +30,7 @@ const supabaseOrigin = (() => {
  * (colores que vienen de datos, posiciones runtime) — mismo trade-off
  * documentado de la CSP anterior; el riesgo real de XSS vive en script-src.
  */
-export function buildCsp(nonce: string): string {
+export function buildCsp(nonce: string, pathname = ''): string {
   const dev = process.env.NODE_ENV === 'development'
   return [
     "default-src 'self'",
@@ -39,6 +41,10 @@ export function buildCsp(nonce: string): string {
     `img-src 'self' data: blob: ${supabaseOrigin}`,
     `connect-src 'self' ${supabaseOrigin}`,
     "frame-src 'self'",
+    // Quién puede meter ESTA página en un iframe. Fuera del calendario es
+    // 'self' —lo mismo que decía X-Frame-Options: SAMEORIGIN—; en el
+    // calendario, además, los orígenes de EMBED_ALLOWED_ORIGINS (ver lib/embed).
+    frameAncestors(pathname),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -5,10 +5,10 @@ const securityHeaders = [
     key: 'X-DNS-Prefetch-Control',
     value: 'on',
   },
-  {
-    key: 'X-Frame-Options',
-    value: 'SAMEORIGIN',
-  },
+  // X-Frame-Options NO va acá: se aplica por ruta más abajo. No sabe expresar
+  // una lista de orígenes (ALLOW-FROM está muerto), así que en las rutas
+  // embebibles se omite y manda `frame-ancestors` de la CSP, que sí puede.
+  // Ver src/lib/embed.ts.
   {
     key: 'X-Content-Type-Options',
     value: 'nosniff',
@@ -59,6 +59,23 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        /**
+         * X-Frame-Options a TODO menos el calendario.
+         *
+         * El calendario se embebe en el sitio de Theos (/eventos/embed genera
+         * ese iframe) y SAMEORIGIN lo bloqueaba: la función existía y no podía
+         * funcionar. Ahí manda `frame-ancestors` de la CSP, que sí sabe listar
+         * orígenes — y si no hay ninguno configurado, sigue siendo 'self', o
+         * sea que quitar el header de esta ruta no abre nada por sí solo.
+         *
+         * El negative lookahead deja fuera /calendario y todo lo que cuelgue
+         * de él; el resto del sistema sigue bloqueado, que es lo que evita
+         * clickjacking sobre acciones de alguien con sesión.
+         */
+        source: '/((?!calendario).*)',
+        headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }],
       },
     ]
   },

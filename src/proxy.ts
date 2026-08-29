@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
   // donde Next lee el nonce y lo estampa en sus scripts. La misma política va
   // también en el response para que el browser la aplique.
   const nonce = newNonce()
-  const csp = buildCsp(nonce)
+  const csp = buildCsp(nonce, request.nextUrl.pathname)
   request.headers.set('content-security-policy', csp)
   request.headers.set('x-nonce', nonce)
 
