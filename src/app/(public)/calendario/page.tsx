@@ -3,6 +3,7 @@ import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { registerDestination, loginRedirectTo } from '@/lib/events/public-register-link'
+import { estaEmbebido, comoNavegar } from '@/lib/events/embedded-nav'
 import type { AdminEvent } from '@/data/event-config'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
@@ -72,16 +73,32 @@ function CalendarioWidget() {
   const router = useRouter()
   // EVE-1: botón Inscribirse con login-gate (patrón de /vacantes). Sin sesión →
   // /login con redirect al deep link; con sesión → directo a /eventos?register=.
+  /**
+   * Sale del calendario hacia el destino, respetando si está EMBEBIDO.
+   *
+   * En un iframe abre pestaña nueva. Adentro, la inscripción encadena login →
+   * formulario → perfil, todo apretado en el recuadro del calendario y sobre
+   * una página que habla de otra cosa. El calendario se queda como estaba y el
+   * trámite pasa en una ventana con espacio.
+   */
+  function salir(dest: string) {
+    const { modo, url } = comoNavegar(dest, estaEmbebido())
+    if (modo === 'pestaña-nueva') { window.open(url, '_blank', 'noopener,noreferrer'); return }
+    router.push(url)
+  }
+
   async function goRegister(ev: Pick<AdminEvent, 'id'> & { registration_form_id?: string | null }) {
     // Con formulario de inscripción el destino ES el formulario: inscribirse es
     // llenarlo (ver registerDestination).
     const dest = registerDestination(ev)
+    // Ojo: sin sesión el destino es el login CON redirect, así que la pestaña
+    // nueva termina en el formulario y no en el dashboard.
     try {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      router.push(session ? dest : loginRedirectTo(dest))
+      salir(session ? dest : loginRedirectTo(dest))
     } catch {
-      router.push(loginRedirectTo(dest))
+      salir(loginRedirectTo(dest))
     }
   }
   function formatDate(iso: string) {
