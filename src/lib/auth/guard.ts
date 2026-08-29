@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
+import { cuentaHabilitada } from '@/lib/auth/account-active'
 
 export type AuthContext = { userId: string; memberId: string | null; roles: RoleId[] }
 
@@ -15,8 +16,14 @@ export async function getAuthContext(): Promise<AuthContext | null> {
 
   const admin = createAdminClient()
   const { data: member } = await admin
-    .from('members').select('id').eq('auth_user_id', user.id).maybeSingle()
+    .from('members').select('id, is_active').eq('auth_user_id', user.id).maybeSingle()
   if (!member) return { userId: user.id, memberId: null, roles: [] }
+  // Ficha dada de baja → NO hay contexto. Se devuelve null y no un contexto sin
+  // roles a propósito: requireRoles() sin argumentos solo exige sesión, así que
+  // un contexto vacío la dejaría seguir matriculándose y mandando formularios.
+  // Con null, todos los guards la niegan igual. Reactivar la ficha devuelve el
+  // acceso solo: no se banea la cuenta de Auth, no hay nada que deshacer.
+  if (!cuentaHabilitada(member as { is_active: boolean | null })) return null
 
   const { data: roleRows } = await admin
     .from('member_roles').select('role').eq('member_id', (member as { id: string }).id).eq('is_active', true)

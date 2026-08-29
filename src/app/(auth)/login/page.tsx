@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { shouldSuggestPasskey } from '@/lib/auth/passkey-suggestion'
+import { CUENTA_DESACTIVADA, MENSAJE_CUENTA_DESACTIVADA } from '@/lib/auth/account-active'
 import { PasskeySuggestionModal } from '@/components/auth/PasskeySuggestionModal'
 import { safeDest, DEFAULT_DEST } from '@/lib/auth/redirect-target'
 
@@ -33,6 +34,20 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe]   = useState(false)
   const [loading, setLoading]         = useState(false)
   const [authError, setAuthError]     = useState('')
+
+  // ?motivo=cuenta_desactivada — lo pone AuthProvider al cerrarle la sesión a
+  // una ficha dada de baja.
+  //
+  // Con useSyncExternalStore y no con un useEffect+setState: leer la URL es
+  // justamente "leer una fuente externa", y así no hay estado que sincronizar
+  // ni render en cascada. Tampoco con useSearchParams, que obligaría a meter
+  // toda la pantalla de ingreso en un Suspense por un banner.
+  const motivo = useSyncExternalStore(
+    () => () => {},                                              // la URL no cambia sola acá
+    () => new URLSearchParams(window.location.search).get('motivo'),
+    () => null,                                                  // en el servidor no hay URL
+  )
+  const avisoBaja = motivo === CUENTA_DESACTIVADA ? MENSAJE_CUENTA_DESACTIVADA : ''
   const [emailErr, setEmailErr]       = useState('')
   const [passErr, setPassErr]         = useState('')
   // AUD-1 · aria-invalid + aria-describedby. `id` explícito para NO cambiar los
@@ -292,13 +307,13 @@ export default function LoginPage() {
       {/* AUD-1 · Los aria del campo (invalid + describedby) salen de fieldA11y,
           que respeta los ids existentes para no romper el autocompletado. */}
       {/* Auth error banner */}
-      {authError && (
+      {(authError || avisoBaja) && (
         <div
           role="alert"
           className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body"
         >
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
-          {authError}
+          {authError || avisoBaja}
         </div>
       )}
 

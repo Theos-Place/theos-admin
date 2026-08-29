@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
+import { cuentaHabilitada, CUENTA_DESACTIVADA, MENSAJE_CUENTA_DESACTIVADA } from '@/lib/auth/account-active'
 
 /**
  * Devuelve el usuario autenticado actual con sus roles activos.
@@ -23,7 +24,7 @@ export async function GET() {
 
     const { data: member } = await admin
       .from('members')
-      .select('id, first_name, last_name, email, cedula, is_system')
+      .select('id, first_name, last_name, email, cedula, is_system, is_active')
       .eq('auth_user_id', user.id)
       .maybeSingle()
 
@@ -32,6 +33,17 @@ export async function GET() {
       return NextResponse.json({
         user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [], managed_event_ids: [] },
       })
+    }
+
+    // Ficha dada de baja: se responde con un CÓDIGO, no con user:null. El
+    // cliente necesita distinguirla de "sin sesión" para cerrarla y avisar —
+    // si la trata como no autenticada, el proxy ve la cookie viva y la rebota
+    // al dashboard sin parar.
+    if (!cuentaHabilitada(member as { is_active: boolean | null })) {
+      return NextResponse.json(
+        { user: null, code: CUENTA_DESACTIVADA, error: MENSAJE_CUENTA_DESACTIVADA },
+        { status: 403 },
+      )
     }
 
     const { data: roleRows } = await admin

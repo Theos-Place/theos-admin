@@ -308,5 +308,23 @@ export async function deactivateMember(
     .single()
 
   if (error) throw error
+
+  // Cortar la sesión que ya tenga abierta. Sin esto la baja recién le pega
+  // cuando el token vence o recarga: getAuthContext ya la niega, pero la
+  // pestaña abierta sigue mostrando lo que cargó.
+  //
+  // Se revocan las sesiones, NO se BANEA la cuenta de Auth: banear necesitaría
+  // un paso simétrico para revertirlo y hoy no existe endpoint de
+  // reactivación —- se vuelve poniendo is_active en true—, así que la persona
+  // quedaría bloqueada con la ficha ya activa. Revocar no deja nada que
+  // deshacer.
+  const authUserId = (data as DbMember & { auth_user_id?: string | null }).auth_user_id
+  if (authUserId) {
+    const { error: outErr } = await supabase.auth.admin.signOut(authUserId, 'global')
+    // Best-effort: la baja ya quedó escrita y es lo que manda. Un fallo acá
+    // solo significa que la pestaña abierta dura hasta que recargue.
+    if (outErr) console.warn('deactivateMember cerrar sesión:', outErr.message)
+  }
+
   return data as DbMember
 }

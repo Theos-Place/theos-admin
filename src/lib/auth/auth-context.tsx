@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { RoleId } from '@/types/auth'
+import { CUENTA_DESACTIVADA } from '@/lib/auth/account-active'
 
 export interface AuthUser {
   name: string
@@ -44,8 +45,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let alive = true
     fetch('/api/auth/me')
-      .then(r => (r.ok ? r.json() : { user: null }))
-      .then(data => { if (alive) setState({ user: data.user ?? null, loaded: true }) })
+      .then(async r => (r.ok || r.status === 403 ? r.json().catch(() => ({ user: null })) : { user: null }))
+      .then(async data => {
+        if (!alive) return
+        // Ficha dada de baja: la cookie sigue viva, así que mandarla al login
+        // sin más la devolvería al dashboard en el siguiente salto. Se cierra
+        // la sesión primero y recién ahí se va, con el motivo en la URL.
+        if (data?.code === CUENTA_DESACTIVADA) {
+          await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+          window.location.href = `/login?motivo=${CUENTA_DESACTIVADA}`
+          return
+        }
+        setState({ user: data.user ?? null, loaded: true })
+      })
       .catch(() => { if (alive) setState({ user: null, loaded: true }) })
     return () => { alive = false }
   }, [])
