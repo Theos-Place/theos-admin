@@ -89,7 +89,10 @@ export const STAFF_IMPORT_ROLES: RoleId[] = ['encargado_staff', 'coordinador_ser
  *  perfil). Todo lo demás implica trabajar algo del sistema para otras personas.
  *  Se agregó para el centro de ayuda (visibilidad 'gestion'), que necesita
  *  distinguir "cualquier persona con sesión" de "cualquier persona que gestiona". */
-export const SELF_SERVICE_ROLES: RoleId[] = ['miembro']
+/** El piso de permisos de cualquier persona con ficha. Ver `withBaseRole`. */
+export const BASE_ROLE: RoleId = 'miembro'
+
+export const SELF_SERVICE_ROLES: RoleId[] = [BASE_ROLE]
 
 /** El rol MÍNIMO de cualquier persona con ficha: ver su propio perfil, el de su
  *  familia y el currículo (/estudios/plan). Nadie lo tiene escrito en
@@ -103,10 +106,22 @@ export const SELF_SERVICE_ROLES: RoleId[] = ['miembro']
  *
  *  Ojo con el caso que NO cubre, y es a propósito: una sesión de Auth sin ficha
  *  de miembro no recibe el rol base. Sin ficha no hay perfil propio que ver, y
- *  darle 'miembro' la dejaría entrar a una pantalla sin datos. */
+ *  darle 'miembro' la dejaría entrar a una pantalla sin datos.
+ *
+ *  BUG 2026-08-29: esto solo aplicaba el rol base a quien NO tenía ninguno, así
+ *  que un rol operativo que no declara el módulo `miembros` DEJABA a la persona
+ *  sin su propio perfil. Le pegaba a 72 personas —71 encargados de eventos y un
+ *  editor de grupos— y también a `folletos`, `reportes`, `revision_pagos`,
+ *  `becas`, `forms` y `evaluaciones`. Un rol se AGREGA a lo que sos, no te
+ *  reemplaza: el piso ahora es de todos, tengan lo que tengan encima.
+ *
+ *  Los dos lectores que podrían confundirse ya no lo hacen: hasManagementRole
+ *  excluye 'miembro' (SELF_SERVICE_ROLES) y landsOnProfile exige que TODOS los
+ *  roles sean de perfil, así que un admin sigue cayendo en su dashboard. */
 export function withBaseRole(roles: readonly RoleId[] | null | undefined): RoleId[] {
   const explicitos = (roles ?? []).filter(Boolean)
-  return explicitos.length ? [...explicitos] : ['miembro']
+  if (explicitos.includes(BASE_ROLE)) return [...explicitos]
+  return [...explicitos, BASE_ROLE]
 }
 
 /** ¿Alguno de estos roles es de gestión (algo más que el autoservicio)? */

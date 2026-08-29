@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
-import { withBaseRole, hasModulePermission, moduleScope, hasManagementRole } from './roles'
+import { withBaseRole, hasModulePermission, moduleScope, hasManagementRole, ROLES } from './roles'
 import { landsOnProfile } from './home-route'
 
 describe('withBaseRole', () => {
@@ -21,11 +21,41 @@ describe('withBaseRole', () => {
     expect(withBaseRole(undefined)).toEqual(['miembro'])
   })
 
-  it('con roles explícitos NO agrega miembro', () => {
-    // Importa: si agregara 'miembro' a todos, hasManagementRole seguiría bien
-    // (lo excluye), pero landsOnProfile NO — un admin caería en su perfil.
-    expect(withBaseRole(['admin'])).toEqual(['admin'])
-    expect(withBaseRole(['dirigente', 'finanzas'])).toEqual(['dirigente', 'finanzas'])
+  it('con roles explícitos TAMBIÉN agrega miembro', () => {
+    // Cambió el 2026-08-29. Antes el rol base solo aplicaba a quien no tenía
+    // ninguno, y un rol operativo que no declara el módulo `miembros` dejaba a
+    // la persona sin su propio perfil (72 casos reales, casi todos
+    // encargado_eventos). Un rol se suma a lo que sos; no reemplaza el piso.
+    expect(withBaseRole(['admin'])).toEqual(['admin', 'miembro'])
+    expect(withBaseRole(['dirigente', 'finanzas'])).toEqual(['dirigente', 'finanzas', 'miembro'])
+  })
+
+  it('no duplica miembro si ya venía escrito en la base', () => {
+    expect(withBaseRole(['miembro'])).toEqual(['miembro'])
+    expect(withBaseRole(['miembro', 'dirigente'])).toEqual(['miembro', 'dirigente'])
+  })
+
+  it('TODO rol conserva el acceso a su propio perfil', () => {
+    // El invariante que se rompió. Se comprueba contra la lista completa de
+    // roles, no contra una muestra: un rol nuevo que no declare `miembros`
+    // vuelve a romperlo en silencio si no se mira acá.
+    for (const rol of ROLES.map(r => r.id)) {
+      const efectivos = withBaseRole([rol])
+      expect(hasModulePermission(efectivos, 'miembros', 'view'), `rol ${rol}`).toBe(true)
+    }
+  })
+
+  it('los roles administrativos NO caen en su perfil por llevar el rol base', () => {
+    // El riesgo del cambio: landsOnProfile exige que TODOS sean de perfil.
+    expect(landsOnProfile(withBaseRole(['admin']))).toBe(false)
+    expect(landsOnProfile(withBaseRole(['encargado_eventos']))).toBe(false)
+    // y los que sí tienen su casa en el perfil siguen igual
+    expect(landsOnProfile(withBaseRole(['dirigente']))).toBe(true)
+  })
+
+  it('el rol base no convierte a nadie en gestión, ni al revés', () => {
+    expect(hasManagementRole(withBaseRole([]))).toBe(false)
+    expect(hasManagementRole(withBaseRole(['encargado_eventos']))).toBe(true)
   })
 
   it('no muta el arreglo que recibe', () => {
