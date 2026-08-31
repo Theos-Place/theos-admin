@@ -9,6 +9,7 @@ import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } fr
 import { cn } from '@/lib/utils'
 import { formatDate, formatCRC } from '@/lib/format'
 import { studyGradeDisplay } from '@/lib/studies/grade-display'
+import { muestraDeudaDeMatricula } from '@/lib/finance/study-debt-visible'
 
 const LOAD_MORE = 10
 
@@ -285,17 +286,16 @@ export function MemberParticipationTab({
                             {row.paymentsCount} pagos
                           </span>
                         )}
-                        {/* NO se pide pago de un estudio cuyo GRUPO ya cerró.
-                            Sin este freno, una inscripción que quedó colgada en
-                            'enrolled' —hay 612 así, de grupos finalizados desde
-                            2014— muestra "Pendiente: ₡X" y un botón de pagar por
-                            un estudio que la persona terminó hace años. Es lo
-                            que se reportó con la Hermenéutica 2024 de Lucía
-                            Porras, que además no tiene NINGÚN pago registrado:
-                            la deuda la inventaba esta pantalla. */}
-                        {(row.rawStatus === 'enrolled' || row.rawStatus === 'pendiente_de_pago')
-                          && row.requiresPayment
-                          && row.groupStatus !== 'finalizado' && (
+                        {/* Se pide el pago solo si EXISTE el cobro — la regla
+                            entera está en muestraDeudaDeMatricula, con sus
+                            tests. Antes se deducía del costo del plan y la
+                            pantalla inventaba la deuda: 521 participantes de
+                            grupos EN CURSO, importados de PCO y sin una sola
+                            fila en `payments`, veían "Pendiente: ₡X" y un botón
+                            de pagar. El freno anterior solo tapaba los grupos
+                            finalizados (caso Hermenéutica 2024 de Lucía
+                            Porras). */}
+                        {muestraDeudaDeMatricula(row) && (
                           row.paymentStatus === 'en_revision' ? (
                             <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[13px] font-semibold font-display">Pago en revisión</span>
                           ) : row.paymentStatus === 'aprobado' ? (
