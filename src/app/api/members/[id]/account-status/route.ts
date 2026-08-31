@@ -9,7 +9,12 @@ export type { AccountState }
 export type AccountStatus = {
   state: AccountState
   linked: boolean
+  /** El de la CUENTA (con el que entra). */
   email: string | null
+  /** El de la FICHA. Si difiere del anterior, la persona no puede recuperar su
+   *  acceso y nadie se entera: el enlace se busca por este y no existe como
+   *  cuenta. La pantalla lo avisa. */
+  member_email: string | null
   email_confirmed_at: string | null
   last_sign_in_at: string | null
 }
@@ -30,13 +35,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     // Sin usuario de Auth ligado → no tiene cuenta de acceso.
     if (!authUserId) {
-      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
+      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, member_email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
     }
 
     const { data, error } = await supabase.auth.admin.getUserById(authUserId)
     if (error || !data?.user) {
       // El link existe pero el usuario no se pudo leer (borrado en Auth, etc.).
-      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
+      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, member_email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
     }
     const u = data.user
     // 'active' = ya entró al menos una vez. Tener usuario creado (AUTH-1 los
@@ -46,6 +51,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       state: accountState({ authUserId, lastSignInAt: u.last_sign_in_at ?? null }),
       linked: true,
       email: u.email ?? memberEmail,
+      member_email: memberEmail,
       email_confirmed_at: u.email_confirmed_at ?? null,
       last_sign_in_at: u.last_sign_in_at ?? null,
     } satisfies AccountStatus)

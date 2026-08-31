@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Ban, BookOpen, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
+import { AlertCircle, Ban, BookOpen, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { ACCESS_EMAIL_ROLES, accesoDesincronizado, errorDeCorreoDeAcceso } from '@/lib/auth/access-email'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
@@ -33,6 +35,9 @@ type AdminData = {
 }
 
 type AccountStatus = {
+  /** El de la FICHA. Si difiere de `email` (el de la cuenta), la persona no
+   *  puede recuperar su acceso — ver accesoDesincronizado. */
+  member_email?: string | null
   state: AccountState
   linked: boolean
   email: string | null
@@ -67,6 +72,45 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const [resendMsg, setResendMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [createBusy, setCreateBusy] = useState(false)
   const [createMsg, setCreateMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Cambio del correo de ACCESO (con cuál entra). Permiso propio: ver
+  // src/lib/auth/access-email.ts.
+  const [correoAbierto, setCorreoAbierto] = useState(false)
+  const [correoNuevo, setCorreoNuevo] = useState('')
+  const [correoBusy, setCorreoBusy] = useState(false)
+  const [correoMsg, setCorreoMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function guardarCorreoDeAcceso() {
+    const malo = errorDeCorreoDeAcceso(correoNuevo)
+    if (malo) { setCorreoMsg({ ok: false, text: malo }); return }
+    setCorreoBusy(true); setCorreoMsg(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/access-email`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: correoNuevo.trim() }),
+      })
+      const d = await res.json().catch(() => null)
+      // El error del servidor se muestra tal cual: dice CUÁL es el problema
+      // (correo de otra persona, cuenta duplicada) y eso es lo accionable.
+      if (!res.ok) { setCorreoMsg({ ok: false, text: d?.error ?? 'No se pudo cambiar el correo.' }); return }
+      setCorreoMsg({ ok: true, text: `Ahora entra con ${d.email}.` })
+      setCorreoAbierto(false); setCorreoNuevo('')
+      await loadAccount()
+      onChanged?.()
+    } catch {
+      setCorreoMsg({ ok: false, text: 'No se pudo cambiar el correo.' })
+    } finally {
+      setCorreoBusy(false)
+    }
+  }
+
+  const { hasRole } = useAuth()
+  const puedeCambiarCorreo = hasRole(...ACCESS_EMAIL_ROLES)
+  const desincronizado = accesoDesincronizado({
+    fichaEmail: account?.member_email,
+    cuentaEmail: account?.email,
+    tieneCuenta: !!account?.linked,
+  })
 
   const loadAccount = useCallback(() => {
     setAccountLoading(true)
@@ -290,6 +334,25 @@ export function MemberAdminTab({ memberId, onChanged }: {
                 : <p>{ACCOUNT_STATE_ACTION.never_entered}</p>}
             </div>
 
+            {/* El síntoma que nadie veía: la ficha dice un correo y la cuenta
+                otro. Mientras esté así la persona NO puede recuperar su acceso
+                —el enlace se busca por el de la ficha, que no existe como
+                cuenta— y la pantalla de ingreso le responde que sí se lo
+                mandaron. Le pasó a 12 personas antes de que existiera esto. */}
+            {desincronizado && (
+              <div role="alert" className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)]">
+                <AlertCircle size={15} className="shrink-0 mt-0.5 text-coral-deep" aria-hidden />
+                <div className="text-[13px] font-body text-navy">
+                  <p className="font-semibold text-coral-deep">El correo del perfil no es con el que entra.</p>
+                  <p className="mt-0.5 text-navy-light/80">
+                    Entra con <strong className="text-navy">{account.email}</strong>, pero el perfil dice{' '}
+                    <strong className="text-navy">{account.member_email}</strong>. Así no va a poder recuperar
+                    su contraseña{puedeCambiarCorreo ? ': cambiale el correo de acceso.' : '; pedile a dirección que le cambie el correo de acceso.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Acciones */}
             <div className="flex items-center gap-2 flex-wrap pt-1">
               {account.state === 'never_entered' && (
@@ -310,7 +373,62 @@ export function MemberAdminTab({ memberId, onChanged }: {
               >
                 {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar instrucciones para recuperar el acceso</>}
               </button>
+              {puedeCambiarCorreo && !correoAbierto && (
+                <button
+                  type="button"
+                  onClick={() => { setCorreoAbierto(true); setCorreoNuevo(account.member_email ?? account.email ?? ''); setCorreoMsg(null) }}
+                  className={cn('inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] transition-colors font-body',
+                    desincronizado
+                      ? 'border-coral/30 text-coral-deep hover:bg-coral/5'
+                      : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low')}
+                >
+                  <Mail size={14} /> Cambiar el correo de acceso
+                </button>
+              )}
             </div>
+
+            {puedeCambiarCorreo && correoAbierto && (
+              <div className="rounded-xl border border-outline bg-surface-low p-3.5 space-y-2.5">
+                <label htmlFor="correo-de-acceso" className="block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
+                  Correo de acceso
+                </label>
+                <input
+                  id="correo-de-acceso"
+                  type="email"
+                  value={correoNuevo}
+                  onChange={e => setCorreoNuevo(e.target.value)}
+                  autoComplete="off"
+                  className="w-full max-w-md rounded-xl border border-outline bg-surface-card px-3 py-2 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
+                />
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Con este correo va a entrar al sistema y le van a llegar los enlaces de contraseña.
+                  El perfil se actualiza con el mismo, para que no vuelvan a quedar distintos.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={guardarCorreoDeAcceso}
+                    disabled={correoBusy}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                  >
+                    {correoBusy ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : 'Guardar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCorreoAbierto(false); setCorreoMsg(null) }}
+                    disabled={correoBusy}
+                    className="rounded-full px-3 py-2 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+            {correoMsg && (
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${correoMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                {correoMsg.ok && <Check size={12} />}{correoMsg.text}
+              </p>
+            )}
 
             {resendMsg && (
               <p className={`text-[13px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>

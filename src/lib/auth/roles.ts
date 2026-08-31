@@ -236,6 +236,17 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'gestor_accesos',
+    name: 'Gestor de accesos',
+    description: 'Cambiar el correo con el que una persona entra al sistema',
+    color: '#8E7CC3',
+    // A PROPÓSITO sin permisos de módulo: no abre ninguna pantalla nueva. Es un
+    // añadido para quien YA administra perfiles (coordinaciones, dirección) y
+    // solo desbloquea una acción puntual en «Cuenta y acceso». Ver
+    // src/lib/auth/access-email.ts para por qué va aparte.
+    permissions: [],
+  },
+  {
     id: 'folletos',
     name: 'Folletos',
     description: 'Gestión y seguimiento de folletos de estudios',
