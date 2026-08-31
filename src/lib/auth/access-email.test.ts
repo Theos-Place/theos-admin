@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ACCESS_EMAIL_ROLES, accesoDesincronizado, errorDeCorreoDeAcceso, normalizarCorreo } from './access-email'
+import { ACCESS_EMAIL_ROLES, accesoDesincronizado, errorDeCorreoDeAcceso, normalizarCorreo, puedeCambiarCorreoDeAcceso } from './access-email'
 
 describe('errorDeCorreoDeAcceso', () => {
   it('acepta correos normales', () => {
@@ -52,5 +52,28 @@ describe('quién puede cambiarlo', () => {
     // que costar cambiar esta línea. De fábrica lo puede solo admin (pasa
     // siempre por requireRoles); el rol es para dárselo a alguien puntual.
     expect(ACCESS_EMAIL_ROLES).toEqual(['gestor_accesos'])
+  })
+})
+
+describe('puedeCambiarCorreoDeAcceso', () => {
+  it('admin puede, aunque no tenga el rol', () => {
+    // El caso reportado: el botón no le salía a admin. En el servidor
+    // requireRoles lo deja pasar siempre; el hasRole del cliente no, así que
+    // preguntar solo por ACCESS_EMAIL_ROLES escondía el botón justo para quien
+    // sí puede.
+    expect(puedeCambiarCorreoDeAcceso(['admin'])).toBe(true)
+    expect(puedeCambiarCorreoDeAcceso(['admin', 'miembro'])).toBe(true)
+  })
+
+  it('quien tiene el rol puede', () => {
+    expect(puedeCambiarCorreoDeAcceso(['gestor_accesos', 'miembro'])).toBe(true)
+  })
+
+  it('el resto no', () => {
+    for (const rol of ['direccion', 'coordinador_estudios', 'dirigente', 'miembro'] as const) {
+      expect(puedeCambiarCorreoDeAcceso([rol]), rol).toBe(false)
+    }
+    expect(puedeCambiarCorreoDeAcceso([])).toBe(false)
+    expect(puedeCambiarCorreoDeAcceso(null)).toBe(false)
   })
 })

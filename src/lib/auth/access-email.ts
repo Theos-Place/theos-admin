@@ -60,3 +60,17 @@ export function accesoDesincronizado(input: {
   if (!ficha || !cuenta) return false
   return ficha !== cuenta
 }
+
+/**
+ * ¿Esta sesión puede cambiar el correo de acceso?
+ *
+ * Existe porque el servidor y el cliente NO deciden igual: `requireRoles` deja
+ * pasar a 'admin' siempre, y el `hasRole` del cliente compara la lista tal cual.
+ * Preguntando solo por ACCESS_EMAIL_ROLES, a un admin le daba false y el botón
+ * quedaba escondido justo para quien sí puede — que es lo que se reportó apenas
+ * salió. Se decide en un solo lugar y con test.
+ */
+export function puedeCambiarCorreoDeAcceso(roles: readonly RoleId[] | null | undefined): boolean {
+  const r = roles ?? []
+  return r.includes('admin') || ACCESS_EMAIL_ROLES.some(x => r.includes(x))
+}

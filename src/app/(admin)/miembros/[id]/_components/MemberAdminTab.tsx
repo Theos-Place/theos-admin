@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { AlertCircle, Ban, BookOpen, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
-import { ACCESS_EMAIL_ROLES, accesoDesincronizado, errorDeCorreoDeAcceso } from '@/lib/auth/access-email'
+import { accesoDesincronizado, errorDeCorreoDeAcceso, puedeCambiarCorreoDeAcceso } from '@/lib/auth/access-email'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
@@ -104,8 +104,8 @@ export function MemberAdminTab({ memberId, onChanged }: {
     }
   }
 
-  const { hasRole } = useAuth()
-  const puedeCambiarCorreo = hasRole(...ACCESS_EMAIL_ROLES)
+  const { user } = useAuth()
+  const puedeCambiarCorreo = puedeCambiarCorreoDeAcceso(user?.roles)
   const desincronizado = accesoDesincronizado({
     fichaEmail: account?.member_email,
     cuentaEmail: account?.email,
