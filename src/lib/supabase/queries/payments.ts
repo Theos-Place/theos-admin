@@ -1,4 +1,6 @@
 import 'server-only'
+import { fechasDelSucesor } from '@/lib/studies/successor-dates'
+import { ymdCR } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { nextLevelCode } from '@/lib/studies/folletos'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
@@ -83,10 +85,14 @@ async function findOrCreateSuccessorGroup(
     zone: string | null; schedule_days: string[] | null; schedule_time: string | null
     location: string | null; sede: string | null; max_students: number | null
     age_min: number | null; age_max: number | null
+    /** Fin del grupo que se cierra: el sucesor arranca ahí (ver successor-dates). */
+    ends_at?: string | null
   },
   nextPlanId: string,
   sourceCode: string,
   nextCode: string,
+  /** Duración del plan del sucesor, para calcularle su propia fecha de fin. */
+  nextDurationWeeks: number | null,
 ): Promise<string | null> {
   const findSuccessor = async (): Promise<string | null> => {
     let query = supabase
@@ -125,6 +131,15 @@ async function findOrCreateSuccessorGroup(
       max_students: src.max_students,
       age_min: src.age_min,
       age_max: src.age_max,
+      /**
+       * FECHAS (2026-08-31). Antes el sucesor nacía SIN ninguna: cuatro grupos
+       * quedaron así —dos DIS2 y dos N3, 29 personas— y sin fecha de fin el
+       * recordatorio de cierre no les llega nunca, porque se calcula sobre ella.
+       *
+       * La cohorte sigue de una: arranca donde terminó el anterior, sin hueco.
+       * La regla y sus casos de borde están en successor-dates.ts.
+       */
+      ...fechasDelSucesor({ finDelAnterior: src.ends_at, semanas: nextDurationWeeks, hoy: ymdCR() }),
       /**
        * 'en_curso', NO 'en_matricula' (decisión 2026-08-27).
        *
@@ -183,7 +198,7 @@ export async function autoEnrollApprovedToNextLevel(
   // Grupo origen completo (para heredar dirigente/horario/zona) + nivel siguiente.
   const { data: g } = await supabase
     .from('study_groups')
-    .select('id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location, sede, max_students, age_min, age_max, plan:study_plans(code)')
+    .select('id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location, sede, max_students, age_min, age_max, ends_at, plan:study_plans(code)')
     .eq('id', sourceGroupId).maybeSingle()
   const src = g as {
     id: string; name: string | null; leader_id: string | null; co_leader_id: string | null
@@ -197,15 +212,15 @@ export async function autoEnrollApprovedToNextLevel(
   const next = nextLevelCode(sourceCode)
   if (!src || !next) return { enrolled: 0, next_level: null, amount: 0, next_group_id: null }
 
-  const { data: nextPlan } = await supabase.from('study_plans').select('id, cost, currency').eq('code', next).maybeSingle()
-  const np = nextPlan as { id: string; cost: number | null; currency: string | null } | null
+  const { data: nextPlan } = await supabase.from('study_plans').select('id, cost, currency, duration_weeks').eq('code', next).maybeSingle()
+  const np = nextPlan as { id: string; cost: number | null; currency: string | null; duration_weeks: number | null } | null
   if (!np) return { enrolled: 0, next_level: next, amount: 0, next_group_id: null }
   const amount = Number(np.cost ?? 0)
   // INT-2: el pago hereda la moneda del costo del plan.
   const currency = np.currency ?? 'CRC'
 
   // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
-  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next)
+  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next, np.duration_weeks)
 
   // Dedup: quién ya tiene inscripción a ese nivel — por plan_id directo O por
   // grupo cuyo plan es el siguiente (A12: las matrículas por grupo tienen
