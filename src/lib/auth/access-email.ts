@@ -17,8 +17,13 @@ import type { RoleId } from '@/types/auth'
  * otra forma, apuntarlo a un correo propio es quedarse con la cuenta ajena. Por
  * eso no alcanza con ser coordinación —que sí puede crear la cuenta y mandar el
  * enlace— y va en un rol que se otorga a dedo desde /accesos.
+ *
+ * NO incluye 'direccion' (2026-08-31): de fábrica esto lo puede SOLO admin
+ * —requireRoles lo deja pasar siempre— y el rol es la manera de dárselo a
+ * alguien puntual. Un rol que ya venga con dirección adentro no sería un
+ * permiso otorgado a dedo, que es lo que se pidió.
  */
-export const ACCESS_EMAIL_ROLES: RoleId[] = ['gestor_accesos', 'direccion']
+export const ACCESS_EMAIL_ROLES: RoleId[] = ['gestor_accesos']
 
 export function normalizarCorreo(valor: string | null | undefined): string {
   return (valor ?? '').trim().toLowerCase()

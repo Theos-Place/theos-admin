@@ -48,8 +48,9 @@ describe('quién puede cambiarlo', () => {
     // Cambiar el correo de acceso es decidir con qué dirección se entra a una
     // cuenta; apuntarla a un correo propio es quedarse con la cuenta ajena.
     // Por eso es un permiso aparte del que crea cuentas y manda enlaces.
-    expect(ACCESS_EMAIL_ROLES).not.toContain('coordinador_estudios')
-    expect(ACCESS_EMAIL_ROLES).not.toContain('coordinador_dirigentes')
-    expect(ACCESS_EMAIL_ROLES).toContain('gestor_accesos')
+    // Por igualdad y no por "contiene" a propósito: agregar un rol acá tiene
+    // que costar cambiar esta línea. De fábrica lo puede solo admin (pasa
+    // siempre por requireRoles); el rol es para dárselo a alguien puntual.
+    expect(ACCESS_EMAIL_ROLES).toEqual(['gestor_accesos'])
   })
 })
