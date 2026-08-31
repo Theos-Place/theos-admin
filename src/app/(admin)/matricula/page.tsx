@@ -675,6 +675,7 @@ export default function MatriculaPage() {
         <StudyReceiptModal
           enrollmentId={pendingReceipt.enrollmentId}
           studyName={pendingReceipt.studyName}
+          memberName={effectiveName}
           amount={pendingReceipt.amount}
           currency={pendingReceipt.currency}
           onDone={() => setPendingReceipt(null)}

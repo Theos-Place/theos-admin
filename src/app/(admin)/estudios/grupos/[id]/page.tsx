@@ -83,7 +83,7 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
   const [restriccion, setRestriccion] = useState<{ memberId: string; nombre: string; motivo: string } | null>(null)
   // El comprobante SIEMPRE se pide (2026-08-06): también cuando matricula el
   // staff. La matrícula ya quedó hecha; esto es el pago, que va por su carril.
-  const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number; currency: string | null } | null>(null)
+  const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number; currency: string | null; memberName: string | null } | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -125,7 +125,14 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
       onEnrolled()
       if (data?.requires_payment && data?.enrollment_id) {
-        setComprobante({ enrollmentId: data.enrollment_id, amount: Number(data.amount ?? 0), currency: data.currency ?? null })
+        setComprobante({
+          enrollmentId: data.enrollment_id,
+          amount: Number(data.amount ?? 0),
+          currency: data.currency ?? null,
+          // Nombre de la persona INSCRITA (acá el staff matricula a un tercero),
+          // para el detalle de la transferencia.
+          memberName: (() => { const m = results.find(x => x.id === memberId); return m ? `${m.first_name} ${m.last_name}` : null })(),
+        })
         setAdding(null)
         return   // el modal del comprobante reemplaza al de búsqueda
       }
@@ -143,6 +150,7 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
       <StudyReceiptModal
         enrollmentId={comprobante.enrollmentId}
         studyName={studyName}
+        memberName={comprobante.memberName}
         amount={comprobante.amount}
         currency={comprobante.currency}
         onDone={() => { setComprobante(null); onClose() }}

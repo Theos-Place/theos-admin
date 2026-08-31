@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
+import { instruccionesHtml } from '@/lib/finance/payment-instructions'
 import type { PaymentConcept } from '@/lib/supabase/queries/payments'
 
 /** Aviso de rechazo de un pago (notificación interna + correo con el motivo).
@@ -35,6 +36,7 @@ export async function notifyRejection(
           <p>${label[0].toUpperCase()}${label.slice(1)} fue <strong>rechazado</strong> por el siguiente motivo:</p>
           <blockquote style="border-left:3px solid #D63E3D;padding-left:12px;color:#444">${reason}</blockquote>
           <p>Por favor volvé a subir un comprobante válido para completar tu pago.</p>
+          ${instruccionesHtml()}
         `,
       }).catch(e => console.warn('sendEmail rechazo falló:', e))
     }

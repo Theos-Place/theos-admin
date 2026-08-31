@@ -1,4 +1,5 @@
 import { toCurrency } from '@/lib/money'
+import { instruccionesUnaLinea, detalleSugerido } from '@/lib/finance/payment-instructions'
 import { ADMIN_ONLY_STATUSES, type LeaderStatus } from '@/lib/studies/leader-admin-status'
 import { isPrematGroup, prematGroupError } from '@/lib/studies/premat-group'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
@@ -1358,10 +1359,15 @@ export async function enrollMember(
   // cualquier estudio (FIN-2 — antes solo lo exigían los planes de
   // REQUIRES_CEDULA_CODES, ej. PREMAT). Bloqueante server-side; la UI lo pide
   // antes, en el propio wizard de matrícula.
+  // El nombre sale de la MISMA consulta que ya se hacía por la cédula: lo usa
+  // el detalle de la transferencia en el aviso de cobro, más abajo.
+  let nombreInscrito: string | null = null
   {
-    const { data: mem } = await supabase.from('members').select('cedula').eq('id', memberId).maybeSingle()
-    const ced = (mem as { cedula?: string | null } | null)?.cedula
-    if (!ced || !String(ced).trim()) throw new Error('CEDULA_REQUERIDA')
+    const { data: mem } = await supabase.from('members')
+      .select('cedula, first_name, last_name').eq('id', memberId).maybeSingle()
+    const m = mem as { cedula?: string | null; first_name?: string | null; last_name?: string | null } | null
+    if (!m?.cedula || !String(m.cedula).trim()) throw new Error('CEDULA_REQUERIDA')
+    nombreInscrito = `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() || null
   }
   // Guard GRU-2: restricción de audiencia del grupo. Server-side porque
   // esconderlo de la UI no alcanza: el staff matricula a terceros por el mismo
@@ -1501,7 +1507,11 @@ export async function enrollMember(
       recipient_member_id: memberId,
       type: 'payment_pending',
       title: 'Tenés un cobro pendiente',
-      body: `Se generó un cobro de matrícula de ${formatMoney(finalAmount, planCurrency)}. Abrí el detalle para pagarlo (subir comprobante).`,
+      // La notificación es corta a propósito, pero lleva el DÓNDE pagar: sin
+      // eso la persona abre el detalle solo para buscar el número de SINPE.
+      body: `Se generó un cobro de matrícula de ${formatMoney(finalAmount, planCurrency)}. `
+        + `Pagá por ${instruccionesUnaLinea()} y subí el comprobante en el detalle. `
+        + `Poné en el detalle de la transferencia: ${detalleSugerido(planName, nombreInscrito) || 'el nombre del curso y el tuyo'}.`,
       link: `/miembros/${memberId}?tab=participacion`,
     })
     if (notifErr) console.warn('enrollMember: notificación de cobro falló:', notifErr.message)

@@ -6,6 +6,7 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
+import { instruccionesHtml, detalleSugerido } from '@/lib/finance/payment-instructions'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { formatCRC } from '@/lib/format'
 
@@ -33,7 +34,8 @@ export async function notifyEventPendingCharge(
       <p>Hola ${nombre},</p>
       <p>Registramos tu ingreso a <strong>${evento}</strong>. Queda pendiente el
         pago de <strong>${formatCRC(amount)}</strong> por tu participación.</p>
-      <p>Para completarlo, subí tu comprobante desde tu perfil:</p>
+      ${instruccionesHtml(detalleSugerido(evento, nombre))}
+      <p>Ya que pagaste, subí tu comprobante desde tu perfil:</p>
       <p style="text-align:center;margin:28px 0;">
         <a href="${perfilUrl}"
            style="background:#F4795B;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;display:inline-block;font-weight:600;">

@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 import { formatDateLong, formatCRC } from '@/lib/format'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { montoAPagar, comprobanteRequerido } from '@/lib/events/registration-payment'
+import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
+import { useAuth } from '@/lib/auth/auth-context'
 import { registerDestination } from '@/lib/events/public-register-link'
 
 type ApplicableScholarship = { id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }
@@ -139,6 +141,11 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const requiresPayment = event.requires_payment && !event.exempt
 
+  // Nombre para el detalle de la transferencia. Solo si el cobro es de la
+  // propia sesión: acá el staff también inscribe a terceros, y poner el nombre
+  // equivocado en el detalle es peor que no poner ninguno.
+  const { user: sesion } = useAuth()
+  const memberName = sesion?.member_id === memberId ? sesion?.name : null
   const [comprobante, setComprobante] = useState<File | null>(null)
   const [referencia, setReferencia] = useState('')
   const [applicable, setApplicable] = useState<ApplicableScholarship | null>(null)
@@ -226,6 +233,7 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
           </div>
         )}
         {requiresPayment && <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />}
+        {pideComprobante && <PaymentInstructions concepto={event.title} nombre={memberName} />}
         {pideComprobante && (
           <div className="space-y-3 rounded-xl border border-outline p-3">
             <div className="space-y-1">
@@ -268,6 +276,10 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
 function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
   registrationId: string; eventTitle: string; amount: number; onDone: () => void
 }) {
+  // Este modal solo lo abre la persona sobre SU propia inscripción (desde su
+  // lista de eventos), así que el nombre de la sesión es el correcto.
+  const { user: sesion } = useAuth()
+  const memberName = sesion?.name ?? null
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
@@ -312,6 +324,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
             <p className="text-[13px] text-navy-light/80 font-body">
               {eventTitle} — {`${formatCRC(amount)}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
             </p>
+            <PaymentInstructions concepto={eventTitle} nombre={memberName} />
             <div className="space-y-1">
               <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input id="comprobante-imagen"

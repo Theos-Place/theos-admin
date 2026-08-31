@@ -16,10 +16,14 @@ import { Modal } from '@/components/shared/Modal'
 import { formatMoney, amountStep } from '@/lib/format'
 import { declaredAmountMismatch } from '@/lib/finance/payment-breakdown'
 import { cn } from '@/lib/utils'
+import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
 
-export function StudyReceiptModal({ enrollmentId, studyName, amount, currency = 'CRC', onDone }: {
+export function StudyReceiptModal({ enrollmentId, studyName, memberName, amount, currency = 'CRC', onDone }: {
   enrollmentId: string
   studyName: string
+  /** Persona INSCRITA, para armarle el detalle de la transferencia. Opcional:
+   *  sin ella las instrucciones salen igual, solo que genéricas. */
+  memberName?: string | null
   /** Monto FINAL a pagar (ya con la beca aplicada, si había). */
   amount: number
   /** Moneda del cobro (INT-3). Sin esto el monto se mostraba siempre en colones. */
@@ -86,6 +90,7 @@ export function StudyReceiptModal({ enrollmentId, studyName, amount, currency = 
               referencia. Hacelo ahora, con el pago recién hecho — es el momento en que tenés
               la captura a mano.
             </p>
+            <PaymentInstructions concepto={studyName} nombre={memberName} />
             <div className="space-y-1">
               <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input id="comprobante-imagen"

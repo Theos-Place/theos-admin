@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { MemberPaymentsList } from '@/components/members/MemberPaymentsList'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
 import { formatDate } from '@/lib/format'
 
 type ScholarshipRow = {
@@ -201,7 +202,13 @@ function MisPagosContent() {
           </div>
         </div>
 
-        {memberId && <MemberScholarships key={memberId} memberId={memberId} />}
+        <div className="space-y-4">
+          {/* Los datos de pago, a la vista de quien tiene algo pendiente. Sin
+              concepto: esta pantalla junta varios cobros, así que el detalle se
+              explica en genérico y el armado va en el modal de cada uno. */}
+          <PaymentInstructions nombre={memberId === selfId ? user?.name : familyNames[memberId ?? '']} />
+          {memberId && <MemberScholarships key={memberId} memberId={memberId} />}
+        </div>
       </div>
     </div>
   )
