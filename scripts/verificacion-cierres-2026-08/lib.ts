@@ -128,7 +128,24 @@ export class IndiceMiembros {
     const niveles: Array<[number, string, (m: Miembro) => boolean]> = [
       [1, 'nombre completo exacto', m => nom(m).join(' ') === n],
       [0.95, 'todos los tokens contra la lista del grupo', m => tokens.every(t => nom(m).includes(t))],
+      // El caso inverso: el formulario trae MÁS apellidos que la ficha. Pasa
+      // seguido —la ficha dice "Ronald Ross" y el dirigente escribió "Ronald
+      // Ross Sibaja"— y dejaba el grupo sin cerrar por un apellido de más.
+      //
+      // Sigue sin ser difuso: se exige que el nombre de la ficha esté COMPLETO
+      // dentro de lo que escribió el dirigente, con dos tokens como mínimo para
+      // que un miembro cargado solo con el nombre de pila no se coma a
+      // cualquiera. Y como todo esto corre contra el roster del grupo, dos
+      // candidatos devuelven ambiguo en vez de elegir.
+      [0.9, 'la ficha completa dentro de lo que escribió el dirigente',
+        m => nom(m).length >= 2 && nom(m).every(t => tokens.includes(t))],
       [0.85, 'nombre de pila contra la lista del grupo', m => tokens.length === 1 && nom(m)[0] === tokens[0]],
+      // Diminutivo o nombre cortado ("Mari" por Mariela). Solo con UN token, y
+      // solo si dentro del grupo hay exactamente una persona cuyo nombre de
+      // pila empiece así — con dos, sale ambiguo y no se elige. Mínimo 4
+      // letras: con 3 el prefijo agarra demasiado.
+      [0.8, 'nombre de pila cortado, único en el grupo',
+        m => tokens.length === 1 && tokens[0].length >= 4 && nom(m)[0].startsWith(tokens[0])],
     ]
     for (const [score, motivo, test] of niveles) {
       const hit = roster.filter(test)

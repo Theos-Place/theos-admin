@@ -133,6 +133,11 @@ export function parsearLinea(linea: string, laxo = false): PersonaCruda | null {
 
   // 1) numeración inicial: "1.", "1)", "1 -", "5 "
   t = t.replace(/^\s*\d{1,2}\s*[.)\-–]?\s+/, '').replace(/^\s*\d{1,2}\s*[.)]\s*/, '')
+  //    …y PEGADA al nombre, sin punto ni espacio: "1Ronald Ross Sibaja". Se
+  //    exige que siga una MAYÚSCULA para no comerse un dígito que sea parte del
+  //    dato. Sin esto la línea entera se descartaba: el dígito hace que
+  //    pareceNombre la rechace.
+  t = t.replace(/^\s*\d{1,2}(?=[A-ZÑÁÉÍÓÚ])/, '')
 
   // 2) paréntesis: es observación, nunca nota
   let observacion: string | null = null
@@ -180,10 +185,35 @@ export function parsearLinea(linea: string, laxo = false): PersonaCruda | null {
 }
 
 /** Bloque de texto libre → personas + líneas descartadas. */
+/**
+ * Corta el texto en líneas, y además parte las que traen VARIAS personas
+ * separadas por comas: "Montserrat Zamora, Tatiana Fernandez, Jimmy Cordero,
+ * Adriana, Sonia, …". Hay dirigentes que llenan el campo entero en un renglón.
+ *
+ * Antes esas líneas se descartaban enteras (la guarda de `comas >= 2` en
+ * parsearLinea, que existe para no partir un "Apellido, Nombre" invertido). El
+ * resultado era perder el cierre completo: una respuesta de 13 personas leía 0.
+ *
+ * Se parte SOLO cuando la forma es inequívocamente una lista: tres o más
+ * fragmentos, y ninguno de más de cuatro palabras. Un "Cruz Graña, Mirtha"
+ * tiene una sola coma y no entra acá; una línea con una coma y un comentario
+ * largo ("Ana Mora, se retiró por trabajo") tampoco, porque son dos fragmentos.
+ */
+function separarLineas(texto: string | null | undefined): string[] {
+  const salida: string[] = []
+  for (const linea of (texto ?? '').split(/\r?\n/)) {
+    const trozos = linea.split(',').map(t => t.trim()).filter(Boolean)
+    const esLista = trozos.length >= 3 && trozos.every(t => t.split(/\s+/).length <= 4)
+    if (esLista) salida.push(...trozos)
+    else salida.push(linea)
+  }
+  return salida
+}
+
 export function parsearLista(texto: string | null | undefined, laxo = false): ListaParseada {
   const personas: PersonaCruda[] = []
   const descartadas: string[] = []
-  for (const linea of (texto ?? '').split(/\r?\n/)) {
+  for (const linea of separarLineas(texto)) {
     const l = linea.trim()
     if (!l) continue
     const p = parsearLinea(l, laxo)

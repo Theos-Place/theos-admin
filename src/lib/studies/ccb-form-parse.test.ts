@@ -205,3 +205,43 @@ describe('capacitacionAPlan — las 38 grafías del campo libre', () => {
     expect(capacitacionAPlan('Retiro de mujeres')).toBeNull()
   })
 })
+
+describe('formas que aparecieron en el archivo del 2026-08-31', () => {
+  it('numeración PEGADA al nombre, sin punto ni espacio', () => {
+    // "1Ronald Ross Sibaja" — 8 personas de una respuesta que leía 0, porque el
+    // dígito hacía que pareceNombre rechazara la línea entera.
+    const r = parsearLista('1Ronald Ross Sibaja \n2Ana Silene Rojas Agüero\n8Milena Agüero Rojas')
+    expect(r.personas.map(p => p.nombre)).toEqual([
+      'Ronald Ross Sibaja', 'Ana Silene Rojas Agüero', 'Milena Agüero Rojas',
+    ])
+  })
+
+  it('solo quita el número pegado si sigue una MAYÚSCULA', () => {
+    // La regla nueva es estricta a propósito: "12Ana Mora" es numeración,
+    // "2024 Retiro" es un año y ya se descartaba por otro lado.
+    expect(parsearLinea('12Ana Mora')?.nombre).toBe('Ana Mora')
+    expect(parsearLinea('2024 Retiro')).toBeNull()
+  })
+
+  it('la lista entera en UNA línea, separada por comas', () => {
+    // El cierre del grupo de Sergio Colombari: 13 personas en un renglón. Antes
+    // caía en la guarda de comas>=2 (que existe para no partir "Apellido,
+    // Nombre") y se perdía el cierre completo.
+    const r = parsearLista('Montserrat Zamora, Tatiana Fernandez, Jimmy Cordero, Adriana, Sonia,', true)
+    expect(r.personas.map(p => p.nombre)).toEqual([
+      'Montserrat Zamora', 'Tatiana Fernandez', 'Jimmy Cordero', 'Adriana', 'Sonia',
+    ])
+  })
+
+  it('un "Apellido, Nombre" invertido NO se parte', () => {
+    // Una sola coma: dos fragmentos, no es lista. Sigue resolviéndose invertido.
+    const r = parsearLista('Cruz Graña, Mirtha')
+    expect(r.personas).toHaveLength(1)
+    expect(r.personas[0].nombre).toBe('Mirtha Cruz Graña')
+  })
+
+  it('un comentario con coma tampoco se parte en pedazos', () => {
+    const r = parsearLista('Ana Mora, se retiró por trabajo')
+    expect(r.personas.length + r.descartadas.length).toBe(1)
+  })
+})
