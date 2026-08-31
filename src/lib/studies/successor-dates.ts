@@ -15,7 +15,16 @@
  * 2026-06-01 → 2026-08-17 con uno de 11. O sea `ends_at = starts_at +
  * semanas·7`, y es el fin del PERÍODO, no la última sesión. Por eso arrancar el
  * sucesor exactamente en `ends_at` del anterior no solapa nada.
+ *
+ * SEMANA DE VACACIONES (2026-08-31, pedido del usuario): al período se le suma
+ * una semana más que las que dura el plan. Los grupos no encadenan pegados —
+ * entre uno y otro hay un respiro—, y como el sucesor arranca en el `ends_at`
+ * del anterior, meter la semana en el fin del período la reparte sola por toda
+ * la cadena sin tener que tocar las fechas de inicio.
  */
+
+/** La pausa entre un estudio y el siguiente, en semanas. */
+export const SEMANAS_DE_VACACIONES = 1
 
 const MS_DIA = 86_400_000
 
@@ -41,5 +50,5 @@ export function fechasDelSucesor(input: {
   // para saber cuándo empezó, y un fin falso dispararía el recordatorio de
   // cierre en una fecha que nadie acordó.
   if (!Number.isFinite(semanas) || semanas <= 0) return { starts_at: inicio, ends_at: null }
-  return { starts_at: inicio, ends_at: sumarDias(inicio, Math.round(semanas) * 7) }
+  return { starts_at: inicio, ends_at: sumarDias(inicio, (Math.round(semanas) + SEMANAS_DE_VACACIONES) * 7) }
 }

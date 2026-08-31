@@ -3,15 +3,23 @@ import { fechasDelSucesor, sumarDias } from './successor-dates'
 
 describe('fechasDelSucesor', () => {
   it('arranca donde terminó el anterior', () => {
-    // Caso real: DIS1 de junio termina el 10/08; su DIS2 (9 semanas) sigue ahí.
+    // DIS1 de junio termina el 10/08; su DIS2 dura 9 semanas + 1 de vacaciones.
     expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 9, hoy: '2026-08-31' }))
-      .toEqual({ starts_at: '2026-08-10', ends_at: '2026-10-12' })
+      .toEqual({ starts_at: '2026-08-10', ends_at: '2026-10-19' })
   })
 
   it('la cadena de Niveles, con la duración de cada plan', () => {
-    // N2 de junio termina el 17/08; su N3 dura 10 semanas.
+    // N2 de junio termina el 17/08; su N3 dura 10 semanas + 1 de vacaciones.
     expect(fechasDelSucesor({ finDelAnterior: '2026-08-17', semanas: 10, hoy: '2026-08-31' }))
-      .toEqual({ starts_at: '2026-08-17', ends_at: '2026-10-26' })
+      .toEqual({ starts_at: '2026-08-17', ends_at: '2026-11-02' })
+  })
+
+  it('el período incluye SIEMPRE la semana de vacaciones', () => {
+    // La pausa entre un estudio y el siguiente. Va en el fin del período y no
+    // en el inicio del que sigue: así se reparte sola por toda la cadena.
+    const { starts_at, ends_at } = fechasDelSucesor({ finDelAnterior: '2026-01-05', semanas: 10, hoy: '2026-01-01' })
+    expect(sumarDias(starts_at, 10 * 7)).toBe('2026-03-16')   // sin vacaciones
+    expect(ends_at).toBe('2026-03-23')                        // con la semana
   })
 
   it('acepta un timestamp completo y se queda con el día', () => {
@@ -21,7 +29,7 @@ describe('fechasDelSucesor', () => {
 
   it('sin fecha de fin del anterior, arranca el día del cierre', () => {
     expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-08-31' }))
-      .toEqual({ starts_at: '2026-08-31', ends_at: '2026-11-09' })
+      .toEqual({ starts_at: '2026-08-31', ends_at: '2026-11-16' })
   })
 
   it('sin duración NO se inventa un fin', () => {

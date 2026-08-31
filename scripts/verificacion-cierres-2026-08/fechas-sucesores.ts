@@ -35,8 +35,11 @@ async function main() {
   const planPorId = new Map(planes.map(p => [p.id, p]))
   const hoy = new Date().toISOString().slice(0, 10)
 
-  const huerfanos = grupos.filter(g => g.status !== 'finalizado' && !g.starts_at)
-  console.log(`grupos abiertos sin fecha de inicio: ${huerfanos.length}\n`)
+  // Los sucesores se reconocen por el prefijo del código ("N3 · …"). Se
+  // incluyen los que YA tienen inicio para recalcularles el FIN: la semana de
+  // vacaciones se agregó después de ponerles fecha (2026-08-31).
+  const huerfanos = grupos.filter(g => g.status !== 'finalizado' && (!g.starts_at || /^[A-Z0-9]+\s*·\s*/.test(g.name)))
+  console.log(`sucesores a revisar: ${huerfanos.length}\n`)
 
   const cambios: Array<{ g: Grupo; starts_at: string; ends_at: string | null; pred: string }> = []
   for (const g of huerfanos) {
@@ -46,6 +49,9 @@ async function main() {
     const pred = grupos.find(x => x.name === sinPrefijo && x.status === 'finalizado')
     if (!pred) { console.log(`✗ ${g.name}: no encuentro el predecesor "${sinPrefijo}"`); continue }
     const f = fechasDelSucesor({ finDelAnterior: pred.ends_at, semanas: plan?.duration_weeks, hoy })
+    const igual = String(g.starts_at ?? '').slice(0, 10) === f.starts_at
+      && String(g.ends_at ?? '').slice(0, 10) === (f.ends_at ?? '')
+    if (igual) { console.log(`· ${g.name}: ya está bien`); continue }
     console.log(`✓ ${g.name}`)
     console.log(`    predecesor "${pred.name}" terminó ${String(pred.ends_at).slice(0, 10)}`)
     console.log(`    → inicia ${f.starts_at}, termina ${f.ends_at ?? '(sin duración en el plan)'}  [${plan?.code} · ${plan?.duration_weeks ?? '?'} semanas]`)
