@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { assignMemberRole, revokeMemberRole } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
-import { ROLES, assignableRoleIds } from '@/lib/auth/roles'
+import { ROLES, assignableRoleIds, ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import type { RoleId } from '@/types/auth'
 import { isUuid } from '@/lib/validate'
 
@@ -26,7 +26,7 @@ export async function POST(
 ) {
   try {
     // admin gestiona todo; coordinador_estudios solo los roles delegados.
-    const auth = await requireRoles('admin', 'coordinador_estudios')
+    const auth = await requireRoles(...ACCESOS_SCREEN_ROLES)
     if (auth.res) return auth.res
     const { memberId } = await params
     if (!isUuid(memberId)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
@@ -53,7 +53,7 @@ export async function DELETE(
   { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
-    const auth = await requireRoles('admin', 'coordinador_estudios')
+    const auth = await requireRoles(...ACCESOS_SCREEN_ROLES)
     if (auth.res) return auth.res
     const { memberId } = await params
     if (!isUuid(memberId)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })

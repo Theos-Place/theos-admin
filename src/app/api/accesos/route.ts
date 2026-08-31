@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import { requireRoles } from '@/lib/auth/guard'
 import { getUserAccess } from '@/lib/supabase/queries/members'
 
@@ -6,7 +7,7 @@ import { getUserAccess } from '@/lib/supabase/queries/members'
 // coordinador_estudios entra para gestionar los permisos que tiene delegados.
 export async function GET() {
   try {
-    const auth = await requireRoles('admin', 'coordinador_estudios')
+    const auth = await requireRoles(...ACCESOS_SCREEN_ROLES)
     if (auth.res) return auth.res
     return NextResponse.json(await getUserAccess())
   } catch (error) {

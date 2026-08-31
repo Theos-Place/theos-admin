@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -146,8 +147,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const userRole  = user?.role ?? ''
   const userRoles = user?.roles ?? []
 
-  // coordinador_estudios entra a accesos para gestionar solo sus permisos delegados.
-  const canViewAccesos = userRoles.some(r => ['admin', 'coordinador_estudios'].includes(r))
+  // Quién entra a accesos: coordinador_estudios para sus permisos delegados,
+  // gestor_accesos para dar y quitar. La lista vive en roles.ts, no acá.
+  const canViewAccesos = userRoles.some(r => (ACCESOS_SCREEN_ROLES as string[]).includes(r))
   const canViewListas = userRoles.some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
   const canViewDuplicados = userRoles.some(r => ['admin', 'editor_perfiles'].includes(r))
 

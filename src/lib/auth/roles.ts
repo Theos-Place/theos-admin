@@ -61,13 +61,30 @@ export const COORDINADOR_ESTUDIOS_DELEGABLE: RoleId[] = [
   'editor_perfiles', 'editor_grupos_estudio', 'folletos',
 ]
 
+/**
+ * Quién ENTRA a la pantalla de accesos.
+ *
+ * Estaba escrita a mano en tres lugares —el sidebar, GET /api/accesos y el
+ * POST/DELETE de roles— y son el mismo invariante: agregar un rol y olvidarse
+ * de uno de los tres deja la pantalla visible sin datos, o los datos sin
+ * pantalla. Acá se decide una sola vez.
+ */
+export const ACCESOS_SCREEN_ROLES: RoleId[] = ['admin', 'coordinador_estudios', 'gestor_accesos']
+
 /** Qué roles puede asignar/quitar un actor según SUS roles:
  *   · 'all'  → admin: cualquiera.
- *   · Set    → coordinador_estudios: solo los delegados.
+ *   · Set    → gestor_accesos: todos MENOS 'admin'.
+ *              coordinador_estudios: solo los delegados.
  *   · Set()  → nadie (sin permiso de gestión de accesos).
  *  La usan el endpoint de accesos (server) y la UI de accesos (para filtrar). */
 export function assignableRoleIds(actorRoles: RoleId[]): 'all' | Set<RoleId> {
   if (actorRoles.includes('admin')) return 'all'
+  // 'gestor_accesos' da y quita accesos, pero NO reparte 'admin': poder
+  // otorgarse admin a uno mismo vuelve al rol indistinguible de admin, y
+  // entonces no habría por qué tenerlo aparte. Es el único que se le niega.
+  if (actorRoles.includes('gestor_accesos')) {
+    return new Set(ROLES.map(r => r.id).filter(id => id !== 'admin'))
+  }
   if (actorRoles.includes('coordinador_estudios')) return new Set(COORDINADOR_ESTUDIOS_DELEGABLE)
   return new Set<RoleId>()
 }
@@ -238,12 +255,12 @@ export const ROLES: Role[] = [
   {
     id: 'gestor_accesos',
     name: 'Gestor de accesos',
-    description: 'Cambiar el correo con el que una persona entra al sistema',
+    description: 'Dar y quitar accesos, y cambiar el correo con el que una persona entra',
     color: '#8E7CC3',
-    // A PROPÓSITO sin permisos de módulo: no abre ninguna pantalla nueva. Es un
-    // añadido para quien YA administra perfiles (coordinaciones, dirección) y
-    // solo desbloquea una acción puntual en «Cuenta y acceso». Ver
-    // src/lib/auth/access-email.ts para por qué va aparte.
+    // Sin permisos de MÓDULO a propósito: lo que habilita no son pantallas de
+    // datos sino dos capacidades sobre las cuentas —repartir roles
+    // (assignableRoleIds, todo menos 'admin') y cambiar el correo de acceso
+    // (access-email.ts)—, cada una con su regla y sus tests.
     permissions: [],
   },
   {
