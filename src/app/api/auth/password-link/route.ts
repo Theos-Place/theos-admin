@@ -41,8 +41,23 @@ export async function POST(req: NextRequest) {
     }
     // Por identificador: 3 en 15 minutos alcanza de sobra para un caso real y
     // evita llenarle el buzón a alguien más.
+    //
+    // BUG 2026-08-31: acá se devolvía RESPUESTA_NEUTRAL —"ya le mandamos el
+    // enlace, revisá tu bandeja y spam"— sin mandar nada. Alguien que no
+    // recibía el correo reintentaba, quemaba los 3 intentos y a partir de ahí
+    // veía "ya te lo mandamos" para siempre, sin que saliera un solo correo.
+    // Caso real: una persona reintentó toda una tarde con esa pantalla
+    // diciéndole que sí.
+    //
+    // Decir que está limitado NO filtra nada: la respuesta depende de cuántas
+    // veces se escribió ESE identificador, no de si existe la cuenta. Un
+    // atacante ya sabe cuántas veces lo escribió.
     if (!rateLimit(`pwlink:id:${identifier}`, 3, 15 * 60_000)) {
-      return NextResponse.json(RESPUESTA_NEUTRAL)
+      return NextResponse.json({
+        error: 'Ya pediste el enlace hace un momento. Esperá unos minutos antes de volver a intentarlo — '
+          + 'si no te llegó, revisá la carpeta de spam o escribinos a soporte@theosplace.org.',
+        code: 'demasiados_intentos',
+      }, { status: 429 })
     }
 
     // Resolver a un miembro: se acepta correo o documento, igual que el login.
