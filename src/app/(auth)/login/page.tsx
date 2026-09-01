@@ -456,14 +456,19 @@ export default function LoginPage() {
         </>
       )}
 
-      {/* AUTH-1: primera vez — la cuenta ya existe (creada en lote con
-          contraseña aleatoria); la persona la reclama con el flujo de
-          recuperación, solo cambia el copy. */}
+      {/* UN SOLO enlace para "no puedo entrar" (2026-09-01). Antes eran dos
+          —"primera vez" y "olvidé mi contraseña"— que iban al MISMO flujo de
+          recuperación, solo con distinto copy. Dos enlaces al mismo lugar
+          obligan a decidir algo que no cambia nada, y desde que existe el
+          registro público "primera vez" además se confundía con crear cuenta.
+
+          El que sí es una decisión de verdad —tengo perfil vs. no tengo— quedó
+          abajo, con su propio texto. */}
       <div className="mt-5 rounded-xl border border-teal-deep/25 bg-teal-soft/15 px-4 py-3 text-center">
         <p className="text-[13px] text-navy font-body">
-          ¿Primera vez en la nueva plataforma?{' '}
-          <Link href="/recuperar?nueva=1" className="font-semibold text-teal-deep hover:underline">
-            Creá tu contraseña acá →
+          ¿No podés entrar, o nunca definiste tu contraseña?{' '}
+          <Link href="/recuperar" className="font-semibold text-teal-deep hover:underline">
+            Creá o recuperá tu contraseña →
           </Link>
         </p>
       </div>
@@ -487,13 +492,6 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      {/* Recuperar */}
-      <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">
-        ¿Olvidaste tu contraseña?{' '}
-        <Link href="/recuperar" className="text-navy-light hover:text-navy font-medium transition-colors">
-          Recuperar acceso →
-        </Link>
-      </p>
 
       {/* Legal */}
       <p className="mt-6 text-center text-[13px] text-navy-light/80 font-body">
