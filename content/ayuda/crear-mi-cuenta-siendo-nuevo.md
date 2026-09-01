@@ -9,7 +9,7 @@ resumen: Cómo registrarte si nunca has estado en el sistema, por qué se pide l
 
 # Soy nuevo en Theos y quiero crear mi cuenta
 
-![Los cuatro pasos para registrarte, y qué pasa si tu cédula ya estaba](/ayuda/infografias/crear-mi-cuenta-siendo-nuevo.svg)
+![Los cuatro pasos para registrarte, y qué pasa si tu cédula ya estaba](/ayuda/infografias/crear-mi-cuenta-siendo-nuevo.svg) ![El flujo completo: registrarte y definir tu contraseña](/ayuda/tutoriales/registro/registro.gif)
 
 Si nunca has estado en el sistema, podés crear tu cuenta vos mismo desde la
 pantalla de ingreso. No hay que pedirle permiso a nadie ni esperar a que alguien
@@ -27,10 +27,10 @@ tus estudios, tus pagos y tu historial — quedarían en el perfil viejo.
 
 En la pantalla de ingreso hay dos enlaces distintos, y hacen cosas distintas:
 
-- **«¿Primera vez en la nueva plataforma? Creá tu contraseña acá»** — para quien
-  YA tiene perfil. Es la mayoría de la gente.
-- **«¿Nuevo en Theos y todavía no tenés perfil? Creá tu cuenta acá»** — para
-  quien de verdad no está en el sistema.
+- **«¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Restablecé
+  tu contraseña»** — para quien YA tiene perfil. Es la mayoría de la gente.
+- **«¿Nuevo en Theos y todavía no tenés perfil? Registrate acá»** — para quien
+  de verdad no está en el sistema.
 
 Si tenés dudas de cuál sos, probá primero recuperar el acceso con tu correo. Si
 no tenés perfil, no pasa nada.
@@ -93,3 +93,5 @@ matricularte, inscribirte a eventos y ver tus pagos.
 
 Todo lo demás —ver a otras personas, manejar grupos, revisar pagos— son permisos
 que se otorgan aparte, y los da la coordinación cuando corresponde.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/registro/registro.mp4)

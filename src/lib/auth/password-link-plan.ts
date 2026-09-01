@@ -1,6 +1,7 @@
 // En qué orden intentar generar el enlace de contraseña.
 //
-// El botón "¿Primera vez en la nueva plataforma? Creá tu contraseña acá" y el de
+// El botón "Restablecé tu contraseña" de la pantalla de ingreso (hasta el
+// 2026-09-01 eran dos, "primera vez" y "olvidé mi contraseña") y el de
 // "¿Olvidaste tu contraseña?" caen en el MISMO flujo, y la persona no tiene por
 // qué saber en cuál de los tres estados está su cuenta:
 //

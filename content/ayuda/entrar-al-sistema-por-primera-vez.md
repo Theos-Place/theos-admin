@@ -17,7 +17,7 @@ Lo que falta es que le pongas una contraseña, y eso lo hacés vos — nadie má
 ## Los cuatro pasos
 
 1. Entrá a [admin.theosplace.org](https://admin.theosplace.org).
-2. Tocá **"Creá tu contraseña acá"**, debajo del botón de iniciar sesión.
+2. Tocá **"Restablecé tu contraseña"**, debajo del botón de iniciar sesión.
 3. Escribí **el mismo correo** con el que te llegan los mensajes de Theos y tocá enviar.
 4. Abrí el enlace que te llega al correo y elegí tu contraseña.
 
@@ -36,7 +36,7 @@ mirá también la pestaña de *Promociones*. El enlace tarda un par de minutos c
 tuyo está escrito distinto. Escribinos a [soporte@theosplace.org](mailto:soporte@theosplace.org)
 y lo corregimos.
 
-**Me olvidé la contraseña.** Es el mismo camino: tocá **"Recuperar acceso"** en la pantalla
+**Me olvidé la contraseña.** Es el mismo camino y el mismo enlace: **"Restablecé tu contraseña"** en la pantalla
 de inicio y seguí los pasos.
 
 **Me mandaron un correo con instrucciones, no un enlace para entrar.** Es a propósito. Los

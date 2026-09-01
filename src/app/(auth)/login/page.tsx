@@ -466,9 +466,9 @@ export default function LoginPage() {
           abajo, con su propio texto. */}
       <div className="mt-5 rounded-xl border border-teal-deep/25 bg-teal-soft/15 px-4 py-3 text-center">
         <p className="text-[13px] text-navy font-body">
-          ¿No podés entrar, o nunca definiste tu contraseña?{' '}
+          ¿Primera vez en la nueva plataforma u olvidaste tu contraseña?{' '}
           <Link href="/recuperar" className="font-semibold text-teal-deep hover:underline">
-            Creá o recuperá tu contraseña →
+            Restablecé tu contraseña →
           </Link>
         </p>
       </div>

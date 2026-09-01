@@ -27,7 +27,7 @@ describe('correo de instrucciones para entrar', () => {
   })
 
   it('lleva el paso a paso y el correo con el que hay que pedirlo', () => {
-    expect(html).toContain('Creá tu contraseña acá')
+    expect(html).toContain('Restablecé tu contraseña')
     expect(html).toContain('floriana@theosplace.org')
     expect(html).toContain('Hola, Floriana')
   })
@@ -46,9 +46,11 @@ describe('variante "restablecer" (la manda un admin desde la ficha)', () => {
     }
   })
 
-  it('manda al enlace de recuperar, no al de primera vez', () => {
-    expect(reset).toContain('Recuperar acceso')
-    expect(reset).not.toContain('Primera vez en la nueva plataforma')
+  it('apunta al MISMO enlace que la variante de primera vez', () => {
+    // Los dos casos siempre fueron el mismo flujo, y desde el 2026-09-01 la
+    // pantalla de ingreso tiene un solo enlace. El correo tiene que nombrar el
+    // que la persona va a ver: si nombra uno que no existe, la deja buscando.
+    expect(reset).toContain('Restablecé tu contraseña')
   })
 })
 

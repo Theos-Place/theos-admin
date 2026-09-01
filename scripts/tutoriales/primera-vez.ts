@@ -70,10 +70,13 @@ export const flujo: TutorialFlow = {
     await t.badge(1) // paso 1 de la guía: entrá a admin.theosplace.org
     await t.shot('01-login')
 
-    // 2 · "Creá tu contraseña acá"
-    await t.click(t.page.getByText('Creá tu contraseña acá'))
+    // 2 · "Restablecé tu contraseña". El texto cambió el 2026-09-01 (antes eran
+    //     DOS enlaces al mismo flujo); si vuelve a cambiar, esta línea se cae y
+    //     hay que regrabar — es el precio de guiarse por el texto visible, que
+    //     es también lo que hace que el tutorial muestre lo que la gente ve.
+    await t.click(t.page.getByText('Restablecé tu contraseña'))
     await t.page.waitForURL('**/recuperar**')
-    await t.badge(2) // paso 2: "Creá tu contraseña acá"
+    await t.badge(2) // paso 2: "Restablecé tu contraseña"
     await t.shot('02-crear-contrasena')
 
     // 3 · Ingresar el correo y enviar

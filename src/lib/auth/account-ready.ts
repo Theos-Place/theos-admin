@@ -14,8 +14,13 @@ import { renderEmail } from '@/lib/email/baseLayout'
  * misma desde la pantalla de ingreso, y ahí lo usa en segundos.
  *
  * Dos variantes, misma estructura:
- *   · 'primera_vez'  → nunca ha entrado: "Creá tu contraseña acá".
- *   · 'restablecer'  → ya tenía contraseña y la perdió: "Recuperar acceso".
+ *   · 'primera_vez'  → nunca ha entrado.
+ *   · 'restablecer'  → ya tenía contraseña y la perdió.
+ *
+ * Las dos apuntan al MISMO enlace de la pantalla de ingreso: desde el
+ * 2026-09-01 hay uno solo, "Restablecé tu contraseña", porque los dos casos
+ * siempre fueron el mismo flujo. Lo que cambia entre las variantes es el tono,
+ * no el camino.
  *
  * El correo CON token (password-link.ts) queda SOLO para el autoservicio: ahí
  * lo pide la persona y lo usa al toque.
@@ -44,7 +49,7 @@ const COPY: Record<AccessEmailKind, {
       + 'solo tenés que crear tu contraseña — toma menos de dos minutos.',
     cta: 'Entrar al sistema →',
     pasosTitulo: 'Cómo crear tu contraseña',
-    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma? Creá tu contraseña acá&raquo;',
+    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Restablecé tu contraseña&raquo;',
     ultimoPaso: 'Te llega un enlace al momento; abrilo y definí tu contraseña.',
   },
   restablecer: {
@@ -53,7 +58,7 @@ const COPY: Record<AccessEmailKind, {
       + 'nueva. Son cuatro pasos y no toma ni dos minutos.',
     cta: 'Ir a la pantalla de ingreso →',
     pasosTitulo: 'Cómo recuperar tu acceso',
-    enlaceDeLogin: '&laquo;¿Olvidaste tu contraseña? Recuperar acceso&raquo;',
+    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Restablecé tu contraseña&raquo;',
     ultimoPaso: 'Te llega un enlace al momento; abrilo y definí tu contraseña nueva.',
   },
 }
