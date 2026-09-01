@@ -99,7 +99,15 @@ export function MemberAdminTab({ memberId, onChanged }: {
       // El error del servidor se muestra tal cual: dice CUÁL es el problema
       // (correo de otra persona, cuenta duplicada) y eso es lo accionable.
       if (!res.ok) { setCorreoMsg({ ok: false, text: d?.error ?? 'No se pudo cambiar el correo.' }); return }
-      setCorreoMsg({ ok: true, text: `Ahora entra con ${d.email}.` })
+      setCorreoMsg({
+        ok: true,
+        text: d.religada
+          // Se encontró la cuenta que la persona ya se había creado por su
+          // lado y la ficha se movió ahí: conviene decirlo, porque conserva sus
+          // ingresos y su contraseña — no tiene que volver a definir nada.
+          ? `Ya tenía una cuenta con ${d.email}: la ficha quedó conectada a esa, con su contraseña de siempre.`
+          : `Ahora entra con ${d.email}.`,
+      })
       setCorreoAbierto(false); setCorreoNuevo('')
       await loadAccount()
       onChanged?.()

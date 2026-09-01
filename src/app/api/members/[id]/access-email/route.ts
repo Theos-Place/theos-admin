@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { ACCESS_EMAIL_ROLES, errorDeCorreoDeAcceso, normalizarCorreo } from '@/lib/auth/access-email'
+import { planDeCambioDeCorreo } from '@/lib/auth/access-email-plan'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAudit } from '@/lib/audit'
@@ -51,19 +52,46 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    // Cuenta de Auth con ese correo. Se chequea ANTES porque el admin API
-    // responde 500 —no 409— cuando el correo ya existe, y ese error no le dice
-    // nada a nadie. Verificado el 2026-08-31 con un caso real.
-    const { data: lista } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    const ocupada = (lista?.users ?? []).find(u => normalizarCorreo(u.email) === email && u.id !== m.auth_user_id)
-    if (ocupada) {
-      return NextResponse.json(
-        {
-          error: 'Ya existe otra cuenta de acceso con ese correo. Hay que resolver el duplicado antes de reasignarlo.',
-          code: 'cuenta_duplicada',
-        },
-        { status: 409 },
-      )
+    // Cuenta de Auth con ese correo. Va por una función de base
+    // (buscar_cuenta_por_correo) y no por auth.admin.listUsers: ese mira MIL de
+    // las 18.415 cuentas, así que el guard fallaba para el 95% del padrón y el
+    // cambio reventaba después con un 500 de Supabase.
+    const { data: encontrada } = await supabase.rpc('buscar_cuenta_por_correo' as never, { p_email: email } as never)
+    const otra = ((encontrada ?? []) as Array<{ id: string; ha_entrado: boolean; fichas: number }>)[0] ?? null
+
+    const { data: mia } = await supabase.rpc('buscar_cuenta_por_correo' as never, { p_email: m.email ?? '' } as never)
+    const actualInfo = ((mia ?? []) as Array<{ id: string; ha_entrado: boolean; fichas: number }>)
+      .find(u => u.id === m.auth_user_id)
+
+    const plan = planDeCambioDeCorreo({
+      actual: { id: m.auth_user_id, haEntrado: !!actualInfo?.ha_entrado, fichas: Number(actualInfo?.fichas ?? 1) },
+      conEseCorreo: otra ? { id: otra.id, haEntrado: !!otra.ha_entrado, fichas: Number(otra.fichas) } : null,
+    })
+    if (plan.accion === 'bloquear') {
+      return NextResponse.json({ error: plan.motivo, code: 'cuenta_duplicada' }, { status: 409 })
+    }
+
+    // RELIGAR: la persona ya se creó una cuenta con el correo bueno y la de su
+    // ficha nunca se usó. Se mueve la ficha a la que usa y se borra la muerta;
+    // renombrar sería imposible igual (el correo está tomado). Antes esto
+    // devolvía "hay que resolver el duplicado" y no había con qué resolverlo.
+    if (plan.accion === 'religar') {
+      const { error: relErr } = await supabase.from('members')
+        .update({ auth_user_id: plan.cuentaNueva, email }).eq('id', id)
+      if (relErr) {
+        console.error('access-email religar:', relErr.message)
+        return NextResponse.json({ error: 'No se pudo reconectar la cuenta.' }, { status: 500 })
+      }
+      const { error: delErr } = await supabase.auth.admin.deleteUser(plan.cuentaAbandonada)
+      // Si no se pudo borrar, la persona YA quedó bien: solo sobra una cuenta
+      // sin dueño. No se revierte por eso.
+      if (delErr) console.warn('access-email borrar cuenta vieja:', delErr.message)
+      await logAudit({
+        actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'members', entityId: id,
+        oldData: { email: m.email, auth_user_id: m.auth_user_id },
+        newData: { email, auth_user_id: plan.cuentaNueva, via: 'access-email:religar' },
+      })
+      return NextResponse.json({ ok: true, email, religada: true })
     }
 
     // email_confirm: la dirección la pone el staff, no se le pide a la persona
