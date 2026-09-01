@@ -468,6 +468,16 @@ export default function LoginPage() {
         </p>
       </div>
 
+      {/* Registro público: para quien NO está en el padrón. Va SEPARADO del
+          "creá tu contraseña", que es para quien ya tiene ficha — confundir los
+          dos es lo que hace que alguien termine con dos fichas. */}
+      <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">
+        ¿Nuevo en Theos y todavía no tenés perfil?{' '}
+        <Link href="/registro" className="font-semibold text-teal-deep hover:underline">
+          Creá tu cuenta acá →
+        </Link>
+      </p>
+
       {/* Ayuda: pública, se lee SIN sesión (el tutorial de crear la contraseña
           está ahí, así que tiene que abrirse desde acá). */}
       <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">

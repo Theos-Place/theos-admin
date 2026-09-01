@@ -14,7 +14,7 @@ import { loginUrlWithDest, safeDest } from '@/lib/auth/redirect-target'
 // módulo '/formularios' sigue pidiendo sesión. La ruta solo sirve los que están
 // marcados abiertos y sin requerir cuenta — el filtro real está en el API, acá
 // solo se deja pasar el prefijo.
-const PUBLIC_PREFIXES = ['/login', '/recuperar', '/calendario', '/formulario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm', '/auth/continuar']
+const PUBLIC_PREFIXES = ['/login', '/registro', '/recuperar', '/calendario', '/formulario', '/completar-perfil', '/terminos', '/vacantes', '/ayuda', '/auth/confirm', '/auth/continuar']
 
 export function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
