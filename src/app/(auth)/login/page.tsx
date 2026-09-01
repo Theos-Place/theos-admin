@@ -31,7 +31,6 @@ export default function LoginPage() {
   const [email, setEmail]             = useState('')  // correo o cédula
   const [password, setPassword]       = useState('')
   const [showPass, setShowPass]       = useState(false)
-  const [rememberMe, setRememberMe]   = useState(false)
   const [loading, setLoading]         = useState(false)
   const [authError, setAuthError]     = useState('')
 
@@ -374,36 +373,6 @@ export default function LoginPage() {
             </p>
           )}
         </div>
-
-        {/* Recordarme */}
-        <label className="flex items-center gap-2.5 cursor-pointer w-fit">
-          <div
-            className="relative flex items-center"
-            onClick={() => setRememberMe(v => !v)}
-          >
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={() => {}}
-              className="sr-only"
-            />
-            <div
-              className={`h-4 w-4 rounded flex items-center justify-center transition-all ${rememberMe ? 'bg-coral' : 'bg-white'}`}
-              style={{
-                border: rememberMe ? 'none' : '1.5px solid rgba(22,20,64,0.25)',
-              }}
-            >
-              {rememberMe && (
-                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                  <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </div>
-          </div>
-          <span className="text-[13px] text-navy-light/80 select-none font-body">
-            Recordarme
-          </span>
-        </label>
 
         {/* Submit */}
         <button

@@ -41,10 +41,17 @@ export default async function AyudaArticuloPage(
   const html = renderMarkdown(doc.content)
   const hasImages = html.includes('<img')
 
-  // El TEXTO va en ancho de lectura. Las infografías son diagramas anchos: en
-  // una columna de 768 px quedan ilegibles, así que esas guías usan el ancho de
-  // trabajo — y cualquier imagen se abre a pantalla completa al tocarla.
-  const width = doc.tipo === 'infografia' ? 'work' : 'reading'
+  // El TEXTO va en ancho de lectura. Las imágenes —infografías y los GIF de los
+  // tutoriales— son diagramas anchos: en una columna de 768 px quedan
+  // ilegibles, así que la página se abre al ancho de trabajo. Cualquier imagen
+  // además se ve a pantalla completa al tocarla.
+  //
+  // Depende de si HAY imágenes, no del `tipo`. Antes miraba `tipo ===
+  // 'infografia'`, que funcionaba solo porque hasta ahora las imágenes vivían
+  // únicamente ahí. El primer tutorial con infografía —"Soy nuevo en Theos y
+  // quiero crear mi cuenta"— salió apretado en la columna angosta: el diagrama
+  // era el mismo, la etiqueta era otra. La etiqueta nunca fue la razón.
+  const width = hasImages ? 'work' : 'reading'
 
   return (
     <PageContainer width={width}>

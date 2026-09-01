@@ -145,9 +145,12 @@ export const flujo: TutorialFlow = {
     await t.badge(4)
     await t.shot('09-exito')
 
-    // 5 · Adentro. Una cuenta recién registrada es 'miembro': ve su perfil.
+    // 5 · Adentro. Se va a /dashboard y el sistema redirige SOLO al perfil,
+    //     porque una cuenta recién registrada es 'miembro' y los miembros no
+    //     tienen dashboard (landsOnProfile). Antes esto iba a '/perfil', que NO
+    //     existe como ruta: el video terminaba en "página no encontrada".
     await t.pause(2000)
-    await t.goto('/perfil')
+    await t.goto('/dashboard')
     await t.badge(null)
     await t.pause(1500)
     await t.shot('10-adentro')
