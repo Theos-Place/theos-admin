@@ -2,6 +2,7 @@
 // Versión server-side de la lógica que antes vivía en enrollment-eligibility.ts (mock).
 
 import type { StudyType, StudyGroup } from '@/types/study'
+import { perdona, type Waivable } from '@/lib/studies/exception-scope'
 import { ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
 import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
 
@@ -186,7 +187,10 @@ export function computeEligibility(
     // Excepción de matrícula activa: requisitos perdonados para este plan.
     const waived = profile.exceptions?.[study.code]
     const by_exception = !!waived && waived.length > 0
-    const isWaived = (req: string) => !!waived && (waived.includes('all') || waived.includes(req))
+    // 'all' cubre los requisitos de entrada pero NO 'repetir': habilitar un
+    // curso ya aprobado es otra decisión y se marca aparte. La regla vive en
+    // exception-scope.ts, con sus tests.
+    const isWaived = (req: Waivable) => perdona(waived, req)
 
     // 1. Prerequisito
     if (study.prerequisite) {
@@ -229,15 +233,19 @@ export function computeEligibility(
       reasons_blocked.push('Ya estás matriculado en este estudio')
     }
 
-    // 3. No lo completó
+    // 3. No lo completó — salvo excepción de REPETIR, que existe justamente
+    // para quien ya lo llevó y lo quiere volver a llevar.
     if (profile.completed_codes.includes(study.code)) {
-      reasons_blocked.push('Ya completaste este estudio')
+      if (isWaived('repetir')) reasons_met.push('Podés repetir este estudio (excepción) ✓')
+      else reasons_blocked.push('Ya completaste este estudio')
     }
 
     // 3b. No completó un estudio POSTERIOR de la cadena (si llevó Panorama,
-    // ya pasó por los Discípulos aunque no estén registrados).
+    // ya pasó por los Discípulos aunque no estén registrados). La misma
+    // excepción lo cubre: quien repite Nivel 2 después de haber llegado a
+    // Nivel 4 está pidiendo exactamente esto.
     if (completedDescendant(study.code, plans, profile.completed_codes)) {
-      reasons_blocked.push('Ya completaste un estudio más avanzado de esta cadena')
+      if (!isWaived('repetir')) reasons_blocked.push('Ya completaste un estudio más avanzado de esta cadena')
     }
 
     // 4. Compromisos (cada uno puede eximirse por excepción)

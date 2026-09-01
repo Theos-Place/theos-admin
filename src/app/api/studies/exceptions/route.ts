@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { WAIVABLE } from '@/lib/studies/exception-scope'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { listExceptionsForMember, createException } from '@/lib/supabase/queries/study-exceptions'
@@ -10,8 +11,10 @@ import { REASON_MIN, REASON_MAX } from '@/lib/studies/exception-reason'
 const exceptionSchema = z.object({
   member_id: z.string().uuid(),
   plan_id: z.string().uuid(),
+  // La lista viene de WAIVABLE, no escrita otra vez acá: agregar un permiso
+  // nuevo y olvidar este enum lo rechaza con 400 y nadie entiende por qué.
   waived_requirements: z
-    .array(z.enum(['donor', 'attendance', 'server', 'prerequisite', 'age', 'all']))
+    .array(z.enum(WAIVABLE))
     .min(1, 'Elegí al menos un requisito a eximir'),
   reason: z.string().trim().min(REASON_MIN, 'Contá en una frase por qué se hace la excepción').max(REASON_MAX),
 }).strict()

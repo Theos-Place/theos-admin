@@ -267,3 +267,40 @@ describe('etapa avanzada (EST-5)', () => {
     expect(r.by_invitation).toBe(true)
   })
 })
+
+describe('excepción de REPETIR un curso ya llevado', () => {
+  // El caso: alguien que aprobó un estudio y lo quiere volver a llevar. Antes
+  // no había forma — la matrícula lo bloqueaba con "Ya completaste este
+  // estudio", que no es un requisito incumplido sino lo contrario.
+  const plan = {
+    code: 'N1', name: 'Nivel 1', stage: 'inicial', weeks: 10, prerequisite: null,
+    req_donor: false, req_server: false, req_attendee: false, min_age: null, max_age: null,
+    requires_payment: false, cost: null, currency: null, invitation_only: false,
+  } as never
+
+  const perfil = (exceptions?: Record<string, string[]>) => ({
+    completed_codes: ['N1'], current_code: null, enrolled_codes: [],
+    is_donor: false, is_server: false, charla_count: 0, attendance_active: false,
+    attendance_active_intermedia: false, invited_codes: [], member_age: 30,
+    authorized_virtual_studies: false, exceptions,
+  } as never)
+
+  it('sin excepción, sigue bloqueado', () => {
+    const r = computeEligibility([plan], [], perfil())
+    expect(r[0].reasons_blocked).toContain('Ya completaste este estudio')
+    expect(r[0].is_eligible).toBe(false)
+  })
+
+  it('con la excepción, se puede repetir', () => {
+    const r = computeEligibility([plan], [], perfil({ N1: ['repetir'] }))
+    expect(r[0].reasons_blocked).not.toContain('Ya completaste este estudio')
+    expect(r[0].is_eligible).toBe(true)
+  })
+
+  it('"todos los requisitos" NO alcanza para repetir', () => {
+    // Perdonar lo que falta y habilitar lo ya aprobado son decisiones
+    // distintas: quien otorga tiene que marcar 'repetir' explícitamente.
+    const r = computeEligibility([plan], [], perfil({ N1: ['all'] }))
+    expect(r[0].reasons_blocked).toContain('Ya completaste este estudio')
+  })
+})

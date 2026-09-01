@@ -7,6 +7,7 @@ import { useToast } from '@/components/shared/Toast'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { etiquetaVigencia } from '@/lib/studies/exception-scope'
 import {
   validateExceptionReason, isValidExceptionReason, REASON_MAX,
 } from '@/lib/studies/exception-reason'
@@ -14,6 +15,7 @@ import {
 type Exception = {
   id: string; plan_code: string; plan_name: string
   waived_requirements: string[]; reason: string | null
+  bloque_nombre?: string | null; cierre_matricula?: string | null; vigente?: boolean
   granted_by_name: string | null; status: string; created_at: string
 }
 
@@ -26,6 +28,7 @@ const REQS: { key: string; label: string }[] = [
 ]
 const REQ_LABEL: Record<string, string> = {
   ...Object.fromEntries(REQS.map(r => [r.key, r.label])), all: 'Todos los requisitos',
+  repetir: 'Repetir el curso',
 }
 
 /** "Crear excepción de matrícula" en el perfil — solo roles de estudios. Exime a un
@@ -39,6 +42,9 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
   const [planId, setPlanId] = useState('')
   const [waiveAll, setWaiveAll] = useState(false)
   const [waived, setWaived] = useState<Set<string>>(new Set())
+  // Aparte de los requisitos: no es perdonar algo que falta, es habilitar un
+  // curso que la persona YA aprobó. Por eso no entra en "todos los requisitos".
+  const [repetir, setRepetir] = useState(false)
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,10 +66,13 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
 
   if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return null
 
+  // `vigente` lo calcula el servidor con el bloque: una excepción puede seguir
+  // en 'active' y estar vencida. Mostrar solo el status mentiría.
   const activeList = list.filter(e => e.status === 'active')
+  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Costa_Rica' })
 
   async function submit() {
-    const reqs = waiveAll ? ['all'] : [...waived]
+    const reqs = [...(waiveAll ? ['all'] : [...waived]), ...(repetir ? ['repetir'] : [])]
     if (!planId || reqs.length === 0 || saving) return
     // La razón es obligatoria (2026-08-04): misma regla que valida el API.
     const reasonError = validateExceptionReason(reason)
@@ -133,6 +142,9 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                       <p className="text-[13px] font-medium text-navy font-body">{e.plan_code} — {e.plan_name}</p>
                       <p className="text-[13px] text-navy-light/80 font-body">
                         Exime: {e.waived_requirements.map(r => REQ_LABEL[r] ?? r).join(', ')}
+                      </p>
+                      <p className={`text-[13px] font-body ${e.vigente === false ? 'text-coral' : 'text-navy-light/80'}`}>
+                        {etiquetaVigencia({ cierreMatricula: e.cierre_matricula, bloqueNombre: e.bloque_nombre, hoy })}
                       </p>
                       {e.granted_by_name && <p className="text-[13px] text-navy-light/80 font-body">Otorgada por {e.granted_by_name}</p>}
                     </div>
