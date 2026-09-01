@@ -30,7 +30,11 @@ describe('petición SIN sesión', () => {
   it('sirve el tutorial público', async () => {
     const doc = await getHelpDoc(PUBLICO, null)
     expect(doc?.visibilidad).toBe('publica')
-    expect(doc?.content).toContain('Creá tu contraseña')
+    // Se comprueba que llega el CONTENIDO, no una frase suelta: la anterior
+    // ('Creá tu contraseña acá') era copy de la pantalla de ingreso y el test
+    // se cayó al renombrar ese enlace. El título sí es parte del documento.
+    expect(doc?.content).toContain('# Entrar al sistema por primera vez')
+    expect((doc?.content ?? '').length).toBeGreaterThan(200)
   })
 
   it('NO sirve un tutorial interno aunque se adivine la URL', async () => {

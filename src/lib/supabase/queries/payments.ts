@@ -315,7 +315,9 @@ export async function submitEnrollmentComprobante(input: {
   enrollment_id: string
   receipt_path: string
   reference_code: string | null
-}): Promise<{ id: string } | null> {
+  // `group_id` y `member_id` salen en la respuesta porque el caller manda el
+  // correo de bienvenida ACÁ y no al matricularse (ver la ruta de enrollments).
+}): Promise<{ id: string; member_id: string; group_id: string | null } | null> {
   const supabase = createAdminClient()
   const { data: enr } = await supabase
     .from('study_enrollments')
@@ -381,7 +383,7 @@ export async function submitEnrollmentComprobante(input: {
     // que después se separarían. Si falla, el pago queda en la cola como antes:
     // es mejor que quede por revisar a que se pierda.
     try { await autoAcceptComprobante(eid) } catch (e) { console.warn('autoAcceptComprobante:', e) }
-    return { id: eid }
+    return { id: eid, member_id: row.member_id, group_id: row.group_id }
   }
 
   let insertResult
@@ -417,7 +419,7 @@ export async function submitEnrollmentComprobante(input: {
   // que después se separarían. Si falla, el pago queda en la cola como antes:
   // es mejor que quede por revisar a que se pierda.
   try { await autoAcceptComprobante((data as { id: string }).id) } catch (e) { console.warn('autoAcceptComprobante:', e) }
-  return { id: (data as { id: string }).id }
+  return { id: (data as { id: string }).id, member_id: row.member_id, group_id: row.group_id }
 }
 
 /** Sube el comprobante de una inscripción a evento: análoga a

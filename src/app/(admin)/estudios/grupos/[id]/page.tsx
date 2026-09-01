@@ -83,7 +83,7 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
   const [restriccion, setRestriccion] = useState<{ memberId: string; nombre: string; motivo: string } | null>(null)
   // El comprobante SIEMPRE se pide (2026-08-06): también cuando matricula el
   // staff. La matrícula ya quedó hecha; esto es el pago, que va por su carril.
-  const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number; currency: string | null; memberName: string | null } | null>(null)
+  const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number; currency: string | null; memberName: string | null; memberId: string } | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -132,6 +132,9 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
           // Nombre de la persona INSCRITA (acá el staff matricula a un tercero),
           // para el detalle de la transferencia.
           memberName: (() => { const m = results.find(x => x.id === memberId); return m ? `${m.first_name} ${m.last_name}` : null })(),
+          // Para poder cancelar: acá el staff matricula a un TERCERO, así que
+          // el retiro tiene que decir a quién (si no, retira a la sesión).
+          memberId,
         })
         setAdding(null)
         return   // el modal del comprobante reemplaza al de búsqueda
@@ -149,11 +152,14 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
     return (
       <StudyReceiptModal
         enrollmentId={comprobante.enrollmentId}
+        groupId={groupId}
+        memberId={comprobante.memberId}
         studyName={studyName}
         memberName={comprobante.memberName}
         amount={comprobante.amount}
         currency={comprobante.currency}
         onDone={() => { setComprobante(null); onClose() }}
+        onCancelada={() => { setComprobante(null); onEnrolled() }}
       />
     )
   }

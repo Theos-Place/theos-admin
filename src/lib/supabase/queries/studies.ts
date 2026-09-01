@@ -1304,7 +1304,10 @@ export async function enrollMember(
      *  lo confirma y queda en la bitácora — nunca silencioso). */
     allowRestrictionOverride?: boolean
   },
-): Promise<{ status: 'enrolled'; enrollment_id: string; amount: number; currency: string | null; requires_payment: boolean }> {
+  // `status` puede ser 'pendiente_de_pago': con costo la matrícula no se
+  // confirma hasta el comprobante (regla 2026-09-01). El caller lo usa para
+  // saber si ya está adentro o si falta pagar.
+): Promise<{ status: 'enrolled' | 'pendiente_de_pago'; enrollment_id: string; amount: number; currency: string | null; requires_payment: boolean }> {
   const supabase = createAdminClient()
   // La columna del cupo en study_groups es `max_students` (no max_capacity: eso
   // es el nombre del TIPO DE DOMINIO). BUG 2026-08-06: se pedía `max_capacity`,
@@ -1459,10 +1462,20 @@ export async function enrollMember(
   }
   // El dirigente del grupo no paga la matrícula de su propio grupo.
   const requiresPaymentFinal = requiresPayment && finalAmount > 0 && !esDirigenteDelGrupo
-  // REGLA 2026-08-04: la matrícula queda EFECTIVA aunque el estudio tenga costo.
-  // El pago nace pendiente y lo revisa finanzas por su cuenta; un pago sin
-  // resolver no deshace ni suspende la matrícula.
-  const status = 'enrolled' as const
+  // REGLA 2026-09-01: con costo, la matrícula nace PENDIENTE DE PAGO y solo se
+  // confirma cuando entra el comprobante (approve_payment la pasa a 'enrolled').
+  //
+  // Esto revierte la decisión del 2026-08-04, que la dejaba efectiva de
+  // inmediato. El caso que la tumbó: alguien empieza a matricularse, llega a la
+  // pantalla del comprobante, se arrepiente y cierra — y quedaba matriculada,
+  // ocupando cupo, con un cobro abierto y un correo de bienvenida a un curso
+  // que nunca llevó. Pasó con Alexandra Forero y hubo que retirarla a mano.
+  //
+  // El estado 'pendiente_de_pago' nunca se removió del modelo: sigue ocupando
+  // cupo (OCCUPYING_STATUSES), cuenta como "cursando" en elegibilidad, tiene su
+  // etiqueta en las pantallas y el cierre lo contempla. Lo único que había
+  // cambiado era que dejó de escribirse.
+  const status = requiresPaymentFinal ? 'pendiente_de_pago' as const : 'enrolled' as const
 
   const { data: enr, error } = await supabase
     .from('study_enrollments')

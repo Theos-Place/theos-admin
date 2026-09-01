@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { notifyEnrollment } from '@/lib/email/enrollment-notify'
 import { requireModuleView } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
@@ -42,6 +43,20 @@ export async function POST(req: NextRequest) {
 
     const result = await submitEnrollmentComprobante({ enrollment_id: enrollmentId, receipt_path: path, reference_code: reference })
     if (!result) return NextResponse.json({ error: 'No se encontró la matrícula.' }, { status: 404 })
+
+    // El correo de bienvenida sale ACÁ, no al matricularse.
+    //
+    // Antes salía apenas se creaba la matrícula, o sea ANTES de que la persona
+    // pagara. Le decía "tu matrícula fue confirmada" a alguien que todavía
+    // estaba viendo la pantalla del comprobante — y si abandonaba ahí, quedaba
+    // con un correo de bienvenida a un curso que nunca llevó. Es lo que pasó
+    // con Alexandra Forero.
+    //
+    // Los estudios SIN costo siguen avisando al matricularse: ahí no hay
+    // comprobante que esperar y este código nunca corre.
+    if (result.group_id) {
+      await notifyEnrollment(result.group_id, result.member_id)
+    }
     return NextResponse.json({ ok: true, id: result.id }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'COMPROBANTE_EN_REVISION') {

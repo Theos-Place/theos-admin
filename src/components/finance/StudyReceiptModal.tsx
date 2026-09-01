@@ -18,8 +18,14 @@ import { declaredAmountMismatch } from '@/lib/finance/payment-breakdown'
 import { cn } from '@/lib/utils'
 import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
 
-export function StudyReceiptModal({ enrollmentId, studyName, memberName, amount, currency = 'CRC', onDone }: {
+export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, memberName, amount, currency = 'CRC', onDone, onCancelada }: {
   enrollmentId: string
+  /** Para poder CANCELAR la matrícula desde acá (retiro). Sin esto la única
+   *  salida del modal era subir el comprobante. */
+  groupId?: string
+  /** A quién se retira. Sin él, el endpoint retira a la sesión — correcto en
+   *  autoservicio, insuficiente cuando el staff matricula a un tercero. */
+  memberId?: string | null
   studyName: string
   /** Persona INSCRITA, para armarle el detalle de la transferencia. Opcional:
    *  sin ella las instrucciones salen igual, solo que genéricas. */
@@ -29,7 +35,15 @@ export function StudyReceiptModal({ enrollmentId, studyName, memberName, amount,
   /** Moneda del cobro (INT-3). Sin esto el monto se mostraba siempre en colones. */
   currency?: string | null
   onDone: () => void
+  /** Se llama tras cancelar, para que la pantalla se refresque. */
+  onCancelada?: () => void
 }) {
+  // Cancelar la matrícula sin comprobante. Existe porque no había salida: la
+  // persona que se arrepentía en esta pantalla quedaba matriculada y con un
+  // cobro abierto, y alguien del staff tenía que retirarla a mano. Pasó con
+  // Alexandra Forero.
+  const [confirmarCancelar, setConfirmarCancelar] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   // FIN-3: el monto declarado es solo para AVISAR si no coincide con el
@@ -58,11 +72,42 @@ export function StudyReceiptModal({ enrollmentId, studyName, memberName, amount,
     } finally { setBusy(false) }
   }
 
+  async function cancelarMatricula() {
+    if (!groupId || cancelando) return
+    setCancelando(true); setError(null)
+    try {
+      const res = await fetch(`/api/studies/groups/${groupId}/enrollments`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(memberId ? { member_id: memberId } : {}),
+          // El motivo es obligatorio (EST-14) y este es el real: sirve después
+          // para saber por qué el cupo se liberó.
+          reason: 'La persona canceló la matrícula sin enviar el comprobante',
+        }),
+      })
+      if (!res.ok) throw new Error('No se pudo cancelar la matrícula.')
+      // withdrawMember cancela también el pago pendiente sin comprobante, así
+      // que no queda un cobro huérfano.
+      onCancelada?.()
+      onDone()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo cancelar la matrícula.')
+      setConfirmarCancelar(false)
+    } finally {
+      setCancelando(false)
+    }
+  }
+
   return (
     <Modal
-      // Sin salida por fondo ni Esc mientras falte el comprobante: el único
-      // camino es enviarlo. Ya enviado, cerrar es lo normal.
-      onClose={() => { if (done) onDone() }}
+      // La X y el Esc: ya enviado, cierran. Sin enviar, ABREN la confirmación
+      // de cancelar en vez de no hacer nada.
+      //
+      // Antes la X estaba ahí y era INERTE — parecía que se podía cerrar y no
+      // se cerraba, que es peor que no tenerla. Es lo que se reportó: "quería
+      // cerrar la pantalla y el sistema no tiene esa opción".
+      onClose={() => { if (done) onDone(); else if (groupId) setConfirmarCancelar(true) }}
       titleId="comprobante-matricula-title" width={420}
     >
       <div className="p-6 space-y-4">
@@ -150,6 +195,44 @@ export function StudyReceiptModal({ enrollmentId, studyName, memberName, amount,
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
               </button>
             </div>
+
+            {/* La salida. Va abajo y en tono discreto: el camino que queremos
+                es enviar el comprobante, pero tiene que EXISTIR una salida —
+                antes la única forma de arrepentirse era cerrar el navegador y
+                quedaba la matrícula viva con su cobro abierto. */}
+            {groupId && (
+              confirmarCancelar ? (
+                <div className="rounded-xl bg-[rgba(239,85,84,0.06)] border border-[rgba(239,85,84,0.2)] px-3.5 py-3 space-y-2.5">
+                  <p className="text-[13px] text-navy font-body">
+                    Se cancela la matrícula en {studyName} y se anula el cobro. El cupo queda libre
+                    para otra persona; podés volver a matricularte después si querés.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={cancelarMatricula}
+                      disabled={cancelando}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                    >
+                      {cancelando ? <><Loader2 size={14} className="animate-spin" /> Cancelando…</> : 'Sí, cancelar la matrícula'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmarCancelar(false)}
+                      disabled={cancelando}
+                      className="rounded-full px-3 py-2 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
+                    >
+                      Mejor no
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmarCancelar(true)}
+                  className="w-full text-center text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+                >
+                  Cancelar la matrícula
+                </button>
+              )
+            )}
           </>
         )}
       </div>

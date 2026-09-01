@@ -50,7 +50,15 @@ export async function POST(
       })
     }
     // Correos de matrícula (estudiante + dirigentes). Best-effort, no bloquea.
-    await notifyEnrollment(id, targetMemberId)
+    //
+    // SOLO si el estudio NO cobra. Cuando hay que pagar, el correo sale al
+    // subir el comprobante (POST /api/payments), no acá: antes le llegaba "tu
+    // matrícula fue confirmada" a alguien que todavía estaba viendo la pantalla
+    // del comprobante, y si la abandonaba quedaba con la bienvenida a un curso
+    // que nunca llevó. Caso real: Alexandra Forero.
+    if (!result.requires_payment) {
+      await notifyEnrollment(id, targetMemberId)
+    }
     // FOL-1: si esta matrícula llenó el cupo, genera el tiquete de folletos
     // (idempotente vía índice único; best-effort: no revierte la matrícula).
     // Desde 2026-08-04 toda matrícula cuenta acá: antes, las que tenían costo

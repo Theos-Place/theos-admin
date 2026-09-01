@@ -77,7 +77,7 @@ export default function MatriculaPage() {
   const [docGate, setDocGate]             = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
-  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; studyName: string; amount: number; currency: string | null } | null>(null)
+  const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; groupId: string; studyName: string; amount: number; currency: string | null } | null>(null)
   const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'study_plan'; id: string; name: string } | null>(null)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
@@ -199,11 +199,13 @@ export default function MatriculaPage() {
       setConfirmModal(null)
       if (data?.requires_payment) {
         // Con costo: se ofrece subir el comprobante en el momento, que es lo
-        // más cómodo estando ahí. 2026-08-04: la matrícula YA quedó hecha —
-        // cerrar esta pantalla sin subir nada no la deshace; el cobro queda
-        // pendiente y finanzas le da seguimiento.
+        // más cómodo estando ahí. La matrícula YA quedó hecha (2026-08-04,
+        // carriles separados), pero desde el 2026-09-01 la pantalla ofrece
+        // CANCELARLA: antes no había salida y quien se arrepentía quedaba
+        // matriculado con un cobro abierto.
         setPendingReceipt({
           enrollmentId: data.enrollment_id,
+          groupId: group.group_id,
           studyName: study.study_name,
           amount: data.amount,
           currency: data.currency ?? group.currency ?? null,
@@ -674,11 +676,14 @@ export default function MatriculaPage() {
       {pendingReceipt && (
         <StudyReceiptModal
           enrollmentId={pendingReceipt.enrollmentId}
+          groupId={pendingReceipt.groupId}
+          memberId={effectiveMemberId}
           studyName={pendingReceipt.studyName}
           memberName={effectiveName}
           amount={pendingReceipt.amount}
           currency={pendingReceipt.currency}
           onDone={() => setPendingReceipt(null)}
+          onCancelada={() => { setPendingReceipt(null); setRetryKey(k => k + 1) }}
         />
       )}
 
