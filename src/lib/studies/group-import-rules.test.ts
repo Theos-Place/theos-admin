@@ -47,10 +47,22 @@ describe('validateGroupImportRow (EST-2)', () => {
   })
 
   it('fechas incoherentes y ventana inválida son error', () => {
-    expect(validateGroupImportRow({ plan: 'N1', fecha_inicio: '2026-10-01', fecha_fin: '2026-09-01' }, ctx))
+    // La fecha va FIJA. Antes el test leía el reloj real y sus fechas —futuras
+    // cuando se escribió— caducaron: el 2026-09-01 empezó a fallar solo.
+    const hoy = { ...ctx, todayYmd: '2026-08-01' }
+    expect(validateGroupImportRow({ plan: 'N1', fecha_inicio: '2026-10-01', fecha_fin: '2026-09-01' }, hoy))
       .toMatchObject({ ok: false })
-    expect(validateGroupImportRow({ plan: 'N1', fecha_inicio: '2026-09-01', fin_matricula: '2026-09-15' }, ctx))
+    expect(validateGroupImportRow({ plan: 'N1', fecha_inicio: '2026-09-01', fin_matricula: '2026-09-15' }, hoy))
       .toMatchObject({ ok: false }) // fin de matrícula después del inicio del grupo
+  })
+
+  it('un grupo que YA arrancó no acota la ventana (y eso no depende de hoy)', () => {
+    // La contraparte, que es la razón de ser de maxEnrollmentEnd: registrar un
+    // grupo en curso no puede dejar el campo inservible.
+    expect(validateGroupImportRow(
+      { plan: 'N1', fecha_inicio: '2026-07-01', fin_matricula: '2026-07-15' },
+      { ...ctx, todayYmd: '2026-08-01' },
+    )).toMatchObject({ ok: true })
   })
 
   it('cupo inválido es error; vacío es null', () => {

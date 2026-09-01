@@ -9,6 +9,7 @@
 //   · fechas coherentes (inicio <= fin) y ventana de matrícula válida (GRU-1).
 
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
+import { ymdCR } from '@/lib/format'
 import { normalizeCedula } from '@/lib/cedula'
 
 export type GroupImportRow = {
@@ -31,6 +32,16 @@ export type GroupImportContext = {
   zoneCodeByName: Map<string, string>
   /** cédula normalizada → member_id */
   leaderIdByCedula: Map<string, string>
+  /** Hoy en Costa Rica (YYYY-MM-DD). Se inyecta por dos razones, no por gusto:
+   *
+   *  · para poder testear. Sin esto la validación leía el reloj real, y el test
+   *    de "fin de matrícula después del inicio" tenía fechas quemadas que
+   *    fueron futuras cuando se escribió: el 2026-09-01 empezó a fallar solo,
+   *    sin que nadie tocara nada. Un test que caduca es peor que no tenerlo;
+   *  · porque el reloj real daba UTC. Costa Rica es UTC-6, así que entre las
+   *    6 p.m. y la medianoche el sistema ya creía que era mañana y dejaba de
+   *    acotar la ventana de un grupo que arranca al día siguiente. */
+  todayYmd?: string
 }
 
 export type GroupInsertRow = {
@@ -79,7 +90,7 @@ export function validateGroupImportRow(r: GroupImportRow, ctx: GroupImportContex
 
   const enrollment_start_date = r.inicio_matricula?.trim() || null
   const enrollment_end_date = r.fin_matricula?.trim() || null
-  const windowError = validateEnrollmentDates({ enrollment_start_date, enrollment_end_date, starts_at })
+  const windowError = validateEnrollmentDates({ enrollment_start_date, enrollment_end_date, starts_at }, ctx.todayYmd ?? ymdCR())
   if (windowError) return { ok: false, reason: windowError }
 
   let max_students: number | null = null

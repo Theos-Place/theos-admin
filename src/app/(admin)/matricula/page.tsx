@@ -1030,6 +1030,11 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
               </span>
             )}
           </p>
+          {/* La ubicación va DEBAJO de la zona, no en una quinta columna: es el
+              detalle de la zona, y la fila ya venía apretada con cuatro. */}
+          {group.location && (
+            <p className="text-[13px] text-navy-light/80 font-body leading-snug">{group.location}</p>
+          )}
         </div>
         <div>
           <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">Horario</p>
@@ -1142,6 +1147,9 @@ function ConfirmModal({
           {[
             { label: 'Estudio',   value: study.study_name },
             { label: 'Grupo',     value: `${group.zone.charAt(0).toUpperCase() + group.zone.slice(1)} — ${group.schedule_days} ${group.schedule_time}` },
+            // Acá es donde de verdad hace falta: es lo último que ve antes de
+            // confirmar, y es el dato con el que tiene que llegar el primer día.
+            ...(group.location ? [{ label: 'Dónde', value: group.location }] : []),
             { label: 'Dirigente', value: group.leader_name },
             { label: 'Inicio',    value: formatDateLong(group.start_date) },
             { label: 'Duración',  value: `${study.weeks} semanas` },

@@ -68,6 +68,10 @@ export type EligibilityResult = {
 export type EligibleGroup = {
   group_id: string
   zone: string
+  /** Dónde se reúne, dentro de la zona ("Casa de la familia Rojas", "Salón 3").
+   *  La zona sola no alcanza para llegar, y quien se matricula lo necesita
+   *  ANTES de elegir grupo, no después. Vacía en los virtuales. */
+  location: string
   schedule_days: string
   schedule_time: string
   leader_name: string
@@ -299,6 +303,7 @@ export function computeEligibility(
             return {
               group_id: g.id,
               zone: g.zone,
+              location: g.is_virtual ? '' : (g.location ?? ''),
               schedule_days: formatDays(g.schedule_days),
               schedule_time: g.schedule_time,
               leader_name: g.leader_name ?? 'Sin asignar',
