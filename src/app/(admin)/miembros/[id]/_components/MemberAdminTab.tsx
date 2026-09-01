@@ -74,6 +74,12 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const [createMsg, setCreateMsg] = useState<{ ok: boolean; text: string } | null>(null)
   // Cambio del correo de ACCESO (con cuál entra). Permiso propio: ver
   // src/lib/auth/access-email.ts.
+  // Rebote / queja de SES. Vive en otra pantalla (MemberEmailStatus), pero el
+  // aviso hace falta ACÁ: es donde alguien va cuando le dicen "no me llegan los
+  // correos", y sin verlo el rebote es invisible.
+  const [correoEstado, setCorreoEstado] = useState<{ bounced: boolean; bounced_at: string | null; complained: boolean; complained_at: string | null } | null>(null)
+  const [limpiarBusy, setLimpiarBusy] = useState(false)
+  const [limpiarMsg, setLimpiarMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [correoAbierto, setCorreoAbierto] = useState(false)
   const [correoNuevo, setCorreoNuevo] = useState('')
   const [correoBusy, setCorreoBusy] = useState(false)
@@ -106,11 +112,38 @@ export function MemberAdminTab({ memberId, onChanged }: {
 
   const { user } = useAuth()
   const puedeCambiarCorreo = puedeCambiarCorreoDeAcceso(user?.roles)
+  // Mismos roles que exige el endpoint de email-status (admin pasa siempre).
+  const puedeLimpiarRebote = (user?.roles ?? []).some(r => ['admin', 'direccion', 'comunicaciones'].includes(r))
   const desincronizado = accesoDesincronizado({
     fichaEmail: account?.member_email,
     cuentaEmail: account?.email,
     tieneCuenta: !!account?.linked,
   })
+
+  const loadCorreoEstado = useCallback(() => {
+    return fetch(`/api/members/${memberId}/email-status`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setCorreoEstado(d))
+      .catch(() => setCorreoEstado(null))
+  }, [memberId])
+
+  async function limpiarRebote() {
+    setLimpiarBusy(true); setLimpiarMsg(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/email-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_flags' }),
+      })
+      if (!res.ok) throw new Error()
+      setLimpiarMsg({ ok: true, text: 'Listo: vuelve a recibir correos del sistema.' })
+      await loadCorreoEstado()
+    } catch {
+      setLimpiarMsg({ ok: false, text: 'No se pudo limpiar la marca.' })
+    } finally {
+      setLimpiarBusy(false)
+    }
+  }
 
   const loadAccount = useCallback(() => {
     setAccountLoading(true)
@@ -122,6 +155,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
   }, [memberId])
 
   useEffect(() => { loadAccount() }, [loadAccount])
+  useEffect(() => { loadCorreoEstado() }, [loadCorreoEstado])
 
   async function createAccount() {
     if (createBusy) return
@@ -349,6 +383,42 @@ export function MemberAdminTab({ memberId, onChanged }: {
                     <strong className="text-navy">{account.member_email}</strong>. Así no va a poder recuperar
                     su contraseña{puedeCambiarCorreo ? ': cambiale el correo de acceso.' : '; pedile a dirección que le cambie el correo de acceso.'}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Rebote de SES: la persona está excluida de TODOS los envíos y no
+                hay nada en pantalla que lo diga. Es la primera causa de "no me
+                llegan los correos". */}
+            {(correoEstado?.bounced || correoEstado?.complained) && (
+              <div role="alert" className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 bg-amber-50 border border-amber-200">
+                <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-700" aria-hidden />
+                <div className="text-[13px] font-body text-navy flex-1">
+                  <p className="font-semibold text-amber-700">
+                    {correoEstado.bounced ? 'Su correo rebotó' : 'Marcó nuestros correos como spam'}
+                    {correoEstado.bounced && correoEstado.bounced_at ? ` el ${formatDate(correoEstado.bounced_at)}` : ''}
+                  </p>
+                  <p className="mt-0.5 text-navy-light/80">
+                    Mientras esté así no se le manda ningún correo del sistema. Si la dirección
+                    estaba mal escrita, cambiala y la marca se limpia sola; si es correcta,
+                    limpiala acá — y si aun así no le llega, hay que sacarla de la lista de
+                    supresión en la consola de AWS SES.
+                  </p>
+                  {puedeLimpiarRebote && (
+                    <button
+                      type="button"
+                      onClick={limpiarRebote}
+                      disabled={limpiarBusy}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3.5 py-1.5 text-[13px] text-amber-700 hover:bg-amber-100 transition-colors disabled:opacity-50 font-body"
+                    >
+                      {limpiarBusy ? <><Loader2 size={13} className="animate-spin" /> Limpiando…</> : <>Limpiar la marca y volver a enviarle</>}
+                    </button>
+                  )}
+                  {limpiarMsg && (
+                    <p className={`mt-1.5 inline-flex items-center gap-1 ${limpiarMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                      {limpiarMsg.ok && <Check size={12} />}{limpiarMsg.text}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
