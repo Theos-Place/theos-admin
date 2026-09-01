@@ -77,12 +77,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // La ficha se alinea sola: dejarlas distintas es reponer el problema que
     // esta pantalla vino a arreglar.
-    const { error: memErr } = await supabase.from('members').update({ email }).eq('id', id)
+    //
+    // Y se limpian rebote y queja SI el correo cambió de verdad: esas marcas
+    // eran de la dirección VIEJA. Sin esto, corregirle a alguien un correo mal
+    // escrito lo deja igual de excluido —las campañas saltan a quien tiene
+    // email_bounced— y no se entiende por qué. Caso real: Douglas García, con
+    // el correo sin una letra, rebotado en duro desde el 4 de agosto.
+    //
+    // Si el correo NO cambió (se reescribió el mismo), las marcas se quedan:
+    // ahí siguen siendo ciertas.
+    const cambio = normalizarCorreo(m.email) !== email
+    const patch = cambio
+      ? { email, email_bounced: false, email_bounced_at: null, email_complained: false, email_complained_at: null }
+      : { email }
+    const { error: memErr } = await supabase.from('members').update(patch).eq('id', id)
     if (memErr) console.warn('access-email ficha:', memErr.message)
 
     await logAudit({
       actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'members', entityId: id,
-      oldData: { email: m.email }, newData: { email, via: 'access-email' },
+      oldData: { email: m.email }, newData: { email, via: 'access-email', rebote_limpiado: cambio },
     })
     return NextResponse.json({ ok: true, email })
   } catch (error) {
