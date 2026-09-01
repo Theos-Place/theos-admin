@@ -3529,6 +3529,50 @@ otra cosa.
   horarias de crons (hoy UTC pensado para CR) y GDPR para España — definir en la misma
   fase, no requieren código todavía.
 
+## Fase 10 — Entrega de correo (2026-09-01)
+
+### [ ] COR-1 · El correo de acceso no llega a Hotmail/Outlook
+
+```
+SÍNTOMA, con evidencia. A la gente de Hotmail y Outlook le llegan las campañas y NO le
+llega el correo del enlace de acceso. Verificado con Arianna Leiva (arileiva14@hotmail.com):
+el boletín mensual le llegó y quedó 'delivered' en message_logs; el enlace del mismo día,
+del mismo remitente, no apareció nunca. Confirmado que no es su buzón, ni un rebote, ni
+supresión de SES.
+
+Señal de población, DÉBIL pero sin contraejemplos: de las 7 personas de Hotmail/Outlook
+que pidieron el enlace, 0 lograron entrar. Gmail 2 de 10, otros dominios 5 de 7. Siete
+casos es muy poco para llamarlo prueba — hay que medirlo con más datos antes de dar la
+causa por cierta. Ahora se puede: desde 2026-09-01 los transaccionales quedan en
+message_logs con su estado de SES.
+
+TAMAÑO. 5.437 cuentas de Hotmail y 253 de Outlook en el padrón. No es un caso suelto:
+es lo que va a pasar cuando el sistema se empuje a toda la congregación.
+
+QUÉ YA SE DESCARTÓ, para no repetirlo:
+ · No es el remitente ni el dominio: las campañas salen del mismo no-reply@theosplace.org,
+   con la misma firma DKIM y el mismo configuration set, y sí llegan.
+ · No es la lista de remitentes seguros. Outlook la usa para saltar el filtro de correo no
+   deseado, pero NO salta un veredicto de phishing — y si es phishing de alta confianza el
+   correo va a cuarentena, donde la persona no lo ve por más que busque.
+ · No es mandar una contraseña temporal por correo: viaja por el mismo canal filtrado y
+   deja la contraseña en texto plano en dos buzones. Descartado el 2026-09-01.
+
+HIPÓTESIS A MEDIR (en este orden). Lo único que cambia entre el correo que llega y el que
+no es el CONTENIDO:
+ a) la URL con token hacia admin.theosplace.org — subdominio con poca reputación, patrón
+    idéntico al de un phishing;
+ b) el asunto sobre contraseñas;
+ c) la ausencia de la cabecera List-Unsubscribe, que las campañas sí llevan.
+
+CÓMO MEDIRLO, no adivinarlo: mandar variantes a buzones de prueba de Hotmail/Outlook
+(mismo texto sin enlace, enlace al dominio raíz, asunto neutro) y leer el estado en
+message_logs. Con eso se sabe cuál de las tres es, en vez de cambiar las tres a ciegas.
+
+MITIGACIÓN QUE YA ESTÁ, y por eso esto no es urgente: el botón "Copiar enlace de acceso"
+en Cuenta y acceso entrega el enlace por WhatsApp sin pasar por el correo.
+```
+
 ---
 
 ## Notas para la ejecución en Claude Code
