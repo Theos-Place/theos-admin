@@ -115,6 +115,57 @@ async function registrarSilenciado(to: string, subject: string, kind?: string): 
   }
 }
 
+
+/**
+ * Deja constancia de CADA correo que sale por acá.
+ *
+ * Antes solo se registraban las campañas: los transaccionales —el enlace de
+ * contraseña, el aviso de cobro, el recordatorio de cierre— no dejaban rastro.
+ * Tres veces en una semana hubo que contestar "¿le llegó el correo?" por
+ * deducción, mirando `recovery_sent_at` de Auth y descartando causas, en vez de
+ * mirarlo. Casos: Adriana Jiménez, Douglas García y Arianna Leiva.
+ *
+ * `broadcast_id` queda NULO, y eso es lo que distingue un transaccional de una
+ * campaña. La fila se empareja después con los eventos de SES por
+ * `provider_message_id`, así que las entregas y los rebotes de estos correos se
+ * anotan solos con el código que ya existe.
+ *
+ * Best-effort y con import dinámico, igual que registrarSilenciado: si falla el
+ * registro NO se cae el envío. El correo ya salió; perder la línea del log es
+ * molesto, no romper el envío por escribirlo sería peor.
+ *
+ * OJO con un efecto de borde deseado: getDailyEmailsSent() cuenta message_logs
+ * sin filtrar por campaña, así que ahora los transaccionales también cuentan
+ * para el límite diario. Es lo correcto —consumen la misma cuota de SES— y el
+ * volumen es bajo, pero conviene saberlo si un día una campaña se reparte en
+ * más días de los esperados.
+ */
+async function registrarEnvio(input: {
+  to: string; subject: string; status: 'sent' | 'failed'
+  messageId?: string; error?: string
+}): Promise<void> {
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    // Cliente laxo: `subject` es una columna nueva (migración 20260901120000) y
+    // los tipos generados todavía no la traen. Mismo patrón que en
+    // members-detail.ts con las columnas nuevas de payments.
+    const db = createAdminClient() as unknown as {
+      from: (t: string) => { insert: (v: Record<string, unknown>) => Promise<{ error: unknown }> }
+    }
+    await db.from('message_logs').insert({
+      channel: 'email',
+      recipient: input.to,
+      subject: input.subject,
+      status: input.status,
+      sent_at: input.status === 'sent' ? new Date().toISOString() : null,
+      provider_message_id: input.messageId ?? null,
+      last_error: input.error ?? null,
+    })
+  } catch (e) {
+    console.warn('registrarEnvio:', e instanceof Error ? e.message : e)
+  }
+}
+
 /**
  * Envía un email por SES SMTP. Centraliza la config de SES:
  *  - X-SES-CONFIGURATION-SET en TODOS los envíos (bounces/complaints → SNS).
@@ -143,7 +194,9 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
   assertEmailConfigured()
   const marketingHeaders = kind === 'marketing' && unsubscribeToken ? listUnsubscribeHeader(unsubscribeToken) : undefined
   const transport = getTransport()
-  const result = await transport.sendMail({
+  let result: Awaited<ReturnType<typeof transport.sendMail>>
+  try {
+    result = await transport.sendMail({
     from: { name: fromName || FROM_NAME, address: FROM_EMAIL },
     to: to.name ? { name: to.name, address: to.email } : to.email,
     subject,
@@ -152,10 +205,19 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
       'X-SES-CONFIGURATION-SET': CONFIGURATION_SET, // siempre: sin esto SES no publica bounces/complaints a SNS
       ...marketingHeaders,
       ...headers,
-    },
-  })
+      },
+    })
+  } catch (e) {
+    // Un envío que ni siquiera salió también es información: sin esta línea,
+    // "no me llegó el correo" y "el correo nunca se mandó" se ven igual desde
+    // afuera.
+    await registrarEnvio({ to: to.email, subject, status: 'failed', error: e instanceof Error ? e.message : String(e) })
+    throw e
+  }
   // El ID de SES, no el Message-ID que generó nodemailer: es el que llega en los
   // eventos de SNS, así que es el único que empareja entregas y rebotes con su
   // envío. Ver ses-message-id.ts.
-  return { messageId: providerMessageId(result.response, result.messageId) }
+  const messageId = providerMessageId(result.response, result.messageId)
+  await registrarEnvio({ to: to.email, subject, status: 'sent', messageId })
+  return { messageId }
 }
