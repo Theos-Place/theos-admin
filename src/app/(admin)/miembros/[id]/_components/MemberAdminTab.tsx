@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { AlertCircle, Ban, BookOpen, Check, GraduationCap, KeyRound, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
+import { AlertCircle, Ban, BookOpen, Check, GraduationCap, KeyRound, Link2, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { accesoDesincronizado, errorDeCorreoDeAcceso, puedeCambiarCorreoDeAcceso } from '@/lib/auth/access-email'
@@ -80,10 +80,33 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const [correoEstado, setCorreoEstado] = useState<{ bounced: boolean; bounced_at: string | null; complained: boolean; complained_at: string | null } | null>(null)
   const [limpiarBusy, setLimpiarBusy] = useState(false)
   const [limpiarMsg, setLimpiarMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // Enlace de acceso para entregar por otro canal (WhatsApp). Existe porque a
+  // Hotmail/Outlook no le está llegando el correo del enlace.
+  const [enlaceBusy, setEnlaceBusy] = useState(false)
+  const [enlace, setEnlace] = useState<string | null>(null)
+  const [enlaceMsg, setEnlaceMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [correoAbierto, setCorreoAbierto] = useState(false)
   const [correoNuevo, setCorreoNuevo] = useState('')
   const [correoBusy, setCorreoBusy] = useState(false)
   const [correoMsg, setCorreoMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function generarEnlaceDeAcceso() {
+    setEnlaceBusy(true); setEnlaceMsg(null); setEnlace(null)
+    try {
+      const res = await fetch(`/api/members/${memberId}/access-link`, { method: 'POST' })
+      const d = await res.json().catch(() => null)
+      if (!res.ok) { setEnlaceMsg({ ok: false, text: d?.error ?? 'No se pudo generar el enlace.' }); return }
+      setEnlace(d.url)
+      navigator.clipboard?.writeText(d.url).then(
+        () => setEnlaceMsg({ ok: true, text: 'Enlace copiado. Pegalo en el WhatsApp de la persona.' }),
+        () => setEnlaceMsg({ ok: true, text: 'Enlace listo: copialo de acá abajo.' }),
+      )
+    } catch {
+      setEnlaceMsg({ ok: false, text: 'No se pudo generar el enlace.' })
+    } finally {
+      setEnlaceBusy(false)
+    }
+  }
 
   async function guardarCorreoDeAcceso() {
     const malo = errorDeCorreoDeAcceso(correoNuevo)
@@ -451,6 +474,17 @@ export function MemberAdminTab({ memberId, onChanged }: {
               >
                 {pwBusy ? <><Loader2 size={14} className="animate-spin" /> Enviando…</> : <><KeyRound size={14} /> Enviar instrucciones para recuperar el acceso</>}
               </button>
+              {puedeCambiarCorreo && (
+                <button
+                  type="button"
+                  onClick={generarEnlaceDeAcceso}
+                  disabled={enlaceBusy}
+                  title="Genera el enlace para entregarlo por WhatsApp, sin pasar por el correo"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 border-[var(--outline-variant)] font-body"
+                >
+                  {enlaceBusy ? <><Loader2 size={14} className="animate-spin" /> Generando…</> : <><Link2 size={14} /> Copiar enlace de acceso</>}
+                </button>
+              )}
               {puedeCambiarCorreo && !correoAbierto && (
                 <button
                   type="button"
@@ -501,6 +535,22 @@ export function MemberAdminTab({ memberId, onChanged }: {
                   </button>
                 </div>
               </div>
+            )}
+            {enlace && (
+              <div className="rounded-xl border border-outline bg-surface-low p-3.5 space-y-2">
+                <p className="text-[13px] text-navy font-body">
+                  Sirve <strong>una sola vez</strong> y vence. Entregáselo <strong>directo a la persona</strong>:
+                  quien lo tenga entra a su cuenta, así que no va en un grupo.
+                </p>
+                <p className="break-all rounded-lg bg-white border border-outline px-2.5 py-2 text-[13px] text-navy font-body">
+                  {enlace}
+                </p>
+              </div>
+            )}
+            {enlaceMsg && (
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${enlaceMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                {enlaceMsg.ok && <Check size={12} />}{enlaceMsg.text}
+              </p>
             )}
             {correoMsg && (
               <p className={`text-[13px] font-body inline-flex items-center gap-1 ${correoMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
