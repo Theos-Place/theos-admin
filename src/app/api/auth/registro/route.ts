@@ -6,7 +6,8 @@ import { inviteMemberToCompleteProfile } from '@/lib/auth/invite'
 import { sendPasswordLink } from '@/lib/auth/password-link'
 import { DOCUMENT_TYPES, normalizeCedula } from '@/lib/cedula'
 import {
-  RESPUESTA_NEUTRAL_REGISTRO, erroresDeRegistro, normalizarRegistro, planDeRegistro,
+  MENSAJE_REGISTRO_CREADO, MENSAJE_SIN_CORREO, MENSAJE_YA_EXISTE,
+  erroresDeRegistro, normalizarRegistro, planDeRegistro,
 } from '@/lib/auth/registro-publico'
 
 // POST { first_name, last_name, document_type, cedula, email, phone? }
@@ -53,31 +54,41 @@ export async function POST(req: NextRequest) {
         { error: 'Demasiados intentos. Esperá unos minutos y volvé a probar.' }, { status: 429 },
       )
     }
-    // Por documento: 3 en 15 minutos. A diferencia del límite por IP, este NO
-    // dice que está limitado — decirlo revelaría que el documento existe.
+    // Por documento: 3 en 15 minutos. Es lo que evita que la pantalla se use
+    // para tantear cédulas en masa, ahora que sí dice cuándo una ya existe.
     if (!rateLimit(`registro:doc:${d.document_type}:${d.cedula}`, 3, 15 * 60_000)) {
-      return NextResponse.json({ ok: true, message: RESPUESTA_NEUTRAL_REGISTRO })
+      return NextResponse.json(
+        { error: 'Demasiados intentos con ese documento. Esperá unos minutos.' }, { status: 429 },
+      )
     }
 
     const supabase = createAdminClient()
-    const { data: encontrada } = await supabase
+    // Por DOCUMENTO primero: es la llave fuerte, con índice único detrás.
+    const { data: porDoc } = await supabase
       .from('members').select('id, email')
       .eq('document_type', d.document_type)
       .eq('cedula_normalized', normalizeCedula(d.cedula))
       .limit(1).maybeSingle()
+    // Y por CORREO, que no tiene índice único pero igual identifica a alguien:
+    // sin este chequeo, la misma persona con otro documento se crea dos veces.
+    const { data: porCorreo } = porDoc ? { data: null } : await supabase
+      .from('members').select('id, email').ilike('email', d.email).limit(1).maybeSingle()
 
-    const plan = planDeRegistro({ existente: (encontrada as { id: string; email: string | null } | null) ?? null })
+    const existente = ((porDoc ?? porCorreo) as { id: string; email: string | null } | null) ?? null
+    const plan = planDeRegistro({ existente })
 
     if (plan.accion === 'derivar_a_staff') {
-      // No hay a dónde mandar el enlace y no se puede usar el correo escrito.
-      // Se responde igual que siempre y queda el aviso para soporte.
+      // Existe pero sin correo: no hay a dónde mandar el enlace, y usar el que
+      // se acaba de escribir sería regalar la cuenta.
       console.warn('registro público, ficha sin correo:', plan.motivo)
-      return NextResponse.json({ ok: true, message: RESPUESTA_NEUTRAL_REGISTRO })
+      return NextResponse.json({ ok: true, ya_existia: true, message: MENSAJE_SIN_CORREO })
     }
 
     if (plan.accion === 'reenviar') {
+      // Al correo DE LA FICHA, nunca al escrito. Y se le dice que ya existía:
+      // sin eso queda esperando un correo de bienvenida que no va a llegar.
       await sendPasswordLink({ email: plan.correoDeLaFicha, tieneCuenta: true, nombre: d.first_name })
-      return NextResponse.json({ ok: true, message: RESPUESTA_NEUTRAL_REGISTRO })
+      return NextResponse.json({ ok: true, ya_existia: true, message: MENSAJE_YA_EXISTE })
     }
 
     const { data: creada, error: insErr } = await supabase.from('members').insert({
@@ -93,7 +104,7 @@ export async function POST(req: NextRequest) {
       // 23505 = el índice único de documento. Puede pasar si dos registros
       // entran a la vez con la misma cédula: la respuesta es la de siempre.
       if ((insErr as { code?: string }).code === '23505') {
-        return NextResponse.json({ ok: true, message: RESPUESTA_NEUTRAL_REGISTRO })
+        return NextResponse.json({ ok: true, ya_existia: true, message: MENSAJE_YA_EXISTE })
       }
       throw insErr
     }
@@ -105,7 +116,7 @@ export async function POST(req: NextRequest) {
     // Sin logAudit explícito: no hay actor —es un registro público— y el
     // trigger de la base ya deja el INSERT con actor_id NULL, que es
     // exactamente lo que corresponde acá.
-    return NextResponse.json({ ok: true, message: RESPUESTA_NEUTRAL_REGISTRO })
+    return NextResponse.json({ ok: true, message: MENSAJE_REGISTRO_CREADO })
   } catch (error) {
     console.error('POST /api/auth/registro:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

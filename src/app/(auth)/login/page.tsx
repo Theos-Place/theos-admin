@@ -479,7 +479,7 @@ export default function LoginPage() {
       <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">
         ¿Nuevo en Theos y todavía no tenés perfil?{' '}
         <Link href="/registro" className="font-semibold text-teal-deep hover:underline">
-          Creá tu cuenta acá →
+          Registrate acá →
         </Link>
       </p>
 

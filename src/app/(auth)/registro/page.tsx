@@ -25,7 +25,7 @@ export default function RegistroPage() {
   })
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
-  const [listo, setListo] = useState<string | null>(null)
+  const [listo, setListo] = useState<{ texto: string; yaExistia: boolean } | null>(null)
   const [error, setError] = useState('')
 
   // AUD-1: los aria salen de fieldA11y. `.input` va al campo y `.error` al
@@ -58,7 +58,7 @@ export default function RegistroPage() {
       const body = await res.json().catch(() => null)
       if (res.status === 429) { setError(body?.error ?? 'Demasiados intentos. Esperá unos minutos.'); return }
       if (!res.ok) { setErrores(body?.campos ?? {}); setError(body?.error ?? 'No se pudo completar el registro.'); return }
-      setListo(body.message)
+      setListo({ texto: body.message, yaExistia: !!body.ya_existia })
     } catch {
       setError('No pudimos completar el registro. Revisá tu conexión e intentá de nuevo.')
     } finally {
@@ -69,11 +69,18 @@ export default function RegistroPage() {
   if (listo) {
     return (
       <div className="w-full max-w-[400px] text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-teal-soft/30">
-          <Check size={22} className="text-teal-deep" />
+        <div className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${listo.yaExistia ? 'bg-amber-100' : 'bg-teal-soft/30'}`}>
+          {listo.yaExistia
+            ? <AlertCircle size={22} className="text-amber-700" />
+            : <Check size={22} className="text-teal-deep" />}
         </div>
-        <h1 className="text-xl font-bold text-navy font-display mb-2">Revisá tu correo</h1>
-        <p className="text-[13px] text-navy-light/80 font-body">{listo}</p>
+        {/* Se distingue "creada" de "ya existía": son dos desenlaces distintos
+            y el segundo necesita que la persona entienda que NO hay perfil
+            nuevo, o vuelve a intentarlo. */}
+        <h1 className="text-xl font-bold text-navy font-display mb-2">
+          {listo.yaExistia ? 'Ya tenías cuenta' : 'Revisá tu correo'}
+        </h1>
+        <p className="text-[13px] text-navy-light/80 font-body">{listo.texto}</p>
         <Link href="/login" className="mt-6 inline-block text-[13px] text-teal-deep hover:underline font-medium font-body">
           Volver a la pantalla de ingreso
         </Link>

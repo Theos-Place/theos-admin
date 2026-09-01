@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1150" role="img" aria-labelledby="t-registro d-registro" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-registro">Crear tu cuenta si sos nuevo en Theos</title>
+  <desc id="d-registro">Cuatro pasos para registrarte: abrir el sistema, tocar Registrate acá, llenar tus datos con la cédula obligatoria, y abrir el enlace del correo para definir tu contraseña. Antes de empezar: si ya sos parte de Theos no te registrés, recuperá tu acceso.</desc>
+
+  <rect width="720" height="1150" fill="#F6F5F2"/>
+
+  <!-- Cabecera -->
+  <rect x="0" y="0" width="720" height="150" fill="#161440"/>
+  <text x="48" y="72" font-size="32" font-weight="bold" fill="#FFFFFF">Crear tu cuenta</text>
+  <text x="48" y="110" font-size="32" font-weight="bold" fill="#FFFFFF">si sos nuevo</text>
+  <text x="430" y="88" font-size="14" fill="#70BDC2">Lo hacés vos.</text>
+  <text x="430" y="110" font-size="14" fill="#70BDC2">No hay que pedir permiso.</text>
+
+  <!-- Aviso: primero, porque es el error más caro -->
+  <g>
+    <rect x="48" y="186" width="624" height="94" rx="16" fill="#FFF1F1"/>
+    <rect x="48" y="186" width="6" height="94" rx="3" fill="#EF5554"/>
+    <text x="76" y="218" font-size="16" font-weight="bold" fill="#B3272C">¿Ya sos parte de Theos? No te registrés.</text>
+    <text x="76" y="244" font-size="14" fill="#5B5975">Aunque nunca hayas entrado, es casi seguro que ya tenés perfil.</text>
+    <text x="76" y="266" font-size="14" fill="#5B5975">Usá &#171;Cre&#225; o recuper&#225; tu contrase&#241;a&#187;: si te registr&#225;s, tus estudios y pagos quedan afuera.</text>
+  </g>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="312" width="624" height="110" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="367" r="26" fill="#161440"/>
+    <text x="102" y="376" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="150" y="356" font-size="19" font-weight="bold" fill="#161440">Abrí el sistema</text>
+    <text x="150" y="386" font-size="16" fill="#5B5975">admin.theosplace.org</text>
+    <text x="150" y="408" font-size="13" fill="#8B8AA0">Desde el celular o la computadora, la que tengás a mano.</text>
+  </g>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="442" width="624" height="110" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="497" r="26" fill="#161440"/>
+    <text x="102" y="506" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="150" y="486" font-size="19" font-weight="bold" fill="#161440">Tocá &#171;Registrate acá&#187;</text>
+    <text x="150" y="516" font-size="15" fill="#5B5975">Está abajo, donde dice &#171;&#191;Nuevo en Theos y todav&#237;a no ten&#233;s perfil?&#187;</text>
+    <text x="150" y="538" font-size="13" fill="#8B8AA0">Ojo: no es el mismo enlace que el de crear la contraseña.</text>
+  </g>
+
+  <!-- Paso 3 -->
+  <g>
+    <rect x="48" y="572" width="624" height="150" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="627" r="26" fill="#161440"/>
+    <text x="102" y="636" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="150" y="616" font-size="19" font-weight="bold" fill="#161440">Llená tus datos</text>
+    <text x="150" y="646" font-size="15" fill="#5B5975">Nombre, apellidos, documento, correo y teléfono (opcional).</text>
+    <rect x="150" y="662" width="480" height="46" rx="10" fill="#EAF5F5"/>
+    <text x="166" y="682" font-size="13" font-weight="bold" fill="#2F6F73">La cédula es obligatoria</text>
+    <text x="166" y="700" font-size="13" fill="#3F7A7E">Es lo que evita que te queden dos perfiles con tus cosas repartidas.</text>
+  </g>
+
+  <!-- Paso 4 -->
+  <g>
+    <rect x="48" y="742" width="624" height="110" rx="16" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="102" cy="797" r="26" fill="#161440"/>
+    <text x="102" y="806" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="150" y="786" font-size="19" font-weight="bold" fill="#161440">Abrí el correo y definí tu contraseña</text>
+    <text x="150" y="816" font-size="15" fill="#5B5975">Te llega de no-reply@theosplace.org, al momento.</text>
+    <text x="150" y="838" font-size="13" fill="#8B8AA0">Si no aparece, revisá no deseados — y &#171;Otros&#187; si us&#225;s Hotmail u Outlook.</text>
+  </g>
+
+  <!-- Caso especial -->
+  <g>
+    <rect x="48" y="882" width="624" height="98" rx="16" fill="#FFF8F0"/>
+    <rect x="48" y="882" width="6" height="98" rx="3" fill="#EF5554"/>
+    <text x="76" y="914" font-size="15" font-weight="bold" fill="#161440">Si tu cédula ya estaba registrada</text>
+    <text x="76" y="940" font-size="14" fill="#5B5975">No se crea otro perfil, y el enlace va al correo que YA estaba en el tuyo.</text>
+    <text x="76" y="962" font-size="14" fill="#5B5975">Si no tenés acceso a ese correo, escribinos a soporte@theosplace.org.</text>
+  </g>
+
+  <!-- Qué vas a ver -->
+  <g>
+    <rect x="48" y="1010" width="624" height="106" rx="16" fill="#161440"/>
+    <text x="76" y="1042" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">QUÉ VAS A PODER HACER</text>
+    <text x="76" y="1072" font-size="15" fill="#FFFFFF">Ver tu perfil y el de tu familia, matricularte e inscribirte a eventos.</text>
+    <text x="76" y="1098" font-size="14" fill="#9FA8C7">Los demás permisos los da la coordinación cuando corresponde.</text>
+  </g>
+</svg>

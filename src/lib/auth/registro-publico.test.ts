@@ -73,3 +73,16 @@ describe('planDeRegistro', () => {
     expect(planDeRegistro({ existente: { id: 'm1', email: '   ' } }).accion).toBe('derivar_a_staff')
   })
 })
+
+describe('mensajes al usuario', () => {
+  it('el de "ya existe" dice que NO se creó nada y adónde fue el enlace', async () => {
+    const { MENSAJE_YA_EXISTE, MENSAJE_SIN_CORREO } = await import('./registro-publico')
+    // Sin esto la persona queda esperando un correo de bienvenida que no llega,
+    // y a los cinco minutos vuelve a intentar registrarse.
+    expect(MENSAJE_YA_EXISTE).toMatch(/no creamos un perfil nuevo/i)
+    expect(MENSAJE_YA_EXISTE).toMatch(/correo registrado/i)
+    // Nunca se dice CUÁL es ese correo: eso sería filtrar el dato de otra persona.
+    expect(MENSAJE_YA_EXISTE).not.toMatch(/@/)
+    expect(MENSAJE_SIN_CORREO).toMatch(/soporte@theosplace\.org/)
+  })
+})

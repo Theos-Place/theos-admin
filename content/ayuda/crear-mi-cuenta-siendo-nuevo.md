@@ -9,6 +9,8 @@ resumen: Cómo registrarte si nunca has estado en el sistema, por qué se pide l
 
 # Soy nuevo en Theos y quiero crear mi cuenta
 
+![Los cuatro pasos para registrarte, y qué pasa si tu cédula ya estaba](/ayuda/infografias/crear-mi-cuenta-siendo-nuevo.svg)
+
 Si nunca has estado en el sistema, podés crear tu cuenta vos mismo desde la
 pantalla de ingreso. No hay que pedirle permiso a nadie ni esperar a que alguien
 te dé de alta.
@@ -52,13 +54,13 @@ que te corresponda.
 2. Te llega un correo con el paso a paso para definir tu contraseña.
 3. Definís la contraseña y ya entrás.
 
-## Si tu cédula ya estaba registrada
+## Si tu cédula o tu correo ya estaban registrados
 
-El sistema **no crea un perfil nuevo** — eso es a propósito, para que no queden
-dos perfiles tuyos.
+El sistema te lo dice y **no crea un perfil nuevo** — eso es a propósito, para
+que no queden dos perfiles tuyos. En vez de eso te manda el enlace para
+restablecer tu contraseña.
 
-Y en ese caso te manda el enlace de acceso **al correo que ya estaba en tu
-perfil**, que puede no ser el que acabás de escribir. Si tenías registrado un
+Ese enlace va **al correo que ya estaba en tu perfil**, que puede no ser el que acabás de escribir. Si tenías registrado un
 correo viejo, el enlace llega ahí.
 
 Esto también es a propósito, y es por seguridad: si el enlace fuera al correo

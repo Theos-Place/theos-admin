@@ -16,9 +16,16 @@ import { DOCUMENT_TYPES, documentFormatMessage, isDocumentType, isValidDocument,
  * cuenta, con su historial de estudios y sus pagos. Es el único camino de
  * apropiación que abre esta pantalla, y se cierra acá.
  *
- * Y la respuesta al navegador es SIEMPRE la misma, exista o no el documento: si
- * cambiara, la pantalla se convierte en un verificador de qué cédulas están
- * registradas.
+ * SOBRE DECIRLE QUE YA EXISTE (decisión del usuario, 2026-09-01). La primera
+ * versión respondía siempre lo mismo para no convertir la pantalla en un
+ * verificador de qué cédulas están registradas. Se cambió a decirlo de frente:
+ * quien de verdad ya tiene cuenta necesita entender por qué no se creó nada, y
+ * "revisá tu correo" lo dejaba adivinando.
+ *
+ * Lo que se dice es lo mínimo: que ya existe y que se mandó el enlace al correo
+ * REGISTRADO. Nunca cuál es ese correo — eso sí sería filtrar el dato de otro.
+ * El límite por intentos sigue siendo lo que evita que se use para tantear
+ * cédulas en masa.
  *
  * EL ROL NO SE ESCRIBE. 'miembro' es el piso implícito de cualquier ficha
  * (withBaseRole en roles.ts): no hay fila que insertar en member_roles, y de
@@ -107,9 +114,19 @@ export function planDeRegistro(input: {
   return { accion: 'reenviar', memberId: e.id, correoDeLaFicha: correo }
 }
 
-/** Lo que ve el navegador, pase lo que pase. */
-export const RESPUESTA_NEUTRAL_REGISTRO =
-  'Listo. Si los datos son correctos, te llega un correo con el paso a paso para entrar. '
+/** Cuenta creada. */
+export const MENSAJE_REGISTRO_CREADO =
+  'Listo. Te mandamos un correo con el paso a paso para definir tu contraseña. '
   + 'Revisá tu bandeja y la carpeta de spam.'
+
+/** Ya existía: NO se creó nada y se mandó el enlace de recuperación. */
+export const MENSAJE_YA_EXISTE =
+  'Ya tenés una cuenta con esos datos, así que no creamos un perfil nuevo. '
+  + 'Te mandamos al correo registrado el enlace para restablecer tu contraseña.'
+
+/** Existe pero sin correo en la ficha: no hay a dónde mandar el enlace. */
+export const MENSAJE_SIN_CORREO =
+  'Ya tenés un perfil, pero no tiene un correo registrado, así que no podemos mandarte el enlace. '
+  + 'Escribinos a soporte@theosplace.org y lo resolvemos.'
 
 export { DOCUMENT_TYPES }
