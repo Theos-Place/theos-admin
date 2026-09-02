@@ -156,7 +156,10 @@ export async function POST(
       try {
         const { createAutoFolletoIfNeeded, linkPaymentsToFolletoRequest } = await import('@/lib/supabase/queries/folletos')
         const { ymdCR } = await import('@/lib/format')
-        const r = await createAutoFolletoIfNeeded(successorGroupId, 'cierre', ymdCR(), lugarEntrega)
+        // `id` es el grupo que se acaba de cerrar: queda enlazado al tiquete para
+        // que el detalle y el correo puedan decir cuántos aprobaron, reprobaron
+        // y se retiraron. Sin ese enlace el tiquete solo sabe del sucesor.
+        const r = await createAutoFolletoIfNeeded(successorGroupId, 'cierre', ymdCR(), lugarEntrega, id)
         folletoCreado = r.created
         if (!r.created) console.warn('folleto de cierre no creado:', r.reason)
         // Los pagos individuales que acaba de crear la auto-matrícula quedan

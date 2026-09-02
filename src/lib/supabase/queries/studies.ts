@@ -12,6 +12,7 @@ import { hasRestriction, restrictionBlockedMessage, type GroupRestriction } from
 import { ymdCR } from '@/lib/format'
 import type { Json } from '@/types/database'
 import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-export'
+import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-read'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -1736,4 +1737,110 @@ export async function expirePendingStudyEnrollments(
     }
   }
   return { expired: detalle.length, detalle }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * FOL-3 (2026-09-02) · Detalle de un cierre ya hecho
+ *
+ * El cierre es irreversible y la pantalla de cierre solo abre para grupos EN
+ * CURSO, así que una vez cerrado no había dónde ver qué se decidió: quién
+ * aprobó, quién no y por qué. Esto lo reconstruye desde las inscripciones.
+ *
+ * La reprobación se lee con close-result-read porque el RPC la guarda en
+ * `notes` y no en el status — leer el status pelado cuenta reprobados como
+ * aprobados.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+export type CierreParticipante = {
+  member_id: string
+  nombre: string
+  resultado: ResultadoCierre
+  /** El motivo tal como lo escribió el dirigente, sin el prefijo de la base. */
+  motivo: string | null
+  nota: number | null
+}
+
+export type CierreDetalle = {
+  grupo: {
+    id: string
+    name: string | null
+    nivel: string | null
+    status: string
+    dirigente: string | null
+    co_dirigente: string | null
+    ubicacion: string | null
+    zona: string | null
+    starts_at: string | null
+    ends_at: string | null
+  }
+  conteo: ConteoCierre
+  participantes: CierreParticipante[]
+  /** Tiquete de folletos que salió de este cierre, si lo hubo. */
+  folleto_request_id: string | null
+}
+
+export async function getCierreDetalle(groupId: string): Promise<CierreDetalle | null> {
+  const { contarResultadosCierre, clasificarResultado, motivoLegible } =
+    await import('@/lib/studies/close-result-read')
+  const supabase = createAdminClient()
+
+  const { data: g } = await supabase
+    .from('study_groups')
+    .select('id, name, status, location, zone, starts_at, ends_at, plan:study_plans(name),'
+      + ' leader:members!study_groups_leader_id_fkey(first_name, last_name),'
+      + ' co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name)')
+    .eq('id', groupId).maybeSingle()
+  if (!g) return null
+  const row = g as unknown as Record<string, unknown>
+  const primero = <T,>(v: unknown): T | null => (Array.isArray(v) ? ((v[0] as T) ?? null) : ((v as T) ?? null))
+  const persona = (v: unknown): string | null => {
+    const p = primero<{ first_name: string | null; last_name: string | null }>(v)
+    if (!p) return null
+    const n = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()
+    return n || null
+  }
+
+  const { data: enr } = await supabase
+    .from('study_enrollments')
+    .select('member_id, status, notes, drop_reason, grade, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
+    .eq('group_id', groupId)
+  const filas = (enr ?? []) as Array<{
+    member_id: string; status: string | null; notes: string | null
+    drop_reason: string | null; grade: number | null
+    member: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
+  }>
+
+  const { data: fol } = await supabase
+    .from('folleto_requests').select('id').eq('origin_group_id', groupId).limit(1).maybeSingle()
+
+  const participantes: CierreParticipante[] = filas.map(f => ({
+    member_id: f.member_id,
+    nombre: persona(f.member) ?? 'sin nombre',
+    resultado: clasificarResultado(f),
+    motivo: motivoLegible(f),
+    nota: f.grade,
+  }))
+  // Los resultados primero (aprobado, reprobado, retirado, sin evaluar) y
+  // dentro de cada grupo por nombre: quien revisa un cierre busca por persona.
+  const orden: Record<string, number> = { aprobado: 0, reprobado: 1, retirado: 2, sin_evaluar: 3, otro: 4 }
+  participantes.sort((a, b) =>
+    (orden[a.resultado] - orden[b.resultado]) || a.nombre.localeCompare(b.nombre, 'es-CR'))
+
+  return {
+    grupo: {
+      id: String(row.id),
+      name: (row.name as string | null) ?? null,
+      nivel: primero<{ name: string | null }>(row.plan)?.name ?? null,
+      status: String(row.status),
+      dirigente: persona(row.leader),
+      co_dirigente: persona(row.co_leader),
+      ubicacion: (row.location as string | null) ?? null,
+      zona: (row.zone as string | null) ?? null,
+      starts_at: (row.starts_at as string | null) ?? null,
+      ends_at: (row.ends_at as string | null) ?? null,
+    },
+    conteo: contarResultadosCierre(filas),
+    participantes,
+    folleto_request_id: (fol as { id: string } | null)?.id ?? null,
+  }
 }

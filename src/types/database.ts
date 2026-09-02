@@ -1457,7 +1457,9 @@ export type Database = {
           created_at: string | null
           id: string
           note: string | null
+          origin_group_id: string | null
           quantity: number
+          quantity_leaders: number | null
           sede: string | null
           source_group_id: string | null
           source_plan_code: string | null
@@ -1477,7 +1479,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           note?: string | null
+          origin_group_id?: string | null
           quantity?: number
+          quantity_leaders?: number | null
           sede?: string | null
           source_group_id?: string | null
           source_plan_code?: string | null
@@ -1497,7 +1501,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           note?: string | null
+          origin_group_id?: string | null
           quantity?: number
+          quantity_leaders?: number | null
           sede?: string | null
           source_group_id?: string | null
           source_plan_code?: string | null
@@ -1509,6 +1515,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "folleto_requests_origin_group_id_fkey"
+            columns: ["origin_group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "folleto_requests_bloque_id_fkey"
             columns: ["bloque_id"]

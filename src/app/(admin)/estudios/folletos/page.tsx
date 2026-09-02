@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
@@ -9,7 +10,6 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { FileText, Loader2, Check, ChevronRight, MapPin } from 'lucide-react'
-import { resumenPagos, RESUMEN_PAGO_BADGE } from '@/lib/studies/folleto-pagos'
 import type { DbFolletoRequest } from '@/lib/supabase/queries/folletos'
 import {
   FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
@@ -32,11 +32,6 @@ const TIPO_FILTERS: { key: FolletoTipo | 'all'; label: string }[] = [
   { key: 'manual', label: 'Manual' },
 ]
 
-function fmtDate(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(`${iso}T00:00:00`)
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
 
 export default function FolletosPage() {
   const { can } = usePermissions()
@@ -187,7 +182,7 @@ export default function FolletosPage() {
                       />
                     </th>
                   )}
-                  {['Tipo', 'Origen', 'Cantidad', 'Entrega en', 'Pago', 'Fecha estimada', 'Estado', ''].map(h => (
+                  {['Tipo', 'Origen', 'Cantidad', 'Entrega en', 'Estado', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -238,35 +233,32 @@ export default function FolletosPage() {
                           </span>
                         )}
                       </td>
-                      {/* Pista de PAGO, paralela a la del folleto: los estados
-                          de impresión no dependen de esta columna. Es lo que el
-                          dirigente mira para saber a quién le falta. */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {(() => {
-                          const rp = resumenPagos(r.pagos)
-                          return (
-                            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', RESUMEN_PAGO_BADGE[rp.tono])}>
-                              {rp.texto}
-                            </span>
-                          )
-                        })()}
-                      </td>
-                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{fmtDate(r.available_at)}</td>
                       <td className="px-4 py-3">
                         <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', FOLLETO_STATE_BADGE[r.status])}>
                           {FOLLETO_STATE_LABEL[r.status]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {canEdit && next && (
-                          <button
-                            onClick={() => applyStatus([r.id], next)}
-                            disabled={busy}
-                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                      {/* El estado de pago y la fecha estimada se movieron al
+                          detalle: la fila queda con lo que se usa para armar los
+                          paquetes, y lo demás está a un clic. */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            href={`/estudios/folletos/${r.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                           >
-                            {FOLLETO_STATE_LABEL[next]} <ChevronRight size={12} />
-                          </button>
-                        )}
+                            Ver <ChevronRight size={12} aria-hidden />
+                          </Link>
+                          {canEdit && next && (
+                            <button
+                              onClick={() => applyStatus([r.id], next)}
+                              disabled={busy}
+                              className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                            >
+                              {FOLLETO_STATE_LABEL[next]} <ChevronRight size={12} aria-hidden />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

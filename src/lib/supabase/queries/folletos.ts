@@ -4,6 +4,8 @@ import { ROLES } from '@/lib/auth/roles'
 import type { FolletoState } from '@/lib/studies/folletos'
 import { estimatedAvailableDate, levelLabel } from '@/lib/studies/folletos'
 import { hasOwnFolleto, shouldCreateAutoFolleto, type AutoFolletoTipo } from '@/lib/studies/folleto-auto-rules'
+import { desgloseFolletos, type DesgloseFolletos } from '@/lib/studies/folleto-desglose'
+import { contarResultadosCierre, type ConteoCierre } from '@/lib/studies/close-result-read'
 
 
 export type DbFolletoRequest = {
@@ -122,6 +124,10 @@ export async function createAutoFolletoIfNeeded(
   /** Lugar de entrega dicho por quien cierra. Si no viene, se resuelve solo
    *  (grupo → dirigente → zona) como siempre. */
   sedeExplicita?: string | null,
+  /** El grupo que se CERRÓ (tipo='cierre'). `groupId` es el sucesor, el que va
+   *  a usar los folletos; sin este enlace el tiquete no puede decir cuántos
+   *  aprobaron, reprobaron o se retiraron. */
+  originGroupId?: string | null,
   // `id` sale también cuando el tiquete YA existía: quien llama lo necesita
   // para enlazarle los pagos, y ese enlace tiene que ser idempotente igual que
   // la creación.
@@ -129,7 +135,7 @@ export async function createAutoFolletoIfNeeded(
   const supabase = createAdminClient()
   const [{ data: g }, { count }] = await Promise.all([
     supabase.from('study_groups')
-      .select('id, max_students, folletos_sede, plan:study_plans(code)')
+      .select('id, max_students, folletos_sede, leader_id, co_leader_id, plan:study_plans(code)')
       .eq('id', groupId).maybeSingle(),
     // 'pendiente_de_pago' cuenta: los que avanzan por cierre entran así (la
     // matrícula es efectiva de inmediato y el cobro va aparte), y si no se
@@ -138,7 +144,7 @@ export async function createAutoFolletoIfNeeded(
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId).in('status', ['enrolled', 'pendiente_de_pago']),
   ])
-  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
+  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
   if (!row) return { created: false, reason: 'grupo_no_encontrado' }
   const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan
   const code = plan?.code ?? null
@@ -152,12 +158,18 @@ export async function createAutoFolletoIfNeeded(
   // Resolución única (getSedeForGroup): sede de entrega del grupo → sede del
   // dirigente → zona del grupo.
   const sede = (sedeExplicita ?? '').trim() || await getSedeForGroup(groupId)
+  // El dirigente y el co-dirigente también dan el estudio y también necesitan
+  // folleto: se guardan aparte de `quantity` para que el desglose sea visible y
+  // para no reinterpretar lo que `quantity` significa en los tiquetes viejos.
+  const folletosDeDirigentes = (row.leader_id ? 1 : 0) + (row.co_leader_id ? 1 : 0)
   const { data: creado, error } = await supabase.from('folleto_requests').insert({
     tipo,
     source_group_id: groupId,
+    origin_group_id: originGroupId ?? null,
     source_plan_code: code,
     target_level_code: code,
     quantity: enrolled,
+    quantity_leaders: folletosDeDirigentes,
     sede,
     close_date: todayIso,
     available_at: estimatedAvailableDate(todayIso),
@@ -176,22 +188,25 @@ export async function createAutoFolletoIfNeeded(
   }
   const folletoId = (creado as { id: string }).id
 
-  const label = levelLabel(code)
-  const tipoLabel = tipo === 'cupo_lleno' ? 'cupo lleno' : 'fin de matrícula'
-  await notifyFolletoRecipients({
-    title: 'Folletos solicitados',
-    body: `${enrolled} folleto${enrolled !== 1 ? 's' : ''} de ${label} · ${sede ?? 'sede sin definir'} (${tipoLabel})`,
-    subject: `Folletos de ${label} — ${sede ?? 'sede sin definir'}`,
-    html: `
-      <p>Se generó una solicitud de folletos automática (${tipoLabel}).</p>
-      <ul>
-        <li><strong>Nivel:</strong> ${label}</li>
-        <li><strong>Cantidad:</strong> ${enrolled}</li>
-        <li><strong>Sede:</strong> ${sede ?? 'sin definir'}</li>
-      </ul>
-      <p>Podés seguir el estado en el sistema, en Estudios &rsaquo; Folletos.</p>
-    `,
-  })
+  // El correo se arma desde el MISMO detalle que muestra la pantalla, no de
+  // variables sueltas: así los dos dicen lo mismo y no se desincronizan.
+  // Best-effort — un tiquete creado no se pierde porque falle el aviso.
+  try {
+    const detalle = await getFolletoDetalle(folletoId)
+    if (detalle) {
+      const { asuntoFolleto, cuerpoFolleto, etiquetaTipo } = await import('@/lib/email/folleto-request-notify')
+      const { renderEmail } = await import('@/lib/email/baseLayout')
+      await notifyFolletoRecipients({
+        title: 'Folletos solicitados',
+        body: `${detalle.desglose.total} folletos de ${detalle.nivel ?? 'estudio'} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`,
+        subject: asuntoFolleto(detalle),
+        html: renderEmail(cuerpoFolleto(detalle)),
+        link: `/estudios/folletos/${folletoId}`,
+      })
+    }
+  } catch (e) {
+    console.warn('folletos: tiquete creado pero el aviso falló:', e)
+  }
   return { created: true, id: folletoId }
 }
 
@@ -360,4 +375,171 @@ export async function notifyFolletoRecipients(input: {
       html: input.html,
       kind: 'transactional',
     }).catch(e => console.warn('sendEmail folletos falló:', e))))
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * FOL-3 (2026-09-02) · Detalle de un tiquete
+ *
+ * Un tiquete traía nivel, cantidad y sede, y con eso quien imprime no podía
+ * trabajar: no sabía a quién entregarle, dónde se da el estudio, ni de dónde
+ * salía la cantidad. Esto junta todo en una sola lectura, y lo usan por igual
+ * la pantalla de detalle y el correo de aviso — así los dos dicen lo mismo.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+export type FolletoGrupoInfo = {
+  id: string
+  name: string | null
+  nivel: string | null
+  dirigente: string | null
+  co_dirigente: string | null
+  /** Dónde se da el estudio (no dónde se entregan los folletos). */
+  ubicacion: string | null
+  zona: string | null
+  es_virtual: boolean
+  dia: string | null
+  hora: string | null
+  starts_at: string | null
+}
+
+/** Cómo terminó el grupo que se cerró. Solo existe en tiquetes de tipo 'cierre'. */
+export type FolletoCierreInfo = { grupo: FolletoGrupoInfo } & ConteoCierre
+
+export type FolletoDetalle = {
+  id: string
+  tipo: string
+  status: FolletoState
+  nivel: string | null
+  sede_entrega: string | null
+  close_date: string
+  available_at: string
+  note: string | null
+  created_at: string
+  /** Desglose de la cantidad: estudiantes + dirigentes. */
+  desglose: DesgloseFolletos
+  /** Grupo que va a USAR los folletos. */
+  grupo: FolletoGrupoInfo | null
+  /** Grupo que se cerró y disparó el tiquete. null en cupo_lleno/fin_matricula. */
+  cierre: FolletoCierreInfo | null
+  pagos: { total: number; pagados: number }
+  /** Destinatario de una solicitud manual. */
+  target_leader_name: string | null
+}
+
+type GrupoRow = {
+  id: string
+  name: string | null
+  location: string | null
+  zone: string | null
+  is_virtual: boolean | null
+  schedule_days: string | null
+  schedule_time: string | null
+  starts_at: string | null
+  leader_id: string | null
+  co_leader_id: string | null
+  plan: { name: string | null } | { name: string | null }[] | null
+  leader: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
+  co_leader: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
+}
+
+const GRUPO_SELECT =
+  'id, name, location, zone, is_virtual, schedule_days, schedule_time, starts_at, leader_id, co_leader_id,'
+  + ' plan:study_plans(name),'
+  + ' leader:members!study_groups_leader_id_fkey(first_name, last_name),'
+  + ' co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name)'
+
+function uno<T>(v: T | T[] | null): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : v
+}
+
+function nombre(p: { first_name: string | null; last_name: string | null } | null): string | null {
+  if (!p) return null
+  const n = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()
+  return n || null
+}
+
+function aGrupoInfo(row: GrupoRow | null): FolletoGrupoInfo | null {
+  if (!row) return null
+  return {
+    id: row.id,
+    name: row.name,
+    nivel: uno(row.plan)?.name ?? null,
+    dirigente: nombre(uno(row.leader)),
+    co_dirigente: nombre(uno(row.co_leader)),
+    ubicacion: row.location,
+    zona: row.zone,
+    es_virtual: row.is_virtual === true,
+    dia: row.schedule_days,
+    hora: row.schedule_time,
+    starts_at: row.starts_at,
+  }
+}
+
+/** Cuenta cómo terminó cada quien en un grupo ya cerrado.
+ *
+ *  Se trae `notes` porque el RPC `close_group` guarda la reprobación AHÍ y no
+ *  en el status — la regla, con sus tests, vive en close-result-read. Leer solo
+ *  el status contaría a esos reprobados como aprobados. */
+async function contarResultados(groupId: string): Promise<ConteoCierre> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('study_enrollments').select('status, notes').eq('group_id', groupId)
+  return contarResultadosCierre((data ?? []) as Array<{ status: string | null; notes: string | null }>)
+}
+
+export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('folleto_requests')
+    .select('id, tipo, status, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, note, created_at, source_group_id, origin_group_id, target_leader_name')
+    .eq('id', id).maybeSingle()
+  if (error) throw error
+  const t = data as {
+    id: string; tipo: string; status: FolletoState; target_level_code: string | null
+    quantity: number; quantity_leaders: number | null; sede: string | null
+    close_date: string; available_at: string; note: string | null; created_at: string
+    source_group_id: string | null; origin_group_id: string | null; target_leader_name: string | null
+  } | null
+  if (!t) return null
+
+  const [grupoRes, origenRes, pagosRes] = await Promise.all([
+    t.source_group_id
+      ? supabase.from('study_groups').select(GRUPO_SELECT).eq('id', t.source_group_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    t.origin_group_id
+      ? supabase.from('study_groups').select(GRUPO_SELECT).eq('id', t.origin_group_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from('payments').select('status').eq('folleto_request_id', t.id),
+  ])
+
+  const grupo = aGrupoInfo(grupoRes.data as GrupoRow | null)
+  const origen = aGrupoInfo(origenRes.data as GrupoRow | null)
+
+  // Los tiquetes anteriores al 2026-09-02 no tienen quantity_leaders: ahí el
+  // desglose se deduce del grupo, que es la mejor lectura disponible. No se
+  // reescribe `quantity` — sigue siendo la cantidad de estudiantes.
+  const desglose = t.quantity_leaders == null
+    ? desgloseFolletos({
+      estudiantes: t.quantity,
+      tieneDirigente: !!grupo?.dirigente,
+      tieneCoDirigente: !!grupo?.co_dirigente,
+    })
+    : { estudiantes: t.quantity, dirigentes: t.quantity_leaders, total: t.quantity + t.quantity_leaders }
+
+  const pagos = ((pagosRes.data ?? []) as Array<{ status: string | null }>)
+  return {
+    id: t.id,
+    tipo: t.tipo,
+    status: t.status,
+    nivel: levelLabel(t.target_level_code),
+    sede_entrega: t.sede,
+    close_date: t.close_date,
+    available_at: t.available_at,
+    note: t.note,
+    created_at: t.created_at,
+    desglose,
+    grupo,
+    cierre: origen ? { grupo: origen, ...(await contarResultados(origen.id)) } : null,
+    pagos: { total: pagos.length, pagados: pagos.filter(p => p.status === 'paid').length },
+    target_leader_name: t.target_leader_name,
+  }
 }
