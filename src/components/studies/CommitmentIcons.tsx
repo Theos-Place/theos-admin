@@ -52,7 +52,7 @@ function TooltipIcon({
 export function CommitmentIcons({ donor, server, charlas, size = 14 }: CommitmentIconsProps) {
   return (
     <div className="flex items-center gap-2">
-      <TooltipIcon active={donor}   icon={Heart}        tooltip="Donador activo"    size={size} />
+      <TooltipIcon active={donor}   icon={Heart}        tooltip="Donante activo"    size={size} />
       <TooltipIcon active={server}  icon={Hammer}       tooltip="Servidor activo"   size={size} />
       <TooltipIcon active={charlas} icon={CalendarCheck} tooltip="Asiste a charlas" size={size} />
     </div>

@@ -1,7 +1,7 @@
 /**
  * Migración de donaciones nuevas (2026-07-21). Inserta en `donations` las filas de
  * data-import/donaciones_migration.csv que NO estén ya registradas, y marca
- * members.is_donor = true para todos los donadores.
+ * members.is_donor = true para todos los donantes.
  *   cols: member_external_id, donation_date (YYYY-MM-DD), amount (siempre 0), source_group
  *
  * - member: member_external_id → members.external_id. Sin match → skip + warn.
@@ -76,12 +76,12 @@ async function main() {
   const now = new Date().toISOString()
   let skipMember = 0, skipDup = 0
   const toInsert: Array<Record<string, unknown>> = []
-  const donorIds = new Set<string>()          // todos los donadores (con match), para is_donor
+  const donorIds = new Set<string>()          // todos los donantes (con match), para is_donor
 
   for (const r of rows) {
     const memberId = byExt.get(extId(r.member_external_id))
     if (!memberId) { skipMember++; console.warn(`  skip: external_id ${str(r.member_external_id)} sin match en members`); continue }
-    donorIds.add(memberId)                      // es donador aunque la donación ya exista
+    donorIds.add(memberId)                      // es donante aunque la donación ya exista
     const date = str(r.donation_date)
     const key = `${memberId}|${date}`
     if (seen.has(key)) { skipDup++; continue }   // ya registrada (BD o repetida en el CSV)
@@ -97,7 +97,7 @@ async function main() {
     })
   }
 
-  // Miembros que pasarán de no-donador a donador (para el conteo del reporte).
+  // Miembros que pasarán de no-donante a donante (para el conteo del reporte).
   const toMarkDonor = [...donorIds].filter(id => !isDonorNow.get(id))
 
   let inserted = 0
@@ -131,7 +131,7 @@ async function main() {
   console.log(`✅ Miembros marcados is_donor:       ${toMarkDonor.length}`)
   console.log(`⚠️  Skipped (ya registrada):          ${skipDup}`)
   console.log(`⚠️  Skipped (member no encontrado):   ${skipMember}`)
-  console.log(`   (donadores totales con match:     ${donorIds.size})`)
+  console.log(`   (donantes totales con match:     ${donorIds.size})`)
   console.log(DRY_RUN ? '\n(DRY-RUN: no se escribió nada)\n' : '\nListo.\n')
 }
 

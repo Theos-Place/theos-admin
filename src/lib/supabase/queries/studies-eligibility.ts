@@ -106,7 +106,7 @@ export type MemberStudyEligibility = {
  *  - cumple el prerequisito de la cadena (completed del prereq), y
  *  - cumple los compromisos de la etapa (mínimo real, sin exceso):
  *    niveles = ninguno; inicial = asistencia activa (criterio general: ≥6
- *    charlas en 6 meses, con al menos una en 60 días); intermedia = + donador
+ *    charlas en 6 meses, con al menos una en 60 días); intermedia = + donante
  *    + servidor activo, con asistencia REFORZADA (≥12 charlas en 6 meses,
  *    misma condición de recencia — ver ATTENDANCE_MIN_CHARLAS_INTERMEDIA);
  *    campañas = ninguno.

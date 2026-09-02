@@ -263,7 +263,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
               </div>
             )}
 
-            <Toggle checked={form.req_donor}      onChange={v => set('req_donor', v)}      label="Requiere ser donador" />
+            <Toggle checked={form.req_donor}      onChange={v => set('req_donor', v)}      label="Requiere ser donante" />
             <Toggle checked={form.req_server}     onChange={v => set('req_server', v)}     label="Requiere servir en un comité" />
             <Toggle checked={form.req_attendee}   onChange={v => set('req_attendee', v)}   label="Requiere asistencia regular a charlas" />
             <Toggle checked={form.req_bus}        onChange={v => set('req_bus', v)}        label="Requiere haber asistido a la charla del Bus" />

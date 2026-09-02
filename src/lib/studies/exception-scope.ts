@@ -4,7 +4,7 @@
  * DOS COSAS QUE SE AGREGAN (2026-09-01):
  *
  * 1) REPETIR UN CURSO. Hasta ahora una excepción solo perdonaba requisitos de
- *    entrada (donador, asistencia, servidor, prerequisito, edad). No cubría el
+ *    entrada (donante, asistencia, servidor, prerequisito, edad). No cubría el
  *    caso de alguien que YA llevó un estudio y lo quiere repetir: ahí la
  *    matrícula lo bloquea con "Ya completaste este estudio", que no es un
  *    requisito incumplido sino lo contrario.

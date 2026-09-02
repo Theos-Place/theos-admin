@@ -12,7 +12,7 @@
  * CÓMO SE RECUPERA LO QUE FALTA, sin adivinar:
  *
  *  · Los chips de Donantes/Servidores SÍ quedaron escritos, en `segment_label`
- *    (buildSegmentLabel los antepone: "Donadores · Servidores · ...").
+ *    (buildSegmentLabel los antepone: "Donantes · Servidores · ...").
  *
  *  · El de asistencia no quedó en ningún lado, así que se DEDUCE probando: se
  *    corre el filtro con cada valor posible y gana el que reproduce mejor la
@@ -57,7 +57,7 @@ async function main() {
     // buildSegmentLabel los pone, para no confundirlos con una condición que
     // diga "donor" en medio del texto.
     const lab = l.segment_label ?? ''
-    const is_donor = /^Donadores(\s·|$)/.test(lab) || lab.startsWith('Donadores · ')
+    const is_donor = /^Donantes(\s·|$)/.test(lab) || lab.startsWith('Donantes · ')
     const is_server = /(^|·\s)Servidores(\s·|$)/.test(lab)
 
     const guardados = new Set(l.member_ids)

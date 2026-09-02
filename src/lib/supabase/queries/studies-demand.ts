@@ -42,8 +42,8 @@ export type StudyDemandResult = {
  *
  * Compromisos por etapa del estudio OBJETIVO (mismos mínimos que la
  * elegibilidad de matrícula — ver studies-eligibility.ts):
- *   inicial    → asistencia activa (NO pide donador)
- *   intermedia → donador + asistencia activa + servidor activo en comité
+ *   inicial    → asistencia activa (NO pide donante)
+ *   intermedia → donante + asistencia activa + servidor activo en comité
  *
  * Zona: provincia (dirección) del miembro; si no tiene, la sede a la que
  * asiste (decisión 2026-08-19 — antes era al revés).
@@ -65,7 +65,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   const stage = LEVEL_TO_STAGE[plan.level] ?? plan.level
   const stageReq = requirementsForStage(stage)
   const requirements = [
-    ...(stageReq.donor ? ['donador'] : []),
+    ...(stageReq.donor ? ['donante'] : []),
     ...(stageReq.attendance !== 'none' ? ['asistencia'] : []),
     ...(stageReq.server ? ['servidor'] : []),
   ]
@@ -118,7 +118,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   const serverSet = new Set(serverIds)
 
   // Sin prerequisito en cadena (ej. estudios por invitación CDEB/CDC): la
-  // demanda se estima por los compromisos de la etapa (asistencia + donador
+  // demanda se estima por los compromisos de la etapa (asistencia + donante
   // + servidor según corresponda), excluyendo a quien ya lo cursa o completó.
   if (!prereq) {
     // Niveles y campañas no piden compromisos → sin universo de candidatos
@@ -158,7 +158,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       if (error) throw error
       for (const m of (data ?? []) as Array<{ id: string; is_donor: boolean; is_active: boolean; province: string | null; sede: { code: string } | null }>) {
         if (!m.is_active) continue
-        if (requirements.includes('donador') && !m.is_donor) continue
+        if (requirements.includes('donante') && !m.is_donor) continue
         const zoneKey = m.province ?? m.sede?.code ?? 'Sin zona'
         const zone = zonesFallback.get(zoneKey) ?? { graduating: [], eligible: [] }
         zone.eligible.push(m.id)
@@ -259,7 +259,7 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   }
 
   function meetsCommitments(memberId: string, m: MemberState): boolean {
-    if (requirements.includes('donador') && !m.isDonor) return false
+    if (requirements.includes('donante') && !m.isDonor) return false
     if (requirements.includes('asistencia') && !attendanceSet.has(memberId)) return false
     if (requirements.includes('servidor') && !serverSet.has(memberId)) return false
     return true

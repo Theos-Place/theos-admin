@@ -2,7 +2,7 @@
 //
 // A quién se le OFRECE este grupo. Es del grupo, no del plan: dos grupos de la
 // misma capacitación pueden tener restricciones distintas, o uno tenerla y el
-// otro no. Los compromisos de la etapa (donador, servidor, asistencia,
+// otro no. Los compromisos de la etapa (donante, servidor, asistencia,
 // prerequisito, invitación) viven en el plan y se evalúan aparte — la
 // restricción se SUMA, nunca reemplaza.
 //

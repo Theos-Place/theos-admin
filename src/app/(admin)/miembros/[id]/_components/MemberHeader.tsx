@@ -44,7 +44,7 @@ function MemberActivityIcons({ member }: { member: Member }) {
     : 'Asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días)'
   return (
     <div className="mt-3 flex items-center gap-5">
-      <ActivityIcon active={member.is_donor} icon={Heart} label="Donador" activeColor="text-coral" tooltip="Donador" />
+      <ActivityIcon active={member.is_donor} icon={Heart} label="Donante" activeColor="text-coral" tooltip="Donante" />
       <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep" tooltip={committee ? `Servidor en ${committee}` : 'Servidor activo'} />
       <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy" tooltip={attendanceTooltip} />
       <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral" tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'} />
@@ -133,7 +133,7 @@ export function MemberHeader({
               <span
                 className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"
               >
-                Donador
+                Donante
               </span>
             )}
             {member.is_server && (

@@ -252,7 +252,7 @@ Bandeja interna (`/notificaciones`, `internal_notifications`) + alertas calculad
 - **Zonas**: `sedes.is_zone` (23 aprobadas 2026-08-17) gobierna los pickers de zona de grupos de estudio, separado de `is_active` (pickers de miembros/eventos/comunicaciones).
 
 ### Elegibilidad de estudios (`src/lib/studies/eligibility.ts`)
-- Etapas: inicial → asistencia; intermedia y **avanzada** → donador + servidor + asistencia reforzada; niveles y campañas → sin compromisos.
+- Etapas: inicial → asistencia; intermedia y **avanzada** → donante + servidor + asistencia reforzada; niveles y campañas → sin compromisos.
 - Prerequisito encadenado por plan; haber completado un nivel posterior bloquea repetir los previos.
 - Prematrimonial: ambos con N2 completado + documento registrado (409 server-side).
 - Excepciones por miembro (donor/server/attendance/prerequisite/age/all, con motivo obligatorio). Planes invitation-only ocultos sin invitación activa; grupos virtuales solo autorizados; solo grupos `en_matricula` con cupo.

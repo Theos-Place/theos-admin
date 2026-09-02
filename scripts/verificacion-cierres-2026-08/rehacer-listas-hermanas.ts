@@ -13,7 +13,7 @@
  *
  * POR QUÉ SE PUEDEN CERRAR IGUAL. No por medición sino POR ANALOGÍA, y con la
  * aprobación explícita del usuario (2026-08-28): las cinco listas con
- * "Donadores · Servidores" se crearon el mismo día en la misma sesión, las dos
+ * "Donantes · Servidores" se crearon el mismo día en la misma sesión, las dos
  * que SÍ se pudieron medir (Intermedias 84%, Discípulos 68%) dieron "Asistencia
  * estudios", y ese mismo chip es el mejor candidato en estas tres.
  *
@@ -42,10 +42,10 @@ async function main() {
     // Guarda: si ya tiene el filtro completo, alguien la rehizo. No se pisa.
     if (l.filters?.v === 2) { console.log(`· ${nombre}: ya tiene el filtro completo, se salta`); continue }
     // Guarda: los chips tienen que estar en la etiqueta. Si no, la analogía no
-    // aplica — esta lista no es de la familia "Donadores · Servidores".
+    // aplica — esta lista no es de la familia "Donantes · Servidores".
     const lab = l.segment_label ?? ''
-    if (!/^Donadores · Servidores/.test(lab)) {
-      console.log(`✗ ${nombre}: la etiqueta no empieza con "Donadores · Servidores" (${lab.slice(0, 40)}…)`)
+    if (!/^Donantes · Servidores/.test(lab)) {
+      console.log(`✗ ${nombre}: la etiqueta no empieza con "Donantes · Servidores" (${lab.slice(0, 40)}…)`)
       abortar = true; continue
     }
     const { ids, total } = await getMemberIds({

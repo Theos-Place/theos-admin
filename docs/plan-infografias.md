@@ -25,7 +25,7 @@ Son cuatro. No más: es lo que da tiempo de hacer bien y es lo que el staff nece
 
 ### 1. El camino del estudiante
 Las cadenas N1 → N2 → N3 → N4 y DIS1 → DIS2 → DIS3, más las etapas (inicial, intermedia,
-avanzada, campañas) con **los compromisos que pide cada una**: donador activo, servidor en
+avanzada, campañas) con **los compromisos que pide cada una**: donante activo, servidor en
 comité, asistencia activa (6 charlas/6 meses + 1 en 60 días) y reforzada (12). Marcar cuáles
 son solo por invitación (CDEB, Hermenéutica, Cómo Dar Charlas).
 *Por qué esta primero:* es el mapa mental de todo el módulo de estudios. Sin esto, nada de

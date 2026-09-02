@@ -128,11 +128,11 @@ export default function DonacionesPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: 'Donadores identificados', value: uniqueDonors, isAmount: false, alert: false },
+            { label: 'Donantes identificados', value: uniqueDonors, isAmount: false, alert: false },
             { label: 'Total donado este mes', value: totalThisMonth, isAmount: true, alert: false },
             // FIN-1: reemplaza "Sin identificar" (el banner accionable de abajo
-            // se mantiene). Donadores activos = members.is_donor (últimos ~2 trimestres).
-            { label: 'Donadores activos', value: activeDonors, isAmount: false, alert: false },
+            // se mantiene). Donantes activos = members.is_donor (últimos ~2 trimestres).
+            { label: 'Donantes activos', value: activeDonors, isAmount: false, alert: false },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
               <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>

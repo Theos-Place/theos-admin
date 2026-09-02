@@ -322,7 +322,7 @@ export default function MatriculaPage() {
               Compromisos
             </p>
             <div className="space-y-1.5">
-              <CommitmentRow met={isDonor}                    label="Donador/a activo/a" />
+              <CommitmentRow met={isDonor}                    label="Donante/a activo/a" />
               <CommitmentRow met={!!isActiveServer}           label="Servidor/a en comité" />
               <CommitmentRow
                 met={attendanceActive}
@@ -349,7 +349,7 @@ export default function MatriculaPage() {
             Explorá el plan de estudios completo
           </p>
           <p className="text-[13px] text-navy-light/80 font-body">
-            Todos los estudios de Theos Place, con los compromisos que pide cada uno — donador, servicio, asistencia y qué estudio va primero.
+            Todos los estudios de Theos Place, con los compromisos que pide cada uno — donante, servicio, asistencia y qué estudio va primero.
           </p>
         </div>
         <ArrowRight size={18} className="shrink-0 text-coral transition-transform group-hover:translate-x-1" />

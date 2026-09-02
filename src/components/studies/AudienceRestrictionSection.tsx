@@ -94,7 +94,7 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
       {open && (
         <div className="px-5 pb-5 space-y-3">
           <p className="text-[13px] text-navy-light/80 font-body">
-            Esto <strong>se suma</strong> a los requisitos de la etapa (donador, servidor,
+            Esto <strong>se suma</strong> a los requisitos de la etapa (donante, servidor,
             asistencia, estudios previos), no los reemplaza. Quien no cumpla la restricción
             no verá este grupo entre sus opciones.
           </p>

@@ -108,7 +108,7 @@ PostgREST trata el embed self-FK como to-many y devuelve `[]`, dejando vacío el
 - 🟢 Modales: sin reimplementaciones reales (los `fixed inset-0` de `Topbar`/`Sidebar` son menús móviles, no diálogos).
 
 ### 4.3 Lógica de negocio en el cliente
-- 🟡 `finanzas/page.tsx:25-65` — KPIs financieros (ingresos, donadores activos, pagos pendientes) con `.filter`/`.reduce` en el cliente sobre mocks. Aún es mock, pero **al migrar a BD NO portar los `reduce` al cliente** — mover a query/RPC server-side (agregar dinero en cliente es propenso a errores de paginación/TZ).
+- 🟡 `finanzas/page.tsx:25-65` — KPIs financieros (ingresos, donantes activos, pagos pendientes) con `.filter`/`.reduce` en el cliente sobre mocks. Aún es mock, pero **al migrar a BD NO portar los `reduce` al cliente** — mover a query/RPC server-side (agregar dinero en cliente es propenso a errores de paginación/TZ).
 - 🟢 ~30 páginas client con `fetch` en `useEffect` pegan a route handlers con guard — patrón aceptado del proyecto; no se reporta cada una.
 
 ### 4.4 Tipos

@@ -251,9 +251,9 @@ export function computeEligibility(
     // 4. Compromisos (cada uno puede eximirse por excepción)
     if (study.req_donor) {
       requirements.donor = profile.is_donor || isWaived('donor')
-      if (profile.is_donor) reasons_met.push('Sos donador activo ✓')
-      else if (isWaived('donor')) reasons_met.push('Requisito de donador eximido por excepción ✓')
-      else reasons_blocked.push('Requiere ser donador activo de Theos')
+      if (profile.is_donor) reasons_met.push('Sos donante activo ✓')
+      else if (isWaived('donor')) reasons_met.push('Requisito de donante eximido por excepción ✓')
+      else reasons_blocked.push('Requiere ser donante activo de Theos')
     }
     if (study.req_server) {
       requirements.server = profile.is_server || isWaived('server')

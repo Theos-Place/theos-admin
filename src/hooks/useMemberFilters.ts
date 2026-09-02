@@ -8,7 +8,7 @@ import { buildUnits, type FilterUnit } from '@/lib/filter-units'
 
 export { buildUnits }
 
-export type QuickFilter = 'todos' | 'activos' | 'donadores' | 'servidores'
+export type QuickFilter = 'todos' | 'activos' | 'donantes' | 'servidores'
 
 // ─── filter helpers ─────────────────────────────────────────────────────────
 

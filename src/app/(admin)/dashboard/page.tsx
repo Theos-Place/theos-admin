@@ -339,7 +339,7 @@ export default function DashboardPage() {
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
           <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_estudios} label="Estudios activos" sub="Niveles N1–N4" color="#3B7579" href="/estudios/grupos" />
           <StatCard icon={GraduationCap} value={DASHBOARD_STATS.studies.active_capacitaciones} label="Capacitaciones activas" sub="Resto de grupos" color="#9B7FD4" href="/estudios/grupos" />
-          <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donadores activos" color="#3DB97A" href="/finanzas/donaciones" />
+          <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donantes activos" color="#3DB97A" href="/finanzas/donaciones" />
           <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#D63E3D" href="/servidores" />
         </div>
       )}
@@ -509,7 +509,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-navy/80 font-body">Donadores activos</span>
+                <span className="text-[13px] text-navy/80 font-body">Donantes activos</span>
                 <span className="text-[13px] font-semibold text-navy font-body">
                   {DASHBOARD_STATS.finance.donors_active.toLocaleString('es-CR')}
                 </span>

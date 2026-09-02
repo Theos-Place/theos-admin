@@ -20,7 +20,7 @@ export type StageRequirementsSummary = {
 }
 
 const COMMITMENT_LABELS: Record<'donor' | 'server' | 'attendance', string> = {
-  donor: 'Donador/a activo/a',
+  donor: 'Donante/a activo/a',
   server: 'Servidor/a en comité',
   attendance: 'Asistencia activa',
 }

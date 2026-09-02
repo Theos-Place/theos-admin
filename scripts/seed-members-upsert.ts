@@ -3,7 +3,7 @@
  * hoja "Total"). Match por members.external_id (= "Individual ID" de PCO, int→text).
  *
  * Solo actualiza DATOS DE PERFIL: first_name, last_name, email, phone, birth_date,
- * gender. NO toca estado de donador/servidor (esos son dinámicos:
+ * gender. NO toca estado de donante/servidor (esos son dinámicos:
  * vw_active_donors y volunteers.status). NO importa rangos de edad ni SCJ.
  *
  * Reglas:

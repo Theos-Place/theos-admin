@@ -301,7 +301,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   {view.req_donor && (
                     <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral font-body">
-                      Ser donador activo
+                      Ser donante activo
                     </span>
                   )}
                   {view.req_server && (

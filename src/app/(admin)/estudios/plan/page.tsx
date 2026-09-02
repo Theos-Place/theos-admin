@@ -441,7 +441,7 @@ export default function PlanDeEstudiosPage() {
         {/* ── Etapa Intermedia ── */}
         <div className="mb-1">
           <p className="text-[11px] tracking-widest uppercase text-navy-light/35 mb-3 font-display">
-            Etapa Intermedia · Requiere donador + servidor + charlas
+            Etapa Intermedia · Requiere donante + servidor + charlas
           </p>
           <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {intermedia.map(s => <StudyCardFull key={s.id} study={s} mentor={mentorName(s)} canManage={canManage} />)}

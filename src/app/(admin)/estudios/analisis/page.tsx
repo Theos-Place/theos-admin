@@ -36,7 +36,7 @@ type Analysis = {
 }
 
 const REQ_META: Record<string, { label: string; Icon: React.ElementType }> = {
-  donador:    { label: 'Donador',    Icon: HandCoins },
+  donante:    { label: 'Donante',    Icon: HandCoins },
   asistencia: { label: 'Asistencia', Icon: CalendarCheck },
   servidor:   { label: 'Servidor',   Icon: HeartHandshake },
 }
@@ -218,7 +218,7 @@ export default function AnalisisPage() {
               </option>
             ))}
           </optgroup>
-          <optgroup label="Etapa Intermedia (requiere: donador + asistencia + servidor)">
+          <optgroup label="Etapa Intermedia (requiere: donante + asistencia + servidor)">
             {STUDY_TYPES.filter(s => s.stage === 'intermedia' && !s.is_archived && s.is_curricular !== false && !['DIS2', 'DIS3'].includes(s.code)).map(s => (
               <option key={s.id} value={s.id}>
                 {s.code} — {s.name}{s.prerequisite ? ` (prereq: ${s.prerequisite})` : ''}

@@ -653,7 +653,7 @@ export async function importDonations(
     if (dErr) throw dErr
   }
 
-  // 2b. Marcar como donadores a los miembros identificados (opcional).
+  // 2b. Marcar como donantes a los miembros identificados (opcional).
   if (opts.updateDonorStatus) {
     const donorIds = [...new Set([...cedulaToId.values()])]
     for (let i = 0; i < donorIds.length; i += 300) {

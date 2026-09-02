@@ -54,7 +54,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
     exportValue: m => m.is_active ? 'Activo' : 'Inactivo',
   },
   {
-    key: 'is_donor', label: 'Donador', defaultVisible: false,
+    key: 'is_donor', label: 'Donante', defaultVisible: false,
     exportValue: m => m.is_donor ? 'Sí' : 'No',
   },
   {

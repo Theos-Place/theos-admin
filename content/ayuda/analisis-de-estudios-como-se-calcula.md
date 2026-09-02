@@ -31,7 +31,7 @@ que se quiere llegar. La suma de ambas es la demanda estimada.
 
 ## Los compromisos por etapa
 
-| Etapa del estudio | Donador | Servidor activo | Asistencia |
+| Etapa del estudio | Donante | Servidor activo | Asistencia |
 |---|---|---|---|
 | Niveles (N1–N4) | — | — | — |
 | Campañas | — | — | — |
@@ -110,7 +110,7 @@ Esto es lo importante para no decidir mal:
 Los dos casos más comunes:
 
 **«Hay menos gente de la que esperaba»** — casi siempre son los compromisos. En
-intermedia y avanzada se piden donador Y servidor activo Y 12 charlas; con que
+intermedia y avanzada se piden donante Y servidor activo Y 12 charlas; con que
 falte uno, la persona no cuenta.
 
 **«Casi todo cae en Sin zona»** — es lo esperable con los datos de hoy, por lo

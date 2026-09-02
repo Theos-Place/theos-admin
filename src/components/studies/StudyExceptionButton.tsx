@@ -20,7 +20,7 @@ type Exception = {
 }
 
 const REQS: { key: string; label: string }[] = [
-  { key: 'donor', label: 'Donador activo' },
+  { key: 'donor', label: 'Donante activo' },
   { key: 'attendance', label: 'Asistencia a charlas' },
   { key: 'server', label: 'Servidor en comité' },
   { key: 'prerequisite', label: 'Prerequisito (estudio previo)' },

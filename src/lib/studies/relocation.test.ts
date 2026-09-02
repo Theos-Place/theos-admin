@@ -14,12 +14,12 @@ describe('los niveles no piden compromisos', () => {
   }
 })
 
-describe('Discípulos exige donador, servidor y asistencia reforzada', () => {
+describe('Discípulos exige donante, servidor y asistencia reforzada', () => {
   it('sin nada: lista las tres cosas que faltan', () => {
     const r = puedeReubicarseA('DIS2', 'etapa_intermedia', sinNada)
     expect(r.is_eligible).toBe(false)
     expect(r.missing).toHaveLength(3)
-    expect(r.missing.join(' ')).toMatch(/donador/)
+    expect(r.missing.join(' ')).toMatch(/donante/)
     expect(r.missing.join(' ')).toMatch(/comité/)
     expect(r.missing.join(' ')).toMatch(/asistencia/)
   })
@@ -56,8 +56,8 @@ describe('el prerequisito NO se exige', () => {
 
 describe('el texto que se le muestra', () => {
   it('una sola cosa', () => {
-    expect(textoFalta('Discípulos 2', ['ser donador activo']))
-      .toBe('Para estar en Discípulos 2 te falta ser donador activo.')
+    expect(textoFalta('Discípulos 2', ['ser donante activo']))
+      .toBe('Para estar en Discípulos 2 te falta ser donante activo.')
   })
   it('varias, con "y" al final', () => {
     expect(textoFalta('Discípulos 2', ['a', 'b', 'c']))

@@ -57,7 +57,7 @@ export default function FinanzasPage() {
   // INT-3: pagos y donaciones se juntan SIN mezclar monedas.
   const totalIngresos = addTotals(sumByCurrency(filteredPayments), sumByCurrency(filteredDonations))
 
-  // "Donadores activos" = members.is_donor vía el RPC donation_stats — la MISMA
+  // "Donantes activos" = members.is_donor vía el RPC donation_stats — la MISMA
   // fuente que la página de donaciones (FIN-1). Antes se recalculaba acá
   // client-side sobre `donations`, que viaja con ?all=1 y PostgREST corta en
   // ~1000 filas (de 14k+): el número salía distinto al de /finanzas/donaciones.
@@ -158,11 +158,11 @@ export default function FinanzasPage() {
             </p>
           </div>
 
-          {/* Donadores activos */}
+          {/* Donantes activos */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <Heart size={16} className="text-teal-deep" />
-              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donadores activos</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donantes activos</p>
             </div>
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}

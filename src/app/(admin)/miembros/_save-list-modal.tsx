@@ -44,7 +44,7 @@ export function SaveListModal({
             <input id="nombre-de-la-lista"
               autoFocus
               className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              placeholder="Ej. Donadores Heredia..."
+              placeholder="Ej. Donantes Heredia..."
               value={name}
               onChange={e => onName(e.target.value)}
             />
@@ -66,7 +66,7 @@ export function SaveListModal({
             </label>
             <input id="tags-separados-por-coma"
               className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              placeholder="donadores, heredia..."
+              placeholder="donantes, heredia..."
               value={tags}
               onChange={e => onTags(e.target.value)}
             />

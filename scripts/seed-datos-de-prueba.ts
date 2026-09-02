@@ -181,7 +181,7 @@ async function darAsistencia(memberId: string, cantidad: number, charlas: string
 }
 
 /** Donación reciente: el trigger trg_donations_donor recalcula members.is_donor. */
-async function hacerDonador(memberId: string) {
+async function hacerDonante(memberId: string) {
   const { count } = await laxo.from('donations')
     .select('id', { count: 'exact', head: true })
     .eq('member_id', memberId).eq('source_file', 'seed-datos-de-prueba')
@@ -381,7 +381,7 @@ async function main() {
     sirve: 'Matrícula a intermedia (DIS1) con los tres compromisos en verde',
   })
   await darAsistencia(danielIntermedia.id, 14, charlas)
-  await hacerDonador(danielIntermedia.id)
+  await hacerDonante(danielIntermedia.id)
   await hacerServidor(danielIntermedia.id, puestoId)
 
   const elenaAvanzada = await crearMiembro({
@@ -390,7 +390,7 @@ async function main() {
     sirve: 'Ver que CDEB no aparece aunque cumpla todo (EST-5: es por invitación)',
   })
   await darAsistencia(elenaAvanzada.id, 14, charlas)
-  await hacerDonador(elenaAvanzada.id)
+  await hacerDonante(elenaAvanzada.id)
   await hacerServidor(elenaAvanzada.id, puestoId)
 
   // Casos negativos, uno por requisito.
@@ -399,7 +399,7 @@ async function main() {
     caso: 'NEGATIVO · donante y servidora, pero sin charlas',
     sirve: 'Ver el bloqueo y el mensaje de asistencia en el resumen de compromisos (MAT-1)',
   })
-  await hacerDonador(negSinAsistencia.id)
+  await hacerDonante(negSinAsistencia.id)
   await hacerServidor(negSinAsistencia.id, puestoId)
 
   const negSinDonacion = await crearMiembro({
@@ -416,7 +416,7 @@ async function main() {
     sirve: 'Ver el bloqueo por servicio en intermedia',
   })
   await darAsistencia(negSinServicio.id, 14, charlas)
-  await hacerDonador(negSinServicio.id)
+  await hacerDonante(negSinServicio.id)
 
   await crearMiembro({
     nombre: 'Nacho Sin Prerequisito', genero: 'M',

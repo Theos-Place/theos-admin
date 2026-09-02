@@ -53,7 +53,7 @@ export function puedeReubicarseA(
   const missing: string[] = []
 
   if (req.donor && !(c.is_donor || eximido('donor'))) {
-    missing.push('ser donador activo')
+    missing.push('ser donante activo')
   }
   if (req.server && !(c.is_server || eximido('server'))) {
     missing.push('servir activamente en un comité')

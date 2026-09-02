@@ -779,7 +779,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   return (
     <div className="space-y-5">
       {permite('donor') && <div>
-        <Label>Donador</Label>
+        <Label>Donante</Label>
         <Sel value={donorVal} onChange={v => {
           if (donorCond) removeCondition(donorCond.id)
           if (v !== 'any') addCondition({ group: 'donor', type: 'donor', value: v as 'yes' | 'no' })

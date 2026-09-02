@@ -107,7 +107,7 @@ export default function ReportesPage() {
 
   function exportTransparencyCSV() {
     generateCSV(
-      ['Mes', 'Total Donaciones', 'Donadores únicos'],
+      ['Mes', 'Total Donaciones', 'Donantes únicos'],
       monthlyData.map(m => [m.name, formatTotalsInline(m.total), m.uniqueDonors])
       , `informe-transparencia-${yearFilter}`
     )
@@ -308,7 +308,7 @@ export default function ReportesPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {['Mes', 'Total donaciones', 'Donadores únicos', ''].map(h => (
+                      {['Mes', 'Total donaciones', 'Donantes únicos', ''].map(h => (
                         <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>

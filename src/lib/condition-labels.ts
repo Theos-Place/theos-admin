@@ -38,7 +38,7 @@ export function conditionLabel(c: FilterCondition): string {
       if (c.status === 'not_filled') return `No llenó: ${name}`
       return name
     }
-    case 'donor': return c.value === 'yes' ? 'Donador' : 'No donador'
+    case 'donor': return c.value === 'yes' ? 'Donante' : 'No donante'
     case 'age':
       if (c.min && c.max) return `Edad ${c.min}–${c.max}`
       if (c.min) return `Edad ≥${c.min}`

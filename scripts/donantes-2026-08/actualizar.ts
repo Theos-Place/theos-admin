@@ -1,11 +1,11 @@
 /**
- * Marca como donador a la gente de la lista de CCB que todavía no lo está.
+ * Marca como donante a la gente de la lista de CCB que todavía no lo está.
  *
- *   dry-run:  NODE_OPTIONS="--conditions=react-server" npx tsx scripts/donadores-2026-08/actualizar.ts
+ *   dry-run:  NODE_OPTIONS="--conditions=react-server" npx tsx scripts/donantes-2026-08/actualizar.ts
  *   aplicar:  ... actualizar.ts --aplicar
  *
- * El archivo (data-import/donadores-2026-08.csv) es el export de participantes
- * de los grupos "Donadores" de CCB: cinco grupos por trimestre, 1.563 filas y
+ * El archivo (data-import/donantes-2026-08.csv) es el export de participantes
+ * de los grupos "Donantes" de CCB: cinco grupos por trimestre, 1.563 filas y
  * 711 personas distintas —la mayoría aparece en varios trimestres.
  *
  * SOLO AGREGA, decisión del usuario. Hay 22 personas marcadas hoy que no están
@@ -21,7 +21,7 @@ import { cargarEnv, todo, type Miembro } from '../verificacion-cierres-2026-08/l
 
 cargarEnv()
 const APLICAR = process.argv.includes('--aplicar')
-const ARCHIVO = 'data-import/donadores-2026-08.csv'
+const ARCHIVO = 'data-import/donantes-2026-08.csv'
 
 /** CSV con comillas y BOM (el export de CCB trae los dos). */
 function leerCsv(ruta: string): Array<Record<string, string>> {
@@ -45,7 +45,7 @@ function leerCsv(ruta: string): Array<Record<string, string>> {
     .map(f => Object.fromEntries(cab.map((k, i) => [k.replace(/^﻿/, '').trim(), (f[i] ?? '').trim()])))
 }
 
-type MiembroDonador = Miembro & { is_donor: boolean }
+type MiembroDonante = Miembro & { is_donor: boolean }
 
 async function main() {
   console.log(APLICAR ? '⚠️  APLICAR\n' : '🔍 DRY-RUN — no escribe nada\n')
@@ -60,10 +60,10 @@ async function main() {
     if (ext) porExternalCsv.set(ext, r['Name'] ?? '')
   }
 
-  const miembros = await todo<MiembroDonador>(admin, 'members', 'id, external_id, first_name, last_name, is_donor')
+  const miembros = await todo<MiembroDonante>(admin, 'members', 'id, external_id, first_name, last_name, is_donor')
   const porExternal = new Map(miembros.filter(m => m.external_id).map(m => [String(m.external_id).trim(), m]))
 
-  const aMarcar: MiembroDonador[] = []
+  const aMarcar: MiembroDonante[] = []
   const sinFicha: string[] = []
   let yaEstaban = 0
   for (const [ext, nombre] of porExternalCsv) {
@@ -79,7 +79,7 @@ async function main() {
   console.log(`  filas del archivo:                 ${filas.length}`)
   console.log(`  personas distintas:                ${porExternalCsv.size}`)
   console.log(`  ─────────────────────────────────`)
-  console.log(`  ya marcadas como donador:          ${yaEstaban}`)
+  console.log(`  ya marcadas como donante:          ${yaEstaban}`)
   console.log(`  A MARCAR:                          ${aMarcar.length}`)
   console.log(`  sin ficha en la base:              ${sinFicha.length}`)
   console.log(`\n  marcadas hoy que NO están en el archivo: ${marcadosFueraDelCsv.length} (no se tocan)`)

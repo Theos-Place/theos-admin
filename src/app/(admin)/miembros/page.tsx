@@ -53,7 +53,7 @@ function MiembrosContent() {
   }, [])
 
   // Filtros en la URL: sobreviven recargas y se pueden compartir por link.
-  const [showDonors,  setShowDonors]  = useUrlFlag('donadores')
+  const [showDonors,  setShowDonors]  = useUrlFlag('donantes')
   const [showServers, setShowServers] = useUrlFlag('servidores')
   const [showActive,  setShowActive]  = useUrlFlag('activos')
   // Criterio reforzado de estudios: 12 charlas / 6 meses + 1 en 60 días.
@@ -311,13 +311,13 @@ function MiembrosContent() {
           {QUICK_CHIPS.map(({ key, label }) => {
             const active =
               key === 'todos'      ? (!showDonors && !showServers && !showActive && !showStudyAttendance) :
-              key === 'donadores'  ? showDonors :
+              key === 'donantes'  ? showDonors :
               key === 'servidores' ? showServers :
               key === 'activo'     ? showActive :
               showStudyAttendance
             const count =
               key === 'todos'      ? counts?.total :
-              key === 'donadores'  ? counts?.donadores :
+              key === 'donantes'  ? counts?.donantes :
               key === 'servidores' ? counts?.servidores :
               key === 'activo'     ? counts?.activos_asistencia :
               undefined
@@ -327,7 +327,7 @@ function MiembrosContent() {
                 key={key}
                 onClick={() => {
                   if (key === 'todos') { setShowDonors(false); setShowServers(false); setShowActive(false); setShowStudyAttendance(false) }
-                  else if (key === 'donadores') setShowDonors(!showDonors)
+                  else if (key === 'donantes') setShowDonors(!showDonors)
                   else if (key === 'servidores') setShowServers(!showServers)
                   else if (key === 'activo') setShowActive(!showActive)
                   else setShowStudyAttendance(!showStudyAttendance)
@@ -542,7 +542,7 @@ function MiembrosContent() {
                   <td colSpan={visibleColumns.length + 2} className="px-4 py-16 text-center font-body">
                     <Search size={26} className="text-navy-light/80 mx-auto mb-3" strokeWidth={1.75} />
                     <p className="text-sm font-semibold text-navy-light/80">Usá el buscador o aplicá un filtro para ver miembros</p>
-                    <p className="text-[13px] text-navy-light/80 mt-1">Escribí al menos 2 caracteres o activá un chip (Donadores, Servidores, Activo)</p>
+                    <p className="text-[13px] text-navy-light/80 mt-1">Escribí al menos 2 caracteres o activá un chip (Donantes, Servidores, Activo)</p>
                   </td>
                 </tr>
               ) : loading && visibleMembers.length === 0 ? (
@@ -715,7 +715,7 @@ function MiembrosContent() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] text-coral font-body">Donador</span>}
+                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] text-coral font-body">Donante</span>}
                     <AccountBadge state={member.account_state} />
                     <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
                       {member.is_active ? 'Activo' : 'Inactivo'}

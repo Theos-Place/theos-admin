@@ -19,7 +19,7 @@ type FormState = {
   descripcion: string
   semanas: string
   prerequisitos: string[]
-  req_donador: boolean
+  req_donante: boolean
   req_servidor: boolean
   req_asistencia: boolean
   req_pago: boolean
@@ -36,7 +36,7 @@ const INITIAL: FormState = {
   descripcion: '',
   semanas: '',
   prerequisitos: [],
-  req_donador: false,
+  req_donante: false,
   req_servidor: false,
   req_asistencia: false,
   req_pago: false,
@@ -113,7 +113,7 @@ export default function NuevoTipoPage() {
           description: form.descripcion || null,
           level: form.tipo,
           duration_weeks: form.semanas ? Number(form.semanas) : null,
-          requires_donor: form.req_donador,
+          requires_donor: form.req_donante,
           requires_server: form.req_servidor,
           requires_attendance: form.req_asistencia,
           requires_payment: form.req_pago,
@@ -261,7 +261,7 @@ export default function NuevoTipoPage() {
         ))}
 
         <div className="space-y-3 border-t pt-4 border-[var(--outline-variant)]">
-          <Toggle checked={form.req_donador}    onChange={v => set('req_donador', v)}    label="¿Requiere ser donador?" />
+          <Toggle checked={form.req_donante}    onChange={v => set('req_donante', v)}    label="¿Requiere ser donante?" />
           <Toggle checked={form.req_servidor}   onChange={v => set('req_servidor', v)}   label="¿Requiere ser servidor?" />
           <Toggle checked={form.req_asistencia} onChange={v => set('req_asistencia', v)} label="¿Asistencia regular requerida?" />
         </div>

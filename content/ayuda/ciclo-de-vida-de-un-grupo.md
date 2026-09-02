@@ -39,7 +39,7 @@ Dos cosas que confunden seguido:
 A veces un grupo es solo para dirigentes, o solo para quienes ya llevaron cierto estudio. En
 crear/editar grupo hay un bloque **"Restringir este grupo a…"** que limita a quién se le
 ofrece. Se arma con las mismas condiciones del filtro del padrón, acotadas a las que
-describen a una persona: dirigente, servicio, estudio, edad, estado civil y donador.
+describen a una persona: dirigente, servicio, estudio, edad, estado civil y donante.
 
 Tres cosas importantes:
 

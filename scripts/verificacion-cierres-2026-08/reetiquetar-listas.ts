@@ -39,9 +39,9 @@ async function main() {
      * reconstrucción de las otras seis.
      */
     const viejo = l.segment_label ?? ''
-    const donor = f?.v === 2 ? !!f.is_donor : /(^|·\s)Donadores(\s·|$)/.test(viejo)
+    const donor = f?.v === 2 ? !!f.is_donor : /(^|·\s)Donantes(\s·|$)/.test(viejo)
     const server = f?.v === 2 ? !!f.is_server : /(^|·\s)Servidores(\s·|$)/.test(viejo)
-    if (donor) partes.push('Donadores')
+    if (donor) partes.push('Donantes')
     if (server) partes.push('Servidores')
     for (const c of f?.conditions ?? []) partes.push(conditionLabel(c))
     const nueva = partes.length === 0 ? (l.segment_label || 'Todos los miembros') : partes.join(' · ')

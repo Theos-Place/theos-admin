@@ -373,7 +373,7 @@ export default function ListasGuardadasPage() {
                   className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                   value={editTags}
                   onChange={e => setEditTags(e.target.value)}
-                  placeholder="donadores, heredia..."
+                  placeholder="donantes, heredia..."
                 />
               </div>
             </div>

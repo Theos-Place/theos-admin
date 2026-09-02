@@ -140,7 +140,7 @@ export {
 
 export type MemberCounts = {
   total: number
-  donadores: number
+  donantes: number
   servidores: number
   activos_asistencia: number
 }
@@ -166,13 +166,13 @@ export async function getMemberCounts(): Promise<MemberCounts> {
       return 0
     }
   })()
-  const [total, donadores, serverIds, attendanceIds] = await Promise.all([
+  const [total, donantes, serverIds, attendanceIds] = await Promise.all([
     totalP,
     countWhere('is_donor', true),
     getServerMemberIds(),          // ya resiliente (devuelve [])
     getActiveAttendanceMemberIds(),// ya resiliente (devuelve [])
   ])
-  return { total, donadores, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
+  return { total, donantes, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
 }
 
 /** Quita acentos/diacríticos (NFD + corta los combining marks). */
@@ -383,7 +383,7 @@ export async function resolveAdvancedConditions(
         break
       }
       case 'donor': {
-        // is_donor es el flag derivado de donador activo (criterio por trimestres).
+        // is_donor es el flag derivado de donante activo (criterio por trimestres).
         const set = await pagedIds(q => q.eq('is_donor', true), 'members', 'member_id:id', 'id', scopeIds)
         if (c.value === 'yes') res.include.push(set)
         else res.exclude.push(set)

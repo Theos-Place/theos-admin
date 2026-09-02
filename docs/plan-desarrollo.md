@@ -156,7 +156,7 @@ server-side: si llega recommendations para un grupo N1-N3, ignorarlas o rechazar
 Agregá test de la condición de visibilidad/aceptación.
 ```
 
-### [x] FIN-1 · Donaciones: stat de donadores activos + total al filtrar — HECHO 2026-07-27 (RPC `donation_stats` gana `active_donors` = members.is_donor, migración 20260727150000 aplicada — 694 hoy; card "Sin identificar" reemplazada, banner+modal intactos; suma del filtro completo server-side vía `?with_sum=1` paginado, con AmountDisplay y solo para rol finanzas)
+### [x] FIN-1 · Donaciones: stat de donantes activos + total al filtrar — HECHO 2026-07-27 (RPC `donation_stats` gana `active_donors` = members.is_donor, migración 20260727150000 aplicada — 694 hoy; card "Sin identificar" reemplazada, banner+modal intactos; suma del filtro completo server-side vía `?with_sum=1` paginado, con AmountDisplay y solo para rol finanzas)
 
 > OJO dato, no bug: las 14,710 donaciones en prod tienen amount=0 (los montos de QuickBooks
 > son la tarea de datos pendiente) — el "Total filtrado" mostrará ₡0 hasta importarlos,
@@ -165,7 +165,7 @@ Archivos: `src/app/(admin)/finanzas/donaciones/page.tsx` (stat card línea ~131,
 
 ```
 Dos cambios en la página de donaciones (src/app/(admin)/finanzas/donaciones/page.tsx):
-1) Reemplazar la stat card "Sin identificar" (línea ~131) por "Donadores activos": cantidad
+1) Reemplazar la stat card "Sin identificar" (línea ~131) por "Donantes activos": cantidad
    de miembros con members.is_donor = true. Ese flag YA se recalcula como "donó en los
    últimos ~2 trimestres" (ver RPC de is_donor en la migración baseline y el trigger que lo
    marca en cada donación) — usalo, no inventés otra definición. Exponer el conteo desde el
@@ -199,7 +199,7 @@ Reemplazá esa unión de strings por un resumen estructurado y mínimo:
    Nunca listar dos niveles de la misma cadena a la vez.
 3) Compromisos: mostrarlos con las mismas etiquetas cortas que ya se usan en el resto del
    sistema (CommitmentRow en matrícula y RequirementChips en /estudios/analisis):
-   "Donador/a activo/a", "Servidor/a en comité", "Asistencia activa". El detalle largo
+   "Donante/a activo/a", "Servidor/a en comité", "Asistencia activa". El detalle largo
    ("al menos 6 charlas con check-in...") va como tooltip o texto secundario, no como
    ítem principal. Deduplicar: cada compromiso aparece una sola vez.
 4) Mantener las dos columnas "Ya cumplís" / "Te falta" con el mismo estilo visual.
@@ -233,7 +233,7 @@ Archivos: migración SQL (`study_plans.level` CHECK), `src/lib/studies/eligibili
 Crear la etapa "Avanzada" y mover ahí CDEB (Cómo Dar Estudios Bíblicos), HER (Hermenéutica)
 y CDC (Cómo Dar Charlas), que hoy están en etapa intermedia.
 Reglas de la etapa avanzada (decisión confirmada): los MISMOS compromisos que intermedia
-(donador activo + servidor en comité + asistencia reforzada de 12 charlas) Y además solo por
+(donante activo + servidor en comité + asistencia reforzada de 12 charlas) Y además solo por
 invitación (el mecanismo invitation-only ya existe: planes ocultos sin invitación activa en
 study_invitations — reutilizalo, no lo dupliqués).
 1) Migración: agregar 'etapa_avanzada' al CHECK de study_plans.level y actualizar esos 3
@@ -1316,7 +1316,7 @@ el rol forms ve todos; miembro sin nada no ve ninguno; nombrar y quitar encargad
 > · Punto 6 — el staff SÍ puede saltarse la restricción, con confirmación explícita en el
 >   modal de "Añadir miembro" y registro en la bitácora (`logAudit`), igual que PAG-2.
 > · Condiciones permitidas: solo las de AUDIENCIA (dirigente, servicio, estudio, edad,
->   estado civil, donador). Asistencia, inscripción a eventos, formularios, estado de
+>   estado civil, donante). Asistencia, inscripción a eventos, formularios, estado de
 >   cuenta y fecha de creación quedan fuera — no describen a quién va dirigido un grupo y
 >   son las caras de resolver. Agregar una es una línea en `ALLOWED_RESTRICTION_TYPES`.
 >
@@ -1359,7 +1359,7 @@ condiciones con el mismo shape del filtro del padrón. Null = sin restricción.
 ⚠️ ALCANCE — NO CONFUNDIR CON LOS REQUISITOS DEL PLAN
 La restricción es POR GRUPO, nunca por plan ni por etapa. Son dos cosas separadas que se
 evalúan aparte:
-  · El PLAN define los compromisos de la etapa (donador, servidor, asistencia,
+  · El PLAN define los compromisos de la etapa (donante, servidor, asistencia,
     prerequisitos, invitación). Eso ya existe y NO se toca.
   · El GRUPO puede tener, además y opcionalmente, su propia restricción de audiencia.
 Dos grupos del MISMO plan deben poder tener restricciones distintas, o uno tenerla y el

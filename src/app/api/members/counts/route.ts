@@ -3,7 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { moduleScope } from '@/lib/auth/roles'
 import { getMemberCounts } from '@/lib/supabase/queries/members'
 
-// GET: conteos para los chips/header (total, donadores, servidores, activos_asistencia).
+// GET: conteos para los chips/header (total, donantes, servidores, activos_asistencia).
 export async function GET() {
   try {
     const auth = await requireModuleView('miembros', { beyondOwn: true })

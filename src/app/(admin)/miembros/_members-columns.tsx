@@ -44,7 +44,7 @@ export function avatarColor(id: string) {
 
 export const QUICK_CHIPS = [
   { key: 'todos',      label: 'Todos' },
-  { key: 'donadores',  label: 'Donadores' },
+  { key: 'donantes',  label: 'Donantes' },
   { key: 'servidores', label: 'Servidores' },
   { key: 'activo',     label: 'Activo (asistencia)' },
   { key: 'asistencia_estudios', label: 'Asistencia para estudios' },
@@ -102,7 +102,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
     exportValue: m => ACCOUNT_STATE_LABEL[m.account_state],
   },
   {
-    key: 'is_donor', label: 'Donador', defaultVisible: false,
+    key: 'is_donor', label: 'Donante', defaultVisible: false,
     exportValue: m => m.is_donor ? 'Sí' : 'No',
   },
   {
@@ -189,7 +189,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
  */
 export function buildSegmentLabel(conditions: FilterCondition[], showDonors: boolean, showServers: boolean): string {
   const parts: string[] = []
-  if (showDonors)  parts.push('Donadores')
+  if (showDonors)  parts.push('Donantes')
   if (showServers) parts.push('Servidores')
   for (const c of conditions) parts.push(conditionLabel(c))
   return parts.length === 0 ? 'Todos los miembros' : parts.join(' · ')

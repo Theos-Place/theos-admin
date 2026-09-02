@@ -145,7 +145,7 @@ describe('computeEligibility — compromisos', () => {
     const res = computeEligibility([dis1], [], profile())
     const r = of(res, 'DIS1')
     expect(r.is_eligible).toBe(false)
-    expect(r.reasons_blocked.some(m => m.includes('donador'))).toBe(true)
+    expect(r.reasons_blocked.some(m => m.includes('donante'))).toBe(true)
     expect(r.reasons_blocked.some(m => m.includes('charlas'))).toBe(true)
   })
 
