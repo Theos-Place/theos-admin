@@ -11,6 +11,7 @@ import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay
 import { sumByCurrency, addTotals } from '@/lib/money'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
+import { requiereAtencion } from '@/lib/finance/payment-outcome'
 import { FinanceChart } from '@/components/finance/FinanceChart'
 import { useFinance } from '@/hooks/useFinance'
 import { formatDate } from '@/lib/format'
@@ -74,8 +75,11 @@ export default function FinanzasPage() {
   const pendingPayments = payments.filter(p => p.status === 'pending').length
   const pendingRefunds = refunds.filter(r => r.status === 'pending' || r.status === 'processing').length
   const sinpePendingRefunds = refunds.filter(r => r.sinpe_pending && (r.status === 'pending' || r.status === 'processing'))
+  // Solo los fallos DE VERDAD: desde 2026-09-02 una cancelación tiene su
+  // propio estado ('cancelado') y no debe encender la alerta roja — no hay
+  // nada que atender. Antes los 6 "fallidos" del sistema eran cancelaciones.
   const failedRecent7 = payments.filter(p => {
-    if (p.status !== 'failed') return false
+    if (!requiereAtencion(p.status)) return false
     const d = new Date(p.created_at)
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })

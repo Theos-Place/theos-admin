@@ -1569,7 +1569,7 @@ export async function enrollMember(
 /** Retira una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist).
  *  A11: 'completed' es terminal — un retiro accidental ya no borra registro
  *  académico. A3: al retirar una pendiente de pago, su pago de matrícula sin
- *  comprobante se cancela (status 'failed') para que no quede huérfano y
+ *  comprobante se cancela (status 'cancelado') para que no quede huérfano y
  *  aprobable en la cola. */
 export async function withdrawMember(groupId: string, memberId: string, reason?: string): Promise<void> {
   const supabase = createAdminClient()
@@ -1588,7 +1588,8 @@ export async function withdrawMember(groupId: string, memberId: string, reason?:
   const enrollmentId = (updated as Array<{ id: string }>)[0].id
   const { error: payErr } = await supabase
     .from('payments')
-    .update({ status: 'failed' })
+    // 'cancelado', no 'failed': la persona se retiró, no se rompió nada.
+    .update({ status: 'cancelado' })
     .eq('enrollment_id', enrollmentId)
     .eq('concept', 'matricula')
     .eq('status', 'pending')

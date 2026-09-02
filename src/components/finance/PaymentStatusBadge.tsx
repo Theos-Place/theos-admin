@@ -6,6 +6,10 @@ const STATUS_CONFIG: Record<PaymentStatus, { label: string; color: string; bg: s
   pending:        { label: 'Pendiente',    color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
   refunded:       { label: 'Devuelto',     color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
   partial_refund: { label: 'Dev. parcial', color: '#70BDC2', bg: 'rgba(112,189,194,0.15)' },
+  // Cancelado va en gris, no en rojo: es un desenlace normal (la persona
+  // canceló, se venció el plazo) y no hay nada que atender. El rojo se reserva
+  // para 'failed', que sí es una avería del sistema.
+  cancelado:      { label: 'Cancelado',    color: '#29365C', bg: 'rgba(41,54,92,0.10)'    },
   failed:         { label: 'Fallido',      color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
 }
 

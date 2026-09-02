@@ -14,7 +14,7 @@ const METHOD_LABEL: Record<string, string> = {
   card: 'Tarjeta', sinpe: 'SINPE', cash: 'Efectivo', scholarship: 'Beca', comprobante: 'Comprobante',
 }
 const STATUS_LABEL: Record<string, string> = {
-  paid: 'Pagado', pending: 'Pendiente', failed: 'Fallido', refunded: 'Devuelto', partial_refund: 'Devolución parcial',
+  paid: 'Pagado', pending: 'Pendiente', cancelado: 'Cancelado', failed: 'Fallido', refunded: 'Devuelto', partial_refund: 'Devolución parcial',
 }
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre']

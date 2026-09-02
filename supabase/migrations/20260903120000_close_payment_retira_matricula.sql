@@ -26,7 +26,7 @@ declare
   v_event_registration uuid;
 begin
   update payments
-  set status = 'failed', rejection_reason = p_reason,
+  set status = 'cancelado', rejection_reason = p_reason,
       reviewed_by = p_reviewer, reviewed_at = now()
   where id = p_payment_id and status = 'pending'
   returning concept, enrollment_id, event_registration_id
@@ -42,7 +42,7 @@ begin
         drop_reason = coalesce(nullif(p_reason, ''), 'Se cerró el cobro sin pagar')
     where id = v_enrollment and status in ('enrolled', 'pendiente_de_pago');
   elsif v_concept = 'evento' and v_event_registration is not null then
-    update event_registrations set payment_status = 'failed'
+    update event_registrations set payment_status = 'cancelado'
     where id = v_event_registration and payment_status = 'pending';
   end if;
   return true;

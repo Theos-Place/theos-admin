@@ -17,7 +17,7 @@ const paymentWriteSchema = z
     payment_method: z.enum(['card', 'sinpe', 'scholarship', 'cash']).nullish(),
     // Obligatorio: un pago debe declarar su estado explícito, no caer en el
     // default de la columna (auditoría db §1).
-    status: z.enum(['paid', 'pending', 'refunded', 'partial_refund', 'failed']),
+    status: z.enum(['paid', 'pending', 'refunded', 'partial_refund', 'cancelado', 'failed']),
     gateway_ref: z.string().trim().nullish(),
     sinpe_confirmation: z.string().trim().nullish(),
     scholarship_id: z.string().trim().min(1).nullish(),

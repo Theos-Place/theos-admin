@@ -1,7 +1,9 @@
 // Finance module domain types.
 
 export type PaymentMethod = 'card' | 'sinpe' | 'scholarship' | 'cash' | 'comprobante'
-export type PaymentStatus = 'paid' | 'pending' | 'refunded' | 'partial_refund' | 'failed'
+/** 'cancelado' = la persona canceló, se venció el plazo o se cerró el cobro.
+ *  'failed' = el sistema no pudo procesarlo. Ver payment-outcome.ts. */
+export type PaymentStatus = 'paid' | 'pending' | 'refunded' | 'partial_refund' | 'cancelado' | 'failed'
 // 'convertida_donacion' (FIN-6): la persona no quiso el reembolso y la plata
 // quedó como donación. Es un estado RESUELTO, como completed/rejected.
 export type RefundStatus = 'pending' | 'processing' | 'completed' | 'rejected' | 'convertida_donacion'

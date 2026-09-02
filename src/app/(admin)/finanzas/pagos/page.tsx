@@ -344,6 +344,7 @@ function PagosContent() {
                 { value: 'all', label: 'Todos' },
                 { value: 'paid', label: 'Pagado' },
                 { value: 'pending', label: 'Pendiente' },
+                { value: 'cancelado', label: 'Cancelado' },
                 { value: 'failed', label: 'Fallido' },
                 { value: 'refunded', label: 'Devuelto' },
               ]}
