@@ -3,6 +3,9 @@ import { fechasDelSucesor } from '@/lib/studies/successor-dates'
 import { ymdCR } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { nextLevelCode } from '@/lib/studies/folletos'
+import {
+  ESTADOS_ACTIVOS, ESTADOS_A_CONSULTAR, repartirParaMatricula,
+} from '@/lib/studies/auto-enroll-dedup'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 
@@ -225,24 +228,38 @@ export async function autoEnrollApprovedToNextLevel(
   // Dedup: quién ya tiene inscripción a ese nivel — por plan_id directo O por
   // grupo cuyo plan es el siguiente (A12: las matrículas por grupo tienen
   // plan_id NULL y el dedup anterior no las veía → 3 duplicados en prod).
+  //
+  // Se traen los estados y no solo los member_ids, porque "ya está adentro" y
+  // "ya lo aprobó" NO son lo mismo: el primero sería un duplicado, el segundo
+  // es alguien repitiendo el nivel y tiene que entrar como cualquiera. La regla
+  // vive en auto-enroll-dedup, con tests.
   const [byPlan, byGroup] = await Promise.all([
     supabase
       .from('study_enrollments')
-      .select('member_id')
+      .select('member_id, status')
       .eq('plan_id', np.id)
       .in('member_id', approvedMemberIds)
-      .in('status', ['enrolled', 'pendiente_de_pago', 'completed', 'waitlist']),
+      .in('status', ESTADOS_A_CONSULTAR as unknown as string[]),
     supabase
       .from('study_enrollments')
-      .select('member_id, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)')
+      .select('member_id, status, group:study_groups!study_enrollments_group_id_fkey!inner(plan_id)')
       .eq('group.plan_id', np.id)
       .in('member_id', approvedMemberIds)
-      .in('status', ['enrolled', 'pendiente_de_pago', 'completed', 'waitlist']),
+      .in('status', ESTADOS_A_CONSULTAR as unknown as string[]),
   ])
-  const already = new Set([
-    ...((byPlan.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
-    ...((byGroup.data ?? []) as Array<{ member_id: string }>).map(r => r.member_id),
-  ])
+  const filasPrevias = [
+    ...((byPlan.data ?? []) as Array<{ member_id: string; status: string | null }>),
+    ...((byGroup.data ?? []) as Array<{ member_id: string; status: string | null }>),
+  ]
+  const activos = new Set(
+    filasPrevias.filter(r => (ESTADOS_ACTIVOS as readonly string[]).includes(r.status ?? ''))
+      .map(r => r.member_id))
+  const yaAprobados = new Set(
+    filasPrevias.filter(r => r.status === 'completed').map(r => r.member_id))
+  const { matricular, saltados } = repartirParaMatricula(approvedMemberIds, activos, yaAprobados)
+  if (saltados.length > 0) {
+    console.info(`auto-enroll: ${saltados.length} ya estaban matriculados en ${next}, no se duplican`)
+  }
 
   // La matrícula queda ACTIVA siempre (regla 2026-08-04: el pago es un carril
   // aparte). Si el nivel tiene costo se crea además el pago pendiente, que
@@ -250,8 +267,7 @@ export async function autoEnrollApprovedToNextLevel(
   const free = amount <= 0
   const now = new Date().toISOString()
   let enrolled = 0
-  for (const memberId of approvedMemberIds) {
-    if (already.has(memberId)) continue
+  for (const { memberId, nota } of matricular) {
     // El dirigente del grupo sucesor (heredado del origen) no paga su matrícula;
     // el resto (alumnos, aunque dirijan otros grupos) sí.
     const memberFree = free || memberId === src.leader_id || memberId === src.co_leader_id
@@ -263,6 +279,9 @@ export async function autoEnrollApprovedToNextLevel(
         group_id: successorGroupId,
         status: 'enrolled',
         enrolled_at: now,
+        // Quien repite lleva la razón escrita: sin eso, la inscripción de
+        // alguien que ya tenía el nivel aprobado se lee como un error.
+        ...(nota ? { notes: nota } : {}),
       })
       .select('id').single()
     if (enrErr) { console.warn('auto-enroll insert:', enrErr.message); continue }
