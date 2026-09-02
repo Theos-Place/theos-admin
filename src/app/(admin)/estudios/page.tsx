@@ -320,23 +320,28 @@ function StatRow({
   unicos: number
   muted?: boolean
 }) {
+  // `min-w-0` es lo que deja que la celda del grid se encoja: sin eso una línea
+  // larga la estira y el texto se sale de la tarjeta (se vio en tablet, donde
+  // estas dos celdas se parten la mitad de una columna que ya es angosta).
+  // Las dos líneas de números van con `flex-wrap` para que caigan en dos
+  // renglones en vez de desbordarse.
   return (
-    <div className="px-5 py-4">
+    <div className="px-5 py-4 min-w-0">
       <div className="flex items-center gap-2">
-        <Icon size={16} className={muted ? 'text-navy-light/80' : 'text-coral'} />
+        <Icon size={16} className={`shrink-0 ${muted ? 'text-navy-light/80' : 'text-coral'}`} />
         <p className="text-sm font-semibold text-navy font-body">{label}</p>
       </div>
       <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">{hint}</p>
-      <div className="mt-3 flex items-baseline gap-2 font-body">
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-2 font-body">
         <span className={`text-3xl font-bold font-display ${muted ? 'text-navy' : 'text-coral'}`}>
           {grupos}
         </span>
         <span className="text-sm text-navy-light/80">grupos</span>
       </div>
-      <div className="mt-1.5 flex items-baseline gap-1.5 font-body text-sm">
+      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 font-body text-sm">
         <span className="font-semibold text-navy font-display">{inscripciones.toLocaleString('es-CR')}</span>
         <span className="text-navy-light/80">inscripciones</span>
-        <span className="text-navy-light/40">·</span>
+        <span className="text-navy-light/40" aria-hidden="true">·</span>
         <span className="font-semibold text-navy font-display">{unicos.toLocaleString('es-CR')}</span>
         <span className="text-navy-light/80">estudiantes únicos</span>
       </div>
