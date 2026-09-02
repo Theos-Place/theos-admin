@@ -15,7 +15,9 @@
 import { formatDateLong } from '@/lib/format'
 import type { ConteoCierre } from '@/lib/studies/close-result-read'
 
-const BASE = 'https://admin.theosplace.org'
+/** Una persona en la lista del cierre. `motivo` solo viene en reprobados y
+ *  retirados: es lo que el dirigente escribió al evaluar. */
+export type PersonaCierre = { nombre: string; motivo: string | null }
 
 export type ResumenCierre = {
   grupoId: string
@@ -23,6 +25,11 @@ export type ResumenCierre = {
   nivel: string | null
   dirigenteNombre: string
   conteo: ConteoCierre
+  /** Los nombres van EN el correo, no detrás de un enlace: el dirigente no
+   *  entra a la pantalla de cierres, así que un link no le sirve de nada. */
+  aprobados: PersonaCierre[]
+  reprobados: PersonaCierre[]
+  retirados: PersonaCierre[]
   /** Nombre del grupo siguiente y cuántos pasaron, si el cierre lo generó. */
   sucesor: { nombre: string; nivel: string | null; matriculados: number } | null
   /** Cuándo arranca el grupo siguiente (YYYY-MM-DD). */
@@ -42,6 +49,21 @@ function fila(label: string, valor: string): string {
 
 function personas(n: number): string {
   return `${n} ${n === 1 ? 'persona' : 'personas'}`
+}
+
+/** Lista de nombres. Con motivo cuando lo hay — es lo que el dirigente
+ *  escribió y le sirve de constancia de lo que registró. */
+function lista(titulo: string, gente: PersonaCierre[], color: string): string {
+  if (gente.length === 0) return ''
+  const items = gente.map(p => `<li style="margin:0 0 4px;">${p.nombre}${
+    p.motivo ? `<span style="color:#777;"> — ${p.motivo}</span>` : ''
+  }</li>`).join('\n      ')
+  return `<p style="font-size:13px; text-transform:uppercase; letter-spacing:1px; color:${color}; margin:18px 0 6px; font-weight:600;">
+    ${titulo} (${gente.length})
+  </p>
+  <ul style="font-size:14px; color:#161440; line-height:1.8; margin:0; padding-left:20px;">
+      ${items}
+  </ul>`
 }
 
 export function cuerpoCierre(r: ResumenCierre): string {
@@ -86,15 +108,14 @@ lo tengás a mano.</p>
   </table>
 </div>
 
+${lista('Aprobaron', r.aprobados, '#3B7579')}
+${lista('Reprobaron', r.reprobados, '#C43635')}
+${lista('Se retiraron', r.retirados, '#29365C')}
+
 ${sucesorBloque}
 
-<p style="text-align:center; margin:28px 0;">
-  <a class="btn" href="${BASE}/estudios/grupos/${r.grupoId}/resumen-cierre">Ver el detalle del cierre</a>
-</p>
-
 <p style="font-size:13px; color:#777; line-height:1.7;">
-  Ahí queda el resultado de cada persona con su motivo, tal como lo registraste.
-  Si algo quedó mal, escribinos a
+  Esto es lo que registraste al cerrar. Si algo quedó mal, escribinos a
   <a href="mailto:estudios@theosplace.org" style="color:#3B7579;">estudios@theosplace.org</a>
   — el cierre no se puede deshacer solo.
 </p>`
@@ -147,6 +168,11 @@ export async function sendCloseSummary(input: {
   const ids = [g?.leader_id, g?.co_leader_id].filter((x): x is string => !!x)
   if (ids.length === 0) return { sent: 0 }
 
+  // Los participantes ya vienen ordenados por resultado y nombre.
+  const porResultado = (r: string): PersonaCierre[] => detalle.participantes
+    .filter(p => p.resultado === r)
+    .map(p => ({ nombre: p.nombre, motivo: p.motivo }))
+
   const { data: gente } = await sb.from('members')
     .select('id, first_name, last_name, email, email_bounced').in('id', ids)
   let sent = 0
@@ -161,6 +187,9 @@ export async function sendCloseSummary(input: {
       nivel: detalle.grupo.nivel,
       dirigenteNombre: nombre,
       conteo: detalle.conteo,
+      aprobados: porResultado('aprobado'),
+      reprobados: porResultado('reprobado'),
+      retirados: porResultado('retirado'),
       sucesor,
       sucesorArranca,
     }

@@ -7,6 +7,12 @@ const base: ResumenCierre = {
   nivel: 'Nivel 3',
   dirigenteNombre: 'Johnny Leandro Perez',
   conteo: { aprobados: 7, reprobados: 0, retirados: 0, sin_evaluar: 0, historicos: 0 },
+  aprobados: [
+    { nombre: 'Fabio Corrales Loria', motivo: null },
+    { nombre: 'Jessica Sibaja Rodriguez', motivo: null },
+  ],
+  reprobados: [],
+  retirados: [],
   sucesor: { nombre: 'N4 · Nivel 3. Jhonny Leandro. Junio 2026', nivel: 'Nivel 4', matriculados: 7 },
   sucesorArranca: '2026-09-01',
 }
@@ -40,12 +46,13 @@ describe('cuerpo', () => {
     expect(html).toContain('Los folletos del grupo nuevo ya se pidieron')
   })
 
-  it('enlaza al detalle del cierre', () => {
-    expect(html).toContain('/estudios/grupos/g1/resumen-cierre')
-  })
-
   it('avisa que el cierre no se deshace solo', () => {
     expect(html).toContain('no se puede deshacer solo')
+  })
+
+  it('NO enlaza a la pantalla de cierres: el dirigente no entra ahí', () => {
+    expect(html).not.toContain('/estudios/grupos/')
+    expect(html).not.toContain('Ver el detalle')
   })
 })
 
@@ -111,5 +118,52 @@ describe('estudios que no encadenan', () => {
     const html = cuerpoCierre({ ...base, sucesorArranca: null })
     expect(html).toContain(base.sucesor!.nombre)
     expect(html).not.toContain('que arranca el')
+  })
+})
+
+describe('los nombres van en el correo, no detrás de un enlace', () => {
+  it('lista a quienes aprobaron, con el conteo en el título', () => {
+    const html = cuerpoCierre(base)
+    expect(html).toContain('Aprobaron (2)')
+    expect(html).toContain('Fabio Corrales Loria')
+    expect(html).toContain('Jessica Sibaja Rodriguez')
+  })
+
+  it('lista a quienes reprobaron con su motivo', () => {
+    const html = cuerpoCierre({
+      ...base,
+      conteo: { ...base.conteo, reprobados: 1 },
+      reprobados: [{ nombre: 'Viviana López Blanco', motivo: 'no llegó a las últimas 4 sesiones' }],
+    })
+    expect(html).toContain('Reprobaron (1)')
+    expect(html).toContain('Viviana López Blanco')
+    expect(html).toContain('no llegó a las últimas 4 sesiones')
+  })
+
+  it('lista a quienes se retiraron', () => {
+    const html = cuerpoCierre({
+      ...base,
+      conteo: { ...base.conteo, retirados: 1 },
+      retirados: [{ nombre: 'Daniela Ulloa', motivo: 'se cambió de país' }],
+    })
+    expect(html).toContain('Se retiraron (1)')
+    expect(html).toContain('Daniela Ulloa')
+    expect(html).toContain('se cambió de país')
+  })
+
+  it('una lista vacía no imprime su título', () => {
+    const html = cuerpoCierre(base)
+    expect(html).not.toContain('Reprobaron')
+    expect(html).not.toContain('Se retiraron')
+  })
+
+  it('un nombre sin motivo no arrastra el guión', () => {
+    const html = cuerpoCierre({
+      ...base,
+      conteo: { ...base.conteo, reprobados: 1 },
+      reprobados: [{ nombre: 'Sin Motivo Registrado', motivo: null }],
+    })
+    expect(html).toContain('Sin Motivo Registrado')
+    expect(html).not.toContain('Sin Motivo Registrado</span> —')
   })
 })
