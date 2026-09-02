@@ -6,6 +6,7 @@ import { nextLevelCode } from '@/lib/studies/folletos'
 import {
   ESTADOS_ACTIVOS, ESTADOS_A_CONSULTAR, repartirParaMatricula,
 } from '@/lib/studies/auto-enroll-dedup'
+import { nombreDelSucesor } from '@/lib/studies/successor-name'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 
@@ -115,10 +116,12 @@ async function findOrCreateSuccessorGroup(
   const existing = await findSuccessor()
   if (existing) return existing
 
-  // Nombre: reutiliza el del grupo origen cambiando el código de nivel.
-  const name = src.name?.includes(sourceCode)
-    ? src.name.replace(sourceCode, nextCode)
-    : `${nextCode} · ${src.name ?? 'continuación'}`
+  // Nombre: el del grupo origen con el nivel cambiado. La regla vive en
+  // successor-name con tests — antes buscaba el CÓDIGO ("N3") en un nombre que
+  // dice "Nivel 3", nunca lo encontraba y producía "N4 · Nivel 3. Fulano…".
+  const name = nombreDelSucesor({
+    nombreOrigen: src.name, codigoOrigen: sourceCode, codigoDestino: nextCode,
+  })
   const { data: created, error: createErr } = await supabase
     .from('study_groups')
     .insert({
