@@ -45,6 +45,11 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
   // Aparte de los requisitos: no es perdonar algo que falta, es habilitar un
   // curso que la persona YA aprobó. Por eso no entra en "todos los requisitos".
   const [repetir, setRepetir] = useState(false)
+  /** Códigos que la persona YA completó. Se usan solo para avisar: sin esto,
+   *  quien otorga marca "todos los requisitos" creyendo que cubre todo y la
+   *  excepción no sirve — el estudio sigue bloqueado por "ya lo completaste".
+   *  Pasó la primera vez que se usó la función. */
+  const [completados, setCompletados] = useState<string[]>([])
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,6 +60,13 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
     [studyTypes],
   )
 
+  /** ¿El estudio elegido YA lo completó? Ese es el caso que necesita 'repetir'
+   *  y el que se confundía con "todos los requisitos". */
+  const yaLoCompleto = useMemo(() => {
+    const p = plans.find(x => (x.plan_id ?? '') === planId)
+    return !!p && completados.includes(p.code)
+  }, [plans, planId, completados])
+
   const refetch = useCallback(() => {
     fetch(`/api/studies/exceptions?member_id=${memberId}`)
       .then(r => (r.ok ? r.json() : []))
@@ -63,6 +75,13 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
   }, [memberId])
 
   useEffect(() => { if (open) refetch() }, [open, refetch])
+  useEffect(() => {
+    if (!open) return
+    fetch(`/api/matricula/eligibility?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setCompletados(d?.profile?.completed_codes ?? []))
+      .catch(() => setCompletados([]))
+  }, [open, memberId])
 
   if (loaded && !hasRole(...STUDY_ADMIN_ROLES)) return null
 
@@ -171,6 +190,17 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                   <option value="">Seleccionar estudio…</option>
                   {plans.map(p => <option key={p.plan_id ?? p.code} value={p.plan_id ?? ''}>{p.code} — {p.name}</option>)}
                 </select>
+                {/* El aviso que faltaba. "Todos los requisitos" NO habilita
+                    repetir —son decisiones distintas— y sin decirlo acá la
+                    excepción se otorga, se guarda bien, y el estudio sigue sin
+                    aparecer en Matrícula sin que nadie entienda por qué. */}
+                {yaLoCompleto && !repetir && (
+                  <p role="alert" className="mt-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[13px] text-navy font-body">
+                    <strong className="text-amber-700">Ya completó este estudio.</strong>{' '}
+                    Marcá <strong>«Repetir el curso»</strong> abajo, o no le va a aparecer en Matrícula.
+                    «Todos los requisitos» no alcanza para eso.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
