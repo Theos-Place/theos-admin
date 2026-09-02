@@ -1,0 +1,92 @@
+{
+  "applications": [
+    "members"
+  ],
+  "cdeb_recommendations": [
+    "members"
+  ],
+  "duplicate_dismissals": [
+    "members"
+  ],
+  "evaluation_tickets": [
+    "members"
+  ],
+  "event_exceptions": [
+    "events"
+  ],
+  "event_managers": [
+    "members"
+  ],
+  "event_registrations": [
+    "members"
+  ],
+  "events": [
+    "forms"
+  ],
+  "family_members": [
+    "members"
+  ],
+  "finance_requests": [
+    "members"
+  ],
+  "folleto_requests": [
+    "members",
+    "study_groups"
+  ],
+  "form_access_grants": [
+    "members"
+  ],
+  "form_responses": [
+    "members"
+  ],
+  "leader_evaluations": [
+    "members"
+  ],
+  "member_admin_data": [
+    "members"
+  ],
+  "member_recommendations": [
+    "members"
+  ],
+  "member_roles": [
+    "members"
+  ],
+  "message_broadcasts": [
+    "channel_configs"
+  ],
+  "payment_plans": [
+    "members"
+  ],
+  "payments": [
+    "members"
+  ],
+  "position_requests": [
+    "members"
+  ],
+  "prematrimonial_requests": [
+    "members"
+  ],
+  "scholarships": [
+    "users"
+  ],
+  "service_positions": [
+    "areas"
+  ],
+  "study_enrollments": [
+    "members",
+    "study_groups"
+  ],
+  "study_groups": [
+    "members"
+  ],
+  "study_invitations": [
+    "members"
+  ],
+  "study_requests": [
+    "members",
+    "study_groups"
+  ],
+  "study_requirement_exceptions": [
+    "members"
+  ]
+}

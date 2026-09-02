@@ -279,11 +279,17 @@ export async function createManualFolletoRequest(input: {
   return data as { id: string }
 }
 
+/** OJO con el embed de `study_groups`: folleto_requests tiene DOS llaves hacia
+ *  esa tabla (source_group_id y origin_group_id), así que PostgREST exige el
+ *  hint `!folleto_requests_source_group_id_fkey`. Sin él la consulta ENTERA
+ *  falla con PGRST201 y la cola se ve vacía — pasó en producción el 2026-09-02,
+ *  al agregar origin_group_id. El cast `as Array<Record<string, unknown>>` de
+ *  más abajo es lo que impide que TypeScript lo cache antes de tiempo. */
 export async function getFolletoRequests(filters: { sede?: string; status?: FolletoState; tipo?: string } = {}): Promise<DbFolletoRequest[]> {
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
