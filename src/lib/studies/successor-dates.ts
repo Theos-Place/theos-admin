@@ -21,6 +21,17 @@
  * entre uno y otro hay un respiro—, y como el sucesor arranca en el `ends_at`
  * del anterior, meter la semana en el fin del período la reparte sola por toda
  * la cadena sin tener que tocar las fechas de inicio.
+ *
+ * CIERRE TARDÍO (2026-09-02): "arranca donde terminó el anterior" da una fecha
+ * en el PASADO cuando el grupo se cierra tarde. Pasó de verdad: el Nivel 3 de
+ * Jhonny Leandro terminó el 10 de agosto y se cerró el 1 de setiembre, así que
+ * el Nivel 4 nació "empezando" el 10 de agosto — tres semanas antes de existir.
+ * En pantalla se lee como un error, y con razón: un grupo no puede haber
+ * arrancado antes de que hubiera alguien matriculado en él.
+ *
+ * Así que el arranque nunca queda antes del día del cierre. La cadena sigue
+ * pegada cuando se cierra a tiempo, que es el caso normal; cuando se cierra
+ * tarde, arranca el día que de verdad empieza.
  */
 
 /** La pausa entre un estudio y el siguiente, en semanas. */
@@ -41,10 +52,14 @@ export function fechasDelSucesor(input: {
   finDelAnterior: string | null | undefined
   /** `duration_weeks` del plan del sucesor. */
   semanas: number | null | undefined
-  /** Con qué arrancar si el anterior no tiene fecha de fin: el día del cierre. */
+  /** El día del cierre. Es el piso del arranque: un grupo que nace hoy no
+   *  pudo haber empezado ayer. */
   hoy: string
 }): { starts_at: string; ends_at: string | null } {
-  const inicio = (input.finDelAnterior ?? '').slice(0, 10) || input.hoy
+  const finAnterior = (input.finDelAnterior ?? '').slice(0, 10)
+  // Comparación de strings YYYY-MM-DD: ordenan igual que las fechas y no
+  // arrastran husos horarios.
+  const inicio = finAnterior && finAnterior > input.hoy ? finAnterior : input.hoy
   const semanas = Number(input.semanas)
   // Sin duración conocida no se inventa un fin: la fecha de inicio ya alcanza
   // para saber cuándo empezó, y un fin falso dispararía el recordatorio de

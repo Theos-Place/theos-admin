@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Loader2, Users, FileText, Video, MapPin } from 'lucide-react'
+import { ChevronLeft, Loader2, Users, FileText, Video, MapPin, History } from 'lucide-react'
 import type { CierreDetalle, CierreParticipante } from '@/lib/supabase/queries/studies'
 import type { ResultadoCierre } from '@/lib/studies/close-result-read'
 
@@ -14,14 +14,19 @@ const RESULTADO_LABEL: Record<ResultadoCierre, string> = {
   reprobado: 'Reprobó',
   retirado: 'Se retiró',
   sin_evaluar: 'Sin evaluar',
+  historico: 'Ya lo tenía',
   otro: 'Sin cerrar',
 }
 
+/** Contrastes medidos con src/lib/contrast.ts sobre surface-card (#FFFFFF):
+ *  teal-deep 5.24:1 · coral-deep 5.35:1 · navy 17.38:1 · amber-700 5.02:1.
+ *  amber-600 daba 3.19:1 y no pasa AA para texto normal. */
 const RESULTADO_BADGE: Record<ResultadoCierre, string> = {
   aprobado: 'bg-teal-deep/10 text-teal-deep',
   reprobado: 'bg-coral/10 text-coral-deep',
   retirado: 'bg-navy/10 text-navy',
   sin_evaluar: 'bg-amber-500/10 text-amber-700',
+  historico: 'bg-navy/5 text-navy-light',
   otro: 'bg-navy/5 text-navy-light',
 }
 
@@ -35,7 +40,7 @@ function fmtDate(iso: string | null | undefined): string {
 function Conteo({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] min-w-0">
-      <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{label}</p>
+      <p className="text-[11px] tracking-widest uppercase text-navy-light font-display">{label}</p>
       <p className={cn('mt-2 text-3xl font-bold font-display tabular-nums', color)}>{value}</p>
     </div>
   )
@@ -52,10 +57,10 @@ function Fila({ p, idx }: { p: CierreParticipante; idx: number }) {
           {RESULTADO_LABEL[p.resultado]}
         </span>
       </td>
-      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body tabular-nums whitespace-nowrap">
+      <td className="px-4 py-3 text-[13px] text-navy-light font-body tabular-nums whitespace-nowrap">
         {p.nota != null ? p.nota : ''}
       </td>
-      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
+      <td className="px-4 py-3 text-[13px] text-navy-light font-body">
         {p.motivo ? <span className="italic">“{p.motivo}”</span> : ''}
       </td>
     </tr>
@@ -103,7 +108,7 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
             <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em] min-w-0">
               {d.grupo.name ?? 'Grupo sin nombre'}
             </h1>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-navy-light/80 font-body">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-navy-light font-body">
               {d.grupo.nivel && <span>{d.grupo.nivel}</span>}
               {d.grupo.dirigente && <span>Dirigía {d.grupo.dirigente}{d.grupo.co_dirigente ? ` y ${d.grupo.co_dirigente}` : ''}</span>}
               <span className="inline-flex items-center gap-1">
@@ -112,17 +117,37 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
                 ) : <><Video size={13} className="text-navy-light/40" aria-hidden />Sin ubicación</>}
               </span>
             </p>
-            <p className="text-[13px] text-navy-light/80 font-body">
+            <p className="text-[13px] text-navy-light font-body">
               {fmtDate(d.grupo.starts_at)} — {fmtDate(d.grupo.ends_at)}
             </p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Conteo label="Aprobados" value={d.conteo.aprobados} color="text-teal-deep" />
-            <Conteo label="Reprobados" value={d.conteo.reprobados} color="text-coral" />
+            <Conteo label="Reprobados" value={d.conteo.reprobados} color="text-coral-deep" />
             <Conteo label="Retirados" value={d.conteo.retirados} color="text-navy" />
-            <Conteo label="Sin evaluar" value={d.conteo.sin_evaluar} color="text-amber-600" />
+            <Conteo label="Sin evaluar" value={d.conteo.sin_evaluar} color="text-amber-700" />
           </div>
+
+          {/* Arrastre de la importación de PCO: aprobaron el nivel años antes y
+              quedaron pegados a este grupo. No avanzan y no llevan folleto —
+              son la diferencia entre lo que evaluó el dirigente y lo que dice
+              la lista. */}
+          {d.conteo.historicos > 0 && (
+            <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
+              <p className="flex items-start gap-2 text-sm text-navy font-body">
+                <History size={15} className="mt-0.5 shrink-0 text-navy-light" aria-hidden />
+                <span>
+                  <strong>{d.conteo.historicos}</strong>{' '}
+                  {d.conteo.historicos === 1 ? 'persona ya tenía' : 'personas ya tenían'} este nivel
+                  aprobado desde antes de que el grupo empezara (viene de la importación de datos
+                  viejos). No {d.conteo.historicos === 1 ? 'cuenta' : 'cuentan'} como{' '}
+                  {d.conteo.historicos === 1 ? 'aprobado' : 'aprobados'} de este cierre y no{' '}
+                  {d.conteo.historicos === 1 ? 'avanza' : 'avanzan'} de nivel.
+                </span>
+              </p>
+            </div>
+          )}
 
           {d.folleto_request_id && (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
@@ -150,7 +175,7 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
                   <thead>
                     <tr>
                       {['Persona', 'Resultado', 'Nota', 'Motivo'].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light font-display whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>

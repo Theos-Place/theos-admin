@@ -39,7 +39,11 @@ export async function GET(req: NextRequest) {
       // lo que se está viendo.
       filters: ids.length ? undefined : {
         statuses: statuses.length ? statuses : undefined,
-        planCode: searchParams.get('plan') ?? undefined,
+        // `plan` puede venir repetido (?plan=N1&plan=N2): el filtro de tipo de
+      // estudio es de selección múltiple. Se manda como lista siempre —
+      // getAll con un solo valor devuelve un arreglo de uno, y así no hay dos
+      // caminos que mantener.
+      planCodes: searchParams.getAll('plan'),
         zone: searchParams.get('zone') ?? undefined,
         zoneNull: searchParams.get('zone_null') === '1' || undefined,
         day: searchParams.get('day') ?? undefined,

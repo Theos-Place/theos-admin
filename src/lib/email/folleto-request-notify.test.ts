@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase } from './folleto-request-notify'
+import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase, textoHistoricos, textoLleganTarde } from './folleto-request-notify'
 import type { FolletoDetalle } from '@/lib/supabase/queries/folletos'
 
 const grupo = {
@@ -17,7 +17,7 @@ const base: FolletoDetalle = {
   grupo,
   cierre: {
     grupo: { ...grupo, id: 'g0', name: 'N1 · Nivel 1. Marco Araya. Mayo 2026', dirigente: 'Marco Araya Ramirez' },
-    aprobados: 8, reprobados: 2, retirados: 1, sin_evaluar: 0,
+    aprobados: 8, reprobados: 2, retirados: 1, sin_evaluar: 0, historicos: 0,
   },
   pagos: { total: 8, pagados: 5 },
   target_leader_name: null,
@@ -42,7 +42,8 @@ describe('cuerpo: lo que pidieron que apareciera', () => {
   })
 
   it('las fechas van legibles, no en ISO', () => {
-    expect(html).toContain('9 de septiembre de 2026')
+    expect(html).toContain('9 de septiembre de 2026')  // estarían listos
+    expect(html).toContain('15 de septiembre de 2026') // arranca el grupo
     expect(html).not.toContain('2026-09-09')
   })
 
@@ -211,5 +212,82 @@ describe('desfase entre aprobados y matriculados', () => {
 
   it('sin cierre no hay desfase que calcular', () => {
     expect(textoDesfase({ ...base, tipo: 'cupo_lleno', cierre: null })).toBeNull()
+  })
+})
+
+describe('los que ya tenían el nivel (arrastre de la importación)', () => {
+  const conHistoricos = {
+    ...base,
+    desglose: { estudiantes: 6, dirigentes: 1, total: 7 },
+    cierre: { ...base.cierre!, aprobados: 6, reprobados: 0, retirados: 0, historicos: 2 },
+  }
+
+  it('explica por qué la lista tiene más gente que los folletos', () => {
+    expect(textoHistoricos(conHistoricos)).toContain('2 personas de la lista ya tenían')
+    expect(textoHistoricos(conHistoricos)).toContain('no llevan folleto')
+  })
+
+  it('singular con una sola', () => {
+    const uno = { ...conHistoricos, cierre: { ...conHistoricos.cierre!, historicos: 1 } }
+    expect(textoHistoricos(uno)).toContain('1 persona de la lista ya tenía')
+    expect(textoHistoricos(uno)).toContain('no lleva folleto')
+  })
+
+  it('sin históricos no dice nada', () => {
+    expect(textoHistoricos(base)).toBeNull()
+    expect(cuerpoFolleto(base)).not.toContain('ya tenían')
+  })
+
+  it('con el conteo corregido ya no hay desfase que reportar', () => {
+    // Antes se contaban los 2 históricos como aprobados y salía "faltan 2
+    // personas", que hacía pensar en un bug del cierre.
+    expect(textoDesfase(conHistoricos)).toBeNull()
+    expect(cuerpoFolleto(conHistoricos)).not.toContain('conviene revisar antes de imprimir')
+  })
+
+  it('el cuerpo trae la fila y la explicación', () => {
+    const html = cuerpoFolleto(conHistoricos)
+    expect(html).toContain('Ya tenían el nivel')
+    expect(html).toContain('no avanzan ni llevan folleto')
+  })
+})
+
+describe('fechas: los folletos no pueden llegar después de la primera sesión', () => {
+  it('avisa cuando estarían listos DESPUÉS de que el grupo arranca', () => {
+    const d = {
+      ...base,
+      available_at: '2026-09-15',
+      grupo: { ...base.grupo!, starts_at: '2026-09-01' },
+    }
+    expect(textoLleganTarde(d)).toContain('1 de septiembre de 2026')
+    expect(textoLleganTarde(d)).toContain('15 de septiembre de 2026')
+    expect(textoLleganTarde(d)).toContain('después de la primera sesión')
+    expect(cuerpoFolleto(d)).toContain('Ojo con la fecha')
+  })
+
+  it('llegando antes del arranque no dice nada', () => {
+    const d = {
+      ...base,
+      available_at: '2026-09-09',
+      grupo: { ...base.grupo!, starts_at: '2026-09-15' },
+    }
+    expect(textoLleganTarde(d)).toBeNull()
+  })
+
+  it('el mismo día no es tarde', () => {
+    const d = { ...base, available_at: '2026-09-15', grupo: { ...base.grupo!, starts_at: '2026-09-15' } }
+    expect(textoLleganTarde(d)).toBeNull()
+  })
+
+  it('sin grupo no se puede comparar', () => {
+    expect(textoLleganTarde({ ...base, grupo: null })).toBeNull()
+  })
+
+  it('la etiqueta dice "estarían listos", no "se necesitan para"', () => {
+    // available_at es cierre + 2 semanas: una estimación de disponibilidad, no
+    // una fecha de necesidad. Decir lo otro invierte el significado.
+    const html = cuerpoFolleto(base)
+    expect(html).toContain('Estarían listos')
+    expect(html).toContain('(arranca el grupo)')
   })
 })

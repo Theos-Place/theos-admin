@@ -201,6 +201,10 @@ function toListItem(g: RawListGroup): DbGroupListItem {
 export type GroupFilters = {
   statuses?: string[]
   planCode?: string | null
+  /** Varios tipos de estudio a la vez (códigos de plan). Lista vacía = sin
+   *  filtrar, igual que no mandarla: un filtro sin nada escogido no esconde
+   *  nada. Convive con `planCode` para los llamadores de un solo tipo. */
+  planCodes?: string[] | null
   zone?: string | null
   /** true → solo los grupos SIN zona específica (zone IS NULL). */
   zoneNull?: boolean
@@ -230,11 +234,25 @@ export type GroupFilters = {
 async function resolveGroupFilters(
   supabase: ReturnType<typeof createAdminClient>,
   f: GroupFilters,
-): Promise<{ planId: string | null; searchOr: string | null }> {
+): Promise<{ planId: string | null; planIds: string[] | null; searchOr: string | null }> {
   let planId: string | null = null
   if (f.planCode) {
     // Plan inexistente → id imposible para forzar resultado vacío.
     planId = (await getPlanIdByCode(f.planCode)) ?? '00000000-0000-0000-0000-000000000000'
+  }
+
+  // Varios tipos: una sola consulta al catálogo, no una por código.
+  // Un código que no existe simplemente no aporta id; si NINGUNO existe se
+  // fuerza el resultado vacío en vez de ignorar el filtro — ignorarlo
+  // devolvería todos los grupos, que es lo contrario de lo que se pidió.
+  let planIds: string[] | null = null
+  const codigos = (f.planCodes ?? []).filter(c => !!c && c.trim() !== '')
+  if (codigos.length > 0) {
+    const { data, error } = await supabase
+      .from('study_plans').select('id').in('code', codigos)
+    if (error) throw error
+    const ids = ((data ?? []) as Array<{ id: string }>).map(r => r.id)
+    planIds = ids.length > 0 ? ids : ['00000000-0000-0000-0000-000000000000']
   }
 
   let searchOr: string | null = null
@@ -254,7 +272,7 @@ async function resolveGroupFilters(
     }
     searchOr = parts.join(',')
   }
-  return { planId, searchOr }
+  return { planId, planIds, searchOr }
 }
 
 /** Zonas que de verdad aparecen en los grupos: los códigos distintos y si hay
@@ -317,7 +335,7 @@ export async function getStudyGroups(
 ): Promise<{ data: DbGroupListItem[]; total: number }> {
   const supabase = createAdminClient()
   const f = opts.filters ?? {}
-  const { planId, searchOr } = await resolveGroupFilters(supabase, f)
+  const { planId, planIds, searchOr } = await resolveGroupFilters(supabase, f)
   // Ventana "prontos a cerrar": [hoy, hoy+30d] — idéntico al conteo del dashboard.
   // QA 2026-07-17: fechas en zona CR — con toISOString() (UTC) la ventana se
   // corría un día entre 6pm y medianoche hora CR.
@@ -342,6 +360,7 @@ export async function getStudyGroups(
     if (f.startFrom) query = query.gte('starts_at', f.startFrom)
     if (f.startTo) query = query.lte('starts_at', f.startTo)
     if (planId)  query = query.eq('plan_id', planId)
+    if (planIds) query = query.in('plan_id', planIds)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
     const { data, error, count } = await query.range(from, from + pageSize - 1)
@@ -367,6 +386,7 @@ export async function getStudyGroups(
     if (f.startFrom) query = query.gte('starts_at', f.startFrom)
     if (f.startTo) query = query.lte('starts_at', f.startTo)
     if (planId)  query = query.eq('plan_id', planId)
+    if (planIds) query = query.in('plan_id', planIds)
     if (searchOr) query = query.or(searchOr)
     if (f.leaderMemberId) query = query.or(`leader_id.eq.${f.leaderMemberId},co_leader_id.eq.${f.leaderMemberId}`)
     const { data, error } = await query.range(from, from + 999)
@@ -1802,10 +1822,10 @@ export async function getCierreDetalle(groupId: string): Promise<CierreDetalle |
 
   const { data: enr } = await supabase
     .from('study_enrollments')
-    .select('member_id, status, notes, drop_reason, grade, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
+    .select('member_id, status, notes, completed_at, drop_reason, grade, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
     .eq('group_id', groupId)
   const filas = (enr ?? []) as Array<{
-    member_id: string; status: string | null; notes: string | null
+    member_id: string; status: string | null; notes: string | null; completed_at: string | null
     drop_reason: string | null; grade: number | null
     member: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
   }>
@@ -1813,16 +1833,20 @@ export async function getCierreDetalle(groupId: string): Promise<CierreDetalle |
   const { data: fol } = await supabase
     .from('folleto_requests').select('id').eq('origin_group_id', groupId).limit(1).maybeSingle()
 
+  // El arranque del grupo separa a quien aprobó ACÁ de quien venía con el nivel
+  // aprobado desde antes (arrastre de la importación de PCO).
+  const inicioGrupo = ((row.starts_at as string | null) ?? '').slice(0, 10) || null
+
   const participantes: CierreParticipante[] = filas.map(f => ({
     member_id: f.member_id,
     nombre: persona(f.member) ?? 'sin nombre',
-    resultado: clasificarResultado(f),
+    resultado: clasificarResultado(f, inicioGrupo),
     motivo: motivoLegible(f),
     nota: f.grade,
   }))
   // Los resultados primero (aprobado, reprobado, retirado, sin evaluar) y
   // dentro de cada grupo por nombre: quien revisa un cierre busca por persona.
-  const orden: Record<string, number> = { aprobado: 0, reprobado: 1, retirado: 2, sin_evaluar: 3, otro: 4 }
+  const orden: Record<string, number> = { aprobado: 0, reprobado: 1, retirado: 2, sin_evaluar: 3, historico: 4, otro: 5 }
   participantes.sort((a, b) =>
     (orden[a.resultado] - orden[b.resultado]) || a.nombre.localeCompare(b.nombre, 'es-CR'))
 
@@ -1839,7 +1863,7 @@ export async function getCierreDetalle(groupId: string): Promise<CierreDetalle |
       starts_at: (row.starts_at as string | null) ?? null,
       ends_at: (row.ends_at as string | null) ?? null,
     },
-    conteo: contarResultadosCierre(filas),
+    conteo: contarResultadosCierre(filas, inicioGrupo),
     participantes,
     folleto_request_id: (fol as { id: string } | null)?.id ?? null,
   }

@@ -4,13 +4,16 @@ import { fechasDelSucesor, sumarDias } from './successor-dates'
 describe('fechasDelSucesor', () => {
   it('arranca donde terminó el anterior', () => {
     // DIS1 de junio termina el 10/08; su DIS2 dura 9 semanas + 1 de vacaciones.
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 9, hoy: '2026-08-31' }))
+    // El 'hoy' es ANTERIOR al fin del anterior: el cierre se hace a tiempo y la
+    // cadena queda pegada. Con un cierre tardío el arranque se corre a hoy
+    // (ver el describe de abajo).
+    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 9, hoy: '2026-08-05' }))
       .toEqual({ starts_at: '2026-08-10', ends_at: '2026-10-19' })
   })
 
   it('la cadena de Niveles, con la duración de cada plan', () => {
     // N2 de junio termina el 17/08; su N3 dura 10 semanas + 1 de vacaciones.
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-17', semanas: 10, hoy: '2026-08-31' }))
+    expect(fechasDelSucesor({ finDelAnterior: '2026-08-17', semanas: 10, hoy: '2026-08-14' }))
       .toEqual({ starts_at: '2026-08-17', ends_at: '2026-11-02' })
   })
 
@@ -23,7 +26,7 @@ describe('fechasDelSucesor', () => {
   })
 
   it('acepta un timestamp completo y se queda con el día', () => {
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10T00:00:00Z', semanas: 9, hoy: '2026-08-31' }).starts_at)
+    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10T00:00:00Z', semanas: 9, hoy: '2026-08-05' }).starts_at)
       .toBe('2026-08-10')
   })
 
@@ -36,7 +39,7 @@ describe('fechasDelSucesor', () => {
     // Un fin falso dispararía el recordatorio de cierre en una fecha que nadie
     // acordó. Mejor sin fin que con uno inventado.
     for (const semanas of [null, undefined, 0, -3, NaN]) {
-      expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas, hoy: '2026-08-31' }).ends_at).toBeNull()
+      expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas, hoy: '2026-08-05' }).ends_at).toBeNull()
     }
   })
 
@@ -46,5 +49,35 @@ describe('fechasDelSucesor', () => {
     expect(sumarDias('2026-08-10', 63)).toBe('2026-10-12')
     expect(sumarDias('2026-12-31', 1)).toBe('2027-01-01')
     expect(sumarDias('2028-02-28', 1)).toBe('2028-02-29')
+  })
+})
+
+describe('cierre tardío: el sucesor no arranca en el pasado', () => {
+  it('el caso real: el N3 terminó el 10 de agosto y se cerró el 1 de setiembre', () => {
+    // El sucesor nacía "empezando" tres semanas antes de existir.
+    const r = fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 10, hoy: '2026-09-01' })
+    expect(r.starts_at).toBe('2026-09-01')
+    expect(r.ends_at).toBe('2026-11-17') // 11 semanas contadas desde el 1 de setiembre
+  })
+
+  it('cerrado a tiempo sigue pegado al anterior', () => {
+    const r = fechasDelSucesor({ finDelAnterior: '2026-11-02', semanas: 10, hoy: '2026-09-02' })
+    expect(r.starts_at).toBe('2026-11-02')
+  })
+
+  it('cerrado el mismo día que terminó arranca ese día', () => {
+    const r = fechasDelSucesor({ finDelAnterior: '2026-09-02', semanas: 10, hoy: '2026-09-02' })
+    expect(r.starts_at).toBe('2026-09-02')
+  })
+
+  it('sin fecha de fin del anterior, arranca el día del cierre', () => {
+    expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-09-02' }).starts_at)
+      .toBe('2026-09-02')
+  })
+
+  it('el fin se calcula desde el arranque REAL, no desde la fecha pasada', () => {
+    const tarde = fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 10, hoy: '2026-09-01' })
+    const aTiempo = fechasDelSucesor({ finDelAnterior: '2026-09-01', semanas: 10, hoy: '2026-09-01' })
+    expect(tarde.ends_at).toBe(aTiempo.ends_at)
   })
 })

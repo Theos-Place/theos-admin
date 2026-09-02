@@ -17,6 +17,7 @@ import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelect
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
+import { MultiSelect } from '@/components/shared/MultiSelect'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { useToast } from '@/components/shared/Toast'
@@ -110,7 +111,8 @@ export default function GruposPage() {
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
   const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['en_matricula', 'en_curso'])
-  const [selectedType, setSelectedType] = useState('')
+  // Selección MÚLTIPLE de tipos de estudio. Vacío = todos.
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [selectedZone, setSelectedZone] = useState('')
   // Zonas que de verdad aparecen en los grupos: sin esto el filtro ofrecía las 29
   // sedes históricas (solo 2 con grupos) y NO ofrecía "Todas las zonas", que es la
@@ -197,7 +199,7 @@ export default function GruposPage() {
   const filterQS = useCallback(() => {
     const u = new URLSearchParams()
     selectedStatuses.forEach(s => u.append('status', s))
-    if (selectedType) u.set('plan', selectedType)
+    selectedTypes.forEach(t => u.append('plan', t))
     // "Todas las zonas" (zone IS NULL) viaja como zone_null, no como zone.
     const zoneParam = zoneFilterParam(selectedZone)
     if (zoneParam.zone) u.set('zone', zoneParam.zone)
@@ -210,7 +212,7 @@ export default function GruposPage() {
     if (startFrom) u.set('start_from', startFrom)
     if (startTo) u.set('start_to', startTo)
     return u
-  }, [selectedStatuses, selectedType, selectedZone, selectedDay, selectedBloque, search, noLeaderOnly, closingSoonOnly, startFrom, startTo])
+  }, [selectedStatuses, selectedTypes, selectedZone, selectedDay, selectedBloque, search, noLeaderOnly, closingSoonOnly, startFrom, startTo])
 
   const buildUrl = (page: number) => {
     const u = filterQS()
@@ -233,6 +235,11 @@ export default function GruposPage() {
   const tiposPorNombre = useMemo(
     () => [...STUDY_TYPES].sort((a, b) => claveAlfabetica(a.name).localeCompare(claveAlfabetica(b.name), 'es')),
     [STUDY_TYPES],
+  )
+
+  const opcionesTipo = useMemo(
+    () => tiposPorNombre.map(t => ({ value: t.id, label: `${t.code} — ${t.name}` })),
+    [tiposPorNombre],
   )
 
   // El sort reordena solo las filas ya cargadas (in-page). El orden base lo da
@@ -404,21 +411,22 @@ export default function GruposPage() {
             <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
               Tipo de estudio
             </p>
-            <select
-              className={cn(inputCls, 'font-body')}
-              value={selectedType}
-              onChange={e => setSelectedType(e.target.value)}
-            >
-              <option value="">Todos</option>
-              {/* Ordenado por NOMBRE, no por código. El catálogo viene por
-                  código y la lista se leía desordenada: "AED — Administrando el
-                  Dinero, APO — Apocalipsis, ASF — Amor sin Fronteras" está
-                  alfabético por la izquierda, pero quien busca lee la derecha y
-                  ve Apocalipsis antes que Amor sin Fronteras. */}
-              {tiposPorNombre.map(s => (
-                <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
-              ))}
-            </select>
+            {/* Selección múltiple: filtrar de a un tipo por vez obligaba a
+                repetir la búsqueda para comparar, por ejemplo, N1 con N2.
+                Ordenado por NOMBRE, no por código: el catálogo viene por código
+                y la lista se leía desordenada — "AED — Administrando el Dinero,
+                APO — Apocalipsis, ASF — Amor sin Fronteras" está alfabético por
+                la izquierda, pero quien busca lee la derecha y ve Apocalipsis
+                antes que Amor sin Fronteras. */}
+            <MultiSelect
+              opciones={opcionesTipo}
+              seleccionados={selectedTypes}
+              onChange={setSelectedTypes}
+              vacio="Todos"
+              sustantivo="tipos"
+              ariaLabel="Tipo de estudio"
+              buscarPlaceholder="Buscar tipo…"
+            />
           </div>
 
           {/* Zone */}

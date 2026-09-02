@@ -31,7 +31,7 @@ function Dato({ label, children, alerta = false }: {
 }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-2 border-b border-[var(--outline-variant)] last:border-0">
-      <dt className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display w-full sm:w-44 sm:shrink-0">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-widest text-navy-light font-display w-full sm:w-44 sm:shrink-0">{label}</dt>
       <dd className={cn('text-sm font-body min-w-0', alerta ? 'text-coral-deep font-semibold' : 'text-navy')}>{children}</dd>
     </div>
   )
@@ -45,7 +45,7 @@ function Tarjeta({ icon: Icon, title, sub, children }: {
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
         <Icon size={16} className="text-coral shrink-0" aria-hidden />
         <h2 className="text-sm font-semibold text-navy font-display">{title}</h2>
-        {sub && <span className="text-[13px] text-navy-light/80 font-body">{sub}</span>}
+        {sub && <span className="text-[13px] text-navy-light font-body">{sub}</span>}
       </div>
       <dl className="px-5 py-3">{children}</dl>
     </section>
@@ -108,9 +108,12 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
   if (!puedeVer) return <AccessDenied />
 
   const next = d ? nextFolletoState(d.status) : null
+  // Comparación de YYYY-MM-DD como strings: ordenan igual que las fechas.
+  const llegaTarde = !!d?.available_at && !!d?.grupo?.starts_at
+    && d.available_at.slice(0, 10) > d.grupo.starts_at.slice(0, 10)
 
   return (
-    <PageContainer width="form" className="space-y-6">
+    <PageContainer width="work" className="space-y-6">
       <Link
         href="/estudios/folletos"
         className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
@@ -125,7 +128,7 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
       </h1>
 
       {loading ? (
-        <p className="py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full">
+        <p className="py-10 text-center text-sm text-navy-light font-body inline-flex items-center gap-2 justify-center w-full">
           <Loader2 size={15} className="animate-spin" aria-hidden /> Cargando…
         </p>
       ) : error || !d ? (
@@ -152,7 +155,7 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
                 folletos de {d.nivel ?? 'estudio'}
               </p>
             </div>
-            <p className="text-[13px] text-navy-light/80 font-body">{textoDesglose(d.desglose)}</p>
+            <p className="text-[13px] text-navy-light font-body">{textoDesglose(d.desglose)}</p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <MapPin size={15} className={cn('shrink-0', d.sede_entrega ? 'text-teal-deep' : 'text-coral-deep')} aria-hidden />
@@ -183,7 +186,7 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             <Dato label="Grupo">
               {d.grupo
                 ? <Link href={`/estudios/grupos/${d.grupo.id}`} className="text-teal-deep hover:underline">{d.grupo.name ?? 'sin nombre'}</Link>
-                : <span className="text-navy-light/80">{d.target_leader_name ? 'Solicitud manual, sin grupo' : '—'}</span>}
+                : <span className="text-navy-light">{d.target_leader_name ? 'Solicitud manual, sin grupo' : '—'}</span>}
             </Dato>
             <Dato label="Dirigente" alerta={!d.grupo?.dirigente && !d.target_leader_name}>
               {d.grupo?.dirigente ?? d.target_leader_name ?? 'Sin asignar — nadie va a recibir los folletos'}
@@ -199,12 +202,24 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             {(d.grupo?.dia || d.grupo?.hora) && (
               <Dato label="Horario">{[d.grupo?.dia, d.grupo?.hora].filter(Boolean).join(' a las ')}</Dato>
             )}
-            {d.grupo?.starts_at && <Dato label="Arranca">{fmtDate(d.grupo.starts_at)}</Dato>}
           </Tarjeta>
 
-          {/* Fechas y pagos */}
+          {/* Fechas y pagos. `available_at` es la fecha estimada de
+              DISPONIBILIDAD (cierre + 2 semanas), no la de necesidad: esa es el
+              arranque del grupo. Ponerlas juntas hace visible cuando los
+              folletos llegan después de la primera sesión. */}
           <Tarjeta icon={CalendarDays} title="Fechas y pagos">
-            <Dato label="Se necesitan para">{fmtDate(d.available_at)}</Dato>
+            <Dato label="Estarían listos" alerta={llegaTarde}>{fmtDate(d.available_at)}</Dato>
+            {d.grupo?.starts_at && (
+              <Dato label="Se necesitan para" alerta={llegaTarde}>
+                {fmtDate(d.grupo.starts_at)} — arranca el grupo
+              </Dato>
+            )}
+            {llegaTarde && (
+              <Dato label="" alerta>
+                Los folletos llegarían después de la primera sesión. Hay que apurar la impresión.
+              </Dato>
+            )}
             <Dato label="Solicitud creada">{fmtDate(d.created_at)}</Dato>
             {d.pagos.total > 0 && (
               <Dato label="Pagos" alerta={d.pagos.pagados < d.pagos.total}>
@@ -223,12 +238,19 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
                 </Link>
               </Dato>
               {d.cierre.grupo.dirigente && <Dato label="Lo dirigía">{d.cierre.grupo.dirigente}</Dato>}
-              <Dato label="Aprobados">{d.cierre.aprobados} — son los que necesitan folleto</Dato>
+              <Dato label="Aprobados">
+                {d.cierre.aprobados}{textoDesfase(d) ? ' pasaron de nivel' : ' — son los que necesitan folleto'}
+              </Dato>
               {d.cierre.reprobados > 0 && <Dato label="Reprobados">{d.cierre.reprobados} (no avanzan, no llevan folleto)</Dato>}
               {d.cierre.retirados > 0 && <Dato label="Retirados">{d.cierre.retirados} (dejaron el estudio)</Dato>}
               {d.cierre.sin_evaluar > 0 && (
                 <Dato label="Sin evaluar" alerta>
                   {d.cierre.sin_evaluar} — la cantidad puede subir si los evalúan y aprueban
+                </Dato>
+              )}
+              {d.cierre.historicos > 0 && (
+                <Dato label="Ya tenían el nivel">
+                  {d.cierre.historicos} de la importación de datos viejos — no avanzan ni llevan folleto
                 </Dato>
               )}
               {textoDesfase(d) && (
@@ -245,8 +267,8 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             </Tarjeta>
           ) : (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
-              <p className="flex items-start gap-2 text-[13px] text-navy-light/80 font-body">
-                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-navy-light/40" aria-hidden />
+              <p className="flex items-start gap-2 text-[13px] text-navy-light font-body">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-navy-light" aria-hidden />
                 <span>
                   Esta solicitud se generó antes de que el grupo arranque
                   ({FOLLETO_TIPO_LABEL[d.tipo as FolletoTipo] ?? d.tipo}), así que todavía no hay
@@ -256,8 +278,8 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             </div>
           )}
 
-          <p className="flex items-start gap-2 text-[13px] text-navy-light/80 font-body">
-            <Printer size={14} className="mt-0.5 shrink-0 text-navy-light/40" aria-hidden />
+          <p className="flex items-start gap-2 text-[13px] text-navy-light font-body">
+            <Printer size={14} className="mt-0.5 shrink-0 text-navy-light" aria-hidden />
             <span>El total incluye el folleto del dirigente y del co-dirigente: ellos también dan el estudio.</span>
           </p>
         </>

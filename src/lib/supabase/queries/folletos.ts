@@ -485,11 +485,14 @@ function aGrupoInfo(row: GrupoRow | null): FolletoGrupoInfo | null {
  *  Se trae `notes` porque el RPC `close_group` guarda la reprobación AHÍ y no
  *  en el status — la regla, con sus tests, vive en close-result-read. Leer solo
  *  el status contaría a esos reprobados como aprobados. */
-async function contarResultados(groupId: string): Promise<ConteoCierre> {
+async function contarResultados(groupId: string, inicioGrupo: string | null): Promise<ConteoCierre> {
   const supabase = createAdminClient()
   const { data } = await supabase
-    .from('study_enrollments').select('status, notes').eq('group_id', groupId)
-  return contarResultadosCierre((data ?? []) as Array<{ status: string | null; notes: string | null }>)
+    .from('study_enrollments').select('status, notes, completed_at').eq('group_id', groupId)
+  return contarResultadosCierre(
+    (data ?? []) as Array<{ status: string | null; notes: string | null; completed_at: string | null }>,
+    inicioGrupo,
+  )
 }
 
 export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | null> {
@@ -544,7 +547,7 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
     created_at: t.created_at,
     desglose,
     grupo,
-    cierre: origen ? { grupo: origen, ...(await contarResultados(origen.id)) } : null,
+    cierre: origen ? { grupo: origen, ...(await contarResultados(origen.id, origen.starts_at)) } : null,
     pagos: { total: pagos.length, pagados: pagos.filter(p => p.status === 'paid').length },
     target_leader_name: t.target_leader_name,
   }

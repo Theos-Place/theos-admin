@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { clasificarResultado, contarResultadosCierre, motivoLegible } from './close-result-read'
+import { clasificarResultado, contarResultadosCierre, motivoLegible, esHistorico } from './close-result-read'
 
 describe('clasificarResultado: las dos formas de un reprobado', () => {
   it('el status explícito reprobado', () => {
@@ -53,11 +53,11 @@ describe('contarResultadosCierre', () => {
       { status: 'dropped', notes: null },
       { status: 'en_revision', notes: null },
       { status: 'enrolled', notes: null },
-    ])).toEqual({ aprobados: 2, reprobados: 2, retirados: 1, sin_evaluar: 1 })
+    ])).toEqual({ aprobados: 2, reprobados: 2, retirados: 1, sin_evaluar: 1, historicos: 0 })
   })
 
   it('una lista vacía da todo en cero, no NaN', () => {
-    expect(contarResultadosCierre([])).toEqual({ aprobados: 0, reprobados: 0, retirados: 0, sin_evaluar: 0 })
+    expect(contarResultadosCierre([])).toEqual({ aprobados: 0, reprobados: 0, retirados: 0, sin_evaluar: 0, historicos: 0 })
   })
 })
 
@@ -82,5 +82,63 @@ describe('motivoLegible', () => {
 
   it('un aprobado no tiene motivo', () => {
     expect(motivoLegible({ status: 'completed', notes: null, drop_reason: null })).toBeNull()
+  })
+})
+
+describe('arrastre de la importación: aprobó ANTES de que el grupo empezara', () => {
+  it('el caso real: Laura Sandí aprobó en 2022 y quedó pegada a un grupo de 2026', () => {
+    expect(clasificarResultado(
+      { status: 'completed', notes: null, completed_at: '2022-09-08' },
+      '2026-06-01',
+    )).toBe('historico')
+  })
+
+  it('quien aprobó DURANTE el grupo es aprobado normal', () => {
+    expect(clasificarResultado(
+      { status: 'completed', notes: 'aprobado', completed_at: '2026-09-01' },
+      '2026-06-01',
+    )).toBe('aprobado')
+  })
+
+  it('aprobar el mismo día que arrancó cuenta como aprobado, no histórico', () => {
+    expect(clasificarResultado(
+      { status: 'completed', notes: null, completed_at: '2026-06-01' },
+      '2026-06-01',
+    )).toBe('aprobado')
+  })
+
+  it('sin el arranque del grupo no se descarta a nadie', () => {
+    expect(clasificarResultado({ status: 'completed', notes: null, completed_at: '2022-09-08' }))
+      .toBe('aprobado')
+    expect(clasificarResultado({ status: 'completed', notes: null, completed_at: '2022-09-08' }, null))
+      .toBe('aprobado')
+  })
+
+  it('sin fecha de aprobación tampoco se descarta', () => {
+    expect(clasificarResultado({ status: 'completed', notes: null, completed_at: null }, '2026-06-01'))
+      .toBe('aprobado')
+  })
+
+  it('un reprobado histórico sigue contando como reprobado', () => {
+    // La reprobación es explícita; la antigüedad no la borra.
+    expect(clasificarResultado(
+      { status: 'completed', notes: 'reprobado: no llegó', completed_at: '2022-01-01' },
+      '2026-06-01',
+    )).toBe('reprobado')
+  })
+
+  it('el conteo del cierre real: 6 aprobados y 2 históricos, no 8 aprobados', () => {
+    const filas = [
+      ...Array(6).fill({ status: 'completed', notes: 'aprobado', completed_at: '2026-09-01' }),
+      { status: 'completed', notes: null, completed_at: '2022-09-08' },
+      { status: 'completed', notes: null, completed_at: '2022-01-28' },
+    ]
+    expect(contarResultadosCierre(filas, '2026-06-01'))
+      .toEqual({ aprobados: 6, reprobados: 0, retirados: 0, sin_evaluar: 0, historicos: 2 })
+  })
+
+  it('acepta timestamps completos, no solo YYYY-MM-DD', () => {
+    expect(esHistorico('2022-09-08T00:00:00.000Z', '2026-06-01T06:00:00.000Z')).toBe(true)
+    expect(esHistorico('2026-09-01T00:00:00.000Z', '2026-06-01T06:00:00.000Z')).toBe(false)
   })
 })

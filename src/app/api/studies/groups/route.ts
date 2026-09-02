@@ -67,7 +67,11 @@ export async function GET(req: NextRequest) {
     const filters = {
       leaderMemberId,
       statuses: statuses.length ? statuses : undefined,
-      planCode: searchParams.get('plan') ?? undefined,
+      // `plan` puede venir repetido (?plan=N1&plan=N2): el filtro de tipo de
+      // estudio es de selección múltiple. Se manda como lista siempre —
+      // getAll con un solo valor devuelve un arreglo de uno, y así no hay dos
+      // caminos que mantener.
+      planCodes: searchParams.getAll('plan'),
       zone: searchParams.get('zone') ?? undefined,
       zoneNull: searchParams.get('zone_null') === '1' || undefined,
       day: searchParams.get('day') ?? undefined,
@@ -82,7 +86,7 @@ export async function GET(req: NextRequest) {
       startFrom: fechaValida(searchParams.get('start_from')),
       startTo: fechaValida(searchParams.get('start_to')),
     }
-    const hasFilter = statuses.length > 0 || filters.planCode || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon || filters.bloqueId || filters.startFrom || filters.startTo
+    const hasFilter = statuses.length > 0 || filters.planCodes.length > 0 || filters.zone || filters.zoneNull || filters.day || filters.search || filters.noLeader || filters.closingSoon || filters.bloqueId || filters.startFrom || filters.startTo
 
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {
