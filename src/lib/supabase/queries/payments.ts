@@ -142,10 +142,17 @@ async function findOrCreateSuccessorGroup(
        * quedaron así —dos DIS2 y dos N3, 29 personas— y sin fecha de fin el
        * recordatorio de cierre no les llega nunca, porque se calcula sobre ella.
        *
-       * La cohorte sigue de una: arranca donde terminó el anterior, sin hueco.
-       * La regla y sus casos de borde están en successor-dates.ts.
+       * Arranca el próximo día de clase que caiga a 8 días o más del cierre:
+       * 8 días es lo que tardan los folletos en llegar, y tiene que ser un día
+       * en que el estudio se imparte. La regla y sus casos de borde están en
+       * successor-dates.ts.
        */
-      ...fechasDelSucesor({ finDelAnterior: src.ends_at, semanas: nextDurationWeeks, hoy: ymdCR() }),
+      ...fechasDelSucesor({
+        finDelAnterior: src.ends_at,
+        semanas: nextDurationWeeks,
+        hoy: ymdCR(),
+        diasDeClase: src.schedule_days,
+      }),
       /**
        * 'en_curso', NO 'en_matricula' (decisión 2026-08-27).
        *

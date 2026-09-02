@@ -22,22 +22,64 @@
  * del anterior, meter la semana en el fin del período la reparte sola por toda
  * la cadena sin tener que tocar las fechas de inicio.
  *
- * CIERRE TARDÍO (2026-09-02): "arranca donde terminó el anterior" da una fecha
- * en el PASADO cuando el grupo se cierra tarde. Pasó de verdad: el Nivel 3 de
- * Jhonny Leandro terminó el 10 de agosto y se cerró el 1 de setiembre, así que
- * el Nivel 4 nació "empezando" el 10 de agosto — tres semanas antes de existir.
- * En pantalla se lee como un error, y con razón: un grupo no puede haber
- * arrancado antes de que hubiera alguien matriculado en él.
+ * CIERRE TARDÍO (2026-09-02): "arranca donde terminó el anterior" daba una
+ * fecha en el PASADO cuando el grupo se cerraba tarde. El Nivel 3 de Jhonny
+ * Leandro terminó el 10 de agosto y se cerró el 1 de setiembre, así que el
+ * Nivel 4 nació "empezando" el 10 de agosto — tres semanas antes de existir.
  *
- * Así que el arranque nunca queda antes del día del cierre. La cadena sigue
- * pegada cuando se cierra a tiempo, que es el caso normal; cuando se cierra
- * tarde, arranca el día que de verdad empieza.
+ * REGLA ACTUAL (2026-09-02, pedido del usuario). El sucesor arranca el próximo
+ * día de clase que caiga a 8 días o más del cierre:
+ *
+ *   · 8 días es lo que tardan los folletos en llegar a la sede
+ *     (FOLLETO_LEAD_DAYS), así que el grupo no empieza sin material.
+ *   · Y tiene que caer en un día en que ese estudio se imparte: si el grupo es
+ *     los miércoles, arrancar un jueves no significa nada.
+ *
+ * Ejemplo real: el Nivel 3 de Floriana se cerró el miércoles 2 de setiembre.
+ * Ocho días después es el 10, jueves; como el grupo es de miércoles, el
+ * sucesor arranca el miércoles 16.
+ *
+ * Si el grupo anterior todavía no había terminado, el sucesor no se le monta
+ * encima: se corre al primer día de clase después de ese fin.
  */
 
 /** La pausa entre un estudio y el siguiente, en semanas. */
 export const SEMANAS_DE_VACACIONES = 1
 
+/** Días mínimos entre el cierre y el arranque del sucesor: lo que tardan los
+ *  folletos en estar en la sede. */
+export const DIAS_MINIMOS_PARA_ARRANCAR = 8
+
 const MS_DIA = 86_400_000
+
+/** Código de `schedule_days` → día de la semana de JS (0 = domingo). */
+const DIA_SEMANA: Record<string, number> = {
+  D: 0, L: 1, M: 2, X: 3, J: 4, V: 5, S: 6,
+}
+
+/** Qué día de la semana cae un YYYY-MM-DD, en UTC. */
+function diaDeLaSemana(ymd: string): number {
+  return new Date(`${ymd}T00:00:00Z`).getUTCDay()
+}
+
+/**
+ * El primer día EN QUE SE IMPARTE el estudio que caiga en `desde` o después.
+ *
+ * Sin días configurados devuelve `desde` tal cual: no se inventa un horario
+ * que nadie definió, y mover la fecha por una suposición sería peor que
+ * dejarla donde está.
+ */
+export function proximoDiaDeClase(desde: string, dias: readonly string[] | null | undefined): string {
+  const validos = (dias ?? []).map(d => DIA_SEMANA[d]).filter(d => d !== undefined)
+  if (validos.length === 0) return desde
+  const objetivo = new Set(validos)
+  // Como mucho una semana: en 7 días se pasa por todos los días posibles.
+  for (let i = 0; i < 7; i++) {
+    const cand = sumarDias(desde, i)
+    if (objetivo.has(diaDeLaSemana(cand))) return cand
+  }
+  return desde
+}
 
 /** YYYY-MM-DD + n días, en UTC. Las fechas de grupo son días, no instantes:
  *  hacer la cuenta en hora local movería el día en Costa Rica (UTC-6). */
@@ -52,14 +94,19 @@ export function fechasDelSucesor(input: {
   finDelAnterior: string | null | undefined
   /** `duration_weeks` del plan del sucesor. */
   semanas: number | null | undefined
-  /** El día del cierre. Es el piso del arranque: un grupo que nace hoy no
-   *  pudo haber empezado ayer. */
+  /** El día del cierre: desde acá se cuentan los 8 días. */
   hoy: string
+  /** `schedule_days` del grupo (L/M/X/J/V/S/D). El arranque cae en uno de
+   *  estos días. */
+  diasDeClase?: readonly string[] | null
 }): { starts_at: string; ends_at: string | null } {
-  const finAnterior = (input.finDelAnterior ?? '').slice(0, 10)
+  // Piso: 8 días desde el cierre, y nunca encima del grupo anterior.
   // Comparación de strings YYYY-MM-DD: ordenan igual que las fechas y no
   // arrastran husos horarios.
-  const inicio = finAnterior && finAnterior > input.hoy ? finAnterior : input.hoy
+  const porFolletos = sumarDias(input.hoy, DIAS_MINIMOS_PARA_ARRANCAR)
+  const finAnterior = (input.finDelAnterior ?? '').slice(0, 10)
+  const piso = finAnterior && finAnterior > porFolletos ? finAnterior : porFolletos
+  const inicio = proximoDiaDeClase(piso, input.diasDeClase)
   const semanas = Number(input.semanas)
   // Sin duración conocida no se inventa un fin: la fecha de inicio ya alcanza
   // para saber cuándo empezó, y un fin falso dispararía el recordatorio de

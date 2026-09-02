@@ -1,46 +1,81 @@
 import { describe, it, expect } from 'vitest'
-import { fechasDelSucesor, sumarDias } from './successor-dates'
+import { fechasDelSucesor, sumarDias, proximoDiaDeClase } from './successor-dates'
 
 describe('fechasDelSucesor', () => {
-  it('arranca donde terminó el anterior', () => {
-    // DIS1 de junio termina el 10/08; su DIS2 dura 9 semanas + 1 de vacaciones.
-    // El 'hoy' es ANTERIOR al fin del anterior: el cierre se hace a tiempo y la
-    // cadena queda pegada. Con un cierre tardío el arranque se corre a hoy
-    // (ver el describe de abajo).
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 9, hoy: '2026-08-05' }))
-      .toEqual({ starts_at: '2026-08-10', ends_at: '2026-10-19' })
+  it('el caso real: cierre el miércoles 2, grupo de miércoles → arranca el 16', () => {
+    // 2 + 8 días = jueves 10; el próximo miércoles es el 16.
+    const r = fechasDelSucesor({
+      finDelAnterior: '2026-08-10', semanas: 11, hoy: '2026-09-02', diasDeClase: ['X'],
+    })
+    expect(r.starts_at).toBe('2026-09-16')
   })
 
-  it('la cadena de Niveles, con la duración de cada plan', () => {
-    // N2 de junio termina el 17/08; su N3 dura 10 semanas + 1 de vacaciones.
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-17', semanas: 10, hoy: '2026-08-14' }))
-      .toEqual({ starts_at: '2026-08-17', ends_at: '2026-11-02' })
+  it('sin días configurados arranca exactamente a los 8 días', () => {
+    expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-09-02' }).starts_at)
+      .toBe('2026-09-10')
+    expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-09-02', diasDeClase: [] }).starts_at)
+      .toBe('2026-09-10')
+  })
+
+  it('si el día 8 YA es día de clase, arranca ese mismo día', () => {
+    // 2026-09-02 es miércoles; +8 = jueves 10.
+    expect(fechasDelSucesor({
+      finDelAnterior: null, semanas: 10, hoy: '2026-09-02', diasDeClase: ['J'],
+    }).starts_at).toBe('2026-09-10')
+  })
+
+  it('con varios días toma el primero que llegue', () => {
+    // +8 = jueves 10. Con lunes y viernes, el más cercano es el viernes 11.
+    expect(fechasDelSucesor({
+      finDelAnterior: null, semanas: 10, hoy: '2026-09-02', diasDeClase: ['L', 'V'],
+    }).starts_at).toBe('2026-09-11')
+  })
+
+  it('no se le monta al grupo anterior si ese todavía no ha terminado', () => {
+    // Cierre anticipado: +8 daría el 10, pero el anterior corre hasta el 30.
+    const r = fechasDelSucesor({
+      finDelAnterior: '2026-09-30', semanas: 10, hoy: '2026-09-02', diasDeClase: ['X'],
+    })
+    expect(r.starts_at).toBe('2026-09-30') // miércoles
+  })
+
+  it('el fin se cuenta desde el arranque real, con la semana de vacaciones', () => {
+    const r = fechasDelSucesor({
+      finDelAnterior: null, semanas: 10, hoy: '2026-09-02', diasDeClase: ['J'],
+    })
+    // arranca 2026-09-10 + (10 + 1) semanas
+    expect(r.starts_at).toBe('2026-09-10')
+    expect(r.ends_at).toBe('2026-11-26')
   })
 
   it('el período incluye SIEMPRE la semana de vacaciones', () => {
-    // La pausa entre un estudio y el siguiente. Va en el fin del período y no
-    // en el inicio del que sigue: así se reparte sola por toda la cadena.
-    const { starts_at, ends_at } = fechasDelSucesor({ finDelAnterior: '2026-01-05', semanas: 10, hoy: '2026-01-01' })
-    expect(sumarDias(starts_at, 10 * 7)).toBe('2026-03-16')   // sin vacaciones
-    expect(ends_at).toBe('2026-03-23')                        // con la semana
+    const { starts_at, ends_at } = fechasDelSucesor({
+      finDelAnterior: null, semanas: 10, hoy: '2026-01-01',
+    })
+    expect(starts_at).toBe('2026-01-09')                      // el cierre + 8
+    expect(sumarDias(starts_at, 10 * 7)).toBe('2026-03-20')   // sin vacaciones
+    expect(ends_at).toBe('2026-03-27')                        // con la semana
   })
 
-  it('acepta un timestamp completo y se queda con el día', () => {
-    expect(fechasDelSucesor({ finDelAnterior: '2026-08-10T00:00:00Z', semanas: 9, hoy: '2026-08-05' }).starts_at)
-      .toBe('2026-08-10')
-  })
-
-  it('sin fecha de fin del anterior, arranca el día del cierre', () => {
-    expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-08-31' }))
-      .toEqual({ starts_at: '2026-08-31', ends_at: '2026-11-16' })
+  it('acepta un timestamp completo en el fin del anterior', () => {
+    expect(fechasDelSucesor({
+      finDelAnterior: '2026-09-30T00:00:00Z', semanas: 9, hoy: '2026-09-02', diasDeClase: ['X'],
+    }).starts_at).toBe('2026-09-30')
   })
 
   it('sin duración NO se inventa un fin', () => {
     // Un fin falso dispararía el recordatorio de cierre en una fecha que nadie
     // acordó. Mejor sin fin que con uno inventado.
     for (const semanas of [null, undefined, 0, -3, NaN]) {
-      expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas, hoy: '2026-08-05' }).ends_at).toBeNull()
+      expect(fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas, hoy: '2026-09-02' }).ends_at).toBeNull()
     }
+  })
+
+  it('nunca arranca en el pasado, aunque el anterior haya terminado hace meses', () => {
+    const r = fechasDelSucesor({
+      finDelAnterior: '2026-08-10', semanas: 10, hoy: '2026-09-02', diasDeClase: ['X'],
+    })
+    expect(r.starts_at > '2026-09-02').toBe(true)
   })
 
   it('sumarDias no se corre de día por la zona horaria', () => {
@@ -52,32 +87,37 @@ describe('fechasDelSucesor', () => {
   })
 })
 
-describe('cierre tardío: el sucesor no arranca en el pasado', () => {
-  it('el caso real: el N3 terminó el 10 de agosto y se cerró el 1 de setiembre', () => {
-    // El sucesor nacía "empezando" tres semanas antes de existir.
-    const r = fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 10, hoy: '2026-09-01' })
-    expect(r.starts_at).toBe('2026-09-01')
-    expect(r.ends_at).toBe('2026-11-17') // 11 semanas contadas desde el 1 de setiembre
+describe('proximoDiaDeClase', () => {
+  it('2026-09-10 es jueves: pedir miércoles da el 16', () => {
+    expect(proximoDiaDeClase('2026-09-10', ['X'])).toBe('2026-09-16')
   })
 
-  it('cerrado a tiempo sigue pegado al anterior', () => {
-    const r = fechasDelSucesor({ finDelAnterior: '2026-11-02', semanas: 10, hoy: '2026-09-02' })
-    expect(r.starts_at).toBe('2026-11-02')
+  it('pedir el mismo día que ya es, lo devuelve sin moverlo', () => {
+    expect(proximoDiaDeClase('2026-09-10', ['J'])).toBe('2026-09-10')
   })
 
-  it('cerrado el mismo día que terminó arranca ese día', () => {
-    const r = fechasDelSucesor({ finDelAnterior: '2026-09-02', semanas: 10, hoy: '2026-09-02' })
-    expect(r.starts_at).toBe('2026-09-02')
+  it('cubre los siete días de la semana', () => {
+    // 2026-09-10 es jueves.
+    expect(proximoDiaDeClase('2026-09-10', ['V'])).toBe('2026-09-11')
+    expect(proximoDiaDeClase('2026-09-10', ['S'])).toBe('2026-09-12')
+    expect(proximoDiaDeClase('2026-09-10', ['D'])).toBe('2026-09-13')
+    expect(proximoDiaDeClase('2026-09-10', ['L'])).toBe('2026-09-14')
+    expect(proximoDiaDeClase('2026-09-10', ['M'])).toBe('2026-09-15')
+    expect(proximoDiaDeClase('2026-09-10', ['X'])).toBe('2026-09-16')
   })
 
-  it('sin fecha de fin del anterior, arranca el día del cierre', () => {
-    expect(fechasDelSucesor({ finDelAnterior: null, semanas: 10, hoy: '2026-09-02' }).starts_at)
-      .toBe('2026-09-02')
+  it('sin días no mueve la fecha: no se inventa un horario', () => {
+    expect(proximoDiaDeClase('2026-09-10', null)).toBe('2026-09-10')
+    expect(proximoDiaDeClase('2026-09-10', [])).toBe('2026-09-10')
   })
 
-  it('el fin se calcula desde el arranque REAL, no desde la fecha pasada', () => {
-    const tarde = fechasDelSucesor({ finDelAnterior: '2026-08-10', semanas: 10, hoy: '2026-09-01' })
-    const aTiempo = fechasDelSucesor({ finDelAnterior: '2026-09-01', semanas: 10, hoy: '2026-09-01' })
-    expect(tarde.ends_at).toBe(aTiempo.ends_at)
+  it('un código basura se ignora y no rompe', () => {
+    expect(proximoDiaDeClase('2026-09-10', ['Z'])).toBe('2026-09-10')
+    expect(proximoDiaDeClase('2026-09-10', ['Z', 'V'])).toBe('2026-09-11')
+  })
+
+  it('cruza el fin de mes sin perderse', () => {
+    // 2026-09-30 es miércoles; el próximo jueves es el 1 de octubre.
+    expect(proximoDiaDeClase('2026-09-30', ['J'])).toBe('2026-10-01')
   })
 })
