@@ -8,10 +8,18 @@
 
 import type { RoleId } from '@/types/auth'
 
-/** Nombre del comité en `areas` (area_type='committee'). Se compara sin acentos
- *  ni mayúsculas, así que "Comite de Estudios Biblicos" también matchea. Si el
- *  comité se renombra en la BD, hay que actualizarlo acá. */
+/** Nombre canónico del comité en `areas` (area_type='committee'). Es solo la
+ *  referencia legible: el match real lo hace `isStudyCommitteeArea`, que compara
+ *  por palabras y no exige el nombre exacto. */
 export const STUDY_COMMITTEE_AREA_NAME = 'Comité de Estudios Bíblicos'
+
+/** Palabras que tiene que traer el nombre del área, en cualquier orden y con o
+ *  sin conectores. */
+const PALABRAS_DEL_COMITE = ['comite', 'estudios', 'biblicos'] as const
+
+/** Conectores que no aportan: la diferencia entre "Comité de Estudios Bíblicos"
+ *  y "Comité Estudios Bíblicos" no debería romper nada. */
+const CONECTORES = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y'])
 
 /** Roles que ven la cola COMPLETA y pueden asignar. */
 export const REQUEST_COORDINATOR_ROLES: RoleId[] = [
@@ -26,8 +34,28 @@ export function normalizeAreaName(name: string): string {
   return name.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
 }
 
+/**
+ * ¿Este área es el comité de estudios bíblicos?
+ *
+ * Se compara por PALABRAS, no por el nombre exacto. Antes era una igualdad
+ * contra 'Comité de Estudios Bíblicos' y en producción el área se llama
+ * 'Comité Estudios Bíblicos' —sin el "de"— así que no calzaba NADA: el comité
+ * devolvía 0 miembros y sus 22 servidores activos no aparecían como asignables
+ * ni podían entrar a la cola de solicitudes. La función de asignar al comité
+ * (decisión 2026-07-31) nunca llegó a funcionar. Se descubrió el 2026-09-02, al
+ * intentar asignarle una reubicación a Luis Sánchez Flores.
+ *
+ * Con el match por palabras da igual el conector: "Comité Estudios Bíblicos",
+ * "Comité de Estudios Bíblicos" y "Comite de los Estudios Biblicos" son la
+ * misma cosa. Se exige que estén las TRES palabras, así que un "Comité de
+ * Estudios" a secas o un "Comité Bíblico" no se cuelan.
+ */
 export function isStudyCommitteeArea(name: string | null | undefined): boolean {
-  return !!name && normalizeAreaName(name) === normalizeAreaName(STUDY_COMMITTEE_AREA_NAME)
+  if (!name) return false
+  const palabras = new Set(
+    normalizeAreaName(name).split(/[^a-z0-9]+/).filter(p => p && !CONECTORES.has(p)),
+  )
+  return PALABRAS_DEL_COMITE.every(p => palabras.has(p))
 }
 
 export function requestQueueScope(input: {

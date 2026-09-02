@@ -78,3 +78,36 @@ describe('isStudyCommitteeArea', () => {
     expect(isStudyCommitteeArea('')).toBe(false)
   })
 })
+
+describe('isStudyCommitteeArea: el nombre real de producción', () => {
+  it('reconoce el nombre que de verdad tiene el área', () => {
+    // Producción: 'Comité Estudios Bíblicos', SIN el "de". La igualdad exacta
+    // contra 'Comité de Estudios Bíblicos' devolvía false y dejaba el comité
+    // en cero miembros.
+    expect(isStudyCommitteeArea('Comité Estudios Bíblicos')).toBe(true)
+  })
+
+  it('reconoce el nombre canónico, con "de"', () => {
+    expect(isStudyCommitteeArea('Comité de Estudios Bíblicos')).toBe(true)
+  })
+
+  it('da igual el orden, los acentos y las mayúsculas', () => {
+    expect(isStudyCommitteeArea('COMITE ESTUDIOS BIBLICOS')).toBe(true)
+    expect(isStudyCommitteeArea('Estudios Bíblicos — Comité')).toBe(true)
+    expect(isStudyCommitteeArea('Comite de los Estudios Biblicos')).toBe(true)
+  })
+
+  it('exige las tres palabras: no se cuela un comité parecido', () => {
+    expect(isStudyCommitteeArea('Comité de Estudios')).toBe(false)
+    expect(isStudyCommitteeArea('Comité Bíblico')).toBe(false)
+    expect(isStudyCommitteeArea('Estudios Bíblicos')).toBe(false)
+    expect(isStudyCommitteeArea('Comité Oración')).toBe(false)
+  })
+
+  it('nombres vacíos o nulos no matchean', () => {
+    expect(isStudyCommitteeArea(null)).toBe(false)
+    expect(isStudyCommitteeArea(undefined)).toBe(false)
+    expect(isStudyCommitteeArea('')).toBe(false)
+    expect(isStudyCommitteeArea('   ')).toBe(false)
+  })
+})
