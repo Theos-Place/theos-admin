@@ -35,9 +35,15 @@ describe('cuerpo', () => {
     expect(html).toContain('Nivel 3. Jhonny Leandro. Junio 2026')
   })
 
-  it('dice cuántos aprobaron', () => {
-    expect(html).toContain('Aprobaron')
-    expect(html).toContain('7 personas')
+  it('dice cuántos aprobaron, en el título de la lista', () => {
+    expect(html).toContain('Aprobaron (2)')
+  })
+
+  it('NO repite el conteo en una tabla aparte', () => {
+    // Antes salía "Aprobaron | 5 personas" y justo debajo "Aprobaron (5)"
+    // con la lista: la misma cifra dos veces.
+    expect(html).not.toMatch(/Aprobaron<\/td>/)
+    expect(html.match(/Aprobaron/g) ?? []).toHaveLength(1)
   })
 
   it('dice qué pasó con ellos y cuándo arranca el grupo nuevo', () => {
@@ -65,27 +71,34 @@ describe('cuerpo: no imprime renglones vacíos', () => {
     expect(html).not.toContain('Ya tenían el nivel')
   })
 
-  it('con reprobados y retirados los muestra', () => {
+  it('con reprobados y retirados los muestra con su gente', () => {
     const html = cuerpoCierre({
       ...base,
       conteo: { ...base.conteo, reprobados: 2, retirados: 1 },
+      reprobados: [{ nombre: 'Ana Uno', motivo: 'faltó' }, { nombre: 'Ana Dos', motivo: null }],
+      retirados: [{ nombre: 'Beto Tres', motivo: 'se mudó' }],
     })
-    expect(html).toContain('Reprobaron')
-    expect(html).toContain('2 personas')
-    expect(html).toContain('Se retiraron')
-    expect(html).toContain('1 persona')
+    expect(html).toContain('Reprobaron (2)')
+    expect(html).toContain('Se retiraron (1)')
   })
 
-  it('los sin evaluar salen con la nota de que hay que revisarlo', () => {
+  it('los sin evaluar van como nota, no como lista: no hay nombres que dar', () => {
     const html = cuerpoCierre({ ...base, conteo: { ...base.conteo, sin_evaluar: 3 } })
-    expect(html).toContain('Quedaron sin evaluar')
+    expect(html).toContain('3 personas quedaron sin evaluar')
     expect(html).toContain('conviene revisarlo')
   })
 
   it('explica los históricos en vez de dejar el número solo', () => {
     const html = cuerpoCierre({ ...base, conteo: { ...base.conteo, historicos: 2 } })
-    expect(html).toContain('Ya tenían el nivel')
+    expect(html).toContain('ya tenían el nivel aprobado de antes')
     expect(html).toContain('datos viejos importados')
+  })
+
+  it('todo va DENTRO del box de "Cómo terminó el grupo"', () => {
+    const completo = cuerpoCierre(base)
+    const box = completo.slice(completo.indexOf('Cómo terminó el grupo'))
+    const cierraBox = box.indexOf('</div>')
+    expect(box.slice(0, cierraBox)).toContain('Fabio Corrales Loria')
   })
 })
 
@@ -127,6 +140,12 @@ describe('los nombres van en el correo, no detrás de un enlace', () => {
     expect(html).toContain('Aprobaron (2)')
     expect(html).toContain('Fabio Corrales Loria')
     expect(html).toContain('Jessica Sibaja Rodriguez')
+  })
+
+  it('singular en las notas cuando es una sola', () => {
+    const html = cuerpoCierre({ ...base, conteo: { ...base.conteo, sin_evaluar: 1, historicos: 1 } })
+    expect(html).toContain('1 persona quedó sin evaluar')
+    expect(html).toContain('1 persona ya tenía el nivel')
   })
 
   it('lista a quienes reprobaron con su motivo', () => {

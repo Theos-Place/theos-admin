@@ -40,30 +40,29 @@ export function asuntoCierre(r: ResumenCierre): string {
   return `Cerraste ${r.nivel ?? 'tu grupo'}: ${r.conteo.aprobados} aprobados`
 }
 
-function fila(label: string, valor: string): string {
-  return `<tr>
-    <td style="padding:6px 12px 6px 0; font-size:13px; color:#777; white-space:nowrap; vertical-align:top;">${label}</td>
-    <td style="padding:6px 0; font-size:14px; color:#161440; vertical-align:top;"><strong>${valor}</strong></td>
-  </tr>`
-}
-
 function personas(n: number): string {
   return `${n} ${n === 1 ? 'persona' : 'personas'}`
 }
 
-/** Lista de nombres. Con motivo cuando lo hay — es lo que el dirigente
- *  escribió y le sirve de constancia de lo que registró. */
-function lista(titulo: string, gente: PersonaCierre[], color: string): string {
+/** Un resultado con su gente: el título lleva el conteo, así que no hace falta
+ *  repetirlo aparte. Con motivo cuando lo hay — es lo que el dirigente escribió
+ *  y le sirve de constancia de lo que registró. */
+function bloque(titulo: string, gente: PersonaCierre[], color: string, primero: boolean): string {
   if (gente.length === 0) return ''
   const items = gente.map(p => `<li style="margin:0 0 4px;">${p.nombre}${
     p.motivo ? `<span style="color:#777;"> — ${p.motivo}</span>` : ''
-  }</li>`).join('\n      ')
-  return `<p style="font-size:13px; text-transform:uppercase; letter-spacing:1px; color:${color}; margin:18px 0 6px; font-weight:600;">
-    ${titulo} (${gente.length})
-  </p>
-  <ul style="font-size:14px; color:#161440; line-height:1.8; margin:0; padding-left:20px;">
-      ${items}
-  </ul>`
+  }</li>`).join('\n        ')
+  return `<p style="font-size:13px; text-transform:uppercase; letter-spacing:1px; color:${color}; margin:${primero ? '0' : '18px'} 0 6px; font-weight:600;">
+      ${titulo} (${gente.length})
+    </p>
+    <ul style="font-size:14px; color:#161440; line-height:1.8; margin:0; padding-left:20px;">
+        ${items}
+    </ul>`
+}
+
+/** Los que no tienen lista de nombres: van como una línea al pie del bloque. */
+function nota(texto: string): string {
+  return `<p style="font-size:13px; color:#777; line-height:1.7; margin:14px 0 0;">${texto}</p>`
 }
 
 export function cuerpoCierre(r: ResumenCierre): string {
@@ -86,14 +85,19 @@ export function cuerpoCierre(r: ResumenCierre): string {
   Este estudio no encadena con un nivel siguiente, así que no se generó un grupo nuevo.
 </p>`
 
-  // Solo se listan los renglones que tienen gente: un "0 retirados" ocupa
-  // espacio y no dice nada.
-  const detalle = [
-    fila('Aprobaron', personas(c.aprobados)),
-    c.reprobados > 0 ? fila('Reprobaron', personas(c.reprobados)) : '',
-    c.retirados > 0 ? fila('Se retiraron', personas(c.retirados)) : '',
-    c.sin_evaluar > 0 ? fila('Quedaron sin evaluar', `${personas(c.sin_evaluar)} — conviene revisarlo`) : '',
-    c.historicos > 0 ? fila('Ya tenían el nivel', `${personas(c.historicos)}, de datos viejos importados`) : '',
+  // Todo en UN bloque: el conteo vive en el título de cada lista, así que una
+  // tabla de totales aparte solo repetía la misma cifra dos veces.
+  const bloques = [
+    bloque('Aprobaron', r.aprobados, '#3B7579', true),
+    bloque('Reprobaron', r.reprobados, '#C43635', r.aprobados.length === 0),
+    bloque('Se retiraron', r.retirados, '#29365C', r.aprobados.length === 0 && r.reprobados.length === 0),
+  ].filter(Boolean).join('\n    ')
+
+  // Estos dos no tienen lista de nombres: son estados, no resultados que el
+  // dirigente haya registrado persona por persona.
+  const notas = [
+    c.sin_evaluar > 0 ? nota(`${personas(c.sin_evaluar)} ${c.sin_evaluar === 1 ? 'quedó' : 'quedaron'} sin evaluar — conviene revisarlo.`) : '',
+    c.historicos > 0 ? nota(`${personas(c.historicos)} ya ${c.historicos === 1 ? 'tenía' : 'tenían'} el nivel aprobado de antes (datos viejos importados), así que no ${c.historicos === 1 ? 'cuenta' : 'cuentan'} en este cierre.`) : '',
   ].filter(Boolean).join('\n    ')
 
   return `<p class="greeting">Gracias, ${primerNombre}</p>
@@ -103,14 +107,9 @@ lo tengás a mano.</p>
 
 <div class="info-box">
   <p class="info-title">Cómo terminó el grupo</p>
-  <table cellpadding="0" cellspacing="0" style="margin:0;">
-    ${detalle}
-  </table>
+    ${bloques}
+    ${notas}
 </div>
-
-${lista('Aprobaron', r.aprobados, '#3B7579')}
-${lista('Reprobaron', r.reprobados, '#C43635')}
-${lista('Se retiraron', r.retirados, '#29365C')}
 
 ${sucesorBloque}
 

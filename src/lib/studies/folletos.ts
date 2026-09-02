@@ -34,13 +34,14 @@ export function levelLabel(code: string | null | undefined): string {
  *  El prefijo `__` lo hace imposible de confundir con el nombre de una sede. */
 export const OTRO_LUGAR = '__otro__'
 
-/** Semanas de anticipación para la fecha estimada de disponibilidad. */
-export const FOLLETO_LEAD_WEEKS = 2
+/** Días que tardan los folletos en estar en la sede, contados desde el cierre.
+ *  Eran 14 (2 semanas); el usuario corrigió a 8 el 2026-09-02. */
+export const FOLLETO_LEAD_DAYS = 8
 
-/** fecha de cierre (YYYY-MM-DD) + 2 semanas → YYYY-MM-DD. */
+/** fecha de cierre (YYYY-MM-DD) + los días de imprenta → YYYY-MM-DD. */
 export function estimatedAvailableDate(closeDateIso: string): string {
   const d = new Date(`${closeDateIso}T00:00:00`)
-  d.setDate(d.getDate() + FOLLETO_LEAD_WEEKS * 7)
+  d.setDate(d.getDate() + FOLLETO_LEAD_DAYS)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase, textoHistoricos, textoLleganTarde, textoDias } from './folleto-request-notify'
+import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase, textoHistoricos, textoDias } from './folleto-request-notify'
 import type { FolletoDetalle } from '@/lib/supabase/queries/folletos'
 
 const grupo = {
@@ -41,10 +41,17 @@ describe('cuerpo: lo que pidieron que apareciera', () => {
     expect(html).toContain('Dirigentes')
   })
 
-  it('las fechas van legibles, no en ISO', () => {
-    expect(html).toContain('9 de septiembre de 2026')  // estarían listos
-    expect(html).toContain('15 de septiembre de 2026') // arranca el grupo
+  it('la fecha va legible, no en ISO', () => {
+    expect(html).toContain('Estarían listos')
+    expect(html).toContain('9 de septiembre de 2026')
     expect(html).not.toContain('2026-09-09')
+  })
+
+  it('NO dice "se necesitan para": el curso arranca dos semanas después del cierre', () => {
+    // Con los folletos listos en 8 días y el curso arrancando a las dos
+    // semanas, la fecha de necesidad no aporta nada: siempre llegan antes.
+    expect(html).not.toContain('Se necesitan para')
+    expect(html).not.toContain('arranca el grupo')
   })
 
   it('trae la ubicación donde se da el estudio', () => {
@@ -273,42 +280,3 @@ describe('los que ya tenían el nivel (arrastre de la importación)', () => {
   })
 })
 
-describe('fechas: los folletos no pueden llegar después de la primera sesión', () => {
-  it('avisa cuando estarían listos DESPUÉS de que el grupo arranca', () => {
-    const d = {
-      ...base,
-      available_at: '2026-09-15',
-      grupo: { ...base.grupo!, starts_at: '2026-09-01' },
-    }
-    expect(textoLleganTarde(d)).toContain('1 de septiembre de 2026')
-    expect(textoLleganTarde(d)).toContain('15 de septiembre de 2026')
-    expect(textoLleganTarde(d)).toContain('después de la primera sesión')
-    expect(cuerpoFolleto(d)).toContain('Ojo con la fecha')
-  })
-
-  it('llegando antes del arranque no dice nada', () => {
-    const d = {
-      ...base,
-      available_at: '2026-09-09',
-      grupo: { ...base.grupo!, starts_at: '2026-09-15' },
-    }
-    expect(textoLleganTarde(d)).toBeNull()
-  })
-
-  it('el mismo día no es tarde', () => {
-    const d = { ...base, available_at: '2026-09-15', grupo: { ...base.grupo!, starts_at: '2026-09-15' } }
-    expect(textoLleganTarde(d)).toBeNull()
-  })
-
-  it('sin grupo no se puede comparar', () => {
-    expect(textoLleganTarde({ ...base, grupo: null })).toBeNull()
-  })
-
-  it('la etiqueta dice "estarían listos", no "se necesitan para"', () => {
-    // available_at es cierre + 2 semanas: una estimación de disponibilidad, no
-    // una fecha de necesidad. Decir lo otro invierte el significado.
-    const html = cuerpoFolleto(base)
-    expect(html).toContain('Estarían listos')
-    expect(html).toContain('(arranca el grupo)')
-  })
-})

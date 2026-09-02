@@ -108,9 +108,6 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
   if (!puedeVer) return <AccessDenied />
 
   const next = d ? nextFolletoState(d.status) : null
-  // Comparación de YYYY-MM-DD como strings: ordenan igual que las fechas.
-  const llegaTarde = !!d?.available_at && !!d?.grupo?.starts_at
-    && d.available_at.slice(0, 10) > d.grupo.starts_at.slice(0, 10)
 
   return (
     <PageContainer width="work" className="space-y-6">
@@ -202,22 +199,12 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             {textoHorario(d.grupo) && <Dato label="Horario">{textoHorario(d.grupo)}</Dato>}
           </Tarjeta>
 
-          {/* Fechas y pagos. `available_at` es la fecha estimada de
-              DISPONIBILIDAD (cierre + 2 semanas), no la de necesidad: esa es el
-              arranque del grupo. Ponerlas juntas hace visible cuando los
-              folletos llegan después de la primera sesión. */}
+          {/* `available_at` es cuándo estarían en la sede: el cierre más los
+              días de imprenta. No se muestra "se necesitan para" porque el
+              curso arranca dos semanas después del cierre por estándar, así
+              que la fecha de necesidad no aporta nada. */}
           <Tarjeta icon={CalendarDays} title="Fechas y pagos">
-            <Dato label="Estarían listos" alerta={llegaTarde}>{fmtDate(d.available_at)}</Dato>
-            {d.grupo?.starts_at && (
-              <Dato label="Se necesitan para" alerta={llegaTarde}>
-                {fmtDate(d.grupo.starts_at)} — arranca el grupo
-              </Dato>
-            )}
-            {llegaTarde && (
-              <Dato label="" alerta>
-                Los folletos llegarían después de la primera sesión. Hay que apurar la impresión.
-              </Dato>
-            )}
+            <Dato label="Estarían listos">{fmtDate(d.available_at)}</Dato>
             <Dato label="Solicitud creada">{fmtDate(d.created_at)}</Dato>
             {d.pagos.total > 0 && (
               <Dato label="Pagos" alerta={d.pagos.pagados < d.pagos.total}>

@@ -99,23 +99,6 @@ export function textoDesfase(d: FolletoDetalle): string | null {
     + `Alguien entró por otra vía (matrícula directa o excepción).`
 }
 
-/**
- * ¿Los folletos llegan después de que el grupo arranca?
- *
- * `available_at` es la fecha ESTIMADA DE DISPONIBILIDAD (cierre + 2 semanas),
- * no la fecha en que se necesitan. La que importa de verdad es el arranque del
- * grupo: si los folletos estarían listos después, el grupo empieza sin
- * material y hay que apurar la impresión.
- */
-export function textoLleganTarde(d: FolletoDetalle): string | null {
-  const listos = (d.available_at ?? '').slice(0, 10)
-  const arranca = (d.grupo?.starts_at ?? '').slice(0, 10)
-  if (!listos || !arranca) return null
-  if (listos <= arranca) return null
-  return `Ojo con la fecha: el grupo arranca el ${formatDateLong(arranca)} y los folletos `
-    + `estarían listos el ${formatDateLong(listos)}. Van a llegar después de la primera sesión.`
-}
-
 /** Los que venían con el nivel aprobado de antes. Se dice aparte porque
  *  explica, sin que nadie tenga que investigar, por qué la lista del grupo
  *  anterior tiene más gente que los folletos que se piden. */
@@ -181,10 +164,8 @@ export function cuerpoFolleto(d: FolletoDetalle): string {
     ${fila('Desglose', textoDesglose(d.desglose))}
     ${fila('Enviar a', d.sede_entrega ?? 'SIN DEFINIR — hay que preguntarle a quien cerró')}
     ${fila('Estarían listos', formatDateLong(d.available_at))}
-    ${g?.starts_at ? fila('Se necesitan para', `${formatDateLong(g.starts_at)} (arranca el grupo)`) : ''}
     ${pagosBloque}
   </table>
-  ${textoLleganTarde(d) ? `<p style="font-size:13px; color:#A24437; line-height:1.7; margin:12px 0 0;">${textoLleganTarde(d)}</p>` : ''}
 </div>
 
 <div class="info-box">
