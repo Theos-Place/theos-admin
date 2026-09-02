@@ -5183,6 +5183,10 @@ export type Database = {
         }[]
       }
       charla_sede_code: { Args: { p_title: string }; Returns: string }
+      close_payment_ticket: {
+        Args: { p_payment_id: string; p_reviewer?: string | null; p_reason?: string | null }
+        Returns: boolean
+      }
       close_group: {
         Args: { p_closed_by?: string; p_group_id: string; p_results: Json }
         Returns: boolean

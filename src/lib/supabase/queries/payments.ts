@@ -922,9 +922,12 @@ export async function rejectPayment(id: string, reviewerMemberId: string | null,
  *     luego aprobar/rechazar.
  *   - 'reopen'       → en revisión ➜ pendiente: deshace lo anterior, SIN avisar
  *     a la persona (a diferencia de rechazar, que pide motivo y notifica).
- *   - 'close'        → cierra el tiquete SIN pago (status 'failed') con motivo.
- *     NO activa matrícula/inscripción (no toca approve_payment) — sirve para
- *     tiquetes que no se van a cobrar. Cae en el bucket 'cerrado'.
+ *   - 'close'        → cierra el tiquete SIN pago (status 'failed') con motivo
+ *     Y RETIRA la matrícula/inscripción. Antes solo marcaba el pago y ahí se
+ *     detenía, así que una matrícula activa quedaba adentro con el cobro
+ *     cerrado sin pagar: ocupando cupo y sin que nadie debiera nada. Pasó con
+ *     Michelle Alfaro (2026-09-02), inscrita por error. Va por el RPC
+ *     close_payment_ticket para que las dos tablas se muevan juntas.
  *  Devuelve false si la fila ya no estaba en el estado esperado (otro revisor la
  *  movió) → la ruta responde 409. */
 export async function transitionPaymentQueue(
@@ -957,14 +960,16 @@ export async function transitionPaymentQueue(
     return !!data
   }
 
-  // close: solo desde 'pending' (cualquier review_status). Cierra sin cobrar.
-  const { data, error } = await supabase
-    .from('payments')
-    .update({ status: 'failed', rejection_reason: reason ?? null, reviewed_by: reviewerMemberId, reviewed_at: now })
-    .eq('id', id).eq('status', 'pending')
-    .select('id').maybeSingle()
+  // close: solo desde 'pending' (cualquier review_status). Cierra sin cobrar y
+  // retira lo que ese cobro sostenía.
+  void now
+  const { data, error } = await supabase.rpc('close_payment_ticket', {
+    p_payment_id: id,
+    p_reviewer: reviewerMemberId,
+    p_reason: reason ?? null,
+  })
   if (error) throw error
-  return !!data
+  return Boolean(data)
 }
 
 /** Path del comprobante + dueño, para el chequeo de permiso en la ruta de la imagen. */
