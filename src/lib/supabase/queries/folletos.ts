@@ -51,16 +51,27 @@ export async function getFolletoRecipients(): Promise<Array<{ member_id: string;
   if (roleIds.length === 0) return []
   const { data, error } = await supabase
     .from('member_roles')
-    .select('member_id, member:members!member_roles_member_id_fkey(email, first_name, last_name, is_active)')
+    .select('member_id, member:members!member_roles_member_id_fkey(email, first_name, last_name, is_active, email_bounced, email_complained)')
     .in('role', roleIds)
     .eq('is_active', true)
   if (error) { console.warn('getFolletoRecipients:', error.message); return [] }
   const byId = new Map<string, { member_id: string; email: string | null; name: string }>()
-  for (const r of (data ?? []) as Array<{ member_id: string; member: { email: string | null; first_name: string; last_name: string; is_active: boolean } | null }>) {
+  for (const r of (data ?? []) as Array<{
+    member_id: string
+    member: {
+      email: string | null; first_name: string; last_name: string; is_active: boolean
+      email_bounced: boolean | null; email_complained: boolean | null
+    } | null
+  }>) {
     if (!r.member || r.member.is_active === false) continue
+    // La campana sí les llega; el correo no. Una dirección marcada como
+    // rebotada o con queja vuelve a rebotar en cada envío, y cada rebote le
+    // pega a la reputación del dominio en SES. Se detectó el 2026-09-02:
+    // admin@ y lectura@ rebotaban en TODOS los avisos de folletos.
+    const correoUtil = !!r.member.email && !r.member.email_bounced && !r.member.email_complained
     byId.set(r.member_id, {
       member_id: r.member_id,
-      email: r.member.email,
+      email: correoUtil ? r.member.email : null,
       name: `${r.member.first_name} ${r.member.last_name}`.trim(),
     })
   }
