@@ -4,7 +4,6 @@ import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { shouldCloseEnrollment } from '@/lib/studies/enrollment-window'
 import { ymdCR } from '@/lib/format'
-import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
 
 /** Autorizado con el CRON_SECRET o sesión de coordinación/dirección. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -52,26 +51,12 @@ export async function POST(req: NextRequest) {
       closed += count ?? 0
     }
 
-    // FOL-1: al vencer la ventana de matrícula, tiquete de folletos si el
-    // grupo tiene >= 5 matriculados (idempotente: índice único por grupo, así
-    // que re-evaluar días siguientes no duplica; si el cupo ya lo generó,
-    // tampoco). Best-effort por grupo.
-    let folletos = 0
-    const { data: ended } = await supabase
-      .from('study_groups')
-      .select('id')
-      .not('enrollment_end_date', 'is', null)
-      .lt('enrollment_end_date', today)
-      .neq('status', 'finalizado')
-    for (const g of (ended ?? []) as Array<{ id: string }>) {
-      try {
-        const r = await createAutoFolletoIfNeeded(g.id, 'fin_matricula', today)
-        if (r.created) folletos++
-      } catch (e) { console.warn('folleto fin_matricula:', e) }
-    }
-
+    // Este cron ya NO pide folletos. La regla 'fin_matricula' exigía que el
+    // grupo tuviera enrollment_end_date, y de los 93 grupos con folleto propio
+    // que estaban abiertos solo 15 la tenían: el cron recorría una lista casi
+    // vacía. Decisión 2026-09-02: los folletos se piden AL CERRAR el grupo.
     await pingHealthcheck('HEALTHCHECK_URL_GROUP_WINDOWS')
-    return NextResponse.json({ closed, folletos_creados: folletos })
+    return NextResponse.json({ closed })
   } catch (error) {
     console.error('POST /api/cron/group-enrollment-windows:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

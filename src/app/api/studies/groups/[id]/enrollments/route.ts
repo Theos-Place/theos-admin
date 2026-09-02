@@ -3,8 +3,6 @@ import { requireRoles, resolveTargetMemberId } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
 import { notifyEnrollment } from '@/lib/email/enrollment-notify'
-import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
-import { ymdCR } from '@/lib/format'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
 import { RESTRICTION_ERROR_CODE } from '@/lib/studies/group-restrictions'
@@ -59,12 +57,11 @@ export async function POST(
     if (!result.requires_payment) {
       await notifyEnrollment(id, targetMemberId)
     }
-    // FOL-1: si esta matrícula llenó el cupo, genera el tiquete de folletos
-    // (idempotente vía índice único; best-effort: no revierte la matrícula).
-    // Desde 2026-08-04 toda matrícula cuenta acá: antes, las que tenían costo
-    // quedaban 'pendiente_de_pago' y no disparaban la regla hasta que alguien
-    // aprobara el comprobante — el folleto salía tarde.
-    try { await createAutoFolletoIfNeeded(id, 'cupo_lleno', ymdCR()) } catch (e) { console.warn('folleto cupo_lleno:', e) }
+    // Acá NO se piden folletos. Antes se disparaba 'cupo_lleno' al llenarse el
+    // grupo, pero eso exige que el grupo tenga max_students y la mayoría no lo
+    // tiene (vienen así de la importación de PCO), así que la regla no se
+    // activaba nunca. Decisión 2026-09-02: los folletos se piden AL CERRAR,
+    // que es cuando se sabe quién avanza y a qué grupo.
     return NextResponse.json({ ok: true, ...result }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_COMPLETADO') {

@@ -185,6 +185,18 @@ export async function POST(
       console.warn('No se pudo programar la encuesta del dirigente:', e)
     }
 
+    // Resumen al dirigente (2026-09-02). Antes al cerrar no le llegaba nada:
+    // solo se programaba la encuesta, a las 24 horas. Va de últimas y
+    // best-effort — el cierre ya está hecho y es irreversible, así que un
+    // correo fallido no lo puede tumbar.
+    try {
+      const { sendCloseSummary } = await import('@/lib/email/close-summary')
+      const { sent } = await sendCloseSummary({ groupId: id, successorGroupId })
+      if (sent === 0) console.warn('cierre: nadie recibió el resumen (sin dirigente o sin correo)')
+    } catch (e) {
+      console.warn('No se pudo mandar el resumen del cierre:', e)
+    }
+
     return NextResponse.json({ ok: true, autoEnrolled, surveyAt, folletoCreado, successorGroupId })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_CERRADO') {

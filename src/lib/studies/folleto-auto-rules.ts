@@ -1,9 +1,19 @@
-// FOL-1: cuándo se genera automáticamente un tiquete de folletos (módulo puro).
-// Las reglas nuevas REEMPLAZAN la generación por cierre de grupo y por hitos:
-//   · cupo_lleno:    al confirmar una matrícula, si enrolled llegó al cupo;
-//   · fin_matricula: al vencer la ventana de matrícula (GRU-1), con >= 5.
-// El folleto es del PROPIO nivel del grupo (la gente que se matricula lo va a
-// cursar), a diferencia de la regla vieja de cierre que pedía el siguiente.
+// Cuándo se genera automáticamente un tiquete de folletos (módulo puro).
+//
+// DECISIÓN 2026-09-02: el CIERRE es el único disparador de la cadena de
+// niveles. Se quitaron 'cupo_lleno' y 'fin_matricula' del flujo de matrícula
+// porque en la práctica no servían: dependen de que el grupo tenga cupo
+// (max_students) o ventana de matrícula (enrollment_end_date), y de los 93
+// grupos con folleto propio que estaban abiertos, 78 no tenían ninguno de los
+// dos — vienen así de la importación de PCO. Resultado medido: 91 grupos con
+// 468 estudiantes sin tiquete, y UN solo tiquete en toda la base, el del
+// cierre. Los disparadores existían pero no podían activarse nunca.
+//
+// Los tipos se conservan en el union porque hay filas históricas con ellos y
+// porque prematrimonial sigue usando 'cupo_lleno' — ese caso es distinto: el
+// grupo PREMAT nace con la pareja adentro y su cierre no genera sucesor, así
+// que si no se pide ahí, la pareja no recibe folleto nunca.
+//
 // La idempotencia real (1 tiquete por grupo) la garantiza el índice único
 // parcial folleto_requests_auto_por_grupo (migración 20260727200000).
 
