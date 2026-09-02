@@ -1686,3 +1686,54 @@ export async function getGroupsWithParticipants(
   }
   return { grupos, personas }
 }
+
+/**
+ * Suelta el cupo de las matrículas que quedaron a medio camino: creadas con
+ * costo, sin comprobante y pasada la ventana de gracia. La regla —y qué NO se
+ * toca— está en enrollment-hold.ts.
+ *
+ * Se apoya en withdrawMember en vez de escribir el UPDATE a mano: esa función
+ * ya cancela el pago pendiente asociado, así que no queda un cobro huérfano
+ * aprobable en la cola de finanzas. Duplicarlo acá sería el clásico segundo
+ * lugar donde arreglar un bug.
+ */
+export async function expirePendingStudyEnrollments(
+  ahora: Date = new Date(),
+): Promise<{ expired: number; detalle: Array<{ member_id: string; group_id: string }> }> {
+  const supabase = createAdminClient()
+  const { reservaExpirada, MOTIVO_EXPIRADA } = await import('@/lib/studies/enrollment-hold')
+
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select('id, member_id, group_id, status, created_at, payments!payments_enrollment_id_fkey(concept, review_status)')
+    .eq('status', 'pendiente_de_pago')
+  if (error) throw error
+
+  const candidatas = ((data ?? []) as unknown as Array<{
+    id: string; member_id: string; group_id: string | null; status: string; created_at: string
+    payments: Array<{ concept: string | null; review_status: string | null }> | null
+  }>).filter(e => {
+    // El review_status que importa es el del pago de MATRÍCULA; puede haber
+    // otros conceptos colgando de la misma persona.
+    const matricula = (e.payments ?? []).filter(p => p.concept === 'matricula')
+    const conAlgoEnviado = matricula.find(p => p.review_status)
+    return !!e.group_id && reservaExpirada({
+      status: e.status,
+      reviewStatus: conAlgoEnviado?.review_status ?? null,
+      creadaEn: e.created_at,
+      ahora,
+    })
+  })
+
+  const detalle: Array<{ member_id: string; group_id: string }> = []
+  for (const e of candidatas) {
+    try {
+      await withdrawMember(e.group_id!, e.member_id, MOTIVO_EXPIRADA)
+      detalle.push({ member_id: e.member_id, group_id: e.group_id! })
+    } catch (err) {
+      // Una que falle no puede frenar el barrido: la siguiente corrida la agarra.
+      console.warn('expirePendingStudyEnrollments:', err instanceof Error ? err.message : err)
+    }
+  }
+  return { expired: detalle.length, detalle }
+}
