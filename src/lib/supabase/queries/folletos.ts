@@ -391,13 +391,28 @@ export async function setFolletoRequestsStatus(ids: string[], status: FolletoSta
   if (idx <= 0) return { updated: 0 } // 'creada' es inicial: no se llega por transición
   const prev = FOLLETO_STATES[idx - 1]
   const supabase = createAdminClient()
-  const { error, count } = await supabase
+  const { data, error } = await supabase
     .from('folleto_requests')
-    .update({ status, updated_at: new Date().toISOString() }, { count: 'exact' })
+    .update({ status, updated_at: new Date().toISOString() })
     .in('id', ids)
     .eq('status', prev)
+    .select('id')
   if (error) throw error
-  return { updated: count ?? 0 }
+  const movidos = ((data ?? []) as Array<{ id: string }>).map(r => r.id)
+
+  // Al pasar a "enviado / entregado" se le avisa al dirigente que ya puede ir
+  // por sus folletos. Solo a los que DE VERDAD cambiaron: la condición
+  // `eq('status', prev)` deja fuera los que ya estaban en otro estado, y
+  // avisarle a esos sería un correo repetido.
+  if (status === 'enviado_entregado' && movidos.length > 0) {
+    const { notificarFolletosListos } = await import('@/lib/email/folleto-ready-send')
+    for (const id of movidos) {
+      try { await notificarFolletosListos(id) } catch (e) {
+        console.error(`folletos: no se pudo avisar que ${id} está listo:`, e)
+      }
+    }
+  }
+  return { updated: movidos.length }
 }
 
 /** Notifica (campana + correo) a quienes tienen el permiso de folletos.
