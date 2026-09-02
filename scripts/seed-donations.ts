@@ -3,11 +3,18 @@
  * - Match por members.external_id (= "Ind ID" de PCO).
  * - donation_date según el trimestre del nombre del grupo.
  * - amount = 0 (se actualizará desde QuickBooks).
- * - Dedup: member_id + donation_date + source_file 'group_participants_import%'.
+ * - Dedup: member_id + donation_date, sobre TODAS las donaciones (no solo las
+ *   que tienen el prefijo 'group_participants_import' — ver el comentario del
+ *   bloque de dedup: filtrar por source_file dejaba duplicar 502 filas).
  * - Sin match → scripts/output/donations-no-match.csv para revisión manual.
  *
+ * El CSV va por argumento; sin él usa scripts/data/group_participants.csv.
+ * Ojo: ese default es el histórico COMPLETO (incluye grupos de estudio) y no
+ * pasa la validación de fechas. Para importar donaciones hay que pasarle un
+ * export con solo los grupos "Donadores …".
+ *
  * Dry-run por defecto (no escribe nada). Aplicar:
- *   npx tsx scripts/seed-donations.ts --apply
+ *   npx tsx scripts/seed-donations.ts <archivo.csv> --apply
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { parse } from 'csv-parse/sync'
@@ -51,7 +58,15 @@ function dateForGroup(groupName: string): string | null {
 
 async function main() {
   // ── CSV ──
-  const raw = readFileSync(new URL('./data/group_participants.csv', import.meta.url), 'utf8')
+  // La ruta se puede pasar por argumento. El default apunta al histórico, que
+  // trae los 2.035 grupos (estudio incluido) y por eso mismo hace fallar la
+  // validación de fechas: para importar donaciones hay que darle un export
+  // que traiga SOLO los grupos "Donadores …". Con el default el script no
+  // corre, y eso está bien — mejor que importar con la fecha equivocada.
+  const csvArg = process.argv.find(a => a.endsWith('.csv'))
+  const csvUrl = csvArg ? new URL(csvArg, `file://${process.cwd()}/`) : new URL('./data/group_participants.csv', import.meta.url)
+  console.log(`Archivo: ${csvArg ?? 'scripts/data/group_participants.csv (default)'}`)
+  const raw = readFileSync(csvUrl, 'utf8')
   const records: Record<string, string>[] = parse(raw, { columns: true, bom: true, skip_empty_lines: true, trim: true })
   console.log(`CSV: ${records.length.toLocaleString()} registros`)
 
@@ -80,12 +95,23 @@ async function main() {
   }
   console.log(`Miembros con external_id: ${extToId.size.toLocaleString()}`)
 
-  // ── Donaciones ya importadas (dedup) ──
+  // ── Donaciones ya registradas (dedup) ──
+  //
+  // Se miran TODAS, sin filtrar por source_file. Antes el filtro era
+  // `like 'group_participants_import%'` y eso dejaba un hueco: las donaciones
+  // que entran por la pantalla de importación guardan el nombre del archivo
+  // pelado ('Donadores Abr - Jun 2026'), sin ese prefijo. En producción hay
+  // 539 filas así, y de Abr-Jun 2026 había 502 personas que existían
+  // ÚNICAMENTE sin prefijo: correr este script les creaba una SEGUNDA fila del
+  // mismo trimestre. Se detectó el 2026-09-02, antes de importar.
+  //
+  // La clave real es (member_id, donation_date): en este modelo una persona
+  // tiene una fila por trimestre, venga de donde venga.
   const existing = new Set<string>()
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('donations').select('member_id, donation_date')
-      .like('source_file', 'group_participants_import%')
+      .not('member_id', 'is', null)
       .order('id')
       .range(from, from + 999)
     if (error) throw error
@@ -94,7 +120,7 @@ async function main() {
     }
     if (data.length < 1000) break
   }
-  console.log(`Donaciones ya importadas: ${existing.size.toLocaleString()}`)
+  console.log(`Donaciones ya registradas: ${existing.size.toLocaleString()}`)
 
   // ── Construir inserts ──
   type Insert = {
