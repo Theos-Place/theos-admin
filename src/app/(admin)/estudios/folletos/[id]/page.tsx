@@ -12,7 +12,7 @@ import {
   GraduationCap, AlertTriangle, Video,
 } from 'lucide-react'
 import { textoDesglose } from '@/lib/studies/folleto-desglose'
-import { textoDesfase } from '@/lib/email/folleto-request-notify'
+import { textoDesfase, textoHorario } from '@/lib/email/folleto-request-notify'
 import { FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState } from '@/lib/studies/folletos'
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
 import type { FolletoDetalle } from '@/lib/supabase/queries/folletos'
@@ -199,9 +199,7 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
                 [d.grupo?.ubicacion, d.grupo?.zona].filter(Boolean).join(' · ') || 'Sin definir'
               )}
             </Dato>
-            {(d.grupo?.dia || d.grupo?.hora) && (
-              <Dato label="Horario">{[d.grupo?.dia, d.grupo?.hora].filter(Boolean).join(' a las ')}</Dato>
-            )}
+            {textoHorario(d.grupo) && <Dato label="Horario">{textoHorario(d.grupo)}</Dato>}
           </Tarjeta>
 
           {/* Fechas y pagos. `available_at` es la fecha estimada de

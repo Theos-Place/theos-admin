@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase, textoHistoricos, textoLleganTarde } from './folleto-request-notify'
+import { asuntoFolleto, cuerpoFolleto, etiquetaTipo, textoUbicacion, textoHorario, textoDesfase, textoHistoricos, textoLleganTarde, textoDias } from './folleto-request-notify'
 import type { FolletoDetalle } from '@/lib/supabase/queries/folletos'
 
 const grupo = {
   id: 'g1', name: 'N2 · Nivel 1. Marco Araya. Set 2026', nivel: 'Nivel 2',
   dirigente: 'Marco Araya Ramirez', co_dirigente: 'Cristina Poveda Umana',
   ubicacion: 'El Roble, Alajuela', zona: 'alajuela', es_virtual: false,
-  dia: 'Martes', hora: '7:30pm', starts_at: '2026-09-15',
+  dias: ['M'], hora: '7:30pm', starts_at: '2026-09-15',
 }
 
 const base: FolletoDetalle = {
@@ -143,12 +143,33 @@ describe('ubicación y horario', () => {
     expect(textoUbicacion({ ...grupo, ubicacion: null, zona: null, es_virtual: false })).toBeNull()
   })
 
-  it('el horario junta día y hora', () => {
-    expect(textoHorario(grupo)).toBe('Martes a las 7:30pm')
+  it('el horario junta día y hora, con el día en palabras', () => {
+    // `schedule_days` guarda códigos (L/M/X/J/V/S/D) en un ARRAY. Tratarlo
+    // como texto reventaba el correo entero: pasó el 2026-09-02 con el cierre
+    // de Floriana Fonseca, cuyo grupo sí tenía días cargados.
+    expect(textoHorario(grupo)).toBe('martes a las 7:30pm')
+  })
+
+  it('varios días se listan', () => {
+    expect(textoHorario({ ...grupo, dias: ['M', 'J'] })).toBe('martes y jueves a las 7:30pm')
+    expect(textoHorario({ ...grupo, dias: ['L', 'X', 'V'] })).toBe('lunes, miércoles y viernes a las 7:30pm')
   })
 
   it('con solo el día no inventa la hora', () => {
-    expect(textoHorario({ ...grupo, hora: null })).toBe('Martes')
+    expect(textoHorario({ ...grupo, hora: null })).toBe('martes')
+  })
+
+  it('con solo la hora no inventa el día', () => {
+    expect(textoHorario({ ...grupo, dias: null })).toBe('7:30pm')
+  })
+
+  it('sin día ni hora devuelve null', () => {
+    expect(textoHorario({ ...grupo, dias: null, hora: null })).toBeNull()
+    expect(textoHorario({ ...grupo, dias: [], hora: '  ' })).toBeNull()
+  })
+
+  it('un código de día desconocido no rompe: se muestra tal cual', () => {
+    expect(textoDias(['Z'])).toBe('Z')
   })
 })
 

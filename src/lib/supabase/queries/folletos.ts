@@ -191,24 +191,45 @@ export async function createAutoFolletoIfNeeded(
   }
   const folletoId = (creado as { id: string }).id
 
-  // El correo se arma desde el MISMO detalle que muestra la pantalla, no de
-  // variables sueltas: así los dos dicen lo mismo y no se desincronizan.
-  // Best-effort — un tiquete creado no se pierde porque falle el aviso.
+  // AVISO. El correo se arma desde el MISMO detalle que muestra la pantalla,
+  // para que los dos digan lo mismo.
+  //
+  // El HTML se arma en su propio try, y aparte del envío. Antes era un solo
+  // bloque, y cuando armar el cuerpo reventaba se caía TODO — ni campana ni
+  // correo — con un console.warn que nadie ve. Pasó el 2026-09-02 en el cierre
+  // de Floriana Fonseca: `schedule_days` es un array y se estaba tratando como
+  // texto, así que `.trim()` no existía. El tiquete quedó creado y en silencio.
+  //
+  // Ahora, si el cuerpo falla, igual sale el aviso con un texto mínimo: es
+  // preferible un correo pobre a ninguno. Quien imprime se entera igual y el
+  // detalle está a un clic.
+  const label = levelLabel(code)
+  let asunto = `Folletos de ${label} — ${sede ?? 'sede sin definir'}`
+  let cuerpo = `<p>Se generó una solicitud de folletos. Abrila para ver el detalle:</p>
+    <p><a href="https://admin.theosplace.org/estudios/folletos/${folletoId}">Ver la solicitud</a></p>`
+  let resumen = `${enrolled} folleto(s) de ${label} · ${sede ?? 'sede sin definir'}`
   try {
     const detalle = await getFolletoDetalle(folletoId)
     if (detalle) {
       const { asuntoFolleto, cuerpoFolleto, etiquetaTipo } = await import('@/lib/email/folleto-request-notify')
       const { renderEmail } = await import('@/lib/email/baseLayout')
-      await notifyFolletoRecipients({
-        title: 'Folletos solicitados',
-        body: `${detalle.desglose.total} folletos de ${detalle.nivel ?? 'estudio'} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`,
-        subject: asuntoFolleto(detalle),
-        html: renderEmail(cuerpoFolleto(detalle)),
-        link: `/estudios/folletos/${folletoId}`,
-      })
+      asunto = asuntoFolleto(detalle)
+      cuerpo = renderEmail(cuerpoFolleto(detalle))
+      resumen = `${detalle.desglose.total} folletos de ${detalle.nivel ?? 'estudio'} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`
     }
   } catch (e) {
-    console.warn('folletos: tiquete creado pero el aviso falló:', e)
+    console.error('folletos: el detalle del aviso falló, va la versión mínima:', e)
+  }
+  try {
+    await notifyFolletoRecipients({
+      title: 'Folletos solicitados',
+      body: resumen,
+      subject: asunto,
+      html: cuerpo,
+      link: `/estudios/folletos/${folletoId}`,
+    })
+  } catch (e) {
+    console.error('folletos: tiquete creado pero NADIE fue avisado:', e)
   }
   return { created: true, id: folletoId }
 }
@@ -424,7 +445,9 @@ export type FolletoGrupoInfo = {
   ubicacion: string | null
   zona: string | null
   es_virtual: boolean
-  dia: string | null
+  /** `study_groups.schedule_days`: es un ARRAY de códigos (L/M/X/J/V/S/D), no
+   *  un texto. Tratarlo como string reventaba el correo — ver el 2026-09-02. */
+  dias: string[] | null
   hora: string | null
   starts_at: string | null
 }
@@ -459,7 +482,7 @@ type GrupoRow = {
   location: string | null
   zone: string | null
   is_virtual: boolean | null
-  schedule_days: string | null
+  schedule_days: string[] | null
   schedule_time: string | null
   starts_at: string | null
   leader_id: string | null
@@ -496,7 +519,7 @@ function aGrupoInfo(row: GrupoRow | null): FolletoGrupoInfo | null {
     ubicacion: row.location,
     zona: row.zone,
     es_virtual: row.is_virtual === true,
-    dia: row.schedule_days,
+    dias: row.schedule_days,
     hora: row.schedule_time,
     starts_at: row.starts_at,
   }

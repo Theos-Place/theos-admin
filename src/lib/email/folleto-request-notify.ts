@@ -56,10 +56,24 @@ export function textoUbicacion(g: FolletoDetalle['grupo']): string | null {
   return partes.join(' · ')
 }
 
+/** Etiquetas de los días como los guarda `schedule_days`. */
+const DIAS: Record<string, string> = {
+  L: 'lunes', M: 'martes', X: 'miércoles', J: 'jueves', V: 'viernes', S: 'sábado', D: 'domingo',
+}
+
+export function textoDias(dias: string[] | null | undefined): string | null {
+  const nombres = (dias ?? []).map(d => DIAS[d] ?? d).filter(Boolean)
+  if (nombres.length === 0) return null
+  if (nombres.length === 1) return nombres[0]
+  return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
+}
+
 export function textoHorario(g: FolletoDetalle['grupo']): string | null {
   if (!g) return null
-  const partes = [g.dia, g.hora].filter((p): p is string => !!p && p.trim() !== '')
-  return partes.length ? partes.join(' a las ') : null
+  const dias = textoDias(g.dias)
+  const hora = (g.hora ?? '').trim() || null
+  if (dias && hora) return `${dias} a las ${hora}`
+  return dias ?? hora
 }
 
 /**
