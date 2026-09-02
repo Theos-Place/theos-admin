@@ -16,6 +16,7 @@ import {
   levelLabel, type FolletoState,
 } from '@/lib/studies/folletos'
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
+import { textoDesgloseCorto } from '@/lib/studies/folleto-desglose'
 import { ManualFolletoRequestButton } from '@/components/studies/ManualFolletoRequestButton'
 
 const STATUS_FILTERS: { key: FolletoState | 'all'; label: string }[] = [
@@ -215,7 +216,18 @@ export default function FolletosPage() {
                           </>
                         ) : (r.bloque?.nombre ?? '—')}
                       </td>
-                      <td className="px-4 py-3 text-sm text-navy-light/80 tabular-nums font-mono text-[13px]">{r.quantity}</td>
+                      {/* El TOTAL a imprimir, con el desglose debajo. `quantity`
+                          sola es solo la parte de estudiantes: el dirigente y el
+                          co-dirigente también llevan folleto, y quien imprime
+                          necesita el número completo. */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm font-semibold text-navy tabular-nums font-display">
+                          {r.desglose.total}
+                        </span>
+                        <span className="block text-[11px] text-navy-light font-body">
+                          {textoDesgloseCorto(r.desglose)}
+                        </span>
+                      </td>
                       {/* Destino DESTACADO: es el dato que usa quien organiza
                           la entrega para armar los paquetes, no un atributo más
                           de la fila. Un tiquete sin destino se marca en rojo en

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { desgloseFolletos, textoDesglose } from './folleto-desglose'
+import { desgloseFolletos, textoDesglose, textoDesgloseCorto } from './folleto-desglose'
 
 describe('desgloseFolletos', () => {
   it('suma el folleto del dirigente y del co-dirigente', () => {
@@ -45,5 +45,22 @@ describe('textoDesglose', () => {
   it('avisa cuando el grupo no tiene dirigente, en vez de callarlo', () => {
     const d = desgloseFolletos({ estudiantes: 8, tieneDirigente: false, tieneCoDirigente: false })
     expect(textoDesglose(d)).toContain('no tiene dirigente asignado')
+  })
+})
+
+describe('textoDesgloseCorto (celda de tabla)', () => {
+  it('separa estudiantes y dirigentes sin repetir el total', () => {
+    const d = desgloseFolletos({ estudiantes: 6, tieneDirigente: true, tieneCoDirigente: true })
+    expect(textoDesgloseCorto(d)).toBe('6 de estudiantes · 2 de dirigentes')
+  })
+
+  it('singular donde toca', () => {
+    const d = desgloseFolletos({ estudiantes: 1, tieneDirigente: true, tieneCoDirigente: false })
+    expect(textoDesgloseCorto(d)).toBe('1 de estudiante · 1 de dirigente')
+  })
+
+  it('sin dirigentes no deja un "0 de dirigentes" colgando', () => {
+    const d = desgloseFolletos({ estudiantes: 8, tieneDirigente: false, tieneCoDirigente: false })
+    expect(textoDesgloseCorto(d)).toBe('8 de estudiantes')
   })
 })

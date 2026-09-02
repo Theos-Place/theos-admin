@@ -31,6 +31,9 @@ export type DbFolletoRequest = {
   target_leader: { first_name: string | null; last_name: string | null } | null
   /** Pagos individuales enlazados a este tiquete. Ausente = nivel sin cobro. */
   pagos: { total: number; pagados: number }
+  /** Cuántos folletos de verdad: estudiantes + dirigentes. `quantity` sola es
+   *  solo la parte de estudiantes, y la cola tiene que mostrar el total. */
+  desglose: DesgloseFolletos
 }
 
 /** Ids de rol que otorgan el módulo 'folletos' (derivado de ROLES, no hardcodeado). */
@@ -289,7 +292,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name, leader_id, co_leader_id), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
@@ -316,13 +319,32 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
     }
   }
 
-  return filas.map(row => ({
-    ...row,
-    source_group: Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group,
-    bloque: Array.isArray(row.bloque) ? (row.bloque[0] ?? null) : row.bloque,
-    target_leader: Array.isArray(row.target_leader) ? (row.target_leader[0] ?? null) : row.target_leader,
-    pagos: pagos.get(String(row.id)) ?? { total: 0, pagados: 0 },
-  })) as DbFolletoRequest[]
+  return filas.map(row => {
+    const grupo = (Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group) as
+      { name: string | null; leader_id?: string | null; co_leader_id?: string | null } | null
+    const leaders = (row.quantity_leaders as number | null) ?? null
+    // Los tiquetes anteriores al 2026-09-02 no guardaron los folletos de
+    // dirigentes: se deducen del grupo, que es la mejor lectura disponible.
+    const desglose = leaders == null
+      ? desgloseFolletos({
+        estudiantes: Number(row.quantity ?? 0),
+        tieneDirigente: !!grupo?.leader_id,
+        tieneCoDirigente: !!grupo?.co_leader_id,
+      })
+      : {
+        estudiantes: Number(row.quantity ?? 0),
+        dirigentes: leaders,
+        total: Number(row.quantity ?? 0) + leaders,
+      }
+    return {
+      ...row,
+      source_group: grupo,
+      bloque: Array.isArray(row.bloque) ? (row.bloque[0] ?? null) : row.bloque,
+      target_leader: Array.isArray(row.target_leader) ? (row.target_leader[0] ?? null) : row.target_leader,
+      pagos: pagos.get(String(row.id)) ?? { total: 0, pagados: 0 },
+      desglose,
+    }
+  }) as DbFolletoRequest[]
 }
 
 /** Cambio de estado (individual o en lote). QA 2026-07-17: el flujo es LINEAL

@@ -29,6 +29,16 @@ export function desgloseFolletos(input: {
   return { estudiantes, dirigentes, total: estudiantes + dirigentes }
 }
 
+/** Compacto, para una celda de tabla: "6 de estudiantes · 2 de dirigentes".
+ *  El total va aparte, en grande, así que acá no se repite. */
+export function textoDesgloseCorto(d: DesgloseFolletos): string {
+  const partes = [`${d.estudiantes} de estudiante${d.estudiantes === 1 ? '' : 's'}`]
+  if (d.dirigentes > 0) {
+    partes.push(`${d.dirigentes} de dirigente${d.dirigentes === 1 ? '' : 's'}`)
+  }
+  return partes.join(' · ')
+}
+
 /** Una línea para el correo y la cola: "14 de estudiantes + 2 de dirigentes = 16". */
 export function textoDesglose(d: DesgloseFolletos): string {
   if (d.dirigentes === 0) return `${d.estudiantes} (solo estudiantes, el grupo no tiene dirigente asignado)`
