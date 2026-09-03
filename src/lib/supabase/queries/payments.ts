@@ -350,13 +350,14 @@ export async function submitEnrollmentComprobante(input: {
   const supabase = createAdminClient()
   const { data: enr } = await supabase
     .from('study_enrollments')
-    .select('member_id, group_id, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(cost, currency)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost, currency)')
+    .select('member_id, group_id, status, group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(cost, currency)), plan_direct:study_plans!study_enrollments_plan_id_fkey(cost, currency)')
     .eq('id', input.enrollment_id)
     .maybeSingle()
   if (!enr) return null
   const row = enr as {
     member_id: string
     group_id: string | null
+    status: string | null
     group: { plan: { cost: number | null; currency: string | null } | { cost: number | null; currency: string | null }[] | null } | { plan: unknown }[] | null
     plan_direct: { cost: number | null; currency: string | null } | { cost: number | null; currency: string | null }[] | null
   }
@@ -367,6 +368,22 @@ export async function submitEnrollmentComprobante(input: {
   const amount = Number(gp?.cost ?? dplan?.cost ?? 0)
   // INT-2: el pago hereda la moneda del costo del plan (grupo primero, igual que el monto).
   const currency = (gp?.cost != null ? gp.currency : dplan?.currency) ?? 'CRC'
+
+  /**
+   * La matrícula tiene que estar VIVA. Sin este chequeo se podía pagar algo
+   * que ya no existía: el pago original quedaba en 'cancelado', el código de
+   * más abajo no lo encontraba —busca solo 'pending'— y creaba un pago NUEVO
+   * que se daba por bueno.
+   *
+   * Pasó de verdad (2026-09-02). Michelle Alfaro:
+   *   22:41  se matricula        → pago pendiente
+   *   22:42  se cancela          → pago a cancelado
+   *   22:55  sube el comprobante → pago NUEVO, aceptado
+   * Terminó pagando ₡15.000 por un curso del que ya la habían sacado. A
+   * Franklin Zuñiga le pasó lo mismo al cambiarse de grupo.
+   */
+  const VIVAS = ['enrolled', 'pendiente_de_pago', 'waitlist']
+  if (!VIVAS.includes(row.status ?? '')) throw new Error('MATRICULA_NO_VIGENTE')
 
   // Si ya hay un comprobante EN REVISIÓN para esta matrícula, no se acepta
   // otro: un doble submit (doble clic / dos pestañas) creaba dos pagos en la
@@ -379,6 +396,18 @@ export async function submitEnrollmentComprobante(input: {
     .eq('review_status', 'en_revision')
     .limit(1)
   if ((inReview ?? []).length > 0) throw new Error('COMPROBANTE_EN_REVISION')
+
+  // ¿Ya está pagada? El caso de Johnny Leandro (2026-09-01): subió el mismo
+  // comprobante dos veces con 5 minutos de diferencia y quedaron DOS pagos de
+  // ₡20.000 aprobados por la misma matrícula.
+  const { data: yaPagado } = await supabase
+    .from('payments')
+    .select('id')
+    .eq('enrollment_id', input.enrollment_id)
+    .eq('concept', 'matricula')
+    .eq('status', 'paid')
+    .limit(1)
+  if ((yaPagado ?? []).length > 0) throw new Error('YA_PAGADA')
 
   // ¿Ya hay un pago pendiente (sin revisar o rechazado) para esta matrícula?
   const { data: existing } = await supabase

@@ -41,7 +41,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No se pudo subir el comprobante.' }, { status: 500 })
     }
 
-    const result = await submitEnrollmentComprobante({ enrollment_id: enrollmentId, receipt_path: path, reference_code: reference })
+    let result
+    try {
+      result = await submitEnrollmentComprobante({ enrollment_id: enrollmentId, receipt_path: path, reference_code: reference })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : ''
+      // Errores de regla, no de sistema: la persona tiene que entender qué pasó.
+      if (msg === 'MATRICULA_NO_VIGENTE') {
+        return NextResponse.json({
+          error: 'Esta matrícula ya no está activa: se canceló o se liberó el cupo. Si querés llevar el estudio, matriculate de nuevo antes de pagar.',
+          code: 'matricula_no_vigente',
+        }, { status: 409 })
+      }
+      if (msg === 'YA_PAGADA') {
+        return NextResponse.json({
+          error: 'Esta matrícula ya tiene un pago registrado. Si creés que hay un error, escribinos antes de volver a pagar.',
+          code: 'ya_pagada',
+        }, { status: 409 })
+      }
+      if (msg === 'COMPROBANTE_EN_REVISION') {
+        return NextResponse.json({
+          error: 'Ya recibimos un comprobante para esta matrícula y lo estamos revisando.',
+          code: 'comprobante_en_revision',
+        }, { status: 409 })
+      }
+      throw e
+    }
     if (!result) return NextResponse.json({ error: 'No se encontró la matrícula.' }, { status: 404 })
 
     // El correo de bienvenida sale ACÁ, no al matricularse.
