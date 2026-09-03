@@ -53,6 +53,10 @@ export function clasificarResultado(
   // El status explícito manda: si alguien lo puso, es la intención más clara.
   if (status === 'reprobado') return 'reprobado'
   if (status === 'dropped') return 'retirado'
+  // 'cancelada' no es un resultado: la matrícula nunca llegó a darse, así que
+  // no cuenta ni como retiro ni como nada. Cae en 'otro' y queda fuera del
+  // conteo del cierre.
+  if (status === 'cancelada') return 'otro'
   if (status === 'en_revision') return 'sin_evaluar'
   if (status === 'completed') {
     // El RPC guarda la reprobación en la nota, no en el status.

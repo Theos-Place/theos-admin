@@ -22,6 +22,7 @@ import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
+import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -141,21 +142,26 @@ export default function MiembroDetailPage() {
 
   const estudiosRows: StudyRow[] = useMemo(() => {
     if (!member?.study_history) return []
+    // Las etiquetas y el filtro viven en enrollment-history, con tests.
     // 'en_revision': el grupo cerró y esta inscripción quedó sin resultado. NO
     // dice aprobado ni reprobado — eso lo confirma el coordinador de estudios.
-    const STATUS: Record<string, string> = { completed: 'Aprobado', dropped: 'Reprobó', reprobado: 'Reprobó', enrolled: 'En curso', en_revision: 'Por confirmar', waitlist: 'En espera', transferred: 'Transferido', pendiente_de_pago: 'Pendiente de pago' }
+    // Y 'dropped' dice "Se retiró", no "Reprobó": son cosas distintas y solo
+    // una de las dos es un juicio sobre el desempeño de la persona.
     const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
     const fmt = (date: string | null, year: number | null) => {
       if (date) { const [y, m] = date.split('-'); return `${MESES[Number(m) - 1] ?? ''} ${y}`.trim() }
       return year ? String(year) : '—'
     }
-    return member.study_history.map(s => ({
+    return member.study_history
+      // Una matrícula cancelada no ocurrió: no sale en el historial.
+      .filter(s => apareceEnHistorial(s.status))
+      .map(s => ({
       code: s.code,
       name: s.name || studyTypes.find(x => x.code === s.code)?.name || s.code,
       startYear: s.year ?? 0,
       startLabel: fmt(s.date, s.year),
       duration: s.weeks ? `${s.weeks} sem.` : '—',
-      status: STATUS[s.status] ?? s.status,
+      status: etiquetaHistorial(s.status),
       groupId: s.group_id,
       enrollmentId: s.enrollment_id,
       rawStatus: s.status,

@@ -166,8 +166,12 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
           <div className="space-y-1">
             <label htmlFor="hist-estado" className="text-[13px] text-navy-light/80 font-display">Estado</label>
             <select id="hist-estado" className={inputCls} value={status} onChange={e => setStatus(e.target.value)}>
+              {/* "Reprobó" guarda 'reprobado', no 'dropped'. Guardaba mal:
+                  'dropped' es un retiro y la ficha lo mostraba como
+                  reprobación, mezclando las dos cosas. */}
               <option value="completed">Aprobado</option>
-              <option value="dropped">Reprobó</option>
+              <option value="reprobado">Reprobó</option>
+              <option value="dropped">Se retiró</option>
               <option value="enrolled">En curso</option>
             </select>
           </div>

@@ -142,3 +142,19 @@ describe('arrastre de la importación: aprobó ANTES de que el grupo empezara', 
     expect(esHistorico('2026-09-01T00:00:00.000Z', '2026-06-01T06:00:00.000Z')).toBe(false)
   })
 })
+
+describe('una matrícula cancelada no es un resultado del cierre', () => {
+  it("'cancelada' cae en otro, no en retirado", () => {
+    // La matrícula nunca se dio: no cuenta ni como retiro ni como nada.
+    expect(clasificarResultado({ status: 'cancelada', notes: null })).toBe('otro')
+  })
+
+  it('no entra en ningún balde del conteo', () => {
+    expect(contarResultadosCierre([
+      { status: 'completed', notes: null },
+      { status: 'cancelada', notes: null },
+      { status: 'cancelada', notes: null },
+      { status: 'dropped', notes: null },
+    ])).toEqual({ aprobados: 1, reprobados: 0, retirados: 1, sin_evaluar: 0, historicos: 0 })
+  })
+})
