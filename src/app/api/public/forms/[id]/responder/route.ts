@@ -64,15 +64,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const answers: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(entrada)) if (validos.has(k)) answers[k] = v
 
-    // Se reusa submitResponse (RPC transaccional submit_form_response) y no un
-    // insert a mano: las respuestas viven en otra tabla, y hacerlo en dos pasos
-    // sueltos dejaba respuestas fantasma (auditoría A14, migración 119). De
-    // paso manda la confirmación por correo al invitado.
-    const { submitResponse } = await import('@/lib/supabase/queries/forms')
+    /**
+     * UNA RESPUESTA POR CORREO, salvo que el formulario permita varias.
+     *
+     * Mismo criterio que la ruta con sesión, pero acá la clave es el correo:
+     * es lo único que identifica a un invitado entre dos envíos. La IP no
+     * sirve —una familia comparte la del router— y el límite por IP que ya
+     * había frena el abuso, no el doble clic.
+     *
+     * En la ruta autenticada esto dejó 7 duplicados de 61 respuestas, todos
+     * con 0 o 1 segundo de diferencia (2026-09-03). Acá todavía no había
+     * pasado, y se cierra antes de que pase.
+     */
+    const { submitResponse, hasGuestResponded } = await import('@/lib/supabase/queries/forms')
+    const correo = String(body.guest_email).trim().toLowerCase()
+    const { data: formCfg } = await supabase
+      .from('forms').select('allow_multiple_responses').eq('id', id).maybeSingle()
+    const permiteVarias = (formCfg as { allow_multiple_responses: boolean } | null)?.allow_multiple_responses === true
+    if (!permiteVarias && await hasGuestResponded(id, correo)) {
+      return NextResponse.json(
+        { error: 'Ya recibimos una respuesta con ese correo.', code: 'ya_respondido' },
+        { status: 409 },
+      )
+    }
+
     const creada = await submitResponse(id, {
       member_id: null,
       guest_name: String(body.guest_name).trim(),
-      guest_email: String(body.guest_email).trim().toLowerCase(),
+      guest_email: correo,
       answers: answers as Record<string, string | string[] | number>,
     })
 

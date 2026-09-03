@@ -36,6 +36,8 @@ export function PublicFormFiller({ formId, form, fields }: {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [listo, setListo] = useState(false)
+  /** El 409 de duplicado: la respuesta ya existía, no se guardó una nueva. */
+  const [yaEstaba, setYaEstaba] = useState(false)
 
   // Los calculados no se dibujan (no aplican sin ficha) y el API los descarta
   // igual: acá es solo para no mostrar un hueco.
@@ -60,6 +62,11 @@ export function PublicFormFiller({ formId, form, fields }: {
         body: JSON.stringify({ guest_name: nombre, guest_email: correo, answers }),
       })
       const d = await res.json().catch(() => ({}))
+      // Ya había una respuesta con ese correo. No es un error rojo: si el
+      // envío se duplicó, la primera SÍ quedó guardada, y decirle que falló
+      // haría que lo intente otra vez. Se muestra la pantalla de listo con el
+      // texto que corresponde, sin mentir sobre lo que pasó.
+      if (res.status === 409 && d?.code === 'ya_respondido') { setYaEstaba(true); setListo(true); return }
       if (!res.ok) { setError(d.error ?? 'No se pudo enviar el formulario.'); return }
       setListo(true)
     } catch {
@@ -73,8 +80,14 @@ export function PublicFormFiller({ formId, form, fields }: {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal-soft/30">
           <Check size={22} className="text-teal-deep" aria-hidden />
         </div>
-        <h1 className="text-xl font-bold text-navy font-display">¡Listo, recibimos tu respuesta!</h1>
-        <p className="text-sm text-navy-light/80 font-body">Gracias por tomarte el tiempo.</p>
+        <h1 className="text-xl font-bold text-navy font-display">
+          {yaEstaba ? 'Ya teníamos tu respuesta' : '¡Listo, recibimos tu respuesta!'}
+        </h1>
+        <p className="text-sm text-navy-light font-body">
+          {yaEstaba
+            ? 'Este formulario recibe una sola respuesta por persona, y la tuya ya está registrada. No tenés que hacer nada más.'
+            : 'Gracias por tomarte el tiempo.'}
+        </p>
       </main>
     )
   }

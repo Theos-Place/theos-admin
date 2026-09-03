@@ -341,6 +341,24 @@ export async function hasMemberResponded(formId: string, memberId: string): Prom
 }
 
 /**
+ * Lo mismo para quien responde SIN ficha: la clave es el correo.
+ *
+ * Es lo único que identifica a un invitado entre dos envíos — la IP no sirve
+ * (una familia comparte la del router) y el nombre lo escribe la persona cada
+ * vez. Se compara en minúsculas y sin espacios, que es como se guarda.
+ */
+export async function hasGuestResponded(formId: string, guestEmail: string): Promise<boolean> {
+  const correo = guestEmail.trim().toLowerCase()
+  if (!correo) return false
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_responses').select('id')
+    .eq('form_id', formId).eq('guest_email', correo).limit(1)
+  if (error) throw error
+  return (data ?? []).length > 0
+}
+
+/**
  * Los estudios APROBADOS de un miembro, para el campo calculado del formulario.
  *
  * Cuenta 'completed' con o sin grupo: en esta base 22.343 de las 36.680
