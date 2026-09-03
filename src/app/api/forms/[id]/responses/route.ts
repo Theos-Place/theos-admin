@@ -143,6 +143,33 @@ export async function POST(
       console.warn('no se pudieron calcular los campos del formulario:', e)
     }
 
+    /**
+     * UNA RESPUESTA POR PERSONA, salvo que el formulario diga lo contrario.
+     *
+     * `hasMemberResponded` ya existía pero solo se usaba en el GET ?mine=1,
+     * o sea para que la pantalla mostrara "ya respondiste". El POST no lo
+     * miraba, así que un doble clic guardaba dos veces: el botón tampoco se
+     * deshabilitaba mientras enviaba.
+     *
+     * Medido el 2026-09-03: 7 de 61 respuestas eran duplicados, TODOS con 0 o
+     * 1 segundo de diferencia. No era gente respondiendo dos veces — era el
+     * mismo envío contado doble.
+     *
+     * La validación va en el servidor y no solo en el cliente porque el
+     * cliente se puede saltar; el que decide es este.
+     */
+    if (memberId) {
+      const { data: form } = await createAdminClient()
+        .from('forms').select('allow_multiple_responses').eq('id', id).maybeSingle()
+      const permiteVarias = (form as { allow_multiple_responses: boolean } | null)?.allow_multiple_responses === true
+      if (!permiteVarias && await hasMemberResponded(id, memberId)) {
+        return NextResponse.json(
+          { error: 'Ya enviaste una respuesta a este formulario.', code: 'ya_respondido' },
+          { status: 409 },
+        )
+      }
+    }
+
     const res = await submitResponse(id, {
       ...body, answers, member_id: memberId, recorded_by: recordedBy,
       guest_email: memberId ? body.guest_email ?? null : guestEmail,

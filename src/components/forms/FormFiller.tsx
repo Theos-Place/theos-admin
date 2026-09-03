@@ -168,6 +168,8 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   const isGuest = !user
   const [guestEmail, setGuestEmail] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  /** Envío en curso: bloquea el botón y el doble clic. */
+  const [enviando, setEnviando] = useState(false)
 
   // Motivo por el que ESTE formulario no es para esta persona (2026-08-06). Se
   // pregunta al cargar, no al enviar: hacer llenar 24 campos y rechazar al final
@@ -305,6 +307,9 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   }
 
   async function handleSubmit() {
+    // Guarda contra el doble clic. El botón además se deshabilita, pero esto
+    // corta también el caso de dos clics antes del primer render.
+    if (enviando) return
     const errs = getRequiredErrorsForPage(currentPage)
     if (errs.length > 0) { setErrors(errs); return }
     setSubmitError(null)
@@ -338,6 +343,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       identity = { guest_name: 'Invitado', guest_email: email }
     }
 
+    setEnviando(true)
     try {
       const res = await fetch(`/api/forms/${id}/responses`, {
         method: 'POST',
@@ -352,6 +358,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
           setSubmitError(String(detail.error))
           return
         }
+        // Ya respondió: si el envío se duplicó, la primera respuesta SÍ quedó
+        // guardada. Mostrar un error rojo haría creer que se perdió, así que
+        // se trata como éxito.
+        if (res.status === 409 && detail?.code === 'ya_respondido') {
+          setSubmitted(true)
+          return
+        }
         console.error('Error al enviar formulario:', res.status, detail)
         setSubmitError('Ocurrió un error al enviar el formulario. Verificá tu correo e intentá de nuevo.')
         return
@@ -360,6 +373,8 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       console.error('Error de red al enviar formulario:', err)
       setSubmitError('Ocurrió un error al enviar el formulario. Verificá tu correo e intentá de nuevo.')
       return
+    } finally {
+      setEnviando(false)
     }
     setSubmitted(true)
   }
@@ -676,9 +691,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
+                    disabled={enviando}
+                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Enviar respuesta
+                    {enviando ? 'Enviando…' : 'Enviar respuesta'}
                   </button>
                 )}
               </div>
@@ -686,9 +702,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
+                disabled={enviando}
+                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Enviar respuesta
+                {enviando ? 'Enviando…' : 'Enviar respuesta'}
               </button>
             )}
 
