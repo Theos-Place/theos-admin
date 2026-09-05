@@ -8,6 +8,7 @@ import { groupFullMessage } from '@/lib/studies/enrollment-capacity'
 import { RESTRICTION_ERROR_CODE } from '@/lib/studies/group-restrictions'
 import { logAudit } from '@/lib/audit'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
+import { esTipoDeBaja } from '@/lib/studies/baja-matricula'
 import { resolveOnBehalf } from '@/lib/auth/on-behalf'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
@@ -232,14 +233,17 @@ export async function DELETE(
     if (auth.res) return auth.res
   try {
     const { id } = await params
-    const { member_id, reason } = await req.json()
+    const { member_id, reason, tipo } = await req.json()
     const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
     const malMotivo = withdrawReasonError(typeof reason === 'string' ? reason : null)
     if (malMotivo) {
       return NextResponse.json({ error: malMotivo, code: 'motivo_requerido' }, { status: 400 })
     }
-    await withdrawMember(id, targetMemberId, (reason as string).trim())
+    // Sin `tipo` se retira, que es el comportamiento de siempre: un cliente
+    // viejo no debe empezar a cancelar matrículas sin haberlo pedido.
+    const tipoBaja = esTipoDeBaja(tipo) ? tipo : 'retirar'
+    await withdrawMember(id, targetMemberId, (reason as string).trim(), tipoBaja)
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'NO_RETIRABLE') {

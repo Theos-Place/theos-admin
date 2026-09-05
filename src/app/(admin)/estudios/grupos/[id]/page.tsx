@@ -25,6 +25,7 @@ import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
+import { BAJA_COPY, TIPOS_DE_BAJA, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -380,6 +381,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [showAddMember, setShowAddMember] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
   const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
+  /** Quitar del grupo (la matrícula no ocurrió) vs. retirar (cursaba y se
+   *  fue). Antes era una sola acción con dos nombres y todo terminaba en
+   *  "Se retiró", incluso una matrícula hecha por error. */
+  const [tipoBaja, setTipoBaja] = useState<TipoDeBaja>('cancelar')
   const [withdrawing, setWithdrawing] = useState(false)
   const [withdrawError, setWithdrawError] = useState(false)
   // EST-14: el motivo del retiro es obligatorio. Antes se mandaba hardcodeado
@@ -416,7 +421,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       const res = await fetch(`/api/studies/groups/${id}/enrollments`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: withdrawTarget.member_id, reason: withdrawReason.trim() }),
+        body: JSON.stringify({ member_id: withdrawTarget.member_id, reason: withdrawReason.trim(), tipo: tipoBaja }),
       })
       if (!res.ok) throw new Error()
       setWithdrawTarget(null)
@@ -519,21 +524,48 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {withdrawTarget && (
         <Modal onClose={() => setWithdrawTarget(null)} titleId="desinscribir-titulo" width={400}>
           <div className="p-5 space-y-4">
-            <h3 id="desinscribir-titulo" className="font-semibold text-navy font-display">Desinscribir participante</h3>
-            <p className="text-sm text-navy-light/80 font-body">
-              ¿Desinscribir a <strong>{withdrawTarget.member_name}</strong> de este grupo?
-              Quedará como retirado y conservará su historial.
-            </p>
+            <h3 id="desinscribir-titulo" className="font-semibold text-navy font-display">
+              Sacar a {withdrawTarget.member_name} del grupo
+            </h3>
+
+            {/* Se elige ANTES del motivo: lo que se escriba depende de cuál
+                de las dos cosas está pasando. */}
+            <fieldset className="space-y-2">
+              <legend className="text-[13px] font-medium text-navy font-body mb-1">¿Qué pasó?</legend>
+              {TIPOS_DE_BAJA.map(t => (
+                <label
+                  key={t}
+                  className={cn(
+                    'flex gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors',
+                    tipoBaja === t ? 'border-coral bg-coral/5' : 'border-[var(--outline-variant)] hover:bg-surface-low',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="tipo-baja"
+                    value={t}
+                    checked={tipoBaja === t}
+                    onChange={() => setTipoBaja(t)}
+                    className="mt-0.5 accent-coral shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-navy font-body">{BAJA_COPY[t].titulo}</span>
+                    <span className="block text-[13px] text-navy-light font-body">{BAJA_COPY[t].efecto}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+
             <div>
               <label htmlFor="withdraw-reason" className="block text-[13px] font-medium text-coral font-body mb-1">
-                Motivo del retiro <span aria-hidden>*</span>
+                {BAJA_COPY[tipoBaja].labelMotivo} <span aria-hidden>*</span>
               </label>
               <textarea
                 id="withdraw-reason"
                 rows={2}
                 value={withdrawReason}
                 onChange={e => setWithdrawReason(e.target.value)}
-                placeholder="Ej.: se mudó de zona, cambió de horario de trabajo, motivos de salud…"
+                placeholder={BAJA_COPY[tipoBaja].placeholderMotivo}
                 aria-required="true"
                 aria-invalid={!!motivoInvalido && withdrawReason.length > 0 ? true : undefined}
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body resize-none placeholder:text-navy-light/80"
@@ -546,7 +578,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </div>
             {withdrawError && (
               <p className="text-sm text-coral font-body" role="alert">
-                No se pudo desinscribir. Intentá de nuevo.
+                No se pudo. Intentá de nuevo.
               </p>
             )}
             <div className="flex gap-2">
@@ -555,7 +587,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 disabled={withdrawing || !!motivoInvalido}
                 className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
               >
-                {withdrawing ? 'Desinscribiendo…' : 'Desinscribir'}
+                {withdrawing ? BAJA_COPY[tipoBaja].gerundio : BAJA_COPY[tipoBaja].boton}
               </button>
               <button
                 onClick={() => setWithdrawTarget(null)}
@@ -796,10 +828,18 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         )}
                         {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
-                            onClick={() => { setWithdrawError(false); setWithdrawReason(''); setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name }) }}
+                            onClick={() => {
+                              setWithdrawError(false); setWithdrawReason('')
+                              // El default es 'cancelar': sacar a alguien por
+                              // error es más frecuente que un retiro real, y
+                              // es la opción que NO le escribe nada en el
+                              // expediente. Si de verdad se retiró, se marca.
+                              setTipoBaja('cancelar')
+                              setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name })
+                            }}
                             className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
-                            Desinscribir
+                            Sacar del grupo
                           </button>
                         )}
                         {!readOnly && (

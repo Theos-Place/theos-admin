@@ -13,6 +13,7 @@ import { ymdCR } from '@/lib/format'
 import type { Json } from '@/types/database'
 import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-export'
 import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-read'
+import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -1415,8 +1416,20 @@ export async function enrollMember(
   if (plan?.id) {
     // A3 (auditoría BE): retirar la matrícula pendiente y re-inscribirse por
     // acá saltaba el cobro (el guard anterior solo ve 'pendiente_de_pago').
-    // Si existe una inscripción RETIRADA de este plan con su pago de matrícula
-    // aún sin pagar, la re-inscripción debe pasar por el comprobante.
+    /**
+     * Si quedó una inscripción RETIRADA de este plan con el cobro todavía
+     * VIVO, la re-inscripción tiene que pasar por el comprobante.
+     *
+     * Deuda es solo 'pending'. Antes la condición era `status !== 'paid'`, y
+     * con eso un cobro CANCELADO contaba como deuda: al retirar a alguien su
+     * cobro se cancela, así que el propio retiro le dejaba una "deuda" que le
+     * impedía volver a matricularse. Un cobro cancelado no lo debe nadie.
+     *
+     * Pasó con Celina Rodríguez (2026-09-05): la retiraron para reinscribirla
+     * y el sistema la bloqueó con "pago pendiente" por el cobro que la propia
+     * baja había cancelado — teniendo ella su matrícula YA pagada y aprobada
+     * en otro registro.
+     */
     const { data: droppedDebt } = await supabase
       .from('study_enrollments')
       .select('id, payments!payments_enrollment_id_fkey(id, status, concept)')
@@ -1424,7 +1437,7 @@ export async function enrollMember(
       .eq('plan_id', plan.id)
       .eq('status', 'dropped')
     const hasUnpaidDebt = ((droppedDebt ?? []) as Array<{ payments: Array<{ status: string; concept: string | null }> | null }>)
-      .some(e => (e.payments ?? []).some(pay => pay.concept === 'matricula' && pay.status !== 'paid'))
+      .some(e => (e.payments ?? []).some(pay => pay.concept === 'matricula' && pay.status === 'pending'))
     if (hasUnpaidDebt) throw new Error('PAGO_PENDIENTE')
   }
   // El upsert re-activa una fila existente (group,member). Legítimo para
@@ -1566,16 +1579,29 @@ export async function enrollMember(
   return { status, enrollment_id: enrollmentId, amount: finalAmount, currency: planCurrency, requires_payment: requiresPaymentFinal }
 }
 
-/** Retira una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist).
- *  A11: 'completed' es terminal — un retiro accidental ya no borra registro
- *  académico. A3: al retirar una pendiente de pago, su pago de matrícula sin
- *  comprobante se cancela (status 'cancelado') para que no quede huérfano y
- *  aprobable en la cola. */
-export async function withdrawMember(groupId: string, memberId: string, reason?: string): Promise<void> {
+/**
+ * Saca una inscripción ACTIVA (enrolled/pendiente_de_pago/waitlist) del grupo.
+ *
+ * DOS TIPOS (2026-09-05). 'retirar' deja constancia de que la persona cursaba
+ * y se fue ('dropped', la ficha lo muestra como "Se retiró"). 'cancelar' anula
+ * una matrícula que no debió existir ('cancelada'), y esa no sale en el
+ * historial: decir que alguien se retiró de un estudio que nunca empezó es
+ * escribirle una historia que no vivió. La regla está en baja-matricula.ts.
+ *
+ * A11: 'completed' es terminal — un retiro accidental ya no borra registro
+ * académico. A3: el pago de matrícula sin comprobante se cancela para que no
+ * quede huérfano y aprobable en la cola.
+ */
+export async function withdrawMember(
+  groupId: string,
+  memberId: string,
+  reason?: string,
+  tipo: TipoDeBaja = 'retirar',
+): Promise<void> {
   const supabase = createAdminClient()
   const { data: updated, error } = await supabase
     .from('study_enrollments')
-    .update({ status: 'dropped', dropped_at: new Date().toISOString(), drop_reason: reason ?? null })
+    .update({ status: estadoDeBaja(tipo), dropped_at: new Date().toISOString(), drop_reason: reason ?? null })
     .eq('group_id', groupId)
     .eq('member_id', memberId)
     .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
