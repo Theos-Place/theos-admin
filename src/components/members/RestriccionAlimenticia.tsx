@@ -41,12 +41,16 @@ export function RestriccionAlimenticia({
     )
   }
 
-  async function guardar(nuevas: string[], nuevoTexto: string) {
+  /**
+   * `mostrarError`: marcar "Otros" y todavía no haber escrito NO es un error que
+   * mostrar —falta escribir, nada más—, pero salir del campo dejándolo vacío sí.
+   * Sin esa distinción el guardado fallaba en silencio: ni se guardaba ni se
+   * avisaba, que es la peor de las dos.
+   */
+  async function guardar(nuevas: string[], nuevoTexto: string, mostrarError = true) {
     const norm = normalizarRestricciones(nuevas, nuevoTexto)
-    // "Otros" recién marcado y sin texto todavía: no es un error que mostrar, es
-    // que falta escribir. Se espera en silencio a que la persona escriba.
     if (!norm.ok) {
-      setError(nuevas.includes(CLAVE_OTROS) && !nuevoTexto.trim() ? null : (norm.error ?? null))
+      setError(mostrarError ? (norm.error ?? null) : null)
       return
     }
     setEstado('guardando')
@@ -84,7 +88,7 @@ export function RestriccionAlimenticia({
     // reapareciera solo la próxima vez que alguien marque la opción.
     const t = nuevas.includes(CLAVE_OTROS) ? texto : ''
     if (!nuevas.includes(CLAVE_OTROS)) setTexto('')
-    void guardar(nuevas, t)
+    void guardar(nuevas, t, false)
   }
 
   const muestraOtros = marcadas.includes(CLAVE_OTROS)
@@ -109,7 +113,7 @@ export function RestriccionAlimenticia({
         <input
           value={texto}
           onChange={e => { setTexto(e.target.value); if (error) setError(null) }}
-          onBlur={() => guardar(marcadas, texto)}
+          onBlur={e => guardar(marcadas, e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() } }}
           placeholder="¿Cuál?"
           aria-label="Detalle de la restricción alimenticia"

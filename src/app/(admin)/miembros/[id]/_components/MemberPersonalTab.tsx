@@ -1,7 +1,13 @@
+'use client'
+
 import { Phone, Mail, MapPin, User, Heart, Briefcase, Building, Lock, Edit2 } from 'lucide-react'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
 import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
+import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
+import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useAuth } from '@/hooks/useAuth'
 
 
 function calculateAge(dateStr: string): number {
@@ -58,6 +64,12 @@ type Props = {
 }
 
 export function MemberPersonalTab({ member }: Props) {
+  const { can } = usePermissions()
+  const { user } = useAuth()
+  // Staff de padrón sobre cualquier ficha, o la persona sobre la suya: los dos
+  // casos que el PATCH de /api/members/[id] ya acepta. Se comprueba acá para no
+  // ofrecer un campo que el servidor va a rechazar.
+  const puedeEditar = can('miembros', 'edit') || user?.member_id === member.id
   return (
     <div
       className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
@@ -133,14 +145,50 @@ export function MemberPersonalTab({ member }: Props) {
           >
             Salud
           </p>
-          <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.allergies ?? '—'} editable={false} />
-          <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
-          <InfoRow
-            icon={<Lock size={15} strokeWidth={1.75} />}
-            label="Restricción alimenticia"
-            value={textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)}
-            editable={false}
-          />
+          {/* Editables EN SITIO. Antes eran filas con candado, y las demás filas
+              de esta pantalla muestran un lápiz que no hace nada —no tiene
+              onClick—, así que en la práctica desde el perfil no se podía tocar
+              ningún dato de salud (reportado 2026-09-10). Se guardan uno por uno
+              con el mismo componente del formulario. */}
+          {puedeEditar ? (
+            <div className="space-y-3">
+              {/* Sin onGuardado a propósito. Refrescar la ficha desde acá
+                  desmonta la pestaña entera mientras carga, y con ella el
+                  "Guardado en tu perfil ✓" que la persona nunca llegaba a ver
+                  —medido: aparecía "Guardando…" y después nada—. El dato ya está
+                  en la base y el campo muestra el valor nuevo; la ficha se
+                  refresca sola la próxima vez que se abre. */}
+              <CampoPerfilEditable
+                etiqueta="Alergias" valor={member.allergies ?? '—'}
+                memberId={member.id} columna="allergies" tipo="parrafo"
+              />
+              <CampoPerfilEditable
+                etiqueta="Medicamentos" valor={member.medicamentos ?? '—'}
+                memberId={member.id} columna="medications" tipo="parrafo"
+              />
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-1.5 font-display">
+                  Restricción alimenticia
+                </p>
+                <RestriccionAlimenticia
+                  valores={member.dietary_restrictions ?? []}
+                  otro={member.dietary_restrictions_other ?? null}
+                  memberId={member.id}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.allergies ?? '—'} editable={false} />
+              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
+              <InfoRow
+                icon={<Lock size={15} strokeWidth={1.75} />}
+                label="Restricción alimenticia"
+                value={textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)}
+                editable={false}
+              />
+            </>
+          )}
         </div>
       )}
     </div>
