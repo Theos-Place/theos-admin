@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useToast } from '@/components/shared/Toast'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { Modal } from '@/components/shared/Modal'
 
 type Props = {
   member: Member
@@ -22,6 +23,14 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
 
   const [showAdd, setShowAdd] = useState(false)
   const [unlinkTarget, setUnlinkTarget] = useState<FamilyEntry | null>(null)
+  // Fusión pendiente de confirmar: el servidor responde 409 cuando el vínculo
+  // va a unir DOS familias, con los integrantes de cada una para poder mostrarlos.
+  const [fusion, setFusion] = useState<{
+    linkId: string
+    relation: string
+    a: { name: string | null; integrantes: Array<{ id: string; nombre: string }> }
+    b: { name: string | null; integrantes: Array<{ id: string; nombre: string }> }
+  } | null>(null)
   const [busy, setBusy] = useState(false)
 
   // Vincular: draft del modal → POST. 'new' crea el miembro antes de vincular.
@@ -49,18 +58,46 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
         linkId = cData.id
         relation = draft.relation
       }
-      const res = await fetch(`/api/members/${member.id}/family`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: linkId, relation }),
-      })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error ?? 'No se pudo vincular al familiar.')
-      setShowAdd(false)
-      toast('Familiar vinculado.', 'success')
-      onChanged?.()
+      await vincular(linkId, relation, false)
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo vincular al familiar.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** POST del vínculo. `confirmado` solo va en true tras el aviso de fusión. */
+  async function vincular(linkId: string, relation: string, confirmado: boolean) {
+    const res = await fetch(`/api/members/${member.id}/family`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ member_id: linkId, relation, confirmar_fusion: confirmado }),
+    })
+    const data = await res.json().catch(() => null)
+    if (res.status === 409 && data?.code === 'requiere_confirmacion_fusion') {
+      setFusion({
+        linkId,
+        relation,
+        a: data.fusion.familiaDelOwner,
+        b: data.fusion.familiaDelOtro,
+      })
+      setShowAdd(false)
+      return
+    }
+    if (!res.ok) throw new Error(data?.error ?? 'No se pudo vincular al familiar.')
+    setShowAdd(false)
+    setFusion(null)
+    toast(confirmado ? 'Familias unidas.' : 'Familiar vinculado.', 'success')
+    onChanged?.()
+  }
+
+  async function confirmarFusion() {
+    if (!fusion) return
+    setBusy(true)
+    try {
+      await vincular(fusion.linkId, fusion.relation, true)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudieron unir las familias.', 'error')
     } finally {
       setBusy(false)
     }
@@ -175,6 +212,60 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
           onAdd={handleAdd}
           onClose={() => { if (!busy) setShowAdd(false) }}
         />
+      )}
+
+      {/* Aviso de FUSIÓN. Vincular a dos personas que ya tienen familia une los
+          dos hogares; hacerlo en silencio sorprende, y con el bug de las
+          familias partidas ya hay desconfianza en el módulo. Se muestra quién
+          va a quedar junto, con nombre y todo, antes de tocar nada. */}
+      {fusion && (
+        <Modal onClose={() => { if (!busy) setFusion(null) }} titleId="fusion-title" width={560}>
+          <div className="p-5 space-y-4">
+            <h2 id="fusion-title" className="text-lg font-display font-extrabold text-navy">
+              Se van a unir dos familias
+            </h2>
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Las dos personas ya tienen familia registrada. Al vincularlas, las dos
+              familias pasan a ser una sola — no se pierde a nadie, quedan todos juntos.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[fusion.a, fusion.b].map((f, i) => (
+                <div key={i} className="rounded-xl border border-outline p-3">
+                  <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1.5">
+                    {f.name ?? 'Familia'}
+                  </p>
+                  <ul className="space-y-1">
+                    {f.integrantes.map(p2 => (
+                      <li key={p2.id} className="text-[13px] text-navy font-body">{p2.nombre}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <p className="text-[13px] text-navy-light/80 font-body">
+              La familia resultante conserva el nombre de la más antigua. Si querés
+              separarlas después, se hace desvinculando desde esta misma pestaña.
+            </p>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setFusion(null)}
+                disabled={busy}
+                className="rounded-full px-4 py-2 text-sm font-medium text-navy-light/80 hover:bg-navy/5 transition-colors disabled:opacity-50 font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarFusion}
+                disabled={busy}
+                className="rounded-full bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+              >
+                {busy ? 'Uniendo…' : 'Unir las dos familias'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       <DeleteConfirmModal

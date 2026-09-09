@@ -4,6 +4,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
+import { casoDeVinculo, type CasoDeVinculo } from '@/lib/members/fusion-familias'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
  *  campos que no existen en la tabla o que no deben tocarse por este camino). */
@@ -153,54 +154,88 @@ export async function createFamily(input: { name: string; members: Array<{ membe
   return { id: unitId }
 }
 
-/** Vincula a `linkMemberId` con la familia de `ownerId` (acción directa, sin
- *  flujo de solicitud). Si el owner ya pertenece a una unidad familiar, agrega
- *  al nuevo integrante ahí; si no, crea la unidad y suma al owner como
- *  'Titular'. El vínculo es recíproco: ambos comparten family_unit_id, así que
- *  cada uno ve al otro en su perfil. Lanza VINCULO_A_SI_MISMO / YA_VINCULADO. */
+/**
+ * Qué va a pasar si se vincula a estas dos personas, ANTES de tocar nada.
+ *
+ * Existe para que la UI pueda avisar cuando el vínculo va a FUSIONAR dos
+ * familias. Fusionar en silencio sorprende: alguien cree que suma una persona y
+ * en realidad junta dos hogares enteros. Con el bug de las familias partidas ya
+ * hay desconfianza en el módulo; que el sistema diga lo que va a hacer es parte
+ * de recuperarla.
+ */
+export async function previewFamilyLink(ownerId: string, linkMemberId: string): Promise<{
+  caso: CasoDeVinculo
+  familiaDelOwner: { id: string | null; name: string | null; integrantes: Array<{ id: string; nombre: string }> }
+  familiaDelOtro: { id: string | null; name: string | null; integrantes: Array<{ id: string; nombre: string }> }
+}> {
+  const supabase = createAdminClient()
+
+  async function unidadDe(memberId: string): Promise<string | null> {
+    const { data } = await supabase
+      .from('family_members')
+      .select('family_unit_id, unit:family_units!inner(created_at)')
+      .eq('member_id', memberId)
+    const filas = (data ?? []) as Array<{ family_unit_id: string; unit: { created_at: string } | null }>
+    if (filas.length === 0) return null
+    // La más antigua, por si quedara algo previo a UNIQUE(member_id).
+    return [...filas].sort((a, b) =>
+      Date.parse(a.unit?.created_at ?? '') - Date.parse(b.unit?.created_at ?? ''))[0].family_unit_id
+  }
+
+  async function detalle(unitId: string | null) {
+    if (!unitId) return { id: null, name: null, integrantes: [] }
+    const [{ data: unidad }, { data: filas }] = await Promise.all([
+      supabase.from('family_units').select('name').eq('id', unitId).maybeSingle(),
+      supabase.from('family_members')
+        .select('member_id, member:members!family_members_member_id_fkey(first_name, last_name)')
+        .eq('family_unit_id', unitId),
+    ])
+    const integrantes = ((filas ?? []) as Array<{ member_id: string; member: { first_name: string | null; last_name: string | null } | null }>)
+      .map(f => ({
+        id: f.member_id,
+        nombre: `${f.member?.first_name ?? ''} ${f.member?.last_name ?? ''}`.trim(),
+      }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+    return { id: unitId, name: (unidad as { name: string | null } | null)?.name ?? null, integrantes }
+  }
+
+  const [uOwner, uOtro] = await Promise.all([unidadDe(ownerId), unidadDe(linkMemberId)])
+  const [familiaDelOwner, familiaDelOtro] = await Promise.all([detalle(uOwner), detalle(uOtro)])
+  return { caso: casoDeVinculo(uOwner, uOtro), familiaDelOwner, familiaDelOtro }
+}
+
+/**
+ * Vincula a `linkMemberId` con la familia de `ownerId`, FUSIONANDO si los dos ya
+ * tenían familia.
+ *
+ * Todo el trabajo lo hace `link_family_member` en la base. No es preferencia de
+ * estilo: una fusión mueve varias filas y borra una unidad, y hecho desde acá un
+ * fallo a mitad dejaría la familia partida en dos — que es exactamente el estado
+ * del que se está saliendo (bug Chavarría / Hernández, 2026-09-09). En la base es
+ * una transacción.
+ *
+ * Las reglas de la fusión están documentadas en la migración y en
+ * src/lib/members/fusion-familias.ts, que tiene los tests de la misma decisión.
+ *
+ * Lanza VINCULO_A_SI_MISMO. Ya NO lanza YA_VINCULADO: vincular a dos que ya están
+ * en la misma familia es un no-op idempotente, no un error.
+ */
 export async function linkFamilyMember(
   ownerId: string, linkMemberId: string, relation: string, actorMemberId: string | null,
 ): Promise<{ family_unit_id: string }> {
   if (ownerId === linkMemberId) throw new Error('VINCULO_A_SI_MISMO')
   const supabase = createAdminClient()
-
-  // Unidad familiar existente del owner (la más antigua si tuviera varias).
-  const { data: ownUnits, error: uErr } = await supabase
-    .from('family_members')
-    .select('family_unit_id, created_at')
-    .eq('member_id', ownerId)
-    .order('created_at', { ascending: true })
-  if (uErr) throw uErr
-
-  let unitId = (ownUnits ?? [])
-    .map((r: { family_unit_id: string | null }) => r.family_unit_id)
-    .find((x): x is string => !!x)
-
-  if (!unitId) {
-    // Sin unidad: crearla y sumar al owner como Titular (misma convención que el alta).
-    const { data: owner } = await supabase.from('members').select('last_name').eq('id', ownerId).maybeSingle()
-    const lastName = (owner as { last_name: string | null } | null)?.last_name?.trim()
-    const { data: unit, error: cErr } = await supabase
-      .from('family_units')
-      .insert({ name: lastName ? `Familia ${lastName}` : 'Familia' })
-      .select('id')
-      .single()
-    if (cErr) throw cErr
-    unitId = (unit as { id: string }).id
-    const { error: tErr } = await supabase
-      .from('family_members')
-      .insert({ family_unit_id: unitId, member_id: ownerId, relation: 'Titular', linked_by: actorMemberId })
-    if (tErr) throw tErr
+  const { data, error } = await supabase.rpc('link_family_member', {
+    p_owner: ownerId,
+    p_link: linkMemberId,
+    p_relation: relation,
+    p_actor: actorMemberId,
+  })
+  if (error) {
+    if (error.message?.includes('VINCULO_A_SI_MISMO')) throw new Error('VINCULO_A_SI_MISMO')
+    throw error
   }
-
-  const { error: insErr } = await supabase
-    .from('family_members')
-    .insert({ family_unit_id: unitId, member_id: linkMemberId, relation, linked_by: actorMemberId })
-  if (insErr) {
-    if ((insErr as { code?: string }).code === '23505') throw new Error('YA_VINCULADO')
-    throw insErr
-  }
-  return { family_unit_id: unitId }
+  return { family_unit_id: data as unknown as string }
 }
 
 /** Desvincula a `linkMemberId` de la familia de `ownerId` (acción directa).

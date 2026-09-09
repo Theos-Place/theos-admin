@@ -1024,7 +1024,7 @@ export type {
 // ./members-mutations. Re-exportadas acá para no tocar a los consumidores. ─────
 export {
   findMemberByCedulaOrEmail, mergeMembers, getDuplicatePairs, dismissDuplicatePair,
-  createMember, createFamily, getMemberFamily, linkFamilyMember, unlinkFamilyMember,
+  createMember, createFamily, getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember,
   updateMember, deactivateMember,
   MEMBER_WRITE_FIELDS, normalizeEmail,
 } from '@/lib/supabase/queries/members-mutations'

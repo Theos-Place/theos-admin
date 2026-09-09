@@ -5267,8 +5267,21 @@ export type Database = {
         Returns: undefined
       }
       immutable_unaccent: { Args: { "": string }; Returns: string }
+      link_family_member: {
+        Args: {
+          p_actor: string | null
+          p_link: string
+          p_owner: string
+          p_relation: string
+        }
+        Returns: string
+      }
       increment_vacation_days_used: {
         Args: { p_delta: number; p_employee_id: string }
+        Returns: undefined
+      }
+      merge_family_units: {
+        Args: { p_losers: string[]; p_survivor: string }
         Returns: undefined
       }
       merge_members: {

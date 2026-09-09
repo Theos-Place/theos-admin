@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
-import { getMemberFamily, linkFamilyMember, unlinkFamilyMember } from '@/lib/supabase/queries/members'
+import { getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember } from '@/lib/supabase/queries/members'
 
 // Roles con permiso de editar miembros (miembros:edit): editor_perfiles,
 // direccion y admin (este último pasa siempre en requireRoles). Alinea el
@@ -53,14 +53,25 @@ export async function POST(
     if (!isUuid(linkMemberId)) return NextResponse.json({ error: 'Se requiere member_id válido' }, { status: 400 })
     if (!relation) return NextResponse.json({ error: 'Se requiere la relación' }, { status: 400 })
 
+    // Si el vínculo va a FUSIONAR dos familias, no se hace sin confirmación
+    // explícita: junta dos hogares enteros, no suma una persona. La decisión la
+    // toma el servidor —no la UI— para que no se pueda saltar por descuido.
+    if (!body?.confirmar_fusion) {
+      const previo = await previewFamilyLink(id, linkMemberId)
+      if (previo.caso === 'fusionar') {
+        return NextResponse.json({
+          error: 'Estas dos personas ya tienen familia. Vincularlas va a unir las dos familias en una.',
+          code: 'requiere_confirmacion_fusion',
+          fusion: previo,
+        }, { status: 409 })
+      }
+    }
+
     const res = await linkFamilyMember(id, linkMemberId, relation, auth.ctx.memberId)
     return NextResponse.json({ ok: true, ...res }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'VINCULO_A_SI_MISMO') {
       return NextResponse.json({ error: 'No se puede vincular a la persona consigo misma.' }, { status: 400 })
-    }
-    if (error instanceof Error && error.message === 'YA_VINCULADO') {
-      return NextResponse.json({ error: 'Esta persona ya está vinculada a la familia.' }, { status: 409 })
     }
     console.error('POST /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
