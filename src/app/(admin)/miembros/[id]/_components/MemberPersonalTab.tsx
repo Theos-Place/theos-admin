@@ -1,6 +1,7 @@
 import { Phone, Mail, MapPin, User, Heart, Briefcase, Building, Lock, Edit2 } from 'lucide-react'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
+import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
 
 
 function calculateAge(dateStr: string): number {
@@ -134,6 +135,12 @@ export function MemberPersonalTab({ member }: Props) {
           </p>
           <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.allergies ?? '—'} editable={false} />
           <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
+          <InfoRow
+            icon={<Lock size={15} strokeWidth={1.75} />}
+            label="Restricción alimenticia"
+            value={textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)}
+            editable={false}
+          />
         </div>
       )}
     </div>

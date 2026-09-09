@@ -11,10 +11,21 @@
  */
 import { CAMPOS_AUTOEDITABLES, CAMPOS_DE_DOCUMENTO } from './autoedicion'
 
-export type TipoDeEntrada = 'texto' | 'telefono' | 'parrafo'
+export type TipoDeEntrada = 'texto' | 'telefono' | 'parrafo' | 'fecha' | 'seleccion'
+
+/** Opciones del género, con las mismas etiquetas que el resto del sistema. */
+export const OPCIONES_GENERO = [
+  { valor: 'M', etiqueta: 'Masculino' },
+  { valor: 'F', etiqueta: 'Femenino' },
+  { valor: 'otro', etiqueta: 'No indica' },
+] as const
 
 /** Clave del catálogo → columna de members. Solo las que son editables. */
 const COLUMNA_POR_CLAVE: Record<string, { columna: string; tipo: TipoDeEntrada }> = {
+  // 'age' NO está: es un cálculo sobre la fecha de nacimiento, no una columna.
+  // Se edita la fecha y la edad se recalcula sola.
+  birth_date: { columna: 'birth_date', tipo: 'fecha' },
+  gender: { columna: 'gender', tipo: 'seleccion' },
   phone: { columna: 'phone', tipo: 'telefono' },
   address: { columna: 'address', tipo: 'parrafo' },
   emergency_contact_name: { columna: 'emergency_contact_name', tipo: 'texto' },
@@ -24,6 +35,8 @@ const COLUMNA_POR_CLAVE: Record<string, { columna: string; tipo: TipoDeEntrada }
   allergies: { columna: 'allergies', tipo: 'parrafo' },
   medications: { columna: 'medications', tipo: 'parrafo' },
   cedula: { columna: 'cedula', tipo: 'texto' },
+  // dietary_restrictions NO va acá: no es texto libre sino checkboxes con
+  // validación propia, y el FormFiller lo pinta con su propio componente.
 }
 
 export type Editabilidad =

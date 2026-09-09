@@ -19,7 +19,9 @@ import { cn } from '@/lib/utils'
 import { calcAge } from '@/lib/format'
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, User } from 'lucide-react'
 import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
-import { editabilidadDeCampo } from '@/lib/members/campo-editable'
+import { editabilidadDeCampo, OPCIONES_GENERO } from '@/lib/members/campo-editable'
+import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
+import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -39,7 +41,11 @@ function getMemberFieldValue(member: Partial<Member>, key: string): string {
     case 'emergency_contact_phone': return member.emergency_contact_phone || '—'
     case 'occupation':              return member.occupation || '—'
     case 'workplace':               return member.workplace || '—'
+    case 'birth_date':              return member.birth_date || '—'
     case 'allergies':               return member.allergies || '—'
+    case 'medications':             return member.medicamentos || '—'
+    case 'dietary_restrictions':
+      return textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)
     default:                        return '—'
   }
 }
@@ -150,17 +156,36 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
    *  la ficha de quién se está tocando. */
   const puedeEditarPerfil = !isPreview && !!user?.member_id && !onBehalf
   // Prellenado REAL del perfil (los campos personal_data): en preview se usa el
-  // miembro de ejemplo; al llenar de verdad, el perfil de quien responde.
-  const [profile, setProfile] = useState<Partial<Member> | null>(null)
+  // miembro de ejemplo; al llenar de verdad, el perfil de QUIEN RESPONDE.
+  //
+  // BUG 2026-09-10: esto traía siempre el perfil de quien tiene la sesión, así
+  // que llenando el formulario a nombre de otra persona el bloque de datos
+  // personales mostraba —y enviaba— los datos del operador. Ahora sigue a
+  // `onBehalf`: los datos son de la persona por la que se responde.
+  const sujetoId = onBehalf?.id ?? user?.member_id ?? null
+  // Se guarda DE QUIÉN es el perfil, no solo el perfil. Así, al cambiar de
+  // persona, los datos de la anterior dejan de usarse en el mismo render en que
+  // cambia el sujeto — sin limpiarlos a mano dentro del efecto, que además
+  // dispara un render en cascada.
+  const [cargado, setCargado] = useState<{ sujeto: string; datos: Partial<Member> } | null>(null)
   useEffect(() => {
-    if (isPreview || !user?.member_id) return
+    if (isPreview || !sujetoId) return
     let alive = true
-    fetch(`/api/members/${user.member_id}`)
+    // Por otra persona va el endpoint del FORMULARIO: /api/members/[id] exige el
+    // módulo miembros y el rol `forms` no lo tiene, así que daría 403 y todo
+    // saldría en "—" sin explicación.
+    fetch(onBehalf ? `/api/forms/${id}/members/${sujetoId}` : `/api/members/${sujetoId}`)
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d) setProfile(d as Partial<Member>) })
+      .then(d => { if (alive && d) setCargado({ sujeto: sujetoId, datos: d as Partial<Member> }) })
       .catch(() => {})
     return () => { alive = false }
-  }, [isPreview, user?.member_id])
+  }, [isPreview, sujetoId, onBehalf, id])
+  const profile = cargado?.sujeto === sujetoId ? cargado.datos : null
+  /** Aplica un cambio recién guardado sobre el perfil en memoria. */
+  const setProfile = (f: (prev: Partial<Member> | null) => Partial<Member>) => {
+    if (!sujetoId) return
+    setCargado(prev => ({ sujeto: sujetoId, datos: f(prev?.datos ?? null) }))
+  }
   const memberForFields: Partial<Member> = isPreview ? PREVIEW_MEMBER : (profile ?? {})
   /** Refleja en pantalla lo que se acaba de guardar en el perfil, sin recargar.
    *  Solo toca `profile`: las respuestas a medio llenar viven en otro estado y
@@ -574,13 +599,37 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                             key={f.key}
                             className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
                           >
-                            {editable.editable ? (
+                            {f.key === 'dietary_restrictions' ? (
+                              // Este no es un campo de texto: son checkboxes con
+                              // su propia validación (Otros exige detalle), así
+                              // que trae su componente en vez de pasar por el
+                              // editor genérico.
+                              <>
+                                <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
+                                  {f.label}
+                                </div>
+                                <div className="mt-1.5">
+                                  <RestriccionAlimenticia
+                                    valores={memberForFields.dietary_restrictions ?? []}
+                                    otro={memberForFields.dietary_restrictions_other ?? null}
+                                    memberId={user?.member_id ?? ''}
+                                    soloLectura={!puedeEditarPerfil}
+                                    onGuardado={(valores, otro) => setProfile(prev => ({
+                                      ...(prev ?? {}),
+                                      dietary_restrictions: valores,
+                                      dietary_restrictions_other: otro,
+                                    } as Partial<Member>))}
+                                  />
+                                </div>
+                              </>
+                            ) : editable.editable ? (
                               <CampoPerfilEditable
                                 etiqueta={f.label}
                                 valor={getMemberFieldValue(memberForFields, f.key)}
                                 memberId={user!.member_id!}
                                 columna={editable.columna}
                                 tipo={editable.tipo}
+                                opciones={editable.columna === 'gender' ? OPCIONES_GENERO : undefined}
                                 onGuardado={aplicarCambioDePerfil}
                               />
                             ) : (

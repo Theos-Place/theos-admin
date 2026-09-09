@@ -11,6 +11,7 @@ import { PhoneInput } from '@/components/shared/PhoneInput'
 import { normalizePhoneOrNull } from '@/lib/phone'
 import { isValidDocument, documentFormatMessage, isDocumentType, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, type DocumentType } from '@/lib/cedula'
 import { useAuth } from '@/hooks/useAuth'
+import { RESTRICCIONES_ALIMENTICIAS, CLAVE_OTROS, normalizarRestricciones } from '@/lib/members/restriccion-alimenticia'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -42,6 +43,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const [canton,                setCanton]                = useState(member?.canton ?? '')
   const [district,              setDistrict]              = useState(member?.district ?? '')
   const [alergias,              setAlergias]              = useState(member?.allergies ?? '')
+  const [restricciones,        setRestricciones]        = useState<string[]>(member?.dietary_restrictions ?? [])
+  const [restriccionOtro,      setRestriccionOtro]      = useState(member?.dietary_restrictions_other ?? '')
+  const [restriccionErr,       setRestriccionErr]       = useState('')
   const [medicamentos,          setMedicamentos]          = useState(member?.medicamentos ?? '')
   const [emergencyContactName,  setEmergencyContactName]  = useState(member?.emergency_contact_name ?? '')
   const [emergencyContactPhone, setEmergencyContactPhone] = useState(member?.emergency_contact_phone ?? '')
@@ -77,6 +81,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     setCanton(member.canton ?? '')
     setDistrict(member.district ?? '')
     setAlergias(member.allergies ?? '')
+    setRestricciones(member.dietary_restrictions ?? [])
+    setRestriccionOtro(member.dietary_restrictions_other ?? '')
     setMedicamentos(member.medicamentos ?? '')
     setEmergencyContactName(member.emergency_contact_name ?? '')
     setEmergencyContactPhone(member.emergency_contact_phone ?? '')
@@ -119,6 +125,17 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       return
     }
     setCedulaErr('')
+
+    // Restricción alimenticia: se valida ANTES de mandar. La API y la BD también
+    // la validan, pero el error de un CHECK de Postgres no se puede mostrar.
+    const restriccionesNormalizadas = normalizarRestricciones(restricciones, restriccionOtro)
+    if (!restriccionesNormalizadas.ok) {
+      setRestriccionErr(restriccionesNormalizadas.error ?? 'Revisá la restricción alimenticia.')
+      document.getElementById('edit-restriccion-otro')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    setRestriccionErr('')
+
     setSaving(true)
     const payload = {
       first_name: firstName.trim(),
@@ -139,6 +156,8 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
       address: address.trim() || null,
       allergies: alergias.trim() || null,
       medications: medicamentos.trim() || null,
+      dietary_restrictions: restriccionesNormalizadas.restricciones,
+      dietary_restrictions_other: restriccionesNormalizadas.otro,
       emergency_contact_name: emergencyContactName.trim() || null,
       emergency_contact_phone: normalizePhoneOrNull(emergencyContactPhone),
       is_active: isActive,
@@ -531,6 +550,42 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   placeholder="Ninguno"
                   rows={2}
                 />
+              </div>
+              <div className="form-group">
+                <span className="form-label">Restricción alimenticia</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
+                  {RESTRICCIONES_ALIMENTICIAS.map(r => (
+                    <label key={r.clave} className="flex cursor-pointer items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        className="accent-coral"
+                        checked={restricciones.includes(r.clave)}
+                        onChange={() => setRestricciones(prev => {
+                          const nuevas = prev.includes(r.clave)
+                            ? prev.filter(c => c !== r.clave)
+                            : [...prev, r.clave]
+                          if (!nuevas.includes(CLAVE_OTROS)) setRestriccionOtro('')
+                          return nuevas
+                        })}
+                      />
+                      <span className="text-[13px] text-navy font-body">{r.etiqueta}</span>
+                    </label>
+                  ))}
+                </div>
+                {restricciones.includes(CLAVE_OTROS) && (
+                  <input
+                    id="edit-restriccion-otro"
+                    className="form-input mt-2"
+                    value={restriccionOtro}
+                    onChange={e => { setRestriccionOtro(e.target.value); if (restriccionErr) setRestriccionErr('') }}
+                    placeholder="¿Cuál?"
+                    aria-label="Detalle de la restricción alimenticia"
+                    aria-invalid={!!restriccionErr}
+                  />
+                )}
+                {restriccionErr && (
+                  <p role="alert" className="mt-1 text-[13px] text-coral-deep font-body">{restriccionErr}</p>
+                )}
               </div>
             </div>
           </div>

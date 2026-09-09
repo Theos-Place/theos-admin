@@ -6,8 +6,10 @@ import {
 describe('qué puede editar alguien de su propia ficha', () => {
   it('los datos personales que pidió el negocio, y nada más', () => {
     expect([...CAMPOS_AUTOEDITABLES].sort()).toEqual([
-      'address', 'allergies', 'canton', 'district',
-      'emergency_contact_name', 'emergency_contact_phone',
+      'address', 'allergies', 'birth_date', 'canton',
+      'dietary_restrictions', 'dietary_restrictions_other',
+      'district', 'emergency_contact_name', 'emergency_contact_phone',
+      'first_name', 'gender', 'last_name',
       'medications', 'occupation', 'phone', 'province', 'workplace',
     ])
   })
@@ -18,11 +20,13 @@ describe('qué puede editar alguien de su propia ficha', () => {
     expect(r.rechazados[0].motivo).toMatch(/usuario para entrar/)
   })
 
-  it('nombre, apellidos y fecha de nacimiento tampoco', () => {
-    for (const campo of ['first_name', 'last_name', 'birth_date']) {
+  // Decisión del usuario 2026-09-10, que revierte la restricción inicial: la
+  // gente corrige sus propios typos. El correo sigue afuera.
+  it('nombre, apellidos, fecha de nacimiento y género SÍ', () => {
+    for (const campo of ['first_name', 'last_name', 'birth_date', 'gender']) {
       const r = filtrarAutoedicion({ [campo]: 'x' }, null)
-      expect(r.permitidos, campo).toEqual({})
-      expect(r.rechazados, campo).toHaveLength(1)
+      expect(r.permitidos, campo).toEqual({ [campo]: 'x' })
+      expect(r.rechazados, campo).toEqual([])
     }
   })
 
@@ -71,11 +75,11 @@ describe('el documento: completar sí, cambiar no', () => {
 describe('mezclas', () => {
   it('guarda lo permitido y reporta lo demás, en la misma llamada', () => {
     const r = filtrarAutoedicion(
-      { allergies: 'polen', phone: '88887777', email: 'nuevo@x.com', last_name: 'Otro' },
+      { allergies: 'polen', phone: '88887777', email: 'nuevo@x.com', is_active: false },
       null,
     )
     expect(r.permitidos).toEqual({ allergies: 'polen', phone: '88887777' })
-    expect(r.rechazados.map(x => x.campo).sort()).toEqual(['email', 'last_name'])
+    expect(r.rechazados.map(x => x.campo).sort()).toEqual(['email', 'is_active'])
   })
 
   it('conserva un valor vacío: borrar las alergias es una edición válida', () => {

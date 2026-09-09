@@ -34,6 +34,7 @@ export function CampoPerfilEditable({
   memberId,
   columna,
   tipo = 'texto',
+  opciones,
   onGuardado,
 }: {
   etiqueta: string
@@ -42,7 +43,9 @@ export function CampoPerfilEditable({
   memberId: string
   /** Columna de members donde se guarda. */
   columna: string
-  tipo?: 'texto' | 'telefono' | 'parrafo'
+  tipo?: 'texto' | 'telefono' | 'parrafo' | 'fecha' | 'seleccion'
+  /** Para 'seleccion': las opciones, con el valor que se guarda. */
+  opciones?: ReadonlyArray<{ valor: string; etiqueta: string }>
   /** Avisa al padre con el valor nuevo, para refrescar lo que muestre. */
   onGuardado?: (columna: string, valor: string) => void
 }) {
@@ -65,8 +68,10 @@ export function CampoPerfilEditable({
     return () => clearTimeout(t)
   }, [estado])
 
-  async function guardar() {
-    const nuevo = texto.trim()
+  function guardar() { return guardarValor(texto) }
+
+  async function guardarValor(bruto: string) {
+    const nuevo = bruto.trim()
     const anterior = valor === VACIO ? '' : valor
     if (nuevo === anterior) { setEditando(false); setError(null); return }
     setEstado('guardando')
@@ -117,10 +122,17 @@ export function CampoPerfilEditable({
         <div className="mt-[3px]">
           {tipo === 'parrafo' ? (
             <textarea {...comunes} rows={2} />
+          ) : tipo === 'seleccion' ? (
+            // El select guarda al ELEGIR, no al salir: quedarse en modo edición
+            // después de escoger una opción no tiene sentido.
+            <select {...comunes} onChange={e => { setTexto(e.target.value); void guardarValor(e.target.value) }}>
+              <option value="">Sin indicar</option>
+              {(opciones ?? []).map(o => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
+            </select>
           ) : (
             <input
               {...comunes}
-              type={tipo === 'telefono' ? 'tel' : 'text'}
+              type={tipo === 'telefono' ? 'tel' : tipo === 'fecha' ? 'date' : 'text'}
               inputMode={tipo === 'telefono' ? 'tel' : undefined}
               // Enter guarda; Escape cancela y devuelve el valor de antes.
               onKeyDown={e => {

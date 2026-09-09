@@ -15,6 +15,8 @@ export const PERSONAL_DATA_FIELDS: { key: string; label: string; group: string }
   { key: 'full_name',               label: 'Nombre completo',        group: 'Identificación' },
   { key: 'cedula',                  label: 'Cédula',                 group: 'Identificación' },
   { key: 'age',                     label: 'Edad',                   group: 'Identificación' },
+  // La edad de arriba es un cálculo y no se edita; esta es el dato de verdad.
+  { key: 'birth_date',              label: 'Fecha de nacimiento',    group: 'Identificación' },
   { key: 'gender',                  label: 'Género',                 group: 'Identificación' },
   { key: 'marital_status',          label: 'Estado civil',           group: 'Identificación' },
   { key: 'phone',                   label: 'Teléfono',               group: 'Contacto'       },
@@ -25,4 +27,6 @@ export const PERSONAL_DATA_FIELDS: { key: string; label: string; group: string }
   { key: 'occupation',              label: 'Profesión',              group: 'Trabajo'        },
   { key: 'workplace',               label: 'Lugar de trabajo',       group: 'Trabajo'        },
   { key: 'allergies',               label: 'Alergias',               group: 'Salud'          },
+  { key: 'medications',             label: 'Medicamentos',           group: 'Salud'          },
+  { key: 'dietary_restrictions',    label: 'Restricción alimenticia', group: 'Salud'         },
 ]

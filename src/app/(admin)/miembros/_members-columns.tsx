@@ -10,6 +10,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { formatSedeRecency } from '@/lib/sede-attendance'
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
 import { conditionLabel } from '@/lib/condition-labels'
+import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
 
 export function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -172,6 +173,21 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'occupation', label: 'Ocupación', defaultVisible: false,
+  },
+  // Salud. Fuera de la vista por defecto —no es dato para una tabla general—
+  // pero exportable, que es justo para lo que sirve: cocina y logística arman la
+  // lista de una campa o un evento desde acá. Antes ninguno de los dos se podía
+  // exportar, así que el dato existía y no llegaba a quien lo necesita.
+  {
+    key: 'allergies', label: 'Alergias', defaultVisible: false,
+    exportValue: m => m.allergies ?? '',
+  },
+  {
+    key: 'dietary_restrictions', label: 'Restricción alimenticia', defaultVisible: false,
+    exportValue: m => {
+      const t = textoDeRestricciones(m.dietary_restrictions, m.dietary_restrictions_other)
+      return t === '—' ? '' : t
+    },
   },
 ]
 

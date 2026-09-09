@@ -11,17 +11,22 @@
  *  · correo: es la identidad con la que entra y la llave con la que se detectan
  *    duplicados. Cambiarlo necesita verificar que la dirección nueva es suya,
  *    y ese flujo no existe todavía.
- *  · nombre, apellidos, fecha de nacimiento: definen a la persona en el padrón
- *    y se usan para no duplicarla. Un error acá lo arregla staff.
  *  · sede y todo lo administrativo o espiritual: no es un dato personal, es una
  *    decisión de la organización sobre la persona.
  */
 
 /** Campos que la persona edita libremente en su ficha. */
 export const CAMPOS_AUTOEDITABLES = [
+  // Decisión del usuario 2026-09-10, que revierte la restricción inicial: la
+  // gente corrige sus propios typos. OJO con la consecuencia y por eso queda
+  // escrito: nombre, apellidos y fecha de nacimiento son tres de las llaves con
+  // las que se detectan duplicados, así que un typo acá puede hacer que alguien
+  // deje de emparejar con su propia ficha.
+  'first_name', 'last_name', 'birth_date', 'gender',
   'phone',
   'province', 'canton', 'district', 'address',
   'allergies', 'medications',
+  'dietary_restrictions', 'dietary_restrictions_other',
   'emergency_contact_name', 'emergency_contact_phone',
   'occupation', 'workplace',
 ] as const
@@ -43,9 +48,6 @@ export type CampoAutoeditable = typeof CAMPOS_AUTOEDITABLES[number]
  *  un "no autorizado" pelado deja a alguien sin saber cómo seguir. */
 const A_QUIEN_PEDIRLO: Record<string, string> = {
   email: 'El correo es tu usuario para entrar, así que no se cambia desde acá. Escribinos a soporte@theosplace.org.',
-  first_name: 'El nombre y los apellidos los corrige el equipo de Theos. Pedilo en tu sede o a soporte@theosplace.org.',
-  last_name: 'El nombre y los apellidos los corrige el equipo de Theos. Pedilo en tu sede o a soporte@theosplace.org.',
-  birth_date: 'La fecha de nacimiento la corrige el equipo de Theos. Pedilo en tu sede o a soporte@theosplace.org.',
   sede_id: 'La sede la asigna el equipo de Theos.',
   is_active: 'Eso lo maneja el equipo de Theos.',
   is_donor: 'Eso lo maneja el equipo de Theos.',

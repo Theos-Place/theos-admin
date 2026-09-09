@@ -17,10 +17,11 @@ describe('qué se edita en sitio desde el formulario', () => {
     expect(editabilidadDeCampo('email', conDoc)).toEqual({ editable: false, motivo: null })
   })
 
-  it('nombre, edad, género y estado civil tampoco', () => {
-    for (const clave of ['full_name', 'age', 'gender', 'marital_status']) {
-      expect(editabilidadDeCampo(clave, conDoc).editable, clave).toBe(false)
-    }
+  it('el género y la fecha de nacimiento SÍ; la edad no, porque es un cálculo', () => {
+    expect(editabilidadDeCampo('gender', conDoc).editable).toBe(true)
+    expect(editabilidadDeCampo('birth_date', conDoc).editable).toBe(true)
+    // La edad sale de la fecha: se edita la fecha y se recalcula sola.
+    expect(editabilidadDeCampo('age', conDoc).editable).toBe(false)
   })
 
   it('la cédula: se completa si falta, no se cambia si ya está', () => {
@@ -48,6 +49,11 @@ describe('qué se edita en sitio desde el formulario', () => {
       .filter(f => !editabilidadDeCampo(f.key, conDoc).editable)
       .map(f => f.key)
       .sort()
-    expect(noEditables).toEqual(['age', 'cedula', 'email', 'full_name', 'gender', 'marital_status'])
+    // dietary_restrictions figura acá porque NO pasa por el editor genérico de
+    // texto: son checkboxes con validación propia y el FormFiller lo pinta con
+    // su propio componente. Editable sí, por otro camino.
+    expect(noEditables).toEqual([
+      'age', 'cedula', 'dietary_restrictions', 'email', 'full_name', 'marital_status',
+    ])
   })
 })
