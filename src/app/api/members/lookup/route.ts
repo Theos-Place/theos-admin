@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthContext } from '@/lib/auth/guard'
 import { hasManagementRole } from '@/lib/auth/roles'
-import { searchMembersForLookup } from '@/lib/supabase/queries/members'
+import { getMemberForLookupById, searchMembersForLookup } from '@/lib/supabase/queries/members'
+import { isUuid } from '@/lib/validate'
 
 /**
  * Buscador MÍNIMO de personas: nombre, cédula y correo de miembros activos,
@@ -26,6 +27,14 @@ export async function GET(req: NextRequest) {
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     if (!hasManagementRole(ctx.roles)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+    // ?id=<uuid> → la ficha mínima de esa persona. Lo usa el escáner de QR del
+    // check-in, que hasta ahora pegaba al perfil completo y comía 403.
+    const id = req.nextUrl.searchParams.get('id')
+    if (id) {
+      if (!isUuid(id)) return NextResponse.json({ members: [] })
+      const uno = await getMemberForLookupById(id)
+      return NextResponse.json({ members: uno ? [uno] : [] })
     }
     const search = req.nextUrl.searchParams.get('search') ?? ''
     const limit = Math.min(Number(req.nextUrl.searchParams.get('pageSize') ?? 8) || 8, 20)

@@ -1034,6 +1034,32 @@ export type { DuplicateMember, DuplicatePair } from '@/lib/supabase/queries/memb
  *  (check-in, becas, agregar a un grupo, dar acceso a un formulario). Nombre,
  *  cédula y correo de miembros ACTIVOS; nada más. No es el padrón: sin filtros,
  *  sin paginar y con tope duro. Lo autoriza GET /api/members/lookup. */
+/** La misma ficha mínima del lookup, pero por ID: es lo que necesita el QR del
+ *  pase digital, que codifica el member_id.
+ *
+ *  BUG 2026-09-09: el escáner pegaba a `GET /api/members/[id]`, que exige el
+ *  módulo miembros; encargado_eventos —el rol que hace check-in— no lo tiene, así
+ *  que todo QR ajeno devolvía 403 y la pantalla decía "El QR no corresponde a
+ *  ningún miembro". Funcionaba solo con el QR propio o de un familiar, que pasan
+ *  por canViewMemberProfile: de ahí que "algunos sí y otros no".
+ *
+ *  A diferencia de la búsqueda por texto, acá NO se filtra is_active: alguien que
+ *  llega al evento con su pase está presente, y su bandera no es asunto de la
+ *  fila. Son 12 personas hoy, pero la que llegue no se queda afuera.
+ */
+export async function getMemberForLookupById(
+  id: string,
+): Promise<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null } | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('members')
+    .select('id, first_name, last_name, cedula, document_type, email')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return (data ?? null) as { id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null } | null
+}
+
 export async function searchMembersForLookup(
   search: string, limit = 8,
 ): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null }>> {

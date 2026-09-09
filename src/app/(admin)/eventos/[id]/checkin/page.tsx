@@ -245,9 +245,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const already = checkins.find(c => c.member_id === memberId)
     if (already) { scanFeedback(false); flash('dup', `${already.member_name} ya estaba registrado`); return }
     try {
-      const res = await fetch(`/api/members/${memberId}`)
-      if (!res.ok) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
-      const mem = await res.json() as { first_name: string; last_name: string }
+      // Por /lookup?id= y no por /api/members/[id]: ese exige el módulo
+      // miembros, que encargado_eventos no tiene — todo QR ajeno daba 403 y la
+      // pantalla lo reportaba como "no corresponde a ningún miembro"
+      // (bug 2026-09-09). Mismo motivo por el que la búsqueda por nombre ya iba
+      // por /lookup desde agosto; al QR se le pasó.
+      const res = await fetch(`/api/members/lookup?id=${encodeURIComponent(memberId)}`)
+      if (!res.ok) { scanFeedback(false); flash('error', 'No se pudo verificar el QR'); return }
+      const mem = ((await res.json()).members ?? [])[0] as { first_name: string; last_name: string } | undefined
+      if (!mem) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
       const name = `${mem.first_name} ${mem.last_name}`.trim()
       // El gate de "evento pago requiere inscripción" vive en persistCheckin
       // (mismo camino que nombre/cédula). 'not_registered' → cobro en sitio.
