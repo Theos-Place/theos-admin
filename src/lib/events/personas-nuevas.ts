@@ -1,27 +1,31 @@
 /**
- * Cuántas de las personas que hicieron check-in son NUEVAS: su ficha se creó el
- * mismo día del evento.
+ * Cuántas de las personas que hicieron check-in son NUEVAS: esta es la PRIMERA
+ * vez que aparecen en cualquier evento.
  *
- * SON DOS CONDICIONES, no una:
+ * LA REGLA CAMBIÓ (2026-09-10). Antes eran dos condiciones: ficha creada el
+ * mismo día del evento Y primer check-in. La primera se cayó por un caso real:
+ * Victoria Badilla llegó nueva a la charla de Meridiano del 8-sep, pero el
+ * check-in falló por un bug de permisos y su ficha se creó DOS DÍAS DESPUÉS, al
+ * repararlo. El reporte decía "0 personas nuevas" en una charla donde sí hubo
+ * una. La fecha de creación de la ficha mide cuándo la escribimos nosotros, no
+ * cuándo llegó la persona.
  *
- *   1. La ficha se creó el mismo día del evento.
- *   2. Este evento es el PRIMER check-in de esa persona.
+ * Queda una sola condición, que es la que responde la pregunta de verdad: este
+ * evento es el PRIMER check-in de esa persona. Con eso:
+ *   · quien llegó por primera vez cuenta, aunque su ficha se haya creado antes
+ *     (una carga masiva vieja) o después (una reparación);
+ *   · quien ya venía no cuenta, aunque le hayamos creado la ficha ese día;
+ *   · en un día con seis charlas, la persona cuenta UNA sola vez, en aquella a
+ *     la que de verdad llegó primero.
  *
- * La segunda no sobra. Hay días con varias charlas a la vez —los miércoles hay
- * seis—, y una persona puede pasar por dos el mismo día. Si a alguien se le crea
- * el perfil en Cartago y esa misma noche aparece en Meridiano, con la primera
- * condición sola LAS DOS lo cuentan como persona nueva. Con la segunda, solo lo
- * cuenta la charla donde de verdad llegó primero. Medido en producción: 520
- * casos de gente con check-in en dos eventos el mismo día.
- *
- * POR QUÉ EL MISMO DÍA Y NO "hace poco". En una charla, a la persona que llega
- * por primera vez se le crea la ficha ahí mismo, desde el propio check-in
- * ("Agregar persona nueva"). No mide "gente nueva de la iglesia" en general.
+ * CONTRAPARTIDA, dicha en voz alta: ahora también cuenta quien tenía ficha desde
+ * hace años por una carga masiva y viene a su primera charla. Es deliberado —
+ * para la sede esa persona ES nueva—, pero significa que el número no es
+ * "fichas creadas hoy".
  *
  * EL DÍA ES EL DE COSTA RICA, no el UTC. Una charla que arranca a las 7:00pm CR
- * cae en el día siguiente en UTC, así que comparar por UTC pondría el evento y
- * la ficha en días distintos y el conteo daría 0. La comparación se hace sobre
- * la fecha civil de Costa Rica de los dos lados.
+ * cae en el día siguiente en UTC. Se conserva diaCR porque otras pantallas lo
+ * usan.
  */
 
 /** Costa Rica es UTC-6 fijo. Mismo criterio que expand-recurrence. */
@@ -52,7 +56,7 @@ export type CheckinParaConteo = {
 }
 
 export type ConteoNuevos = {
-  /** Personas distintas con ficha creada el día del evento. */
+  /** Personas distintas para las que este es su primer check-in. */
   nuevas: number
   /** Personas distintas con check-in y ficha (el denominador del porcentaje). */
   conFicha: number
@@ -68,9 +72,13 @@ export type ConteoNuevos = {
  * `Z`, o con otra precisión de milisegundos) según de dónde salga.
  */
 function esPersonaNueva(c: CheckinParaConteo, dia: string | null): boolean {
-  if (!dia || !c.member_created_at) return false
-  if (diaCR(c.member_created_at) !== dia) return false
-  if (c.member_first_checkin_at === undefined) return true // la pantalla no trajo el dato
+  if (!c.member_id) return false
+  // Sin el dato del primer check-in no se puede responder. Se cae al criterio
+  // viejo —ficha creada ese día— en vez de devolver 0 en silencio: una pantalla
+  // que no pidió el dato da un número aproximado, no un cero engañoso.
+  if (c.member_first_checkin_at === undefined) {
+    return !!dia && !!c.member_created_at && diaCR(c.member_created_at) === dia
+  }
   if (!c.member_first_checkin_at || !c.checked_at) return false
   return Date.parse(c.member_first_checkin_at) === Date.parse(c.checked_at)
 }
@@ -91,7 +99,7 @@ export function contarPersonasNuevas(
   const conFicha = new Set<string>()
   const nuevas = new Set<string>()
   for (const c of checkins) {
-    if (!c.member_id || !c.member_created_at) continue
+    if (!c.member_id) continue
     conFicha.add(c.member_id)
     if (esPersonaNueva(c, dia)) nuevas.add(c.member_id)
   }

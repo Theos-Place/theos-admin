@@ -48,12 +48,42 @@ describe('contarPersonasNuevas', () => {
   })
 
   it('los invitados sin ficha no entran ni arriba ni abajo', () => {
+    // Un invitado de verdad no tiene member_id: es lo único que lo distingue.
+    // (Antes esta prueba usaba member_created_at nulo como señal de invitado;
+    // con la regla nueva la fecha de creación ya no decide nada, y una fila con
+    // member_id ES una ficha aunque no traiga ese dato.)
     const r = contarPersonasNuevas([
       { member_id: '', member_created_at: null },
-      { member_id: 'a', member_created_at: null },
       { member_id: 'b', member_created_at: '2026-09-07T20:00:00.000Z' },
     ], CHARLA)
     expect(r).toEqual({ nuevas: 1, conFicha: 1, porcentaje: 100 })
+  })
+
+  it('cuenta a quien viene por primera vez aunque su ficha sea vieja', () => {
+    // El caso que motivó el cambio, al revés: la ficha puede ser de hace años
+    // (carga masiva) o de después (una reparación); lo que decide es si este
+    // check-in es el primero de esa persona.
+    const r = contarPersonasNuevas([
+      {
+        member_id: 'vieja-pero-nueva',
+        member_created_at: '2015-05-19T10:00:00.000Z',
+        checked_at: '2026-09-09T01:30:00.000Z',
+        member_first_checkin_at: '2026-09-09T01:30:00.000Z',
+      },
+      {
+        member_id: 'ficha-creada-despues',
+        member_created_at: '2026-09-10T18:00:00.000Z',
+        checked_at: '2026-09-09T01:30:00.000Z',
+        member_first_checkin_at: '2026-09-09T01:30:00.000Z',
+      },
+      {
+        member_id: 'ya-venia',
+        member_created_at: '2026-09-08T20:00:00.000Z',
+        checked_at: '2026-09-09T01:30:00.000Z',
+        member_first_checkin_at: '2024-01-10T01:30:00.000Z',
+      },
+    ], CHARLA)
+    expect(r).toEqual({ nuevas: 2, conFicha: 3, porcentaje: 67 })
   })
 
   it('sin check-ins da cero, sin dividir por cero', () => {
