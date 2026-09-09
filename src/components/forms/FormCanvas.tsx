@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { GripVertical, Copy, Trash2, Pencil, Zap, FileText, User } from 'lucide-react'
+import { moverCampo } from '@/lib/forms/reordenar'
+import { FlechasDeOrden } from './FlechasDeOrden'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew } from '@/data/form-config'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
@@ -41,10 +43,7 @@ export function FormCanvas({
     if (dragIndex === null || dragIndex === targetIndex) {
       setDragIndex(null); setDragOverIndex(null); return
     }
-    const newFields = [...fields]
-    const [removed] = newFields.splice(dragIndex, 1)
-    newFields.splice(targetIndex, 0, removed)
-    onFieldsChange(newFields.map((f, i) => ({ ...f, sort_order: i })))
+    onFieldsChange(moverCampo(fields, dragIndex, targetIndex))
     setDragIndex(null); setDragOverIndex(null)
   }
 
@@ -103,6 +102,8 @@ export function FormCanvas({
             >
               <div className="flex items-center gap-3">
                 <GripVertical size={15} className="text-navy-light/80 cursor-grab shrink-0" />
+                <FlechasDeOrden indice={index} total={fields.length} etiqueta="el campo"
+                    onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
                 <FileText size={14} className="text-blue-400 shrink-0" />
                 <div className="flex-1">
                   <span className="text-[13px] font-bold text-blue-500 uppercase tracking-widest font-display">
@@ -148,6 +149,8 @@ export function FormCanvas({
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <GripVertical size={14} className="text-teal-deep/50 cursor-grab shrink-0" />
+                  <FlechasDeOrden indice={index} total={fields.length} etiqueta="el campo"
+                    onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
                   <User size={14} color="var(--brand-teal-deep, #2a8b8f)" />
                   <span className="text-[13px] font-bold text-[var(--brand-teal-deep,#2a8b8f)] font-display">
                     Datos personales del miembro
@@ -236,8 +239,12 @@ export function FormCanvas({
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 cursor-grab active:cursor-grabbing shrink-0">
-                <GripVertical size={16} className="text-navy-light/80 hover:text-navy-light/80 transition-colors" />
+              <div className="mt-0.5 flex items-center gap-1 shrink-0">
+                <div className="cursor-grab active:cursor-grabbing">
+                  <GripVertical size={16} className="text-navy-light/80 hover:text-navy-light/80 transition-colors" />
+                </div>
+                <FlechasDeOrden indice={index} total={fields.length} etiqueta="el campo"
+                    onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
               </div>
 
               {field.type === 'section' ? (

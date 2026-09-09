@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, GripVertical, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
-import { moverOpcion, puedeSubir, puedeBajar } from '@/lib/forms/reordenar-opciones'
+import { Plus, X, GripVertical, Trash2 } from 'lucide-react'
+import { moverElemento } from '@/lib/forms/reordenar'
+import { FlechasDeOrden } from './FlechasDeOrden'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/form-config'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
@@ -383,8 +384,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             <div className="space-y-2">
               {(field.options ?? []).map((opt, i) => {
                 const opciones = field.options ?? []
-                const mover = (hasta: number) => set('options', moverOpcion(opciones, i, hasta))
-                const flechaCls = 'relative after:absolute after:content-[\'\'] after:-inset-1 h-4 w-5 rounded flex items-center justify-center transition-colors hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed'
+                const mover = (hasta: number) => set('options', moverElemento(opciones, i, hasta))
                 return (
                 <div
                   key={i}
@@ -408,27 +408,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                   >
                     <GripVertical size={14} className="text-navy-light/80" aria-hidden />
                   </div>
-                  {/* Flechas: teclado y celular, donde arrastrar no funciona. */}
-                  <div className="shrink-0 flex flex-col">
-                    <button
-                      type="button"
-                      onClick={() => mover(i - 1)}
-                      disabled={!puedeSubir(i)}
-                      className={flechaCls}
-                      aria-label={`Subir la opción ${i + 1}`}
-                    >
-                      <ChevronUp size={12} className="text-navy-light/80" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => mover(i + 1)}
-                      disabled={!puedeBajar(i, opciones.length)}
-                      className={flechaCls}
-                      aria-label={`Bajar la opción ${i + 1}`}
-                    >
-                      <ChevronDown size={12} className="text-navy-light/80" />
-                    </button>
-                  </div>
+                  <FlechasDeOrden indice={i} total={opciones.length} etiqueta="la opción" onMover={mover} />
                   <input
                     className={cn(inputCls, 'flex-1')}
                     value={opt}
