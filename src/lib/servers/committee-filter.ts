@@ -48,3 +48,47 @@ export function puestosDisponibles<T extends ServidorFiltrable>(servidores: read
   }
   return [...vistos].sort((a, b) => a.localeCompare(b, 'es'))
 }
+
+/**
+ * Agrupa las filas por PERSONA.
+ *
+ * Una persona puede tener varios puestos en el mismo comité (lo permite el
+ * modelo: una fila por member+position). Sin agrupar, aparece dos veces en la
+ * tabla y se lee como un duplicado por error — que es justo el bug de filas
+ * fantasma que ya arreglamos por otro lado. Acá el nombre va una vez y sus
+ * puestos se listan juntos.
+ *
+ * El ORDEN de las personas respeta el de entrada: la tabla ya viene ordenada
+ * por lo que el usuario eligió, y reordenar acá lo pisaría.
+ */
+export type ServidorAgrupado<T> = {
+  member_id: string
+  name: string
+  /** Una entrada por puesto, en el orden en que vinieron. */
+  puestos: T[]
+  /** 'active' si al menos un puesto lo está: la persona sigue sirviendo. */
+  status: EstadoServidor
+}
+
+export function agruparPorPersona<T extends ServidorFiltrable & { member_id: string }>(
+  servidores: readonly T[],
+): Array<ServidorAgrupado<T>> {
+  const porPersona = new Map<string, ServidorAgrupado<T>>()
+  for (const s of servidores) {
+    const ya = porPersona.get(s.member_id)
+    if (ya) {
+      ya.puestos.push(s)
+      // Basta un puesto activo para que la persona cuente como activa: tener
+      // uno viejo dado de baja no la saca del comité.
+      if (s.status === 'active') ya.status = 'active'
+      continue
+    }
+    porPersona.set(s.member_id, {
+      member_id: s.member_id,
+      name: s.name,
+      puestos: [s],
+      status: s.status === 'active' ? 'active' : 'inactive',
+    })
+  }
+  return [...porPersona.values()]
+}

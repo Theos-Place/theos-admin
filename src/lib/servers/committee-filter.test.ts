@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarServidores, puestosDisponibles } from './committee-filter'
+import { filtrarServidores, puestosDisponibles , agruparPorPersona } from './committee-filter'
 
 const gente = [
   { name: 'Ana Mora', status: 'active' },
@@ -105,5 +105,52 @@ describe('puestosDisponibles', () => {
 
   it('ignora los vacíos', () => {
     expect(puestosDisponibles(comite)).not.toContain('')
+  })
+})
+
+describe('agruparPorPersona', () => {
+  const fila = (member_id: string, name: string, position: string, status = 'active') =>
+    ({ member_id, name, position, status })
+
+  it('una persona con dos puestos es UNA fila, no dos', () => {
+    // Sin agrupar aparecía repetida y se leía como un duplicado por error.
+    const r = agruparPorPersona([
+      fila('jc', 'Juan Carlos Obando', 'Colaborador Montaje'),
+      fila('jc', 'Juan Carlos Obando', 'Colaborador Bienvenida'),
+    ])
+    expect(r).toHaveLength(1)
+    expect(r[0].puestos.map(p => p.position)).toEqual(['Colaborador Montaje', 'Colaborador Bienvenida'])
+  })
+
+  it('con un puesto activo y otro dado de baja, la persona sigue activa', () => {
+    const r = agruparPorPersona([
+      fila('jc', 'Juan Carlos', 'Montaje', 'inactive'),
+      fila('jc', 'Juan Carlos', 'Bienvenida', 'active'),
+    ])
+    expect(r[0].status).toBe('active')
+  })
+
+  it('con todos los puestos dados de baja, queda inactiva', () => {
+    const r = agruparPorPersona([
+      fila('jc', 'Juan Carlos', 'Montaje', 'inactive'),
+      fila('jc', 'Juan Carlos', 'Bienvenida', 'inactive'),
+    ])
+    expect(r[0].status).toBe('inactive')
+  })
+
+  it('respeta el orden de entrada: la tabla ya viene ordenada por lo que se eligió', () => {
+    const r = agruparPorPersona([
+      fila('b', 'Beatriz', 'p1'), fila('a', 'Ana', 'p1'), fila('b', 'Beatriz', 'p2'),
+    ])
+    expect(r.map(x => x.name)).toEqual(['Beatriz', 'Ana'])
+  })
+
+  it('personas distintas no se mezclan aunque compartan puesto', () => {
+    const r = agruparPorPersona([fila('a', 'Ana', 'p1'), fila('b', 'Beto', 'p1')])
+    expect(r).toHaveLength(2)
+  })
+
+  it('sin nadie devuelve vacío', () => {
+    expect(agruparPorPersona([])).toEqual([])
   })
 })

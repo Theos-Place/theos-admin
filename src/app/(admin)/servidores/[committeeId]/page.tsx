@@ -18,6 +18,8 @@ import { CommitteeHeader } from './_components/CommitteeHeader'
 import { MembersTab } from './_components/MembersTab'
 import { VacanciesTab } from './_components/VacanciesTab'
 import { GoalsTab } from './_components/GoalsTab'
+import { seOcultaDelBuscador, candidaturaEnComite, puestosQueSePuedenSumar } from '@/lib/servers/reintegro'
+import { Modal } from '@/components/shared/Modal'
 import {
   DisconnectModal,
   EditCommitteeModal,
@@ -89,7 +91,8 @@ export default function CommitteeDetailPage() {
   const [addServerOpen, setAddServerOpen] = useState(false)
   const [serverSearch, setServerSearch] = useState('')
   const [addPositionId, setAddPositionId] = useState('')
-  const [candidates, setCandidates] = useState<Array<{ id: string; first_name: string; last_name: string; email: string | null }>>([])
+  const [addPositionTarget, setAddPositionTarget] = useState<{ member_id: string; name: string } | null>(null)
+  const [candidates, setCandidates] = useState<Array<{ id: string; first_name: string; last_name: string; email: string | null; reintegro?: boolean }>>([])
 
   // Change position modal (newPosition guarda el position_id destino)
   const [changePositionTarget, setChangePositionTarget] = useState<CommitteeServer | null>(null)
@@ -151,26 +154,50 @@ export default function CommitteeDetailPage() {
     [allCommitteeMembers]
   )
 
-  const existingMemberIds = useMemo(
-    () => new Set(allCommitteeMembers.map(m => m.member_id)),
+  /** Registros del comité en el vocabulario de la regla pura. */
+  const registrosDelComite = useMemo(
+    () => allCommitteeMembers.map(m => ({
+      member_id: m.member_id, position_id: m.position_id ?? null, status: m.status,
+    })),
     [allCommitteeMembers]
   )
 
-  // Búsqueda de candidatos contra la BD (miembros activos que no están ya en el comité).
+  // Búsqueda de candidatos.
+  //
+  // DOS BUGS ACÁ (2026-09-09, caso Juan Carlos Obando Marchena):
+  //
+  // 1. Se descartaba a TODA persona con registro en el comité, activo o
+  //    INACTIVO. Quien alguna vez sirvió ahí quedaba excluido del buscador para
+  //    siempre: Juan Carlos dejó de servir, volvió, y no había forma de
+  //    reincorporarlo. Ahora solo se oculta quien ya sirve ACTIVO — a esa
+  //    persona se le suma otro puesto desde su fila, no desde acá.
+  //
+  // 2. Iba a /api/members, que es el PADRÓN y exige alcance total: lider_comite
+  //    no lo tiene, así que a un encargado de comité el buscador le devolvía
+  //    siempre vacío. Va por /lookup, igual que el check-in y las familias.
   useEffect(() => {
     const q = serverSearch.trim()
     if (!q) { setCandidates([]); return }
     const ctrl = new AbortController()
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
+        const res = await fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
         if (!res.ok) return
         const { members } = await res.json()
-        setCandidates((members ?? []).filter((m: { id: string }) => !existingMemberIds.has(m.id)))
+        setCandidates(
+          (members ?? [])
+            .filter((m: { id: string }) => !seOcultaDelBuscador(m.id, registrosDelComite))
+            .map((m: { id: string; first_name: string; last_name: string; email: string | null }) => ({
+              ...m,
+              // Se marca para que la pantalla pueda decir "ya sirvió acá" en vez
+              // de presentarlo como alguien nuevo.
+              reintegro: candidaturaEnComite(m.id, registrosDelComite).tipo === 'reintegro',
+            })),
+        )
       } catch { /* abortado */ }
     }, 250)
     return () => { clearTimeout(t); ctrl.abort() }
-  }, [serverSearch, existingMemberIds])
+  }, [serverSearch, registrosDelComite])
 
   const filteredCandidates = candidates
 
@@ -222,6 +249,46 @@ export default function CommitteeDetailPage() {
     } catch {
       setCommitteeOverride({}) // revertir el nombre optimista
       toast('No se pudieron guardar los cambios del comité. Intentá de nuevo.', 'error')
+    }
+  }
+
+  /** Vuelve a activar un registro que quedó inactivo.
+   *
+   *  Usa el MISMO POST del alta: assignVolunteer hace upsert sobre
+   *  UNIQUE(member_id, position_id), así que reactiva el registro existente en
+   *  vez de crear un duplicado, y dispara position-role-sync — si el puesto
+   *  otorga un rol, la persona lo recupera. Verificado en la base. */
+  async function reactivarServidor(m: { member_id: string; position_id?: string | null; name: string }) {
+    if (!m.position_id) { toast('Ese registro no tiene puesto asociado.', 'error'); return }
+    try {
+      const res = await fetch('/api/servers/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id: m.position_id, member_id: m.member_id }),
+      })
+      if (!res.ok) throw new Error('reactivate failed')
+      await refetch()
+      toast(`${m.name} vuelve a estar activo.`, 'success')
+    } catch {
+      toast('No se pudo reactivar. Intentá de nuevo.', 'error')
+    }
+  }
+
+  /** Suma OTRO puesto del mismo comité a alguien que ya sirve. El modelo lo
+   *  permite (una fila por member+position) y no había forma de hacerlo. */
+  async function agregarOtroPuesto(memberId: string, positionId: string, nombre: string) {
+    setAddPositionTarget(null)
+    try {
+      const res = await fetch('/api/servers/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position_id: positionId, member_id: memberId }),
+      })
+      if (!res.ok) throw new Error('add position failed')
+      await refetch()
+      toast(`Puesto agregado a ${nombre}.`, 'success')
+    } catch {
+      toast('No se pudo agregar el puesto. Intentá de nuevo.', 'error')
     }
   }
 
@@ -370,7 +437,9 @@ export default function CommitteeDetailPage() {
             positionFilter={positionFilter}
             positionOptions={positionOptions}
             onPositionFilterChange={setPositionFilter}
-            onChangePosition={handleChangePositionOpen}
+            onAddPosition={m => setAddPositionTarget({ member_id: m.member_id, name: m.name })}
+          onReactivate={reactivarServidor}
+          onChangePosition={handleChangePositionOpen}
             onDisconnect={setDisconnectTarget}
             onAddServerClick={() => setAddServerOpen(true)}
             toolbarExtra={
@@ -418,6 +487,60 @@ export default function CommitteeDetailPage() {
         {/* Tab: Estudios (solo comité de Dirigentes) */}
         {tab === 'estudios' && (
           <DirigentesEstudiosTab members={committee.members ?? []} />
+        )}
+
+        {/* Sumar OTRO puesto a quien ya sirve. Solo se ofrecen los que la
+            persona no tiene activos: ofrecerle uno que ya tiene haría un upsert
+            que no cambia nada y parecería que el botón no funcionó. */}
+        {addPositionTarget && (
+          <Modal onClose={() => setAddPositionTarget(null)} titleId="otro-puesto-title" width={420}>
+            <div className="p-5 space-y-4">
+              <h2 id="otro-puesto-title" className="text-lg font-display font-extrabold text-navy">
+                Agregar otro puesto
+              </h2>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                {addPositionTarget.name} va a servir además en el puesto que elijas.
+                Los puestos se dan de baja por separado.
+              </p>
+              {(() => {
+                const opciones = puestosQueSePuedenSumar(
+                  addPositionTarget.member_id,
+                  (committee.positions ?? []).map(p2 => ({ id: p2.id, title: p2.title })),
+                  registrosDelComite,
+                )
+                if (opciones.length === 0) {
+                  return (
+                    <p className="text-[13px] text-navy-light/80 font-body">
+                      Ya tiene todos los puestos de este comité.
+                    </p>
+                  )
+                }
+                return (
+                  <div className="space-y-2">
+                    {opciones.map(o => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => agregarOtroPuesto(addPositionTarget.member_id, o.id, addPositionTarget.name)}
+                        className="w-full rounded-xl border border-outline px-3 py-2.5 text-left text-sm text-navy transition-colors hover:bg-surface-low font-body"
+                      >
+                        {o.title}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setAddPositionTarget(null)}
+                  className="rounded-full px-4 py-2 text-sm font-medium text-navy-light/80 transition-colors hover:bg-navy/5 font-body"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </Modal>
         )}
 
         {/* Disconnect modal — rendered inside card to preserve original structure */}
