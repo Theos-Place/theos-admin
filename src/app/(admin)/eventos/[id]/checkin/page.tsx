@@ -1012,7 +1012,9 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
           toCheckin.push(created)
         }
       }
-      const famRes = await fetch('/api/families', {
+      // Por el endpoint del evento, no /api/families: ese exige roles de
+      // padrón y dejaba la familia sin armar DESPUÉS de haber creado a todos.
+      const famRes = await fetch(`/api/events/${eventId}/families`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: `Familia ${lastName.trim()}`, members: entries }),

@@ -49,7 +49,11 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
     let alive = true
     setSearching(true)
     const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=5`)
+      // Por /lookup y no por /api/members: ese es el PADRÓN y exige un módulo
+      // que encargado_eventos no tiene. Como el .then se traga el error con
+      // `{ members: [] }`, en el check-in la búsqueda no fallaba: devolvía
+      // vacío para siempre y parecía que la persona no existía (2026-09-09).
+      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=5`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return

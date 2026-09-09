@@ -84,3 +84,64 @@ describe('el padrón general NO se abrió', () => {
     }
   })
 })
+
+/**
+ * Guardia de regresión. El bug de hoy no fue uno: fueron CINCO llamadas de la
+ * misma pantalla a endpoints del padrón —QR, alta, corrección, familia y
+ * búsqueda de familiar—, descubiertas de a una según la gente las iba pisando.
+ * Peor: varias se tragan el error con `{ members: [] }` o un catch vacío, así
+ * que fallan calladas y parecen "no hay nadie" en vez de "no tenés permiso".
+ *
+ * Este test recorre el flujo de check-in y exige que todo lo que llame vaya a
+ * /api/events/... o al lookup mínimo. Si alguien vuelve a pegarle al padrón
+ * desde acá, se cae en CI y no en la fila de un miércoles.
+ */
+describe('el flujo de check-in nunca llama al padrón', () => {
+  const ARCHIVOS = [
+    'src/app/(admin)/eventos/[id]/checkin/page.tsx',
+    'src/components/members/DocumentCapture.tsx',
+    'src/components/members/FamilyMemberModal.tsx',
+  ]
+
+  // /api/members/[id]/family es la excepción legítima: desde 2026-08-04 ese
+  // endpoint contempla explícitamente a quien registra asistencia (eventos:edit),
+  // así que sí responde al rol de check-in. Verificado, no supuesto.
+  const EXCEPCIONES = ['/api/members/${member.id}/family']
+
+  it('todas las llamadas van a /api/events/... o a /api/members/lookup', () => {
+    const ofensores: string[] = []
+    for (const archivo of ARCHIVOS) {
+      const texto = readFileSync(archivo, 'utf8')
+      for (const linea of texto.split('\n')) {
+        const m = linea.match(/fetch\(`?([^`,)]*)/)
+        if (!m) continue
+        const url = m[1]
+        if (!url.startsWith('/api')) continue // fetch(url) con variable: se revisa aparte
+        const permitida = url.startsWith('/api/events/')
+          || url.startsWith('/api/members/lookup')
+          || EXCEPCIONES.includes(url)
+        if (!permitida) ofensores.push(`${archivo}: ${url}`)
+      }
+    }
+    expect(ofensores).toEqual([])
+  })
+
+  it('DocumentCapture arma la URL del evento cuando está en un check-in', () => {
+    // Es el único que usa fetch(url) con variable, así que se verifica su origen.
+    const texto = readFileSync('src/components/members/DocumentCapture.tsx', 'utf8')
+    expect(texto).toContain('`/api/events/${eventId}/members/${memberId}`')
+  })
+
+  it('la pantalla de check-in le pasa el evento a DocumentCapture', () => {
+    const texto = readFileSync('src/app/(admin)/eventos/[id]/checkin/page.tsx', 'utf8')
+    expect(texto).toContain('eventId={id}')
+  })
+
+  it('las familias del check-in van por el endpoint del evento', () => {
+    const ruta = readFileSync('src/app/api/events/[id]/families/route.ts', 'utf8')
+    expect(ruta).toContain('requireRoles(...EVENT_CHECKIN_ROLES)')
+    // Agrupa fichas existentes; no puede crear ni modificar personas.
+    expect(ruta).not.toContain('createMember')
+    expect(ruta).not.toContain('updateMember')
+  })
+})
