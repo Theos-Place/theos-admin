@@ -21,6 +21,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { canGrantEventManagers } from '@/lib/auth/events-scope'
 import { RegistrationFormPicker } from '@/components/events/RegistrationFormPicker'
 import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
+import { puedeApagarInscripcion } from '@/lib/events/inscripcion-visible'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -187,6 +188,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [newSubName, setNewSubName] = useState('')
   const [newSubCap, setNewSubCap] = useState('')
   const [requiresRegistration, setRequiresRegistration] = useState(event?.requires_registration ?? false)
+  // Con gente inscrita, la bandera no se apaga: quedarían en un evento que dice
+  // no pedir inscripción. El servidor lo rechaza igual; acá se explica ANTES de
+  // que alguien intente y se lleve un error.
+  const bloqueoInscripcion = (() => {
+    if (!event?.requires_registration) return null
+    const r = puedeApagarInscripcion(event.registrations.length)
+    return r.puede ? null : r.motivo
+  })()
   // Los eventos anteriores a la columna no traen el campo: se asumen públicos,
   // que es lo que venían siendo.
   const [isPublic, setIsPublic] = useState(event?.is_public ?? true)
@@ -639,9 +648,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       <Section id="registration" title="④ Inscripciones" open={openSections.has('registration')} onToggle={() => toggleSection('registration')}>
         <div className="space-y-4">
           <label className="flex items-center gap-3 cursor-pointer">
-            <button type="button" role="switch" aria-checked={requiresRegistration} aria-label="Requiere inscripción" onClick={() => setRequiresRegistration(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200 cursor-pointer', requiresRegistration ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresRegistration ? 'translate-x-4' : 'translate-x-0.5')} /></button>
+            <button type="button" role="switch" aria-checked={requiresRegistration} aria-label="Requiere inscripción" disabled={!!bloqueoInscripcion} title={bloqueoInscripcion ?? undefined} onClick={() => setRequiresRegistration(r => !r)} className={cn('relative h-5 w-9 rounded-full transition-all duration-200', bloqueoInscripcion ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', requiresRegistration ? 'bg-coral' : 'bg-navy-light/20')}><span className={cn('absolute top-0.5 left-0 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200', requiresRegistration ? 'translate-x-4' : 'translate-x-0.5')} /></button>
             <span className="text-sm text-navy font-body">Requiere inscripción</span>
           </label>
+          {bloqueoInscripcion && (
+            <p className="text-[13px] text-navy-light/80 font-body">{bloqueoInscripcion}</p>
+          )}
           {requiresRegistration && (
             <div className="space-y-2 pl-1">
               <div className="space-y-1">

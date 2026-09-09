@@ -33,6 +33,7 @@ import { downloadBlob } from '@/lib/export'
 import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X, AlertCircle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
+import { mostrarInscripciones } from '@/lib/events/inscripcion-visible'
 
 type EventView = 'calendar' | 'list' | 'grid'
 const VIEW_STORAGE_KEY = 'theos_eventos_view'
@@ -605,11 +606,18 @@ function EventosContent() {
                           quien solo ve los eventos públicos. */}
                       {canManage && (
                         <>
+                          {/* Un evento sin inscripción no tiene cupo que
+                              llenar ni inscritos que contar: va un guion, no un
+                              0 — que en una columna numérica se lee como dato. */}
                           <td className="px-4 py-3">
-                            <CapacityBar current={event.registrations.length} max={event.max_capacity} />
+                            {mostrarInscripciones({ requires_registration: event.requires_registration, inscritos: event.registrations.length })
+                              ? <CapacityBar current={event.registrations.length} max={event.max_capacity} />
+                              : <span className="text-[13px] text-navy-light/80 font-body">—</span>}
                           </td>
                           <td className="px-4 py-3 text-sm text-navy tabular-nums font-body">
-                            {event.registrations.length}
+                            {mostrarInscripciones({ requires_registration: event.requires_registration, inscritos: event.registrations.length })
+                              ? event.registrations.length
+                              : <span className="text-navy-light/80">—</span>}
                           </td>
                         </>
                       )}

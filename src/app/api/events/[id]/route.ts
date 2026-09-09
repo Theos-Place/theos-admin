@@ -62,6 +62,24 @@ export async function PUT(
     const body = await req.json()
     const { scope, occurrence } = readScope(body)
     // Solo reemplazamos sub-eventos si el body los trae explícitamente.
+    // No se puede apagar la inscripción con gente ya inscrita: quedarían en un
+    // evento que dice no pedirla — invisibles donde se las busca y fuera de lo
+    // que se le manda a los inscritos. El guard va en el SERVIDOR y no solo en
+    // la pantalla: la pantalla es una cortesía, esto es la regla.
+    if ('requires_registration' in body && body.requires_registration === false) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const { count } = await createAdminClient()
+        .from('event_registrations').select('id', { count: 'exact', head: true }).eq('event_id', id)
+      const { puedeApagarInscripcion } = await import('@/lib/events/inscripcion-visible')
+      const veredicto = puedeApagarInscripcion(count ?? 0)
+      if (!veredicto.puede) {
+        return NextResponse.json(
+          { error: veredicto.motivo, code: 'inscripcion_con_datos' },
+          { status: 409 },
+        )
+      }
+    }
+
     const subEvents = 'sub_events' in body ? formToSubEvents(body) : undefined
     const committees = 'organizing_committee_ids' in body ? formToOrganizingCommittees(body) : undefined
     const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId, committees)

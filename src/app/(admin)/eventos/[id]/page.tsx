@@ -35,6 +35,7 @@ import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getInitials, formatMoney } from '@/lib/format'
+import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 
 /** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
  *  a los inscritos con miembro asociado). El botón que abre este modal está
@@ -185,9 +186,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // tenga el módulo de eventos.
   const { user } = useAuth()
   const isEventManager = (user?.managed_event_ids ?? []).includes(id)
-  const visibleTabs = visibleEventTabs({ canManage, canCheckin, canReport, isManager: isEventManager })
+  const todosLosTabs = visibleEventTabs({ canManage, canCheckin, canReport, isManager: isEventManager })
   const seeManagementData = canSeeEventManagementData({ canManage, canCheckin, canReport, isManager: isEventManager })
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
+
 
   // Inscripción desde la ficha: misma elegibilidad y mismo modal que la lista
   // de eventos, para no tener dos caminos que se puedan desincronizar.
@@ -309,9 +311,23 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   const registrationCount = event.registrations.length
   const checkinCount = event.checkins.length
-  const attendanceRate = registrationCount > 0 ? Math.round((checkinCount / registrationCount) * 100) : 0
+  // La inscripción se decide en UN solo lugar (src/lib/events/inscripcion-visible.ts),
+  // sobre el mismo campo que gobierna el botón público. Una charla no se
+  // inscribe, y mostrarle la pestaña y una tasa contra 0 inscritos producía
+  // "187 de 0 inscritos".
+  const ctxInscripcion = { requires_registration: event.requires_registration, inscritos: registrationCount }
+  const hayInscripciones = mostrarInscripciones(ctxInscripcion)
+  const attendanceRate = tasaDeAsistencia({ ...ctxInscripcion, asistentes: checkinCount })
 
-  const activeTabIndex = Math.max(0, visibleTabs.indexOf(activeTab))
+  // La pestaña de inscripciones desaparece cuando el evento no las usa. Se
+  // filtra acá y no en visibleEventTabs porque eso depende de los PERMISOS, y
+  // esto del evento: mezclarlos haría que el gate de permisos dependa del dato.
+  const visibleTabs = todosLosTabs.filter(t => t !== 'inscripciones' || hayInscripciones)
+  // Si el tab abierto ya no está en la lista —se entró por un enlace directo a
+  // inscripciones en una charla, por ejemplo— se cae a Información en vez de
+  // dejar el cuerpo en blanco.
+  const tabEfectivo: Tab = visibleTabs.includes(activeTab) ? activeTab : 'informacion'
+  const activeTabIndex = Math.max(0, visibleTabs.indexOf(tabEfectivo))
   const tabWidthPct = 100 / visibleTabs.length
 
   const incomeEstimate = event.requires_payment && event.payment_amount
@@ -498,7 +514,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  const arcPct = attendanceRate / 100
+  const arcPct = (attendanceRate ?? 0) / 100
   // Personas cuya ficha se creó el mismo día del evento: las que vinieron por
   // primera vez y se registraron ahí mismo desde el check-in.
   const nuevos = contarPersonasNuevas(event.checkins, event.start_at)
@@ -587,7 +603,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 onClick={() => setActiveTab(t)}
                 className={cn(
                   'flex-1 whitespace-nowrap px-2 py-2.5 text-[13px] transition-colors',
-                  activeTab === t ? 'text-coral font-semibold' : 'text-navy-light/80 hover:text-navy',
+                  tabEfectivo === t ? 'text-coral font-semibold' : 'text-navy-light/80 hover:text-navy',
                   'font-body'
                 )}
               >
@@ -607,7 +623,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Tab: Información — la parte de la ficha que ve cualquiera. Si el evento
           pide inscripción, acá mismo está el botón (mismo modal que la lista). */}
-      {activeTab === 'informacion' && (
+      {tabEfectivo === 'informacion' && (
         <EventInfoTab
           event={event}
           flyerPreview={flyerPreview}
@@ -629,12 +645,17 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           comunicar el evento, y solo tiene sentido si el evento pide inscripción.
           Visible para quien gestiona eventos (criterio del 2026-08-26), no solo
           para admin y comunicaciones como el compartir del calendario. */}
-      {activeTab === 'inscripciones' && event.requires_registration && (
+      {tabEfectivo === 'inscripciones' && event.requires_registration && (
         <div className="mb-4">
           <CompartirInscripcion eventId={id} registrationFormId={event.registration_form_id} />
         </div>
       )}
-      {activeTab === 'inscripciones' && (
+      {tabEfectivo === 'inscripciones' && esInscripcionHistorica(ctxInscripcion) && (
+        <div className="mb-4 rounded-xl border border-[var(--outline-variant)] bg-surface-low px-4 py-3">
+          <p className="text-[13px] text-navy-light/80 font-body">{AVISO_INSCRIPCION_HISTORICA}</p>
+        </div>
+      )}
+      {tabEfectivo === 'inscripciones' && (
         <EventRegistrationsTab
           event={event}
           eventId={id}
@@ -646,7 +667,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Tab: Check-in */}
-      {activeTab === 'checkin' && (
+      {tabEfectivo === 'checkin' && (
         <EventCheckinTab
           event={event}
           eventId={id}
@@ -656,7 +677,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Tab: Servidores */}
-      {activeTab === 'servidores' && (
+      {tabEfectivo === 'servidores' && (
         <EventServersTab
           allBookings={allBookings}
           groupedBookings={groupedBookings}
@@ -689,7 +710,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Tab: Comunicaciones */}
-      {activeTab === 'comunicaciones' && (
+      {tabEfectivo === 'comunicaciones' && (
         <div className="space-y-4">
           {canSendMessage && (
             <div className="flex justify-end">
@@ -713,7 +734,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* Tab: Reportes */}
-      {activeTab === 'reportes' && (
+      {tabEfectivo === 'reportes' && (
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Gauge tasa de asistencia */}
@@ -734,11 +755,11 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                   />
                 )}
                 <text x="50" y="52" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#161440" fontFamily="var(--font-display)">
-                  {attendanceRate}%
+                  {attendanceRate === null ? checkinCount : `${attendanceRate}%`}
                 </text>
               </svg>
               <p className="text-[13px] text-navy-light/80 mt-2 font-body">
-                {checkinCount} de {registrationCount} inscritos asistieron
+                {textoDeAsistencia({ ...ctxInscripcion, asistentes: checkinCount })}
               </p>
             </div>
 

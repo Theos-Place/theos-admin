@@ -11,6 +11,7 @@ import { downloadBlob } from '@/lib/export'
 import { Repeat } from 'lucide-react'
 import { zonaValida, fechaLargaEnZona, horaEnZona, aclaracionDeZona } from '@/lib/events/timezone'
 import type { AdminEvent } from '@/data/event-config'
+import { mostrarInscripciones } from '@/lib/events/inscripcion-visible'
 
 type Event = AdminEvent
 
@@ -159,8 +160,14 @@ export function EventHeader({
                 <MapPin size={13} className="text-white/80" />
                 {event.location}
               </span>
-              {/* Cuántos se inscribieron es dato de gestión. */}
-              {canManage && (
+              {/* Cuántos se inscribieron es dato de gestión — y solo tiene
+                  sentido si el evento usa inscripción. En una charla el chip
+                  decía "0 inscritos", que se lee como que nadie se anotó y no
+                  como que no había dónde anotarse. */}
+              {canManage && mostrarInscripciones({
+                requires_registration: event.requires_registration,
+                inscritos: registrationCount,
+              }) && (
                 <span className="flex items-center gap-1.5">
                   <Users size={13} className="text-white/80" />
                   {registrationCount} inscritos
