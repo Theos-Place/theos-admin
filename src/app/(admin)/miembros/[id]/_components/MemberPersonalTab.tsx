@@ -119,8 +119,13 @@ export function MemberPersonalTab({ member }: Props) {
         </div>
       </div>
 
-      {/* Salud */}
-      {(member.allergies || member.medicamentos) && (
+      {/* Salud — SIEMPRE visible, aunque esté vacía.
+          Antes el bloque solo se pintaba si ya había alergias o medicamentos, y
+          eso lo hacía desaparecer justo cuando más se necesita: quien no tiene
+          nada registrado no veía el campo y parecía que se había eliminado
+          (reportado 2026-09-10). Un dato de salud en blanco no es lo mismo que
+          un dato de salud ausente. */}
+      {(
         <div className="mt-4 pt-4 border-t border-[var(--outline-variant)]">
           <p
             className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display"

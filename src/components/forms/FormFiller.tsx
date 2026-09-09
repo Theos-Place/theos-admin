@@ -17,7 +17,9 @@ import { FormHero, hasHero } from '@/components/forms/FormHero'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { calcAge } from '@/lib/format'
-import { AlertTriangle, Check, ChevronLeft, ChevronRight, User, Pencil } from 'lucide-react'
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, User } from 'lucide-react'
+import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
+import { editabilidadDeCampo } from '@/lib/members/campo-editable'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -142,6 +144,11 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
   const canFillForOther = !isPreview
     && (user?.roles ?? []).some(r => r === 'admin' || (FORM_ON_BEHALF_ROLES as string[]).includes(r))
   const [onBehalf, setOnBehalf] = useState<MemberHit | null>(null)
+  /** ¿Se puede editar el perfil desde acá? Solo el PROPIO: en preview no hay
+   *  perfil real, y llenando por otra persona el bloque muestra los datos de
+   *  quien opera —no los de ella—, así que ofrecer editar ahí confundiría sobre
+   *  la ficha de quién se está tocando. */
+  const puedeEditarPerfil = !isPreview && !!user?.member_id && !onBehalf
   // Prellenado REAL del perfil (los campos personal_data): en preview se usa el
   // miembro de ejemplo; al llenar de verdad, el perfil de quien responde.
   const [profile, setProfile] = useState<Partial<Member> | null>(null)
@@ -155,6 +162,13 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
     return () => { alive = false }
   }, [isPreview, user?.member_id])
   const memberForFields: Partial<Member> = isPreview ? PREVIEW_MEMBER : (profile ?? {})
+  /** Refleja en pantalla lo que se acaba de guardar en el perfil, sin recargar.
+   *  Solo toca `profile`: las respuestas a medio llenar viven en otro estado y
+   *  no se rozan — editar un dato personal no puede costarle a nadie lo que ya
+   *  escribió en el formulario. */
+  function aplicarCambioDePerfil(columna: string, valor: string) {
+    setProfile(prev => ({ ...(prev ?? {}), [columna]: valor || null } as Partial<Member>))
+  }
   // Dedupe: si el formulario no admite múltiples respuestas y ya respondió.
   const [alreadyAnswered, setAlreadyAnswered] = useState(false)
   const [form, setForm] = useState<FormTemplate | null>(null)
@@ -544,44 +558,47 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                           </span>
                         </div>
                         <div className="text-[13px] text-[var(--fg-muted,#8c8fb0)] font-body">
-                          Tomados de tu perfil — no editables acá
+                          {puedeEditarPerfil
+                            ? 'Tomados de tu perfil — tocá un dato para corregirlo'
+                            : 'Tomados de tu perfil'}
                         </div>
                       </div>
-                      {/* Va al perfil DE VERDAD. Antes era un placeholder que
-                          mostraba un toast diciendo "redirigir al perfil": el
-                          botón anunciaba lo que iba a hacer en vez de hacerlo.
-
-                          Abre en otra pestaña a propósito: quien está llenando
-                          el formulario perdería lo escrito si lo sacamos de la
-                          página, y después de editar el perfil querrá volver a
-                          donde estaba. En preview no hay a dónde ir, así que se
-                          oculta en vez de llevar a un perfil de mentira. */}
-                      {!isPreview && user?.member_id && (
-                        <a
-                          href={`/miembros/${user.member_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                        >
-                          <Pencil size={11} aria-hidden />
-                          Editar mis datos
-                        </a>
-                      )}
                     </div>
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2.5">
-                      {selectedFields.map(f => (
-                        <div
-                          key={f.key}
-                          className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
-                        >
-                          <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
-                            {f.label}
+                      {selectedFields.map(f => {
+                        const editable = puedeEditarPerfil
+                          ? editabilidadDeCampo(f.key, { tieneDocumento: !!memberForFields.cedula })
+                          : { editable: false as const, motivo: null }
+                        return (
+                          <div
+                            key={f.key}
+                            className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
+                          >
+                            {editable.editable ? (
+                              <CampoPerfilEditable
+                                etiqueta={f.label}
+                                valor={getMemberFieldValue(memberForFields, f.key)}
+                                memberId={user!.member_id!}
+                                columna={editable.columna}
+                                tipo={editable.tipo}
+                                onGuardado={aplicarCambioDePerfil}
+                              />
+                            ) : (
+                              <>
+                                <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
+                                  {f.label}
+                                </div>
+                                <div className="text-[13px] font-semibold mt-[3px] font-body">
+                                  {getMemberFieldValue(memberForFields, f.key)}
+                                </div>
+                                {editable.motivo && (
+                                  <p className="mt-1 text-[11px] text-navy-light/80 font-body">{editable.motivo}</p>
+                                )}
+                              </>
+                            )}
                           </div>
-                          <div className="text-[13px] font-semibold mt-[3px] font-body">
-                            {getMemberFieldValue(memberForFields, f.key)}
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )

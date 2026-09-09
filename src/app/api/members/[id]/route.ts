@@ -68,14 +68,33 @@ async function handleUpdate(
     // UNIQUE en cédula/correo — sin esto, editar crea los duplicados que el
     // alta previene con 409).
     const { MEMBER_WRITE_FIELDS, normalizeEmail, findMemberByCedulaOrEmail } = await import('@/lib/supabase/queries/members')
-    // El miembro editando su propia ficha solo toca datos personales (no flags
-    // de gestión como is_donor/is_active, reservados a staff).
-    const SELF_ONLY_EXCLUDE = new Set(['is_donor', 'is_active'])
-    const allowedFields = (isStaff || isAdmin)
-      ? MEMBER_WRITE_FIELDS
-      : MEMBER_WRITE_FIELDS.filter(f => !SELF_ONLY_EXCLUDE.has(f))
+
     const updates: Record<string, unknown> = {}
-    for (const k of allowedFields) if (k in body) updates[k] = body[k]
+    if (isStaff || isAdmin) {
+      for (const k of MEMBER_WRITE_FIELDS) if (k in body) updates[k] = body[k]
+    } else {
+      // AUTOEDICIÓN. Antes esto era una lista de PROHIBIDOS —todo
+      // MEMBER_WRITE_FIELDS menos is_donor e is_active—, así que la persona podía
+      // cambiarse el correo (su usuario de login y la llave de dedup), el nombre
+      // y la fecha de nacimiento. Ahora es una lista de PERMITIDOS: lo que no
+      // esté en src/lib/members/autoedicion.ts no pasa.
+      const { filtrarAutoedicion } = await import('@/lib/members/autoedicion')
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const { data: actual } = await createAdminClient()
+        .from('members').select('cedula').eq('id', id).maybeSingle()
+      const filtro = filtrarAutoedicion(body, (actual as { cedula: string | null } | null)?.cedula)
+      // Se responde 403 en vez de guardar a medias: alguien que edita su
+      // dirección y su correo en el mismo formulario tiene que enterarse de que
+      // el correo no se guardó, no descubrirlo después.
+      if (filtro.rechazados.length > 0) {
+        return NextResponse.json({
+          error: filtro.rechazados[0].motivo,
+          code: 'campo_no_autoeditable',
+          campos: filtro.rechazados,
+        }, { status: 403 })
+      }
+      Object.assign(updates, filtro.permitidos)
+    }
     // Toggle "perfil de sistema": solo admin puede marcarlo.
     if (isAdmin && 'is_system' in body) updates.is_system = !!body.is_system
     const { normalizePhoneOrNull } = await import('@/lib/phone')
