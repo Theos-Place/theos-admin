@@ -196,7 +196,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                 value={cedula}
                 onChange={e => { setCedula(e.target.value); setError(null) }}
                 placeholder={`${documentType === 'cedula' ? 'Cédula' : 'Documento'}${isMinor ? ' (opcional)' : ' *'}`}
-                aria-label={isMinor ? 'Documento, opcional para menores' : 'Documento, obligatorio'}
+                aria-label="Documento, opcional"
                 className={cn(inputCls, 'font-mono')}
               />
               <div className="relative">

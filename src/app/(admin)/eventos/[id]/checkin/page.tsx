@@ -1106,7 +1106,9 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
         <div className="space-y-1">
           <label htmlFor="np-cedula" className={labelCls} style={labelStyle}>
             {esCedulaCR ? 'Cédula' : 'Número de documento'}
-            {chequeo.exigeCedula ? ' *' : ' (opcional para menores)'}
+            {/* Opcional para todos desde 2026-09-09: FIN-2 lo reclama después
+                y no se traba la fila del evento por el documento. */}
+            {' (opcional)'}
           </label>
           <input
             id="np-cedula" className={fieldCls} style={fieldStyle}

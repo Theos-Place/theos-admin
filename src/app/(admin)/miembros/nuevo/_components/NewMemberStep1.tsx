@@ -141,7 +141,8 @@ export function NewMemberStep1({
           que libera el campo (regla en lib/members/alta-persona.ts). */}
       <Field
         label={`${data.document_type === 'cedula' || !data.document_type ? 'Cédula' : 'Número de documento'}${
-          isMinor ? ' (opcional para menores)' : ' *'
+          // Opcional para todos desde 2026-09-09 (FIN-2 lo pide después).
+          ' (opcional)'
         }`}
         htmlFor="member-cedula"
         error={errors.cedula}
