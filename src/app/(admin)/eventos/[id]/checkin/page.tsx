@@ -516,6 +516,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               <div className="mt-3">
                 <DocumentCapture
                   memberId={docCapture.id}
+                  eventId={id}
                   idPrefix="checkin-doc"
                   submitLabel="Guardar documento"
                   onSaved={() => {
@@ -657,6 +658,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
       {showNewPerson && (
         <NewPersonModal
+          eventId={id}
           initialName={query.trim()}
           onClose={() => setShowNewPerson(false)}
           onCreated={handlePersonCreated}
@@ -880,7 +882,10 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
 
 // ─── Modal: agregar persona nueva (primera visita) ──────────────────────────────
 
-function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistCheckin }: {
+function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn, persistCheckin }: {
+  /** El alta va por el endpoint del evento, que es el que le da permiso al
+   *  equipo de check-in sin abrirle el padrón. */
+  eventId: string
   initialName: string
   onClose: () => void
   onCreated: (member: { id: string; name: string }) => void
@@ -935,17 +940,29 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
     }
   }
 
+  /** El alta va por el endpoint del EVENTO, no por /api/members: ese exige roles
+   *  de padrón que encargado_eventos no tiene —el rol que atiende la fila—, así
+   *  que crear a alguien nuevo devolvía 403 (bug 2026-09-09). El endpoint
+   *  acotado acepta solo datos básicos y no le abre el padrón al rol. */
   async function createMember(payload: Record<string, unknown>): Promise<{ id: string; name: string }> {
-    const res = await fetch('/api/members', {
+    const res = await fetch(`/api/events/${eventId}/members`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
     const data = await res.json().catch(() => null)
     if (!res.ok) {
-      throw new Error(data?.code === 'duplicate'
-        ? `Ya existe un miembro con la cédula o correo de ${payload.first_name}.`
-        : `No se pudo crear a ${payload.first_name}.`)
+      // El 409 dice A QUIÉN pertenece el documento: en la fila lo más común es
+      // que la persona sí exista y no se la haya encontrado, y saber el nombre
+      // es lo que permite usar esa ficha en vez de crear el duplicado.
+      if (data?.code === 'duplicate' && data?.member?.first_name) {
+        const dup = `${data.member.first_name} ${data.member.last_name ?? ''}`.trim()
+        setYaExiste({ id: data.member.id as string, name: dup })
+        throw new Error(`Ese documento o correo ya es de ${dup}. Buscala por su nombre y hacele el check-in.`)
+      }
+      // El mensaje del servidor primero: dice qué pasó de verdad (documento con
+      // formato inválido, campo no permitido) en vez de un genérico.
+      throw new Error(data?.error || `No se pudo crear a ${payload.first_name}.`)
     }
     return { id: data.id as string, name: `${payload.first_name} ${payload.last_name}` }
   }
@@ -964,9 +981,8 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
         cedula: cedula.trim() || null,
         document_type: documentType,
         birth_date: birthDate || null,
-        // Cada ficha nueva sale con su cuenta: el correo dispara la invitación
-        // para que la persona ponga contraseña y active el acceso.
-        send_invite: !!email.trim(),
+        // La invitación la dispara el endpoint cuando hay correo: cada ficha
+        // nueva sale con su cuenta para que la persona ponga contraseña.
       })
 
       // Sin familia → flujo de una persona (el operador elige participante/servidor).
@@ -991,7 +1007,6 @@ function NewPersonModal({ initialName, onClose, onCreated, onCheckedIn, persistC
             birth_date: d.birth_date,
             phone: d.phone,
             email: d.email,
-            send_invite: !!d.email,
           })
           entries.push({ member_id: created.id, relation: d.relation })
           toCheckin.push(created)

@@ -12,8 +12,13 @@ import {
  *
  * Un solo componente para los tres puntos donde se pide el documento (aviso al
  * entrar, matrícula y check-in): antes esto vivía duplicado en el
- * prematrimonial. Guarda con PATCH /api/members/[id], que ya normaliza, valida
- * por tipo y dedupea con 409.
+ * prematrimonial.
+ *
+ * Guarda con PATCH /api/members/[id] — salvo dentro de un evento, donde va por
+ * /api/events/[eventId]/members/[memberId]. La diferencia es de permisos: el
+ * PATCH general exige roles de padrón, y encargado_eventos no los tiene, así que
+ * en la fila el guardado devolvía 403 y el documento nunca se guardaba
+ * (bug 2026-09-09). Los dos normalizan, validan por tipo y dedupean con 409.
  */
 export function DocumentCapture({
   memberId,
@@ -21,6 +26,7 @@ export function DocumentCapture({
   submitLabel = 'Guardar documento',
   autoFocus = false,
   idPrefix = 'doc',
+  eventId,
 }: {
   memberId: string
   onSaved: () => void
@@ -28,6 +34,9 @@ export function DocumentCapture({
   autoFocus?: boolean
   /** Prefijo de los ids: permite más de una instancia en la misma pantalla. */
   idPrefix?: string
+  /** Dentro del check-in de un evento: guarda por el endpoint acotado, que sí
+   *  le permite al equipo de bienvenida corregir el documento. */
+  eventId?: string
 }) {
   const [docType, setDocType] = useState<DocumentType>('cedula')
   const [docNumber, setDocNumber] = useState('')
@@ -43,7 +52,10 @@ export function DocumentCapture({
     setError('')
     setSaving(true)
     try {
-      const res = await fetch(`/api/members/${memberId}`, {
+      const url = eventId
+        ? `/api/events/${eventId}/members/${memberId}`
+        : `/api/members/${memberId}`
+      const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_type: docType, cedula: docNumber.trim() }),

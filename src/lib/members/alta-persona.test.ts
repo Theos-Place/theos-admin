@@ -25,23 +25,32 @@ describe('edadEnAnios', () => {
 })
 
 describe('a quién se le exige cédula', () => {
-  it('al adulto sí', () => {
+  // Cambio 2026-09-09: dejó de ser obligatoria para todos. Antes se exigía al
+  // adulto y eso frenaba la fila del evento; FIN-2 la reclama después.
+  it('al adulto TAMPOCO — el alta pasa sin documento', () => {
     const r = validarAltaDePersona({ ...base, birth_date: '1990-04-02' }, HOY)
-    expect(r.exigeCedula).toBe(true)
-    expect(r.ok).toBe(false)
-    expect(r.errores.cedula).toMatch(/obligatoria/)
+    expect(r.exigeCedula).toBe(false)
+    expect(r.ok).toBe(true)
+    expect(r.errores.cedula).toBeUndefined()
   })
 
-  it('al menor no', () => {
+  it('al menor tampoco', () => {
     const r = validarAltaDePersona({ ...base, birth_date: '2015-04-02' }, HOY)
     expect(r.exigeCedula).toBe(false)
     expect(r.ok).toBe(true)
   })
 
   // "No sé la edad" no puede ser la puerta que vacíe la regla.
-  it('sin fecha de nacimiento se pide igual', () => {
-    expect(validarAltaDePersona(base, HOY).exigeCedula).toBe(true)
-    expect(validarAltaDePersona({ ...base, birth_date: '' }, HOY).ok).toBe(false)
+  it('sin fecha de nacimiento tampoco se pide', () => {
+    expect(validarAltaDePersona(base, HOY).exigeCedula).toBe(false)
+    expect(validarAltaDePersona({ ...base, birth_date: '' }, HOY).ok).toBe(true)
+  })
+
+  // Lo que NO se aflojó: aflojar el requisito no es aflojar el dato capturado.
+  it('si el documento VIENE, se sigue validando el formato', () => {
+    const r = validarAltaDePersona({ ...base, birth_date: '1990-04-02', cedula: 'xx' }, HOY)
+    expect(r.ok).toBe(false)
+    expect(r.errores.cedula).toBeTruthy()
   })
 })
 
@@ -99,10 +108,10 @@ describe('otros tipos de documento', () => {
     expect(validarAltaDePersona({ ...b, cedula: '12345678Z' }, HOY_).ok).toBe(false)
   })
 
-  it('el documento también es obligatorio para el adulto con pasaporte', () => {
-    const r = validarAltaDePersona({ ...b, document_type: 'pasaporte' }, HOY_)
-    expect(r.ok).toBe(false)
-    expect(r.errores.cedula).toMatch(/documento es obligatorio/)
+  it('el pasaporte tampoco es obligatorio, pero si viene se valida', () => {
+    expect(validarAltaDePersona({ ...b, document_type: 'pasaporte' }, HOY_).ok).toBe(true)
+    const malo = validarAltaDePersona({ ...b, document_type: 'pasaporte', cedula: '!' }, HOY_)
+    expect(malo.ok).toBe(false)
   })
 })
 

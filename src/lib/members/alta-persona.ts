@@ -3,19 +3,20 @@
  * evento, o al agregar un integrante de familia. Una sola regla para los dos,
  * porque son la misma decisión.
  *
- * LA CÉDULA ES OBLIGATORIA para personas mayores de edad. Es la única llave
- * confiable para no terminar con la misma persona dos y tres veces en el padrón
- * —el nombre no sirve: se escribe distinto cada vez, con y sin tildes, con uno
- * o dos apellidos—, y sin ella la persona después no se puede matricular en un
- * estudio (la matrícula la exige) ni se le puede cobrar.
+ * LA CÉDULA NO ES OBLIGATORIA (cambio 2026-09-09). Lo fue hasta hoy para los
+ * mayores de edad, con buen motivo: es la única llave confiable para no
+ * terminar con la misma persona dos y tres veces en el padrón —el nombre no
+ * sirve: se escribe distinto cada vez, con y sin tildes, con uno o dos
+ * apellidos—. Pero en la práctica frenaba la fila del evento, y ese costo es
+ * peor: FIN-2 la reclama después, con el aviso de perfil incompleto, que es el
+ * momento en que de verdad hace falta (matricular y cobrar).
  *
- * A LOS MENORES NO. Muchos no tienen documento todavía, y trabar la fila de un
- * miércoles por un niño no tiene sentido.
+ * Lo que NO cambió: si el documento viene, se valida el formato y se dedupea
+ * por la pareja (tipo, número). Aflojar el requisito no es aflojar la calidad
+ * del dato que sí se captura.
  *
- * SIN FECHA DE NACIMIENTO SE PIDE. No es un descuido: "no sé la edad" no puede
- * ser la puerta de escape que vacíe la regla. Quien está registrando a un menor
- * pone la fecha —que además es un dato que se quiere tener— y el campo deja de
- * ser obligatorio solo.
+ * El correo sigue igual: obligatorio donde el alta es la única oportunidad de
+ * pedirlo (el check-in), porque sin él no hay cuenta de acceso.
  */
 import {
   isValidDocument, normalizeCedula, documentFormatMessage,
@@ -94,7 +95,9 @@ export type ResultadoAlta = {
   ok: boolean
   /** Mensaje por campo; la UI lo pinta debajo del input que corresponde. */
   errores: Partial<Record<'first_name' | 'last_name' | 'cedula' | 'email', string>>
-  /** true cuando a esta persona sí se le exige documento. */
+  /** Siempre false desde 2026-09-09: el documento dejó de ser obligatorio. Se
+   *  mantiene para que la UI pueda seguir distinguiendo "recomendado" de
+   *  "obligatorio" sin cambiar su forma. */
   exigeCedula: boolean
   /** true cuando a esta persona sí se le exige correo (para crearle cuenta). */
   exigeCorreo: boolean
@@ -111,15 +114,11 @@ export function validarAltaDePersona(p: AltaDePersona, hoy: string = hoyCR()): R
   const tipo: DocumentType =
     p.document_type && isDocumentType(p.document_type) ? p.document_type : 'cedula'
 
-  const exigeCedula = !esMenorDeEdad(p.birth_date, hoy)
+  // Ya no se exige (ver la cabecera): FIN-2 lo pide después. Se conserva el
+  // campo en el resultado porque la UI lo usa para sugerirlo sin bloquear.
+  const exigeCedula = false
   const cedula = normalizeCedula(p.cedula ?? '')
-  if (!cedula) {
-    if (exigeCedula) {
-      errores.cedula = tipo === 'cedula'
-        ? 'La cédula es obligatoria. Si es menor de edad, poné la fecha de nacimiento.'
-        : 'El documento es obligatorio. Si es menor de edad, poné la fecha de nacimiento.'
-    }
-  } else if (!isValidDocument(tipo, cedula)) {
+  if (cedula && !isValidDocument(tipo, cedula)) {
     errores.cedula = documentFormatMessage(tipo)
   }
 
