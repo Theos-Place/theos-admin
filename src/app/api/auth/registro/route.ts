@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { inviteMemberToCompleteProfile } from '@/lib/auth/invite'
 import { sendPasswordLink } from '@/lib/auth/password-link'
 import { DOCUMENT_TYPES, normalizeCedula } from '@/lib/cedula'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 import {
   MENSAJE_REGISTRO_CREADO, MENSAJE_SIN_CORREO, MENSAJE_YA_EXISTE,
   erroresDeRegistro, normalizarRegistro, planDeRegistro,
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     // Y por CORREO, que no tiene índice único pero igual identifica a alguien:
     // sin este chequeo, la misma persona con otro documento se crea dos veces.
     const { data: porCorreo } = porDoc ? { data: null } : await supabase
-      .from('members').select('id, email').ilike('email', d.email).limit(1).maybeSingle()
+      .from('members').select('id, email').ilike('email', patronDeCorreo(d.email)).limit(1).maybeSingle()
 
     const existente = ((porDoc ?? porCorreo) as { id: string; email: string | null } | null) ?? null
     const plan = planDeRegistro({ existente })

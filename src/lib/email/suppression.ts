@@ -6,12 +6,13 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeSesMessageId } from '@/lib/email/ses-message-id'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 
 type Kind = 'bounced' | 'complained'
 
 async function markEmail(email: string, kind: Kind): Promise<void> {
   const supabase = createAdminClient()
-  const addr = email.trim().toLowerCase()
+  const addr = patronDeCorreo(email)
   if (!addr) return
   const now = new Date().toISOString()
 
@@ -40,7 +41,7 @@ export async function markEmailComplained(email: string): Promise<void> {
   const supabase = createAdminClient()
   await supabase.from('members')
     .update({ newsletter_opt_out: true, newsletter_opt_out_at: new Date().toISOString() })
-    .ilike('email', email.trim().toLowerCase())
+    .ilike('email', patronDeCorreo(email))
 }
 
 /**
@@ -56,7 +57,7 @@ export async function markEmailComplained(email: string): Promise<void> {
  */
 export async function markEmailDelivered(email: string, messageId?: string | null): Promise<void> {
   const supabase = createAdminClient()
-  const addr = email.trim().toLowerCase()
+  const addr = patronDeCorreo(email)
   if (!addr) return
   const now = new Date().toISOString()
 

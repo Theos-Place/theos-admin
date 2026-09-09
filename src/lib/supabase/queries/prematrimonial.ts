@@ -12,6 +12,7 @@ import { normalizePhone } from '@/lib/phone'
 import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibility'
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 import { createComprobantePayment } from '@/lib/supabase/queries/payments'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 
 export const PREMAT_COST = 25000
 export const PREMAT_PLAN_CODE = 'PREMAT'
@@ -34,7 +35,7 @@ export async function findSpouseByContact(raw: string): Promise<{ id: string; na
     if (data) return pick(data as Row)
   }
   if (q.includes('@')) {
-    const { data } = await sb.from('members').select(sel).ilike('email', q.toLowerCase().replace(/[\\%_]/g, m => `\\${m}`)).limit(1).maybeSingle()
+    const { data } = await sb.from('members').select(sel).ilike('email', patronDeCorreo(q)).limit(1).maybeSingle()
     if (data) return pick(data as Row)
   }
   const phone = normalizePhone(q)

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPasswordLink } from '@/lib/auth/password-link'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 
 // POST { identifier } → manda el enlace para definir/restablecer la contraseña.
 //
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
     const esCorreo = identifier.includes('@')
     const query = supabase.from('members').select('first_name, email, auth_user_id').limit(1)
     const { data } = esCorreo
-      ? await query.ilike('email', identifier)
+      ? await query.ilike('email', patronDeCorreo(identifier))
       : await query.eq('cedula_normalized', identifier.replace(/[\s-]/g, '').toUpperCase())
     const member = (data ?? [])[0] as
       | { first_name: string | null; email: string | null; auth_user_id: string | null }

@@ -6,6 +6,7 @@ import { planDeCambioDeCorreo } from '@/lib/auth/access-email-plan'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAudit } from '@/lib/audit'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 
 // PATCH { email } → cambia el correo con el que la persona ENTRA al sistema
 // (auth.users) y, de paso, el de su ficha, para que no vuelvan a separarse.
@@ -43,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Colisión en members: la base NO tiene UNIQUE en email (el dedupe es de
     // app), así que se mira acá o se crean dos fichas con el mismo correo.
-    const { data: choque } = await supabase.from('members').select('id, first_name, last_name').ilike('email', email)
+    const { data: choque } = await supabase.from('members').select('id, first_name, last_name').ilike('email', patronDeCorreo(email))
     const otro = ((choque ?? []) as Array<{ id: string; first_name: string; last_name: string }>).find(x => x.id !== id)
     if (otro) {
       return NextResponse.json(
