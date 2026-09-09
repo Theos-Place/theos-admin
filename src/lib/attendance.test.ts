@@ -3,6 +3,7 @@
 // es el mes en curso del CONTEO de meses hacia atrás, no sus check-ins. Este
 // test fija la regla para que la próxima vez no haya que deducirla del código.
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'fs'
 import {
   attendanceWindowStart, attendanceRecencyStart, meetsAttendanceCriteria,
   ATTENDANCE_MONTHS, ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MIN_CHARLAS_INTERMEDIA,
@@ -76,5 +77,15 @@ describe('meetsAttendanceCriteria', () => {
 describe('attendanceRecencyStart', () => {
   it('son 60 días hacia atrás', () => {
     expect(attendanceRecencyStart(60, AGOSTO_4).slice(0, 10)).toBe('2026-06-05')
+  })
+})
+
+describe('servir cuenta como asistir', () => {
+  it('el criterio no menciona la calidad del check-in', () => {
+    // Guardia de intención: si alguien agrega un filtro por checked_in_as acá,
+    // estaría quitándole asistencia a quien sirvió. Que se caiga y se discuta.
+    const fuente = readFileSync('src/lib/attendance.ts', 'utf8')
+    const codigo = fuente.replace(/\/\*[\s\S]*?\*\//g, '') // sin comentarios
+    expect(codigo).not.toMatch(/checked_in_as|attendance_type|servidor/)
   })
 })

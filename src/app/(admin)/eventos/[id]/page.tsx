@@ -35,6 +35,7 @@ import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getInitials, formatMoney } from '@/lib/format'
+import { contarPorCalidad } from '@/lib/events/calidad-checkin'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 
 /** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
@@ -316,6 +317,17 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // inscribe, y mostrarle la pestaña y una tasa contra 0 inscritos producía
   // "187 de 0 inscritos".
   const ctxInscripcion = { requires_registration: event.requires_registration, inscritos: registrationCount }
+  const porCalidad = contarPorCalidad(event.checkins)
+  // Quienes hicieron check-in COMO SERVIDOR, con su puesto en los comités
+  // organizadores. Es otra lista que la de anotados de antemano.
+  const servidoresPresentes = event.checkins
+    .filter(c => c.attendance_type === 'server' && c.member_id)
+    .map(c => ({
+      member_id: c.member_id,
+      member_name: c.member_name,
+      puestos: event.puestos_servidores?.[c.member_id] ?? [],
+    }))
+    .sort((a, b) => a.member_name.localeCompare(b.member_name, 'es'))
   const hayInscripciones = mostrarInscripciones(ctxInscripcion)
   const attendanceRate = tasaDeAsistencia({ ...ctxInscripcion, asistentes: checkinCount })
 
@@ -679,6 +691,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       {/* Tab: Servidores */}
       {tabEfectivo === 'servidores' && (
         <EventServersTab
+          presentes={servidoresPresentes}
           allBookings={allBookings}
           groupedBookings={groupedBookings}
           confirmedCount={confirmedCount}
@@ -761,6 +774,15 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
               <p className="text-[13px] text-navy-light/80 mt-2 font-body">
                 {textoDeAsistencia({ ...ctxInscripcion, asistentes: checkinCount })}
               </p>
+              {/* La separación asistentes/servidores solo se pinta si hubo
+                  servidores: para todo lo anterior al 2026-09-10 el cero
+                  significa "no se medía", no "nadie sirvió". */}
+              {porCalidad.servidores > 0 && (
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  {porCalidad.asistentes} asistentes · {porCalidad.servidores}{' '}
+                  {porCalidad.servidores === 1 ? 'servidor' : 'servidores'}
+                </p>
+              )}
             </div>
 
             {/* Personas nuevas: ficha creada el mismo día del evento */}

@@ -211,7 +211,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const res = await fetch(`/api/events/${id}/checkins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method }),
+        // attendance_type viajaba SOLO en el estado optimista: el POST no lo
+        // mandaba y la elección de "Servidor" se perdía al refrescar (bug
+        // 2026-09-10, 168.743 check-ins sin la distinción).
+        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method, attendance_type: type }),
       })
       if (res.status === 409) {
         rollback()
@@ -250,16 +253,41 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       // pantalla lo reportaba como "no corresponde a ningún miembro"
       // (bug 2026-09-09). Mismo motivo por el que la búsqueda por nombre ya iba
       // por /lookup desde agosto; al QR se le pasó.
-      const res = await fetch(`/api/members/lookup?id=${encodeURIComponent(memberId)}`)
-      if (!res.ok) { scanFeedback(false); flash('error', 'No se pudo verificar el QR'); return }
-      const mem = ((await res.json()).members ?? [])[0] as { first_name: string; last_name: string } | undefined
-      if (!mem) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
-      const name = `${mem.first_name} ${mem.last_name}`.trim()
+      // El lookup SOLO sirve para saber el nombre y poder decir "✓ Fulano
+      // registrado". El check-in no lo necesita: el servidor resuelve todo con
+      // el member_id.
+      //
+      // Por eso un fallo acá YA NO FRENA EL ESCANEO (2026-09-10). Antes sí, y
+      // cualquier hipo —la sesión que se vence con la pantalla abierta, un
+      // segundo sin señal— dejaba a la persona parada en la fila con un "No se
+      // pudo verificar el QR" mientras el check-in habría funcionado. Se
+      // registra igual y el nombre aparece al refrescar.
+      const res = await fetch(`/api/members/lookup?id=${encodeURIComponent(memberId)}`).catch(() => null)
+      if (res?.status === 401) {
+        // Este SÍ frena, y con la instrucción correcta: sin sesión no se puede
+        // registrar nada, y reintentar el escaneo no lo va a arreglar.
+        scanFeedback(false)
+        flash('error', 'Se venció tu sesión. Volvé a entrar para seguir registrando.')
+        return
+      }
+      const mem = res?.ok
+        ? ((await res.json().catch(() => null))?.members ?? [])[0] as { first_name: string; last_name: string } | undefined
+        : undefined
+      // Sin nombre se sigue igual. Solo se corta si el lookup respondió BIEN y
+      // dijo que ese id no es de nadie: ahí el QR sí está mal.
+      if (res?.ok && !mem) { scanFeedback(false); flash('error', 'El QR no corresponde a ningún miembro'); return }
+      const name = mem ? `${mem.first_name} ${mem.last_name}`.trim() : 'Persona registrada'
       // El gate de "evento pago requiere inscripción" vive en persistCheckin
       // (mismo camino que nombre/cédula). 'not_registered' → cobro en sitio.
       const r = await persistCheckin({ id: memberId, name }, 'participant', 'qr')
       const dest = targetSub ? subName(targetSub) : null
-      if (r === 'ok') { scanFeedback(true); flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`) }
+      if (r === 'ok') {
+        scanFeedback(true)
+        flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`)
+        // Se registró sin haber podido leer el nombre: se refresca para que la
+        // lista muestre a quién, en vez de dejar "Persona registrada".
+        if (!mem) void refetch()
+      }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
       else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }, 'qr') }
       else { scanFeedback(false); flash('error', 'No se pudo registrar') }

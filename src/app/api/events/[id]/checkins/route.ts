@@ -33,6 +33,11 @@ export async function POST(
     const { id } = await params
     const body = await req.json()
     const memberId = body?.member_id ?? null
+    // La pantalla habla de 'participant'/'server'; la base de
+    // 'asistente'/'servidor'. La traducción vive en un solo lugar, y
+    // createCheckin REVALIDA la elección contra los comités organizadores.
+    const { calidadDesdeTipo } = await import('@/lib/events/calidad-checkin')
+    const calidad = calidadDesdeTipo(body?.attendance_type)
     const guestName = typeof body?.guest_name === 'string' ? body.guest_name.trim() : ''
     if (!memberId && !guestName) {
       return NextResponse.json(
@@ -40,7 +45,11 @@ export async function POST(
         { status: 400 },
       )
     }
-    const res = await createCheckin(id, { ...body, guest_name: memberId ? body.guest_name ?? null : guestName })
+    const res = await createCheckin(id, {
+      ...body,
+      guest_name: memberId ? body.guest_name ?? null : guestName,
+      checked_in_as: calidad,
+    })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
     // UNIQUE(member_id, event_id): la persona ya tenía check-in en este evento.

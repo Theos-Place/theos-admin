@@ -84,6 +84,11 @@ export type DbEventEnriched = {
     member_id: string | null
     sub_event_id: string | null
     checked_in_at: string
+    /** En qué calidad llegó: 'asistente' | 'servidor'. Lo ELIGIÓ el operador en
+     *  el check-in; es distinto de is_volunteer, que dice si estaba anotado de
+     *  antemano en event_volunteers. Una persona puede estar en uno, en el otro,
+     *  en los dos o en ninguno. */
+    checked_in_as: string
     /** `created_at` de la ficha: con él se cuenta a quién se le creó el perfil
      *  el mismo día del evento (personas nuevas, en el tab de Reportes). */
     member: { first_name: string; last_name: string; created_at: string | null } | null
@@ -92,6 +97,9 @@ export type DbEventEnriched = {
      *  getEventById; en la LISTA de eventos viene undefined. */
     member_first_checkin_at?: string | null
   }>
+  /** member_id → puestos con que sirve en los comités ORGANIZADORES. Solo lo
+   *  llena getEventById, y solo para quienes hicieron check-in como servidor. */
+  puestos_servidores?: Record<string, string[]>
   volunteers: Array<{
     member_id: string
     role: string | null
@@ -131,6 +139,7 @@ const SELECT = `
     member_id,
     sub_event_id,
     checked_in_at,
+    checked_in_as,
     member:members(first_name, last_name, created_at)
   ),
   volunteers:event_volunteers(
@@ -152,6 +161,7 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
     member_id: (c.member_id as string) ?? null,
     sub_event_id: (c.sub_event_id as string) ?? null,
     checked_in_at: c.checked_in_at as string,
+    checked_in_as: (c.checked_in_as as string) ?? 'asistente',
     member: (c.member as DbEventEnriched['checkins'][number]['member']) ?? null,
     is_volunteer: c.member_id ? volunteerIds.has(c.member_id as string) : false,
   }))
@@ -306,6 +316,23 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
       for (const c of ev.checkins) {
         c.member_first_checkin_at = c.member_id ? porMiembro.get(c.member_id) ?? null : null
       }
+    }
+  }
+
+  // Puesto de quienes hicieron check-in COMO SERVIDOR, para el tab de
+  // Servidores. Solo de ellos: pedir el puesto de los 187 asistentes de una
+  // charla sería una consulta grande para un dato que no se muestra.
+  const idsServidores = ev.checkins
+    .filter(c => c.checked_in_as === 'servidor' && c.member_id)
+    .map(c => c.member_id as string)
+  if (idsServidores.length > 0) {
+    try {
+      const puestos = await puestosEnComitesOrganizadores(id, idsServidores)
+      ev.puestos_servidores = Object.fromEntries(puestos)
+    } catch (e) {
+      // Igual que arriba: el detalle se muestra sin los puestos antes que no
+      // mostrarse por una columna.
+      console.error('getEventById · puestos de servidores:', e instanceof Error ? e.message : e)
     }
   }
   return ev
@@ -765,6 +792,52 @@ export async function memberServesAnyCommittee(memberId: string, committeeIds: s
   return false
 }
 
+/**
+ * Puesto (o puestos) con que cada persona sirve en los comités ORGANIZADORES de
+ * un evento. Para el tab de Servidores: saber que alguien llegó a servir sin
+ * saber en qué no le dice nada al encargado.
+ *
+ * Se listan TODOS los puestos que la persona tenga dentro de los comités
+ * organizadores, no uno solo: alguien puede ser Logística en un comité y
+ * Anfitrión en otro, y quedarse con el primero que aparezca sería arbitrario.
+ * Los puestos de OTROS comités no entran — son ciertos, pero no informan sobre
+ * este evento.
+ */
+export async function puestosEnComitesOrganizadores(
+  eventId: string,
+  memberIds: string[],
+): Promise<Map<string, string[]>> {
+  const salida = new Map<string, string[]>()
+  const ids = [...new Set(memberIds.filter(Boolean))]
+  if (ids.length === 0) return salida
+  const comites = await eventOrganizingCommitteeIds(eventId)
+  if (comites.length === 0) return salida
+
+  const supabase = createAdminClient()
+  const porLote = 200
+  for (let i = 0; i < ids.length; i += porLote) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('member_id, position:service_positions!inner(title, area:areas!service_positions_area_id_fkey!inner(id, parent_id))')
+      .in('member_id', ids.slice(i, i + porLote))
+      .eq('status', 'active')
+    if (error) throw error
+    type Fila = { member_id: string; position: { title: string; area: { id: string; parent_id: string | null } | null } | null }
+    for (const v of (data ?? []) as Fila[]) {
+      const area = v.position?.area
+      // El puesto cuenta si su área ES un comité organizador o CUELGA de uno:
+      // los puestos viven en el comité, pero algunos comités tienen sub-áreas.
+      const esDeOrganizador = !!area && (comites.includes(area.id) || (!!area.parent_id && comites.includes(area.parent_id)))
+      if (!esDeOrganizador || !v.position?.title) continue
+      const lista = salida.get(v.member_id) ?? []
+      if (!lista.includes(v.position.title)) lista.push(v.position.title)
+      salida.set(v.member_id, lista)
+    }
+  }
+  for (const [k, v] of salida) salida.set(k, v.sort((a, b) => a.localeCompare(b, 'es')))
+  return salida
+}
+
 /** Ids de los comités organizadores de un evento (m2m). */
 export async function eventOrganizingCommitteeIds(eventId: string): Promise<string[]> {
   const supabase = createAdminClient()
@@ -821,7 +894,12 @@ export class NotRegisteredError extends Error {
 
 export async function createCheckin(
   eventId: string,
-  input: { member_id?: string | null; guest_name?: string | null; sub_event_id?: string | null; method?: 'manual' | 'qr' | 'smart_link' },
+  input: {
+    member_id?: string | null; guest_name?: string | null; sub_event_id?: string | null
+    method?: 'manual' | 'qr' | 'smart_link'
+    /** 'asistente' | 'servidor'. Se REVALIDA acá, no se cree lo que llega. */
+    checked_in_as?: string | null
+  },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
 
@@ -840,6 +918,19 @@ export async function createCheckin(
     }
   }
 
+  // Calidad del check-in. Marcar 'servidor' se REVALIDA contra los comités
+  // organizadores: el cliente ya consulta server-check para pintar el botón,
+  // pero eso es cortesía — quien mande el POST a mano no debe poder inflar el
+  // conteo de servidores de un evento. Si no califica, entra como asistente:
+  // la persona SÍ estuvo, y perder su asistencia por una etiqueta sería peor
+  // que corregir la etiqueta.
+  let calidad = input.checked_in_as === 'servidor' ? 'servidor' : 'asistente'
+  if (calidad === 'servidor') {
+    const comites = await eventOrganizingCommitteeIds(eventId)
+    const califica = !!input.member_id && await memberServesAnyCommittee(input.member_id, comites)
+    if (!califica) calidad = 'asistente'
+  }
+
   const { data, error } = await supabase
     .from('event_checkins')
     .insert({
@@ -848,6 +939,7 @@ export async function createCheckin(
       guest_name: input.guest_name ?? null,
       sub_event_id: input.sub_event_id ?? null,
       method: input.method ?? 'manual',
+      checked_in_as: calidad,
     })
     .select('id')
     .single()

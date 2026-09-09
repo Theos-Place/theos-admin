@@ -9,6 +9,17 @@
  * últimos ATTENDANCE_MONTHS meses, Y al menos uno de esos check-ins dentro
  * de los últimos ATTENDANCE_RECENCY_DAYS días. Ambas condiciones deben
  * cumplirse juntas.
+ *
+ * SERVIR CUENTA COMO ASISTIR, y es intencional. Desde 2026-09-10 el check-in
+ * distingue si la persona llegó como asistente o como servidora
+ * (event_checkins.checked_in_as), pero ESTE criterio NO mira esa columna: quien
+ * atendió la mesa de bienvenida estuvo en la charla igual que quien se sentó a
+ * escucharla, y descontarle esa asistencia castigaría su elegibilidad para
+ * estudios por haber servido. Verificado el 2026-09-10 que ninguna de las 11
+ * funciones de base que tocan event_checkins filtra por esa columna
+ * (active_attendance_member_ids, report_charla_attendance, refresh_member_sede
+ * y las demás cuentan todo). Si alguien alguna vez quiere separarlas, tiene que
+ * ser una decisión explícita y no un efecto colateral de agregar un filtro.
  */
 export const ATTENDANCE_MONTHS = 6
 export const ATTENDANCE_MIN_CHARLAS = 6

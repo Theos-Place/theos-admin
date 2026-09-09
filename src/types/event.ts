@@ -41,6 +41,9 @@ export type EventCheckin = {
   member_id: string
   member_name: string
   attendance_type: AttendanceType
+  /** Estaba anotado en event_volunteers ANTES del evento. Distinto de haber
+   *  hecho el check-in como servidor: son dos cosas y las dos informan. */
+  registrado_como_servidor?: boolean
   sub_event_id: string | null
   checked_at: string
   /** Cuándo se creó la ficha de la persona. Sirve para contar a quien vino por
@@ -115,6 +118,9 @@ export type AdminEvent = {
   sub_events: SubEvent[]
   registrations: EventRegistration[]
   checkins: EventCheckin[]
+  /** member_id → puestos con que sirve en los comités ORGANIZADORES.
+   *  Solo para quienes hicieron check-in como servidor. */
+  puestos_servidores?: Record<string, string[]>
   volunteer_bookings: VolunteerBooking[]
   cancellation_reason: string | null
   flyer_url: string | null

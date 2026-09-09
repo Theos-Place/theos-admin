@@ -72,12 +72,21 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
       id: c.id,
       member_id: c.member_id ?? '',
       member_name: fullName(c.member),
-      attendance_type: (c.is_volunteer ? 'server' : 'participant') as AttendanceType,
+      // Sale de la COLUMNA, que es lo que el operador eligió. Antes se
+      // derivaba de event_volunteers —quién estaba anotado de antemano—, que
+      // es otra cosa y además está vacía: por eso todo el mundo leía como
+      // participante aunque se hubiera marcado "Servidor".
+      attendance_type: (c.checked_in_as === 'servidor' ? 'server' : 'participant') as AttendanceType,
+      /** Estaba anotado en event_volunteers ANTES del evento. Distinto de haber
+       *  hecho el check-in como servidor. */
+      registrado_como_servidor: c.is_volunteer,
       sub_event_id: c.sub_event_id,
       checked_at: c.checked_in_at,
       member_created_at: c.member?.created_at ?? null,
       member_first_checkin_at: c.member_first_checkin_at,
     })),
+
+    puestos_servidores: db.puestos_servidores ?? {},
 
     volunteer_bookings: db.volunteers.map((v) => ({
       member_id: v.member_id,

@@ -32,7 +32,18 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[name.charAt(0).toUpperCase()] ?? 'bg-navy'
 }
 
+export type ServidorPresente = {
+  member_id: string
+  member_name: string
+  /** Puestos con que sirve en los comités organizadores de ESTE evento. */
+  puestos: string[]
+}
+
 type Props = {
+  /** Quienes hicieron CHECK-IN como servidor. Es distinto de estar anotado de
+   *  antemano (allBookings): una cosa es haberse comprometido y otra haber
+   *  llegado, y al encargado le informan las dos. */
+  presentes?: ServidorPresente[]
   allBookings: VolunteerBooking[]
   groupedBookings: Record<string, VolunteerBooking[]>
   confirmedCount: number
@@ -64,6 +75,7 @@ type Props = {
 }
 
 export function EventServersTab({
+  presentes = [],
   groupedBookings,
   confirmedCount,
   pendingCount,
@@ -125,10 +137,44 @@ export function EventServersTab({
         </div>
       </div>
 
-      {/* Bookings grouped by role */}
+      {/* LLEGARON A SERVIR. Separado de los anotados de antemano a propósito:
+          son dos hechos distintos, y confundirlos haría creer que alguien
+          cumplió por haberse comprometido, o al revés. */}
+      {presentes.length > 0 && (
+        <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
+          <p className="text-[11px] tracking-widest uppercase text-navy-light/80 mb-1 font-display">
+            Hicieron check-in como servidores
+          </p>
+          <p className="text-[13px] text-navy-light/80 mb-3 font-body">
+            {presentes.length} {presentes.length === 1 ? 'persona llegó' : 'personas llegaron'} y se registraron sirviendo.
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {presentes.map(p => (
+              <div key={p.member_id} className="flex items-center gap-2.5 rounded-xl bg-surface-low px-3 py-2">
+                <div className={cn('h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold text-white', avatarColor(p.member_name))}>
+                  {p.member_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-navy font-body">{p.member_name}</p>
+                  {/* Sin puesto resoluble no se inventa uno: puede servir en un
+                      comité que no organiza este evento, o no tener puesto activo. */}
+                  <p className="truncate text-[11px] text-navy-light/80 font-body">
+                    {p.puestos.length > 0 ? p.puestos.join(' · ') : 'Sin puesto en los comités organizadores'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Anotados de antemano, agrupados por rol */}
       {Object.keys(groupedBookings).length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-          <EmptyState icon={UserPlus} title="No hay servidores asignados aún" />
+          <EmptyState
+            icon={UserPlus}
+            title={presentes.length > 0 ? 'Nadie se anotó de antemano' : 'No hay servidores asignados aún'}
+          />
         </div>
       ) : (
         <div className="space-y-3">

@@ -749,6 +749,7 @@ export type Database = {
       event_checkins: {
         Row: {
           checked_in_at: string | null
+          checked_in_as: string
           checked_in_by: string | null
           event_id: string
           guest_name: string | null
@@ -760,6 +761,7 @@ export type Database = {
         }
         Insert: {
           checked_in_at?: string | null
+          checked_in_as?: string
           checked_in_by?: string | null
           event_id: string
           guest_name?: string | null
@@ -771,6 +773,7 @@ export type Database = {
         }
         Update: {
           checked_in_at?: string | null
+          checked_in_as?: string
           checked_in_by?: string | null
           event_id?: string
           guest_name?: string | null
