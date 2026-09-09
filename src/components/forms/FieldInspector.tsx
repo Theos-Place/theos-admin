@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, GripVertical, Trash2 } from 'lucide-react'
+import { Plus, X, GripVertical, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
+import { moverOpcion, puedeSubir, puedeBajar } from '@/lib/forms/reordenar-opciones'
 import { cn } from '@/lib/utils'
 import type { FormFieldNew, LogicRule, LogicCondition, ConditionOperator } from '@/data/form-config'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
@@ -61,6 +62,10 @@ interface FieldInspectorProps {
 }
 
 export function FieldInspector({ field, allFields, onChange, onFocusLogic }: FieldInspectorProps) {
+  // Arrastre de opciones. El HTML5 drag no existe en táctil, así que las
+  // flechas no son un extra: son la única forma de reordenar desde el celular.
+  const [arrastrando, setArrastrando] = useState<number | null>(null)
+  const [encima, setEncima] = useState<number | null>(null)
   const [activeSection, setActiveSection] = useState<'general' | 'options' | 'scale' | 'logic'>(
     onFocusLogic ? 'logic' : 'general'
   )
@@ -376,23 +381,69 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
           <div className="p-4 space-y-3">
             <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Opciones</p>
             <div className="space-y-2">
-              {(field.options ?? []).map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <GripVertical size={14} className="text-navy-light/80 shrink-0 cursor-grab" />
+              {(field.options ?? []).map((opt, i) => {
+                const opciones = field.options ?? []
+                const mover = (hasta: number) => set('options', moverOpcion(opciones, i, hasta))
+                const flechaCls = 'relative after:absolute after:content-[\'\'] after:-inset-1 h-4 w-5 rounded flex items-center justify-center transition-colors hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed'
+                return (
+                <div
+                  key={i}
+                  onDragOver={e => { e.preventDefault(); setEncima(i) }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    if (arrastrando !== null) mover(i)
+                    setArrastrando(null); setEncima(null)
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg transition-all',
+                    arrastrando === i ? 'opacity-30' : '',
+                    encima === i && arrastrando !== null && arrastrando !== i ? 'ring-2 ring-coral/40' : '',
+                  )}
+                >
+                  <div
+                    draggable
+                    onDragStart={() => setArrastrando(i)}
+                    onDragEnd={() => { setArrastrando(null); setEncima(null) }}
+                    className="shrink-0 cursor-grab active:cursor-grabbing"
+                  >
+                    <GripVertical size={14} className="text-navy-light/80" aria-hidden />
+                  </div>
+                  {/* Flechas: teclado y celular, donde arrastrar no funciona. */}
+                  <div className="shrink-0 flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => mover(i - 1)}
+                      disabled={!puedeSubir(i)}
+                      className={flechaCls}
+                      aria-label={`Subir la opción ${i + 1}`}
+                    >
+                      <ChevronUp size={12} className="text-navy-light/80" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => mover(i + 1)}
+                      disabled={!puedeBajar(i, opciones.length)}
+                      className={flechaCls}
+                      aria-label={`Bajar la opción ${i + 1}`}
+                    >
+                      <ChevronDown size={12} className="text-navy-light/80" />
+                    </button>
+                  </div>
                   <input
                     className={cn(inputCls, 'flex-1')}
                     value={opt}
                     onChange={e => {
-                      const opts = [...(field.options ?? [])]; opts[i] = e.target.value
+                      const opts = [...opciones]; opts[i] = e.target.value
                       set('options', opts)
                     }}
                     placeholder={`Opción ${i + 1}`}
                   />
-                  <button type="button" onClick={() => set('options', (field.options ?? []).filter((_, idx) => idx !== i))} className="relative after:absolute after:content-[''] after:-inset-1.5 shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label={`Eliminar opción ${i + 1}`}>
+                  <button type="button" onClick={() => set('options', opciones.filter((_, idx) => idx !== i))} className="relative after:absolute after:content-[''] after:-inset-1.5 shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label={`Eliminar opción ${i + 1}`}>
                     <X size={13} className="text-coral" />
                   </button>
                 </div>
-              ))}
+                )
+              })}
             </div>
             <button type="button" onClick={() => set('options', [...(field.options ?? []), ''])} className="flex items-center gap-1.5 text-[13px] text-coral hover:text-coral-deep transition-colors font-body">
               <Plus size={13} />
@@ -409,8 +460,17 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                   className="accent-coral mt-0.5"
                   checked={field.options_source === 'study_groups_open'}
                   onChange={e => {
-                    set('options_source', e.target.checked ? 'study_groups_open' : null)
-                    if (!e.target.checked) set('options_source_param', null)
+                    // BUG 2026-09-09: acá había DOS set() seguidos. `set` arma el
+                    // campo nuevo a partir del prop `field`, que todavía es el
+                    // viejo cuando corre el segundo — así que el segundo pisaba al
+                    // primero y el check nunca se desmarcaba. Va todo en un solo
+                    // onChange.
+                    const prendido = e.target.checked
+                    onChange({
+                      ...field,
+                      options_source: prendido ? 'study_groups_open' : null,
+                      options_source_param: prendido ? field.options_source_param : null,
+                    })
                   }}
                 />
                 <span>
