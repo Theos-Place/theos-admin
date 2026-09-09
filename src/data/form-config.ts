@@ -22,8 +22,11 @@ export const PERSONAL_DATA_FIELDS: { key: string; label: string; group: string }
   { key: 'phone',                   label: 'Teléfono',               group: 'Contacto'       },
   { key: 'email',                   label: 'Correo',                 group: 'Contacto'       },
   { key: 'address',                 label: 'Dirección',              group: 'Contacto'       },
-  { key: 'emergency_contact_name',  label: 'Contacto de emergencia', group: 'Emergencia'     },
-  { key: 'emergency_contact_phone', label: 'Teléfono de emergencia', group: 'Emergencia'     },
+  // UNA sola opción que trae nombre Y número (2026-09-10): un contacto de
+  // emergencia sin teléfono no sirve para nada, y tener que acordarse de marcar
+  // las dos casillas garantizaba que a veces faltara la mitad. Las claves
+  // sueltas siguen leyéndose para los formularios ya guardados con ellas.
+  { key: 'emergency_contact',       label: 'Contacto de emergencia', group: 'Emergencia'     },
   { key: 'occupation',              label: 'Profesión',              group: 'Trabajo'        },
   { key: 'workplace',               label: 'Lugar de trabajo',       group: 'Trabajo'        },
   { key: 'allergies',               label: 'Alergias',               group: 'Salud'          },

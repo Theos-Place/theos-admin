@@ -99,27 +99,14 @@ async function handleUpdate(
     if (isAdmin && 'is_system' in body) updates.is_system = !!body.is_system
     // Restricción alimenticia: se normaliza y valida acá también, no solo en la
     // BD. El CHECK de la base protege contra imports y scripts, pero devuelve un
-    // 500 ilegible; esto da un 400 que se puede mostrar. Si el patch trae uno
-    // solo de los dos campos, el otro se lee del miembro para validar la pareja
-    // completa — si no, marcar 'otros' sin mandar el texto pasaría el filtro.
-    if ('dietary_restrictions' in updates || 'dietary_restrictions_other' in updates) {
+    // 500 ilegible; esto da un 400 que se puede mostrar.
+    if ('dietary_restrictions' in updates) {
       const { normalizarRestricciones } = await import('@/lib/members/restriccion-alimenticia')
-      const { createAdminClient: adminDieta } = await import('@/lib/supabase/admin')
-      const { data: previo } = await adminDieta()
-        .from('members').select('dietary_restrictions, dietary_restrictions_other').eq('id', id).maybeSingle()
-      const actual = previo as { dietary_restrictions: string[] | null; dietary_restrictions_other: string | null } | null
-      const lista = 'dietary_restrictions' in updates
-        ? updates.dietary_restrictions
-        : (actual?.dietary_restrictions ?? [])
-      const otro = 'dietary_restrictions_other' in updates
-        ? updates.dietary_restrictions_other
-        : (actual?.dietary_restrictions_other ?? null)
-      const norm = normalizarRestricciones(lista, otro)
+      const norm = normalizarRestricciones(updates.dietary_restrictions)
       if (!norm.ok) {
         return NextResponse.json({ error: norm.error, code: 'restriccion_invalida' }, { status: 400 })
       }
       updates.dietary_restrictions = norm.restricciones
-      updates.dietary_restrictions_other = norm.otro
     }
 
     const { normalizePhoneOrNull } = await import('@/lib/phone')

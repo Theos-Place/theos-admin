@@ -41,11 +41,17 @@ function getMemberFieldValue(member: Partial<Member>, key: string): string {
     case 'emergency_contact_phone': return member.emergency_contact_phone || '—'
     case 'occupation':              return member.occupation || '—'
     case 'workplace':               return member.workplace || '—'
+    case 'emergency_contact': {
+      const nombre = member.emergency_contact_name?.trim()
+      const tel = member.emergency_contact_phone?.trim()
+      if (!nombre && !tel) return '—'
+      return [nombre, tel].filter(Boolean).join(' · ')
+    }
     case 'birth_date':              return member.birth_date || '—'
     case 'allergies':               return member.allergies || '—'
     case 'medications':             return member.medicamentos || '—'
     case 'dietary_restrictions':
-      return textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)
+      return textoDeRestricciones(member.dietary_restrictions)
     default:                        return '—'
   }
 }
@@ -599,7 +605,37 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                             key={f.key}
                             className="bg-surface-card border border-[var(--outline-variant)] rounded-lg py-2 px-3"
                           >
-                            {f.key === 'dietary_restrictions' ? (
+                            {f.key === 'emergency_contact' ? (
+                              // Dos columnas bajo una etiqueta: el nombre sin el
+                              // teléfono no sirve, así que se piden juntos.
+                              <>
+                                <div className="text-[11px] text-[var(--fg-muted,#8c8fb0)] uppercase tracking-[.05em] font-display">
+                                  {f.label}
+                                </div>
+                                <div className="mt-1.5 space-y-2">
+                                  {puedeEditarPerfil ? (
+                                    <>
+                                      <CampoPerfilEditable
+                                        etiqueta="Nombre"
+                                        valor={memberForFields.emergency_contact_name || '—'}
+                                        memberId={user!.member_id!} columna="emergency_contact_name"
+                                        onGuardado={aplicarCambioDePerfil}
+                                      />
+                                      <CampoPerfilEditable
+                                        etiqueta="Teléfono"
+                                        valor={memberForFields.emergency_contact_phone || '—'}
+                                        memberId={user!.member_id!} columna="emergency_contact_phone" tipo="telefono"
+                                        onGuardado={aplicarCambioDePerfil}
+                                      />
+                                    </>
+                                  ) : (
+                                    <div className="text-[13px] font-semibold font-body">
+                                      {getMemberFieldValue(memberForFields, f.key)}
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            ) : f.key === 'dietary_restrictions' ? (
                               // Este no es un campo de texto: son checkboxes con
                               // su propia validación (Otros exige detalle), así
                               // que trae su componente en vez de pasar por el
@@ -611,13 +647,11 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                                 <div className="mt-1.5">
                                   <RestriccionAlimenticia
                                     valores={memberForFields.dietary_restrictions ?? []}
-                                    otro={memberForFields.dietary_restrictions_other ?? null}
                                     memberId={user?.member_id ?? ''}
                                     soloLectura={!puedeEditarPerfil}
-                                    onGuardado={(valores, otro) => setProfile(prev => ({
+                                    onGuardado={valores => setProfile(prev => ({
                                       ...(prev ?? {}),
                                       dietary_restrictions: valores,
-                                      dietary_restrictions_other: otro,
                                     } as Partial<Member>))}
                                   />
                                 </div>

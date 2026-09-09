@@ -38,7 +38,6 @@ export function toDomainMember(db: DbMemberEnriched | DbMember): Member {
     address: db.address,
     allergies: db.allergies,
     dietary_restrictions: db.dietary_restrictions,
-    dietary_restrictions_other: db.dietary_restrictions_other ?? null,
     emergency_contact_name: db.emergency_contact_name,
     emergency_contact_phone: db.emergency_contact_phone,
     photo_url: db.photo_url,

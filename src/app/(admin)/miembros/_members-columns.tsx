@@ -185,7 +185,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   {
     key: 'dietary_restrictions', label: 'Restricción alimenticia', defaultVisible: false,
     exportValue: m => {
-      const t = textoDeRestricciones(m.dietary_restrictions, m.dietary_restrictions_other)
+      const t = textoDeRestricciones(m.dietary_restrictions)
       return t === '—' ? '' : t
     },
   },

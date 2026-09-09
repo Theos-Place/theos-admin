@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
-  CAMPOS_AUTOEDITABLES, filtrarAutoedicion, mensajeDeCampoBloqueado,
+  CAMPOS_AUTOEDITABLES, filtrarAutoedicion, mensajeDeCampoBloqueado, puedeEditarColumna,
 } from './autoedicion'
 
 describe('qué puede editar alguien de su propia ficha', () => {
   it('los datos personales que pidió el negocio, y nada más', () => {
     expect([...CAMPOS_AUTOEDITABLES].sort()).toEqual([
       'address', 'allergies', 'birth_date', 'canton',
-      'dietary_restrictions', 'dietary_restrictions_other',
+      'dietary_restrictions',
       'district', 'emergency_contact_name', 'emergency_contact_phone',
       'first_name', 'gender', 'last_name',
       'medications', 'occupation', 'phone', 'province', 'workplace',
@@ -90,5 +90,47 @@ describe('mezclas', () => {
   it('con basura no revienta', () => {
     expect(filtrarAutoedicion(null, null)).toEqual({ permitidos: {}, rechazados: [] })
     expect(filtrarAutoedicion('texto', null)).toEqual({ permitidos: {}, rechazados: [] })
+  })
+})
+
+describe('puedeEditarColumna — quién edita qué', () => {
+  const yo = { esStaff: false, esPropia: true, tieneDocumento: false }
+  const staff = { esStaff: true, esPropia: false, tieneDocumento: true }
+  const ajeno = { esStaff: false, esPropia: false, tieneDocumento: false }
+
+  it('sobre la ficha de otra persona, sin ser staff, no se edita nada', () => {
+    for (const c of ['phone', 'allergies', 'first_name', 'email']) {
+      expect(puedeEditarColumna(c, ajeno), c).toBe(false)
+    }
+  })
+
+  it('el correo lo edita el staff, no la persona', () => {
+    expect(puedeEditarColumna('email', staff)).toBe(true)
+    expect(puedeEditarColumna('email', { ...yo })).toBe(false)
+  })
+
+  it('el estado civil lo edita el staff, no la persona', () => {
+    expect(puedeEditarColumna('marital_status', staff)).toBe(true)
+    expect(puedeEditarColumna('marital_status', yo)).toBe(false)
+  })
+
+  it('la cédula: el staff siempre; la persona solo si le falta', () => {
+    expect(puedeEditarColumna('cedula', staff)).toBe(true)
+    expect(puedeEditarColumna('cedula', { ...yo, tieneDocumento: false })).toBe(true)
+    expect(puedeEditarColumna('cedula', { ...yo, tieneDocumento: true })).toBe(false)
+  })
+
+  it('los datos personales los edita cualquiera de los dos', () => {
+    for (const c of ['phone', 'address', 'allergies', 'occupation', 'gender', 'birth_date']) {
+      expect(puedeEditarColumna(c, yo), c).toBe(true)
+      expect(puedeEditarColumna(c, staff), c).toBe(true)
+    }
+  })
+
+  it('una columna de gestión no la edita nadie desde esta pantalla', () => {
+    for (const c of ['is_active', 'is_donor', 'is_system', 'sede_id']) {
+      expect(puedeEditarColumna(c, staff), c).toBe(false)
+      expect(puedeEditarColumna(c, yo), c).toBe(false)
+    }
   })
 })

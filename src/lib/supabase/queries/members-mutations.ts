@@ -12,7 +12,7 @@ export const MEMBER_WRITE_FIELDS = [
   'cedula', 'document_type', 'first_name', 'last_name', 'birth_date', 'gender', 'marital_status',
   'phone', 'email', 'province', 'canton', 'district', 'address', 'occupation',
   'workplace', 'allergies', 'medications',
-  'dietary_restrictions', 'dietary_restrictions_other', 'emergency_contact_name',
+  'dietary_restrictions', 'emergency_contact_name',
   'emergency_contact_phone', 'photo_url', 'is_donor', 'is_active',
 ] as const
 

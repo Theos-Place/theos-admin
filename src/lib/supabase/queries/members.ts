@@ -39,7 +39,6 @@ export type DbMember = {
   medications: string | null
   /** NOT NULL con default '{}' en la BD: nunca llega null. */
   dietary_restrictions: string[]
-  dietary_restrictions_other: string | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
   photo_url: string | null

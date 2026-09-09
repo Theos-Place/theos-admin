@@ -7,8 +7,7 @@ const conDoc = { tieneDocumento: true }
 
 describe('qué se edita en sitio desde el formulario', () => {
   it('los datos de contacto, salud y trabajo sí', () => {
-    for (const clave of ['phone', 'address', 'allergies', 'occupation', 'workplace',
-      'emergency_contact_name', 'emergency_contact_phone']) {
+    for (const clave of ['phone', 'address', 'allergies', 'occupation', 'workplace']) {
       expect(editabilidadDeCampo(clave, conDoc).editable, clave).toBe(true)
     }
   })
@@ -52,8 +51,13 @@ describe('qué se edita en sitio desde el formulario', () => {
     // dietary_restrictions figura acá porque NO pasa por el editor genérico de
     // texto: son checkboxes con validación propia y el FormFiller lo pinta con
     // su propio componente. Editable sí, por otro camino.
+    // 'emergency_contact' y 'dietary_restrictions' figuran acá porque NO pasan
+    // por el editor genérico de texto: el primero son dos campos bajo una
+    // etiqueta y el segundo son checkboxes, y el FormFiller los pinta con sus
+    // propios componentes. Editables sí, por otro camino.
     expect(noEditables).toEqual([
-      'age', 'cedula', 'dietary_restrictions', 'email', 'full_name', 'marital_status',
+      'age', 'cedula', 'dietary_restrictions', 'email',
+      'emergency_contact', 'full_name', 'marital_status',
     ])
   })
 })

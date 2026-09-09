@@ -4,14 +4,18 @@ import {
 } from './restriccion-alimenticia'
 
 describe('el catálogo', () => {
-  it('son las cuatro opciones pedidas, con claves estables en vez de etiquetas', () => {
+  it('son tres opciones y la lista es CERRADA — «Otros» se quitó a propósito', () => {
     expect(RESTRICCIONES_ALIMENTICIAS.map(r => r.clave))
-      .toEqual(['celiaquia', 'intolerancia_lactosa', 'vegana', 'otros'])
+      .toEqual(['celiaquia', 'intolerancia_lactosa', 'vegana'])
   })
 
   it('las etiquetas en español viven en el código, no en la base', () => {
     expect(RESTRICCIONES_ALIMENTICIAS.map(r => r.etiqueta))
-      .toEqual(['Celiaquía', 'Intolerancia a la lactosa', 'Persona vegana', 'Otros'])
+      .toEqual(['Celiaquía', 'Intolerancia a la lactosa', 'Persona vegana'])
+  })
+
+  it('«otros» ya no es una clave válida', () => {
+    expect(esClaveValida('otros')).toBe(false)
   })
 
   it('solo acepta claves del catálogo', () => {
@@ -22,77 +26,49 @@ describe('el catálogo', () => {
 
 describe('normalizar', () => {
   it('guarda varias a la vez', () => {
-    const r = normalizarRestricciones(['vegana', 'celiaquia'], null)
+    const r = normalizarRestricciones(['vegana', 'celiaquia'])
     expect(r.ok).toBe(true)
     expect(r.restricciones).toEqual(['celiaquia', 'vegana'])
   })
 
   it('ordena según el catálogo, no según en qué orden se tocaron', () => {
-    const a = normalizarRestricciones(['vegana', 'intolerancia_lactosa', 'celiaquia'], null)
-    const b = normalizarRestricciones(['celiaquia', 'vegana', 'intolerancia_lactosa'], null)
-    expect(a.restricciones).toEqual(b.restricciones)
+    expect(normalizarRestricciones(['vegana', 'celiaquia']).restricciones)
+      .toEqual(normalizarRestricciones(['celiaquia', 'vegana']).restricciones)
   })
 
   it('quita repetidos', () => {
-    expect(normalizarRestricciones(['vegana', 'vegana'], null).restricciones).toEqual(['vegana'])
-  })
-
-  it('«Otros» con texto guarda las dos cosas', () => {
-    const r = normalizarRestricciones(['otros'], '  alergia al huevo  ')
-    expect(r.ok).toBe(true)
-    expect(r.restricciones).toEqual(['otros'])
-    expect(r.otro).toBe('alergia al huevo')
-  })
-
-  it('«Otros» SIN texto es un error: la opción sola no le dice nada a la cocina', () => {
-    const r = normalizarRestricciones(['otros'], '')
-    expect(r.ok).toBe(false)
-    expect(r.error).toMatch(/escribí cuál/i)
-  })
-
-  it('texto SIN «Otros» marca el checkbox solo, no descarta lo escrito', () => {
-    // Decisión documentada: en el celular es fácil escribir y que el toque del
-    // checkbox no registre; tirar el texto perdería un dato real.
-    const r = normalizarRestricciones([], 'sin gluten ni maní')
-    expect(r.ok).toBe(true)
-    expect(r.restricciones).toEqual(['otros'])
-    expect(r.otro).toBe('sin gluten ni maní')
-  })
-
-  it('sin «Otros» el texto no se guarda', () => {
-    expect(normalizarRestricciones(['vegana'], null).otro).toBeNull()
+    expect(normalizarRestricciones(['vegana', 'vegana']).restricciones).toEqual(['vegana'])
   })
 
   it('una clave fuera del catálogo se rechaza y nombra cuál', () => {
-    const r = normalizarRestricciones(['vegana', 'carnivoro'], null)
+    const r = normalizarRestricciones(['vegana', 'carnivoro'])
     expect(r.ok).toBe(false)
     expect(r.error).toMatch(/carnivoro/)
   })
 
+  it('«otros», que antes valía, ahora se rechaza', () => {
+    expect(normalizarRestricciones(['otros']).ok).toBe(false)
+  })
+
   it('lista vacía o basura no revienta', () => {
-    expect(normalizarRestricciones([], null)).toEqual({ ok: true, restricciones: [], otro: null })
-    expect(normalizarRestricciones(null, null).ok).toBe(true)
-    expect(normalizarRestricciones('texto', null).ok).toBe(true)
+    expect(normalizarRestricciones([])).toEqual({ ok: true, restricciones: [] })
+    expect(normalizarRestricciones(null).ok).toBe(true)
+    expect(normalizarRestricciones('texto').ok).toBe(true)
   })
 })
 
 describe('cómo se lee', () => {
   it('lista las etiquetas en español', () => {
-    expect(textoDeRestricciones(['celiaquia', 'vegana'], null))
-      .toBe('Celiaquía, Persona vegana')
-  })
-
-  it('«Otros» muestra el detalle, que es lo que la cocina necesita', () => {
-    expect(textoDeRestricciones(['otros'], 'alergia al huevo'))
-      .toBe('Otros: alergia al huevo')
+    expect(textoDeRestricciones(['celiaquia', 'vegana'])).toBe('Celiaquía, Persona vegana')
   })
 
   it('sin restricciones da un guion, no una cadena vacía', () => {
-    expect(textoDeRestricciones([], null)).toBe('—')
-    expect(textoDeRestricciones(null, null)).toBe('—')
+    expect(textoDeRestricciones([])).toBe('—')
+    expect(textoDeRestricciones(null)).toBe('—')
   })
 
   it('ignora claves viejas o corruptas en vez de mostrarlas crudas', () => {
-    expect(textoDeRestricciones(['vegana', 'basura'], null)).toBe('Persona vegana')
+    // Incluye 'otros', que pudo quedar en datos viejos aunque hoy no sea válida.
+    expect(textoDeRestricciones(['vegana', 'otros', 'basura'])).toBe('Persona vegana')
   })
 })

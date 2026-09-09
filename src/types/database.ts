@@ -2468,7 +2468,6 @@ export type Database = {
           address: string | null
           allergies: string | null
           dietary_restrictions: string[]
-          dietary_restrictions_other: string | null
           auth_user_id: string | null
           birth_date: string | null
           canton: string | null
@@ -2521,7 +2520,6 @@ export type Database = {
           address?: string | null
           allergies?: string | null
           dietary_restrictions?: string[]
-          dietary_restrictions_other?: string | null
           auth_user_id?: string | null
           birth_date?: string | null
           canton?: string | null
@@ -2574,7 +2572,6 @@ export type Database = {
           address?: string | null
           allergies?: string | null
           dietary_restrictions?: string[]
-          dietary_restrictions_other?: string | null
           auth_user_id?: string | null
           birth_date?: string | null
           canton?: string | null

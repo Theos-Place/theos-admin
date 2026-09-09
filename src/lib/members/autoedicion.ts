@@ -26,7 +26,7 @@ export const CAMPOS_AUTOEDITABLES = [
   'phone',
   'province', 'canton', 'district', 'address',
   'allergies', 'medications',
-  'dietary_restrictions', 'dietary_restrictions_other',
+  'dietary_restrictions',
   'emergency_contact_name', 'emergency_contact_phone',
   'occupation', 'workplace',
 ] as const
@@ -100,3 +100,33 @@ export function filtrarAutoedicion(
   }
   return { permitidos, rechazados }
 }
+
+/**
+ * ¿Se puede editar esta columna, y quién?
+ *
+ * Hay DOS permisos distintos y confundirlos es lo que produce lápices que no
+ * hacen nada: el staff de padrón edita casi todo, y la persona edita un
+ * subconjunto de su propia ficha. La pantalla tiene que preguntar por el caso
+ * concreto —quién soy, de quién es la ficha— y no por "¿es editable?" en
+ * abstracto.
+ *
+ * `tieneDocumento` importa solo para la cédula: la persona la COMPLETA si le
+ * falta, pero no la cambia. El staff sí la cambia.
+ */
+export function puedeEditarColumna(
+  columna: string,
+  ctx: { esStaff: boolean; esPropia: boolean; tieneDocumento: boolean },
+): boolean {
+  if (ctx.esStaff) return CAMPOS_STAFF.includes(columna)
+  if (!ctx.esPropia) return false
+  if ((CAMPOS_DE_DOCUMENTO as readonly string[]).includes(columna)) return !ctx.tieneDocumento
+  return (CAMPOS_AUTOEDITABLES as readonly string[]).includes(columna)
+}
+
+/** Lo que el staff de padrón puede tocar. Espejo de MEMBER_WRITE_FIELDS sin los
+ *  flags de gestión, que no viven en esta pantalla. */
+const CAMPOS_STAFF: readonly string[] = [
+  ...CAMPOS_AUTOEDITABLES,
+  ...CAMPOS_DE_DOCUMENTO,
+  'email', 'marital_status',
+]

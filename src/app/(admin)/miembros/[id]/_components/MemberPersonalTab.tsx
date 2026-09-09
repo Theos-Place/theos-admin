@@ -1,14 +1,15 @@
 'use client'
 
-import { Phone, Mail, MapPin, User, Heart, Briefcase, Building, Lock, Edit2 } from 'lucide-react'
+import { Phone, Mail, MapPin, User, Heart, Briefcase, Building, Lock, Cake } from 'lucide-react'
 import type { Member } from '@/types/member'
 import { formatDate } from '@/lib/format'
 import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
+import { puedeEditarColumna } from '@/lib/members/autoedicion'
+import { OPCIONES_GENERO } from '@/lib/members/campo-editable'
 import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
 import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
-
 
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr)
@@ -19,40 +20,57 @@ function calculateAge(dateStr: string): number {
   return age
 }
 
-function InfoRow({
-  icon,
-  label,
-  value,
-  editable = true,
+/**
+ * Una fila del perfil.
+ *
+ * ANTES: toda fila "editable" pintaba un lápiz que NO TENÍA onClick. Era
+ * decorativo — la pantalla prometía una edición que no existía, y las filas que
+ * sí importaban (salud) mostraban un candado. Ahora el lápiz aparece solo donde
+ * de verdad se puede editar, y editar de verdad; donde no, va el candado.
+ *
+ * Quién puede qué lo decide puedeEditarColumna, que distingue staff de la propia
+ * persona. Preguntarlo por columna y no "¿es editable?" en abstracto es
+ * justamente lo que evita volver a ofrecer algo que el servidor rechaza.
+ */
+function Fila({
+  icon, label, value, columna, tipo = 'texto', opciones, memberId, puedeEditar,
 }: {
   icon: React.ReactNode
   label: string
   value: string
-  editable?: boolean
+  /** Sin columna, la fila es de solo lectura (un dato calculado, por ejemplo). */
+  columna?: string
+  tipo?: 'texto' | 'telefono' | 'parrafo' | 'fecha' | 'seleccion'
+  opciones?: ReadonlyArray<{ valor: string; etiqueta: string }>
+  memberId: string
+  puedeEditar: boolean
 }) {
+  const editable = !!columna && puedeEditar
   return (
     <div className="flex items-start gap-3 py-2.5">
       <div className="mt-0.5 text-navy-light/80 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p
-          className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-0.5 font-display"
-        >
-          {label}
-        </p>
-        <p className="text-sm text-navy font-body">
-          {value || '—'}
-        </p>
+        {editable ? (
+          <CampoPerfilEditable
+            etiqueta={label}
+            valor={value || '—'}
+            memberId={memberId}
+            columna={columna!}
+            tipo={tipo}
+            opciones={opciones}
+          />
+        ) : (
+          <>
+            <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-0.5 font-display">
+              {label}
+            </p>
+            <p className="text-sm text-navy font-body">{value || '—'}</p>
+          </>
+        )}
       </div>
-      {editable ? (
-        <button
-          className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-surface-low transition-all"
-          aria-label="Editar"
-        >
-          <Edit2 size={13} strokeWidth={1.75} />
-        </button>
-      ) : (
-        <div className="rounded-lg p-1.5 text-navy-light/80">
-          <Lock size={13} strokeWidth={1.75} />
+      {!editable && (
+        <div className="rounded-lg p-1.5 text-navy-light/80" title="Este dato no se edita desde acá">
+          <Lock size={13} strokeWidth={1.75} aria-hidden />
         </div>
       )}
     </div>
@@ -66,131 +84,101 @@ type Props = {
 export function MemberPersonalTab({ member }: Props) {
   const { can } = usePermissions()
   const { user } = useAuth()
-  // Staff de padrón sobre cualquier ficha, o la persona sobre la suya: los dos
-  // casos que el PATCH de /api/members/[id] ya acepta. Se comprueba acá para no
-  // ofrecer un campo que el servidor va a rechazar.
-  const puedeEditar = can('miembros', 'edit') || user?.member_id === member.id
+  // Los dos casos que el PATCH de /api/members/[id] ya acepta: staff de padrón
+  // sobre cualquier ficha, o la persona sobre la suya.
+  const ctx = {
+    esStaff: can('miembros', 'edit'),
+    esPropia: user?.member_id === member.id,
+    tieneDocumento: !!member.cedula?.trim(),
+  }
+  const edita = (columna: string) => puedeEditarColumna(columna, ctx)
+  const comun = { memberId: member.id }
+
   return (
-    <div
-      className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
-    >
-      {/* Non-editable: name + cedula */}
+    <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
       <div className="mb-4 pb-4 border-b border-[var(--outline-variant)]">
-        <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Nombre completo" value={`${member.first_name} ${member.last_name}`} editable={false} />
-        <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula" value={member.cedula ?? 'Sin cédula'} editable={false} />
+        {/* El nombre va en DOS filas y no en una de "nombre completo": son dos
+            columnas distintas, y un solo campo obligaría a adivinar dónde parte
+            un apellido compuesto. */}
+        <Fila {...comun} icon={<User size={15} strokeWidth={1.75} />} label="Nombre"
+          value={member.first_name} columna="first_name" puedeEditar={edita('first_name')} />
+        <Fila {...comun} icon={<User size={15} strokeWidth={1.75} />} label="Apellidos"
+          value={member.last_name} columna="last_name" puedeEditar={edita('last_name')} />
+        <Fila {...comun} icon={<Lock size={15} strokeWidth={1.75} />} label="Cédula"
+          value={member.cedula ?? 'Sin cédula'} columna="cedula" puedeEditar={edita('cedula')} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-        {/* Contacto */}
         <div>
-          <p
-            className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display"
-          >
-            Contacto
-          </p>
-          <InfoRow icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono" value={member.phone ?? '—'} />
-          <InfoRow icon={<Mail size={15} strokeWidth={1.75} />} label="Correo" value={member.email ?? '—'} />
-          <InfoRow icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección" value={member.address ?? '—'} />
-          <InfoRow
-            icon={<Phone size={15} strokeWidth={1.75} />}
-            label="Contacto de emergencia"
-            value={member.emergency_contact_name ?? ''}
-          />
-          <InfoRow
-            icon={<Phone size={15} strokeWidth={1.75} />}
-            label="Teléfono de emergencia"
-            value={member.emergency_contact_phone ?? ''}
-          />
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display">Contacto</p>
+          <Fila {...comun} icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono"
+            value={member.phone ?? '—'} columna="phone" tipo="telefono" puedeEditar={edita('phone')} />
+          <Fila {...comun} icon={<Mail size={15} strokeWidth={1.75} />} label="Correo"
+            value={member.email ?? '—'} columna="email" puedeEditar={edita('email')} />
+          <Fila {...comun} icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección"
+            value={member.address ?? '—'} columna="address" tipo="parrafo" puedeEditar={edita('address')} />
+          <Fila {...comun} icon={<Phone size={15} strokeWidth={1.75} />} label="Contacto de emergencia"
+            value={member.emergency_contact_name ?? '—'} columna="emergency_contact_name"
+            puedeEditar={edita('emergency_contact_name')} />
+          <Fila {...comun} icon={<Phone size={15} strokeWidth={1.75} />} label="Teléfono de emergencia"
+            value={member.emergency_contact_phone ?? '—'} columna="emergency_contact_phone" tipo="telefono"
+            puedeEditar={edita('emergency_contact_phone')} />
         </div>
 
-        {/* Datos personales */}
         <div>
-          <p
-            className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display"
-          >
-            Datos personales
-          </p>
-          <InfoRow
-            icon={<User size={15} strokeWidth={1.75} />}
-            label="Edad"
-            value={member.birth_date ? `${calculateAge(member.birth_date)} años · ${formatDate(member.birth_date)}` : '—'}
-          />
-          <InfoRow
-            icon={<User size={15} strokeWidth={1.75} />}
-            label="Género"
-            value={
-              member.gender === 'M'
-                ? 'Masculino'
-                : member.gender === 'F'
-                ? 'Femenino'
-                : 'No indica'
-            }
-          />
-          <InfoRow icon={<Heart size={15} strokeWidth={1.75} />} label="Estado civil" value={member.marital_status ?? '—'} />
-          <InfoRow icon={<Briefcase size={15} strokeWidth={1.75} />} label="Profesión" value={member.occupation ?? '—'} />
-          <InfoRow icon={<Building size={15} strokeWidth={1.75} />} label="Lugar de trabajo" value={member.workplace ?? '—'} />
+          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display">Datos personales</p>
+          {/* La EDAD es un cálculo y no se edita: se edita la fecha, y la edad se
+              recalcula sola. Por eso la fila dice "Fecha de nacimiento" y muestra
+              los años al lado, en vez de fingir que la edad es el dato. */}
+          <Fila {...comun} icon={<Cake size={15} strokeWidth={1.75} />} label="Fecha de nacimiento"
+            value={member.birth_date ?? ''} columna="birth_date" tipo="fecha"
+            puedeEditar={edita('birth_date')} />
+          {member.birth_date && (
+            <p className="-mt-2 mb-1 ml-[27px] text-[11px] text-navy-light/80 font-body">
+              {calculateAge(member.birth_date)} años · {formatDate(member.birth_date)}
+            </p>
+          )}
+          <Fila {...comun} icon={<User size={15} strokeWidth={1.75} />} label="Género"
+            value={member.gender ?? ''} columna="gender" tipo="seleccion" opciones={OPCIONES_GENERO}
+            puedeEditar={edita('gender')} />
+          <Fila {...comun} icon={<Heart size={15} strokeWidth={1.75} />} label="Estado civil"
+            value={member.marital_status ?? '—'} columna="marital_status"
+            puedeEditar={edita('marital_status')} />
+          <Fila {...comun} icon={<Briefcase size={15} strokeWidth={1.75} />} label="Profesión"
+            value={member.occupation ?? '—'} columna="occupation" puedeEditar={edita('occupation')} />
+          <Fila {...comun} icon={<Building size={15} strokeWidth={1.75} />} label="Lugar de trabajo"
+            value={member.workplace ?? '—'} columna="workplace" puedeEditar={edita('workplace')} />
         </div>
       </div>
 
-      {/* Salud — SIEMPRE visible, aunque esté vacía.
-          Antes el bloque solo se pintaba si ya había alergias o medicamentos, y
-          eso lo hacía desaparecer justo cuando más se necesita: quien no tiene
-          nada registrado no veía el campo y parecía que se había eliminado
-          (reportado 2026-09-10). Un dato de salud en blanco no es lo mismo que
-          un dato de salud ausente. */}
-      {(
-        <div className="mt-4 pt-4 border-t border-[var(--outline-variant)]">
-          <p
-            className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display"
-          >
-            Salud
-          </p>
-          {/* Editables EN SITIO. Antes eran filas con candado, y las demás filas
-              de esta pantalla muestran un lápiz que no hace nada —no tiene
-              onClick—, así que en la práctica desde el perfil no se podía tocar
-              ningún dato de salud (reportado 2026-09-10). Se guardan uno por uno
-              con el mismo componente del formulario. */}
-          {puedeEditar ? (
-            <div className="space-y-3">
-              {/* Sin onGuardado a propósito. Refrescar la ficha desde acá
-                  desmonta la pestaña entera mientras carga, y con ella el
-                  "Guardado en tu perfil ✓" que la persona nunca llegaba a ver
-                  —medido: aparecía "Guardando…" y después nada—. El dato ya está
-                  en la base y el campo muestra el valor nuevo; la ficha se
-                  refresca sola la próxima vez que se abre. */}
-              <CampoPerfilEditable
-                etiqueta="Alergias" valor={member.allergies ?? '—'}
-                memberId={member.id} columna="allergies" tipo="parrafo"
-              />
-              <CampoPerfilEditable
-                etiqueta="Medicamentos" valor={member.medicamentos ?? '—'}
-                memberId={member.id} columna="medications" tipo="parrafo"
-              />
-              <div>
-                <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-1.5 font-display">
-                  Restricción alimenticia
-                </p>
-                <RestriccionAlimenticia
-                  valores={member.dietary_restrictions ?? []}
-                  otro={member.dietary_restrictions_other ?? null}
-                  memberId={member.id}
-                />
-              </div>
-            </div>
-          ) : (
-            <>
-              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias" value={member.allergies ?? '—'} editable={false} />
-              <InfoRow icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos" value={member.medicamentos ?? '—'} editable={false} />
-              <InfoRow
-                icon={<Lock size={15} strokeWidth={1.75} />}
-                label="Restricción alimenticia"
-                value={textoDeRestricciones(member.dietary_restrictions, member.dietary_restrictions_other)}
-                editable={false}
-              />
-            </>
-          )}
+      {/* Salud — SIEMPRE visible, aunque esté vacía. Antes el bloque solo se
+          pintaba si ya había algo, y desaparecía justo para quien no tenía nada
+          registrado: parecía que el campo se había eliminado (reportado
+          2026-09-10). Un dato de salud en blanco no es un dato ausente. */}
+      <div className="mt-4 pt-4 border-t border-[var(--outline-variant)]">
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-3 font-display">Salud</p>
+        <Fila {...comun} icon={<Lock size={15} strokeWidth={1.75} />} label="Alergias"
+          value={member.allergies ?? '—'} columna="allergies" tipo="parrafo"
+          puedeEditar={edita('allergies')} />
+        <Fila {...comun} icon={<Lock size={15} strokeWidth={1.75} />} label="Medicamentos"
+          value={member.medicamentos ?? '—'} columna="medications" tipo="parrafo"
+          puedeEditar={edita('medications')} />
+        <div className="flex items-start gap-3 py-2.5">
+          <div className="mt-0.5 text-navy-light/80 shrink-0"><Lock size={15} strokeWidth={1.75} /></div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-1.5 font-display">
+              Restricción alimenticia
+            </p>
+            {edita('dietary_restrictions') ? (
+              <RestriccionAlimenticia valores={member.dietary_restrictions ?? []} memberId={member.id} />
+            ) : (
+              <p className="text-sm text-navy font-body">
+                {textoDeRestricciones(member.dietary_restrictions)}
+              </p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
