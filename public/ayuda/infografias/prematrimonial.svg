@@ -5,7 +5,7 @@
   <rect width="720" height="1084" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Prematrimonial</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Se inscribe en pareja y tiene su propia cola.</text>
 
   <!-- Requisitos -->
@@ -13,10 +13,10 @@
     <rect x="48" y="148" width="624" height="176" rx="14" fill="#161440"/>
     <text x="76" y="180" font-size="12" font-weight="bold" fill="#70BDC2" letter-spacing="2">REQUISITOS · APLICAN A CADA PERSONA, NO A LA PAREJA</text>
     <g font-size="15" fill="#FFFFFF">
-      <circle cx="88" cy="212" r="6" fill="#EF5554"/>
+      <circle cx="88" cy="212" r="6" fill="#D63E3D"/>
       <text x="108" y="218"><tspan font-weight="bold">N1 completado y matriculado en N2.</tspan> Los dos. No hace falta</text>
       <text x="108" y="238">terminar el N2: alcanza con estar llevándolo.</text>
-      <circle cx="88" cy="272" r="6" fill="#EF5554"/>
+      <circle cx="88" cy="272" r="6" fill="#D63E3D"/>
       <text x="108" y="278"><tspan font-weight="bold">Documento de identidad</tspan> registrado en su ficha.</text>
     </g>
     <text x="76" y="310" font-size="13" fill="#9FA8C7">El sistema los verifica al enviar, y dice cuál de los dos es el que no cumple.</text>
@@ -31,7 +31,7 @@
     <text x="122" y="424" font-size="17" font-weight="bold" fill="#161440">Solicitud</text>
     <text x="122" y="448" font-size="14" fill="#5B5975">La llena la pareja, o alguien del equipo por ellos.</text>
   </g>
-  <path d="M360 468 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+  <path d="M360 468 v18" stroke="#D63E3D" stroke-width="2" marker-end="url(#pr)"/>
 
   <g>
     <rect x="48" y="494" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -40,7 +40,7 @@
     <text x="122" y="526" font-size="17" font-weight="bold" fill="#161440">Pago en revisión</text>
     <text x="122" y="550" font-size="14" fill="#5B5975">Entra a la cola de pagos como cualquier otro cobro.</text>
   </g>
-  <path d="M360 570 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+  <path d="M360 570 v18" stroke="#D63E3D" stroke-width="2" marker-end="url(#pr)"/>
 
   <g>
     <rect x="48" y="596" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -49,7 +49,7 @@
     <text x="122" y="628" font-size="17" font-weight="bold" fill="#161440">Pendiente</text>
     <text x="122" y="652" font-size="14" fill="#5B5975">Con el pago APROBADO, espera que se arme el grupo.</text>
   </g>
-  <path d="M360 672 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+  <path d="M360 672 v18" stroke="#D63E3D" stroke-width="2" marker-end="url(#pr)"/>
 
   <g>
     <rect x="48" y="698" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -58,7 +58,7 @@
     <text x="122" y="730" font-size="17" font-weight="bold" fill="#161440">Grupo creado</text>
     <text x="122" y="754" font-size="14" fill="#5B5975">Se les asigna el grupo y empieza el curso.</text>
   </g>
-  <path d="M360 774 v18" stroke="#EF5554" stroke-width="2" marker-end="url(#pr)"/>
+  <path d="M360 774 v18" stroke="#D63E3D" stroke-width="2" marker-end="url(#pr)"/>
 
   <g>
     <rect x="48" y="800" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
@@ -72,7 +72,7 @@
   <!-- Errores comunes -->
   <g>
     <rect x="48" y="916" width="624" height="126" rx="14" fill="#FFF8F0"/>
-    <rect x="48" y="916" width="6" height="126" rx="3" fill="#EF5554"/>
+    <rect x="48" y="916" width="6" height="126" rx="3" fill="#D63E3D"/>
     <text x="76" y="946" font-size="15" font-weight="bold" fill="#161440">Los dos errores de siempre</text>
     <text x="76" y="974" font-size="14" fill="#5B5975">"No me deja inscribirlos" → los niveles de uno, o el documento sin registrar.</text>
     <text x="76" y="996" font-size="14" fill="#5B5975">"Ya pagaron y sigue en revisión" → avanza cuando el pago queda APROBADO,</text>
@@ -82,7 +82,7 @@
 
   <defs>
     <marker id="pr" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

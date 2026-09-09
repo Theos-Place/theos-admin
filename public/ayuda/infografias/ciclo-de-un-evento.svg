@@ -5,7 +5,7 @@
   <rect width="720" height="1120" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Ciclo de un evento</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Y por qué el check-in es el paso que más cosas mueve.</text>
 
   <!-- Pasos -->
@@ -16,7 +16,7 @@
     <text x="122" y="182" font-size="17" font-weight="bold" fill="#161440">Crear</text>
     <text x="122" y="206" font-size="14" fill="#5B5975">Fecha, lugar, cupo, comité organizador y recurrencia.</text>
   </g>
-  <path d="M360 228 v20" stroke="#EF5554" stroke-width="2" marker-end="url(#e)"/>
+  <path d="M360 228 v20" stroke="#D63E3D" stroke-width="2" marker-end="url(#e)"/>
 
   <g>
     <rect x="48" y="256" width="624" height="100" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -26,7 +26,7 @@
     <text x="122" y="314" font-size="14" fill="#5B5975">Solo si el evento la pide (cupo limitado o cobro).</text>
     <text x="122" y="336" font-size="13" fill="#8B8AA0">Una charla normal no la pide: la gente llega y se le hace check-in.</text>
   </g>
-  <path d="M360 356 v20" stroke="#EF5554" stroke-width="2" marker-end="url(#e)"/>
+  <path d="M360 356 v20" stroke="#D63E3D" stroke-width="2" marker-end="url(#e)"/>
 
   <g>
     <rect x="48" y="384" width="624" height="100" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -37,17 +37,17 @@
     <text x="122" y="460" font-size="14" fill="#5B5975">—o exención— a los servidores del comité organizador.</text>
     <text x="122" y="478" font-size="13" fill="#8B8AA0">Si llega sin pagar, se le puede cobrar en el check-in.</text>
   </g>
-  <path d="M360 484 v20" stroke="#EF5554" stroke-width="2" marker-end="url(#e)"/>
+  <path d="M360 484 v20" stroke="#D63E3D" stroke-width="2" marker-end="url(#e)"/>
 
   <g>
-    <rect x="48" y="512" width="624" height="108" rx="14" fill="#FFFFFF" stroke="#EF5554" stroke-width="2"/>
-    <circle cx="88" cy="566" r="19" fill="#EF5554"/>
+    <rect x="48" y="512" width="624" height="108" rx="14" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
+    <circle cx="88" cy="566" r="19" fill="#D63E3D"/>
     <text x="88" y="573" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
     <text x="122" y="546" font-size="17" font-weight="bold" fill="#161440">Check-in del día</text>
     <text x="122" y="570" font-size="14" fill="#5B5975">Manual, por QR o por link. Desde Eventos → Check-in.</text>
     <text x="122" y="596" font-size="13" fill="#8B8AA0">Un evento sin check-in queda como si no hubiera pasado.</text>
   </g>
-  <path d="M360 620 v20" stroke="#EF5554" stroke-width="2" marker-end="url(#e)"/>
+  <path d="M360 620 v20" stroke="#D63E3D" stroke-width="2" marker-end="url(#e)"/>
 
   <g>
     <rect x="48" y="648" width="624" height="80" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
@@ -70,7 +70,7 @@
   <!-- Solo charlas -->
   <g>
     <rect x="48" y="944" width="624" height="122" rx="14" fill="#FFF8F0"/>
-    <rect x="48" y="944" width="6" height="122" rx="3" fill="#EF5554"/>
+    <rect x="48" y="944" width="6" height="122" rx="3" fill="#D63E3D"/>
     <text x="76" y="976" font-size="15" font-weight="bold" fill="#161440">Por qué la asistencia de alguien "no cuenta"</text>
     <text x="76" y="1004" font-size="14" fill="#5B5975">Para los requisitos de estudios solo cuentan los check-ins de CHARLA.</text>
     <text x="76" y="1026" font-size="14" fill="#5B5975">Activa: 6 charlas en 6 meses + 1 en los últimos 60 días. Reforzada: 12.</text>
@@ -79,7 +79,7 @@
 
   <defs>
     <marker id="e" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

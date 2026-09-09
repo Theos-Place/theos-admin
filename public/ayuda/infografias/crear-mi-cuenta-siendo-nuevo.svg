@@ -14,7 +14,7 @@
   <!-- Aviso: primero, porque es el error más caro -->
   <g>
     <rect x="48" y="186" width="624" height="94" rx="16" fill="#FFF1F1"/>
-    <rect x="48" y="186" width="6" height="94" rx="3" fill="#EF5554"/>
+    <rect x="48" y="186" width="6" height="94" rx="3" fill="#D63E3D"/>
     <text x="76" y="218" font-size="16" font-weight="bold" fill="#B3272C">¿Ya sos parte de Theos? No te registrés.</text>
     <text x="76" y="244" font-size="14" fill="#5B5975">Aunque nunca hayas entrado, es casi seguro que ya tenés perfil.</text>
     <text x="76" y="266" font-size="14" fill="#5B5975">Usá &#171;Restablec&#233; tu contrase&#241;a&#187;: si te registr&#225;s, tus estudios y pagos quedan afuera.</text>
@@ -65,7 +65,7 @@
   <!-- Caso especial -->
   <g>
     <rect x="48" y="882" width="624" height="98" rx="16" fill="#FFF8F0"/>
-    <rect x="48" y="882" width="6" height="98" rx="3" fill="#EF5554"/>
+    <rect x="48" y="882" width="6" height="98" rx="3" fill="#D63E3D"/>
     <text x="76" y="914" font-size="15" font-weight="bold" fill="#161440">Si tu cédula ya estaba registrada</text>
     <text x="76" y="940" font-size="14" fill="#5B5975">No se crea otro perfil, y el enlace va al correo que YA estaba en el tuyo.</text>
     <text x="76" y="962" font-size="14" fill="#5B5975">Si no tenés acceso a ese correo, escribinos a soporte@theosplace.org.</text>

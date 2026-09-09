@@ -5,7 +5,7 @@
   <rect width="720" height="1200" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Los tres flujos de servicio</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Tienen nombres parecidos y se piden al revés todo el tiempo.</text>
 
   <!-- La pregunta que los distingue -->
@@ -28,13 +28,13 @@
     <rect x="76" y="392" width="560" height="24" rx="12" fill="#F0EFE9"/>
     <text x="90" y="409" font-size="13" fill="#5B5975">Ejemplo: nunca hubo un encargado de transmisión en vivo y ahora hace falta.</text>
   </g>
-  <path d="M360 428 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#f)"/>
+  <path d="M360 428 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#f)"/>
 
   <!-- 2 -->
   <g>
     <rect x="48" y="458" width="624" height="204" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="458" width="6" height="204" rx="3" fill="#EF5554"/>
-    <circle cx="90" cy="494" r="18" fill="#EF5554"/>
+    <rect x="48" y="458" width="6" height="204" rx="3" fill="#D63E3D"/>
+    <circle cx="90" cy="494" r="18" fill="#D63E3D"/>
     <text x="90" y="501" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
     <text x="122" y="501" font-size="19" font-weight="bold" fill="#161440">Solicitud de vacante</text>
     <text x="76" y="536" font-size="14" fill="#8B8AA0">No existe: LA PLAZA ABIERTA. El puesto sí existe.</text>
@@ -51,7 +51,7 @@
     <rect x="76" y="622" width="560" height="24" rx="12" fill="#FFF8F0"/>
     <text x="90" y="639" font-size="13" fill="#C4383A">La ventana para pedir vacantes abre el día 25 de cada mes.</text>
   </g>
-  <path d="M360 662 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#f)"/>
+  <path d="M360 662 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#f)"/>
 
   <!-- 3 -->
   <g>
@@ -86,7 +86,7 @@
 
   <defs>
     <marker id="f" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

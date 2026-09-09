@@ -5,7 +5,7 @@
   <rect width="720" height="1140" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Cómo me matriculo</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Todo pasa en una sola pantalla: Matrícula.</text>
 
   <!-- Pasos -->

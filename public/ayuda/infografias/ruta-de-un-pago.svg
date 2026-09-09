@@ -5,7 +5,7 @@
   <rect width="720" height="1000" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">La ruta de un pago</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Qué pasa desde que te cobran hasta que queda confirmado.</text>
 
   <!-- Paso 1 -->
@@ -17,7 +17,7 @@
     <text x="124" y="212" font-size="14" fill="#5B5975">El cobro existe y espera tu comprobante. Lo ves en</text>
     <text x="124" y="232" font-size="14" fill="#5B5975">Pagos pendientes, en el menú de tu cuenta.</text>
   </g>
-  <path d="M360 246 v22" stroke="#EF5554" stroke-width="2" marker-end="url(#pp)"/>
+  <path d="M360 246 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#pp)"/>
 
   <!-- Paso 2 -->
   <g>
@@ -30,7 +30,7 @@
   </g>
 
   <!-- Bifurcación -->
-  <g stroke="#EF5554" stroke-width="2" fill="none">
+  <g stroke="#D63E3D" stroke-width="2" fill="none">
     <path d="M360 372 v20"/>
     <path d="M200 392 h320"/>
     <path d="M200 392 v26" marker-end="url(#pp)"/>
@@ -49,7 +49,7 @@
 
   <!-- Rechazado -->
   <g>
-    <rect x="376" y="426" width="296" height="150" rx="14" fill="#FFFFFF" stroke="#EF5554" stroke-width="2"/>
+    <rect x="376" y="426" width="296" height="150" rx="14" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
     <text x="404" y="458" font-size="12" font-weight="bold" fill="#C4383A" letter-spacing="2">RECHAZADO</text>
     <text x="404" y="486" font-size="14" fill="#5B5975">Te llega el motivo y subís otro</text>
     <text x="404" y="506" font-size="14" fill="#5B5975">comprobante. Casi siempre es</text>
@@ -87,7 +87,7 @@
 
   <defs>
     <marker id="pp" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 0 L5 10 z" fill="#EF5554"/>
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

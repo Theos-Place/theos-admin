@@ -6,7 +6,7 @@
 
   <!-- Encabezado -->
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">El camino del estudiante</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Qué se lleva primero, qué viene después y qué pide cada etapa.</text>
 
   <!-- ── Cadena de Niveles ── -->
@@ -23,7 +23,7 @@
       <rect x="496" y="204" width="104" height="34" rx="17" fill="#161440"/>
       <text x="548" y="226">Nivel 4</text>
     </g>
-    <g stroke="#EF5554" stroke-width="2" fill="none">
+    <g stroke="#D63E3D" stroke-width="2" fill="none">
       <path d="M180 221 h26" marker-end="url(#p)"/>
       <path d="M322 221 h26" marker-end="url(#p)"/>
       <path d="M464 221 h26" marker-end="url(#p)"/>
@@ -47,7 +47,7 @@
       <rect x="240" y="386" width="120" height="34" rx="17" fill="#161440"/>
       <text x="300" y="408">Panorama</text>
     </g>
-    <g stroke="#EF5554" stroke-width="2" fill="none">
+    <g stroke="#D63E3D" stroke-width="2" fill="none">
       <path d="M272 357 h26" marker-end="url(#p)"/>
       <path d="M442 357 h26" marker-end="url(#p)"/>
       <path d="M208 403 h26" marker-end="url(#p)"/>
@@ -68,7 +68,7 @@
 
   <g>
     <rect x="48" y="600" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <rect x="48" y="600" width="6" height="88" rx="3" fill="#EF5554"/>
+    <rect x="48" y="600" width="6" height="88" rx="3" fill="#D63E3D"/>
     <text x="76" y="630" font-size="17" font-weight="bold" fill="#161440">Etapa inicial</text>
     <text x="76" y="656" font-size="14" fill="#5B5975">Pide asistencia ACTIVA a las charlas.</text>
     <text x="76" y="676" font-size="13" fill="#8B8AA0">Sirviendo como Jesús y estudios de entrada</text>
@@ -96,7 +96,7 @@
   <!-- ── Solo por invitación ── -->
   <g>
     <rect x="48" y="1010" width="624" height="104" rx="14" fill="#FFF8F0"/>
-    <rect x="48" y="1010" width="6" height="104" rx="3" fill="#EF5554"/>
+    <rect x="48" y="1010" width="6" height="104" rx="3" fill="#D63E3D"/>
     <text x="76" y="1040" font-size="15" font-weight="bold" fill="#161440">Solo por invitación</text>
     <text x="76" y="1066" font-size="14" fill="#5B5975">Cómo Dar Estudios Bíblicos · Hermenéutica · Cómo Dar Charlas.</text>
     <text x="76" y="1088" font-size="14" fill="#5B5975">No aparecen en Matrícula hasta que el comité te invita. No es un error.</text>
@@ -109,7 +109,7 @@
 
   <defs>
     <marker id="p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0 0 L10 5 L0 10 z" fill="#EF5554"/>
+      <path d="M0 0 L10 5 L0 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

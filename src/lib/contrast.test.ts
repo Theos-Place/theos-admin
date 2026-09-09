@@ -130,3 +130,31 @@ describe('calendario público: el texto informativo pasa AA', () => {
     expect(ratio('#FFFFFF', TOKENS.navy, 0.6)).toBeGreaterThanOrEqual(AA_NORMAL)
   })
 })
+
+/**
+ * UI-2 · El coral retirado no vuelve.
+ *
+ * #EF5554 salió de la marca por contraste: 3.44:1 sobre blanco, que no pasa AA.
+ * El vigente es #D63E3D con 4.55:1. Vivía todavía en 21 SVG de ayuda —el plan
+ * decía 10, eran más—, así que las infografías enseñaban un color que el resto
+ * del sistema ya no usa Y que no se lee bien.
+ */
+describe('UI-2 · el coral retirado no vuelve', () => {
+  const CORAL_RETIRADO = '#EF5554'
+  const CORAL_VIGENTE = '#D63E3D'
+
+  it('el retirado NO pasa AA sobre blanco; el vigente sí — por eso se cambió', () => {
+    expect(contrastRatio(hexToRgb(CORAL_RETIRADO), hexToRgb('#ffffff'))).toBeLessThan(AA_NORMAL)
+    expect(contrastRatio(hexToRgb(CORAL_VIGENTE), hexToRgb('#ffffff'))).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('ningún archivo de public/ lo usa', () => {
+    const salida = execSync(`grep -rl "${CORAL_RETIRADO.slice(1)}" public/ || true`, { encoding: 'utf8' })
+    expect(salida.split('\n').filter(Boolean)).toEqual([])
+  })
+
+  it('ni el código fuente, fuera de este test', () => {
+    const salida = execSync(`grep -rl "${CORAL_RETIRADO.slice(1)}" src/ || true`, { encoding: 'utf8' })
+    expect(salida.split('\n').filter(Boolean).filter(f => !f.includes('contrast.test'))).toEqual([])
+  })
+})

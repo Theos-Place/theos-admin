@@ -43,8 +43,8 @@
 
   <!-- Paso 4 -->
   <g>
-    <rect x="48" y="598" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#EF5554" stroke-width="2"/>
-    <circle cx="102" cy="657" r="26" fill="#EF5554"/>
+    <rect x="48" y="598" width="624" height="118" rx="16" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
+    <circle cx="102" cy="657" r="26" fill="#D63E3D"/>
     <text x="102" y="666" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
     <text x="150" y="646" font-size="19" font-weight="bold" fill="#161440">Definí tu contraseña</text>
     <text x="150" y="676" font-size="16" fill="#5B5975">Y ya estás dentro.</text>
@@ -62,7 +62,7 @@
   <!-- Si algo falla -->
   <g>
     <rect x="48" y="890" width="624" height="76" rx="16" fill="#FFF8F0"/>
-    <rect x="48" y="890" width="6" height="76" rx="3" fill="#EF5554"/>
+    <rect x="48" y="890" width="6" height="76" rx="3" fill="#D63E3D"/>
     <text x="76" y="920" font-size="14" font-weight="bold" fill="#161440">¿Dice que tu correo no existe?</text>
     <text x="76" y="946" font-size="14" fill="#5B5975">Escribinos a soporte@theosplace.org y lo corregimos.</text>
   </g>

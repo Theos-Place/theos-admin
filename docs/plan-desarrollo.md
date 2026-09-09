@@ -3531,7 +3531,27 @@ otra cosa.
 
 ## Fase 10 — Entrega de correo (2026-09-01)
 
-### [ ] COR-1 · El correo de acceso no llega a Hotmail/Outlook
+### [x] COR-1 · El correo de acceso no llega a Hotmail/Outlook — CERRADO 2026-09-10, NO REPRODUCE
+
+**Medido antes de cerrar**, enlaces de acceso de los últimos 14 días:
+
+| Proveedor | Enviados | Entregados | Recibieron → Entraron |
+|---|---|---|---|
+| Gmail | 208 | 198 | 175 → 160 (91%) |
+| Hotmail/Outlook | 96 | **95** | 74 → 65 (**88%**) |
+| Otros | 33 | 31 | 22 → 20 (91%) |
+
+Hotmail entrega el 99% y su gente entra a la misma tasa que la de Gmail. El
+síntoma original —el enlace no llegaba NUNCA— no aparece. Lo más probable es que
+lo hayan cerrado dos cambios posteriores al reporte: el DKIM/DMARC de SES
+(ses-dkim-dmarc, agosto) y el paso a enviar el enlace por SES en vez del SMTP de
+Supabase Auth (password-link.ts, 2026-08-03).
+
+Se cierra como NO REPRODUCE y no como "arreglado": no se tocó nada a propósito
+para esto, así que si vuelve a aparecer hay que reabrirlo con la medición nueva
+al lado de esta.
+
+<details><summary>Reporte original</summary>
 
 ```
 SÍNTOMA, con evidencia. A la gente de Hotmail y Outlook le llegan las campañas y NO le
@@ -3577,7 +3597,18 @@ en Cuenta y acceso entrega el enlace por WhatsApp sin pasar por el correo.
 
 ## Fase 11 — Cosas menores pendientes (2026-09-07)
 
-### [ ] UI-2 · Las infografías de ayuda todavía usan el coral viejo
+### [x] UI-2 · Las infografías de ayuda todavía usan el coral viejo — HECHO 2026-09-10
+
+Eran **21 archivos y 92 ocurrencias**, no 10 como decía este plan. Las 92 eran
+atributos `fill=` o `stroke=` planos —ni gradientes ni CSS embebido—, así que el
+reemplazo a #D63E3D fue directo.
+
+Medido con el propio módulo del proyecto antes de tocar nada: el coral retirado
+da **3.44:1** sobre blanco (no pasa AA 4.5) y el vigente **4.55:1** (pasa). Eso
+es exactamente por lo que se retiró.
+
+Un test nuevo en contrast.test.ts recorre `public/` y `src/` y se cae si el hex
+retirado vuelve a aparecer — que es como llegó a haber 21 archivos con él.
 
 ```
 QUÉ ES. Diez SVG de public/ayuda/infografias/ pintan con #EF5554, que es el coral que se
@@ -3710,3 +3741,136 @@ MIENTRAS TANTO: después de cada fusión, correr la consulta de huérfanos
     migración 20260728100000); computeMemberSede es la spec ejecutable de los fixtures. Si cambia
     la regla: las dos funciones SQL + el espejo TS + los fixtures.
 - Después de cada punto completado, marcar el checkbox acá y anotar el commit/PR.
+
+---
+
+## Fase 12 — Cola ordenada al 2026-09-10
+
+Todo lo que quedó abierto, en el orden en que conviene hacerlo. El criterio del
+orden: primero lo que deja gente sin poder trabajar, después lo que ensucia
+datos, después lo que falta construir.
+
+### Bloque A · Bugs que dejan pantallas mudas
+
+#### [ ] PAD-1 · Cinco pantallas siguen pidiendo el padrón a roles que no lo tienen
+
+`GET /api/members?search=` exige alcance total sobre el módulo miembros. Los
+roles acotados no lo tienen, así que reciben 403 y —como el código hace
+`r.ok ? r.json() : { members: [] }`— el buscador **devuelve vacío en silencio**:
+parece que la persona no existe.
+
+Es el MISMO patrón que ya se arregló cuatro veces por separado: el QR del
+check-in (2026-09-09), el modal de familia, el buscador de familiar y el de
+candidatos a servidor (2026-09-10). Verificado que quedan:
+
+| Archivo | Quién lo sufre |
+|---|---|
+| `components/layout/Topbar.tsx` | `lider_comite` — el buscador global se le muestra (scope `committee` pasa el gate de la UI) y el API le da 403 |
+| `components/shared/MemberCombobox.tsx` | usado en modales de comité (`lider_comite`), acceso a formularios (`forms`) y solicitudes (`solicitudes_estudio`) |
+| `miembros/[id]/page.tsx`, `miembros/nuevo/page.tsx` | solo staff de padrón — **no** hay problema, se listan para no volver a revisarlos |
+| `communications/RecipientSelector.tsx` | rol `comunicaciones`, que sí tiene padrón — **no** hay problema |
+
+**Arreglo**: los dos primeros pasan a `/api/members/lookup`. Y de una vez, un
+test que recorra `src/` y falle si una pantalla vuelve a pedir el padrón — que
+es como se llegó a cinco.
+
+#### [ ] SRV-1 · Terminar los tests del gate de servidor en el check-in
+
+Quedaron a medias: falta el caso de que el POST rechace como servidor a quien no
+sirve en los comités organizadores del evento. La revalidación existe y está en
+`createCheckin`; lo que falta es el test de punta a punta.
+
+### Bloque B · Datos sucios
+
+#### [ ] DAT-1 · Fechas de nacimiento imposibles — REPLANTEADO 2026-09-10
+
+**La premisa original estaba equivocada.** El plan decía "65 fichas activas con
+fecha imposible", contando a todo el que dijera 3 años o menos. Pero registrar
+niños chiquitos es NORMAL acá: hay 452 personas de 4 a 11 años en el padrón, y
+de las 65 sospechosas 41 están en una familia, 34 como "Hijo/a", ninguna tiene
+cuenta de acceso y solo 2 tienen cédula. Son los chiquitos que llegan con sus
+papás.
+
+Separadas por si la edad contradice otro dato de su PROPIA ficha:
+
+- **15 imposibles de verdad** — dicen 1-3 años y a la vez figuran como
+  **Cónyuge** (6), están **matriculadas en estudios** (8), o dicen 1194 (1).
+- **50 probablemente reales** — sin ninguna contradicción. NO se tocan.
+
+Script listo con simulacro y respaldo a CSV:
+`scripts/datos-2026-09/borrar-fechas-imposibles.cjs`. **Pendiente: confirmar que
+se borran solo los 15.**
+
+Y falta lo que evita que vuelva a pasar: **validar el rango al capturar la
+fecha**, en el alta y en la edición.
+
+#### [ ] DAT-2 · 246 inscripciones con fecha de conclusión anterior al inicio del grupo
+
+En 100 grupos. Es la huella de la carga masiva del 18-jul: trajo fechas de
+corridas viejas pegadas a grupos nuevos. El caso Byron Pérez (corregido a mano
+el 2026-09-09) salió de acá — decía `completed` con fecha de 2022 en un grupo
+que arrancó en 2025.
+
+Ojo: una fecha rara **no** implica que el estado esté mal. Byron sí lo tenía mal,
+pero hay que revisar caso por caso o encontrar una señal que los separe.
+
+#### [ ] DAT-3 · 48 grupos finalizados sin una sola nota
+
+Grupos con gente inscrita, marcados `finalizado`, donde nadie quedó
+`completed` ni `reprobado`. Los dirigentes tienen que confirmar quién aprobó;
+no se puede deducir.
+
+#### [ ] DAT-4 · Historial de estudios faltante de Byron y Katherinne
+
+Ninguno de los dos tiene en el sistema sus N1–N4 de 2022 ni sus N1–N3 de 2025
+con Mirtha. Si la matrícula valida prerequisitos, les va a faltar historial para
+inscribirse en N3 y N4 de 2026.
+
+### Bloque C · Lo que falta construir
+
+#### [ ] EVE-9 · Export de inscritos a un evento
+
+**No existe.** Es el que necesita cocina y logística: la lista de quién va, con
+**alergias y restricción alimenticia** — que es literalmente para lo que se
+capturó ese dato. Debe incluir también la columna `checked_in_as`
+(asistente/servidor), que hoy no tiene dónde ir.
+
+La función de la columna ya está escrita y probada
+(`inscritosParaExport`: vacío o "N/A" cuando el evento no usa inscripción).
+
+#### [ ] EVE-10 · Columna `closed_at` en los grupos de estudio
+
+Hoy los reportes de cierre se apoyan en `updated_at`, que cambia con cualquier
+edición. Con una columna propia, "qué se cerró el lunes" deja de ser una
+aproximación.
+
+#### [ ] EVE-8 · Cinco (seis) sedes marcadas como zona
+
+Al verificarlo el 2026-09-10 apareció una más: además de Cartago, Liberia,
+Alajuela, Potrero y Pérez Zeledón, **San Rafael de Alajuela** también está con
+`is_zone = true`. Hay que decidir si entra en el mismo arreglo.
+
+Sigue siendo el más riesgoso: cambiar la marca toca los filtros por zona de
+otras pantallas. Medir qué se rompe antes de tocarlo.
+
+#### [ ] UI-3 · Regrabar el tutorial de check-in
+
+Cambió bastante desde la última grabación: el botón de persona nueva, la cédula
+opcional, el alta desde la fila y la distinción asistente/servidor.
+
+### Bloque D · Decisiones que necesito de vos
+
+- [ ] ¿`Colaborador Youth` y `Colaborador de Onboarding` deben otorgar acceso a
+      eventos por defecto, como ya lo hace `Colaborador`?
+- [ ] ¿Se le manda a **Victoria Badilla Saxe** su invitación de cuenta? Se creó
+      sin correo a propósito (era un alta retroactiva).
+- [ ] Confirmar con **Otto Chaves** que `ottoalfredo@oac.cr` es correcto: ahora
+      es su usuario para entrar y venía marcado POR VERIFICAR en la hoja.
+
+### Bloque E · Operativo (no requiere código)
+
+- [ ] Env `HEALTHCHECK_URL_*` en Vercel (9, una por cron) y Sentry.
+- [ ] Copiar las env de Supabase a los deploys **Preview** — hoy fallan.
+- [ ] Confirmar el SMTP de Supabase Auth.
+- [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase.
+- [ ] Sacar a Douglas García de la supresión de AWS SES.

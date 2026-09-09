@@ -5,7 +5,7 @@
   <rect width="720" height="1000" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Becas y cupones</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Dos herramientas para el mismo problema: que el costo no deje a nadie afuera.</text>
 
   <!-- Comparación -->
@@ -61,7 +61,7 @@
   <!-- Revocar -->
   <g>
     <rect x="48" y="856" width="624" height="112" rx="14" fill="#FFF8F0"/>
-    <rect x="48" y="856" width="6" height="112" rx="3" fill="#EF5554"/>
+    <rect x="48" y="856" width="6" height="112" rx="3" fill="#D63E3D"/>
     <text x="76" y="886" font-size="15" font-weight="bold" fill="#161440">Revocar: se puede o no se puede</text>
     <text x="76" y="914" font-size="14" fill="#5B5975">Una beca ACTIVA se revoca (se otorgó por error, cambió la situación).</text>
     <text x="76" y="936" font-size="14" fill="#5B5975">Una ya USADA no: el canje ocurrió y el cobro se afectó.</text>

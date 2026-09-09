@@ -7,7 +7,7 @@
   <text x="40" y="52" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#161440">
     Ciclo de vida de un grupo de estudio
   </text>
-  <rect x="40" y="66" width="56" height="4" rx="2" fill="#EF5554"/>
+  <rect x="40" y="66" width="56" height="4" rx="2" fill="#D63E3D"/>
 
   <!-- Etapas -->
   <g font-family="Arial, sans-serif">
@@ -31,7 +31,7 @@
 
     <!-- 3 -->
     <rect x="390" y="110" width="150" height="96" rx="12" fill="#ffffff" stroke="#dcdcd4"/>
-    <circle cx="414" cy="134" r="12" fill="#EF5554"/>
+    <circle cx="414" cy="134" r="12" fill="#D63E3D"/>
     <text x="414" y="139" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
     <text x="434" y="139" font-size="14" font-weight="bold" fill="#161440">En curso</text>
     <text x="406" y="166" font-size="12" fill="#555">Se toma asistencia</text>
@@ -57,7 +57,7 @@
     <text x="756" y="200" font-size="12" fill="#555">de los listados.</text>
 
     <!-- Flechas -->
-    <g stroke="#EF5554" stroke-width="2" fill="none">
+    <g stroke="#D63E3D" stroke-width="2" fill="none">
       <path d="M195 158 h15" marker-end="url(#punta)"/>
       <path d="M370 158 h15" marker-end="url(#punta)"/>
       <path d="M545 158 h15" marker-end="url(#punta)"/>
@@ -83,7 +83,7 @@
 
   <defs>
     <marker id="punta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF5554"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#D63E3D"/>
     </marker>
   </defs>
 </svg>

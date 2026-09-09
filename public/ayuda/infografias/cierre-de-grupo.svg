@@ -5,7 +5,7 @@
   <rect width="720" height="1010" fill="#F6F5F2"/>
 
   <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Cierre de un grupo de estudio</text>
-  <rect x="48" y="80" width="60" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
   <text x="48" y="114" font-size="15" fill="#5B5975">Lo hace el dirigente del grupo, al terminar las semanas del estudio.</text>
 
   <!-- Pasos -->
@@ -39,21 +39,21 @@
 
   <!-- Antes de confirmar -->
   <text x="48" y="592" font-size="20" font-weight="bold" fill="#161440">Antes de confirmar</text>
-  <rect x="48" y="604" width="44" height="4" rx="2" fill="#EF5554"/>
+  <rect x="48" y="604" width="44" height="4" rx="2" fill="#D63E3D"/>
 
   <g font-size="14.5">
     <rect x="48" y="626" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <circle cx="82" cy="660" r="10" fill="#EF5554"/>
+    <circle cx="82" cy="660" r="10" fill="#D63E3D"/>
     <text x="106" y="656" font-weight="bold" fill="#161440">Reprobar exige una justificación.</text>
     <text x="106" y="678" fill="#5B5975">Explicá qué pasó: esa nota la ve el equipo de estudios, no el estudiante.</text>
 
     <rect x="48" y="726" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <circle cx="82" cy="760" r="10" fill="#EF5554"/>
+    <circle cx="82" cy="760" r="10" fill="#D63E3D"/>
     <text x="106" y="756" font-weight="bold" fill="#161440">La recomendación a CDEB es confidencial.</text>
     <text x="106" y="778" fill="#5B5975">No la ve el estudiante — es tu evaluación honesta para el comité de dirigentes.</text>
 
     <rect x="48" y="826" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <circle cx="82" cy="860" r="10" fill="#EF5554"/>
+    <circle cx="82" cy="860" r="10" fill="#D63E3D"/>
     <text x="106" y="856" font-weight="bold" fill="#161440">El cierre no se deshace desde el sistema.</text>
     <text x="106" y="878" fill="#5B5975">Si algo quedó mal, avisá al coordinador de estudios para corregirlo.</text>
   </g>
