@@ -9,6 +9,7 @@ import { useToast } from '@/components/shared/Toast'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { Modal } from '@/components/shared/Modal'
+import { RELACIONES_FAMILIARES } from '@/lib/members/relaciones'
 
 type Props = {
   member: Member
@@ -103,6 +104,29 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
     }
   }
 
+  /** Corrige la relación de un integrante. Guarda al cambiar el select: es un
+   *  campo único y con un botón "guardar" aparte se olvida a medias. */
+  async function cambiarRelacion(fm: FamilyEntry, relation: string) {
+    if (relation === fm.relation) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/members/${member.id}/family`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: fm.id, relation }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error ?? 'No se pudo cambiar la relación.')
+      toast(`${fm.name} ahora figura como ${relation}.`, 'success')
+      onChanged?.()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo cambiar la relación.', 'error')
+      onChanged?.() // devuelve el select al valor real
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function handleUnlink() {
     if (!unlinkTarget) return
     setBusy(true)
@@ -166,13 +190,33 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                 {fm.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
               </div>
             )
+            // El nombre va dentro del enlace; la relación NO. Es un control y
+            // anidarlo en un <a> lo deja inoperable con teclado y hace que un
+            // clic para cambiarla navegue al perfil.
             const info = (
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-navy font-body">{fm.name}</p>
-                <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep mt-0.5 inline-block font-body">
-                  {fm.relation}
-                </span>
               </div>
+            )
+            const relacion = canEdit ? (
+              <select
+                value={fm.relation ?? 'Otro'}
+                disabled={busy}
+                onChange={e => cambiarRelacion(fm, e.target.value)}
+                aria-label={`Relación de ${fm.name}`}
+                className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-1 text-[11px] text-teal-deep outline-none transition-colors hover:bg-teal-soft/50 focus:ring-2 focus:ring-teal-deep/30 disabled:opacity-50 font-body"
+              >
+                {RELACIONES_FAMILIARES.map(r => <option key={r} value={r}>{r}</option>)}
+                {/* Si la fila trae algo fuera de la lista (datos viejos), se
+                    muestra igual en vez de que el select lo cambie solo. */}
+                {fm.relation && !(RELACIONES_FAMILIARES as readonly string[]).includes(fm.relation) && (
+                  <option value={fm.relation}>{fm.relation}</option>
+                )}
+              </select>
+            ) : (
+              <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body">
+                {fm.relation}
+              </span>
             )
             return (
               <div key={fm.id} className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3">
@@ -188,6 +232,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                     {info}
                   </>
                 )}
+                {relacion}
                 {canEdit && (
                   <button
                     type="button"

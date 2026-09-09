@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
-import { getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember } from '@/lib/supabase/queries/members'
+import { getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember, updateFamilyRelation } from '@/lib/supabase/queries/members'
+import { RELACIONES_FAMILIARES, esRelacionValida } from '@/lib/members/relaciones'
 
 // Roles con permiso de editar miembros (miembros:edit): editor_perfiles,
 // direccion y admin (este último pasa siempre en requireRoles). Alinea el
@@ -74,6 +75,40 @@ export async function POST(
       return NextResponse.json({ error: 'No se puede vincular a la persona consigo misma.' }, { status: 400 })
     }
     console.error('POST /api/members/[id]/family:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// PATCH: corrige la relación de un integrante dentro de la familia de [id].
+// Body: { member_id, relation }. Antes la relación solo se fijaba al vincular y
+// no había forma de corregirla — y la fusión de familias puede dejar etiquetas
+// que hay que ajustar (dos 'Titular', p. ej.).
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRoles(...FAMILY_EDIT_ROLES)
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
+    const body = await req.json().catch(() => ({}))
+    const memberId = typeof body?.member_id === 'string' ? body.member_id : ''
+    const relation = typeof body?.relation === 'string' ? body.relation.trim() : ''
+    if (!isUuid(memberId)) return NextResponse.json({ error: 'Se requiere member_id válido' }, { status: 400 })
+    if (!esRelacionValida(relation)) {
+      return NextResponse.json(
+        { error: `Relación inválida. Las válidas son: ${RELACIONES_FAMILIARES.join(', ')}.` },
+        { status: 400 },
+      )
+    }
+    await updateFamilyRelation(id, memberId, relation)
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'SIN_VINCULO') {
+      return NextResponse.json({ error: 'Esa persona no está en esta familia.' }, { status: 404 })
+    }
+    console.error('PATCH /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -7,13 +7,17 @@ import { validarAltaDePersona, noLlevaCuenta } from '@/lib/members/alta-persona'
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 import { calcAge } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
+import { RELACIONES_FAMILIARES } from '@/lib/members/relaciones'
 
 // Draft de un integrante de familia, reutilizable en alta de miembro y check-in.
 export type FamilyDraft =
   | { kind: 'linked'; member_id: string; first_name: string; last_name: string; cedula: string | null; relation: string }
   | { kind: 'new'; first_name: string; last_name: string; cedula: string | null; document_type: string; birth_date: string | null; phone: string | null; email: string | null; relation: string }
 
-const RELATIONS = ['Cónyuge', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a', 'Otro']
+// Lista compartida con la API y con la pestaña que corrige la relación.
+// 'Titular' se excluye acá a propósito: al vincular a alguien nuevo no se lo
+// declara titular del hogar; eso se corrige después si hace falta.
+const RELATIONS = RELACIONES_FAMILIARES.filter(r => r !== 'Titular')
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy placeholder-navy-light/50 outline-none focus:ring-1 focus:ring-coral/30 transition-all border-0'
 

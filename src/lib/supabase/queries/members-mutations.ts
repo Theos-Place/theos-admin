@@ -238,6 +238,37 @@ export async function linkFamilyMember(
   return { family_unit_id: data as unknown as string }
 }
 
+/**
+ * Corrige la relación de un integrante DENTRO de la familia del owner.
+ *
+ * Hasta 2026-09-10 la relación solo se podía fijar al vincular y después no se
+ * podía tocar desde ninguna pantalla. Con la fusión de familias eso pasó de
+ * incómodo a bloqueante: al unir dos hogares pueden quedar dos 'Titular', o
+ * alguien con la etiqueta que tenía en su familia anterior, y no había manera de
+ * arreglarlo sin entrar a la base.
+ *
+ * Lanza SIN_VINCULO si esa persona no está en la familia del owner: así no se
+ * puede editar a alguien de otra familia pasando su id a mano.
+ */
+export async function updateFamilyRelation(
+  ownerId: string, memberId: string, relation: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: ownRow } = await supabase
+    .from('family_members').select('family_unit_id').eq('member_id', ownerId).maybeSingle()
+  const unitId = (ownRow as { family_unit_id: string } | null)?.family_unit_id
+  if (!unitId) throw new Error('SIN_VINCULO')
+
+  const { data, error } = await supabase
+    .from('family_members')
+    .update({ relation })
+    .eq('family_unit_id', unitId)
+    .eq('member_id', memberId)
+    .select('id')
+  if (error) throw error
+  if ((data ?? []).length === 0) throw new Error('SIN_VINCULO')
+}
+
 /** Desvincula a `linkMemberId` de la familia de `ownerId` (acción directa).
  *  Quita su fila de la(s) unidad(es) que comparte con el owner; si una unidad
  *  queda con ≤1 integrante, la elimina (unidad huérfana). Lanza SIN_VINCULO. */
