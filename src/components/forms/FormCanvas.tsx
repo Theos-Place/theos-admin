@@ -10,6 +10,22 @@ import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { FieldTypeIcon } from './FieldTypeIcon'
 import { FieldPreview } from './FieldPreview'
 
+/**
+ * Barra de acciones de una tarjeta (editar, duplicar, borrar): SIEMPRE visible.
+ *
+ * Antes era `opacity-0 group-hover:opacity-100`. En Tailwind v4 la variante
+ * hover va envuelta en `@media (hover: hover)`, así que en una pantalla táctil
+ * no se aplicaba nunca: los botones no estaban escondidos, estaban
+ * inalcanzables — desde el celular no se podía editar ni borrar un campo. Con
+ * teclado pasaba algo parecido: se podía tabular hasta un botón invisible.
+ *
+ * Se descartó conservar el hover solo en escritorio: exige tres variantes
+ * peleando por el mismo `opacity` y quién gana depende del orden en que
+ * Tailwind las emite, que no es algo sobre lo que se deba apoyar un control
+ * que decide si alguien puede borrar un campo o no.
+ */
+const ACCIONES = 'opacity-100'
+
 interface FormCanvasProps {
   fields: FormFieldNew[]
   activeFieldId: string | null
@@ -113,7 +129,7 @@ export function FormCanvas({
                     <span className="ml-2 text-[13px] text-navy-light/80 font-body">· {field.label}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={cn('flex items-center gap-1 transition-opacity', ACCIONES)}>
                   <button type="button" onClick={e => { e.stopPropagation(); onSelectField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-navy/10 flex items-center justify-center transition-colors" aria-label="Editar campo">
                     <Pencil size={12} className="text-navy-light/80" />
                   </button>
@@ -157,7 +173,7 @@ export function FormCanvas({
                   </span>
                   <span className="text-[11px] text-[rgba(42,139,143,.6)] font-display">#{index + 1}</span>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={cn('flex gap-1 transition-opacity', ACCIONES)}>
                   <button
                     type="button"
                     onClick={e => { e.stopPropagation(); onSelectField(field.id) }}
@@ -169,6 +185,7 @@ export function FormCanvas({
                     type="button"
                     onClick={e => { e.stopPropagation(); onDeleteField(field.id) }}
                     className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-coral/10 transition-colors"
+                    aria-label="Eliminar los datos personales"
                   >
                     <Trash2 size={11} className="text-coral" />
                   </button>
@@ -215,7 +232,7 @@ export function FormCanvas({
             }}
           >
             {/* Action bar */}
-            <div className={cn('absolute top-2 right-2 flex items-center gap-1 transition-opacity z-10', 'opacity-0 group-hover:opacity-100')}>
+            <div className={cn('absolute top-2 right-2 flex items-center gap-1 transition-opacity z-10', ACCIONES)}>
               {logicCount > 0 && (
                 <button
                   type="button"
@@ -245,6 +262,9 @@ export function FormCanvas({
                 </div>
                 <FlechasDeOrden indice={index} total={fields.length} etiqueta="el campo"
                     onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
+                <span className="h-5 min-w-5 rounded-full bg-navy/5 flex items-center justify-center text-[11px] text-navy-light/80 font-mono px-1">
+                  {index + 1}
+                </span>
               </div>
 
               {field.type === 'section' ? (
@@ -252,7 +272,7 @@ export function FormCanvas({
                   <FieldPreview field={field} compact />
                 </div>
               ) : (
-                <div className="flex-1 space-y-2 min-w-0">
+                <div className="flex-1 space-y-2 min-w-0 pr-24">
                   <div className="flex items-start gap-2">
                     <div className="shrink-0 h-5 w-5 rounded flex items-center justify-center mt-0.5 bg-surface-low">
                       <FieldTypeIcon type={field.type} size={11} className="text-navy-light/80" />
@@ -290,9 +310,6 @@ export function FormCanvas({
                 </div>
               )}
 
-              <span className="shrink-0 mt-0.5 h-5 min-w-5 rounded-full bg-navy/5 flex items-center justify-center text-[11px] text-navy-light/80 font-mono px-1">
-                {index + 1}
-              </span>
             </div>
 
             {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-coral" />}
