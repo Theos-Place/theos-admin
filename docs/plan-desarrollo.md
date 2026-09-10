@@ -3852,21 +3852,26 @@ inscribirse en N3 y N4 de 2026.
 
 **Orden pedido por el usuario (2026-09-10): UI-3 → EVE-8 → EVE-10 → EVE-9.**
 
-#### [ ] EVE-9 · Export de inscritos a un evento
+#### [x] EVE-9 · Export de asistentes a un evento — HECHO 2026-09-10 (5387b681)
 
-**No existe.** Es el que necesita cocina y logística: la lista de quién va, con
-**alergias y restricción alimenticia** — que es literalmente para lo que se
-capturó ese dato. Debe incluir también la columna `checked_in_as`
-(asistente/servidor), que hoy no tiene dónde ir.
+`GET /api/events/[id]/attendees/export` → .xlsx, con el botón "Lista para
+cocina (Excel)" en la pantalla del evento. Una fila por persona (inscripciones
+y check-ins cruzados), con alergias, restricción alimenticia, participante o
+servidor, sub-evento y hora de llegada. Los invitados sin ficha también salen.
 
-La función de la columna ya está escrita y probada
-(`inscritosParaExport`: vacío o "N/A" cuando el evento no usa inscripción).
+Gate `requireEventAccess` — lleva alergias, que son datos de salud. Verificado
+contra "Charla Meridiano" (181 check-ins): 200 con encargado_eventos, 403 con
+rol solo miembro.
 
-#### [ ] EVE-10 · Columna `closed_at` en los grupos de estudio
+#### [x] EVE-10 · Columna `closed_at` en los grupos de estudio — HECHO 2026-09-10 (2ff6dc2a)
 
-Hoy los reportes de cierre se apoyan en `updated_at`, que cambia con cualquier
-edición. Con una columna propia, "qué se cerró el lunes" deja de ser una
-aproximación.
+Migración `20260910050000`: `closed_at` y `closed_by`, sellados por el RPC
+`close_group`. El backfill es exacto (el máximo de completed_at/dropped_at de
+las inscripciones ES el momento del cierre): 1.856 grupos con fecha, 220 en
+NULL a propósito porque el histórico de CCB no dejó huella.
+
+Medido: `updated_at` estaba mal en LOS 1.856, no en algunos. En 1.785 el error
+era de años — decían 18 de julio de 2026, la fecha del import.
 
 #### [x] EVE-8 · Sedes marcadas como zona — NO HABÍA NADA QUE ARREGLAR (medido 2026-09-10)
 
@@ -3995,3 +4000,18 @@ En España no se puede pedir información protegida de menores. Hay que poder
 registrar la asistencia de un niño sin guardar los datos que sí guardamos en
 Costa Rica. Es una decisión legal antes que técnica: hay que fijar exactamente
 qué campos sí y cuáles no, y si el niño existe como ficha o solo como un conteo.
+
+### [ ] DAT-7 · Lo que la gente escribió en el campo de alergias
+
+Lo destapó el export de EVE-9. De 172 personas con algo escrito ahí:
+
+- **13 escribieron una restricción alimenticia**, no una alergia: "Celiaca-No
+  gluten", "Intolerante a la lactosa", "Gluten y lacteos". Es justo el dato que
+  ahora tiene campo propio. NO se convierte solo: "Gluten" puede ser celiaquía
+  o alergia de verdad, y esa diferencia le importa a quien cocina.
+- **4 escribieron otra cosa**: 3 un correo y 1 un teléfono. Se colaron de un
+  campo equivocado en algún formulario.
+- **22 escribieron "No" o "Ninguna"**, que es ruido: ocupa la columna y hace
+  que la lista de cocina resalte a alguien que no necesita nada.
+
+Script: `scripts/cierre-2026-09/alergias-sucias.ts`.
