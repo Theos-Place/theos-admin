@@ -102,7 +102,10 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
   const base = toDomainMember(db)
 
   const attendanceHistory = db.attendance.map(a => ({
-    name: a.event_name,
+    // Si entró a un SUB-EVENTO, ese es al que fue. El perfil de Julia
+    // Barrantes decía "Charla Pedregal Miércoles" cuando ella va al Youth de
+    // esa charla, y leído así parecía que iba a la charla de adultos.
+    name: a.sub_event_name ? `${a.event_name} · ${a.sub_event_name}` : a.event_name,
     date: a.event_date,
     type: a.event_type,
     attendance_type: (a.was_volunteer ? 'servidor' : 'participante') as 'participante' | 'servidor',

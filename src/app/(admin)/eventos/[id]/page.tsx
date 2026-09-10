@@ -803,13 +803,20 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
               <p className="text-[13px] text-navy-light/80 mt-2 font-body">
                 {nuevos.conFicha === 0
                   ? 'Todavía no hay asistencia registrada.'
-                  : `de ${nuevos.conFicha} asistentes con ficha, se les creó el perfil ese mismo día`}
+                  // El texto describía la regla VIEJA ("el perfil se creó ese
+                  // mismo día"), que dejó de ser la que se aplica: ahora cuenta
+                  // a quien este evento le quedó como su PRIMER check-in. Karla,
+                  // María Cristina y Matthew se crearon al día siguiente del
+                  // evento y sí son nuevas — con el texto viejo parecía un error.
+                  : `de ${nuevos.conFicha} asistentes con ficha, esta fue su primera vez`}
               </p>
               {nuevos.nuevas > 0 && (
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {event.checkins
-                    .filter(c => c.member_created_at &&
-                      contarPersonasNuevas([c], event.start_at).nuevas === 1)
+                    // Sin `&& c.member_created_at`: el conteo de arriba usa el
+                    // primer check-in, así que exigir la fecha de creación acá
+                    // escondía de la lista a gente que SÍ estaba contada.
+                    .filter(c => contarPersonasNuevas([c], event.start_at).nuevas === 1)
                     .map(c => (
                       <span
                         key={c.id}

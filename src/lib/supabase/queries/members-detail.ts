@@ -55,6 +55,10 @@ export type DbAttendance = {
   event_type: string
   event_date: string
   was_volunteer: boolean
+  /** A qué sub-evento entró, si entró a uno. Julia Barrantes va al Youth de la
+   *  charla de Pedregal, y el perfil le decía "Charla Pedregal Miércoles" a
+   *  secas: leído así parece que va a la charla de adultos. */
+  sub_event_name?: string | null
 }
 
 export type DbService = {
@@ -166,7 +170,9 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
       .select(`
         event_id,
         checked_in_at,
-        events(title, event_type, starts_at)
+        sub_event_id,
+        events(title, event_type, starts_at),
+        sub_event:sub_events(name)
       `)
       .eq('member_id', id)
       .order('checked_in_at', { ascending: false }),
@@ -426,11 +432,13 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   const attendance: DbAttendance[] = (checkinsRes.data ?? []).map((c) => {
     const row = c as Record<string, unknown>
     const ev = row.events as { title: string; event_type: string; starts_at: string } | null
+    const sub = row.sub_event as { name: string } | null
     return {
       event_name: ev?.title ?? '',
       event_type: ev?.event_type ?? 'otro',
       event_date: ev?.starts_at ?? row.checked_in_at as string,
       was_volunteer: volunteerEventIds.has(row.event_id as string),
+      sub_event_name: sub?.name ?? null,
     }
   })
 
