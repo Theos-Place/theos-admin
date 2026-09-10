@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .select(`
         not_recommended_to_lead_studies, not_recommended_to_lead_studies_at, not_recommended_reason,
         marker:members!member_admin_data_not_recommended_to_lead_studies_by_fkey(first_name, last_name),
-        authorized_virtual_studies, authorized_virtual_studies_at,
+        authorized_virtual_studies, authorized_virtual_studies_at, authorized_virtual_studies_reason,
         virtual_approver:members!member_admin_data_authorized_virtual_studies_by_fkey(first_name, last_name),
         servers_onboarding, servers_onboarding_at,
         onboarding_marker:members!member_admin_data_servers_onboarding_by_fkey(first_name, last_name)
@@ -55,6 +55,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       marker: { first_name: string | null; last_name: string | null } | null
       authorized_virtual_studies: boolean
       authorized_virtual_studies_at: string | null
+      authorized_virtual_studies_reason: string | null
       virtual_approver: { first_name: string | null; last_name: string | null } | null
       servers_onboarding: boolean
       servers_onboarding_at: string | null
@@ -74,6 +75,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       can_edit: viewStudies && canApprove, // el resto de roles de estudios lo ve read-only
       authorized_virtual_studies: viewStudies ? (row?.authorized_virtual_studies ?? false) : false,
       authorized_virtual_studies_at: viewStudies ? (row?.authorized_virtual_studies_at ?? null) : null,
+      authorized_virtual_studies_reason: viewStudies ? (row?.authorized_virtual_studies_reason ?? null) : null,
       authorized_virtual_studies_by_name: viewStudies && row?.virtual_approver
         ? [row.virtual_approver.first_name, row.virtual_approver.last_name].filter(Boolean).join(' ') || null
         : null,
@@ -101,6 +103,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       not_recommended_to_lead_studies?: boolean
       reason?: string
       authorized_virtual_studies?: boolean
+      /** Por qué se autoriza. Obligatoria al autorizar. Va aparte de `reason`,
+       *  que es la del otro campo: si compartieran nombre, mandar los dos
+       *  cambios juntos escribiría la misma frase en los dos lados. */
+      virtual_reason?: string
       servers_onboarding?: boolean
     }
     const hasApproval = 'not_recommended_to_lead_studies' in body
@@ -127,6 +133,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (typeof body.authorized_virtual_studies !== 'boolean') {
         return NextResponse.json({ error: 'Valor inválido' }, { status: 400 })
       }
+      // Autorizar exige el porqué. Sin él, meses después nadie sabe si fue por
+      // distancia, por salud o por una excepción puntual — y el criterio no se
+      // puede revisar ni explicar.
+      if (body.authorized_virtual_studies && !(typeof body.virtual_reason === 'string' && body.virtual_reason.trim())) {
+        return NextResponse.json(
+          { error: 'Indicá por qué se le autoriza llevar estudios virtuales.', code: 'motivo_requerido' },
+          { status: 400 },
+        )
+      }
     }
     // Onboarding de servidores: roles que administran servidores.
     if (hasOnboarding) {
@@ -149,6 +164,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       update.authorized_virtual_studies = body.authorized_virtual_studies
       update.authorized_virtual_studies_by = auth.ctx.memberId
       update.authorized_virtual_studies_at = now
+      // La razón viaja al autorizar; al quitar la autorización se limpia —
+      // una razón sin la marca que la motivó no dice nada.
+      update.authorized_virtual_studies_reason = body.authorized_virtual_studies
+        ? body.virtual_reason!.trim()
+        : null
     }
     if (hasOnboarding) {
       update.servers_onboarding = body.servers_onboarding

@@ -2128,6 +2128,7 @@ export type Database = {
           authorized_virtual_studies: boolean
           authorized_virtual_studies_at: string | null
           authorized_virtual_studies_by: string | null
+          authorized_virtual_studies_reason: string | null
           member_id: string
           not_recommended_reason: string | null
           not_recommended_to_lead_studies: boolean
@@ -2142,6 +2143,7 @@ export type Database = {
           authorized_virtual_studies?: boolean
           authorized_virtual_studies_at?: string | null
           authorized_virtual_studies_by?: string | null
+          authorized_virtual_studies_reason?: string | null
           member_id: string
           not_recommended_reason?: string | null
           not_recommended_to_lead_studies?: boolean
@@ -2156,6 +2158,7 @@ export type Database = {
           authorized_virtual_studies?: boolean
           authorized_virtual_studies_at?: string | null
           authorized_virtual_studies_by?: string | null
+          authorized_virtual_studies_reason?: string | null
           member_id?: string
           not_recommended_reason?: string | null
           not_recommended_to_lead_studies?: boolean

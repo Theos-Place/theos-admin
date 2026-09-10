@@ -27,6 +27,7 @@ type AdminData = {
   authorized_virtual_studies: boolean
   authorized_virtual_studies_at: string | null
   authorized_virtual_studies_by_name: string | null
+  authorized_virtual_studies_reason: string | null
   can_edit_virtual: boolean
   servers_onboarding: boolean
   servers_onboarding_at: string | null
@@ -60,6 +61,8 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const [error, setError] = useState<string | null>(null)
   const [busyVirtual, setBusyVirtual] = useState(false)
   const [savedVirtual, setSavedVirtual] = useState(false)
+  const [virtualReasonOpen, setVirtualReasonOpen] = useState(false)
+  const [virtualReason, setVirtualReason] = useState('')
   const [errorVirtual, setErrorVirtual] = useState<string | null>(null)
   const [busyOnboarding, setBusyOnboarding] = useState(false)
   const [savedOnboarding, setSavedOnboarding] = useState(false)
@@ -270,21 +273,36 @@ export function MemberAdminTab({ memberId, onChanged }: {
     }
   }
 
-  async function toggleVirtualAuth() {
+  /** Al AUTORIZAR se pide el porqué antes de guardar; al quitar la
+   *  autorización no hay nada que justificar y se guarda de una. */
+  function toggleVirtualAuth() {
     if (!admin || busyVirtual || !admin.can_edit_virtual) return
+    if (!admin.authorized_virtual_studies) { setVirtualReasonOpen(true); return }
+    void guardarVirtual(false, '')
+  }
+
+  async function guardarVirtual(valor: boolean, motivo: string) {
+    if (!admin) return
     setBusyVirtual(true)
     setSavedVirtual(false)
+    setErrorVirtual('')
     try {
       const res = await fetch(`/api/members/${memberId}/admin-data`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authorized_virtual_studies: !admin.authorized_virtual_studies }),
+        body: JSON.stringify({
+          authorized_virtual_studies: valor,
+          ...(valor ? { virtual_reason: motivo } : {}),
+        }),
       })
-      if (!res.ok) throw new Error()
+      const body = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(body?.error ?? 'No se pudo actualizar la autorización.')
+      setVirtualReasonOpen(false)
+      setVirtualReason('')
       await loadAdmin()
       setSavedVirtual(true)
-    } catch {
-      setErrorVirtual('No se pudo actualizar la autorización.')
+    } catch (e) {
+      setErrorVirtual(e instanceof Error ? e.message : 'No se pudo actualizar la autorización.')
     } finally {
       setBusyVirtual(false)
     }
@@ -686,6 +704,11 @@ export function MemberAdminTab({ memberId, onChanged }: {
                 Autorizado por {admin.authorized_virtual_studies_by_name}{admin.authorized_virtual_studies_at ? ` · ${formatDate(admin.authorized_virtual_studies_at)}` : ''}
               </p>
             )}
+            {admin?.authorized_virtual_studies && admin.authorized_virtual_studies_reason && (
+              <p className="text-[13px] text-navy-light/80 mt-1 italic font-body">
+                Razón: “{admin.authorized_virtual_studies_reason}”
+              </p>
+            )}
           </div>
           </div>
           <button
@@ -704,6 +727,41 @@ export function MemberAdminTab({ memberId, onChanged }: {
             <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', admin?.authorized_virtual_studies ? 'translate-x-5' : 'translate-x-0')} />
           </button>
         </div>
+        {/* El porqué, antes de autorizar. Sin esto, meses después nadie sabe
+            si fue por distancia, por salud o por una excepción puntual. */}
+        {virtualReasonOpen && !admin?.authorized_virtual_studies && (
+          <div className="mt-3 space-y-2">
+            <label htmlFor="virtual-reason" className="block text-[13px] font-medium text-navy-light/80 font-body">
+              Razón (obligatoria) — la fecha y quién autoriza se guardan automáticamente
+            </label>
+            <textarea
+              id="virtual-reason"
+              value={virtualReason}
+              onChange={e => setVirtualReason(e.target.value)}
+              rows={2}
+              placeholder="¿Por qué esta persona puede llevar el estudio virtual? Ej. vive fuera del área, trabaja en el horario del grupo presencial."
+              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void guardarVirtual(true, virtualReason)}
+                disabled={!virtualReason.trim() || busyVirtual}
+                className={cn('rounded-full bg-coral px-4 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body inline-flex items-center gap-1.5', (!virtualReason.trim() || busyVirtual) && 'opacity-50 cursor-not-allowed')}
+              >
+                {busyVirtual ? <><Loader2 size={13} className="animate-spin" /> Guardando…</> : 'Autorizar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setVirtualReasonOpen(false); setVirtualReason('') }}
+                disabled={busyVirtual}
+                className="rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
         {savedVirtual && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
         {errorVirtual && <p className="text-[13px] text-coral mt-2 font-body">{errorVirtual}</p>}
         </div>
