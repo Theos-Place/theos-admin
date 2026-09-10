@@ -159,13 +159,18 @@ export const flujo: TutorialFlow = {
     await t.fill('input[placeholder*="Buscar por nombre"]', 'Rosa Visitante')
     await t.pause(700)
     await t.badge(6)
-    await t.click(t.page.getByRole('button', { name: /Agregar persona nueva/ }))
+    await t.click(t.page.getByRole('button', { name: /persona nueva/i }))
     await t.page.getByPlaceholder('Nombre').first().waitFor({ timeout: 15_000 })
     await t.fill('#np-first', 'Rosa')
     await t.fill('#np-last', 'Visitante')
     await t.fill('#np-email', 'rosa.visitante@prueba.theosplace.invalid')
     await t.pause(800)
     await t.shot('06-persona-nueva')
+    // Se cierra el modal: el tutorial sigue con la familia, no con este alta
+    // (crear a Rosa de verdad ensuciaría el padrón cada vez que se graba).
+    await t.page.keyboard.press('Escape')
+    await t.page.getByLabel(/Cédula \(opcional\)/).waitFor({ state: 'detached', timeout: 10_000 })
+    await t.fill('input[placeholder*="Buscar por nombre"]', '')
 
     // 7 · Una familia llega: el papá al evento, el hijo al subevento
     await t.fill('input[placeholder*="Buscar por nombre"]', 'Familia')
