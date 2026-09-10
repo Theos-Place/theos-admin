@@ -4158,3 +4158,60 @@ que varios clientes descartan—: el logo llegaba a Outlook a su tamaño real
 fecha de inicio se corría un día al convertir una fecha sin hora a zona de
 Costa Rica.
 
+### [ ] REP-2 · Reporte de asistencia: ver una semana sola, no el acumulado
+
+HOY `/reportes/asistencia` muestra el año entero: gráfico semanal, promedio,
+semana pico. Al tocar una semana no hay forma de ver SOLO esa semana.
+
+LO QUE SE QUIERE. Al seleccionar una semana —clic en la barra o un selector—,
+la pantalla muestra el detalle de ESA semana:
+
+- Total de asistentes, desglosado **por sede/charla** (Meridiano Martes,
+  Heredia, Antares, United…), con la cantidad de cada una.
+- Contexto corto: contra la semana anterior y contra la misma semana del año
+  pasado (delta en número y en %). Contexto, no acumulado.
+- Los dos números por charla, asistente y servidor, que ya existen en
+  `event_checkins.checked_in_as` (columna agregada el 2026-09-10).
+- Las semanas parciales marcadas como **"semana en curso"** — el flag
+  `partial` ya existe en `WeeklyPoint`. Sin eso alguien compara media semana
+  contra semanas completas sin darse cuenta.
+
+CÓMO. La vista anual se queda igual; el detalle es un estado adicional (panel
+abajo del gráfico o drill-down) con un "volver al año" claro. Deep-linkeable
+(`?semana=2026-W37`) para poder mandar el enlace.
+
+DATOS — lo primero que hay que revisar. Ver si el snapshot actual
+(`report_snapshots` / el RPC de charlas) ya trae el desglose por sede POR
+SEMANA o solo los totales. `CharlaAggRow` hoy es
+`{ yr, title, wk, mo, checkins }`, así que el título ya está por semana: puede
+que alcance. Si no, se amplía el snapshot nocturno. **NO calcular en vivo
+contra `event_checkins`**: son 170 mil filas y el patrón del módulo es
+snapshot.
+
+PERMISOS: los mismos del reporte, `requireModuleView('reportes')`.
+
+TESTS: seleccionar una semana muestra solo sus números; el desglose por sede
+suma el total; la semana parcial queda marcada; el deep link abre la semana
+correcta; la vista anual no cambia.
+
+### [ ] DAT-8 · 54 menores de 12 con correo y sin familia
+
+Salió de limpiar los correos de menores (2026-09-10). De 87 con correo, a 28
+se les quitó porque estaban en una familia y a 5 se les armó la familia con
+evidencia. Quedan 54 a los que NO se les puede quitar el correo: sin familia
+detrás se quedarían sin ninguna forma de contacto.
+
+La lista, con la evidencia de cada uno, está en
+`scripts/output/menores-sin-familia.csv`:
+
+-  3 comparten teléfono con un adulto → revisables de una.
+- 39 solo comparten un apellido con alguien que tiene familia. **Eso no es
+  evidencia**: hay cientos de Rodríguez. Hay que preguntar.
+- 12 sin ninguna pista.
+
+Ojo con dos de los 3 primeros: Alana y Elena apuntan a "Carlos Blanco", que
+está DUPLICADO. Primero se resuelve el duplicado.
+
+Y un vínculo equivocado no es inocuo: por la regla de una persona = una
+familia, vincular mal FUSIONA dos hogares.
+
