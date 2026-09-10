@@ -3920,3 +3920,78 @@ cuenta ya es, correctamente, de la otra ficha.
 - [ ] Confirmar el SMTP de Supabase Auth.
 - [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase.
 - [x] Sacar a Douglas García de la supresión de AWS SES. — HECHO por el usuario 2026-09-10
+
+
+---
+
+## Fase 13 — Cola nueva (pedida 2026-09-10)
+
+Ocho cosas nuevas. El orden de adentro todavía no está decidido; lo que sí está
+es que van después de la Fase 12.
+
+### [ ] DAT-5 · Grupos finalizados con gente sin resultado
+
+**Medido el 2026-09-10.** Buena noticia primero: **nadie quedó `enrolled` en un
+grupo cerrado** — el cierre siempre resuelve el estado de la inscripción. Lo que
+falta es el RESULTADO: 1.738 grupos con 11.420 personas quedaron `completed` sin
+nota numérica y sin la etiqueta aprobado/reprobado.
+
+De esos, casi todo es el histórico importado de CCB, que nunca trajo notas
+(2010–2025). **Lo accionable son los 63 grupos con 313 personas que se cerraron
+en 2026, ya dentro de la app.** Ahí sí hubo un dirigente que cerró y no puso el
+resultado.
+
+Antes de perseguir a nadie hay que ver por qué se pudo cerrar sin resultado: si
+la pantalla de cierre lo permite, el arreglo es del formulario, no de los datos.
+Absorbe a DAT-3 (los 48 grupos sin una sola nota son un subconjunto).
+
+Script: `scripts/cierre-2026-09/pendientes-de-nota.ts`.
+
+### [ ] DAT-6 · Traer las asistencias al día desde CCB — **es del usuario**
+
+Actualizar todas las asistencias de las personas. El dato sale de CCB; no es
+trabajo de código hasta que exista el archivo. Cuando llegue, se importa con el
+camino de `seed-attendance-long.ts` (ojo con los gotchas ya documentados:
+`status='finished'`, fechas en MM/DD/YYYY, dedup por día en hora de Costa Rica).
+
+### [ ] INF-1 · Ambiente de staging
+
+Hoy todo se prueba contra producción — los tutoriales se graban ahí, con el
+guard `@prueba.`, y los scripts de medición leen la base real. Un staging con
+su propio proyecto de Supabase y su propio deploy de Vercel quita ese riesgo.
+
+Depende de resolver antes las env de Supabase en los deploys Preview (Bloque E),
+porque es el mismo problema.
+
+### [ ] FIN-4 · Planes de pago para matrículas e inscripciones
+
+Poder partir el monto de una matrícula (o de la inscripción a un evento) en
+varios pagos, con sus fechas y su saldo. Necesita definición de producto: si el
+plan bloquea o no la matrícula, qué pasa si alguien deja de pagar, y cómo se ve
+en la ficha y en los reportes de finanzas. Convive con la regla de 2026-08-04
+(la matrícula es efectiva de inmediato, `pendiente_de_pago` ya no se escribe).
+
+### [ ] EVE-11 · Google Wallet y Apple Wallet
+
+Que el pase del evento se pueda guardar en la billetera del teléfono, en vez de
+depender del QR en un correo. Las dos plataformas piden cuenta de desarrollador
+y firma de los pases; hay que ver el costo y quién administra las credenciales
+antes de escribir código.
+
+### [ ] FIN-5 · Tilopay
+
+Pasarela de pago. Hay que revisar qué reemplaza y qué convive con lo que ya
+existe, y si entra en el mismo flujo que FIN-4.
+
+### [ ] REP-1 · Actualizar todos los reportes
+
+Revisión completa de `/reportes`: qué sigue sirviendo, qué quedó desactualizado
+y qué falta. Conviene hacerlo DESPUÉS de DAT-5 y DAT-6, porque varios reportes
+leen justo esos datos y hoy dan un número que no es.
+
+### [ ] EVE-12 · Check-in de niños para España (sin datos protegidos)
+
+En España no se puede pedir información protegida de menores. Hay que poder
+registrar la asistencia de un niño sin guardar los datos que sí guardamos en
+Costa Rica. Es una decisión legal antes que técnica: hay que fijar exactamente
+qué campos sí y cuáles no, y si el niño existe como ficha o solo como un conteo.
