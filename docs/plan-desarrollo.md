@@ -4034,12 +4034,30 @@ Revisión completa de `/reportes`: qué sigue sirviendo, qué quedó desactualiz
 y qué falta. Conviene hacerlo DESPUÉS de DAT-5 y DAT-6, porque varios reportes
 leen justo esos datos y hoy dan un número que no es.
 
-### [ ] EVE-12 · Check-in de niños para España (sin datos protegidos)
+### [x] EVE-12 · Check-in de niños para España — HECHO 2026-09-10
 
-En España no se puede pedir información protegida de menores. Hay que poder
-registrar la asistencia de un niño sin guardar los datos que sí guardamos en
-Costa Rica. Es una decisión legal antes que técnica: hay que fijar exactamente
-qué campos sí y cuáles no, y si el niño existe como ficha o solo como un conteo.
+La decisión, que era lo que faltaba (del usuario): el niño **sí existe como
+ficha**, pero de él se guardan **solo nombre y fecha de nacimiento**, los dos
+obligatorios — la fecha porque sin ella no se sabe que es menor, el nombre
+porque hay que poder llamarlo. **No se le crea cuenta de acceso**, nunca. Y su
+ficha **cuelga de la familia** del adulto que lo trajo.
+
+En el alta desde el check-in hay una casilla. Al marcarla, el formulario se
+reduce a esos dos campos más "¿con quién viene?".
+
+La marca vive en la BASE (`members.datos_protegidos`) con dos CHECK que la
+sostienen: una ficha protegida no puede tener correo, teléfono, cédula ni
+auth_user_id, y no puede estar sin fecha de nacimiento. Van ahí y no solo en la
+app porque el check-in no es el único camino que escribe en `members`: un
+import futuro también tiene que respetarlo.
+
+Si el vínculo con la familia falla, la ficha se borra. Es mejor que el alta se
+caiga y se reintente a dejar un menor suelto en el padrón, sin adulto a quien
+preguntarle por él. Y un menor protegido no puede colgar de otro menor
+protegido: la cadena seguiría sin llegar a un adulto.
+
+Prueba de punta a punta: `scripts/pruebas/menor-protegido.ts`, que además
+verifica que la base rechace los intentos de escribirle correo o cédula.
 
 ### [ ] DAT-7 · Lo que la gente escribió en el campo de alergias
 

@@ -2473,6 +2473,7 @@ export type Database = {
           account_confirmed_at: string | null
           address: string | null
           allergies: string | null
+          datos_protegidos: boolean
           dietary_restrictions: string[]
           auth_user_id: string | null
           birth_date: string | null
@@ -2525,6 +2526,7 @@ export type Database = {
           account_confirmed_at?: string | null
           address?: string | null
           allergies?: string | null
+          datos_protegidos?: boolean
           dietary_restrictions?: string[]
           auth_user_id?: string | null
           birth_date?: string | null
@@ -2577,6 +2579,7 @@ export type Database = {
           account_confirmed_at?: string | null
           address?: string | null
           allergies?: string | null
+          datos_protegidos?: boolean
           dietary_restrictions?: string[]
           auth_user_id?: string | null
           birth_date?: string | null

@@ -17,6 +17,8 @@ import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { validarAltaDePersona } from '@/lib/members/alta-persona'
 import { normalizeCedula, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 import { PageContainer } from '@/components/layout/PageContainer'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
 // no forma parte del bundle inicial de la página.
@@ -928,6 +930,11 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
   const [cedula, setCedula] = useState('')
   const [documentType, setDocumentType] = useState<string>('cedula')
   const [birthDate, setBirthDate] = useState('')
+  // EVE-12 · Menor con datos protegidos (España): de esta ficha solo se
+  // guardan nombre y fecha de nacimiento, no se le crea cuenta, y cuelga de la
+  // familia del adulto que lo trajo.
+  const [menorProtegido, setMenorProtegido] = useState(false)
+  const [familiar, setFamiliar] = useState<{ id: string; nombre: string } | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [familyDrafts, setFamilyDrafts] = useState<FamilyDraft[]>([])
@@ -945,7 +952,16 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
     birth_date: birthDate, document_type: documentType, exigirCorreo: true,
   })
   const esCedulaCR = documentType === 'cedula'
-  const valid = chequeo.ok
+  // Un menor protegido no pasa por validarAltaDePersona: esa función exige
+  // correo y documento, que son justo lo que de él no se guarda. Su regla
+  // vive en menor-protegido.ts y el servidor la vuelve a aplicar.
+  const impedimentoMenor = menorProtegido
+    ? motivoQueImpideCrear({
+        datos: { first_name: firstName, last_name: lastName, birth_date: birthDate },
+        familiarId: familiar?.id ?? null,
+      })
+    : null
+  const valid = menorProtegido ? impedimentoMenor === null : chequeo.ok
 
   /** Al salir del campo: ¿esta cédula ya es de alguien? El lookup busca por
    *  cédula además de por nombre, así que sirve tal cual. */
@@ -1001,6 +1017,18 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
     setSaving(true)
     setError(null)
     try {
+      if (menorProtegido) {
+        const menor = await createMember({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          birth_date: birthDate || null,
+          datos_protegidos: true,
+          familiar_id: familiar?.id ?? null,
+        })
+        onCreated(menor)
+        return
+      }
+
       const principal = await createMember({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -1090,6 +1118,56 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
           </div>
         </div>
         <div className="space-y-1">
+          <label htmlFor="np-birth" className={labelCls} style={labelStyle}>
+            Fecha de nacimiento {menorProtegido ? '*' : ''}
+          </label>
+          <input id="np-birth" type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+        </div>
+
+        {/* EVE-12 · España: de un menor con datos protegidos no se puede
+            guardar más que su nombre y su fecha de nacimiento. */}
+        <label className="flex items-start gap-2.5 rounded-xl p-3 cursor-pointer" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <input
+            type="checkbox"
+            checked={menorProtegido}
+            onChange={e => { setMenorProtegido(e.target.checked); setError(null) }}
+            className="mt-0.5 accent-coral shrink-0"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium text-white font-body">Menor con datos protegidos</span>
+            <span className="block text-[13px] text-white/80 font-body">
+              Solo se guardan nombre y fecha de nacimiento. No se le crea cuenta y su ficha queda con la familia.
+            </span>
+          </span>
+        </label>
+
+        {menorProtegido ? (
+          <div className="space-y-1">
+            <label htmlFor="np-familiar" className={labelCls} style={labelStyle}>¿Con quién viene? *</label>
+            {familiar ? (
+              <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
+                <span className="flex-1 text-sm text-white font-body">{familiar.nombre}</span>
+                <button
+                  type="button"
+                  onClick={() => setFamiliar(null)}
+                  className="text-[13px] text-white/80 hover:text-white font-body"
+                >
+                  Cambiar
+                </button>
+              </div>
+            ) : (
+              <MemberCombobox
+                onSelect={m => setFamiliar({ id: m.id, nombre: `${m.first_name} ${m.last_name}`.trim() })}
+                placeholder="Buscar a la mamá, el papá o el familiar…"
+              />
+            )}
+            {tocado && impedimentoMenor && (
+              <p className="text-[13px] text-coral-soft font-body" role="alert">{impedimentoMenor.mensaje}</p>
+            )}
+          </div>
+        ) : (
+        <>
+        <div className="space-y-1">
           <label htmlFor="np-phone" className={labelCls} style={labelStyle}>Teléfono</label>
           <input id="np-phone" className={fieldCls} style={fieldStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="8888-8888" />
         </div>
@@ -1112,9 +1190,9 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label htmlFor="np-doctype" className={labelCls} style={labelStyle}>Tipo de documento</label>
+            <label htmlFor="np-doctype-x" className={labelCls} style={labelStyle}>Tipo de documento</label>
             <select
-              id="np-doctype" className={fieldCls} style={fieldStyle}
+              id="np-doctype-x" className={fieldCls} style={fieldStyle}
               value={documentType}
               onChange={e => { setDocumentType(e.target.value); setYaExiste(null) }}
             >
@@ -1126,10 +1204,6 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
                 </option>
               ))}
             </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="np-birth" className={labelCls} style={labelStyle}>Fecha de nacimiento</label>
-            <input id="np-birth" type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
           </div>
         </div>
 
@@ -1155,6 +1229,8 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
           <p id="np-cedula-err" className="text-[13px] text-coral-soft font-body" role="alert">
             {chequeo.errores.cedula}
           </p>
+        )}
+        </>
         )}
 
         {/* La cédula ya es de alguien: se ofrece registrar a esa persona en vez

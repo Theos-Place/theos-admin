@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { CAMPOS_ALTA_CHECKIN, camposRechazados, soloCamposPermitidos } from '@/lib/members/alta-desde-checkin'
+import { motivoQueImpideCrear, fichaDeMenorProtegido } from '@/lib/members/menor-protegido'
 
 /**
  * POST /api/events/[id]/members — alta de una persona DESDE la fila del evento.
@@ -32,6 +33,10 @@ const schema = z.object({
   email: z.string().trim().nullish(),
   phone: z.string().trim().nullish(),
   birth_date: z.string().trim().nullish(),
+  // EVE-12 · Menor con datos protegidos (España): solo nombre y fecha, sin
+  // cuenta de acceso, y colgado de la familia del adulto que lo trajo.
+  datos_protegidos: z.boolean().optional(),
+  familiar_id: z.string().trim().nullish(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,14 +47,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!isUuid(eventId)) return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
 
     const crudo = await req.json().catch(() => null)
-    const demas = camposRechazados(crudo, CAMPOS_ALTA_CHECKIN)
+    const PERMITIDOS = [...CAMPOS_ALTA_CHECKIN, 'datos_protegidos', 'familiar_id'] as const
+    const demas = camposRechazados(crudo, PERMITIDOS)
     if (demas.length) {
       return NextResponse.json(
         { error: `Desde el check-in no se pueden establecer estos campos: ${demas.join(', ')}.`, code: 'campo_no_permitido' },
         { status: 400 },
       )
     }
-    const parsed = schema.safeParse(soloCamposPermitidos(crudo, CAMPOS_ALTA_CHECKIN))
+    const parsed = schema.safeParse(soloCamposPermitidos(crudo, PERMITIDOS))
     if (!parsed.success) {
       return NextResponse.json({ error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) }, { status: 400 })
     }
@@ -60,6 +66,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!evento) return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
 
     const d = parsed.data
+
+    // ── Menor con datos protegidos ────────────────────────────────────────
+    // Camino propio y corto: no pasa por documento, correo ni dedup, porque de
+    // esta ficha no se guarda nada de eso. Y NO se le crea cuenta de acceso.
+    if (d.datos_protegidos) {
+      const impedimento = motivoQueImpideCrear({
+        datos: d as unknown as Record<string, unknown>,
+        familiarId: d.familiar_id ?? null,
+      })
+      if (impedimento) {
+        return NextResponse.json({ error: impedimento.mensaje, code: impedimento.code }, { status: 400 })
+      }
+      const { crearMenorProtegido } = await import('@/lib/supabase/queries/menor-protegido')
+      const creado = await crearMenorProtegido(
+        fichaDeMenorProtegido(d as unknown as Record<string, unknown>),
+        d.familiar_id!,
+      )
+      // invite: nunca. Se devuelve explícito para que la pantalla no muestre
+      // "se le mandó el correo" en una ficha que no tiene correo.
+      return NextResponse.json({ ...creado, invite: { sent: false, reason: 'menor_protegido' } }, { status: 201 })
+    }
+
     const { normalizeEmail, findMemberByCedulaOrEmail, createMember, getMemberForLookupById } = await import('@/lib/supabase/queries/members')
     const { normalizePhoneOrNull } = await import('@/lib/phone')
     const { isDocumentType, isValidDocument, documentFormatMessage } = await import('@/lib/cedula')
