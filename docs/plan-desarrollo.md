@@ -3752,7 +3752,7 @@ datos, después lo que falta construir.
 
 ### Bloque A · Bugs que dejan pantallas mudas
 
-#### [ ] PAD-1 · Cinco pantallas siguen pidiendo el padrón a roles que no lo tienen
+#### [x] PAD-1 · Pantallas pidiendo el padrón a roles que no lo tienen — HECHO 2026-09-10
 
 `GET /api/members?search=` exige alcance total sobre el módulo miembros. Los
 roles acotados no lo tienen, así que reciben 403 y —como el código hace
@@ -3770,9 +3770,26 @@ candidatos a servidor (2026-09-10). Verificado que quedan:
 | `miembros/[id]/page.tsx`, `miembros/nuevo/page.tsx` | solo staff de padrón — **no** hay problema, se listan para no volver a revisarlos |
 | `communications/RecipientSelector.tsx` | rol `comunicaciones`, que sí tiene padrón — **no** hay problema |
 
-**Arreglo**: los dos primeros pasan a `/api/members/lookup`. Y de una vez, un
-test que recorra `src/` y falle si una pantalla vuelve a pedir el padrón — que
-es como se llegó a cinco.
+**HECHO**. En vez de cambiar los dos casos sueltos, se invirtió el DEFAULT de
+`MemberCombobox`: antes apuntaba al padrón y tres pantallas ya habían tenido que
+pasar `searchUrl` una por una para esquivarlo. Ahora el default es el lookup, y
+lo seguro es lo que pasa si nadie se acuerda. El Topbar también pasó al lookup.
+
+Medido: son **12 roles** de gestión sin alcance total sobre miembros
+(becas, folletos, forms, dirigente, lider_comite, encargado_eventos, reportes,
+gestor_accesos, revision_pagos, solicitudes_estudio, editor_grupos_estudio,
+evaluaciones). El caso del Topbar es el más engañoso: su gate de UI es
+`view && scope !== 'own'`, y `lider_comite` cae justo en el medio — ve la caja y
+recibe 403.
+
+ÚNICA excepción que se queda en el padrón: el alta de empleados, que usa la
+ocupación (el lookup no la trae) y es de direccion/encargado_staff.
+
+Guardia nueva: `src/lib/auth/padron-en-pantallas.test.ts` recorre `src/` por las
+DOS formas de llegar al padrón —armar la URL a mano o pasarle
+`searchUrl="/api/members"` al combobox— y falla si aparece una fuera de la lista
+blanca. Verificado en el navegador con lider_comite: padrón 403, lookup 200 con
+8 resultados, y el buscador global vuelve a encontrar gente.
 
 #### [ ] SRV-1 · Terminar los tests del gate de servidor en el check-in
 
@@ -3833,6 +3850,8 @@ inscribirse en N3 y N4 de 2026.
 
 ### Bloque C · Lo que falta construir
 
+**Orden pedido por el usuario (2026-09-10): UI-3 → EVE-8 → EVE-10 → EVE-9.**
+
 #### [ ] EVE-9 · Export de inscritos a un evento
 
 **No existe.** Es el que necesita cocina y logística: la lista de quién va, con
@@ -3869,8 +3888,8 @@ opcional, el alta desde la fila y la distinción asistente/servidor.
       eventos por defecto, como ya lo hace `Colaborador`?
 - [ ] ¿Se le manda a **Victoria Badilla Saxe** su invitación de cuenta? Se creó
       sin correo a propósito (era un alta retroactiva).
-- [ ] Confirmar con **Otto Chaves** que `ottoalfredo@oac.cr` es correcto: ahora
-      es su usuario para entrar y venía marcado POR VERIFICAR en la hoja.
+- [x] Confirmar con **Otto Chaves** que `ottoalfredo@oac.cr` es correcto.
+      — CONFIRMADO por el usuario 2026-09-10.
 
 ### Bloque E · Operativo (no requiere código)
 
@@ -3878,4 +3897,4 @@ opcional, el alta desde la fila y la distinción asistente/servidor.
 - [ ] Copiar las env de Supabase a los deploys **Preview** — hoy fallan.
 - [ ] Confirmar el SMTP de Supabase Auth.
 - [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase.
-- [ ] Sacar a Douglas García de la supresión de AWS SES.
+- [x] Sacar a Douglas García de la supresión de AWS SES. — HECHO por el usuario 2026-09-10

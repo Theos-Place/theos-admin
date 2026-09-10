@@ -217,7 +217,10 @@ function GlobalMemberSearch() {
       if (term.length < 2) { if (alive) { setResults([]); setOpen(false) } return }
       setSearching(true)
       setOpen(true)
-      fetch(`/api/members?search=${encodeURIComponent(term)}&pageSize=8`)
+      // PAD-1: por el lookup mínimo. El gate de ARRIBA muestra la caja a
+      // lider_comite (su alcance es 'committee', que no es 'own'), pero el
+      // padrón exige alcance total: le devolvía 403 y la caja quedaba muda.
+      fetch(`/api/members/lookup?search=${encodeURIComponent(term)}&pageSize=8`)
         .then(r => (r.ok ? r.json() : null))
         .then(d => { if (alive) { setResults(d?.members ?? []); setHighlight(0); setSearching(false) } })
         .catch(() => { if (alive) { setResults([]); setSearching(false) } })

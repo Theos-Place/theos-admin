@@ -73,6 +73,10 @@ export function StepPersonSearch({
           excludeIds={excludeIds}
           placeholder="Buscar por nombre, email o cédula..."
           onSelect={onSelect}
+          // Único caso que se queda en el PADRÓN: usa la ocupación, que el
+          // lookup mínimo no trae, y esta pantalla es de direccion/
+          // encargado_staff, que sí tienen el módulo miembros.
+          searchUrl="/api/members"
           secondaryText={m => [m.email, m.cedula].filter(Boolean).join(' · ') || null}
           metaText={m => m.occupation ?? null}
           emptyState={

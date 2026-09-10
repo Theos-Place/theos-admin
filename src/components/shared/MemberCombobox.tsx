@@ -41,8 +41,10 @@ type MemberComboboxProps = {
   metaText?: (m: MemberHit) => string | null
   /** Contenido a mostrar mientras no se alcanza `minChars`. */
   emptyState?: ReactNode
-  /** Endpoint alternativo con la misma respuesta `{ members }`. Default
-   *  `/api/members` (exige el módulo miembros). */
+  /** Endpoint alternativo con la misma respuesta `{ members }`. El default es
+   *  el LOOKUP mínimo, que sirve a cualquier rol de gestión. Solo se cambia a
+   *  `/api/members` cuando de verdad hacen falta campos que el lookup no trae
+   *  (hoy: la ocupación, en el alta de empleados). */
   searchUrl?: string
 }
 
@@ -51,14 +53,20 @@ function initials(m: MemberHit) {
 }
 
 /**
- * Buscador compartido de miembros contra `GET /api/members?search=…` con
- * debounce de 300ms. Al elegir una opción se llama `onSelect` y se limpia
- * la búsqueda (el estado "seleccionado" lo maneja quien lo usa).
+ * Buscador compartido de miembros, con debounce de 300ms. Al elegir una opción
+ * se llama `onSelect` y se limpia la búsqueda (el estado "seleccionado" lo
+ * maneja quien lo usa).
  *
- * `searchUrl` permite apuntar a OTRO endpoint con la misma forma de respuesta
- * (`{ members: [...] }`). Existe porque /api/members exige el módulo miembros:
- * una pantalla cuyo permiso es otro (dar acceso a un formulario, por ejemplo)
- * necesita buscar personas sin que eso implique abrirle el padrón entero.
+ * PAD-1 (2026-09-10): el default pasó de `/api/members` al LOOKUP mínimo. El
+ * padrón exige alcance total sobre el módulo miembros, y DOCE roles de gestión
+ * no lo tienen (becas, folletos, forms, dirigente, lider_comite, encargado_
+ * eventos…). Como el fetch hace `r.ok ? … : []`, esas pantallas no fallaban:
+ * devolvían VACÍO en silencio y parecía que la persona no existía. Tres
+ * pantallas ya lo habían resuelto una por una pasando `searchUrl`; con el
+ * default invertido, lo seguro es lo que pasa si nadie se acuerda.
+ *
+ * `searchUrl` sigue existiendo para el caso contrario: una pantalla que SÍ
+ * necesita campos del padrón y cuyos usuarios lo tienen.
  */
 export function MemberCombobox({
   onSelect,
@@ -72,7 +80,7 @@ export function MemberCombobox({
   secondaryText,
   metaText,
   emptyState,
-  searchUrl = '/api/members',
+  searchUrl = MEMBER_LOOKUP_URL,
 }: MemberComboboxProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MemberHit[]>([])
