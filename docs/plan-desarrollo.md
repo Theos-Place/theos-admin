@@ -3868,14 +3868,26 @@ Hoy los reportes de cierre se apoyan en `updated_at`, que cambia con cualquier
 edición. Con una columna propia, "qué se cerró el lunes" deja de ser una
 aproximación.
 
-#### [ ] EVE-8 · Cinco (seis) sedes marcadas como zona
+#### [x] EVE-8 · Sedes marcadas como zona — NO HABÍA NADA QUE ARREGLAR (medido 2026-09-10)
 
-Al verificarlo el 2026-09-10 apareció una más: además de Cartago, Liberia,
-Alajuela, Potrero y Pérez Zeledón, **San Rafael de Alajuela** también está con
-`is_zone = true`. Hay que decidir si entra en el mismo arreglo.
+La premisa era falsa: `is_zone` **no** compite con ser sede. Son dos flags
+independientes, justamente para eso se separaron (migración
+`20260817130000_sedes_is_zone.sql`).
 
-Sigue siendo el más riesgoso: cambiar la marca toca los filtros por zona de
-otras pantallas. Medir qué se rompe antes de tocarlo.
+Lo medido en producción: Cartago, Liberia, Alajuela, Potrero, Pérez Zeledón y
+Heredia están con `is_active = true` **y** `is_zone = true`, y sus charlas
+recurrentes resuelven bien la sede. Aparecen donde tienen que aparecer: en los
+pickers de sede (por `is_active`) y en los de zona de grupos de estudio (por
+`is_zone`). Ningún consumidor mezcla las dos listas — se revisaron
+`group-zone-filter.ts`, el listado de grupos, crear/editar grupo y
+`StudyRequestActions`.
+
+San Rafael de Alajuela es el único caso distinto: `is_zone = true` con
+`is_active = false`. Es correcto — tiene 1 grupo de estudio y ninguna charla,
+o sea es zona pero no sede.
+
+OJO PARA EL FUTURO: no apagar `is_active` de esas seis "porque son zonas". Eso
+sí las sacaría de eventos y de las fichas de miembros.
 
 #### [x] UI-3 · Regrabar el tutorial de check-in — HECHO 2026-09-10 (67a51e8d)
 
