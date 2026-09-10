@@ -1003,7 +1003,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { label: 'Ubicación', value: group.location },
               { label: 'Capacidad máxima', value: `${group.max_capacity} personas` },
               { label: 'Fecha de inicio', value: group.start_date },
-              { label: 'Fecha de cierre', value: group.end_date ?? '—' },
+              { label: 'Fecha de fin', value: group.end_date ?? '—' }, // la planeada; el cierre real va abajo
               { label: 'Semana actual', value: group.status === 'finalizado' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
               // EVE-10 · La fecha REAL del cierre, no updated_at. Solo tiene
               // sentido en un grupo cerrado, y falta en el histórico de CCB.
