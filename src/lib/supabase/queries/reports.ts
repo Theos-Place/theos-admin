@@ -5,6 +5,7 @@ import { buildCharlaReport, type CharlaAggRow, type CharlaReport } from '@/lib/r
 import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/reports/member-growth'
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
 import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
+import { detalleDeSemana, type DetalleDeSemana } from '@/lib/reports/semana-detalle'
 import {
   buildDirigentesReport, collapseAdminBuckets,
   type LeaderRow, type ActiveGroupRow, type PlanRow, type LeaderHistoryPoint,
@@ -188,6 +189,21 @@ export async function refreshReportSnapshots(): Promise<Record<string, number>> 
 export async function getCharlaAttendanceReport(opts: { year?: number; sede?: string } = {}): Promise<CharlaReport> {
   const supabase = createAdminClient()
   return buildCharlaReport(await loadAggRows<CharlaAggRow>(supabase, 'report_charla_attendance'), opts)
+}
+
+/**
+ * REP-2 · El detalle de UNA semana, del MISMO snapshot que el reporte anual.
+ *
+ * Sobre el snapshot y no contra event_checkins: son 170 mil filas y el patrón
+ * del módulo es leer el agregado nocturno. Un clic en una barra no puede
+ * disparar un conteo en vivo sobre esa tabla.
+ */
+export async function getSemanaDetalle(
+  year: number, week: number, opts: { sede?: string } = {},
+): Promise<DetalleDeSemana | null> {
+  const supabase = createAdminClient()
+  const filas = await loadAggRows<CharlaAggRow>(supabase, 'report_charla_attendance')
+  return detalleDeSemana(filas, year, week, { sede: opts.sede })
 }
 
 /** Crecimiento (personas nuevas): filas agregadas cacheadas → series (año, sede). */

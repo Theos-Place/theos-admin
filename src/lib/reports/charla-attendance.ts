@@ -6,8 +6,13 @@
 
 import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 
-/** Fila cruda del RPC. */
-export type CharlaAggRow = { yr: number; title: string; wk: number; mo: number; checkins: number }
+/** Fila cruda del RPC. `calidad` = 'asistente' | 'servidor' (migración
+ *  20260910090000). Opcional: los snapshots viejos no la traen y para el
+ *  reporte anual da igual — solo suma checkins. */
+export type CharlaAggRow = {
+  yr: number; title: string; wk: number; mo: number; checkins: number
+  calidad?: string | null
+}
 
 export type AnnualCard = {
   year: number

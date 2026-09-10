@@ -12,6 +12,9 @@ import { UpdatingBadge } from '@/components/reportes/UpdatingBadge'
 import { Tabs } from '@/components/shared/Tabs'
 import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
+import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
+import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
+import { useSearchParams } from 'next/navigation'
 
 const NAVY = '#161440'
 const CORAL = '#D63E3D'
@@ -36,6 +39,12 @@ export default function ReporteAsistenciaPage() {
   const [growth, setGrowth] = useState<GrowthReport | null>(null)
   const [year, setYear] = useState<number | null>(null)
   const [sede, setSede] = useState<string>(ALL_SEDES)
+  // La semana abierta vive en la URL, no en un estado suelto: así el enlace se
+  // puede compartir y el back del navegador vuelve al año. Se lee con el hook
+  // y no con un efecto, que dispararía un render en cascada.
+  const params = useSearchParams()
+  const [semanaLocal, setSemanaLocal] = useState<string | null>(null)
+  const semanaSel = leerClaveDeSemana(semanaLocal ?? params.get('semana'))
   const [tab, setTab] = useState<'asistencia' | 'crecimiento'>('asistencia')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,8 +71,23 @@ export default function ReporteAsistenciaPage() {
 
   useEffect(() => { load(null, ALL_SEDES) }, [load])
 
-  function onYear(y: number) { setYear(y); load(y, sede) }
+  function onYear(y: number) { setYear(y); load(y, sede); setSemana(null) }
   function onSede(s: string) { setSede(s); load(year, s) }
+
+  /** REP-2 · La semana abierta va en la URL (?semana=2026-W37) para poder
+   *  mandar el enlace. Se lee de ahí, no de un estado suelto, así el back del
+   *  navegador vuelve al año como cualquiera esperaría. */
+  function abrirSemana(week: number) {
+    if (!report) return
+    setSemana(`${report.year}-W${String(week).padStart(2, '0')}`)
+  }
+  function setSemana(clave: string | null) {
+    setSemanaLocal(clave)
+    const url = new URL(window.location.href)
+    if (clave) url.searchParams.set('semana', clave)
+    else url.searchParams.delete('semana')
+    window.history.pushState(null, '', url)
+  }
 
   // Carga inicial: skeleton.
   if (!report || !growth) {
@@ -186,7 +210,7 @@ export default function ReporteAsistenciaPage() {
                   subtitle={`Check-ins por semana (${sedeLabel}). Línea punteada navy = promedio del año.`}
                   empty={report.weekly.length === 0}
                   height={230}
-                  footnote={hasPartialWeek ? 'Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales.' : undefined}
+                  footnote={`Tocá una barra para ver esa semana sola.${hasPartialWeek ? ' Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales.' : ''}`}
                 >
                   <ResponsiveContainer>
                     <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -199,7 +223,14 @@ export default function ReporteAsistenciaPage() {
                         labelFormatter={(l) => `Semana ${l}`}
                       />
                       <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
-                      <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                      <Bar
+                        dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={28}
+                        cursor="pointer"
+                        onClick={(d: unknown) => {
+                          const w = (d as { week?: number } | undefined)?.week
+                          if (typeof w === 'number') abrirSemana(w)
+                        }}
+                      >
                         {report.weekly.map(w => (
                           <Cell key={w.week} fill={w.partial ? CORAL_SOFT : w.week === highlightWeek ? CORAL : CORAL_DIM} />
                         ))}
@@ -207,6 +238,17 @@ export default function ReporteAsistenciaPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartCard>
+                {semanaSel && (
+                  <div className="mt-4">
+                    <SemanaDetallePanel
+                      key={`${semanaSel.year}-${semanaSel.week}-${report.sede}`}
+                      year={semanaSel.year}
+                      week={semanaSel.week}
+                      sede={report.sede}
+                      onVolver={() => setSemana(null)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
