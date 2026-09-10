@@ -251,7 +251,19 @@ study_plans.difficulty ('Básico/Intermedio/Avanzado') es dificultad y NO se toc
 Tests: elegibilidad de un plan etapa_avanzada (compromisos de intermedia + invitación).
 ```
 
-### [x] EST-6 · Solicitudes de interés: texto claro + solo lectura — HECHO 2026-07-27 (disclaimer/toast/aviso de duplicado sin promesa de contacto y apuntando a Matrícula; RequestBoard gana prop `readOnly` — tab de intereses sin Tomar/Asignar/Resolver/Rechazar; API rechaza acciones para study_interest con 400 `solo_lectura`; reubicaciones intactas; históricas resueltas se siguen mostrando; /estudios/analisis no leía study_requests — sin impacto)
+### [x] EST-6 · Solicitudes de interés: texto claro + solo lectura — HECHO 2026-07-27 · **MATIZADO 2026-09-10, ver abajo** (disclaimer/toast/aviso de duplicado sin promesa de contacto y apuntando a Matrícula; RequestBoard gana prop `readOnly` — tab de intereses sin Tomar/Asignar/Resolver/Rechazar; API rechaza acciones para study_interest con 400 `solo_lectura`; reubicaciones intactas; históricas resueltas se siguen mostrando; /estudios/analisis no leía study_requests — sin impacto)
+
+> **ACLARACIÓN 2026-09-10 (decisión del usuario).** "Solo lectura" significa que
+> no se GESTIONAN: no se toman, no se asignan, no se resuelven ni se rechazan
+> con el flujo. **Su estado SÍ se cambia a mano**, y eso es la regla, no una
+> excepción — la coordinación necesita poder cerrarlas y reabrirlas, que es
+> justo para lo que se agregó `set_status` el 2026-09-08.
+>
+> Las dos reglas convivieron mal tres días: el guard de EST-6 rechazaba
+> `set_status` antes de llegar a la rama que lo implementaba, así que la
+> pantalla ofrecía el selector y el API contestaba "no se gestionan". Arreglado
+> en `e8333b87` con `esAccionDeGestion`, que separa las dos cosas y está
+> cubierto por tests para que no se vuelvan a mezclar.
 Archivos: `src/components/studies/StudyRequestActions.tsx` (disclaimer ~195-199, toast ~148), `src/app/(admin)/estudios/solicitudes/page.tsx`, `src/components/shared/RequestBoard.tsx`, `src/app/api/studies/requests/*`, `src/lib/supabase/queries/study-requests.ts`
 
 ```
