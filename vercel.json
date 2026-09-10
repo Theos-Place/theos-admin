@@ -36,6 +36,7 @@
     { "path": "/api/cron/birthday-greetings", "schedule": "0 12 * * *" },
     { "path": "/api/cron/study-requests-expire", "schedule": "0 13 1 2,6,10 *" },
     { "path": "/api/cron/close-reminders", "schedule": "30 14 * * *" },
+    { "path": "/api/cron/cuentas-sin-ficha", "schedule": "15 13 * * *" },
     {
       "path": "/api/cron/event-surveys",
       "schedule": "0 17 * * *"

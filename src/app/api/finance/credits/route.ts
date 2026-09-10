@@ -26,7 +26,7 @@ export async function GET() {
       const { data, error } = await sb.from('study_enrollments')
         .select(`id, member_id, group_id,
                  member:members!study_enrollments_member_id_fkey(first_name, last_name),
-                 group:study_groups(name, plan:study_plans!study_groups_plan_id_fkey(cost, currency))`)
+                 group:study_groups!study_enrollments_group_id_fkey(name, plan:study_plans!study_groups_plan_id_fkey(cost, currency))`)
         .in('status', ['enrolled', 'pendiente_de_pago', 'en_revision'])
         .range(from, from + 999)
       if (error) throw error
