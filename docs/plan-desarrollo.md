@@ -3877,19 +3877,29 @@ Alajuela, Potrero y Pérez Zeledón, **San Rafael de Alajuela** también está c
 Sigue siendo el más riesgoso: cambiar la marca toca los filtros por zona de
 otras pantallas. Medir qué se rompe antes de tocarlo.
 
-#### [ ] UI-3 · Regrabar el tutorial de check-in
+#### [x] UI-3 · Regrabar el tutorial de check-in — HECHO 2026-09-10 (67a51e8d)
 
-Cambió bastante desde la última grabación: el botón de persona nueva, la cédula
-opcional, el alta desde la fila y la distinción asistente/servidor.
+Regrabado con el paso 6 nuevo (alta de persona nueva) y la guía corregida: el
+correo es obligatorio, la cédula no, y la elección Participante/Servidor queda
+guardada y cuenta como asistencia.
 
 ### Bloque D · Decisiones que necesito de vos
 
-- [ ] ¿`Colaborador Youth` y `Colaborador de Onboarding` deben otorgar acceso a
-      eventos por defecto, como ya lo hace `Colaborador`?
-- [ ] ¿Se le manda a **Victoria Badilla Saxe** su invitación de cuenta? Se creó
-      sin correo a propósito (era un alta retroactiva).
+- [x] ¿`Colaborador Youth` y `Colaborador de Onboarding` deben otorgar acceso a
+      eventos por defecto, como ya lo hace `Colaborador`? — NO. Solo
+      `Colaborador`. Es el comportamiento actual: no había que cambiar nada.
+- [x] ¿Se le manda a **Victoria Badilla Saxe** su invitación de cuenta?
+      — ENVIADA 2026-09-10. Destapó AUTH-2 (abajo).
 - [x] Confirmar con **Otto Chaves** que `ottoalfredo@oac.cr` es correcto.
       — CONFIRMADO por el usuario 2026-09-10.
+
+#### [x] AUTH-2 · Definir la contraseña dejaba a la persona sin perfil — HECHO 2026-09-10 (30deb6a0)
+
+`generateLink({type:'invite'})` crea la cuenta de Supabase Auth pero nadie
+escribía `members.auth_user_id`, y `getAuthContext` resuelve la ficha por ese
+campo. Afectaba a los tres llamadores de `sendPasswordLink`. Reparadas las 3
+fichas de producción; las otras 8 sin enlazar son correos compartidos donde la
+cuenta ya es, correctamente, de la otra ficha.
 
 ### Bloque E · Operativo (no requiere código)
 
