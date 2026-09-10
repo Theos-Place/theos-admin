@@ -88,6 +88,9 @@ export type DbGroupEnriched = {
   age_min: number | null
   age_max: number | null
   enrollments: Array<{
+    /** Necesario para mover a la persona de grupo: la acción es sobre la
+     *  MATRÍCULA, no sobre la persona (alguien puede tener varias). */
+    id?: string
     member_id: string
     status: 'enrolled' | 'waitlist' | 'completed' | 'dropped' | 'transferred' | 'pendiente_de_pago' | 'expirada' | 'reprobado' | 'en_revision'
     grade: number | null
@@ -437,7 +440,7 @@ const GROUP_SELECT = `
   leader:members!study_groups_leader_id_fkey(first_name, last_name, phone, email),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone, email),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
-    member_id, status, grade, notes,
+    id, member_id, status, grade, notes,
     member:members!study_enrollments_member_id_fkey(first_name, last_name)
   )
 `

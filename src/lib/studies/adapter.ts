@@ -85,6 +85,7 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
 
   const participants: GroupParticipant[] = db.enrollments
     ? db.enrollments.map((e) => ({
+        enrollment_id: e.id,
         member_id: e.member_id,
         member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
         status: mapParticipantStatus(e.status),

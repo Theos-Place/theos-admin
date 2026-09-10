@@ -39,6 +39,8 @@ export type GroupStatus =
   | 'finalizado'
 
 export type GroupParticipant = {
+  /** id de la MATRÍCULA. Solo viene en el detalle del grupo. */
+  enrollment_id?: string
   member_id: string
   member_name: string
   /** 'en_revision': el grupo cerró sin registrar el resultado de esta persona.

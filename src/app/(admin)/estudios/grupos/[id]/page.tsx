@@ -27,6 +27,7 @@ import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
 import { BAJA_COPY, TIPOS_DE_BAJA, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 import { participantesActivos, participantesRetirados, participantesVisibles, textoBotonRetirados } from '@/lib/studies/roster-visible'
+import { MoverDeGrupoModal } from '@/components/studies/MoverDeGrupoModal'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -381,6 +382,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [mostrarRetirados, setMostrarRetirados] = useState(false)
+  const [moverTarget, setMoverTarget] = useState<{ enrollment_id: string; member_name: string } | null>(null)
   const [showSendMessage, setShowSendMessage] = useState(false)
   const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
   /** Quitar del grupo (la matrícula no ocurrió) vs. retirar (cursaba y se
@@ -519,6 +521,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           tiene un título visible (se identifica por la barra superior y las
           insignias), y sin <h1> no hay punto de entrada para orientarse. */}
       <h1 className="sr-only">{group.name ?? 'Detalle del grupo'}</h1>
+      {moverTarget && (
+        <MoverDeGrupoModal
+          enrollmentId={moverTarget.enrollment_id}
+          personaNombre={moverTarget.member_name}
+          onClose={() => setMoverTarget(null)}
+          onMovido={mensaje => { setMoverTarget(null); toast(mensaje, 'success'); void refetch() }}
+        />
+      )}
       {showAddMember && (
         <AddMemberModal
           groupId={id}
@@ -843,6 +853,18 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                             memberName={p.member_name}
                             onResuelto={() => refetch()}
                           />
+                        )}
+                        {/* Mover de grupo es de COORDINACIÓN, no del dirigente:
+                            mueve plata. Para él existe la solicitud de
+                            reubicación, que pasa por coordinación. */}
+                        {canManageGroups && group.status !== 'finalizado'
+                          && p.status !== 'withdrawn' && p.enrollment_id && (
+                          <button
+                            onClick={() => setMoverTarget({ enrollment_id: p.enrollment_id!, member_name: p.member_name })}
+                            className="rounded-lg px-2 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                          >
+                            Mover de grupo…
+                          </button>
                         )}
                         {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
