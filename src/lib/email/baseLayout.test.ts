@@ -81,3 +81,32 @@ describe('estilos de la tabla de puntajes', () => {
     expect(html).toContain('class="wrapper"')
   })
 })
+
+describe('el logo del encabezado no puede salir gigante en Outlook', () => {
+  // Outlook de escritorio dibuja con el motor de Word: ignora el CSS por clase
+  // en las imágenes y pinta el PNG a su tamaño real, que es 2526 × 1280. En
+  // septiembre 2026 los correos de folletos llegaban con el encabezado como
+  // una portada de página entera.
+  const html = renderEmail('<p>hola</p>')
+
+  it('el <img> trae los atributos width y height de HTML, no solo CSS', () => {
+    expect(html).toMatch(/<img[^>]*\bwidth="160"/)
+    expect(html).toMatch(/<img[^>]*\bheight="81"/)
+  })
+
+  it('y además el tamaño va inline, que es lo que respetan los demás clientes', () => {
+    const img = html.match(/<img[\s\S]*?\/>/)![0]
+    expect(img).toContain('width:160px')
+    expect(img).toContain('height:81px')
+  })
+
+  it('el alto NO queda en auto: sin él, Word reserva el alto original', () => {
+    const img = html.match(/<img[\s\S]*?\/>/)![0]
+    expect(img).not.toContain('height:auto')
+  })
+
+  it('160 × 81 conserva la proporción real del archivo (2526 × 1280)', () => {
+    // Si alguien cambia el logo por uno con otra forma, este test avisa.
+    expect(Math.round(160 * 1280 / 2526)).toBe(81)
+  })
+})

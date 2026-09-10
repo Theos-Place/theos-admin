@@ -4,6 +4,10 @@
  * Stephanie Porras NO es nueva: ya estaba en el padrón con el mismo teléfono,
  * la misma fecha de nacimiento y el mismo correo. Solo le faltaba el check-in.
  *
+ * El correo de Karla venía cortado en la captura y lo confirmó el usuario
+ * (2026-09-10). No se adivinó: un dominio inventado le manda la cuenta de esa
+ * persona a un tercero.
+ *
  * Matthew (2023) es hijo de María Cristina: mismo teléfono, mismo correo, y su
  * segundo apellido es el primero de ella. Se los vincula como familia.
  *
@@ -25,6 +29,7 @@ type Alta = {
   email: string | null; phone: string; birth_date: string
 }
 const NUEVAS: Alta[] = [
+  { first_name: 'Karla',          last_name: 'Rodríguez Guerrero', email: 'karla.rodriguezguerrero76@gmail.com', phone: '89939246', birth_date: '1976-04-20' },
   { first_name: 'María Cristina', last_name: 'Víquez León', email: 'cvl306@gmail.com', phone: '89959719', birth_date: '1992-06-30' },
   { first_name: 'Matthew',        last_name: 'Vargas Víquez', email: 'cvl306@gmail.com', phone: '89959719', birth_date: '2023-03-08' },
 ]

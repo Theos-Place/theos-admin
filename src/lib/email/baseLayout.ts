@@ -16,7 +16,7 @@ const STYLES = `
   body { background-color: #f4f4f0; font-family: 'Montserrat', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   .wrapper { max-width: 620px; margin: 40px auto 16px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(22,20,64,0.10); }
   .header { background-color: #161440; padding: 36px 48px; text-align: center; }
-  .header img { height: auto; width: 160px; display: inline-block; }
+  .header img { width: 160px; height: 81px; display: block; margin: 0 auto; border: 0; }
   .body { padding: 48px 48px 36px; }
   .greeting { font-size: 22px; font-weight: 700; color: #161440; margin-bottom: 16px; }
   .body p { font-size: 15px; color: #555; line-height: 1.75; margin-bottom: 14px; }
@@ -95,6 +95,22 @@ const STYLES = `
 // 'self') y en dev bloquearía un dominio externo.
 const LOGO_URL = 'https://admin.theosplace.org/logo-theos-white.png'
 
+// El tamaño del logo va en ATRIBUTOS HTML y en estilo INLINE, no solo en la
+// clase .header img.
+//
+// Outlook de escritorio dibuja con el motor de Word: ignora el CSS por clase
+// para las imágenes y pinta el archivo a su tamaño real. El PNG mide
+// 2526 × 1280, así que el encabezado salía como una portada gigante que
+// empujaba todo el correo fuera de la pantalla (reportado el 2026-09-10 sobre
+// los correos de folletos).
+//
+// El alto va explícito y no en 'auto' por la misma razón: sin él, Word reserva
+// el alto original. 81 = 160 × 1280/2526, el aspecto real del archivo. Si
+// alguna vez se cambia el logo por uno con otra proporción, hay que recalcular
+// este número o la imagen se deforma.
+const LOGO_ANCHO = 160
+const LOGO_ALTO = 81
+
 /**
  * Envuelve el contenido del cuerpo en el cascarón completo del correo.
  * opts.unsubscribeUrl → agrega el pie de baja de marketing DENTRO del footer
@@ -159,8 +175,9 @@ export function renderEmail(content: string, opts?: { unsubscribeUrl?: string; l
 <body>
 ${preheader}
   <div class="wrapper">
-    <div class="header">
-      <img src="${logoUrl}" alt="Theos Place" />
+    <div class="header" style="background-color:#161440;padding:36px 48px;text-align:center;">
+      <img src="${logoUrl}" alt="Theos Place" width="${LOGO_ANCHO}" height="${LOGO_ALTO}"
+           style="width:${LOGO_ANCHO}px;height:${LOGO_ALTO}px;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
     </div>
     <div class="body">
 ${rest}
