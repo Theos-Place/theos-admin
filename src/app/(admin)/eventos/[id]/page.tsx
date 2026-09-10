@@ -897,6 +897,16 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
             >
               <Download size={14} /> Exportar inscritos
             </button>
+            {/* EVE-9 · La lista de cocina y logística: la única que trae
+                alergias, restricción alimenticia y si la persona vino a
+                participar o a servir. Va en Excel y no en CSV porque se
+                imprime, y porque resalta a quién hay que atender distinto. */}
+            <a
+              href={`/api/events/${event.id}/attendees/export`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              <Download size={14} /> Lista para cocina (Excel)
+            </a>
           </div>
         </div>
       )}
