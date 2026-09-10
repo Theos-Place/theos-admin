@@ -375,6 +375,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const canSendMessage = can('comunicaciones', 'create')
   // Crear/editar/eliminar grupos: STUDY_ADMIN + editor_grupos_estudio.
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
+  // Mover de grupo mueve PLATA: solo coordinación de estudios/dirigentes,
+  // dirección y admin. Mismo conjunto que exige el API.
+  const puedeMover = (actor?.roles ?? []).some(r => (STUDY_ADMIN_ROLES as string[]).includes(r))
   // SEC-1: 'member'/'none' = vista de solo lectura (miembro inscrito viendo SU
   // grupo): sin añadir/desinscribir, sin links a perfiles ajenos, sin editar
   // el link de WhatsApp. El server ya recorta el roster a su propia inscripción.
@@ -384,7 +387,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const [mostrarRetirados, setMostrarRetirados] = useState(false)
   const [moverTarget, setMoverTarget] = useState<{ enrollment_id: string; member_name: string } | null>(null)
   const [showSendMessage, setShowSendMessage] = useState(false)
-  const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
+  const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string; enrollment_id?: string } | null>(null)
   /** Quitar del grupo (la matrícula no ocurrió) vs. retirar (cursaba y se
    *  fue). Antes era una sola acción con dos nombres y todo terminaba en
    *  "Se retiró", incluso una matrícula hecha por error. */
@@ -544,6 +547,31 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <h3 id="desinscribir-titulo" className="font-semibold text-navy font-display">
               Sacar a {withdrawTarget.member_name} del grupo
             </h3>
+
+            {/* La salida más común es un CAMBIO DE GRUPO, y hacerlo a mano
+                —sacar de acá y matricular allá— es lo que le generó a Adriana,
+                a Raquel y a Mariela un cobro nuevo teniendo el pago hecho. Se
+                ofrece primero, antes de las razones para sacarla de verdad. */}
+            {puedeMover && withdrawTarget.enrollment_id && (
+              <div className="rounded-xl border border-teal-deep/30 bg-teal-soft/15 p-3 space-y-2">
+                <p className="text-[13px] text-navy font-body">
+                  ¿La estás pasando a <strong>otro grupo</strong>?
+                </p>
+                <p className="text-[13px] text-navy-light font-body">
+                  Movela en vez de sacarla: así su pago la acompaña y no se le cobra de nuevo.
+                </p>
+                <button
+                  onClick={() => {
+                    const t = withdrawTarget
+                    setWithdrawTarget(null)
+                    setMoverTarget({ enrollment_id: t.enrollment_id!, member_name: t.member_name })
+                  }}
+                  className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
+                >
+                  Mover a otro grupo…
+                </button>
+              </div>
+            )}
 
             {/* Se elige ANTES del motivo: lo que se escriba depende de cuál
                 de las dos cosas está pasando. */}
@@ -856,8 +884,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         )}
                         {/* Mover de grupo es de COORDINACIÓN, no del dirigente:
                             mueve plata. Para él existe la solicitud de
-                            reubicación, que pasa por coordinación. */}
-                        {canManageGroups && group.status !== 'finalizado'
+                            reubicación, que pasa por coordinación.
+                            STUDY_ADMIN y no canManageGroups: este último
+                            incluye editor_grupos_estudio, que veía el botón y
+                            se comía un 403 del API. */}
+                        {puedeMover && group.status !== 'finalizado'
                           && p.status !== 'withdrawn' && p.enrollment_id && (
                           <button
                             onClick={() => setMoverTarget({ enrollment_id: p.enrollment_id!, member_name: p.member_name })}
@@ -875,7 +906,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                               // es la opción que NO le escribe nada en el
                               // expediente. Si de verdad se retiró, se marca.
                               setTipoBaja('cancelar')
-                              setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name })
+                              setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name, enrollment_id: p.enrollment_id })
                             }}
                             className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                           >
