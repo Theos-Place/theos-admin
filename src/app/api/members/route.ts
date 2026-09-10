@@ -77,6 +77,11 @@ export async function POST(req: NextRequest) {
     // INT-1: el número se guarda en MAYÚSCULAS (dedup consistente para DNI/
     // pasaporte con letras; las cédulas CR son dígitos y no cambian).
     if ('cedula' in payload && typeof payload.cedula === 'string') payload.cedula = payload.cedula.trim().toUpperCase() || null
+    if ('birth_date' in payload) {
+      const { motivoDeFechaInvalida } = await import('@/lib/members/alta-persona')
+      const motivo = motivoDeFechaInvalida(payload.birth_date as string | null)
+      if (motivo) return NextResponse.json({ error: motivo, code: 'fecha_invalida' }, { status: 400 })
+    }
     const documentType = typeof payload.document_type === 'string' && payload.document_type ? payload.document_type : 'cedula'
     const { isDocumentType, isValidDocument, documentFormatMessage } = await import('@/lib/cedula')
     if (!isDocumentType(documentType)) {

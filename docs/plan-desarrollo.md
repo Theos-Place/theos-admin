@@ -3782,7 +3782,7 @@ sirve en los comités organizadores del evento. La revalidación existe y está 
 
 ### Bloque B · Datos sucios
 
-#### [ ] DAT-1 · Fechas de nacimiento imposibles — REPLANTEADO 2026-09-10
+#### [x] DAT-1 · Fechas de nacimiento imposibles — HECHO 2026-09-10
 
 **La premisa original estaba equivocada.** El plan decía "65 fichas activas con
 fecha imposible", contando a todo el que dijera 3 años o menos. Pero registrar
@@ -3797,12 +3797,17 @@ Separadas por si la edad contradice otro dato de su PROPIA ficha:
   **Cónyuge** (6), están **matriculadas en estudios** (8), o dicen 1194 (1).
 - **50 probablemente reales** — sin ninguna contradicción. NO se tocan.
 
-Script listo con simulacro y respaldo a CSV:
-`scripts/datos-2026-09/borrar-fechas-imposibles.cjs`. **Pendiente: confirmar que
-se borran solo los 15.**
+**Aplicado**: se borraron las 15 (respaldo en
+`scripts/datos-2026-09/fechas-borradas.csv` con la fecha vieja y el motivo). Las
+50 de niños quedaron intactas — verificado después: 0 con contradicción, 50
+chiquitos con su fecha.
 
-Y falta lo que evita que vuelva a pasar: **validar el rango al capturar la
-fecha**, en el alta y en la edición.
+Y lo que evita que vuelva a pasar: `motivoDeFechaInvalida` valida el rango en el
+alta, en la edición y en las DOS rutas del API (los imports y los scripts no
+pasan por la pantalla). El límite es solo por arriba —futuro o más de 130 años—:
+poner un mínimo de edad rechazaría a los niños que sí existen, que es justo el
+error que casi cometemos al "limpiar" esto. Verificado en el navegador: 1194 y
+2030 dan 400 con su motivo; un niño de 2 años y una fecha vacía pasan.
 
 #### [ ] DAT-2 · 246 inscripciones con fecha de conclusión anterior al inicio del grupo
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { edadEnAnios, esMenorDeEdad, validarAltaDePersona, hoyCR } from './alta-persona'
+import { edadEnAnios, esMenorDeEdad, validarAltaDePersona, hoyCR, motivoDeFechaInvalida } from './alta-persona'
 
 const HOY = '2026-09-07'
 const base = { first_name: 'Ana', last_name: 'Mora Vargas' }
@@ -162,5 +162,42 @@ describe('correo obligatorio para crear la cuenta', () => {
     }, HOY_)
     expect(r.exigeCedula).toBe(false)
     expect(r.exigeCorreo).toBe(true)
+  })
+})
+
+describe('DAT-1 · la fecha de nacimiento se valida al escribirla', () => {
+  it('rechaza el futuro', () => {
+    expect(motivoDeFechaInvalida('2030-01-01', HOY)).toMatch(/futuro/)
+  })
+
+  it('rechaza un año imposible — el caso real decía 1194', () => {
+    expect(motivoDeFechaInvalida('1194-12-09', HOY)).toMatch(/edad imposible/)
+  })
+
+  it('ACEPTA a un niño de 2 años: acá sí se registran chiquitos', () => {
+    // 452 personas de 4 a 11 años en el padrón, y familias que anotan a sus
+    // hijos. Poner un mínimo de edad rechazaría a los que sí existen — que es
+    // el error que casi cometimos al "limpiar" estos datos.
+    expect(motivoDeFechaInvalida('2024-03-15', HOY)).toBeNull()
+    expect(motivoDeFechaInvalida('2026-01-05', HOY)).toBeNull()
+  })
+
+  it('acepta a alguien de 90 y rechaza a alguien de 140', () => {
+    expect(motivoDeFechaInvalida('1936-01-01', HOY)).toBeNull()
+    expect(motivoDeFechaInvalida('1886-01-01', HOY)).toMatch(/edad imposible/)
+  })
+
+  it('vacía es válida: la fecha no es obligatoria', () => {
+    for (const v of ['', null, undefined, '   ']) expect(motivoDeFechaInvalida(v, HOY)).toBeNull()
+  })
+
+  it('un formato roto se rechaza en vez de calcular basura', () => {
+    expect(motivoDeFechaInvalida('15/03/1990', HOY)).toMatch(/formato/)
+  })
+
+  it('el alta completa reporta el error en su campo', () => {
+    const r = validarAltaDePersona({ ...base, birth_date: '1194-12-09' }, HOY)
+    expect(r.ok).toBe(false)
+    expect(r.errores.birth_date).toMatch(/edad imposible/)
   })
 })

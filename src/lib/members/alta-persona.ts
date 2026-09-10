@@ -73,6 +73,39 @@ export function noLlevaCuenta(nacimiento: string | null | undefined, hoy: string
   return esMenorDe(EDAD_MINIMA_PARA_CUENTA, nacimiento, hoy)
 }
 
+/** Edad máxima plausible. Por encima de esto la fecha está mal escrita, no hay
+ *  alguien de 140 años. */
+export const EDAD_MAXIMA = 130
+
+/**
+ * ¿La fecha de nacimiento es plausible?
+ *
+ * DAT-1 (2026-09-10): había 15 fichas donde el año estaba mal digitado — una
+ * decía 1194 y otras daban 1-3 años a gente que figura como cónyuge o está
+ * matriculada en estudios. Nada las frenaba al escribirlas.
+ *
+ * OJO CON EL LÍMITE DE ABAJO: acá SÍ se registran niños chiquitos —hay 452
+ * personas de 4 a 11 años en el padrón, y familias que anotan a sus hijos—, así
+ * que una fecha de hace 2 años es perfectamente válida. Lo único que no puede
+ * ser es el FUTURO o un año fuera de rango humano. Poner un mínimo de edad
+ * rechazaría a los niños que sí existen, que es el error que casi cometemos al
+ * "limpiar" estos datos.
+ */
+export function motivoDeFechaInvalida(
+  nacimiento: string | null | undefined,
+  hoy: string = hoyCR(),
+): string | null {
+  const v = (nacimiento ?? '').trim()
+  if (!v) return null // vacía es válida: la fecha no es obligatoria
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return 'La fecha de nacimiento no tiene un formato válido.'
+  if (v > hoy) return 'La fecha de nacimiento no puede ser en el futuro.'
+  const edad = edadEnAnios(v, hoy)
+  if (edad === null || edad > EDAD_MAXIMA) {
+    return `Revisá el año: esa fecha da una edad imposible (máximo ${EDAD_MAXIMA} años).`
+  }
+  return null
+}
+
 export type AltaDePersona = {
   first_name: string
   last_name: string
@@ -94,7 +127,7 @@ export type AltaDePersona = {
 export type ResultadoAlta = {
   ok: boolean
   /** Mensaje por campo; la UI lo pinta debajo del input que corresponde. */
-  errores: Partial<Record<'first_name' | 'last_name' | 'cedula' | 'email', string>>
+  errores: Partial<Record<'first_name' | 'last_name' | 'cedula' | 'email' | 'birth_date', string>>
   /** Siempre false desde 2026-09-09: el documento dejó de ser obligatorio. Se
    *  mantiene para que la UI pueda seguir distinguiendo "recomendado" de
    *  "obligatorio" sin cambiar su forma. */
@@ -121,6 +154,9 @@ export function validarAltaDePersona(p: AltaDePersona, hoy: string = hoyCR()): R
   if (cedula && !isValidDocument(tipo, cedula)) {
     errores.cedula = documentFormatMessage(tipo)
   }
+
+  const malaFecha = motivoDeFechaInvalida(p.birth_date, hoy)
+  if (malaFecha) errores.birth_date = malaFecha
 
   const exigeCorreo = !!p.exigirCorreo && !noLlevaCuenta(p.birth_date, hoy)
   const email = (p.email ?? '').trim()

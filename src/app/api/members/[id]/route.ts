@@ -97,6 +97,18 @@ async function handleUpdate(
     }
     // Toggle "perfil de sistema": solo admin puede marcarlo.
     if (isAdmin && 'is_system' in body) updates.is_system = !!body.is_system
+    // Fecha de nacimiento: rango plausible. DAT-1 (2026-09-10) encontró 15
+    // fichas con el año mal digitado —una decía 1194— que nada frenó al
+    // escribirlas. Se valida acá y no solo en la pantalla: los imports y los
+    // scripts no pasan por la pantalla.
+    if ('birth_date' in updates) {
+      const { motivoDeFechaInvalida } = await import('@/lib/members/alta-persona')
+      const motivo = motivoDeFechaInvalida(updates.birth_date as string | null)
+      if (motivo) {
+        return NextResponse.json({ error: motivo, code: 'fecha_invalida' }, { status: 400 })
+      }
+    }
+
     // Restricción alimenticia: se normaliza y valida acá también, no solo en la
     // BD. El CHECK de la base protege contra imports y scripts, pero devuelve un
     // 500 ilegible; esto da un 400 que se puede mostrar.
