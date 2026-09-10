@@ -112,12 +112,29 @@ describe('pagosQueViajan', () => {
 
 describe('lo que se le dice al coordinador', () => {
   it('el resumen dice exactamente qué va a pasar', () => {
-    expect(resumenDeLaAccion({ persona: 'Adriana', desde: 'SCJ — Lunes', hacia: 'SCJ — Martes', pagosQueViajan: 1 }))
+    const dinero = planDeDinero({
+      pagos: [{ id: 'p', status: 'paid', review_status: 'aprobado', concept: 'matricula', amount: 5000 }],
+      costoDestino: 5000, moneda: 'CRC',
+    })
+    expect(resumenDeLaAccion({ persona: 'Adriana', desde: 'SCJ — Lunes', hacia: 'SCJ — Martes', mensajeDelDinero: dinero.mensaje }))
       .toBe('Se cierra la matrícula de Adriana en «SCJ — Lunes» como transferida y queda matriculada en «SCJ — Martes». Su pago se traslada a la matrícula nueva; no se le cobra de nuevo.')
   })
 
+  it('NO dice "no se le cobra de nuevo" cuando sí se le va a cobrar', () => {
+    // Se contradecía: creaba un cobro de ₡15.000 y en la misma frase decía que
+    // no se cobraba nada.
+    const dinero = planDeDinero({
+      pagos: [{ id: 'p', status: 'paid', review_status: 'aprobado', concept: 'matricula', amount: 5000 }],
+      costoDestino: 20000, moneda: 'CRC',
+    })
+    const texto = resumenDeLaAccion({ persona: 'Adriana', desde: 'A', hacia: 'B', mensajeDelDinero: dinero.mensaje })
+    expect(texto).toContain('₡15.000')
+    expect(texto).not.toContain('no se le cobra de nuevo')
+  })
+
   it('y no promete mover un pago que no existe', () => {
-    expect(resumenDeLaAccion({ persona: 'Adriana', desde: 'A', hacia: 'B', pagosQueViajan: 0 }))
+    const dinero = planDeDinero({ pagos: [], costoDestino: 0, moneda: 'CRC' })
+    expect(resumenDeLaAccion({ persona: 'Adriana', desde: 'A', hacia: 'B', mensajeDelDinero: dinero.mensaje }))
       .toContain('No hay ningún pago que mover.')
   })
 
@@ -131,6 +148,14 @@ describe('lo que se le dice al coordinador', () => {
     expect(nota).toContain('SCJ — Martes')
     expect(nota).toContain('Camila Coordinadora')
     expect(nota).toContain('no se cobró de nuevo')
+  })
+
+  it('la nota del cobro de la diferencia dice OTRA cosa, no se desmiente sola', () => {
+    const nota = notaDeTransferencia({
+      desde: 'A', hacia: 'B', quien: 'Camila', cuando: new Date('2026-09-10T18:00:00Z'), esDiferencia: true,
+    })
+    expect(nota).toContain('DIFERENCIA de precio')
+    expect(nota).not.toContain('no se cobró de nuevo')
   })
 })
 

@@ -3064,6 +3064,7 @@ export type Database = {
           sinpe_confirmation: string | null
           status: string | null
           study_group_id: string | null
+          transfer_note: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3100,6 +3101,7 @@ export type Database = {
           sinpe_confirmation?: string | null
           status?: string | null
           study_group_id?: string | null
+          transfer_note?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3136,6 +3138,7 @@ export type Database = {
           sinpe_confirmation?: string | null
           status?: string | null
           study_group_id?: string | null
+          transfer_note?: string | null
           updated_at?: string | null
         }
         Relationships: [

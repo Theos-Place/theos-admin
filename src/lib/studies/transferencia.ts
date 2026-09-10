@@ -115,32 +115,42 @@ export function pagosQueViajan<T extends PagoParaTransferir>(pagos: readonly T[]
   )
 }
 
-/** La traza que se le deja al pago, para que finanzas entienda el movimiento. */
+/** La traza que se le deja al pago, para que finanzas entienda el movimiento.
+ *
+ *  Dos textos, porque son dos cosas distintas: el pago que VIAJA y el cobro
+ *  NUEVO por la diferencia. Ponerle a los dos "no se cobró de nuevo" —como
+ *  pasaba— hace que la fila del cobro se desmienta a sí misma. */
 export function notaDeTransferencia(input: {
   desde: string
   hacia: string
   quien: string
   cuando: Date
+  /** true = esta nota va en el cobro de la diferencia, no en el pago que viaja. */
+  esDiferencia?: boolean
 }): string {
   const fecha = input.cuando.toLocaleDateString('es-CR', {
     day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Costa_Rica',
   })
-  return `Movida de grupo el ${fecha}: «${input.desde}» → «${input.hacia}» (por ${input.quien}). El pago viaja con la matrícula; no se cobró de nuevo.`
+  const cabeza = `Movida de grupo el ${fecha}: «${input.desde}» → «${input.hacia}» (por ${input.quien}).`
+  return input.esDiferencia
+    ? `${cabeza} Este cobro es la DIFERENCIA de precio entre los dos grupos; lo que ya había pagado se trasladó a la matrícula nueva.`
+    : `${cabeza} Este pago viajó con la matrícula, no se cobró de nuevo.`
 }
 
-/** Lo que se le dice al coordinador ANTES de confirmar. Sin sorpresas. */
+/**
+ * Lo que se le dice al coordinador ANTES de confirmar. Sin sorpresas.
+ *
+ * `mensajeDelDinero` viene de planDeDinero y es la ÚNICA fuente sobre la
+ * plata: antes esta función armaba su propia frase y decía "no se le cobra de
+ * nuevo" en un movimiento que sí generaba un cobro de ₡15.000.
+ */
 export function resumenDeLaAccion(input: {
   persona: string
   desde: string
   hacia: string
-  pagosQueViajan: number
+  mensajeDelDinero: string
 }): string {
-  const pago = input.pagosQueViajan === 0
-    ? 'No hay ningún pago que mover.'
-    : input.pagosQueViajan === 1
-      ? 'Su pago se traslada a la matrícula nueva; no se le cobra de nuevo.'
-      : `Sus ${input.pagosQueViajan} pagos se trasladan a la matrícula nueva; no se le cobra de nuevo.`
-  return `Se cierra la matrícula de ${input.persona} en «${input.desde}» como transferida y queda matriculada en «${input.hacia}». ${pago}`
+  return `Se cierra la matrícula de ${input.persona} en «${input.desde}» como transferida y queda matriculada en «${input.hacia}». ${input.mensajeDelDinero}`
 }
 
 // ─── La plata al cambiar de estudio ─────────────────────────────────────────
