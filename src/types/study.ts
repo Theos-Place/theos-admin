@@ -83,6 +83,10 @@ export type StudyGroup = {
   enrollment_start_date?: string | null
   enrollment_end_date?: string | null
   status: GroupStatus
+  /** EVE-10 · Cuándo se cerró y quién lo cerró. Solo en el detalle. NULL en el
+   *  histórico importado de CCB, que no dejó huella del cierre. */
+  closed_at?: string | null
+  closed_by_name?: string | null
   current_week: number
   participants: GroupParticipant[]
   whatsapp_group_url: string | null

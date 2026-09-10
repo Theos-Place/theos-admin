@@ -81,6 +81,7 @@ function stubParticipants(counts: { enrolled: number; pending: number; withdrawn
 export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admin' | 'leader' | 'member' | 'none' }): StudyGroup {
   const leaderName = db.leader ? `${db.leader.first_name} ${db.leader.last_name}`.trim() : null
   const coLeaderName = db.co_leader ? `${db.co_leader.first_name} ${db.co_leader.last_name}`.trim() : null
+  const closerName = db.closer ? `${db.closer.first_name} ${db.closer.last_name}`.trim() : null
 
   const participants: GroupParticipant[] = db.enrollments
     ? db.enrollments.map((e) => ({
@@ -128,6 +129,8 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
     enrollment_start_date: db.enrollment_start_date ?? null,
     enrollment_end_date: db.enrollment_end_date ?? null,
     status: db.status,
+    closed_at: db.closed_at ?? null,
+    closed_by_name: closerName,
     current_week: db.current_week,
     participants,
     whatsapp_group_url: db.whatsapp_group_url,

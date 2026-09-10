@@ -73,6 +73,11 @@ export type DbGroupEnriched = {
   enrollment_start_date: string | null
   enrollment_end_date: string | null
   status: 'en_matricula' | 'en_curso' | 'finalizado'
+  /** EVE-10: cuándo se cerró. NULL en los grupos históricos de CCB, que no
+   *  dejaron huella — antes esto se aproximaba con updated_at, que cambia con
+   *  cualquier edición (estaba mal en los 1.856 grupos que sí tenían huella). */
+  closed_at?: string | null
+  closer?: { first_name: string; last_name: string } | null
   current_week: number
   whatsapp_group_url: string | null
   is_leader_training: boolean | null
@@ -426,8 +431,9 @@ const GROUP_SELECT = `
   max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
   status, current_week, whatsapp_group_url,
   is_leader_training, training_modality, is_virtual, enrollment_restrictions,
-  age_min, age_max,
+  age_min, age_max, closed_at,
   plan:study_plans(code),
+  closer:members!study_groups_closed_by_fkey(first_name, last_name),
   leader:members!study_groups_leader_id_fkey(first_name, last_name, phone, email),
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone, email),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(

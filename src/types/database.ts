@@ -4284,6 +4284,8 @@ export type Database = {
           bloque_id: string | null
           close_overdue_notified_at: string | null
           close_reminder_sent_at: string | null
+          closed_at: string | null
+          closed_by: string | null
           co_leader_id: string | null
           created_at: string | null
           current_week: number | null
@@ -4324,6 +4326,8 @@ export type Database = {
           bloque_id?: string | null
           close_overdue_notified_at?: string | null
           close_reminder_sent_at?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
@@ -4364,6 +4368,8 @@ export type Database = {
           bloque_id?: string | null
           close_overdue_notified_at?: string | null
           close_reminder_sent_at?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           co_leader_id?: string | null
           created_at?: string | null
           current_week?: number | null
@@ -4409,6 +4415,13 @@ export type Database = {
           {
             foreignKeyName: "study_groups_co_leader_id_fkey"
             columns: ["co_leader_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_closed_by_fkey"
+            columns: ["closed_by"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]

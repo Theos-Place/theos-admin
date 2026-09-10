@@ -18,7 +18,7 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
-import { getInitials } from '@/lib/format'
+import { getInitials, formatDateLong } from '@/lib/format'
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
@@ -1005,6 +1005,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               { label: 'Fecha de inicio', value: group.start_date },
               { label: 'Fecha de cierre', value: group.end_date ?? '—' },
               { label: 'Semana actual', value: group.status === 'finalizado' ? 'N/A' : `${group.current_week} de ${studyType?.weeks ?? '?'}` },
+              // EVE-10 · La fecha REAL del cierre, no updated_at. Solo tiene
+              // sentido en un grupo cerrado, y falta en el histórico de CCB.
+              ...(group.status === 'finalizado' ? [{
+                label: 'Se cerró',
+                value: group.closed_at
+                  ? formatDateLong(group.closed_at) + (group.closed_by_name ? ` · ${group.closed_by_name}` : '')
+                  : 'Sin registro (grupo del histórico)',
+              }] : []),
               { label: 'Dirigente', value: group.leader_name ?? 'Sin asignar' },
               { label: 'Co-dirigente', value: group.co_leader_name ?? '—' },
             ].map(({ label, value }) => (
