@@ -3647,7 +3647,7 @@ ciclo-grupo-estudio, como-me-matriculo, registrar-un-estudio-externo, mi-perfil,
 inscribirme-a-un-evento, cierre-de-grupo.
 ```
 
-### [ ] EVE-8 · Cinco sedes de charla están marcadas como zona, no como sede
+### [x] EVE-8 · Cinco sedes de charla están marcadas como zona — CERRADO 2026-09-10, no había nada que arreglar (ver Fase 12)
 
 ```
 QUÉ ES. Cartago, Liberia, Alajuela, Potrero y Pérez Zeledón existen en el catálogo `sedes`
@@ -4028,7 +4028,7 @@ Lo destapó el export de EVE-9. De 172 personas con algo escrito ahí:
 
 Script: `scripts/cierre-2026-09/alergias-sucias.ts`.
 
-### [ ] FIN-6 · Nada impide subir el mismo comprobante dos veces
+### [x] FIN-6 · Nada impide subir el mismo comprobante dos veces — HECHO 2026-09-10
 
 Salió del caso de Adriana Jiménez (2026-09-10). Se matriculó en un SCJ, la
 movimos de grupo, y en el camino el MISMO comprobante SINPE quedó cargado dos
@@ -4039,12 +4039,76 @@ figuraban ₡10.000 pagados; ella transfirió ₡5.000.
 no basta con un UNIQUE a secas, porque hay pagos legítimos sin referencia y
 podría haber referencias repetidas de bancos distintos.
 
-Lo mínimo útil: al aprobar un comprobante, avisar si esa referencia ya está
-usada por otro pago —quién, cuánto y cuándo— y pedir confirmación. Que el
-sistema lo diga, no que lo tenga que notar una persona semanas después
-cuadrando finanzas.
+RESUELTO. El chequeo va donde NACE el pago y no en la cola de revisión,
+porque desde que el comprobante se acepta al subirlo casi ninguno pasa por
+revisión humana: nacen aprobados, y no había ningún momento en que alguien
+mirara.
+
+No es un UNIQUE: una familia paga varios cursos con UNA transferencia y esos
+pagos comparten referencia legítimamente (Diana Tseng, Lin Ta Hsiang y Roy
+Muñoz, ₡15.000 en un solo SINPE). La señal que separa los dos casos es de
+QUIÉN es el pago. Regla en `src/lib/finance/referencia-repetida.ts`.
+
+También le pasó a Raquel Badilla, y a Dina Romero con otra forma (pago
+aprobado huérfano). Las tres quedaron cuadradas.
 
 Ojo también con el flujo de cambio de grupo: la matrícula vieja quedó
 `pendiente_de_pago` con `dropped_at`, y encima se le generó un pago pendiente
 nuevo. Vale revisar qué hace exactamente ese flujo con el pago ya aprobado.
+
+---
+
+## Fase 14 — Hecho el 2026-09-10 (tarde)
+
+### [x] EST-16 · Mover a alguien de grupo, con su pago
+
+`transferEnrollment` compartida entre la acción directa del coordinador y la
+resolución de reubicaciones — una sola implementación, como pedía el brief.
+
+La plata deja de ser un bloqueo y pasa a ser regla explícita: mismo precio y
+el pago viaja; más caro y queda el cobro de la diferencia; más barato o gratis
+y lo que sobra queda a favor. La reubicación conserva su política de NO cobrar
+la diferencia, y eso va con nombre (`cobrarDiferencia`), no escondido.
+
+Solo se cruzan estudios de la misma familia —Niveles con Niveles,
+capacitaciones con capacitaciones— y el Prematrimonial queda fuera del todo.
+
+Tres avisos por correo: a quien se mueve (con el monto que debe o el saldo a
+favor), al dirigente que la pierde y al que la recibe.
+
+Tutorial grabado: `content/ayuda/mover-de-grupo.md`.
+
+### [x] FIN-7 · Página de saldos a favor
+
+`/finanzas/saldos`. El saldo se calcula, no se guarda: es lo pagado menos lo
+que cuesta la matrícula. Un segundo número guardado aparte se desalinea del
+primero — es como Adriana terminó con ₡10.000.
+
+### [x] EST-17 · Justificación al autorizar estudios virtuales
+
+Se exige el porqué al autorizar y se limpia al quitar la autorización. Las 26
+personas ya autorizadas quedan sin razón: es dato viejo y no se inventa.
+
+### [x] PER-1 · Sacar y mover de grupo, solo coordinación
+
+Sacar a otra persona pasó de GROUP_ADMIN_ROLES a STUDY_ADMIN_ROLES, y la
+pantalla y el servidor ahora usan la misma lista (no coincidían). Retirar la
+propia matrícula sigue siendo de cualquiera.
+
+### [x] UI-4 · Arreglos que salieron de reportes de uso
+
+- La lista del grupo mostraba a los retirados sin decirlo: 8 filas bajo un
+  "7 inscritos". Ahora se piden con un botón.
+- El comité decía "47 servidores" y eran 37 personas en 47 puestos.
+- El lápiz y el basurero de comités y puestos no existían en pantalla táctil.
+- Botón para crear puestos, que faltaba en el panel de admin.
+- 40 puestos repetidos por el "de", consolidados sin perder un solo rol.
+
+### [x] COR-2 · Tres bugs de los correos del sistema
+
+Los tres del mismo origen —el correo se apoyaba en el `<style>` del `<head>`,
+que varios clientes descartan—: el logo llegaba a Outlook a su tamaño real
+(2526 × 1280), el botón quedaba como texto blanco sin fondo (invisible), y la
+fecha de inicio se corría un día al convertir una fecha sin hora a zona de
+Costa Rica.
 
