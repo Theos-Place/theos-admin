@@ -4027,3 +4027,24 @@ Lo destapó el export de EVE-9. De 172 personas con algo escrito ahí:
   que la lista de cocina resalte a alguien que no necesita nada.
 
 Script: `scripts/cierre-2026-09/alergias-sucias.ts`.
+
+### [ ] FIN-6 · Nada impide subir el mismo comprobante dos veces
+
+Salió del caso de Adriana Jiménez (2026-09-10). Se matriculó en un SCJ, la
+movimos de grupo, y en el camino el MISMO comprobante SINPE quedó cargado dos
+veces —una por cada grupo— con la misma `reference_code`. En el sistema
+figuraban ₡10.000 pagados; ella transfirió ₡5.000.
+
+`payments.reference_code` tiene índice, pero **no único**: nada lo detiene. Y
+no basta con un UNIQUE a secas, porque hay pagos legítimos sin referencia y
+podría haber referencias repetidas de bancos distintos.
+
+Lo mínimo útil: al aprobar un comprobante, avisar si esa referencia ya está
+usada por otro pago —quién, cuánto y cuándo— y pedir confirmación. Que el
+sistema lo diga, no que lo tenga que notar una persona semanas después
+cuadrando finanzas.
+
+Ojo también con el flujo de cambio de grupo: la matrícula vieja quedó
+`pendiente_de_pago` con `dropped_at`, y encima se le generó un pago pendiente
+nuevo. Vale revisar qué hace exactamente ese flujo con el pago ya aprobado.
+
