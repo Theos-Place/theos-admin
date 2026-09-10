@@ -17,9 +17,11 @@ async function main() {
   await page.waitForTimeout(7000)
   await page.getByRole('heading', { name: /Semana 37 de 2025/ }).waitFor({ timeout: 20_000 })
   const panel = page.locator('div').filter({ hasText: /^Semana 37 de 2025/ }).last()
-  await page.getByText('Por sede').first().waitFor({ timeout: 20_000 })
+  await page.getByText(/vs semana anterior/i).first().waitFor({ timeout: 20_000 })
   await page.waitForTimeout(800)
-  console.log('   ✓ abre:', (await panel.innerText()).split('\n').filter(Boolean).slice(0, 12).join(' | '))
+  console.log('   ✓ abre:', (await panel.innerText()).split('\n').filter(Boolean).slice(0, 10).join(' | '))
+  const titulos = await page.locator('h3, h2').allInnerTexts()
+  console.log('   gráfico de sedes:', titulos.find(t => /Comparación por sede/i.test(t)))
   await page.screenshot({ path: 'scripts/adriana-2026-09/out-rep2.png' })
 
   console.log('\n2) "volver al año" lo cierra y limpia la URL')

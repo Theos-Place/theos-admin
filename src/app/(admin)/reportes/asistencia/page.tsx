@@ -15,6 +15,7 @@ import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { useSearchParams } from 'next/navigation'
+import type { DetalleDeSemana } from '@/lib/reports/semana-detalle'
 
 const NAVY = '#161440'
 const CORAL = '#D63E3D'
@@ -45,6 +46,11 @@ export default function ReporteAsistenciaPage() {
   const params = useSearchParams()
   const [semanaLocal, setSemanaLocal] = useState<string | null>(null)
   const semanaSel = leerClaveDeSemana(semanaLocal ?? params.get('semana'))
+  // El resultado se guarda CON su clave de semana y el resto se deriva. Así el
+  // efecto no tiene que resetear nada al cambiar de semana —eso dispara
+  // renders en cascada— y nunca se muestra el dato de una semana bajo el
+  // título de otra.
+  const [resultado, setResultado] = useState<{ clave: string; detalle: DetalleDeSemana | null; error: string | null } | null>(null)
   const [tab, setTab] = useState<'asistencia' | 'crecimiento'>('asistencia')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -70,6 +76,32 @@ export default function ReporteAsistenciaPage() {
   }, [])
 
   useEffect(() => { load(null, ALL_SEDES) }, [load])
+
+  // El detalle de la semana se pide UNA vez acá y lo comparten el panel y el
+  // gráfico de sedes: dos fetch del mismo dato podrían mostrar números
+  // distintos si el snapshot cambia entre uno y otro.
+  const claveSemana = semanaSel ? `${semanaSel.year}-W${String(semanaSel.week).padStart(2, '0')}` : null
+  const claveConSede = claveSemana ? `${claveSemana}|${sede}` : null
+  useEffect(() => {
+    if (!claveSemana || !claveConSede) return
+    let vivo = true
+    const qs = new URLSearchParams({ semana: claveSemana })
+    if (sede && sede !== ALL_SEDES) qs.set('sede', sede)
+    fetch(`/api/reports/charla-attendance?${qs}`)
+      .then(async r => {
+        if (r.ok) return r.json()
+        const b = await r.json().catch(() => null)
+        throw new Error(b?.error ?? 'No se pudo cargar la semana.')
+      })
+      .then(d => { if (vivo) setResultado({ clave: claveConSede, detalle: d, error: null }) })
+      .catch(e => { if (vivo) setResultado({ clave: claveConSede, detalle: null, error: e.message }) })
+    return () => { vivo = false }
+  }, [claveSemana, claveConSede, sede])
+
+  const listo = !!claveConSede && resultado?.clave === claveConSede
+  const detalle = listo ? resultado!.detalle : null
+  const errorSemana = listo ? resultado!.error : null
+  const cargandoSemana = !!claveConSede && !listo
 
   function onYear(y: number) { setYear(y); load(y, sede); setSemana(null) }
   function onSede(s: string) { setSede(s); load(year, s) }
@@ -113,6 +145,11 @@ export default function ReporteAsistenciaPage() {
   }
 
   const sedeLabel = report.sede === ALL_SEDES ? 'todas las sedes' : report.sede
+  // Con una semana abierta, el ranking de sedes es el de ESA semana.
+  const rankingSemanal = !!semanaSel && !!detalle
+  const rankingAMostrar = rankingSemanal
+    ? detalle!.porSede.map(s => ({ sede: s.sede, total: s.total }))
+    : report.sedeRanking
   const hasPartialWeek = report.weekly.some(w => w.partial)
   // Card de promedio semanal del año seleccionado (cambia con el pill).
   const selectedCard = report.annualCards.find(c => c.year === report.year)
@@ -241,10 +278,11 @@ export default function ReporteAsistenciaPage() {
                 {semanaSel && (
                   <div className="mt-4">
                     <SemanaDetallePanel
-                      key={`${semanaSel.year}-${semanaSel.week}-${report.sede}`}
                       year={semanaSel.year}
                       week={semanaSel.week}
-                      sede={report.sede}
+                      detalle={detalle}
+                      cargando={cargandoSemana}
+                      error={errorSemana}
                       onVolver={() => setSemana(null)}
                     />
                   </div>
@@ -255,20 +293,27 @@ export default function ReporteAsistenciaPage() {
             {/* Comparativos lado a lado en desktop. */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {/* Comparación por sede */}
+              {/* Sigue la semana elegida: preguntar "¿cómo nos fue esta
+                  semana?" y tener al lado el acumulado del año era leer dos
+                  cosas distintas creyendo que eran la misma. */}
               <ChartCard
-                title={`Comparación por sede — ${report.year}`}
-                subtitle="Check-ins del año por sede. La sede seleccionada se resalta."
-                empty={report.sedeRanking.length === 0}
-                height={Math.max(180, report.sedeRanking.length * 26)}
+                title={rankingSemanal
+                  ? `Comparación por sede — semana ${semanaSel!.week} de ${semanaSel!.year}`
+                  : `Comparación por sede — ${report.year}`}
+                subtitle={rankingSemanal
+                  ? 'Check-ins de esa semana por sede. La sede seleccionada se resalta.'
+                  : 'Check-ins del año por sede. La sede seleccionada se resalta.'}
+                empty={rankingAMostrar.length === 0}
+                height={Math.max(180, rankingAMostrar.length * 26)}
               >
                 <ResponsiveContainer>
-                  <BarChart layout="vertical" data={report.sedeRanking} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  <BarChart layout="vertical" data={rankingAMostrar} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                     <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Check-ins']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
-                      {report.sedeRanking.map(s => (
+                      {rankingAMostrar.map(s => (
                         <Cell key={s.sede} fill={report.sede !== ALL_SEDES && s.sede === report.sede ? CORAL : NAVY} />
                       ))}
                     </Bar>
