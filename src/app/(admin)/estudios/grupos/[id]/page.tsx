@@ -26,6 +26,7 @@ import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
 import { BAJA_COPY, TIPOS_DE_BAJA, type TipoDeBaja } from '@/lib/studies/baja-matricula'
+import { participantesActivos, participantesRetirados, participantesVisibles, textoBotonRetirados } from '@/lib/studies/roster-visible'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -379,6 +380,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const readOnly = group?.viewer_scope === 'member' || group?.viewer_scope === 'none'
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
+  const [mostrarRetirados, setMostrarRetirados] = useState(false)
   const [showSendMessage, setShowSendMessage] = useState(false)
   const [withdrawTarget, setWithdrawTarget] = useState<{ member_id: string; member_name: string } | null>(null)
   /** Quitar del grupo (la matrícula no ocurrió) vs. retirar (cursaba y se
@@ -493,7 +495,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   const studyType = studyTypes.find(s => s.id === group.study_type_id) ?? null
-  const enrolled = group.participants.filter(p => p.status !== 'withdrawn')
+  // La tabla mostraba TODAS las filas mientras el encabezado contaba solo a
+  // los activos: 8 filas bajo un "7 inscritos". Ahora los retirados se piden.
+  const enrolled = participantesActivos(group.participants)
+  const retirados = participantesRetirados(group.participants)
+  const visibles = participantesVisibles(group.participants, mostrarRetirados)
+  const textoRetirados = textoBotonRetirados(retirados.length, mostrarRetirados)
   // GRU-3: ¿llegó contacto? Solo llega si quien mira gestiona el grupo.
   const hayContactoDirigente = Boolean(
     group.leader_phone || group.leader_email || group.co_leader_phone || group.co_leader_email,
@@ -731,9 +738,20 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {activeTab === 'participantes' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-navy-light/80 font-body">
-              {enrolled.length} inscritos de {group.max_capacity} lugares
-            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-sm text-navy-light/80 font-body">
+                {enrolled.length} inscritos de {group.max_capacity} lugares
+              </p>
+              {textoRetirados && (
+                <button
+                  onClick={() => setMostrarRetirados(v => !v)}
+                  aria-pressed={mostrarRetirados}
+                  className="rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                >
+                  {textoRetirados}
+                </button>
+              )}
+            </div>
             {/* REU-2 · Para el estudiante que abre SU grupo y se da cuenta de
                 que se matriculó en el equivocado. El flujo ya existía enterrado
                 en una pestaña del perfil; acá está donde se necesita. */}
@@ -770,7 +788,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 </tr>
               </thead>
               <tbody>
-                {group.participants.map(p => (
+                {visibles.map(p => (
                   <tr
                     key={p.member_id}
                     className="hover:bg-surface-low transition-colors border-b border-[var(--outline-variant)]"
