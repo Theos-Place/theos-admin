@@ -16,6 +16,26 @@ export const FALLBACK: Record<string, { subject: string; html: string }> = {
   form_completado: { subject: 'Recibimos tus respuestas', html: '<p>Hola {{nombre}}, recibimos tus respuestas del formulario "{{nombre_form}}".</p>' },
   matricula_estudiante: { subject: 'Tu matrícula fue confirmada', html: '<p>Hola {{nombre}}, tu matrícula en "{{nombre_capacitacion}}" fue confirmada. Inicia el {{fecha_inicio}}.</p>' },
   matricula_dirigente: { subject: 'Nuevo estudiante en tu capacitación', html: '<p>Hola {{nombre_dirigente}}, {{nombre_estudiante}} se matriculó en "{{nombre_capacitacion}}".</p>' },
+  // Traslado de grupo (2026-09-10). Tres avisos, porque son tres personas con
+  // preguntas distintas: la que se mueve quiere saber a dónde va, el dirigente
+  // que la pierde quiere saber que no desapareció, y el que la recibe quiere
+  // saber que le llega alguien.
+  traslado_estudiante: {
+    subject: 'Te cambiamos de grupo: {{nombre_capacitacion}}',
+    html: '<p>Hola {{nombre}}, te movimos de grupo. Ahora estás en <strong>{{nombre_grupo_nuevo}}</strong>'
+      + ' con {{nombre_dirigente}}, los {{dias}} a las {{hora}}, en {{lugar}}. Inicia el {{fecha_inicio}}.</p>'
+      + '<p>{{nota_pago}}</p>',
+  },
+  traslado_dirigente_sale: {
+    subject: '{{nombre_estudiante}} se pasó a otro grupo',
+    html: '<p>Hola {{nombre_dirigente}}, te avisamos que <strong>{{nombre_estudiante}}</strong> ya no está'
+      + ' en {{nombre_grupo_anterior}}: se pasó a {{nombre_grupo_nuevo}}. No se retiró de los estudios.</p>',
+  },
+  traslado_dirigente_entra: {
+    subject: '{{nombre_estudiante}} se suma a tu grupo',
+    html: '<p>Hola {{nombre_dirigente}}, <strong>{{nombre_estudiante}}</strong> se pasó a'
+      + ' {{nombre_grupo_nuevo}} desde {{nombre_grupo_anterior}}.</p>',
+  },
   inicio_capacitacion: { subject: 'Tu capacitación está por comenzar', html: '<p>Hola {{nombre}}, tu capacitación "{{nombre_capacitacion}}" inicia el {{fecha_inicio}}.</p>' },
   beca_aprobada: {
     subject: '¡Tu beca fue aprobada!',

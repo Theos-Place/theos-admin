@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, resolveTargetMemberId, pidioPorOtroSinPermiso } from '@/lib/auth/guard'
-import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { GROUP_ADMIN_ROLES, STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { enrollMember, withdrawMember, setEnrollmentGrade } from '@/lib/supabase/queries/studies'
 import { notifyEnrollment } from '@/lib/email/enrollment-notify'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
@@ -245,16 +245,20 @@ export async function DELETE(
   try {
     const { id } = await params
     const { member_id, reason, tipo } = await req.json()
-    // Misma lista que el alta: quien administra grupos también da de baja. Y si
-    // pidieron dar de baja a otro sin el rol, se corta — antes se retiraba al
-    // propio actor en silencio.
-    if (pidioPorOtroSinPermiso(auth.ctx, member_id, GROUP_ADMIN_ROLES)) {
+    // Sacar a OTRA persona es de COORDINACIÓN (decisión del usuario,
+    // 2026-09-10): toca su matrícula y su pago. Antes bastaba con
+    // GROUP_ADMIN_ROLES, que incluye editor_grupos_estudio — y la pantalla ya
+    // usa STUDY_ADMIN, así que además no coincidían.
+    //
+    // Retirar la PROPIA matrícula sigue siendo de cualquiera con sesión: eso
+    // no cambia (p. ej. cancelar un alta con costo que no se llegó a pagar).
+    if (pidioPorOtroSinPermiso(auth.ctx, member_id, STUDY_ADMIN_ROLES)) {
       return NextResponse.json(
-        { error: 'No tenés permiso para sacar del grupo a otra persona.', code: 'sin_permiso_por_otro' },
+        { error: 'Sacar a otra persona del grupo es de coordinación de estudios.', code: 'sin_permiso_por_otro' },
         { status: 403 },
       )
     }
-    const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, GROUP_ADMIN_ROLES)
+    const targetMemberId = resolveTargetMemberId(auth.ctx, member_id, STUDY_ADMIN_ROLES)
     if (!targetMemberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })
     const malMotivo = withdrawReasonError(typeof reason === 'string' ? reason : null)
     if (malMotivo) {

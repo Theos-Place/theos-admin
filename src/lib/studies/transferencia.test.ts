@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   motivoQueImpideTransferir, destinosPosibles, pagosQueViajan,
-  notaDeTransferencia, resumenDeLaAccion, planDeDinero, type GrupoParaTransferir,
+  notaDeTransferencia, resumenDeLaAccion, planDeDinero, familiaDelPlan, type GrupoParaTransferir,
 } from './transferencia'
 
 const base: GrupoParaTransferir = {
@@ -19,7 +19,7 @@ describe('motivoQueImpideTransferir', () => {
     expect(motivoQueImpideTransferir({ origen: base, destino: base })?.code).toBe('mismo_grupo')
   })
 
-  it('a otro ESTUDIO sí se puede: pasa que alguien se matricula en el equivocado', () => {
+  it('a otro ESTUDIO de la misma familia sí se puede: pasa que alguien se matricula en el equivocado', () => {
     // Caso real: se matriculó en Religiones del Mundo y le tocaba otro.
     expect(motivoQueImpideTransferir({
       origen: base, destino: g({ id: 'b', plan_id: 'rdm', name: 'Religiones del Mundo', costo: 20000 }),
@@ -66,13 +66,13 @@ describe('destinosPosibles', () => {
   it('ofrece solo los que se pueden, en orden alfabético', () => {
     const opciones = destinosPosibles(base, [
       g({ id: 'z', name: 'SCJ — Zapote' }),
-      g({ id: 'x', name: 'Nivel 1', plan_id: 'n1', costo: 0 }),   // otro estudio: SÍ se ofrece
+      g({ id: 'x', name: 'Hebreos', plan_id: 'heb', costo: 20000 }), // otro estudio, misma familia: SÍ
       g({ id: 'y', name: 'SCJ — Belén' }),
       g({ id: 'w', name: 'SCJ — Lleno', inscritos: 10 }),          // sin cupo
       g({ id: 'v', name: 'SCJ — Dólares', currency: 'USD' }),      // otra moneda
       base,                                                         // el mismo
     ])
-    expect(opciones.map(o => o.name)).toEqual(['Nivel 1', 'SCJ — Belén', 'SCJ — Zapote'])
+    expect(opciones.map(o => o.name)).toEqual(['Hebreos', 'SCJ — Belén', 'SCJ — Zapote'])
   })
 
   it('no ofrece uno donde la persona ya completó', () => {
@@ -229,5 +229,66 @@ describe('planDeDinero', () => {
     expect(r.cobrar).toBe(5000)
     expect(r.mensaje).toContain('No tenía ningún pago')
     expect(r.mensaje).not.toContain('₡0')
+  })
+})
+
+describe('familias de estudio (decisión 2026-09-10)', () => {
+  const nivel = (over: Partial<GrupoParaTransferir> = {}): GrupoParaTransferir => ({
+    id: 'n1', name: 'Nivel 3 — Lunes', plan_id: 'n3', plan_level: 'niveles', plan_code: 'N3',
+    costo: 5000, currency: 'CRC', status: 'en_matricula', max_students: 10, inscritos: 2, ...over,
+  })
+  const capa = (over: Partial<GrupoParaTransferir> = {}): GrupoParaTransferir => ({
+    id: 'c1', name: 'Panorama — Jueves', plan_id: 'pan', plan_level: 'etapa_intermedia', plan_code: 'PAN',
+    costo: 20000, currency: 'CRC', status: 'en_matricula', max_students: 10, inscritos: 2, ...over,
+  })
+
+  it('de un Nivel solo se puede mover a otro Nivel', () => {
+    expect(motivoQueImpideTransferir({ origen: nivel(), destino: nivel({ id: 'n2', plan_code: 'N4' }) })).toBeNull()
+    const r = motivoQueImpideTransferir({ origen: nivel(), destino: capa() })
+    expect(r?.code).toBe('otra_familia')
+    expect(r?.mensaje).toContain('otro Nivel')
+  })
+
+  it('de una capacitación solo a otra capacitación', () => {
+    expect(motivoQueImpideTransferir({ origen: capa(), destino: capa({ id: 'c2', plan_code: 'RDM' }) })).toBeNull()
+    expect(motivoQueImpideTransferir({ origen: capa(), destino: nivel() })?.code).toBe('otra_familia')
+  })
+
+  it('las campañas cuentan como capacitación: se cruzan entre sí', () => {
+    expect(motivoQueImpideTransferir({
+      origen: capa({ plan_level: 'campanas', plan_code: 'TRANS' }),
+      destino: capa({ id: 'c2', plan_level: 'etapa_avanzada', plan_code: 'HER' }),
+    })).toBeNull()
+  })
+
+  it('el Prematrimonial no se mueve por acá, ni entrando ni saliendo', () => {
+    const premat = capa({ id: 'pm', name: 'Prematrimonial', plan_code: 'PREMAT', plan_level: 'etapa_inicial' })
+    expect(motivoQueImpideTransferir({ origen: capa(), destino: premat })?.code).toBe('plan_excluido')
+    expect(motivoQueImpideTransferir({ origen: premat, destino: capa() })?.code).toBe('plan_excluido')
+  })
+
+  it('el selector solo ofrece la familia que corresponde', () => {
+    const opciones = destinosPosibles(nivel(), [
+      nivel({ id: 'a', name: 'Nivel 4 — Martes', plan_code: 'N4' }),
+      capa({ id: 'b', name: 'Hebreos' }),
+      capa({ id: 'c', name: 'Prematrimonial', plan_code: 'PREMAT' }),
+      nivel({ id: 'd', name: 'Nivel 2 — Jueves', plan_code: 'N2' }),
+    ])
+    expect(opciones.map(o => o.name)).toEqual(['Nivel 2 — Jueves', 'Nivel 4 — Martes'])
+  })
+})
+
+describe('familiaDelPlan', () => {
+  it('N1 a N4 son niveles', () => {
+    expect(familiaDelPlan('niveles', 'N1')).toBe('niveles')
+  })
+  it('todo lo demás es capacitación', () => {
+    for (const l of ['etapa_inicial', 'etapa_intermedia', 'etapa_avanzada', 'campanas', null]) {
+      expect(familiaDelPlan(l, 'X')).toBe('capacitaciones')
+    }
+  })
+  it('Prematrimonial queda fuera, escrito como sea', () => {
+    expect(familiaDelPlan('etapa_inicial', 'PREMAT')).toBe('excluido')
+    expect(familiaDelPlan('etapa_inicial', 'premat')).toBe('excluido')
   })
 })

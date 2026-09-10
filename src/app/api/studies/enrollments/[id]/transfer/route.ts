@@ -33,13 +33,13 @@ async function leerMatricula(id: string): Promise<Fila | null> {
 async function gruposAbiertos(): Promise<GrupoParaTransferir[]> {
   const sb = createAdminClient()
   const { data, error } = await sb.from('study_groups')
-    .select('id, name, plan_id, max_students, status, schedule_days, schedule_time, zone, plan:study_plans!study_groups_plan_id_fkey(code, cost, currency)')
+    .select('id, name, plan_id, max_students, status, schedule_days, schedule_time, zone, plan:study_plans!study_groups_plan_id_fkey(code, cost, currency, level)')
     .in('status', ['en_matricula', 'en_curso'])
   if (error) throw error
   const grupos = (data ?? []) as unknown as Array<{
     id: string; name: string; plan_id: string | null; max_students: number | null; status: string
     schedule_days: string[] | null; schedule_time: string | null; zone: string | null
-    plan: { code: string | null; cost: number | null; currency: string | null } | null
+    plan: { code: string | null; cost: number | null; currency: string | null; level: string | null } | null
   }>
   // Una sola consulta para la ocupación de todos: pedirla grupo por grupo eran
   // 100 consultas para pintar un selector.
@@ -51,6 +51,7 @@ async function gruposAbiertos(): Promise<GrupoParaTransferir[]> {
   }
   return grupos.map(g => ({
     id: g.id, name: g.name, plan_id: g.plan_id, status: g.status,
+    plan_level: g.plan?.level ?? null, plan_code: g.plan?.code ?? null,
     costo: Number(g.plan?.cost ?? 0), currency: g.plan?.currency ?? 'CRC',
     max_students: g.max_students, inscritos: ocupacion.get(g.id) ?? 0,
   }))
@@ -71,15 +72,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     let origen = todos.find(g => g.id === enr.group_id) ?? null
     if (!origen) {
       const { data } = await sb.from('study_groups')
-        .select('id, name, plan_id, max_students, status, plan:study_plans!study_groups_plan_id_fkey(cost, currency)')
+        .select('id, name, plan_id, max_students, status, plan:study_plans!study_groups_plan_id_fkey(cost, currency, code, level)')
         .eq('id', enr.group_id).maybeSingle()
       if (!data) return NextResponse.json({ error: 'Grupo de origen no encontrado' }, { status: 404 })
       const g = data as unknown as {
         id: string; name: string; plan_id: string | null; max_students: number | null; status: string
-        plan: { cost: number | null; currency: string | null } | null
+        plan: { cost: number | null; currency: string | null; code: string | null; level: string | null } | null
       }
       origen = {
         id: g.id, name: g.name, plan_id: g.plan_id, status: g.status,
+        plan_level: g.plan?.level ?? null, plan_code: g.plan?.code ?? null,
         costo: Number(g.plan?.cost ?? 0), currency: g.plan?.currency ?? 'CRC',
         max_students: g.max_students, inscritos: 0,
       }

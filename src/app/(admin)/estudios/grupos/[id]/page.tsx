@@ -897,7 +897,13 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                             Mover de grupo…
                           </button>
                         )}
-                        {!readOnly && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
+                        {/* Sacar del grupo es de COORDINACIÓN (decisión del
+                            usuario, 2026-09-10). Antes bastaba con no ser
+                            de solo lectura, así que el dirigente del grupo
+                            podía hacerlo — y sacar a alguien le toca su
+                            matrícula y su pago. Para el dirigente existe la
+                            solicitud de reubicación. */}
+                        {puedeMover && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
                           <button
                             onClick={() => {
                               setWithdrawError(false); setWithdrawReason('')

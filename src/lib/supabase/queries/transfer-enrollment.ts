@@ -44,18 +44,19 @@ async function leerGrupo(id: string): Promise<GrupoParaTransferir | null> {
   const sb = createAdminClient()
   const { data, error } = await sb
     .from('study_groups')
-    .select('id, name, plan_id, max_students, status, plan:study_plans!study_groups_plan_id_fkey(cost, currency)')
+    .select('id, name, plan_id, max_students, status, plan:study_plans!study_groups_plan_id_fkey(cost, currency, code, level)')
     .eq('id', id).maybeSingle()
   if (error) throw error
   if (!data) return null
   const g = data as unknown as {
     id: string; name: string; plan_id: string | null; max_students: number | null; status: string | null
-    plan: { cost: number | null; currency: string | null } | null
+    plan: { cost: number | null; currency: string | null; code: string | null; level: string | null } | null
   }
   const { count } = await sb.from('study_enrollments')
     .select('id', { count: 'exact', head: true }).eq('group_id', id).eq('status', 'enrolled')
   return {
     id: g.id, name: g.name, plan_id: g.plan_id, status: g.status ?? '',
+    plan_level: g.plan?.level ?? null, plan_code: g.plan?.code ?? null,
     costo: Number(g.plan?.cost ?? 0), currency: g.plan?.currency ?? 'CRC',
     max_students: g.max_students, inscritos: count ?? 0,
   }
@@ -168,6 +169,21 @@ export async function transferEnrollment(input: {
   }
 
   void actorMemberId
+
+  // Los tres avisos. Best-effort y AL FINAL: el traslado ya está hecho y no se
+  // deshace porque un correo falle.
+  try {
+    const { notifyTraslado } = await import('@/lib/email/traslado-notify')
+    await notifyTraslado({
+      memberId, desdeGroupId, haciaGroupId,
+      cobroPendiente: cobrarDiferencia ? plan.cobrar : 0,
+      saldoAFavor: plan.saldoAFavor,
+      moneda: destino.currency,
+    })
+  } catch (e) {
+    console.warn('transferEnrollment: los avisos fallaron:', e instanceof Error ? e.message : e)
+  }
+
   return {
     enrollment_id: nuevaId,
     desde_grupo: origen.name,

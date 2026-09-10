@@ -11,10 +11,34 @@
  * de la solicitud y el de la acción directa no se separen con el tiempo.
  */
 
+/**
+ * A qué familia de estudios pertenece un grupo.
+ *
+ * Mover a alguien de un Nivel 3 a Hebreos no es cambiar de grupo: es cambiar
+ * de camino. Ofrecerlo en la misma lista invita al error (decisión del
+ * usuario, 2026-09-10). Así que los niveles solo se cruzan con niveles, y las
+ * capacitaciones con capacitaciones.
+ *
+ * 'excluido' es Prematrimonial: tiene su propio flujo, con pareja y
+ * requisitos, y nada de eso sobrevive a un traslado suelto.
+ */
+export type FamiliaDeEstudio = 'niveles' | 'capacitaciones' | 'excluido'
+
+const PLANES_EXCLUIDOS = new Set(['PREMAT'])
+
+export function familiaDelPlan(level: string | null, code: string | null): FamiliaDeEstudio {
+  if (code && PLANES_EXCLUIDOS.has(code.toUpperCase())) return 'excluido'
+  return level === 'niveles' ? 'niveles' : 'capacitaciones'
+}
+
 export type GrupoParaTransferir = {
   id: string
   name: string
   plan_id: string | null
+  /** study_plans.level — 'niveles', 'etapa_inicial', 'campanas'… */
+  plan_level?: string | null
+  /** study_plans.code — para excluir Prematrimonial. */
+  plan_code?: string | null
   /** Costo del plan, en su moneda. */
   costo: number
   currency: string | null
@@ -32,6 +56,8 @@ export type ImpedimentoTransferencia =
   | { code: 'sin_cupo'; mensaje: string }
   | { code: 'ya_matriculado'; mensaje: string }
   | { code: 'ya_completado'; mensaje: string }
+  | { code: 'otra_familia'; mensaje: string }
+  | { code: 'plan_excluido'; mensaje: string }
 
 /** Estados de grupo a los que se puede mover a alguien. */
 const DESTINOS_VALIDOS = new Set(['en_matricula', 'en_curso'])
@@ -56,6 +82,22 @@ export function motivoQueImpideTransferir(input: {
   }
   if (estadoEnDestino === 'enrolled' || estadoEnDestino === 'pendiente_de_pago') {
     return { code: 'ya_matriculado', mensaje: `Ya está matriculada en ${destino.name}.` }
+  }
+  const familiaOrigen = familiaDelPlan(origen.plan_level ?? null, origen.plan_code ?? null)
+  const familiaDestino = familiaDelPlan(destino.plan_level ?? null, destino.plan_code ?? null)
+  if (familiaDestino === 'excluido' || familiaOrigen === 'excluido') {
+    return {
+      code: 'plan_excluido',
+      mensaje: 'El Prematrimonial no se mueve por acá: tiene su propio flujo, con pareja y requisitos.',
+    }
+  }
+  if (familiaOrigen !== familiaDestino) {
+    return {
+      code: 'otra_familia',
+      mensaje: familiaOrigen === 'niveles'
+        ? 'Está en un Nivel: solo se puede mover a otro Nivel. Pasar a una capacitación es otro camino, no un cambio de grupo.'
+        : 'Está en una capacitación: solo se puede mover a otra capacitación, no a los Niveles.',
+    }
   }
   if (!DESTINOS_VALIDOS.has(destino.status)) {
     return { code: 'grupo_cerrado', mensaje: `${destino.name} no está recibiendo gente (está ${destino.status}).` }

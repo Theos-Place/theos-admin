@@ -19,6 +19,7 @@ export type { TemplateData }
 export type SystemTemplateKey =
   | 'form_asignado' | 'form_completado'
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
+  | 'traslado_estudiante' | 'traslado_dirigente_sale' | 'traslado_dirigente_entra'
   | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada'
   | 'cupon_asignado'
   | 'encuesta_evento' | 'inscripcion_evento'
