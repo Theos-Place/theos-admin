@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 
-import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload, ShieldCheck } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
+import { rolesGrantedByPosition } from '@/lib/servers/position-roles'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { PositionRequestsSection } from './_PositionRequests'
@@ -201,12 +202,19 @@ function DeactivateConfirm({
  *  para no tocar ubicación/cantidad/expiración/destacado. */
 type PosDescFields = { title: string; study_requirement: string; description: string; functions: string; profile: string; skills: string }
 function PositionEditModal({
-  initial, onSave, onClose,
+  initial, onSave, onClose, modo = 'editar', rolesQueOtorgaria,
 }: {
   initial: { title: string; study_requirement?: string | null; description?: string | null; functions?: string | null; profile?: string | null; skills?: string | null }
-  onSave: (data: PosDescFields) => void
+  onSave: (data: PosDescFields & { quantity?: number }) => void
   onClose: () => void
+  modo?: 'crear' | 'editar'
+  /** Roles automáticos que otorgaría el título que se está escribiendo. Se
+   *  avisa MIENTRAS se escribe: el título no es decorativo —"Colaborador
+   *  Bienvenida" da acceso al check-in de eventos— y enterarse después es
+   *  cómo se crean permisos que nadie sabe que existen. */
+  rolesQueOtorgaria?: (title: string) => string[]
 }) {
+  const crear = modo === 'crear'
   const [f, setF] = useState<PosDescFields>({
     title: initial.title ?? '',
     study_requirement: initial.study_requirement ?? '',
@@ -215,16 +223,30 @@ function PositionEditModal({
     profile: initial.profile ?? '',
     skills: initial.skills ?? '',
   })
+  const [cupo, setCupo] = useState('1')
   const set = <K extends keyof PosDescFields>(k: K, v: PosDescFields[K]) => setF(p => ({ ...p, [k]: v }))
   const valid = f.title.trim().length > 0
+  const roles = rolesQueOtorgaria?.(f.title) ?? []
   return (
     <Modal onClose={onClose} titleId="pos-edit-title" width={520}>
       <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-        <h2 id="pos-edit-title" className="text-base font-bold text-navy font-display">Editar puesto</h2>
+        <h2 id="pos-edit-title" className="text-base font-bold text-navy font-display">{crear ? 'Nuevo puesto' : 'Editar puesto'}</h2>
         <div className="space-y-1.5">
           <label htmlFor="nombre-del-puesto" className={labelCls}>Nombre del puesto *</label>
           <input id="nombre-del-puesto" autoFocus aria-label="Nombre del puesto" className={inputCls} value={f.title} onChange={e => set('title', e.target.value)} />
+          {roles.length > 0 && (
+            <p className="text-[13px] text-teal-deep font-body flex items-start gap-1.5" role="status">
+              <ShieldCheck size={14} className="mt-0.5 shrink-0" aria-hidden />
+              <span>Con este nombre, quien ocupe el puesto gana automáticamente: <strong>{roles.join(', ')}</strong>.</span>
+            </p>
+          )}
         </div>
+        {crear && (
+          <div className="space-y-1.5">
+            <label htmlFor="cupo-del-puesto" className={labelCls}>Cupo (cuántas personas)</label>
+            <input id="cupo-del-puesto" type="number" min={1} aria-label="Cupo del puesto" className={inputCls} value={cupo} onChange={e => setCupo(e.target.value)} />
+          </div>
+        )}
         <div className="space-y-1.5">
           <label htmlFor="nivel-de-estudio" className={labelCls}>Nivel de estudio</label>
           <input id="nivel-de-estudio" aria-label="Nivel de estudio" className={inputCls} placeholder="Ej. Discípulos 2" value={f.study_requirement} onChange={e => set('study_requirement', e.target.value)} />
@@ -247,9 +269,12 @@ function PositionEditModal({
         </div>
         <div className="flex gap-2 pt-1">
           <button disabled={!valid}
-            onClick={() => onSave({ ...f, title: f.title.trim() })}
+            onClick={() => onSave({
+              ...f, title: f.title.trim(),
+              ...(crear ? { quantity: Math.max(1, Number(cupo) || 1) } : {}),
+            })}
             className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
-            Guardar cambios
+            {crear ? 'Crear puesto' : 'Guardar cambios'}
           </button>
           <button onClick={onClose} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
             Cancelar
@@ -301,6 +326,7 @@ export default function ServidoresAdminPage() {
   const [deactTarget, setDeactTarget] = useState<DeactTarget>(null)
   const [expandedPos, setExpandedPos] = useState<Set<string>>(new Set()) // puestos con detalle abierto
   const [editPos, setEditPos] = useState<CommitteePosition | null>(null) // edición de campos descriptivos
+  const [nuevoPuesto, setNuevoPuesto] = useState(false)
   function togglePos(id: string) {
     setExpandedPos(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s })
   }
@@ -328,6 +354,41 @@ export default function ServidoresAdminPage() {
       toast('No se pudo guardar el puesto.', 'error')
     }
   }
+
+  async function crearPuesto(data: PosDescFields & { quantity?: number }) {
+    if (!selectedCommId) return
+    setNuevoPuesto(false)
+    try {
+      const res = await fetch('/api/servers/positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          area_id: selectedCommId,
+          title: data.title,
+          quantity: data.quantity ?? 1,
+          study_requirement: data.study_requirement || null,
+          description: data.description || null,
+          functions: data.functions || null,
+          profile: data.profile || null,
+          skills: data.skills || null,
+        }),
+      })
+      const body = await res.json().catch(() => null)
+      // El 409 de duplicado trae su propio mensaje: decir "no se pudo" cuando
+      // el puesto ya existe manda a la gente a buscar un problema que no hay.
+      if (!res.ok) throw new Error(body?.error || 'No se pudo crear el puesto.')
+      await refetchServers()
+      const roles: string[] = body?.roles_automaticos ?? []
+      toast(
+        roles.length
+          ? `Puesto creado. Quien lo ocupe gana: ${roles.join(', ')}.`
+          : 'Puesto creado.',
+        'success',
+      )
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo crear el puesto.', 'error')
+    }
+  }
   // Eliminación: usa los modales compartidos. confirmState para borrar con palabra
   // "eliminar"; warn cuando hay servidores activos y se bloquea.
   const [confirmState, setConfirmState] = useState<{ title: string; description: string; run: () => Promise<void> } | null>(null)
@@ -341,6 +402,19 @@ export default function ServidoresAdminPage() {
 
   const selectedComm    = committees.find(c => c.id === selectedCommId) ?? null
   const selectedCommPositions = selectedCommId ? (positionsByCommittee[selectedCommId] ?? []) : []
+
+  // Misma función que aplica el servidor al asignar a alguien: si las dos se
+  // separaran, el aviso del modal diría una cosa y el permiso sería otro.
+  const rolesQueOtorgaria = useCallback((title: string) => (
+    selectedComm
+      ? rolesGrantedByPosition({
+          title,
+          areaName: selectedComm.name,
+          areaType: 'committee',
+          parentAreaName: selectedArea?.name ?? null,
+        })
+      : []
+  ), [selectedComm, selectedArea])
 
   // Conteo real de miembros activos del comité.
   function getMemberCount(committee: Committee): number {
@@ -548,6 +622,15 @@ export default function ServidoresAdminPage() {
       )}
       {editPos && (
         <PositionEditModal initial={editPos} onSave={savePositionDesc} onClose={() => setEditPos(null)} />
+      )}
+      {nuevoPuesto && selectedComm && (
+        <PositionEditModal
+          modo="crear"
+          initial={{ title: '' }}
+          rolesQueOtorgaria={rolesQueOtorgaria}
+          onSave={crearPuesto}
+          onClose={() => setNuevoPuesto(false)}
+        />
       )}
       <DeleteConfirmModal
         open={!!confirmState}
@@ -840,6 +923,16 @@ export default function ServidoresAdminPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                {/* Faltaba: áreas y comités sí tenían botón de crear, y los
+                    puestos no — cada puesto nuevo terminaba saliendo por un
+                    script suelto. */}
+                <button
+                  onClick={() => setNuevoPuesto(true)}
+                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
+                >
+                  <Plus size={12} />
+                  Nuevo
+                </button>
                 <button onClick={() => setSelectedCommId(null)} className="text-navy-light/80 hover:text-navy p-1" title="Cerrar" aria-label="Cerrar panel de puestos">
                   <X size={16} />
                 </button>
@@ -847,12 +940,19 @@ export default function ServidoresAdminPage() {
             </div>
 
             {selectedCommPositions.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-10 text-center">
-                <LayoutGrid size={26} className="text-navy-light/80" />
-                <p className="text-sm text-navy-light/80 font-body">
-                  Este comité no tiene puestos
-                </p>
-              </div>
+              <EmptyState
+                className="flex-1"
+                icon={LayoutGrid}
+                title="Este comité no tiene puestos"
+                action={
+                  <button
+                    onClick={() => setNuevoPuesto(true)}
+                    className="text-[13px] text-coral hover:underline font-body"
+                  >
+                    Crear el primero
+                  </button>
+                }
+              />
             ) : (
               <div className="flex-1 overflow-y-auto py-1.5">
                 {selectedCommPositions.map((p, i) => {
