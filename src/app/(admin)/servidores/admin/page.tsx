@@ -819,7 +819,7 @@ export default function ServidoresAdminPage() {
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-[var(--outline-variant)]">
-                        {['Comité', 'Miembros activos', 'Estado', ''].map(h => (
+                        {['Comité', 'Miembros', 'Estado', ''].map(h => (
                           <th
                             key={h}
                             className="px-5 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display"
@@ -869,14 +869,24 @@ export default function ServidoresAdminPage() {
                                 <div className="toggle-track" />
                               </label>
                             </td>
-                            <td className="px-5 py-3 text-right" onClick={e => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+                              {/* Siempre visibles. Con opacity-0 + group-hover
+                                  no existían en pantalla táctil: Tailwind v4
+                                  mete hover: dentro de @media (hover: hover),
+                                  así que en el celular no había cómo editar ni
+                                  borrar un comité. */}
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Solo el ícono, como en puestos: con el
+                                    texto "Editar" la columna se sale del panel
+                                    cuando el de puestos está abierto, y el
+                                    botón quedaba cortado a la mitad. */}
                                 <button
                                   onClick={() => setCommModal({ open: true, editing: c })}
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors"
+                                  title="Editar comité"
+                                  aria-label={`Editar comité ${c.name}`}
                                 >
                                   <Edit2 size={11} />
-                                  Editar
                                 </button>
                                 <button
                                   onClick={() => requestDeleteCommittee(c)}
@@ -977,14 +987,14 @@ export default function ServidoresAdminPage() {
                       </button>
                       <button
                         onClick={() => setEditPos(p)}
-                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-navy hover:bg-navy/5 transition-colors opacity-0 group-hover:opacity-100"
+                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-navy hover:bg-navy/5 transition-colors"
                         title="Editar puesto" aria-label={`Editar puesto ${p.title}`}
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={() => requestDeletePosition(p)}
-                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors opacity-0 group-hover:opacity-100"
+                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
                         title="Eliminar puesto" aria-label={`Eliminar puesto ${p.title}`}
                       >
                         <Trash2 size={13} />
