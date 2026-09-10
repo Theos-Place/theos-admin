@@ -151,3 +151,31 @@ describe('encargado_eventos por el Comité Youth', () => {
     expect(enYouth('Encargado')).toEqual(['lider_comite'])
   })
 })
+
+describe('el "de" no cambia si un puesto de sede da check-in', () => {
+  const sede = (title: string) => rolesGrantedByPosition({
+    title, areaName: 'Sede Pedregal Jueves', areaType: 'committee', parentAreaName: 'Sedes',
+  })
+
+  it('Coordinador de Información da lo mismo que Coordinador Información', () => {
+    expect(sede('Coordinador de Información')).toContain('encargado_eventos')
+    expect(sede('Coordinador Información')).toContain('encargado_eventos')
+  })
+
+  it('lo mismo con Bienvenida, escrito de las dos formas', () => {
+    expect(sede('Colaborador de Bienvenida')).toContain('encargado_eventos')
+    expect(sede('Colaborador Bienvenida')).toContain('encargado_eventos')
+  })
+
+  it('quitar el artículo NO abre la puerta a puestos que no operan el evento', () => {
+    for (const t of ['Colaborador de Comida', 'Coordinador de Hospitalidad', 'Colaborador de Montaje', 'Colaborador GR Pz']) {
+      expect(sede(t)).not.toContain('encargado_eventos')
+    }
+  })
+
+  it('sigue sin dar nada fuera de un comité de sede', () => {
+    expect(rolesGrantedByPosition({
+      title: 'Coordinador de Información', areaName: 'Comité Sports', areaType: 'committee', parentAreaName: 'Área Operaciones',
+    })).not.toContain('encargado_eventos')
+  })
+})

@@ -21,9 +21,22 @@ export type PositionRoleRule = {
 }
 
 /** minúsculas, sin acentos, espacios recortados — para comparar títulos con
- *  variantes de escritura ("Colaborador Bienvenida" / "Colaborador de Bienvenida"). */
+ *  variantes de escritura. */
 function norm(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
+}
+
+/** Como norm(), pero además SIN artículos: "Coordinador de Información" y
+ *  "Coordinador Información" son el mismo puesto.
+ *
+ *  Antes la lista de abajo repetía cada título con "de" y sin "de", y bastaba
+ *  con que alguien creara una variante nueva para que el puesto dejara de dar
+ *  el permiso en silencio. Pasó el 2026-09-10: "Coordinador de Información",
+ *  recién creado en Sede Pedregal Jueves, no daba check-in aunque
+ *  "Coordinador Información" sí. Comparar sin artículos cierra esa clase
+ *  entera de error en vez de tapar el caso. */
+function normSinArticulos(s: string): string {
+  return norm(s).replace(/\b(de|del|la|el|los|las)\b/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 /** Puestos de una sede que operan el evento: logística, anfitriones, bienvenida
@@ -34,18 +47,17 @@ function norm(s: string): string {
  *  coordinador, así que las 36 personas de la mesa de información no recibían el
  *  rol y su jefe sí. Se incluyen también los títulos "Información/Anuncios", que
  *  son la misma mesa en las sedes que juntaron las dos funciones. */
+// Se comparan con normSinArticulos, así que van UNA vez: la variante con "de"
+// matchea sola.
 const SEDE_EVENTOS_TITLES = new Set([
   'logistica',
   'asistente logistica',
   'anfitrion',
   'colaborador bienvenida',
-  'colaborador de bienvenida',
   'coordinador bienvenida',
   'colaborador informacion',
-  'colaborador de informacion',
-  'colaborador informacion/anuncios',
-  'colaborador de informacion/anuncios',
   'coordinador informacion',
+  'colaborador informacion/anuncios',
 ])
 
 /** Un comité de sede: cuelga del área "Sedes", o se llama "Sede X".
@@ -73,7 +85,7 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
     description:
       'Puestos que operan el evento en los comités de sede: Logística, Asistente Logística, ' +
       'Anfitrión, Colaborador/Coordinador Bienvenida y Coordinador Información.',
-    matches: (ctx) => esComiteDeSede(ctx) && SEDE_EVENTOS_TITLES.has(norm(ctx.title)),
+    matches: (ctx) => esComiteDeSede(ctx) && SEDE_EVENTOS_TITLES.has(normSinArticulos(ctx.title)),
   },
   {
     role: 'encargado_eventos',
