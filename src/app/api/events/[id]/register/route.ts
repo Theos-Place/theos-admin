@@ -8,7 +8,7 @@ import {
   PaymentRequiredError, EventFullError, AlreadyRegisteredError,
 } from '@/lib/supabase/queries/events'
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
-import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
+import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
 import { montoAPagar, comprobanteRequerido, type Descuento } from '@/lib/events/registration-payment'
 
 // Quién puede inscribir A OTRO desde acá (mismos roles que gestionan
@@ -128,6 +128,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ ...res, pricing, comprobante_recibido: comprobanteRequerido(aPagar) }, { status: 201 })
   } catch (error) {
+    // FIN-6 · La referencia ya estaba registrada: es un 409 con
+    // instrucciones, no un error interno mudo.
+    if (error instanceof ReferenciaYaUsada) {
+      return NextResponse.json({ error: error.message, code: 'referencia_repetida' }, { status: 409 })
+    }
     if (error instanceof PaymentRequiredError) return NextResponse.json({ error: error.message }, { status: 422 })
     if (error instanceof AlreadyRegisteredError) return NextResponse.json({ error: error.message }, { status: 409 })
     if (error instanceof EventFullError) return NextResponse.json({ error: error.message }, { status: 409 })

@@ -3,7 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
+import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
 import { EVENT_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 
 // Mismos roles que gestionan event_registrations desde el panel de staff.
@@ -54,6 +54,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!result) return NextResponse.json({ error: 'No se encontró la inscripción.' }, { status: 404 })
     return NextResponse.json({ ok: true, id: result.id }, { status: 201 })
   } catch (error) {
+    // FIN-6 · La referencia ya estaba registrada: es un 409 con
+    // instrucciones, no un error interno mudo.
+    if (error instanceof ReferenciaYaUsada) {
+      return NextResponse.json({ error: error.message, code: 'referencia_repetida' }, { status: 409 })
+    }
     if (error instanceof Error && error.message === 'COMPROBANTE_EN_REVISION') {
       return NextResponse.json(
         { error: 'Ya hay un comprobante en revisión para esta inscripción. Esperá el resultado antes de subir otro.' },

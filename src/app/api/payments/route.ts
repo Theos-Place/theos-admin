@@ -4,7 +4,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
+import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
 
 // POST (multipart): sube el comprobante (screenshot) al bucket privado y adjunta el
 // pago de la matrícula (actualiza el pago pendiente auto-creado o crea uno).
@@ -84,6 +84,11 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ ok: true, id: result.id }, { status: 201 })
   } catch (error) {
+    // FIN-6 · La referencia ya estaba registrada: es un 409 con
+    // instrucciones, no un error interno mudo.
+    if (error instanceof ReferenciaYaUsada) {
+      return NextResponse.json({ error: error.message, code: 'referencia_repetida' }, { status: 409 })
+    }
     if (error instanceof Error && error.message === 'COMPROBANTE_EN_REVISION') {
       return NextResponse.json(
         { error: 'Ya hay un comprobante en revisión para esta matrícula. Esperá el resultado antes de subir otro.' },

@@ -9,6 +9,7 @@ import {
 import { nombreDelSucesor } from '@/lib/studies/successor-name'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
+import { revisarReferencia, tieneReferenciaComparable } from '@/lib/finance/referencia-repetida'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -41,6 +42,15 @@ export type PaymentQueueRow = {
 
 /** Crea un pago por comprobante en estado de revisión. status='pending' (finanzas)
  *  + review_status='en_revision' (flujo de comprobante). */
+/** Un comprobante que no se acepta porque su referencia ya está registrada.
+ *  Lleva `code` para que la ruta responda 409 y la pantalla diga qué hacer. */
+export class ReferenciaYaUsada extends Error {
+  constructor(mensaje: string, public pagoExistente: string) {
+    super(mensaje)
+    this.name = 'ReferenciaYaUsada'
+  }
+}
+
 export async function createComprobantePayment(input: {
   member_id: string
   amount: number
@@ -54,6 +64,32 @@ export async function createComprobantePayment(input: {
   currency?: string
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
+
+  // FIN-6 · El mismo comprobante, dos veces. Desde que el comprobante se
+  // acepta al subirlo casi ninguno pasa por revisión humana, así que este es
+  // el único momento en que alguien puede mirar. Sin esto, Adriana y Raquel
+  // quedaron con ₡10.000 pagados habiendo transferido ₡5.000.
+  //
+  // La misma referencia para OTRA persona no se toca: es una familia pagando
+  // junta con una sola transferencia, y eso es legítimo.
+  if (tieneReferenciaComparable(input.reference_code)) {
+    const { data: previos } = await supabase
+      .from('payments')
+      .select('id, member_id, amount, status, review_status, description, created_at')
+      .eq('reference_code', input.reference_code)
+    const verdicto = revisarReferencia(
+      { member_id: input.member_id, amount: input.amount },
+      ((previos ?? []) as Array<{
+        id: string; member_id: string | null; amount: number; status: string
+        review_status: string | null; description: string | null; created_at: string | null
+      }>).map(x => ({ ...x, descripcion: x.description, creado: x.created_at })),
+    )
+    if (verdicto.nivel === 'bloqueo') {
+      throw new ReferenciaYaUsada(verdicto.mensaje, verdicto.pagoExistente)
+    }
+    if (verdicto.nivel === 'aviso') console.warn('referencia compartida:', verdicto.mensaje)
+  }
+
   const { data, error } = await supabase
     .from('payments')
     .insert({
