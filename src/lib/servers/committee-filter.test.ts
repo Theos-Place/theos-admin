@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filtrarServidores, puestosDisponibles , agruparPorPersona } from './committee-filter'
+import { filtrarServidores, puestosDisponibles, agruparPorPersona, conteoDelComite, textoDelConteo } from './committee-filter'
 
 const gente = [
   { name: 'Ana Mora', status: 'active' },
@@ -152,5 +152,49 @@ describe('agruparPorPersona', () => {
 
   it('sin nadie devuelve vacío', () => {
     expect(agruparPorPersona([])).toEqual([])
+  })
+})
+
+describe('conteoDelComite', () => {
+  const s = (member_id: string, name: string, status: 'active' | 'inactive' = 'active') =>
+    ({ member_id, name, status })
+
+  it('el caso de Sede Madrid: 47 puestos no son 47 personas', () => {
+    // Reportado por Sofía el 2026-09-10.
+    const conMuchosPuestos = [
+      s('a', 'Ana'), s('a', 'Ana'), s('a', 'Ana'),
+      s('b', 'Beto'), s('b', 'Beto'),
+      s('c', 'Caro'),
+    ]
+    expect(conteoDelComite(conMuchosPuestos)).toEqual({ puestos: 6, personas: 3 })
+  })
+
+  it('los inactivos no cuentan en ninguno de los dos', () => {
+    expect(conteoDelComite([s('a', 'Ana'), s('b', 'Beto', 'inactive')]))
+      .toEqual({ puestos: 1, personas: 1 })
+  })
+
+  it('alguien con un puesto activo y otro dado de baja cuenta una vez', () => {
+    expect(conteoDelComite([s('a', 'Ana'), s('a', 'Ana', 'inactive')]))
+      .toEqual({ puestos: 1, personas: 1 })
+  })
+
+  it('comité vacío', () => {
+    expect(conteoDelComite([])).toEqual({ puestos: 0, personas: 0 })
+  })
+})
+
+describe('textoDelConteo', () => {
+  it('dice los dos números cuando difieren', () => {
+    expect(textoDelConteo({ puestos: 47, personas: 31 })).toBe('31 personas en 47 puestos')
+  })
+
+  it('no repite el mismo número dos veces', () => {
+    expect(textoDelConteo({ puestos: 12, personas: 12 })).toBe('12 personas')
+  })
+
+  it('singular', () => {
+    expect(textoDelConteo({ puestos: 1, personas: 1 })).toBe('1 persona')
+    expect(textoDelConteo({ puestos: 3, personas: 1 })).toBe('1 persona en 3 puestos')
   })
 })

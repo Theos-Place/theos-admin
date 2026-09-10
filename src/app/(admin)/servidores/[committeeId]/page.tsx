@@ -20,6 +20,7 @@ import { VacanciesTab } from './_components/VacanciesTab'
 import { GoalsTab } from './_components/GoalsTab'
 import { seOcultaDelBuscador, candidaturaEnComite, puestosQueSePuedenSumar } from '@/lib/servers/reintegro'
 import { Modal } from '@/components/shared/Modal'
+import { conteoDelComite, textoDelConteo } from '@/lib/servers/committee-filter'
 import {
   DisconnectModal,
   EditCommitteeModal,
@@ -149,10 +150,11 @@ export default function CommitteeDetailPage() {
     [displayedMembers, committee],
   )
 
-  const activeCount = useMemo(
-    () => allCommitteeMembers.filter(m => m.status === 'active').length,
-    [allCommitteeMembers]
-  )
+  // Puestos Y personas: contar filas decía "47 servidores activos" en Sede
+  // Madrid cuando no son 47 personas, sino 47 puestos repartidos entre menos
+  // gente (reportado por Sofía, 2026-09-10).
+  const conteo = useMemo(() => conteoDelComite(allCommitteeMembers), [allCommitteeMembers])
+  const activeCount = conteo.personas
 
   /** Registros del comité en el vocabulario de la regla pura. */
   const registrosDelComite = useMemo(
@@ -391,6 +393,7 @@ export default function CommitteeDetailPage() {
         committee={committee}
         committeeOverride={committeeOverride}
         activeCount={activeCount}
+        conteoTexto={textoDelConteo(conteo)}
         onBack={() => router.push('/servidores')}
         onEditClick={() => {
           setCommitteeForm({

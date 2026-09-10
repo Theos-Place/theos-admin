@@ -92,3 +92,31 @@ export function agruparPorPersona<T extends ServidorFiltrable & { member_id: str
   }
   return [...porPersona.values()]
 }
+
+/**
+ * Cuántos PUESTOS ocupados y cuántas PERSONAS hay en un comité.
+ *
+ * Sofía lo reportó el 2026-09-10 sobre Sede Madrid: el encabezado decía "47
+ * servidores activos" y no eran 47 personas — eran 47 puestos, porque hay
+ * gente con más de uno. El número mentía sobre el tamaño del equipo.
+ *
+ * Los dos números sirven y por eso se muestran los dos: puestos es lo que hay
+ * que cubrir, personas es a cuánta gente hay que convocar.
+ */
+export function conteoDelComite(
+  servidores: readonly (ServidorFiltrable & { member_id: string })[],
+): { puestos: number; personas: number } {
+  const activos = servidores.filter(s => s.status === 'active')
+  return {
+    puestos: activos.length,
+    personas: new Set(activos.map(s => s.member_id)).size,
+  }
+}
+
+/** Cómo se lee en el encabezado. Cuando cada quien tiene un solo puesto los dos
+ *  números son iguales y repetirlos sobra, así que se dice uno. */
+export function textoDelConteo(c: { puestos: number; personas: number }): string {
+  const personas = `${c.personas} ${c.personas === 1 ? 'persona' : 'personas'}`
+  if (c.puestos === c.personas) return `${personas}`
+  return `${personas} en ${c.puestos} puestos`
+}

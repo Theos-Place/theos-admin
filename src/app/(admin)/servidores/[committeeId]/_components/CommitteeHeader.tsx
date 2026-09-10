@@ -8,6 +8,8 @@ type Props = {
   committee: CommitteeData
   committeeOverride: Partial<CommitteeData>
   activeCount: number
+  /** "31 personas en 47 puestos" — los dos números, porque no son lo mismo. */
+  conteoTexto?: string
   onEditClick: () => void
   onAddServerClick: () => void
   onBack: () => void
@@ -17,6 +19,7 @@ export function CommitteeHeader({
   committee,
   committeeOverride,
   activeCount,
+  conteoTexto,
   onEditClick,
   onAddServerClick,
   onBack,
@@ -35,7 +38,7 @@ export function CommitteeHeader({
         <div>
           <h1 className="ptitle">{committeeOverride.name ?? committee.name}</h1>
           <div className="psub">
-            {committeeOverride.area ?? committee.area} · {activeCount} servidor{activeCount !== 1 ? 'es' : ''} activo{activeCount !== 1 ? 's' : ''}
+            {committeeOverride.area ?? committee.area} · {conteoTexto ?? `${activeCount} activos`}
           </div>
           {/* Encargado del comité (areas.leader_id) */}
           <div className="mt-3">
