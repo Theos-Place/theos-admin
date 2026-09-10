@@ -54,3 +54,23 @@ export function motivoQueImpide(cambio: CambioDeEstado): string | null {
 export function puedeCambiarEstado(cambio: CambioDeEstado): boolean {
   return motivoQueImpide(cambio) === null
 }
+
+/**
+ * EST-6 vs. el cambio de estado a mano: las dos decisiones convivían mal.
+ *
+ * EST-6 (anterior) dejó las solicitudes de INTERÉS como datos de demanda de
+ * solo lectura, y el API rechazaba CUALQUIER acción sobre ellas. El cambio de
+ * estado a mano se agregó después (2026-09-08) justamente para ellas — nacían
+ * 'open' y no había cómo cerrarlas — pero el guard de EST-6 lo mataba antes de
+ * llegar: código inalcanzable, y la coordinadora viendo "no se gestionan" al
+ * intentar lo único que sí podía hacer.
+ *
+ * La regla real: en una solicitud de interés no se GESTIONA (no se toma, no se
+ * asigna, no se rechaza con el flujo, no se resuelve matriculando), pero su
+ * estado SÍ se mueve. Son cosas distintas.
+ */
+const GESTION = new Set(['take', 'assign', 'resolve', 'reject'])
+
+export function esAccionDeGestion(action: unknown): boolean {
+  return typeof action === 'string' && GESTION.has(action)
+}

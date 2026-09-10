@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { puedeCambiarEstado, motivoQueImpide, estadosDestino } from './request-status-change'
+import { puedeCambiarEstado, motivoQueImpide, estadosDestino, esAccionDeGestion } from './request-status-change'
 
 const interes = (from: string, to: string) => ({ requestType: 'study_interest', from, to })
 const reubic = (from: string, to: string) => ({ requestType: 'relocation', from, to })
@@ -53,5 +53,22 @@ describe('estadosDestino', () => {
   })
   it('el interés sí', () => {
     expect(estadosDestino('study_interest')).toContain('resolved')
+  })
+})
+
+describe('esAccionDeGestion (EST-6 vs. cambio de estado)', () => {
+  it('tomar, asignar, resolver y rechazar son gestión', () => {
+    for (const a of ['take', 'assign', 'resolve', 'reject']) {
+      expect(esAccionDeGestion(a)).toBe(true)
+    }
+  })
+
+  it('cambiar el estado a mano NO es gestión: existe justo para los intereses', () => {
+    expect(esAccionDeGestion('set_status')).toBe(false)
+  })
+
+  it('no revienta con basura', () => {
+    expect(esAccionDeGestion(undefined)).toBe(false)
+    expect(esAccionDeGestion(42)).toBe(false)
   })
 })

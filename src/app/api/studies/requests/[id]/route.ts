@@ -4,7 +4,7 @@ import {
   updateStudyRequestStatus, assignStudyRequest, resolveStudyRequest, isStudyCommitteeMember,
 } from '@/lib/supabase/queries/study-requests'
 import { requestQueueScope, canAssignRequests, canWorkRequest } from '@/lib/studies/request-assignment'
-import { motivoQueImpide, ESTADOS_MOVIBLES } from '@/lib/studies/request-status-change'
+import { motivoQueImpide, ESTADOS_MOVIBLES, esAccionDeGestion } from '@/lib/studies/request-status-change'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyRequestStatus } from '@/types/study'
 
@@ -37,15 +37,20 @@ export async function PATCH(
     const body = await req.json()
 
     // EST-6 (decisión confirmada): las solicitudes de INTERÉS son datos de
-    // demanda de solo lectura — sin tomar/asignar/resolver/rechazar. Solo las
-    // de reubicación mantienen el flujo de gestión.
-    {
+    // demanda — no se toman, ni se asignan, ni se resuelven ni se rechazan con
+    // el flujo. Solo las de reubicación mantienen la gestión.
+    //
+    // Pero su ESTADO sí se mueve: `set_status` se agregó (2026-09-08)
+    // exactamente para ellas, que nacían 'open' sin forma de cerrarlas. Este
+    // guard lo mataba antes de llegar — la coordinación veía "no se gestionan"
+    // al intentar lo único que sí podía hacer. Ver esAccionDeGestion.
+    if (esAccionDeGestion(body?.action)) {
       const supabase = (await import('@/lib/supabase/admin')).createAdminClient()
       const { data: reqRow } = await supabase
         .from('study_requests').select('request_type').eq('id', id).maybeSingle()
       if ((reqRow as { request_type?: string } | null)?.request_type === 'study_interest') {
         return NextResponse.json(
-          { error: 'Las solicitudes de interés son informativas (datos de demanda) y no se gestionan.', code: 'solo_lectura' },
+          { error: 'Las solicitudes de interés son informativas (datos de demanda) y no se gestionan. Su estado sí se puede cambiar a mano.', code: 'solo_lectura' },
           { status: 400 },
         )
       }
