@@ -97,9 +97,17 @@ podés revisar de un vistazo quién quedó dónde.
 
 ## Si es una persona nueva
 
-Primera visita, no aparece en la búsqueda: tocá **Agregar persona nueva** y llenás lo
-básico (nombre y apellidos; lo demás es opcional) sin salir del check-in. Si le anotás el
-correo, le llega una invitación para crear su cuenta.
+Primera visita, no aparece en la búsqueda: tocá **Agregar persona nueva** —el botón está
+siempre a la vista, no hace falta escribir el nombre primero— y llenás lo básico sin salir
+del check-in.
+
+Lo que pide: **nombre, apellidos y correo**. El correo es obligatorio porque con él se le
+crea la cuenta para que después entre solo. **La cédula es opcional**: no se frena la fila
+por un documento, y el sistema se lo vuelve a pedir más adelante.
+
+Si el documento o el correo ya son de otra persona, la pantalla te lo dice con el nombre de
+quién: casi siempre significa que sí está en el sistema y hay que buscarla en vez de crear
+un duplicado.
 
 ## Cosas que confunden
 
@@ -109,6 +117,11 @@ volver a registrar sin problema.
 **¿Participante o Servidor?** Servidor es solo para servidores activos del comité que
 organiza — el sistema mismo lo valida y esconde el botón si no aplica. Ante la duda:
 Participante.
+
+La elección **queda guardada** y el reporte del evento la separa: "187 asistentes · de los
+cuales 30 servidores". Servir NO le quita asistencia a nadie: quien atendió la mesa estuvo
+en la charla igual que quien se sentó a escucharla, y cuenta para su elegibilidad de
+estudios como cualquier otra.
 
 **La charla ya terminó y faltó gente por registrar.** La ventana de check-in dura hasta
 4 horas después del fin. Pasado eso, buscá el evento por nombre en el selector: el sistema

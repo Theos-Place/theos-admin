@@ -152,32 +152,47 @@ export const flujo: TutorialFlow = {
     await t.pause(1200)
     await t.shot('05-registrado')
 
-    // 6 · Una familia llega: el papá al evento, el hijo al subevento
+    // 6 · Llega alguien que NO está en el sistema: se crea ahí mismo.
+    //     Se graba porque es el caso cotidiano de una charla y porque el botón
+    //     ahora está SIEMPRE a la vista (antes había que escribir el nombre
+    //     para que apareciera) y la cédula dejó de ser obligatoria.
+    await t.fill('input[placeholder*="Buscar por nombre"]', 'Rosa Visitante')
+    await t.pause(700)
+    await t.badge(6)
+    await t.click(t.page.getByRole('button', { name: /Agregar persona nueva/ }))
+    await t.page.getByPlaceholder('Nombre').first().waitFor({ timeout: 15_000 })
+    await t.fill('#np-first', 'Rosa')
+    await t.fill('#np-last', 'Visitante')
+    await t.fill('#np-email', 'rosa.visitante@prueba.theosplace.invalid')
+    await t.pause(800)
+    await t.shot('06-persona-nueva')
+
+    // 7 · Una familia llega: el papá al evento, el hijo al subevento
     await t.fill('input[placeholder*="Buscar por nombre"]', 'Familia')
     await t.page.getByText(FABIAN).filter({ visible: true }).first().waitFor({ timeout: 15_000 })
     await t.click(t.page.getByText(FABIAN).filter({ visible: true }).first())
     await t.page.getByText('viene con familia').first().waitFor({ timeout: 15_000 })
-    await t.badge(6)
+    await t.badge(7)
     await t.pause(1000)
-    await t.shot('06-familia')
+    await t.shot('07-familia')
     // Marcar al hijo y mandarlo al cuidado de niños
     await t.click(t.page.getByRole('checkbox', { name: /Felipe/ }))
     await t.click(t.page.getByRole('radiogroup', { name: /Felipe/ }).getByRole('radio', { name: SUBEVENTO }))
     await t.pause(600)
-    await t.shot('07-subevento')
+    await t.shot('08-subevento')
 
-    // 7 · Registrar a los dos → cada quien queda en su destino
-    await t.badge(7)
+    // 8 · Registrar a los dos → cada quien queda en su destino
+    await t.badge(8)
     await t.click(t.page.getByRole('button', { name: /Registrar 2/ }))
     await t.page.getByText('viene con familia').waitFor({ state: 'detached', timeout: 20_000 })
     await t.page.getByText(FABIAN).filter({ visible: true }).first().waitFor({ timeout: 15_000 })
     await t.pause(1000)
-    await t.shot('08-registrados')
+    await t.shot('09-registrados')
     // El hijo quedó en el subevento: cambiar el chip para verlo
     await t.click(t.page.getByRole('button', { name: SUBEVENTO }))
     await t.page.getByText(FELIPE).filter({ visible: true }).first().waitFor({ timeout: 15_000 })
     await t.pause(1500)
-    await t.shot('09-subevento-lista')
+    await t.shot('10-subevento-lista')
   },
 
   async teardown(admin) {

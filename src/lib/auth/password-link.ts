@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/provider'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { linkAttemptOrder, shouldTryOtherKind, type PasswordLinkKind } from '@/lib/auth/password-link-plan'
+import { planDeEnlace, type FichaConCorreo } from '@/lib/auth/enlace-de-cuenta'
+import { patronDeCorreo, esMismoCorreo } from '@/lib/email/correo-exacto'
 
 export type { PasswordLinkKind }
 
@@ -112,6 +114,38 @@ function body(kind: PasswordLinkKind, link: string, nombre: string | null): stri
 </p>`
 }
 
+/** Enlaza la ficha con la cuenta de Auth que 'invite' acaba de crear.
+ *  Sin esto la persona define su contraseña, entra, y `getAuthContext` no le
+ *  encuentra perfil (resuelve por auth_user_id). No lanza nunca: el correo con
+ *  el enlace vale más que el enlace de la ficha, que se puede rehacer después. */
+async function enlazarFichaConLaCuenta(email: string): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: usuarios } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    // generateLink no devuelve el id del usuario: se busca por correo.
+    const authUserId = usuarios?.users.find(u => esMismoCorreo(u.email, email))?.id
+    if (!authUserId) return
+    const { data: fichas } = await supabase
+      .from('members').select('id, auth_user_id').ilike('email', patronDeCorreo(email))
+    const { data: dueno } = await supabase
+      .from('members').select('id').eq('auth_user_id', authUserId).maybeSingle()
+    const plan = planDeEnlace(
+      (fichas ?? []) as FichaConCorreo[],
+      authUserId,
+      (dueno as { id: string } | null)?.id ?? null,
+    )
+    if (plan.accion !== 'enlazar') {
+      if (plan.motivo !== 'ya_enlazada') console.warn('enlace de cuenta omitido:', plan.motivo, email)
+      return
+    }
+    const { error } = await supabase
+      .from('members').update({ auth_user_id: authUserId }).eq('id', plan.memberId)
+    if (error) console.error('no se pudo enlazar auth_user_id:', error.message)
+  } catch (e) {
+    console.error('enlazarFichaConLaCuenta:', e instanceof Error ? e.message : e)
+  }
+}
+
 /** Manda el enlace por SES. `{ sent: false }` si el correo no tiene cuenta —
  *  el caller responde igual en los dos casos, para no revelar quién existe. */
 export async function sendPasswordLink(input: {
@@ -122,6 +156,8 @@ export async function sendPasswordLink(input: {
 }): Promise<{ sent: boolean; reason?: string; kind?: PasswordLinkKind }> {
   const link = await buildPasswordLink(input.email, input.tieneCuenta)
   if (!link) return { sent: false, reason: 'sin_cuenta' }
+  // 'invite' creó la cuenta de Auth: la ficha tiene que quedar apuntando a ella.
+  if (link.kind === 'invite') await enlazarFichaConLaCuenta(input.email)
   try {
     await sendEmail({
       to: { email: input.email, name: input.nombre ?? input.email },
