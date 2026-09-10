@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { eventOrganizingCommitteeIds, memberServesAnyCommittee } from '@/lib/supabase/queries/events'
+import { eventOrganizingCommitteeIds, calificaComoServidor } from '@/lib/supabase/queries/events'
 
 // GET: ¿el miembro es servidor activo de algún comité organizador del evento?
 // ?member_id=<uuid> → { hasCommittees, isServer }
@@ -16,7 +16,9 @@ export async function GET(
     if (!memberId) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })
     const committeeIds = await eventOrganizingCommitteeIds(id)
     const hasCommittees = committeeIds.length > 0
-    const isServer = hasCommittees ? await memberServesAnyCommittee(memberId, committeeIds) : false
+    // MISMA función que aplica el check-in: la pantalla no puede ofrecer algo
+    // que el servidor después va a corregir, ni al revés.
+    const isServer = await calificaComoServidor(memberId, id)
     return NextResponse.json({ hasCommittees, isServer })
   } catch (error) {
     console.error('GET /api/events/[id]/server-check:', error)

@@ -783,6 +783,25 @@ export async function memberServesCommittee(memberId: string, committee: string)
 }
 
 /** ¿El miembro sirve en ALGUNO de los comités dados? Sin comités → permisivo (true). */
+/**
+ * ¿Esta persona califica como SERVIDOR de este evento?
+ *
+ * Un evento SIN comités organizadores no tiene servidores: no hay contra qué
+ * comparar. memberServesAnyCommittee es permisivo con la lista vacía —así lo
+ * necesita el alta de voluntarios— y ese `true` no sirve para la etiqueta.
+ *
+ * Existe porque la condición estaba copiada en tres lugares y a uno se le
+ * había olvidado: createCheckin dejaba pasar como servidor a cualquiera en un
+ * evento sin comités, y por ahí se podía inflar el conteo con un POST a mano
+ * (encontrado por scripts/pruebas/gate-servidor-checkin.ts, 2026-09-10).
+ */
+export async function calificaComoServidor(memberId: string | null, eventId: string): Promise<boolean> {
+  if (!memberId) return false
+  const comites = await eventOrganizingCommitteeIds(eventId)
+  if (comites.length === 0) return false
+  return memberServesAnyCommittee(memberId, comites)
+}
+
 export async function memberServesAnyCommittee(memberId: string, committeeIds: string[]): Promise<boolean> {
   const ids = committeeIds.filter(Boolean)
   if (ids.length === 0) return true // evento sin comités organizadores → permisivo
@@ -925,10 +944,8 @@ export async function createCheckin(
   // la persona SÍ estuvo, y perder su asistencia por una etiqueta sería peor
   // que corregir la etiqueta.
   let calidad = input.checked_in_as === 'servidor' ? 'servidor' : 'asistente'
-  if (calidad === 'servidor') {
-    const comites = await eventOrganizingCommitteeIds(eventId)
-    const califica = !!input.member_id && await memberServesAnyCommittee(input.member_id, comites)
-    if (!califica) calidad = 'asistente'
+  if (calidad === 'servidor' && !(await calificaComoServidor(input.member_id ?? null, eventId))) {
+    calidad = 'asistente'
   }
 
   const { data, error } = await supabase

@@ -3818,11 +3818,24 @@ DOS formas de llegar al padrón —armar la URL a mano o pasarle
 blanca. Verificado en el navegador con lider_comite: padrón 403, lookup 200 con
 8 resultados, y el buscador global vuelve a encontrar gente.
 
-#### [ ] SRV-1 · Terminar los tests del gate de servidor en el check-in
+#### [x] SRV-1 · Tests del gate de servidor en el check-in — HECHO 2026-09-10
 
-Quedaron a medias: falta el caso de que el POST rechace como servidor a quien no
-sirve en los comités organizadores del evento. La revalidación existe y está en
-`createCheckin`; lo que falta es el test de punta a punta.
+`scripts/pruebas/gate-servidor-checkin.ts`: monta un comité, un evento y tres
+personas (una sirve, otra no, otra sirvió pero está inactiva), corre el
+check-in contra la base real y limpia todo. Va contra la base y no con mocks
+porque la regla vive en una consulta: un test con mocks probaría el mock.
+
+**Y encontró un hueco real.** En un evento SIN comités organizadores,
+`memberServesAnyCommittee` devuelve `true` —es permisivo con la lista vacía,
+así lo necesita el alta de voluntarios— y `createCheckin` no lo estaba
+guardando. O sea que en esos eventos cualquiera podía entrar como servidor con
+un POST a mano e inflar el conteo. La pantalla nunca lo habría ofrecido:
+server-check sí tenía el guard, así que el cliente y el servidor decían cosas
+distintas.
+
+Arreglado con `calificaComoServidor(memberId, eventId)`, que ahora usan los
+dos. La condición estaba copiada en tres lugares y a uno se le había
+olvidado — por eso vive en una sola función.
 
 ### Bloque B · Datos sucios
 
