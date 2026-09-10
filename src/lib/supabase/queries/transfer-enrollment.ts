@@ -68,9 +68,22 @@ export async function transferEnrollment(input: {
   /** Quién lo hace: va en la traza del pago. */
   actorMemberId: string | null
   actorNombre: string
+  /**
+   * ¿Se le cobra la diferencia si el destino es más caro?
+   *
+   * true (default) para la acción directa del coordinador: mover a alguien a
+   * un estudio de ₡20.000 habiendo pagado ₡5.000 deja ₡15.000 por cobrar.
+   *
+   * false para las REUBICACIONES, que conservan su regla: cambiar de grupo
+   * porque el sistema o el horario obligaron no es motivo para cobrarle más
+   * a la persona (decisión 2026-09-08, caso Valeria Astorga). El pago igual
+   * viaja; lo que no se genera es el cobro extra.
+   */
+  cobrarDiferencia?: boolean
 }): Promise<ResultadoTransferencia> {
   const sb = createAdminClient()
   const { memberId, desdeGroupId, haciaGroupId, actorMemberId, actorNombre } = input
+  const cobrarDiferencia = input.cobrarDiferencia ?? true
 
   const [origen, destino] = await Promise.all([leerGrupo(desdeGroupId), leerGrupo(haciaGroupId)])
   if (!origen) throw new TransferenciaBloqueada('origen_no_existe', 'El grupo de origen no existe.')
@@ -140,7 +153,7 @@ export async function transferEnrollment(input: {
     if (error) console.error('transferEnrollment: no se pudo mover el pago', pagoId, error.message)
   }
 
-  if (plan.cobrar > 0) {
+  if (plan.cobrar > 0 && cobrarDiferencia) {
     const { error } = await sb.from('payments').insert({
       member_id: memberId, amount: plan.cobrar, currency: destino.currency ?? 'CRC',
       payment_method: 'comprobante', concept: 'matricula', entity_type: 'study_group',
@@ -160,8 +173,10 @@ export async function transferEnrollment(input: {
     desde_grupo: origen.name,
     hacia_grupo: destino.name,
     pagos_movidos: plan.mover.length,
-    cobro_creado: plan.cobrar,
+    cobro_creado: cobrarDiferencia ? plan.cobrar : 0,
     saldo_a_favor: plan.saldoAFavor,
-    mensaje: plan.mensaje,
+    mensaje: !cobrarDiferencia && plan.cobrar > 0
+      ? 'Su pago se traslada a la matrícula nueva. No se le cobra la diferencia: es una reubicación.'
+      : plan.mensaje,
   }
 }

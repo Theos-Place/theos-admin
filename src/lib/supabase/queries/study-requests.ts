@@ -442,23 +442,45 @@ export async function resolveStudyRequest(
     throw new Error('YA_MATRICULADO')
   }
 
-  // Transfiere la inscripción actual (si había una activa) al grupo destino.
-  // QA 2026-07-17: si esta escritura falla hay que abortar ANTES de matricular
-  // — seguir dejaba al miembro activo en dos grupos a la vez.
-  if (row.current_group_id) {
-    const { error: trErr } = await supabase
-      .from('study_enrollments')
-      .update({ status: 'transferred', transferred_to: targetGroupId, updated_at: new Date().toISOString() })
-      .eq('group_id', row.current_group_id)
-      .eq('member_id', row.member_id)
-      .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
-    if (trErr) throw trErr
-  }
-
   let enrollmentId: string
   let folletoRequestId: string | null = null
 
-  if (row.wants_folleto) {
+  // MISMA mecánica que la acción directa "Mover de grupo" (2026-09-10): cerrar
+  // el origen como 'transferred', abrir el destino y llevarse el pago. Antes
+  // esto vivía duplicado acá y el pago NO viajaba — se resolvía matriculando
+  // 'sinCobro', que evitaba el cobro doble pero dejaba el pago colgando de la
+  // matrícula vieja. Ahora viaja de verdad.
+  //
+  // cobrarDiferencia: false — una reubicación no le cobra más a la persona
+  // aunque el destino sea más caro. Esa parte de la regla NO cambia.
+  const yaTransferido = row.current_group_id
+    ? await (async () => {
+        const { transferEnrollment, TransferenciaBloqueada } = await import('./transfer-enrollment')
+        try {
+          const r = await transferEnrollment({
+            memberId: row.member_id,
+            desdeGroupId: row.current_group_id!,
+            haciaGroupId: targetGroupId,
+            actorMemberId: resolverMemberId,
+            actorNombre: 'la resolución de la reubicación',
+            cobrarDiferencia: false,
+          })
+          return r.enrollment_id
+        } catch (e) {
+          // Si no había matrícula activa que mover, no es un error: la
+          // reubicación sigue por el camino normal y matricula de cero.
+          if (e instanceof TransferenciaBloqueada && (e.code === 'sin_matricula' || e.code === 'matricula_inactiva')) {
+            return null
+          }
+          throw e
+        }
+      })()
+    : null
+
+  if (yaTransferido && !row.wants_folleto) {
+    // Ya quedó matriculada y con su pago movido: no hay nada más que hacer.
+    enrollmentId = yaTransferido
+  } else if (row.wants_folleto) {
     const { data: g } = await supabase
       .from('study_groups')
       .select('plan:study_plans!study_groups_plan_id_fkey(id, code, cost, currency)')
