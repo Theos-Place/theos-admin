@@ -3663,7 +3663,22 @@ y el catálogo decía miércoles. El catálogo tenía razón; la serie se movió
 ```
 
 
-### [ ] DAT-1 · 65 fichas activas con fecha de nacimiento imposible
+### [x] DAT-1 · 65 fichas con fecha de nacimiento imposible — RESUELTO 2026-09-10
+
+> **CÓMO SE RESOLVIÓ.** Se borró la fecha de las **15 genuinamente imposibles**
+> —las que se contradicen con su propia ficha: cónyuge a los 3 años, estudios
+> completados, el año 1194— y se **dejaron intactos a los niños de verdad**.
+> Decisión del usuario.
+>
+> Verificado el 2026-09-10: Adolfo Guiso quedó sin fecha, los 452 niños de 4 a
+> 11 años siguen con la suya, y las ~50 fichas de 1 a 3 años que quedan son
+> bebés reales (crecen y se suman más con el tiempo — no es una cola por
+> vaciar).
+>
+> Lo que casi pasa, y por eso quedó escrito: el pedido inicial era borrarles la
+> fecha a las 65. Medir antes de aplicar mostró **452 niños ya en el padrón** y
+> 34 de los 65 listados como "Hijo/a". Borrar en bloque habría destruido datos
+> de menores reales.
 
 ```
 QUÉ ES. 65 personas activas tienen una fecha de nacimiento que no puede ser: 57
