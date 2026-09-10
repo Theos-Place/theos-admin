@@ -17,6 +17,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { ymdCR } from '@/lib/format'
+import { fechaCR } from '@/lib/fecha-cr'
 import {
   resolveEndDate, closeReminderDue, MAX_CLOSE_REMINDERS_PER_RUN,
   type CloseReminderKind,
@@ -24,11 +25,11 @@ import {
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'
 
-/** Fecha larga en CR. Ancla a mediodía para que una fecha sin hora no se corra de día. */
+/** El ancla a mediodía que había acá funcionaba, pero era un truco que hay que
+ *  recordar en cada archivo — y en enrollment-notify se olvidó. La regla vive
+ *  ahora en un solo lugar, con tests. */
 function fmtDate(dateOnly: string): string {
-  const d = new Date(`${dateOnly}T12:00:00`)
-  if (isNaN(d.getTime())) return dateOnly
-  return d.toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Costa_Rica' })
+  return fechaCR(dateOnly, 'larga-2d') || dateOnly
 }
 
 type Persona = { first_name: string | null; last_name: string | null; email: string | null } | null

@@ -5,12 +5,15 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
+import { fechaCR } from '@/lib/fecha-cr'
 
 const DAY_LABEL: Record<string, string> = { L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo' }
 
+// starts_at es una fecha SIN hora. Convertirla a zona de Costa Rica la
+// retrocedía un día: a Sonia Arias le llegó "28 de septiembre" para un grupo
+// que arranca el 29, un martes. Ver fecha-cr.ts.
 function fmtDate(iso: string | null): string {
-  if (!iso) return 'por confirmar'
-  try { return new Date(iso).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Costa_Rica' }) } catch { return iso }
+  return iso ? (fechaCR(iso, 'larga-2d') || iso) : 'por confirmar'
 }
 function fullName(m: { first_name?: string | null; last_name?: string | null } | null): string {
   return m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : ''

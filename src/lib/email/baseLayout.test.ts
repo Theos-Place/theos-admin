@@ -27,13 +27,17 @@ describe('renderEmail · preheader', () => {
   })
 })
 
-// ── Color del texto de los botones (2026-08-06) ─────────────────────────────
-// El <style> del layout ya lo declara blanco, pero varios clientes lo tiran y
-// pintan el enlace de azul: botón coral con letra azul.
+// ── Estilo de los botones (2026-08-06; ampliado el 2026-09-10) ──────────────
+// El <style> del layout ya los declara, pero varios clientes lo tiran. Antes
+// acá solo se inyectaba el color blanco, y sin la hoja de estilos el botón
+// quedaba texto blanco SIN FONDO — invisible sobre fondo claro. Ahora va el
+// botón completo.
 describe('inlineButtonColors', () => {
-  it('le pone blanco en línea a un botón sin style', () => {
+  it('le pone el botón COMPLETO en línea, no solo el color', () => {
     const out = inlineButtonColors('<a class="cta-button" href="https://x">Ir →</a>')
-    expect(out).toContain('style="color:#ffffff; text-decoration:none;"')
+    expect(out).toContain('color:#ffffff')
+    expect(out).toContain('background-color:#C43635')
+    expect(out).toContain('padding:16px 40px')
     expect(out).toContain('href="https://x"')
   })
 
@@ -55,8 +59,9 @@ describe('inlineButtonColors', () => {
   })
 
   it('renderEmail lo aplica solo', () => {
-    expect(renderEmail('<a class="cta-button" href="https://x">Ir</a>'))
-      .toContain('style="color:#ffffff; text-decoration:none;"')
+    const html = renderEmail('<a class="cta-button" href="https://x">Ir</a>')
+    expect(html).toContain('background-color:#C43635')
+    expect(html).toContain('color:#ffffff')
   })
 })
 
@@ -108,5 +113,39 @@ describe('el logo del encabezado no puede salir gigante en Outlook', () => {
   it('160 × 81 conserva la proporción real del archivo (2526 × 1280)', () => {
     // Si alguien cambia el logo por uno con otra forma, este test avisa.
     expect(Math.round(160 * 1280 / 2526)).toBe(81)
+  })
+})
+
+describe('el botón se tiene que ver aunque el cliente descarte el <style>', () => {
+  // Carlos Andrés (2026-09-10) reportó que "no le llegaba el link" para
+  // cambiar su contraseña. Le llegaba: lo que no llegaba era el BOTÓN. Solo se
+  // inyectaba color:#ffffff inline y el fondo coral venía de la clase, así que
+  // sin la hoja de estilos quedaba texto blanco sin fondo.
+  const html = renderEmail('<div class="cta-wrapper"><a class="cta-button" href="https://x.cr">Cambiar mi contraseña →</a></div>')
+  const boton = html.match(/<a[^>]*class="cta-button"[^>]*>/)![0]
+
+  it('el fondo del botón va inline, no solo en la clase', () => {
+    expect(boton).toContain('background-color:#C43635')
+  })
+
+  it('y con él lo que lo hace parecer un botón', () => {
+    for (const trozo of ['display:inline-block', 'padding:16px 40px', 'border-radius:50px', 'color:#ffffff']) {
+      expect(boton).toContain(trozo)
+    }
+  })
+
+  it('nunca texto blanco sin fondo: si hay color blanco, hay fondo', () => {
+    expect(boton.includes('color:#ffffff') && boton.includes('background-color:')).toBe(true)
+  })
+
+  it('el botón secundario lleva el navy, no el coral', () => {
+    const sec = renderEmail('<a class="cta-secondary" href="https://x.cr">Ver</a>')
+      .match(/<a[^>]*class="cta-secondary"[^>]*>/)![0]
+    expect(sec).toContain('background-color:#161440')
+  })
+
+  it('no pisa un style que la plantilla ya traía', () => {
+    const propio = inlineButtonColors('<a class="cta-button" style="background:#000" href="#">Ir</a>')
+    expect(propio).toContain('style="background:#000"')
   })
 })

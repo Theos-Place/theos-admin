@@ -147,10 +147,45 @@ function hoistPreheader(content: string): { preheader: string; rest: string } {
  * Solo toca los <a> que NO traen ya un style propio: si alguien puso un color a
  * mano, se respeta.
  */
+/**
+ * El botón, escrito ENTERO en el atributo style.
+ *
+ * Antes acá solo se inyectaba `color:#ffffff`. Todo lo demás —el fondo coral,
+ * el padding, el borde redondeado— vivía en la clase .cta-button del <style>
+ * del <head>. Varios clientes de correo descartan ese bloque, y entonces el
+ * botón quedaba como TEXTO BLANCO SIN FONDO: sobre fondo claro, un enlace
+ * invisible.
+ *
+ * Fue el caso de Carlos Andrés (2026-09-10): recibió los correos de
+ * restablecer contraseña y reportó que "no le llegaba el link". Le llegaba —
+ * lo que no llegaba era el botón, y el texto suelto no se veía como algo que
+ * se pueda tocar.
+ *
+ * La familia de fuentes también va inline: la Montserrat entra por un @import
+ * dentro del <style>, así que se va con él.
+ */
+function estiloDeBoton(fondo: string): string {
+  return [
+    'display:inline-block',
+    `background-color:${fondo}`,
+    'color:#ffffff',
+    'text-decoration:none',
+    "font-family:'Montserrat',Arial,sans-serif",
+    'font-size:14px',
+    'font-weight:700',
+    'letter-spacing:1px',
+    'text-transform:uppercase',
+    'padding:16px 40px',
+    'border-radius:50px',
+    'mso-padding-alt:0',
+  ].join(';')
+}
+
 export function inlineButtonColors(html: string): string {
   return html.replace(
-    /<a\b(?![^>]*\sstyle=)([^>]*\bclass="(?:cta-button|cta-secondary)"[^>]*)>/gi,
-    '<a$1 style="color:#ffffff; text-decoration:none;">',
+    /<a\b(?![^>]*\sstyle=)([^>]*\bclass="(cta-button|cta-secondary)"[^>]*)>/gi,
+    (_m, atributos: string, clase: string) =>
+      `<a${atributos} style="${estiloDeBoton(clase === 'cta-secondary' ? '#161440' : '#C43635')}">`,
   )
 }
 

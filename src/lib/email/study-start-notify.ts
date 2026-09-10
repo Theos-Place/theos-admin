@@ -9,16 +9,14 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { ymdCR } from '@/lib/format'
+import { fechaCR } from '@/lib/fecha-cr'
 
 const DAY_LABEL: Record<string, string> = { L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo' }
 
 /** Fecha de un `DATE` (YYYY-MM-DD) en formato largo CR. Ancla a mediodía para
  *  evitar el corrimiento de día al interpretar una fecha sin hora como UTC. */
 function fmtDate(dateOnly: string | null): string {
-  if (!dateOnly) return 'por confirmar'
-  const d = new Date(dateOnly.length === 10 ? `${dateOnly}T12:00:00` : dateOnly)
-  if (isNaN(d.getTime())) return dateOnly
-  return d.toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Costa_Rica' })
+  return dateOnly ? (fechaCR(dateOnly, 'larga-2d') || dateOnly) : 'por confirmar'
 }
 function fullName(m: { first_name?: string | null; last_name?: string | null } | null): string {
   return m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : ''
