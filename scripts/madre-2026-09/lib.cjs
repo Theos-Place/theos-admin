@@ -62,6 +62,23 @@ const COMITE_MADRE_A_SISTEMA = {
 }
 /** Comités que el madre define y NO existen en el sistema: se crean. */
 const COMITES_NUEVOS = { 'Gestión procesos': 'Área Operaciones' }
+
+/**
+ * Lo que el madre pide y el usuario decidió NO tener (2026-09-11).
+ *
+ * La Etapa 1 creó el área Journey y el comité Gestión procesos, y el usuario los
+ * borró desde la app junto con FINANZAS: quedaron vacíos. Sin esta lista, volver
+ * a correr la Etapa 1 los recrearía y desharía la decisión — el script tiene que
+ * poder correrse dos veces sin pelear con lo que la gente hizo después.
+ */
+const NO_CREAR_AREAS = ['Journey']
+const NO_CREAR_COMITES = ['Gestión procesos']
+
+/**
+ * Comités cuya área decidió el usuario, no el madre (2026-09-11).
+ * Hombres y Mujeres: el madre los pone en Journey; van en Comunidad.
+ */
+const AREA_DECIDIDA = { 'Comité de Hombres': 'Area de Comunidad', 'Comité de Mujeres': 'Area de Comunidad' }
 /** "Sedes" de Puestos madre se reparte entre estos comités reales. */
 const FAMILIA_SEDES = 'sedes'
 
@@ -132,4 +149,4 @@ const CORRECCIONES_POR_COMITE = [
 ]
 
 module.exports = { nuevoCliente, hoja, norm, correccionesDifusas, CORRECCIONES_POR_COMITE, cargarSistema, indiceComites,
-  COMITE_MADRE_A_SISTEMA, COMITES_NUEVOS, PERSONAS_A_SISTEMA, NO_SON_COMITES, IGNORAR, AREA_CONGELADA, FAMILIA_SEDES }
+  COMITE_MADRE_A_SISTEMA, COMITES_NUEVOS, NO_CREAR_AREAS, NO_CREAR_COMITES, AREA_DECIDIDA, PERSONAS_A_SISTEMA, NO_SON_COMITES, IGNORAR, AREA_CONGELADA, FAMILIA_SEDES }

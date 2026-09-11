@@ -71,7 +71,17 @@ const t = v => { const s = String(v ?? '').trim(); return s || null }
     const oficial = tabla.get(`${L.norm(p.title)}|${p.area_id}`)
     if (!oficial) { intactos.push(p); continue }
     if (L.norm(p.title) === L.norm(oficial)) { soloFicha.push({ p, oficial }); continue }
-    const gemelo = (porComite.get(p.area_id) ?? []).find(x => x.id !== p.id && L.norm(x.title) === L.norm(oficial))
+    // El "gemelo" es un puesto del mismo comité que YA se llama como el oficial…
+    let gemelo = (porComite.get(p.area_id) ?? []).find(x => x.id !== p.id && L.norm(x.title) === L.norm(oficial))
+    // …o uno que se va a renombrar a ese nombre en esta misma corrida. Sin esta
+    // segunda mitad, dos puestos que colapsan en el mismo oficial y ninguno lo
+    // lleva todavía se renombran los DOS y el comité queda con el título
+    // duplicado. Pasó en Sede Madrid: «Colaborador Audiovisuales» y
+    // «Coordinador Audiovisuales», los dos a «Colaborador PT sedes».
+    if (!gemelo) {
+      const yaPlanificado = renombrar.find(x => x.p.area_id === p.area_id && L.norm(x.oficial) === L.norm(oficial))
+      if (yaPlanificado) gemelo = yaPlanificado.p
+    }
     if (gemelo) fusionar.push({ de: p, a: gemelo, oficial })
     else renombrar.push({ p, oficial })
   }
@@ -151,6 +161,13 @@ const t = v => { const s = String(v ?? '').trim(); return s || null }
       `select v.id from volunteers v where v.position_id=$1
         and exists (select 1 from volunteers w where w.position_id=$2 and w.member_id=v.member_id)`, [f.de.id, f.a.id])
     if (choque.length) {
+      // El destino puede tener la fila INACTIVA: si solo se inactiva la del
+      // puesto viejo, la persona se queda sin ninguna activa y PIERDE la
+      // asignación. Pasó con 5 de Sede Madrid. Se reactiva el destino primero.
+      await c.query(`update volunteers set status='active', end_date=null, updated_at=now()
+                     where position_id=$2 and status <> 'active'
+                       and member_id in (select member_id from volunteers where id = any($1))`,
+        [choque.map(x => x.id), f.a.id])
       await c.query(`update volunteers set status='inactive', end_date=coalesce(end_date, current_date), updated_at=now()
                      where id = any($1)`, [choque.map(x => x.id)])
       colisiones += choque.length

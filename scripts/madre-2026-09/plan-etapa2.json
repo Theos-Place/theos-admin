@@ -1,1106 +1,12 @@
 {
- "renombrar": [
-  {
-   "id": "09a915b9-c01c-4024-833f-9b3c561d14b3",
-   "comite": "Community",
-   "de": "Colaborador",
-   "a": "Colaborador Comuity",
-   "activos": 3
-  },
-  {
-   "id": "acbf7ae2-f1a7-40ca-b92a-9dfef1ca6e26",
-   "comite": "Sede Cartago",
-   "de": "Encargado GR",
-   "a": "Encargado Sede",
-   "activos": 1
-  },
-  {
-   "id": "4186927a-58bb-44f6-b199-484080495730",
-   "comite": "Comité de Mujeres",
-   "de": "Colaborador",
-   "a": "Colaborador Mujeres",
-   "activos": 23
-  },
-  {
-   "id": "2b78f06c-f887-4289-8408-93ee109334ab",
-   "comite": "Comité Tecnología de Información",
-   "de": "Colaborador de Análisis de Datos",
-   "a": "Colaborador Analisis datos",
-   "activos": 2
-  },
-  {
-   "id": "81a319ae-cb9e-434d-8e9f-2e8f06f02fd6",
-   "comite": "Comité de Worship",
-   "de": "Colaborador",
-   "a": "Colaborador Worship",
-   "activos": 24
-  },
-  {
-   "id": "222ad85f-6e2c-49f7-8d9d-08337b01513d",
-   "comite": "Sede Madrid",
-   "de": "Colaborador Audiovisuales",
-   "a": "Colaborador PT sedes",
-   "activos": 5
-  },
-  {
-   "id": "68c643f6-967f-4e54-be15-966089397fd4",
-   "comite": "Sede Potrero",
-   "de": "Encargado GR",
-   "a": "Encargado Sede",
-   "activos": 1
-  },
-  {
-   "id": "983ff6a7-2b25-4118-b37e-565c65b234ff",
-   "comite": "Sede Pérez Zeledón",
-   "de": "Encargado GR",
-   "a": "Encargado Sede",
-   "activos": 2
-  },
-  {
-   "id": "ef30546f-5b4b-4376-b255-d0326374c92d",
-   "comite": "Sede Pedregal Miércoles",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "69454f35-e414-4139-bcf0-1a63633c0833",
-   "comite": "Sede Madrid",
-   "de": "Coordinador Oración",
-   "a": "Coordinador Oración Sede",
-   "activos": 1
-  },
-  {
-   "id": "9ea8fff1-8f2d-40fd-b577-4dd61dd8ed1f",
-   "comite": "Comité de Hombres",
-   "de": "Asistente Encargado",
-   "a": "Asistente Hombres",
-   "activos": 1
-  },
-  {
-   "id": "a1a0a56e-e6f6-48d1-8730-4125bf64d7fa",
-   "comite": "Comité Dirigentes Administrativo",
-   "de": "Colaborador",
-   "a": "Colaborador Dirigentes Administrativo",
-   "activos": 5
-  },
-  {
-   "id": "eb867650-7edf-4c70-b9c1-1d3a02077674",
-   "comite": "Comité Dirigentes Administrativo",
-   "de": "Encargado",
-   "a": "Encargado Dirigentes",
-   "activos": 1
-  },
-  {
-   "id": "33189a03-1859-42e0-9d0a-cd1dfeb1f1e5",
-   "comite": "Comité Matrimonios",
-   "de": "Colaborador",
-   "a": "Colaborador Matrimonios",
-   "activos": 18
-  },
-  {
-   "id": "d933ea9b-9e27-45e4-87c9-4ebe072bc78d",
-   "comite": "Comité Matrimonios",
-   "de": "Encargado",
-   "a": "Encargado Matrimonios",
-   "activos": 4
-  },
-  {
-   "id": "171132ff-d007-479a-8789-b9908b21102e",
-   "comite": "Comité de Hombres",
-   "de": "Encargado",
-   "a": "Encargado Hombres",
-   "activos": 1
-  },
-  {
-   "id": "186756cb-19f4-47ad-9106-0fae709120aa",
-   "comite": "Comité Tecnología de Información",
-   "de": "Encargado",
-   "a": "Encargado IT",
-   "activos": 1
-  },
-  {
-   "id": "aebbf1dc-2a00-4701-8762-16ac63c5c26a",
-   "comite": "Comité Comunicación",
-   "de": "Colaborador",
-   "a": "Colaborador Comunicación",
-   "activos": 2
-  },
-  {
-   "id": "11d697de-ff56-4239-a16f-dd031e7562d3",
-   "comite": "SubComité Prod.Audiovisual",
-   "de": "Colaborador Prod.Audiovisual",
-   "a": "Colaborador PT sedes",
-   "activos": 3
-  },
-  {
-   "id": "dce96efb-7533-49e3-80e6-b1fc7672b79d",
-   "comite": "Comité GO",
-   "de": "Colaborador",
-   "a": "Colaborador GO",
-   "activos": 8
-  },
-  {
-   "id": "fefa6ab6-2485-4896-a4f5-475e8d627d90",
-   "comite": "Comité Sports",
-   "de": "Colaborador de dance",
-   "a": "Colaborador Dance",
-   "activos": 0
-  },
-  {
-   "id": "36fbbd1a-3537-4d8d-8a15-31723a2df8d4",
-   "comite": "Sede Meridiano Miércoles",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "d96aec47-d4fb-4426-9510-22d1eda15d41",
-   "comite": "Sede Guápiles",
-   "de": "Encargado GR",
-   "a": "Encargado Sede",
-   "activos": 2
-  },
-  {
-   "id": "fba8b0ef-98a5-4ded-8a67-b32d94211e9a",
-   "comite": "Sede Alajuela",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 2
-  },
-  {
-   "id": "c44ec82a-6ee8-44f5-8e9e-83be976b21bd",
-   "comite": "Sede Cartago",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "250d9555-d715-47d0-b66c-f4e19836dede",
-   "comite": "Sede Guápiles",
-   "de": "Colaborador GR Gp",
-   "a": "Colaborador de grupo",
-   "activos": 5
-  },
-  {
-   "id": "a3012de8-13a0-457b-bd55-1115eca28b43",
-   "comite": "Sede Pedregal Jueves",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "0550f4e3-5e2b-4035-8e69-ed6adb75dcd5",
-   "comite": "Sede Madrid",
-   "de": "Coordinador Audiovisuales",
-   "a": "Colaborador PT sedes",
-   "activos": 1
-  },
-  {
-   "id": "80919c26-88bd-4862-828a-0f1427c99fd6",
-   "comite": "Sede Liberia",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "93e07682-6885-47f6-b2b9-1e21575546e9",
-   "comite": "Sede Madrid",
-   "de": "Colaborador Oración",
-   "a": "Orador",
-   "activos": 7
-  },
-  {
-   "id": "a69af73a-a487-4cf7-bef0-c7768f77ab64",
-   "comite": "Sede Madrid",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 2
-  },
-  {
-   "id": "cb2bf885-27b3-4851-a342-7927eec23948",
-   "comite": "Sede Potrero",
-   "de": "Colaborador GR Pt",
-   "a": "Colaborador Díques",
-   "activos": 6
-  },
-  {
-   "id": "bf8fc718-749e-4911-9e8c-c1267a3d7339",
-   "comite": "Sede Meridiano Martes",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "13ff0cc9-022a-40de-a656-77e5f4c5bc6c",
-   "comite": "Sede Pérez Zeledón",
-   "de": "Colaborador GR Pz",
-   "a": "Colaborador de grupo",
-   "activos": 8
-  },
-  {
-   "id": "5b25b6ab-5c0b-49fb-9e2d-c6ebcb40181e",
-   "comite": "Sede Antares",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "ffabc5fa-4da3-42d6-a38e-45b55d22868e",
-   "comite": "Sede Pedregal Domingos",
-   "de": "Logística",
-   "a": "Encargado Logística",
-   "activos": 1
-  },
-  {
-   "id": "2a5b7498-6e39-4f24-8831-2ff84d9d40d9",
-   "comite": "Comité de Servidores",
-   "de": "Colaborador Atracción",
-   "a": "Atracción y Selección",
-   "activos": 1
-  },
-  {
-   "id": "e214b0f1-b1b4-45b6-87e5-1b15d7949bf7",
-   "comite": "Sede Cartago",
-   "de": "Colaborador Información/Anuncios",
-   "a": "Colaborador Información",
-   "activos": 5
-  },
-  {
-   "id": "dbfa1242-1c67-4b5d-b417-11919a820e89",
-   "comite": "Directores",
-   "de": "Directores generales",
-   "a": "Director General",
-   "activos": 2
-  },
-  {
-   "id": "9edc565f-ff4e-458d-91b8-3177af7e0c53",
-   "comite": "Comité de Campamentos",
-   "de": "Colaborador",
-   "a": "Colaborador Campamentos",
-   "activos": 26
-  },
-  {
-   "id": "abfe20be-2eaf-434b-b33c-d6d5715d1879",
-   "comite": "Comité de Campamentos",
-   "de": "Encargado de Comité",
-   "a": "Encargado Campamentos",
-   "activos": 1
-  },
-  {
-   "id": "e115f50c-381b-4c90-aef3-bfc0dd3d1605",
-   "comite": "Comité Ayuda Social",
-   "de": "Encargado de comité",
-   "a": "Encargado Ayuda Social",
-   "activos": 1
-  }
- ],
- "fusionar": [
-  {
-   "de": "5f5a928c-6e49-4f75-9995-710bce976cda",
-   "deTitulo": "Colaborador Diagramación",
-   "a": "058009ff-effb-4ae0-8880-555ba3b67d14",
-   "aTitulo": "Diagramador",
-   "comite": "Comité Estudios Bíblicos",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "7a636ddd-4df8-443f-836a-0dbc5fb22627",
-   "deTitulo": "Colaborador",
-   "a": "1cb3da8c-9e36-47b1-a1b1-e5b44426d4e9",
-   "aTitulo": "Colaborador Edife",
-   "comite": "Comité Edife",
-   "mueve": 22,
-   "total": 23
-  },
-  {
-   "de": "0c859a32-1951-4643-9fe4-599e94bc9c6a",
-   "deTitulo": "Orador Cartago GR",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 5,
-   "total": 5
-  },
-  {
-   "de": "384ad66c-c85b-4fb8-bea4-253297048bb5",
-   "deTitulo": "Colaborador Prod.Técnica Antares",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 5,
-   "total": 5
-  },
-  {
-   "de": "75ce0de2-e261-463f-bf5d-b5a95130bef8",
-   "deTitulo": "Coordinador Oración Liberia",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "89e7c100-b431-4aef-b842-9a8cf26cfdfe",
-   "deTitulo": "Coordinador Oración Madrid",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "1cdc1b96-7226-4b87-bbf5-be9c39241c16",
-   "deTitulo": "Orador Antares",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 8,
-   "total": 8
-  },
-  {
-   "de": "a41dcab8-5870-4f81-9dfb-141a31163e5a",
-   "deTitulo": "Encargado",
-   "a": "6dd38b44-77fa-42eb-9ab0-33e94fd43973",
-   "aTitulo": "Encargado Contenido",
-   "comite": "Comité Contenido",
-   "mueve": 1,
-   "total": 2
-  },
-  {
-   "de": "a05d9380-26b7-4e3f-945c-f6e54517b866",
-   "deTitulo": "Colaborador",
-   "a": "cebbade8-cebd-4a60-986b-7c4c6b7acc2b",
-   "aTitulo": "Colaborador Youth",
-   "comite": "Comité Youth",
-   "mueve": 4,
-   "total": 5
-  },
-  {
-   "de": "60a1a173-7fc6-4357-b4c5-9a82d77fd907",
-   "deTitulo": "Colaborador Prod.Técnica Pedregal J",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 3,
-   "total": 3
-  },
-  {
-   "de": "9930867a-9357-4fb4-a54e-788f6451413f",
-   "deTitulo": "Colaborador ProofReading",
-   "a": "570e67e5-eddb-4fd4-ac3b-316ee95fb59e",
-   "aTitulo": "Proofreading",
-   "comite": "Comité Estudios Bíblicos",
-   "mueve": 4,
-   "total": 5
-  },
-  {
-   "de": "4f3a172e-e61e-464e-a477-f77d307018b0",
-   "deTitulo": "Encargado",
-   "a": "ff1e34f5-c5d4-4e94-b12c-fc2ee2de95d2",
-   "aTitulo": "Encargado Youth",
-   "comite": "Comité Youth",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "ed17ae03-0ebe-416e-be63-fd859a1267fa",
-   "deTitulo": "Coordinador Oración Alajuela",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "24dd0edd-27ac-4891-aa60-95068163b085",
-   "deTitulo": "Coordinador Oración Dirigentes",
-   "a": "0603f250-0947-43b1-9bb7-e6650b0fe5f7",
-   "aTitulo": "Coordinador Oración Comités",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "6167d196-1684-4875-be79-f5c03b12327a",
-   "deTitulo": "Colaborador Prod. Técnica Mujeres",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "80bf9ba4-5bb3-4f4d-b52f-acb3c14be5d5",
-   "deTitulo": "Coordinador Oración Meridiano M",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "c6d6e3bb-aa1d-437b-8189-9c599508eb08",
-   "deTitulo": "Asistente Encargado",
-   "a": "f8fc72d5-5a8e-4d06-b5b0-8ba61d3c44fc",
-   "aTitulo": "Asistente Estudios Biblicos",
-   "comite": "Comité Estudios Bíblicos",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "731948d4-d216-42f4-9069-64d6c9c615c0",
-   "deTitulo": "Encargado",
-   "a": "a6ab13e5-7e00-4828-9695-f601f16fb4d5",
-   "aTitulo": "Encargado Estudios Biblicos",
-   "comite": "Comité Estudios Bíblicos",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "60d761a3-03d4-412a-a6d9-7d8a51e2e467",
-   "deTitulo": "Orador Liberia",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 4,
-   "total": 5
-  },
-  {
-   "de": "520cfc6d-6a70-4093-8aa3-53844637d9e9",
-   "deTitulo": "Colaborador Prod.Técnica Pedregal D",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 4,
-   "total": 4
-  },
-  {
-   "de": "1ff1cfc9-3513-46f7-92c8-1443064d4ad9",
-   "deTitulo": "Colaborador",
-   "a": "9422656c-1ba9-4d7c-bb81-85caeaf03035",
-   "aTitulo": "Colaborador Hombres",
-   "comite": "Comité de Hombres",
-   "mueve": 14,
-   "total": 15
-  },
-  {
-   "de": "487c29f5-6bdc-48b5-b4b8-443078ecdd85",
-   "deTitulo": "Coordinador Oración Campas/Edife",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "3bf27f7f-03dd-4b92-8f33-0687ed5a93b2",
-   "deTitulo": "Coordinador Oración Hombres",
-   "a": "0603f250-0947-43b1-9bb7-e6650b0fe5f7",
-   "aTitulo": "Coordinador Oración Comités",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "f0d97085-9682-46f9-b667-8bb968c67b8f",
-   "deTitulo": "Orador Staff",
-   "a": "fcc730c4-dcfb-4109-b56b-46a0eb3eef5f",
-   "aTitulo": "Orador Comité",
-   "comite": "Comité Oración",
-   "mueve": 3,
-   "total": 3
-  },
-  {
-   "de": "2a6525a8-c157-49ba-a32c-373b3365a11c",
-   "deTitulo": "Orador Pedregal D",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 12,
-   "total": 12
-  },
-  {
-   "de": "39fb3290-3c90-4ab7-b59a-32b9ffdf7e79",
-   "deTitulo": "Coordinador Oración Cartago",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "726c1520-83ed-4688-932e-275d9e068ae6",
-   "deTitulo": "Coordinador Oración Go",
-   "a": "0603f250-0947-43b1-9bb7-e6650b0fe5f7",
-   "aTitulo": "Coordinador Oración Comités",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "9e4898fc-b41c-46fa-9e66-eee0687e157a",
-   "deTitulo": "Coordinador Oración Perez",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "9e8f3f06-e639-48d0-b299-d841e2973f9f",
-   "deTitulo": "Coordinador Oración Mujeres",
-   "a": "0603f250-0947-43b1-9bb7-e6650b0fe5f7",
-   "aTitulo": "Coordinador Oración Comités",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "47cee855-348d-4a54-aecb-ee613f4a9c9d",
-   "deTitulo": "Coordinador Oración Servidores",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "2a12523f-ae4f-4e98-8d1c-40bf58924a92",
-   "deTitulo": "Orador Alajuela",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 3,
-   "total": 3
-  },
-  {
-   "de": "ed3c61da-b69d-41d9-9f94-6c28304007f7",
-   "deTitulo": "Coordinador Oración Guapiles",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "71623166-7c7d-459a-9446-b1a415ea4bc0",
-   "deTitulo": "Coordinador Oración Potrero",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "3aa61b28-4ddc-448a-be80-b50f46415b3a",
-   "deTitulo": "Encargado",
-   "a": "7c8683f5-89ff-452a-a20a-ffd6ac19823a",
-   "aTitulo": "Encargado Oración",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "834cf282-2efc-4984-9177-89c6ff60f4c5",
-   "deTitulo": "Orador Dirigentes",
-   "a": "fcc730c4-dcfb-4109-b56b-46a0eb3eef5f",
-   "aTitulo": "Orador Comité",
-   "comite": "Comité Oración",
-   "mueve": 6,
-   "total": 6
-  },
-  {
-   "de": "3de539aa-3fab-4c5e-9652-8c55333919bc",
-   "deTitulo": "Coordinador Oración Antares",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "855baaa5-ffdd-4240-97ce-c861b9ce5fb0",
-   "deTitulo": "Orador Madrid",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 4,
-   "total": 4
-  },
-  {
-   "de": "c9806f69-530f-4c2c-a164-db16a866727c",
-   "deTitulo": "Colaborador",
-   "a": "04b92ecb-c452-4e9f-a7b9-bb6995f6976b",
-   "aTitulo": "Colaborador contable",
-   "comite": "Comité Contabilidad",
-   "mueve": 4,
-   "total": 4
-  },
-  {
-   "de": "9aaa52a5-217e-4851-89fc-a65f787ea462",
-   "deTitulo": "Colaborador Prod.Técnica Alajuela",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 5,
-   "total": 5
-  },
-  {
-   "de": "abf8bcae-3d5d-418d-b577-bfe63f939eff",
-   "deTitulo": "Coordinador Oración Youth",
-   "a": "0603f250-0947-43b1-9bb7-e6650b0fe5f7",
-   "aTitulo": "Coordinador Oración Comités",
-   "comite": "Comité Oración",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "3bc0ca82-f877-4ed4-b981-279b1dc2c27c",
-   "deTitulo": "Orador Mujeres",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 4,
-   "total": 5
-  },
-  {
-   "de": "59b7d67c-7ac4-4270-be65-2a5d26777586",
-   "deTitulo": "Encargado",
-   "a": "8e8eab48-1205-4c34-a342-1efb60f8b8ce",
-   "aTitulo": "Encargado Experiencia",
-   "comite": "Comité Experiencia",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "f8ec7b5b-2b91-4df2-b2f4-74b5cff4a99e",
-   "deTitulo": "Coordinador Oración Pedregal J",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "b3c32ca4-0bab-4857-bac9-aa1c195fb485",
-   "deTitulo": "Encargado",
-   "a": "b598bc7e-b166-40b8-98db-174328f6dcda",
-   "aTitulo": "Encargado Worship",
-   "comite": "Comité de Worship",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "b9482a85-61b7-4472-a59b-387fdbbcde43",
-   "deTitulo": "Encargado",
-   "a": "ea13f716-7d46-476b-ad84-b431794cd76f",
-   "aTitulo": "Encargado comunicación",
-   "comite": "Comité Comunicación",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "fc06c18e-23b2-4141-8981-33952b5130cd",
-   "deTitulo": "Colaborador Prod.Técnica Cartago",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 3,
-   "total": 5
-  },
-  {
-   "de": "2f8cf158-928a-4352-ba04-7ba6b0ca46dc",
-   "deTitulo": "Encargado de comité",
-   "a": "0c941a28-6736-465f-aced-2ceec0a2e9fa",
-   "aTitulo": "Encargado Comunity",
-   "comite": "Community",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "93265f65-13cb-4bda-b3d1-d8750b7edb2b",
-   "deTitulo": "Colaborador Prod.Técnica Liberia",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 4,
-   "total": 4
-  },
-  {
-   "de": "a7b3ff70-9d7f-4cff-afa9-857661482f16",
-   "deTitulo": "Colaborador Diques",
-   "a": "393bbdc6-e3ad-42a9-9a48-694d93f6ecc5",
-   "aTitulo": "Colaborador Renuevos",
-   "comite": "Comité Ayuda Social",
-   "mueve": 5,
-   "total": 5
-  },
-  {
-   "de": "a05f6d24-164d-48f8-ab98-a6ff44585b48",
-   "deTitulo": "Colaborador Abuelitos Cañas",
-   "a": "c89ca572-8803-4876-a918-6b67b9b05140",
-   "aTitulo": "Colaborador Abuelitos",
-   "comite": "Comité Ayuda Social",
-   "mueve": 1,
-   "total": 2
-  },
-  {
-   "de": "b778cf91-055a-4c1c-aaf8-026b8e41f76a",
-   "deTitulo": "Coordinador Oración Pedregal D",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "51a57c20-8dfa-4abc-92e9-ef016a40b961",
-   "deTitulo": "Coordinador Prod.Técnica Liberia",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "5f70f13d-0d0c-4bd0-8b54-e7e567a223f9",
-   "deTitulo": "Coordinador Abuelitos Cañas",
-   "a": "3c19d4a3-48dd-47f9-9421-e43f23b68a39",
-   "aTitulo": "Coordinador Abuelitos",
-   "comite": "Comité Ayuda Social",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "b0852ca9-a6c7-4760-969a-83948b35c7cd",
-   "deTitulo": "Encargado de comité",
-   "a": "e3896f9c-77b7-45a1-88c3-95b239c1d6c0",
-   "aTitulo": "Encargado Edife",
-   "comite": "Comité Edife",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "298e7e60-e271-4fb3-b4b7-16dcb1859c6b",
-   "deTitulo": "Encargado de comité",
-   "a": "c22ea45f-1d48-4235-bca7-69c12ae156b4",
-   "aTitulo": "Encargado GO",
-   "comite": "Comité GO",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "603a634d-eec8-4647-8387-3be4a398ef91",
-   "deTitulo": "Coordinador de spinning",
-   "a": "db7b9911-a4e6-4bc5-be7d-163c4afaa939",
-   "aTitulo": "Colaborador Biking",
-   "comite": "Comité Sports",
-   "mueve": 0,
-   "total": 1
-  },
-  {
-   "de": "0394430a-02da-49a8-9ad1-08589c07d581",
-   "deTitulo": "Encargado",
-   "a": "22a3bec9-ae06-46ab-9f97-432a701096b1",
-   "aTitulo": "Encargado Sports",
-   "comite": "Comité Sports",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "e06862f6-8517-4962-b336-f1786e0e39bc",
-   "deTitulo": "Coordinador de trail",
-   "a": "5b3c6fcd-8f11-4379-bed8-1bfe703b451d",
-   "aTitulo": "Coordinador Hiking",
-   "comite": "Comité Sports",
-   "mueve": 0,
-   "total": 1
-  },
-  {
-   "de": "7523ab4d-a175-49f7-ae80-a587014351e8",
-   "deTitulo": "Coordinador Lectura",
-   "a": "95923a86-5cee-4e0f-b80a-542d1eaa3e51",
-   "aTitulo": "Colaborador Lectura",
-   "comite": "Sede Pedregal Jueves",
-   "mueve": 0,
-   "total": 1
-  },
-  {
-   "de": "02f12829-e00b-4a51-8b7a-160a8d541e36",
-   "deTitulo": "Colaborador Ayuda Social",
-   "a": "8d477295-b574-42e6-9dcf-5769f9e0da71",
-   "aTitulo": "Colaborador Act. Sociales",
-   "comite": "Sede Liberia",
-   "mueve": 0,
-   "total": 4
-  },
-  {
-   "de": "cfaea343-d0bc-4dc4-8d16-5b611c71b125",
-   "deTitulo": "Coordinador Ayuda Social",
-   "a": "04aa17df-7045-4cc6-a217-769840af933b",
-   "aTitulo": "Coordinador Act. Sociales",
-   "comite": "Sede Liberia",
-   "mueve": 0,
-   "total": 1
-  },
-  {
-   "de": "b7c433be-ddc7-41da-8a71-cbc09b3251a0",
-   "deTitulo": "Coordinador Youth",
-   "a": "95d7de9a-c13f-4bf7-a658-fd9d98a03bf6",
-   "aTitulo": "Colaborador Youth",
-   "comite": "Sede Madrid",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "e3ac8d12-6916-415b-be23-9781e3292a65",
-   "deTitulo": "Coordinador Oración Meridiano K",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 2,
-   "total": 2
-  },
-  {
-   "de": "719314ce-add1-400f-ad89-bd170b457246",
-   "deTitulo": "Orador Meridiano K",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 17,
-   "total": 17
-  },
-  {
-   "de": "cc9f5d2d-0bda-4410-a541-92596e39d712",
-   "deTitulo": "Colaborador Prod.Técnica Pedregal M",
-   "a": "192cb8e5-d38a-4157-abaa-249bc8218f0f",
-   "aTitulo": "Colaborador PT sedes",
-   "comite": "SubComité Producción Técnica",
-   "mueve": 4,
-   "total": 4
-  },
-  {
-   "de": "9df6b1d5-39cf-4db1-9cd9-1fb58cd3d346",
-   "deTitulo": "Coordinador Oración Pedregal M",
-   "a": "03b5c5c8-6159-4231-8ded-d0b1f40ef118",
-   "aTitulo": "Coordinador Oración Sede",
-   "comite": "Comité Oración",
-   "mueve": 1,
-   "total": 1
-  },
-  {
-   "de": "5c87a85c-3012-4b29-8ac8-ff97a57a2f3e",
-   "deTitulo": "Orador Pedregal M",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 7,
-   "total": 7
-  },
-  {
-   "de": "e37a472e-7e4c-4f7d-ae1c-f7579ae8dc9b",
-   "deTitulo": "Orador Pedregal J",
-   "a": "91c42dff-dfe1-4e46-8ff9-5498c9040f46",
-   "aTitulo": "Orador Sede",
-   "comite": "Comité Oración",
-   "mueve": 4,
-   "total": 4
-  }
- ],
- "crear": [
-  {
-   "comite": "Sede Pérez Zeledón",
-   "comite_id": "c9337841-5db5-4131-a8f0-4972340418fe",
-   "titulo": "Asistente Logistica"
-  },
-  {
-   "comite": "Sede Pedregal Miércoles",
-   "comite_id": "1023bd68-c25e-4600-b215-3485c5b222cf",
-   "titulo": "Asistente Logistica"
-  },
-  {
-   "comite": "Sede Alajuela",
-   "comite_id": "95942aac-7dea-4f03-9dc8-c3c91fdbb4ca",
-   "titulo": "Asistente Logistica"
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "comite_id": "f8748efe-e5ed-49d2-b563-7c0d1797c7c7",
-   "titulo": "Colaborador Campamentos"
-  },
-  {
-   "comite": "Sede Pérez Zeledón",
-   "comite_id": "c9337841-5db5-4131-a8f0-4972340418fe",
-   "titulo": "Colaborador Comida"
-  },
-  {
-   "comite": "Sede Alajuela",
-   "comite_id": "95942aac-7dea-4f03-9dc8-c3c91fdbb4ca",
-   "titulo": "Colaborador Finanzas"
-  },
-  {
-   "comite": "Sede Pedregal Miércoles",
-   "comite_id": "1023bd68-c25e-4600-b215-3485c5b222cf",
-   "titulo": "Colaborador Finanzas"
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "comite_id": "f8748efe-e5ed-49d2-b563-7c0d1797c7c7",
-   "titulo": "Colaborador Montaje"
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
-   "comite_id": "673907c3-35f3-4efa-afae-51c4c53a578c",
-   "titulo": "Colaborador Seguimiento"
-  },
-  {
-   "comite": "Comité Contabilidad",
-   "comite_id": "3c1487bc-daa9-4a0c-bbba-c0b1607fae94",
-   "titulo": "Colaborador Recaudación de Fondos"
-  },
-  {
-   "comite": "Sede Antares",
-   "comite_id": "e8534dd5-591e-420a-ace4-f9e92c648ebf",
-   "titulo": "Coordinador Finanzas"
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "comite_id": "f8748efe-e5ed-49d2-b563-7c0d1797c7c7",
-   "titulo": "Coordinador Información"
-  },
-  {
-   "comite": "Sede Antares",
-   "comite_id": "e8534dd5-591e-420a-ace4-f9e92c648ebf",
-   "titulo": "Coordinador Información"
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "comite_id": "f8748efe-e5ed-49d2-b563-7c0d1797c7c7",
-   "titulo": "Coordinador Montaje"
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "comite_id": "d766b113-fe74-4d26-805c-216e43b52612",
-   "titulo": "Encargado Experiencia"
-  },
-  {
-   "comite": "Comité Tecnología de Información",
-   "comite_id": "a7553734-75aa-4ae0-8f7c-38daece5c744",
-   "titulo": "Encargado Comite"
-  },
-  {
-   "comite": "Sede Liberia",
-   "comite_id": "2cdbab65-7084-4e31-af0e-b5b5e16e889e",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Comité de Dirigentes",
-   "comite_id": "e404832d-4a35-480f-a430-40c319bc2a81",
-   "titulo": "Dirigente CR"
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "comite_id": "f8748efe-e5ed-49d2-b563-7c0d1797c7c7",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Sede Pedregal Domingos",
-   "comite_id": "48c47262-0310-49ab-b6df-85b8418e4f3a",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Comité de Dirigentes",
-   "comite_id": "e404832d-4a35-480f-a430-40c319bc2a81",
-   "titulo": "Dirigente Madrid"
-  },
-  {
-   "comite": "Comité Contenido",
-   "comite_id": "86c688f2-48f0-4cd9-a753-2a488cd9bc34",
-   "titulo": "Colaborador Contenido"
-  },
-  {
-   "comite": "Sede Alajuela",
-   "comite_id": "95942aac-7dea-4f03-9dc8-c3c91fdbb4ca",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Sede Antares",
-   "comite_id": "e8534dd5-591e-420a-ace4-f9e92c648ebf",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
-   "comite_id": "673907c3-35f3-4efa-afae-51c4c53a578c",
-   "titulo": "Asistente Logistica"
-  },
-  {
-   "comite": "Charlistas",
-   "comite_id": "863c5578-35b8-4b4e-97e2-c8fe5e182555",
-   "titulo": "Charlista de grupos"
-  },
-  {
-   "comite": "Sede Cartago",
-   "comite_id": "4e1c0952-10ba-4e69-b23b-498aeb1cf318",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
-   "comite_id": "673907c3-35f3-4efa-afae-51c4c53a578c",
-   "titulo": "Orador Sede"
-  },
-  {
-   "comite": "Sede Pedregal Miércoles",
-   "comite_id": "1023bd68-c25e-4600-b215-3485c5b222cf",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Sede Meridiano Martes",
-   "comite_id": "f23dab82-6516-4bf7-9126-e31bb3378355",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Comité de Planificación",
-   "comite_id": "e61336ab-72d8-459f-b1d6-06ba6d30215c",
-   "titulo": "Colaborador Planificación"
-  },
-  {
-   "comite": "Comité Oración",
-   "comite_id": "9eeab6a6-cc0c-4a7c-ad97-ee9194aa1eb5",
-   "titulo": "Diseñador/a"
-  },
-  {
-   "comite": "Sede Pérez Zeledón",
-   "comite_id": "c9337841-5db5-4131-a8f0-4972340418fe",
-   "titulo": "Encargado Logística"
-  },
-  {
-   "comite": "Sede Pérez Zeledón",
-   "comite_id": "c9337841-5db5-4131-a8f0-4972340418fe",
-   "titulo": "Colaborador PT sedes"
-  },
-  {
-   "comite": "Sede Cartago",
-   "comite_id": "4e1c0952-10ba-4e69-b23b-498aeb1cf318",
-   "titulo": "Colaborador Worship"
-  }
- ],
+ "renombrar": [],
+ "fusionar": [],
+ "crear": [],
  "intactos": [
   {
-   "comite": "Comité Comunicación",
-   "titulo": "Coordinador de Whatsapp",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Meridiano Martes",
-   "titulo": "Colaborador de Información/Anuncios",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Comunicación",
-   "titulo": "Colaborador de Storytelling",
-   "activos": 0
+   "comite": "Community",
+   "titulo": "Colaborador Comuity",
+   "activos": 12
   },
   {
    "comite": "Area de Comunidad",
@@ -1133,143 +39,23 @@
    "activos": 1
   },
   {
-   "comite": "Comité Contenido",
-   "titulo": "Coordinador de Diagramación",
-   "activos": 0
+   "comite": "Comité de Mujeres",
+   "titulo": "Colaborador Mujeres",
+   "activos": 26
   },
   {
-   "comite": "Sede Meridiano Martes",
-   "titulo": "Colaborador de Desmontaje",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Meridiano Martes",
-   "titulo": "Colaborador de Actividades",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Cartago",
-   "titulo": "Colaborador de Desmontaje - Montaje",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Cartago",
-   "titulo": "Colaboradora de Decoracion",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Cartago",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Antares",
-   "titulo": "Colaborador de Información/Anuncios",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Antares",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Contenido",
-   "titulo": "Coordinador de Impresión",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Up United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Small United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Big United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Contenido",
-   "titulo": "Diagramador de Folletos",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Contenido",
-   "titulo": "Creador de Material Estudios Virtuales",
-   "activos": 0
+   "comite": "Comité Tecnología de Información",
+   "titulo": "Colaborador Analisis datos",
+   "activos": 2
   },
   {
    "comite": "SubComité Producción Técnica",
    "titulo": "Encargado",
-   "activos": 1
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Coordinador Prod.Técnica Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de Inspección",
    "activos": 0
   },
   {
    "comite": "Comité Comunicación",
    "titulo": "Colaborador de creación contenido",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Asistente de Small United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher ONE United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Asistente BIG United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Bienvenida United Pedregal",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Up Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Small Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Asistente de Small Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Teacher Big Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Asistente Big Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Alajuela",
    "activos": 0
   },
   {
@@ -1279,58 +65,8 @@
   },
   {
    "comite": "Comité Oración",
-   "titulo": "Orador Theos United",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Este",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador United",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
    "titulo": "Orador Theos Oeste",
    "activos": 1
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Madrid",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Edife",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "OradorTheos Campas",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Go",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Hombres",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Mujeres PM",
-   "activos": 0
   },
   {
    "comite": "Comité Oración",
@@ -1338,89 +74,19 @@
    "activos": 1
   },
   {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Home",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Matrimonios",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Ayuda Social",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Theos Youth",
-   "activos": 0
-  },
-  {
    "comite": "Sede Pedregal Jueves",
    "titulo": "Colaborador de Hospitalidad",
    "activos": 2
   },
   {
-   "comite": "Sede Pedregal Jueves",
-   "titulo": "Colaborador de Montaje",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Liberia",
-   "titulo": "Colaborador de Montaje",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Liberia",
-   "titulo": "Colaborador de Desmontaje",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Liberia",
-   "titulo": "Colaborador de Actividades",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Liberia",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Mujeres",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Hombres",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Pedregal Miércoles",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "titulo": "Colaborador de Audiovisuales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de inspección",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de presupuesto",
-   "activos": 0
+   "comite": "Comité Dirigentes Administrativo",
+   "titulo": "Colaborador Dirigentes Administrativo",
+   "activos": 15
   },
   {
    "comite": "Comité de Dirigentes",
    "titulo": "Dirigente",
-   "activos": 194
+   "activos": 21
   },
   {
    "comite": "SubComité Producción Técnica",
@@ -1428,64 +94,9 @@
    "activos": 1
   },
   {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Este",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Oeste",
-   "activos": 0
-  },
-  {
    "comite": "Comité de Mujeres",
    "titulo": "Encargado",
    "activos": 1
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Home",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Home",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Oeste",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración United",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Este",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de presupuesto",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Cartago",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Heredia",
-   "activos": 0
   },
   {
    "comite": "Comité de Planificación",
@@ -1493,118 +104,38 @@
    "activos": 1
   },
   {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de compras de materiales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de bodega",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Médico",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de Salud Ocupacional",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de Mercadeo",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de Stand",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de Alimentación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de Alimentación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Coordinador de Transporte",
-   "activos": 0
-  },
-  {
    "comite": "Comité Liderando",
    "titulo": "Encargado",
    "activos": 1
   },
   {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador Prod.Técnica Este",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador Prod.Técnica Heredia",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador Prod.Técnica Home",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador Prod.Técnica United",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Coordinador Prod.Técnica Este",
-   "activos": 0
-  },
-  {
    "comite": "Comité Ayuda Social",
    "titulo": "Colaborador Abuelitos GAM",
-   "activos": 2
+   "activos": 0
   },
   {
    "comite": "SubComité Producción Técnica",
    "titulo": "Coordinador Prod.Técnica Alajuela",
-   "activos": 1
+   "activos": 0
   },
   {
    "comite": "Comité Ayuda Social",
    "titulo": "Colaborador Calles Liberia",
-   "activos": 1
+   "activos": 0
   },
   {
    "comite": "Comité Ayuda Social",
    "titulo": "Coordinador Abuelitos GAM",
-   "activos": 1
+   "activos": 0
   },
   {
    "comite": "SubComité Producción Técnica",
    "titulo": "Coordinador Prod.Técnica Cartago",
-   "activos": 1
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador de Transporte",
    "activos": 0
   },
   {
    "comite": "Comité Ayuda Social",
    "titulo": "Coordinador Calles Liberia",
-   "activos": 1
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Project Manager para Proyecto un Place para Theos",
    "activos": 0
   },
   {
@@ -1615,17 +146,17 @@
   {
    "comite": "Comité Sports",
    "titulo": "Asistente Encargado",
-   "activos": 3
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador",
    "activos": 0
   },
   {
-   "comite": "FINANZAS",
-   "titulo": "Director Area Finanzas",
-   "activos": 0
+   "comite": "Comité Sports",
+   "titulo": "Colaborador Dance",
+   "activos": 7
+  },
+  {
+   "comite": "Sede Guápiles",
+   "titulo": "Encargado Sede",
+   "activos": 2
   },
   {
    "comite": "Sede Potrero",
@@ -1633,18 +164,8 @@
    "activos": 3
   },
   {
-   "comite": "Comité de Planificación",
-   "titulo": "Encargado de comité",
-   "activos": 0
-  },
-  {
    "comite": "Sede Cartago",
    "titulo": "Colaborador Anuncios",
-   "activos": 0
-  },
-  {
-   "comite": "Sede Pedregal Jueves",
-   "titulo": "Coordinador de Hospitalidad",
    "activos": 0
   },
   {
@@ -1655,17 +176,7 @@
   {
    "comite": "Sede Pedregal Miércoles",
    "titulo": "Coordinador Información",
-   "activos": 1
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Colaborador Youth",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Coordinador de Baile",
-   "activos": 0
+   "activos": 2
   },
   {
    "comite": "Sede Liberia",
@@ -1683,34 +194,9 @@
    "activos": 1
   },
   {
-   "comite": "Comité Estudios Bíblicos",
-   "titulo": "Diagramador",
-   "activos": 0
-  },
-  {
    "comite": "Sede Meridiano Martes",
    "titulo": "Colaborador Finanzas",
-   "activos": 6
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Coordinador de Atracción y Selección",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador Estrategias de Atracción",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador de Manuales/Guías de Puestos de Servicio",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Coordinador de Fútbol Masculino",
-   "activos": 0
+   "activos": 14
   },
   {
    "comite": "Sede Antares",
@@ -1718,149 +204,9 @@
    "activos": 0
   },
   {
-   "comite": "Comité Estudios Bíblicos",
-   "titulo": "Proofreading",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Colaborador de Fútbol Masculino",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Hombres",
-   "titulo": "Coordinador de Comunicación",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Encargado Producción técnica",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador de Producción técnica en sede",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador de Producción técnica en campamentos",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador de Producción técnica en act. especiales",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Coordinador de Producción técnica en sede",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador producción audiovisual",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador producción logistica",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador de diseño de ambientes",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador Conexión y Hospitalidad",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador Comunicación escenica",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Comunicación",
-   "titulo": "ASistente de encargado",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Worship",
-   "titulo": "Encargado de Comité de Música",
-   "activos": 0
-  },
-  {
-   "comite": "Servicios generales",
-   "titulo": "Encargado de Servicios Generales",
-   "activos": 0
-  },
-  {
    "comite": "Comité Oración",
    "titulo": "Orador Comité",
-   "activos": 0
-  },
-  {
-   "comite": "Comité GO",
-   "titulo": "Colaborador de contenido multimedia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité GO",
-   "titulo": "Colaborador Misión Cuba",
-   "activos": 0
-  },
-  {
-   "comite": "Comité GO",
-   "titulo": "Colaborador Misión Nepal",
-   "activos": 0
-  },
-  {
-   "comite": "Community",
-   "titulo": "Encargado de Comité Community",
-   "activos": 0
-  },
-  {
-   "comite": "Community",
-   "titulo": "Colaborador de Community",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
-   "titulo": "Colaboraborador de software",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Campamentos",
-   "titulo": "Asistente de Encargado",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Campamentos",
-   "titulo": "Colaborador de Transporte",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Campamentos",
-   "titulo": "Colaborador de Comunicación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Colaborador de Onboarding",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Dirigentes",
-   "titulo": "Asistente de Encargado",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Dirigentes",
-   "titulo": "Colaborador Actualización y Datos",
-   "activos": 0
+   "activos": 10
   },
   {
    "comite": "Comité Contenido",
@@ -1870,61 +216,6 @@
   {
    "comite": "Comité Contenido",
    "titulo": "Colaborador Contenido Youth",
-   "activos": 0
-  },
-  {
-   "comite": "STAFF",
-   "titulo": "Director Area Staff",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador de Puestos disponibles",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador de Servidores Nuevos",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Sede",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Colaborador de Actividades Servidores",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Servidores",
-   "titulo": "Encargado de comité Servidores",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Planificación",
-   "titulo": "Encargado comité de Planificación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Planificación",
-   "titulo": "Asistente de Planificación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador de Oración en Sedes",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Productor técnico",
-   "activos": 0
-  },
-  {
-   "comite": "SubComité Producción Técnica",
-   "titulo": "Colaborador PT sedes",
    "activos": 0
   },
   {
@@ -1954,28 +245,13 @@
   },
   {
    "comite": "Comité Oración",
-   "titulo": "Encargado Oración",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
    "titulo": "Asistente Oración",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Coordinador Oración Comités",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Oración",
-   "titulo": "Orador Sede",
    "activos": 0
   },
   {
    "comite": "Comité Ayuda Social",
    "titulo": "Colaborador Valientes",
-   "activos": 0
+   "activos": 4
   },
   {
    "comite": "Comité de Servidores",
@@ -1993,39 +269,29 @@
    "activos": 0
   },
   {
+   "comite": "Sede Cartago",
+   "titulo": "Colaborador Información",
+   "activos": 7
+  },
+  {
    "comite": "Comité Youth",
    "titulo": "Encargado Youth",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Youth",
-   "titulo": "Asistente Youth",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Encargado Sports",
-   "activos": 0
+   "activos": 1
   },
   {
    "comite": "Comité Sports",
    "titulo": "Coordinador Volleyball",
-   "activos": 2
+   "activos": 3
   },
   {
    "comite": "Comité Sports",
    "titulo": "Coordinador Funcionales",
-   "activos": 2
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Coordinador Hiking",
-   "activos": 2
+   "activos": 3
   },
   {
    "comite": "Comité Sports",
    "titulo": "Coordinador Biking",
-   "activos": 1
+   "activos": 2
   },
   {
    "comite": "Comité Sports",
@@ -2035,7 +301,7 @@
   {
    "comite": "Comité Sports",
    "titulo": "Colaborador Volleyball",
-   "activos": 0
+   "activos": 1
   },
   {
    "comite": "Comité Sports",
@@ -2045,17 +311,12 @@
   {
    "comite": "Comité Sports",
    "titulo": "Colaborador Hiking",
-   "activos": 14
-  },
-  {
-   "comite": "Comité Sports",
-   "titulo": "Colaborador Biking",
-   "activos": 2
+   "activos": 18
   },
   {
    "comite": "Comité Sports",
    "titulo": "Asistente Sports",
-   "activos": 0
+   "activos": 4
   },
   {
    "comite": "Comité Sports",
@@ -2068,69 +329,24 @@
    "activos": 0
   },
   {
-   "comite": "Comité Experiencia",
-   "titulo": "Encargado Experiencia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Asistente Experiencia",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Experiencia",
-   "titulo": "Colaborador experiencia",
-   "activos": 0
-  },
-  {
    "comite": "Comité Contabilidad",
    "titulo": "Encargado contabilidad",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Contabilidad",
-   "titulo": "Auxiliar contable",
-   "activos": 0
+   "activos": 2
   },
   {
    "comite": "Comité Contabilidad",
    "titulo": "Colaborador contable",
-   "activos": 0
+   "activos": 4
   },
   {
-   "comite": "Comité Edife",
-   "titulo": "Encargado Edife",
-   "activos": 0
+   "comite": "Comité Experiencia",
+   "titulo": "Encargado Experiencia",
+   "activos": 2
   },
   {
-   "comite": "Comité Edife",
-   "titulo": "Asistente Edife",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Edife",
-   "titulo": "Colaborador Edife",
-   "activos": 0
-  },
-  {
-   "comite": "Community",
-   "titulo": "Encargado Comunity",
-   "activos": 0
-  },
-  {
-   "comite": "Community",
-   "titulo": "Asistente Comunity",
-   "activos": 0
-  },
-  {
-   "comite": "Community",
-   "titulo": "Colaborador Comunity",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Comunicación",
-   "titulo": "Encargado comunicación",
-   "activos": 0
+   "comite": "Comité Sports",
+   "titulo": "Colaborador Biking",
+   "activos": 4
   },
   {
    "comite": "Comité Comunicación",
@@ -2144,11 +360,6 @@
   },
   {
    "comite": "Comité Contenido",
-   "titulo": "Encargado Contenido",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Contenido",
    "titulo": "Asistente Contenido",
    "activos": 0
   },
@@ -2158,23 +369,13 @@
    "activos": 0
   },
   {
+   "comite": "Directores",
+   "titulo": "Director General",
+   "activos": 2
+  },
+  {
    "comite": "Comité Contenido",
    "titulo": "Colaborador Contenido Actividades Especiales",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Worship",
-   "titulo": "Asistente Worship",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Worship",
-   "titulo": "Musico",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Worship",
-   "titulo": "Encargado Worship",
    "activos": 0
   },
   {
@@ -2185,11 +386,6 @@
   {
    "comite": "Comité de Dirigentes",
    "titulo": "Colaborador retroalimentación",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Dirigentes",
-   "titulo": "Asistente Dirigentes",
    "activos": 0
   },
   {
@@ -2249,16 +445,6 @@
   },
   {
    "comite": "Comité Estudios Bíblicos",
-   "titulo": "Encargado Estudios Biblicos",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
-   "titulo": "Asistente Estudios Biblicos",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Estudios Bíblicos",
    "titulo": "Colaborador EB Actividades",
    "activos": 0
   },
@@ -2280,16 +466,6 @@
   {
    "comite": "Comité Estudios Bíblicos",
    "titulo": "Colaborador EB Software",
-   "activos": 0
-  },
-  {
-   "comite": "Comité GO",
-   "titulo": "Encargado GO",
-   "activos": 0
-  },
-  {
-   "comite": "Comité GO",
-   "titulo": "Asistente GO",
    "activos": 0
   },
   {
@@ -2324,11 +500,6 @@
   },
   {
    "comite": "Comité de Hombres",
-   "titulo": "Colaborador Hombres",
-   "activos": 0
-  },
-  {
-   "comite": "Comité de Hombres",
    "titulo": "Colaborador Hombres Seguimiento",
    "activos": 0
   },
@@ -2336,6 +507,11 @@
    "comite": "Comité de Hombres",
    "titulo": "Colaborador Hombres Comunicación",
    "activos": 0
+  },
+  {
+   "comite": "Comité de Hombres",
+   "titulo": "Colaborador Hombres",
+   "activos": 17
   },
   {
    "comite": "Sede Pedregal Domingos",
@@ -2348,29 +524,364 @@
    "activos": 1
   },
   {
-   "comite": "Comité de Campamentos",
-   "titulo": "Colaborador Médico",
-   "activos": 0
-  },
-  {
-   "comite": "Comité Ayuda Social",
-   "titulo": "Colaborador Theos en las Calles Perez Zeledón",
-   "activos": 0
-  },
-  {
    "comite": "Comité Ayuda Social",
    "titulo": "Coordinador Valientes",
    "activos": 0
   },
   {
-   "comite": "Comité Ayuda Social",
-   "titulo": "Coordinador de Ayuda Social Guanacaste",
-   "activos": 0
+   "comite": "Sede Pedregal Jueves",
+   "titulo": "Colaborador Campamentos",
+   "activos": 3
+  },
+  {
+   "comite": "Sede Alajuela",
+   "titulo": "Colaborador Finanzas",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Colaborador Seguimiento",
+   "activos": 1
+  },
+  {
+   "comite": "SubComité Producción Técnica",
+   "titulo": "Encargado Experiencia",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Tecnología de Información",
+   "titulo": "Encargado Comite",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Liberia",
+   "titulo": "Colaborador PT sedes",
+   "activos": 11
+  },
+  {
+   "comite": "Sede Pedregal Jueves",
+   "titulo": "Colaborador PT sedes",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Pedregal Domingos",
+   "titulo": "Colaborador PT sedes",
+   "activos": 5
+  },
+  {
+   "comite": "Comité Contenido",
+   "titulo": "Colaborador Contenido",
+   "activos": 6
+  },
+  {
+   "comite": "Sede Alajuela",
+   "titulo": "Colaborador PT sedes",
+   "activos": 10
+  },
+  {
+   "comite": "Sede Antares",
+   "titulo": "Colaborador PT sedes",
+   "activos": 5
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Asistente Logistica",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Cartago",
+   "titulo": "Colaborador PT sedes",
+   "activos": 4
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Orador Sede",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Pedregal Miércoles",
+   "titulo": "Colaborador PT sedes",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Meridiano Martes",
+   "titulo": "Colaborador PT sedes",
+   "activos": 4
+  },
+  {
+   "comite": "Comité de Planificación",
+   "titulo": "Colaborador Planificación",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Oración",
+   "titulo": "Diseñador/a",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Pérez Zeledón",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Pérez Zeledón",
+   "titulo": "Colaborador PT sedes",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Cartago",
+   "titulo": "Encargado Sede",
+   "activos": 1
+  },
+  {
+   "comite": "Comité de Worship",
+   "titulo": "Colaborador Worship",
+   "activos": 24
+  },
+  {
+   "comite": "Sede Madrid",
+   "titulo": "Colaborador PT sedes",
+   "activos": 4
+  },
+  {
+   "comite": "Sede Potrero",
+   "titulo": "Encargado Sede",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Pérez Zeledón",
+   "titulo": "Encargado Sede",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Pedregal Miércoles",
+   "titulo": "Encargado Logística",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Madrid",
+   "titulo": "Coordinador Oración Sede",
+   "activos": 1
+  },
+  {
+   "comite": "Comité de Hombres",
+   "titulo": "Asistente Hombres",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Dirigentes Administrativo",
+   "titulo": "Encargado Dirigentes",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Matrimonios",
+   "titulo": "Colaborador Matrimonios",
+   "activos": 30
+  },
+  {
+   "comite": "Comité Matrimonios",
+   "titulo": "Encargado Matrimonios",
+   "activos": 4
+  },
+  {
+   "comite": "Comité de Hombres",
+   "titulo": "Encargado Hombres",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Tecnología de Información",
+   "titulo": "Encargado IT",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Comunicación",
+   "titulo": "Colaborador Comunicación",
+   "activos": 2
+  },
+  {
+   "comite": "SubComité Prod.Audiovisual",
+   "titulo": "Colaborador PT sedes",
+   "activos": 3
+  },
+  {
+   "comite": "Comité GO",
+   "titulo": "Colaborador GO",
+   "activos": 14
+  },
+  {
+   "comite": "Sede Meridiano Miércoles",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Alajuela",
+   "titulo": "Encargado Logística",
+   "activos": 2
+  },
+  {
+   "comite": "Sede Cartago",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Guápiles",
+   "titulo": "Colaborador de grupo",
+   "activos": 5
+  },
+  {
+   "comite": "Sede Pedregal Jueves",
+   "titulo": "Encargado Logística",
+   "activos": 3
+  },
+  {
+   "comite": "Sede Liberia",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Madrid",
+   "titulo": "Orador",
+   "activos": 7
+  },
+  {
+   "comite": "Sede Madrid",
+   "titulo": "Encargado Logística",
+   "activos": 4
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Proofreading",
+   "activos": 9
+  },
+  {
+   "comite": "Sede Potrero",
+   "titulo": "Colaborador Díques",
+   "activos": 6
+  },
+  {
+   "comite": "Sede Meridiano Martes",
+   "titulo": "Encargado Logística",
+   "activos": 3
+  },
+  {
+   "comite": "Sede Pérez Zeledón",
+   "titulo": "Colaborador de grupo",
+   "activos": 8
+  },
+  {
+   "comite": "Sede Antares",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Sede Pedregal Domingos",
+   "titulo": "Encargado Logística",
+   "activos": 1
+  },
+  {
+   "comite": "Comité de Campamentos",
+   "titulo": "Colaborador Campamentos",
+   "activos": 29
+  },
+  {
+   "comite": "Comité de Campamentos",
+   "titulo": "Encargado Campamentos",
+   "activos": 1
   },
   {
    "comite": "Comité Ayuda Social",
-   "titulo": "Colaborador de Ayuda Social Guanacaste",
-   "activos": 0
+   "titulo": "Encargado Ayuda Social",
+   "activos": 8
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Diagramador",
+   "activos": 5
+  },
+  {
+   "comite": "Comité Edife",
+   "titulo": "Colaborador Edife",
+   "activos": 23
+  },
+  {
+   "comite": "Comité Contenido",
+   "titulo": "Encargado Contenido",
+   "activos": 3
+  },
+  {
+   "comite": "Comité Youth",
+   "titulo": "Colaborador Youth",
+   "activos": 10
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Asistente Estudios Biblicos",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Estudios Bíblicos",
+   "titulo": "Encargado Estudios Biblicos",
+   "activos": 2
+  },
+  {
+   "comite": "Comité Oración",
+   "titulo": "Encargado Oración",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Oración",
+   "titulo": "Coordinador Oración Comités",
+   "activos": 6
+  },
+  {
+   "comite": "Comité de Worship",
+   "titulo": "Encargado Worship",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Comunicación",
+   "titulo": "Encargado comunicación",
+   "activos": 1
+  },
+  {
+   "comite": "Community",
+   "titulo": "Encargado Comunity",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Edife",
+   "titulo": "Encargado Edife",
+   "activos": 1
+  },
+  {
+   "comite": "Comité GO",
+   "titulo": "Encargado GO",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Sports",
+   "titulo": "Encargado Sports",
+   "activos": 1
+  },
+  {
+   "comite": "Comité Sports",
+   "titulo": "Coordinador Hiking",
+   "activos": 5
+  },
+  {
+   "comite": "SubComité Producción Técnica",
+   "titulo": "Colaborador PT sedes",
+   "activos": 47
+  },
+  {
+   "comite": "Comité Oración",
+   "titulo": "Coordinador Oración Sede",
+   "activos": 42
+  },
+  {
+   "comite": "Comité Oración",
+   "titulo": "Orador Sede",
+   "activos": 114
   }
  ]
 }

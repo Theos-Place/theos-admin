@@ -19,6 +19,7 @@ const aplicar = process.argv.includes('--aplicar')
   const crearAreas = []
   for (const a of areasMadre) {
     const hit = idxA.get(L.norm(a))
+    if (!hit && L.NO_CREAR_AREAS.includes(a)) { console.log(`  ${a.padEnd(14)} → (el usuario la borró; no se recrea)`); continue }
     console.log(`  ${a.padEnd(14)} → ${hit ? hit.name : '❌ NO EXISTE — se crearía'}`)
     if (!hit) crearAreas.push(a)
   }
@@ -36,10 +37,19 @@ const aplicar = process.argv.includes('--aplicar')
     const areaMadre = [...new Set(PM.filter(r => String(r['Comité']).trim() === m).map(r => String(r['Área']).trim()))].filter(Boolean)[0] ?? null
     const destino = L.COMITE_MADRE_A_SISTEMA[L.norm(m)]
     const hit = destino ? (idxC.get(L.norm(destino)) ?? [])[0] : (idxC.get(L.norm(m)) ?? [])[0]
+    if (!hit && L.NO_CREAR_COMITES.includes(m)) { console.log(`  ${m.padEnd(28)} → (el usuario lo borró; no se recrea)`); continue }
     if (!hit) {
       const areaNueva = L.COMITES_NUEVOS[m] ?? areaMadre
       console.log(`  ${m.padEnd(28)} → ❌ NO EXISTE — se crearía en «${areaNueva}»`)
       crearC.push({ nombre: m, area: areaNueva }); continue
+    }
+    // El área que el usuario decidió pisa a la del madre.
+    const decidida = L.AREA_DECIDIDA[hit.name]
+    if (decidida) {
+      const ok = L.norm(hit.area ?? '') === L.norm(decidida)
+      console.log(`  ${m.padEnd(28)} → ${hit.name.padEnd(34)}  (área ${decidida} por decisión${ok ? '' : ' — HAY QUE MOVERLO'})`)
+      if (!ok) moverC.push({ id: hit.id, nombre: hit.name, de: hit.area, a: decidida })
+      continue
     }
     const congelada = L.AREA_CONGELADA.includes(hit.name)
     const cambia = !congelada && areaMadre && L.norm(hit.area ?? '') !== L.norm(areaMadre)
