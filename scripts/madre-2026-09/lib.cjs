@@ -8,6 +8,29 @@ const MADRE = 'data-import/excel-madre-consolidado-2026-09.xlsx'
 const hoja = n => XLSX.utils.sheet_to_json(XLSX.readFile(MADRE).Sheets[n], { defval: '' })
 
 /**
+ * CORRECCIONES DEL USUARIO a los match difusos (2026-09-11).
+ *
+ * El madre resolvió 203 asignaciones con match difuso y una parte estaba mal:
+ * "Colaborador de basket" → Colaborador QA, "Coordinador de spinning" →
+ * Coordinador Hiking, "Colaborador de Sistemas" → Colaborador Semillitas. El
+ * usuario revisó los 62 mapeos difusos y devolvió la columna "puesto por
+ * cambiar": confirmó 38 y corrigió 24, que mueven 91 personas.
+ *
+ * Esta tabla PISA al madre. Es name-level porque los difusos lo eran: cada
+ * nombre de CCB tenía un solo destino.
+ */
+const CORRECCIONES = 'data-import/mapeos-difusos-corregidos-2026-09-11.xlsx'
+function correccionesDifusas() {
+  const filas = XLSX.utils.sheet_to_json(XLSX.readFile(CORRECCIONES).Sheets['Sheet1'], { defval: '' })
+  const m = new Map()
+  for (const r of filas) {
+    const ccb = String(r['puesto CCB']).trim(), fin = String(r['puesto por cambiar']).trim()
+    if (ccb && fin) m.set(norm(ccb), fin)
+  }
+  return m
+}
+
+/**
  * Normalización para comparar nombres.
  *
  * Quita tildes y los prefijos con los que el sistema y el madre nombran la misma
@@ -87,5 +110,26 @@ function indiceComites(comites) {
   return i
 }
 
-module.exports = { nuevoCliente, hoja, norm, cargarSistema, indiceComites,
+/**
+ * CORRECCIONES POR (puesto CCB + comité), decididas el 2026-09-11 después de
+ * cruzar destino contra comité. No estaban en la revisión de difusos porque su
+ * método era "por comité" o porque el destino pertenecía a otro comité:
+ *
+ *  · Los 4 "Encargado" de Matrimonios caían en "Encargado Mujeres" por fallback
+ *    —el canon no tenía "Encargado Matrimonios"—. Se crea el puesto, siguiendo
+ *    el patrón Encargado + comité que el canon usa en todos los demás.
+ *  · Los "Coordinador Oración <sede>" iban a "Coordinador Información", que es
+ *    un puesto de Sedes. Van al mismo destino que sus hermanos (Meridiano,
+ *    Perez, Pedregal…): "Coordinador Oración Sede".
+ */
+const CORRECCIONES_POR_COMITE = [
+  { ccb: 'Encargado', comite: 'Comité Matrimonios', oficial: 'Encargado Matrimonios' },
+  ...['Antares','Liberia','Madrid','Cartago','Guapiles','Potrero','Alajuela','Pedregal J']
+      .map(s => ({ ccb: `Coordinador Oración ${s}`, comite: 'Comité Oración', oficial: 'Coordinador Oración Sede' })),
+  // Mismo caso, 1 persona, pero su comité es la sede y no el Comité Oración:
+  // se extiende la misma regla por consistencia (avisado al usuario).
+  { ccb: 'Coordinador Oración', comite: 'Sede Madrid', oficial: 'Coordinador Oración Sede' },
+]
+
+module.exports = { nuevoCliente, hoja, norm, correccionesDifusas, CORRECCIONES_POR_COMITE, cargarSistema, indiceComites,
   COMITE_MADRE_A_SISTEMA, COMITES_NUEVOS, PERSONAS_A_SISTEMA, NO_SON_COMITES, IGNORAR, AREA_CONGELADA, FAMILIA_SEDES }
