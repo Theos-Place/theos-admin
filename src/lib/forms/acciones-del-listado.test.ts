@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { accionesDelFormulario, puedeCrearFormularios } from './acciones-del-listado'
+import { accionesDelFormulario, puedeCrearFormularios, puedeRepartirAcceso } from './acciones-del-listado'
 import type { RoleId } from '@/types/auth'
 
 const FORM = 'af0a33f8-359f-4407-9eb2-17f91d52d682'
@@ -70,5 +70,27 @@ describe('crear formularios', () => {
 
   it('solo lectura tampoco', () => {
     expect(puedeCrearFormularios(['solo_lectura'] as RoleId[])).toBe(false)
+  })
+})
+
+describe('repartir el acceso a un formulario', () => {
+  it('lo puede hacer quien ya lo tiene compartido', () => {
+    expect(puedeRepartirAcceso({
+      roles: ['lider_comite'] as RoleId[], formId: FORM, grantedFormIds: [FORM],
+    })).toBe(true)
+  })
+
+  it('pero solo el de ESE formulario, no el de otro', () => {
+    expect(puedeRepartirAcceso({
+      roles: ['lider_comite'] as RoleId[], formId: FORM, grantedFormIds: [OTRO],
+    })).toBe(false)
+  })
+
+  it('el módulo con edición también', () => {
+    expect(puedeRepartirAcceso({ roles: ['forms'] as RoleId[], formId: FORM })).toBe(true)
+  })
+
+  it('solo lectura no reparte accesos', () => {
+    expect(puedeRepartirAcceso({ roles: ['solo_lectura'] as RoleId[], formId: FORM })).toBe(false)
   })
 })

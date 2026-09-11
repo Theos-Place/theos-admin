@@ -50,6 +50,26 @@ export function accionesDelFormulario(input: {
   }
 }
 
+/**
+ * ¿Puede repartir el acceso a ESTE formulario?
+ *
+ * Decisión del usuario (2026-09-11): quien recibió un formulario compartido
+ * también lo comparte — armar el equipo es parte de llevar la actividad. Espejo
+ * del guard de /api/forms/[id]/access.
+ *
+ * (El encargado del EVENTO al que pertenece un formulario también puede, y el
+ * API lo contempla; acá no se puede saber sin cargar el formulario, y hoy no hay
+ * ni un formulario colgado de un evento. Cuando lo haya, se le pasa el evento.)
+ */
+export function puedeRepartirAcceso(input: {
+  roles: readonly RoleId[] | null | undefined
+  formId: string
+  grantedFormIds?: readonly string[] | null
+}): boolean {
+  return (input.grantedFormIds ?? []).includes(input.formId)
+    || hasModulePermission([...(input.roles ?? [])], 'formularios', 'edit')
+}
+
 /** ¿Se le ofrece crear formularios nuevos? Solo con el módulo: un acceso puntual
  *  es para llevar lo que le compartieron, y el botón terminaba en un muro. */
 export function puedeCrearFormularios(roles: readonly RoleId[] | null | undefined): boolean {

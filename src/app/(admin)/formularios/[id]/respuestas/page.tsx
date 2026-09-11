@@ -28,9 +28,12 @@ function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   const dataFields = form.fields.filter(f => isDataField(f.type))
   // encabezadoDeCampo y no f.label: los campos ocultos no exigen título y su
   // columna quedaría sin nombre.
-  const headers = ['Miembro', 'Registrada por', 'Fecha', ...dataFields.map(f => encabezadoDeCampo(f.type, f.label))]
+  // "Teléfono (perfil)" sale de la ficha, no de una pregunta: los encargados
+  // necesitan llamar a la gente y no todos los formularios lo piden.
+  const headers = ['Miembro', 'Teléfono (perfil)', 'Registrada por', 'Fecha', ...dataFields.map(f => encabezadoDeCampo(f.type, f.label))]
   const rows = responses.map(r => [
     r.member_name,
+    r.member_phone,
     r.recorded_by_name,
     new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
     ...dataFields.map(f => {

@@ -1,6 +1,7 @@
 // Adapta filas de Supabase a los tipos de dominio de formularios.
 
 import type { DbFormTemplate, DbFormField, DbFormResponse } from '@/lib/supabase/queries/forms'
+import { formatPhoneCR } from '@/lib/phone'
 import type { FormTemplate, FormFieldNew, FormResponse, FieldType, LogicRule } from '@/types/forms'
 
 // Mapea field_type de la BD al FieldType del builder (algunos tipos no existen
@@ -92,6 +93,7 @@ export function toDomainFormResponse(db: DbFormResponse): FormResponse {
     form_id: db.form_id,
     member_id: db.member_id ?? '',
     member_name: memberName,
+    member_phone: formatPhoneCR(db.member?.phone),
     submitted_at: db.submitted_at,
     answers,
     recorded_by_name: db.recorder

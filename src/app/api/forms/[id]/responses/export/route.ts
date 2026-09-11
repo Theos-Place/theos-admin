@@ -7,6 +7,7 @@ import {
 } from '@/lib/supabase/queries/forms'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
 import { encabezadoDeCampo } from '@/lib/forms/computed-fields'
+import { formatPhoneCR } from '@/lib/phone'
 import {
   excelCellKind, excelNumFmt, isDataField, columnWidthFor, answerToCell, xlsxFileName,
 } from '@/lib/forms/xlsx-export'
@@ -48,6 +49,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     // Contexto primero, respuestas después: es el orden en que uno lee una fila.
     const CONTEXTO = [
       { header: 'Quién respondió', width: 28 },
+      // Del PERFIL, no de una pregunta: los encargados llaman a la gente y no
+      // todos los formularios piden teléfono. Va pegado al nombre, que es como
+      // se usa. Se titula "(perfil)" para que no se confunda con la columna de
+      // una pregunta de teléfono, si el formulario tiene una.
+      { header: 'Teléfono (perfil)', width: 16 },
       // FRM-4: vacío en el caso normal. Con valor = la digitó el staff, no la
       // propia persona. Va junto al nombre para que nadie las confunda.
       { header: 'Registrada por', width: 24 },
@@ -79,8 +85,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       if (fmt) ws.getColumn(CONTEXTO.length + 1 + i).numFmt = fmt
     })
     ws.getColumn(1).numFmt = '@'          // el nombre, texto
-    ws.getColumn(2).numFmt = '@'          // quién la registró, texto
-    ws.getColumn(3).numFmt = 'dd/mm/yyyy' // la fecha, fecha real
+    ws.getColumn(2).numFmt = '@'          // el teléfono, texto (si no, Excel se lo come)
+    ws.getColumn(3).numFmt = '@'          // quién la registró, texto
+    ws.getColumn(4).numFmt = 'dd/mm/yyyy' // la fecha, fecha real
 
     for (const r of responses) {
       // Las respuestas vienen como lista de valores, no como objeto por campo.
@@ -97,6 +104,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       const fila: Array<string | number | Date | null> = [
         // Un formulario anónimo no trae nombre: se dice, no se deja en blanco.
         nombre || 'Anónimo',
+        formatPhoneCR(r.member?.phone) || null,
         digitador || null,
         r.submitted_at ? new Date(r.submitted_at) : null,
         ...campos.map(f => answerToCell(porCampo.get(f.id), excelCellKind(f.field_type), origin)),

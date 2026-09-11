@@ -117,6 +117,9 @@ export interface FormResponse {
   form_id: string
   member_id: string
   member_name: string
+  /** Teléfono del PERFIL de quien respondió (vacío si respondió como invitado).
+   *  No sale de una pregunta del formulario. */
+  member_phone: string
   submitted_at: string
   answers: Record<string, string | string[] | number>
   /** FRM-4: nombre de quien la DIGITÓ, si no fue la propia persona. Vacío en el

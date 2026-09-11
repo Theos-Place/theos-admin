@@ -1,9 +1,10 @@
 'use client'
 
 // "Personas con acceso a este formulario" (2026-08-04): acceso puntual para que
-// alguien —la encargada de una actividad, por ejemplo— vea y exporte las
-// respuestas de ESTE formulario y de ningún otro. No da permiso para editar la
-// estructura: eso sigue siendo del módulo formularios.
+// alguien —la encargada de una actividad, por ejemplo— trabaje ESTE formulario y
+// ningún otro. Desde el 2026-09-11 el acceso es completo sobre ese formulario:
+// ver y exportar las respuestas, editarlo, y compartirlo con su equipo. Lo que
+// no da es el resto del módulo: ni crear formularios nuevos ni ver los demás.
 //
 // La administración vive acá, en la configuración de CADA formulario (no en el
 // evento). API: /api/forms/[id]/access.

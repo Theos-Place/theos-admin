@@ -49,7 +49,9 @@ export type DbFormResponse = {
   id: string
   form_id: string
   member_id: string | null
-  member: { first_name: string; last_name: string } | null
+  /** El teléfono sale del PERFIL, no de una pregunta del formulario: los
+   *  encargados necesitan contactar a la gente y la respuesta puede no pedirlo. */
+  member: { first_name: string; last_name: string; phone: string | null } | null
   guest_name: string | null
   submitted_at: string
   /** FRM-4: quién la digitó, si no fue la propia persona. NULL en el caso normal. */
@@ -97,7 +99,7 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
     .from('form_responses')
     .select(`
       id, form_id, member_id, guest_name, submitted_at, recorded_by,
-      member:members!form_responses_member_id_fkey(first_name, last_name),
+      member:members!form_responses_member_id_fkey(first_name, last_name, phone),
       recorder:members!form_responses_recorded_by_fkey(first_name, last_name),
       values:form_response_values(field_id, value_text, value_json)
     `)

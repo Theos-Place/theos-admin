@@ -14,6 +14,20 @@ export function normalizePhoneOrNull(value: string | null | undefined): string |
   return cleaned.length > 0 ? cleaned : null
 }
 
+/**
+ * Teléfono listo para LEER (exports, listas para llamar).
+ *
+ * En la base se guardan solo dígitos, así que un 88887777 sale pegado y cuesta
+ * marcarlo de un vistazo. Los de Costa Rica son de 8 dígitos y se leen en dos
+ * bloques de cuatro. Cualquier otro largo se devuelve tal cual: partirlo por la
+ * mitad sería inventar un formato que no existe.
+ */
+export function formatPhoneCR(value: string | null | undefined): string {
+  const d = normalizePhone(value)
+  if (d.length !== 8) return d
+  return `${d.slice(0, 4)}-${d.slice(4)}`
+}
+
 /** Código de país por defecto: los teléfonos del padrón se guardan sin él y
  *  casi todos son de Costa Rica (8 dígitos). */
 export const DEFAULT_COUNTRY_CODE = '506'
