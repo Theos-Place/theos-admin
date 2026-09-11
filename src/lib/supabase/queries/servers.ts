@@ -133,6 +133,12 @@ export async function getCommittees(): Promise<DbCommittee[]> {
     `)
     .eq('area_type', 'committee')
     .eq('is_active', true)
+    // Los PUESTOS también se filtran por activos. Sin esta línea el filtro de
+    // arriba solo aplicaba al comité y la pantalla seguía pintando los puestos
+    // desactivados: después de la sincronización del Excel Madre (2026-09-11),
+    // Worship mostraba "Encargado", "Encargado Worship" y "Encargado de Comité
+    // de Música" como si los tres existieran, cuando dos ya estaban fusionados.
+    .eq('positions.is_active', true)
     .order('name', { ascending: true })
   if (error) throw error
   const areaMap = await getAreaNameMap(supabase)

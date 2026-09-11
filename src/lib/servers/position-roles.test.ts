@@ -8,6 +8,13 @@ function enSede(title: string, areaName = 'Sede Pedregal Jueves'): PositionConte
 }
 
 describe('encargado_eventos por puesto de sede', () => {
+  it('el nombre oficial 2026 "Encargado Logística" también lo da', () => {
+    // El renombre del Excel Madre (2026-09-11) sacó a 10 encargados de
+    // logística del check-in porque la lista solo tenía "Logística".
+    expect(rolesGrantedByPosition(enSede('Encargado Logística'))).toContain('encargado_eventos')
+    expect(rolesGrantedByPosition(enSede('Logística'))).toContain('encargado_eventos')
+  })
+
   it('lo dan logística y anfitrión, que es lo que se pidió', () => {
     for (const t of ['Logística', 'Asistente Logística', 'Anfitrión']) {
       expect(rolesGrantedByPosition(enSede(t))).toContain('encargado_eventos')
@@ -72,17 +79,36 @@ describe('encargado_eventos por puesto de sede', () => {
 })
 
 describe('lider_comite', () => {
-  it('lo da el encargado de un comité, de cualquier área', () => {
-    expect(rolesGrantedByPosition(enSede('Encargado'))).toContain('lider_comite')
-    expect(rolesGrantedByPosition({
-      title: 'Encargado de comité', areaName: 'Comité Experiencia',
-      areaType: 'committee', parentAreaName: 'Área Operaciones',
-    })).toContain('lider_comite')
+  const enComite = (title: string, areaName = 'Comité Experiencia') =>
+    rolesGrantedByPosition({ title, areaName, areaType: 'committee', parentAreaName: 'Área Operaciones' })
+
+  it('lo da el encargado de un comité, con el nombre pelado o con el del comité', () => {
+    for (const t of ['Encargado', 'Encargado de comité', 'Encargado Experiencia', 'Encargado Ayuda Social']) {
+      expect(enComite(t), t).toContain('lider_comite')
+    }
+  })
+
+  // La sincronización del Excel Madre (2026-09-11) renombró los "Encargado" a
+  // "Encargado <Comité>". Con la regla vieja —título exacto— 26 comités dejaban
+  // de otorgar el rol en silencio.
+  it('los nombres oficiales 2026 siguen otorgándolo', () => {
+    for (const [t, c] of [['Encargado Worship', 'Comité de Worship'], ['Encargado Sports', 'Comité Sports'],
+                          ['Encargado Matrimonios', 'Comité Matrimonios'], ['Encargado IT', 'Comité Tecnología de Información']]) {
+      expect(enComite(t, c), t).toContain('lider_comite')
+    }
   })
 
   it('no lo dan los sub-roles', () => {
-    for (const t of ['Asistente Encargado', 'Encargado GR', 'Ayudante de Encargado Place Heredia']) {
-      expect(rolesGrantedByPosition(enSede(t))).not.toContain('lider_comite')
+    for (const t of ['Asistente Encargado', 'Ayudante de Encargado Place Heredia']) {
+      expect(enComite(t), t).not.toContain('lider_comite')
+    }
+  })
+
+  // Decisión del usuario 2026-09-11: en una sede, "Encargado Logística" y
+  // "Encargado Sede" son roles de la operación, no la cabeza de un comité.
+  it('en un comité de SEDE no lo da ningún Encargado', () => {
+    for (const t of ['Encargado', 'Encargado Logística', 'Encargado Sede', 'Encargado GR']) {
+      expect(rolesGrantedByPosition(enSede(t)), t).not.toContain('lider_comite')
     }
   })
 })
@@ -118,39 +144,25 @@ describe('solicitudes_estudio por puesto del comité', () => {
   })
 })
 
-// Los colaboradores de Youth hacen el check-in del subevento de Youth en las
-// charlas, así que su puesto trae el acceso a eventos (2026-09-08).
-describe('encargado_eventos por el Comité Youth', () => {
+// El Comité Youth ya NO otorga encargado_eventos por el puesto "Colaborador".
+// Ese puesto se fusionó en "Colaborador Youth" con el Excel Madre, y la decisión
+// del usuario (2026-09-11) es que quien hace check-in en Youth vaya en un puesto
+// de bienvenida, no que el colaborador lo traiga por su nombre.
+describe('Comité Youth', () => {
   const enYouth = (title: string, areaName = 'Comité Youth') =>
     rolesGrantedByPosition({ title, areaName, areaType: 'committee', parentAreaName: 'Area de Enseñanza' })
 
-  it('el Colaborador de Youth lo trae', () => {
-    expect(enYouth('Colaborador')).toContain('encargado_eventos')
-  })
-
-  it('el nombre del comité se reconoce con y sin tilde', () => {
-    expect(enYouth('Colaborador', 'Comite Youth')).toContain('encargado_eventos')
-    expect(enYouth('Colaborador', 'COMITÉ DE YOUTH')).toContain('encargado_eventos')
-  })
-
-  // Se acota al título exacto: esto da permiso para hacer check-in y la lista
-  // se amplía cuando alguien lo decida, no por parecido de nombre.
-  it('los otros puestos del comité NO lo traen', () => {
-    for (const t of ['Teacher', 'Asistente Teacher', 'Colaborador Youth',
-                     'Colaborador de Onboarding', 'Asistente Youth']) {
+  it('ningún puesto del comité otorga encargado_eventos', () => {
+    for (const t of ['Colaborador', 'Colaborador Youth', 'Teacher', 'Asistente Teacher', 'Encargado Youth']) {
       expect(enYouth(t), t).not.toContain('encargado_eventos')
     }
   })
 
-  it('un "Colaborador" de otro comité tampoco', () => {
-    expect(enYouth('Colaborador', 'Comité de Worship')).not.toContain('encargado_eventos')
-    expect(enYouth('Colaborador', 'Comité de Mujeres')).not.toContain('encargado_eventos')
-  })
-
   it('el Encargado de Youth sigue trayendo lider_comite, y solo eso', () => {
-    expect(enYouth('Encargado')).toEqual(['lider_comite'])
+    expect(enYouth('Encargado Youth')).toEqual(['lider_comite'])
   })
 })
+
 
 describe('el "de" no cambia si un puesto de sede da check-in', () => {
   const sede = (title: string) => rolesGrantedByPosition({
