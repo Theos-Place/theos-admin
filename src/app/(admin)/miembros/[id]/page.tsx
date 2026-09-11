@@ -328,7 +328,7 @@ export default function MiembroDetailPage() {
       {/* TAB: Info Personal */}
       {activeTab === 'personal' && (
         <div className="space-y-4">
-          <MemberPersonalTab member={member} />
+          <MemberPersonalTab member={member} onActualizado={refetch} />
           <MemberEmailStatus memberId={member.id} />
         </div>
       )}

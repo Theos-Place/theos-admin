@@ -33,7 +33,7 @@ function calculateAge(dateStr: string): number {
  * justamente lo que evita volver a ofrecer algo que el servidor rechaza.
  */
 function Fila({
-  icon, label, value, columna, tipo = 'texto', opciones, memberId, puedeEditar,
+  icon, label, value, columna, tipo = 'texto', opciones, memberId, puedeEditar, onGuardado,
 }: {
   icon: React.ReactNode
   label: string
@@ -44,6 +44,7 @@ function Fila({
   opciones?: ReadonlyArray<{ valor: string; etiqueta: string }>
   memberId: string
   puedeEditar: boolean
+  onGuardado?: (columna: string, valor: string) => void
 }) {
   const editable = !!columna && puedeEditar
   return (
@@ -58,6 +59,7 @@ function Fila({
             columna={columna!}
             tipo={tipo}
             opciones={opciones}
+            onGuardado={onGuardado}
           />
         ) : (
           <>
@@ -79,9 +81,13 @@ function Fila({
 
 type Props = {
   member: Member
+  /** Recarga la ficha. El encabezado y las otras pestañas leen el mismo objeto,
+   *  así que un dato corregido acá tiene que refrescarlas: sin esto la pantalla
+   *  seguía mostrando el valor viejo y parecía que el guardado había fallado. */
+  onActualizado?: () => void
 }
 
-export function MemberPersonalTab({ member }: Props) {
+export function MemberPersonalTab({ member, onActualizado }: Props) {
   const { can } = usePermissions()
   const { user } = useAuth()
   // Los dos casos que el PATCH de /api/members/[id] ya acepta: staff de padrón
@@ -92,7 +98,7 @@ export function MemberPersonalTab({ member }: Props) {
     tieneDocumento: !!member.cedula?.trim(),
   }
   const edita = (columna: string) => puedeEditarColumna(columna, ctx)
-  const comun = { memberId: member.id }
+  const comun = { memberId: member.id, onGuardado: () => onActualizado?.() }
 
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">

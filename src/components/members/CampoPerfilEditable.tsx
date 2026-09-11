@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pencil, Check, Loader2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { valorAMostrar } from '@/lib/members/campo-editable'
 
 /**
  * Un dato del perfil, editable donde se muestra.
@@ -50,6 +51,11 @@ export function CampoPerfilEditable({
   onGuardado?: (columna: string, valor: string) => void
 }) {
   const VACIO = '—'
+  // Lo último que ESTE campo guardó. Sin esto, al confirmar se volvía a pintar
+  // la prop del servidor —que no se recarga— y el dato recién guardado
+  // desaparecía de la pantalla: se veía igual que un guardado fallido.
+  const [guardado, setGuardado] = useState<{ desde: string; valor: string } | null>(null)
+  const mostrado = valorAMostrar(valor, guardado)
   const [editando, setEditando] = useState(false)
   const [texto, setTexto] = useState(valor === VACIO ? '' : valor)
   const [estado, setEstado] = useState<'quieto' | 'guardando' | 'guardado'>('quieto')
@@ -72,7 +78,7 @@ export function CampoPerfilEditable({
 
   async function guardarValor(bruto: string) {
     const nuevo = bruto.trim()
-    const anterior = valor === VACIO ? '' : valor
+    const anterior = mostrado === VACIO ? '' : mostrado
     if (nuevo === anterior) { setEditando(false); setError(null); return }
     setEstado('guardando')
     setError(null)
@@ -84,6 +90,7 @@ export function CampoPerfilEditable({
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error ?? 'No se pudo guardar.')
+      setGuardado({ desde: valor, valor: nuevo || VACIO })
       setEstado('guardado')
       setEditando(false)
       onGuardado?.(columna, nuevo)
@@ -138,7 +145,7 @@ export function CampoPerfilEditable({
               onKeyDown={e => {
                 if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() }
                 if (e.key === 'Escape') {
-                  setTexto(valor === VACIO ? '' : valor)
+                  setTexto(mostrado === VACIO ? '' : mostrado)
                   setError(null)
                   setEditando(false)
                 }
@@ -168,13 +175,13 @@ export function CampoPerfilEditable({
       </div>
       <button
         type="button"
-        onClick={() => { setTexto(valor === VACIO ? '' : valor); setEditando(true) }}
+        onClick={() => { setTexto(mostrado === VACIO ? '' : mostrado); setEditando(true) }}
         // Área de toque cómoda en celular, que es desde donde más se usa.
         className="mt-[3px] flex w-full items-center gap-1.5 rounded-lg py-1 text-left transition-colors hover:bg-navy/5"
         aria-label={`Editar ${etiqueta}`}
       >
-        <span className={cn('text-[13px] font-semibold font-body', valor === VACIO && 'text-navy-light/80')}>
-          {valor}
+        <span className={cn('text-[13px] font-semibold font-body', mostrado === VACIO && 'text-navy-light/80')}>
+          {mostrado}
         </span>
         <Pencil size={10} className="shrink-0 text-navy-light/80" aria-hidden />
       </button>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { editabilidadDeCampo } from './campo-editable'
+import { editabilidadDeCampo, valorAMostrar } from './campo-editable'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 
 const sinDoc = { tieneDocumento: false }
@@ -59,5 +59,26 @@ describe('qué se edita en sitio desde el formulario', () => {
       'age', 'cedula', 'dietary_restrictions', 'email',
       'emergency_contact', 'full_name', 'marital_status',
     ])
+  })
+})
+
+describe('qué valor se muestra después de guardar', () => {
+  it('muestra lo recién guardado aunque la prop del servidor siga vieja', () => {
+    expect(valorAMostrar('Vindas', { desde: 'Vindas', valor: 'Vindas Loaiza' }))
+      .toBe('Vindas Loaiza')
+  })
+
+  it('sin nada guardado, muestra lo del servidor', () => {
+    expect(valorAMostrar('Vindas', null)).toBe('Vindas')
+  })
+
+  it('cuando el servidor manda un valor nuevo, gana el servidor', () => {
+    // Alguien editó la misma ficha en otra pestaña: el eco local es viejo.
+    expect(valorAMostrar('Vindas Loaiza R.', { desde: 'Vindas', valor: 'Vindas Loaiza' }))
+      .toBe('Vindas Loaiza R.')
+  })
+
+  it('un borrado se muestra como borrado, no revierte al valor viejo', () => {
+    expect(valorAMostrar('8888-8888', { desde: '8888-8888', valor: '' })).toBe('')
   })
 })

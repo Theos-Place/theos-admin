@@ -71,3 +71,24 @@ export function editabilidadDeCampo(
   }
   return { editable: true, columna: mapeo.columna, tipo: mapeo.tipo }
 }
+
+/**
+ * Qué valor mostrar en un campo editable en sitio.
+ *
+ * El bug que lo motiva (2026-09-11, caso Daniela Vindas): el campo guardaba el
+ * apellido completo en la base y acto seguido volvía a pintar el apellido VIEJO,
+ * porque lo que muestra es una prop del servidor que no se recarga. Desde
+ * afuera se ve exactamente igual que si no hubiera guardado — y se reintenta,
+ * y vuelve a "fallar".
+ *
+ * `guardado` es lo último que este campo escribió, junto con la prop que tenía
+ * cuando lo escribió. Mientras la prop no se mueva, gana lo guardado; apenas el
+ * servidor manda un valor nuevo (`desde` ya no calza), gana el servidor — así
+ * un cambio hecho en otra pestaña no queda tapado por un eco viejo.
+ */
+export function valorAMostrar(
+  delServidor: string,
+  guardado: { desde: string; valor: string } | null,
+): string {
+  return guardado && guardado.desde === delServidor ? guardado.valor : delServidor
+}
