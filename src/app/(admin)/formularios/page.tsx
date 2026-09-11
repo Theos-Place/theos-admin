@@ -34,6 +34,7 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
 import { sePuedeCompartir, formShareLink } from '@/lib/forms/share-link'
+import { accionesDelFormulario, puedeCrearFormularios } from '@/lib/forms/acciones-del-listado'
 import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
@@ -109,6 +110,12 @@ export default function FormulariosPage() {
   // que el endpoint, para no mostrar un botón que va a devolver 403.
   const { user } = useAuth()
   const puedeBorrar = canUserDeleteForms(user?.roles)
+  const puedeCrear = puedeCrearFormularios(user?.roles)
+  // Con qué permiso llegó la persona a CADA formulario. Quien tiene un acceso
+  // puntual no entra al editor: su click tiene que ir a las respuestas.
+  const acciones = (formId: string) => accionesDelFormulario({
+    roles: user?.roles, formId, grantedFormIds: user?.granted_form_ids,
+  })
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
@@ -213,13 +220,15 @@ export default function FormulariosPage() {
             Constructor de formularios de inscripción y encuestas
           </p>
         </div>
-        <Link
-          href="/formularios/nuevo"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
-        >
-          <Plus size={14} />
-          Nuevo formulario
-        </Link>
+        {puedeCrear && (
+          <Link
+            href="/formularios/nuevo"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
+          >
+            <Plus size={14} />
+            Nuevo formulario
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
@@ -324,10 +333,11 @@ export default function FormulariosPage() {
               <tbody>
                 {visible.map((form, idx) => {
                   const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
+                  const acc = acciones(form.id)
                   return (
                     <tr
                       key={form.id}
-                      onClick={() => window.location.href = `/formularios/${form.id}`}
+                      onClick={() => window.location.href = acc.destino}
                       className={cn(
                         'hover:bg-navy/5 transition-colors cursor-pointer group',
                         idx % 2 === 1 ? 'bg-surface-low/40' : ''
@@ -393,24 +403,31 @@ export default function FormulariosPage() {
                       {/* Acciones */}
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Link
-                            href={`/formularios/${form.id}`}
-                            className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
-                          >
-                            Editar
-                          </Link>
-                          <Link
-                            href={`/formularios/${form.id}/respuestas`}
-                            className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
-                          >
-                            Respuestas
-                          </Link>
-                          <Link
-                            href={`/formularios/${form.id}/preview`}
-                            className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"
-                          >
-                            <Eye size={12} />
-                          </Link>
+                          {acc.muestraEditar && (
+                            <Link
+                              href={`/formularios/${form.id}`}
+                              className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            >
+                              Editar
+                            </Link>
+                          )}
+                          {acc.muestraRespuestas && (
+                            <Link
+                              href={`/formularios/${form.id}/respuestas`}
+                              className="rounded-lg px-2.5 py-1 text-[13px] text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors font-body"
+                            >
+                              Respuestas
+                            </Link>
+                          )}
+                          {acc.muestraEditar && (
+                            <Link
+                              href={`/formularios/${form.id}/preview`}
+                              className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"
+                            >
+                              <Eye size={12} />
+                            </Link>
+                          )}
+                          {acc.muestraEditar && (
                           <div className="relative">
                             <button
                               type="button"
@@ -439,14 +456,16 @@ export default function FormulariosPage() {
                                     Compartir link
                                   </button>
                                 )}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDuplicate(form.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                                >
-                                  <Copy size={13} className="text-navy-light/80" />
-                                  Duplicar
-                                </button>
+                                {acc.muestraDuplicar && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDuplicate(form.id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                                  >
+                                    <Copy size={13} className="text-navy-light/80" />
+                                    Duplicar
+                                  </button>
+                                )}
                                 {canPublishForm(form) ? (
                                   <button
                                     type="button"
@@ -494,6 +513,7 @@ export default function FormulariosPage() {
                               </div>
                             )}
                           </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -509,6 +529,7 @@ export default function FormulariosPage() {
           <ul className="md:hidden divide-y divide-[var(--outline-variant)]">
             {visible.map(form => {
               const CatIcon = CATEGORY_ICONS[form.category] ?? FileText
+              const acc = acciones(form.id)
               return (
                 // En celular la tarjeta entera llevaba al EDITOR y no había
                 // ninguna forma de llegar a las respuestas: en escritorio hay
@@ -522,7 +543,7 @@ export default function FormulariosPage() {
                       <CatIcon size={16} className="text-navy-light/80" />
                     </div>
                     <Link
-                      href={`/formularios/${form.id}`}
+                      href={acc.destino}
                       className="min-w-0 flex-1 -my-1 py-1 active:bg-surface-low rounded-lg"
                     >
                       <p className="truncate text-sm font-medium text-navy font-body">{form.name}</p>
@@ -541,13 +562,15 @@ export default function FormulariosPage() {
                   </div>
                   {/* El conteo ES el enlace a las respuestas: quien mira cuántas
                       hay es porque las quiere ver. */}
-                  <Link
-                    href={`/formularios/${form.id}/respuestas`}
-                    className="mt-2 ml-12 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light active:bg-surface-low font-body"
-                  >
-                    <Inbox size={13} aria-hidden />
-                    Ver {form.responses_count} respuesta{form.responses_count !== 1 ? 's' : ''}
-                  </Link>
+                  {acc.muestraRespuestas && (
+                    <Link
+                      href={`/formularios/${form.id}/respuestas`}
+                      className="mt-2 ml-12 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light active:bg-surface-low font-body"
+                    >
+                      <Inbox size={13} aria-hidden />
+                      Ver {form.responses_count} respuesta{form.responses_count !== 1 ? 's' : ''}
+                    </Link>
+                  )}
                 </li>
               )
             })}

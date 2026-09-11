@@ -86,12 +86,14 @@ describe('herencia: el formulario del evento lo gestiona su encargado', () => {
     expect(canEditFormStructure(scope)).toBe(true)
   })
 
-  it('el acceso puntual lee y exporta, pero NO edita la estructura', () => {
+  // 2026-09-11: el acceso puntual pasó a editar también. Se comparte con quien
+  // lleva la actividad, igual que el encargado de un evento con su formulario.
+  it('el acceso puntual lee, exporta y edita ESE formulario', () => {
     const scope = formViewerScope({
       roles: ['miembro'], memberId: MIEMBRO, form: FORM, hasGrant: true, isEventManager: false,
     })
     expect(scope).toBe('grantee')
-    expect(canEditFormStructure(scope)).toBe(false)
+    expect(canEditFormStructure(scope)).toBe(true)
   })
 
   it('la herencia no alcanza a un formulario suelto de otro evento', () => {

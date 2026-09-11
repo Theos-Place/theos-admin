@@ -10,9 +10,10 @@
 //                (tabla event_managers): lo ve, lo exporta y SÍ puede editarlo
 //                — organiza esa actividad (decisión 2026-08-06).
 //  · 'grantee' → acceso puntual a ESE formulario (tabla form_access_grants):
-//                lee y exporta sus respuestas, y ningún otro formulario.
-//                NO puede editar la estructura del formulario — eso sigue
-//                siendo del módulo.
+//                lee y exporta sus respuestas, y desde el 2026-09-11 también
+//                edita ESE formulario — mismo trato que el encargado de un
+//                evento, porque se comparte con quien lleva la actividad. No
+//                alcanza ningún otro formulario ni crear formularios nuevos.
 //  · 'none'    → no ve respuestas.
 //
 // NOTA sobre hacerlo polimórfico (accesos a eventos y grupos con una sola
@@ -56,12 +57,13 @@ export function canExportFormResponses(scope: FormViewerScope): boolean {
   return scope !== 'none'
 }
 
-/** ¿Puede editar la ESTRUCTURA del formulario? Solo el módulo, nunca el
- *  acceso puntual. La acción concreta la sigue validando el guard de escritura. */
+/** ¿Puede editar la ESTRUCTURA del formulario? La acción concreta la sigue
+ *  validando el guard de escritura (requireFormEdit). */
 export function canEditFormStructure(scope: FormViewerScope): boolean {
-  // El encargado del evento sí edita el formulario de SU evento; el acceso
-  // puntual a un formulario suelto, no.
-  return scope === 'admin' || scope === 'event_manager'
+  // Todo el que llega a un formulario por un camino propio lo edita; 'none' es
+  // el único que no. Crear formularios NUEVOS sigue siendo del módulo, y eso se
+  // decide aparte (puedeCrearFormularios).
+  return scope !== 'none'
 }
 
 /**

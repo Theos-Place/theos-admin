@@ -46,11 +46,20 @@ describe('formViewerScope', () => {
     expect(formViewerScope({ ...base, roles: ['miembro'], form: null, hasGrant: true })).toBe('none')
   })
 
-  it('el grantee exporta pero NO edita la estructura', () => {
+  // Decisión del usuario 2026-09-11: a quien se le comparte un formulario es
+  // porque lleva esa actividad, igual que el encargado de un evento. Antes el
+  // grant era de solo lectura y la pantalla del formulario le respondía "ACCESO
+  // RESTRINGIDO" (caso Carolina Salas).
+  it('el grantee exporta y TAMBIÉN edita ese formulario', () => {
     expect(canExportFormResponses('grantee')).toBe(true)
-    expect(canEditFormStructure('grantee')).toBe(false)
+    expect(canEditFormStructure('grantee')).toBe(true)
+    expect(canEditFormStructure('event_manager')).toBe(true)
     expect(canEditFormStructure('admin')).toBe(true)
+  })
+
+  it('sin acceso, ni exporta ni edita', () => {
     expect(canExportFormResponses('none')).toBe(false)
+    expect(canEditFormStructure('none')).toBe(false)
   })
 })
 

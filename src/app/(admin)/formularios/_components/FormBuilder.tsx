@@ -17,6 +17,7 @@ import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldChe
 import { Modal } from '@/components/shared/Modal'
 import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Tipos estructurales que no exigen label (el separador de página es un divisor).
 type FormStatus = 'draft' | 'active'
@@ -103,6 +104,8 @@ interface FormBuilderProps {
 export function FormBuilder({ formId }: FormBuilderProps) {
   const router = useRouter()
   const toast = useToast()
+  const { can } = usePermissions()
+  const puedeRepartirAcceso = can('formularios', 'edit')
 
   const [name, setName]               = useState('')
   const [description, setDescription] = useState('')
@@ -312,7 +315,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             <GitBranch size={12} />
             Lógica
           </button>
-          {formId && (
+          {/* Compartir el formulario con otra persona es del MÓDULO: quien llegó
+              acá por un acceso compartido edita el formulario, pero no reparte
+              el acceso. Su API ya lo rechaza; sin esto el botón abría un panel
+              vacío con un error. */}
+          {formId && puedeRepartirAcceso && (
             <button
               type="button"
               onClick={() => setShowAccessPanel(true)}

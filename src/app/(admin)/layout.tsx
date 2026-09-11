@@ -102,12 +102,18 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // cualquier sesión autenticada (las convocatorias por correo apuntan ahí).
   // El módulo formularios (dirección/admin) sigue exigiéndose para el resto.
   if (/^\/formularios\/[0-9a-f-]{36}\/responder$/i.test(pathname)) return <>{children}</>
-  // Excepción (2026-08-04): acceso puntual a UN formulario. Quien tenga grants
-  // entra al listado (la API le devuelve solo los suyos) y a las respuestas de
-  // esos formularios. Sin el módulo NO abre el editor ni ningún otro form.
+  // Excepción (2026-08-04, ampliada el 2026-09-11): acceso puntual a UN
+  // formulario. Quien tenga grants entra al listado (la API le devuelve solo los
+  // suyos) y a ESOS formularios completos — respuestas, pantalla del formulario
+  // y vista previa. Ningún otro formulario, y crear nuevos sigue siendo del
+  // módulo.
+  //
+  // Antes solo se abría /respuestas, y el listado mandaba al detalle: hacer
+  // click en un formulario compartido contestaba "ACCESO RESTRINGIDO" (caso
+  // Carolina Salas, 2026-09-11).
   if ((user.granted_form_ids ?? []).length > 0) {
     if (pathname === '/formularios') return <>{children}</>
-    const m = pathname.match(/^\/formularios\/([0-9a-f-]{36})\/respuestas$/i)
+    const m = pathname.match(/^\/formularios\/([0-9a-f-]{36})(?:\/(respuestas|preview))?$/i)
     if (m && (user.granted_form_ids ?? []).includes(m[1])) return <>{children}</>
   }
   // Excepción (EST-10): /formularios/[id]/seleccion es la revisión del comité de
