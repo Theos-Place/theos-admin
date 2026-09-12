@@ -22,6 +22,10 @@ const CONSOLIDAR = [
   ['Comité Oración', 'Orador Theos Oeste',   'Orador Sede'],
   ['Comité Oración', 'Orador Theos Cartago', 'Orador Sede'],
   ['Comité Oración', 'Orador Theos Liberia', 'Orador Sede'],
+  // Usuario 2026-09-11: en TI, «Encargado Comite» y «Encargado IT» son el mismo
+  // puesto. Gana «Encargado IT», que es el nombre oficial del madre y el que
+  // trae ficha. Floriana está en los DOS, así que ahí actúa el manejo de choque.
+  ['Comité Tecnología de Información', 'Encargado Comite', 'Encargado IT'],
 ]
 
 ;(async () => {
@@ -61,10 +65,12 @@ const CONSOLIDAR = [
       and not exists (select 1 from member_role_position_grants g where g.position_id=sp.id)
       and not exists (select 1 from vacancies vc where vc.position_id=sp.id)
       and not exists (select 1 from position_requests pr where pr.created_position_id=sp.id)`)
-  const { rows: q } = await c.query(`select sp.title, (select count(*) from volunteers v where v.position_id=sp.id and v.status='active')::int act
-    from service_positions sp join areas a on a.id=sp.area_id where a.name='Comité Oración' and sp.is_active order by act desc`)
   console.log(`\nconsolidados: ${hechos}   asignaciones movidas: ${movidas}   puestos vacíos borrados: ${borrados}`)
-  console.log('Comité Oración queda:'); q.forEach(x => console.log(`   ${String(x.act).padStart(3)}  «${x.title}»`))
+  for (const comite of [...new Set(CONSOLIDAR.map(x => x[0]))]) {
+    const { rows: q } = await c.query(`select sp.title, (select count(*) from volunteers v where v.position_id=sp.id and v.status='active')::int act
+      from service_positions sp join areas a on a.id=sp.area_id where a.name=$1 and sp.is_active order by act desc`, [comite])
+    console.log(`\n${comite} queda:`); q.forEach(x => console.log(`   ${String(x.act).padStart(3)}  «${x.title}»`))
+  }
   if (aplicar) { await c.query('commit'); console.log('\n✅ APLICADO') }
   else { await c.query('rollback'); console.log('\n🔎 DRY RUN (rollback).') }
   await c.end()
