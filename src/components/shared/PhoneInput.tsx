@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useId } from 'react'
 
 type Props = {
   value: string
@@ -42,10 +42,14 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label, 
   const [number, setNumber]           = useState(() => getNumber(value))
 
   // Re-sincroniza cuando la prop `value` cambia (ej. data que llega async).
-  useEffect(() => {
+  // Durante el render y no en un efecto: en un efecto el input alcanzaba a
+  // pintarse una vez con el valor viejo.
+  const [valorPrevio, setValorPrevio] = useState(value)
+  if (valorPrevio !== value) {
+    setValorPrevio(value)
     setCountryCode(getCountryCode(value))
     setNumber(getNumber(value))
-  }, [value])
+  }
 
   function handleCodeChange(code: string) {
     setCountryCode(code)

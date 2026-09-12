@@ -26,7 +26,16 @@ const eslintConfig = defineConfig([
       // exigir errores = 0 sin bloquear; NO agregar casos nuevos — el ratchet
       // de --max-warnings en CI baja conforme se migren.
       //
-      // 2026-09-11: 85 casos. La mitad son `useEffect(() => { cargar() })` con
+      // 2026-09-11 (2ª tanda): quedan 67. Los que salieron eran estado
+      // derivado (espejar una prop en estado) o reset al cambiar una prop, y se
+      // migraron a derivar en el render o a ajustar el estado DURANTE el render
+      // comparando contra el valor previo. OJO con ese patrón: el valor que se
+      // compara tiene que ser estable entre renders (un id, un string, un array
+      // memoizado). Comparar contra algo que se construye en cada render —un
+      // `?? []`, un objeto literal— hace que el render se llame a sí mismo sin
+      // parar.
+      //
+      // Los 67 que quedan son `useEffect(() => { cargar() })` con
       // un `setLoading(true)` antes del fetch. OJO: reordenar el async NO los
       // apaga — se comprobó que la regla marca igual un useCallback async cuyo
       // único setState va después del await, y solo calla si el setState vive

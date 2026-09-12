@@ -46,7 +46,7 @@ function SolicitarPuestoContent() {
     return [...m].map(([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name))
   }, [committees])
 
-  const [areaCode, setAreaCode] = useState('')
+  const [areaElegida, setAreaElegida] = useState('')
   const [committeeId, setCommitteeId] = useState(params.get('comite') ?? '')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -57,22 +57,20 @@ function SolicitarPuestoContent() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  // Si vino un comité por query (?comite=), su área queda preseleccionada.
+  // DERIVADA y no copiada a estado con un efecto: el área que vale es la que se
+  // eligió a mano o, si no se eligió ninguna, la del comité que vino en la URL.
+  const areaCode = areaElegida || (committees.find(x => x.id === committeeId)?.area_code ?? '')
+
   // Comités del área elegida.
   const committeesOfArea = useMemo(
     () => committees.filter(c => c.area_code === areaCode).sort((a, b) => a.name.localeCompare(b.name)),
     [committees, areaCode],
   )
 
-  // Si vino un comité por query (?comite=), preseleccionar su área.
-  useEffect(() => {
-    if (!committeeId || areaCode) return
-    const c = committees.find(x => x.id === committeeId)
-    if (c?.area_code) setAreaCode(c.area_code)
-  }, [committeeId, areaCode, committees])
-
   // Cambiar de área resetea el comité (evita combinaciones incoherentes).
   function onAreaChange(code: string) {
-    setAreaCode(code)
+    setAreaElegida(code)
     setCommitteeId('')
   }
 

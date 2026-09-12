@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
@@ -100,8 +100,6 @@ export default function FormulariosPage() {
       toast(`No se pudo copiar solo. El link es: ${url}`, 'error')
     }
   }
-  const [localTemplates, setLocalTemplates] = useState<FormTemplate[]>([])
-  useEffect(() => { setLocalTemplates(forms) }, [forms])
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>('all')
   const [deleteTarget, setDeleteTarget] = useState<FormTemplate | null>(null)
@@ -120,7 +118,7 @@ export default function FormulariosPage() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
 
   async function handleDuplicate(formId: string) {
-    const template = localTemplates.find(t => t.id === formId)
+    const template = forms.find(t => t.id === formId)
     if (!template) return
     setMenuOpen(null)
     try {
@@ -180,18 +178,18 @@ export default function FormulariosPage() {
   }
 
   const stats = useMemo(() => {
-    const active = localTemplates.filter(f => formWindowStatus(f) === 'activo').length
+    const active = forms.filter(f => formWindowStatus(f) === 'activo').length
     // Aproximación: respuestas de formularios cuya última respuesta cae este mes.
-    const responsesThisMonth = localTemplates
+    const responsesThisMonth = forms
       .filter(f => f.last_response_at && thisMonth(f.last_response_at))
       .reduce((s, f) => s + f.responses_count, 0)
-    const noResponses = localTemplates.filter(f => f.responses_count === 0).length
-    const avg = localTemplates.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(localTemplates.length, 1)
+    const noResponses = forms.filter(f => f.responses_count === 0).length
+    const avg = forms.reduce((sum, f) => sum + f.responses_count, 0) / Math.max(forms.length, 1)
     return { active, responsesThisMonth, noResponses, avg: Math.round(avg * 10) / 10 }
-  }, [localTemplates])
+  }, [forms])
 
   const filtered = useMemo(() => {
-    return localTemplates.filter(f => {
+    return forms.filter(f => {
       if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
       if (!matchesEstado(f, estadoFilter)) return false
       if (query.trim()) {
@@ -200,7 +198,7 @@ export default function FormulariosPage() {
       }
       return true
     })
-  }, [localTemplates, categoryFilter, estadoFilter, query])
+  }, [forms, categoryFilter, estadoFilter, query])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
 

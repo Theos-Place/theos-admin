@@ -206,10 +206,17 @@ function MiembrosContent() {
   // Todo el filtrado (búsqueda, chips y condiciones avanzadas) es server-side.
   const displayMembers = loadedMembers
 
-  // Limpiar selección cuando cambia el set mostrado
-  useEffect(() => {
+  // Limpiar selección cuando cambia el set mostrado (otra búsqueda o filtro
+  // trae otras personas, y quedarse con ids de la tanda anterior haría que una
+  // acción masiva tocara a quien ya no está en pantalla).
+  //
+  // Ajuste durante el render: en un efecto era un setState sincrónico, y encima
+  // dejaba un frame con la selección vieja sobre la lista nueva.
+  const [listaPrevia, setListaPrevia] = useState(displayMembers)
+  if (listaPrevia !== displayMembers) {
+    setListaPrevia(displayMembers)
     setSelectedIds(new Set())
-  }, [displayMembers])
+  }
 
   const { sorted: sortedMembers, sortKey, sortDir, toggleSort } = useSortableTable(displayMembers)
 

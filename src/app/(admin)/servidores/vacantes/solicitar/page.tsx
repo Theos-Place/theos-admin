@@ -32,7 +32,7 @@ function SolicitarVacantesContent() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
-  const [committeeId, setCommitteeId] = useState(preselectedCommittee)
+  const [committeeElegido, setCommitteeId] = useState(preselectedCommittee)
   const [cart, setCart] = useState<Record<string, number>>({}) // position_id → cantidad
 
   // Datos de la vacante (compartidos por todos los puestos del carrito).
@@ -77,10 +77,10 @@ function SolicitarVacantesContent() {
   const canSend = !isLeader || windowOpen
 
   // Si el líder gestiona un solo comité, queda fijo y bloqueado.
+  // DERIVADO en vez de forzado a estado con un efecto: si el líder gestiona un
+  // solo comité, ese es el que vale y el estado local ni se consulta.
   const lockedCommittee = isLeader && committees.length === 1 ? committees[0] : null
-  useEffect(() => {
-    if (lockedCommittee && committeeId !== lockedCommittee.id) setCommitteeId(lockedCommittee.id)
-  }, [lockedCommittee, committeeId])
+  const committeeId = lockedCommittee?.id ?? committeeElegido
 
   const committeePositions = useMemo(
     () => positions

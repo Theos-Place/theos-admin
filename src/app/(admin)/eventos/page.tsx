@@ -323,8 +323,15 @@ function EventosContent() {
 
   const visibleRows = listRows.slice(0, visibleCount)
 
-  // Cambiar de mes/año reinicia la paginación (mismo criterio que el filtro de tipo).
-  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [currentMonth, currentYear])
+  // Cambiar de mes/año reinicia la paginación (mismo criterio que el filtro de
+  // tipo). Ajuste durante el render en vez de un efecto: React re-renderiza
+  // antes de pintar, así que el reset no se ve como un salto.
+  const mesMostrado = `${currentYear}-${currentMonth}`
+  const [mesPrevio, setMesPrevio] = useState(mesMostrado)
+  if (mesPrevio !== mesMostrado) {
+    setMesPrevio(mesMostrado)
+    setVisibleCount(PAGE_SIZE)
+  }
 
   function handlePrev() {
     if (currentMonth === 0) {

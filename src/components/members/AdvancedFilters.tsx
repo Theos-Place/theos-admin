@@ -756,9 +756,17 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
   const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
 
-  useEffect(() => {
+  // Quitar la condición (con la X del chip) vacía los inputs. Ajuste durante el
+  // render en vez de un efecto: si no, el chip desaparece y los inputs se
+  // quedan con el valor viejo por un frame.
+  // Se compara por ID y no por identidad del objeto: si el padre rearmara el
+  // array de condiciones en cada render, comparar referencias haría que el
+  // render se llame a sí mismo sin parar.
+  const [ageCondPrevia, setAgeCondPrevia] = useState(ageCond?.id)
+  if (ageCondPrevia !== ageCond?.id) {
+    setAgeCondPrevia(ageCond?.id)
     if (!ageCond) { setAgeMin(''); setAgeMax('') }
-  }, [ageCond])
+  }
 
   function syncAge() {
     if (ageCond) removeCondition(ageCond.id)
@@ -769,7 +777,11 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   const createdCond = conditions.find(c => c.type === 'created') as Extract<FilterCondition, { type: 'created' }> | undefined
   const [createdFrom, setCreatedFrom] = useState(createdCond?.from ?? '')
   const [createdTo, setCreatedTo] = useState(createdCond?.to ?? '')
-  useEffect(() => { if (!createdCond) { setCreatedFrom(''); setCreatedTo('') } }, [createdCond])
+  const [createdCondPrevia, setCreatedCondPrevia] = useState(createdCond?.id)
+  if (createdCondPrevia !== createdCond?.id) {
+    setCreatedCondPrevia(createdCond?.id)
+    if (!createdCond) { setCreatedFrom(''); setCreatedTo('') }
+  }
   function syncCreated(from: string, to: string) {
     setCreatedFrom(from); setCreatedTo(to)
     if (createdCond) removeCondition(createdCond.id)

@@ -1,6 +1,9 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+
+/** El estado de hidratación no cambia nunca: no hay a qué suscribirse. */
+const SIN_SUSCRIPCION = () => () => {}
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -26,11 +29,12 @@ const MARGIN = 8
  */
 export function Popover({ anchorRect, onClose, title, children, width = 320, titleId }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const [mounted, setMounted] = useState(false)
+  // El portal necesita saber si ya hidratamos. useSyncExternalStore da esa
+  // respuesta sin estado ni efecto: en el servidor devuelve false y en el
+  // cliente true, que es exactamente lo que hacía el setMounted(true).
+  const mounted = useSyncExternalStore(SIN_SUSCRIPCION, () => true, () => false)
   const [mobile, setMobile] = useState(false)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
-
-  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 639px)')

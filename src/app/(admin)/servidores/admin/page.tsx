@@ -314,8 +314,10 @@ export default function ServidoresAdminPage() {
     return m
   }, [serverCommittees])
 
-  const [areas, setAreas]           = useState<Area[]>([])
-  const [committees, setCommittees] = useState<Committee[]>([])
+  // Directo del hook: se copiaban a estado local con un efecto que nadie más
+  // escribía, así que era el mismo dato con un render de atraso.
+  const areas = adminAreas
+  const committees = adminCommittees
   /**
    * La selección (área → comité → puesto) vive en la URL, no en estado local:
    * así se puede mandar el link de UN puesto y el botón atrás devuelve a donde
@@ -335,7 +337,6 @@ export default function ServidoresAdminPage() {
   const selectedPosId = seleccion.puesto
   const setSelectedPosId = useCallback((id: string | null) => irA({ puesto: id }), [irA])
 
-  useEffect(() => { setAreas(adminAreas); setCommittees(adminCommittees) }, [adminAreas, adminCommittees])
   // Sin área en la URL se abre la primera, que es como estaba antes de los deep
   // links. `replace` y no `push`: entrar a la pantalla no debe dejar una entrada
   // de más en el historial.

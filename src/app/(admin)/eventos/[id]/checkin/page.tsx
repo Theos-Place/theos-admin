@@ -115,10 +115,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Sin permiso → fuera (el registro lo hace un encargado autenticado).
   useEffect(() => { if (!canCheckin) router.replace('/dashboard') }, [canCheckin, router])
 
-  // Sincroniza los check-ins ya registrados cuando carga el evento.
-  useEffect(() => {
+  // Sincroniza los check-ins ya registrados cuando carga (o recarga) el evento.
+  // Es copia local porque cada registro se agrega de forma optimista antes de
+  // que responda el server. El ajuste va durante el render y no en un efecto:
+  // así la lista nueva no aparece un frame después de la vieja.
+  const [eventoPrevio, setEventoPrevio] = useState(event)
+  if (eventoPrevio !== event) {
+    setEventoPrevio(event)
     if (event) setCheckins(event.checkins)
-  }, [event])
+  }
 
   // Al seleccionar un miembro, consulta si es servidor de los comités organizadores.
   useEffect(() => {

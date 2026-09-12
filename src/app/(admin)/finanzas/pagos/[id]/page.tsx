@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Check, Image as ImageIcon } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -8,15 +8,15 @@ import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
-import { type Payment } from '@/types/finance'
 import { useFinance } from '@/hooks/useFinance'
 import { formatDate, formatDateTime } from '@/lib/format'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { payments, refunds, refetch, loading } = useFinance('payments', 'refunds')
-  const [payment, setPayment] = useState<Payment | null>(null)
-  useEffect(() => { setPayment(payments.find(p => p.id === id) ?? null) }, [payments, id])
+  // Derivado, no copiado a estado con un efecto: nadie más lo escribía, así que
+  // el estado solo agregaba un render de atraso.
+  const payment = useMemo(() => payments.find(p => p.id === id) ?? null, [payments, id])
   const [showRefund, setShowRefund] = useState(false)
   const [toast, setToast] = useState('')
 

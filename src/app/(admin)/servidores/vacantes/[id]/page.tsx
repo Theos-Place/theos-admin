@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Application, ApplicationStatus } from '@/types/server'
@@ -42,8 +42,12 @@ export default function VacanteDetailPage() {
   )
 
   const [tab, setTab] = useState<Tab>('descripcion')
-  const [apps, setApps] = useState<Application[]>([])
-  useEffect(() => { setApps(initialApps) }, [initialApps])
+  // Copia local porque abajo se editan estados de forma optimista. Se
+  // resincroniza cuando el server manda otra lista, ajustando DURANTE el render
+  // en vez de en un efecto: así no queda un frame con la lista vieja.
+  const [apps, setApps] = useState<Application[]>(initialApps)
+  const [appsDelServer, setAppsDelServer] = useState(initialApps)
+  if (appsDelServer !== initialApps) { setAppsDelServer(initialApps); setApps(initialApps) }
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [panelNotes, setPanelNotes] = useState<Record<string, string>>({})
   const [assignModal, setAssignModal] = useState<Application | null>(null)

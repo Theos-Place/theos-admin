@@ -36,10 +36,11 @@ export default function ConfiguracionPage() {
   // por URL directa tampoco se entra). El resto de comunicaciones queda igual.
   const { user, loaded } = useAuth()
   const isAdmin = (user?.roles ?? []).includes('admin')
-  const { configs: allConfigs, refetch } = useCommunications('configs')
+  // Se usa la lista del hook directo: antes se copiaba a estado local con un
+  // efecto que nunca la modificaba, así que era el mismo dato con un render de
+  // atraso.
+  const { configs, refetch } = useCommunications('configs')
   const [tab, setTab] = useState<SmtpTab>('smtp')
-  const [configs, setConfigs] = useState<ChannelConfig[]>([])
-  useEffect(() => { setConfigs(allConfigs) }, [allConfigs])
   const [deleteTarget, setDeleteTarget] = useState<ChannelConfig | null>(null)
   const [showSmtpForm, setShowSmtpForm] = useState(false)
   const [showWaForm, setShowWaForm] = useState(false)

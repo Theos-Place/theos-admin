@@ -100,8 +100,16 @@ export default function CommitteeDetailPage() {
   const [newPosition, setNewPosition] = useState('')
 
   // Goals (local state)
-  const [goals, setGoals] = useState<CommitteeGoal[]>([])
-  useEffect(() => { setGoals(goalsByCommittee[committeeId] ?? []) }, [goalsByCommittee, committeeId])
+  // Copia local porque el estado de una meta se cambia de forma optimista. Se
+  // resincroniza durante el render cuando llega otra lista o se cambia de
+  // comité, no en un efecto.
+  // Se compara la ranura del mapa TAL CUAL (puede venir undefined), no un
+  // `?? []`: ese array nuevo en cada render haría que la comparación nunca
+  // coincida y el render se llame a sí mismo sin parar.
+  const metasDelServer = goalsByCommittee[committeeId]
+  const [goals, setGoals] = useState<CommitteeGoal[]>(metasDelServer ?? [])
+  const [metasPrevias, setMetasPrevias] = useState(metasDelServer)
+  if (metasPrevias !== metasDelServer) { setMetasPrevias(metasDelServer); setGoals(metasDelServer ?? []) }
   const [newGoalText, setNewGoalText] = useState('')
   const [newGoalDate, setNewGoalDate] = useState('')
   const [showGoalForm, setShowGoalForm] = useState(false)

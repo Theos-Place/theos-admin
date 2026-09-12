@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 /**
  * Paginación de VISTA para datasets chicos/acotados que ya viven en memoria por
@@ -12,7 +12,17 @@ export function useClientPagination<T>(items: T[], pageSize = 25) {
   const [visibleCount, setVisibleCount] = useState(pageSize)
 
   // Reset al cambiar el conjunto (filtros/búsqueda → nuevo array).
-  useEffect(() => { setVisibleCount(pageSize) }, [items, pageSize])
+  //
+  // Se ajusta DURANTE el render y no en un efecto: React re-renderiza antes de
+  // pintar, así que nadie ve la lista larga por un frame. Con el efecto sí se
+  // veía, y encima era un setState sincrónico dentro de un effect.
+  const [conjuntoPrevio, setConjuntoPrevio] = useState(items)
+  const [pageSizePrevio, setPageSizePrevio] = useState(pageSize)
+  if (conjuntoPrevio !== items || pageSizePrevio !== pageSize) {
+    setConjuntoPrevio(items)
+    setPageSizePrevio(pageSize)
+    setVisibleCount(pageSize)
+  }
 
   const loadMore = useCallback(() => setVisibleCount(c => c + pageSize), [pageSize])
 

@@ -22,10 +22,10 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint (ratchet)
-        # errores = 0 SIEMPRE. Warnings: 88 es la deuda actual (2026-09-11:
-        # cerradas a cero react-hooks/refs, preserve-manual-memoization y
-        # no-unused-vars; quedan 85 set-state-in-effect + 3 purity) — bajar este
-        # número conforme se migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=88
+        # errores = 0 SIEMPRE. Warnings: 70 es la deuda actual (2026-09-11, 2ª
+        # tanda: migrados los 18 set-state-in-effect que eran estado derivado o
+        # reset por cambio de prop; quedan 67 set-state-in-effect + 3 purity) —
+        # bajar este número conforme se migren casos; NUNCA subirlo.
+        run: npx eslint src --max-warnings=70
       - name: Tests
         run: npm test --if-present

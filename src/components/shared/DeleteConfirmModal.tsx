@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 
@@ -28,8 +28,15 @@ export function DeleteConfirmModal({
 }: DeleteConfirmModalProps) {
   const [text, setText] = useState('')
 
-  // El input siempre arranca vacío al abrir.
-  useEffect(() => { if (open) setText('') }, [open])
+  // El input siempre arranca vacío al abrir. Se limpia durante el render, en el
+  // flanco de cerrado→abierto: en un efecto era un setState sincrónico y el
+  // modal alcanzaba a pintarse una vez con lo que se había tecleado la vez
+  // anterior.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(open)
+  if (abiertoPrevio !== open) {
+    setAbiertoPrevio(open)
+    if (open) setText('')
+  }
 
   if (!open) return null
 

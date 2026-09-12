@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect, useMemo } from 'react'
+import { use, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStudies } from '@/hooks/useStudies'
@@ -104,9 +104,15 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
     [studyGroups],
   )
 
-  useEffect(() => {
+  // Cambiar de filtro vuelve a la primera página. Se ajusta DURANTE el render
+  // y no en un efecto: React re-renderiza antes de pintar, así que no se ve la
+  // lista larga por un frame antes del reset.
+  const filtrosActivos = `${search}|${statusFilter}|${zoneFilter}`
+  const [filtrosPrevios, setFiltrosPrevios] = useState(filtrosActivos)
+  if (filtrosPrevios !== filtrosActivos) {
+    setFiltrosPrevios(filtrosActivos)
     setVisibleCount(PAGE_SIZE)
-  }, [search, statusFilter, zoneFilter])
+  }
 
   // El detalle (listado de grupos del tipo) es solo para roles de estudios.
   // Protección por URL: un miembro que tipea la ruta ve acceso denegado.
