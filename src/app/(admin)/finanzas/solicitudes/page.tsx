@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Lock, Loader2, GraduationCap, CreditCard, ExternalLink } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { RequestBoard } from '@/components/shared/RequestBoard'
+import { AprobarBecaForm } from '@/components/finance/AprobarBecaForm'
 import type { FinanceRequest } from '@/types/finance'
 
 const TABS = [
@@ -101,12 +102,14 @@ export default function FinanzasSolicitudesPage() {
             )}
           </>
         )}
+        renderResolveExtra={(r, onChange) =>
+          r.request_type === 'scholarship' ? <AprobarBecaForm onChange={onChange} /> : null}
         renderResolveHint={r => (
           <div className="rounded-xl bg-teal/10 border border-teal/25 px-3.5 py-2.5">
             {r.request_type === 'scholarship' ? (
               <p className="text-[13px] text-teal-deep font-body">
-                Para hacerla efectiva, registrá la beca en{' '}
-                <Link href="/finanzas/becas/nueva" className="inline-flex items-center gap-1 font-semibold underline underline-offset-2">
+                La beca ya quedó asignada y se le avisó por correo. Podés verla en{' '}
+                <Link href="/finanzas/becas" className="inline-flex items-center gap-1 font-semibold underline underline-offset-2">
                   Finanzas → Becas <ExternalLink size={11} />
                 </Link>
               </p>

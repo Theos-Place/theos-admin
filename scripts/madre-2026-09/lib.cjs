@@ -82,10 +82,18 @@ const AREA_DECIDIDA = { 'Comité de Hombres': 'Area de Comunidad', 'Comité de M
 /** "Sedes" de Puestos madre se reparte entre estos comités reales. */
 const FAMILIA_SEDES = 'sedes'
 
-/** COMITÉ DE LA HOJA PERSONAS → COMITÉ DEL SISTEMA (los que no calzan solos). */
+/** COMITÉ DE LA HOJA PERSONAS / DEL CCB ACTUAL → COMITÉ DEL SISTEMA.
+ *  Solo los que el nombre normalizado no resuelve solo. Los "Pedregal X ( Y )"
+ *  traen entre paréntesis la sede de origen y el paréntesis se limpia aparte. */
 const PERSONAS_A_SISTEMA = {
   'life este': 'Sede Life Este',
+  'workship': 'Comité de Worship',
+  'comite workship': 'Comité de Worship',
 }
+
+/** Quita el sufijo entre paréntesis con el que CCB nombra algunas sedes
+ *  ("Pedregal Jueves ( Home )") y el prefijo/sufijo sobrante. */
+const sinParentesis = s => String(s ?? '').replace(/\s*\([^)]*\)\s*/g, ' ').trim()
 /** Comités de la hoja Personas que NO son comités: gente sin equipo asignado. */
 const NO_SON_COMITES = ['Area Espiritual', 'Area de Comunidad', 'Area de Enseñanza']
 /**
@@ -148,5 +156,5 @@ const CORRECCIONES_POR_COMITE = [
   { ccb: 'Coordinador Oración', comite: 'Sede Madrid', oficial: 'Coordinador Oración Sede' },
 ]
 
-module.exports = { nuevoCliente, hoja, norm, correccionesDifusas, CORRECCIONES_POR_COMITE, cargarSistema, indiceComites,
+module.exports = { nuevoCliente, hoja, norm, sinParentesis, correccionesDifusas, CORRECCIONES_POR_COMITE, cargarSistema, indiceComites,
   COMITE_MADRE_A_SISTEMA, COMITES_NUEVOS, NO_CREAR_AREAS, NO_CREAR_COMITES, AREA_DECIDIDA, PERSONAS_A_SISTEMA, NO_SON_COMITES, IGNORAR, AREA_CONGELADA, FAMILIA_SEDES }
