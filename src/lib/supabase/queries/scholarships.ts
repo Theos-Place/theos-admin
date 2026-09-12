@@ -159,6 +159,39 @@ function toDomain(r: DbRow, usedCount = 0): Scholarship {
   }
 }
 
+/**
+ * BEC-4 · Cuántas veces se usó cada beca, SIN mirar el kind.
+ *
+ * Por diseño solo los cupones genéricos dejan fila en scholarship_redemptions
+ * (una asignada se consume marcándose status='used'), y por eso este conteo
+ * antes se hacía solo para los genéricos. El problema es que `used_count`
+ * terminaba significando dos cosas distintas según quién preguntara:
+ * moveScholarship lo cuenta para cualquier beca y bloquea el movimiento, y la
+ * pantalla lo recibía en 0 y mostraba el tag como si estuviera sin usar. Una
+ * beca podía estar bloqueada para mover y decir "Sin usar" al mismo tiempo.
+ *
+ * Contar siempre cuesta una consulta igual y deja un solo significado. Si algún
+ * día una asignada llega a tener redención, las dos partes la ven.
+ *
+ * Los ids van troceados a 300: un .in() largo revienta por URL (mismo
+ * antecedente que servers-export).
+ */
+async function contarRedenciones(
+  supabase: ReturnType<typeof createAdminClient>, ids: string[],
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  for (let i = 0; i < ids.length; i += 300) {
+    const trozo = ids.slice(i, i + 300)
+    if (!trozo.length) continue
+    const { data } = await supabase
+      .from('scholarship_redemptions').select('scholarship_id').in('scholarship_id', trozo)
+    for (const red of (data ?? []) as Array<{ scholarship_id: string }>) {
+      counts.set(red.scholarship_id, (counts.get(red.scholarship_id) ?? 0) + 1)
+    }
+  }
+  return counts
+}
+
 /** Cola de gestión (pantalla /finanzas/becas). */
 export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; status?: ScholarshipStatus }): Promise<Scholarship[]> {
   const supabase = createAdminClient()
@@ -169,16 +202,7 @@ export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; s
   if (error) throw error
   const rows = (data ?? []) as DbRow[]
 
-  // Conteo de usos de cupones genéricos (para mostrar "usado N veces").
-  const genericIds = rows.filter(r => r.kind === 'generica').map(r => r.id)
-  const counts = new Map<string, number>()
-  if (genericIds.length) {
-    const { data: redemptions } = await supabase
-      .from('scholarship_redemptions').select('scholarship_id').in('scholarship_id', genericIds)
-    for (const red of (redemptions ?? []) as Array<{ scholarship_id: string }>) {
-      counts.set(red.scholarship_id, (counts.get(red.scholarship_id) ?? 0) + 1)
-    }
-  }
+  const counts = await contarRedenciones(supabase, rows.map(r => r.id))
   return rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
 }
 
@@ -190,7 +214,10 @@ export async function getMemberScholarships(memberId: string): Promise<Scholarsh
     .eq('kind', 'asignada').eq('member_id', memberId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return ((data ?? []) as DbRow[]).map(r => toDomain(r))
+  const rows = (data ?? []) as DbRow[]
+  // También acá: la persona ve sus becas con el mismo used_count que finanzas.
+  const counts = await contarRedenciones(supabase, rows.map(r => r.id))
+  return rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
 }
 
 /** Beca asignada activa de un miembro para un destino específico (para
@@ -794,8 +821,9 @@ export async function moveScholarship(
   if (!data) return { ok: false, error: 'no_encontrada' }
   const row = data as DbRow
 
-  const { count } = await supabase
-    .from('scholarship_redemptions').select('id', { count: 'exact', head: true }).eq('scholarship_id', id)
+  // BEC-4: el mismo conteo que ve la pantalla, para que "no se puede mover" y
+  // el tag "Sin usar" no puedan contradecirse.
+  const redenciones = await contarRedenciones(supabase, [id])
 
   const planId = destino.entity_type === 'study_plan' ? destino.entity_id : null
   const eventId = destino.entity_type === 'event' ? destino.entity_id : null
@@ -808,7 +836,7 @@ export async function moveScholarship(
     kind: row.kind, status: row.status, entity_type: row.entity_type,
     plan_id: row.plan_id, event_id: row.event_id,
     discount_type: row.discount_type, discount_value: Number(row.discount_value),
-    currency: toCurrency(row.currency), used_count: count ?? 0,
+    currency: toCurrency(row.currency), used_count: redenciones.get(id) ?? 0,
   }
   const destinoNuevo: DestinoNuevo = { entity_type: destino.entity_type, id: destino.entity_id, nombre, currency, cost }
 

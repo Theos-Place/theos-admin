@@ -235,7 +235,7 @@ El arreglo es en un solo punto: que `sendSystemEmail` devuelva si el envío fue
 REAL o silenciado, y que nadie estampe la fecha cuando fue silenciado. Va con
 test, porque el modo silencioso es justo el que nadie mira.
 
-### [ ] BEC-4 · El tag de una beca asignada no mira las redenciones
+### [x] BEC-4 · El tag de una beca asignada no mira las redenciones — HECHO 2026-09-12
 
 `getScholarshipsQueue` cuenta `scholarship_redemptions` solo para los cupones
 genéricos, así que una beca asignada siempre llega con `used_count = 0` y su
@@ -243,6 +243,15 @@ tag sale de `status`. Hoy da igual —una asignada se consume marcándose
 `status='used'`— pero `usoDeLaBeca` ya contempla el caso de la redención, y si
 alguna vez se registra una para una asignada el tag va a mentir. O se cuentan
 también para las asignadas, o se documenta que ahí no aplican.
+
+RESUELTO contando siempre, sin mirar el kind (`contarRedenciones`, una sola
+implementación que usan la cola, "Mis becas" y moveScholarship). El problema
+real no era el tag sino que `used_count` significaba dos cosas: el mover ya lo
+contaba para cualquier beca y bloqueaba, y la pantalla lo recibía en 0 — una
+beca podía decir "Sin usar" y no dejarse mover en el mismo renglón. Verificado
+insertando una redención de mentira sobre una asignada: la cola pasó a 1, el
+tag a "Usada", el perfil vio lo mismo y el movimiento quedó bloqueado; borrada
+la fila, todo volvió a 0.
 
 ### [ ] API-1 · El PATCH de becas valida a mano, no con zod
 

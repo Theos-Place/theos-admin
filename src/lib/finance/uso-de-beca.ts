@@ -8,6 +8,13 @@
  *
  * `used_count` entra al cálculo porque una beca puede tener redenciones
  * registradas: si las tiene, se usó, aunque el status haya quedado atrás.
+ *
+ * BEC-4: ese conteo llega de verdad para CUALQUIER beca. Por diseño solo los
+ * cupones genéricos dejan fila en scholarship_redemptions —una asignada se
+ * consume marcándose status='used'— pero la consulta ya no filtra por kind, así
+ * que si alguna vez una asignada tiene redención, acá se ve. Antes llegaba
+ * siempre en 0 para las asignadas y esta rama era letra muerta: la beca podía
+ * estar bloqueada para moverse y decir "Sin usar" en la misma pantalla.
  */
 
 export type Uso = 'sin_usar' | 'usada' | 'revocada'

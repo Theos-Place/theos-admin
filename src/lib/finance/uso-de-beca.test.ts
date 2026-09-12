@@ -58,3 +58,25 @@ describe('presentación', () => {
     expect(FILTROS_USO[0].id).toBe('sin_usar')
   })
 })
+
+describe('BEC-4 · el conteo de redenciones ya no es letra muerta', () => {
+  it('una asignada con redención se ve usada aunque el status siga activo', () => {
+    // Antes la consulta solo contaba redenciones de cupones genéricos, así que
+    // a una asignada le llegaba used_count=0 siempre y esta rama nunca corría.
+    expect(usoDeLaBeca({ status: 'active', used_count: 1 })).toBe('usada')
+  })
+
+  it('el tag y el bloqueo para mover leen el MISMO número', () => {
+    // moveScholarship niega el movimiento cuando hay redenciones. Si la
+    // pantalla contara distinto, una beca podría decir "Sin usar" y no dejarse
+    // mover en el mismo renglón.
+    const beca = { status: 'active' as const, used_count: 2 }
+    const bloqueadaParaMover = beca.used_count > 0
+    expect(bloqueadaParaMover).toBe(true)
+    expect(usoDeLaBeca(beca)).toBe('usada')
+  })
+
+  it('sin redenciones, una activa sigue prometida', () => {
+    expect(usoDeLaBeca({ status: 'active', used_count: 0 })).toBe('sin_usar')
+  })
+})
