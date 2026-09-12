@@ -22,6 +22,12 @@ interface Props<T> {
   extraExports?: Array<{ id: string; label: string; hint?: string; run: () => Promise<void> }>
 }
 
+/** Columnas cuyo valor es un NÚMERO que no se debe tratar como número: Excel se
+ *  come el cero inicial de un teléfono y convierte una cédula larga a notación
+ *  científica. Se reconocen por la etiqueta, que es lo que el autor de la
+ *  columna controla. */
+const COLUMNAS_DE_TEXTO = /tel[eé]fono|whatsapp|c[eé]dula|documento|identificaci[oó]n|c[oó]digo/i
+
 function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) {
   import('xlsx').then(XLSX => {
     const exportCols = columns.filter(c => c.exportable !== false)
@@ -36,6 +42,19 @@ function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) 
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
 
+    // Teléfonos y cédulas como TEXTO. aoa_to_sheet infiere el tipo del
+    // contenido, así que "8888 4563" queda numérico y Excel lo reformatea: se
+    // fuerza t:'s' y el formato '@' celda por celda.
+    exportCols.forEach((col, c) => {
+      if (!COLUMNAS_DE_TEXTO.test(col.label)) return
+      for (let r = 1; r <= rows.length; r++) {
+        const ref = XLSX.utils.encode_cell({ r, c })
+        const cell = ws[ref]
+        if (!cell) continue
+        cell.t = 's'; cell.v = String(cell.v ?? ''); cell.z = '@'
+      }
+    })
+
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
     for (let c = range.s.c; c <= range.e.c; c++) {
       const cell = XLSX.utils.encode_cell({ r: 0, c })
@@ -46,6 +65,11 @@ function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) 
         alignment: { horizontal: 'center' },
       }
     }
+
+    // Autofiltro y encabezado congelado: en una lista de 200 servidores, sin
+    // esto hay que volver a arriba para saber qué columna se está leyendo.
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: Math.max(headers.length - 1, 0), r: rows.length } }) }
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 }
 
     ws['!cols'] = exportCols.map(col => ({ wch: Math.max(col.label.length, 15) }))
 

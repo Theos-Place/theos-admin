@@ -17,6 +17,12 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { PositionRequestsSection } from './_PositionRequests'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { Users, Mail, Phone } from 'lucide-react'
+import { ExportButton } from '@/components/shared/ExportButton'
+import { SERVER_COLUMNS, type FlatServer } from '@/lib/servers/columns'
+import { miembrosDelPuesto, conteoDelPuesto, tituloDelPuesto, filasParaExport, nombreDeArchivo } from '@/lib/servers/miembros-del-puesto'
+import { leerSeleccion, escribirSeleccion, alElegir, type SeleccionAdmin } from '@/lib/servers/deep-link'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
@@ -310,12 +316,33 @@ export default function ServidoresAdminPage() {
 
   const [areas, setAreas]           = useState<Area[]>([])
   const [committees, setCommittees] = useState<Committee[]>([])
-  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null)
-  const [selectedCommId, setSelectedCommId] = useState<string | null>(null)
+  /**
+   * La selección (área → comité → puesto) vive en la URL, no en estado local:
+   * así se puede mandar el link de UN puesto y el botón atrás devuelve a donde
+   * uno estaba. Mismo criterio que el ?semana= del reporte de asistencia.
+   */
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const seleccion = useMemo(() => leerSeleccion(searchParams), [searchParams])
+  const irA = useCallback((cambio: Partial<SeleccionAdmin>) => {
+    router.replace(`${pathname}${escribirSeleccion(alElegir(seleccion, cambio))}`, { scroll: false })
+  }, [router, pathname, seleccion])
+  const selectedAreaId = seleccion.area
+  const setSelectedAreaId = useCallback((id: string | null) => irA({ area: id }), [irA])
+  const selectedCommId = seleccion.comite
+  const setSelectedCommId = useCallback((id: string | null) => irA({ comite: id }), [irA])
+  const selectedPosId = seleccion.puesto
+  const setSelectedPosId = useCallback((id: string | null) => irA({ puesto: id }), [irA])
+
   useEffect(() => { setAreas(adminAreas); setCommittees(adminCommittees) }, [adminAreas, adminCommittees])
+  // Sin área en la URL se abre la primera, que es como estaba antes de los deep
+  // links. `replace` y no `push`: entrar a la pantalla no debe dejar una entrada
+  // de más en el historial.
   useEffect(() => {
-    setSelectedAreaId((prev) => prev ?? adminAreas[0]?.id ?? null)
-  }, [adminAreas])
+    if (seleccion.area || !adminAreas[0]) return
+    router.replace(`${pathname}${escribirSeleccion({ area: adminAreas[0].id, comite: null, puesto: null })}`, { scroll: false })
+  }, [seleccion.area, adminAreas, router, pathname])
 
   type AreaModal   = { open: boolean; editing: Area | null }
   type CommModal   = { open: boolean; editing: Committee | null }
@@ -402,6 +429,35 @@ export default function ServidoresAdminPage() {
 
   const selectedComm    = committees.find(c => c.id === selectedCommId) ?? null
   const selectedCommPositions = selectedCommId ? (positionsByCommittee[selectedCommId] ?? []) : []
+
+  // ── Cuarta etapa: la gente del puesto seleccionado ──────────────────────
+  const [verInactivos, setVerInactivos] = useState(false)
+  const comiteDeServidores = useMemo(
+    () => serverCommittees.find(c => c.id === selectedCommId) ?? null,
+    [serverCommittees, selectedCommId])
+  const selectedPos = selectedCommPositions.find(p => p.id === selectedPosId) ?? null
+  const miembros = useMemo(
+    () => miembrosDelPuesto(comiteDeServidores, selectedPosId, { incluirInactivos: verInactivos }),
+    [comiteDeServidores, selectedPosId, verInactivos])
+  const conteoPuesto = useMemo(
+    () => conteoDelPuesto(comiteDeServidores, selectedPosId),
+    [comiteDeServidores, selectedPosId])
+  const ctxExport = useMemo(() => ({
+    comite: selectedComm?.name ?? '',
+    area: selectedArea?.name ?? '',
+    lider: comiteDeServidores?.leader.name ?? '',
+  }), [selectedComm, selectedArea, comiteDeServidores])
+  // Lo que se ve es lo que se baja: la misma lista alimenta la tabla y el
+  // archivo (antecedente de committee-filter, donde eran dos y se separaron).
+  const filasPuesto = useMemo<FlatServer[]>(
+    () => filasParaExport(miembros, ctxExport), [miembros, ctxExport])
+  const filasComite = useMemo<FlatServer[]>(
+    () => filasParaExport(
+      (comiteDeServidores?.members ?? [])
+        .filter(m => verInactivos || m.status === 'active')
+        .map(m => ({ ...m, antiguedad: '' })),
+      ctxExport),
+    [comiteDeServidores, verInactivos, ctxExport])
 
   // Misma función que aplica el servidor al asignar a alguien: si las dos se
   // separaran, el aviso del modal diría una cosa y el permiso sería otro.
@@ -677,7 +733,10 @@ export default function ServidoresAdminPage() {
       <PositionRequestsSection />
 
       {/* Paneles: áreas · comités · (puestos cuando hay comité seleccionado) */}
-      <div className={cn('grid gap-4', selectedComm ? 'lg:grid-cols-[240px_minmax(0,1fr)_minmax(0,1fr)]' : 'lg:grid-cols-[300px_1fr]')}>
+      <div className={cn('grid gap-4',
+        selectedPos ? 'xl:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)]'
+          : selectedComm ? 'lg:grid-cols-[240px_minmax(0,1fr)_minmax(0,1fr)]'
+          : 'lg:grid-cols-[300px_1fr]')}>
 
         {/* ── Left: areas ─────────────────────────────────────────── */}
         <div
@@ -835,7 +894,7 @@ export default function ServidoresAdminPage() {
                         return (
                           <tr
                             key={c.id}
-                            onClick={() => setSelectedCommId(prev => prev === c.id ? null : c.id)}
+                            onClick={() => setSelectedCommId(selectedCommId === c.id ? null : c.id)}
                             className={cn('group transition-colors cursor-pointer', !c.is_active && 'opacity-50',
                               selectedCommId === c.id ? 'bg-coral/5' : 'hover:bg-surface-low',
                               i < areaComm.length - 1 && 'border-b border-[var(--outline-variant)]')}
@@ -933,6 +992,19 @@ export default function ServidoresAdminPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                {/* Descarga de TODO el comité con el puesto de cada quien: es la
+                    que más se pide, y desde acá sale sin tener que entrar puesto
+                    por puesto. Respeta el toggle de inactivos de la cuarta
+                    columna, que es el único que hay. */}
+                {filasComite.length > 0 && (
+                  <ExportButton
+                    data={filasComite}
+                    columns={SERVER_COLUMNS}
+                    allColumns={SERVER_COLUMNS}
+                    filename={nombreDeArchivo(selectedComm.name)}
+                    label="Descargar comité"
+                  />
+                )}
                 {/* Faltaba: áreas y comités sí tenían botón de crear, y los
                     puestos no — cada puesto nuevo terminaba saliendo por un
                     script suelto. */}
@@ -970,17 +1042,30 @@ export default function ServidoresAdminPage() {
                   const hasDetail = !!(p.description || p.functions || p.profile || p.skills || p.study_requirement)
                   return (
                   <div key={p.id} className={cn(i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}>
-                    <div className="group flex items-center gap-2 px-5 py-2.5 hover:bg-surface-low transition-colors">
+                    <div className={cn('group flex items-center gap-2 px-5 py-2.5 transition-colors',
+                      selectedPosId === p.id ? 'bg-coral/5' : 'hover:bg-surface-low')}>
+                      {/* El chevron abre la ficha del puesto; el NOMBRE abre la
+                          cuarta columna con su gente. Son dos cosas distintas y
+                          por eso son dos botones. */}
                       <button
                         onClick={() => togglePos(p.id)}
-                        className="flex flex-1 items-center gap-2 text-left min-w-0"
+                        className="shrink-0 rounded p-0.5 text-navy-light/80 hover:text-navy"
                         aria-expanded={open}
                         aria-label={`${open ? 'Ocultar' : 'Ver'} detalle de ${p.title}`}
                       >
                         {hasDetail
-                          ? (open ? <ChevronDown size={14} className="text-navy-light/80 shrink-0" /> : <ChevronRight size={14} className="text-navy-light/80 shrink-0" />)
-                          : <span className="w-3.5 shrink-0" />}
-                        <span className="flex-1 text-[13px] text-navy font-body truncate">{p.title}</span>
+                          ? (open ? <ChevronDown size={14} /> : <ChevronRight size={14} />)
+                          : <span className="block w-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => setSelectedPosId(selectedPosId === p.id ? null : p.id)}
+                        className="flex flex-1 items-center gap-2 text-left min-w-0"
+                        aria-pressed={selectedPosId === p.id}
+                        aria-label={`Ver quiénes ocupan ${p.title}`}
+                      >
+                        <span className={cn('flex-1 text-[13px] font-body truncate',
+                          selectedPosId === p.id ? 'text-coral font-semibold' : 'text-navy')}>{p.title}</span>
+                        <Users size={12} className="shrink-0 text-navy-light/40" aria-hidden />
                         {p.study_requirement && (
                           <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body">{p.study_requirement}</span>
                         )}
@@ -1032,6 +1117,114 @@ export default function ServidoresAdminPage() {
                   </div>
                   )
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Cuarta etapa: quién ocupa el puesto ───────────────────── */}
+        {selectedPos && (
+          <div className="rounded-2xl overflow-hidden flex flex-col bg-surface-card shadow-[var(--shadow-md)] min-h-[480px]">
+            <div className="flex items-start justify-between gap-2 px-5 py-3.5 border-b border-[var(--outline-variant)]">
+              <div className="min-w-0">
+                <span className="text-[13px] font-bold uppercase tracking-widest text-navy-light/80 font-display">
+                  Miembros
+                </span>
+                <p className="text-base font-bold text-navy mt-0.5 font-display">
+                  {tituloDelPuesto(selectedPos.title, conteoPuesto)}
+                </p>
+                {conteoPuesto.inactivos > 0 && (
+                  <label className="mt-1.5 inline-flex items-center gap-2 text-[13px] text-navy-light/80 font-body cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={verInactivos}
+                      onChange={e => setVerInactivos(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded border-[var(--outline-variant)] accent-coral"
+                    />
+                    Incluir {conteoPuesto.inactivos} inactivo{conteoPuesto.inactivos === 1 ? '' : 's'}
+                  </label>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {miembros.length > 0 && (
+                  <ExportButton
+                    data={filasPuesto}
+                    columns={SERVER_COLUMNS}
+                    allColumns={SERVER_COLUMNS}
+                    filename={nombreDeArchivo(selectedComm?.name, selectedPos.title)}
+                    label="Descargar"
+                  />
+                )}
+                <button
+                  onClick={() => setSelectedPosId(null)}
+                  className="text-navy-light/80 hover:text-navy p-1"
+                  title="Cerrar" aria-label="Cerrar panel de miembros"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {miembros.length === 0 ? (
+              /* Vacío ÚTIL: el puesto existe y no tiene a nadie. Se dice, y se
+                 manda al comité, que es donde vive el flujo de asignar. */
+              <EmptyState
+                className="flex-1"
+                icon={Users}
+                title={conteoPuesto.inactivos > 0 && !verInactivos
+                  ? 'Nadie activo en este puesto'
+                  : 'Este puesto no tiene a nadie'}
+                description={conteoPuesto.inactivos > 0 && !verInactivos
+                  ? `Hay ${conteoPuesto.inactivos} registro${conteoPuesto.inactivos === 1 ? '' : 's'} inactivo${conteoPuesto.inactivos === 1 ? '' : 's'}. Marcá la casilla de arriba para verlos y reintegrar a alguien.`
+                  : undefined}
+                action={selectedComm && (
+                  <Link href={`/servidores/${selectedComm.id}`} className="text-[13px] text-coral hover:underline font-body">
+                    Asignar a alguien desde el comité
+                  </Link>
+                )}
+              />
+            ) : (
+              <div className="flex-1 overflow-y-auto divide-y divide-[var(--outline-variant)]">
+                {miembros.map(m => (
+                  <div key={`${m.member_id}-${m.position_id}`} className="px-5 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/miembros/${m.member_id}`}
+                          className="text-[13px] font-semibold text-navy hover:text-coral transition-colors font-body"
+                        >
+                          {m.name}
+                        </Link>
+                        <p className="text-[11px] text-navy-light/80 font-body mt-0.5">
+                          Desde {m.start_date ? new Date(m.start_date).toLocaleDateString('es-CR') : '—'}
+                          {m.antiguedad !== '—' && ` · ${m.antiguedad}`}
+                        </p>
+                      </div>
+                      {/* Dos estados y no tres: ServerStatus es active|inactive
+                          y en la base no hay ni una fila 'on_leave' (1.525
+                          activas, 620 inactivas). Pintar "En pausa" sería una
+                          etiqueta que nunca aparece. */}
+                      <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
+                        m.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/5 text-navy-light/80')}>
+                        {m.status === 'active' ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                    {(m.email || m.phone) && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        {m.phone && (
+                          <a href={`tel:${m.phone}`} className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy font-body">
+                            <Phone size={11} aria-hidden /> {m.phone}
+                          </a>
+                        )}
+                        {m.email && (
+                          <a href={`mailto:${m.email}`} className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy font-body truncate">
+                            <Mail size={11} className="shrink-0" aria-hidden /> <span className="truncate">{m.email}</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>

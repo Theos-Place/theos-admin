@@ -26,6 +26,12 @@ const CONSOLIDAR = [
   // puesto. Gana «Encargado IT», que es el nombre oficial del madre y el que
   // trae ficha. Floriana está en los DOS, así que ahí actúa el manejo de choque.
   ['Comité Tecnología de Información', 'Encargado Comite', 'Encargado IT'],
+  // 2026-09-12: los creé yo al mover a Daniela y Gustavo desde Estudios
+  // Bíblicos. Usé el nombre del madre («Asistente Logistica», sin tilde) sin
+  // ver que esas sedes ya tenían «Asistente Logística» con tilde. Gana el que
+  // ya existía y tiene la gente.
+  ['Sede Meridiano Martes', 'Asistente Logistica', 'Asistente Logística'],
+  ['Sede Liberia', 'Asistente Logistica', 'Asistente Logística'],
 ]
 
 ;(async () => {
