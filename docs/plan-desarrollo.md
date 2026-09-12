@@ -30,7 +30,7 @@
 
 
 - Un punto por sesión/PR. Pegar el prompt tal cual y pedir además: correr `tsc --noEmit`,
-  lint y `vitest` antes de dar por terminado (la verja de CI usa `--max-warnings=107`, solo baja).
+  lint y `vitest` antes de dar por terminado (la verja de CI usa `--max-warnings=70`, solo baja).
 - Reglas del repo que ningún cambio debe romper (de AGENTS.md y docs/sistema-overview.md):
   - Todo handler de /api se autoriza solo con `requireRoles(...)` o `requireModuleView(...)`
     (el middleware excluye /api).
@@ -184,3 +184,98 @@ está DUPLICADO. Primero se resuelve el duplicado.
 Y un vínculo equivocado no es inocuo: por la regla de una persona = una
 familia, vincular mal FUSIONA dos hogares.
 
+
+
+## Fase 15 — Hallazgos del repaso de QA del 2026-09-11
+
+Salieron de revisar en frío lo que se construyó ese día (aprobación de becas,
+mover una beca de destino, tags, y la limpieza de warnings). Lo que **funciona**
+quedó verificado contra producción con un ida y vuelta real —27 comprobaciones,
+incluida una beca movida de verdad y restaurada campo por campo— así que acá
+solo está lo que **falta**.
+
+### [ ] BEC-2 · Avisar cuando el destino de una beca activa se quedó sin cupo
+
+Es el problema que destapó todo esto y sigue sin estar en pantalla. Hoy, en
+producción:
+
+| persona | destino | grupos abiertos | con cupo |
+|---|---|---|---|
+| Karla Ávila | Romanos | 1 | **0** |
+| María José Ruiz | Romanos | 1 | **0** |
+| Monserrath Arroyo | Evangelismo | 2 | 2 |
+
+Las dos primeras tienen una beca viva que no pueden usar, y nadie se entera
+hasta que la persona escribe. La pestaña "Becas asignadas" ya lista las que
+están sin usar; falta que la fila diga **"sin cupo en el destino"** y que ese
+sea un filtro, para que sea una cola de trabajo y no un hallazgo casual.
+
+La consulta ya está resuelta: por cada beca activa, contar los grupos del plan
+en `en_matricula` cuyo `max_students` es nulo o mayor a sus inscritos
+(`enrolled` + `pendiente_de_pago`). Cero = sin cupo.
+
+CUIDADO: un plan sin NINGÚN grupo abierto no es lo mismo que uno lleno. El
+primero puede abrir la otra semana; el segundo hay que resolverlo ya. Que el
+aviso los distinga.
+
+### [ ] BEC-3 · `email_sent_at` se marca aunque el correo no haya salido
+
+Con `EMAIL_SILENT_MODE` activo, `sendEmail` devuelve
+`{ messageId: 'skipped-silent-mode' }` sin tirar error, así que
+`sendSystemEmail` responde `{ ok: true }` y quien llama estampa
+`email_sent_at`. El resultado es que la beca **dice que se avisó y no se
+avisó**: la pantalla muestra la fecha de envío y el botón cambia a "Reenviar
+correo".
+
+Ya pasó con la beca de Valeria el 2026-09-11. Afecta a los tres lugares que
+estampan la fecha: `approveScholarshipRequest`, `moveScholarship` y el botón
+"Enviar por correo" de los cupones.
+
+El arreglo es en un solo punto: que `sendSystemEmail` devuelva si el envío fue
+REAL o silenciado, y que nadie estampe la fecha cuando fue silenciado. Va con
+test, porque el modo silencioso es justo el que nadie mira.
+
+### [ ] BEC-4 · El tag de una beca asignada no mira las redenciones
+
+`getScholarshipsQueue` cuenta `scholarship_redemptions` solo para los cupones
+genéricos, así que una beca asignada siempre llega con `used_count = 0` y su
+tag sale de `status`. Hoy da igual —una asignada se consume marcándose
+`status='used'`— pero `usoDeLaBeca` ya contempla el caso de la redención, y si
+alguna vez se registra una para una asignada el tag va a mentir. O se cuentan
+también para las asignadas, o se documenta que ahí no aplican.
+
+### [ ] API-1 · El PATCH de becas valida a mano, no con zod
+
+`PATCH /api/scholarships/[id]` (mover una beca) valida `action`, `entity_type`
+y el uuid del destino con `if`s. La convención del repo (AGENTS.md) es zod con
+`detalles: z.treeifyError(...)`. El `POST /api/scholarships/coupons` de al lado
+tiene el mismo problema y es más viejo: conviene migrar los dos juntos.
+
+### [ ] FIN-7 · Josué Valverde pagó ₡20.000 de más
+
+Se matriculó y pagó el estudio completo antes de que su beca —del 100%— se le
+asignara. No es un bug: es plata que hay que devolver o acreditar, y **la
+decisión es del usuario**, saldo a favor o devolución. Las de Gisselle y
+Valeria ya se resolvieron el 2026-09-11.
+
+### [ ] LINT-1 · Quedan 70 warnings, y 67 son el mismo patrón
+
+Van dos tandas (93 → 70). Lo que queda es casi todo
+`useEffect(() => { cargar() })` con un `setLoading(true)` antes del fetch.
+
+**Ojo con el camino corto**: reordenar el async NO los apaga. Está comprobado
+que la regla marca igual un `useCallback` async cuyo único `setState` va
+después del `await`, y solo se calla si el `setState` vive dentro de un
+`.then(...)`. Convertir `await` en `.then` sería maquillaje —el `setState`
+corre en el mismo tick— así que el arreglo real es derivar el estado o mover el
+`setState` a un manejador de evento.
+
+Y el patrón de "ajustar el estado durante el render" que se usó en la segunda
+tanda tiene una trampa: el valor con el que se compara **tiene que ser estable
+entre renders**. Un `?? []` o un objeto literal hace que el render se llame a sí
+mismo sin parar. Con un efecto eso solo re-disparaba el efecto; durante el
+render, tumba la pantalla.
+
+Los 3 de `purity` son `Date.now()` en render y hay que hacerlos junto con estos:
+anclar el reloj pide guardarlo en estado desde un efecto, o sea un
+`set-state-in-effect` nuevo.
