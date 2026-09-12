@@ -45,6 +45,11 @@ export const FALLBACK: Record<string, { subject: string; html: string }> = {
     subject: 'Novedades sobre tu solicitud de beca',
     html: '<p>Hola {{nombre}},</p><p>Revisamos tu solicitud de beca para {{nombre_estudio_evento}} y pudimos aprobarte un apoyo parcial.</p><p>Se te asignó un descuento de {{descuento}} que podés aplicar al momento de hacer tu pago.</p>',
   },
+  // Beca movida a otro estudio (el destino original se llenó o se canceló).
+  beca_movida: {
+    subject: 'Tu beca ahora aplica a {{nombre_estudio_evento}}',
+    html: '<p>Hola {{nombre}},</p><p>Tu beca ya no está asignada a {{nombre_anterior}}: la pasamos a <strong>{{nombre_estudio_evento}}</strong>.</p><p>{{motivo}}</p><p>El descuento sigue siendo de <strong>{{descuento}}</strong>.{{#queda_saldo}} El monto que te queda por pagar es <strong>{{monto_final}}</strong>.{{/queda_saldo}}</p>',
+  },
   beca_rechazada: {
     subject: 'Sobre tu solicitud de beca',
     html: '<p>Hola {{nombre}},</p><p>Gracias por tu solicitud de beca para {{nombre_estudio_evento}}. En esta ocasión no pudimos aprobarla.</p><p>Motivo: {{motivo_rechazo}}</p>',

@@ -11,6 +11,10 @@ import {
 } from '@/lib/finance/scholarship-payment-rules'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
 import { previewApproval } from '@/lib/finance/scholarship-approval'
+import {
+  planearMovimiento, avisoDelCambio,
+  type BecaParaMover, type DestinoNuevo, type MotivoBloqueo,
+} from '@/lib/finance/cambio-de-destino-beca'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -742,4 +746,110 @@ export async function rejectScholarshipRequest(
   } catch (e) {
     console.warn('rejectScholarshipRequest: aviso falló:', e)
   }
+}
+
+// ── Mover una beca asignada a otro estudio/evento ───────────────────────────
+
+/**
+ * Cambia el destino de una beca asignada.
+ *
+ * El UPDATE va condicionado a `status='active'`: entre que se leyó la beca y se
+ * escribe, la persona pudo haberla usado. Sin esa condición el movimiento le
+ * quitaría el estudio que acaba de pagar.
+ *
+ * El correo es best-effort (igual que en approveScholarshipRequest), pero el
+ * aviso importa más que en una aprobación: la persona ya tiene un correo que
+ * nombra el destino viejo.
+ */
+export async function moveScholarship(
+  id: string,
+  destino: { entity_type: ScholarshipEntityType; entity_id: string },
+  opts: { motivo?: string | null; notificar?: boolean } = {},
+): Promise<
+  | { ok: true; aviso: string | null; entity_name: string }
+  | { ok: false; error: MotivoBloqueo | 'no_encontrada' }
+> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('scholarships').select(SELECT).eq('id', id).maybeSingle()
+  if (error) throw error
+  if (!data) return { ok: false, error: 'no_encontrada' }
+  const row = data as DbRow
+
+  const { count } = await supabase
+    .from('scholarship_redemptions').select('id', { count: 'exact', head: true }).eq('scholarship_id', id)
+
+  const planId = destino.entity_type === 'study_plan' ? destino.entity_id : null
+  const eventId = destino.entity_type === 'event' ? destino.entity_id : null
+  const [{ currency, cost }, nombre] = await Promise.all([
+    resolveEntityPricing(destino.entity_type, planId, eventId),
+    resolveEntityName(destino.entity_type, planId, eventId),
+  ])
+
+  const beca: BecaParaMover = {
+    kind: row.kind, status: row.status, entity_type: row.entity_type,
+    plan_id: row.plan_id, event_id: row.event_id,
+    discount_type: row.discount_type, discount_value: Number(row.discount_value),
+    currency: toCurrency(row.currency), used_count: count ?? 0,
+  }
+  const destinoNuevo: DestinoNuevo = { entity_type: destino.entity_type, id: destino.entity_id, nombre, currency, cost }
+
+  const plan = planearMovimiento(beca, destinoNuevo)
+  if (!plan.ok) return { ok: false, error: plan.error }
+
+  const { data: updated, error: updErr } = await supabase.from('scholarships')
+    .update({ ...plan.campos, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('status', 'active').select('id')
+  if (updErr) throw updErr
+  // 0 filas = alguien la usó o la revocó mientras tanto.
+  if ((updated ?? []).length === 0) return { ok: false, error: 'no_activa' }
+
+  const aviso = avisoDelCambio(beca, destinoNuevo, plan)
+
+  if (opts.notificar !== false && row.member_id) {
+    try {
+      const anterior = await resolveEntityName(row.entity_type, row.plan_id, row.event_id)
+      const descuento = formatDiscount(row.discount_type, Number(row.discount_value), plan.campos.currency)
+      const quedaSaldo = plan.campos.approval_type === 'parcial' && plan.campos.final_amount != null
+
+      await supabase.from('internal_notifications').insert({
+        recipient_member_id: row.member_id,
+        type: 'scholarship_moved',
+        title: 'Tu beca cambió de estudio',
+        body: `Tu beca de ${descuento} pasó de ${anterior} a ${nombre}.`,
+        link: null,
+      })
+
+      const { data: m } = await supabase.from('members')
+        .select('email, first_name, last_name').eq('id', row.member_id).maybeSingle()
+      const member = m as { email: string | null; first_name: string; last_name: string } | null
+      if (member?.email) {
+        const sent = await sendSystemEmail({
+          systemKey: 'beca_movida',
+          to: { email: member.email, name: `${member.first_name} ${member.last_name}`.trim() },
+          data: {
+            nombre: member.first_name,
+            nombre_anterior: anterior,
+            nombre_estudio_evento: nombre,
+            motivo: opts.motivo?.trim() || 'El estudio anterior ya no tenía campo disponible.',
+            descuento,
+            // Sección {{#queda_saldo}}: renderTemplate solo itera ARRAYS de
+            // objetos, y el {{monto_final}} de adentro se lee del item, no de
+            // `data`. Lista vacía = el párrafo del saldo no sale.
+            queda_saldo: quedaSaldo
+              ? [{ monto_final: formatMoney(plan.campos.final_amount!, plan.campos.currency) }]
+              : [],
+          },
+        })
+        if (sent.ok) {
+          await supabase.from('scholarships')
+            .update({ email_sent_at: new Date().toISOString(), email_sent_to: member.email })
+            .eq('id', id)
+        }
+      }
+    } catch (e) {
+      console.warn('moveScholarship: aviso falló:', e)
+    }
+  }
+
+  return { ok: true, aviso, entity_name: nombre }
 }

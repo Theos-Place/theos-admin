@@ -22,6 +22,7 @@ import { previewApproval, QUICK_PERCENTAGES, quickLabel } from '@/lib/finance/sc
 // MEMBER_LOOKUP_URL: el rol 'becas' no tiene el módulo miembros y el
 // buscador quedaba vacío (bug 2026-08-04).
 import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
+import { BecasAsignadasTab } from '@/components/finance/BecasAsignadasTab'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
@@ -57,7 +58,7 @@ export default function BecasPage() {
   const canEdit = can('becas', 'edit')
   const toast = useToast()
 
-  const [tab, setTab] = useState<'cupones' | 'solicitudes'>('cupones')
+  const [tab, setTab] = useState<'cupones' | 'asignadas' | 'solicitudes'>('cupones')
 
   // ── Cupones/becas ────────────────────────────────────────────────────────
   const [coupons, setCoupons] = useState<Scholarship[]>([])
@@ -179,7 +180,7 @@ export default function BecasPage() {
             </div>
             <div>
               <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Becas</h1>
-              <p className="mt-0.5 text-sm text-white/80 font-body">Cupones genéricos y solicitudes asignadas</p>
+              <p className="mt-0.5 text-sm text-white/80 font-body">Cupones genéricos, becas asignadas y solicitudes</p>
             </div>
           </div>
           {canEdit && tab === 'cupones' && (
@@ -194,7 +195,7 @@ export default function BecasPage() {
       </div>
 
       <div className="flex items-center gap-2">
-        {([['cupones', 'Cupones genéricos'], ['solicitudes', 'Solicitudes asignadas']] as const).map(([id, label]) => (
+        {([['cupones', 'Cupones genéricos'], ['asignadas', 'Becas asignadas'], ['solicitudes', 'Solicitudes']] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -305,6 +306,8 @@ export default function BecasPage() {
           </div>
         </>
       )}
+
+      {tab === 'asignadas' && <BecasAsignadasTab canEdit={canEdit} />}
 
       {tab === 'solicitudes' && (
         <>
