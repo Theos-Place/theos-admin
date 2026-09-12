@@ -11,6 +11,7 @@ import {
 } from '@/lib/finance/scholarship-payment-rules'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
 import { previewApproval } from '@/lib/finance/scholarship-approval'
+import { seRegistraElEnvio, mensajeDeOmision, type MotivoOmitido } from '@/lib/email/resultado-del-envio'
 import {
   planearMovimiento, avisoDelCambio,
   type BecaParaMover, type DestinoNuevo, type MotivoBloqueo,
@@ -461,8 +462,11 @@ export async function approveScholarshipRequest(
           monto_final: preview.breakdown ? formatMoney(preview.breakdown.final, becaCurrency) : '',
         },
       })
-      // BEC-1: registrar el envío en la beca (mismo tracking que el botón manual).
-      if (sent.ok) {
+      // BEC-1: registrar el envío en la beca (mismo tracking que el botón
+      // manual). BEC-3: se mira `enviado`, no `ok` — con el modo silencioso el
+      // correo no sale y `ok` viene true igual, así que la beca quedaba
+      // diciendo "ya se avisó" sin que nadie hubiera recibido nada.
+      if (seRegistraElEnvio(sent)) {
         await supabase.from('scholarships')
           .update({ email_sent_at: new Date().toISOString(), email_sent_to: member.email })
           .eq('id', scholarshipId)
@@ -646,6 +650,16 @@ const SEND_EMAIL_ERROR: Record<string, { message: string; status: number }> = {
 
 export function scholarshipEmailErrorResponse(error: unknown): NextResponse | null {
   if (!(error instanceof Error)) return null
+  // BEC-3: el correo no salió pero tampoco falló (modo silencioso, cuenta de
+  // prueba). 409 y no 502: no es un error del proveedor y reintentar ya mismo
+  // da lo mismo — hay que cambiar algo antes.
+  if (error.message.startsWith('envio_omitido:')) {
+    const motivo = error.message.slice('envio_omitido:'.length) as MotivoOmitido
+    return NextResponse.json(
+      { error: mensajeDeOmision(motivo), code: 'envio_omitido', motivo },
+      { status: 409 },
+    )
+  }
   const entry = SEND_EMAIL_ERROR[error.message]
   if (!entry) return null
   return NextResponse.json({ error: entry.message, code: error.message }, { status: entry.status })
@@ -698,6 +712,11 @@ export async function sendScholarshipEmail(
         data: { nombre: member.first_name, nombre_estudio_evento: s.entity_name, descuento: discount },
       })
   if (!result.ok) throw new Error('envio_fallido')
+  // BEC-3: el envío puede no haber salido sin que haya fallado (modo silencioso,
+  // cuenta de prueba). Se avisa en vez de estampar una fecha falsa: quien apretó
+  // el botón tiene que saber que no salió, y el botón debe seguir diciendo
+  // "Enviar" y no "Reenviar".
+  if (!seRegistraElEnvio(result)) throw new Error(`envio_omitido:${result.motivo}`)
 
   const sentAt = new Date().toISOString()
   await supabase.from('scholarships')
@@ -840,7 +859,8 @@ export async function moveScholarship(
               : [],
           },
         })
-        if (sent.ok) {
+        // BEC-3: `enviado`, no `ok`. Ver approveScholarshipRequest.
+        if (seRegistraElEnvio(sent)) {
           await supabase.from('scholarships')
             .update({ email_sent_at: new Date().toISOString(), email_sent_to: member.email })
             .eq('id', id)

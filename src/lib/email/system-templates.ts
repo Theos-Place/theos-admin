@@ -10,6 +10,7 @@ import { sendEmail } from '@/lib/email/provider'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { renderTemplate, renderTemplateWithHtml, type TemplateData } from '@/lib/email/render-vars'
 import { FALLBACK } from '@/lib/email/system-template-fallbacks'
+import type { ResultadoEnvio } from '@/lib/email/resultado-del-envio'
 
 export { FALLBACK }
 
@@ -61,7 +62,7 @@ export async function sendSystemEmail(opts: {
    *  Nunca meter acá texto escrito por una persona sin escapar antes. */
   rawData?: Record<string, string>
   fromName?: string
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: boolean } & ResultadoEnvio> {
   try {
     const tpl = await getSystemTemplate(opts.systemKey)
     const subject = renderTemplate(tpl.subject, opts.data)
@@ -71,10 +72,13 @@ export async function sendSystemEmail(opts: {
       ? renderTemplateWithHtml(tpl.html, opts.data, opts.rawData)
       : renderTemplate(tpl.html, opts.data)
     const html = renderEmail(cuerpo)
-    await sendEmail({ to: opts.to, subject, html, kind: 'transactional', fromName: opts.fromName })
-    return { ok: true }
+    // BEC-3: `ok` es "no falló"; `enviado` es "salió de verdad". No son lo
+    // mismo con el modo silencioso encendido, y quien registre el envío tiene
+    // que mirar `enviado`.
+    const r = await sendEmail({ to: opts.to, subject, html, kind: 'transactional', fromName: opts.fromName })
+    return { ok: true, enviado: r.enviado, motivo: r.motivo }
   } catch (e) {
     console.warn('sendSystemEmail:', opts.systemKey, e)
-    return { ok: false }
+    return { ok: false, enviado: false, motivo: null }
   }
 }

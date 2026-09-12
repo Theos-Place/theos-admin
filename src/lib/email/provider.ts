@@ -13,6 +13,7 @@ import nodemailer from 'nodemailer'
 import { listUnsubscribeHeader } from '@/lib/email/footer'
 import { providerMessageId } from '@/lib/email/ses-message-id'
 import { isEmailSilentMode, silentDecision, silentLogLine } from '@/lib/email/silent-mode'
+import { ENVIADO, omitido, MESSAGE_ID_OMITIDO, type ResultadoEnvio } from '@/lib/email/resultado-del-envio'
 
 /** Token de error cuando no hay proveedor configurado (la UI lo traduce). */
 export const EMAIL_NOT_CONFIGURED = 'EMAIL_NOT_CONFIGURED'
@@ -174,13 +175,16 @@ async function registrarEnvio(input: {
  * el pie de baja dentro cuando es marketing — acá NO se modifica el HTML.
  * El remitente es siempre SES_FROM_EMAIL (verificado).
  */
-export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers, authCritical }: SendEmailInput): Promise<{ messageId: string }> {
+/** BEC-3: el resultado dice si el correo SALIÓ, no solo si no hubo error. Los
+ *  dos caminos de abajo (dominio de prueba y modo silencioso) no envían nada y
+ *  antes se veían iguales que un envío bueno. */
+export async function sendEmail({ to, subject, html, fromName, kind, unsubscribeToken, headers, authCritical }: SendEmailInput): Promise<{ messageId: string } & ResultadoEnvio> {
   // Dominios .invalid (cuentas [prueba] del seed): jamás se intenta enviar —
   // cada intento rebota en SES y castiga la reputación del remitente. Los
   // tutoriales grabados y las corridas de QA matriculan con estas cuentas.
   if (/\.invalid$/i.test(to.email.trim())) {
     console.warn(`sendEmail omitido (dominio .invalid): ${to.email}`)
-    return { messageId: 'skipped-invalid-domain' }
+    return { messageId: MESSAGE_ID_OMITIDO.dominio_invalido, ...omitido('dominio_invalido') }
   }
   // MIG-1 Etapa 0 · Modo silencioso. Va ANTES de assertEmailConfigured a
   // propósito: con el modo encendido el correo no sale, así que no importa si
@@ -188,7 +192,7 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
   if (silentDecision({ silent: isEmailSilentMode(), authCritical }) === 'silenciar') {
     console.warn(silentLogLine(to.email, subject))
     await registrarSilenciado(to.email, subject, kind)
-    return { messageId: 'skipped-silent-mode' }
+    return { messageId: MESSAGE_ID_OMITIDO.modo_silencioso, ...omitido('modo_silencioso') }
   }
 
   assertEmailConfigured()
@@ -219,5 +223,5 @@ export async function sendEmail({ to, subject, html, fromName, kind, unsubscribe
   // envío. Ver ses-message-id.ts.
   const messageId = providerMessageId(result.response, result.messageId)
   await registrarEnvio({ to: to.email, subject, status: 'sent', messageId })
-  return { messageId }
+  return { messageId, ...ENVIADO }
 }
