@@ -144,18 +144,32 @@ describe('solicitudes_estudio por puesto del comité', () => {
   })
 })
 
-// El Comité Youth ya NO otorga encargado_eventos por el puesto "Colaborador".
-// Ese puesto se fusionó en "Colaborador Youth" con el Excel Madre, y la decisión
-// del usuario (2026-09-11) es que quien hace check-in en Youth vaya en un puesto
-// de bienvenida, no que el colaborador lo traiga por su nombre.
+// Los colaboradores de Youth hacen el check-in del subevento de Youth en las
+// charlas, así que su puesto trae el acceso a eventos. La regla se quitó el
+// 2026-09-11 y volvió el 12 por decisión del usuario, ahora apuntando también
+// al nombre oficial «Colaborador Youth» que dejó el Excel Madre.
 describe('Comité Youth', () => {
   const enYouth = (title: string, areaName = 'Comité Youth') =>
     rolesGrantedByPosition({ title, areaName, areaType: 'committee', parentAreaName: 'Area de Enseñanza' })
 
-  it('ningún puesto del comité otorga encargado_eventos', () => {
-    for (const t of ['Colaborador', 'Colaborador Youth', 'Teacher', 'Asistente Teacher', 'Encargado Youth']) {
+  it('el Colaborador de Youth trae encargado_eventos, con el nombre viejo y con el oficial', () => {
+    expect(enYouth('Colaborador')).toContain('encargado_eventos')
+    expect(enYouth('Colaborador Youth')).toContain('encargado_eventos')
+  })
+
+  it('el nombre del comité se reconoce con y sin tilde', () => {
+    expect(enYouth('Colaborador Youth', 'Comite Youth')).toContain('encargado_eventos')
+    expect(enYouth('Colaborador Youth', 'COMITÉ DE YOUTH')).toContain('encargado_eventos')
+  })
+
+  it('los otros puestos del comité NO lo traen', () => {
+    for (const t of ['Teacher', 'Asistente Teacher', 'Colaborador de Onboarding', 'Asistente Youth']) {
       expect(enYouth(t), t).not.toContain('encargado_eventos')
     }
+  })
+
+  it('un "Colaborador" de otro comité tampoco', () => {
+    expect(enYouth('Colaborador', 'Comité de Worship')).not.toContain('encargado_eventos')
   })
 
   it('el Encargado de Youth sigue trayendo lider_comite, y solo eso', () => {
