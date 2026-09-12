@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useEffectEvent, useRef } from 'react'
 import { Columns2, RotateCcw } from 'lucide-react'
 
 export type ColumnDef<T> = {
@@ -38,12 +38,14 @@ export function ColumnSelector<T>({ columns, storageKey, onChange }: Props<T>) {
 
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  // useEffectEvent en vez de un ref escrito durante el render: el efecto avisa
+  // al padre con el onChange más nuevo sin que el cambio de identidad de esa
+  // prop vuelva a disparar el aviso.
+  const avisar = useEffectEvent((visible: ColumnDef<T>[]) => onChange(visible))
 
   useEffect(() => {
     const visible = columns.filter(c => visibleKeys.includes(String(c.key)) || c.alwaysVisible)
-    onChangeRef.current(visible)
+    avisar(visible)
     try { localStorage.setItem(storageKey, JSON.stringify(visibleKeys)) } catch {}
   }, [visibleKeys, columns, storageKey])
 

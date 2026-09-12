@@ -31,10 +31,15 @@ export function usePaginatedList<Raw, T = Raw>(
   /** Re-pide la primera página (para reintentar tras un error). */
   const reload = useCallback(() => setNonce(n => n + 1), [])
 
-  // mapItem suele ser una arrow inline → no estabilizada. La guardamos en ref
-  // para no re-disparar el efecto en cada render por su identidad.
+  // mapItem suele ser una arrow inline → cambia de identidad en cada render y
+  // re-dispararía el efecto, así que se guarda en un ref.
+  //
+  // La escritura va en un EFECTO, no en el cuerpo del render: escribir un ref
+  // durante el render es justo lo que React pide no hacer (react-hooks/refs).
+  // No se usa useEffectEvent porque `map` también se llama desde loadMore, que
+  // no es un efecto, y ahí React prohíbe invocar un effect event.
   const mapRef = useRef(mapItem)
-  mapRef.current = mapItem
+  useEffect(() => { mapRef.current = mapItem })
   const map = useCallback((rows: Raw[]): T[] => {
     const fn = mapRef.current
     return fn ? rows.map(fn) : (rows as unknown as T[])

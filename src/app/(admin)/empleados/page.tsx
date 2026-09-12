@@ -41,8 +41,11 @@ export default function EmpleadosPage() {
   const [filter, setFilter] = useState<FilterKey>('all')
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  const active   = employees.filter(e => e.status === 'active')
-  const inactive = employees.filter(e => e.status === 'inactive')
+  // Memoizadas porque `displayed` depende de ellas: sin esto son arrays nuevos
+  // en cada render, el useMemo de abajo nunca memoiza nada y el compilador de
+  // React se salta la optimización del componente entero.
+  const active   = useMemo(() => employees.filter(e => e.status === 'active'), [employees])
+  const inactive = useMemo(() => employees.filter(e => e.status === 'inactive'), [employees])
   const planilla = active.filter(e => e.contract_type === 'planilla').length
   const servicios = active.filter(e => e.contract_type === 'servicios_profesionales').length
   const pendingVacations = employees.reduce(

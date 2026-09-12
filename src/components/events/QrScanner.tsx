@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { BrowserQRCodeReader, type IScannerControls } from '@zxing/browser'
 import { cn } from '@/lib/utils'
 import { SwitchCamera, CameraOff } from 'lucide-react'
@@ -13,8 +13,10 @@ type Facing = 'environment' | 'user'
 export function QrScanner({ onResult, className }: { onResult: (text: string) => void; className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
-  const onResultRef = useRef(onResult)
-  onResultRef.current = onResult
+  // useEffectEvent: el callback del lector tiene que ver SIEMPRE el onResult
+  // más nuevo sin que su identidad reinicie la cámara. Antes era un ref escrito
+  // durante el render, que es justo lo que React pide no hacer.
+  const emitir = useEffectEvent((texto: string) => onResult(texto))
   const [facing, setFacing] = useState<Facing>('environment')
   const [error, setError] = useState<string | null>(null)
   const [retry, setRetry] = useState(0)
@@ -25,7 +27,7 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
     setError(null)
     reader
       .decodeFromConstraints({ video: { facingMode: facing } }, videoRef.current!, (result) => {
-        if (result) onResultRef.current(result.getText())
+        if (result) emitir(result.getText())
       })
       .then(controls => {
         if (cancelled) controls.stop()

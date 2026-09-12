@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getRefunds, createRefund, type RefundWriteInput } from '@/lib/supabase/queries/finance'
 import { resolveRefundScope, scopeToRefundFilters } from '@/lib/auth/refunds-scope'

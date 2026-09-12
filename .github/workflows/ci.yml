@@ -22,11 +22,10 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint (ratchet)
-        # errores = 0 SIEMPRE. Warnings: 94 es la deuda actual (2026-08-21:
-        # arreglados los 13 exhaustive-deps de finanzas/empleados/plan y el
-        # new Date() impuro del dashboard de finanzas; el resto son
-        # react-hooks/set-state-in-effect + purity/refs) — bajar este número
-        # conforme se migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=93
+        # errores = 0 SIEMPRE. Warnings: 88 es la deuda actual (2026-09-11:
+        # cerradas a cero react-hooks/refs, preserve-manual-memoization y
+        # no-unused-vars; quedan 85 set-state-in-effect + 3 purity) — bajar este
+        # número conforme se migren casos; NUNCA subirlo.
+        run: npx eslint src --max-warnings=88
       - name: Tests
         run: npm test --if-present
