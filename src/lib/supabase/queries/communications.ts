@@ -11,6 +11,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { sePuedeBorrarEnServidor, MENSAJE_NO_BORRABLE, type MotivoNoBorrable } from '@/lib/communications/borrado-de-comunicado'
+import {
+  estadoDeLaFila, estadosDelFiltro, type CorreoDelSistema, type FiltroCorreo,
+} from '@/lib/communications/correos-del-sistema'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import {
   emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons, type SkipReason,
@@ -208,6 +211,119 @@ export function broadcastDeleteErrorResponse(error: unknown): NextResponse | nul
     return NextResponse.json({ error: MENSAJE_NO_BORRABLE[motivo], code: motivo }, { status: 409 })
   }
   return null
+}
+
+/**
+ * Correos que manda el SISTEMA (no las campañas): `broadcast_id` nulo.
+ *
+ * El nombre de la persona sale de emparejar el correo contra `members.email`,
+ * porque el camino transaccional no guarda member_id. Se resuelve por página y
+ * no con un join: no hay FK entre message_logs.recipient y members, así que
+ * PostgREST no puede hacerlo.
+ *
+ * Los silenciados vienen de otra tabla. El filtro elige la fuente en vez de
+ * mezclar las dos: cada una pagina bien por su lado, y unirlas obligaría a
+ * traerlas enteras para ordenarlas en memoria.
+ */
+export async function getSystemEmails(opts: {
+  page?: number; pageSize?: number; filtro?: FiltroCorreo; q?: string
+} = {}): Promise<{ items: CorreoDelSistema[]; total: number; page: number; pageSize: number }> {
+  const supabase = createAdminClient()
+  const page = Math.max(1, opts.page ?? 1)
+  const pageSize = Math.min(200, Math.max(1, opts.pageSize ?? 50))
+  const desde = (page - 1) * pageSize
+  const filtro = opts.filtro ?? 'todos'
+  const q = (opts.q ?? '').trim()
+
+  const estados = estadosDelFiltro(filtro)
+
+  // Rama silenciados: otra tabla, sin estado ni error que mostrar.
+  if (estados === null) {
+    let sq = supabase.from('silenced_emails')
+      .select('id, recipient, subject, attempted_at', { count: 'exact' })
+      .order('attempted_at', { ascending: false })
+    if (q) sq = sq.or(`recipient.ilike.%${q}%,subject.ilike.%${q}%`)
+    const { data, count, error } = await sq.range(desde, desde + pageSize - 1)
+    if (error) throw error
+    const filas = (data ?? []) as Array<{ id: string; recipient: string; subject: string | null; attempted_at: string }>
+    const nombres = await nombresPorCorreo(supabase, filas.map(f => f.recipient))
+    return {
+      items: filas.map(f => ({
+        id: f.id,
+        persona: nombres.get(f.recipient.toLowerCase()) ?? null,
+        destinatario: f.recipient,
+        asunto: f.subject ?? '',
+        fecha: f.attempted_at,
+        estado: 'silenciado' as const,
+        error: null,
+      })),
+      total: count ?? 0, page, pageSize,
+    }
+  }
+
+  // Cliente laxo: `subject` es una columna nueva (migración 20260901120000) y
+  // los tipos generados todavía no la traen. Mismo patrón que registrarEnvio en
+  // email/provider.ts, que es quien la escribe.
+  const dbLaxo = supabase as unknown as {
+    from: (t: string) => {
+      select: (cols: string, opts?: { count: 'exact' }) => {
+        is: (c: string, v: null) => {
+          order: (c: string, o: { ascending: boolean }) => {
+            in: (c: string, v: string[]) => unknown
+            or: (f: string) => unknown
+            range: (a: number, b: number) => Promise<{ data: unknown; count: number | null; error: unknown }>
+          }
+        }
+      }
+    }
+  }
+  type Consulta = {
+    in: (c: string, v: string[]) => Consulta
+    or: (f: string) => Consulta
+    range: (a: number, b: number) => Promise<{ data: unknown; count: number | null; error: unknown }>
+  }
+  let lq = dbLaxo.from('message_logs')
+    .select('id, recipient, subject, status, sent_at, created_at, error_message, last_error', { count: 'exact' })
+    .is('broadcast_id', null)
+    .order('created_at', { ascending: false }) as unknown as Consulta
+  if (estados.length) lq = lq.in('status', estados)
+  if (q) lq = lq.or(`recipient.ilike.%${q}%,subject.ilike.%${q}%`)
+  const { data, count, error } = await lq.range(desde, desde + pageSize - 1)
+  if (error) throw error
+
+  const filas = (data ?? []) as Array<{
+    id: string; recipient: string; subject: string | null; status: string | null
+    sent_at: string | null; created_at: string | null
+    error_message: string | null; last_error: string | null
+  }>
+  const nombres = await nombresPorCorreo(supabase, filas.map(f => f.recipient))
+  return {
+    items: filas.map(f => ({
+      id: f.id,
+      persona: nombres.get((f.recipient ?? '').toLowerCase()) ?? null,
+      destinatario: f.recipient,
+      asunto: f.subject ?? '',
+      // sent_at cuando salió; created_at para los que todavía no.
+      fecha: f.sent_at ?? f.created_at,
+      estado: estadoDeLaFila(f.status),
+      error: f.error_message ?? f.last_error ?? null,
+    })),
+    total: count ?? 0, page, pageSize,
+  }
+}
+
+/** Nombre de cada dirección, en una sola consulta por página. */
+async function nombresPorCorreo(
+  supabase: ReturnType<typeof createAdminClient>, correos: string[],
+): Promise<Map<string, string>> {
+  const unicos = [...new Set(correos.filter(Boolean).map(c => c.toLowerCase()))]
+  const m = new Map<string, string>()
+  if (!unicos.length) return m
+  const { data } = await supabase.from('members').select('email, first_name, last_name').in('email', unicos)
+  for (const r of (data ?? []) as Array<{ email: string | null; first_name: string; last_name: string }>) {
+    if (r.email) m.set(r.email.toLowerCase(), `${r.first_name} ${r.last_name}`.trim())
+  }
+  return m
 }
 
 export type ConfigWriteInput = {

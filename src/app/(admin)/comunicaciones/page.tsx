@@ -25,12 +25,13 @@ import {
   X,
   Trash2,
 } from 'lucide-react'
+import { CorreosDelSistemaTab } from '@/components/communications/CorreosDelSistemaTab'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { useToast } from '@/components/shared/Toast'
 import { textoDeConfirmacion, resumenDelBorrado } from '@/lib/communications/borrado-de-comunicado'
 
-type MainTab = 'historial' | 'programados' | 'borradores'
+type MainTab = 'historial' | 'programados' | 'borradores' | 'sistema'
 type ChannelFilter = 'all' | CommunicationChannel
 type StatusFilter = 'all' | CommunicationStatus
 
@@ -267,7 +268,7 @@ export default function ComunicacionesPage() {
       {/* Tabs */}
       <div>
         <div className="flex gap-1 border-b mb-4 border-[var(--outline-variant)]">
-          {(['historial', 'programados', 'borradores'] as MainTab[]).map(t => (
+          {(['historial', 'programados', 'borradores', 'sistema'] as MainTab[]).map(t => (
             <button
               key={t}
               type="button"
@@ -279,7 +280,8 @@ export default function ComunicacionesPage() {
             >
               {t === 'historial' ? 'Historial'
                 : t === 'programados' ? `Programados${scheduled.length > 0 ? ` (${scheduled.length})` : ''}`
-                : `Borradores${drafts.length > 0 ? ` (${drafts.length})` : ''}`}
+                : t === 'borradores' ? `Borradores${drafts.length > 0 ? ` (${drafts.length})` : ''}`
+                : 'Del sistema'}
             </button>
           ))}
         </div>
@@ -514,6 +516,7 @@ export default function ComunicacionesPage() {
             )}
           </div>
         )}
+        {tab === 'sistema' && <CorreosDelSistemaTab />}
       </div>
 
       <DeleteConfirmModal
