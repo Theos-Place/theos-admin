@@ -23,9 +23,12 @@ import {
   ClipboardList,
   Clock,
   X,
+  Trash2,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { useToast } from '@/components/shared/Toast'
+import { textoDeConfirmacion, resumenDelBorrado } from '@/lib/communications/borrado-de-comunicado'
 
 type MainTab = 'historial' | 'programados' | 'borradores'
 type ChannelFilter = 'all' | CommunicationChannel
@@ -70,6 +73,31 @@ export default function ComunicacionesPage() {
       setCancelando(null)
     }
   }
+  /**
+   * Borrar borradores. Solo acá: un programado se cancela primero y uno que ya
+   * salió es el registro de a quién le llegó (la regla vive en
+   * lib/communications/borrado-de-comunicado.ts y la repite el servidor).
+   *
+   * `porBorrar` guarda la tanda: uno solo o todos. Así el modal de confirmación
+   * es el mismo en los dos casos y no hay dos caminos que mantener.
+   */
+  const [porBorrar, setPorBorrar] = useState<string[] | null>(null)
+  const [borrando, setBorrando] = useState(false)
+
+  async function confirmarBorrado() {
+    if (!porBorrar) return
+    setBorrando(true)
+    let ok = 0, fallados = 0
+    for (const id of porBorrar) {
+      const res = await fetch(`/api/communications/messages/${id}`, { method: 'DELETE' })
+      if (res.ok) ok++; else fallados++
+    }
+    await refetch()
+    toast(resumenDelBorrado(ok, fallados), fallados > 0 ? 'error' : 'success')
+    setBorrando(false)
+    setPorBorrar(null)
+  }
+
   // Un programado NO es historial: todavía no salió. Tampoco borrador: ya tiene
   // destinatarios y hora. Va en su propia pestaña, donde se puede cancelar.
   const sent = useMemo(() => messages.filter(m => m.status !== 'draft' && m.status !== 'scheduled'), [messages])
@@ -434,6 +462,16 @@ export default function ComunicacionesPage() {
 
         {tab === 'borradores' && (
           <div className="space-y-3">
+            {drafts.length > 1 && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setPorBorrar(drafts.map(d => d.id))}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors font-body"
+                >
+                  <Trash2 size={13} /> Borrar los {drafts.length}
+                </button>
+              </div>
+            )}
             {drafts.length === 0 ? (
               <div className="rounded-2xl bg-surface-card">
                 <EmptyState icon={FileEdit} title="No hay borradores guardados" />
@@ -455,19 +493,37 @@ export default function ComunicacionesPage() {
                       Guardado el {new Date(msg.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
-                  <Link
-                    href={`/comunicaciones/nueva`}
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
-                  >
-                    <FileEdit size={12} />
-                    Continuar editando
-                  </Link>
+                  <div className="shrink-0 inline-flex items-center gap-2">
+                    <Link
+                      href={`/comunicaciones/nueva`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+                    >
+                      <FileEdit size={12} />
+                      Continuar editando
+                    </Link>
+                    <button
+                      onClick={() => setPorBorrar([msg.id])}
+                      aria-label={`Borrar el borrador "${msg.subject || 'sin asunto'}"`}
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-coral/40 text-coral hover:bg-coral/5 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
           </div>
         )}
       </div>
+
+      <DeleteConfirmModal
+        open={!!porBorrar}
+        title={porBorrar && porBorrar.length > 1 ? 'Borrar borradores' : 'Borrar borrador'}
+        description={textoDeConfirmacion(porBorrar?.length ?? 0)}
+        loading={borrando}
+        onConfirm={confirmarBorrado}
+        onCancel={() => setPorBorrar(null)}
+      />
     </div>
   )
 }

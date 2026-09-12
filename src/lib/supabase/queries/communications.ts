@@ -8,7 +8,9 @@
  *   CREATE INDEX IF NOT EXISTS idx_message_logs_queue
  *     ON message_logs(status, scheduled_date, channel) WHERE status = 'pending';
  */
+import { NextResponse } from 'next/server'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { sePuedeBorrarEnServidor, MENSAJE_NO_BORRABLE, type MotivoNoBorrable } from '@/lib/communications/borrado-de-comunicado'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import {
   emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons, type SkipReason,
@@ -155,6 +157,57 @@ export async function deleteTemplate(id: string): Promise<void> {
   }
   const { error } = await supabase.from('message_templates').delete().eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Borra un comunicado en borrador.
+ *
+ * El conteo de message_logs se consulta aunque el estado diga 'draft': la regla
+ * del repo es no borrar nada con referencias, y un borrador con envíos
+ * registrados significa que algo salió y el estado quedó mal. Ahí el borrado se
+ * niega con el conteo, no se borra en cascada.
+ */
+export async function deleteBroadcast(id: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('message_broadcasts').select('status').eq('id', id).maybeSingle()
+  const estado = (data as { status?: string } | null)?.status
+  if (!estado) throw new Error('BROADCAST_NO_ENCONTRADO')
+
+  const { count } = await supabase
+    .from('message_logs').select('id', { count: 'exact', head: true }).eq('broadcast_id', id)
+
+  const permiso = sePuedeBorrarEnServidor(estado, count ?? 0)
+  if (!permiso.ok) {
+    throw new Error(permiso.error === 'tiene_envios'
+      ? `BROADCAST_CON_ENVIOS:${permiso.envios}`
+      : `BROADCAST_NO_BORRABLE:${permiso.error}`)
+  }
+
+  const { error } = await supabase.from('message_broadcasts').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Traduce los errores de deleteBroadcast a una respuesta HTTP. Mismo patrón
+ *  que scholarshipErrorResponse: el mensaje humano vive junto a la regla. */
+export function broadcastDeleteErrorResponse(error: unknown): NextResponse | null {
+  if (!(error instanceof Error)) return null
+  if (error.message === 'BROADCAST_NO_ENCONTRADO') {
+    return NextResponse.json({ error: 'El comunicado no existe.' }, { status: 404 })
+  }
+  if (error.message.startsWith('BROADCAST_CON_ENVIOS:')) {
+    const envios = Number(error.message.split(':')[1]) || 0
+    // 409 con el conteo, que es la convención del repo para un DELETE con
+    // referencias: quien lo lee necesita saber CUÁNTAS, no solo que hay.
+    return NextResponse.json(
+      { error: `${MENSAJE_NO_BORRABLE.tiene_envios} Tiene ${envios}.`, code: 'tiene_envios', envios },
+      { status: 409 },
+    )
+  }
+  if (error.message.startsWith('BROADCAST_NO_BORRABLE:')) {
+    const motivo = error.message.split(':')[1] as MotivoNoBorrable
+    return NextResponse.json({ error: MENSAJE_NO_BORRABLE[motivo], code: motivo }, { status: 409 })
+  }
+  return null
 }
 
 export type ConfigWriteInput = {
