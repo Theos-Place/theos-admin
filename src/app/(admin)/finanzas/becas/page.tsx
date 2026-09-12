@@ -13,6 +13,9 @@ import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
+import {
+  filtrarSolicitudes, conteos, filtroInicial, textoVacio, FILTROS, type FiltroSolicitud,
+} from '@/lib/finance/filtro-solicitudes-beca'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
 import { previewApproval, QUICK_PERCENTAGES, quickLabel } from '@/lib/finance/scholarship-approval'
@@ -147,6 +150,20 @@ export default function BecasPage() {
       .finally(() => setRequestsLoading(false))
   }, [])
   useEffect(() => { if (canView && tab === 'solicitudes') refetchRequests() }, [canView, tab, refetchRequests])
+
+  /**
+   * Filtro de estado de las solicitudes. Arranca en "Por revisar" cuando hay
+   * algo pendiente: a eso entra uno. El filtro elegido a mano manda sobre el
+   * inicial, así que se guarda aparte y se deriva cuál está activo — poner el
+   * inicial con un setState en un efecto pisaría la elección del usuario en
+   * cada refetch.
+   */
+  const [filtroElegido, setFiltroElegido] = useState<FiltroSolicitud | null>(null)
+  const filtroSolicitudes = filtroElegido ?? filtroInicial(requests)
+  const conteoSolicitudes = useMemo(() => conteos(requests), [requests])
+  const solicitudesVisibles = useMemo(
+    () => filtrarSolicitudes(requests, filtroSolicitudes),
+    [requests, filtroSolicitudes])
 
   const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
 
@@ -290,11 +307,31 @@ export default function BecasPage() {
       )}
 
       {tab === 'solicitudes' && (
+        <>
+        <div className="flex items-center gap-2 flex-wrap">
+          {FILTROS.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFiltroElegido(f.id)}
+              aria-pressed={filtroSolicitudes === f.id}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
+                filtroSolicitudes === f.id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
+              )}
+            >
+              {f.label}
+              <span className={cn('ml-1.5', filtroSolicitudes === f.id ? 'text-white/80' : 'text-navy-light/80')}>
+                {conteoSolicitudes[f.id]}
+              </span>
+            </button>
+          ))}
+        </div>
+
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
           {requestsLoading ? (
             <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
-          ) : requests.length === 0 ? (
-            <EmptyState icon={GraduationCap} title="No hay solicitudes de beca" />
+          ) : solicitudesVisibles.length === 0 ? (
+            <EmptyState icon={GraduationCap} title={textoVacio(filtroSolicitudes, requests.length > 0)} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
@@ -306,7 +343,7 @@ export default function BecasPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map((r, idx) => (
+                  {solicitudesVisibles.map((r, idx) => (
                     <tr key={r.id} className={cn('transition-colors', idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
                       <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.member_name}</td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.entity_name ?? '—'}</td>
@@ -336,6 +373,7 @@ export default function BecasPage() {
             </div>
           )}
         </div>
+        </>
       )}
 
       <DeleteConfirmModal
