@@ -113,7 +113,10 @@ BEGIN
           jsonb_build_object('duplicate_id', p_dup_id, 'soft', true,
                              'resueltos', p_resueltos, 'principal_antes', v_keep));
 
-  RETURN jsonb_build_object('dup_auth_user_id', v_dup_auth, 'dup_email', v_dup_mail);
+  RETURN jsonb_build_object(
+    'dup_auth_user_id', v_dup_auth, 'dup_email', v_dup_mail,
+    -- El login del principal, para poder mudarle el correo al elegido.
+    'keep_auth_user_id', (SELECT auth_user_id FROM members WHERE id = p_keep_id));
 END;
 $$;
 

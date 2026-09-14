@@ -163,6 +163,23 @@ export type FichaConCuenta = FichaParaFusion & {
   last_sign_in_at?: string | null
 }
 
+/**
+ * Cuál de las dos fichas debería sobrevivir, mirando las cuentas de acceso.
+ *
+ * Si una cuenta se usó y la otra nunca, la que se usó manda: dejarla como
+ * secundaria significa deshabilitar el login que la persona realmente ocupa y
+ * pedirle que entre con uno que nunca abrió. Eso no se deja al criterio de
+ * quien fusiona a las 5 de la tarde — se preselecciona.
+ *
+ * Si las dos se usaron, o ninguna, no hay señal: decide la persona.
+ */
+export function principalSugerido<T extends FichaConCuenta>(a: T, b: T): { principal: T; duplicado: T; porQue: string | null } {
+  const usada = (m: FichaConCuenta) => !!m.auth_user_id && !!m.last_sign_in_at
+  if (usada(a) && !usada(b)) return { principal: a, duplicado: b, porQue: 'Es la ficha cuya cuenta se usa para entrar.' }
+  if (usada(b) && !usada(a)) return { principal: b, duplicado: a, porQue: 'Es la ficha cuya cuenta se usa para entrar.' }
+  return { principal: a, duplicado: b, porQue: null }
+}
+
 export type AvisoDeCuentas = {
   /** Las dos fichas tienen login: una se va a deshabilitar. */
   hayDos: boolean
@@ -193,7 +210,7 @@ export function avisoDeCuentas(principal: FichaConCuenta, duplicado: FichaConCue
  * persona sigue entrando con el correo viejo. No es un error, pero hay que
  * decirlo o el próximo "no puedo entrar" sale de acá.
  */
-export function avisoDeCorreoDeLogin(
+export function correoDeLoginQuedaDesalineado(
   principal: FichaConCuenta, duplicado: FichaConCuenta, r: Resolucion,
 ): { correoDelPerfil: string; correoDelLogin: string } | null {
   if (!principal.auth_user_id) return null
@@ -202,4 +219,23 @@ export function avisoDeCorreoDeLogin(
   const login = String(principal.email ?? '').trim()
   if (!perfil || !login || igual(perfil, login)) return null
   return { correoDelPerfil: perfil, correoDelLogin: login }
+}
+
+/**
+ * El correo con el que la persona va a entrar después de fusionar.
+ *
+ * Si se elige el correo del duplicado, la cuenta que sobrevive se muda a ese
+ * correo. Antes solo se avisaba de que quedaban distintos, y eso es una trampa:
+ * el perfil dice un correo y el login pide otro, y la persona no tiene cómo
+ * saberlo. Un perfil, un correo.
+ */
+export function correoFinalDeLogin(
+  principal: FichaConCuenta, duplicado: FichaConCuenta, r: Resolucion,
+): { mudar: true; a: string; desde: string } | { mudar: false } {
+  if (!principal.auth_user_id) return { mudar: false }
+  const elegido = r['email'] === 'duplicado' ? duplicado.email : principal.email
+  const actual = String(principal.email ?? '').trim()
+  const nuevo = String(elegido ?? '').trim()
+  if (!nuevo || igual(nuevo, actual)) return { mudar: false }
+  return { mudar: true, a: nuevo, desde: actual }
 }

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (auth.res) return auth.res
     const { id } = await params // miembro que se CONSERVA
     const body = (await req.json().catch(() => ({}))) as {
-      duplicate_id?: string; resueltos?: Record<string, unknown>
+      duplicate_id?: string; resueltos?: Record<string, unknown>; correo_de_login?: string | null
     }
     if (!body.duplicate_id) return NextResponse.json({ error: 'Falta duplicate_id' }, { status: 400 })
     if (body.duplicate_id === id) return NextResponse.json({ error: 'No se puede fusionar consigo mismo' }, { status: 400 })
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const r = await mergeMembersResuelto(id, body.duplicate_id, {
       resueltos: body.resueltos, actorUserId: auth.ctx.userId,
+      correoDeLogin: body.correo_de_login ?? null,
     })
     return NextResponse.json({ ok: true, ...r })
   } catch (error) {

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
+import { principalSugerido } from '@/lib/members/resolucion-de-fusion'
 import { useToast } from '@/components/shared/Toast'
 import { calcAge, formatDateNumeric, initialsFromParts } from '@/lib/format'
 import { ChevronLeft, Users } from 'lucide-react'
@@ -75,14 +76,19 @@ function MemberMini({ m }: { m: DupMember }) {
  * sobrevive y se le pasa el par.
  */
 function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () => void; onMerged: (aviso: string) => void }) {
-  const [principal, setPrincipal] = useState<'a' | 'b'>('a')
-  const keep = principal === 'a' ? pair.a : pair.b
-  const drop = principal === 'a' ? pair.b : pair.a
+  // Cuál sobrevive NO arranca en "la primera": si una de las dos tiene la
+  // cuenta que la persona usa para entrar, esa manda. Dejar de secundaria la
+  // cuenta que sí se ocupa significa apagarle el login bueno.
+  const sugerido = useMemo(() => principalSugerido(pair.a, pair.b), [pair])
+  const [invertido, setInvertido] = useState(false)
+  const keep = invertido ? sugerido.duplicado : sugerido.principal
+  const drop = invertido ? sugerido.principal : sugerido.duplicado
   return (
     <ResolucionDeFusion
       principal={keep}
       duplicado={drop}
-      onCambiarPrincipal={() => setPrincipal(p => (p === 'a' ? 'b' : 'a'))}
+      porQueEstePrincipal={invertido ? null : sugerido.porQue}
+      onCambiarPrincipal={() => setInvertido(v => !v)}
       onCancelar={onClose}
       onFusionado={onMerged}
     />

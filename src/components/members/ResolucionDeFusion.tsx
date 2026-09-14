@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 import { formatDateNumeric } from '@/lib/format'
 import {
   clasificarCampos, resolucionInicial, faltanPorDecidir, estaCompleta,
-  valoresAAplicar, avisoDeCuentas, avisoDeCorreoDeLogin, combinarTexto,
+  valoresAAplicar, avisoDeCuentas, correoFinalDeLogin, combinarTexto,
   type FichaConCuenta, type Resolucion, type Eleccion,
 } from '@/lib/members/resolucion-de-fusion'
 
@@ -30,13 +30,51 @@ const muestra = (v: unknown): string => {
   return String(v)
 }
 
-export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusionado, onCambiarPrincipal }: {
+type FichaConNombre = FichaConCuenta & { first_name: string; last_name: string }
+
+/** La cabecera de cada columna: de quién es la ficha y si esa cuenta se usa.
+ *  Antes decía solo "se conserva / se descarta" y no había cómo saber cuál era
+ *  cuál — que fue lo primero que se notó al usarlo. */
+function ColumnaFicha({ m, rol }: { m: FichaConNombre; rol: string }) {
+  return (
+    <span className="min-w-0">
+      <span className="block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">{rol}</span>
+      <span className="block text-[13px] font-semibold text-navy font-body truncate">
+        {`${m.first_name} ${m.last_name}`.trim()}
+      </span>
+      <span className="block text-[13px] text-navy-light/80 font-body truncate">{m.email ?? 'sin correo'}</span>
+      <span className={cn('block text-[13px] font-body',
+        m.auth_user_id && m.last_sign_in_at ? 'text-teal-deep' : 'text-navy-light/80')}>
+        {!m.auth_user_id ? 'sin cuenta para entrar'
+          : m.last_sign_in_at ? `entró el ${formatDateNumeric(m.last_sign_in_at)}`
+          : 'tiene cuenta, nunca entró'}
+      </span>
+    </span>
+  )
+}
+
+function Opcion({ campo, valor, elegido, onElegir }: {
+  campo: string; valor: string; elegido: boolean; onElegir: () => void
+}) {
+  return (
+    <label className={cn('flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer min-w-0',
+      elegido ? 'bg-coral/5 ring-1 ring-coral/30' : 'hover:bg-surface-low')}>
+      <input type="radio" name={`campo-${campo}`} checked={elegido} onChange={onElegir}
+        className="accent-coral mt-0.5 shrink-0" />
+      <span className="min-w-0 text-[13px] text-navy font-body break-words">{valor}</span>
+    </label>
+  )
+}
+
+export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusionado, onCambiarPrincipal, porQueEstePrincipal }: {
   principal: FichaConCuenta & { first_name: string; last_name: string }
   duplicado: FichaConCuenta & { first_name: string; last_name: string }
   onCancelar: () => void
   onFusionado: (aviso: string) => void
   /** Si se pasa, se ofrece invertir cuál ficha sobrevive. */
   onCambiarPrincipal?: () => void
+  /** Por qué el sistema eligió esta como principal (null = la eligió la persona). */
+  porQueEstePrincipal?: string | null
 }) {
   const c = useMemo(() => clasificarCampos(principal, duplicado), [principal, duplicado])
   const [r, setR] = useState<Resolucion>(() => resolucionInicial(c))
@@ -47,7 +85,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
   const faltan = faltanPorDecidir(c, r)
   const listo = estaCompleta(c, r)
   const cuentas = avisoDeCuentas(principal, duplicado)
-  const correoLogin = avisoDeCorreoDeLogin(principal, duplicado, r)
+  const login = correoFinalDeLogin(principal, duplicado, r)
   const nombre = (m: { first_name: string; last_name: string }) => `${m.first_name} ${m.last_name}`.trim()
 
   async function fusionar() {
@@ -59,27 +97,24 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
         body: JSON.stringify({
           duplicate_id: duplicado.id,
           resueltos: valoresAAplicar(c, r, principal, duplicado),
+          correo_de_login: login.mudar ? login.a : null,
         }),
       })
       const d = await res.json().catch(() => null)
       if (!res.ok) { setError(d?.error ?? 'No se pudo fusionar. Intentá de nuevo.'); setEnviando(false); return }
-      onFusionado(d?.cuentaDeshabilitada
-        ? `Fichas fusionadas. La cuenta ${d.cuentaDeshabilitada} quedó deshabilitada.`
-        : d?.cuentaConProblema
-          ? `Fichas fusionadas, pero la cuenta ${d.cuentaConProblema} no se pudo deshabilitar: hay que hacerlo a mano.`
-          : 'Fichas fusionadas.')
+      const partes = ['Fichas fusionadas.']
+      if (d?.loginMudadoA) partes.push(`Ahora se entra con ${d.loginMudadoA}.`)
+      if (d?.cuentaDeshabilitada) partes.push(`La cuenta ${d.cuentaDeshabilitada} quedó deshabilitada.`)
+      if (d?.cuentaConProblema) partes.push(`OJO: ${d.cuentaConProblema} — hay que terminarlo a mano.`)
+      onFusionado(partes.join(' '))
     } catch {
       setError('No se pudo fusionar. Revisá tu conexión.'); setEnviando(false)
     }
   }
 
-  const Opcion = ({ campo, lado, valor }: { campo: string; lado: Eleccion; valor: string }) => (
-    <label className={cn('flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer min-w-0',
-      r[campo] === lado ? 'bg-coral/5 ring-1 ring-coral/30' : 'hover:bg-surface-low')}>
-      <input type="radio" name={`campo-${campo}`} checked={r[campo] === lado}
-        onChange={() => setR(x => ({ ...x, [campo]: lado }))} className="accent-coral mt-0.5 shrink-0" />
-      <span className="min-w-0 text-[13px] text-navy font-body break-words">{valor}</span>
-    </label>
+  const opcion = (campo: string, lado: Eleccion, valor: string) => (
+    <Opcion key={`${campo}-${lado}`} campo={campo} valor={valor}
+      elegido={r[campo] === lado} onElegir={() => setR(x => ({ ...x, [campo]: lado }))} />
   )
 
   return (
@@ -93,6 +128,9 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
               <button onClick={onCambiarPrincipal} className="ml-1 text-coral hover:underline">Cambiar cuál sobrevive</button>
             )}
           </p>
+          {porQueEstePrincipal && (
+            <p className="text-[13px] text-teal-deep font-body mt-1">La eligió el sistema: {porQueEstePrincipal}</p>
+          )}
         </div>
 
         {cuentas && (
@@ -104,19 +142,17 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
             <p className="mt-1">
               Se conserva la de <strong>{principal.email ?? '—'}</strong> y <strong>{cuentas.correoQueSeVa ?? '—'}</strong> queda deshabilitada.
             </p>
-            <p className="mt-0.5">
-              Último ingreso — la que queda: {cuentas.ultimoIngresoPrincipal ? formatDateNumeric(cuentas.ultimoIngresoPrincipal) : 'nunca entró'} ·
-              {' '}la que se va: {cuentas.ultimoIngresoDuplicado ? formatDateNumeric(cuentas.ultimoIngresoDuplicado) : 'nunca entró'}.
-            </p>
+
             {cuentas.laQueSeVaEsLaQueUsan && (
               <p className="mt-1 font-semibold">La que se va es la que esta persona usa. Revisá si la principal está bien elegida.</p>
             )}
           </div>
         )}
 
-        {correoLogin && (
-          <p className="rounded-xl bg-[rgba(233,185,73,0.15)] px-3.5 py-2.5 text-[13px] text-navy font-body">
-            El perfil va a quedar con <strong>{correoLogin.correoDelPerfil}</strong>, pero se sigue entrando al sistema con <strong>{correoLogin.correoDelLogin}</strong>.
+        {login.mudar && (
+          <p className="rounded-xl bg-teal-soft/25 px-3.5 py-2.5 text-[13px] text-teal-deep font-body">
+            A partir de la fusión se entra al sistema con <strong>{login.a}</strong>, el correo que elegiste.
+            El anterior, {login.desde}, deja de servir para entrar.
           </p>
         )}
 
@@ -127,8 +163,13 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
               Hay que elegir · {c.conflictos.length}
             </p>
             <div className="rounded-xl border border-[var(--outline-variant)] divide-y divide-[var(--outline-variant)]">
-              <div className="grid grid-cols-[150px_1fr_1fr] gap-2 px-3 py-1.5 text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
-                <span>Campo</span><span>Se conserva</span><span>Se descarta</span>
+              {/* La cabecera dice de QUIÉN es cada columna y si esa cuenta se
+                  usa. Antes decía solo "se conserva / se descarta" y no había
+                  cómo saber cuál ficha era cuál. */}
+              <div className="grid grid-cols-[150px_1fr_1fr] gap-2 px-3 py-2 border-b border-[var(--outline-variant)]">
+                <span className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display pt-1">Campo</span>
+                <ColumnaFicha m={principal} rol="Se conserva" />
+                <ColumnaFicha m={duplicado} rol="Se descarta" />
               </div>
               {c.conflictos.map(x => {
                 const sinDecidir = !r[x.campo.key]
@@ -139,13 +180,12 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
                         {x.campo.label}
                         {x.campo.identidad && <span className="block text-[11px] text-coral">elegí uno</span>}
                       </span>
-                      <Opcion campo={x.campo.key} lado="principal" valor={muestra(x.principal)} />
-                      <Opcion campo={x.campo.key} lado="duplicado" valor={muestra(x.duplicado)} />
+                      {opcion(x.campo.key, 'principal', muestra(x.principal))}
+                      {opcion(x.campo.key, 'duplicado', muestra(x.duplicado))}
                     </div>
                     {x.campo.combinable && (
                       <div className="pl-[158px] pt-1">
-                        <Opcion campo={x.campo.key} lado="combinado"
-                          valor={`Combinar: ${combinarTexto(x.principal, x.duplicado)}`} />
+                        {opcion(x.campo.key, 'combinado', `Combinar: ${combinarTexto(x.principal, x.duplicado)}`)}
                       </div>
                     )}
                   </div>

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   clasificarCampos, resolucionInicial, faltanPorDecidir, estaCompleta, combinarTexto,
-  valoresAAplicar, avisoDeCuentas, avisoDeCorreoDeLogin, CAMPOS_FUSIONABLES,
+  valoresAAplicar, avisoDeCuentas, correoFinalDeLogin, principalSugerido, CAMPOS_FUSIONABLES,
   type FichaParaFusion, type Resolucion,
 } from './resolucion-de-fusion'
 
@@ -149,18 +149,50 @@ describe('cuentas de acceso', () => {
   })
 })
 
-describe('correo del perfil vs correo del login', () => {
+describe('el correo del login sigue al correo elegido', () => {
   const p = ficha({ auth_user_id: 'u', email: 'login@x.com' })
   const d = ficha({ auth_user_id: null, email: 'perfil@x.com' })
 
-  it('avisa cuando el correo elegido no es con el que se entra', () => {
-    expect(avisoDeCorreoDeLogin(p, d, { email: 'duplicado' } as Resolucion))
-      .toEqual({ correoDelPerfil: 'perfil@x.com', correoDelLogin: 'login@x.com' })
+  it('si se elige el correo del duplicado, la cuenta se muda a ese correo', () => {
+    // Un perfil, un correo: que el perfil diga uno y el login pida otro es una
+    // trampa que la persona no tiene cómo descubrir.
+    expect(correoFinalDeLogin(p, d, { email: 'duplicado' } as Resolucion))
+      .toEqual({ mudar: true, a: 'perfil@x.com', desde: 'login@x.com' })
   })
-  it('si se queda el correo del principal no hay nada que avisar', () => {
-    expect(avisoDeCorreoDeLogin(p, d, { email: 'principal' } as Resolucion)).toBeNull()
+  it('si se queda el del principal, no se muda nada', () => {
+    expect(correoFinalDeLogin(p, d, { email: 'principal' } as Resolucion)).toEqual({ mudar: false })
   })
-  it('si el principal no tiene cuenta, tampoco', () => {
-    expect(avisoDeCorreoDeLogin(ficha({ email: 'a@x.com' }), d, { email: 'duplicado' } as Resolucion)).toBeNull()
+  it('si son el mismo correo, tampoco', () => {
+    const d2 = ficha({ email: 'LOGIN@x.com' })
+    expect(correoFinalDeLogin(p, d2, { email: 'duplicado' } as Resolucion)).toEqual({ mudar: false })
+  })
+  it('sin cuenta en el principal no hay login que mudar', () => {
+    expect(correoFinalDeLogin(ficha({ email: 'a@x.com' }), d, { email: 'duplicado' } as Resolucion)).toEqual({ mudar: false })
+  })
+})
+
+describe('principalSugerido', () => {
+  const usada = (o = {}) => ficha({ auth_user_id: 'u', last_sign_in_at: '2026-09-08', ...o })
+  const nuncaUsada = (o = {}) => ficha({ auth_user_id: 'u', last_sign_in_at: null, ...o })
+
+  it('gana la ficha cuya cuenta SÍ se usa, venga en el orden que venga', () => {
+    // El caso Ximena: la cuenta que ella usa estaba en la ficha que parecía la
+    // secundaria. Dejarla de secundaria le apaga el login que ocupa.
+    expect(principalSugerido(nuncaUsada({ id: 'a' }), usada({ id: 'b' })).principal.id).toBe('b')
+    expect(principalSugerido(usada({ id: 'a' }), nuncaUsada({ id: 'b' })).principal.id).toBe('a')
+  })
+  it('y explica por qué la eligió', () => {
+    expect(principalSugerido(nuncaUsada(), usada()).porQue).toContain('se usa para entrar')
+  })
+  it('si las dos se usaron, no inventa: decide la persona', () => {
+    const r = principalSugerido(usada({ id: 'a' }), usada({ id: 'b' }))
+    expect(r.principal.id).toBe('a')
+    expect(r.porQue).toBeNull()
+  })
+  it('si ninguna se usó, tampoco', () => {
+    expect(principalSugerido(nuncaUsada({ id: 'a' }), nuncaUsada({ id: 'b' })).porQue).toBeNull()
+  })
+  it('una ficha sin cuenta no cuenta como usada', () => {
+    expect(principalSugerido(ficha({ id: 'a' }), usada({ id: 'b' })).principal.id).toBe('b')
   })
 })

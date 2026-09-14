@@ -105,13 +105,20 @@ export async function mergeMembers(
 export type ResultadoFusion = {
   /** La cuenta del duplicado quedó deshabilitada (había dos logins). */
   cuentaDeshabilitada: string | null
-  /** No se pudo deshabilitar: hay que hacerlo a mano. */
+  /** El login se mudó a este correo, para que perfil y login digan lo mismo. */
+  loginMudadoA: string | null
+  /** Algo de las cuentas no se pudo hacer: hay que terminarlo a mano. */
   cuentaConProblema: string | null
 }
 
 export async function mergeMembersResuelto(
   keepId: string, dupId: string,
-  opts: { resueltos?: Record<string, unknown>; actorUserId?: string | null } = {},
+  opts: {
+    resueltos?: Record<string, unknown>
+    actorUserId?: string | null
+    /** Correo con el que la persona debe entrar después de fusionar. */
+    correoDeLogin?: string | null
+  } = {},
 ): Promise<ResultadoFusion> {
   const supabase = createAdminClient()
   // Cliente laxo: el RPC es nuevo (migración 20260914180000) y los tipos
@@ -127,18 +134,43 @@ export async function mergeMembersResuelto(
   })
   if (error) throw new Error(error.message)
 
-  const r = (data ?? {}) as { dup_auth_user_id?: string | null; dup_email?: string | null }
-  if (!r.dup_auth_user_id) return { cuentaDeshabilitada: null, cuentaConProblema: null }
-
-  // 100 años: es "deshabilitada" sin borrarla, así que el historial de esa
-  // cuenta sigue existiendo y se puede revertir si la fusión estuvo mal.
-  const { error: banErr } = await supabase.auth.admin.updateUserById(
-    r.dup_auth_user_id, { ban_duration: '876000h' })
-  if (banErr) {
-    console.error('mergeMembersResuelto: fusión OK, no se pudo deshabilitar la cuenta:', banErr.message)
-    return { cuentaDeshabilitada: null, cuentaConProblema: r.dup_email ?? r.dup_auth_user_id }
+  const r = (data ?? {}) as {
+    dup_auth_user_id?: string | null; dup_email?: string | null
+    keep_auth_user_id?: string | null
   }
-  return { cuentaDeshabilitada: r.dup_email ?? r.dup_auth_user_id, cuentaConProblema: null }
+  const out: ResultadoFusion = { cuentaDeshabilitada: null, loginMudadoA: null, cuentaConProblema: null }
+
+  // 1) La cuenta del duplicado. Se deshabilita con un ban largo en vez de
+  //    borrarla: así el historial sigue existiendo y la fusión es reversible.
+  //    Y se le MUDA el correo a un alias, porque Auth exige correos únicos y
+  //    ese correo puede ser justo el que el login del principal va a tomar.
+  if (r.dup_auth_user_id) {
+    const alias = `fusionado+${r.dup_auth_user_id}@theosplace.invalid`
+    const { error } = await supabase.auth.admin.updateUserById(r.dup_auth_user_id, {
+      ban_duration: '876000h', email: alias, email_confirm: true,
+    })
+    if (error) {
+      console.error('mergeMembersResuelto: fusión OK, no se pudo deshabilitar la cuenta:', error.message)
+      out.cuentaConProblema = r.dup_email ?? r.dup_auth_user_id
+    } else {
+      out.cuentaDeshabilitada = r.dup_email ?? r.dup_auth_user_id
+    }
+  }
+
+  // 2) El login sigue al correo elegido: un perfil, un correo. Va DESPUÉS de
+  //    liberar el alias del duplicado — si no, Auth rechaza el correo repetido.
+  if (opts.correoDeLogin && r.keep_auth_user_id) {
+    const { error } = await supabase.auth.admin.updateUserById(r.keep_auth_user_id, {
+      email: opts.correoDeLogin, email_confirm: true,
+    })
+    if (error) {
+      console.error('mergeMembersResuelto: no se pudo mudar el correo del login:', error.message)
+      out.cuentaConProblema = `el login sigue siendo el correo viejo (${error.message})`
+    } else {
+      out.loginMudadoA = opts.correoDeLogin
+    }
+  }
+  return out
 }
 
 /** Traduce los errores del RPC a una respuesta HTTP con el dato que chocó. */

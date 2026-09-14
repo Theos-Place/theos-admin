@@ -288,3 +288,50 @@ render, tumba la pantalla.
 Los 3 de `purity` son `Date.now()` en render y hay que hacerlos junto con estos:
 anclar el reloj pide guardarlo en estado desde un efecto, o sea un
 `set-state-in-effect` nuevo.
+
+## Fase 16 — Pedido el 2026-09-14
+
+### [ ] FRM-5 · Restricción de audiencia en formularios
+
+```
+FEATURE · Limitar un formulario a cierto tipo de personas: que solo le aparezca disponible
+a quien cumple la condición.
+
+Casos pedidos: solo servidores (servicio activo) · solo donantes · solo quienes tienen un
+estudio activo (y poder especificar CUÁL plan) · solo quienes ya APROBARON cierto estudio ·
+solo dirigentes. Y combinaciones.
+
+REUTILIZAR, NO INVENTAR — es el mismo problema ya resuelto dos veces:
+ · GRU-2 (restricción de audiencia por grupo de estudio) usa el modelo de condiciones del
+   filtro del padrón (src/types/filters.ts: study, leader, service, donor, attendance…) y
+   una función pura evaluateConditions(member, conditions) per-persona. Usá EXACTAMENTE esa
+   pieza: mismo shape de condiciones, mismo evaluador, mismas etiquetas de
+   condition-labels. Si GRU-2 dejó el evaluador acoplado a grupos, extraelo a un módulo
+   compartido y que ambos lo consuman.
+ · La condición de estudio ya distingue "activo/enrolled" vs "completed" y el plan
+   específico — cubre "estudio activo de tal tipo" y "ya aprobó tal estudio" sin nada nuevo.
+
+1) MIGRACIÓN: audience_restrictions (jsonb, nullable) en forms. Null = sin restricción
+   (como hoy).
+2) BUILDER: sección "¿Quién puede llenar este formulario? (opcional)" con el constructor de
+   condiciones del padrón. Resumen legible de la restricción en la lista de formularios.
+3) APLICACIÓN — tres capas, y acá está lo delicado:
+   a) LISTADO/DISPONIBILIDAD: a quien no cumple, el formulario no le aparece disponible.
+   b) SERVER-SIDE al ABRIR y al ENVIAR respuesta: 403 con mensaje claro ("Este formulario
+      es solo para servidores activos") — el link directo compartido por WhatsApp va a
+      llegar a gente que no cumple, y la respuesta de alguien fuera de la audiencia no debe
+      entrar aunque tenga la URL.
+   c) FORMULARIOS PÚBLICOS (is_public / sin sesión): una restricción de audiencia exige
+      saber QUIÉN es la persona → un formulario con restricción NO puede ser público
+      anónimo. El builder debe forzar requires_auth cuando hay restricción, con la
+      explicación de por qué.
+4) INTERACCIÓN con lo existente: el staff que llena "a nombre de" otra persona (FRM-4) —
+   la condición se evalúa sobre la persona A NOMBRE DE QUIEN se llena, no sobre el staff.
+   Los accesos puntuales por formulario (FRM-1) son de LECTURA de respuestas y no cambian.
+5) En la vista del formulario para gestores: contador de cuántas personas del padrón
+   cumplen hoy la restricción (mismo patrón que GRU-2) — detecta de una condiciones mal
+   armadas que dejan el form sin audiencia.
+Tests: form restringido no aparece a quien no cumple; el POST de respuesta rechaza con 403;
+restricción fuerza requires_auth; "a nombre de" evalúa al titular; combinación de dos
+condiciones; form sin restricción intacto.
+```

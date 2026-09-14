@@ -24,6 +24,7 @@ import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
 import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
+import { principalSugerido } from '@/lib/members/resolucion-de-fusion'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -461,7 +462,8 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
    * campo. El buscador solo devuelve nombre, cédula y correo — con eso no se
    * puede comparar nada.
    */
-  const [aResolver, setAResolver] = useState<{ principal: FichaFusion; duplicado: FichaFusion } | null>(null)
+  const [aResolver, setAResolver] = useState<{ principal: FichaFusion; duplicado: FichaFusion; porQue: string | null } | null>(null)
+  const [invertido, setInvertido] = useState(false)
   const [cargandoFichas, setCargandoFichas] = useState(false)
 
   async function abrirResolucion(dup: SearchHit) {
@@ -470,7 +472,12 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
       const [p, d] = await Promise.all(
         [keepId, dup.id].map(x => fetch(`/api/members/${x}`).then(r => (r.ok ? r.json() : null))))
       if (!p || !d) { setErr('No se pudieron cargar las dos fichas.'); return }
-      setAResolver({ principal: p as FichaFusion, duplicado: d as FichaFusion })
+      // La misma regla que en /miembros/duplicados: si el duplicado es el que
+      // tiene la cuenta que la persona usa, ESE sobrevive — aunque estemos
+      // parados en la otra ficha. Dejarlo de secundario le apaga el login bueno.
+      const sug = principalSugerido(p as FichaFusion, d as FichaFusion)
+      setInvertido(false)
+      setAResolver({ principal: sug.principal, duplicado: sug.duplicado, porQue: sug.porQue })
     } catch {
       setErr('No se pudieron cargar las dos fichas.')
     } finally { setCargandoFichas(false) }
@@ -567,8 +574,10 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
 
       {aResolver && (
         <ResolucionDeFusion
-          principal={aResolver.principal}
-          duplicado={aResolver.duplicado}
+          principal={invertido ? aResolver.duplicado : aResolver.principal}
+          duplicado={invertido ? aResolver.principal : aResolver.duplicado}
+          porQueEstePrincipal={invertido ? null : aResolver.porQue}
+          onCambiarPrincipal={() => setInvertido(v => !v)}
           onCancelar={() => setAResolver(null)}
           onFusionado={(aviso: string) => { setAResolver(null); onMerged(aviso) }}
         />
