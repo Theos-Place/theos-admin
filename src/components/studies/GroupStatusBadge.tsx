@@ -1,13 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { GroupStatus } from '@/types/study'
-
-const STATUS_CONFIG: Record<GroupStatus, { label: string; className: string }> = {
-  en_matricula: { label: 'En matrícula', className: 'bg-teal-soft/30 text-teal-deep' },
-  en_curso:     { label: 'En curso',     className: 'bg-navy/10 text-navy' },
-  finalizado:   { label: 'Finalizado',   className: 'bg-surface-low text-navy-light/80' },
-}
+import { ETIQUETA_VISIBLE, BADGE_VISIBLE, type EstadoVisible } from '@/lib/studies/estado-visible'
 
 /** Chip: el grupo es una capacitación de dirigentes (is_leader_training = true). */
 export function LeaderTrainingBadge({ modality, className }: { modality?: string | null; className?: string }) {
@@ -38,21 +32,23 @@ export function NoLeaderBadge({ className }: { className?: string }) {
 }
 
 interface GroupStatusBadgeProps {
-  status: GroupStatus
+  /** Acepta el estado VISIBLE, que tiene un escalón más que el guardado:
+   *  "Por iniciar" es un grupo cuya matrícula cerró y que todavía no arranca.
+   *  Se calcula con estadoVisible(); ver lib/studies/estado-visible.ts. */
+  status: EstadoVisible
   className?: string
 }
 
 export function GroupStatusBadge({ status, className }: GroupStatusBadgeProps) {
-  const config = STATUS_CONFIG[status]
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-md px-2 py-0.5 text-[13px] font-medium font-display',
-        config.className,
+        BADGE_VISIBLE[status],
         className
       )}
     >
-      {config.label}
+      {ETIQUETA_VISIBLE[status]}
     </span>
   )
 }

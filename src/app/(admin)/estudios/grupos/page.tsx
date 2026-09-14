@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import type { GroupStatus, StudyGroup, StudyType } from '@/types/study'
+import type { StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
@@ -13,6 +13,10 @@ import { toDomainStudyGroup } from '@/lib/studies/adapter'
 import { sedeLabel, useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
+import {
+  estadoVisible, ESTADOS_VISIBLES, ETIQUETA_VISIBLE, type EstadoVisible,
+} from '@/lib/studies/estado-visible'
+import { ymdCR } from '@/lib/format'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
@@ -29,19 +33,11 @@ import { getInitials, formatDateNumeric } from '@/lib/format'
 
 const PAGE_SIZE = 25
 
-const ALL_STATUSES: GroupStatus[] = ['en_matricula', 'en_curso', 'finalizado']
-const STATUS_LABELS: Record<GroupStatus, string> = {
-  en_matricula: 'En matrícula',
-  en_curso: 'En curso',
-  finalizado: 'Finalizado',
-}
+// Cuatro chips, no tres: "Por iniciar" es un grupo cuya matrícula ya cerró y
+// que todavía no arranca. No existe en la columna — se deriva de la ventana.
+const ALL_STATUSES = ESTADOS_VISIBLES
+const STATUS_LABELS = ETIQUETA_VISIBLE
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
-
-const STATUS_EXPORT: Record<GroupStatus, string> = {
-  en_matricula: 'En matrícula',
-  en_curso: 'En curso',
-  finalizado: 'Finalizado',
-}
 
 function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[] {
   return [
@@ -81,7 +77,7 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
   },
   {
     key: 'status', label: 'Estado', defaultVisible: true,
-    exportValue: g => STATUS_EXPORT[g.status] ?? g.status,
+    exportValue: g => ETIQUETA_VISIBLE[estadoVisible(g, ymdCR())] ?? g.status,
   },
   {
     key: 'start_date', label: 'Fecha inicio', defaultVisible: true,
@@ -110,7 +106,10 @@ export default function GruposPage() {
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
-  const [selectedStatuses, setSelectedStatuses] = useState<GroupStatus[]>(['en_matricula', 'en_curso'])
+  const [selectedStatuses, setSelectedStatuses] = useState<EstadoVisible[]>(['en_matricula', 'por_iniciar', 'en_curso'])
+  // La fecha de hoy en CR, una sola vez por montaje: el estado visible se
+  // deriva de ella y no tiene por qué recalcularse en cada render.
+  const [hoy] = useState(ymdCR)
   // Selección MÚLTIPLE de tipos de estudio. Vacío = todos.
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [selectedZone, setSelectedZone] = useState('')
@@ -178,7 +177,7 @@ export default function GruposPage() {
     STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
   )
 
-  function toggleStatus(s: GroupStatus) {
+  function toggleStatus(s: EstadoVisible) {
     setSelectedStatuses(prev =>
       prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
     )
@@ -608,7 +607,7 @@ export default function GruposPage() {
                           return (
                             <td key="status" className="px-4 py-3">
                               <span className="inline-flex items-center gap-1.5 flex-wrap">
-                                <GroupStatusBadge status={group.status} />
+                                <GroupStatusBadge status={estadoVisible(group, hoy)} />
                                 {group.is_leader_training && <LeaderTrainingBadge modality={group.training_modality} />}
                                 {group.is_virtual && <VirtualGroupBadge />}
                                 {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}
@@ -654,7 +653,7 @@ export default function GruposPage() {
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <StudyTypeBadge code={group.study_type_id} size="sm" />
-                      <GroupStatusBadge status={group.status} />
+                      <GroupStatusBadge status={estadoVisible(group, hoy)} />
                       {group.is_leader_training && <LeaderTrainingBadge modality={group.training_modality} />}
                       {group.is_virtual && <VirtualGroupBadge />}
                       {!group.leader_id && group.status !== 'finalizado' && <NoLeaderBadge />}

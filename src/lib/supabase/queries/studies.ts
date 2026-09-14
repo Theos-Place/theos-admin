@@ -14,6 +14,7 @@ import type { Json } from '@/types/database'
 import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-export'
 import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-read'
 import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
+import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -235,6 +236,34 @@ export type GroupFilters = {
    *  puede ir solo: "desde marzo" o "hasta junio" son búsquedas válidas. */
   startFrom?: string | null
   startTo?: string | null
+  /**
+   * Estado VISIBLE: parte 'en_matricula' según la ventana de matrícula, para
+   * poder pedir "Por iniciar" (cerrada) aparte de "En matrícula" (abierta).
+   * Ver lib/studies/estado-visible.ts. Se filtra en la consulta y no en
+   * memoria para que el total y el "cargar más" sigan diciendo la verdad.
+   */
+  desglose?: DesgloseDeEstados | null
+  /** Hoy en hora CR; se inyecta para poder testear y para no mezclar zonas. */
+  hoyYmd?: string
+}
+
+/** Traduce el desglose de estados visibles a una condición de PostgREST.
+ *  Va como UN solo `or`: mezclar "Por iniciar" con "En curso" no se puede
+ *  expresar con un filtro global de ventana, porque le pegaría también a los
+ *  en_curso. */
+function condicionDeEstados(d: DesgloseDeEstados, hoy: string): string | null {
+  if (d.sinFiltro) return null
+  const partes: string[] = []
+  if (d.matriculaAbierta) {
+    // Sin fecha de cierre cuenta como abierta: es el comportamiento histórico.
+    partes.push(`and(status.eq.en_matricula,or(enrollment_end_date.is.null,enrollment_end_date.gte.${hoy}))`)
+  }
+  if (d.matriculaCerrada) {
+    partes.push(`and(status.eq.en_matricula,enrollment_end_date.lt.${hoy})`)
+  }
+  for (const e of d.guardados) partes.push(`status.eq.${e}`)
+  // Nada elegido que exista: se fuerza vacío en vez de traer todo.
+  return partes.length ? partes.join(',') : 'status.eq.__ninguno__'
 }
 
 /** Resuelve las partes de los filtros que viven en tablas relacionadas:
@@ -350,6 +379,7 @@ export async function getStudyGroups(
   // corría un día entre 6pm y medianoche hora CR.
   const closeFrom = ymdCR()
   const closeTo = ymdCR(new Date(Date.now() + 30 * 86400000))
+  const condEstados = f.desglose ? condicionDeEstados(f.desglose, f.hoyYmd ?? ymdCR()) : null
 
   if (opts.page !== undefined || opts.pageSize !== undefined) {
     const page = Math.max(1, opts.page ?? 1)
@@ -359,7 +389,8 @@ export async function getStudyGroups(
       .from('study_groups')
       .select(LIST_GROUP_SELECT, { count: 'exact' })
       .order('ends_at', { ascending: false, nullsFirst: false })
-    if (f.statuses?.length) query = query.in('status', f.statuses)
+    if (condEstados) query = query.or(condEstados)
+    else if (f.statuses?.length) query = query.in('status', f.statuses)
     if (f.zone)  query = query.eq('zone', f.zone)
     if (f.zoneNull) query = query.is('zone', null)
     if (f.day)   query = query.contains('schedule_days', [f.day])
@@ -385,7 +416,8 @@ export async function getStudyGroups(
       .from('study_groups')
       .select(LIST_GROUP_SELECT)
       .order('ends_at', { ascending: false, nullsFirst: false })
-    if (f.statuses?.length) query = query.in('status', f.statuses)
+    if (condEstados) query = query.or(condEstados)
+    else if (f.statuses?.length) query = query.in('status', f.statuses)
     if (f.zone)  query = query.eq('zone', f.zone)
     if (f.zoneNull) query = query.is('zone', null)
     if (f.day)   query = query.contains('schedule_days', [f.day])

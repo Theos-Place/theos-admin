@@ -8,6 +8,7 @@ import {
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
+import { desglosarSeleccion, ESTADOS_VISIBLES, type EstadoVisible } from '@/lib/studies/estado-visible'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
 
@@ -63,10 +64,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Filtros del listado — viajan al servidor (status[], plan, zona, día, búsqueda).
+    // `status` viaja con los estados VISIBLES, que son cuatro: 'por_iniciar'
+    // no existe en la columna — es 'en_matricula' con la ventana ya vencida.
+    // El desglose lo resuelve la consulta; ver lib/studies/estado-visible.ts.
     const statuses = searchParams.getAll('status')
+    const visibles = statuses.filter((s): s is EstadoVisible =>
+      (ESTADOS_VISIBLES as string[]).includes(s))
     const filters = {
       leaderMemberId,
       statuses: statuses.length ? statuses : undefined,
+      desglose: visibles.length ? desglosarSeleccion(visibles) : undefined,
       // `plan` puede venir repetido (?plan=N1&plan=N2): el filtro de tipo de
       // estudio es de selección múltiple. Se manda como lista siempre —
       // getAll con un solo valor devuelve un arreglo de uno, y así no hay dos
