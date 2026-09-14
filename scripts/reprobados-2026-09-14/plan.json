@@ -1,0 +1,248 @@
+{
+ "ciertos": [
+  {
+   "grupo": "Sirviendo como Jesus. Jose Quirós A.Febrero 2026",
+   "grupo_id": "f678869f-650b-42d5-8f5e-eb518f327cc5",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Jose Quiros",
+   "fin": "2026-04-20",
+   "nombre": "Matias Ceciliano",
+   "motivo": null,
+   "member_id": "0af23658-7a1d-4366-ba7f-7e5050d96080",
+   "ficha": "Matias Ceciliano Rodriguez",
+   "ccb": "16418"
+  },
+  {
+   "grupo": "Sirviendo como Jesus. Adriana Villalobos.Febrero 2026",
+   "grupo_id": "02d095da-47b8-419a-8564-b9de7388e570",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Adriana Villalobos",
+   "fin": "2026-04-27",
+   "nombre": "Kenia Godínez Vargas",
+   "motivo": "dejo el curso por motivos laborales",
+   "member_id": "63eed1e0-dce4-41cc-a6de-fee7796c4e24",
+   "ficha": "Kenia Godinez Vargas",
+   "ccb": "20844"
+  },
+  {
+   "grupo": "Panorama. Lara Aguilar. Febrero 2026",
+   "grupo_id": "43de3144-1c26-4a3f-ac9e-9e0218750c46",
+   "plan": "Panorama",
+   "dirigente": "LARA Aguilar",
+   "fin": "2026-04-27",
+   "nombre": "Margarita Masis",
+   "motivo": "abandonó el curso",
+   "member_id": "71df6d5b-fd9c-43cc-bfb9-de29d0f5cf90",
+   "ficha": "Margarita Masis Hernandez",
+   "ccb": "10476"
+  },
+  {
+   "grupo": "Romanos. Naomi Sasso. Febrero 2026",
+   "grupo_id": "1f55dd92-9127-49e3-bd87-4d1c1c101ac0",
+   "plan": "Romanos",
+   "dirigente": "Naomi Sasso",
+   "fin": "2026-05-07",
+   "nombre": "Cristina Jimenez",
+   "motivo": "No presento proyecto final por temas de trabajo",
+   "member_id": "cab5642f-fc04-4044-a461-fc2d555d575a",
+   "ficha": "Cristina Jiménez Bonilla",
+   "ccb": "10059"
+  },
+  {
+   "grupo": "Discipulos 3. Esteban Mejías. Marzo 2026",
+   "grupo_id": "5b2eb7a7-07db-48cc-8339-d9ea70888879",
+   "plan": "Discípulos 3",
+   "dirigente": "Esteban Mejias Montero",
+   "fin": "2026-06-18",
+   "nombre": "Katherine Cambronero Barrios",
+   "motivo": "No asistió a clase desde el inicio del estudio.",
+   "member_id": "0c29f319-e02b-420e-b4cd-055bf3180202",
+   "ficha": "Katherine Cambronero Barrios",
+   "ccb": "15744"
+  },
+  {
+   "grupo": "Sirviendo como Jesús.Ana Catalina Rodríguez.Junio 2026",
+   "grupo_id": "43aeed1b-f44d-4f9b-8f23-84de3faba493",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Ana Catalina Rodríguez Arce",
+   "fin": "2026-08-11",
+   "nombre": "Stephanny López",
+   "motivo": "temas laborales",
+   "member_id": "6bfaa3bf-61e3-4eb4-8481-90efa7de7449",
+   "ficha": "Stephanny López Soto",
+   "ccb": "24484"
+  }
+ ],
+ "dudosos": [
+  {
+   "grupo": "Sirviendo como Jesus. Karina Cavero.Febrero 2026",
+   "grupo_id": "f2761f12-239e-4a99-a149-69f018c103c1",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Karina Cavero Sandoval",
+   "fin": "2026-04-13",
+   "nombre": "Pilli Mora Aello No se presento  desde el inicio",
+   "motivo": null,
+   "por": "ninguna ficha con ese nombre",
+   "opciones": ""
+  },
+  {
+   "grupo": "Como interpretar la Biblia. Lucia Porras. Febrero 2026",
+   "grupo_id": "d4207fa3-782f-4164-b376-8c95a24c9724",
+   "plan": "Hermenéutica",
+   "dirigente": "Lucía Porras",
+   "fin": "2026-04-13",
+   "nombre": "Jose Sanchez debió retirar el curso por viajes laborales que debió realizar",
+   "motivo": null,
+   "por": "13 fichas posibles",
+   "opciones": "Jose Luis Vargas Sanchez (17137) | Jose Francisco Sanchez Navarro (8230) | José Flores Sanchez (3878) | José María Sánchez (1093) | Jose Fernando Sanchez Pacheco (11710) | Jose Sanchez Corrales (17966) | Jose Daniel Madrigal Sanchez (16417) | Jose David Sanchez (4687) | Jose Pasillo Sánchez (18030) | José Pablo Arce Sanchez (22142) | Jose Daniel Sanchez (6739) | José Andrés Rodriguez Sánchez (19932) | Joselyne Sánchez Badilla (22882)"
+  },
+  {
+   "grupo": "Panorama. Israel González. Febrero 2026",
+   "grupo_id": "bfd6d3c9-cc64-46c7-84d9-d9aad865e41e",
+   "plan": "Panorama",
+   "dirigente": "Israel Gonzalez Leon",
+   "fin": "2026-04-27",
+   "nombre": "Jorge Zúñiga",
+   "motivo": "No continuó, me comentó que no quería continuar en este grupo. Que no se sentía cómodo en la manera de recibir las clases. Solamente fue a dos clases.",
+   "por": "3 fichas posibles",
+   "opciones": "Jorge Zuniga García (15587) | Jorge Coto Zuniga (11847) | Jorge Zuniga Vega (13074)"
+  },
+  {
+   "grupo": "Romanos. Naomi Sasso. Febrero 2026",
+   "grupo_id": "1f55dd92-9127-49e3-bd87-4d1c1c101ac0",
+   "plan": "Romanos",
+   "dirigente": "Naomi Sasso",
+   "fin": "2026-05-07",
+   "nombre": "Ernesto Desanti",
+   "motivo": "No pudo terminar por temas de trabajo, pero pidio volver a ser invitado",
+   "por": "3 fichas posibles",
+   "opciones": "Ernesto Desanti S (Hijo) (4152) | Ernesto Desanti Gonzalez (246) | Ernesto Desanti (abuelo) (5021)"
+  },
+  {
+   "grupo": "Romanos. Naomi Sasso. Febrero 2026",
+   "grupo_id": "1f55dd92-9127-49e3-bd87-4d1c1c101ac0",
+   "plan": "Romanos",
+   "dirigente": "Naomi Sasso",
+   "fin": "2026-05-07",
+   "nombre": "Tatiana Quiros",
+   "motivo": "Ausencias",
+   "por": "3 fichas posibles",
+   "opciones": "Tatiana Fuentes Quirós (9981) | Tatiana Quiros Granados (17663) | Tatiana Quiros Astorga (6948)"
+  },
+  {
+   "grupo": "Sirviendo como Jesús.Gustavo Zamora.Junio 2026",
+   "grupo_id": "952e6b74-358d-4992-9135-7117356bf49b",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Gustavo Zamora",
+   "fin": "2026-08-24",
+   "nombre": "Lisseth Gonzalez",
+   "motivo": "Liz tuvo que retirarse en la clase 3 por una situación de salud del esposo",
+   "por": "ninguna ficha con ese nombre",
+   "opciones": ""
+  },
+  {
+   "grupo": "Evangelismo. Carlos Quesada y Juan Quesada. Junio 2026",
+   "grupo_id": "1827218b-5f74-4fe4-93c0-e1f2d0e2e9df",
+   "plan": "Evangelismo",
+   "dirigente": "Carlos Quesada",
+   "fin": "2026-08-14",
+   "nombre": "Hazel",
+   "motivo": "se salió del curso no volvió",
+   "por": "nombre sin apellido"
+  },
+  {
+   "grupo": "Discípulos 3. Alberto Murillo. Junio 2026",
+   "grupo_id": "f6416253-c1c1-4ad7-be84-aa0a6b381c05",
+   "plan": "Discípulos 3",
+   "dirigente": "Alberto Murillo",
+   "fin": "2026-09-07",
+   "nombre": "Esteban Gonzalez",
+   "motivo": "fue trasladado a trabajar a Cartago para un proyecto. Terminando el proyecto deberia poder terminar con discipulos 3.",
+   "por": "4 fichas posibles",
+   "opciones": "Esteban Quiros Gonzalez (21717) | Esteban Gonzalez Gonzalez (23940) | Esteban Gonzalez Fallas (834) | Esteban Ugalde González (23341)"
+  }
+ ],
+ "yaEstan": [
+  {
+   "grupo": "Religiones del mundo. Andrey Umaña. Febrero 2026",
+   "grupo_id": "1c066fd2-60af-4971-b251-54f37ae672a6",
+   "plan": "Religiones del Mundo",
+   "dirigente": "Andrey Umaña",
+   "fin": "2026-04-06",
+   "nombre": "Andrea García",
+   "motivo": "baja asistencia"
+  },
+  {
+   "grupo": "Panorama. Josué Sánchez. Febrero 2026",
+   "grupo_id": "a7614c0e-cbfb-4d42-ad08-6e628c66dda3",
+   "plan": "Panorama",
+   "dirigente": "Rodrigo Josué Sánchez Vergara",
+   "fin": "2026-05-07",
+   "nombre": "Dina Zamora",
+   "motivo": null
+  },
+  {
+   "grupo": "Cómo Interpretar la Biblia. Lucía Porras. Junio 2026",
+   "grupo_id": "3f07ddb9-ab2d-47ea-9fb5-5aff7cf18678",
+   "plan": "Hermenéutica",
+   "dirigente": "Lucia Porras Chacon",
+   "fin": "2026-08-02",
+   "nombre": "Melissa Acón",
+   "motivo": "Ignacio Mora, Johny Leandro, Mariana Alvarado... Todos se salieron por tiempo y ausencias."
+  },
+  {
+   "grupo": "Sirviendo como Jesús.Jose Luis Cavero.Junio 2026",
+   "grupo_id": "94589ce2-942e-46ee-b2c6-25e5f8d50404",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Jose Luis Cavero Sandoval",
+   "fin": "2026-08-04",
+   "nombre": "Melissa Retana",
+   "motivo": "dejó el Estudio después de la \"oración de envío\". Fue una experiencia muy traumante para ella."
+  },
+  {
+   "grupo": "Sirviendo como Jesús.Ana Catalina Rodríguez.Junio 2026",
+   "grupo_id": "43aeed1b-f44d-4f9b-8f23-84de3faba493",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Ana Catalina Rodríguez Arce",
+   "fin": "2026-08-11",
+   "nombre": "Andreina Bolaños",
+   "motivo": "temas laborales"
+  },
+  {
+   "grupo": "Sirviendo como Jesús.Ana Catalina Rodríguez.Junio 2026",
+   "grupo_id": "43aeed1b-f44d-4f9b-8f23-84de3faba493",
+   "plan": "Sirviendo como Jesús",
+   "dirigente": "Ana Catalina Rodríguez Arce",
+   "fin": "2026-08-11",
+   "nombre": "Hellen Daiana López López",
+   "motivo": "- temas laborales"
+  },
+  {
+   "grupo": "Discípulos 3. Leticia Villalobos. Junio 2026",
+   "grupo_id": "8bb6969a-d0d4-4ead-bf42-4d2285110d15",
+   "plan": "Discípulos 3",
+   "dirigente": "Leticia Villalobos",
+   "fin": "2026-08-31",
+   "nombre": "Jose Pablo Ramírez Bolaños",
+   "motivo": "ausencias"
+  },
+  {
+   "grupo": "Administrando el Dinero.Fernando Chavarria.Junio 2026",
+   "grupo_id": "29539987-47d1-4dde-805a-e0408d813c2f",
+   "plan": "Administrando el Dinero",
+   "dirigente": "Fernando Chavarria",
+   "fin": "2026-08-02",
+   "nombre": "Natalia Sancho",
+   "motivo": null
+  },
+  {
+   "grupo": "Discípulos 3. Alberto Murillo. Junio 2026",
+   "grupo_id": "f6416253-c1c1-4ad7-be84-aa0a6b381c05",
+   "plan": "Discípulos 3",
+   "dirigente": "Alberto Murillo",
+   "fin": "2026-09-07",
+   "nombre": "Jimena L MONTERO",
+   "motivo": "no dermino discipulos 2 aduciendo motivos personales."
+  }
+ ]
+}
