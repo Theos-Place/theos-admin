@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
 import { useToast } from '@/components/shared/Toast'
-import { Modal } from '@/components/shared/Modal'
 import { calcAge, formatDateNumeric, initialsFromParts } from '@/lib/format'
 import { ChevronLeft, Users } from 'lucide-react'
 
@@ -69,182 +68,24 @@ function MemberMini({ m }: { m: DupMember }) {
 }
 
 // ─── Merge campo por campo ──────────────────────────────────────────────────────
-const MERGE_FIELDS: { key: keyof DupMember; label: string }[] = [
-  { key: 'first_name', label: 'Nombre' },
-  { key: 'last_name', label: 'Apellido' },
-  { key: 'cedula', label: 'Cédula' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Teléfono' },
-  { key: 'birth_date', label: 'Fecha de nacimiento' },
-  { key: 'province', label: 'Provincia' },
-  { key: 'canton', label: 'Cantón' },
-  { key: 'occupation', label: 'Ocupación' },
-  { key: 'photo_url', label: 'Foto' },
-]
 
-function fieldDisplay(m: DupMember, key: keyof DupMember): string {
-  const v = m[key]
-  if (v === null || v === undefined || v === '') return '—'
-  if (key === 'birth_date') return formatDateNumeric(v as string)
-  if (key === 'photo_url') return 'Foto cargada'
-  return String(v)
-}
-function fieldEditedLabel(m: DupMember, key: string): string | null {
-  const ts = m.field_updated_at?.[key]
-  return ts ? `editado ${formatDateNumeric(ts)}` : null
-}
-/** Selección por defecto: el valor editado más recientemente; si solo uno tiene
- *  valor, ese; si ninguno, 'a'. */
-function defaultChoice(a: DupMember, b: DupMember, key: keyof DupMember): 'a' | 'b' {
-  const av = a[key], bv = b[key]
-  const aHas = av !== null && av !== undefined && av !== ''
-  const bHas = bv !== null && bv !== undefined && bv !== ''
-  if (aHas && !bHas) return 'a'
-  if (bHas && !aHas) return 'b'
-  const at = a.field_updated_at?.[key], bt = b.field_updated_at?.[key]
-  if (at && bt) return new Date(bt) > new Date(at) ? 'b' : 'a'
-  if (bt && !at) return 'b'
-  return 'a'
-}
-
-function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () => void; onMerged: () => void }) {
+/**
+ * La resolución campo por campo vive en un componente compartido: la misma la
+ * usa el "Fusionar duplicado" de la ficha. Acá solo se elige cuál de las dos
+ * sobrevive y se le pasa el par.
+ */
+function MergeModal({ pair, onClose, onMerged }: { pair: DupPair; onClose: () => void; onMerged: (aviso: string) => void }) {
   const [principal, setPrincipal] = useState<'a' | 'b'>('a')
-  const [choice, setChoice] = useState<Record<string, 'a' | 'b'>>(() => {
-    const init: Record<string, 'a' | 'b'> = {}
-    for (const f of MERGE_FIELDS) init[f.key] = defaultChoice(pair.a, pair.b, f.key)
-    return init
-  })
-  const [confirming, setConfirming] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-
   const keep = principal === 'a' ? pair.a : pair.b
   const drop = principal === 'a' ? pair.b : pair.a
-
-  function pick(key: string, side: 'a' | 'b') { setChoice(c => ({ ...c, [key]: side })) }
-  function selectAll(side: 'a' | 'b') {
-    const next: Record<string, 'a' | 'b'> = {}
-    for (const f of MERGE_FIELDS) next[f.key] = side
-    setChoice(next)
-  }
-
-  // Campos finales que difieren del principal → se actualizan.
-  const changedFields = useMemo(() => {
-    const out: { key: keyof DupMember; from: 'a' | 'b'; value: unknown }[] = []
-    for (const f of MERGE_FIELDS) {
-      const src = choice[f.key] === 'a' ? pair.a : pair.b
-      const val = src[f.key]
-      if (val !== keep[f.key]) out.push({ key: f.key, from: choice[f.key], value: val })
-    }
-    return out
-  }, [choice, pair, keep])
-
-  async function doMerge() {
-    setLoading(true); setErr(null)
-    try {
-      const fields: Record<string, unknown> = {}
-      for (const c of changedFields) fields[c.key as string] = c.value
-      const res = await fetch(`/api/members/${keep.id}/merge`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duplicate_id: drop.id, fields, soft: true }),
-      })
-      if (!res.ok) throw new Error()
-      onMerged()
-    } catch { setErr('No se pudo fusionar. Intentá de nuevo.'); setLoading(false); setConfirming(false) }
-  }
-
-  if (confirming) {
-    return (
-      <DeleteConfirmModal
-        open
-        title="Confirmar fusión"
-        description={`Se conservará ${keep.first_name} ${keep.last_name} con los datos elegidos. El otro perfil quedará inactivo (marcado como fusionado) y su familia, roles, estudios, servicio y pagos pasarán al principal.`}
-        keyword="fusionar"
-        confirmLabel="Fusionar"
-        loading={loading}
-        onConfirm={doMerge}
-        onCancel={() => setConfirming(false)}
-      />
-    )
-  }
-
   return (
-    <Modal onClose={onClose} titleId="fusionar-campos-title" width={768}>
-      <div className="p-6 space-y-4">
-        <div>
-          <p id="fusionar-campos-title" className="text-base font-bold text-navy font-display">Fusionar campo por campo</p>
-          <p className="text-[13px] text-navy-light/80 font-body mt-1">Elegí qué dato conservar de cada perfil. El perfil principal sobrevive; el otro queda inactivo.</p>
-        </div>
-
-        {/* Principal + seleccionar todo */}
-        <div className="flex flex-wrap items-center gap-2 justify-between">
-          <div className="flex items-center gap-2 text-xs font-body">
-            <span className="text-navy-light/80">Perfil principal:</span>
-            {(['a', 'b'] as const).map(s => (
-              <button key={s} onClick={() => setPrincipal(s)}
-                className={cn('rounded-full px-3 py-1 transition-colors', principal === s ? 'bg-navy text-white' : 'bg-surface-low text-navy-light')}>
-                {s === 'a' ? pair.a.first_name : pair.b.first_name} {s === 'a' ? pair.a.last_name : pair.b.last_name}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => selectAll('a')} className="text-[13px] text-coral hover:underline font-body">Todo de A</button>
-            <button onClick={() => selectAll('b')} className="text-[13px] text-coral hover:underline font-body">Todo de B</button>
-          </div>
-        </div>
-
-        {/* Tabla comparativa */}
-        <div className="rounded-xl border border-[var(--outline-variant)] divide-y divide-[var(--outline-variant)]">
-          <div className="grid grid-cols-[80px_1fr_1fr] gap-2 px-3 py-2 text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
-            <span>Campo</span>
-            <span>A · {pair.a.first_name}</span>
-            <span>B · {pair.b.first_name}</span>
-          </div>
-          {MERGE_FIELDS.map(f => {
-            const aEd = fieldEditedLabel(pair.a, f.key), bEd = fieldEditedLabel(pair.b, f.key)
-            return (
-              <div key={f.key} className="grid grid-cols-[80px_1fr_1fr] gap-2 px-3 py-2 items-start">
-                <span className="text-[13px] text-navy-light/80 font-body pt-1">{f.label}</span>
-                {(['a', 'b'] as const).map(side => {
-                  const m = side === 'a' ? pair.a : pair.b
-                  const ed = side === 'a' ? aEd : bEd
-                  return (
-                    <label key={side} className={cn('flex items-start gap-2 rounded-lg px-2 py-1 cursor-pointer', choice[f.key] === side ? 'bg-coral/5' : 'hover:bg-surface-low')}>
-                      <input type="radio" checked={choice[f.key] === side} onChange={() => pick(f.key, side)} className="accent-coral mt-1 shrink-0" />
-                      <span className="min-w-0">
-                        <span className="block text-[13px] text-navy font-body truncate">{fieldDisplay(m, f.key)}</span>
-                        {ed && <span className="block text-[11px] text-navy-light/80 font-body">{ed}</span>}
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Resumen */}
-        {changedFields.length > 0 && (
-          <div className="rounded-xl bg-surface-low px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1">Cambios a aplicar al principal</p>
-            <ul className="text-[13px] text-navy-light/80 font-body space-y-0.5">
-              {changedFields.map(c => (
-                <li key={c.key as string}>
-                  <strong className="text-navy">{MERGE_FIELDS.find(f => f.key === c.key)?.label}</strong>: se usa el valor del perfil {c.from.toUpperCase()}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {err && <p className="text-sm text-coral font-body">{err}</p>}
-
-        <div className="flex gap-2 pt-1">
-          <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-          <button onClick={() => setConfirming(true)} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Continuar</button>
-        </div>
-      </div>
-    </Modal>
+    <ResolucionDeFusion
+      principal={keep}
+      duplicado={drop}
+      onCambiarPrincipal={() => setPrincipal(p => (p === 'a' ? 'b' : 'a'))}
+      onCancelar={onClose}
+      onFusionado={onMerged}
+    />
   )
 }
 
@@ -360,13 +201,15 @@ export default function DuplicadosPage() {
         <MergeModal
           pair={merging}
           onClose={() => setMerging(null)}
-          onMerged={() => {
+          onMerged={(aviso) => {
             const mergedKey = pairKey(merging)
             setMerging(null)
             // El par fusionado ya no es candidato (el secundario quedó inactivo):
             // se quita de inmediato y luego se refresca contra la BD.
             setPairs(prev => prev.filter(x => pairKey(x) !== mergedKey))
-            toast('Miembros fusionados correctamente', 'success')
+            // El aviso lo arma la resolución: puede incluir que una cuenta de
+            // acceso quedó deshabilitada, que es lo que hay que leer.
+            toast(aviso, 'success')
             load()
           }}
         />

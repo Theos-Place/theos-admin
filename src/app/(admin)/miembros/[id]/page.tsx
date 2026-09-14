@@ -23,6 +23,7 @@ import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
+import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ export default function MiembroDetailPage() {
   const [deactivating, setDeactivating] = useState(false)
   const [revealDonations, setRevealDonations] = useState(false)
   const [showMerge, setShowMerge] = useState(false)
+  const [avisoFusion, setAvisoFusion] = useState<string | null>(null)
   // PAG-4: ?open=<sección> (p. ej. "Ver historial de pagos" de /mis-pagos usa
   // ?tab=participacion&open=pagos) arranca con ese acordeón expandido.
   const [openSections, setOpenSections] = useState({
@@ -372,12 +374,22 @@ export default function MiembroDetailPage() {
       )}
 
 
+      {avisoFusion && (
+        <div className="rounded-2xl bg-teal-soft/25 px-4 py-3 flex items-start gap-2">
+          <p className="flex-1 text-[13px] text-teal-deep font-body">{avisoFusion}</p>
+          <button onClick={() => setAvisoFusion(null)} aria-label="Cerrar el aviso"
+            className="text-teal-deep/80 hover:text-teal-deep text-[13px]">✕</button>
+        </div>
+      )}
+
       {showMerge && member && (
         <MergeMemberModal
           keepId={id}
           keepName={`${member.first_name} ${member.last_name}`.trim()}
           onClose={() => setShowMerge(false)}
-          onMerged={() => { setShowMerge(false); refetch() }}
+          // El aviso puede decir que una cuenta de acceso quedó deshabilitada:
+          // se muestra en la pantalla, no se traga.
+          onMerged={(aviso) => { setShowMerge(false); setAvisoFusion(aviso); refetch() }}
         />
       )}
 
@@ -424,6 +436,9 @@ type SearchHit = { id: string; first_name: string; last_name: string; cedula: st
 
 /** GET /api/members devuelve `{ members, total }`. Esta pantalla leía `data`, así
  *  que la búsqueda del modal de fusión SIEMPRE salía vacía (bug 2026-08-06). */
+/** Lo que necesita la resolución campo por campo: la ficha completa. */
+type FichaFusion = Parameters<typeof ResolucionDeFusion>[0]['principal']
+
 function hitsFrom(payload: unknown): SearchHit[] {
   if (Array.isArray(payload)) return payload as SearchHit[]
   const o = (payload ?? {}) as { members?: SearchHit[]; data?: SearchHit[] }
@@ -434,14 +449,32 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
   keepId: string
   keepName: string
   onClose: () => void
-  onMerged: () => void
+  onMerged: (aviso: string) => void
 }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchHit[]>([])
   const [picked, setPicked] = useState<SearchHit | null>(null)
   const [searching, setSearching] = useState(false)
-  const [merging, setMerging] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  /**
+   * Las dos fichas COMPLETAS, que es lo que necesita la resolución campo por
+   * campo. El buscador solo devuelve nombre, cédula y correo — con eso no se
+   * puede comparar nada.
+   */
+  const [aResolver, setAResolver] = useState<{ principal: FichaFusion; duplicado: FichaFusion } | null>(null)
+  const [cargandoFichas, setCargandoFichas] = useState(false)
+
+  async function abrirResolucion(dup: SearchHit) {
+    setCargandoFichas(true); setErr(null)
+    try {
+      const [p, d] = await Promise.all(
+        [keepId, dup.id].map(x => fetch(`/api/members/${x}`).then(r => (r.ok ? r.json() : null))))
+      if (!p || !d) { setErr('No se pudieron cargar las dos fichas.'); return }
+      setAResolver({ principal: p as FichaFusion, duplicado: d as FichaFusion })
+    } catch {
+      setErr('No se pudieron cargar las dos fichas.')
+    } finally { setCargandoFichas(false) }
+  }
 
   useEffect(() => {
     const q = query.trim()
@@ -466,32 +499,13 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
     return () => { alive = false; clearTimeout(t) }
   }, [query, keepId])
 
-  async function handleMerge() {
-    if (!picked) return
-    setMerging(true)
-    setErr(null)
-    try {
-      const res = await fetch(`/api/members/${keepId}/merge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duplicate_id: picked.id }),
-      })
-      if (!res.ok) throw new Error('Error al fusionar')
-      onMerged()
-    } catch (e) {
-      console.error(e)
-      setErr('No se pudo fusionar. Intentá de nuevo.')
-      setMerging(false)
-    }
-  }
-
   return (
     <Modal onClose={onClose} titleId="fusionar-duplicado-title" width={448}>
       <div className="p-6 space-y-4">
         <div>
           <p id="fusionar-duplicado-title" className="text-base font-bold text-navy font-display">Fusionar duplicado</p>
           <p className="text-[13px] text-navy-light/80 font-body mt-1">
-            Buscá el registro duplicado. Toda su información (estudios, asistencias, servicio, pagos…) se moverá a <strong className="text-navy">{keepName}</strong> y el duplicado se <strong>eliminará</strong>. Esta acción no se puede deshacer.
+            Buscá el registro duplicado. Toda su información (estudios, asistencias, servicio, pagos…) se moverá a <strong className="text-navy">{keepName}</strong> y el duplicado quedará inactivo. En el siguiente paso elegís qué dato se conserva de cada campo.
           </p>
         </div>
 
@@ -529,7 +543,7 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
           </>
         ) : (
           <div className="rounded-xl bg-coral-soft/15 px-3 py-3">
-            <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display mb-1">Se eliminará y fusionará en {keepName}</p>
+            <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display mb-1">Se fusionará en {keepName}</p>
             <p className="text-sm text-navy font-body">{picked.first_name} {picked.last_name}</p>
             <p className="text-[13px] text-navy-light/80 font-body">
               {picked.cedula ? `Cédula ${picked.cedula}` : 'Sin cédula'}{picked.email ? ` · ${picked.email}` : ''}
@@ -544,11 +558,21 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
           <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
             Cancelar
           </button>
-          <button onClick={handleMerge} disabled={!picked || merging} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
-            {merging ? 'Fusionando…' : 'Fusionar y eliminar duplicado'}
+          <button onClick={() => picked && abrirResolucion(picked)} disabled={!picked || cargandoFichas}
+            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            {cargandoFichas ? 'Cargando…' : 'Continuar'}
           </button>
         </div>
       </div>
+
+      {aResolver && (
+        <ResolucionDeFusion
+          principal={aResolver.principal}
+          duplicado={aResolver.duplicado}
+          onCancelar={() => setAResolver(null)}
+          onFusionado={(aviso: string) => { setAResolver(null); onMerged(aviso) }}
+        />
+      )}
     </Modal>
   )
 }

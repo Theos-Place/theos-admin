@@ -24,7 +24,10 @@ function definicionVigente(): string {
   const archivos = readdirSync(DIR).sort().filter(f => f.endsWith('.sql'))
   for (const file of [...archivos].reverse()) {
     const sql = readFileSync(join(DIR, file), 'utf8')
-    if (/create\s+or\s+replace\s+function\s+(?:public\.)?merge_members/i.test(sql)) return sql
+    // El `\(` no es decorativo: sin él, `merge_members_resuelto` —que envuelve
+    // a esta función— también matchea, y el guard termina leyendo la migración
+    // equivocada y dando por descubiertas las 84 columnas.
+    if (/create\s+or\s+replace\s+function\s+(?:"?public"?\.)?"?merge_members"?\s*\(/i.test(sql)) return sql
   }
   throw new Error('no se encontró ninguna migración que defina merge_members')
 }

@@ -89,11 +89,84 @@ export async function mergeMembers(
   }
 }
 
+/**
+ * Fusión con la resolución campo por campo.
+ *
+ * Todo lo de datos va en UN RPC (merge_members_resuelto): foto del duplicado,
+ * valores elegidos, fusión y bitácora, en una sola transacción. Antes el UPDATE
+ * de los campos elegidos corría después del RPC, en otra request y marcado como
+ * "cosmético": si fallaba, la fusión ya había ocurrido y lo elegido se perdía.
+ *
+ * Lo único que queda afuera de la transacción es deshabilitar la cuenta de
+ * login del duplicado, porque vive en Supabase Auth y no en la base. Va al
+ * final y a propósito: si falla, la fusión ya está hecha y bien — queda una
+ * cuenta viva de más, que se arregla a mano, en vez de una fusión a medias.
+ */
+export type ResultadoFusion = {
+  /** La cuenta del duplicado quedó deshabilitada (había dos logins). */
+  cuentaDeshabilitada: string | null
+  /** No se pudo deshabilitar: hay que hacerlo a mano. */
+  cuentaConProblema: string | null
+}
+
+export async function mergeMembersResuelto(
+  keepId: string, dupId: string,
+  opts: { resueltos?: Record<string, unknown>; actorUserId?: string | null } = {},
+): Promise<ResultadoFusion> {
+  const supabase = createAdminClient()
+  // Cliente laxo: el RPC es nuevo (migración 20260914180000) y los tipos
+  // generados todavía no lo listan. Mismo patrón que registrarEnvio con la
+  // columna `subject` de message_logs.
+  const rpc = supabase as unknown as {
+    rpc: (n: string, a: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  const { data, error } = await rpc.rpc('merge_members_resuelto', {
+    p_keep_id: keepId, p_dup_id: dupId,
+    p_resueltos: opts.resueltos ?? {},
+    p_actor: opts.actorUserId ?? null,
+  })
+  if (error) throw new Error(error.message)
+
+  const r = (data ?? {}) as { dup_auth_user_id?: string | null; dup_email?: string | null }
+  if (!r.dup_auth_user_id) return { cuentaDeshabilitada: null, cuentaConProblema: null }
+
+  // 100 años: es "deshabilitada" sin borrarla, así que el historial de esa
+  // cuenta sigue existiendo y se puede revertir si la fusión estuvo mal.
+  const { error: banErr } = await supabase.auth.admin.updateUserById(
+    r.dup_auth_user_id, { ban_duration: '876000h' })
+  if (banErr) {
+    console.error('mergeMembersResuelto: fusión OK, no se pudo deshabilitar la cuenta:', banErr.message)
+    return { cuentaDeshabilitada: null, cuentaConProblema: r.dup_email ?? r.dup_auth_user_id }
+  }
+  return { cuentaDeshabilitada: r.dup_email ?? r.dup_auth_user_id, cuentaConProblema: null }
+}
+
+/** Traduce los errores del RPC a una respuesta HTTP con el dato que chocó. */
+export function fusionErrorResponse(error: unknown): { error: string; code: string; valor: string } | null {
+  if (!(error instanceof Error)) return null
+  const m = /(CEDULA|CORREO)_DE_UN_TERCERO:(.*)$/.exec(error.message)
+  if (!m) return null
+  const valor = m[2].trim()
+  return m[1] === 'CEDULA'
+    ? { error: `La cédula ${valor} ya es de otra persona activa. Revisá cuál es la correcta antes de fusionar.`, code: 'cedula_de_un_tercero', valor }
+    : { error: `El correo ${valor} ya es de otra persona activa. Revisá cuál es el correcto antes de fusionar.`, code: 'correo_de_un_tercero', valor }
+}
+
 export type DuplicateMember = {
   id: string; first_name: string; last_name: string
-  cedula: string | null; email: string | null; phone: string | null; created_at: string
-  birth_date: string | null; province: string | null; canton: string | null
-  occupation: string | null; photo_url: string | null
+  cedula: string | null; document_type: string | null
+  email: string | null; phone: string | null; created_at: string
+  birth_date: string | null; gender: string | null; marital_status: string | null
+  province: string | null; canton: string | null; district: string | null; address: string | null
+  occupation: string | null; workplace: string | null
+  allergies: string | null; medications: string | null
+  /** Es un arreglo en la base, no un texto. */
+  dietary_restrictions: string[] | null
+  emergency_contact_name: string | null; emergency_contact_phone: string | null
+  photo_url: string | null
+  /** Para el aviso de cuentas: si las dos fichas tienen login, una se deshabilita. */
+  auth_user_id: string | null; last_sign_in_at: string | null
+  external_id: string | null
   field_updated_at: Record<string, string> | null
 }
 export type DuplicatePair = { a: DuplicateMember; b: DuplicateMember; reasons: string[] }
@@ -107,7 +180,14 @@ export async function getDuplicatePairs(): Promise<DuplicatePair[]> {
   const ids = [...new Set(pairs.flatMap(p => [p.member_a, p.member_b]))]
   if (ids.length === 0) return []
   const { data: members, error: mErr } = await supabase
-    .from('members').select('id, first_name, last_name, cedula, email, phone, created_at, birth_date, province, canton, occupation, photo_url, field_updated_at').in('id', ids)
+    // Todas las columnas que compara la resolución campo por campo, más las
+    // que necesita para avisar de las cuentas de acceso (auth_user_id,
+    // last_sign_in_at) y del rastro de CCB (external_id).
+    .from('members').select(`id, first_name, last_name, cedula, document_type, email, phone,
+      birth_date, gender, marital_status, province, canton, district, address,
+      occupation, workplace, allergies, medications, dietary_restrictions,
+      emergency_contact_name, emergency_contact_phone, photo_url,
+      auth_user_id, last_sign_in_at, external_id, created_at, field_updated_at`).in('id', ids)
   if (mErr) throw mErr
   const byId = new Map((members ?? []).map(m => [m.id, m as DuplicateMember]))
   return pairs
