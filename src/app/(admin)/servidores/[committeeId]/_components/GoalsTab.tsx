@@ -4,6 +4,7 @@ import { Plus, Check, Target } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { type CommitteeGoal } from '@/types/server'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 
 type Props = {
   goals: CommitteeGoal[]
@@ -61,7 +62,7 @@ export function GoalsTab({
             </p>
             {g.due_date && (
               <p className="text-[13px] text-navy-light/80 font-mono">
-                Límite: {new Date(g.due_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                Límite: {formatDate(g.due_date)}
               </p>
             )}
           </div>

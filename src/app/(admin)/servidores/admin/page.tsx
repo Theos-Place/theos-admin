@@ -24,6 +24,7 @@ import { SERVER_COLUMNS, type FlatServer } from '@/lib/servers/columns'
 import { miembrosDelPuesto, conteoDelPuesto, tituloDelPuesto, filasParaExport, nombreDeArchivo } from '@/lib/servers/miembros-del-puesto'
 import { leerSeleccion, escribirSeleccion, alElegir, type SeleccionAdmin } from '@/lib/servers/deep-link'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
+import { formatDateNumeric } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
@@ -1197,7 +1198,7 @@ export default function ServidoresAdminPage() {
                           {m.name}
                         </Link>
                         <p className="text-[11px] text-navy-light/80 font-body mt-0.5">
-                          Desde {m.start_date ? new Date(m.start_date).toLocaleDateString('es-CR') : '—'}
+                          Desde {formatDateNumeric(m.start_date)}
                           {m.antiguedad !== '—' && ` · ${m.antiguedad}`}
                         </p>
                       </div>

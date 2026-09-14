@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { type SortDirection } from '@/hooks/useSortableTable'
 import { agruparPorPersona } from '@/lib/servers/committee-filter'
+import { formatDate } from '@/lib/format'
 
 type StatusFilter = 'active' | 'inactive' | 'all'
 
@@ -178,7 +179,7 @@ export function MembersTab({
                     ))}
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                    {new Date(m.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {formatDate(m.start_date)}
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {calcularAntiguedad(m.start_date)}

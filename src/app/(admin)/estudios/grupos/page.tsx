@@ -25,7 +25,7 @@ import { cn, claveAlfabetica } from '@/lib/utils'
 import { Plus, BookOpen } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
-import { getInitials } from '@/lib/format'
+import { getInitials, formatDateNumeric } from '@/lib/format'
 
 const PAGE_SIZE = 25
 
@@ -85,11 +85,11 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
   },
   {
     key: 'start_date', label: 'Fecha inicio', defaultVisible: true,
-    exportValue: g => g.start_date ? new Date(g.start_date).toLocaleDateString('es-CR') : '—',
+    exportValue: g => formatDateNumeric(g.start_date),
   },
   {
     key: 'end_date', label: 'Fecha fin', defaultVisible: false,
-    exportValue: g => g.end_date ? new Date(g.end_date).toLocaleDateString('es-CR') : '',
+    exportValue: g => g.end_date ? formatDateNumeric(g.end_date) : '',
   },
   {
     key: 'location', label: 'Ubicación', defaultVisible: false,
@@ -616,9 +616,9 @@ export default function GruposPage() {
                             </td>
                           )
                         case 'start_date':
-                          return <td key="start_date" className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{group.start_date ? new Date(group.start_date).toLocaleDateString('es-CR') : '—'}</td>
+                          return <td key="start_date" className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{formatDateNumeric(group.start_date)}</td>
                         case 'end_date':
-                          return <td key="end_date" className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{group.end_date ? new Date(group.end_date).toLocaleDateString('es-CR') : '—'}</td>
+                          return <td key="end_date" className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{formatDateNumeric(group.end_date)}</td>
                         default: {
                           const rawVal = (group as Record<string, unknown>)[String(col.key)]
                           return <td key={String(col.key)} className="px-4 py-3 text-sm text-navy-light/80 max-w-[160px] truncate font-body">{rawVal != null ? String(rawVal) : '—'}</td>

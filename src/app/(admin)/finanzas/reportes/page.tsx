@@ -8,6 +8,7 @@ import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay
 import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
+import { formatDate } from '@/lib/format'
 
 // Etiquetas en español para la tabla (los values crudos venían de la BD).
 const METHOD_LABEL: Record<string, string> = {
@@ -189,7 +190,7 @@ export default function ReportesPage() {
                       <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{d.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{d.member_cedula}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{new Date(d.donation_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{formatDate(d.donation_date)}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>

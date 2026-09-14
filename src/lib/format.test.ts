@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol } from './format'
+import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric } from './format'
 
 describe('ymdCR', () => {
   it('un instante de madrugada UTC es el día ANTERIOR en CR (UTC-6)', () => {
@@ -72,5 +72,35 @@ describe('formatMoney', () => {
     expect(currencySymbol('CRC')).toBe('\u20a1')
     expect(currencySymbol(undefined)).toBe('\u20a1')
     expect(currencySymbol('EUR')).toBe('\u20ac')
+  })
+})
+
+describe('fechas puras: no se corren un día en Costa Rica', () => {
+  // Las columnas `date` (study_groups.starts_at, volunteers.start_date,
+  // donations.donation_date, committee_goals.due_date) llegan como
+  // "2026-09-28". `new Date("2026-09-28")` las lee como medianoche UTC y en CR
+  // (UTC-6) muestran el 27. Por eso existe parseFlexibleDate y por eso hay que
+  // usar estos formateadores en vez de new Date(...).toLocaleDateString.
+  it('formatDate no retrocede el día', () => {
+    expect(formatDate('2026-09-28')).toContain('28')
+  })
+  it('formatDateLong tampoco', () => {
+    expect(formatDateLong('2026-09-28')).toContain('28')
+  })
+  it('formatDateNumeric tampoco', () => {
+    expect(formatDateNumeric('2026-09-28')).toBe('28/09/2026')
+  })
+  it('el 1 de enero no se va al año anterior', () => {
+    // El caso que más duele: 2026-01-01 mostrándose como 31 dic 2025.
+    expect(formatDateNumeric('2026-01-01')).toBe('01/01/2026')
+    expect(formatDate('2026-01-01')).toContain('2026')
+  })
+  it('un timestamp con hora sigue siendo un instante, no una fecha pura', () => {
+    // La suite corre en UTC (ver vitest.config), así que este caso comprueba la
+    // RAMA, no el corrimiento: un valor con hora no entra por el atajo de fecha
+    // pura y se interpreta con new Date(). El corrimiento real solo se ve en
+    // una zona negativa, y de eso se cuida no usar new Date() en las pantallas.
+    expect(formatDateNumeric('2026-09-27T23:30:00.000Z')).toBe('27/09/2026')
+    expect(formatDateNumeric('2026-09-28T00:30:00.000Z')).toBe('28/09/2026')
   })
 })
