@@ -88,8 +88,8 @@ BEGIN
     FROM information_schema.columns c
    WHERE c.table_schema = 'public' AND c.table_name = 'members'
      AND p_resueltos ? c.column_name
-     AND c.column_name NOT IN ('id','created_at','updated_at','auth_user_id','external_id',
-                               'is_active','deactivation_reason','deactivated_at','deactivated_by');
+     -- Misma lista que usa merge_members, en un solo lugar (merge_no_copia).
+     AND c.column_name <> ALL (merge_no_copia());
   IF v_cols IS NOT NULL THEN
     EXECUTE format('UPDATE members SET %s, updated_at = now() WHERE id = $2', v_cols)
       USING p_resueltos, p_keep_id;
