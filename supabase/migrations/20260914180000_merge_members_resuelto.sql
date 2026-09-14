@@ -40,8 +40,9 @@ DECLARE
   v_key      text;
   v_val      text;
   v_tipo     text;
-  v_dup_auth uuid;
-  v_dup_mail text;
+  v_dup_auth  uuid;
+  v_dup_mail  text;
+  v_keep_auth uuid;
 BEGIN
   IF p_keep_id = p_dup_id THEN RAISE EXCEPTION 'No se puede fusionar un miembro consigo mismo'; END IF;
   SELECT to_jsonb(m) INTO v_keep FROM members m WHERE m.id = p_keep_id;
@@ -113,10 +114,21 @@ BEGIN
           jsonb_build_object('duplicate_id', p_dup_id, 'soft', true,
                              'resueltos', p_resueltos, 'principal_antes', v_keep));
 
+  -- OJO CON ESTO. Si el principal no tenía cuenta, merge_members le PASA la del
+  -- duplicado. En ese caso la cuenta del duplicado ya no es "la que se
+  -- descarta": es la única que hay, y deshabilitarla deja a la persona afuera.
+  -- Pasó con Bárbara Solís: su ficha quedó apuntando a una cuenta baneada.
+  -- Solo se devuelve para deshabilitar cuando de verdad sobra.
+  SELECT auth_user_id INTO v_keep_auth FROM members WHERE id = p_keep_id;
+  IF v_dup_auth IS NOT DISTINCT FROM v_keep_auth THEN
+    v_dup_auth := NULL;
+    v_dup_mail := NULL;
+  END IF;
+
   RETURN jsonb_build_object(
     'dup_auth_user_id', v_dup_auth, 'dup_email', v_dup_mail,
     -- El login del principal, para poder mudarle el correo al elegido.
-    'keep_auth_user_id', (SELECT auth_user_id FROM members WHERE id = p_keep_id));
+    'keep_auth_user_id', v_keep_auth);
 END;
 $$;
 
