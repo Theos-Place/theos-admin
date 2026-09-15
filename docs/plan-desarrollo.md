@@ -124,10 +124,10 @@ Script: `scripts/cierre-2026-09/alergias-sucias.ts`.
 
 ## Fase 14 — Pedido el 2026-09-10 (tarde)
 
-> Nota 2026-09-10: la fase decía "Hecho" pero REP-2 NO está implementado (verificado contra
-> el código: no existe el deep link ?semana= ni el panel de detalle). Queda pendiente.
+> Nota 2026-09-15: REP-2 quedó HECHO — existen `SemanaDetallePanel` y el deep link
+> `?semana=`. (La nota del 2026-09-10 decía lo contrario y ya no aplica.)
 
-### [ ] REP-2 · Reporte de asistencia: ver una semana sola, no el acumulado
+### [x] REP-2 · Reporte de asistencia: ver una semana sola — HECHO 2026-09-13
 
 HOY `/reportes/asistencia` muestra el año entero: gráfico semanal, promedio,
 semana pico. Al tocar una semana no hay forma de ver SOLO esa semana.
@@ -179,7 +179,8 @@ La lista, con la evidencia de cada uno, está en
 - 12 sin ninguna pista.
 
 Ojo con dos de los 3 primeros: Alana y Elena apuntan a "Carlos Blanco", que
-está DUPLICADO. Primero se resuelve el duplicado.
+estaba DUPLICADO. **Resuelto el 2026-09-15**: el 23828 se fusionó en el 17615,
+así que ese bloqueo ya no existe.
 
 Y un vínculo equivocado no es inocuo: por la regla de una persona = una
 familia, vincular mal FUSIONA dos hogares.
@@ -218,7 +219,7 @@ CUIDADO: un plan sin NINGÚN grupo abierto no es lo mismo que uno lleno. El
 primero puede abrir la otra semana; el segundo hay que resolverlo ya. Que el
 aviso los distinga.
 
-### [ ] BEC-3 · `email_sent_at` se marca aunque el correo no haya salido
+### [x] BEC-3 · `email_sent_at` se marca aunque el correo no haya salido — HECHO 2026-09-12 (`ecef9ea0`)
 
 Con `EMAIL_SILENT_MODE` activo, `sendEmail` devuelve
 `{ messageId: 'skipped-silent-mode' }` sin tirar error, así que
@@ -335,3 +336,114 @@ Tests: form restringido no aparece a quien no cumple; el POST de respuesta recha
 restricción fuerza requires_auth; "a nombre de" evalúa al titular; combinación de dos
 condiciones; form sin restricción intacto.
 ```
+
+### [ ] FAM-2 · Reconstruir las familias desde CCB + reglas de menores de edad
+
+```
+DATA FIX + REGLA · Muchos reportes de que las familias ya no salen en el sistema nuevo.
+Fuente: data-import/familias-ccb-2026-09-14.csv — las 1.578 familias reales de CCB (2+
+integrantes, 4.126 personas) con family_id, external_id, posición (primary contact /
+spouse / child / other), correo, teléfono y cédula.
+Script one-off, DRY-RUN por etapa con mi aprobación. EMAIL_SILENT_MODE si sigue activo.
+
+────────────────────────────────────────
+PARTE A · RECONSTRUIR LAS FAMILIAS
+1) DIAGNÓSTICO primero: de las 1.578 familias de CCB, ¿cuántas existen hoy en family_units
+   (todas juntas), cuántas parciales (algunos integrantes sí, otros no), cuántas ausentes?
+   Ese número dice el tamaño real del problema que la gente reporta.
+2) IMPORTAR/COMPLETAR: para cada familia del CSV, matchear integrantes por external_id y
+   dejarlos en UNA unidad familiar:
+   - Nadie está en familia → crearla completa.
+   - Algunos ya están en una unidad → sumar los que faltan a ESA unidad.
+   - Integrantes repartidos en DOS unidades → fusionarlas (la regla de "una persona = una
+     familia" y su fusión ya existen — reutilizala; recordá que fusiona hogares completos).
+   - Mapear la posición de CCB a la relation del sistema (primary contact → Titular,
+     spouse/child/other → los valores que use family_members).
+   - NUNCA sacar a nadie de una familia existente: este import agrega y une, no separa
+     (las separaciones son el flujo manual que ya existe).
+3) Sin match por external_id → reporte, no crear miembros.
+
+────────────────────────────────────────
+PARTE B · REGLA NUEVA DE MENORES DE EDAD (obligatoria, transversal)
+Para MENORES (birth_date < 18 años, calculado — y si no hay fecha de nacimiento, no se
+puede saber: tratarlos como caso a revisar, no asumir):
+ 1) NO crearles usuario de login: excluirlos de cualquier creación de cuentas (el script
+    masivo de AUTH-1, el botón de crear cuenta en la ficha, el flujo de check-in). Si un
+    menor ya tiene cuenta creada de corridas anteriores, reportarlos — decido yo si se
+    deshabilitan.
+ 2) NO exigirles teléfono ni correo: en todos los formularios donde esos campos son
+    obligatorios (crear miembro, completar perfil, FIN-2, check-in), para menores pasan a
+    opcionales. El contacto es el de su familia — por eso la Parte A importa: un menor
+    SIN familia vinculada queda sin vía de contacto (ese reporte ya existe:
+    scripts/output/menores-sin-familia.csv — conectalo).
+ 3) Server-side además de UI: las validaciones de zod que exigen email/phone deben
+    excepcionar menores; y el endpoint de crear cuenta debe RECHAZAR a un menor con 403 y
+    mensaje claro, no solo esconder el botón.
+ 4) LIMPIAR TELÉFONOS PRESTADOS: si el teléfono de un menor es IGUAL (normalizado) al de
+    alguno de los adultos de su familia, quitárselo al menor — es el número del papá o la
+    mamá dado en algún formulario, no un dato del menor; duplica el contacto y ensucia
+    búsquedas y dedup. Orden importa: correr DESPUÉS de la Parte A (sin familia vinculada
+    no se sabe de quién es el número). Solo se borra si el adulto de la familia lo tiene;
+    un teléfono del menor que no coincide con nadie se queda. Dry-run con la lista
+    (menor → teléfono → con cuál familiar coincide) antes de borrar, y el mismo criterio
+    aplicado a los CORREOS (menor con el correo del papá/mamá → quitárselo al menor).
+ 5) Al cumplir 18: no automatices nada todavía — pero dejá una consulta/reporte de "menores
+    que ya cumplieron 18 sin cuenta" para ofrecerles el alta cuando corresponda.
+
+VERIFICACIÓN: conteo de familias antes/después; los casos reportados por la gente (pedirme
+2-3 nombres concretos de los reportes) verificados a mano; ningún menor con cuenta nueva;
+crear un miembro menor sin correo ni teléfono funciona de punta a punta.
+```
+
+
+## Fase 17 — Hallazgos del 2026-09-15
+
+Salieron de trabajar el comunicado de Meridiano, el data fix de las series de
+charlas y el barrido de servidores contra CCB. Ninguno bloquea nada hoy.
+
+### [ ] SRV-1 · Michelle Evans perdió el rango de Coordinador Lectura
+
+CCB la tiene como **Coordinador Lectura** en Pedregal Jueves; en el sistema le
+quedó «Colaborador Lectura» y el puesto de coordinador está con cero personas.
+Es el mismo tipo de caso que Producción Técnica, ya resuelto, pero de a uno.
+Confirmar con la sede antes de tocar: pudo ser un cambio real.
+
+### [ ] SRV-2 · Ingrid Gómez y Zully Murillo tienen dos IDs en CCB
+
+Las dos están activas y en la sede correcta, pero con un `external_id` que el
+export de CCB no trae (17267 vs 11068, y 5142 vs 24238). No es un duplicado del
+sistema: es de CCB. **El arreglo es de ese lado**, acá solo hay que no volver a
+reportarlas como faltantes.
+
+### [ ] SRV-3 · 25 puestos fantasma
+
+Puestos marcados activos, con cero personas y un gemelo vivo de nombre casi
+igual («Abuelitos GAM» vs «Abuelitos», «Orador Cartago» vs «Orador Cartago GR»).
+Los dejó el renombre de puestos. No rompen nada, pero ensucian los selectores y
+hacen que una ficha se lea como inactiva cuando no lo está (ver UI-4).
+
+### [ ] UI-4 · La tabla de servicio del perfil no tiene orden
+
+`servicioRows` en `/miembros/[id]` sale en el orden que devuelva PostgREST, así
+que una fila inactiva puede aparecer arriba de la activa. Fue lo que hizo que
+María José Murillo se leyera como inactiva teniendo su «Colaborador Abuelitos»
+al día. Ordenar por activo primero y después por fecha de inicio descendente.
+
+### [ ] COM-4 · Un comunicado de más de 1.000 no sale completo de una corrida
+
+`processPendingEmails` lee los pendientes sin paginar y PostgREST corta en 1.000
+filas, así que el de Meridiano (1.300) salió en dos tandas —la segunda a mano—.
+El cron nocturno los recoge igual, pero un envío con fecha (una charla al día
+siguiente) no puede depender de eso. Paginar el `select`.
+
+### [ ] REP-3 · El reporte de charlas mezcla año calendario con semana ISO
+
+`report_charla_attendance` devuelve `yr` como año calendario y `wk` como semana
+ISO. Del 1 al 3 de enero de 2027, esos días son semana 53 **de 2026** pero van a
+aparecer como "semana 53 de 2027". Se arregla usando `isoyear` junto con `week`.
+
+### [ ] DAT-9 · `member_por_external_id()` existe y nadie la llama
+
+La función y la regla en AGENTS.md quedaron listas el 2026-09-15, pero hoy no
+hay ningún import de CCB dentro de `src/` que la use — son todos scripts
+puntuales. Cuando se escriba el próximo import, tiene que entrar por ahí.
