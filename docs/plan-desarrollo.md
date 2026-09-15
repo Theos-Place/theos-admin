@@ -428,6 +428,15 @@ específica; si no, el insert choca contra el único de `family_members`.
    meses después. Menores activos 1.088 → 1.081.
    `data-import/fechas-vaciadas-por-estudios-2026-09-15.csv`.
 
+   **Una de las 7 se revirtió el mismo día: Samantha Cubillo SÍ es niña**
+   (confirmado por el usuario). Era la única sin prueba propia — las otras
+   cuatro se matricularon con menos de 3 "años", que es imposible por sí solo;
+   ella se matriculó a los 10,7, que es raro pero no imposible. Esa diferencia
+   estaba a la vista y no se usó para frenar. Lo que está mal en su caso son las
+   MATRÍCULAS (Nivel 1, 2, 3 y Transformados), no la fecha: queda para revisar
+   si alguien matriculó a la persona equivocada o si un menor puede llevarlos
+   con permiso.
+
    Quedan **~22 con señales de adulto** (cédula, o estudios pero con 12+ años)
    sin una prueba dura: esos hay que preguntarlos uno por uno.
 
