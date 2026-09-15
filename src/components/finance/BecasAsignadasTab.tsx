@@ -26,6 +26,10 @@ import {
   type FiltroUso,
 } from '@/lib/finance/uso-de-beca'
 import { planearMovimiento, avisoDelCambio, MENSAJE_BLOQUEO, type BecaParaMover } from '@/lib/finance/cambio-de-destino-beca'
+import {
+  FILTROS_CUPO, conteosPorCupo, ETIQUETA_CUPO, BADGE_CUPO, AYUDA_CUPO,
+  type EstadoDelCupo, type FiltroCupo,
+} from '@/lib/finance/cupo-del-destino'
 
 export type BecaAsignada = {
   id: string
@@ -44,6 +48,8 @@ export type BecaAsignada = {
   used_count: number
   created_at: string
   email_sent_at: string | null
+  /** BEC-2: si la persona puede usar la beca hoy. Lo calcula el servidor. */
+  cupo: EstadoDelCupo
 }
 
 type Destino = { id: string; nombre: string; cost: number | null; currency: string | null }
@@ -53,6 +59,10 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
   const [becas, setBecas] = useState<BecaAsignada[]>([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState<FiltroUso>('sin_usar')
+  // Filtro aparte del de uso, no un valor más de la misma pastilla: las dos
+  // preguntas son distintas ("¿ya se gastó?" y "¿se puede gastar?") y cruzarlas
+  // es justo lo que hace falta — las que importan son sin usar Y sin cupo.
+  const [cupo, setCupo] = useState<FiltroCupo>('todas')
 
   // El setState va DESPUÉS del await, no en el cuerpo del efecto: hacerlo
   // sincrónico dispara el render en cascada que marca react-hooks.
@@ -72,7 +82,14 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
   // Los conteos se cuentan sobre la lista COMPLETA: si dependieran del filtro
   // activo, las otras pastillas mostrarían cero.
   const conteo = useMemo(() => conteosPorUso(becas), [becas])
-  const visibles = useMemo(() => filtrarPorUso(becas, filtro), [becas, filtro])
+  // El conteo de cupo se hace sobre las que YA pasaron el filtro de uso: la
+  // pregunta "¿cuántas sin cupo?" solo tiene sentido entre las que aún se
+  // pueden usar.
+  const porUso = useMemo(() => filtrarPorUso(becas, filtro), [becas, filtro])
+  const conteoCupo = useMemo(() => conteosPorCupo(porUso.map(b => b.cupo)), [porUso])
+  const visibles = useMemo(
+    () => (cupo === 'todas' ? porUso : porUso.filter(b => b.cupo === cupo)),
+    [porUso, cupo])
 
   const [mover, setMover] = useState<BecaAsignada | null>(null)
 
@@ -95,6 +112,29 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
         ))}
       </div>
 
+      {/* BEC-2 · Cola de las que no se pueden usar. Solo aparece si hay alguna:
+          una fila de filtros en cero es ruido permanente. */}
+      {conteoCupo.lleno + conteoCupo.sin_grupos > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mt-2">
+          <span className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cupo del destino</span>
+          {FILTROS_CUPO.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setCupo(f.id)}
+              aria-pressed={cupo === f.id}
+              title={f.id === 'todas' ? undefined : AYUDA_CUPO[f.id]}
+              className={cn(
+                'rounded-full px-3 py-1 text-[13px] font-medium border transition-all font-display',
+                cupo === f.id ? 'bg-coral text-white border-coral' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
+              )}
+            >
+              {f.label}
+              <span className={cn('ml-1.5', cupo === f.id ? 'text-white/80' : 'text-navy-light/80')}>{conteoCupo[f.id]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] mt-4">
         {cargando ? (
           <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full">
@@ -110,7 +150,7 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Persona', 'Destino', 'Descuento', 'Estado', 'Aprobada', ''].map(h => (
+                  {['Persona', 'Destino', 'Descuento', 'Estado', 'Cupo', 'Aprobada', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -129,6 +169,18 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
                         <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display whitespace-nowrap', BADGE_USO[uso])}>
                           {ETIQUETA_USO[uso]}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {b.cupo === 'no_aplica' ? (
+                          <span className="text-[13px] text-navy-light/80 font-body" aria-hidden>—</span>
+                        ) : (
+                          <span
+                            title={AYUDA_CUPO[b.cupo]}
+                            className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display whitespace-nowrap', BADGE_CUPO[b.cupo])}
+                          >
+                            {ETIQUETA_CUPO[b.cupo]}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{formatDate(b.created_at)}</td>
                       <td className="px-4 py-3 text-right">

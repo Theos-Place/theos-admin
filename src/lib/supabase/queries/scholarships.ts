@@ -10,6 +10,9 @@ import {
   checkCouponEmailSendable,
 } from '@/lib/finance/scholarship-payment-rules'
 import { formatDiscount } from '@/lib/finance/payment-breakdown'
+import {
+  estadoDelCupo, aplicaLaRevision, type EstadoDelCupo, type GrupoDelDestino,
+} from '@/lib/finance/cupo-del-destino'
 import { previewApproval } from '@/lib/finance/scholarship-approval'
 import { seRegistraElEnvio, mensajeDeOmision, type MotivoOmitido } from '@/lib/email/resultado-del-envio'
 import {
@@ -77,6 +80,9 @@ export type Scholarship = {
   /** BEC-1: registro del correo enviado con el código/aviso de beca. */
   email_sent_at: string | null
   email_sent_to: string | null
+  /** BEC-2: si la persona puede USAR la beca hoy. Solo se calcula para las que
+   *  apuntan a un plan y siguen vivas (ver `aplicaLaRevision`). */
+  cupo: EstadoDelCupo
 }
 
 /** Redondea al colón (CRC no usa decimales en la práctica de este sistema). */
@@ -156,6 +162,7 @@ function toDomain(r: DbRow, usedCount = 0): Scholarship {
     created_at: r.created_at,
     email_sent_at: r.email_sent_at,
     email_sent_to: r.email_sent_to,
+    cupo: 'no_aplica',
   }
 }
 
@@ -192,6 +199,61 @@ async function contarRedenciones(
   return counts
 }
 
+/**
+ * BEC-2 · Marcar cuáles de estas becas no se pueden usar hoy.
+ *
+ * El caso: a Karla Ávila y a María José Ruiz les aprobaron el 100% para Romanos
+ * y el único grupo abierto se llenó. La beca sigue viva, no se puede aplicar, y
+ * nadie se entera hasta que la persona escribe.
+ *
+ * Una sola consulta por todos los planes involucrados y otra por los inscritos,
+ * no una por beca: la pantalla lista decenas y esto se recalcula en cada carga.
+ */
+async function calcularCupos(
+  supabase: ReturnType<typeof createAdminClient>, becas: Scholarship[],
+): Promise<Map<string, EstadoDelCupo>> {
+  const cupos = new Map<string, EstadoDelCupo>()
+  const planes = [...new Set(becas.filter(aplicaLaRevision).map(b => b.plan_id!))]
+  if (!planes.length) return cupos
+
+  // Grupos EN MATRÍCULA de esos planes. Un grupo en curso o cerrado no recibe
+  // a nadie nuevo, así que no cuenta como destino disponible.
+  const grupos: Array<{ id: string; plan_id: string; max_students: number | null }> = []
+  for (let i = 0; i < planes.length; i += 300) {
+    const { data, error } = await supabase
+      .from('study_groups').select('id, plan_id, max_students')
+      .in('plan_id', planes.slice(i, i + 300)).eq('status', 'en_matricula')
+    if (error) throw error
+    grupos.push(...((data ?? []) as typeof grupos))
+  }
+
+  // Inscritos que OCUPAN campo. 'pendiente_de_pago' ya no se escribe desde la
+  // regla del 2026-08-04, pero las filas viejas siguen ahí y ocupan igual.
+  const inscritos = new Map<string, number>()
+  const ids = grupos.map(g => g.id)
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await supabase
+      .from('study_enrollments').select('group_id')
+      .in('group_id', ids.slice(i, i + 300)).in('status', ['enrolled', 'pendiente_de_pago'])
+    if (error) throw error
+    for (const e of (data ?? []) as Array<{ group_id: string }>) {
+      inscritos.set(e.group_id, (inscritos.get(e.group_id) ?? 0) + 1)
+    }
+  }
+
+  const porPlan = new Map<string, GrupoDelDestino[]>()
+  for (const g of grupos) {
+    const l = porPlan.get(g.plan_id) ?? []
+    l.push({ max_students: g.max_students, inscritos: inscritos.get(g.id) ?? 0 })
+    porPlan.set(g.plan_id, l)
+  }
+  for (const b of becas) {
+    if (!aplicaLaRevision(b)) continue
+    cupos.set(b.id, estadoDelCupo(porPlan.get(b.plan_id!) ?? []))
+  }
+  return cupos
+}
+
 /** Cola de gestión (pantalla /finanzas/becas). */
 export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; status?: ScholarshipStatus }): Promise<Scholarship[]> {
   const supabase = createAdminClient()
@@ -203,7 +265,9 @@ export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; s
   const rows = (data ?? []) as DbRow[]
 
   const counts = await contarRedenciones(supabase, rows.map(r => r.id))
-  return rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
+  const becas = rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
+  const cupos = await calcularCupos(supabase, becas)
+  return becas.map(b => ({ ...b, cupo: cupos.get(b.id) ?? b.cupo }))
 }
 
 /** Becas asignadas de un miembro (cualquier estado) — para "Mis becas" del perfil. */

@@ -214,29 +214,30 @@ quedó verificado contra producción con un ida y vuelta real —27 comprobacion
 incluida una beca movida de verdad y restaurada campo por campo— así que acá
 solo está lo que **falta**.
 
-### [ ] BEC-2 · Avisar cuando el destino de una beca activa se quedó sin cupo
+### [x] BEC-2 · El destino de una beca sin cupo — HECHO 2026-09-15
 
-Es el problema que destapó todo esto y sigue sin estar en pantalla. Hoy, en
-producción:
+No avisa por correo: es una señal en pantalla. La pestaña "Becas asignadas"
+ahora trae una columna **Cupo** y una segunda fila de filtros que solo aparece
+si hay algo que atender — una fila de pastillas en cero es ruido permanente.
 
-| persona | destino | grupos abiertos | con cupo |
-|---|---|---|---|
-| Karla Ávila | Romanos | 1 | **0** |
-| María José Ruiz | Romanos | 1 | **0** |
-| Monserrath Arroyo | Evangelismo | 2 | 2 |
+Distingue **"Sin cupo en el destino"** (todos los grupos abiertos están llenos,
+hay que mover la beca o abrir cupo) de **"Sin grupos abiertos"** (el plan puede
+abrir uno la otra semana, no hay nada que hacer hoy). Mezclarlos habría vuelto
+ruido la cola.
 
-Las dos primeras tienen una beca viva que no pueden usar, y nadie se entera
-hasta que la persona escribe. La pestaña "Becas asignadas" ya lista las que
-están sin usar; falta que la fila diga **"sin cupo en el destino"** y que ese
-sea un filtro, para que sea una cola de trabajo y no un hallazgo casual.
+El filtro de cupo es aparte del de uso y se cruza con él: las que importan son
+las que están sin usar Y sin cupo.
 
-La consulta ya está resuelta: por cada beca activa, contar los grupos del plan
-en `en_matricula` cuyo `max_students` es nulo o mayor a sus inscritos
-(`enrolled` + `pendiente_de_pago`). Cero = sin cupo.
+Verificado contra producción: de 6 becas vivas y sin usar, las 2 de Romanos
+—Karla Ávila y María José Ruiz— salen "Sin cupo en el destino" y las otras 4
+con cupo. Es exactamente el cuadro que describía este pendiente.
 
-CUIDADO: un plan sin NINGÚN grupo abierto no es lo mismo que uno lleno. El
-primero puede abrir la otra semana; el segundo hay que resolverlo ya. Que el
-aviso los distinga.
+Gotcha que costó una vuelta: `scholarships.entity_type` vale `'study_plan'`,
+no `'estudio'`. El dominio en español no llega hasta esa columna, y con el
+valor equivocado la revisión devolvía "no aplica" para todas. Hay un test que
+lo fija.
+
+Regla en `src/lib/finance/cupo-del-destino.ts`.
 
 ### [x] BEC-3 · `email_sent_at` se marca aunque el correo no haya salido — HECHO 2026-09-12 (`ecef9ea0`)
 
