@@ -105,21 +105,29 @@ Revisión completa de `/reportes`: qué sigue sirviendo, qué quedó desactualiz
 y qué falta. Conviene hacerlo DESPUÉS de DAT-5 y DAT-6, porque varios reportes
 leen justo esos datos y hoy dan un número que no es.
 
-### [ ] DAT-7 · Lo que la gente escribió en el campo de alergias
+### [x] DAT-7 · El campo de alergias — HECHO 2026-09-15
 
-Lo destapó el export de EVE-9. De 172 personas con algo escrito ahí:
+De 181 personas con algo escrito, se limpiaron 33 y quedaron 148 con contenido
+real. Regla en `src/lib/members/limpieza-de-alergias.ts`, con tests.
 
-- **13 escribieron una restricción alimenticia**, no una alergia: "Celiaca-No
-  gluten", "Intolerante a la lactosa", "Gluten y lacteos". Es justo el dato que
-  ahora tiene campo propio. NO se convierte solo: "Gluten" puede ser celiaquía
-  o alergia de verdad, y esa diferencia le importa a quien cocina.
-- **4 escribieron otra cosa**: 3 un correo y 1 un teléfono. Se colaron de un
-  campo equivocado en algún formulario.
-- **22 escribieron "No" o "Ninguna"**, que es ruido: ocupa la columna y hace
-  que la lista de cocina resalte a alguien que no necesita nada.
+**Solo se borró lo que no dice nada** — 32 entre "No", "N/A", "Ninguna" y
+"None" (el brief decía 22; también había ruido en inglés) — más un correo que
+la persona ya tenía idéntico en su ficha, o sea borrarlo no perdió nada.
 
-Script: `scripts/cierre-2026-09/alergias-sucias.ts`.
+**Las restricciones alimenticias se dejaron tal cual las escribieron**, por
+decisión del usuario: "Gluten" puede ser celiaquía o alergia de verdad y esa
+diferencia le importa a quien cocina, así que la traducción al campo
+`dietary_restrictions` no se hace sola. Son 13.
 
+**Cinco quedaron para revisar a mano** porque borrarlos perdería el dato: son
+lo único que hay de él. Ivannia Mora escribió su cédula y tiene el campo vacío;
+Alejandra Cadario un correo (con un guion bajo en el dominio, o sea inválido) y
+no tiene correo en la ficha; Carolina Chavarría un correo distinto al suyo; y
+dos menores tienen "4 años" y "7 años", que se coló del campo de al lado.
+
+Pendiente menor: quedaron 2 "Si" y 1 "FOTOS SI" clasificados como alergia. No
+son alergias, pero un "Si" al menos avisa que hay algo que preguntar, así que
+se dejaron a propósito en vez de borrarlos.
 
 ## Fase 14 — Pedido el 2026-09-10 (tarde)
 
