@@ -98,6 +98,8 @@ export interface FormTemplate {
   ends_at: string | null
   is_public: boolean
   requires_auth: boolean
+  /** FRM-5 · A quién se le ofrece (mismo shape que el filtro del padrón). */
+  audience_restrictions: unknown
   /** EST-10: si es false, una respuesta por persona (el llenado lo verifica). */
   allow_multiple_responses: boolean
   created_at: string

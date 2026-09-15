@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-window'
 import { ChevronLeft } from 'lucide-react'
 import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
-import { AudienceRestrictionSection } from '@/components/studies/AudienceRestrictionSection'
+import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudiencia'
 import { normalizeRestriction, type GroupRestriction } from '@/lib/studies/group-restrictions'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
@@ -371,11 +371,16 @@ function EditarForm({ group, studyType, refetch }: {
 
         {/* GRU-2 · A quién se le ofrece este grupo (opcional). */}
         {restrictionLoaded && (
-          <AudienceRestrictionSection
+          <RestriccionDeAudiencia
             value={restriction}
             onChange={setRestriction}
             defaultOpen={!!group.has_restriction}
-          />
+          
+          titulo="Restringir este grupo a… (opcional)"
+          sinRestriccion="Sin restricción: se le ofrece a cualquiera que califique para esta etapa."
+          explicacion={<>Esto <strong>se suma</strong> a los requisitos de la etapa (donante, servidor, asistencia, estudios previos), no los reemplaza. Quien no cumpla la restricción no verá este grupo entre sus opciones.</>}
+          avisoNadie="así, el grupo no se le ofrecerá a nadie."
+        />
         )}
 
         {error && <p className="text-sm text-coral font-body">{error}</p>}

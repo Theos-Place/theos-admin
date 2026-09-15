@@ -1854,6 +1854,7 @@ export type Database = {
         Row: {
           allow_multiple_responses: boolean | null
           assignment_notified_key: string | null
+          audience_restrictions: Json | null
           category: string | null
           created_at: string | null
           created_by: string | null
@@ -1876,6 +1877,7 @@ export type Database = {
         Insert: {
           allow_multiple_responses?: boolean | null
           assignment_notified_key?: string | null
+          audience_restrictions?: Json | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -1898,6 +1900,7 @@ export type Database = {
         Update: {
           allow_multiple_responses?: boolean | null
           assignment_notified_key?: string | null
+          audience_restrictions?: Json | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null

@@ -312,50 +312,42 @@ anclar el reloj pide guardarlo en estado desde un efecto, o sea un
 
 ## Fase 16 — Pedido el 2026-09-14
 
-### [ ] FRM-5 · Restricción de audiencia en formularios
+### [x] FRM-5 · Restricción de audiencia en formularios — HECHO 2026-09-15
 
-```
-FEATURE · Limitar un formulario a cierto tipo de personas: que solo le aparezca disponible
-a quien cumple la condición.
+Se reutilizó GRU-2 en serio, no se copió: la regla que estaba en
+`lib/studies/group-restrictions.ts` se extrajo a **`lib/audiencia/restriccion.ts`**
+y el evaluador a **`queries/audiencia.ts`**. Los grupos siguen entrando por su
+módulo de siempre, que ahora solo tiene lo suyo (el mensaje del bloqueo y el
+código de error). El constructor de la UI también es uno solo
+(`components/audiencia/RestriccionDeAudiencia`): lo único que cambia entre
+grupos y formularios son los textos, y van por props.
 
-Casos pedidos: solo servidores (servicio activo) · solo donantes · solo quienes tienen un
-estudio activo (y poder especificar CUÁL plan) · solo quienes ya APROBARON cierto estudio ·
-solo dirigentes. Y combinaciones.
+Migración `20260915060000`: `forms.audience_restrictions` jsonb, NULL = abierto.
 
-REUTILIZAR, NO INVENTAR — es el mismo problema ya resuelto dos veces:
- · GRU-2 (restricción de audiencia por grupo de estudio) usa el modelo de condiciones del
-   filtro del padrón (src/types/filters.ts: study, leader, service, donor, attendance…) y
-   una función pura evaluateConditions(member, conditions) per-persona. Usá EXACTAMENTE esa
-   pieza: mismo shape de condiciones, mismo evaluador, mismas etiquetas de
-   condition-labels. Si GRU-2 dejó el evaluador acoplado a grupos, extraelo a un módulo
-   compartido y que ambos lo consuman.
- · La condición de estudio ya distingue "activo/enrolled" vs "completed" y el plan
-   específico — cubre "estudio activo de tal tipo" y "ya aprobó tal estudio" sin nada nuevo.
+Las tres capas del brief, aplicadas:
+ · **Listado** — a quien no cumple, el formulario no le aparece.
+ · **Servidor** — el guard vive en `memberFormFillAccess`, que ya era el punto
+   común del endpoint y de la pantalla. La audiencia se mira ANTES del atajo
+   del staff, porque si no el "a nombre de" se saltaría la restricción.
+ · **Público** — una restricción cierra el formulario al mundo. Guardar una ya
+   fuerza `requires_auth` (en la QUERY, no en el builder: el PUT es alcanzable
+   sin pasar por la pantalla), así que la comprobación en la ruta pública es
+   redundante — y por eso está: si alguna vez llega una restricción por SQL
+   directo sin el flag, la diferencia es que cualquiera conteste.
 
-1) MIGRACIÓN: audience_restrictions (jsonb, nullable) en forms. Null = sin restricción
-   (como hoy).
-2) BUILDER: sección "¿Quién puede llenar este formulario? (opcional)" con el constructor de
-   condiciones del padrón. Resumen legible de la restricción en la lista de formularios.
-3) APLICACIÓN — tres capas, y acá está lo delicado:
-   a) LISTADO/DISPONIBILIDAD: a quien no cumple, el formulario no le aparece disponible.
-   b) SERVER-SIDE al ABRIR y al ENVIAR respuesta: 403 con mensaje claro ("Este formulario
-      es solo para servidores activos") — el link directo compartido por WhatsApp va a
-      llegar a gente que no cumple, y la respuesta de alguien fuera de la audiencia no debe
-      entrar aunque tenga la URL.
-   c) FORMULARIOS PÚBLICOS (is_public / sin sesión): una restricción de audiencia exige
-      saber QUIÉN es la persona → un formulario con restricción NO puede ser público
-      anónimo. El builder debe forzar requires_auth cuando hay restricción, con la
-      explicación de por qué.
-4) INTERACCIÓN con lo existente: el staff que llena "a nombre de" otra persona (FRM-4) —
-   la condición se evalúa sobre la persona A NOMBRE DE QUIEN se llena, no sobre el staff.
-   Los accesos puntuales por formulario (FRM-1) son de LECTURA de respuestas y no cambian.
-5) En la vista del formulario para gestores: contador de cuántas personas del padrón
-   cumplen hoy la restricción (mismo patrón que GRU-2) — detecta de una condiciones mal
-   armadas que dejan el form sin audiencia.
-Tests: form restringido no aparece a quien no cumple; el POST de respuesta rechaza con 403;
-restricción fuerza requires_auth; "a nombre de" evalúa al titular; combinación de dos
-condiciones; form sin restricción intacto.
-```
+La casilla "se puede contestar sin cuenta" desaparece cuando hay restricción:
+diría que se puede cuando el servidor va a exigir cuenta igual, y una casilla
+que miente es peor que una ausente.
+
+Probado contra producción con rollback: con "solo servidores", un servidor pasa,
+un no servidor y un anónimo se rechazan con "Este formulario es solo para:
+Servicio.", y el staff llenando a nombre de un no servidor también se rechaza.
+**Gotcha:** `updateForm` escribe por PostgREST, o sea FUERA de una transacción
+de `pg` — el rollback no lo revirtió y hubo que limpiar a mano. Para probar
+escrituras que pasan por las queries del app, la transacción no sirve de red.
+
+Queda anotado: el resumen de una condición de servicio sin área ni comité dice
+solo "Servicio". Es correcto pero vago; en uso real se elige un área.
 
 ### [ ] FAM-2 · Reconstruir las familias desde CCB + reglas de menores de edad
 

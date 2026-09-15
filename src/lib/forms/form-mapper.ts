@@ -25,6 +25,10 @@ export function formToWriteInput(body: Record<string, unknown>): FormWriteInput 
     // Abierto a cualquiera con el link. Por defecto NO: un formulario sin
     // audiencia definida no es para cualquiera (2026-08-06).
     is_public: Boolean(body.is_public),
+    // FRM-5 · A quién se le ofrece. Se manda siempre —incluso null— para que
+    // crear sin restricción deje la columna limpia; la query normaliza y, si
+    // hay condiciones, fuerza requires_auth.
+    audience_restrictions: body.audience_restrictions ?? null,
     ...heroFrom(body),
   }
 }
@@ -59,6 +63,9 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   // desde el principio y nadie la mandaba, así que quedaba en true para
   // siempre y el formulario público no se podía abrir nunca.
   if ('requires_auth' in body) out.requires_auth = Boolean(body.requires_auth)
+  // FRM-5: solo si viene la clave. `undefined` (no se tocó) y `null` (quitar la
+  // restricción) son cosas distintas y la query las distingue.
+  if ('audience_restrictions' in body) out.audience_restrictions = body.audience_restrictions ?? null
   const hero = heroFrom(body)
   if ('hero_image_url' in body) out.hero_image_url = hero.hero_image_url
   if ('hero_title' in body) out.hero_title = hero.hero_title

@@ -21,17 +21,20 @@ import { esCampoCalculado } from '@/lib/forms/computed-fields'
 //   5. Los campos calculados se ignoran: dependen de una ficha de miembro que
 //      un invitado no tiene, y aceptarlos del cliente sería dejar que quien
 //      responde escriba su propio historial.
+//   6. Un formulario con restricción de audiencia (FRM-5) NO es abierto: sin
+//      sesión no hay contra quién evaluar la condición.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const supabase = createAdminClient()
 
     const { data } = await supabase
-      .from('forms').select('id, is_public, requires_auth, is_active, starts_at, ends_at, allow_multiple_responses')
+      .from('forms').select('id, is_public, requires_auth, is_active, starts_at, ends_at, allow_multiple_responses, audience_restrictions')
       .eq('id', id).maybeSingle()
     const f = data as {
       is_public: boolean; requires_auth: boolean; is_active: boolean
       starts_at: string | null; ends_at: string | null
+      audience_restrictions: unknown
     } | null
     if (!f || !esFormularioAbierto(f)) {
       return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })

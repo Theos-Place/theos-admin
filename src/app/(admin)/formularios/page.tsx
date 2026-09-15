@@ -36,6 +36,12 @@ import { useToast } from '@/components/shared/Toast'
 import { sePuedeCompartir, formShareLink } from '@/lib/forms/share-link'
 import { accionesDelFormulario, puedeCrearFormularios } from '@/lib/forms/acciones-del-listado'
 import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
+import { normalizeRestriction, restrictionSummary } from '@/lib/audiencia/restriccion'
+
+/** Resumen legible de la restricción de audiencia, o '' si no tiene. */
+function resumenDeAudiencia(raw: unknown): string {
+  return restrictionSummary(normalizeRestriction(raw))
+}
 
 type CategoryFilter = 'all' | 'event_registration' | 'study_registration' | 'survey' | 'registration' | 'other'
 
@@ -354,6 +360,14 @@ export default function FormulariosPage() {
                             {form.entity_name && (
                               <span className="text-[13px] text-navy-light/80 font-body">
                                 {form.entity_name}
+                              </span>
+                            )}
+                            {/* FRM-5 · Quién puede llenarlo. Va en la lista y no
+                                solo adentro: una restricción que no se ve es la
+                                que nadie recuerda que está puesta. */}
+                            {resumenDeAudiencia(form.audience_restrictions) && (
+                              <span className="block text-[13px] text-coral-deep font-body">
+                                Solo para: {resumenDeAudiencia(form.audience_restrictions)}
                               </span>
                             )}
                           </div>

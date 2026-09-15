@@ -119,6 +119,11 @@ export async function POST(
       formId: id,
       memberId,
       isStaff: hasFormsModule(auth.ctx.roles) || await hasFormAccessGrant(id, auth.ctx.memberId),
+      // FRM-5 + FRM-4: si el staff llena a nombre de otro, la audiencia se
+      // evalúa sobre ESA persona. `memberId` ya es el titular cuando se llena
+      // por alguien más; se pasa explícito para que la regla no tenga que
+      // adivinarlo desde acá.
+      aNombreDeId: memberId !== auth.ctx.memberId ? memberId : null,
     })
     if (!acceso.allowed) {
       return NextResponse.json({ error: acceso.reason, code: 'formulario_no_asignado' }, { status: 403 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView, getAuthContext } from '@/lib/auth/guard'
-import { getForms, createForm, getGrantedFormIds } from '@/lib/supabase/queries/forms'
+import { getForms, createForm, getGrantedFormIds, formIdsFueraDeAudiencia } from '@/lib/supabase/queries/forms'
 import { hasFormsModule } from '@/lib/auth/forms-scope'
 import { getManagedEventIds } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
@@ -18,9 +18,15 @@ export async function GET() {
     // que tiene a cargo (FRM-1 B: el permiso del evento se hereda a su form).
     const granted = new Set(await getGrantedFormIds(ctx.memberId))
     const misEventos = new Set(await getManagedEventIds(ctx.memberId))
-    const visibles = forms.filter(f =>
+    const conAcceso = forms.filter(f =>
       granted.has(f.id)
       || (f.entity_type === 'event' && f.entity_id && misEventos.has(f.entity_id)))
+    // FRM-5 · A quien no cumple la restricción, el formulario NO le aparece.
+    // Esconderlo no es la defensa —el link se comparte y el POST tiene su
+    // propio guard— pero ofrecerle algo que va a rechazarse es peor que no
+    // ofrecerlo.
+    const fuera = await formIdsFueraDeAudiencia(ctx.memberId, conAcceso)
+    const visibles = conAcceso.filter(f => !fuera.has(f.id))
     if (visibles.length === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(visibles)
   } catch (error) {

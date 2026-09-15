@@ -2,6 +2,10 @@
 //
 // Lo que se fija acá es el contrato que usan la matrícula, el guard del endpoint
 // y la UI: qué se guarda, cómo se lee y a quién se le ofrece cada grupo.
+//
+// Entra por `./group-restrictions` a propósito, que es la superficie que usan
+// los callers: la regla en sí vive en `@/lib/audiencia/restriccion` (compartida
+// con los formularios, FRM-5) y acá se prueba tal como la consume el grupo.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {

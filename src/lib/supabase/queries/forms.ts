@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
+import { normalizeRestriction, hasRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
+import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
+import { memberPassesRestriction } from '@/lib/supabase/queries/audiencia'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -41,6 +44,8 @@ export type DbFormTemplate = {
   hero_image_url: string | null
   hero_title: string | null
   hero_subtitle: string | null
+  /** FRM-5 · A quién se le ofrece. NULL = a todos. */
+  audience_restrictions: unknown
   fields: DbFormField[]
   responses: Array<{ submitted_at: string }>
 }
@@ -62,7 +67,7 @@ export type DbFormResponse = {
 
 const FORM_SELECT = `
   id, title, description, category, entity_type, entity_id, is_active, is_public, requires_auth, allow_multiple_responses, starts_at, ends_at, created_at, created_by,
-  hero_image_url, hero_title, hero_subtitle,
+  hero_image_url, hero_title, hero_subtitle, audience_restrictions,
   fields:form_fields(
     id, field_type, label, placeholder, help_text, description, is_required,
     options, options_source, options_source_param, conditions, sort_order, scale_min, scale_max, scale_min_label, scale_max_label
@@ -210,6 +215,29 @@ export type FormWriteInput = {
   hero_image_url?: string | null
   hero_title?: string | null
   hero_subtitle?: string | null
+  /** FRM-5 · A quién se le ofrece. null limpia la restricción. */
+  audience_restrictions?: unknown
+}
+
+/**
+ * FRM-5 · Normaliza la restricción y aplica lo que arrastra.
+ *
+ * Va en la query y no en el endpoint a propósito: el builder no es el único
+ * camino que escribe un formulario, y una restricción que se guarda sin forzar
+ * `requires_auth` queda escrita y sin aplicarse — sin sesión no hay contra
+ * quién evaluar la condición. Lo peor de los dos mundos: la pantalla dice que
+ * está restringido y cualquiera lo contesta.
+ *
+ * `undefined` (la clave no venía en el patch) NO es lo mismo que `null` (quitar
+ * la restricción): con undefined no se toca nada.
+ */
+function conRestriccionNormalizada<T extends Partial<FormWriteInput>>(input: T) {
+  if (!('audience_restrictions' in input)) return input as Insertable<'forms'>
+  const restriccion = normalizeRestriction(input.audience_restrictions)
+  const ajustes = ajustesPorRestriccion(restriccion)
+  // El cast es por `audience_restrictions`, que en FormWriteInput es `unknown`
+  // porque llega del cliente: acá ya pasó por normalizeRestriction.
+  return { ...input, audience_restrictions: restriccion, ...(ajustes ?? {}) } as unknown as Insertable<'forms'>
 }
 
 async function insertFields(supabase: ReturnType<typeof createAdminClient>, formId: string, fields: FieldInput[]) {
@@ -221,7 +249,7 @@ async function insertFields(supabase: ReturnType<typeof createAdminClient>, form
 
 export async function createForm(input: FormWriteInput, fields: FieldInput[] = []): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('forms').insert(input).select('id').single()
+  const { data, error } = await supabase.from('forms').insert(conRestriccionNormalizada(input)).select('id').single()
   if (error) throw error
   const id = (data as { id: string }).id
   await insertFields(supabase, id, fields)
@@ -240,7 +268,7 @@ export async function updateForm(
 ): Promise<void> {
   const supabase = createAdminClient()
   if (Object.keys(patch).length > 0) {
-    const { error } = await supabase.from('forms').update(patch).eq('id', id)
+    const { error } = await supabase.from('forms').update(conRestriccionNormalizada(patch)).eq('id', id)
     if (error) throw error
   }
   if (fields) {
@@ -289,6 +317,59 @@ export async function deleteForm(id: string): Promise<void> {
 
 /** Registra una respuesta: crea form_response y sus form_response_values.
  *  `answers` viene keyed por field_id. */
+/**
+ * FRM-5 · ¿Esta persona está dentro de la audiencia del formulario?
+ *
+ * Server-side y no solo en el listado: el link se comparte por WhatsApp y llega
+ * a quien no cumple, y el staff responde por terceros con el mismo endpoint.
+ *
+ * Sin miembro (invitado anónimo) contra un form restringido la respuesta es NO:
+ * no hay contra quién evaluar la condición y dejarlo pasar la volvería
+ * decorativa. Por eso el builder fuerza `requires_auth`.
+ */
+export async function miembroEnLaAudiencia(
+  formId: string,
+  memberId: string | null,
+): Promise<{ permitido: boolean; restriccion: Restriccion | null }> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('forms').select('audience_restrictions').eq('id', formId).maybeSingle()
+  const restriccion = normalizeRestriction(
+    (data as { audience_restrictions?: unknown } | null)?.audience_restrictions)
+  if (!hasRestriction(restriccion)) return { permitido: true, restriccion: null }
+  if (!memberId) return { permitido: false, restriccion }
+  return { permitido: await memberPassesRestriction(memberId, restriccion), restriccion }
+}
+
+/**
+ * De una lista de formularios, los ids que esta persona NO puede ver.
+ *
+ * Una sola pasada por restricción distinta: es común que varios formularios
+ * compartan la misma audiencia ("solo servidores"), y evaluarla una vez por
+ * formulario multiplica consultas sin cambiar el resultado. Mismo criterio que
+ * `passedRestrictedGroupIds`.
+ */
+export async function formIdsFueraDeAudiencia(
+  memberId: string | null,
+  forms: Array<{ id: string; audience_restrictions?: unknown }>,
+): Promise<Set<string>> {
+  const porFirma = new Map<string, { restriccion: Restriccion; formIds: string[] }>()
+  for (const f of forms) {
+    const r = normalizeRestriction(f.audience_restrictions)
+    if (!hasRestriction(r)) continue
+    const firma = JSON.stringify(r)
+    const entry = porFirma.get(firma)
+    if (entry) entry.formIds.push(f.id)
+    else porFirma.set(firma, { restriccion: r!, formIds: [f.id] })
+  }
+  const fuera = new Set<string>()
+  for (const { restriccion, formIds } of porFirma.values()) {
+    const pasa = memberId ? await memberPassesRestriction(memberId, restriccion) : false
+    if (!pasa) for (const id of formIds) fuera.add(id)
+  }
+  return fuera
+}
+
 /** EST-10: ¿este miembro ya respondió el formulario? (dedupe del llenado). */
 /**
  * EST-10: resuelve las opciones DINÁMICAS de los campos que las declaran.

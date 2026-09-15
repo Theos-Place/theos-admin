@@ -5,7 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formFillAccess, type FillAccess } from '@/lib/forms/fill-access'
 import { isSelectionForm } from '@/lib/forms/selection-rules'
 import { CONVOKED_STATUS, CONVOKED_RECOMMENDATION_PREFIX } from '@/lib/supabase/queries/form-selection'
-import { getFormById } from '@/lib/supabase/queries/forms'
+import { getFormById, miembroEnLaAudiencia } from '@/lib/supabase/queries/forms'
+import { aQuienSeEvalua, mensajeFueraDeAudiencia } from '@/lib/forms/audiencia'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /** ¿A este miembro se le mandó un correo con el link de ESTE formulario?
@@ -30,7 +31,21 @@ export async function memberFormFillAccess(input: {
   memberId: string | null
   /** Tiene el módulo formularios o un acceso puntual a este formulario. */
   isStaff: boolean
+  /** FRM-4 · A nombre de quién se está llenando, si no es de quien teclea. */
+  aNombreDeId?: string | null
 }): Promise<FillAccess> {
+  // FRM-5 · La AUDIENCIA se mira primero y también para el staff cuando llena a
+  // nombre de otro: la restricción describe a la persona destinataria, no a
+  // quien teclea. Un coordinador llenando el formulario de un servidor no lo
+  // convierte a él en el destinatario.
+  //
+  // El staff llenando para SÍ MISMO sí pasa de largo, igual que en los demás
+  // portones de esta función: está gestionando, no participando.
+  const evaluado = aQuienSeEvalua({ autorId: input.memberId, aNombreDeId: input.aNombreDeId })
+  if (!input.isStaff || input.aNombreDeId) {
+    const { permitido, restriccion } = await miembroEnLaAudiencia(input.formId, evaluado)
+    if (!permitido) return { allowed: false, reason: mensajeFueraDeAudiencia(restriccion) }
+  }
   if (input.isStaff) return { allowed: true }
   if (!input.memberId) {
     return { allowed: false, reason: 'Necesitás entrar con tu cuenta para llenar este formulario.' }

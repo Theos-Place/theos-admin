@@ -21,7 +21,7 @@ import { minEnrollmentEnd, maxEnrollmentEnd } from '@/lib/studies/enrollment-win
 import { ChevronLeft, CheckCircle } from 'lucide-react'
 import type { GroupStatus } from '@/types/study'
 import { canAdvanceLeaderStep, leaderStepHint } from '@/lib/studies/leader-step'
-import { AudienceRestrictionSection } from '@/components/studies/AudienceRestrictionSection'
+import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudiencia'
 import type { GroupRestriction } from '@/lib/studies/group-restrictions'
 
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
@@ -503,7 +503,12 @@ export default function NuevoGrupoPage() {
           </div>
 
           {/* GRU-2 · A quién se le ofrece este grupo (opcional). */}
-          <AudienceRestrictionSection value={restriction} onChange={setRestriction} />
+          <RestriccionDeAudiencia value={restriction} onChange={setRestriction} 
+          titulo="Restringir este grupo a… (opcional)"
+          sinRestriccion="Sin restricción: se le ofrece a cualquiera que califique para esta etapa."
+          explicacion={<>Esto <strong>se suma</strong> a los requisitos de la etapa (donante, servidor, asistencia, estudios previos), no los reemplaza. Quien no cumpla la restricción no verá este grupo entre sus opciones.</>}
+          avisoNadie="así, el grupo no se le ofrecerá a nadie."
+        />
 
           <div className="flex flex-col items-end gap-1.5 pt-2">
             {!step1.study_type_id && (

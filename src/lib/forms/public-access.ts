@@ -13,16 +13,34 @@
 // Y uno con requires_auth en false pero sin is_public NO se abre: sería un
 // formulario de convocatoria expuesto sin filtro, que es la peor combinación
 // posible y la más fácil de dejar por accidente.
+//
+// FRM-5 agrega una tercera condición: una restricción de audiencia CIERRA el
+// formulario al mundo. Guardar una restricción ya fuerza requires_auth, así que
+// en la práctica esto es redundante — y por eso mismo está: si alguna vez una
+// restricción llega por otro camino (SQL directo, una fila vieja) sin el flag,
+// la diferencia entre redundante y ausente es que cualquiera conteste un
+// formulario que dice ser solo para servidores.
 
 export type FormPublicFlags = {
   is_public: boolean
   requires_auth: boolean
   is_active: boolean
+  /** FRM-5. Cualquier valor no nulo cierra el formulario al público. */
+  audience_restrictions?: unknown
 }
 
 /** ¿Se puede abrir sin cuenta? */
 export function esFormularioAbierto(f: FormPublicFlags): boolean {
-  return f.is_active && f.is_public && !f.requires_auth
+  return f.is_active && f.is_public && !f.requires_auth && !tieneAudienciaRestringida(f)
+}
+
+/** Una restricción con condiciones. Se mira el contenido y no solo el `null`:
+ *  un `{conditions: []}` guardado por un builder es "sin restricción". */
+export function tieneAudienciaRestringida(f: FormPublicFlags): boolean {
+  const r = f.audience_restrictions
+  if (!r || typeof r !== 'object') return false
+  const cs = (r as { conditions?: unknown }).conditions
+  return Array.isArray(cs) && cs.length > 0
 }
 
 export type EnvioInvitado = {

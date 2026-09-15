@@ -1,14 +1,18 @@
 'use client'
 
-// GRU-2 · "Restringir este grupo a… (opcional)".
+// "Restringir esto a… (opcional)".
 //
 // Es el MISMO constructor de condiciones del padrón (AdvancedFilters), acotado a
 // los tipos que describen una audiencia. Mientras se arma, muestra cuánta gente
 // del padrón cumple: una condición demasiado estrecha se ve al instante y no
-// cuando nadie se matriculó.
+// cuando ya nadie pudo entrar.
 //
-// El componente no guarda nada: le devuelve al form la restricción normalizada
-// (o null) y el form la manda con el resto del grupo.
+// Nació con GRU-2 para los grupos de estudio y lo reusa FRM-5 para los
+// formularios. Lo que cambia entre los dos es solo el TEXTO, así que viene por
+// props: el comportamiento no se duplica.
+//
+// El componente no guarda nada: le devuelve al padre la restricción (o null) y
+// el padre la manda con el resto del objeto.
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ChevronDown, ChevronUp, Users, Loader2 } from 'lucide-react'
 import { AdvancedFilters } from '@/components/members/AdvancedFilters'
@@ -16,17 +20,27 @@ import { cn } from '@/lib/utils'
 import type { FilterCondition, AddableCondition } from '@/types/filters'
 import {
   ALLOWED_RESTRICTION_TYPES, restrictionSummary, hasRestriction,
-  type GroupRestriction,
-} from '@/lib/studies/group-restrictions'
+  type Restriccion,
+} from '@/lib/audiencia/restriccion'
 
 type Props = {
-  value: GroupRestriction | null
-  onChange: (r: GroupRestriction | null) => void
-  /** Arranca abierta (al editar un grupo que YA tiene restricción). */
+  value: Restriccion | null
+  onChange: (r: Restriccion | null) => void
+  /** Arranca abierta (al editar algo que YA tiene restricción). */
   defaultOpen?: boolean
+  /** Título del acordeón. Ej: "Restringir este grupo a… (opcional)". */
+  titulo: string
+  /** Qué se dice cuando NO hay restricción. */
+  sinRestriccion: string
+  /** Párrafo de contexto: qué implica restringir ESTE objeto. */
+  explicacion: React.ReactNode
+  /** Qué pasa si la restricción no alcanza a nadie. */
+  avisoNadie: string
 }
 
-export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Props) {
+export function RestriccionDeAudiencia({
+  value, onChange, defaultOpen, titulo, sinRestriccion, explicacion, avisoNadie,
+}: Props) {
   const [open, setOpen] = useState(!!defaultOpen)
   const [count, setCount] = useState<number | null>(null)
   const [counting, setCounting] = useState(false)
@@ -57,7 +71,7 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
     let vivo = true
     const t = setTimeout(() => {
       setCounting(true)
-      fetch('/api/studies/groups/restriction-count', {
+      fetch('/api/audience/count', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ restriction: value }),
@@ -81,11 +95,9 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-surface-low transition-colors"
       >
         <span>
-          <span className="text-sm text-navy font-display">Restringir este grupo a… (opcional)</span>
+          <span className="text-sm text-navy font-display">{titulo}</span>
           <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">
-            {resumen
-              ? `Solo para: ${resumen}`
-              : 'Sin restricción: se le ofrece a cualquiera que califique para esta etapa.'}
+            {resumen ? `Solo para: ${resumen}` : sinRestriccion}
           </span>
         </span>
         {open ? <ChevronUp size={18} className="text-navy-light/80 shrink-0" /> : <ChevronDown size={18} className="text-navy-light/80 shrink-0" />}
@@ -93,11 +105,7 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
 
       {open && (
         <div className="px-5 pb-5 space-y-3">
-          <p className="text-[13px] text-navy-light/80 font-body">
-            Esto <strong>se suma</strong> a los requisitos de la etapa (donante, servidor,
-            asistencia, estudios previos), no los reemplaza. Quien no cumpla la restricción
-            no verá este grupo entre sus opciones.
-          </p>
+          <p className="text-[13px] text-navy-light/80 font-body">{explicacion}</p>
 
           <AdvancedFilters
             conditions={conditions}
@@ -116,7 +124,7 @@ export function AudienceRestrictionSection({ value, onChange, defaultOpen }: Pro
                 : count === null
                   ? <><Users size={14} className="shrink-0" /> No se pudo calcular el alcance.</>
                   : count === 0
-                    ? <><Users size={14} className="shrink-0" /> <span><strong>Nadie</strong> del padrón cumple esta restricción — así, el grupo no se le ofrecerá a nadie.</span></>
+                    ? <><Users size={14} className="shrink-0" /> <span><strong>Nadie</strong> del padrón cumple esta restricción — {avisoNadie}</span></>
                     : <><Users size={14} className="shrink-0" /> <span><strong>{count.toLocaleString('es-CR')}</strong> {count === 1 ? 'persona cumple' : 'personas cumplen'} esta restricción.</span></>}
             </div>
           )}

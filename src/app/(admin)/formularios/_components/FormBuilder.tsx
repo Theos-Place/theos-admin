@@ -19,6 +19,9 @@ import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
 import { useAuth } from '@/hooks/useAuth'
 import { puedeRepartirAcceso } from '@/lib/forms/acciones-del-listado'
+import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudiencia'
+import { normalizeRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
+import { exigeIdentificarse, AVISO_EXIGE_CUENTA } from '@/lib/forms/audiencia'
 
 // Tipos estructurales que no exigen label (el separador de página es un divisor).
 type FormStatus = 'draft' | 'active'
@@ -124,6 +127,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   /** `requires_auth` en la tabla: si hace falta cuenta para contestar. Existía
    *  desde el principio, en true en todos los formularios, y nadie la leía. */
   const [pideCuenta, setPideCuenta]   = useState(true)
+  /** FRM-5 · A quién se le ofrece este formulario. null = a todos. */
+  const [audiencia, setAudiencia]     = useState<Restriccion | null>(null)
   /** El link que se comparte. Se arma con el origen real y no con una constante
    *  para que en Preview no se copie el de producción. */
   const linkPublico = typeof window !== 'undefined' && formId
@@ -154,6 +159,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setStatus(f.is_active ? 'active' : 'draft')
         setIsPublic(f.is_public)
         setPideCuenta(f.requires_auth ?? true)
+        setAudiencia(normalizeRestriction((db as { audience_restrictions?: unknown }).audience_restrictions))
         setWindowStart(isoToWindowYmd(f.starts_at))
         setWindowEnd(isoToWindowYmd(f.ends_at))
         setFields(f.fields)
@@ -215,7 +221,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       name, description, category, is_active: isActive, is_public: isPublic, fields,
       // Solo tiene sentido no pedir cuenta si además está abierto: un
       // formulario de convocatoria sin cuenta sería expuesto sin filtro.
-      requires_auth: isPublic ? pideCuenta : true,
+      // FRM-5 · Con restricción SIEMPRE pide cuenta: sin saber quién es la
+      // persona no hay contra quién evaluar la condición. El servidor lo fuerza
+      // igual; acá se hace para que lo guardado y lo que se ve digan lo mismo.
+      requires_auth: exigeIdentificarse(audiencia) ? true : (isPublic ? pideCuenta : true),
+      audience_restrictions: audiencia,
       starts_at: windowStart || null,
       ends_at: windowEnd || null,
       hero_image_url: hero.hero_image_url ?? null,
@@ -421,8 +431,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
             {/* Sin cuenta: solo aparece si ya está abierto. Las dos banderas se
                 exigen juntas (ver esFormularioAbierto), y ofrecerla suelta
-                invitaría a dejar un formulario de convocatoria al aire. */}
-            {isPublic && (
+                invitaría a dejar un formulario de convocatoria al aire.
+                Con restricción de audiencia no se ofrece: la casilla diría que
+                se puede contestar sin cuenta cuando el servidor va a exigirla
+                igual, y una casilla que miente es peor que una ausente. */}
+            {isPublic && !exigeIdentificarse(audiencia) && (
               <label className="mt-2.5 flex items-start gap-2.5 cursor-pointer pl-6">
                 <input
                   type="checkbox"
@@ -443,7 +456,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
 
             {/* El link para compartir: solo cuando de verdad se puede abrir sin
                 cuenta. Mostrarlo antes repartiría un link que pide login. */}
-            {isPublic && !pideCuenta && formId && (
+            {isPublic && !pideCuenta && !exigeIdentificarse(audiencia) && formId && (
               <div className="mt-3 pt-3 border-t border-[var(--outline-variant)]">
                 <p className="text-sm text-navy font-body mb-1.5">Link público</p>
                 <div className="flex items-center gap-2">
@@ -471,6 +484,25 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                 </p>
               </div>
             )}
+
+            {/* FRM-5 · A quién se le ofrece. Va acá, pegado a "quién puede
+                llenarlo", porque es la misma pregunta con más precisión. */}
+            <div className="mt-3 pt-3 border-t border-[var(--outline-variant)]">
+              <RestriccionDeAudiencia
+                value={audiencia}
+                onChange={setAudiencia}
+                defaultOpen={exigeIdentificarse(audiencia)}
+                titulo="¿Quién puede llenar este formulario? (opcional)"
+                sinRestriccion="Sin restricción: lo puede llenar cualquiera que tenga acceso al formulario."
+                explicacion={<>A quien no cumpla, el formulario <strong>no le aparece</strong> y tampoco se le acepta la respuesta si le llega el link por otro lado.</>}
+                avisoNadie="así, nadie va a poder contestarlo."
+              />
+              {exigeIdentificarse(audiencia) && (
+                <p className="mt-2 rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-body">
+                  {AVISO_EXIGE_CUENTA}
+                </p>
+              )}
+            </div>
 
             {/* Ventana de vigencia: pasada la fecha de fin, el formulario se
                 cierra solo (estado derivado; no acepta más respuestas). */}
