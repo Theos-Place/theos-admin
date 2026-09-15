@@ -19,6 +19,8 @@ import { normalizeCedula, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedu
 import { PageContainer } from '@/components/layout/PageContainer'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
+import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
+import { todayCR } from '@/lib/format'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
 // no forma parte del bundle inicial de la página.
@@ -84,7 +86,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const { can } = usePermissions()
   const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
   const { event, loading, refetch } = useEvent(id)
-  // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=), para el header.
+  // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=).
   const occParam = useSearchParams().get('date')
   // Subevento destino del check-in (null = evento padre).
   const [targetSub, setTargetSub] = useState<string | null>(null)
@@ -119,10 +121,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Es copia local porque cada registro se agrega de forma optimista antes de
   // que responda el server. El ajuste va durante el render y no en un efecto:
   // así la lista nueva no aparece un frame después de la vieja.
+  /**
+   * El día de ESTA ocurrencia. Un recurrente es UNA fila con una regla y todos
+   * sus check-ins cuelgan de ahí, así que sin filtrar por día la pantalla
+   * mostraba los de todas las semanas juntos — el 15 de setiembre la Charla
+   * Meridiano Martes decía 189 y eran de la semana anterior. Y peor: esa lista
+   * decide si alguien "ya estaba registrado", o sea quien vino una vez no podía
+   * volver a marcar.
+   */
+  const diaOcurrencia = diaQueSeEstaViendo(occParam, !!event?.is_recurring, todayCR())
+
   const [eventoPrevio, setEventoPrevio] = useState(event)
   if (eventoPrevio !== event) {
     setEventoPrevio(event)
-    if (event) setCheckins(event.checkins)
+    if (event) setCheckins(checkinsDeLaOcurrencia(event.checkins, event.is_recurring, diaOcurrencia))
   }
 
   // Al seleccionar un miembro, consulta si es servidor de los comités organizadores.
@@ -436,7 +448,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Eventos pagos: el gate "solo inscritos" vive en persistCheckin (choke point)
   // y en el server; un no inscrito cae en requestCobro (cobro en sitio, Fase 2).
   // Fecha mostrada: la de la ocurrencia (?date=) si viene, si no la del evento.
-  const eventDate = occParam ? new Date(occParam) : new Date(event.start_at)
+  const eventDate = diaOcurrencia ? new Date(`${diaOcurrencia}T12:00:00`) : new Date(event.start_at)
   const headerDate = isNaN(eventDate.getTime())
     ? ''
     : eventDate.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
