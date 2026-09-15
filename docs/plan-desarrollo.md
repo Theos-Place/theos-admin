@@ -407,11 +407,21 @@ específica; si no, el insert choca contra el único de `family_members`.
        Daniela Céspedes "nació" el mismo día que se registró y Vanessa Fernández
        un día antes. No son recién nacidos: es la fecha de REGISTRO metida en el
        campo de nacimiento.
-   No se corrigió nada: la fecha real no está en ninguna fuente que tengamos,
-   hay que preguntarla. Una opción sin preguntar es **vaciar** la fecha de los
-   19 del último grupo — el sistema trata "sin fecha" como adulto y una fecha
-   falsa hace daño activo (les quita la cuenta y los saca de los formularios),
-   mientras que NULL solo dice la verdad: no se sabe.
+   **Los 19 del último grupo quedaron con la fecha VACÍA (aplicado 2026-09-15).**
+   La fecha real no está en ninguna fuente, y una falsa hace daño activo: les
+   quita la cuenta y los saca de los formularios que piden correo. NULL solo
+   dice la verdad. Los 19 tienen correo o teléfono propio —varios corporativos,
+   `bzuniga@specialized.co.cr`, `fherrera@jaamcr.com`— y 8 llevaron estudios:
+   ninguno es un bebé. Sin esa segunda señal no se tocó a nadie, porque una
+   iglesia sí registra recién nacidos. Menores activos 1.107 → 1.088, menores
+   sin familia 281 → 262.
+
+   Respaldo en `data-import/fechas-vaciadas-2026-09-15.csv` **y solo ahí**: el
+   trigger `audit_members` guarda `old_data` en null, así que para un vaciado el
+   audit_log no sirve de respaldo. Comprobado sobre este mismo cambio.
+
+   Quedan **29 con señales de adulto** (estudios o cédula) pero sin la marca de
+   la fecha de registro: esos hay que preguntarlos uno por uno.
 
 **Sobre DAT-8:** reconstruir las familias rescata solo **2** de los 55 menores
 de 12 con correo y sin familia (Ana Lucía Alvarado y Layla Castro). Los otros 53
