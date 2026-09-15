@@ -183,7 +183,7 @@ export default function ReporteAsistenciaPage() {
       <UpdatingBadge show={loading} />
       <ReportShell
         title="Crecimiento y Asistencia"
-        description="Personas nuevas y check-ins a charlas por sede. Fuente: perfiles (fecha de registro) y eventos de tipo charla; la sede se deriva de la asistencia."
+        description="Personas nuevas y check-ins a charlas por sede. La fecha de alta es la primera señal de la persona (perfil, check-in o matrícula) y la sede se deriva de la asistencia."
         years={report.years}
         year={report.year}
         onYear={onYear}
@@ -365,7 +365,7 @@ export default function ReporteAsistenciaPage() {
         {tab === 'crecimiento' && (
           <div role="tabpanel" aria-label="Crecimiento" className="space-y-3">
             <p className="text-[13px] text-navy-light/80 font-body">
-              Crecimiento <strong className="text-navy-light/90">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = fecha de registro del perfil. Objetivo #1 del año: crecer en sedes.
+              Crecimiento <strong className="text-navy-light/90">bruto</strong> (solo altas, no se restan bajas). “Nuevo” = la primera vez que sabemos de la persona: su perfil, su primer check-in o su primera matrícula, lo que haya pasado antes. Objetivo #1 del año: crecer en sedes.
             </p>
 
             {/* KPIs de crecimiento */}
@@ -432,7 +432,7 @@ export default function ReporteAsistenciaPage() {
                 subtitle={`Ritmo de captación de personas nuevas (${sedeLabel}).`}
                 empty={growth.totalNew === 0}
                 height={210}
-                footnote="Cuenta cada persona en el mes en que se registró su perfil."
+                footnote="Cuenta cada persona en el mes de su primera señal: perfil, primer check-in o primera matrícula. No es la fecha en que se creó la ficha — a quien entró por un import se le creó meses después."
               >
                 <ResponsiveContainer>
                   <BarChart data={growthMonthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>

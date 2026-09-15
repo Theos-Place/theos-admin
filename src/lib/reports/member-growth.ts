@@ -3,9 +3,16 @@
 // created_mo, title, new_members). Módulo PURO (sin React, sin Supabase): la
 // sede se deriva del título con el mismo diccionario canónico que asistencia.
 //
-// "Nuevo" = fecha de creación del perfil (members.created_at). La sede es la
-// DOMINANTE por asistencia a charlas (la sede a la que más asistió). Si nunca
-// asistió, cae en "Sin sede". Crecimiento BRUTO: solo altas, sin restar bajas.
+// "Nuevo" = la primera señal real de la persona: lo más temprano entre la
+// creación de su perfil, su primer check-in y su primera matrícula. NO es
+// members.created_at a secas: esa columna dice cuándo se creó la FILA, y para
+// quien entró por una carga masiva eso puede ser meses después. El síntoma que
+// lo destapó fue julio de 2026 en cero — la ventana de la migración, cuando
+// nadie se creaba en este sistema (ver la migración 20260915010000).
+//
+// La sede es la DOMINANTE por asistencia a charlas (la sede a la que más
+// asistió). Si nunca asistió, cae en "Sin sede". Crecimiento BRUTO: solo altas,
+// sin restar bajas.
 
 import { sedeFromTitle, ALL_SEDES } from '@/lib/reports/charla-attendance'
 
