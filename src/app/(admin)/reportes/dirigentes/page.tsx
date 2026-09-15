@@ -18,14 +18,12 @@ import {
 import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
 import type { DirigentesReport, LeaderHistoryPoint } from '@/lib/reports/dirigentes'
+import {
+  NAVY, TEAL, EJE_TICK, ESTILO_TOOLTIP, ETIQUETA_VALOR,
+  ETIQUETA_CATEGORIA, anchoDeEjeCategoria,
+} from '@/lib/reports/paleta'
 
-const NAVY = '#161440'
-const TEAL = '#3B7579'
 
-const tooltipStyle = {
-  borderRadius: 12, border: '1px solid var(--outline-variant)',
-  fontSize: 12, fontFamily: 'var(--font-body)',
-}
 const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
 
 type Payload = DirigentesReport & { ver_matiz: boolean }
@@ -186,11 +184,11 @@ export default function ReporteDirigentesPage() {
         <ResponsiveContainer>
           <BarChart data={estadoData} layout="vertical" margin={{ left: 12, right: 32 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-            <YAxis type="category" dataKey="estado" width={100} tick={{ fontSize: 12 }} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(Number(v))} />
+            <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
+            <YAxis type="category" dataKey="estado" width={anchoDeEjeCategoria(estadoData.map(d => d.estado))} tick={ETIQUETA_CATEGORIA} interval={0} />
+            <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
             <Bar dataKey="total" fill={NAVY} radius={[0, 6, 6, 0]} name="Dirigentes">
-              <LabelList dataKey="total" position="right" style={{ fontSize: 12, fill: NAVY }} />
+              <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -208,11 +206,11 @@ export default function ReporteDirigentesPage() {
           <ResponsiveContainer>
             <BarChart data={report.capacitados} layout="vertical" margin={{ left: 12, right: 32 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(Number(v))} />
+              <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(report.capacitados.map(d => d.name))} tick={ETIQUETA_CATEGORIA} interval={0} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
               <Bar dataKey="total" fill={NAVY} radius={[0, 6, 6, 0]} name="Capacitados">
-                <LabelList dataKey="total" position="right" style={{ fontSize: 11, fill: NAVY }} />
+                <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -228,11 +226,11 @@ export default function ReporteDirigentesPage() {
           <ResponsiveContainer>
             <BarChart data={report.disponibles_por_estudio} layout="vertical" margin={{ left: 12, right: 32 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(Number(v))} />
+              <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(report.disponibles_por_estudio.map(d => d.name))} tick={ETIQUETA_CATEGORIA} interval={0} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
               <Bar dataKey="total" fill={TEAL} radius={[0, 6, 6, 0]} name="Disponibles">
-                <LabelList dataKey="total" position="right" style={{ fontSize: 11, fill: NAVY }} />
+                <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -252,12 +250,12 @@ export default function ReporteDirigentesPage() {
         <ResponsiveContainer>
           <BarChart data={report.por_zona} layout="vertical" margin={{ left: 12, right: 32 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-            <YAxis type="category" dataKey="zona" width={150} tick={{ fontSize: 11 }} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v) => fmt(Number(v))} />
+            <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
+            <YAxis type="category" dataKey="zona" width={anchoDeEjeCategoria(report.por_zona.map(d => d.zona))} tick={ETIQUETA_CATEGORIA} interval={0} />
+            <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
             <Bar dataKey="dando_ahora" stackId="z" fill={NAVY} radius={[0, 0, 0, 0]} name="Dando ahora" />
             <Bar dataKey="disponibles_sin_grupo" stackId="z" fill={TEAL} radius={[0, 6, 6, 0]} name="Disponibles">
-              <LabelList dataKey="activos" position="right" style={{ fontSize: 11, fill: NAVY }} />
+              <LabelList dataKey="activos" position="right" style={ETIQUETA_VALOR} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,10 @@ export function ReportShell({
   children: React.ReactNode
 }) {
   const [sedeQuery, setSedeQuery] = useState('')
+  // Los años SIEMPRE de menor a mayor. Cada reporte los arma por su lado y
+  // algunos venían al revés: la línea de tiempo leída de derecha a izquierda
+  // obliga a releer los botones cada vez que se cambia de pestaña.
+  const aniosOrdenados = useMemo(() => [...years].sort((a, b) => a - b), [years])
   const q = norm(sedeQuery)
   const filteredSedes = q ? sedes.filter(s => norm(s).includes(q)) : sedes
   const fmt = (n: number | undefined) => (n == null ? undefined : n.toLocaleString('es-CR'))
@@ -48,7 +52,7 @@ export function ReportShell({
 
       {/* Filtro de año (afecta todo el reporte) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {years.map(y => (
+        {aniosOrdenados.map(y => (
           <button
             key={y}
             onClick={() => onYear(y)}

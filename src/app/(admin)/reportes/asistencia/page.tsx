@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, Legend, Cell,
+  ReferenceLine, Legend, Cell, LabelList,
 } from 'recharts'
 import { ReportShell } from '@/components/reportes/ReportShell'
 import { KpiCard } from '@/components/reportes/KpiCard'
@@ -16,24 +16,14 @@ import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { useSearchParams } from 'next/navigation'
 import type { DetalleDeSemana } from '@/lib/reports/semana-detalle'
+import {
+  CORAL, CORAL_ATENUADO, PARCIAL_RELLENO, PARCIAL_BORDE, NAVY, GRIS,
+  COLORES_POR_ANIO, EJE_TICK, REJILLA, CURSOR_BARRA,
+  ESTILO_TOOLTIP, ETIQUETA_VALOR, ETIQUETA_CATEGORIA,
+  anchoDeEjeCategoria, margenParaEtiquetas,
+} from '@/lib/reports/paleta'
 
-const NAVY = '#161440'
-const CORAL = '#D63E3D'
-const CORAL_DIM = 'rgba(239,85,84,0.55)' // coral apagado: semanas no destacadas
-const CORAL_SOFT = '#F4B6B5' // coral claro: semanas parciales
-const TEAL = '#3B7579'
-// Color por posición de año en el comparativo (más viejo → más nuevo). El AÑO
-// SELECCIONADO es siempre el último ⇒ CORAL, y se usa el mismo coral en todos
-// los gráficos del año seleccionado (semanal, crecimiento) para consistencia.
-const YEAR_COLORS = [TEAL, NAVY, CORAL]
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-
-const tooltipStyle = {
-  borderRadius: 12,
-  border: '1px solid var(--outline-variant)',
-  fontSize: 12,
-  fontFamily: 'var(--font-body)',
-}
 
 export default function ReporteAsistenciaPage() {
   const [report, setReport] = useState<CharlaReport | null>(null)
@@ -251,11 +241,11 @@ export default function ReporteAsistenciaPage() {
                 >
                   <ResponsiveContainer>
                     <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-                      <XAxis dataKey="week" interval={xTickInterval} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+                      <XAxis dataKey="week" interval={xTickInterval} tick={EJE_TICK} tickLine={false} axisLine={false} />
+                      <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
                       <Tooltip
-                        contentStyle={tooltipStyle}
+                        contentStyle={ESTILO_TOOLTIP}
                         formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
                         labelFormatter={(l) => `Semana ${l}`}
                       />
@@ -269,7 +259,16 @@ export default function ReporteAsistenciaPage() {
                         }}
                       >
                         {report.weekly.map(w => (
-                          <Cell key={w.week} fill={w.partial ? CORAL_SOFT : w.week === highlightWeek ? CORAL : CORAL_DIM} />
+                          // La semana parcial se marca con relleno claro Y borde
+                          // punteado: solo con el relleno no llegaba a 3:1 y se
+                          // perdía contra el blanco de la tarjeta.
+                          <Cell
+                            key={w.week}
+                            fill={w.partial ? PARCIAL_RELLENO : w.week === highlightWeek ? CORAL : CORAL_ATENUADO}
+                            stroke={w.partial ? PARCIAL_BORDE : undefined}
+                            strokeWidth={w.partial ? 1.5 : undefined}
+                            strokeDasharray={w.partial ? '3 2' : undefined}
+                          />
                         ))}
                       </Bar>
                     </BarChart>
@@ -307,15 +306,31 @@ export default function ReporteAsistenciaPage() {
                 height={Math.max(180, rankingAMostrar.length * 26)}
               >
                 <ResponsiveContainer>
-                  <BarChart layout="vertical" data={rankingAMostrar} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Check-ins']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
+                  {/* El eje se ancha según el nombre más largo para que cada
+                      sede quepa en UNA línea, y el total se imprime al final de
+                      la barra: en tablet no hay hover y comparar dos sedes
+                      obligaba a pasar por encima de cada una. */}
+                  <BarChart
+                    layout="vertical" data={rankingAMostrar}
+                    margin={{ top: 4, right: margenParaEtiquetas(rankingAMostrar.map(s => s.total)), left: 8, bottom: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} horizontal={false} />
+                    <XAxis type="number" tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <YAxis
+                      type="category" dataKey="sede"
+                      width={anchoDeEjeCategoria(rankingAMostrar.map(s => s.sede))}
+                      tick={ETIQUETA_CATEGORIA} tickLine={false} axisLine={false} interval={0}
+                    />
+                    <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Check-ins']} cursor={CURSOR_BARRA} />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
                       {rankingAMostrar.map(s => (
                         <Cell key={s.sede} fill={report.sede !== ALL_SEDES && s.sede === report.sede ? CORAL : NAVY} />
                       ))}
+                      <LabelList
+                        dataKey="total" position="right"
+                        formatter={(v) => Number(v).toLocaleString('es-CR')}
+                        style={ETIQUETA_VALOR}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -331,13 +346,13 @@ export default function ReporteAsistenciaPage() {
               >
                 <ResponsiveContainer>
                   <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+                    <XAxis dataKey="month" tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={ESTILO_TOOLTIP} />
                     <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-body)' }} />
                     {report.monthlyYears.map((y, i) => (
-                      <Bar key={y} dataKey={String(y)} name={String(y)} fill={YEAR_COLORS[i % YEAR_COLORS.length]} radius={[3, 3, 0, 0]} maxBarSize={22} />
+                      <Bar key={y} dataKey={String(y)} name={String(y)} fill={COLORES_POR_ANIO[i % COLORES_POR_ANIO.length]} radius={[3, 3, 0, 0]} maxBarSize={22} />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
@@ -385,15 +400,27 @@ export default function ReporteAsistenciaPage() {
                 footnote='Sede = la de mayor asistencia a charlas. “Sin sede” (al final) = sin asistencia registrada.'
               >
                 <ResponsiveContainer>
-                  <BarChart layout="vertical" data={bySedeOrdered} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis type="category" dataKey="sede" width={110} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
+                  <BarChart
+                    layout="vertical" data={bySedeOrdered}
+                    margin={{ top: 4, right: margenParaEtiquetas(bySedeOrdered.map(s => s.total)), left: 8, bottom: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} horizontal={false} />
+                    <XAxis type="number" tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <YAxis
+                      type="category" dataKey="sede"
+                      width={anchoDeEjeCategoria(bySedeOrdered.map(s => s.sede))}
+                      tick={ETIQUETA_CATEGORIA} tickLine={false} axisLine={false} interval={0}
+                    />
+                    <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} cursor={CURSOR_BARRA} />
                     <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={26}>
                       {bySedeOrdered.map(s => (
-                        <Cell key={s.sede} fill={growth.sede !== ALL_SEDES && s.sede === growth.sede ? CORAL : s.sede === NO_SEDE ? '#A9A8BE' : NAVY} />
+                        <Cell key={s.sede} fill={growth.sede !== ALL_SEDES && s.sede === growth.sede ? CORAL : s.sede === NO_SEDE ? GRIS : NAVY} />
                       ))}
+                      <LabelList
+                        dataKey="total" position="right"
+                        formatter={(v) => Number(v).toLocaleString('es-CR')}
+                        style={ETIQUETA_VALOR}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -409,10 +436,10 @@ export default function ReporteAsistenciaPage() {
               >
                 <ResponsiveContainer>
                   <BarChart data={growthMonthlyData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+                    <XAxis dataKey="month" tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
                     <Bar dataKey="total" fill={CORAL} radius={[4, 4, 0, 0]} maxBarSize={28} />
                   </BarChart>
                 </ResponsiveContainer>

@@ -13,16 +13,12 @@ import { cn } from '@/lib/utils'
 import {
   MAIN_GROUPS, G1_SUBS, GROUP_LABELS, type MainGroup, type RetencionReport,
 } from '@/lib/reports/retencion'
+import {
+  NAVY, CORAL, TEAL, EJE_TICK, REJILLA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
+} from '@/lib/reports/paleta'
 
-const NAVY = '#161440'
-const CORAL = '#D63E3D'
-const TEAL = '#3B7579'
 const G1_COLORS: Record<string, string> = { G1a: TEAL, G1b: NAVY, G1c: CORAL }
 
-const tooltipStyle = {
-  borderRadius: 12, border: '1px solid var(--outline-variant)',
-  fontSize: 12, fontFamily: 'var(--font-body)',
-}
 // Defensivo: un valor faltante muestra 0 en vez de tumbar la pantalla (p. ej.
 // si el cache quedó con un formato distinto tras un deploy).
 const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
@@ -137,12 +133,12 @@ export default function ReporteRetencionPage() {
         <ChartCard title={`Asistentes únicos por año — ${group}`} subtitle="Personas distintas que asistieron al menos una vez ese año." height={260}>
           <ResponsiveContainer>
             <BarChart data={uniqueData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => [fmt(Number(v)), 'Asistentes']} />
+              <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+              <XAxis dataKey="year" tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => [fmt(Number(v)), 'Asistentes']} />
               <Bar dataKey="count" fill={CORAL} radius={[4, 4, 0, 0]} maxBarSize={40}>
-                <LabelList dataKey="count" position="top" formatter={(v) => fmt(Number(v))} style={{ fontSize: 10, fill: NAVY, fontFamily: 'var(--font-body)' }} />
+                <LabelList dataKey="count" position="top" formatter={(v) => fmt(Number(v))} style={ETIQUETA_VALOR} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -152,12 +148,12 @@ export default function ReporteRetencionPage() {
         <ChartCard title={`Retención año a año — ${group}`} subtitle="De quienes estuvieron en el grupo un año, cuántos siguen al año siguiente." height={260}>
           <ResponsiveContainer>
             <BarChart data={retData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} unit="%" domain={[0, 100]} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v, _n, p) => [`${v}% (${fmt((p?.payload as { retained: number }).retained)} de ${fmt((p?.payload as { base: number }).base)})`, 'Retención']} />
+              <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+              <XAxis dataKey="label" tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} unit="%" domain={[0, 100]} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v, _n, p) => [`${v}% (${fmt((p?.payload as { retained: number }).retained)} de ${fmt((p?.payload as { base: number }).base)})`, 'Retención']} />
               <Bar dataKey="rate" fill={TEAL} radius={[4, 4, 0, 0]} maxBarSize={40}>
-                <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v)}%`} style={{ fontSize: 10, fill: NAVY, fontFamily: 'var(--font-body)' }} />
+                <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v)}%`} style={ETIQUETA_VALOR} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -169,10 +165,10 @@ export default function ReporteRetencionPage() {
         <ChartCard title="Subgrupos de G1 por año" subtitle="G1a (2-4) · G1b (5-8) · G1c (9-12)" height={260}>
           <ResponsiveContainer>
             <BarChart data={g1SubData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+              <XAxis dataKey="year" tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} />
               <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-body)' }} />
               {G1_SUBS.map(s => <Bar key={s} dataKey={s} stackId="g1" fill={G1_COLORS[s]} maxBarSize={40} />)}
             </BarChart>
@@ -189,10 +185,10 @@ export default function ReporteRetencionPage() {
       >
         <ResponsiveContainer>
           <LineChart data={projData} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" vertical={false} />
-            <XAxis dataKey="year" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [v == null ? '—' : fmt(Number(v)), n === 'proj' ? 'Proyección' : 'Real']} />
+            <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
+            <XAxis dataKey="year" tick={EJE_TICK} tickLine={false} axisLine={false} />
+            <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
+            <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v, n) => [v == null ? '—' : fmt(Number(v)), n === 'proj' ? 'Proyección' : 'Real']} />
             <Line type="monotone" dataKey="real" stroke={CORAL} strokeWidth={2.5} dot={{ r: 3 }} connectNulls={false} name="Real" />
             <Line type="monotone" dataKey="proj" stroke={CORAL} strokeWidth={2} strokeDasharray="5 4" dot={false} name="Proyección" />
           </LineChart>

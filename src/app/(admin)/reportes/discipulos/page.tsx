@@ -11,17 +11,12 @@ import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
+import {
+  NAVY, CORAL, TEAL, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
+  ETIQUETA_CATEGORIA, anchoDeEjeCategoria, margenParaEtiquetas,
+} from '@/lib/reports/paleta'
 
-const NAVY = '#161440'
-const CORAL = '#D63E3D'
-const TEAL = '#3B7579'
 
-const tooltipStyle = {
-  borderRadius: 12,
-  border: '1px solid var(--outline-variant)',
-  fontSize: 12,
-  fontFamily: 'var(--font-body)',
-}
 
 const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
 
@@ -134,14 +129,14 @@ export default function ReporteDiscipulosPage() {
           height={300}
         >
           <ResponsiveContainer>
-            <BarChart layout="vertical" data={comboData} margin={{ top: 4, right: 40, left: 8, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v) => [fmt(Number(v)), 'Personas']} cursor={{ fill: 'rgba(22,20,64,0.04)' }} />
+            <BarChart layout="vertical" data={comboData} margin={{ top: 4, right: margenParaEtiquetas(comboData.map(d => d.value)), left: 8, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} horizontal={false} />
+              <XAxis type="number" tick={EJE_TICK} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(comboData.map(d => d.name))} tick={ETIQUETA_CATEGORIA} tickLine={false} axisLine={false} interval={0} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => [fmt(Number(v)), 'Personas']} cursor={CURSOR_BARRA} />
               <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={30}>
                 {comboData.map((d, i) => <Cell key={d.name} fill={i === 3 ? CORAL : NAVY} />)}
-                <LabelList dataKey="value" position="right" formatter={(v) => fmt(Number(v))} style={{ fontSize: 11, fill: 'var(--navy)', fontFamily: 'var(--font-body)' }} />
+                <LabelList dataKey="value" position="right" formatter={(v) => fmt(Number(v))} style={ETIQUETA_VALOR} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -158,16 +153,16 @@ export default function ReporteDiscipulosPage() {
       >
         <ResponsiveContainer>
           <BarChart layout="vertical" data={milestoneData} margin={{ top: 4, right: 60, left: 8, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--outline-variant)" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} unit=" m" />
-            <YAxis type="category" dataKey="label" width={180} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} horizontal={false} />
+            <XAxis type="number" tick={EJE_TICK} tickLine={false} axisLine={false} unit=" m" />
+            <YAxis type="category" dataKey="label" width={anchoDeEjeCategoria(milestoneData.map(d => d.label))} tick={ETIQUETA_CATEGORIA} tickLine={false} axisLine={false} interval={0} />
             <Tooltip
-              contentStyle={tooltipStyle}
+              contentStyle={ESTILO_TOOLTIP}
               formatter={(v, _n, p) => [`${v} meses (~${fmt((p?.payload as { avgDays: number })?.avgDays ?? 0)} días)`, 'Promedio']}
               labelFormatter={(l, p) => `${l} · n=${fmt((p?.[0]?.payload as { n?: number })?.n ?? 0)}`}
             />
             <Bar dataKey="meses" fill={TEAL} radius={[0, 4, 4, 0]} maxBarSize={30}>
-              <LabelList dataKey="meses" position="right" formatter={(v) => `${Number(v)} m`} style={{ fontSize: 11, fill: 'var(--navy)', fontFamily: 'var(--font-body)' }} />
+              <LabelList dataKey="meses" position="right" formatter={(v) => `${Number(v)} m`} style={ETIQUETA_VALOR} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
