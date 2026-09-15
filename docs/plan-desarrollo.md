@@ -125,9 +125,21 @@ Alejandra Cadario un correo (con un guion bajo en el dominio, o sea inválido) y
 no tiene correo en la ficha; Carolina Chavarría un correo distinto al suyo; y
 dos menores tienen "4 años" y "7 años", que se coló del campo de al lado.
 
+**El import también se arregló**, que era lo que hacía falta para que la
+limpieza no fuera cosmética. Los cinco de arriba tienen CERO ediciones con
+actor humano: el texto lo metió `scripts/import-members.ts` leyendo la columna
+`Allergies` de CCB, y a Ivannia se lo metió DOS veces (28-jul y 11-set). El
+script ya traía un filtro —un `/^\d+$/` -— o sea alguien ya se había topado con
+esto, pero solo agarraba números puros y la cédula con guiones se le colaba.
+Ahora usa `clasificarAlergia()` y reporta al final lo que descartó, con el
+Individual ID, para que se corrija en CCB.
+
 Pendiente menor: quedaron 2 "Si" y 1 "FOTOS SI" clasificados como alergia. No
 son alergias, pero un "Si" al menos avisa que hay algo que preguntar, así que
 se dejaron a propósito en vez de borrarlos.
+
+Y los cinco casos de "a mano" hay que arreglarlos EN CCB, no acá: si solo se
+limpian de este lado, el próximo import los trae de vuelta.
 
 ## Fase 14 — Pedido el 2026-09-10 (tarde)
 

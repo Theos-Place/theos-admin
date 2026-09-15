@@ -7,6 +7,7 @@
 import { readFileSync } from 'node:fs'
 import { parse } from 'csv-parse/sync'
 import { createClient } from '@supabase/supabase-js'
+import { clasificarAlergia } from '../src/lib/members/limpieza-de-alergias'
 
 const APPLY = process.argv.includes('--apply')
 
@@ -48,6 +49,11 @@ type Person = {
   famId: string; famPos: string; row: Record<string, unknown>; _id?: string
 }
 
+// Lo que el filtro de alergias descartó, para que la corrida lo diga en voz
+// alta en vez de tragárselo en silencio.
+let alergiasVacias = 0
+const alergiasDeOtroCampo: Array<{ ext: string; texto: string }> = []
+
 const persons: Person[] = []
 for (const r of records) {
   const first = clean(G(r, 'First Name')).replace(/^[-.]+$/, '')
@@ -56,8 +62,21 @@ for (const r of records) {
   if (!first && !last && !email) continue
   const ext = clean(G(r, 'Individual ID'))
   const cedula = clean(G(r, 'Custom Fields - ID'))
+  // La columna Allergies de CCB trae de todo: la alergia real, un "Ninguna",
+  // y datos que se colaron del campo de al lado (una cédula, un correo, una
+  // edad). Antes acá había un `/^\d+$/` que descartaba números puros —o sea
+  // alguien ya se había topado con esto— pero se le colaba la cédula con
+  // guiones: Ivannia Mora entró con "1-1396-0111" en julio y OTRA VEZ en
+  // setiembre. Limpiar la base no sirve de nada si el import lo vuelve a meter.
+  //
+  // Ahora se usa la misma regla que la limpieza (con tests). Lo que no es
+  // alergia ni restricción no entra, y se reporta al final para que alguien lo
+  // arregle en CCB, que es donde está escrito mal.
   const allergiesRaw = clean(G(r, 'Allergies'))
-  const allergies = /^\d+$/.test(allergiesRaw) ? '' : allergiesRaw
+  const veredicto = clasificarAlergia(allergiesRaw)
+  const allergies = veredicto === 'alergia' || veredicto === 'restriccion' ? allergiesRaw : ''
+  if (veredicto === 'vacio') alergiasVacias++
+  if (veredicto === 'otro_campo') alergiasDeOtroCampo.push({ ext, texto: allergiesRaw })
   const gender = ({ m: 'M', f: 'F' } as Record<string, string>)[clean(G(r, 'Gender')).toLowerCase()] ?? null
   persons.push({
     ext, first: first || '—', last: last || '—', emailLower: email.toLowerCase(), cedula,
@@ -132,6 +151,16 @@ async function main() {
   for (const p of persons) { if (!p.famId) continue; const g = famGroups.get(p.famId) ?? []; g.push(p); famGroups.set(p.famId, g) }
   const multiFams = [...famGroups.entries()].filter(([, g]) => g.length >= 2)
   console.log(`Familias con 2+ integrantes: ${multiFams.length}`)
+
+  if (alergiasVacias || alergiasDeOtroCampo.length) {
+    console.log(`\nAlergias descartadas del CSV: ${alergiasVacias} que no dicen nada ("No", "Ninguna", "None")`)
+    if (alergiasDeOtroCampo.length) {
+      // Estos hay que arreglarlos EN CCB: acá solo se dejan fuera. Si no, vuelven
+      // en el siguiente import, que es exactamente lo que pasó con Ivannia Mora.
+      console.log(`${alergiasDeOtroCampo.length} traen un dato de otro campo — corregir en CCB:`)
+      for (const a of alergiasDeOtroCampo) console.log(`   Individual ID ${a.ext}: ${JSON.stringify(a.texto)}`)
+    }
+  }
 
   if (!APPLY) { console.log('\n(dry-run) Corré con --apply para escribir.'); return }
 

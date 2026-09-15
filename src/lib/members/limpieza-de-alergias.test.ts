@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { clasificarAlergia, seBorra, sePuedeDescartar } from './limpieza-de-alergias'
 
 describe('clasificarAlergia', () => {
@@ -62,5 +63,29 @@ describe('sePuedeDescartar', () => {
 
   it('no confunde dos números cortos distintos', () => {
     expect(sePuedeDescartar('12345', { phone: '99912345' })).toBe(false)
+  })
+})
+
+describe('el import usa esta misma regla', () => {
+  // Limpiar la base no sirve de nada si el import vuelve a meter la basura.
+  // Pasó: Ivannia Mora entró con su cédula en el campo de alergias en julio y
+  // OTRA VEZ en setiembre. El import tenía su propio filtro, un /^\d+$/ que
+  // solo agarraba números puros y se le colaba la cédula con guiones.
+  const IMPORT = readFileSync('scripts/import-members.ts', 'utf8')
+
+  it('llama a clasificarAlergia y no a un filtro propio', () => {
+    expect(IMPORT).toMatch(/clasificarAlergia\(allergiesRaw\)/)
+    expect(IMPORT).not.toMatch(/\/\^\\d\+\$\/\.test\(allergiesRaw\)/)
+  })
+
+  it('solo deja entrar alergia y restricción', () => {
+    expect(IMPORT).toMatch(/veredicto === 'alergia' \|\| veredicto === 'restriccion'/)
+  })
+
+  it('reporta lo que descartó en vez de tragárselo', () => {
+    // El filtro viejo descartaba en silencio, y por eso nadie notó durante dos
+    // imports que el campo venía con cédulas.
+    expect(IMPORT).toMatch(/alergiasDeOtroCampo/)
+    expect(IMPORT).toMatch(/corregir en CCB/)
   })
 })
