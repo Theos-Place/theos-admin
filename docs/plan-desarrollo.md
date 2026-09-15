@@ -414,12 +414,16 @@ export de CCB no trae (17267 vs 11068, y 5142 vs 24238). No es un duplicado del
 sistema: es de CCB. **El arreglo es de ese lado**, acá solo hay que no volver a
 reportarlas como faltantes.
 
-### [ ] SRV-3 · 25 puestos fantasma
+### [x] SRV-3 · Puestos fantasma — HECHO 2026-09-15 (eran 3, no 25)
 
-Puestos marcados activos, con cero personas y un gemelo vivo de nombre casi
-igual («Abuelitos GAM» vs «Abuelitos», «Orador Cartago» vs «Orador Cartago GR»).
-Los dejó el renombre de puestos. No rompen nada, pero ensucian los selectores y
-hacen que una ficha se lea como inactiva cuando no lo está (ver UI-4).
+Los 25 del reporte del 15-set estaban mal contados: usé `count(*)` sobre un LEFT
+JOIN, que da 1 aunque no haya ningún voluntario, así que entraron puestos recién
+creados y todavía vacíos. Con `count(v.id)` los fantasmas de verdad son 3:
+«Charlista de grupos», «Coordinador Abuelitos GAM» y «Colaborador Abuelitos GAM».
+
+Desactivados, no borrados: el puesto sigue existiendo para que el historial de
+quien lo tuvo no quede colgando. Quedan 329 puestos activos, 71 sin nadie, y
+esos 71 son vacantes legítimas —no tienen gemelo vivo—, no basura.
 
 ### [x] UI-4 · La tabla de servicio del perfil no tiene orden — HECHO 2026-09-15
 
@@ -436,11 +440,13 @@ más que el cupo del día. Comprobado contra el comunicado de Meridiano: la
 consulta de un solo tiro devuelve 1.000 filas y la paginada 1.300, sin
 repetidos.
 
-### [ ] REP-3 · El reporte de charlas mezcla año calendario con semana ISO
+### [x] REP-3 · El reporte de charlas mezcla año calendario con semana ISO — HECHO 2026-09-15
 
-`report_charla_attendance` devuelve `yr` como año calendario y `wk` como semana
-ISO. Del 1 al 3 de enero de 2027, esos días son semana 53 **de 2026** pero van a
-aparecer como "semana 53 de 2027". Se arregla usando `isoyear` junto con `week`.
+El RPC devuelve ahora `iso_yr` además de `yr`: los dos hacen falta y significan
+cosas distintas. El total del año y el desglose por mes son calendario —"la
+asistencia de 2026" es enero a diciembre— y la serie semanal va por año ISO,
+incluido el detalle de `?semana=`, que también filtraba por el año calendario.
+Ya había 13 check-ins mal ubicados (3-ene-2021, semana 53 de 2020).
 
 ### [ ] DAT-9 · `member_por_external_id()` existe y nadie la llama
 

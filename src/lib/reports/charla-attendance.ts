@@ -10,7 +10,15 @@ import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
  *  20260910090000). Opcional: los snapshots viejos no la traen y para el
  *  reporte anual da igual — solo suma checkins. */
 export type CharlaAggRow = {
-  yr: number; title: string; wk: number; mo: number; checkins: number
+  /** Año CALENDARIO del check-in: manda en los totales del año y en el mes. */
+  yr: number
+  /**
+   * Año al que pertenece la SEMANA, que no siempre es el del día: el 3 de enero
+   * de 2021 cae en la semana 53 de 2020. La serie semanal va por acá o el
+   * número de semana no cierra — 2021 no tiene semana 53.
+   */
+  iso_yr: number
+  title: string; wk: number; mo: number; checkins: number
   calidad?: string | null
 }
 
@@ -73,24 +81,32 @@ export function buildCharlaReport(
   const filtered = rows.filter(bySede)
 
   // ── Promedio anual (cards) — respeta el filtro de sede ──
-  const annualByYear = new Map<number, { total: number; weeks: Set<number> }>()
+  // El TOTAL del año es calendario ("la asistencia de 2026" es enero a
+  // diciembre), pero el promedio semanal se calcula sobre el año ISO: dividir
+  // check-ins de un año entre semanas de otro da un número que no significa
+  // nada. La diferencia entre las dos ventanas es de 13 check-ins en toda la
+  // historia, así que las cards no se mueven; lo que se gana es que la cuenta
+  // sea defendible.
+  const totalByYear = new Map<number, number>()
+  for (const r of filtered) totalByYear.set(r.yr, (totalByYear.get(r.yr) ?? 0) + r.checkins)
+
+  const isoByYear = new Map<number, { total: number; weeks: Set<number> }>()
   for (const r of filtered) {
-    const e = annualByYear.get(r.yr) ?? { total: 0, weeks: new Set<number>() }
+    const e = isoByYear.get(r.iso_yr) ?? { total: 0, weeks: new Set<number>() }
     e.total += r.checkins
     if (r.checkins > 0) e.weeks.add(r.wk)
-    annualByYear.set(r.yr, e)
+    isoByYear.set(r.iso_yr, e)
   }
   const weeklyAvgOf = (y: number): number => {
-    const e = annualByYear.get(y)
+    const e = isoByYear.get(y)
     if (!e || e.weeks.size === 0) return 0
     return e.total / e.weeks.size
   }
   // Cards en orden ascendente para calcular el cambio vs año previo; se muestran desc.
   const yearsAsc = [...years].sort((a, b) => a - b)
   const annualCards: AnnualCard[] = yearsAsc.map(y => {
-    const e = annualByYear.get(y)
-    const total = e?.total ?? 0
-    const weeks = e?.weeks.size ?? 0
+    const total = totalByYear.get(y) ?? 0
+    const weeks = isoByYear.get(y)?.weeks.size ?? 0
     const avg = weeklyAvgOf(y)
     const prevAvg = weeklyAvgOf(y - 1)
     const changePct = prevAvg > 0 ? round1(((avg - prevAvg) / prevAvg) * 100) : null
@@ -99,7 +115,9 @@ export function buildCharlaReport(
 
   // ── Asistencia semanal (año seleccionado, sede filtrada) ──
   const weekTotals = new Map<number, number>()
-  for (const r of filtered) if (r.yr === year) weekTotals.set(r.wk, (weekTotals.get(r.wk) ?? 0) + r.checkins)
+  // Por iso_yr: una semana pertenece al año de la SEMANA, no al del día. Con
+  // r.yr, los check-ins del 3-ene-2021 salían como "semana 53 de 2021".
+  for (const r of filtered) if (r.iso_yr === year) weekTotals.set(r.wk, (weekTotals.get(r.wk) ?? 0) + r.checkins)
   const weekly: WeeklyPoint[] = []
   if (weekTotals.size > 0) {
     const wks = [...weekTotals.keys()]

@@ -3,10 +3,12 @@ import {
   detalleDeSemana, claveDeSemana, leerClaveDeSemana, semanaISO, type FilaConCalidad,
 } from './semana-detalle'
 
+// iso_yr por defecto igual a yr: solo se separan en el borde del año, que es lo
+// que prueba el caso de la semana 53 al final del archivo.
 const f = (
   title: string, wk: number, checkins: number,
-  calidad: string | null = 'asistente', yr = 2026,
-): FilaConCalidad => ({ yr, title, wk, mo: 9, checkins, calidad })
+  calidad: string | null = 'asistente', yr = 2026, iso_yr = yr,
+): FilaConCalidad => ({ yr, iso_yr, title, wk, mo: 9, checkins, calidad })
 
 const SEMANA_37 = [
   f('Charla Meridiano Martes', 37, 189),
@@ -119,5 +121,26 @@ describe('semanaISO', () => {
   it('el 1 de enero puede caer en la última semana del año anterior', () => {
     // 2027-01-01 es viernes → semana 53 de 2026.
     expect(semanaISO(new Date('2027-01-01T12:00:00Z'))).toEqual({ year: 2026, week: 53 })
+  })
+})
+
+
+describe('una semana ISO a caballo entre dos años', () => {
+  it('la semana 53 se arma con los días de enero del año siguiente', () => {
+    // El 1 al 3 de enero de 2027 son la semana 53 de 2026. Con el año
+    // calendario se perdían: quedaban como "semana 53 de 2027", que no existe.
+    const filas = [
+      { yr: 2026, iso_yr: 2026, title: 'Charla Meridiano Martes', wk: 53, mo: 12, checkins: 120, calidad: 'asistente' },
+      { yr: 2027, iso_yr: 2026, title: 'Charla Meridiano Martes', wk: 53, mo: 1, checkins: 13, calidad: 'asistente' },
+    ]
+    const d = detalleDeSemana(filas, 2026, 53, { hoy: new Date('2027-02-01T12:00:00Z') })
+    expect(d?.total).toBe(133)
+  })
+
+  it('esos días NO aparecen como semana 53 del año en que cayeron', () => {
+    const filas = [
+      { yr: 2027, iso_yr: 2026, title: 'Charla Meridiano Martes', wk: 53, mo: 1, checkins: 13, calidad: 'asistente' },
+    ]
+    expect(detalleDeSemana(filas, 2027, 53, { hoy: new Date('2027-02-01T12:00:00Z') })).toBeNull()
   })
 })

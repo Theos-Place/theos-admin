@@ -86,9 +86,15 @@ function comparar(actual: number, otro: number | null): Comparacion {
   return { total: otro, delta, pct: otro === 0 ? null : Math.round((delta / otro) * 1000) / 10 }
 }
 
-/** Total de una semana, o null si esa semana no existe en los datos. */
+/**
+ * Total de una semana, o null si esa semana no existe en los datos.
+ *
+ * Por iso_yr y no por yr: la clave de la URL (2026-W53) designa una semana ISO,
+ * y una semana ISO puede caer en dos años calendario. Con yr, la semana 53 de
+ * 2026 perdería los check-ins del 1 al 3 de enero de 2027.
+ */
 function totalDe(filas: readonly FilaConCalidad[], year: number, week: number): number | null {
-  const suyas = filas.filter(f => f.yr === year && f.wk === week)
+  const suyas = filas.filter(f => f.iso_yr === year && f.wk === week)
   if (suyas.length === 0) return null
   return suyas.reduce((n, f) => n + Number(f.checkins), 0)
 }
@@ -108,7 +114,7 @@ export function detalleDeSemana(
 
   const conSede = filas.map(f => ({ ...f, sede: sedeFromTitle(f.title) }))
   const delFiltro = sedeFiltro ? conSede.filter(f => f.sede === sedeFiltro) : conSede
-  const suyas = delFiltro.filter(f => f.yr === year && f.wk === week)
+  const suyas = delFiltro.filter(f => f.iso_yr === year && f.wk === week)
   // Sin ninguna fila esa semana no existe en los datos: se devuelve null en
   // vez de una pantalla de ceros, que se leería como "no vino nadie".
   if (suyas.length === 0) return null
