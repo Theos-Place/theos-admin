@@ -378,9 +378,11 @@ específica; si no, el insert choca contra el único de `family_members`.
    dudas rompería el alta de miles de adultos. Quedan en el reporte.
 
 **PARTE B · lo que falta, y es decisión del usuario:**
- · [ ] **166 teléfonos y 1 correo prestados** de un adulto de la familia, listos
-   para borrar. Dry-run corrido, lista en
-   `data-import/menores-datos-prestados-2026-09-15.csv`. Falta el visto bueno.
+ · [x] **166 teléfonos y 1 correo prestados** — APLICADO 2026-09-15. Los
+   menores con teléfono propio bajaron de 461 a 295 y el correo de 256 a 255.
+   Verificado después: **cero** teléfonos de menor siguen siendo iguales a los
+   de un adulto de su familia. Lista en
+   `data-import/menores-datos-prestados-2026-09-15.csv`.
  · [ ] **197 menores YA tienen cuenta** de corridas anteriores (una sola se usó
    para entrar, la de un niño de 8 años). Deshabilitarlas es decisión del
    usuario — `data-import/menores-con-cuenta-2026-09-15.csv`.
