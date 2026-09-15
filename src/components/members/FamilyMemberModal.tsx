@@ -8,6 +8,10 @@ import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 import { calcAge } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 import { RELACIONES_FAMILIARES } from '@/lib/members/relaciones'
+import {
+  sePuedeBuscar, minimoParaBuscar, candidatosVisibles, seleccionAutomatica,
+  textoSinResultados, consultaParaElServidor,
+} from '@/lib/members/busqueda-de-integrante'
 
 // Draft de un integrante de familia, reutilizable en alta de miembro y check-in.
 export type FamilyDraft =
@@ -30,12 +34,24 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
   onClose: () => void
 }) {
   const [mode, setMode] = useState<'search' | 'new'>('search')
+  /** Lo que se teclea para buscar: cédula, nombre o apellidos. Sigue llamándose
+   *  `cedula` porque el flujo B lo reusa como el documento del integrante nuevo. */
   const [cedula, setCedula] = useState('')
   const [documentType, setDocumentType] = useState<string>('cedula')
   const [searching, setSearching] = useState(false)
+  const [resultados, setResultados] = useState<Found[]>([])
   const [found, setFound] = useState<Found | null>(null)
   const [searched, setSearched] = useState(false)
   const [relation, setRelation] = useState('')
+  /**
+   * Clave ESTABLE de los ya vinculados, para la dependencia del efecto.
+   *
+   * `existingIds` llega de un `.map()` en el padre, o sea un array NUEVO en cada
+   * render. Ponerlo tal cual en las dependencias vuelve a disparar el efecto
+   * siempre, y como el efecto reinicia su debounce de 350 ms, el buscador se
+   * queda pidiendo al servidor en bucle mientras el modal esté abierto.
+   */
+  const excluidosKey = existingIds.join(',')
 
   // Flujo B — nuevo
   const [firstName, setFirstName] = useState('')
@@ -45,11 +61,13 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  // Búsqueda por cédula (debounced) en la BD real.
+  // Búsqueda (debounced) por cédula, nombre o apellidos. El buscador de atrás
+  // ya sabía hacer las tres; lo que acá se descartaba era todo resultado cuya
+  // cédula no fuera exactamente la escrita, y por eso solo servía el número.
   useEffect(() => {
     if (mode !== 'search') return
     const q = cedula.trim()
-    if (q.length < 4) { setFound(null); setSearched(false); return }
+    if (!sePuedeBuscar(q)) { setResultados([]); setFound(null); setSearched(false); return }
     let alive = true
     setSearching(true)
     const t = setTimeout(() => {
@@ -57,20 +75,23 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
       // que encargado_eventos no tiene. Como el .then se traga el error con
       // `{ members: [] }`, en el check-in la búsqueda no fallaba: devolvía
       // vacío para siempre y parecía que la persona no existía (2026-09-09).
-      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=5`)
+      fetch(`/api/members/lookup?search=${encodeURIComponent(consultaParaElServidor(q))}&pageSize=10`)
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return
-          const norm = (s: string) => s.replace(/[-\s]/g, '')
-          const match = (d.members ?? []).find((m: Found) => m.cedula && norm(m.cedula) === norm(q))
-          setFound(match ?? null)
+          const excluidos = excluidosKey ? excluidosKey.split(',') : []
+          const lista = candidatosVisibles((d.members ?? []) as Found[], excluidos)
+          setResultados(lista)
+          // Cédula completa con un solo dueño: se elige sola, como siempre. Un
+          // nombre nunca — dos personas pueden llamarse igual.
+          setFound(seleccionAutomatica(lista, q))
           setSearched(true)
         })
-        .catch(() => { if (alive) { setFound(null); setSearched(true) } })
+        .catch(() => { if (alive) { setResultados([]); setFound(null); setSearched(true) } })
         .finally(() => { if (alive) setSearching(false) })
     }, 350)
     return () => { alive = false; clearTimeout(t) }
-  }, [cedula, mode])
+  }, [cedula, mode, excluidosKey])
 
   const isMinor = birthDate ? calcAge(birthDate) < 18 : false
   // El correo se le pide a todo el que pueda tener cuenta (12+), no solo a los
@@ -120,7 +141,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
 
         {/* Tabs flujo A / B */}
         <div className="flex gap-2">
-          {([['search', 'Buscar por cédula', Search], ['new', 'Crear nuevo', UserPlus]] as const).map(([m, label, Icon]) => (
+          {([['search', 'Buscar persona', Search], ['new', 'Crear nuevo', UserPlus]] as const).map(([m, label, Icon]) => (
             <button
               key={m}
               onClick={() => { setMode(m); setError(null) }}
@@ -142,10 +163,45 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               autoFocus
               value={cedula}
               onChange={e => { setCedula(e.target.value); setError(null) }}
-              placeholder="Cédula del integrante…"
-              className={cn(inputCls, 'font-mono')}
+              placeholder="Cédula, nombre o apellidos…"
+              aria-label="Buscar a la persona por cédula, nombre o apellidos"
+              className={inputCls}
             />
             {searching && <p className="text-[13px] text-navy-light/80 font-body">Buscando…</p>}
+            {!searching && cedula.trim() !== '' && !sePuedeBuscar(cedula) && (
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Escribí al menos {minimoParaBuscar(cedula.trim())} caracteres.
+              </p>
+            )}
+
+            {/* Varios candidatos: se elige uno. Solo aparece cuando hay algo
+                que elegir — con una cédula completa la selección ya vino hecha
+                y una lista de uno sería un clic de más. */}
+            {!searching && resultados.length > 0 && !(found && resultados.length === 1) && (
+              <ul className="space-y-1 max-h-56 overflow-y-auto">
+                {resultados.map(r => (
+                  <li key={r.id}>
+                    <button
+                      type="button"
+                      onClick={() => { setFound(r); setError(null) }}
+                      aria-pressed={found?.id === r.id}
+                      className={cn(
+                        'w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors',
+                        found?.id === r.id ? 'bg-teal-soft/30' : 'hover:bg-surface-low',
+                      )}
+                    >
+                      <span className="h-8 w-8 shrink-0 rounded-full bg-teal-deep flex items-center justify-center text-[13px] font-bold text-white font-display">
+                        {(r.first_name[0] + r.last_name[0]).toUpperCase()}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm text-navy font-body truncate">{r.first_name} {r.last_name}</span>
+                        <span className="block text-[13px] text-navy-light/80 font-body">{r.cedula || 'sin cédula'}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {found && (
               <div className="rounded-xl bg-teal-soft/15 p-3 space-y-3">
@@ -157,7 +213,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                     <p className="text-sm text-navy flex items-center gap-1 font-body">
                       <UserCheck size={13} className="text-teal-deep" /> {found.first_name} {found.last_name}
                     </p>
-                    <p className="text-[13px] text-navy-light/80">{found.cedula}</p>
+                    <p className="text-[13px] text-navy-light/80">{found.cedula || 'sin cédula'}</p>
                   </div>
                 </div>
                 <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
@@ -171,10 +227,10 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               </div>
             )}
 
-            {searched && !found && !searching && cedula.trim().length >= 4 && (
+            {searched && !searching && resultados.length === 0 && (
               <div className="rounded-xl bg-surface-low p-3 text-center space-y-2">
                 <p className="text-[13px] text-navy-light/80 font-body">
-                  No se encontró a nadie con esa cédula.
+                  {textoSinResultados(cedula)}
                 </p>
                 <button onClick={() => { setMode('new'); setError(null) }} className="text-[13px] font-medium text-coral hover:underline font-body">
                   Crear integrante nuevo →
