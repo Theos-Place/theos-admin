@@ -395,7 +395,23 @@ específica; si no, el insert choca contra el único de `family_members`.
    ofrezca el alta. Nada automatizado, como pide el brief —
    `data-import/cumplieron-18-sin-cuenta-2026-09-15.csv`.
  · [ ] Quedan **281 menores sin familia vinculada**, o sea sin vía de contacto.
-   Se cruza con DAT-8.
+   Se cruza con DAT-8. **Pero 48 de esos probablemente NO son menores**: tienen
+   la fecha de nacimiento mal (pista del usuario, 15-set). Las señales, en
+   `scripts/familias-2026-09-15/menores-con-fecha-sospechosa.cjs` y el CSV
+   `data-import/menores-fecha-sospechosa-2026-09-15.csv`:
+     · **33 llevaron estudios de adulto.** Marietta Hernández figura con 7 años
+       y completó Nivel 1, 2, 3 y 4; Cindy Marín con 9 y lleva cinco estudios.
+     · **14 tienen cédula registrada.** A un menor casi nunca se le anota, y la
+       de Valeria Sánchez (5 años) es 19554062 — formato viejo, de otra época.
+     · **19 tienen la fecha de nacimiento A DÍAS de cuando se creó su ficha.**
+       Daniela Céspedes "nació" el mismo día que se registró y Vanessa Fernández
+       un día antes. No son recién nacidos: es la fecha de REGISTRO metida en el
+       campo de nacimiento.
+   No se corrigió nada: la fecha real no está en ninguna fuente que tengamos,
+   hay que preguntarla. Una opción sin preguntar es **vaciar** la fecha de los
+   19 del último grupo — el sistema trata "sin fecha" como adulto y una fecha
+   falsa hace daño activo (les quita la cuenta y los saca de los formularios),
+   mientras que NULL solo dice la verdad: no se sabe.
 
 **Sobre DAT-8:** reconstruir las familias rescata solo **2** de los 55 menores
 de 12 con correo y sin familia (Ana Lucía Alvarado y Layla Castro). Los otros 53
