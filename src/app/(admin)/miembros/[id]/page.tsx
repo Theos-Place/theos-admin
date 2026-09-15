@@ -22,6 +22,7 @@ import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
+import { ordenarServicios } from '@/lib/members/orden-de-servicios'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
 import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
 import { principalSugerido } from '@/lib/members/resolucion-de-fusion'
@@ -202,8 +203,12 @@ export default function MiembroDetailPage() {
     }))
   }, [member, studyTypes])
 
+  // Orden inicial: activos arriba y lo más reciente primero. Sin esto la tabla
+  // sale como la devuelva PostgREST y una fila cerrada puede quedar encima de
+  // la vigente — así se leyó como inactiva una persona que estaba sirviendo.
+  // La tabla sigue siendo ordenable por columna.
   const servicioRows: ServiceRow[] = useMemo(() =>
-    (member?.service_history ?? []).map(s => ({
+    ordenarServicios(member?.service_history ?? []).map(s => ({
       position: s.position,
       committee: s.committee,
       from: s.from,

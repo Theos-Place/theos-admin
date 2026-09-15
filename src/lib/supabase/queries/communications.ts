@@ -1028,16 +1028,6 @@ export async function processPendingEmails(
     config: { smtp_from_name: string | null; smtp_from_email: string | null } | null
   }
 
-  // Pendientes de hoy o atrasados (lte: si el cron falló un día, los recoge).
-  let query = supabase.from('message_logs')
-    .select('id, recipient, member_id, attempts')
-    .eq('broadcast_id', broadcastId)
-    .eq('status', 'pending')
-    .eq('channel', 'email')
-    .lte('scheduled_date', today)
-    .order('created_at')
-  if (recipientEmails?.length) query = query.in('recipient', recipientEmails)
-
   // Recuperar claims huérfanos: si el proceso murió entre el claim (status
   // 'sending' + claimed_at) y el envío, esas filas quedarían en 'sending' para
   // siempre y el broadcast nunca cerraría. Un envío real tarda segundos, así
@@ -1054,30 +1044,53 @@ export async function processPendingEmails(
     .eq('status', 'sending')
     .or(`claimed_at.lt.${staleThreshold},claimed_at.is.null`)
 
-  const { data: logsData, error: lErr } = await query
-  if (lErr) throw lErr
-  const logs = (logsData ?? []) as Array<{ id: string; recipient: string; member_id: string | null; attempts: number | null }>
+  // Respetar el cupo del día aunque se procese manualmente varias veces.
+  const dailyUsed = await getDailyEmailsSent()
+  const available = Math.max(0, DAILY_LIMIT - dailyUsed)
+
+  // Pendientes de hoy o atrasados (lte: si el cron falló un día, los recoge),
+  // PAGINADOS. PostgREST corta en 1.000 filas y esto se leía de un solo tiro:
+  // el comunicado de Meridiano (1.300 personas) salió en dos tandas y la
+  // segunda hubo que dispararla a mano. El cron nocturno recoge el resto, pero
+  // un envío con fecha —una charla al día siguiente— no puede depender de eso.
+  //
+  // Nunca se piden más de `available`: el cupo del día ya es el techo, y traer
+  // filas que no se van a enviar es transporte regalado.
+  const PAGINA = 1000
+  const logs: Array<{ id: string; recipient: string; member_id: string | null; attempts: number | null }> = []
+  while (logs.length < available) {
+    const cuantas = Math.min(PAGINA, available - logs.length)
+    let q = supabase.from('message_logs')
+      .select('id, recipient, member_id, attempts')
+      .eq('broadcast_id', broadcastId)
+      .eq('status', 'pending')
+      .eq('channel', 'email')
+      .lte('scheduled_date', today)
+      .order('created_at')
+      // El rango arranca en logs.length y no en 0 porque las filas ya leídas
+      // siguen en 'pending' hasta que el loop de envío las reclame una por una.
+      .range(logs.length, logs.length + cuantas - 1)
+    if (recipientEmails?.length) q = q.in('recipient', recipientEmails)
+    const { data, error: lErr } = await q
+    if (lErr) throw lErr
+    const pagina = (data ?? []) as typeof logs
+    logs.push(...pagina)
+    if (pagina.length < cuantas) break
+  }
+  // Nada que mandar: o no quedan pendientes, o el cupo del día se acabó.
   if (!logs.length) {
     await refreshBroadcastCounters(broadcastId)
     return { sent: 0, failed: 0 }
   }
 
-  // Respetar el cupo del día aunque se procese manualmente varias veces.
-  const dailyUsed = await getDailyEmailsSent()
-  const available = Math.max(0, DAILY_LIMIT - dailyUsed)
-
-  // Candidatos del run (respetando el cupo). El claim real es POR FILA justo
-  // antes de cada envío (ver el loop): la auditoría A6 encontró que el claim
-  // por LOTE dejaba filas en 'sending' durante 15-30 min (lotes grandes a
-  // ~100ms+SMTP por correo) — más que el umbral de rescate de 10 min — y un
-  // segundo run las "rescataba" y RE-ENVIABA mientras el primero seguía vivo.
-  // Con claim por fila, la ventana claim→envío es de ~1s y el rescate solo
-  // puede tocar filas de procesos realmente muertos.
-  const batch = logs.slice(0, available)
-  if (batch.length === 0) {
-    await refreshBroadcastCounters(broadcastId)
-    return { sent: 0, failed: 0 }
-  }
+  // El claim real es POR FILA justo antes de cada envío (ver el loop): la
+  // auditoría A6 encontró que el claim por LOTE dejaba filas en 'sending'
+  // durante 15-30 min (lotes grandes a ~100ms+SMTP por correo) — más que el
+  // umbral de rescate de 10 min — y un segundo run las "rescataba" y
+  // RE-ENVIABA mientras el primero seguía vivo. Con claim por fila, la ventana
+  // claim→envío es de ~1s y el rescate solo puede tocar filas de procesos
+  // realmente muertos.
+  const batch = logs
 
   // Nombre + token de baja de los miembros en un solo query (no N+1).
   const memberIds = Array.from(new Set(batch.map(l => l.member_id).filter(Boolean))) as string[]

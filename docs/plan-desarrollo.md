@@ -64,12 +64,11 @@ Absorbe a DAT-3 (los 48 grupos sin una sola nota son un subconjunto).
 
 Script: `scripts/cierre-2026-09/pendientes-de-nota.ts`.
 
-### [ ] DAT-6 · Traer las asistencias al día desde CCB — **es del usuario**
+### [x] DAT-6 · Traer las asistencias al día desde CCB — HECHO (confirmado 2026-09-15)
 
-Actualizar todas las asistencias de las personas. El dato sale de CCB; no es
-trabajo de código hasta que exista el archivo. Cuando llegue, se importa con el
-camino de `seed-attendance-long.ts` (ojo con los gotchas ya documentados:
-`status='finished'`, fechas en MM/DD/YYYY, dedup por día en hora de Costa Rica).
+El archivo llegó y se importó. Verificado contra la base: jun 3.949, jul 4.117,
+ago 4.012, set 1.958 check-ins, con el último del 13 de setiembre. La serie no
+tiene huecos.
 
 ### [ ] INF-1 · Ambiente de staging
 
@@ -422,19 +421,20 @@ igual («Abuelitos GAM» vs «Abuelitos», «Orador Cartago» vs «Orador Cartag
 Los dejó el renombre de puestos. No rompen nada, pero ensucian los selectores y
 hacen que una ficha se lea como inactiva cuando no lo está (ver UI-4).
 
-### [ ] UI-4 · La tabla de servicio del perfil no tiene orden
+### [x] UI-4 · La tabla de servicio del perfil no tiene orden — HECHO 2026-09-15
 
-`servicioRows` en `/miembros/[id]` sale en el orden que devuelva PostgREST, así
-que una fila inactiva puede aparecer arriba de la activa. Fue lo que hizo que
-María José Murillo se leyera como inactiva teniendo su «Colaborador Abuelitos»
-al día. Ordenar por activo primero y después por fecha de inicio descendente.
+Regla en `src/lib/members/orden-de-servicios.ts`: activos primero y, dentro de
+cada grupo, lo más reciente arriba. Un servicio sin fecha cae al final de SU
+grupo y no al final de todo — medio histórico de CCB vino sin `start_date` y
+hundirlo entero escondería servicios vigentes. La tabla sigue siendo ordenable
+por columna.
 
-### [ ] COM-4 · Un comunicado de más de 1.000 no sale completo de una corrida
+### [x] COM-4 · Un comunicado de más de 1.000 no sale completo de una corrida — HECHO 2026-09-15
 
-`processPendingEmails` lee los pendientes sin paginar y PostgREST corta en 1.000
-filas, así que el de Meridiano (1.300) salió en dos tandas —la segunda a mano—.
-El cron nocturno los recoge igual, pero un envío con fecha (una charla al día
-siguiente) no puede depender de eso. Paginar el `select`.
+`processPendingEmails` pagina el `select` de pendientes de a 1.000 y nunca pide
+más que el cupo del día. Comprobado contra el comunicado de Meridiano: la
+consulta de un solo tiro devuelve 1.000 filas y la paginada 1.300, sin
+repetidos.
 
 ### [ ] REP-3 · El reporte de charlas mezcla año calendario con semana ISO
 
