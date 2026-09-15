@@ -26,10 +26,17 @@ import {
 /** Mayoría de edad en Costa Rica. Es el umbral del DOCUMENTO. */
 export const MAYORIA_DE_EDAD = 18
 
-/** AUTH-1: por debajo de esta edad no se crean cuentas de acceso, así que
- *  tampoco se les exige correo. Es un umbral DISTINTO al del documento y no es
- *  un descuido: un chico de 15 puede tener correo y cuenta, y no tener cédula. */
-export const EDAD_MINIMA_PARA_CUENTA = 12
+/**
+ * Por debajo de esta edad no se crean cuentas de acceso, así que tampoco se les
+ * exige correo ni teléfono.
+ *
+ * ERA 12 (AUTH-1) con el argumento de que un chico de 15 puede tener correo y
+ * cuenta aunque no tenga cédula. FAM-2 (2026-09-15) lo subió a la MAYORÍA DE
+ * EDAD: a un menor no se le crea login, punto, y su contacto es el de su
+ * familia. Queda un solo umbral a propósito — con dos, el endpoint bloqueaba a
+ * los de 15 y el formulario les seguía exigiendo correo.
+ */
+export const EDAD_MINIMA_PARA_CUENTA = MAYORIA_DE_EDAD
 
 /** Costa Rica es UTC-6 fijo. */
 const CR_OFFSET_MS = 6 * 60 * 60 * 1000
@@ -68,7 +75,8 @@ export function esMenorDeEdad(nacimiento: string | null | undefined, hoy: string
   return esMenorDe(MAYORIA_DE_EDAD, nacimiento, hoy)
 }
 
-/** Demasiado chico para tener cuenta de acceso (AUTH-1). */
+/** Demasiado chico para tener cuenta de acceso. Ver EDAD_MINIMA_PARA_CUENTA:
+ *  desde FAM-2 es la mayoría de edad, no 12. */
 export function noLlevaCuenta(nacimiento: string | null | undefined, hoy: string = hoyCR()): boolean {
   return esMenorDe(EDAD_MINIMA_PARA_CUENTA, nacimiento, hoy)
 }

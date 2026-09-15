@@ -349,64 +349,50 @@ escrituras que pasan por las queries del app, la transacción no sirve de red.
 Queda anotado: el resumen de una condición de servicio sin área ni comité dice
 solo "Servicio". Es correcto pero vago; en uso real se elige un área.
 
-### [ ] FAM-2 · Reconstruir las familias desde CCB + reglas de menores de edad
+### [~] FAM-2 · Familias desde CCB + reglas de menores — PARTE A HECHA, PARTE B casi
 
-```
-DATA FIX + REGLA · Muchos reportes de que las familias ya no salen en el sistema nuevo.
-Fuente: data-import/familias-ccb-2026-09-14.csv — las 1.578 familias reales de CCB (2+
-integrantes, 4.126 personas) con family_id, external_id, posición (primary contact /
-spouse / child / other), correo, teléfono y cédula.
-Script one-off, DRY-RUN por etapa con mi aprobación. EMAIL_SILENT_MODE si sigue activo.
+**PARTE A · APLICADA 2026-09-15.** De las 1.578 familias de CCB, 1.210 ya
+estaban completas. Se crearon **205 familias** y se sumaron **191 personas** a
+familias existentes; cero fusiones de hogares, porque el diagnóstico no
+encontró ninguna familia repartida en dos unidades. 31 personas de CCB no
+tienen ficha y se reportaron sin crearlas
+(`data-import/familias-sin-ficha-2026-09-15.csv`).
 
-────────────────────────────────────────
-PARTE A · RECONSTRUIR LAS FAMILIAS
-1) DIAGNÓSTICO primero: de las 1.578 familias de CCB, ¿cuántas existen hoy en family_units
-   (todas juntas), cuántas parciales (algunos integrantes sí, otros no), cuántas ausentes?
-   Ese número dice el tamaño real del problema que la gente reporta.
-2) IMPORTAR/COMPLETAR: para cada familia del CSV, matchear integrantes por external_id y
-   dejarlos en UNA unidad familiar:
-   - Nadie está en familia → crearla completa.
-   - Algunos ya están en una unidad → sumar los que faltan a ESA unidad.
-   - Integrantes repartidos en DOS unidades → fusionarlas (la regla de "una persona = una
-     familia" y su fusión ya existen — reutilizala; recordá que fusiona hogares completos).
-   - Mapear la posición de CCB a la relation del sistema (primary contact → Titular,
-     spouse/child/other → los valores que use family_members).
-   - NUNCA sacar a nadie de una familia existente: este import agrega y une, no separa
-     (las separaciones son el flujo manual que ya existe).
-3) Sin match por external_id → reporte, no crear miembros.
+De 1.379 unidades y 3.465 integrantes se pasó a **1.584 y 4.124**. El script
+aborta con rollback si alguien quedara en dos familias.
 
-────────────────────────────────────────
-PARTE B · REGLA NUEVA DE MENORES DE EDAD (obligatoria, transversal)
-Para MENORES (birth_date < 18 años, calculado — y si no hay fecha de nacimiento, no se
-puede saber: tratarlos como caso a revisar, no asumir):
- 1) NO crearles usuario de login: excluirlos de cualquier creación de cuentas (el script
-    masivo de AUTH-1, el botón de crear cuenta en la ficha, el flujo de check-in). Si un
-    menor ya tiene cuenta creada de corridas anteriores, reportarlos — decido yo si se
-    deshabilitan.
- 2) NO exigirles teléfono ni correo: en todos los formularios donde esos campos son
-    obligatorios (crear miembro, completar perfil, FIN-2, check-in), para menores pasan a
-    opcionales. El contacto es el de su familia — por eso la Parte A importa: un menor
-    SIN familia vinculada queda sin vía de contacto (ese reporte ya existe:
-    scripts/output/menores-sin-familia.csv — conectalo).
- 3) Server-side además de UI: las validaciones de zod que exigen email/phone deben
-    excepcionar menores; y el endpoint de crear cuenta debe RECHAZAR a un menor con 403 y
-    mensaje claro, no solo esconder el botón.
- 4) LIMPIAR TELÉFONOS PRESTADOS: si el teléfono de un menor es IGUAL (normalizado) al de
-    alguno de los adultos de su familia, quitárselo al menor — es el número del papá o la
-    mamá dado en algún formulario, no un dato del menor; duplica el contacto y ensucia
-    búsquedas y dedup. Orden importa: correr DESPUÉS de la Parte A (sin familia vinculada
-    no se sabe de quién es el número). Solo se borra si el adulto de la familia lo tiene;
-    un teléfono del menor que no coincide con nadie se queda. Dry-run con la lista
-    (menor → teléfono → con cuál familiar coincide) antes de borrar, y el mismo criterio
-    aplicado a los CORREOS (menor con el correo del papá/mamá → quitárselo al menor).
- 5) Al cumplir 18: no automatices nada todavía — pero dejá una consulta/reporte de "menores
-    que ya cumplieron 18 sin cuenta" para ofrecerles el alta cuando corresponda.
+Gotcha: dos filas de CCB pueden resolver a la MISMA ficha (dos registros que
+después se fusionaron acá). Se deduplican conservando la posición más
+específica; si no, el insert choca contra el único de `family_members`.
 
-VERIFICACIÓN: conteo de familias antes/después; los casos reportados por la gente (pedirme
-2-3 nombres concretos de los reportes) verificados a mano; ningún menor con cuenta nueva;
-crear un miembro menor sin correo ni teléfono funciona de punta a punta.
-```
+**PARTE B · el código, HECHO:**
+ · A un menor no se le crea cuenta. El guard vive DENTRO de
+   `inviteMemberToCompleteProfile`, que es por donde pasan los tres caminos que
+   crean cuentas; el endpoint además responde 403 con `menor_sin_cuenta`, y la
+   ficha explica por qué en vez de esconder el botón.
+ · Correo y teléfono dejan de ser obligatorios para menores. **Se unificó el
+   umbral**: `EDAD_MINIMA_PARA_CUENTA` era 12 (AUTH-1) y ahora es la mayoría de
+   edad. Con dos umbrales, a un chico de 15 el endpoint le negaba la cuenta
+   mientras el formulario le seguía exigiendo el correo que servía para crearla.
+ · Sin fecha de nacimiento (3.260 fichas) NO se asume menor: bloquear por las
+   dudas rompería el alta de miles de adultos. Quedan en el reporte.
 
+**PARTE B · lo que falta, y es decisión del usuario:**
+ · [ ] **166 teléfonos y 1 correo prestados** de un adulto de la familia, listos
+   para borrar. Dry-run corrido, lista en
+   `data-import/menores-datos-prestados-2026-09-15.csv`. Falta el visto bueno.
+ · [ ] **197 menores YA tienen cuenta** de corridas anteriores (una sola se usó
+   para entrar, la de un niño de 8 años). Deshabilitarlas es decisión del
+   usuario — `data-import/menores-con-cuenta-2026-09-15.csv`.
+ · [ ] **66 cumplieron 18 sin cuenta** en el último año: candidatos a que se les
+   ofrezca el alta. Nada automatizado, como pide el brief —
+   `data-import/cumplieron-18-sin-cuenta-2026-09-15.csv`.
+ · [ ] Quedan **281 menores sin familia vinculada**, o sea sin vía de contacto.
+   Se cruza con DAT-8.
+
+**Sobre DAT-8:** reconstruir las familias rescata solo **2** de los 55 menores
+de 12 con correo y sin familia (Ana Lucía Alvarado y Layla Castro). Los otros 53
+tampoco están en una familia en CCB, así que DAT-8 sigue necesitando preguntar.
 
 ## Fase 17 — Hallazgos del 2026-09-15
 

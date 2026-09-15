@@ -4,6 +4,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { accountState, type AccountState } from '@/lib/members/account-state'
+import { puedeCrearseCuenta, MOTIVO_MENOR_SIN_CUENTA } from '@/lib/members/reglas-de-menores'
 
 export type { AccountState }
 export type AccountStatus = {
@@ -17,6 +18,10 @@ export type AccountStatus = {
   member_email: string | null
   email_confirmed_at: string | null
   last_sign_in_at: string | null
+  /** FAM-2 · false para un menor o para datos protegidos: no se le crea cuenta. */
+  puede_tener_cuenta?: boolean
+  /** Por qué no, para decirlo en la ficha en vez de solo esconder el botón. */
+  motivo_sin_cuenta?: string | null
 }
 
 // Estado de la cuenta de acceso (Supabase Auth) de un miembro. SOLO roles
@@ -29,13 +34,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
   try {
     const supabase = createAdminClient()
-    const { data: member } = await supabase.from('members').select('auth_user_id, email').eq('id', id).maybeSingle()
-    const authUserId = (member as { auth_user_id: string | null } | null)?.auth_user_id ?? null
-    const memberEmail = (member as { email: string | null } | null)?.email ?? null
+    const { data: member } = await supabase.from('members')
+      .select('auth_user_id, email, birth_date, datos_protegidos').eq('id', id).maybeSingle()
+    const m = member as {
+      auth_user_id: string | null; email: string | null
+      birth_date: string | null; datos_protegidos: boolean | null
+    } | null
+    const authUserId = m?.auth_user_id ?? null
+    const memberEmail = m?.email ?? null
+    // FAM-2 · La ficha necesita saber si se le PUEDE crear cuenta para decirlo,
+    // no solo para esconder el botón: un botón que desaparece sin explicación
+    // manda a alguien a buscar por qué.
+    const puede = m ? puedeCrearseCuenta(m) : true
+    const edad = { puede_tener_cuenta: puede, motivo_sin_cuenta: puede ? null : MOTIVO_MENOR_SIN_CUENTA }
 
     // Sin usuario de Auth ligado → no tiene cuenta de acceso.
     if (!authUserId) {
-      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, member_email: memberEmail, email_confirmed_at: null, last_sign_in_at: null } satisfies AccountStatus)
+      return NextResponse.json({ state: 'none', linked: false, email: memberEmail, member_email: memberEmail, email_confirmed_at: null, last_sign_in_at: null, ...edad } satisfies AccountStatus)
     }
 
     const { data, error } = await supabase.auth.admin.getUserById(authUserId)

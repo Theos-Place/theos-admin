@@ -147,7 +147,7 @@ describe('correo obligatorio para crear la cuenta', () => {
 
   // AUTH-1: por debajo de 12 no se crean cuentas, así que pedir el correo sería
   // pedir un dato que no se va a usar.
-  it('a un menor de 12 no se le pide, aunque sí se le pidiera al resto', () => {
+  it('a un menor no se le pide, aunque sí se le pidiera al resto', () => {
     const r = validarAltaDePersona({
       first_name: 'Luis', last_name: 'Mora', birth_date: '2018-01-01', exigirCorreo: true,
     }, HOY_)
@@ -155,12 +155,23 @@ describe('correo obligatorio para crear la cuenta', () => {
     expect(r.errores.email).toBeUndefined()
   })
 
-  // El umbral del correo (12) y el del documento (18) son distintos a propósito.
-  it('a un chico de 15 se le pide correo pero no cédula', () => {
+  // FAM-2 (2026-09-15) unificó el umbral en la mayoría de edad. Antes eran dos:
+  // 12 para el correo y 18 para el documento, y a un chico de 15 se le exigía
+  // correo mientras el endpoint le negaba la cuenta para la que serviría.
+  it('a un chico de 15 ya no se le pide ni correo ni cédula', () => {
     const r = validarAltaDePersona({
       first_name: 'Sofía', last_name: 'Mora', birth_date: '2011-01-01', exigirCorreo: true,
     }, HOY_)
     expect(r.exigeCedula).toBe(false)
+    expect(r.exigeCorreo).toBe(false)
+  })
+
+  it('a alguien SIN fecha de nacimiento se le sigue pidiendo correo', () => {
+    // No se asume que es menor para saltarse un campo obligatorio: hay 3.260
+    // fichas sin fecha y casi todas son de adultos.
+    const r = validarAltaDePersona({
+      first_name: 'Sin', last_name: 'Fecha', birth_date: '', exigirCorreo: true,
+    }, HOY_)
     expect(r.exigeCorreo).toBe(true)
   })
 })

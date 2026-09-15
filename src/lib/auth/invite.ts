@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { puedeCrearseCuenta, MOTIVO_MENOR_SIN_CUENTA } from '@/lib/members/reglas-de-menores'
 
 /**
  * Invita a un miembro a completar su perfil: crea (o reutiliza) un usuario de
@@ -15,6 +16,18 @@ export async function inviteMemberToCompleteProfile(
   email: string,
 ): Promise<{ sent: boolean; reason?: string }> {
   const supabase = createAdminClient()
+  // FAM-2 · A un menor no se le crea cuenta. El guard va ACÁ y no en cada
+  // endpoint: hay tres caminos que llaman a esta función (el botón de la ficha,
+  // el alta de miembro y el registro público) y el cuarto que alguien escriba
+  // mañana también tiene que respetarla. Un chequeo por endpoint es un chequeo
+  // que se olvida.
+  {
+    const { data } = await supabase.from('members')
+      .select('birth_date, datos_protegidos').eq('id', memberId).maybeSingle()
+    if (data && !puedeCrearseCuenta(data as { birth_date: string | null; datos_protegidos: boolean | null })) {
+      return { sent: false, reason: MOTIVO_MENOR_SIN_CUENTA }
+    }
+  }
   try {
     // createUser (no inviteUserByEmail): el correo lo mandamos NOSOTROS por SES
     // con un enlace que sirve en cualquier dispositivo. inviteUserByEmail

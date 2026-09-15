@@ -44,6 +44,8 @@ type AccountStatus = {
   email: string | null
   email_confirmed_at: string | null
   last_sign_in_at: string | null
+  puede_tener_cuenta?: boolean
+  motivo_sin_cuenta?: string | null
 }
 
 /** Tab "Administrativo": SOLO roles administrativos (el miembro nunca lo ve, ni
@@ -364,6 +366,14 @@ export function MemberAdminTab({ memberId, onChanged }: {
               <UserX size={14} className="text-navy-light/80" />
               <span className="text-[13px] text-navy-light/80 font-body">Este miembro no tiene cuenta de acceso.</span>
             </div>
+            {/* FAM-2 · A un menor no se le crea cuenta. Se dice, no se esconde
+                y ya: un botón que desaparece sin explicación manda a alguien a
+                buscar por qué. El endpoint lo rechaza igual con 403. */}
+            {account?.puede_tener_cuenta === false ? (
+              <p className="rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-body">
+                {account.motivo_sin_cuenta}
+              </p>
+            ) : (
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
@@ -378,6 +388,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
                 <span className="text-[13px] text-navy-light/80 font-body">Requiere un correo registrado en el perfil.</span>
               )}
             </div>
+            )}
             <p className="text-[13px] text-navy-light/80 font-body">
               Crea el usuario de acceso y le manda el correo con el paso a paso para crear su contraseña. El correo NO lleva un enlace que venza: la persona lo pide desde la pantalla de ingreso cuando lo va a usar.
             </p>
