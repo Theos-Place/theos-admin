@@ -182,12 +182,16 @@ TESTS: seleccionar una semana muestra solo sus números; el desglose por sede
 suma el total; la semana parcial queda marcada; el deep link abre la semana
 correcta; la vista anual no cambia.
 
-### [ ] DAT-8 · 54 menores de 12 con correo y sin familia
+### [ ] DAT-8 · Menores de 12 con correo y sin familia — bajaron de 54 a 30
 
 Salió de limpiar los correos de menores (2026-09-10). De 87 con correo, a 28
 se les quitó porque estaban en una familia y a 5 se les armó la familia con
-evidencia. Quedan 54 a los que NO se les puede quitar el correo: sin familia
+evidencia. Quedaban 54 a los que NO se les puede quitar el correo: sin familia
 detrás se quedarían sin ninguna forma de contacto.
+
+**Medido el 2026-09-15: bajaron a 30.** FAM-2 (las familias reconstruidas) y el
+vaciado de 26 fechas falsas se llevaron 24 por delante —los que no eran menores
+o los que sí tenían familia en CCB—, sin haber trabajado este pendiente.
 
 La lista, con la evidencia de cada uno, está en
 `scripts/output/menores-sin-familia.csv`:
