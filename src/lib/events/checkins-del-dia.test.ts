@@ -46,6 +46,19 @@ describe('diaQueSeEstaViendo', () => {
   it('con ?date= manda el parámetro', () => {
     expect(diaQueSeEstaViendo('2026-09-08', true, '2026-09-15')).toBe('2026-09-08')
   })
+
+  it('acepta el ISO COMPLETO, que es lo que manda el calendario', () => {
+    // El bug: el calendario y la lista de check-in pasan el start_at entero,
+    // no un YYYY-MM-DD. Rechazándolo, abrir la ocurrencia del 8 de setiembre
+    // caía en "hoy" y mostraba cero check-ins de 189.
+    expect(diaQueSeEstaViendo('2026-09-08T19:00:00.000Z', true, '2026-09-15')).toBe('2026-09-08')
+  })
+
+  it('un ISO de las 7 p.m. CR se resuelve a SU día, no al siguiente', () => {
+    // 19:00 CR viaja como la 01:00 UTC del día siguiente. Cortar el string con
+    // slice(0,10) daría el 9 y volvería a vaciar la pantalla.
+    expect(diaQueSeEstaViendo('2026-09-09T01:00:00.000Z', true, '2026-09-15')).toBe('2026-09-08')
+  })
   it('un parámetro con basura se ignora', () => {
     expect(diaQueSeEstaViendo('ayer', true, '2026-09-15')).toBe('2026-09-15')
   })

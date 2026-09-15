@@ -44,6 +44,16 @@ export function checkinsDeLaOcurrencia<T extends CheckinConFecha>(
  * Hoy y no la fecha de inicio del evento: un recurrente arrancó hace meses y
  * quien abre la pantalla sin parámetro está parado en la charla de hoy, no en
  * la primera de la serie.
+ *
+ * EL PARÁMETRO LLEGA EN DOS FORMATOS y aceptar uno solo fue un bug: el
+ * calendario y la lista de check-in mandan el `start_at` completo
+ * ("2026-09-09T01:00:00.000Z"), no un YYYY-MM-DD. Con la versión que solo
+ * aceptaba la fecha corta, abrir la ocurrencia del 8 de setiembre caía en el
+ * `else` y mostraba HOY: cero check-ins en un evento que tenía 189.
+ *
+ * Un ISO completo se convierte a su día CIVIL en hora de Costa Rica, no se
+ * corta con slice(0,10): una charla de las 7 p.m. viaja como la 1 a.m. UTC del
+ * día siguiente y cortar el string daría el día equivocado.
  */
 export function diaQueSeEstaViendo(
   paramFecha: string | null,
@@ -51,6 +61,10 @@ export function diaQueSeEstaViendo(
   hoyYmd: string,
 ): string | null {
   if (!esRecurrente) return null
-  if (paramFecha && /^\d{4}-\d{2}-\d{2}$/.test(paramFecha)) return paramFecha
+  if (paramFecha) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(paramFecha)) return paramFecha
+    const dia = diaCR(paramFecha)
+    if (dia) return dia
+  }
   return hoyYmd
 }
