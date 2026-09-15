@@ -34,9 +34,10 @@ import { EventServersTab } from './_components/EventServersTab'
 import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { getInitials, formatMoney } from '@/lib/format'
+import { getInitials, formatMoney, todayCR } from '@/lib/format'
 import { contarPorCalidad } from '@/lib/events/calidad-checkin'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
+import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 
 /** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
  *  a los inscritos con miembro asociado). El botón que abre este modal está
@@ -164,11 +165,29 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // la del evento padre. Conserva la duración del evento (end - start).
   const occParam = useSearchParams().get('date')
   const event = useMemo(() => {
-    if (!rawEvent || !occParam) return rawEvent
+    if (!rawEvent) return rawEvent
+    /**
+     * Los check-ins se acotan a ESTA ocurrencia. Un recurrente es UNA fila con
+     * una regla y toda su asistencia cuelga de ahí, así que sin esto el detalle
+     * suma todas las semanas: el 15 de setiembre la Charla Meridiano Martes
+     * mostraba 189 y eran del 8.
+     *
+     * Va acá, en el objeto `event` que consumen todas las pestañas, y no en
+     * cada contador: la página tiene siete lugares que cuentan check-ins —el
+     * total, la calidad, los servidores presentes, las personas nuevas, el
+     * desglose por subevento, la lista y el export— y arreglarlos de a uno es
+     * garantizar que el próximo nazca mal.
+     */
+    const dia = diaQueSeEstaViendo(occParam, rawEvent.is_recurring, todayCR())
+    const checkins = checkinsDeLaOcurrencia(rawEvent.checkins, rawEvent.is_recurring, dia)
+    if (!occParam) return { ...rawEvent, checkins }
     const occStart = new Date(occParam)
-    if (isNaN(occStart.getTime())) return rawEvent
+    if (isNaN(occStart.getTime())) return { ...rawEvent, checkins }
     const durMs = Math.max(0, new Date(rawEvent.end_at).getTime() - new Date(rawEvent.start_at).getTime())
-    return { ...rawEvent, start_at: occStart.toISOString(), end_at: new Date(occStart.getTime() + durMs).toISOString() }
+    return {
+      ...rawEvent, checkins,
+      start_at: occStart.toISOString(), end_at: new Date(occStart.getTime() + durMs).toISOString(),
+    }
   }, [rawEvent, occParam])
   const { can } = usePermissions()
   const toast = useToast()
@@ -366,7 +385,12 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   }
 
   // ¿Tiene asistencia ligada? (bloquea borrado destructivo de la serie/puntual).
-  const hasAttendance = event.checkins.length > 0 || event.registrations.length > 0
+  //
+  // Mira `rawEvent` y no `event`: los check-ins de `event` están acotados a la
+  // ocurrencia que se está viendo, y para BORRAR LA SERIE importa si hubo
+  // asistencia en CUALQUIER semana. Con la lista filtrada, pararse en una
+  // semana vacía habilitaría borrar meses de asistencia.
+  const hasAttendance = (rawEvent?.checkins.length ?? 0) > 0 || event.registrations.length > 0
 
   /**
    * Duplica el evento y lleva DIRECTO a editar la copia.
@@ -909,7 +933,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 participar o a servir. Va en Excel y no en CSV porque se
                 imprime, y porque resalta a quién hay que atender distinto. */}
             <a
-              href={`/api/events/${event.id}/attendees/export`}
+              href={`/api/events/${event.id}/attendees/export${event.is_recurring ? `?date=${occurrenceRef().date}` : ''}`}
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <Download size={14} /> Lista para cocina (Excel)

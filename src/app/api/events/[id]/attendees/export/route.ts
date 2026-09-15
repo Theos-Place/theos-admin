@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import ExcelJS from 'exceljs'
 import { requireEventAccess } from '@/lib/auth/event-guard'
 import { getEventById } from '@/lib/supabase/queries/events'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { filasDeAsistentes, resumenDeCocina, type PersonaDelEvento } from '@/lib/events/export-asistentes'
 import { xlsxFileName } from '@/lib/forms/xlsx-export'
+import { diaCR } from '@/lib/events/checkins-del-dia'
 
 // EVE-9 · GET: los asistentes del evento en .xlsx, para cocina y logística.
 //
@@ -14,7 +15,7 @@ import { xlsxFileName } from '@/lib/forms/xlsx-export'
 // GATE: requireEventAccess — administra eventos o es encargado DE ESTE evento.
 // La hoja lleva alergias, que son datos de salud: no sale con una sesión
 // cualquiera, aunque la información general del evento sí sea pública adentro.
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const acceso = await requireEventAccess(id)
@@ -28,7 +29,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       payment_status: r.payment_status ?? null,
       registered_at: r.registered_at ?? null,
     }))
-    const checkins = (event.checkins ?? []).map(c => ({
+    /**
+     * ?date=YYYY-MM-DD · la ocurrencia que se está exportando.
+     *
+     * Un evento recurrente es UNA fila con una regla y toda su asistencia
+     * cuelga de ahí. Sin acotar, exportar "los asistentes de la charla del
+     * martes" bajaba la serie entera — el 15 de setiembre eso eran 189
+     * personas de la semana anterior.
+     *
+     * Sin el parámetro no se filtra: un evento de una sola vez exporta todo, y
+     * un recurrente sin fecha explícita también, que es preferible a devolver
+     * un CSV vacío sin explicar por qué.
+     */
+    const dia = req.nextUrl.searchParams.get('date')
+    const delDia = event.is_recurring && dia
+      ? (event.checkins ?? []).filter(c => diaCR(String(c.checked_in_at ?? '')) === dia)
+      : (event.checkins ?? [])
+    const checkins = delDia.map(c => ({
       id: c.id,
       member_id: c.member_id ?? null,
       guest_name: (c as { guest_name?: string | null }).guest_name ?? null,

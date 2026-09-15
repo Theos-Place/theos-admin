@@ -20,6 +20,8 @@ import { useEvents } from '@/hooks/useEvents'
 import { useDashboard } from '@/hooks/useDashboard'
 import { landsOnProfile } from '@/lib/auth/home-route'
 import { formatTotalsInline, type MoneyTotals } from '@/lib/money'
+import { checkinsDeLaOcurrencia } from '@/lib/events/checkins-del-dia'
+import { todayCR } from '@/lib/format'
 
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
@@ -269,18 +271,29 @@ export default function DashboardPage() {
     return eventsInRange(events, start, end)
   }, [events, today])
 
-  // Today check-ins (mock last 5)
+  /**
+   * Los check-ins de HOY, y en un evento recurrente eso NO es todos los suyos:
+   * un recurrente es una fila con una regla y su asistencia se acumula semana a
+   * semana. Sin acotar por el día, el dashboard sumaba la Charla Meridiano
+   * Martes entera —189— como si hubieran venido hoy.
+   */
+  const checkinsDeHoy = useMemo(
+    () => todayEvents.map(ev => ({
+      ev, lista: checkinsDeLaOcurrencia(ev.checkins, ev.is_recurring, todayCR()),
+    })),
+    [todayEvents])
+
   const todayCheckins = useMemo(() => {
     const all: { name: string; time: string }[] = []
-    for (const ev of todayEvents) {
-      for (const c of ev.checkins.slice(0, 5)) {
+    for (const { ev, lista } of checkinsDeHoy) {
+      for (const c of lista.slice(0, 5)) {
         all.push({ name: c.member_name, time: formatEventTime(ev.start_at) })
       }
     }
     return all.slice(0, 5)
-  }, [todayEvents])
+  }, [checkinsDeHoy])
 
-  const totalTodayCheckins = todayEvents.reduce((s, e) => s + e.checkins.length, 0)
+  const totalTodayCheckins = checkinsDeHoy.reduce((s, x) => s + x.lista.length, 0)
 
   if (!loaded) return null
 
