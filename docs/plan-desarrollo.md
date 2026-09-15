@@ -182,41 +182,41 @@ TESTS: seleccionar una semana muestra solo sus números; el desglose por sede
 suma el total; la semana parcial queda marcada; el deep link abre la semana
 correcta; la vista anual no cambia.
 
-### [ ] DAT-8 · Menores de 12 con correo y sin familia — bajaron de 54 a 30
+### [~] DAT-8 · Menores de 12 con correo y sin familia — de 54 a 26
 
-Salió de limpiar los correos de menores (2026-09-10). De 87 con correo, a 28
-se les quitó porque estaban en una familia y a 5 se les armó la familia con
-evidencia. Quedaban 54 a los que NO se les puede quitar el correo: sin familia
-detrás se quedarían sin ninguna forma de contacto.
+Salió de limpiar los correos de menores (2026-09-10). Quedaban 54 a los que NO
+se les podía quitar el correo: sin familia detrás se quedaban sin ninguna forma
+de contacto.
 
-**Medido el 2026-09-15: bajaron a 30.** FAM-2 (las familias reconstruidas) y el
-vaciado de 26 fechas falsas se llevaron 24 por delante —los que no eran menores
-o los que sí tenían familia en CCB—, sin haber trabajado este pendiente.
+**Bajaron a 26.** Primero a 30 solos, de rebote de FAM-2 y del vaciado de las
+26 fechas falsas. Los otros 4 el 2026-09-15.
 
-La lista, con la evidencia de cada uno, está en
-`scripts/output/menores-sin-familia.csv`:
+LA CLAVE FUE SEPARAR DOS PROBLEMAS que vivían mezclados, con una señal
+mecánica: si el correo lleva el **nombre de pila** de la propia persona
+(`src/lib/members/correo-de-quien.ts`). El apellido NO cuenta — madre e hijo lo
+comparten, y `cristellopeztorres@` daría por propio el correo de la ficha de
+Camilia Sanabria **Lopez**. Es la misma trampa que ya advertía este pendiente
+sobre los apellidos, colándose por la puerta del correo.
 
--  3 comparten teléfono con un adulto → revisables de una.
-- 39 solo comparten un apellido con alguien que tiene familia. **Eso no es
-  evidencia**: hay cientos de Rodríguez. Hay que preguntar.
-- 12 sin ninguna pista.
-
-Ojo con dos de los 3 primeros: Alana y Elena apuntan a "Carlos Blanco", que
-estaba DUPLICADO. **Resuelto el 2026-09-15**: el 23828 se fusionó en el 17615,
-así que ese bloqueo ya no existe.
-
-Y un vínculo equivocado no es inocuo: por la regla de una persona = una
-familia, vincular mal FUSIONA dos hogares.
-
-
-
-## Fase 15 — Hallazgos del repaso de QA del 2026-09-11
-
-Salieron de revisar en frío lo que se construyó ese día (aprobación de becas,
-mover una beca de destino, tags, y la limpieza de warnings). Lo que **funciona**
-quedó verificado contra producción con un ida y vuelta real —27 comprobaciones,
-incluida una beca movida de verdad y restaurada campo por campo— así que acá
-solo está lo que **falta**.
+De los 30:
+ · **12 · el correo es suyo** → no son menores, la fecha está mal. Todos con
+   correo que lleva su nombre y teléfono propio; un niño de 4 años no tiene
+   `andres.herreram1802@gmail.com` ni `pilar@rojasarquitectos.com`.
+   **Pendiente: confirmar el criterio antes de vaciarles la fecha.**
+   `data-import/dat8-fecha-mal-2026-09-15.csv`.
+ · **4 · el correo es de un adulto identificado** → HECHO. Se les armó la
+   familia y RECIÉN DESPUÉS se les quitó el correo: al revés los dejaba sin
+   ninguna vía de contacto, que es exactamente por lo que este pendiente estaba
+   trabado. Elena y Alana a la familia de Carlos Blanco —el duplicado que las
+   bloqueaba se resolvió el 15-set— y Samuel a la de Elena Sanabria.
+   El cuarto caso, Camilia Sanabria Lopez, resultó ser un DUPLICADO de Camila
+   (misma fecha de nacimiento, mismo día de creación): confirmado por el usuario
+   y fusionado. Los check-ins suman 1+1=2, no se deduplican — se verificó antes
+   de correr, que es lo que faltó con Steven Angulo.
+ · **14 · sin pista** → a mano. Varios tienen correo con diminutivo o iniciales
+   (`moniqu2601@` de Mónica Umaña, `macarygc@` de Mariana García) que la regla
+   no reconoce a propósito: aflojarla para atraparlos arriesga borrarle el
+   correo a un menor de verdad. `data-import/dat8-a-mano-2026-09-15.csv`.
 
 ### [x] BEC-2 · El destino de una beca sin cupo — HECHO 2026-09-15
 
