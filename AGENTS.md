@@ -40,3 +40,14 @@ El proxy (`src/proxy.ts`) excluye `/api`: **todo handler de ruta API debe llamar
 8. Listas paginadas responden `{ items, total, page, pageSize }`.
 9. Sin "modo consulta" en DELETE (nada de `?check=1`); la consulta previa es un GET propio.
 10. Paths nuevos en inglés y plural.
+
+# Cruzar datos contra CCB
+
+**Un external_id se resuelve con `member_por_external_id(id)`, nunca con `members.external_id` a secas** — en SQL directo, en un script de import y en cualquier consulta que cruce contra un export de CCB.
+
+El motivo: la fusión de duplicados deja el external_id del duplicado en `members.external_id_fusionados` y **no** se lo copia al principal (`external_id` está en la lista de `merge_no_copia()`). La ficha del duplicado tampoco se borra: queda `is_active=false` con `deactivation_reason='merged'`, conservando su external_id. Así que un mismo ID vive en DOS fichas a la vez, y buscar por `external_id` devuelve la muerta — peor que no encontrar nada, porque la persona aparece inactiva cuando está sirviendo. La función ordena por ficha viva primero y por eso acierta (migración `20260915030000`, contrato fijado por `src/lib/members/resolucion-por-external-id.test.ts`).
+
+Dos reglas más para estos cruces, las dos aprendidas rompiendo algo:
+
+- **Match por external_id, nunca por nombre.** Si no queda otra, la condición es que haya EXACTAMENTE UNA ficha viva con el nombre idéntico; con cero o con dos, se reporta y no se toca. Un regex sobre apellidos ya confundió a dos personas distintas.
+- **Que CCB no traiga una fila no prueba que el servicio se acabó.** Puede ser una edición hecha a mano en el sistema nuevo, que es la fuente correcta (así pasó con Sede Madrid el 13-set-2026). Antes de dar de baja en masa, comparar contra lo que el sistema sabe y preguntar.
