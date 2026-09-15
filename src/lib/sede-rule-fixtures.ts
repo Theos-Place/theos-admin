@@ -18,6 +18,12 @@
 //  · Inactivo (sin asistencia en 6 meses): sede = charla más asistida en los 6
 //    meses PREVIOS a su última asistencia (su último período activo).
 //  · Sin asistencias con sede reconocible: sin sede (null).
+//
+// Los nombres esperados salen de SEDE_CANONICAL, que en setiembre de 2026
+// absorbió el renombre en bloque de las series (ahora llevan el día de la
+// semana) y la unificación de Heredia dentro de Pedregal Miércoles. Por eso un
+// check-in a la "Charla Heredia" histórica rinde hoy "Pedregal Miércoles": esa
+// continuidad es justamente lo que el contrato tiene que preservar.
 
 export type SedeCheckin = { checked_in_at: string; title: string }
 export type SedeExpected = { name: string; case: 'activo' | 'inactivo'; lastCheckin: string } | null
@@ -50,7 +56,7 @@ export const SEDE_RULE_CASES: SedeRuleCase[] = [
       { checked_in_at: '2026-06-01T00:00:00Z', title: 'Charla Cartago' },
       { checked_in_at: '2026-05-01T00:00:00Z', title: 'Charla Heredia' },
     ],
-    expected: { name: 'Cartago', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
+    expected: { name: 'Cartago Miércoles', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
   },
   {
     name: 'activo con empate → gana la más reciente',
@@ -59,7 +65,7 @@ export const SEDE_RULE_CASES: SedeRuleCase[] = [
       { checked_in_at: '2026-06-01T00:00:00Z', title: 'Charla Cartago' },
       { checked_in_at: '2026-07-01T00:00:00Z', title: 'Charla Heredia' },
     ],
-    expected: { name: 'Heredia', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
+    expected: { name: 'Pedregal Miércoles', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
   },
   {
     name: 'inactivo: usa la ventana previa a la última asistencia, no todo el historial',
@@ -72,7 +78,7 @@ export const SEDE_RULE_CASES: SedeRuleCase[] = [
       { checked_in_at: '2025-09-01T00:00:00Z', title: 'Charla Cartago' },
       { checked_in_at: '2025-11-01T00:00:00Z', title: 'Charla Cartago' },
     ],
-    expected: { name: 'Cartago', case: 'inactivo', lastCheckin: '2025-11-01T00:00:00Z' },
+    expected: { name: 'Cartago Miércoles', case: 'inactivo', lastCheckin: '2025-11-01T00:00:00Z' },
   },
   {
     name: 'mezcla canónico/no canónico: ignora los no reconocidos',
@@ -81,6 +87,6 @@ export const SEDE_RULE_CASES: SedeRuleCase[] = [
       { checked_in_at: '2026-07-02T00:00:00Z', title: 'Reunión general' },
       { checked_in_at: '2026-07-01T00:00:00Z', title: 'Charla Heredia' },
     ],
-    expected: { name: 'Heredia', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
+    expected: { name: 'Pedregal Miércoles', case: 'activo', lastCheckin: '2026-07-01T00:00:00Z' },
   },
 ]
