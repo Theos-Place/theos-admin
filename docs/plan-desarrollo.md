@@ -420,8 +420,24 @@ específica; si no, el insert choca contra el único de `family_members`.
    trigger `audit_members` guarda `old_data` en null, así que para un vaciado el
    audit_log no sirve de respaldo. Comprobado sobre este mismo cambio.
 
-   Quedan **29 con señales de adulto** (estudios o cédula) pero sin la marca de
-   la fecha de registro: esos hay que preguntarlos uno por uno.
+   **Regla del usuario (15-set): con estudios NO se puede tener menos de 12 —
+   los estudios arrancan a esa edad, "eso ni aplica".** Con eso se vaciaron 7
+   fichas más, en TODO el padrón y no solo las sin familia. Cuatro tienen prueba
+   propia además de la regla: se matricularon con menos de 3 "años" de edad —
+   Cindy Marín figura nacida el 2017-03-18 y matriculada el 2017-06-01, tres
+   meses después. Menores activos 1.088 → 1.081.
+   `data-import/fechas-vaciadas-por-estudios-2026-09-15.csv`.
+
+   Quedan **~22 con señales de adulto** (cédula, o estudios pero con 12+ años)
+   sin una prueba dura: esos hay que preguntarlos uno por uno.
+
+### [ ] AUD-1 · El audit_log no guarda el valor viejo
+
+`audit_members` registra el UPDATE pero escribe `old_data` en NULL: solo
+conserva la fila nueva. Para cualquier corrección de datos que pise o vacíe un
+campo, el audit_log **no sirve de respaldo** — lo comprobado el 15-set al
+vaciar 26 fechas de nacimiento, cuyo único respaldo son los CSV de
+`data-import/`. Arreglar el trigger para que guarde la fila anterior.
 
 **Sobre DAT-8:** reconstruir las familias rescata solo **2** de los 55 menores
 de 12 con correo y sin familia (Ana Lucía Alvarado y Layla Castro). Los otros 53
