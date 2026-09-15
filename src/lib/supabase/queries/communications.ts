@@ -14,6 +14,7 @@ import { sePuedeBorrarEnServidor, MENSAJE_NO_BORRABLE, type MotivoNoBorrable } f
 import {
   estadoDeLaFila, estadosDelFiltro, type CorreoDelSistema, type FiltroCorreo,
 } from '@/lib/communications/correos-del-sistema'
+import { ventanaDelMesCR, type AporteAlResumen } from '@/lib/communications/resumen-general'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, EMAIL_NOT_CONFIGURED } from '@/lib/email/provider'
 import {
   emptySkipReasons, totalSkipped, noRecipientsMessage, type SkipReasons, type SkipReason,
@@ -310,6 +311,45 @@ export async function getSystemEmails(opts: {
     })),
     total: count ?? 0, page, pageSize,
   }
+}
+
+/**
+ * Lo que aportan los correos del SISTEMA al resumen del mes de /comunicaciones.
+ *
+ * Cuatro conteos con `head: true`: son ~1.700 filas y creciendo, y acá solo se
+ * necesita el número — traerlas para contarlas en memoria sería pagar el
+ * transporte de todo el mes por cuatro enteros.
+ *
+ * Los silenciados NO suman: el modo silencioso corta antes de que exista la
+ * fila, así que ni salieron ni fallaron. Viven en su propia tabla y tienen su
+ * filtro en la pestaña.
+ */
+export async function getSystemEmailStats(hoyYmd: string = todayCR()): Promise<AporteAlResumen> {
+  const supabase = createAdminClient()
+  const { desde, hasta } = ventanaDelMesCR(hoyYmd)
+
+  // `created_at` y no `sent_at`: una fila que falló o está en cola nunca tuvo
+  // sent_at, y dejarla fuera escondería justo lo que la tarjeta "Con errores"
+  // tiene que mostrar.
+  const contar = async (estados?: string[]) => {
+    let q = supabase.from('message_logs')
+      .select('id', { count: 'exact', head: true })
+      .is('broadcast_id', null)
+      .gte('created_at', desde)
+      .lt('created_at', hasta)
+    if (estados) q = q.in('status', estados)
+    const { count, error } = await q
+    if (error) throw error
+    return count ?? 0
+  }
+
+  const [mensajes, alcanzados, entregados, conErrores] = await Promise.all([
+    contar(),
+    contar(['sent', 'delivered']),
+    contar(['delivered']),
+    contar(['bounced', 'failed']),
+  ])
+  return { mensajes, alcanzados, entregados, conErrores }
 }
 
 /** Nombre de cada dirección, en una sola consulta por página. */

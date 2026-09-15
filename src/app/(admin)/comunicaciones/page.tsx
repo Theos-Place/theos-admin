@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { getDeliveryRate, type CommunicationChannel, type CommunicationStatus } from '@/data/communication-utils'
 import { useCommunications } from '@/hooks/useCommunications'
@@ -30,6 +30,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { useToast } from '@/components/shared/Toast'
 import { textoDeConfirmacion, resumenDelBorrado } from '@/lib/communications/borrado-de-comunicado'
+import {
+  resumenGeneral, desgloseDeTarjeta, APORTE_VACIO, type AporteAlResumen,
+} from '@/lib/communications/resumen-general'
 
 type MainTab = 'historial' | 'programados' | 'borradores' | 'sistema'
 type ChannelFilter = 'all' | CommunicationChannel
@@ -108,16 +111,39 @@ export default function ComunicacionesPage() {
       .sort((a, b) => (a.scheduled_at ?? '').localeCompare(b.scheduled_at ?? '')),
     [messages])
 
+  /**
+   * Los correos del sistema también cuentan en el resumen. Son los avisos
+   * automáticos (matrícula, beca, contraseña): hasta ahora no entraban en estas
+   * tarjetas y en un mes normal son la mayor parte del correo que sale, así que
+   * la pantalla mostraba casi cero cuando habían salido cientos. Cada tarjeta
+   * dice cuánto de su número es automático.
+   */
+  const [sistema, setSistema] = useState<AporteAlResumen>(APORTE_VACIO)
+  useEffect(() => {
+    // .then y no async/await: react-hooks/set-state-in-effect solo acepta el
+    // setState dentro del callback de la promesa (anotado en eslint.config.mjs).
+    // Si falla, el resumen se queda con la parte de campañas: un número
+    // incompleto es mejor que una pantalla rota.
+    fetch('/api/communications/summary')
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error('no'))))
+      .then((d: AporteAlResumen) => setSistema(d))
+      .catch(() => {})
+  }, [])
+
   const stats = useMemo(() => {
     const sentThisMonth = sent.filter(m => thisMonth(m.sent_at))
     // "Alcanzados" son los que RECIBIERON, no el total al que apuntaba el
     // comunicado: ese total incluye a los saltados (sin correo, rebotados, baja).
-    const totalRecipients = sentThisMonth.reduce((sum, m) => sum + m.stats.sent, 0)
-    const totalDelivered = sentThisMonth.reduce((sum, m) => sum + m.stats.delivered, 0)
-    const avgRate = totalRecipients > 0 ? Math.round((totalDelivered / totalRecipients) * 100) : 0
-    const withErrors = sent.filter(m => m.stats.failed > 0).length
-    return { sentThisMonth: sentThisMonth.length, totalRecipients, avgRate, withErrors }
-  }, [sent])
+    // Todo es del MES: antes "Con errores" contaba el historial completo al lado
+    // de una tarjeta que decía "este mes", y con dos orígenes esa mezcla dejaba
+    // un número imposible de interpretar.
+    return resumenGeneral({
+      mensajes: sentThisMonth.length,
+      alcanzados: sentThisMonth.reduce((sum, m) => sum + m.stats.sent, 0),
+      entregados: sentThisMonth.reduce((sum, m) => sum + m.stats.delivered, 0),
+      conErrores: sentThisMonth.filter(m => m.stats.failed > 0).length,
+    }, sistema)
+  }, [sent, sistema])
 
   // Formularios viven dentro de Comunicaciones: resumen con sus métricas.
   const { forms } = useForms()
@@ -193,11 +219,25 @@ export default function ComunicacionesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Mensajes este mes', value: stats.sentThisMonth, color: 'text-navy', icon: CheckCircle2 },
-          { label: 'Destinatarios alcanzados', value: stats.totalRecipients.toLocaleString('es-CR'), color: 'text-teal-deep', icon: Users },
-          { label: 'Tasa de entrega', value: `${stats.avgRate}%`, color: stats.avgRate >= 90 ? 'text-teal-deep' : 'text-amber-600', icon: TrendingUp },
-          { label: 'Con errores', value: stats.withErrors, color: stats.withErrors > 0 ? 'text-coral' : 'text-navy-light/80', icon: AlertTriangle },
-        ].map(({ label, value, color, icon: Icon }) => (
+          {
+            label: 'Mensajes este mes', value: stats.mensajes.total.toLocaleString('es-CR'),
+            color: 'text-navy', icon: CheckCircle2, nota: desgloseDeTarjeta(stats.mensajes),
+          },
+          {
+            label: 'Destinatarios alcanzados', value: stats.alcanzados.total.toLocaleString('es-CR'),
+            color: 'text-teal-deep', icon: Users, nota: desgloseDeTarjeta(stats.alcanzados),
+          },
+          {
+            label: 'Tasa de entrega', value: `${stats.tasa}%`,
+            color: stats.tasa >= 90 ? 'text-teal-deep' : 'text-amber-600', icon: TrendingUp,
+            nota: stats.tasaDelSistema === null ? null : `${stats.tasaDelSistema}% la del sistema`,
+          },
+          {
+            label: 'Con errores', value: stats.conErrores.total.toLocaleString('es-CR'),
+            color: stats.conErrores.total > 0 ? 'text-coral' : 'text-navy-light/80', icon: AlertTriangle,
+            nota: desgloseDeTarjeta(stats.conErrores),
+          },
+        ].map(({ label, value, color, icon: Icon, nota }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between mb-3">
               <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
@@ -207,6 +247,11 @@ export default function ComunicacionesPage() {
             </div>
             <p className={cn('text-4xl font-extrabold tabular-nums font-display', color)}>
               {value}
+            </p>
+            {/* El desglose deja claro que el número no es solo de campañas.
+                Ocupa alto fijo para que las cuatro tarjetas queden parejas. */}
+            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body min-h-[18px]">
+              {nota ?? ''}
             </p>
           </div>
         ))}
