@@ -383,9 +383,14 @@ específica; si no, el insert choca contra el único de `family_members`.
    Verificado después: **cero** teléfonos de menor siguen siendo iguales a los
    de un adulto de su familia. Lista en
    `data-import/menores-datos-prestados-2026-09-15.csv`.
- · [ ] **197 menores YA tienen cuenta** de corridas anteriores (una sola se usó
-   para entrar, la de un niño de 8 años). Deshabilitarlas es decisión del
-   usuario — `data-import/menores-con-cuenta-2026-09-15.csv`.
+ · [x] **197 menores con cuenta** — RESUELTO 2026-09-15. Las 196 de chicos de
+   12 a 17 años, ninguna usada jamás, quedaron deshabilitadas con un ban largo:
+   no se borran ni se desligan, así que al cumplir 18 basta con quitar el ban
+   (borrarlas dejaría el correo ocupado por un usuario huérfano).
+   La 197 no era lo que parecía: la "cuenta de menor" de Miguel Andrés Álvarez,
+   8 años, tenía el correo de su mamá Karin Buscemi y el login era de ELLA,
+   que no tenía cuenta propia porque ese usuario le ocupaba el correo.
+   Deshabilitarla la habría dejado sin acceso: se le MUDÓ la cuenta a su ficha.
  · [ ] **66 cumplieron 18 sin cuenta** en el último año: candidatos a que se les
    ofrezca el alta. Nada automatizado, como pide el brief —
    `data-import/cumplieron-18-sin-cuenta-2026-09-15.csv`.
