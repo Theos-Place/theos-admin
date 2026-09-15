@@ -440,22 +440,35 @@ específica; si no, el insert choca contra el único de `family_members`.
    Quedan **~22 con señales de adulto** (cédula, o estudios pero con 12+ años)
    sin una prueba dura: esos hay que preguntarlos uno por uno.
 
-### [ ] AUD-1 · El audit_log no guarda el valor viejo
+### [x] AUD-1 · El audit_log no guardaba el valor viejo — HECHO 2026-09-15
 
-`audit_members` registra el UPDATE pero escribe `old_data` en NULL: solo
-conserva la fila nueva. Para cualquier corrección de datos que pise o vacíe un
-campo, el audit_log **no sirve de respaldo** — lo comprobado el 15-set al
-vaciar 26 fechas de nacimiento, cuyo único respaldo son los CSV de
-`data-import/`. Arreglar el trigger para que guarde la fila anterior.
+`log_changes` ponía `old_data` en NULL para los UPDATE, literalmente
+`CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE NULL END`. Registraba
+que algo cambió y cómo quedó, nunca cómo estaba antes. Se descubrió al vaciar
+26 fechas de nacimiento: el único respaldo terminaron siendo unos CSV.
 
-**Sobre DAT-8:** reconstruir las familias rescata solo **2** de los 55 menores
-de 12 con correo y sin familia (Ana Lucía Alvarado y Layla Castro). Los otros 53
-tampoco están en una familia en CCB, así que DAT-8 sigue necesitando preguntar.
+Ahora un UPDATE guarda **solo lo que cambió**, viejo y nuevo:
 
-## Fase 17 — Hallazgos del 2026-09-15
+```
+old: {"birth_date":"1965-09-09"}   new: {"birth_date":null}
+```
 
-Salieron de trabajar el comunicado de Meridiano, el data fix de las series de
-charlas y el barrido de servidores contra CCB. Ninguno bloquea nada hoy.
+Eso arregla de paso el TAMAÑO, que era el otro problema. La tabla iba en
+**314 MB con 369 mil filas** porque cada UPDATE copiaba las ~50 columnas
+aunque hubiera cambiado una: una fila de `members` pesa 1.480 bytes en JSON y
+un cambio de dos campos ahora pesa 275. INSERT y DELETE no cambian — ahí la
+fila entera ES el contenido.
+
+Dos detalles que importan: la comparación es `is distinct from` y no `<>`,
+porque con `<>` un paso a NULL no cuenta como cambio y era justo el caso que
+lo motivó; y `updated_at` queda fuera del diff, porque lo mueve
+`set_updated_at` en cada escritura y si contara todo cambio traería ese ruido.
+
+Contrato fijado por `src/lib/audit-log-contrato.test.ts`. Migración
+`20260915090000`.
+
+Pendiente aparte: **no es retroactivo.** Lo que se cambió antes de hoy sigue
+sin valor viejo, y los 314 MB ya escritos no se achican solos.
 
 ### [x] SRV-1 · Michelle Evans · CERRADO 2026-09-15 — no era un problema
 
