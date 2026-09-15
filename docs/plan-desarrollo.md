@@ -400,19 +400,18 @@ crear un miembro menor sin correo ni teléfono funciona de punta a punta.
 Salieron de trabajar el comunicado de Meridiano, el data fix de las series de
 charlas y el barrido de servidores contra CCB. Ninguno bloquea nada hoy.
 
-### [ ] SRV-1 · Michelle Evans perdió el rango de Coordinador Lectura
+### [x] SRV-1 · Michelle Evans · CERRADO 2026-09-15 — no era un problema
 
-CCB la tiene como **Coordinador Lectura** en Pedregal Jueves; en el sistema le
-quedó «Colaborador Lectura» y el puesto de coordinador está con cero personas.
-Es el mismo tipo de caso que Producción Técnica, ya resuelto, pero de a uno.
-Confirmar con la sede antes de tocar: pudo ser un cambio real.
+CCB la tenía como Coordinador Lectura en Pedregal Jueves y el sistema como
+«Colaborador Lectura». El usuario confirmó que el sistema es el correcto: el
+cambio de rango fue real. El puesto «Coordinador Lectura» de esa sede queda
+vacío a propósito.
 
-### [ ] SRV-2 · Ingrid Gómez y Zully Murillo tienen dos IDs en CCB
+### [x] SRV-2 · Ingrid Gómez y Zully Murillo tenían dos IDs en CCB — HECHO 2026-09-15
 
-Las dos están activas y en la sede correcta, pero con un `external_id` que el
-export de CCB no trae (17267 vs 11068, y 5142 vs 24238). No es un duplicado del
-sistema: es de CCB. **El arreglo es de ese lado**, acá solo hay que no volver a
-reportarlas como faltantes.
+Resuelto del lado de CCB, que era donde estaba el duplicado. En el sistema las
+dos siempre estuvieron activas y en la sede correcta; lo que no calzaba era el
+`external_id` del export (17267 vs 11068, y 5142 vs 24238).
 
 ### [x] SRV-3 · Puestos fantasma — HECHO 2026-09-15 (eran 3, no 25)
 
