@@ -23,18 +23,33 @@ const esMadrid = s => norm(s).includes('madrid')
 ;(async () => {
   const c = L.nuevoCliente(); await c.connect()
   const ccb = leerCSV(fs.readFileSync('data-import/puestos-ccb-activos-2026-09-15.csv','utf8'))
+  // Una ficha se resuelve por su external_id O por los que absorbió al
+  // fusionarse: el merge deja el del duplicado en external_id_fusionados y NO
+  // se lo copia al principal (está en merge_no_copia). Sin esto, una persona
+  // fusionada parece "sin ficha" aunque esté sirviendo — así reporté de más a
+  // Dylana Vincenti y a María José Céspedes el 15-set.
   const { rows: sis } = await c.query(`
-    select m.external_id ext, m.first_name||' '||m.last_name persona, v.id, v.status, v.end_date,
-           sp.title puesto, a.name comite
-    from members m join volunteers v on v.member_id=m.id
-    join service_positions sp on sp.id=v.position_id join areas a on a.id=sp.area_id
-    where a.name not like '[prueba]%' and m.external_id is not null`)
+    select coalesce(m.external_id, f.ext) ext, m.first_name||' '||m.last_name persona,
+           v.status, v.end_date, sp.title puesto, a.name comite
+    from members m
+    left join lateral unnest(coalesce(m.external_id_fusionados, array[]::text[])) f(ext) on true
+    join volunteers v on v.member_id = m.id
+    join service_positions sp on sp.id = v.position_id
+    join areas a on a.id = sp.area_id
+    where a.name not like '[prueba]%'
+      and (m.external_id is not null or f.ext is not null)`)
   const pp = new Map()
   for (const r of sis) { if (!pp.has(r.ext)) pp.set(r.ext, []); pp.get(r.ext).push(r) }
   const par = (a,b) => a===b || a.startsWith(b) || b.startsWith(a)
 
   const cerradas = [], sinFicha = []
-  const extEnSistema = new Set(sis.map(r => r.ext))
+  // "Sin ficha" se pregunta contra members, no contra el join con volunteers:
+  // alguien con ficha y CERO servicios no es alguien sin ficha.
+  const { rows: fichas } = await c.query(`
+    select coalesce(m.external_id, f.ext) ext from members m
+    left join lateral unnest(coalesce(m.external_id_fusionados, array[]::text[])) f(ext) on true
+    where m.external_id is not null or f.ext is not null`)
+  const extEnSistema = new Set(fichas.map(r => r.ext))
   for (const r of ccb) {
     const ext = String(r['Individual ID']).trim()
     const equipo = r['Team Name'] || r['Category Name']
