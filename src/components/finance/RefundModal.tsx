@@ -5,6 +5,7 @@ import type { PaymentMethod } from '@/types/finance'
 import { Modal } from '@/components/shared/Modal'
 import { AmountDisplay } from './AmountDisplay'
 import { formatCRC } from '@/lib/format'
+import { avisoDeDevolucion } from '@/lib/finance/aviso-de-devolucion'
 
 interface RefundModalProps {
   isOpen: boolean
@@ -39,7 +40,10 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
     ? payment.amount
     : Math.min(Number(partialAmount) || 0, payment.amount)
 
-  const isSinpe = payment.method === 'sinpe'
+  // El aviso era binario (SINPE o, si no, 'tarjeta') y prometía un cobro
+  // automático por una pasarela que no existe. La regla vive en
+  // lib/finance/aviso-de-devolucion.ts, con tests.
+  const aviso = avisoDeDevolucion(payment.method)
 
   function handleConfirm() {
     if (type === 'partial' && (!partialAmount || Number(partialAmount) <= 0)) return
@@ -148,19 +152,16 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
             />
           )}
 
-          {/* SINPE / Card notice */}
+          {/* Cómo entró el pago y cómo va a salir la devolución. Siempre en
+              ámbar: hoy NINGUNA devolución es automática, así que el aviso
+              siempre pide acción de alguien. */}
           <div
             className="flex items-start gap-2.5 rounded-xl p-3.5"
-            style={{
-              background: isSinpe ? 'rgba(233,185,73,0.10)' : 'rgba(61,185,122,0.08)',
-              border: `1px solid ${isSinpe ? 'rgba(233,185,73,0.25)' : 'rgba(61,185,122,0.20)'}`,
-            }}
+            style={{ background: 'rgba(233,185,73,0.10)', border: '1px solid rgba(233,185,73,0.25)' }}
           >
-            <Info size={15} className="mt-px shrink-0" style={{ color: isSinpe ? '#E9B949' : '#3DB97A' }} />
-            <p className="text-[13px] leading-relaxed font-body" style={{ color: isSinpe ? '#9B7200' : '#1E6B42' }}>
-              {isSinpe
-                ? 'Este pago fue por SINPE. La devolución requiere procesamiento manual — el equipo de finanzas coordinará la transferencia.'
-                : 'Este pago fue por tarjeta y se procesará automáticamente a través de la pasarela de pago.'}
+            <Info size={15} className="mt-px shrink-0" style={{ color: '#E9B949' }} />
+            <p className="text-[13px] leading-relaxed font-body" style={{ color: '#9B7200' }}>
+              {aviso.texto}
             </p>
           </div>
         </div>
