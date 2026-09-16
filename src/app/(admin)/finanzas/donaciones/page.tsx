@@ -131,7 +131,8 @@ export default function DonacionesPage() {
             { label: 'Donantes identificados', value: uniqueDonors, isAmount: false, alert: false },
             { label: 'Total donado este mes', value: totalThisMonth, isAmount: true, alert: false },
             // FIN-1: reemplaza "Sin identificar" (el banner accionable de abajo
-            // se mantiene). Donantes activos = members.is_donor (últimos ~2 trimestres).
+            // se mantiene). Donantes activos = members.is_donor (mes actual + los 5
+            // anteriores; la regla vive en refresh_donor_flags()).
             { label: 'Donantes activos', value: activeDonors, isAmount: false, alert: false },
           ].map(({ label, value, isAmount, alert }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">

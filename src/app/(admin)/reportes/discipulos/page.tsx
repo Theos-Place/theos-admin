@@ -107,7 +107,7 @@ export default function ReporteDiscipulosPage() {
           label="Donan activamente"
           value={fmt(criteria.donan.n)}
           sublabel={`${criteria.donan.pct}% de la base`}
-          info="Donaron en aproximadamente los últimos 2 trimestres (flag is_donor)."
+          info="Donaron al menos una vez en los últimos 6 meses, contando el mes actual."
         />
       </div>
 

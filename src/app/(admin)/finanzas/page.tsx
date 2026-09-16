@@ -171,7 +171,7 @@ export default function FinanzasPage() {
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}
             </p>
-            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">Donaron en los últimos 2 trimestres</p>
+            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">Donaron en los últimos 6 meses, contando el actual</p>
           </div>
 
           {/* Pagos pendientes */}
