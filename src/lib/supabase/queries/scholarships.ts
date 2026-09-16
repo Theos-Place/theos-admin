@@ -19,6 +19,7 @@ import {
   planearMovimiento, avisoDelCambio,
   type BecaParaMover, type DestinoNuevo, type MotivoBloqueo,
 } from '@/lib/finance/cambio-de-destino-beca'
+import type { MotivoBloqueoCancelacion } from '@/lib/finance/cancelacion-de-beca'
 import { reportarError } from '@/lib/observabilidad'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
@@ -78,6 +79,10 @@ export type Scholarship = {
   used_at: string | null
   used_count: number
   created_at: string
+  /** Cancelación (2026-09-16): por qué, quién y cuándo. Solo en las 'revoked'. */
+  revoked_at: string | null
+  revoke_reason: string | null
+  revoked_by_name: string | null
   /** BEC-1: registro del correo enviado con el código/aviso de beca. */
   email_sent_at: string | null
   email_sent_to: string | null
@@ -105,6 +110,7 @@ export { formatDiscount }
 const SELECT = `
   id, kind, member_id, entity_type, plan_id, event_id, discount_type, discount_value,
   code, currency, expires_at, approval_type, status, used_at, created_at, email_sent_at, email_sent_to,
+  revoked_at, revoke_reason, revoked_by,
   member:members!scholarships_member_id_fkey(first_name, last_name),
   plan:study_plans!scholarships_plan_id_fkey(name),
   event:events!scholarships_event_id_fkey(title)
@@ -127,6 +133,11 @@ type DbRow = {
   status: ScholarshipStatus
   used_at: string | null
   created_at: string
+  revoked_at: string | null
+  revoke_reason: string | null
+  /** auth.users.id, igual que approved_by/created_by. El nombre se resuelve
+   *  aparte (resolverNombresDeQuienCancelo): PostgREST no cruza a auth. */
+  revoked_by: string | null
   email_sent_at: string | null
   email_sent_to: string | null
   member: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
@@ -159,6 +170,10 @@ function toDomain(r: DbRow, usedCount = 0): Scholarship {
     approval_type: r.approval_type,
     status: r.status,
     used_at: r.used_at,
+    revoked_at: r.revoked_at ?? null,
+    revoke_reason: r.revoke_reason ?? null,
+    // Lo llena resolverNombresDeQuienCancelo; acá no hay con qué.
+    revoked_by_name: null,
     used_count: usedCount,
     created_at: r.created_at,
     email_sent_at: r.email_sent_at,
@@ -255,6 +270,30 @@ async function calcularCupos(
   return cupos
 }
 
+/**
+ * Pone el nombre de quien canceló cada beca.
+ *
+ * Va aparte porque `scholarships.revoked_by` referencia auth.users —igual que
+ * approved_by y created_by— y PostgREST no puede hacer join contra ese esquema.
+ * El puente es `members.auth_user_id`.
+ */
+async function resolverNombresDeQuienCancelo(
+  supabase: ReturnType<typeof createAdminClient>, becas: Scholarship[], rows: DbRow[],
+): Promise<Scholarship[]> {
+  const ids = [...new Set(rows.map(r => r.revoked_by).filter((v): v is string => !!v))]
+  if (!ids.length) return becas
+  const { data } = await supabase.from('members').select('auth_user_id, first_name, last_name').in('auth_user_id', ids)
+  const nombre = new Map<string, string>()
+  for (const m of (data ?? []) as Array<{ auth_user_id: string; first_name: string; last_name: string }>) {
+    nombre.set(m.auth_user_id, `${m.first_name} ${m.last_name}`.trim())
+  }
+  const porBeca = new Map(rows.map(r => [r.id, r.revoked_by]))
+  return becas.map(b => {
+    const uid = porBeca.get(b.id)
+    return uid ? { ...b, revoked_by_name: nombre.get(uid) ?? null } : b
+  })
+}
+
 /** Cola de gestión (pantalla /finanzas/becas). */
 export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; status?: ScholarshipStatus }): Promise<Scholarship[]> {
   const supabase = createAdminClient()
@@ -266,7 +305,7 @@ export async function getScholarshipsQueue(filters?: { kind?: ScholarshipKind; s
   const rows = (data ?? []) as DbRow[]
 
   const counts = await contarRedenciones(supabase, rows.map(r => r.id))
-  const becas = rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
+  const becas = await resolverNombresDeQuienCancelo(supabase, rows.map(r => toDomain(r, counts.get(r.id) ?? 0)), rows)
   const cupos = await calcularCupos(supabase, becas)
   return becas.map(b => ({ ...b, cupo: cupos.get(b.id) ?? b.cupo }))
 }
@@ -282,7 +321,7 @@ export async function getMemberScholarships(memberId: string): Promise<Scholarsh
   const rows = (data ?? []) as DbRow[]
   // También acá: la persona ve sus becas con el mismo used_count que finanzas.
   const counts = await contarRedenciones(supabase, rows.map(r => r.id))
-  return rows.map(r => toDomain(r, counts.get(r.id) ?? 0))
+  return resolverNombresDeQuienCancelo(supabase, rows.map(r => toDomain(r, counts.get(r.id) ?? 0)), rows)
 }
 
 /** Beca asignada activa de un miembro para un destino específico (para
@@ -422,12 +461,46 @@ export async function createGenericScholarship(input: {
 
 /** Revoca una beca/cupón. Solo si sigue 'active' — si ya está 'used', el caller
  *  debe advertir en vez de dejar revocar (ActiveWarningModal). */
-export async function revokeScholarship(id: string): Promise<boolean> {
+/**
+ * Cancela una beca que todavía no se usó, dejando constancia de quién y por qué.
+ *
+ * El motivo es OBLIGATORIO y la base lo respalda (constraint
+ * scholarships_revoked_con_motivo): antes esto solo escribía status='revoked' y
+ * una beca podía quedar cancelada sin ninguna explicación, que en algo que
+ * mueve plata es el dato que después nadie encuentra.
+ *
+ * El `.eq('status','active')` es el guard anti-carrera: si alguien la usó o la
+ * canceló mientras tanto, el update no toca nada y se devuelve el porqué
+ * releyendo el estado real, en vez de un booleano que no distingue los casos.
+ */
+export async function revokeScholarship(
+  id: string,
+  opts: { motivo: string; actorUserId: string | null },
+): Promise<{ ok: true } | { ok: false; error: MotivoBloqueoCancelacion | 'no_encontrada' | 'motivo_invalido' }> {
+  const { motivoNormalizado, puedeCancelarse } = await import('@/lib/finance/cancelacion-de-beca')
+  const motivo = motivoNormalizado(opts.motivo)
+  if (!motivo) return { ok: false, error: 'motivo_invalido' }
+
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('scholarships')
-    .update({ status: 'revoked' }).eq('id', id).eq('status', 'active').select('id')
+    .update({
+      status: 'revoked',
+      revoke_reason: motivo,
+      revoked_by: opts.actorUserId,
+      revoked_at: new Date().toISOString(),
+    })
+    .eq('id', id).eq('status', 'active').select('id')
   if (error) throw error
-  return (data ?? []).length > 0
+  if ((data ?? []).length > 0) return { ok: true }
+
+  // No se actualizó: averiguar por qué, para poder decirlo en vez de devolver
+  // un booleano que no distingue "ya usada" de "no existe".
+  const { data: actual } = await supabase.from('scholarships').select('kind, status').eq('id', id).maybeSingle()
+  const fila = actual as { kind: ScholarshipKind; status: ScholarshipStatus } | null
+  if (!fila) return { ok: false, error: 'no_encontrada' }
+  const redenciones = await contarRedenciones(supabase, [id])
+  const permitido = puedeCancelarse({ kind: fila.kind, status: fila.status, used_count: redenciones.get(id) ?? 0 })
+  return permitido.ok ? { ok: false, error: 'ya_usada' } : permitido
 }
 
 /** INT-3 · La moneda de una beca sale de LO QUE SE BECA (el plan o el evento).

@@ -12,9 +12,11 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { GraduationCap, Loader2, ArrowRightLeft, Search, X } from 'lucide-react'
+import { GraduationCap, Loader2, ArrowRightLeft, Search, X, Ban } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
+import { CancelarBecaModal } from '@/components/finance/CancelarBecaModal'
+import { textoDeLaCancelacion } from '@/lib/finance/cancelacion-de-beca'
 import { useToast } from '@/components/shared/Toast'
 import { usePublicEvents } from '@/hooks/useEvents'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -47,6 +49,10 @@ export type BecaAsignada = {
   used_at: string | null
   used_count: number
   created_at: string
+  /** Solo en las canceladas: por qué, quién y cuándo. */
+  revoked_at?: string | null
+  revoke_reason?: string | null
+  revoked_by_name?: string | null
   email_sent_at: string | null
   /** BEC-2: si la persona puede usar la beca hoy. Lo calcula el servidor. */
   cupo: EstadoDelCupo
@@ -92,6 +98,7 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
     [porUso, cupo])
 
   const [mover, setMover] = useState<BecaAsignada | null>(null)
+  const [cancelar, setCancelar] = useState<BecaAsignada | null>(null)
 
   return (
     <>
@@ -169,6 +176,14 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
                         <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display whitespace-nowrap', BADGE_USO[uso])}>
                           {ETIQUETA_USO[uso]}
                         </span>
+                        {b.status === 'revoked' && (() => {
+                          // Sin el motivo al lado, una beca cancelada no le dice
+                          // nada a quien la mire después.
+                          const linea = textoDeLaCancelacion({
+                            quien: b.revoked_by_name ?? null, cuando: b.revoked_at ?? null, motivo: b.revoke_reason ?? null,
+                          })
+                          return linea ? <p className="text-[13px] text-navy-light/80 font-body mt-1 max-w-[28ch]">{linea}</p> : null
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         {b.cupo === 'no_aplica' ? (
@@ -185,12 +200,20 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{formatDate(b.created_at)}</td>
                       <td className="px-4 py-3 text-right">
                         {canEdit && uso === 'sin_usar' && (
-                          <button
-                            onClick={() => setMover(b)}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-navy/20 text-navy px-3 py-1 text-[13px] hover:bg-navy/5 transition-colors font-body whitespace-nowrap"
-                          >
-                            <ArrowRightLeft size={13} /> Mover a otro estudio
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setMover(b)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-navy/20 text-navy px-3 py-1 text-[13px] hover:bg-navy/5 transition-colors font-body whitespace-nowrap"
+                            >
+                              <ArrowRightLeft size={13} /> Mover a otro estudio
+                            </button>
+                            <button
+                              onClick={() => setCancelar(b)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 text-coral-deep px-3 py-1 text-[13px] hover:bg-coral/5 transition-colors font-body whitespace-nowrap"
+                            >
+                              <Ban size={13} /> Cancelar
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -201,6 +224,27 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
           </div>
         )}
       </div>
+
+      {cancelar && (
+        <CancelarBecaModal
+          titulo="Cancelar la beca"
+          detalle={`${cancelar.member_name ?? 'Sin persona'} · ${formatDiscount(cancelar.discount_type, cancelar.discount_value, cancelar.currency)} · ${cancelar.entity_name}`}
+          onClose={() => setCancelar(null)}
+          onConfirmar={async (motivo) => {
+            const res = await fetch(`/api/scholarships/${cancelar.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'cancelar', motivo }),
+            })
+            if (!res.ok) {
+              const d = await res.json().catch(() => null)
+              return d?.error ?? 'No se pudo cancelar la beca.'
+            }
+            setCancelar(null); toast('Beca cancelada.', 'success'); recargar()
+            return null
+          }}
+        />
+      )}
 
       {mover && (
         <MoverBecaModal

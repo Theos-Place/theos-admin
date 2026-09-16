@@ -4,6 +4,9 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revokeScholarship, moveScholarship } from '@/lib/supabase/queries/scholarships'
 import { MENSAJE_BLOQUEO, type MotivoBloqueo } from '@/lib/finance/cambio-de-destino-beca'
+import {
+  MENSAJE_BLOQUEO_CANCELACION, MENSAJE_MOTIVO_CORTO, motivoNormalizado,
+} from '@/lib/finance/cancelacion-de-beca'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET ?usage=1: cuántas veces se usó (para decidir DeleteConfirmModal vs ActiveWarningModal en el cliente).
@@ -26,10 +29,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-// PATCH { action: 'mover', entity_type, plan_id|event_id, motivo?, notificar? }
-// Cambia el destino de una beca asignada (el estudio original se llenó o se
-// canceló). Convención del repo: acción puntual como { action }, no un endpoint
-// propio.
+// PATCH { action: 'mover' | 'cancelar', ... }
+//   'mover'    { entity_type, plan_id|event_id, motivo?, notificar? } — cambia el
+//              destino de una beca asignada (el estudio original se llenó o se canceló).
+//   'cancelar' { motivo } — cierra una beca sin usar dejando quién y por qué.
+// Convención del repo: acción puntual como { action }, no un endpoint propio.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireModuleView('becas', { action: 'edit' })
   if (auth.res) return auth.res
@@ -37,8 +41,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Id inválido' }, { status: 400 })
     const body = await req.json().catch(() => null)
+    if (body?.action === 'cancelar') return cancelar(id, body, auth.ctx.userId)
     if (body?.action !== 'mover') {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { action: "debe ser 'mover'" } }, { status: 400 })
+      return NextResponse.json({ error: 'Datos inválidos', detalles: { action: "debe ser 'mover' o 'cancelar'" } }, { status: 400 })
     }
     const entityType = body?.entity_type
     if (entityType !== 'study_plan' && entityType !== 'event') {
@@ -70,18 +75,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-// DELETE: revoca (no borra físicamente — status='revoked'). Bloqueado si ya está usada.
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireModuleView('becas', { action: 'edit' })
-  if (auth.res) return auth.res
-  try {
-    const { id } = await params
-    if (!isUuid(id)) return NextResponse.json({ error: 'Id inválido' }, { status: 400 })
-    const revoked = await revokeScholarship(id)
-    if (!revoked) return NextResponse.json({ error: 'No se puede revocar: ya fue usada o no está activa.' }, { status: 409 })
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    reportarError('DELETE /api/scholarships/[id]:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+/**
+ * Cancela una beca sin usar. El motivo es obligatorio y queda guardado con el
+ * nombre de quien la canceló: una beca cancelada sin explicación es justo el
+ * dato que después nadie encuentra.
+ *
+ * Reemplaza al viejo DELETE, que escribía status='revoked' y nada más. Se quitó
+ * en vez de dejarlo conviviendo para no tener dos caminos que cancelan la misma
+ * beca, uno de ellos sin pedir motivo — el rato que alguien use ese, la garantía
+ * deja de valer.
+ */
+async function cancelar(id: string, body: unknown, actorUserId: string): Promise<NextResponse> {
+  const motivo = motivoNormalizado((body as { motivo?: unknown })?.motivo)
+  if (!motivo) {
+    return NextResponse.json({ error: 'Datos inválidos', detalles: { motivo: MENSAJE_MOTIVO_CORTO } }, { status: 400 })
   }
+  const result = await revokeScholarship(id, { motivo, actorUserId })
+  if (result.ok) return NextResponse.json({ ok: true })
+  if (result.error === 'no_encontrada') return NextResponse.json({ error: 'La beca no existe.' }, { status: 404 })
+  if (result.error === 'motivo_invalido') {
+    return NextResponse.json({ error: 'Datos inválidos', detalles: { motivo: MENSAJE_MOTIVO_CORTO } }, { status: 400 })
+  }
+  // Que ya se haya usado o cancelado es un conflicto con su estado, no un dato malo.
+  return NextResponse.json(
+    { error: MENSAJE_BLOQUEO_CANCELACION[result.error], code: result.error },
+    { status: 409 },
+  )
 }

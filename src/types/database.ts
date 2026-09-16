@@ -3900,6 +3900,9 @@ export type Database = {
           plan_id: string | null
           reason: string | null
           request_id: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
           status: string | null
           updated_at: string | null
           used_at: string | null
@@ -3930,6 +3933,9 @@ export type Database = {
           plan_id?: string | null
           reason?: string | null
           request_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           status?: string | null
           updated_at?: string | null
           used_at?: string | null
@@ -3960,6 +3966,9 @@ export type Database = {
           plan_id?: string | null
           reason?: string | null
           request_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
           status?: string | null
           updated_at?: string | null
           used_at?: string | null

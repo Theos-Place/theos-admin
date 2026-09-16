@@ -31,7 +31,7 @@ type ScholarshipRow = {
 const SCHOLARSHIP_BADGE: Record<ScholarshipRow['status'], { label: string; cls: string }> = {
   active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-deep' },
   used: { label: 'Usada', cls: 'bg-navy/8 text-navy-light/80' },
-  revoked: { label: 'Revocada', cls: 'bg-coral/10 text-coral' },
+  revoked: { label: 'Cancelada', cls: 'bg-coral/10 text-coral' },
 }
 
 function discountLabel(s: ScholarshipRow) {

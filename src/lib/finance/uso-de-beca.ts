@@ -34,7 +34,7 @@ export function usoDeLaBeca(b: BecaConUso): Uso {
 export const ETIQUETA_USO: Record<Uso, string> = {
   sin_usar: 'Sin usar',
   usada: 'Usada',
-  revocada: 'Revocada',
+  revocada: 'Cancelada',
 }
 
 /** Verde = plata ya aplicada; ámbar = compromiso vivo pendiente; coral = anulada. */
@@ -48,7 +48,7 @@ export const BADGE_USO: Record<Uso, string> = {
 export const FILTROS_USO: Array<{ id: FiltroUso; label: string }> = [
   { id: 'sin_usar', label: 'Sin usar' },
   { id: 'usada', label: 'Usadas' },
-  { id: 'revocada', label: 'Revocadas' },
+  { id: 'revocada', label: 'Canceladas' },
   { id: 'todas', label: 'Todas' },
 ]
 

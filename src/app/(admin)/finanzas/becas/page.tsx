@@ -8,7 +8,6 @@ import { useRowSelection } from '@/hooks/useRowSelection'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
@@ -23,6 +22,7 @@ import { previewApproval, QUICK_PERCENTAGES, quickLabel } from '@/lib/finance/sc
 // buscador quedaba vacío (bug 2026-08-04).
 import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/shared/MemberCombobox'
 import { BecasAsignadasTab } from '@/components/finance/BecasAsignadasTab'
+import { CancelarBecaModal } from '@/components/finance/CancelarBecaModal'
 import type { FinanceRequest } from '@/types/finance'
 
 type Scholarship = {
@@ -47,7 +47,7 @@ type Scholarship = {
   email_sent_to: string | null
 }
 
-const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Revocada' }
+const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Cancelada' }
 const STATUS_BADGE: Record<string, string> = {
   active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral-soft/20 text-coral',
 }
@@ -83,7 +83,7 @@ export default function BecasPage() {
 
   const [confirmRevoke, setConfirmRevoke] = useState<Scholarship | null>(null)
   const [warnUsed, setWarnUsed] = useState<Scholarship | null>(null)
-  const [bulkRevoking, setBulkRevoking] = useState(false)
+  const [cancelarLote, setCancelarLote] = useState(false)
 
   // BEC-1: enviar el código de un cupón por correo a una persona elegida.
   const [sendTarget, setSendTarget] = useState<Scholarship | null>(null)
@@ -114,29 +114,35 @@ export default function BecasPage() {
     if (c.used_count > 0) { setWarnUsed(c); return }
     setConfirmRevoke(c)
   }
-  async function doRevoke() {
-    if (!confirmRevoke) return
-    const res = await fetch(`/api/scholarships/${confirmRevoke.id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const d = await res.json().catch(() => null)
-      toast(d?.error ?? 'No se pudo revocar.', 'error')
+  /** Cancela uno o varios cupones con UN motivo. El endpoint es PATCH
+   *  { action: 'cancelar', motivo }: el viejo DELETE se quitó porque no pedía
+   *  motivo, y dos caminos para cancelar —uno de ellos mudo— dejan la garantía
+   *  en nada. Devuelve el mensaje de error, o null si salió bien. */
+  async function cancelarCupones(ids: string[], motivo: string): Promise<string | null> {
+    let ok = 0
+    const errores: string[] = []
+    for (const id of ids) {
+      const res = await fetch(`/api/scholarships/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancelar', motivo }),
+      })
+      if (res.ok) ok++
+      else {
+        const d = await res.json().catch(() => null)
+        errores.push(d?.error ?? 'error desconocido')
+      }
+    }
+    if (ok === 0) return errores[0] ?? 'No se pudo cancelar.'
+    // Un lote a medias no se traga: se dice cuántos quedaron sin cancelar.
+    if (errores.length) {
+      toast(`${ok} cancelados, ${errores.length} no se pudieron: ${errores[0]}`, 'error')
     } else {
-      toast('Cupón revocado.', 'success')
-      refetchCoupons()
+      toast(ids.length > 1 ? `${ok} cupones cancelados.` : 'Cupón cancelado.', 'success')
     }
-    setConfirmRevoke(null)
-  }
-  async function bulkRevoke() {
-    setBulkRevoking(true)
-    let ok = 0, failed = 0
-    for (const id of sel.selectedIds) {
-      const res = await fetch(`/api/scholarships/${id}`, { method: 'DELETE' })
-      if (res.ok) ok++; else failed++
-    }
-    toast(failed > 0 ? `${ok} revocados, ${failed} no se pudieron revocar.` : `${ok} cupones revocados.`, failed > 0 ? 'error' : 'success')
     sel.clear()
-    setBulkRevoking(false)
     refetchCoupons()
+    return null
   }
 
   // ── Solicitudes de beca ──────────────────────────────────────────────────
@@ -229,11 +235,10 @@ export default function BecasPage() {
           {canEdit && sel.count > 0 && (
             <BulkActionBar count={sel.count} onClear={sel.clear} noun="cupones">
               <button
-                onClick={bulkRevoke}
-                disabled={bulkRevoking}
-                className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[13px] hover:bg-white/10 transition-colors font-body disabled:opacity-50"
+                onClick={() => setCancelarLote(true)}
+                className="rounded-full border border-white/25 text-white px-3.5 py-1.5 text-[13px] hover:bg-white/10 transition-colors font-body"
               >
-                {bulkRevoking ? 'Revocando…' : 'Revocar seleccionados'}
+                Cancelar seleccionados
               </button>
             </BulkActionBar>
           )}
@@ -292,7 +297,7 @@ export default function BecasPage() {
                                 onClick={() => requestRevoke(c)}
                                 className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[13px] hover:bg-coral/5 transition-colors font-body"
                               >
-                                Revocar
+                                Cancelar
                               </button>
                             </div>
                           )}
@@ -379,17 +384,35 @@ export default function BecasPage() {
         </>
       )}
 
-      <DeleteConfirmModal
-        open={!!confirmRevoke}
-        title="Revocar cupón"
-        description={`Se revocará el cupón "${confirmRevoke?.code}". Esta acción no se puede deshacer.`}
-        onConfirm={doRevoke}
-        onCancel={() => setConfirmRevoke(null)}
-      />
+      {confirmRevoke && (
+        <CancelarBecaModal
+          titulo="Cancelar el cupón"
+          detalle={`Código ${confirmRevoke.code} · ${confirmRevoke.entity_name}`}
+          onClose={() => setConfirmRevoke(null)}
+          onConfirmar={async (motivo) => {
+            const err = await cancelarCupones([confirmRevoke.id], motivo)
+            if (!err) setConfirmRevoke(null)
+            return err
+          }}
+        />
+      )}
+      {cancelarLote && (
+        <CancelarBecaModal
+          titulo="Cancelar los cupones seleccionados"
+          detalle={`${sel.selectedIds.length} cupones. El motivo queda igual en todos.`}
+          cuantas={sel.selectedIds.length}
+          onClose={() => setCancelarLote(false)}
+          onConfirmar={async (motivo) => {
+            const err = await cancelarCupones([...sel.selectedIds], motivo)
+            if (!err) setCancelarLote(false)
+            return err
+          }}
+        />
+      )}
       <ActiveWarningModal
         open={!!warnUsed}
-        title="No se puede revocar"
-        message={`El cupón "${warnUsed?.code}" ya fue usado ${warnUsed?.used_count} vez/veces. No se puede revocar un cupón con usos registrados.`}
+        title="No se puede cancelar"
+        message={`El cupón "${warnUsed?.code}" ya fue usado ${warnUsed?.used_count} vez/veces. No se puede cancelar un cupón con usos registrados.`}
         onClose={() => setWarnUsed(null)}
       />
 
