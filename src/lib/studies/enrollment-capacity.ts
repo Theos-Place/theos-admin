@@ -14,8 +14,16 @@ export const OCCUPYING_STATUSES = [
   'enrolled', 'pendiente_de_pago', 'waitlist', 'completed', 'reprobado',
 ] as const
 
-/** Estados que LIBERAN el cupo (la persona ya no está en el grupo). */
-export const RELEASING_STATUSES = ['dropped', 'withdrawn', 'transferred', 'expirada'] as const
+/**
+ * Estados que LIBERAN el cupo (la persona ya no está en el grupo).
+ *
+ * 'cancelada' se sumó el 2026-09-16: la escribe `estadoDeBaja('cancelar')` —el
+ * "Quitar del grupo" de la pantalla— y faltaba en esta lista. No causaba un bug
+ * de cupo, porque lo que se consulta es OCCUPYING_STATUSES y ahí nunca estuvo;
+ * pero la lista se lee como el inventario de los estados de baja y estaba
+ * incompleta, que es como se empieza a razonar mal sobre ellos.
+ */
+export const RELEASING_STATUSES = ['dropped', 'cancelada', 'withdrawn', 'transferred', 'expirada'] as const
 
 export function occupiesSpot(status: string | null | undefined): boolean {
   return !!status && (OCCUPYING_STATUSES as readonly string[]).includes(status)
