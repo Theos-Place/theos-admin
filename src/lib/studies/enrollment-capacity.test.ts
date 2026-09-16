@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  isGroupFull, occupiesSpot, groupFullMessage, OCCUPYING_STATUSES, RELEASING_STATUSES,
-} from './enrollment-capacity'
+import { isGroupFull, occupiesSpot, groupFullMessage, OCCUPYING_STATUSES, RELEASING_STATUSES, sigueEnElGrupo } from './enrollment-capacity'
 
 describe('occupiesSpot', () => {
   it('ocupan cupo quienes están en el grupo', () => {
@@ -40,5 +38,26 @@ describe('isGroupFull', () => {
   it('el mensaje dice el tope cuando lo hay', () => {
     expect(groupFullMessage(12)).toContain('12')
     expect(groupFullMessage(null)).toContain('cupo')
+  })
+})
+
+describe('sigueEnElGrupo', () => {
+  it('un retirado NO sigue en el grupo: tiene que poder volver', () => {
+    // El caso: a María José Ruiz la retiraron de Lecturas con Propósito cuando
+    // se le venció el cobro manual, y después la pantalla la daba por "Ya
+    // inscrito" con el botón deshabilitado. El servidor sí acepta la
+    // reincorporación — solo frena a quien COMPLETÓ el estudio.
+    expect(sigueEnElGrupo('withdrawn')).toBe(false)
+  })
+
+  it('los demás sí siguen dentro', () => {
+    expect(sigueEnElGrupo('enrolled')).toBe(true)
+    expect(sigueEnElGrupo('pending')).toBe(true)
+  })
+
+  it('"en revisión" cuenta como dentro', () => {
+    // Es alguien cuyo grupo cerró sin registrarle resultado, no alguien que se
+    // fue: volver a agregarlo duplicaría su matrícula.
+    expect(sigueEnElGrupo('en_revision')).toBe(true)
   })
 })

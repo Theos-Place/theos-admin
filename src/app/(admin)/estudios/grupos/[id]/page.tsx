@@ -28,6 +28,7 @@ import { withdrawReasonError } from '@/lib/studies/close-payload'
 import { BAJA_COPY, TIPOS_DE_BAJA, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 import { participantesActivos, participantesRetirados, participantesVisibles, textoBotonRetirados } from '@/lib/studies/roster-visible'
 import { MoverDeGrupoModal } from '@/components/studies/MoverDeGrupoModal'
+import { sigueEnElGrupo } from '@/lib/studies/enrollment-capacity'
 
 /** GRU-2 · Resumen legible de la restricción de audiencia del grupo. El detalle
  *  no viaja en el listado (solo el flag), así que se pide acá. */
@@ -536,7 +537,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
         <AddMemberModal
           groupId={id}
           studyName={studyType?.name ?? group?.study_type_id ?? 'el estudio'}
-          enrolledIds={new Set((group?.participants ?? []).map(p => p.member_id))}
+          /* Solo quien SIGUE en el grupo. Un retirado tiene que poder volver:
+             el servidor acepta la reincorporación —solo frena a quien ya
+             completó el estudio— y acá el botón salía deshabilitado con "Ya
+             inscrito", sin forma de reincorporarlo desde la pantalla. */
+          enrolledIds={new Set((group?.participants ?? []).filter(p => sigueEnElGrupo(p.status)).map(p => p.member_id))}
           onClose={() => setShowAddMember(false)}
           onEnrolled={refetch}
         />

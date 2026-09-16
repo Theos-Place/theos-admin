@@ -43,3 +43,21 @@ export function groupFullMessage(maxCapacity: number | null | undefined): string
     ? `Este grupo ya llegó a su cupo (${max}). Elegí otro grupo o ampliá el cupo desde el detalle del grupo.`
     : 'Este grupo ya llegó a su cupo.'
 }
+
+/**
+ * ¿Esta persona SIGUE en el grupo? Se pregunta con el estado de DOMINIO
+ * (GroupParticipant.status), no con el de la base.
+ *
+ * Existe porque la pantalla del grupo daba por "ya inscrito" a cualquiera que
+ * apareciera en la lista de participantes, retirados incluidos. A María José
+ * Ruiz la retiraron de Lecturas con Propósito cuando se le venció el cobro
+ * manual, y después el botón de agregarla salía deshabilitado con "Ya inscrito":
+ * no había forma de volver a meterla desde la pantalla, aunque el servidor sí
+ * acepta la reincorporación (solo bloquea a quien ya COMPLETÓ el estudio).
+ *
+ * 'en_revision' cuenta como dentro: es alguien cuyo grupo cerró sin resultado,
+ * no alguien que se fue.
+ */
+export function sigueEnElGrupo(status: 'enrolled' | 'pending' | 'withdrawn' | 'en_revision'): boolean {
+  return status !== 'withdrawn'
+}

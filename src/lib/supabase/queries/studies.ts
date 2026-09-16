@@ -1570,7 +1570,13 @@ export async function enrollMember(
 
   const { data: enr, error } = await supabase
     .from('study_enrollments')
-    .upsert({ group_id: groupId, member_id: memberId, status, recorded_by: opts?.recordedBy ?? null }, { onConflict: 'group_id,member_id' })
+    .upsert({
+      group_id: groupId, member_id: memberId, status, recorded_by: opts?.recordedBy ?? null,
+      // Reincorporar BORRA el rastro de la baja. Sin esto la fila quedaba
+      // 'enrolled' con su dropped_at y su motivo puestos, o sea alguien
+      // cursando con fecha de retiro: la ficha decía las dos cosas a la vez.
+      dropped_at: null, drop_reason: null,
+    }, { onConflict: 'group_id,member_id' })
     .select('id').single()
   if (error) throw error
   const enrollmentId = (enr as { id: string }).id
