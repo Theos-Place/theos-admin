@@ -47,12 +47,30 @@ export function NotificationsBell() {
     load()
     // Refresca el conteo: al marcar/borrar en otra parte, al volver el foco, y
     // por polling periódico (notificaciones nuevas llegan sin recargar).
+    //
+    // EL POLLING SE DETIENE CON LA PESTAÑA OCULTA. Antes corría siempre, así
+    // que una pestaña abierta y olvidada pedía al servidor una vez por minuto
+    // todo el día: con una jornada de 8 horas son 480 llamadas por persona que
+    // nadie iba a ver. No se pierde nada, porque el listener de `focus` ya
+    // recarga al volver — que es justo el momento en que el dato importa.
     const onChanged = () => load()
-    const poll = setInterval(load, 60000)
+    let poll: ReturnType<typeof setInterval> | null = null
+    const arrancar = () => {
+      if (poll) clearInterval(poll)
+      poll = setInterval(load, 60000)
+    }
+    const detener = () => { if (poll) { clearInterval(poll); poll = null } }
+    const onVisibilidad = () => {
+      if (document.hidden) detener()
+      else { load(); arrancar() }
+    }
+    if (!document.hidden) arrancar()
+    document.addEventListener('visibilitychange', onVisibilidad)
     window.addEventListener('notifications:changed', onChanged)
     window.addEventListener('focus', onChanged)
     return () => {
-      clearInterval(poll)
+      detener()
+      document.removeEventListener('visibilitychange', onVisibilidad)
       window.removeEventListener('notifications:changed', onChanged)
       window.removeEventListener('focus', onChanged)
     }
