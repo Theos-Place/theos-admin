@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { createCheckin, deleteCheckin, getEventAttendeeIds, NotRegisteredError } from '@/lib/supabase/queries/events'
+import {
+  createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente, NotRegisteredError,
+} from '@/lib/supabase/queries/events'
+import { YA_REGISTRADO } from '@/lib/events/checkin-duplicado'
 
 // GET: asistentes (member_ids con check-in) de un evento. Para elegir audiencia
 // en comunicaciones. Devuelve { count, member_ids }.
@@ -29,10 +32,12 @@ export async function POST(
     // Check-in operable por encargado_eventos, dirección y admin (admin pasa siempre).
     const auth = await requireRoles('encargado_eventos', 'direccion')
     if (auth.res) return auth.res
+  // Fuera del try: el catch los necesita para armar el 409 informativo, y el
+  // body de un Request se puede leer UNA sola vez.
+  const { id } = await params
+  const body = await req.json().catch(() => null)
+  const memberId = body?.member_id ?? null
   try {
-    const { id } = await params
-    const body = await req.json()
-    const memberId = body?.member_id ?? null
     // La pantalla habla de 'participant'/'server'; la base de
     // 'asistente'/'servidor'. La traducción vive en un solo lugar, y
     // createCheckin REVALIDA la elección contra los comités organizadores.
@@ -49,13 +54,25 @@ export async function POST(
       ...body,
       guest_name: memberId ? body.guest_name ?? null : guestName,
       checked_in_as: calidad,
+      // Quién lo registró. Hasta hoy no se guardaba y por eso no se podía
+      // contestar "¿quién la marcó?" en ningún reclamo.
+      checked_in_by: auth.ctx.userId,
     })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    // UNIQUE(member_id, event_id): la persona ya tenía check-in en este evento.
+    /**
+     * Ya tenía check-in HOY en este evento (único por miembro, evento y día).
+     *
+     * El 409 devuelve los DATOS del check-in que ya existe —hora, calidad,
+     * operador— y no solo un mensaje: la pantalla los usa para pintar el panel
+     * de "ya estaba registrada" en vez de un error. Esto vale sobre todo cuando
+     * dos operadores trabajan en paralelo y el estado local de uno está viejo:
+     * el servidor es el que sabe.
+     */
     if ((error as { code?: string })?.code === '23505') {
+      const existente = memberId ? await getCheckinExistente(id, memberId) : null
       return NextResponse.json(
-        { error: 'Esta persona ya tiene check-in en este evento.', code: 'duplicate' },
+        { error: 'Esta persona ya tiene check-in en este evento.', code: YA_REGISTRADO, checkin: existente },
         { status: 409 },
       )
     }

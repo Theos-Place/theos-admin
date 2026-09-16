@@ -9,7 +9,7 @@ import { CheckinCard } from '@/components/events/CheckinCard'
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { ChevronLeft, UserPlus, X, Camera, Trash2 } from 'lucide-react'
+import { ChevronLeft, UserPlus, X, Camera, Trash2, UserCheck } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { Modal } from '@/components/shared/Modal'
@@ -21,6 +21,10 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { todayCR } from '@/lib/format'
+import {
+  marcaEnLaBusqueda, textoYaRegistrado, textoDeshacer, textoQrRepetido,
+  esYaRegistrado, type CheckinExistente,
+} from '@/lib/events/checkin-duplicado'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
 // no forma parte del bundle inicial de la página.
@@ -93,6 +97,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [scanOn, setScanOn] = useState(false)
   const [scanMsg, setScanMsg] = useState<{ kind: 'ok' | 'dup' | 'error'; text: string } | null>(null)
   const [toDelete, setToDelete] = useState<EventCheckin | null>(null)
+  /**
+   * Persona que se seleccionó y YA tenía check-in. No es un error: en la puerta
+   * el caso normal es que el operador dude ("¿ya la registré?"). El panel se
+   * lo dice y le ofrece deshacer, que es el caso raro.
+   */
+  const [yaRegistrado, setYaRegistrado] = useState<
+    { nombre: string; checkin: CheckinExistente } | null>(null)
+  const [deshaciendo, setDeshaciendo] = useState(false)
+  const [confirmarDeshacer, setConfirmarDeshacer] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const lastScanRef = useRef<{ id: string; t: number } | null>(null)
   const [query, setQuery] = useState('')
@@ -201,6 +214,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   const registeredIds = new Set(event.registrations.map(r => r.member_id))
+  /** member_id → su check-in de HOY. Se arma UNA vez de la lista que la
+   *  pantalla ya tiene, en vez de una consulta por fila del resultado. */
+  const checkinPorMiembro = new Map(
+    checkins.filter(c => c.member_id).map(c => [c.member_id, {
+      id: c.id, checked_at: c.checked_at, checked_in_as: c.attendance_type === 'server' ? 'servidor' : 'asistente',
+    } as CheckinExistente]))
   const searchResults = memberResults
 
   // Persiste un check-in (optimista con rollback). CHOKE POINT ÚNICO de los tres
@@ -237,7 +256,18 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       })
       if (res.status === 409) {
         rollback()
-        const data = await res.json().catch(() => null) as { code?: string } | null
+        const data = await res.json().catch(() => null) as
+          { code?: string; checkin?: CheckinExistente | null } | null
+        /**
+         * El servidor dice que ya estaba registrada y manda los datos del
+         * check-in que existe. Se pinta el panel con ESO y no con el estado
+         * local: si dos operadores trabajan en paralelo, el de esta pantalla
+         * puede estar viejo y el servidor es el que sabe.
+         */
+        if (esYaRegistrado(res.status, data)) {
+          if (data?.checkin) setYaRegistrado({ nombre: m.name, checkin: data.checkin })
+          return 'dup'
+        }
         return data?.code === 'not_registered' ? 'not_registered' : 'dup'
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -264,8 +294,17 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const flash = (kind: 'ok' | 'dup' | 'error', txt: string) => { setScanMsg({ kind, text: txt }); setTimeout(() => setScanMsg(m => (m?.text === txt ? null : m)), 3000) }
 
     if (!UUID_RE.test(memberId)) { scanFeedback(false); flash('error', 'QR no válido'); return }
+    // QR repetido: se informa, no se reprocha. Es la señal que el operador de
+    // puerta necesita — "ya pasó"— no un error.
     const already = checkins.find(c => c.member_id === memberId)
-    if (already) { scanFeedback(false); flash('dup', `${already.member_name} ya estaba registrado`); return }
+    if (already) {
+      scanFeedback(false)
+      flash('dup', textoQrRepetido(already.member_name, {
+        id: already.id, checked_at: already.checked_at,
+        checked_in_as: already.attendance_type === 'server' ? 'servidor' : 'asistente',
+      }))
+      return
+    }
     try {
       // Por /lookup?id= y no por /api/members/[id]: ese exige el módulo
       // miembros, que encargado_eventos no tiene — todo QR ajeno daba 403 y la
@@ -356,6 +395,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
   async function handleSelectMember(member: { id: string; name: string }) {
+    // Ya registrado: se muestra el estado y no se intenta de nuevo. El servidor
+    // igual devuelve el 409 informativo si el estado local está viejo.
+    const ya = checkinPorMiembro.get(member.id)
+    if (ya) { setYaRegistrado({ nombre: member.name, checkin: ya }); return }
     try {
       const res = await fetch(`/api/members/${member.id}/family`)
       const family = res.ok ? await res.json() : []
@@ -365,6 +408,27 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       }
     } catch { /* si falla, seguimos al flujo individual */ }
     setSelectedMember(member)
+  }
+
+  /** Deshace el check-in del panel. Borrado duro: es corrección operativa
+   *  inmediata, no historial (mismo criterio que el botón de la lista). */
+  async function deshacerCheckin() {
+    if (!yaRegistrado) return
+    setDeshaciendo(true)
+    try {
+      const res = await fetch(
+        `/api/events/${id}/checkins?checkinId=${encodeURIComponent(yaRegistrado.checkin.id)}`,
+        { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setCheckins(prev => prev.filter(c => c.id !== yaRegistrado.checkin.id))
+      setYaRegistrado(null)
+      setConfirmarDeshacer(false)
+      setQuery('')
+    } catch {
+      setScanMsg({ kind: 'error', text: 'No se pudo deshacer el check-in.' })
+    } finally {
+      setDeshaciendo(false)
+    }
   }
 
   async function handleConfirm(type: AttendanceType) {
@@ -619,6 +683,13 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                         </span>
                       )}
                     </p>
+                    {/* Quien YA tiene check-in sale marcado acá, antes de que el
+                        operador toque: en la fila, saberlo después es tarde. */}
+                    {marcaEnLaBusqueda(checkinPorMiembro.get(r.id)) && (
+                      <p className="text-teal-deep text-[13px] font-semibold font-body">
+                        {marcaEnLaBusqueda(checkinPorMiembro.get(r.id))}
+                      </p>
+                    )}
                   </div>
                 </button>
               ))}
@@ -632,6 +703,62 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               <p className="text-navy-light/80 text-sm font-body">No se encontró nadie con ese nombre.</p>
             </div>
           ) : null}
+
+          {/* Ya registrado: estado y salida, no un error. Va sobre la lista
+              porque es la respuesta a lo que el operador acaba de tocar. */}
+          {yaRegistrado && (
+            <div className="rounded-2xl bg-teal-soft/20 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <UserCheck size={18} className="text-teal-deep shrink-0 mt-0.5" aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-navy font-medium font-body">{yaRegistrado.nombre}</p>
+                  <p className="text-[13px] text-navy-light font-body">
+                    {textoYaRegistrado(yaRegistrado.checkin)}
+                  </p>
+                </div>
+              </div>
+              {confirmarDeshacer ? (
+                <div className="space-y-2">
+                  <p className="text-[13px] text-coral-deep font-body">
+                    {textoDeshacer(yaRegistrado.nombre)}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={deshacerCheckin}
+                      disabled={deshaciendo}
+                      className="flex-1 rounded-xl bg-coral px-4 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-60 font-body min-h-[44px]"
+                    >
+                      {deshaciendo ? 'Quitando…' : 'Sí, quitar el check-in'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmarDeshacer(false)}
+                      disabled={deshaciendo}
+                      className="rounded-xl border border-navy/20 px-4 py-2.5 text-sm text-navy hover:bg-navy/5 transition-colors font-body min-h-[44px]"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setYaRegistrado(null); setQuery('') }}
+                    className="flex-1 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-ink transition-colors font-body min-h-[44px]"
+                  >
+                    Entendido
+                  </button>
+                  {canCheckin && (
+                    <button
+                      onClick={() => setConfirmarDeshacer(true)}
+                      className="rounded-xl border border-coral/40 px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body min-h-[44px]"
+                    >
+                      Deshacer check-in
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Persona nueva: botón FIJO. Antes solo aparecía después de escribir
               un nombre y esperar a que la búsqueda no encontrara nada — tres

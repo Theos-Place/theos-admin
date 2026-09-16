@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { todayCR } from '@/lib/format'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from '@/types/event'
 
@@ -918,6 +919,13 @@ export async function createCheckin(
     method?: 'manual' | 'qr' | 'smart_link'
     /** 'asistente' | 'servidor'. Se REVALIDA acá, no se cree lo que llega. */
     checked_in_as?: string | null
+    /**
+     * Quién lo registró (auth.users.id de la sesión). Hasta el 15-set no se
+     * guardaba: los 172.569 check-ins de la base tienen checked_in_by en NULL,
+     * así que "¿quién registró a esta persona?" no se podía contestar. Lo pide
+     * el panel de check-in duplicado y sirve igual para cualquier reclamo.
+     */
+    checked_in_by?: string | null
   },
 ): Promise<{ id: string }> {
   const supabase = createAdminClient()
@@ -957,6 +965,7 @@ export async function createCheckin(
       sub_event_id: input.sub_event_id ?? null,
       method: input.method ?? 'manual',
       checked_in_as: calidad,
+      checked_in_by: input.checked_in_by ?? null,
     })
     .select('id')
     .single()
@@ -1096,6 +1105,49 @@ export async function onsiteChargeAndCheckin(
     charged,
     mode,
   }
+}
+
+/**
+ * El check-in que ESTA persona ya tiene en este evento HOY, si existe.
+ *
+ * Alimenta el 409 informativo del POST: la pantalla necesita hora, calidad y
+ * operador para mostrar el panel de "ya estaba registrada" en vez de un error.
+ * Se consulta DESPUÉS del choque contra el único, así que la fila existe.
+ *
+ * El día entra en la búsqueda porque el único es por (miembro, evento, DÍA):
+ * en un recurrente la persona tiene un check-in por semana y el que importa es
+ * el de hoy.
+ */
+export async function getCheckinExistente(
+  eventId: string, memberId: string,
+): Promise<{ id: string; checked_at: string; checked_in_as: string | null; operador: string | null } | null> {
+  const supabase = createAdminClient()
+  const desde = `${todayCR()}T06:00:00.000Z`            // medianoche CR = 06:00 UTC
+  const hasta = new Date(new Date(desde).getTime() + 24 * 3600 * 1000).toISOString()
+  const { data } = await supabase
+    .from('event_checkins')
+    .select('id, checked_in_at, checked_in_as, checked_in_by')
+    .eq('event_id', eventId).eq('member_id', memberId)
+    .gte('checked_in_at', desde).lt('checked_in_at', hasta)
+    .order('checked_in_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (!data) return null
+  const r = data as {
+    id: string; checked_in_at: string; checked_in_as: string | null; checked_in_by: string | null
+  }
+
+  // checked_in_by apunta a auth.users, no a members: el nombre sale del perfil
+  // ligado a esa cuenta. Sin perfil ligado se devuelve null y el panel omite el
+  // "por Fulano" en vez de inventarlo.
+  let operador: string | null = null
+  if (r.checked_in_by) {
+    const { data: m } = await supabase
+      .from('members').select('first_name, last_name').eq('auth_user_id', r.checked_in_by).maybeSingle()
+    const p = m as { first_name: string; last_name: string } | null
+    if (p) operador = `${p.first_name} ${p.last_name}`.trim()
+  }
+  return { id: r.id, checked_at: r.checked_in_at, checked_in_as: r.checked_in_as, operador }
 }
 
 /** Deshace un check-in: borra la fila de event_checkins. Borrado duro — el
