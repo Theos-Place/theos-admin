@@ -133,10 +133,23 @@ export async function transferEnrollment(input: {
   const nuevaId = (nueva as { id: string }).id
 
   // 3. La plata.
+  // La beca viaja en el cálculo: un pago saldado con beca tiene amount 0 pero
+  // deja la matrícula cubierta. Sin esto se le cobraba todo de nuevo (Gisselle
+  // López, 2026-09-16) — ver `cubiertoPorBeca` en lib/studies/transferencia.ts.
   const { data: pagosRaw } = await sb.from('payments')
-    .select('id, status, review_status, concept, amount')
+    .select('id, status, review_status, concept, amount, scholarship:scholarships(original_amount, final_amount)')
     .eq('member_id', memberId).eq('enrollment_id', origenEnr.id)
-  const viajan = pagosQueViajan((pagosRaw ?? []) as PagoConMonto[]) as PagoConMonto[]
+  type FilaDePago = PagoConMonto & {
+    scholarship: { original_amount: number | null; final_amount: number | null }
+      | Array<{ original_amount: number | null; final_amount: number | null }> | null
+  }
+  const conBeca = ((pagosRaw ?? []) as unknown as FilaDePago[]).map(p => {
+    const s = Array.isArray(p.scholarship) ? p.scholarship[0] : p.scholarship
+    const original = s?.original_amount != null ? Number(s.original_amount) : null
+    const final = s?.final_amount != null ? Number(s.final_amount) : 0
+    return { ...p, cubiertoPorBeca: original != null ? Math.max(0, original - final) : 0 }
+  })
+  const viajan = pagosQueViajan(conBeca) as PagoConMonto[]
   const plan = planDeDinero({ pagos: viajan, costoDestino: destino.costo, moneda: destino.currency })
 
   const nota = notaDeTransferencia({

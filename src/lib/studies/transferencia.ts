@@ -208,7 +208,30 @@ export function resumenDeLaAccion(input: {
 // pagó y lo que cuesta su matrícula. Guardarlo aparte sería un segundo número
 // que puede quedar desalineado con el primero.
 
-export type PagoConMonto = PagoParaTransferir & { amount: number }
+export type PagoConMonto = PagoParaTransferir & {
+  amount: number
+  /**
+   * Lo que cubrió una beca en ESTE pago (0 si no hubo). Es `original_amount -
+   * final_amount` de la beca, los dos congelados al aprobarla (FIN-5).
+   *
+   * EL BUG QUE ARREGLA (2026-09-16, Gisselle López). `pagado` sumaba `amount`,
+   * que es la PLATA que entró. Una matrícula saldada con una beca del 100%
+   * tiene amount 0 — está pagada, pero el número dice cero. Al moverla de
+   * LECTPROP a CTBD, dos planes que valen exactamente lo mismo, la regla leyó
+   * "pagó ₡0", vio que el destino vale ₡20.000 y le cobró la matrícula entera
+   * de nuevo. A una persona con beca completa, que ya tenía el correo diciendo
+   * que no pagaba nada.
+   *
+   * Lo que cubre la matrícula no es la plata que entró, es la plata que entró
+   * MÁS la que la beca perdonó.
+   */
+  cubiertoPorBeca?: number
+}
+
+/** Lo que este pago deja cubierto: la plata que entró más lo que perdonó la beca. */
+export function valorCubierto(p: PagoConMonto): number {
+  return Number(p.amount) + Number(p.cubiertoPorBeca ?? 0)
+}
 
 export type PlanDeDinero = {
   /** Pagos que se re-enlazan a la matrícula nueva. */
@@ -253,7 +276,8 @@ export function planDeDinero(input: {
       : { mover: [], ajustar: null, cobrar: 0, saldoAFavor: 0, mensaje: 'No hay ningún pago que mover.' }
   }
 
-  const pagado = pagos.filter(p => p.status === 'paid').reduce((n, p) => n + Number(p.amount), 0)
+  // valorCubierto, NO `amount`: ver el comentario de `cubiertoPorBeca`.
+  const pagado = pagos.filter(p => p.status === 'paid').reduce((n, p) => n + valorCubierto(p), 0)
   const pendientes = pagos.filter(p => p.status === 'pending')
   const mover = pagos.map(p => p.id)
 
@@ -273,19 +297,24 @@ export function planDeDinero(input: {
     }
   }
 
+  // Si parte de lo cubierto salió de una beca, decir "ya pagó ₡20.000" sería
+  // falso: no pagó nada. El coordinador lee esta frase antes de confirmar.
+  const conBeca = pagos.some(p => p.status === 'paid' && Number(p.cubiertoPorBeca ?? 0) > 0)
+  const tiene = conBeca ? `Tiene cubiertos ${plata(pagado, moneda)} (beca incluida)` : `Ya pagó ${plata(pagado, moneda)}`
+
   const falta = costoDestino - pagado
   if (falta > 0) {
     return {
       mover, ajustar: null, cobrar: falta, saldoAFavor: 0,
-      mensaje: `Ya pagó ${plata(pagado, moneda)} y el grupo nuevo vale ${plata(costoDestino, moneda)}: su pago se traslada como abono y le queda un cobro pendiente de ${plata(falta, moneda)}.`,
+      mensaje: `${tiene} y el grupo nuevo vale ${plata(costoDestino, moneda)}: eso se traslada como abono y le queda un cobro pendiente de ${plata(falta, moneda)}.`,
     }
   }
   if (falta < 0) {
     return {
       mover, ajustar: null, cobrar: 0, saldoAFavor: -falta,
       mensaje: costoDestino === 0
-        ? `El grupo nuevo es gratis y ella ya pagó ${plata(pagado, moneda)}: ese pago la sigue acompañando y le queda ${plata(-falta, moneda)} a favor.`
-        : `Ya pagó ${plata(pagado, moneda)} y el grupo nuevo vale ${plata(costoDestino, moneda)}: le quedan ${plata(-falta, moneda)} a favor.`,
+        ? `El grupo nuevo es gratis. ${tiene}: eso la sigue acompañando y le queda ${plata(-falta, moneda)} a favor.`
+        : `${tiene} y el grupo nuevo vale ${plata(costoDestino, moneda)}: le quedan ${plata(-falta, moneda)} a favor.`,
     }
   }
   return {

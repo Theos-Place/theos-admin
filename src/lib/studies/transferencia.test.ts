@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   motivoQueImpideTransferir, destinosPosibles, pagosQueViajan,
-  notaDeTransferencia, resumenDeLaAccion, planDeDinero, familiaDelPlan, type GrupoParaTransferir,
+  notaDeTransferencia, resumenDeLaAccion, planDeDinero, familiaDelPlan,
+  type GrupoParaTransferir, type PagoConMonto,
 } from './transferencia'
 
 const base: GrupoParaTransferir = {
@@ -290,5 +291,66 @@ describe('familiaDelPlan', () => {
   it('Prematrimonial queda fuera, escrito como sea', () => {
     expect(familiaDelPlan('etapa_inicial', 'PREMAT')).toBe('excluido')
     expect(familiaDelPlan('etapa_inicial', 'premat')).toBe('excluido')
+  })
+})
+
+describe('planDeDinero · una matrícula saldada con beca', () => {
+  const pagoConBeca = (over: Partial<PagoConMonto> = {}): PagoConMonto => ({
+    id: 'p1', status: 'paid', review_status: 'aprobado', concept: 'matricula',
+    amount: 0, cubiertoPorBeca: 20000, ...over,
+  } as PagoConMonto)
+
+  it('EL BUG: con beca del 100% y destino del mismo precio, NO se le cobra nada', () => {
+    // Gisselle López, 2026-09-16. Beca del 100% para Lecturas con Propósito
+    // (₡20.000), la mueven a CTBD (₡20.000, exactamente lo mismo) y el sistema
+    // le cobró ₡20.000 de "diferencia". La regla sumaba `amount`, que es la
+    // plata que entró: con beca completa vale 0 aunque la matrícula esté
+    // saldada. Lo que cubre no es la plata que entró, es esa más la que la beca
+    // perdonó.
+    const plan = planDeDinero({ pagos: [pagoConBeca()], costoDestino: 20000, moneda: 'CRC' })
+    expect(plan.cobrar).toBe(0)
+    expect(plan.saldoAFavor).toBe(0)
+  })
+
+  it('a un destino MÁS CARO solo se cobra la diferencia real', () => {
+    const plan = planDeDinero({ pagos: [pagoConBeca()], costoDestino: 25000, moneda: 'CRC' })
+    expect(plan.cobrar).toBe(5000)
+  })
+
+  it('a un destino MÁS BARATO le queda saldo a favor, no un cobro', () => {
+    const plan = planDeDinero({ pagos: [pagoConBeca()], costoDestino: 15000, moneda: 'CRC' })
+    expect(plan.cobrar).toBe(0)
+    expect(plan.saldoAFavor).toBe(5000)
+  })
+
+  it('una beca PARCIAL suma lo que perdonó a lo que la persona sí pagó', () => {
+    // Beca del 50%: pagó ₡10.000 y la beca cubrió los otros ₡10.000.
+    const plan = planDeDinero({
+      pagos: [pagoConBeca({ amount: 10000, cubiertoPorBeca: 10000 })],
+      costoDestino: 20000, moneda: 'CRC',
+    })
+    expect(plan.cobrar).toBe(0)
+  })
+
+  it('el mensaje no dice "ya pagó" cuando no pagó', () => {
+    // El coordinador lee esta frase antes de confirmar; decirle que pagó
+    // ₡20.000 una persona becada al 100% es simplemente falso.
+    const plan = planDeDinero({ pagos: [pagoConBeca()], costoDestino: 25000, moneda: 'CRC' })
+    expect(plan.mensaje).not.toMatch(/ya pagó/i)
+    expect(plan.mensaje).toMatch(/beca incluida/i)
+  })
+
+  it('sin beca el mensaje sigue diciendo "ya pagó", como siempre', () => {
+    const plan = planDeDinero({
+      pagos: [pagoConBeca({ amount: 20000, cubiertoPorBeca: 0 })],
+      costoDestino: 25000, moneda: 'CRC',
+    })
+    expect(plan.mensaje).toMatch(/ya pagó/i)
+    expect(plan.cobrar).toBe(5000)
+  })
+
+  it('un pago sin el campo se comporta igual que antes (retrocompatible)', () => {
+    const sinCampo = { id: 'p1', status: 'paid', review_status: 'aprobado', concept: 'matricula', amount: 20000 } as PagoConMonto
+    expect(planDeDinero({ pagos: [sinCampo], costoDestino: 20000, moneda: 'CRC' }).cobrar).toBe(0)
   })
 })
