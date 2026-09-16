@@ -551,3 +551,126 @@ gratuito y uno con costo casi lleno.
 Gotcha: el micro-label quedó como componente a NIVEL DE MÓDULO. Definido
 dentro de `GroupRow`, `react-hooks/static-components` lo marca como ERROR —no
 advertencia— porque un componente creado en cada render remonta su subárbol.
+
+### [ ] CHK-2 · Aviso de cumpleaños en el check-in (pedido 2026-09-15)
+
+Al hacer check-in de alguien que cumple años en la semana actual, avisarle al
+operador para felicitarlo en el momento.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Check-in: avisar cuando la persona cumple años esta semana
+
+PANTALLA: src/app/(admin)/eventos/[id]/checkin/page.tsx (y el flujo de QR/smart link si
+muestra confirmación al operador).
+
+QUÉ: cuando se hace check-in de una persona cuyo cumpleaños cae en la SEMANA ACTUAL
+(lunes a domingo de la semana del evento, comparando solo día y mes de birth_date),
+mostrar un aviso visible en la confirmación del check-in: "🎂 [Nombre] cumple años el
+[día de semana + fecha] — ¡felicitalo!". Si el cumpleaños es HOY, decirlo explícito
+("¡Hoy es su cumpleaños!").
+
+IMPLEMENTACIÓN:
+- El cálculo va en una función pura testeable (ej. src/lib/members/cumple-esta-semana.ts)
+  que recibe birth_date y la fecha de referencia. Ojo con: birth_date null, cumpleaños
+  29 de febrero (tratarlo como 28-feb en años no bisiestos), y semanas que cruzan de año
+  (ej. evento 30-dic, cumpleaños 2-ene). Ya hay lógica de cumpleaños en
+  src/lib/notifications/birthday-rules — revisala primero: si ahí ya existe "cumple en
+  rango", REUTILIZAR, NO INVENTAR.
+- El endpoint de check-in (o la búsqueda) ya trae datos del miembro — incluir birth_date
+  si no viene, sin consulta extra por fila.
+- Es solo un aviso al operador en pantalla: NO manda correos ni notificaciones
+  (EMAIL_SILENT_MODE sigue activo y esto no debe depender de él).
+- También mostrar el mismo indicador (🎂) junto al nombre en los resultados de búsqueda
+  del check-in, para que se vea antes de registrarla.
+Tests de la función pura (casos: hoy, dentro de la semana, semana cruzando año, 29-feb,
+birth_date null). tsc/lint/vitest al cierre.
+```
+
+### [ ] AUT-2 · Limpieza de cuentas de auth sin uso (pedido 2026-09-15)
+
+Optimizar auth.users: dejar cuenta de login solo a quien (a) se haya logueado
+alguna vez, o (b) tenga un estudio o una asistencia en los últimos 2 años. Al
+resto, borrarle la cuenta de ingreso. **Se borra solo la cuenta de login, nunca
+la ficha del miembro** — y como "Creá tu contraseña" recrea la cuenta cuando la
+persona vuelve, el borrado es recuperable en la práctica.
+
+Prompt para Claude Code:
+
+```
+MANTENIMIENTO · Limpieza de cuentas auth.users sin uso — DRY-RUN OBLIGATORIO
+
+OBJETIVO: reducir auth.users dejando cuenta de login únicamente a quien la usa o
+probablemente la va a usar. NUNCA se toca la tabla de miembros ni ningún dato del
+perfil: solo la cuenta de autenticación.
+
+CRITERIO — una cuenta SE QUEDA si cumple AL MENOS UNO:
+1. Se logueó alguna vez (auth.users.last_sign_in_at IS NOT NULL).
+2. Su miembro tiene una matrícula de estudio (cualquier estado menos cancelada) con
+   actividad en los últimos 2 años (creada, iniciada o cerrada desde 2024-09-15).
+3. Su miembro tiene al menos un check-in de evento/charla desde 2024-09-15.
+4. Tiene algún rol asignado (staff/dirigentes/etc. — jamás borrar cuenta con rol).
+5. Es cuenta de prueba marcada ([prueba] / @prueba.theosplace.invalid) — esas las
+   maneja scripts/limpiar-datos-de-prueba.ts, no este proceso.
+Todo lo demás es candidato a borrar.
+
+ETAPA 1 — DRY-RUN (única etapa de esta corrida):
+- Script scripts/limpiar-cuentas-auth.ts que genere un reporte (XLSX o CSV) con: total
+  de auth.users, cuántas se quedan por cada criterio, y la LISTA COMPLETA de candidatas
+  a borrar (email, nombre del miembro, fecha de creación de la cuenta, último
+  estudio/asistencia si tiene). NO BORRAR NADA en esta corrida — la lista la revisa y
+  aprueba la usuaria primero.
+ETAPA 2 — (solo tras aprobación explícita): borrar con supabase.auth.admin.deleteUser(),
+  en lotes con pausa, registrando cada borrado en un log. Verificar antes qué pasa con
+  las FK: si members referencia auth.users (user_id), poner user_id en NULL, no fallar.
+  Idempotente: segunda corrida = cero cambios.
+NOTAS: nada de correos a nadie (EMAIL_SILENT_MODE). Confirmar que el flujo "Creá tu
+contraseña" funciona para un miembro cuya cuenta fue borrada (debe poder recrearla solo);
+si no funciona, reportarlo ANTES de la etapa 2. Test del criterio de selección con
+fixtures. tsc/lint/vitest al cierre.
+```
+
+### [ ] AUT-3 · Primer ingreso y matrícula: flujo fluido para usuarios nuevos (pedido 2026-09-15)
+
+El camino de un usuario nuevo (entrar por primera vez → crear contraseña →
+volver a la matrícula) se siente enredado: hoy pasa por "olvidé mi contraseña",
+que confunde a quien nunca ha tenido una.
+
+Prompt para Claude Code:
+
+```
+UX · Primer ingreso: que un usuario nuevo entre y se matricule sin fricción
+
+PROBLEMA: la primera vez de un usuario nuevo depende del flujo de "olvidé mi contraseña",
+que es confuso para alguien que nunca tuvo contraseña, y el camino hasta matricularse se
+siente enredado.
+
+ETAPA 1 — DIAGNÓSTICO (reportar antes de tocar nada):
+- Mapear el flujo actual completo de un usuario nuevo: página de login → cómo descubre
+  que debe crear contraseña → correo (¿qué plantilla, qué asunto, cuánto dura el enlace?
+  ver el pendiente de Fase 0 de OTP < 1h) → dónde aterriza al definirla → cómo regresa
+  a lo que quería hacer (¿se respeta ?redirect= de src/proxy.ts en TODO el camino,
+  incluido el enlace del correo?).
+- Listar cada punto de fricción con captura del estado actual.
+
+ETAPA 2 — MEJORAS (según lo que salga, pero como mínimo):
+1. En el login, separar claramente "Primera vez aquí → Creá tu contraseña" de
+   "Olvidé mi contraseña" (pueden compartir mecanismo por debajo, pero el usuario nuevo
+   no debe leer 'olvidé' ni 'recuperar'). Copys en el lenguaje de Theos.
+2. El correo de creación debe decir "Creá tu contraseña", no "restablecer" — revisar la
+   plantilla de Supabase Auth / SMTP y ajustar asunto y cuerpo (usar el molde visual de
+   baseLayout si el correo sale por nuestro SES; si sale por Supabase, ajustar el template
+   en el dashboard y documentar el cambio en docs/).
+3. Tras definir la contraseña, aterrizar directo donde iba (?redirect= a /matricula si
+   venía de ahí) con sesión ya iniciada — no mandarlo de vuelta al login a reescribir todo.
+4. Mensajes de error humanos: correo no registrado ("Este correo no está en nuestra
+   base — escribí a X"), enlace vencido ("El enlace venció, pedí uno nuevo aquí" con botón).
+5. Estado de carga y confirmación visible al pedir el correo ("Te enviamos un enlace a
+   ma***@gmail.com") para que no lo pida cinco veces.
+NOTA: los correos de auth de Supabase son transaccionales del propio login — confirmar si
+pasan por EMAIL_SILENT_MODE; NO deben quedar silenciados (sin ellos nadie puede entrar),
+pero tampoco tocar nada que dispare correos masivos.
+Actualizar la infografía/tutorial "Tu primera vez en el sistema" en /ayuda si el flujo
+cambia. Probar el camino completo con un usuario de prueba. tsc/lint/vitest al cierre.
+```

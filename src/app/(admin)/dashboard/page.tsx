@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { subtituloDeDonantes, explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { eventsInRange } from '@/lib/events/event-views'
@@ -120,7 +121,7 @@ function StatCard({
       </div>
       <div className="text-sm text-navy/80 mb-2 font-body">{label}</div>
       {sub && (
-        <div className="text-[13px] text-navy/45 font-body">{sub}</div>
+        <div className="text-[13px] text-navy-light/80 font-body">{sub}</div>
       )}
       {delta && (
         <div className="flex items-center gap-1 text-[13px] text-[#3DB97A] font-body">
@@ -352,7 +353,7 @@ export default function DashboardPage() {
           <StatCard icon={Users}     value={DASHBOARD_STATS.members.total}  label="Miembros"       delta={`+${DASHBOARD_STATS.members.new_this_month}/mes`} color="#161440" href="/miembros" />
           <StatCard icon={BookOpen}  value={DASHBOARD_STATS.studies.active_estudios} label="Estudios activos" sub="Niveles N1–N4" color="#3B7579" href="/estudios/grupos" />
           <StatCard icon={GraduationCap} value={DASHBOARD_STATS.studies.active_capacitaciones} label="Capacitaciones activas" sub="Resto de grupos" color="#9B7FD4" href="/estudios/grupos" />
-          <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donantes activos" color="#3DB97A" href="/finanzas/donaciones" />
+          <StatCard icon={Heart} value={DASHBOARD_STATS.finance.donors_active} label="Donantes activos" sub={subtituloDeDonantes(now)} color="#3DB97A" href="/finanzas/donaciones" />
           <StatCard icon={Hammer} value={DASHBOARD_STATS.servers.active} label="Servidores activos" sub={`${DASHBOARD_STATS.servers.positions.toLocaleString('es-CR')} puestos ocupados`} color="#D63E3D" href="/servidores" />
         </div>
       )}
@@ -521,11 +522,18 @@ export default function DashboardPage() {
                     : '₡ •••,•••'}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-navy/80 font-body">Donantes activos</span>
-                <span className="text-[13px] font-semibold text-navy font-body">
-                  {DASHBOARD_STATS.finance.donors_active.toLocaleString('es-CR')}
-                </span>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-navy/80 font-body">Donantes activos</span>
+                  <span className="text-[13px] font-semibold text-navy font-body">
+                    {DASHBOARD_STATS.finance.donors_active.toLocaleString('es-CR')}
+                  </span>
+                </div>
+                {/* Qué cuenta como donante, con la fecha puesta. Antes el número
+                    salía solo y cada quien suponía su propia ventana. */}
+                <p className="text-[13px] text-navy-light/80 font-body mt-0.5 pr-14">
+                  {explicacionDeDonantes(now)}
+                </p>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-navy/80 font-body">Devoluciones pend.</span>
