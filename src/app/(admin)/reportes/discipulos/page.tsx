@@ -9,6 +9,7 @@ import {
 import { KpiCard } from '@/components/reportes/KpiCard'
 import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
+import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
 import {
@@ -79,7 +80,7 @@ export default function ReporteDiscipulosPage() {
         </Link>
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Discípulos Multiplicadores</h1>
         <p className="mt-1 text-sm text-navy-light/80 font-body">
-          Personas que cumplen los 3 criterios a la vez: asistencia comprometida, sirven y donan activamente.
+          Personas que cumplen los 3 criterios a la vez: son asistentes comprometidos, sirven y donan activamente.
         </p>
       </div>
 
@@ -92,7 +93,7 @@ export default function ReporteDiscipulosPage() {
           highlight
         />
         <KpiCard
-          label="Comprometidos"
+          label="Asistentes comprometidos"
           value={fmt(criteria.comprometidos.n)}
           sublabel={`${criteria.comprometidos.pct}% de la base`}
           info={ATTENDANCE_GENERAL_TOOLTIP}
@@ -107,7 +108,7 @@ export default function ReporteDiscipulosPage() {
           label="Donan activamente"
           value={fmt(criteria.donan.n)}
           sublabel={`${criteria.donan.pct}% de la base`}
-          info="Donaron al menos una vez en los últimos 6 meses, contando el mes actual."
+          info={explicacionDeDonantes(new Date())}
         />
       </div>
 
@@ -117,7 +118,7 @@ export default function ReporteDiscipulosPage() {
           title="Traslape entre criterios"
           subtitle="Cómo se combinan los 3 criterios. El centro son los Discípulos Multiplicadores."
           height={300}
-          footnote="Comprometido = coral · Sirve = navy · Dona = teal. Los números son personas en cada región."
+          footnote="Asistentes comprometidos = coral · Sirve = navy · Dona = teal. Los números son personas en cada región."
         >
           <VennDiagram venn={venn} />
         </ChartCard>
@@ -198,7 +199,7 @@ export default function ReporteDiscipulosPage() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <CohortStat label={`Nuevos en ${cohort.year}`} value={fmt(cohort.nuevos)} highlight />
             <CohortStat label="Son DM hoy" value={fmt(cohort.dmHoy)} sub={cohort.nuevos > 0 ? `${Math.round((cohort.dmHoy / cohort.nuevos) * 1000) / 10}%` : undefined} />
-            <CohortStat label="Comprometidos" value={fmt(cohort.comprometidos)} />
+            <CohortStat label="Asistentes comprometidos" value={fmt(cohort.comprometidos)} />
             <CohortStat label="Sirven" value={fmt(cohort.sirven)} />
             <CohortStat label="Donan" value={fmt(cohort.donan)} />
           </div>
@@ -247,7 +248,10 @@ function VennDiagram({ venn }: { venn: DiscipulosReport['venn'] }) {
         <circle cx="160" cy="190" r="82" fill="rgba(81,157,162,0.28)" />
       </g>
       {/* Etiquetas de conjunto */}
-      <text x="70" y="45" textAnchor="middle" fontSize="12" fontWeight="700" fill={CORAL} fontFamily="var(--font-display)">Comprometido</text>
+      <text x="70" y="38" textAnchor="middle" fontSize="12" fontWeight="700" fill={CORAL} fontFamily="var(--font-display)">
+        <tspan x="70" dy="0">Asistentes</tspan>
+        <tspan x="70" dy="13">comprometidos</tspan>
+      </text>
       <text x="250" y="45" textAnchor="middle" fontSize="12" fontWeight="700" fill={NAVY} fontFamily="var(--font-display)">Sirve</text>
       <text x="160" y="290" textAnchor="middle" fontSize="12" fontWeight="700" fill={TEAL} fontFamily="var(--font-display)">Dona</text>
       {/* Números por región */}
