@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
 import { cuentaHabilitada } from '@/lib/auth/account-active'
+import { recordarActor } from '@/lib/auth/actor-actual'
 
 export type AuthContext = { userId: string; memberId: string | null; roles: RoleId[] }
 
@@ -13,6 +14,11 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  // Desde acá, todo lo que escriba esta petición queda firmado en audit_log.
+  // Va antes de resolver la ficha a propósito: los roles se leen con el cliente
+  // admin y esas lecturas ya no cambian nada, pero cualquier escritura posterior
+  // del handler sí.
+  recordarActor(user.id)
 
   const admin = createAdminClient()
   const { data: member } = await admin

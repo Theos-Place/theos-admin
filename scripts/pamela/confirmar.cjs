@@ -1,0 +1,11 @@
+const { nuevoCliente } = require('../madre-2026-09/lib.cjs')
+;(async () => {
+  const c = nuevoCliente(); await c.connect()
+  const m = await c.query(`select version, name from supabase_migrations.schema_migrations where version='20260916190000'`)
+  console.log('migración registrada: ' + JSON.stringify(m.rows[0] ?? null))
+  const f = await c.query(`select pg_get_functiondef(oid) like '%x-actor-user-id%' as tiene from pg_proc where proname='log_changes'`)
+  console.log('la función en vivo lee el header: ' + f.rows[0].tiene)
+  const n = await c.query(`select count(*) total, count(actor_id) con_actor from audit_log`)
+  console.log(`audit_log: ${n.rows[0].total} filas, ${n.rows[0].con_actor} con actor`)
+  await c.end()
+})().catch(e => { console.error(e.message); process.exit(1) })
