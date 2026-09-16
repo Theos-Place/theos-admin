@@ -261,8 +261,10 @@ export async function autoEnrollApprovedToNextLevel(
   const next = nextLevelCode(sourceCode)
   if (!src || !next) return { enrolled: 0, next_level: null, amount: 0, next_group_id: null }
 
-  const { data: nextPlan } = await supabase.from('study_plans').select('id, cost, currency, duration_weeks').eq('code', next).maybeSingle()
-  const np = nextPlan as { id: string; cost: number | null; currency: string | null; duration_weeks: number | null } | null
+  // `name` se trae para la descripción del cobro: 'Matrícula · Nivel 3' y no
+  // una línea de ₡5.000 sin decir de qué.
+  const { data: nextPlan } = await supabase.from('study_plans').select('id, name, cost, currency, duration_weeks').eq('code', next).maybeSingle()
+  const np = nextPlan as { id: string; name: string | null; cost: number | null; currency: string | null; duration_weeks: number | null } | null
   if (!np) return { enrolled: 0, next_level: next, amount: 0, next_group_id: null }
   const amount = Number(np.cost ?? 0)
   // INT-2: el pago hereda la moneda del costo del plan.
@@ -346,6 +348,16 @@ export async function autoEnrollApprovedToNextLevel(
         concept: 'matricula',
         enrollment_id: enrollmentId,
         status: 'pending',
+        // EL COBRO TIENE QUE DECIR DE QUÉ GRUPO ES (2026-09-16). Estos tres
+        // campos faltaban y el de `enrollMember` sí los pone, así que los
+        // cobros de la auto-matrícula nacían huérfanos: sin grupo, sin tipo de
+        // entidad y sin descripción. En la pantalla del grupo no aparecían —
+        // cualquier consulta por study_group_id los perdía— y en la lista de
+        // pagos salían como una línea suelta de ₡5.000 sin decir de qué.
+        // Los 6 del "Nivel 3. Daniella Sánchez R." quedaron así.
+        study_group_id: successorGroupId,
+        entity_type: 'study_group',
+        description: `Matrícula · ${np.name ?? next}`,
       }).select('id').single()
       if (payErr) {
         console.warn('auto-enroll pago falló, revirtiendo inscripción:', payErr.message)
