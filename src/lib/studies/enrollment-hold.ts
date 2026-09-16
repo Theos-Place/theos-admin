@@ -35,7 +35,8 @@ export function reservaExpirada(input: {
   status: string
   /** review_status del pago de matrícula, o null si nunca subió nada. */
   reviewStatus: string | null | undefined
-  /** Cuándo se creó la matrícula (ISO). */
+  /** Desde cuándo corre la gracia (ISO). Sale de `relojDeLaReserva`, NO del
+   *  created_at de la matrícula: ver el comentario de esa función. */
   creadaEn: string
   ahora: Date
 }): boolean {
@@ -48,3 +49,43 @@ export function reservaExpirada(input: {
 
 export const MOTIVO_EXPIRADA =
   `Matrícula sin comprobante por más de ${HORAS_DE_GRACIA} horas: se liberó el cupo automáticamente`
+
+/** Un pago de matrícula, con lo poco que hace falta para fechar la reserva. */
+export type PagoDeMatricula = {
+  concept: string | null
+  status: string | null
+  review_status: string | null
+  created_at: string
+}
+
+/**
+ * ¿Desde cuándo corre la ventana de gracia de ESTA reserva?
+ *
+ * EL BUG QUE ARREGLA (2026-09-16, María José Ruiz). Antes se usaba el
+ * `created_at` de la fila de `study_enrollments`. Pero la matrícula se guarda
+ * con un `upsert` sobre (group_id, member_id): cuando alguien que se dio de
+ * baja vuelve al grupo, la fila NO es nueva, se reutiliza — y su `created_at`
+ * sigue siendo el del primer intento. Así que una matrícula recién hecha nacía
+ * con días de antigüedad y el siguiente barrido la mataba.
+ *
+ * Le pasó a ella: se rematriculó a las 15:53 y a las 16:00 el cron la botó
+ * diciéndole que habían pasado 24 horas. Habían pasado siete minutos.
+ *
+ * El reloj correcto es el del COBRO pendiente, que sí se crea de cero en cada
+ * matrícula — y además es el que describe la regla de verdad: "24 horas desde
+ * que se te pidió el comprobante". Si no hay cobro pendiente se cae al
+ * created_at de la matrícula, que es el comportamiento viejo.
+ */
+export function relojDeLaReserva(input: {
+  enrollmentCreatedAt: string
+  pagos: PagoDeMatricula[] | null | undefined
+}): string {
+  const pendientes = (input.pagos ?? [])
+    .filter(p => p.concept === 'matricula' && p.status === 'pending')
+    .map(p => p.created_at)
+    .filter(d => Number.isFinite(Date.parse(d)))
+    .sort()
+  // El MÁS RECIENTE: si quedó un cobro viejo colgando de un intento anterior,
+  // fechar la reserva con él la mataría igual que el bug que esto arregla.
+  return pendientes.length ? pendientes[pendientes.length - 1] : input.enrollmentCreatedAt
+}

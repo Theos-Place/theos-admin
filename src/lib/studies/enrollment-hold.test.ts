@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { HORAS_DE_GRACIA, MOTIVO_EXPIRADA, reservaExpirada } from './enrollment-hold'
+import { HORAS_DE_GRACIA, MOTIVO_EXPIRADA, reservaExpirada, relojDeLaReserva } from './enrollment-hold'
 
 const ahora = new Date('2026-09-02T12:00:00Z')
 const haceHoras = (h: number) => new Date(ahora.getTime() - h * 3600_000).toISOString()
@@ -45,5 +45,56 @@ describe('reservaExpirada', () => {
   it('el motivo dice qué pasó y cuánto se esperó', () => {
     expect(MOTIVO_EXPIRADA).toContain(String(HORAS_DE_GRACIA))
     expect(MOTIVO_EXPIRADA).toMatch(/liberó el cupo/i)
+  })
+})
+
+describe('relojDeLaReserva', () => {
+  const pago = (over: Partial<{ concept: string | null; status: string | null; review_status: string | null; created_at: string }> = {}) => ({
+    concept: 'matricula', status: 'pending', review_status: null, created_at: haceHoras(1), ...over,
+  })
+
+  it('EL BUG: una rematrícula no hereda la antigüedad de la fila vieja', () => {
+    // study_enrollments se guarda con upsert sobre (group_id, member_id): al
+    // volver al grupo la fila se REUSA y su created_at sigue siendo el del
+    // primer intento. A María José la mataron 7 minutos después de
+    // rematricularla porque la fila decía 4 días. El cobro sí es nuevo.
+    const reloj = relojDeLaReserva({
+      enrollmentCreatedAt: haceHoras(96),
+      pagos: [pago({ created_at: haceHoras(0.1) })],
+    })
+    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: reloj, ahora })).toBe(false)
+  })
+
+  it('sin cobro pendiente se cae al created_at de la matrícula', () => {
+    expect(relojDeLaReserva({ enrollmentCreatedAt: haceHoras(30), pagos: [] })).toBe(haceHoras(30))
+    expect(relojDeLaReserva({ enrollmentCreatedAt: haceHoras(30), pagos: null })).toBe(haceHoras(30))
+  })
+
+  it('un cobro CANCELADO de un intento anterior no cuenta', () => {
+    // Los dos pagos de ella quedaron 'cancelado'; si contaran, el intento nuevo
+    // nacería viejo otra vez.
+    expect(relojDeLaReserva({
+      enrollmentCreatedAt: haceHoras(96),
+      pagos: [pago({ status: 'cancelado', created_at: haceHoras(96) }), pago({ created_at: haceHoras(2) })],
+    })).toBe(haceHoras(2))
+  })
+
+  it('con varios cobros pendientes gana el MÁS RECIENTE', () => {
+    expect(relojDeLaReserva({
+      enrollmentCreatedAt: haceHoras(96),
+      pagos: [pago({ created_at: haceHoras(50) }), pago({ created_at: haceHoras(3) })],
+    })).toBe(haceHoras(3))
+  })
+
+  it('un cobro de otro concepto no fecha la reserva', () => {
+    expect(relojDeLaReserva({
+      enrollmentCreatedAt: haceHoras(30),
+      pagos: [pago({ concept: 'folleto', created_at: haceHoras(1) })],
+    })).toBe(haceHoras(30))
+  })
+
+  it('la que de verdad quedó abandonada sí expira', () => {
+    const reloj = relojDeLaReserva({ enrollmentCreatedAt: haceHoras(40), pagos: [pago({ created_at: haceHoras(40) })] })
+    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: reloj, ahora })).toBe(true)
   })
 })

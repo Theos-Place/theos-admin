@@ -1812,17 +1812,17 @@ export async function expirePendingStudyEnrollments(
   ahora: Date = new Date(),
 ): Promise<{ expired: number; detalle: Array<{ member_id: string; group_id: string }> }> {
   const supabase = createAdminClient()
-  const { reservaExpirada, MOTIVO_EXPIRADA } = await import('@/lib/studies/enrollment-hold')
+  const { reservaExpirada, relojDeLaReserva, MOTIVO_EXPIRADA } = await import('@/lib/studies/enrollment-hold')
 
   const { data, error } = await supabase
     .from('study_enrollments')
-    .select('id, member_id, group_id, status, created_at, payments!payments_enrollment_id_fkey(concept, review_status)')
+    .select('id, member_id, group_id, status, created_at, payments!payments_enrollment_id_fkey(concept, status, review_status, created_at)')
     .eq('status', 'pendiente_de_pago')
   if (error) throw error
 
   const candidatas = ((data ?? []) as unknown as Array<{
     id: string; member_id: string; group_id: string | null; status: string; created_at: string
-    payments: Array<{ concept: string | null; review_status: string | null }> | null
+    payments: Array<{ concept: string | null; status: string | null; review_status: string | null; created_at: string }> | null
   }>).filter(e => {
     // El review_status que importa es el del pago de MATRÍCULA; puede haber
     // otros conceptos colgando de la misma persona.
@@ -1831,7 +1831,9 @@ export async function expirePendingStudyEnrollments(
     return !!e.group_id && reservaExpirada({
       status: e.status,
       reviewStatus: conAlgoEnviado?.review_status ?? null,
-      creadaEn: e.created_at,
+      // NO e.created_at: la fila se reusa al rematricular y traería la fecha
+      // del primer intento. Ver relojDeLaReserva.
+      creadaEn: relojDeLaReserva({ enrollmentCreatedAt: e.created_at, pagos: e.payments }),
       ahora,
     })
   })
