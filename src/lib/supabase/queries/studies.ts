@@ -1498,11 +1498,12 @@ export async function enrollMember(
   // 'dropped' (reincorporación); una inscripción 'completed' no se resucita.
   const { data: existing } = await supabase
     .from('study_enrollments')
-    .select('status')
+    .select('id, status')
     .eq('group_id', groupId)
     .eq('member_id', memberId)
     .maybeSingle()
-  const existingStatus = (existing as { status: string } | null)?.status
+  const existingEnr = existing as { id: string; status: string } | null
+  const existingStatus = existingEnr?.status
   if (existingStatus === 'completed') throw new Error('YA_COMPLETADO')
 
   // CUPO (2026-08-04): validación server-side. Antes solo la UI filtraba los
@@ -1566,6 +1567,32 @@ export async function enrollMember(
   // cupo (OCCUPYING_STATUSES), cuenta como "cursando" en elegibilidad, tiene su
   // etiqueta en las pantallas y el cierre lo contempla. Lo único que había
   // cambiado era que dejó de escribirse.
+  // ¿Ya estaba en este grupo? Rematricular a alguien que ya está adentro no
+  // puede empeorarle la situación. El upsert de abajo REUSA la fila, así que
+  // sin este guard la segunda corrida le pisaba el status y lo devolvía a
+  // deber, con un cobro nuevo por el monto completo (Daniel Alfaro, Alberto
+  // Vargas y Yanil Gutiérrez, set-2026). La regla vive en studies/rematricula.ts.
+  let cobroAReusar: string | null = null
+  if (existingEnr) {
+    const { decidirRematricula } = await import('@/lib/studies/rematricula')
+    const { data: pagosPrevios } = await supabase
+      .from('payments').select('id, concept, status').eq('enrollment_id', existingEnr.id)
+    const decision = decidirRematricula({
+      estadoActual: existingStatus,
+      pagos: (pagosPrevios ?? []) as Array<{ id: string; concept: string | null; status: string | null }>,
+      requierePago: requiresPaymentFinal,
+    })
+    if (decision.accion === 'nada_que_hacer') {
+      // Ni un UPDATE: el estado que ya tiene es el correcto.
+      return {
+        status: existingStatus as 'enrolled' | 'pendiente_de_pago',
+        enrollment_id: existingEnr.id,
+        amount: finalAmount, currency: planCurrency, requires_payment: false,
+      }
+    }
+    if (decision.accion === 'reusar_cobro') cobroAReusar = decision.pagoId
+  }
+
   const status = requiresPaymentFinal ? 'pendiente_de_pago' as const : 'enrolled' as const
 
   const { data: enr, error } = await supabase
@@ -1581,7 +1608,14 @@ export async function enrollMember(
   if (error) throw error
   const enrollmentId = (enr as { id: string }).id
 
-  if (requiresPaymentFinal) {
+  if (requiresPaymentFinal && cobroAReusar) {
+    // Ya tenía un cobro abierto por esta misma matrícula: se le corrige el monto
+    // y se deja ese. Insertar otro es la deuda duplicada que trajo a estas tres
+    // personas acá.
+    await supabase.from('payments')
+      .update({ amount: finalAmount, scholarship_id: appliedScholarship?.id ?? null })
+      .eq('id', cobroAReusar).eq('status', 'pending')
+  } else if (requiresPaymentFinal) {
     // Pago pendiente sin comprobante todavía (mismo patrón que
     // autoEnrollApprovedToNextLevel) — se completa cuando suba el comprobante.
     // QA 2026-07-17: si el pago no se pudo crear, revertir la inscripción —
