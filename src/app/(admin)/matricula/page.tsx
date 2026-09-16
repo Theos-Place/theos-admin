@@ -22,7 +22,7 @@ import { DEBT_BLOCK_REASON } from '@/lib/studies/eligibility'
 import { summarizeStageRequirements } from '@/lib/studies/stage-requirements-summary'
 import type { StudyType } from '@/types/study'
 import { ATTENDANCE_MIN_CHARLAS, ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS } from '@/lib/attendance'
-import { formatDateLong, formatCRC, formatMoney } from '@/lib/format'
+import { formatDate, formatDateLong, formatCRC, formatMoney } from '@/lib/format'
 import { studyCostLabel } from '@/lib/studies/cost-label'
 import { buildPaymentBreakdown, formatDiscount } from '@/lib/finance/payment-breakdown'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
@@ -1042,73 +1042,137 @@ function StudyCard({
   )
 }
 
+/** Micro-label de la tarjeta. A nivel de módulo y no dentro de GroupRow:
+ *  react-hooks/static-components lo marca como ERROR, no como advertencia —
+ *  un componente creado en cada render remonta su subárbol entero. */
+function Etiqueta({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">{children}</p>
+}
+
+/**
+ * La tarjeta de un grupo en la lista de matrícula.
+ *
+ * MAT-2 · En mobile era ilegible. La grilla de 2 columnas dejaba cada una en
+ * ~140px, así que una ubicación larga ("Casona Escalante, Bo. Escalante, 50
+ * Norte y 100 Oeste…") se partía palabra por palabra; y el `flex-wrap` del
+ * contenedor raíz mandaba el bloque de Inicio/precio/Matricular a incrustarse
+ * a media tarjeta.
+ *
+ * Ahora son dos layouts de verdad y no una grilla que se encoge:
+ *  · MOBILE · una columna. La ubicación ocupa el ancho completo —es el dato
+ *    largo y el único que lo necesita— y Horario/Dirigente comparten fila
+ *    porque sí caben. El pie va separado con borde.
+ *  · DESKTOP · las cuatro columnas de siempre con el bloque a la derecha.
+ *
+ * La ubicación se recorta a dos líneas en los dos tamaños. No se pierde nada:
+ * el `title` la muestra entera al pasar el mouse y el modal de confirmación la
+ * trae completa en "Dónde".
+ */
 function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => void }) {
   const fillPct = porcentajeOcupado(group.filled, group.max_capacity)
 
-  return (
-    <div
-      className="rounded-xl px-3 py-3 flex items-center gap-3 flex-wrap bg-surface-low"
+  const cupos = (
+    <>
+      <Etiqueta>Cupos</Etiqueta>
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] text-navy font-body whitespace-nowrap">
+          {textoCupos(group.spots_available, group.max_capacity)}
+        </span>
+        <div className="flex-1 h-1.5 rounded-full bg-navy-light/10 overflow-hidden min-w-[40px]">
+          <div className="h-full rounded-full bg-coral transition-all" style={{ width: `${fillPct}%` }} />
+        </div>
+      </div>
+    </>
+  )
+
+  const precio = group.requires_payment && group.cost
+    ? <span className="text-[13px] font-semibold text-coral font-display">{formatCRC(group.cost)}</span>
+    : <span className="text-[13px] font-semibold text-teal-deep font-display">Gratuito</span>
+
+  const botonMatricular = (
+    <button
+      onClick={onEnroll}
+      className="rounded-lg bg-coral px-3 py-2 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body min-h-[40px]"
     >
-      <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1.5">
+      Matricular
+    </button>
+  )
+
+  const zona = (
+    <p className="text-[13px] font-medium text-navy capitalize font-body flex items-center gap-1.5 flex-wrap">
+      {group.zone}
+      {group.is_virtual && (
+        <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
+          Virtual
+        </span>
+      )}
+    </p>
+  )
+
+  const ubicacion = group.location ? (
+    <p title={group.location} className="text-[13px] text-navy-light/80 font-body leading-snug line-clamp-2">
+      {group.location}
+    </p>
+  ) : null
+
+  return (
+    <div className="rounded-xl bg-surface-low px-3 py-3">
+      {/* ── MOBILE ── una columna, sin grilla que se encoja. */}
+      <div className="sm:hidden space-y-2.5">
         <div>
-          <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">Zona</p>
-          <p className="text-[13px] font-medium text-navy capitalize font-body flex items-center gap-1.5">
-            {group.zone}
-            {group.is_virtual && (
-              <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
-                Virtual
-              </span>
-            )}
-          </p>
-          {/* La ubicación va DEBAJO de la zona, no en una quinta columna: es el
-              detalle de la zona, y la fila ya venía apretada con cuatro. */}
-          {group.location && (
-            <p className="text-[13px] text-navy-light/80 font-body leading-snug">{group.location}</p>
-          )}
+          <Etiqueta>Zona</Etiqueta>
+          {zona}
+          {ubicacion}
         </div>
-        <div>
-          <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">Horario</p>
-          <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
+        <div className="grid grid-cols-2 gap-x-3">
+          <div>
+            <Etiqueta>Horario</Etiqueta>
+            <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
+          </div>
+          <div>
+            <Etiqueta>Dirigente</Etiqueta>
+            <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">Dirigente</p>
-          <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-navy-light/80 uppercase tracking-wider mb-0.5 font-display">Cupos</p>
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-navy font-body whitespace-nowrap">
-              {textoCupos(group.spots_available, group.max_capacity)}
-            </span>
-            <div className="flex-1 h-1.5 rounded-full bg-navy-light/10 overflow-hidden min-w-[40px]">
-              <div
-                className="h-full rounded-full bg-coral transition-all"
-                style={{ width: `${fillPct}%` }}
-              />
-            </div>
+        <div>{cupos}</div>
+        {/* Pie separado: es la zona de decisión (cuándo, cuánto, matricular) y
+            mezclada con los datos era lo que se veía incrustado. */}
+        <div className="flex items-center justify-between gap-2 border-t border-[var(--outline-variant)] pt-2.5">
+          <span className="text-[13px] text-navy-light/80 font-body">
+            Inicia {formatDate(group.start_date)}
+          </span>
+          <div className="flex items-center gap-3 shrink-0">
+            {precio}
+            {botonMatricular}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className="text-[13px] text-navy-light/80 font-body">
-          Inicio: {formatDateLong(group.start_date)}
-        </span>
-        {group.requires_payment && group.cost ? (
-          <span className="text-[13px] font-semibold text-coral font-display">
-            {formatCRC(group.cost)}
+      {/* ── DESKTOP ── las cuatro columnas de siempre. */}
+      <div className="hidden sm:flex items-center gap-3">
+        <div className="flex-1 min-w-0 grid grid-cols-4 gap-x-3 gap-y-1.5">
+          <div className="min-w-0">
+            <Etiqueta>Zona</Etiqueta>
+            {zona}
+            {ubicacion}
+          </div>
+          <div className="min-w-0">
+            <Etiqueta>Horario</Etiqueta>
+            <p className="text-[13px] text-navy font-body">{group.schedule_days} {group.schedule_time}</p>
+          </div>
+          <div className="min-w-0">
+            <Etiqueta>Dirigente</Etiqueta>
+            <p className="text-[13px] text-navy font-body">{group.leader_name}</p>
+          </div>
+          <div className="min-w-0">{cupos}</div>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-[13px] text-navy-light/80 font-body">
+            Inicio: {formatDateLong(group.start_date)}
           </span>
-        ) : (
-          <span className="text-[13px] font-semibold text-teal-deep font-display">
-            Gratuito
-          </span>
-        )}
-        <button
-          onClick={onEnroll}
-          className="mt-1 rounded-lg bg-coral px-3 py-1.5 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body"
-        >
-          Matricular
-        </button>
+          {precio}
+          <div className="mt-1">{botonMatricular}</div>
+        </div>
       </div>
     </div>
   )

@@ -522,3 +522,32 @@ Ya había 13 check-ins mal ubicados (3-ene-2021, semana 53 de 2020).
 La función y la regla en AGENTS.md quedaron listas el 2026-09-15, pero hoy no
 hay ningún import de CCB dentro de `src/` que la use — son todos scripts
 puntuales. Cuando se escriba el próximo import, tiene que entrar por ahí.
+
+## Fase 17 — Pedido el 2026-09-15
+
+### [x] MAT-2 · La tarjeta de grupo en mobile — HECHO 2026-09-15
+
+`GroupRow` pasó de UNA grilla que se encogía a DOS layouts de verdad:
+
+ · **Mobile** · una columna. La ubicación ocupa el ancho completo —es el único
+   dato largo— y Horario/Dirigente comparten fila porque sí caben en 360px. El
+   pie va separado con borde: fecha corta a la izquierda, precio y botón a la
+   derecha.
+ · **Desktop** · las cuatro columnas de siempre, intactas.
+
+La causa del bloque incrustado era el `flex-wrap` del contenedor raíz, que ya
+no existe en mobile.
+
+La ubicación se recorta a dos líneas en los dos tamaños, con `title` para verla
+entera. No se pierde: el modal de confirmación ya la traía completa en "Dónde"
+— verificado, no hizo falta agregarla.
+
+La prematrimonial NO tiene tarjeta equivalente (es un formulario de
+preferencias), así que no hubo nada que duplicar.
+
+Revisado en 360px con los tres casos que importaban: ubicación larga, virtual
+gratuito y uno con costo casi lleno.
+
+Gotcha: el micro-label quedó como componente a NIVEL DE MÓDULO. Definido
+dentro de `GroupRow`, `react-hooks/static-components` lo marca como ERROR —no
+advertencia— porque un componente creado en cada render remonta su subárbol.
