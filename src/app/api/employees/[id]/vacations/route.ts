@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createVacationRecord, type VacationWriteInput } from '@/lib/supabase/queries/employees'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: crea una solicitud de vacaciones/permiso. Body: VacationWriteInput (sin employee_id)
 export async function POST(
@@ -15,7 +16,7 @@ export async function POST(
     const v = await createVacationRecord({ ...body, employee_id: id })
     return NextResponse.json(v, { status: 201 })
   } catch (error) {
-    console.error('POST /api/employees/[id]/vacations:', error)
+    reportarError('POST /api/employees/[id]/vacations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { deactivateMember } from '@/lib/supabase/queries/members'
 import { logAudit } from '@/lib/audit'
+import { reportarError } from '@/lib/observabilidad'
 
 // Dar de baja (desactivar) a un MIEMBRO del sistema. Solo admin y comunicaciones
 // (admin pasa siempre por requireRoles). No confundir con la baja de suscripción
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/members/[id]/deactivate:', error)
+    reportarError('POST /api/members/[id]/deactivate:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

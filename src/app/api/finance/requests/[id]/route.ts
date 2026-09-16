@@ -4,6 +4,7 @@ import { updateFinanceRequestStatus, assignFinanceRequest } from '@/lib/supabase
 import { necesitaAprobacionPropia, validarAprobacion } from '@/lib/finance/aprobacion-de-beca'
 import { approveScholarshipRequest } from '@/lib/supabase/queries/scholarships'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 const ACTIONS: Record<string, 'in_review' | 'resolved' | 'rejected'> = {
   take: 'in_review',
@@ -82,7 +83,7 @@ export async function PATCH(
     )
     return NextResponse.json(updated)
   } catch (error) {
-    console.error('PATCH /api/finance/requests/[id]:', error)
+    reportarError('PATCH /api/finance/requests/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -5,6 +5,7 @@ import { renderEmail } from '@/lib/email/baseLayout'
 import { linkAttemptOrder, shouldTryOtherKind, type PasswordLinkKind } from '@/lib/auth/password-link-plan'
 import { planDeEnlace, type FichaConCorreo } from '@/lib/auth/enlace-de-cuenta'
 import { patronDeCorreo, esMismoCorreo } from '@/lib/email/correo-exacto'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 export type { PasswordLinkKind }
 
@@ -64,7 +65,7 @@ export async function buildPasswordLink(
     const res = await generar(email, intento)
     if (res.hashed) { hashed = res.hashed; kind = intento; break }
     if (!shouldTryOtherKind(res.error)) {
-      console.error('buildPasswordLink:', intento, res.error)
+      reportarFalla('buildPasswordLink:', res.error, { intento })
       return null
     }
   }
@@ -140,9 +141,9 @@ async function enlazarFichaConLaCuenta(email: string): Promise<void> {
     }
     const { error } = await supabase
       .from('members').update({ auth_user_id: authUserId }).eq('id', plan.memberId)
-    if (error) console.error('no se pudo enlazar auth_user_id:', error.message)
+    if (error) reportarFalla('no se pudo enlazar auth_user_id:', error.message)
   } catch (e) {
-    console.error('enlazarFichaConLaCuenta:', e instanceof Error ? e.message : e)
+    reportarError('enlazarFichaConLaCuenta:', e)
   }
 }
 

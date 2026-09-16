@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getDonations, getDonationStats, getDonationsFilteredSum, type DonationFilters } from '@/lib/supabase/queries/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: donaciones paginadas con filtros server-side.
 //  ?stats=1 → solo los totales (RPC donation_stats).
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       filtered_sum: withSum && !stripAmounts ? sum : null,
     })
   } catch (error) {
-    console.error('GET /api/finance/donations:', error)
+    reportarError('GET /api/finance/donations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import {
   createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente, NotRegisteredError,
 } from '@/lib/supabase/queries/events'
 import { YA_REGISTRADO } from '@/lib/events/checkin-duplicado'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: asistentes (member_ids con check-in) de un evento. Para elegir audiencia
 // en comunicaciones. Devuelve { count, member_ids }.
@@ -18,7 +19,7 @@ export async function GET(
     const member_ids = await getEventAttendeeIds(id)
     return NextResponse.json({ count: member_ids.length, member_ids })
   } catch (error) {
-    console.error('GET /api/events/[id]/checkins:', error)
+    reportarError('GET /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -80,7 +81,7 @@ export async function POST(
     if (error instanceof NotRegisteredError) {
       return NextResponse.json({ error: error.message, code: 'not_registered' }, { status: 409 })
     }
-    console.error('POST /api/events/[id]/checkins:', error)
+    reportarError('POST /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -99,7 +100,7 @@ export async function DELETE(
     await deleteCheckin(id, checkinId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/events/[id]/checkins:', error)
+    reportarError('DELETE /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

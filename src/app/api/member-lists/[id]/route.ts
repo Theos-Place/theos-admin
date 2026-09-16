@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getMemberListById, updateMemberList, deleteMemberList, recomputeMemberList } from '@/lib/supabase/queries/member-lists'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +30,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
     return NextResponse.json(list)
   } catch (error) {
-    console.error('GET /api/member-lists/[id]:', error)
+    reportarError('GET /api/member-lists/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -42,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await updateMemberList(id, await req.json())
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/member-lists/[id]:', error)
+    reportarError('PATCH /api/member-lists/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -55,7 +56,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await deleteMemberList(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/member-lists/[id]:', error)
+    reportarError('DELETE /api/member-lists/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

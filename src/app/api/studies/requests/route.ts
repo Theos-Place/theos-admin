@@ -8,6 +8,7 @@ import {
 import { requestQueueScope } from '@/lib/studies/request-assignment'
 import { isRelocationCode, textoFalta } from '@/lib/studies/relocation'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
+import { reportarError } from '@/lib/observabilidad'
 
 const TYPES = new Set(['relocation', 'study_interest'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/studies/requests:', error)
+    reportarError('GET /api/studies/requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -202,7 +203,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(request, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/requests:', error)
+    reportarError('POST /api/studies/requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

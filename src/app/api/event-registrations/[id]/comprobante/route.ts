@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
 import { EVENT_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // Mismos roles que gestionan event_registrations desde el panel de staff.
 
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .from(PAYMENT_RECEIPTS_BUCKET)
       .upload(path, bytes, { contentType: file.type || 'application/octet-stream', upsert: false })
     if (upErr) {
-      console.error('upload receipt evento:', upErr.message)
+      reportarFalla('upload receipt evento:', upErr.message)
       return NextResponse.json({ error: 'No se pudo subir el comprobante.' }, { status: 500 })
     }
 
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         { status: 409 },
       )
     }
-    console.error('POST /api/event-registrations/[id]/comprobante:', error)
+    reportarError('POST /api/event-registrations/[id]/comprobante:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getInternalNotifications } from '@/lib/supabase/queries/study-requests'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: notificaciones internas del usuario autenticado.
 export async function GET() {
@@ -10,7 +11,7 @@ export async function GET() {
     if (!auth.ctx.memberId) return NextResponse.json([])
     return NextResponse.json(await getInternalNotifications(auth.ctx.memberId))
   } catch (error) {
-    console.error('GET /api/notifications/internal:', error)
+    reportarError('GET /api/notifications/internal:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

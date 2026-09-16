@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { linkDonation } from '@/lib/supabase/queries/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 // PATCH: vincula una donación a un miembro. Body: { member_id }
 export async function PATCH(
@@ -16,7 +17,7 @@ export async function PATCH(
     await linkDonation(id, member_id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/finance/donations/[id]:', error)
+    reportarError('PATCH /api/finance/donations/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

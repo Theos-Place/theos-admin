@@ -3,6 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { moduleScope } from '@/lib/auth/roles'
 import { getMemberIds } from '@/lib/supabase/queries/members'
 import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: solo los IDs (y total) que coinciden con los filtros, sin paginar.
 // Mismos params que /api/members. Para guardar listas / acciones sobre todo el filtro.
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/members/ids:', error)
+    reportarError('GET /api/members/ids:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

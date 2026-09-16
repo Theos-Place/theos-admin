@@ -3,6 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { logAudit } from '@/lib/audit'
 import { approveScholarshipRequest, rejectScholarshipRequest } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: revisa una solicitud de beca. Body:
 //  { action: 'approve', discount_type, discount_value, approval_type: 'total'|'parcial' }
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (error instanceof Error && (error.message === 'Solicitud no encontrada' || error.message === 'La solicitud ya fue resuelta' || error.message === 'La solicitud no tiene un destino definido')) {
       return NextResponse.json({ error: error.message }, { status: 409 })
     }
-    console.error('POST /api/scholarships/requests/[id]/review:', error)
+    reportarError('POST /api/scholarships/requests/[id]/review:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

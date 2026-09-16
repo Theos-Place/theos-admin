@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { confirmSinpePayment } from '@/lib/supabase/queries/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 // Confirmación de pago SINPE: la ÚNICA mutación de este endpoint.
 // Auditoría A1: el PUT genérico anterior aceptaba cualquier campo/transición
@@ -53,7 +54,7 @@ export async function PUT(
     await logAudit({ actorUserId: auth.ctx.userId, action: 'APPROVE', entityType: 'payments', entityId: id, newData: { via: 'sinpe_confirm' } })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/finance/payments/[id]:', error)
+    reportarError('PUT /api/finance/payments/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

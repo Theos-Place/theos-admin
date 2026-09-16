@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getScholarshipsQueue } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: listado de becas/cupones para el dashboard de finanzas (stat "sin usar").
 // La gestión completa (crear cupón, revisar solicitudes, revocar) vive en
@@ -11,7 +12,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getScholarshipsQueue())
   } catch (error) {
-    console.error('GET /api/finance/scholarships:', error)
+    reportarError('GET /api/finance/scholarships:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

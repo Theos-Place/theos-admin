@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isUuid } from '@/lib/validate'
 import { isRemindablePayment } from '@/lib/finance/payment-reminder-rules'
 import { remindMembersPendingPayments } from '@/lib/supabase/queries/payment-reminders'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: recordatorio MANUAL de un pago (REV-2), desde la cola de revisión.
 // Reusa la lógica del cron semanal (helper compartido): notificación interna
@@ -49,7 +50,7 @@ export async function POST(
     }
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/payments/[id]/remind:', error)
+    reportarError('POST /api/payments/[id]/remind:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

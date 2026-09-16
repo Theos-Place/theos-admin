@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getScholarshipsQueue, createGenericScholarship } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: lista becas/cupones (?kind=asignada|generica, ?status=active|used|revoked).
 export async function GET(req: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET /api/scholarships/coupons:', error)
+    reportarError('GET /api/scholarships/coupons:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error && error.message === 'CODIGO_DUPLICADO') {
       return NextResponse.json({ error: 'Ya existe un cupón con ese código.' }, { status: 409 })
     }
-    console.error('POST /api/scholarships/coupons:', error)
+    reportarError('POST /api/scholarships/coupons:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

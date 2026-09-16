@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { updateBloque, deleteBloque, countBlockEnrollments } from '@/lib/supabase/queries/bloques'
+import { reportarError } from '@/lib/observabilidad'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -63,7 +64,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await updateBloque(id, patch)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/studies/bloques/[id]:', error)
+    reportarError('PUT /api/studies/bloques/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -90,7 +91,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await deleteBloque(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/studies/bloques/[id]:', error)
+    reportarError('DELETE /api/studies/bloques/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

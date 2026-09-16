@@ -11,6 +11,7 @@ import { formatPhoneCR } from '@/lib/phone'
 import {
   excelCellKind, excelNumFmt, isDataField, columnWidthFor, answerToCell, xlsxFileName,
 } from '@/lib/forms/xlsx-export'
+import { reportarError } from '@/lib/observabilidad'
 
 // FRM-3 · GET: las respuestas del formulario en .xlsx.
 //
@@ -121,7 +122,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       },
     })
   } catch (error) {
-    console.error('GET /api/forms/[id]/responses/export:', error)
+    reportarError('GET /api/forms/[id]/responses/export:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

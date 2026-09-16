@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { saldosAFavor, totalPorMoneda, type MatriculaConPagos } from '@/lib/finance/saldo-a-favor'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: quién tiene plata a favor.
 //
@@ -69,7 +70,7 @@ export async function GET() {
       matriculas_revisadas: filas.length,
     })
   } catch (error) {
-    console.error('GET /api/finance/credits:', error)
+    reportarError('GET /api/finance/credits:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

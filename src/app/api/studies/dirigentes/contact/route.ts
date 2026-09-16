@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDirigentesContact } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST /api/studies/dirigentes/contact → contacto + sede para enriquecer la
 // exportación de dirigentes. PII: gated a roles que gestionan dirigentes (no a
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     const contact = await getDirigentesContact(ids)
     return NextResponse.json({ contact })
   } catch (error) {
-    console.error('POST /api/studies/dirigentes/contact:', error)
+    reportarError('POST /api/studies/dirigentes/contact:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -7,6 +7,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import {
   EN_REVISION_BLOCK_MESSAGE, SETTABLE_STATUSES, canSeeLeaderAdminStatus,
 } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 const bodySchema = z.object({
   qualified_study_codes: z.array(z.string()).optional(),
@@ -82,7 +83,7 @@ export async function PATCH(
         { status: 409 },
       )
     }
-    console.error('PATCH /api/studies/dirigentes/[id]:', error)
+    reportarError('PATCH /api/studies/dirigentes/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

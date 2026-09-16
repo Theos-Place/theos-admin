@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { groupViewerScope } from '@/lib/auth/studies-scope'
 import { getGroupSessions, getGroupLeaderIds, isMemberOfGroup } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: sesiones de asistencia de un grupo (con conteo de presentes).
 // SEC-1: estudios más allá de 'own', el dirigente DE ESTE grupo, o un miembro
@@ -25,7 +26,7 @@ export async function GET(
     if (scope === 'none') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(await getGroupSessions(id))
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/sessions:', error)
+    reportarError('GET /api/studies/groups/[id]/sessions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

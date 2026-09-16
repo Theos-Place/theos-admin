@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { canManageCommittee } from '@/lib/auth/committee-scope'
 import { getVacancies, createVacancy } from '@/lib/supabase/queries/servers'
 import { vacancyWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
     if (auth.res) return auth.res
     return NextResponse.json(await getVacancies())
   } catch (error) {
-    console.error('GET /api/servers/vacancies:', error)
+    reportarError('GET /api/servers/vacancies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     const vacancy = await createVacancy(input)
     return NextResponse.json(vacancy, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/vacancies:', error)
+    reportarError('POST /api/servers/vacancies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

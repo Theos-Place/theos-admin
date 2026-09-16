@@ -3,6 +3,7 @@ import { requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { moduleScope } from '@/lib/auth/roles'
 import { getMembers } from '@/lib/supabase/queries/members'
 import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/members:', error)
+    reportarError('GET /api/members:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ...member, invite }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/members:', error)
+    reportarError('POST /api/members:', error)
     const e = error as { code?: string; message?: string }
     if (e?.code === '23505') {
       return NextResponse.json(

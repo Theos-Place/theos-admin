@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { approvePositionRequest, rejectPositionRequest } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // PATCH { action: 'approve' | 'reject' }: resolver una solicitud de puesto nuevo.
 // Solo Staff/admin. Aprobar crea el puesto en el catálogo.
@@ -22,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
   } catch (error) {
-    console.error('PATCH /api/servers/position-requests/[id]:', error)
+    reportarError('PATCH /api/servers/position-requests/[id]:', error)
     const msg = error instanceof Error ? error.message : 'Error interno'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

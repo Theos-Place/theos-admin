@@ -13,6 +13,7 @@ import { PREMAT_EVAL_ROLES, needsFollowUp } from '@/lib/studies/premat-evaluatio
 import { parsePrematBackground, redactSensitiveBackground } from '@/lib/studies/premat-background'
 import { checkCoupleGender, SAME_GENDER_MESSAGE, missingGenderMessage } from '@/lib/studies/premat-gender'
 import { todayCR, formatDate } from '@/lib/format'
+import { reportarError } from '@/lib/observabilidad'
 
 const MAX_BYTES = 8 * 1024 * 1024
 
@@ -46,7 +47,7 @@ export async function GET() {
     })
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET prematrimonial:', error)
+    reportarError('GET prematrimonial:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -190,7 +191,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error && error.message === 'SOLICITUD_ACTIVA_EXISTE') {
       return NextResponse.json({ error: 'Ya tenés una solicitud de prematrimonial en curso con esta pareja.', code: 'duplicada' }, { status: 409 })
     }
-    console.error('POST prematrimonial:', error)
+    reportarError('POST prematrimonial:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

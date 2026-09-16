@@ -10,6 +10,7 @@ import {
   MAX_GREETINGS_PER_RUN, type SkipReason,
 } from '@/lib/notifications/birthday-rules'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET o sesión de dirección/comunicaciones. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -188,7 +189,7 @@ export async function POST(req: NextRequest) {
       digest_enviados: digest,
     })
   } catch (error) {
-    console.error('POST /api/cron/birthday-greetings:', error)
+    reportarError('POST /api/cron/birthday-greetings:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

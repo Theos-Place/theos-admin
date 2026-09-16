@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET (cron semanal) o sesión de dirección/admin. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_STORAGE_ORPHANS')
     return NextResponse.json({ ok: issues.length === 0, reports })
   } catch (error) {
-    console.error('POST /api/cron/storage-orphans:', error)
+    reportarError('POST /api/cron/storage-orphans:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

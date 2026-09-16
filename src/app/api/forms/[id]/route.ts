@@ -7,6 +7,7 @@ import { hasFormsModule } from '@/lib/auth/forms-scope'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 import { requireFormEdit } from '@/lib/auth/event-guard'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(
   _req: NextRequest,
@@ -37,7 +38,7 @@ export async function GET(
     }
     return NextResponse.json(resuelto)
   } catch (error) {
-    console.error('GET /api/forms/[id]:', error)
+    reportarError('GET /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -61,7 +62,7 @@ export async function PUT(
     try { await notifyFormAssignedIfNeeded(id) } catch (e) { console.warn('form_asignado notify:', e) }
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/forms/[id]:', error)
+    reportarError('PUT /api/forms/[id]:', error)
     // Se propaga el mensaje real, como hace el POST de eventos. "Error interno"
     // dejó a alguien media hora sin saber por qué no guardaba un formulario: el
     // motivo —un tipo de campo que la base no aceptaba— estaba solo en el log
@@ -88,7 +89,7 @@ export async function DELETE(
     if (code === 'form_activo' || code === 'form_con_respuestas') {
       return NextResponse.json({ error: FORM_ACTION_MESSAGES[code], code }, { status: 409 })
     }
-    console.error('DELETE /api/forms/[id]:', error)
+    reportarError('DELETE /api/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

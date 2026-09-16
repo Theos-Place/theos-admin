@@ -4,6 +4,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPasswordLink } from '@/lib/auth/password-link'
 import { patronDeCorreo } from '@/lib/email/correo-exacto'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // POST { identifier } → manda el enlace para definir/restablecer la contraseña.
 //
@@ -116,13 +117,13 @@ export async function POST(req: NextRequest) {
         nombre: member?.first_name ?? null,
       })
       if (!res.sent && res.reason !== 'sin_cuenta') {
-        console.error('password-link:', res.reason)
+        reportarFalla('password-link:', res.reason)
       }
     }
 
     return NextResponse.json(RESPUESTA_NEUTRAL)
   } catch (error) {
-    console.error('POST /api/auth/password-link:', error)
+    reportarError('POST /api/auth/password-link:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

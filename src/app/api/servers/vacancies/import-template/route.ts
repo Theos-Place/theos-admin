@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs'
 import { requireRoles } from '@/lib/auth/guard'
 import { STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: plantilla .xlsx para importar vacantes, con los datos EN VIVO (áreas,
 // comités y puestos del momento) y dropdowns dependientes en cascada
@@ -126,7 +127,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('GET /api/servers/vacancies/import-template:', error)
+    reportarError('GET /api/servers/vacancies/import-template:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   HERO_BUCKET, validateHeroUpload, heroExtension,
 } from '@/lib/forms/hero-upload'
+import { reportarError } from '@/lib/observabilidad'
 
 export const runtime = 'nodejs'
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { data } = supabase.storage.from(HERO_BUCKET).getPublicUrl(path)
     return NextResponse.json({ url: data.publicUrl })
   } catch (error) {
-    console.error('POST /api/forms/upload-hero:', error)
+    reportarError('POST /api/forms/upload-hero:', error)
     return NextResponse.json({ error: 'No se pudo subir la imagen. Intentá de nuevo.' }, { status: 500 })
   }
 }

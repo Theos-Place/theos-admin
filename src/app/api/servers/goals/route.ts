@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getCommitteeGoals, createGoal } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getCommitteeGoals())
   } catch (error) {
-    console.error('GET /api/servers/goals:', error)
+    reportarError('GET /api/servers/goals:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const goal = await createGoal(await req.json())
     return NextResponse.json(goal, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/goals:', error)
+    reportarError('POST /api/servers/goals:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

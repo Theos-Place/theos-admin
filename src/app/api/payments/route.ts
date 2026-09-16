@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitEnrollmentComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // POST (multipart): sube el comprobante (screenshot) al bucket privado y adjunta el
 // pago de la matrícula (actualiza el pago pendiente auto-creado o crea uno).
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       .from(PAYMENT_RECEIPTS_BUCKET)
       .upload(path, bytes, { contentType: file.type || 'application/octet-stream', upsert: false })
     if (upErr) {
-      console.error('upload receipt:', upErr.message)
+      reportarFalla('upload receipt:', upErr.message)
       return NextResponse.json({ error: 'No se pudo subir el comprobante.' }, { status: 500 })
     }
 
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         { status: 409 },
       )
     }
-    console.error('POST /api/payments:', error)
+    reportarError('POST /api/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

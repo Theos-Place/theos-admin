@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { pingHealthcheck } from '@/lib/health'
 import { cuentasSinFicha, textoDelAviso, type FichaConCorreo } from '@/lib/auth/cuentas-sin-ficha'
+import { reportarError } from '@/lib/observabilidad'
 
 /** CRON_SECRET, o sesión de admin para dispararlo a mano. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       casos,
     })
   } catch (error) {
-    console.error('POST /api/cron/cuentas-sin-ficha:', error)
+    reportarError('POST /api/cron/cuentas-sin-ficha:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

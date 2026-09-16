@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/validate'
 import { convertRefundToDonation } from '@/lib/supabase/queries/refund-actions'
+import { reportarError } from '@/lib/observabilidad'
 
 // FIN-6 (4) · La persona no quiere el reembolso: se convierte en donación.
 //
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error) {
     const known = error instanceof Error ? ERRORES[error.message] : undefined
     if (known) return NextResponse.json({ error: known.error }, { status: known.status })
-    console.error('POST /api/finance/refunds/[id]/convert-to-donation:', error)
+    reportarError('POST /api/finance/refunds/[id]/convert-to-donation:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mergeMembersResuelto, fusionErrorResponse } from '@/lib/supabase/queries/members-mutations'
 import { requireRoles } from '@/lib/auth/guard'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * POST: fusiona el duplicado en este miembro, con la resolución campo por campo.
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error) {
     const conflicto = fusionErrorResponse(error)
     if (conflicto) return NextResponse.json(conflicto, { status: 409 })
-    console.error('POST /api/members/[id]/merge:', error)
+    reportarError('POST /api/members/[id]/merge:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

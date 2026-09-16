@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { markNotificationRead, deleteNotifications } from '@/lib/supabase/queries/study-requests'
+import { reportarError } from '@/lib/observabilidad'
 
 // PATCH: marca la notificación como leída (solo si pertenece al usuario).
 export async function PATCH(
@@ -15,7 +16,7 @@ export async function PATCH(
     await markNotificationRead(id, auth.ctx.memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/notifications/internal/[id]:', error)
+    reportarError('PATCH /api/notifications/internal/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -33,7 +34,7 @@ export async function DELETE(
     await deleteNotifications([id], auth.ctx.memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/notifications/internal/[id]:', error)
+    reportarError('DELETE /api/notifications/internal/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

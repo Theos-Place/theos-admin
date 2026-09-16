@@ -10,6 +10,7 @@ import { logAudit } from '@/lib/audit'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
 import { esTipoDeBaja } from '@/lib/studies/baja-matricula'
 import { resolveOnBehalf } from '@/lib/auth/on-behalf'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -143,7 +144,7 @@ export async function POST(
     }
     const scholarshipRes = scholarshipErrorResponse(error)
     if (scholarshipRes) return scholarshipRes
-    console.error('POST enrollments:', error)
+    reportarError('POST enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -219,7 +220,7 @@ export async function PATCH(
     await setEnrollmentGrade(id, member_id, Number(grade))
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH enrollments:', error)
+    reportarError('PATCH enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -276,7 +277,7 @@ export async function DELETE(
         { status: 409 },
       )
     }
-    console.error('DELETE enrollments:', error)
+    reportarError('DELETE enrollments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

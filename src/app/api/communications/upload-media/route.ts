@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 export const runtime = 'nodejs'
 
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
     return NextResponse.json({ url: data.publicUrl, bytes: file.size, type: file.type })
   } catch (error) {
-    console.error('POST /api/communications/upload-media:', error)
+    reportarError('POST /api/communications/upload-media:', error)
     return NextResponse.json({ error: 'No se pudo subir el archivo. Intentá de nuevo.' }, { status: 500 })
   }
 }

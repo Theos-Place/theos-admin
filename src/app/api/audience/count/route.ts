@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { normalizeRestriction, restrictionSummary } from '@/lib/audiencia/restriccion'
 import { countMembersMatchingRestriction } from '@/lib/supabase/queries/audiencia'
+import { reportarError } from '@/lib/observabilidad'
 
 // Cuánta gente del padrón cumpliría esta restricción de audiencia.
 //
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     const count = await countMembersMatchingRestriction(restriction)
     return NextResponse.json({ count, summary: restrictionSummary(restriction) })
   } catch (error) {
-    console.error('POST /api/audience/count:', error)
+    reportarError('POST /api/audience/count:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

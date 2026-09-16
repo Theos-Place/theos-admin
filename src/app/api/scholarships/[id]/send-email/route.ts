@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireModuleView } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { sendScholarshipEmail, scholarshipEmailErrorResponse } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: envía por correo el código de un cupón genérico a una persona (o el
 // aviso de una beca asignada a su dueño) y registra el envío (BEC-1).
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error) {
     const res = scholarshipEmailErrorResponse(error)
     if (res) return res
-    console.error('POST /api/scholarships/[id]/send-email:', error)
+    reportarError('POST /api/scholarships/[id]/send-email:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

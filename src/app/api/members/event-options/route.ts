@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: catálogo liviano de eventos para el filtro avanzado del padrón (FIL-1,
 // "asistió / no asistió al evento X"). Endpoint propio porque /api/events exige
@@ -29,7 +30,7 @@ export async function GET() {
     }
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET /api/members/event-options:', error)
+    reportarError('GET /api/members/event-options:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

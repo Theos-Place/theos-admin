@@ -9,6 +9,7 @@ import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requiremen
 import { todayCR } from '@/lib/format'
 import { getBlockingStudyDebt } from '@/lib/supabase/queries/payments'
 import { passedRestrictedGroupIds } from '@/lib/supabase/queries/group-restrictions'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET /api/matricula/eligibility?member_id=X
 // Devuelve { eligibility: EligibilityResult[], profile } calculado con datos reales.
@@ -62,7 +63,7 @@ export async function GET(req: NextRequest) {
       pending_study_payments: blocking_debt.count,
     })
   } catch (error) {
-    console.error('GET /api/matricula/eligibility:', error)
+    reportarError('GET /api/matricula/eligibility:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

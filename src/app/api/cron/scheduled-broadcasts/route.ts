@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { dispatchScheduledBroadcasts, processPendingEmails } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET o por quien gestiona comunicaciones. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
       queue_processed: cola,
     })
   } catch (error) {
-    console.error('POST /api/cron/scheduled-broadcasts:', error)
+    reportarError('POST /api/cron/scheduled-broadcasts:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

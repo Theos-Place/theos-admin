@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getMessageRecipients } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: destinatarios reales de un broadcast (message_logs).
 export async function GET(
@@ -20,7 +21,7 @@ export async function GET(
     const { rows, total } = await getMessageRecipients(id, { page, pageSize, status })
     return NextResponse.json({ recipients: rows, total })
   } catch (error) {
-    console.error('GET /api/communications/messages/[id]/recipients:', error)
+    reportarError('GET /api/communications/messages/[id]/recipients:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

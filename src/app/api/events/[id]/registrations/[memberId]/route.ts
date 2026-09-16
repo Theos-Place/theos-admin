@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateRegistrationPayment, deleteRegistration } from '@/lib/supabase/queries/events'
 import { requireEventAccess } from '@/lib/auth/event-guard'
+import { reportarError } from '@/lib/observabilidad'
 
 const VALID = ['pending', 'paid', 'exempted'] as const
 
@@ -21,7 +22,7 @@ export async function PATCH(
     await updateRegistrationPayment(id, memberId, body.payment_status)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/events/[id]/registrations/[memberId]:', error)
+    reportarError('PATCH /api/events/[id]/registrations/[memberId]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -39,7 +40,7 @@ export async function DELETE(
     await deleteRegistration(id, memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/events/[id]/registrations/[memberId]:', error)
+    reportarError('DELETE /api/events/[id]/registrations/[memberId]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createApplication } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: el usuario autenticado aplica a un puesto (como él mismo). Abierto a
 // cualquier miembro. Solo puestos publicados; evita aplicaciones duplicadas.
@@ -37,7 +38,7 @@ export async function POST(
     await createApplication({ vacancy_id: id, applicant_id: memberId, notes: typeof body?.notes === 'string' ? body.notes : null })
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/vacancies/[id]/apply:', error)
+    reportarError('POST /api/servers/vacancies/[id]/apply:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

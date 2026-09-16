@@ -4,6 +4,7 @@ import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { shouldCloseEnrollment } from '@/lib/studies/enrollment-window'
 import { ymdCR } from '@/lib/format'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET o sesión de coordinación/dirección. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_GROUP_WINDOWS')
     return NextResponse.json({ closed })
   } catch (error) {
-    console.error('POST /api/cron/group-enrollment-windows:', error)
+    reportarError('POST /api/cron/group-enrollment-windows:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

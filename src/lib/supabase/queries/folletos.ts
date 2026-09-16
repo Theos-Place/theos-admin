@@ -6,6 +6,7 @@ import { estimatedAvailableDate, levelLabel } from '@/lib/studies/folletos'
 import { hasOwnFolleto, shouldCreateAutoFolleto, type AutoFolletoTipo } from '@/lib/studies/folleto-auto-rules'
 import { desgloseFolletos, type DesgloseFolletos } from '@/lib/studies/folleto-desglose'
 import { contarResultadosCierre, type ConteoCierre } from '@/lib/studies/close-result-read'
+import { reportarError } from '@/lib/observabilidad'
 
 
 export type DbFolletoRequest = {
@@ -229,7 +230,7 @@ export async function createAutoFolletoIfNeeded(
       resumen = `${detalle.desglose.total} folletos de ${detalle.nivel ?? 'estudio'} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`
     }
   } catch (e) {
-    console.error('folletos: el detalle del aviso falló, va la versión mínima:', e)
+    reportarError('folletos: el detalle del aviso falló, va la versión mínima:', e)
   }
   try {
     await notifyFolletoRecipients({
@@ -240,7 +241,7 @@ export async function createAutoFolletoIfNeeded(
       link: `/estudios/folletos/${folletoId}`,
     })
   } catch (e) {
-    console.error('folletos: tiquete creado pero NADIE fue avisado:', e)
+    reportarError('folletos: tiquete creado pero NADIE fue avisado:', e)
   }
   return { created: true, id: folletoId }
 }
@@ -408,7 +409,7 @@ export async function setFolletoRequestsStatus(ids: string[], status: FolletoSta
     const { notificarFolletosListos } = await import('@/lib/email/folleto-ready-send')
     for (const id of movidos) {
       try { await notificarFolletosListos(id) } catch (e) {
-        console.error(`folletos: no se pudo avisar que ${id} está listo:`, e)
+        reportarError('folletos: no se pudo avisar que el folleto está listo:', e, { id })
       }
     }
   }

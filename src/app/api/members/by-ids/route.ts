@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getMembersByIds } from '@/lib/supabase/queries/members'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: trae los miembros de un conjunto de IDs (p. ej. integrantes de una lista guardada).
 // Body: { ids: string[] }
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const members = await getMembersByIds(ids)
     return NextResponse.json({ members, total: members.length })
   } catch (error) {
-    console.error('POST /api/members/by-ids:', error)
+    reportarError('POST /api/members/by-ids:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

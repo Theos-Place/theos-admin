@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { markEmailBounced, markEmailComplained, markEmailDelivered } from '@/lib/email/suppression'
+import { reportarError } from '@/lib/observabilidad'
 
 // Webhook de Amazon SNS para notificaciones de SES (bounces y complaints).
 //
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, ignored: msg.Type })
   } catch (error) {
-    console.error('POST /api/email/sns-webhook:', error)
+    reportarError('POST /api/email/sns-webhook:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

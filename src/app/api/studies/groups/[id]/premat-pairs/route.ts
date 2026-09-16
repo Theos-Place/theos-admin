@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getRequestsForGroup } from '@/lib/supabase/queries/prematrimonial'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: parejas de un grupo prematrimonial (solicitudes con resulting_group_id =
 // grupo) — el form de evaluación del cierre necesita una fila por pareja.
@@ -24,7 +25,7 @@ export async function GET(
       })),
     })
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/premat-pairs:', error)
+    reportarError('GET /api/studies/groups/[id]/premat-pairs:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

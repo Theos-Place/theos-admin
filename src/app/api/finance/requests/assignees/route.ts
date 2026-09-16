@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getAssignableFinanceMembers } from '@/lib/supabase/queries/finance-requests'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: miembros con rol finanzas activo, asignables a una solicitud.
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getAssignableFinanceMembers())
   } catch (error) {
-    console.error('GET /api/finance/requests/assignees:', error)
+    reportarError('GET /api/finance/requests/assignees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

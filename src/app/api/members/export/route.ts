@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
 import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
 // para exportar. Mismos params que /api/members. Usa createAdminClient (en getMembers).
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ members, total })
   } catch (error) {
-    console.error('GET /api/members/export:', error)
+    reportarError('GET /api/members/export:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

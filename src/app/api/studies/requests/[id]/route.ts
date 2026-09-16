@@ -7,6 +7,7 @@ import { requestQueueScope, canAssignRequests, canWorkRequest } from '@/lib/stud
 import { motivoQueImpide, ESTADOS_MOVIBLES, esAccionDeGestion } from '@/lib/studies/request-status-change'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyRequestStatus } from '@/types/study'
+import { reportarError } from '@/lib/observabilidad'
 
 const ACTIONS: Record<string, 'in_review' | 'rejected'> = {
   take: 'in_review',
@@ -171,7 +172,7 @@ export async function PATCH(
     if (error instanceof Error && error.message === 'YA_RESUELTA') {
       return NextResponse.json({ error: 'Esta solicitud ya fue resuelta o rechazada; refrescá la página.' }, { status: 409 })
     }
-    console.error('PATCH /api/studies/requests/[id]:', error)
+    reportarError('PATCH /api/studies/requests/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

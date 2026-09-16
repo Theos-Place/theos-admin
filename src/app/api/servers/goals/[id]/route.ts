@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { updateGoal, deleteGoal } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function PUT(
   req: NextRequest,
@@ -13,7 +14,7 @@ export async function PUT(
     await updateGoal(id, await req.json())
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/servers/goals/[id]:', error)
+    reportarError('PUT /api/servers/goals/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -29,7 +30,7 @@ export async function DELETE(
     await deleteGoal(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/servers/goals/[id]:', error)
+    reportarError('DELETE /api/servers/goals/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

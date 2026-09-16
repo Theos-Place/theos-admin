@@ -3,6 +3,7 @@ import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/aut
 import { isUuid } from '@/lib/validate'
 import { getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember, updateFamilyRelation } from '@/lib/supabase/queries/members'
 import { RELACIONES_FAMILIARES, esRelacionValida } from '@/lib/members/relaciones'
+import { reportarError } from '@/lib/observabilidad'
 
 // Roles con permiso de editar miembros (miembros:edit): editor_perfiles,
 // direccion y admin (este último pasa siempre en requireRoles). Alinea el
@@ -32,7 +33,7 @@ export async function GET(
     }
     return NextResponse.json(await getMemberFamily(id))
   } catch (error) {
-    console.error('GET /api/members/[id]/family:', error)
+    reportarError('GET /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -74,7 +75,7 @@ export async function POST(
     if (error instanceof Error && error.message === 'VINCULO_A_SI_MISMO') {
       return NextResponse.json({ error: 'No se puede vincular a la persona consigo misma.' }, { status: 400 })
     }
-    console.error('POST /api/members/[id]/family:', error)
+    reportarError('POST /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -108,7 +109,7 @@ export async function PATCH(
     if (error instanceof Error && error.message === 'SIN_VINCULO') {
       return NextResponse.json({ error: 'Esa persona no está en esta familia.' }, { status: 404 })
     }
-    console.error('PATCH /api/members/[id]/family:', error)
+    reportarError('PATCH /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -134,7 +135,7 @@ export async function DELETE(
     if (error instanceof Error && error.message === 'SIN_VINCULO') {
       return NextResponse.json({ error: 'Estas personas no están vinculadas; refrescá la página.' }, { status: 409 })
     }
-    console.error('DELETE /api/members/[id]/family:', error)
+    reportarError('DELETE /api/members/[id]/family:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

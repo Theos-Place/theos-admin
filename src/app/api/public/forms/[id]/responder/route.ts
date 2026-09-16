@@ -6,6 +6,7 @@ import {
 } from '@/lib/forms/public-access'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
 import { esCampoCalculado } from '@/lib/forms/computed-fields'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: respuesta de un INVITADO a un formulario abierto. Sin sesión.
 //
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     return NextResponse.json({ ok: true, id: creada.id }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/public/forms/[id]/responder:', error)
+    reportarError('POST /api/public/forms/[id]/responder:', error)
     return NextResponse.json({ error: 'No se pudo enviar el formulario.' }, { status: 500 })
   }
 }

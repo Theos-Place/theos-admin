@@ -4,6 +4,7 @@ import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 import type { EventType, EventStatus } from '@/types/event'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/events:', error)
+    reportarError('GET /api/events:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId, formToOrganizingCommittees(body))
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events:', error)
+    reportarError('POST /api/events:', error)
     // Propaga el mensaje real (ej. FK de event_type, columna faltante) para que
     // el formulario lo muestre en vez de redirigir como si hubiera guardado.
     const msg = (error as { message?: string })?.message ?? 'Error interno'

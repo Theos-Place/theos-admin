@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { setVacanciesStatus } from '@/lib/supabase/queries/servers'
 import { isVacancyState } from '@/lib/servers/vacancy-states'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: cambio de estado masivo de solicitudes de cupos (vacancies). Body:
 // { status: 'enviado_lider'|'aprobado'|'denegado', ids: string[] }. No toca
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { updated } = await setVacanciesStatus(list, status)
     return NextResponse.json({ ok: true, updated })
   } catch (error) {
-    console.error('POST /api/servers/vacancies/bulk:', error)
+    reportarError('POST /api/servers/vacancies/bulk:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailPublicPage } from '@/lib/email/public-page'
+import { reportarError } from '@/lib/observabilidad'
 
 // Baja de newsletter por link (sin login). El token (members.unsubscribe_token)
 // identifica al miembro de forma estable y revocable.
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
       blocked ? undefined : { actionHref: `/api/email/resubscribe?token=${encodeURIComponent(token)}`, actionLabel: 'Volver a suscribirme' },
     )
   } catch (error) {
-    console.error('GET /api/email/unsubscribe:', error)
+    reportarError('GET /api/email/unsubscribe:', error)
     return emailPublicPage('Algo salió mal', 'No pudimos procesar tu baja. Intentá de nuevo más tarde.')
   }
 }

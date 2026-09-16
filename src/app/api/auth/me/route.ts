@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
 import { cuentaHabilitada, CUENTA_DESACTIVADA, MENSAJE_CUENTA_DESACTIVADA } from '@/lib/auth/account-active'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * Devuelve el usuario autenticado actual con sus roles activos.
@@ -143,7 +144,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('GET /api/auth/me:', error)
+    reportarError('GET /api/auth/me:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

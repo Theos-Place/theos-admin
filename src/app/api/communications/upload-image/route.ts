@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 export const runtime = 'nodejs'
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
     return NextResponse.json({ url: data.publicUrl })
   } catch (error) {
-    console.error('POST /api/communications/upload-image:', error)
+    reportarError('POST /api/communications/upload-image:', error)
     return NextResponse.json({ error: 'No se pudo subir la imagen. Intentá de nuevo.' }, { status: 500 })
   }
 }

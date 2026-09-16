@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { scheduleBroadcast, unscheduleBroadcast } from '@/lib/supabase/queries/communications'
 import { resolveScheduledAt, SCHEDULE_MESSAGES } from '@/lib/communications/schedule'
 import type { Recipient } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: deja el comunicado esperando su hora (status 'scheduled'). Hermano de
 // /send: mismo body de destinatarios, más cuándo.
@@ -64,7 +65,7 @@ export async function POST(
         { status: 409 },
       )
     }
-    console.error('POST /api/communications/messages/[id]/schedule:', error)
+    reportarError('POST /api/communications/messages/[id]/schedule:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -87,7 +88,7 @@ export async function DELETE(
     }
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/communications/messages/[id]/schedule:', error)
+    reportarError('DELETE /api/communications/messages/[id]/schedule:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

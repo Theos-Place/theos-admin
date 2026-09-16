@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { filasDeAsistentes, resumenDeCocina, type PersonaDelEvento } from '@/lib/events/export-asistentes'
 import { xlsxFileName } from '@/lib/forms/xlsx-export'
 import { diaCR } from '@/lib/events/checkins-del-dia'
+import { reportarError } from '@/lib/observabilidad'
 
 // EVE-9 · GET: los asistentes del evento en .xlsx, para cocina y logística.
 //
@@ -152,7 +153,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     })
   } catch (error) {
-    console.error('GET /api/events/[id]/attendees/export:', error)
+    reportarError('GET /api/events/[id]/attendees/export:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

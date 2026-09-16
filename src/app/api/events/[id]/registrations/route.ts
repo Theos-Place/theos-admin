@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRegistration, registrationPricing, getEventRegistrationIds, PaymentRequiredError, EventFullError, AlreadyRegisteredError } from '@/lib/supabase/queries/events'
 import { requireEventAccess } from '@/lib/auth/event-guard'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: con ?member_id → precio aplicable para inscribir a ese miembro.
 //      sin member_id → lista de inscritos { count, member_ids } (audiencia comms).
@@ -21,7 +22,7 @@ export async function GET(
     const pricing = await registrationPricing(id, memberId)
     return NextResponse.json(pricing)
   } catch (error) {
-    console.error('GET /api/events/[id]/registrations:', error)
+    reportarError('GET /api/events/[id]/registrations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -59,7 +60,7 @@ export async function POST(
         { status: 409 },
       )
     }
-    console.error('POST /api/events/[id]/registrations:', error)
+    reportarError('POST /api/events/[id]/registrations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

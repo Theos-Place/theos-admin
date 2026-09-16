@@ -10,6 +10,7 @@ import { releaseGroupFeedback } from '@/lib/supabase/queries/leader-feedback'
 import { sendLeaderFeedbackReport } from '@/lib/email/leader-feedback-report-send'
 import { ticketClosable } from '@/lib/studies/evaluation-window'
 import type { EvaluationTicketStatus } from '@/types/evaluations'
+import { reportarError } from '@/lib/observabilidad'
 
 const ACTIONS: Record<string, EvaluationTicketStatus> = {
   take: 'in_review',
@@ -81,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(await updateEvaluationTicketStatus(
       id, ACTIONS[action], auth.ctx.memberId, review_notes?.trim() || null))
   } catch (error) {
-    console.error('PATCH /api/evaluations/tickets/[id]:', error)
+    reportarError('PATCH /api/evaluations/tickets/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

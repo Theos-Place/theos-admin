@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { DOCUMENT_PROMPT_NOTICE } from '@/lib/members/document-prompt'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: la persona descarta un aviso de su perfil. Se guarda con FECHA para
 // que el aviso reaparezca al vencer el plazo (FIN-2: 14 días). Cada quien
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, dismissed_at: dismissedAt })
   } catch (error) {
-    console.error('POST /api/members/notice-dismissals:', error)
+    reportarError('POST /api/members/notice-dismissals:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

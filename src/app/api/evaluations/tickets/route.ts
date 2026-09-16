@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVALUATION_ROLES } from '@/lib/auth/roles'
 import { getEvaluationTickets } from '@/lib/supabase/queries/evaluation-tickets'
 import type { EvaluationTicketStatus } from '@/types/evaluations'
+import { reportarError } from '@/lib/observabilidad'
 
 const ESTADOS: EvaluationTicketStatus[] = ['open', 'in_review', 'escalated', 'resolved', 'rejected']
 
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
       : undefined
     return NextResponse.json(await getEvaluationTickets({ status }))
   } catch (error) {
-    console.error('GET /api/evaluations/tickets:', error)
+    reportarError('GET /api/evaluations/tickets:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

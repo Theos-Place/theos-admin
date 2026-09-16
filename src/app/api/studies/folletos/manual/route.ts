@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { ymdCR } from '@/lib/format'
 import { createManualFolletoRequest, notifyFolletoRecipients } from '@/lib/supabase/queries/folletos'
 import { STUDY_CATALOG } from '@/data/study-catalog'
+import { reportarError } from '@/lib/observabilidad'
 
 const VALID_CODES = new Set(STUDY_CATALOG.map(s => s.code))
 
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/folletos/manual:', error)
+    reportarError('POST /api/studies/folletos/manual:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getActiveDirigentes, addDirigente } from '@/lib/supabase/queries/studies'
 import { requireRoles } from '@/lib/auth/guard'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -10,7 +11,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getActiveDirigentes())
   } catch (error) {
-    console.error('GET /api/studies/dirigentes:', error)
+    reportarError('GET /api/studies/dirigentes:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     await addDirigente(body.member_id, Boolean(body.active))
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/dirigentes:', error)
+    reportarError('POST /api/studies/dirigentes:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

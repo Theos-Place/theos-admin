@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getGroupsWithParticipants } from '@/lib/supabase/queries/studies'
 import { armarFilas } from '@/lib/studies/participantes-export'
+import { reportarError } from '@/lib/observabilidad'
 
 /** YYYY-MM-DD o nada. */
 const fechaValida = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined)
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json({ filas: armarFilas(grupos, personas) })
   } catch (error) {
-    console.error('GET /api/studies/groups/participantes:', error)
+    reportarError('GET /api/studies/groups/participantes:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

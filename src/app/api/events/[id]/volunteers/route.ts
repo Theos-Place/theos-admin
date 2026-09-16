@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createVolunteer, NotCommitteeServerError } from '@/lib/supabase/queries/events'
 import { requireEventAccess } from '@/lib/auth/event-guard'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: asigna un servidor. Body: { member_id, role?, status? }
 export async function POST(
@@ -22,7 +23,7 @@ export async function POST(
     if (error instanceof NotCommitteeServerError) {
       return NextResponse.json({ error: error.message }, { status: 422 })
     }
-    console.error('POST /api/events/[id]/volunteers:', error)
+    reportarError('POST /api/events/[id]/volunteers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

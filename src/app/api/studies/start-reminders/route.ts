@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { notifyUpcomingStudyStarts } from '@/lib/email/study-start-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado si trae el CRON_SECRET (cron de Supabase) o sesión de coordinación. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_START_REMINDERS')
     return NextResponse.json(result)
   } catch (error) {
-    console.error('POST /api/studies/start-reminders:', error)
+    reportarError('POST /api/studies/start-reminders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

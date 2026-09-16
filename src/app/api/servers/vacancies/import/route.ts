@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { importVacancies, type ImportVacancyRow } from '@/lib/supabase/queries/vacancy-import'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: importación bulk de vacantes. Solo admin + coordinación de staff (punto 6).
 // Body: { rows: ImportVacancyRow[] }. Valida fila por fila Área→Comité→Puesto.
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(await importVacancies(rows))
   } catch (error) {
-    console.error('POST /api/servers/vacancies/import:', error)
+    reportarError('POST /api/servers/vacancies/import:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

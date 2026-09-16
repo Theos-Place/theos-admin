@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getPaidPositions, createPosition } from '@/lib/supabase/queries/employees'
 import { positionWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 // Rangos salariales SOLO para rol finanzas (decisión 2026-06-11).
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
     if (auth.ctx.roles.includes('finanzas')) return NextResponse.json(positions)
     return NextResponse.json(positions.map(p => ({ ...p, salary_min: null, salary_max: null })))
   } catch (error) {
-    console.error('GET /api/employees/positions:', error)
+    reportarError('GET /api/employees/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     const p = await createPosition(parsed.data)
     return NextResponse.json(p, { status: 201 })
   } catch (error) {
-    console.error('POST /api/employees/positions:', error)
+    reportarError('POST /api/employees/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

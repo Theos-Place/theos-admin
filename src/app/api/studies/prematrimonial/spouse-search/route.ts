@@ -5,6 +5,7 @@ import {
 } from '@/lib/supabase/queries/prematrimonial'
 import { checkCoupleGender } from '@/lib/studies/premat-gender'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // Búsqueda del cónyuge por NOMBRE o por cédula/correo/teléfono.
 //
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       gender_missing: !genderCheck.ok && genderCheck.code === 'genero_faltante' ? genderCheck.who : null,
     })
   } catch (error) {
-    console.error('POST prematrimonial/spouse-search:', error)
+    reportarError('POST prematrimonial/spouse-search:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

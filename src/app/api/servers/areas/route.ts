@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getAreas, createArea } from '@/lib/supabase/queries/servers'
 import { areaCreateSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: áreas (area_type='area') para dropdowns de área padre / área base.
 export async function GET() {
@@ -12,7 +13,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getAreas())
   } catch (error) {
-    console.error('GET /api/servers/areas:', error)
+    reportarError('GET /api/servers/areas:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     const area = await createArea(parsed.data)
     return NextResponse.json(area, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/areas:', error)
+    reportarError('POST /api/servers/areas:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

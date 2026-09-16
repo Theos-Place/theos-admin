@@ -9,6 +9,7 @@ import {
 } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 import { requireEventAccess } from '@/lib/auth/event-guard'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Lee el alcance (all/future/single) y la ocurrencia del body, si vienen.
  *  `occurrence_date` = YYYY-MM-DD en hora CR (lo calcula el cliente). */
@@ -44,7 +45,7 @@ export async function GET(
     }
     return NextResponse.json(event)
   } catch (error) {
-    console.error('GET /api/events/[id]:', error)
+    reportarError('GET /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -90,7 +91,7 @@ export async function PUT(
     if (error instanceof EventHasAttendanceError) {
       return NextResponse.json({ error: error.message }, { status: 422 })
     }
-    console.error('PUT /api/events/[id]:', error)
+    reportarError('PUT /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -109,7 +110,7 @@ export async function PATCH(
     await cancelEvent(id, typeof body.reason === 'string' ? body.reason : '')
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/events/[id]:', error)
+    reportarError('PATCH /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -131,7 +132,7 @@ export async function DELETE(
     if (error instanceof EventHasAttendanceError) {
       return NextResponse.json({ error: error.message }, { status: 422 })
     }
-    console.error('DELETE /api/events/[id]:', error)
+    reportarError('DELETE /api/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

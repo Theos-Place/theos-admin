@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // Preferencias de notificación del miembro AUTENTICADO. Combina:
 //  · member_notification_prefs (toggles internos + canal preferido)
@@ -49,7 +50,7 @@ export async function GET() {
       email_complained: !!member?.email_complained,
     })
   } catch (error) {
-    console.error('GET /api/notifications/preferences:', error)
+    reportarError('GET /api/notifications/preferences:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -101,7 +102,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/notifications/preferences:', error)
+    reportarError('PUT /api/notifications/preferences:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

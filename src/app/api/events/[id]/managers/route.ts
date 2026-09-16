@@ -6,6 +6,7 @@ import { isUuid } from '@/lib/validate'
 import {
   getEventManagers, grantEventManager, revokeEventManager, getEventById,
 } from '@/lib/supabase/queries/events'
+import { reportarError } from '@/lib/observabilidad'
 
 // Encargados de UN evento (FRM-1 parte B). Nombrar y quitar es de quien
 // ADMINISTRA eventos: el encargado recibe el permiso, no lo reparte.
@@ -20,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!isUuid(id)) return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     return NextResponse.json(await getEventManagers(id))
   } catch (error) {
-    console.error('GET /api/events/[id]/managers:', error)
+    reportarError('GET /api/events/[id]/managers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const creado = lista.find(m => m.member_id === parsed.data.member_id)
     return NextResponse.json(creado ?? { ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events/[id]/managers:', error)
+    reportarError('POST /api/events/[id]/managers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -65,7 +66,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await revokeEventManager(id, memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/events/[id]/managers:', error)
+    reportarError('DELETE /api/events/[id]/managers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

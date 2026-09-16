@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { deleteNotifications } from '@/lib/supabase/queries/study-requests'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: elimina un conjunto de notificaciones del usuario. Body: { ids: string[] }
 // Sesión-only: solo afecta las notificaciones propias (filtra por recipient_member_id).
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     await deleteNotifications(ids, auth.ctx.memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/notifications/internal/delete:', error)
+    reportarError('POST /api/notifications/internal/delete:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { sendBroadcast, NO_RECIPIENTS, type Recipient } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: envía el broadcast. Body: { recipients: Recipient[] }
 export async function POST(
@@ -35,7 +36,7 @@ export async function POST(
         { status: 409 },
       )
     }
-    console.error('POST /api/communications/messages/[id]/send:', error)
+    reportarError('POST /api/communications/messages/[id]/send:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

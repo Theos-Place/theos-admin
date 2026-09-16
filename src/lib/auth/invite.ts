@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { puedeCrearseCuenta, MOTIVO_MENOR_SIN_CUENTA } from '@/lib/members/reglas-de-menores'
+import { reportarFalla } from '@/lib/observabilidad'
 
 /**
  * Invita a un miembro a completar su perfil: crea (o reutiliza) un usuario de
@@ -43,7 +44,7 @@ export async function inviteMemberToCompleteProfile(
       const existing = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
       authUserId = existing.data?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())?.id ?? null
       if (!authUserId) {
-        console.error('createUser falló:', error.message)
+        reportarFalla('createUser falló:', error.message)
         return { sent: false, reason: error.message }
       }
     }
@@ -53,7 +54,7 @@ export async function inviteMemberToCompleteProfile(
         .from('members')
         .update({ auth_user_id: authUserId })
         .eq('id', memberId)
-      if (linkErr) console.error('No se pudo enlazar auth_user_id:', linkErr.message)
+      if (linkErr) reportarFalla('No se pudo enlazar auth_user_id:', linkErr.message)
     }
     // Correo SIN token (2026-08-04): el enlace con token vencía entre que el
     // admin lo mandaba y la persona lo abría. La cuenta ya existe (se creó
@@ -69,7 +70,7 @@ export async function inviteMemberToCompleteProfile(
     return { sent: true }
   } catch (err) {
     const reason = err instanceof Error ? err.message : 'error desconocido'
-    console.error('inviteMemberToCompleteProfile error:', reason)
+    reportarFalla('inviteMemberToCompleteProfile:', reason)
     return { sent: false, reason }
   }
 }

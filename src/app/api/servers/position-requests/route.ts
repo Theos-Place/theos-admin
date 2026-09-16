@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createPositionRequest, getPositionRequests, getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // Validación runtime de la solicitud de puesto nuevo. `.strict()` corta el mass
 // assignment; `requested_by` lo pone el handler desde la sesión, nunca el cliente.
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const status = req.nextUrl.searchParams.get('status') as 'pending' | 'approved' | 'rejected' | null
     return NextResponse.json(await getPositionRequests(status ?? undefined))
   } catch (error) {
-    console.error('GET /api/servers/position-requests:', error)
+    reportarError('GET /api/servers/position-requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/position-requests:', error)
+    reportarError('POST /api/servers/position-requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

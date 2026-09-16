@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { CAMPOS_CORRECCION_CHECKIN, camposRechazados, soloCamposPermitidos } from '@/lib/members/alta-desde-checkin'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * PATCH /api/events/[id]/members/[memberId] — corregir el documento o el
@@ -93,7 +94,7 @@ export async function PATCH(
     await updateMember(memberId, updates as Parameters<typeof updateMember>[1])
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/events/[id]/members/[memberId]:', error)
+    reportarError('PATCH /api/events/[id]/members/[memberId]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

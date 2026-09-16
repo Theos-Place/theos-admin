@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { countActivePositionVolunteers } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: conteo de servidores activos del puesto, para el ActiveWarningModal
 // antes de confirmar. Reemplaza el viejo modo `DELETE ?check=1` (un retry sin
@@ -16,7 +17,7 @@ export async function GET(
     const { id } = await params
     return NextResponse.json({ activeVolunteers: await countActivePositionVolunteers(id) })
   } catch (error) {
-    console.error('GET /api/servers/positions/[id]/usage:', error)
+    reportarError('GET /api/servers/positions/[id]/usage:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

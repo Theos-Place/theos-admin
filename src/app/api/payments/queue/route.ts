@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getPendingPaymentsQueue, type PaymentQueueStatus, type PaymentConcept } from '@/lib/supabase/queries/payments'
+import { reportarError } from '@/lib/observabilidad'
 
 const STATUSES = new Set(['pendiente', 'en_revision', 'cerrado'])
 const CONCEPTS = new Set(['matricula', 'folletos', 'evento'])
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
       leaderId: leaderId && UUID_RE.test(leaderId) ? leaderId : undefined,
     }))
   } catch (error) {
-    console.error('GET /api/payments/queue:', error)
+    reportarError('GET /api/payments/queue:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

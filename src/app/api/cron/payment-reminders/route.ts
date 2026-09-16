@@ -4,6 +4,7 @@ import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isRemindablePayment } from '@/lib/finance/payment-reminder-rules'
 import { remindMembersPendingPayments } from '@/lib/supabase/queries/payment-reminders'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET o sesión de dirección/finanzas. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_PAYMENT_REMINDERS')
     return NextResponse.json({ members_with_pending: counts.size, ...result, tractos_vencidos: overdue })
   } catch (error) {
-    console.error('POST /api/cron/payment-reminders:', error)
+    reportarError('POST /api/cron/payment-reminders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

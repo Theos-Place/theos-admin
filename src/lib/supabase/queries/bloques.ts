@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { bloqueMilestones, MILESTONE_TO_TIPO, bloqueEstadoActual, addDays, type BloqueMilestone, type BloqueEstado } from '@/lib/studies/bloques'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Hoy en zona America/Costa_Rica (YYYY-MM-DD). */
 function crToday(): string {
@@ -204,7 +205,7 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
           by_sede: bySede, detail, total,
         })
       } catch (e) {
-        console.error(`processBloqueMilestones ${b.nombre}/${m}:`, e)
+        reportarError('processBloqueMilestones:', e, { bloque: b.nombre, hito: m })
       }
     }
   }

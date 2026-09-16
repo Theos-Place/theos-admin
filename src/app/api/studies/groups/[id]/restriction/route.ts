@@ -4,6 +4,7 @@ import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { restrictionSummary } from '@/lib/studies/group-restrictions'
 import { getGroupRestriction, countMembersMatchingRestriction } from '@/lib/supabase/queries/group-restrictions'
+import { reportarError } from '@/lib/observabilidad'
 
 // GRU-2 · La restricción de audiencia GUARDADA de un grupo, para poder editarla.
 // El listado de grupos solo lleva `has_restriction` (el detalle no le sirve a la
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const count = await countMembersMatchingRestriction(restriction)
     return NextResponse.json({ restriction, count, summary: restrictionSummary(restriction) })
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/restriction:', error)
+    reportarError('GET /api/studies/groups/[id]/restriction:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

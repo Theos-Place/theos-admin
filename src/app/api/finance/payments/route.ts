@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import {
   getPayments, getPaymentsPage, getPaymentStats, createPayment, getEnrollmentForPayment,
 } from '@/lib/supabase/queries/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 // Validación runtime del alta manual de pagos. El input va directo al insert
 // de `payments` con service role: `.strict()` corta el mass assignment.
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json({ payments: rows, total })
   } catch (error) {
-    console.error('GET /api/finance/payments:', error)
+    reportarError('GET /api/finance/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
     const payment = await createPayment(parsed.data)
     return NextResponse.json(payment, { status: 201 })
   } catch (error) {
-    console.error('POST /api/finance/payments:', error)
+    reportarError('POST /api/finance/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

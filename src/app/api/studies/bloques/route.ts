@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getBloques, createBloque } from '@/lib/supabase/queries/bloques'
+import { reportarError } from '@/lib/observabilidad'
 
 // Bloques de capacitación: solo coordinador de estudios y admin.
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getBloques())
   } catch (error) {
-    console.error('GET /api/studies/bloques:', error)
+    reportarError('GET /api/studies/bloques:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ id }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/bloques:', error)
+    reportarError('POST /api/studies/bloques:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

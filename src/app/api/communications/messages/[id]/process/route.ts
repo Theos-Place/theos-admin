@@ -4,6 +4,7 @@ import {
   processPendingEmails, retryFailedEmails, getBroadcastQueueStats,
 } from '@/lib/supabase/queries/communications'
 import { isEmailConfigured } from '@/lib/email/provider'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado si trae el CRON_SECRET (cron de Supabase) o una sesión con rol. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -24,7 +25,7 @@ export async function GET(
     const { id } = await params
     return NextResponse.json(await getBroadcastQueueStats(id))
   } catch (error) {
-    console.error('GET /api/communications/messages/[id]/process:', error)
+    reportarError('GET /api/communications/messages/[id]/process:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -63,7 +64,7 @@ export async function POST(
     const result = await processPendingEmails(id)
     return NextResponse.json({ ...result, retried })
   } catch (error) {
-    console.error('POST /api/communications/messages/[id]/process:', error)
+    reportarError('POST /api/communications/messages/[id]/process:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

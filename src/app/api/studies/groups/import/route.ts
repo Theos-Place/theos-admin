@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { importStudyGroups } from '@/lib/supabase/queries/group-import'
 import type { GroupImportRow } from '@/lib/studies/group-import-rules'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: importación masiva de grupos (EST-2). Body: { rows, dry_run? }.
 // dry_run valida todo sin insertar (preview del wizard). Import parcial: las
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     const result = await importStudyGroups(rows, { dryRun: body?.dry_run === true })
     return NextResponse.json(result, { status: body?.dry_run === true || result.inserted === 0 ? 200 : 201 })
   } catch (error) {
-    console.error('POST /api/studies/groups/import:', error)
+    reportarError('POST /api/studies/groups/import:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

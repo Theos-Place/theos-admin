@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { updateTemplate, deleteTemplate } from '@/lib/supabase/queries/communications'
 import { templateUpdateSchema } from '../schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function PUT(
   req: NextRequest,
@@ -22,7 +23,7 @@ export async function PUT(
     await updateTemplate(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/communications/templates/[id]:', error)
+    reportarError('PUT /api/communications/templates/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -41,7 +42,7 @@ export async function DELETE(
     if (error instanceof Error && error.message === 'SYSTEM_TEMPLATE_PROTECTED') {
       return NextResponse.json({ error: 'Las plantillas del sistema no se pueden eliminar.' }, { status: 403 })
     }
-    console.error('DELETE /api/communications/templates/[id]:', error)
+    reportarError('DELETE /api/communications/templates/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

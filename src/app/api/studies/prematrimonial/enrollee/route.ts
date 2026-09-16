@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { meetsPrematRequirement } from '@/lib/supabase/queries/prematrimonial'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: datos mínimos del miembro que se va a inscribir al prematrimonial cuando
 // un admin lo hace EN NOMBRE DE otro (flujo "Ver disponibilidad como"). Solo
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
       meets_requirement,
     })
   } catch (error) {
-    console.error('GET prematrimonial/enrollee:', error)
+    reportarError('GET prematrimonial/enrollee:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

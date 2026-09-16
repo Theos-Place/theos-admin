@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { bulkSetDirigenteActive, membersWithActiveGroups } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST /api/studies/dirigentes/bulk-status → cambio de estado masivo.
 // Body: { member_ids: string[], active: boolean }
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     skipped = [...skipped, ...result.skipped]
     return NextResponse.json({ ok: true, updated: result.updated, skipped })
   } catch (error) {
-    console.error('POST /api/studies/dirigentes/bulk-status:', error)
+    reportarError('POST /api/studies/dirigentes/bulk-status:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildPasswordLink } from '@/lib/auth/password-link'
 import { logAudit } from '@/lib/audit'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST → devuelve el enlace de acceso SIN mandarlo por correo, para entregarlo
 // por otro canal (WhatsApp).
@@ -52,7 +53,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     })
     return NextResponse.json({ ok: true, url: link.url, kind: link.kind })
   } catch (error) {
-    console.error('POST /api/members/[id]/access-link:', error)
+    reportarError('POST /api/members/[id]/access-link:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

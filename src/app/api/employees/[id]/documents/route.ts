@@ -4,6 +4,7 @@ import {
   addEmployeeDocument, uploadEmployeeDocFile, type DocumentWriteInput,
 } from '@/lib/supabase/queries/employees'
 import type { DocumentType } from '@/types/employee'
+import { reportarError } from '@/lib/observabilidad'
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
 const DOC_TYPES = new Set<string>(['contrato', 'identificacion', 'seguro_social', 'otro'])
@@ -65,7 +66,7 @@ export async function POST(
     const doc = await addEmployeeDocument({ ...body, employee_id: id })
     return NextResponse.json(doc, { status: 201 })
   } catch (error) {
-    console.error('POST /api/employees/[id]/documents:', error)
+    reportarError('POST /api/employees/[id]/documents:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { assignVolunteer, removeVolunteer } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: asigna un servidor a una posición. Body: { position_id, member_id }
 export async function POST(req: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     await assignVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/volunteers:', error)
+    reportarError('POST /api/servers/volunteers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -25,7 +26,7 @@ export async function DELETE(req: NextRequest) {
     await removeVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/servers/volunteers:', error)
+    reportarError('DELETE /api/servers/volunteers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

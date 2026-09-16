@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * GET público de UN evento, para la página que se comparte por link o QR.
@@ -93,7 +94,7 @@ export async function GET(
         && new Date(e.starts_at).getTime() < Date.now(),
     })
   } catch (error) {
-    console.error('GET /api/public/events/[id]:', error)
+    reportarError('GET /api/public/events/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

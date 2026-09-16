@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { pingHealthcheck } from '@/lib/health'
 import { solicitudesAVencer, ESTADO_QUE_VENCE, ESTADO_VENCIDA } from '@/lib/studies/request-expiry'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET (cron diario) o sesión de coordinación —
  *  igual que los demás crons, para poder dispararlo a mano si hace falta. */
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_STUDY_REQUESTS_EXPIRE')
     return NextResponse.json({ ok: true, vencidas: aVencer.length, por_bloque: porBloque })
   } catch (error) {
-    console.error('POST /api/cron/study-requests-expire:', error)
+    reportarError('POST /api/cron/study-requests-expire:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

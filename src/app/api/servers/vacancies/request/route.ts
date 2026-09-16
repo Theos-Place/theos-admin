@@ -4,6 +4,7 @@ import { canManageCommittee, isGlobalServiceAdmin } from '@/lib/auth/committee-s
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createVacancyRequests, getServiceCoordinators } from '@/lib/supabase/queries/servers'
 import { isVacancyRequestWindowOpen } from '@/lib/servers/request-window'
+import { reportarError } from '@/lib/observabilidad'
 
 type Body = {
   committee_id?: string
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, rows, slots, status }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/vacancies/request:', error)
+    reportarError('POST /api/servers/vacancies/request:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

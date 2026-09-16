@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isSurveyDue } from '@/lib/studies/study-survey'
 import { requestLeaderFeedback } from '@/lib/email/leader-feedback-notify'
 import { DAILY_LIMIT } from '@/lib/email/provider'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET o sesión de coordinación de estudios. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       results: resultados,
     })
   } catch (error) {
-    console.error('POST /api/cron/study-surveys:', error)
+    reportarError('POST /api/cron/study-surveys:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

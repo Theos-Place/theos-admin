@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { isGlobalServiceAdmin } from '@/lib/auth/committee-scope'
 import { getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // Comités para los que el usuario puede solicitar vacantes/puestos.
 //  { all: true } → roles administrativos globales (cualquier comité).
@@ -14,7 +15,7 @@ export async function GET() {
     const ids = all ? [] : (auth.ctx.memberId ? await getManageableCommitteeIds(auth.ctx.memberId) : [])
     return NextResponse.json({ all, ids })
   } catch (error) {
-    console.error('GET /api/servers/manageable-committees:', error)
+    reportarError('GET /api/servers/manageable-committees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

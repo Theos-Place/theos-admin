@@ -4,6 +4,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/types/database'
+import { reportarError } from '@/lib/observabilidad'
 
 // Datos administrativos del miembro. SOLO roles administrativos (el miembro
 // NUNCA accede, ni lectura). La escritura de not_recommended_to_lead_studies
@@ -88,7 +89,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       can_edit_onboarding: viewOnboarding,
     })
   } catch (error) {
-    console.error('GET /api/members/[id]/admin-data:', error)
+    reportarError('GET /api/members/[id]/admin-data:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -180,7 +181,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/members/[id]/admin-data:', error)
+    reportarError('PUT /api/members/[id]/admin-data:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

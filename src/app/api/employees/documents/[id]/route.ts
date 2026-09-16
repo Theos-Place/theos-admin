@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { deleteEmployeeDocument } from '@/lib/supabase/queries/employees'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function DELETE(
   _req: NextRequest,
@@ -13,7 +14,7 @@ export async function DELETE(
     await deleteEmployeeDocument(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/employees/documents/[id]:', error)
+    reportarError('DELETE /api/employees/documents/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

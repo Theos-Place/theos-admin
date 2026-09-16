@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: opciones para los filtros de la cola de revisión (REV-1): planes de
 // estudio activos y dirigentes con grupo. Endpoint propio porque
@@ -47,7 +48,7 @@ export async function GET() {
 
     return NextResponse.json({ plans: plans ?? [], leaders })
   } catch (error) {
-    console.error('GET /api/payments/queue/options:', error)
+    reportarError('GET /api/payments/queue/options:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

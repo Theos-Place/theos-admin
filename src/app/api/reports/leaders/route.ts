@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getDirigentesReport } from '@/lib/supabase/queries/reports'
 import { canSeeLeaderAdminStatus } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: reporte de dirigentes (DIR-7). Permiso de módulo 'reportes' como el resto.
 //
@@ -15,7 +16,7 @@ export async function GET() {
     const verMatiz = canSeeLeaderAdminStatus(auth.ctx.roles)
     return NextResponse.json({ ...(await getDirigentesReport(verMatiz)), ver_matiz: verMatiz })
   } catch (error) {
-    console.error('GET /api/reports/leaders:', error)
+    reportarError('GET /api/reports/leaders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { processRefund } from '@/lib/supabase/queries/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 // PUT: procesa la devolución. Body: { status, processed_date?, confirmation?,
 // reject_reason? }. Al completar, marca el pago refunded.
@@ -29,7 +30,7 @@ export async function PUT(
         { status: 409 },
       )
     }
-    console.error('PUT /api/finance/refunds/[id]:', error)
+    reportarError('PUT /api/finance/refunds/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

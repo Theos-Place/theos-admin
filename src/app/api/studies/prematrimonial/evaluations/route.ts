@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { PREMAT_EVAL_ROLES } from '@/lib/studies/premat-evaluation'
 import { getPrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: evaluaciones de pareja del prematrimonial (?request_id= o ?member_id=).
 // PRE-8 — SENSIBLE: contenido pastoral (puntos ciegos, temas no resueltos).
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET /api/studies/prematrimonial/evaluations:', error)
+    reportarError('GET /api/studies/prematrimonial/evaluations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

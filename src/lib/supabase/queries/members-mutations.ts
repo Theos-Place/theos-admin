@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
 import { casoDeVinculo, type CasoDeVinculo } from '@/lib/members/fusion-familias'
+import { reportarFalla } from '@/lib/observabilidad'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
  *  campos que no existen en la tabla o que no deben tocarse por este camino). */
@@ -85,7 +86,7 @@ export async function mergeMembers(
     for (const k of Object.keys(opts.fields)) stamp[k] = now
     const { error: uErr } = await supabase
       .from('members').update({ ...opts.fields, field_updated_at: stamp }).eq('id', keepId)
-    if (uErr) console.error('mergeMembers: fusión OK, pero falló el update de campos del principal:', uErr.message)
+    if (uErr) reportarFalla('mergeMembers: fusión OK, pero falló el update de campos del principal:', uErr.message)
   }
 }
 
@@ -150,7 +151,7 @@ export async function mergeMembersResuelto(
       ban_duration: '876000h', email: alias, email_confirm: true,
     })
     if (error) {
-      console.error('mergeMembersResuelto: fusión OK, no se pudo deshabilitar la cuenta:', error.message)
+      reportarFalla('mergeMembersResuelto: fusión OK, no se pudo deshabilitar la cuenta:', error.message)
       out.cuentaConProblema = r.dup_email ?? r.dup_auth_user_id
     } else {
       out.cuentaDeshabilitada = r.dup_email ?? r.dup_auth_user_id
@@ -164,7 +165,7 @@ export async function mergeMembersResuelto(
       email: opts.correoDeLogin, email_confirm: true,
     })
     if (error) {
-      console.error('mergeMembersResuelto: no se pudo mudar el correo del login:', error.message)
+      reportarFalla('mergeMembersResuelto: no se pudo mudar el correo del login:', error.message)
       out.cuentaConProblema = `el login sigue siendo el correo viejo (${error.message})`
     } else {
       out.loginMudadoA = opts.correoDeLogin

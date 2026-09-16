@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * POST /api/events/[id]/families — armar una familia DESDE la fila del evento.
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const res = await createFamily({ name: parsed.data.name, members: parsed.data.members })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events/[id]/families:', error)
+    reportarError('POST /api/events/[id]/families:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

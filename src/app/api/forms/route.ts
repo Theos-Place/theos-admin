@@ -5,6 +5,7 @@ import { hasFormsModule } from '@/lib/auth/forms-scope'
 import { getManagedEventIds } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToFields } from '@/lib/forms/form-mapper'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -30,7 +31,7 @@ export async function GET() {
     if (visibles.length === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(visibles)
   } catch (error) {
-    console.error('GET /api/forms:', error)
+    reportarError('GET /api/forms:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     try { await notifyFormAssignedIfNeeded(form.id) } catch (e) { console.warn('form_asignado notify:', e) }
     return NextResponse.json(form, { status: 201 })
   } catch (error) {
-    console.error('POST /api/forms:', error)
+    reportarError('POST /api/forms:', error)
     // Mismo criterio que el PUT: el motivo real llega a la pantalla en vez de
     // quedarse en el log (ver el comentario de PUT /api/forms/[id]).
     const msg = (error as { message?: string })?.message ?? 'Error interno'

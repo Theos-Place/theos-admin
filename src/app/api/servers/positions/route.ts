@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getServicePositions, createServicePosition } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: lista de puestos (con comité, área base y conteo de servidores).
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getServicePositions())
   } catch (error) {
-    console.error('GET /api/servers/positions:', error)
+    reportarError('GET /api/servers/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
     const roles = await rolesDelPuesto(supabase, area_id, title)
     return NextResponse.json({ ...creado, ...parsed.data, roles_automaticos: roles }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/positions:', error)
+    reportarError('POST /api/servers/positions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { canViewMemberProfile, requireModuleView, requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getMemberFullById, updateMember } from '@/lib/supabase/queries/members'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(
   _req: NextRequest,
@@ -32,7 +33,7 @@ export async function GET(
       donations: seesRows ? member.donations.map(d => ({ ...d, amount: null })) : [],
     })
   } catch (error) {
-    console.error('GET /api/members/[id]:', error)
+    reportarError('GET /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -168,7 +169,7 @@ async function handleUpdate(
         { status: 409 },
       )
     }
-    console.error('PUT/PATCH /api/members/[id]:', error)
+    reportarError('PUT/PATCH /api/members/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

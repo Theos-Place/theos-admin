@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { setVacationStatus } from '@/lib/supabase/queries/employees'
+import { reportarError } from '@/lib/observabilidad'
 
 // PUT: aprueba/rechaza una solicitud. Body: { status }
 export async function PUT(
@@ -24,7 +25,7 @@ export async function PUT(
         { status: 409 },
       )
     }
-    console.error('PUT /api/employees/vacations/[id]:', error)
+    reportarError('PUT /api/employees/vacations/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

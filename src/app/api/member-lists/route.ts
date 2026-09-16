@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getMemberLists, createMemberList } from '@/lib/supabase/queries/member-lists'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -13,7 +14,7 @@ export async function GET() {
     }
     return NextResponse.json(await getMemberLists())
   } catch (error) {
-    console.error('GET /api/member-lists:', error)
+    reportarError('GET /api/member-lists:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     const list = await createMemberList(body)
     return NextResponse.json(list, { status: 201 })
   } catch (error) {
-    console.error('POST /api/member-lists:', error)
+    reportarError('POST /api/member-lists:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

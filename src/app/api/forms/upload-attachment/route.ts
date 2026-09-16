@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { anchoDestino, valeLaPena, resumenOptimizacion, CALIDAD } from '@/lib/images/optimize'
+import { reportarError } from '@/lib/observabilidad'
 
 export const runtime = 'nodejs'
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
     // firma al abrirla (ver /api/forms/attachment).
     return NextResponse.json({ path })
   } catch (error) {
-    console.error('POST /api/forms/upload-attachment:', error)
+    reportarError('POST /api/forms/upload-attachment:', error)
     return NextResponse.json({ error: 'No se pudo subir la imagen. Intentá de nuevo.' }, { status: 500 })
   }
 }

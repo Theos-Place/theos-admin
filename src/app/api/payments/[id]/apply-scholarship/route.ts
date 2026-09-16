@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import {
   applyScholarshipToPayment, scholarshipErrorResponse, paymentApplyErrorResponse,
 } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: aplica una beca asignada o un código de cupón a un pago PENDIENTE
 // (BEC-1). Recalcula el monto; beca completa → el pago queda aprobado sin
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error) {
     const res = paymentApplyErrorResponse(error) ?? scholarshipErrorResponse(error)
     if (res) return res
-    console.error('POST /api/payments/[id]/apply-scholarship:', error)
+    reportarError('POST /api/payments/[id]/apply-scholarship:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

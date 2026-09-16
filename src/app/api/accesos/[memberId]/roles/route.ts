@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { ROLES, assignableRoleIds, ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import type { RoleId } from '@/types/auth'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 // Derivado de ROLES para que nunca se desincronice con los roles reales del sistema.
 const VALID_ROLES = new Set(ROLES.map(r => r.id))
@@ -42,7 +43,7 @@ export async function POST(
     })
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/accesos/[memberId]/roles:', error)
+    reportarError('POST /api/accesos/[memberId]/roles:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -69,7 +70,7 @@ export async function DELETE(
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/accesos/[memberId]/roles:', error)
+    reportarError('DELETE /api/accesos/[memberId]/roles:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { setFolletoRequestsStatus } from '@/lib/supabase/queries/folletos'
 import { isFolletoState } from '@/lib/studies/folletos'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: cambio de estado (individual o en lote). Body: { ids: string[], status }. Módulo 'folletos' (edit).
 export async function POST(req: NextRequest) {
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { updated } = await setFolletoRequestsStatus(list, status)
     return NextResponse.json({ ok: true, updated })
   } catch (error) {
-    console.error('POST /api/studies/folletos/bulk:', error)
+    reportarError('POST /api/studies/folletos/bulk:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

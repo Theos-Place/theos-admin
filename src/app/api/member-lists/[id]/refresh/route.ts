@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { recomputeMemberList } from '@/lib/supabase/queries/member-lists'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: vuelve a correr los filtros guardados de la lista y reescribe su
 // membresía. Lo usan el botón "Actualizar" de las listas snapshot y la pantalla
@@ -18,7 +19,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ ok: true, antes: r.antes, despues: r.despues, list: r.list })
   } catch (error) {
-    console.error('POST /api/member-lists/[id]/refresh:', error)
+    reportarError('POST /api/member-lists/[id]/refresh:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

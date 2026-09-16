@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getMessages, createBroadcast } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // Validación runtime del broadcast (B11 auditoría): el input se esparce entero
 // al insert de `message_broadcasts`, así que `.strict()` evita colar columnas
@@ -28,7 +29,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getMessages())
   } catch (error) {
-    console.error('GET /api/communications/messages:', error)
+    reportarError('GET /api/communications/messages:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const b = await createBroadcast(parsed.data)
     return NextResponse.json(b, { status: 201 })
   } catch (error) {
-    console.error('POST /api/communications/messages:', error)
+    reportarError('POST /api/communications/messages:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

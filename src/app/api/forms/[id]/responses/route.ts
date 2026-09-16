@@ -10,6 +10,7 @@ import { resolveOnBehalf, FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import type { RoleId } from '@/types/auth'
 import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(
   req: NextRequest,
@@ -41,7 +42,7 @@ export async function GET(
     if (scope === 'none') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     return NextResponse.json(await getFormResponses(id))
   } catch (error) {
-    console.error('GET /api/forms/[id]/responses:', error)
+    reportarError('GET /api/forms/[id]/responses:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -188,7 +189,7 @@ export async function POST(
     })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    console.error('POST /api/forms/[id]/responses:', error)
+    reportarError('POST /api/forms/[id]/responses:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

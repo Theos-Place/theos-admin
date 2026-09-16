@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { EVALUATION_ROLES } from '@/lib/auth/roles'
 import { getAssignableEvaluationMembers } from '@/lib/supabase/queries/evaluation-tickets'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: a quién se le puede asignar un tiquete de evaluación.
 export async function GET() {
@@ -10,7 +11,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getAssignableEvaluationMembers())
   } catch (error) {
-    console.error('GET /api/evaluations/tickets/assignees:', error)
+    reportarError('GET /api/evaluations/tickets/assignees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

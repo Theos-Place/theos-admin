@@ -7,6 +7,7 @@ import { hasOpenStudyInterest } from '@/lib/supabase/queries/study-requests'
 import { activeExceptionsByCodeForMember } from '@/lib/supabase/queries/study-exceptions'
 import { toDomainStudyType, toDomainStudyGroup } from '@/lib/studies/adapter'
 import { computeEligibility } from '@/lib/studies/eligibility'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET /api/studies/request-options?member_id=X
 // Opciones para el dropdown de "solicitar estudio": TODOS los estudios que el
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
     const hasOpen = await hasOpenStudyInterest(memberId)
     return NextResponse.json({ options, has_open_request: hasOpen })
   } catch (error) {
-    console.error('GET /api/studies/request-options:', error)
+    reportarError('GET /api/studies/request-options:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

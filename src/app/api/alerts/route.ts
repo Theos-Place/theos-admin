@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getAlerts } from '@/lib/supabase/queries/alerts'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -11,7 +12,7 @@ export async function GET() {
     // alertas globales de solicitudes, devoluciones y vacaciones).
     return NextResponse.json(await getAlerts(auth.ctx.roles))
   } catch (error) {
-    console.error('GET /api/alerts:', error)
+    reportarError('GET /api/alerts:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

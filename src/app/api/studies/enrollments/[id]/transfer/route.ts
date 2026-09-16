@@ -10,6 +10,7 @@ import {
   destinosPosibles, pagosQueViajan, planDeDinero, resumenDeLaAccion,
   type GrupoParaTransferir, type PagoConMonto,
 } from '@/lib/studies/transferencia'
+import { reportarError } from '@/lib/observabilidad'
 
 // Mover una matrícula de grupo, con su pago.
 //
@@ -114,7 +115,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       }),
     })
   } catch (error) {
-    console.error('GET /api/studies/enrollments/[id]/transfer:', error)
+    reportarError('GET /api/studies/enrollments/[id]/transfer:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -162,7 +163,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (error instanceof TransferenciaBloqueada) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 409 })
     }
-    console.error('PATCH /api/studies/enrollments/[id]/transfer:', error)
+    reportarError('PATCH /api/studies/enrollments/[id]/transfer:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

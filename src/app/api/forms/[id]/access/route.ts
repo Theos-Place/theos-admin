@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import {
   getFormAccessGrants, grantFormAccess, revokeFormAccess, getFormById,
 } from '@/lib/supabase/queries/forms'
+import { reportarError } from '@/lib/observabilidad'
 
 // Accesos puntuales a UN formulario.
 //
@@ -28,7 +29,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (auth.res) return auth.res
     return NextResponse.json(await getFormAccessGrants(id))
   } catch (error) {
-    console.error('GET /api/forms/[id]/access:', error)
+    reportarError('GET /api/forms/[id]/access:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const created = grants.find(g => g.member_id === parsed.data.member_id)
     return NextResponse.json(created ?? { ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/forms/[id]/access:', error)
+    reportarError('POST /api/forms/[id]/access:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -72,7 +73,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await revokeFormAccess(id, memberId)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/forms/[id]/access:', error)
+    reportarError('DELETE /api/forms/[id]/access:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // Datos espirituales del miembro. Acceso: el propio miembro a SU fila, o roles
 // administrativos a cualquiera. El service role salta RLS; el guard la replica.
@@ -29,7 +30,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (error) throw error
     return NextResponse.json(data ?? { baptism_date: null, baptism_place: null, spiritual_gifts: null })
   } catch (error) {
-    console.error('GET /api/members/[id]/spiritual:', error)
+    reportarError('GET /api/members/[id]/spiritual:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -57,7 +58,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/members/[id]/spiritual:', error)
+    reportarError('PUT /api/members/[id]/spiritual:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

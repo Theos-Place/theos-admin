@@ -5,6 +5,7 @@ import {
   getFinanceRequests, countOpenFinanceRequests, createFinanceRequest, notifyFinanceRolesOfRequest,
 } from '@/lib/supabase/queries/finance-requests'
 import type { FinanceRequestStatus, FinanceRequestType } from '@/types/finance'
+import { reportarError } from '@/lib/observabilidad'
 
 const TYPES = new Set(['scholarship', 'refund'])
 const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
       member_id: searchParams.get('member_id') ?? undefined,
     }))
   } catch (error) {
-    console.error('GET /api/finance/requests:', error)
+    reportarError('GET /api/finance/requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(request, { status: 201 })
   } catch (error) {
-    console.error('POST /api/finance/requests:', error)
+    reportarError('POST /api/finance/requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

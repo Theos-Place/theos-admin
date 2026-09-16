@@ -5,6 +5,7 @@ import {
   getAvailabilityForms, getLeaderAvailabilityResponses,
 } from '@/lib/supabase/queries/leader-availability'
 import { canSeeLeaderAdminStatus, visibleLeaderStatus } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 // DIR-1 · Insumo del coordinador de dirigentes: las respuestas del formulario de
 // disponibilidad con el estado actual de cada dirigente. SOLO LECTURA — nada de
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     }))
     return NextResponse.json({ forms, form_id: target, rows: saneadas })
   } catch (error) {
-    console.error('GET /api/studies/dirigentes/disponibilidad:', error)
+    reportarError('GET /api/studies/dirigentes/disponibilidad:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

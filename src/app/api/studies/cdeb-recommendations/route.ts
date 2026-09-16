@@ -13,6 +13,7 @@ import {
   saveCdebRecommendation, getCdebRecommendationsByGroup, getCdebRecommendationsByMember,
   getCdebRecommendationQueue,
 } from '@/lib/supabase/queries/cdeb-recommendations'
+import { reportarError } from '@/lib/observabilidad'
 
 // EST-9 · recomendaciones a CDEB (cierre de DIS3 / Panorama).
 //
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({ items: await getCdebRecommendationQueue() })
   } catch (error) {
-    console.error('GET /api/studies/cdeb-recommendations:', error)
+    reportarError('GET /api/studies/cdeb-recommendations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -171,7 +172,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ ok: true, id: saved.id }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/cdeb-recommendations:', error)
+    reportarError('POST /api/studies/cdeb-recommendations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

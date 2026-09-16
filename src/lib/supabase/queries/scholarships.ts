@@ -19,6 +19,7 @@ import {
   planearMovimiento, avisoDelCambio,
   type BecaParaMover, type DestinoNuevo, type MotivoBloqueo,
 } from '@/lib/finance/cambio-de-destino-beca'
+import { reportarError } from '@/lib/observabilidad'
 
 const SCHOLARSHIP_ERROR_MESSAGES: Record<string, string> = {
   SCHOLARSHIP_NOT_FOUND: 'La beca indicada no existe o no aplica para tu cuenta.',
@@ -721,7 +722,7 @@ export async function applyScholarshipToPayment(
     try {
       approved = await approvePayment(paymentId, reviewerMemberId)
     } catch (e) {
-      console.error('applyScholarshipToPayment: falló approve_payment tras aplicar la beca', paymentId, e)
+      reportarError('applyScholarshipToPayment: falló approve_payment tras aplicar la beca:', e, { paymentId })
       approved = false
     }
   }

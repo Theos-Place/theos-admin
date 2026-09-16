@@ -3,6 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { isStudyGroupsOnly } from '@/lib/auth/roles'
 import { getStudyDemand } from '@/lib/supabase/queries/studies'
 import { getCurrentBlock, getNextBlock, suggestedGroups } from '@/lib/studies/blocks'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET /api/studies/analysis?study_code=XX — demanda por zona de un estudio,
 // con contexto del bloque actual y el siguiente (para el que se calcula).
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('GET /api/studies/analysis:', error)
+    reportarError('GET /api/studies/analysis:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getVacancies } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET público para la página /vacantes (las vacantes son públicas: cualquiera
 // puede verlas; aplicar sí requiere sesión). Decisión documentada: NO lleva
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
     }))
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET /api/public/vacancies:', error)
+    reportarError('GET /api/public/vacancies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

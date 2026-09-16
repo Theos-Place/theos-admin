@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { eventOrganizingCommitteeIds, calificaComoServidor } from '@/lib/supabase/queries/events'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: ¿el miembro es servidor activo de algún comité organizador del evento?
 // ?member_id=<uuid> → { hasCommittees, isServer }
@@ -21,7 +22,7 @@ export async function GET(
     const isServer = await calificaComoServidor(memberId, id)
     return NextResponse.json({ hasCommittees, isServer })
   } catch (error) {
-    console.error('GET /api/events/[id]/server-check:', error)
+    reportarError('GET /api/events/[id]/server-check:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

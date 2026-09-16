@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { addRefundComment, getRefundComments } from '@/lib/supabase/queries/refund-actions'
 import { resolveRefundScope, type RefundScope } from '@/lib/auth/refunds-scope'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // FIN-6 (3) · Comentarios de una devolución. Los ve y los escribe quien tiene
 // alcance sobre ELLA: finanzas, o el responsable del origen (encargado del
@@ -44,7 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
     return NextResponse.json({ items: await getRefundComments(id) })
   } catch (error) {
-    console.error('GET /api/finance/refunds/[id]/comments:', error)
+    reportarError('GET /api/finance/refunds/[id]/comments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const created = await addRefundComment(id, auth.ctx.memberId, parsed.data.body)
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
-    console.error('POST /api/finance/refunds/[id]/comments:', error)
+    reportarError('POST /api/finance/refunds/[id]/comments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

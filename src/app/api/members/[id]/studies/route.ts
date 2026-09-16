@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { EXTERNAL_STUDY_ROLES } from '@/lib/auth/roles'
 import { addMemberStudy, getPlanIdByCode, getMemberStudyCodes } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // Registrar A MANO un estudio en el expediente de alguien. El caso principal es
 // el estudio llevado POR FUERA de Theos (otra iglesia, otro ministerio).
@@ -41,7 +42,7 @@ export async function GET(
     const items = await getMemberStudyCodes(id)
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('GET /api/members/[id]/studies:', error)
+    reportarError('GET /api/members/[id]/studies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -104,7 +105,7 @@ export async function POST(
     })
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/members/[id]/studies:', error)
+    reportarError('POST /api/members/[id]/studies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

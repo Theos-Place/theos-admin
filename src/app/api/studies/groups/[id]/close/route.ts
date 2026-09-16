@@ -8,6 +8,7 @@ import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
 import { PREMAT_PLAN_CODE, getRequestsForGroup, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
 import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: cierra el grupo. Body: { results: CloseResult[] }. (FOL-1: el campo
 // folleto del body viejo se ignora — el cierre ya no genera folletos.)
@@ -224,7 +225,7 @@ export async function POST(
         { status: 409 },
       )
     }
-    console.error('POST /api/studies/groups/[id]/close:', error)
+    reportarError('POST /api/studies/groups/[id]/close:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

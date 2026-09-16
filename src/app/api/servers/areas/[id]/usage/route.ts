@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { countAreaLinks } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: entidades activas ligadas al área/comité (servidores activos, puestos,
 // comités hijos) para el ActiveWarningModal. Reemplaza el viejo modo
@@ -17,7 +18,7 @@ export async function GET(
     const { id } = await params
     return NextResponse.json(await countAreaLinks(id))
   } catch (error) {
-    console.error('GET /api/servers/areas/[id]/usage:', error)
+    reportarError('GET /api/servers/areas/[id]/usage:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

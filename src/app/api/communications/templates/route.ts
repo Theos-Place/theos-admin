@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getTemplates, createTemplate } from '@/lib/supabase/queries/communications'
 import { templateWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -10,7 +11,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getTemplates())
   } catch (error) {
-    console.error('GET /api/communications/templates:', error)
+    reportarError('GET /api/communications/templates:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     const t = await createTemplate(parsed.data)
     return NextResponse.json(t, { status: 201 })
   } catch (error) {
-    console.error('POST /api/communications/templates:', error)
+    reportarError('POST /api/communications/templates:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

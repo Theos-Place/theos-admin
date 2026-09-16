@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { normalizeRestriction, restrictionSummary } from '@/lib/studies/group-restrictions'
 import { countMembersMatchingRestriction } from '@/lib/supabase/queries/group-restrictions'
+import { reportarError } from '@/lib/observabilidad'
 
 // GRU-2 · Cuánta gente del padrón cumpliría esta restricción.
 //
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     const count = await countMembersMatchingRestriction(restriction)
     return NextResponse.json({ count, summary: restrictionSummary(restriction) })
   } catch (error) {
-    console.error('POST /api/studies/groups/restriction-count:', error)
+    reportarError('POST /api/studies/groups/restriction-count:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import { EVALUATION_ROLES } from '@/lib/auth/roles'
 import {
   getEvaluationTicket, getEvaluationParticipants,
 } from '@/lib/supabase/queries/evaluation-tickets'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: quiénes contestaron la evaluación de este grupo y quiénes no.
 //
@@ -19,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!ticket) return NextResponse.json({ error: 'No existe ese tiquete' }, { status: 404 })
     return NextResponse.json(await getEvaluationParticipants(ticket.group_id))
   } catch (error) {
-    console.error('GET /api/evaluations/tickets/[id]/participants:', error)
+    reportarError('GET /api/evaluations/tickets/[id]/participants:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

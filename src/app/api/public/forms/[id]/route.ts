@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { esFormularioAbierto } from '@/lib/forms/public-access'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: un formulario ABIERTO, para contestarlo sin cuenta.
 //
@@ -49,7 +50,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       fields: campos ?? [],
     })
   } catch (error) {
-    console.error('GET /api/public/forms/[id]:', error)
+    reportarError('GET /api/public/forms/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

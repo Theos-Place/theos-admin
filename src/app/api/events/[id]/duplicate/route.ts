@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEventById, createEvent } from '@/lib/supabase/queries/events'
 import { eventoDuplicado } from '@/lib/events/duplicate'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: crea una copia del evento. Devuelve el evento nuevo (201).
 //
@@ -32,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     )
     return NextResponse.json(creado, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events/[id]/duplicate:', error)
+    reportarError('POST /api/events/[id]/duplicate:', error)
     // El mensaje real, como en el POST de eventos: un fallo de FK o de columna
     // se entiende, "Error interno" no.
     const msg = (error as { message?: string })?.message ?? 'Error interno'

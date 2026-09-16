@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { moduleScope } from '@/lib/auth/roles'
 import { getCommittees, getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -17,7 +18,7 @@ export async function GET() {
     }
     return NextResponse.json(committees)
   } catch (error) {
-    console.error('GET /api/servers/committees:', error)
+    reportarError('GET /api/servers/committees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

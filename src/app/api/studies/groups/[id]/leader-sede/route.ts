@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getLeaderSedeForGroup } from '@/lib/supabase/queries/folletos'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: sede tomada del perfil del dirigente del grupo (para prellenar el paso de
 // folletos en el cierre, editable por quien cierra).
@@ -11,7 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params
     return NextResponse.json({ sede: await getLeaderSedeForGroup(id) })
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/leader-sede:', error)
+    reportarError('GET /api/studies/groups/[id]/leader-sede:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

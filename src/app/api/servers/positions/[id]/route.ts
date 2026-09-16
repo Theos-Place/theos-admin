@@ -5,6 +5,7 @@ import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   updateServicePosition, deleteServicePosition,
 } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // Validación runtime del patch de puestos. El patch se esparce entero al update
 // de `service_positions` con service role: `.strict()` corta el mass assignment.
@@ -45,7 +46,7 @@ export async function PUT(
     await updateServicePosition(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/servers/positions/[id]:', error)
+    reportarError('PUT /api/servers/positions/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -63,7 +64,7 @@ export async function DELETE(
     await deleteServicePosition(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/servers/positions/[id]:', error)
+    reportarError('DELETE /api/servers/positions/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

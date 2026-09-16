@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { getEvents, type DbEventEnriched } from '@/lib/supabase/queries/events'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET público para el widget /calendario (embebible en el sitio de la iglesia).
 // Decisión documentada: NO lleva requireRoles — expone los eventos con campos de
@@ -62,7 +63,7 @@ export async function GET(req: Request) {
       }))
     return NextResponse.json({ events: publicEvents, total: publicEvents.length })
   } catch (error) {
-    console.error('GET /api/public/events:', error)
+    reportarError('GET /api/public/events:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

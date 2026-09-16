@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createFamily } from '@/lib/supabase/queries/members'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: crea una familia. Body: { name, members: [{ member_id, relation }] }
 export async function POST(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     const res = await createFamily({ name: body.name, members: body.members })
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    console.error('POST /api/families:', error)
+    reportarError('POST /api/families:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

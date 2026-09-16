@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { inviteMemberToCompleteProfile } from '@/lib/auth/invite'
 import { puedeCrearseCuenta, MOTIVO_MENOR_SIN_CUENTA } from '@/lib/members/reglas-de-menores'
+import { reportarError } from '@/lib/observabilidad'
 
 // Crea la cuenta de acceso (Supabase Auth) de un miembro y le envía las instrucciones
 // de activación. SOLO roles administrativos, service_role en backend. Reutiliza
@@ -40,7 +41,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ ok: true, email })
   } catch (error) {
-    console.error('POST /api/members/[id]/create-account:', error)
+    reportarError('POST /api/members/[id]/create-account:', error)
     const msg = error instanceof Error ? error.message : 'No se pudo crear la cuenta.'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

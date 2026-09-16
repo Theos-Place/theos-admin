@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { verifyConfig } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: marca la config como verificada.
 export async function POST(
@@ -14,7 +15,7 @@ export async function POST(
     await verifyConfig(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/communications/configs/[id]/verify:', error)
+    reportarError('POST /api/communications/configs/[id]/verify:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

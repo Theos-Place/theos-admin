@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getMemberGrowthReport } from '@/lib/supabase/queries/reports'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: reporte de Crecimiento (personas nuevas por sede/mes). Mismo permiso de
 // módulo 'reportes' que asistencia. Las queries usan service role y saltan RLS.
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     const report = await getMemberGrowthReport({ year, sede })
     return NextResponse.json(report)
   } catch (error) {
-    console.error('GET /api/reports/member-growth:', error)
+    reportarError('GET /api/reports/member-growth:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

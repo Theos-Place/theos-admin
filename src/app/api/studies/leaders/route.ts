@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getStudyLeaders, createLeader } from '@/lib/supabase/queries/studies'
 import { leaderWriteSchema } from './schema'
 import { canSeeLeaderAdminStatus, visibleLeaderStatus } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -35,7 +36,7 @@ export async function GET() {
       evaluations: [],
     })))
   } catch (error) {
-    console.error('GET /api/studies/leaders:', error)
+    reportarError('GET /api/studies/leaders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     const leader = await createLeader(parsed.data)
     return NextResponse.json(leader, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/leaders:', error)
+    reportarError('POST /api/studies/leaders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

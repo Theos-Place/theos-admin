@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, canViewMemberProfile } from '@/lib/auth/guard'
 import { getPaymentsByMember } from '@/lib/supabase/queries/payments'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: pagos/cobros de un miembro. Lo ve el propio miembro, su FAMILIA (PAG-1,
 // /mis-pagos permite pagar por familiares — mismo criterio que el perfil) o el
@@ -32,7 +33,7 @@ export async function GET(
     }
     return NextResponse.json(await getPaymentsByMember(id))
   } catch (error) {
-    console.error('GET /api/members/[id]/payments:', error)
+    reportarError('GET /api/members/[id]/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

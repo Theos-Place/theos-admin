@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { reportarError } from '@/lib/observabilidad'
 
 const GENERIC_ERROR = 'Correo o cédula o contraseña incorrectos.'
 const RATE_LIMIT_ERROR = 'Demasiados intentos. Esperá un momento y volvé a intentar.'
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/auth/login:', error)
+    reportarError('POST /api/auth/login:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

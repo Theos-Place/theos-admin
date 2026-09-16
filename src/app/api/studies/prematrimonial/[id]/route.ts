@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { createGroupForRequest, cancelPrematrimonialRequest } from '@/lib/supabase/queries/prematrimonial'
+import { reportarError } from '@/lib/observabilidad'
 
 // PATCH: acciones del coordinador sobre una solicitud prematrimonial.
 //  { action: 'create_group', group: {...} }  → crea grupo y asigna la pareja.
@@ -41,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (msg === 'ESTADO_INVALIDO') return NextResponse.json({ error: 'La solicitud no está pendiente (ya tiene grupo o fue cancelada).' }, { status: 409 })
     if (msg === 'YA_CANCELADA') return NextResponse.json({ error: 'La solicitud ya está cancelada.' }, { status: 409 })
     if (msg === 'NO_ENCONTRADA') return NextResponse.json({ error: 'Solicitud no encontrada.' }, { status: 404 })
-    console.error('PATCH prematrimonial/[id]:', error)
+    reportarError('PATCH prematrimonial/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

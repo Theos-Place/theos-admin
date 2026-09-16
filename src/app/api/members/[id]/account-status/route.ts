@@ -5,6 +5,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { accountState, type AccountState } from '@/lib/members/account-state'
 import { puedeCrearseCuenta, MOTIVO_MENOR_SIN_CUENTA } from '@/lib/members/reglas-de-menores'
+import { reportarError } from '@/lib/observabilidad'
 
 export type { AccountState }
 export type AccountStatus = {
@@ -71,7 +72,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       last_sign_in_at: u.last_sign_in_at ?? null,
     } satisfies AccountStatus)
   } catch (error) {
-    console.error('GET /api/members/[id]/account-status:', error)
+    reportarError('GET /api/members/[id]/account-status:', error)
     return NextResponse.json({ error: 'No se pudo consultar el estado de la cuenta.' }, { status: 500 })
   }
 }

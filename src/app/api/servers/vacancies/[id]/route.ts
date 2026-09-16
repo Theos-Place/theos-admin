@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { canManageCommittee } from '@/lib/auth/committee-scope'
 import { updateVacancy, deleteVacancy, getVacancyCommitteeId } from '@/lib/supabase/queries/servers'
 import { vacancyWriteSchema } from '../schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function PUT(
   req: NextRequest,
@@ -27,7 +28,7 @@ export async function PUT(
     await updateVacancy(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/servers/vacancies/[id]:', error)
+    reportarError('PUT /api/servers/vacancies/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -47,7 +48,7 @@ export async function DELETE(
     await deleteVacancy(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/servers/vacancies/[id]:', error)
+    reportarError('DELETE /api/servers/vacancies/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

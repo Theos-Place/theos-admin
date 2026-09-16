@@ -7,6 +7,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAudit } from '@/lib/audit'
 import { patronDeCorreo } from '@/lib/email/correo-exacto'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // PATCH { email } → cambia el correo con el que la persona ENTRA al sistema
 // (auth.users) y, de paso, el de su ficha, para que no vuelvan a separarse.
@@ -80,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const { error: relErr } = await supabase.from('members')
         .update({ auth_user_id: plan.cuentaNueva, email }).eq('id', id)
       if (relErr) {
-        console.error('access-email religar:', relErr.message)
+        reportarFalla('access-email religar:', relErr.message)
         return NextResponse.json({ error: 'No se pudo reconectar la cuenta.' }, { status: 500 })
       }
       const { error: delErr } = await supabase.auth.admin.deleteUser(plan.cuentaAbandonada)
@@ -100,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // funciona a quien llega hasta acá.
     const { error: authErr } = await supabase.auth.admin.updateUserById(m.auth_user_id, { email, email_confirm: true })
     if (authErr) {
-      console.error('access-email updateUserById:', authErr.message)
+      reportarFalla('access-email updateUserById:', authErr.message)
       return NextResponse.json({ error: 'No se pudo cambiar el correo de la cuenta.' }, { status: 500 })
     }
 
@@ -128,7 +129,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     })
     return NextResponse.json({ ok: true, email })
   } catch (error) {
-    console.error('PATCH /api/members/[id]/access-email:', error)
+    reportarError('PATCH /api/members/[id]/access-email:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

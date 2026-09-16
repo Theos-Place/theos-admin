@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { bulkUpdateLeaderStudies } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST /api/studies/dirigentes/bulk-studies → agrega/quita un estudio a la
 // formación o disponibilidad de varios dirigentes.
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     const updated = await bulkUpdateLeaderStudies(ids, field, codes, action)
     return NextResponse.json({ ok: true, updated })
   } catch (error) {
-    console.error('POST /api/studies/dirigentes/bulk-studies:', error)
+    reportarError('POST /api/studies/dirigentes/bulk-studies:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

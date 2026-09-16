@@ -11,6 +11,7 @@ import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 import { desglosarSeleccion, ESTADOS_VISIBLES, type EstadoVisible } from '@/lib/studies/estado-visible'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 // Roles que pueden listar grupos: los que gestionan grupos (STUDY_ADMIN +
 // editor_grupos_estudio) + dirigentes, más los consumidores cross-módulo del
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
     const { data, total } = await getStudyGroups({ page, pageSize, filters })
     return NextResponse.json({ groups: data, total, page, pageSize })
   } catch (error) {
-    console.error('GET /api/studies/groups:', error)
+    reportarError('GET /api/studies/groups:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -172,7 +173,7 @@ export async function POST(req: NextRequest) {
         { status: 409 },
       )
     }
-    console.error('POST /api/studies/groups:', error)
+    reportarError('POST /api/studies/groups:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Json } from '@/types/database'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'APPROVE' | 'REJECT' | 'MERGE' | 'ROLE_CHANGE' | 'DEACTIVATE'
 
@@ -30,8 +31,8 @@ export async function logAudit(input: {
       old_data: (input.oldData ?? null) as Json,
       new_data: (input.newData ?? null) as Json,
     })
-    if (error) console.error('logAudit:', error.message)
+    if (error) reportarFalla('logAudit:', error.message)
   } catch (e) {
-    console.error('logAudit:', e)
+    reportarError('logAudit:', e)
   }
 }

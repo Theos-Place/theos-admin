@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { REQUEST_COORDINATOR_ROLES } from '@/lib/studies/request-assignment'
 import { getAssignableForRequests } from '@/lib/supabase/queries/study-requests'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: a quién se le puede asignar una solicitud — coordinadores de estudios /
 // dirigentes MÁS los miembros con puesto activo en el comité de estudios
@@ -12,7 +13,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getAssignableForRequests())
   } catch (error) {
-    console.error('GET /api/studies/requests/assignees:', error)
+    reportarError('GET /api/studies/requests/assignees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

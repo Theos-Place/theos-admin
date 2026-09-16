@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { updatePlan } from '@/lib/supabase/queries/studies'
 import { planUpdateSchema } from '../schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function PUT(
   req: NextRequest,
@@ -23,7 +24,7 @@ export async function PUT(
     const plan = await updatePlan(id, parsed.data)
     return NextResponse.json(plan)
   } catch (error) {
-    console.error('PUT /api/studies/plans/[id]:', error)
+    reportarError('PUT /api/studies/plans/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

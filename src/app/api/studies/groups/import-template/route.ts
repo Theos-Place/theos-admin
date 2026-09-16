@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: plantilla .xlsx para importar grupos de estudio (EST-2), con dropdowns
 // de planes (códigos vivos) y zonas del catálogo. Mismo guard que importar.
@@ -71,7 +72,7 @@ export async function GET() {
       },
     })
   } catch (error) {
-    console.error('GET /api/studies/groups/import-template:', error)
+    reportarError('GET /api/studies/groups/import-template:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

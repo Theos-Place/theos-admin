@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { notifyPendingGroupCloses } from '@/lib/email/close-reminder-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado si trae el CRON_SECRET o sesión de coordinación. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_CLOSE_REMINDERS')
     return NextResponse.json(result)
   } catch (error) {
-    console.error('POST /api/cron/close-reminders:', error)
+    reportarError('POST /api/cron/close-reminders:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

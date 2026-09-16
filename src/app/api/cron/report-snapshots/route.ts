@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { refreshReportSnapshots } from '@/lib/supabase/queries/reports'
+import { reportarError } from '@/lib/observabilidad'
 
 // Cron nocturno (medianoche CR): recalcula los datasets pesados de reportes y los
 // guarda en report_snapshots. Las páginas leen de esa caché en vez de re-agregar
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     await pingHealthcheck('HEALTHCHECK_URL_REPORT_SNAPSHOTS')
     return NextResponse.json({ ok: true, counts, refreshed_at: new Date().toISOString() })
   } catch (error) {
-    console.error('GET /api/cron/report-snapshots:', error)
+    reportarError('GET /api/cron/report-snapshots:', error)
     return NextResponse.json({ error: 'Error refrescando snapshots de reportes' }, { status: 500 })
   }
 }

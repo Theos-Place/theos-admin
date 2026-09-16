@@ -10,6 +10,7 @@ import {
   MENSAJE_REGISTRO_CREADO, MENSAJE_SIN_CORREO, MENSAJE_YA_EXISTE,
   erroresDeRegistro, normalizarRegistro, planDeRegistro,
 } from '@/lib/auth/registro-publico'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // POST { first_name, last_name, document_type, cedula, email, phone? }
 // → crea la ficha y su cuenta de acceso. SIN SESIÓN: es el registro público.
@@ -112,14 +113,14 @@ export async function POST(req: NextRequest) {
     const memberId = (creada as { id: string }).id
 
     const invite = await inviteMemberToCompleteProfile(memberId, d.email)
-    if (!invite.sent) console.error('registro público, invitación:', invite.reason)
+    if (!invite.sent) reportarFalla('registro público, invitación:', invite.reason)
 
     // Sin logAudit explícito: no hay actor —es un registro público— y el
     // trigger de la base ya deja el INSERT con actor_id NULL, que es
     // exactamente lo que corresponde acá.
     return NextResponse.json({ ok: true, message: MENSAJE_REGISTRO_CREADO })
   } catch (error) {
-    console.error('POST /api/auth/registro:', error)
+    reportarError('POST /api/auth/registro:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

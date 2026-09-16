@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { countBlockEnrollments } from '@/lib/supabase/queries/bloques'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: cuántas matrículas asociadas tiene el bloque, para que la UI advierta
 // antes de ofrecer el borrado. Reemplaza el viejo modo `DELETE ?check=1`
@@ -17,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const enrollments = apertura ? await countBlockEnrollments(apertura) : 0
     return NextResponse.json({ enrollments })
   } catch (error) {
-    console.error('GET /api/studies/bloques/[id]/usage:', error)
+    reportarError('GET /api/studies/bloques/[id]/usage:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

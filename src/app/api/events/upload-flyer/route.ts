@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { anchoDestino, valeLaPena, resumenOptimizacion, CALIDAD } from '@/lib/images/optimize'
+import { reportarError } from '@/lib/observabilidad'
 
 export const runtime = 'nodejs'
 
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
     return NextResponse.json({ url: data.publicUrl })
   } catch (error) {
-    console.error('POST /api/events/upload-flyer:', error)
+    reportarError('POST /api/events/upload-flyer:', error)
     return NextResponse.json({ error: 'No se pudo subir el flyer. Intentá de nuevo.' }, { status: 500 })
   }
 }

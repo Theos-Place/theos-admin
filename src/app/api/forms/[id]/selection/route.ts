@@ -5,6 +5,7 @@ import { SELECTION_REVIEW_ROLES, SELECTION_STATUSES } from '@/lib/forms/selectio
 import {
   getSelectionData, saveSelectionReview, inviteSelected, convokeSelection,
 } from '@/lib/supabase/queries/form-selection'
+import { reportarError } from '@/lib/observabilidad'
 
 // EST-10: revisión/selección del comité sobre un formulario de preinscripción.
 // Las respuestas traen testimonio y luchas personales: gate estricto a
@@ -20,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!data) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
     return NextResponse.json(data)
   } catch (error) {
-    console.error('GET /api/forms/[id]/selection:', error)
+    reportarError('GET /api/forms/[id]/selection:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -57,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (error instanceof Error && error.message === 'RESPUESTA_NO_ENCONTRADA') {
       return NextResponse.json({ error: 'Esa respuesta no pertenece a este formulario' }, { status: 404 })
     }
-    console.error('PATCH /api/forms/[id]/selection:', error)
+    reportarError('PATCH /api/forms/[id]/selection:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       EMAIL_NOT_CONFIGURED: { error: 'El correo no está configurado (faltan las variables de SES)', status: 409 },
     }
     if (known[msg]) return NextResponse.json({ error: known[msg].error }, { status: known[msg].status })
-    console.error('POST /api/forms/[id]/selection:', error)
+    reportarError('POST /api/forms/[id]/selection:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

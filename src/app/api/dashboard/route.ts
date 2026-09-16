@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { DASHBOARD_ROLES } from '@/lib/auth/home-route'
 import { getDashboardStats, type DashboardStats } from '@/lib/supabase/queries/dashboard'
+import { reportarError } from '@/lib/observabilidad'
 
 // SEC-1: los KPIs del dashboard exponen datos de TODOS los módulos (incluidos
 // montos de finanzas). El payload se recorta por permiso: cada bloque exige
@@ -36,7 +37,7 @@ export async function GET() {
     const trimmed = Object.fromEntries(allowed.map(block => [block, stats[block]]))
     return NextResponse.json(trimmed)
   } catch (error) {
-    console.error('GET /api/dashboard:', error)
+    reportarError('GET /api/dashboard:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

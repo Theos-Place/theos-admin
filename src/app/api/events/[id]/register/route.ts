@@ -10,6 +10,7 @@ import {
 import { scholarshipErrorResponse } from '@/lib/supabase/queries/scholarships'
 import { submitEventComprobante, PAYMENT_RECEIPTS_BUCKET, ReferenciaYaUsada } from '@/lib/supabase/queries/payments'
 import { montoAPagar, comprobanteRequerido, type Descuento } from '@/lib/events/registration-payment'
+import { reportarError } from '@/lib/observabilidad'
 
 // Quién puede inscribir A OTRO desde acá (mismos roles que gestionan
 // event_registrations en la ruta de staff, /api/events/[id]/registrations).
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (!ok) throw new Error('submitEventComprobante devolvió null')
       } catch (e) {
         await supabase.from('event_registrations').delete().eq('id', res.id)
-        console.error('register: comprobante falló, inscripción deshecha:', e)
+        reportarError('register: comprobante falló, inscripción deshecha:', e)
         return NextResponse.json({
           error: 'No pudimos guardar el comprobante, así que la inscripción no quedó hecha. Probá de nuevo.',
         }, { status: 500 })
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     const scholarshipRes = scholarshipErrorResponse(error)
     if (scholarshipRes) return scholarshipRes
-    console.error('POST /api/events/[id]/register:', error)
+    reportarError('POST /api/events/[id]/register:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

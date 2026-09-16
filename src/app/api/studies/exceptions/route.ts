@@ -5,6 +5,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { listExceptionsForMember, createException } from '@/lib/supabase/queries/study-exceptions'
 import { REASON_MIN, REASON_MAX } from '@/lib/studies/exception-reason'
+import { reportarError } from '@/lib/observabilidad'
 
 // La razón es OBLIGATORIA (2026-08-04): una excepción salta compromisos sin
 // dejar rastro de por qué, y es la decisión más discrecional del módulo.
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Se requiere member_id' }, { status: 400 })
     return NextResponse.json(await listExceptionsForMember(memberId))
   } catch (error) {
-    console.error('GET /api/studies/exceptions:', error)
+    reportarError('GET /api/studies/exceptions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/exceptions:', error)
+    reportarError('POST /api/studies/exceptions:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

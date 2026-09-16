@@ -4,6 +4,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEvents, registrationPricing } from '@/lib/supabase/queries/events'
 import { computeEventEligibility } from '@/lib/events/eligibility'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET /api/eventos/elegibilidad?member_id=X
 // Devuelve { eligibility: EventEligibilityResult[] } con eventos abiertos a
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
     const eligibility = computeEventEligibility(openEvents, memberId, pricingByEvent, enRevision)
     return NextResponse.json({ eligibility })
   } catch (error) {
-    console.error('GET /api/eventos/elegibilidad:', error)
+    reportarError('GET /api/eventos/elegibilidad:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

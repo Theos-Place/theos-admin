@@ -5,6 +5,7 @@
 // guarda" (bug 2026-08-06). Acá el fallo SIEMPRE vuelve con un motivo legible, y
 // el éxito invalida la caché para que el listado no muestre la versión vieja.
 import { invalidateCommsCache } from '@/lib/communications/comms-cache'
+import { reportarError } from '@/lib/observabilidad'
 
 export type TemplatePayload = {
   name: string
@@ -49,7 +50,7 @@ export async function saveTemplate(payload: TemplatePayload, id?: string): Promi
     invalidateCommsCache('templates')
     return { ok: true }
   } catch (e) {
-    console.error('saveTemplate:', e)
+    reportarError('saveTemplate:', e)
     return { ok: false, error: 'No hay conexión con el servidor. Revisá tu internet e intentá de nuevo.' }
   }
 }

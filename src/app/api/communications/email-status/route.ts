@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDailyEmailsSent } from '@/lib/supabase/queries/communications'
 import { sendEmail, isEmailConfigured, DAILY_LIMIT, FROM_EMAIL } from '@/lib/email/provider'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: estado de la integración de email (configurada, límite, uso de hoy).
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
       sentToday: isEmailConfigured() ? await getDailyEmailsSent() : 0,
     })
   } catch (error) {
-    console.error('GET /api/communications/email-status:', error)
+    reportarError('GET /api/communications/email-status:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/communications/email-status:', error)
+    reportarError('POST /api/communications/email-status:', error)
     const msg = error instanceof Error ? error.message : 'Error interno'
     return NextResponse.json({ error: `No se pudo enviar: ${msg}` }, { status: 500 })
   }

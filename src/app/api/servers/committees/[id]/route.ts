@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { updateCommittee } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // Validación runtime del patch del comité. El patch va directo al update de
 // `areas` con service role: `.strict()` corta el mass assignment.
@@ -34,7 +35,7 @@ export async function PUT(
     await updateCommittee(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/servers/committees/[id]:', error)
+    reportarError('PUT /api/servers/committees/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

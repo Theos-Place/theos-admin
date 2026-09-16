@@ -4,6 +4,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendAccountReadyEmail } from '@/lib/auth/account-ready'
+import { reportarError } from '@/lib/observabilidad'
 
 // Envía al miembro las INSTRUCCIONES para recuperar su acceso. Solo roles
 // administrativos (los que ven el tab Administrativo).
@@ -44,7 +45,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (!res.sent) return NextResponse.json({ error: 'No se pudo enviar el correo.' }, { status: 400 })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/members/[id]/password-reset:', error)
+    reportarError('POST /api/members/[id]/password-reset:', error)
     return NextResponse.json({ error: 'No se pudieron enviar las instrucciones.' }, { status: 500 })
   }
 }

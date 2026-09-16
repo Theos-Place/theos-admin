@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { updateArea, deleteArea } from '@/lib/supabase/queries/servers'
 import { areaUpdateSchema } from '../schema'
+import { reportarError } from '@/lib/observabilidad'
 
 // PUT: edita un área/comité (nombre, descripción, área padre, encargado).
 export async function PUT(
@@ -24,7 +25,7 @@ export async function PUT(
     await updateArea(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/servers/areas/[id]:', error)
+    reportarError('PUT /api/servers/areas/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -42,7 +43,7 @@ export async function DELETE(
     await deleteArea(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/servers/areas/[id]:', error)
+    reportarError('DELETE /api/servers/areas/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

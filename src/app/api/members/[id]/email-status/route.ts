@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // Estado de comunicaciones por email de un miembro + acciones (suscribir,
 // dar de baja, limpiar rebote/queja). Solo comunicaciones/direccion/admin.
@@ -49,7 +50,7 @@ export async function GET(
       complained_at: r.email_complained_at,
     })
   } catch (error) {
-    console.error('GET /api/members/[id]/email-status:', error)
+    reportarError('GET /api/members/[id]/email-status:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -89,7 +90,7 @@ export async function POST(
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/members/[id]/email-status:', error)
+    reportarError('POST /api/members/[id]/email-status:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

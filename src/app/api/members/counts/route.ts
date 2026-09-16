@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { moduleScope } from '@/lib/auth/roles'
 import { getMemberCounts } from '@/lib/supabase/queries/members'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: conteos para los chips/header (total, donantes, servidores, activos_asistencia).
 export async function GET() {
@@ -16,7 +17,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getMemberCounts())
   } catch (error) {
-    console.error('GET /api/members/counts:', error)
+    reportarError('GET /api/members/counts:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

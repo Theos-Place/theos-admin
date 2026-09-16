@@ -1,5 +1,6 @@
 import 'server-only'
 import { asuntoListos, cuerpoListos } from '@/lib/email/folleto-ready-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * Le avisa al dirigente que sus folletos ya están en la sede.
@@ -58,7 +59,9 @@ export async function notificarFolletosListos(folletoId: string): Promise<{ sent
       })
       sent++
     } catch (e) {
-      console.error(`folletos listos → ${m.email} falló:`, e instanceof Error ? e.message : e)
+      // El id de la ficha, NO el correo: sendDefaultPii está en false justamente
+      // para que no salga PII de 23k miembros hacia un tercero.
+      reportarError('folletos listos: el envío falló:', e, { memberId: m.id })
     }
   }
   return { sent }

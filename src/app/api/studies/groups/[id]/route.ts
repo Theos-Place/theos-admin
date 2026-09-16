@@ -10,6 +10,7 @@ import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import type { GroupWriteInput } from '@/lib/supabase/queries/studies'
 import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(
   _req: NextRequest,
@@ -46,7 +47,7 @@ export async function GET(
     }
     return NextResponse.json({ ...sinContacto, enrollments: [], viewer_scope: 'none' })
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]:', error)
+    reportarError('GET /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -103,7 +104,7 @@ export async function PUT(
         { status: 409 },
       )
     }
-    console.error('PUT /api/studies/groups/[id]:', error)
+    reportarError('PUT /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -132,7 +133,7 @@ export async function DELETE(
     await deleteGroup(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/studies/groups/[id]:', error)
+    reportarError('DELETE /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

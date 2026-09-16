@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { getEligibleStudiesForMember } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET ?member_id=X — elegibilidad de estudios del miembro para los modales de
 // solicitud. El propio perfil siempre; el de OTRO miembro exige módulo estudios
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json(await getEligibleStudiesForMember(memberId))
   } catch (error) {
-    console.error('GET /api/studies/eligibility:', error)
+    reportarError('GET /api/studies/eligibility:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

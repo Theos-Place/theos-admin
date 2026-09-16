@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { revokeException } from '@/lib/supabase/queries/study-exceptions'
+import { reportarError } from '@/lib/observabilidad'
 
 // DELETE /api/studies/exceptions/[id] → revoca la excepción (status = revoked).
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +13,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await revokeException(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/studies/exceptions/[id]:', error)
+    reportarError('DELETE /api/studies/exceptions/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

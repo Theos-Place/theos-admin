@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { approvePayment, rejectPayment, revertPaymentApproval, transitionPaymentQueue } from '@/lib/supabase/queries/payments'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyRejection } from '@/lib/email/payment-rejection-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: revisar/gestionar un tiquete de pago.
 // Body: { action, reason? }. Acciones:
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await logAudit({ actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'payments', entityId: id, newData: { queue_action: action } })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/payments/[id]/review:', error)
+    reportarError('POST /api/payments/[id]/review:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

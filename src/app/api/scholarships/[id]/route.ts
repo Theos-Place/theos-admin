@@ -4,6 +4,7 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revokeScholarship, moveScholarship } from '@/lib/supabase/queries/scholarships'
 import { MENSAJE_BLOQUEO, type MotivoBloqueo } from '@/lib/finance/cambio-de-destino-beca'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET ?usage=1: cuántas veces se usó (para decidir DeleteConfirmModal vs ActiveWarningModal en el cliente).
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const usedDirectly = (scholarship as { status: string } | null)?.status === 'used'
     return NextResponse.json({ used_count: (count ?? 0) + (usedDirectly ? 1 : 0) })
   } catch (error) {
-    console.error('GET /api/scholarships/[id]:', error)
+    reportarError('GET /api/scholarships/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -64,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ ok: true, aviso: result.aviso, entity_name: result.entity_name })
   } catch (error) {
-    console.error('PATCH /api/scholarships/[id]:', error)
+    reportarError('PATCH /api/scholarships/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -80,7 +81,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!revoked) return NextResponse.json({ error: 'No se puede revocar: ya fue usada o no está activa.' }, { status: 409 })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/scholarships/[id]:', error)
+    reportarError('DELETE /api/scholarships/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

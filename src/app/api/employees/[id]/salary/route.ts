@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { recordSalaryChange } from '@/lib/supabase/queries/employees'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: registra cambio de salario. Body: { new_salary, reason? }
 export async function POST(
@@ -15,7 +16,7 @@ export async function POST(
     await recordSalaryChange(id, Number(new_salary), reason)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/employees/[id]/salary:', error)
+    reportarError('POST /api/employees/[id]/salary:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

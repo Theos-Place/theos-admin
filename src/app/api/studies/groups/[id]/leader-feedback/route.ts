@@ -11,6 +11,7 @@ import {
   releaseGroupFeedback, setFeedbackHidden, surveyQuestions, saveSurveyResponse,
   groupPerQuestion,
 } from '@/lib/supabase/queries/leader-feedback'
+import { reportarError } from '@/lib/observabilidad'
 
 // Retroalimentación al dirigente de un grupo cerrado.
 //
@@ -88,7 +89,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       fields: cuestionario.fields,
     })
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/leader-feedback:', error)
+    reportarError('GET /api/studies/groups/[id]/leader-feedback:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -151,7 +152,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (error instanceof Error && error.message === 'DIRIGENTE_SIN_FICHA') {
       return NextResponse.json({ error: 'El dirigente de este grupo no tiene ficha de dirigente.' }, { status: 409 })
     }
-    console.error('POST /api/studies/groups/[id]/leader-feedback:', error)
+    reportarError('POST /api/studies/groups/[id]/leader-feedback:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -206,7 +207,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PATCH /api/studies/groups/[id]/leader-feedback:', error)
+    reportarError('PATCH /api/studies/groups/[id]/leader-feedback:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

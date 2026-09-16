@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailPublicPage } from '@/lib/email/public-page'
+import { reportarError } from '@/lib/observabilidad'
 
 // Re-suscripción de newsletter por link (sin login). Revierte la baja poniendo
 // newsletter_opt_out = false. Mismo patrón que /unsubscribe: solo el token,
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
     if (updErr) throw updErr
     return emailPublicPage('¡Listo!', 'Te has vuelto a suscribir a nuestras comunicaciones.')
   } catch (error) {
-    console.error('GET /api/email/resubscribe:', error)
+    reportarError('GET /api/email/resubscribe:', error)
     return emailPublicPage('Algo salió mal', 'No pudimos procesar tu solicitud. Intentá de nuevo más tarde.')
   }
 }

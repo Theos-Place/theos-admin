@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getMemberRecommendations, dirigenteLeadsMember } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: recomendaciones del miembro (cierres de estudio).
 //  · Roles administrativos (admin/coord_estudios/coord_dirigentes/direccion) → todas.
@@ -25,7 +26,7 @@ export async function GET(
     }
     return NextResponse.json(await getMemberRecommendations(id))
   } catch (error) {
-    console.error('GET /api/members/[id]/recommendations:', error)
+    reportarError('GET /api/members/[id]/recommendations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

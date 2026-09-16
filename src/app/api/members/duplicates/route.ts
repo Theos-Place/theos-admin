@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDuplicatePairs, dismissDuplicatePair } from '@/lib/supabase/queries/members'
 import { requireRoles } from '@/lib/auth/guard'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getDuplicatePairs())
   } catch (error) {
-    console.error('GET /api/members/duplicates:', error)
+    reportarError('GET /api/members/duplicates:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     await dismissDuplicatePair(body.a, body.b)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('POST /api/members/duplicates:', error)
+    reportarError('POST /api/members/duplicates:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

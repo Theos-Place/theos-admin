@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { saveGroupAttendance } from '@/lib/supabase/queries/studies'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: registra la asistencia de una sesión.
 // Body: { session_date, topic?, notes?, attendance: [{ member_id, present }] }
@@ -19,7 +20,7 @@ export async function POST(
     const res = await saveGroupAttendance(id, body)
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/groups/[id]/attendance:', error)
+    reportarError('POST /api/studies/groups/[id]/attendance:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

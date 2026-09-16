@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getEmployeeDocSignedUrl } from '@/lib/supabase/queries/employees'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: redirige a una URL firmada temporal del documento privado.
 export async function GET(
@@ -15,7 +16,7 @@ export async function GET(
     if (!url) return NextResponse.json({ error: 'Documento sin archivo' }, { status: 404 })
     return NextResponse.redirect(url)
   } catch (error) {
-    console.error('GET /api/employees/documents/[id]/download:', error)
+    reportarError('GET /api/employees/documents/[id]/download:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

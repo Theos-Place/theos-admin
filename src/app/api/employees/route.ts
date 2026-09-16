@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getEmployees, createEmployee } from '@/lib/supabase/queries/employees'
 import { employeeWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 // Montos de salario SOLO para rol finanzas (decisión 2026-06-11): el resto
 // (incluido admin) ve las filas con los montos en null.
@@ -18,7 +19,7 @@ export async function GET() {
       salary_changes: (e.salary_changes ?? []).map(c => ({ ...c, previous_salary: null, new_salary: null })),
     })))
   } catch (error) {
-    console.error('GET /api/employees:', error)
+    reportarError('GET /api/employees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     const e = await createEmployee(parsed.data)
     return NextResponse.json(e, { status: 201 })
   } catch (error) {
-    console.error('POST /api/employees:', error)
+    reportarError('POST /api/employees:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

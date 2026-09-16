@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { updateConfig, deleteConfig } from '@/lib/supabase/queries/communications'
 import { configUpdateSchema } from '../schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function PUT(
   req: NextRequest,
@@ -22,7 +23,7 @@ export async function PUT(
     await updateConfig(id, parsed.data)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('PUT /api/communications/configs/[id]:', error)
+    reportarError('PUT /api/communications/configs/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -38,7 +39,7 @@ export async function DELETE(
     await deleteConfig(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/communications/configs/[id]:', error)
+    reportarError('DELETE /api/communications/configs/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

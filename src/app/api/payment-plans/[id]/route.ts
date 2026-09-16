@@ -4,6 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/validate'
 import { cancelPaymentPlan, getPlanInstallments } from '@/lib/supabase/queries/payment-plans'
+import { reportarError } from '@/lib/observabilidad'
 
 const PLAN_ROLES = ['finanzas', 'direccion', 'admin'] as const
 
@@ -53,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ ok: true, tractos_pendientes: pendientes })
   } catch (error) {
-    console.error('PATCH /api/payment-plans/[id]:', error)
+    reportarError('PATCH /api/payment-plans/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

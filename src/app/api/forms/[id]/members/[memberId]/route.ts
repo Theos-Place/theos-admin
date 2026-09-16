@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * GET /api/forms/[id]/members/[memberId] — los datos personales de la persona
@@ -47,7 +48,7 @@ export async function GET(
     if (!data) return NextResponse.json({ error: 'Persona no encontrada' }, { status: 404 })
     return NextResponse.json(data)
   } catch (error) {
-    console.error('GET /api/forms/[id]/members/[memberId]:', error)
+    reportarError('GET /api/forms/[id]/members/[memberId]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

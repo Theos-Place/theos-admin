@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, canViewMemberProfile } from '@/lib/auth/guard'
 import { getMemberScholarships } from '@/lib/supabase/queries/scholarships'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: becas ASIGNADAS de un miembro (kind 'asignada'; las genéricas con
 // código no se listan) — PAG-4, sección "Mis becas" de /mis-pagos. Lo ve el
@@ -22,7 +23,7 @@ export async function GET(
     }
     return NextResponse.json({ items: await getMemberScholarships(id) })
   } catch (error) {
-    console.error('GET /api/members/[id]/scholarships:', error)
+    reportarError('GET /api/members/[id]/scholarships:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

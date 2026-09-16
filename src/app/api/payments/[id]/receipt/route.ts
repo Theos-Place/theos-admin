@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { ROLES } from '@/lib/auth/roles'
 import { getPaymentReceiptMeta, signReceiptUrl } from '@/lib/supabase/queries/payments'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: URL firmada de corta duración del comprobante. Solo el DUEÑO del pago o
 // quien tenga el permiso 'revision_pagos'. El bucket es privado.
@@ -25,7 +26,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!url) return NextResponse.json({ error: 'No se pudo generar el enlace.' }, { status: 500 })
     return NextResponse.json({ url })
   } catch (error) {
-    console.error('GET /api/payments/[id]/receipt:', error)
+    reportarError('GET /api/payments/[id]/receipt:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

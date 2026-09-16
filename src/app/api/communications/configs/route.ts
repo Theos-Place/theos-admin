@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getChannelConfigs, createConfig } from '@/lib/supabase/queries/communications'
 import { configWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -10,7 +11,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getChannelConfigs())
   } catch (error) {
-    console.error('GET /api/communications/configs:', error)
+    reportarError('GET /api/communications/configs:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     const c = await createConfig(parsed.data)
     return NextResponse.json(c, { status: 201 })
   } catch (error) {
-    console.error('POST /api/communications/configs:', error)
+    reportarError('POST /api/communications/configs:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getSystemEmailStats } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: el aporte de los correos automáticos al resumen del mes. Va aparte del
 // listado paginado de /system-emails porque no es una página de esa lista: son
@@ -12,7 +13,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getSystemEmailStats())
   } catch (error) {
-    console.error('GET /api/communications/summary:', error)
+    reportarError('GET /api/communications/summary:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

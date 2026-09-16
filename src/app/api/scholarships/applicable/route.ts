@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { findApplicableScholarship } from '@/lib/supabase/queries/scholarships'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET /api/scholarships/applicable?member_id=X&entity_type=study_plan|event&entity_id=Y
 // Beca asignada activa del miembro para ese destino, si existe (para el
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     const scholarship = await findApplicableScholarship(memberId, entityType, entityId)
     return NextResponse.json({ scholarship })
   } catch (error) {
-    console.error('GET /api/scholarships/applicable:', error)
+    reportarError('GET /api/scholarships/applicable:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

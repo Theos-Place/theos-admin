@@ -5,6 +5,7 @@ import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { CAMPOS_ALTA_CHECKIN, camposRechazados, soloCamposPermitidos } from '@/lib/members/alta-desde-checkin'
 import { motivoQueImpideCrear, fichaDeMenorProtegido } from '@/lib/members/menor-protegido'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * POST /api/events/[id]/members — alta de una persona DESDE la fila del evento.
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ ...member, invite }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events/[id]/members:', error)
+    reportarError('POST /api/events/[id]/members:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

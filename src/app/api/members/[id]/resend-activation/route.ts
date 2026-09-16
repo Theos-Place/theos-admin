@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // Reenvía el aviso de acceso a un miembro con cuenta de Auth SIN activar. SOLO
 // roles administrativos, service_role en backend. Manda el mismo correo sin
@@ -45,7 +46,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (!res.sent) throw new Error(res.reason ?? 'No se pudo enviar el correo.')
     return NextResponse.json({ ok: true, email })
   } catch (error) {
-    console.error('POST /api/members/[id]/resend-activation:', error)
+    reportarError('POST /api/members/[id]/resend-activation:', error)
     const msg = error instanceof Error ? error.message : 'No se pudieron enviar las instrucciones.'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { approveApplications, rejectApplications } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST: acción masiva sobre aplicaciones. Body: { action: 'approve'|'reject', ids: string[] }
 //  - approve (5b): aprueba y activa al aplicante como servidor (transaccional, sin correo).
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ error: 'Acción inválida.' }, { status: 400 })
   } catch (error) {
-    console.error('POST /api/servers/applications/bulk:', error)
+    reportarError('POST /api/servers/applications/bulk:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

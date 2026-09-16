@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getSystemEmails } from '@/lib/supabase/queries/communications'
 import { FILTROS_CORREO, type FiltroCorreo } from '@/lib/communications/correos-del-sistema'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: los correos que manda el SISTEMA solo (avisos automáticos), paginados.
 // Guard igual que el resto del módulo. No es solo curiosidad: acá se contesta
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
       q: sp.get('q') ?? '',
     }))
   } catch (error) {
-    console.error('GET /api/communications/system-emails:', error)
+    reportarError('GET /api/communications/system-emails:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

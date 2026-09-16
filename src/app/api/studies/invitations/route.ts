@@ -4,6 +4,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   listInvitationsForPlan, createInvitation, revokeInvitation,
 } from '@/lib/supabase/queries/study-invitations'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET ?plan_id=<uuid> → invitaciones del plan. Solo roles de estudios.
 export async function GET(req: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
     const invitations = await listInvitationsForPlan(planId)
     return NextResponse.json({ invitations })
   } catch (error) {
-    console.error('GET /api/studies/invitations:', error)
+    reportarError('GET /api/studies/invitations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       )
     }
-    console.error('POST /api/studies/invitations:', error)
+    reportarError('POST /api/studies/invitations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -56,7 +57,7 @@ export async function DELETE(req: NextRequest) {
     await revokeInvitation(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('DELETE /api/studies/invitations:', error)
+    reportarError('DELETE /api/studies/invitations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

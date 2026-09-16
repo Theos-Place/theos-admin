@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { todayCR } from '@/lib/format'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import type { EventType, EventStatus, EventPaymentStatus, AttendanceType } from '@/types/event'
+import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -308,7 +309,7 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
     // cae a la regla de la fecha sola (ver personas-nuevas.ts) en vez de romper
     // toda la pantalla por una tarjeta.
     if (errPrimeros) {
-      console.error('getEventById · members_first_checkin:', errPrimeros.message)
+      reportarFalla('getEventById · members_first_checkin:', errPrimeros.message)
     } else {
       const porMiembro = new Map(
         ((primeros ?? []) as Array<{ member_id: string; first_checkin_at: string }>)
@@ -333,7 +334,7 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
     } catch (e) {
       // Igual que arriba: el detalle se muestra sin los puestos antes que no
       // mostrarse por una columna.
-      console.error('getEventById · puestos de servidores:', e instanceof Error ? e.message : e)
+      reportarError('getEventById · puestos de servidores:', e)
     }
   }
   return ev

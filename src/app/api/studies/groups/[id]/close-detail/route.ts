@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getCierreDetalle } from '@/lib/supabase/queries/studies'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: cómo terminó un grupo ya cerrado — quién aprobó, quién no y por qué.
 //
@@ -27,7 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!detalle) return NextResponse.json({ error: 'Ese grupo no existe.' }, { status: 404 })
     return NextResponse.json(detalle)
   } catch (error) {
-    console.error('GET /api/studies/groups/[id]/close-detail:', error)
+    reportarError('GET /api/studies/groups/[id]/close-detail:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

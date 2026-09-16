@@ -4,6 +4,7 @@ import {
   motivoQueImpideTransferir, pagosQueViajan, planDeDinero, notaDeTransferencia,
   type GrupoParaTransferir, type PagoConMonto,
 } from '@/lib/studies/transferencia'
+import { reportarFalla } from '@/lib/observabilidad'
 
 /**
  * Mover una matrícula de un grupo a otro, con su pago.
@@ -151,7 +152,7 @@ export async function transferEnrollment(input: {
       ...(plan.ajustar?.id === pagoId ? { amount: plan.ajustar.monto } : {}),
     }
     const { error } = await sb.from('payments').update(parche).eq('id', pagoId)
-    if (error) console.error('transferEnrollment: no se pudo mover el pago', pagoId, error.message)
+    if (error) reportarFalla('transferEnrollment: no se pudo mover el pago:', error.message, { pagoId })
   }
 
   if (plan.cobrar > 0 && cobrarDiferencia) {
@@ -165,7 +166,7 @@ export async function transferEnrollment(input: {
         esDiferencia: true,
       }),
     })
-    if (error) console.error('transferEnrollment: no se pudo crear el cobro de la diferencia:', error.message)
+    if (error) reportarFalla('transferEnrollment: no se pudo crear el cobro de la diferencia:', error.message)
   }
 
   void actorMemberId

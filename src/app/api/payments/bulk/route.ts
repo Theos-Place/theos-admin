@@ -3,6 +3,7 @@ import { requireModuleView } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { approvePayment, rejectPayment } from '@/lib/supabase/queries/payments'
 import { notifyRejection } from '@/lib/email/payment-rejection-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 // POST /api/payments/bulk — { ids: string[], action: 'approve'|'reject', reason? }
 // Aprobar/rechazar en lote desde la cola de revisión. Cada id se procesa con su
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(result)
   } catch (error) {
-    console.error('POST /api/payments/bulk:', error)
+    reportarError('POST /api/payments/bulk:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

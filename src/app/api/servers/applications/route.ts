@@ -5,6 +5,7 @@ import {
   getApplications, getApplicationsPage, getApplicationStats, createApplication,
   type ApplicationFilters,
 } from '@/lib/supabase/queries/servers'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     const { rows, total } = await getApplicationsPage(filters)
     return NextResponse.json({ applications: rows, total })
   } catch (error) {
-    console.error('GET /api/servers/applications:', error)
+    reportarError('GET /api/servers/applications:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     await createApplication(await req.json())
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/servers/applications:', error)
+    reportarError('POST /api/servers/applications:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

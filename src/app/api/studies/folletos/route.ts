@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { getFolletoRequests } from '@/lib/supabase/queries/folletos'
 import { isFolletoState } from '@/lib/studies/folletos'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET: lista de solicitudes de folletos. Filtros: ?sede= &status=. Módulo 'folletos'.
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     const tipo = req.nextUrl.searchParams.get('tipo') ?? undefined
     return NextResponse.json(await getFolletoRequests({ sede: sede || undefined, status, tipo: tipo || undefined }))
   } catch (error) {
-    console.error('GET /api/studies/folletos:', error)
+    reportarError('GET /api/studies/folletos:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

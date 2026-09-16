@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { FORM_UPLOADS_BUCKET, esPathDeAdjunto } from '@/lib/forms/attachment'
+import { reportarError } from '@/lib/observabilidad'
 
 // GET ?path=<uuid>.webp → redirige a una URL firmada del adjunto.
 //
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.redirect(data.signedUrl)
   } catch (error) {
-    console.error('GET /api/forms/attachment:', error)
+    reportarError('GET /api/forms/attachment:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

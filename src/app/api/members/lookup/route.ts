@@ -3,6 +3,7 @@ import { getAuthContext } from '@/lib/auth/guard'
 import { hasManagementRole } from '@/lib/auth/roles'
 import { getMemberForLookupById, searchMembersForLookup } from '@/lib/supabase/queries/members'
 import { isUuid } from '@/lib/validate'
+import { reportarError } from '@/lib/observabilidad'
 
 /**
  * Buscador MÍNIMO de personas: nombre, cédula y correo de miembros activos,
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Number(req.nextUrl.searchParams.get('pageSize') ?? 8) || 8, 20)
     return NextResponse.json({ members: await searchMembersForLookup(search, limit) })
   } catch (error) {
-    console.error('GET /api/members/lookup:', error)
+    reportarError('GET /api/members/lookup:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

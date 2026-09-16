@@ -5,6 +5,7 @@ import { getRefunds, createRefund, type RefundWriteInput } from '@/lib/supabase/
 import { resolveRefundScope, scopeToRefundFilters } from '@/lib/auth/refunds-scope'
 import type { RefundStatus } from '@/types/finance'
 import { formatCRC } from '@/lib/format'
+import { reportarError } from '@/lib/observabilidad'
 
 // FIN-6: la cola ya no es solo de finanzas. El responsable del ORIGEN también
 // la ve, acotada a lo suyo (encargado de evento → sus eventos; coordinación de
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     // el server va a rechazar con 403.
     return NextResponse.json({ refunds, can_resolve: scope.canResolve, scope: scope.access })
   } catch (error) {
-    console.error('GET /api/finance/refunds:', error)
+    reportarError('GET /api/finance/refunds:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
         )
     }
   } catch (error) {
-    console.error('POST /api/finance/refunds:', error)
+    reportarError('POST /api/finance/refunds:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/validate'
 import { createPaymentPlan, getPlanForPayment, getPlanInstallments } from '@/lib/supabase/queries/payment-plans'
 import { MIN_INSTALLMENTS, MAX_INSTALLMENTS } from '@/lib/finance/installments'
+import { reportarError } from '@/lib/observabilidad'
 
 // Arreglo de pago en tractos sobre un pago PENDIENTE (FIN-4). Uso interno: solo
 // finanzas, dirección y admin. Nunca es una opción de autoservicio.
@@ -37,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!plan) return NextResponse.json({ plan: null, installments: [] })
     return NextResponse.json({ plan, installments: await getPlanInstallments(plan.id) })
   } catch (error) {
-    console.error('GET /api/payments/[id]/payment-plan:', error)
+    reportarError('GET /api/payments/[id]/payment-plan:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error) {
     const known = error instanceof Error ? ERRORES[error.message] : undefined
     if (known) return NextResponse.json({ error: known.error, code: error instanceof Error ? error.message.toLowerCase() : undefined }, { status: known.status })
-    console.error('POST /api/payments/[id]/payment-plan:', error)
+    reportarError('POST /api/payments/[id]/payment-plan:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

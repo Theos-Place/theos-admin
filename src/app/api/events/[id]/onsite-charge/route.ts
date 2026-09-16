@@ -8,6 +8,7 @@ import {
   PaymentRequiredError,
 } from '@/lib/supabase/queries/events'
 import { notifyEventPendingCharge } from '@/lib/email/event-charge-notify'
+import { reportarError } from '@/lib/observabilidad'
 
 const bodySchema = z.object({
   member_id: z.string().uuid(),
@@ -62,7 +63,7 @@ export async function POST(
     if (error instanceof PaymentRequiredError) {
       return NextResponse.json({ error: error.message, code: 'payment_required' }, { status: 400 })
     }
-    console.error('POST /api/events/[id]/onsite-charge:', error)
+    reportarError('POST /api/events/[id]/onsite-charge:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

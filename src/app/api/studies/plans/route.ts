@@ -5,6 +5,7 @@ import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getStudyPlans, createPlan } from '@/lib/supabase/queries/studies'
 import { visiblePlans, canSeeArchivedPlans } from '@/lib/studies/plan-visibility'
 import { planWriteSchema } from './schema'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     // Se filtran acá y no en la página: si no, bastaría con mirar el payload.
     return NextResponse.json(visiblePlans(plans, canSeeArchivedPlans(auth.ctx.roles)))
   } catch (error) {
-    console.error('GET /api/studies/plans:', error)
+    reportarError('GET /api/studies/plans:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     const plan = await createPlan(parsed.data)
     return NextResponse.json(plan, { status: 201 })
   } catch (error) {
-    console.error('POST /api/studies/plans:', error)
+    reportarError('POST /api/studies/plans:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

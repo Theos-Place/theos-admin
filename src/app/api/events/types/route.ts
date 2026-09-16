@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEventTypes, createEventType } from '@/lib/supabase/queries/events'
+import { reportarError } from '@/lib/observabilidad'
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     if (auth.res) return auth.res
     return NextResponse.json(await getEventTypes())
   } catch (error) {
-    console.error('GET /api/events/types:', error)
+    reportarError('GET /api/events/types:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     const res = await createEventType(body)
     return NextResponse.json(res, { status: 201 })
   } catch (error) {
-    console.error('POST /api/events/types:', error)
+    reportarError('POST /api/events/types:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

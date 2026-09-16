@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { isUuid } from '@/lib/validate'
 import { logAudit } from '@/lib/audit'
 import { deleteBroadcast, broadcastDeleteErrorResponse } from '@/lib/supabase/queries/communications'
+import { reportarError } from '@/lib/observabilidad'
 
 // DELETE: borra un comunicado en BORRADOR. Un programado hay que cancelarlo
 // antes (vuelve a borrador) y uno que ya salió no se borra nunca: es el
@@ -27,7 +28,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   } catch (error) {
     const res = broadcastDeleteErrorResponse(error)
     if (res) return res
-    console.error('DELETE /api/communications/messages/[id]:', error)
+    reportarError('DELETE /api/communications/messages/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
