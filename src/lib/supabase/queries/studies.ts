@@ -1,6 +1,7 @@
 import { toCurrency } from '@/lib/money'
 import { ADMIN_ONLY_STATUSES, type LeaderStatus } from '@/lib/studies/leader-admin-status'
 import { isPrematGroup, prematGroupError } from '@/lib/studies/premat-group'
+import { reportarFalla } from '@/lib/observabilidad'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import {
   COMITE_DIRIGENTES, PUESTO_POR_DEFECTO, esPuestoDeDirigente,
@@ -1892,7 +1893,10 @@ export async function getGroupsWithParticipants(
  */
 export async function expirePendingStudyEnrollments(
   ahora: Date = new Date(),
-): Promise<{ expired: number; detalle: Array<{ member_id: string; group_id: string }> }> {
+  /** `dryRun`: lista a quién soltaría sin escribir nada. Es la forma de revisar
+   *  el barrido contra datos reales antes de dejarlo correr solo. */
+  opts: { dryRun?: boolean } = {},
+): Promise<{ expired: number; detalle: Array<{ member_id: string; group_id: string; nombre?: string; grupo?: string; horas?: number }> }> {
   const supabase = createAdminClient()
   const { reservaExpirada, relojDeLaReserva, MOTIVO_EXPIRADA } = await import('@/lib/studies/enrollment-hold')
 
@@ -1923,17 +1927,120 @@ export async function expirePendingStudyEnrollments(
     })
   })
 
-  const detalle: Array<{ member_id: string; group_id: string }> = []
+  const detalle: Array<{ member_id: string; group_id: string; nombre?: string; grupo?: string; horas?: number }> = []
+  const nombres = await nombresDeMiembrosYGrupos(supabase, candidatas)
   for (const e of candidatas) {
+    const info = nombres.get(e.id) ?? {}
+    if (opts.dryRun) {
+      detalle.push({ member_id: e.member_id, group_id: e.group_id!, ...info })
+      continue
+    }
     try {
       await withdrawMember(e.group_id!, e.member_id, MOTIVO_EXPIRADA)
-      detalle.push({ member_id: e.member_id, group_id: e.group_id! })
+      detalle.push({ member_id: e.member_id, group_id: e.group_id!, ...info })
+      // Avisarle que se liberó. Best-effort: el cupo ya se soltó y una
+      // notificación que falle no puede deshacer eso ni frenar al resto.
+      try {
+        const { textoDeLiberacion, TIPO_LIBERADA } = await import('@/lib/studies/aviso-de-plazo')
+        const t = textoDeLiberacion({ estudio: info.grupo ?? 'tu estudio' })
+        await supabase.from('internal_notifications').insert({
+          recipient_member_id: e.member_id, type: TIPO_LIBERADA,
+          title: t.title, body: t.body, link: '/matricula',
+        })
+      } catch (err) {
+        reportarFalla('expirar matrícula: no se pudo avisar de la liberación:', err, { enrollmentId: e.id })
+      }
     } catch (err) {
       // Una que falle no puede frenar el barrido: la siguiente corrida la agarra.
       console.warn('expirePendingStudyEnrollments:', err instanceof Error ? err.message : err)
     }
   }
   return { expired: detalle.length, detalle }
+}
+
+/** Nombre de la persona y del grupo, para los mensajes y para el dry-run. */
+async function nombresDeMiembrosYGrupos(
+  supabase: ReturnType<typeof createAdminClient>,
+  filas: ReadonlyArray<{ id: string; member_id: string; group_id: string | null }>,
+): Promise<Map<string, { nombre?: string; grupo?: string }>> {
+  const out = new Map<string, { nombre?: string; grupo?: string }>()
+  if (filas.length === 0) return out
+  const [{ data: ms }, { data: gs }] = await Promise.all([
+    supabase.from('members').select('id, first_name, last_name').in('id', [...new Set(filas.map(f => f.member_id))]),
+    supabase.from('study_groups').select('id, name').in('id', [...new Set(filas.map(f => f.group_id).filter((x): x is string => !!x))]),
+  ])
+  const nm = new Map(((ms ?? []) as Array<{ id: string; first_name: string; last_name: string }>)
+    .map(m => [m.id, `${m.first_name} ${m.last_name}`.trim()]))
+  const gm = new Map(((gs ?? []) as Array<{ id: string; name: string }>).map(g => [g.id, g.name]))
+  for (const f of filas) out.set(f.id, { nombre: nm.get(f.member_id), grupo: f.group_id ? gm.get(f.group_id) : undefined })
+  return out
+}
+
+/**
+ * Avisa a quien lleva 48 horas sin subir el comprobante (NOT-2).
+ *
+ * Va en el MISMO barrido que expira, no en un cron nuevo: los candidatos se
+ * calculan con la misma consulta y el mismo reloj, así que un aviso y una baja
+ * nunca pueden discrepar sobre cuántas horas pasaron.
+ *
+ * La idempotencia se resuelve mirando si ya existe una notificación de este
+ * tipo para esa persona y ese grupo: el barrido corre a diario y la ventana de
+ * aviso dura 24 horas, así que sin esto habría dos.
+ */
+export async function avisarMatriculasPorVencer(
+  ahora: Date = new Date(),
+  opts: { dryRun?: boolean } = {},
+): Promise<{ avisados: number; detalle: Array<{ member_id: string; grupo?: string; horas: number }> }> {
+  const supabase = createAdminClient()
+  const { relojDeLaReserva } = await import('@/lib/studies/enrollment-hold')
+  const { necesitaAviso, textoDelAviso, TIPO_AVISO } = await import('@/lib/studies/aviso-de-plazo')
+
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select('id, member_id, group_id, status, created_at, payments!payments_enrollment_id_fkey(concept, status, review_status, created_at, payment_plan_id)')
+    .eq('status', 'pendiente_de_pago')
+  if (error) throw error
+
+  type Fila = {
+    id: string; member_id: string; group_id: string | null; status: string; created_at: string
+    payments: Array<{ concept: string | null; status: string | null; review_status: string | null; created_at: string; payment_plan_id?: string | null }> | null
+  }
+  const filas = (data ?? []) as unknown as Fila[]
+  if (filas.length === 0) return { avisados: 0, detalle: [] }
+
+  // Una sola consulta para saber a quién ya se le avisó.
+  const { data: previos } = await supabase
+    .from('internal_notifications').select('recipient_member_id, link')
+    .eq('type', TIPO_AVISO).in('recipient_member_id', [...new Set(filas.map(f => f.member_id))])
+  const avisados = new Set(((previos ?? []) as Array<{ recipient_member_id: string; link: string | null }>)
+    .map(n => `${n.recipient_member_id}|${n.link ?? ''}`))
+
+  const nombres = await nombresDeMiembrosYGrupos(supabase, filas)
+  const detalle: Array<{ member_id: string; grupo?: string; horas: number }> = []
+
+  for (const e of filas) {
+    if (!e.group_id) continue
+    const matricula = (e.payments ?? []).filter(p => p.concept === 'matricula')
+    const reloj = relojDeLaReserva({ enrollmentCreatedAt: e.created_at, pagos: e.payments })
+    const horas = (ahora.getTime() - Date.parse(reloj)) / 3600_000
+    const link = `/mis-pagos?grupo=${e.group_id}`
+    if (!necesitaAviso({
+      horas,
+      reviewStatus: matricula.find(p => p.review_status)?.review_status ?? null,
+      conPlanDePagos: matricula.some(p => !!p.payment_plan_id),
+      yaAvisado: avisados.has(`${e.member_id}|${link}`),
+    })) continue
+
+    const info = nombres.get(e.id) ?? {}
+    detalle.push({ member_id: e.member_id, grupo: info.grupo, horas: Math.round(horas * 10) / 10 })
+    if (opts.dryRun) continue
+    const t = textoDelAviso({ estudio: info.grupo ?? 'tu estudio', horas })
+    const { error: nErr } = await supabase.from('internal_notifications').insert({
+      recipient_member_id: e.member_id, type: TIPO_AVISO, title: t.title, body: t.body, link,
+    })
+    if (nErr) reportarFalla('avisar matrícula por vencer:', nErr.message, { enrollmentId: e.id })
+  }
+  return { avisados: opts.dryRun ? 0 : detalle.length, detalle }
 }
 
 /* ────────────────────────────────────────────────────────────────────────────

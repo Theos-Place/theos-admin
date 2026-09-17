@@ -874,7 +874,29 @@ del endpoint, no solo la UI); dirigente recibe teléfono+cumpleaños pero el per
 403; gestión intacta. tsc/lint/vitest al cierre.
 ```
 
-### [ ] NOT-2 · Campanita: cobro pendiente de matrícula + desmatrícula a las 24h (pedido 2026-09-17)
+### [x] NOT-2 · Campanita del cobro pendiente + plazo unificado — HECHO 2026-09-17
+
+Resuelto el conflicto que el ítem marcaba: **72 horas fijas para todos**
+(decisión del usuario). Con eso todos los plazos del sistema dicen lo mismo —
+los eventos con comprobante rechazado y el recordatorio de pago ya usaban 72; la
+matrícula de estudio era la única con 24.
+
+Tres cosas que cambiaron respecto de lo que pedía el prompt, y por qué:
+
+1. El aviso NO va al matricularse sino a las **48 horas**. Ese aviso ya existió y
+   se quitó el 2026-09-01 con medición: la gente sube el comprobante en minutos
+   (4 de 4, promedio 3 min), así que los 4 avisos salían equivocados. A las 48
+   quedan 24 y todavía se puede hacer algo.
+2. Se excluyen las matrículas con **plan de pagos**. No estaba en la lista de
+   exclusiones del prompt y era necesario: los tractos tienen su propia fecha de
+   vencimiento (el de Irina Morales vence el 30-set) y el barrido los habría
+   soltado por medir "horas desde que se creó el cobro".
+3. El dry-run va por `?dry=1` y no por método GET: Vercel invoca este cron con
+   GET (`export const GET = POST`), así que un handler GET propio habría
+   suplantado la corrida real.
+
+El aviso y la baja viven en el MISMO barrido, que ya corría a diario: comparten
+consulta y reloj, así que nunca pueden discrepar sobre cuántas horas pasaron.
 
 Si tengo un cobro pendiente de un estudio (me matriculé y no adjunté
 comprobante, o me inscribieron manualmente), que la campanita me avise: tengo

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { expirePendingEventRegistrations } from '@/lib/supabase/queries/events'
-import { expirePendingStudyEnrollments } from '@/lib/supabase/queries/studies'
+import { expirePendingStudyEnrollments, avisarMatriculasPorVencer } from '@/lib/supabase/queries/studies'
 import { reportarError } from '@/lib/observabilidad'
 
 /** Autorizado con el CRON_SECRET (edge function diaria) o sesión de dirección. */
@@ -34,10 +34,36 @@ export async function POST(req: NextRequest) {
   const denied = await authorize(req)
   if (denied) return denied
   try {
+    /**
+     * `?dry=1` → DRY-RUN: lista a quién soltaría y a quién avisaría HOY sin
+     * escribir nada. Sirve para revisar el barrido contra datos reales antes de
+     * dejarlo correr solo, y para entender por qué tocó a alguien.
+     *
+     * Va por PARÁMETRO y no por método: Vercel invoca este cron con GET (ver
+     * `export const GET = POST` al final), así que un handler GET propio habría
+     * suplantado la corrida de verdad.
+     */
+    if (new URL(req.url).searchParams.get('dry') === '1') {
+      const [estudios, avisos] = await Promise.all([
+        expirePendingStudyEnrollments(new Date(), { dryRun: true }),
+        avisarMatriculasPorVencer(new Date(), { dryRun: true }),
+      ])
+      return NextResponse.json({ dry_run: true, soltaria_el_cupo: estudios.detalle, avisaria: avisos.detalle })
+    }
     const events = await expirePendingEventRegistrations()
     const estudios = await expirePendingStudyEnrollments()
+    // NOT-2: el aviso de "te quedan 24 horas" va DESPUÉS de expirar y en el
+    // mismo barrido. Después, para no avisarle a quien en esta misma corrida ya
+    // se quedó sin cupo; y en el mismo barrido porque comparte la consulta y el
+    // reloj, así que un aviso y una baja nunca pueden discrepar sobre cuántas
+    // horas pasaron.
+    const avisos = await avisarMatriculasPorVencer()
     await pingHealthcheck('HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE')
-    return NextResponse.json({ events_expired: events.expired, matriculas_expiradas: estudios.expired })
+    return NextResponse.json({
+      events_expired: events.expired,
+      matriculas_expiradas: estudios.expired,
+      avisos_enviados: avisos.avisados,
+    })
   } catch (error) {
     reportarError('POST /api/cron/payment-holds-expire:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
