@@ -100,3 +100,31 @@ describe('quien no tiene nada que ver con el grupo', () => {
     expect(r.enrollments).toEqual([])
   })
 })
+
+describe('SEGURIDAD · un grupo ajeno no se mira', () => {
+  // Lo reportó el usuario el 2026-09-17: logueada como dirigente, pegando el id
+  // de un grupo que no es suyo en la URL, veía su ficha. El endpoint devolvía el
+  // grupo completo menos el contacto del dirigente y las inscripciones — o sea
+  // nombre, horario, zona, ubicación, cupo, fechas, restricciones y el enlace de
+  // WhatsApp.
+  it('un dirigente NO tiene alcance sobre un grupo que no dirige', () => {
+    const scope = groupViewerScope({
+      roles: ['dirigente'], memberId: 'dirigente-de-otro-grupo',
+      group: GRUPO, isEnrolled: false,
+    })
+    expect(scope).toBe('none')
+  })
+
+  it('y con alcance none no se devuelve ni la lista', () => {
+    expect(recortarRoster(ROSTER, 'none')).toEqual([])
+  })
+
+  it('quien acaba de matricularse SÍ entra, aunque deba el pago', () => {
+    // isMemberOfGroup cuenta cualquier estado, incluido pendiente_de_pago: por
+    // eso cortar 'none' no rompe la pantalla de confirmación de matrícula, que
+    // se abre DESPUÉS de crear la inscripción.
+    expect(groupViewerScope({
+      roles: ['miembro'], memberId: 'recien-matriculado', group: GRUPO, isEnrolled: true,
+    })).toBe('member')
+  })
+})

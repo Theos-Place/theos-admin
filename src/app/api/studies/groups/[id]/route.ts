@@ -35,6 +35,24 @@ export async function GET(
       group: g,
       isEnrolled: auth.ctx.memberId ? await isMemberOfGroup(id, auth.ctx.memberId) : false,
     })
+    /**
+     * Sin relación con el grupo, no se devuelve NADA.
+     *
+     * Hasta el 2026-09-17 el alcance 'none' recibía el grupo completo menos el
+     * contacto del dirigente y las inscripciones: nombre, horario, zona,
+     * ubicación, cupo, fechas, restricciones y el ENLACE DE WHATSAPP. O sea que
+     * un dirigente que pegaba el id de un grupo ajeno en la URL veía su ficha
+     * entera. Lo reportó el usuario probando exactamente eso.
+     *
+     * El endpoint hermano (sessions) ya devolvía 403 en este caso; esto lo pone
+     * a la par. Quien acaba de matricularse NO se ve afectado: apenas existe la
+     * fila de inscripción su alcance es 'member' —isMemberOfGroup cuenta
+     * cualquier estado, incluido pendiente_de_pago—, y la pantalla de
+     * confirmación llega después de matricular.
+     */
+    if (scope === 'none') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
     // GRU-3: la lista se recorta ACÁ, no en la UI. Esconder una columna en
     // pantalla no esconde el dato: viaja igual en el JSON.
     const roster = (group as unknown as { enrollments?: FilaDeRoster[] }).enrollments ?? []
@@ -50,7 +68,8 @@ export async function GET(
       // propia inscripción y abría el grupo sin saber con quién lo lleva.
       return NextResponse.json({ ...sinContacto, enrollments: recortarRoster(roster, 'member'), viewer_scope: 'member' })
     }
-    return NextResponse.json({ ...sinContacto, enrollments: [], viewer_scope: 'none' })
+    // Inalcanzable: arriba se corta 'none'. Queda por exhaustividad del tipo.
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   } catch (error) {
     reportarError('GET /api/studies/groups/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

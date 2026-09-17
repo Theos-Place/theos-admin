@@ -20,9 +20,20 @@
  * cohorte que ya avanzó con ella.
  */
 
-/** Ventana de gracia. 24 horas: quien paga por SINPE en el momento sube el
- *  comprobante en minutos, y quien paga de noche tiene la mañana siguiente. */
-export const HORAS_DE_GRACIA = 24
+/**
+ * Ventana de gracia: 72 HORAS, iguales para todos.
+ *
+ * Eran 24. Se unificó en 72 el 2026-09-17 por decisión del usuario, y con eso
+ * TODOS los plazos del sistema dicen lo mismo: una inscripción a evento con
+ * comprobante rechazado ya se expiraba a las 72h, y el recordatorio de pago usa
+ * esa misma ventana (REMINDER_REJECTED_WINDOW_HOURS). Antes la matrícula de
+ * estudio era la única con 24, y nadie podía explicar por qué.
+ *
+ * No hay excepción para las inscripciones manuales del staff: 72 horas alcanzan
+ * para el caso que las motivaba —inscribir a alguien que va a pagar por SINPE
+ * después— sin necesitar una regla aparte que después haya que recordar.
+ */
+export const HORAS_DE_GRACIA = 72
 
 /**
  * ¿Se le suelta el cupo?
@@ -38,10 +49,21 @@ export function reservaExpirada(input: {
   /** Desde cuándo corre la gracia (ISO). Sale de `relojDeLaReserva`, NO del
    *  created_at de la matrícula: ver el comentario de esa función. */
   creadaEn: string
+  /**
+   * ¿Tiene un plan de pagos activo? Entonces NO se le suelta el cupo.
+   *
+   * Un plan parte el cobro en tractos con su propia fecha de vencimiento —el de
+   * Irina Morales vence el 30 de setiembre—, así que medir "horas desde que se
+   * creó el cobro" no dice nada: la persona está al día con lo que se acordó.
+   * Sin esta salida, el barrido desmatricularía justamente a quien negoció cómo
+   * pagar.
+   */
+  conPlanDePagos?: boolean
   ahora: Date
 }): boolean {
   if (input.status !== 'pendiente_de_pago') return false
   if (input.reviewStatus) return false
+  if (input.conPlanDePagos) return false
   const creada = Date.parse(input.creadaEn)
   if (!Number.isFinite(creada)) return false
   return input.ahora.getTime() - creada >= HORAS_DE_GRACIA * 3600_000
