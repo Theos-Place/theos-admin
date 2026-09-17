@@ -18,7 +18,12 @@ export function ChartCard({
     <div className={cn('rounded-2xl bg-surface-card p-3 sm:p-4 shadow-[var(--shadow-md)]', className)}>
       <div className="mb-2">
         <h3 className="text-sm font-bold text-navy font-display">{title}</h3>
-        {subtitle && <p className="text-[13px] text-navy-light/80 font-body mt-0.5 truncate">{subtitle}</p>}
+        {/* En mobile el subtítulo BAJA en vez de truncarse: ahí los gráficos van en
+            una sola columna, así que la altura despareja no molesta, y truncar
+            "Cómo se combinan los 3 criterios. El centro son los Discípulos
+            Multiplicadores." lo dejaba en tres palabras. De `sm` para arriba se
+            trunca como antes, para que las tarjetas de una fila queden parejas. */}
+        {subtitle && <p className="text-[13px] text-navy-light/80 font-body mt-0.5 sm:truncate">{subtitle}</p>}
       </div>
       {empty ? (
         <div className="flex items-center justify-center text-[13px] text-navy-light/80 font-body" style={{ height }}>

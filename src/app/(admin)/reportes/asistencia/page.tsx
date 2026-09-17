@@ -122,7 +122,7 @@ export default function ReporteAsistenciaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-5">
             <div className="hidden lg:block h-64 rounded-2xl bg-surface-card animate-pulse" />
             <div className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 {[0, 1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-surface-card animate-pulse" />)}
               </div>
               <div className="h-72 rounded-2xl bg-surface-card animate-pulse" />

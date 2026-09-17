@@ -47,7 +47,7 @@ export default function ReporteDiscipulosPage() {
           <p className="text-sm text-coral font-body">{error}</p>
         ) : (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               {[0, 1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-surface-card animate-pulse" />)}
             </div>
             <div className="h-72 rounded-2xl bg-surface-card animate-pulse" />
@@ -85,7 +85,7 @@ export default function ReporteDiscipulosPage() {
       </div>
 
       {/* Hero + criterios */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <KpiCard
           label="Discípulos Multiplicadores hoy"
           value={fmt(dm)}
