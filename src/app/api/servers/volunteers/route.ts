@@ -12,6 +12,21 @@ export async function POST(req: NextRequest) {
     await assignVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
+    // Entrar al Comité Dirigentes es volverse dirigente activo: se aplican los
+    // mismos bloqueos que en la pantalla de dirigentes, con su motivo, para que
+    // no salga un "Error interno" que no explica nada.
+    if (error instanceof Error && error.message === 'DIRIGENTE_NO_RECOMENDADO') {
+      return NextResponse.json({
+        error: 'No se puede agregar al Comité Dirigentes: está marcada como no recomendada para dar estudios.',
+        code: 'no_recomendado',
+      }, { status: 409 })
+    }
+    if (error instanceof Error && error.message === 'DIRIGENTE_EN_REVISION') {
+      return NextResponse.json({
+        error: 'No se puede agregar al Comité Dirigentes: su caso está en revisión. Eso lo resuelve la coordinación de dirigentes.',
+        code: 'dirigente_en_revision',
+      }, { status: 409 })
+    }
     reportarError('POST /api/servers/volunteers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

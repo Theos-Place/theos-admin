@@ -2,6 +2,7 @@ import { createAdminClient, type Insertable, type Updatable } from '@/lib/supaba
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 import { todayCR } from '@/lib/format'
+import { reportarFalla } from '@/lib/observabilidad'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -469,7 +470,19 @@ async function syncRolesForApprovedApplications(ids: string[], actorUserId?: str
     // Aprobar una aplicación mete al voluntario por el RPC `approve_applications`,
     // saltándose assignVolunteer. Si el puesto es del Comité Dirigentes hay que
     // sincronizar igual, o entrar por acá volvería a desalinear las listas.
-    await sincronizarDirigente(row.applicant_id, vacancy.position_id, true)
+    //
+    // ACÁ SÍ ES BEST-EFFORT, a diferencia de assignVolunteer: el RPC ya
+    // escribió y esto puede venir de un lote. Si la persona está "no
+    // recomendada" o "en revisión", tirar dejaría a medias las aprobaciones
+    // siguientes. Se reporta y se sigue: queda en Sentry y en los logs, y la
+    // persona queda en el comité para que la coordinación lo resuelva.
+    try {
+      await sincronizarDirigente(row.applicant_id, vacancy.position_id, true)
+    } catch (e) {
+      reportarFalla('aprobar aplicación: no se pudo activar como dirigente:', e, {
+        memberId: row.applicant_id, positionId: vacancy.position_id,
+      })
+    }
   }
 }
 
@@ -821,6 +834,32 @@ async function leQuedaOtroPuestoDeDirigente(memberId: string, exceptoPositionId:
 }
 
 /**
+ * Valida ANTES de escribir que meter a esta persona al Comité Dirigentes sea
+ * posible.
+ *
+ * Entrar al comité ES volverse dirigente activo, así que se aplican los mismos
+ * dos guards que la pantalla de dirigentes: "no recomendado para dar estudios"
+ * y "en revisión". Si no se validara acá, `setDirigenteActive` tiraría DESPUÉS
+ * del upsert del voluntario y el cambio quedaría a medias: la persona dentro
+ * del comité, sin ficha de dirigente ni rol, y la pantalla mostrando un "Error
+ * interno" que no explica nada.
+ */
+async function validarEntradaDeDirigente(memberId: string, positionId: string): Promise<void> {
+  if (!(await esPuestoDelComiteDirigentes(positionId))) return
+  const supabase = createAdminClient()
+  const [{ data: admin }, { data: ficha }] = await Promise.all([
+    supabase.from('member_admin_data').select('not_recommended_to_lead_studies').eq('member_id', memberId).maybeSingle(),
+    supabase.from('study_leaders').select('availability_status').eq('member_id', memberId).maybeSingle(),
+  ])
+  if ((admin as { not_recommended_to_lead_studies: boolean | null } | null)?.not_recommended_to_lead_studies) {
+    throw new Error('DIRIGENTE_NO_RECOMENDADO')
+  }
+  if ((ficha as { availability_status: string | null } | null)?.availability_status === 'en_revision') {
+    throw new Error('DIRIGENTE_EN_REVISION')
+  }
+}
+
+/**
  * Valida ANTES de escribir que sacar a esta persona del comité no la deje sin
  * rol en mitad de un grupo.
  *
@@ -845,6 +884,9 @@ async function sincronizarDirigente(memberId: string, positionId: string, entra:
 }
 
 export async function assignVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
+  // Antes de tocar nada: entrar al Comité Dirigentes es volverse dirigente
+  // activo, y hay dos motivos por los que eso se bloquea.
+  await validarEntradaDeDirigente(memberId, positionId)
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('volunteers')
