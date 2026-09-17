@@ -100,7 +100,7 @@ export type DbGroupEnriched = {
     grade: number | null
     /** Resultado del cierre: 'aprobado' o 'reprobado: <motivo>'. */
     notes: string | null
-    member: { first_name: string; last_name: string } | null
+    member: { first_name: string; last_name: string; phone?: string | null; birth_date?: string | null } | null
   }>
 }
 
@@ -464,6 +464,10 @@ export async function getStudyGroupsWithEnrollments(opts: { leaderMemberId?: str
   return all
 }
 
+// GRU-3: el participante trae `phone` y `birth_date` para la lista del
+// dirigente (contactar y felicitar). Salen del servidor SOLO para quien
+// corresponde: el recorte lo hace recortarRoster() en el GET, no la UI.
+// (El comentario va acá y no adentro del select: PostgREST no acepta `--`.)
 const GROUP_SELECT = `
   id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location,
   max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
@@ -476,7 +480,7 @@ const GROUP_SELECT = `
   co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone, email),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(
     id, member_id, status, grade, notes,
-    member:members!study_enrollments_member_id_fkey(first_name, last_name)
+    member:members!study_enrollments_member_id_fkey(first_name, last_name, phone, birth_date)
   )
 `
 

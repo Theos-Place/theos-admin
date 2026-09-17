@@ -88,6 +88,9 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
         enrollment_id: e.id,
         member_id: e.member_id,
         member_name: e.member ? `${e.member.first_name} ${e.member.last_name}`.trim() : '',
+        // GRU-3: llegan solo si el servidor los mandó (dirigente o gestión).
+        phone: e.member?.phone ?? null,
+        birth_date: e.member?.birth_date ?? null,
         status: mapParticipantStatus(e.status),
         // Resultado del cierre. Dos convenciones conviven en los datos y las dos
         // valen: el cierre de la app escribe status 'completed' + notes

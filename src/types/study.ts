@@ -49,6 +49,11 @@ export type GroupParticipant = {
   status: 'enrolled' | 'pending' | 'withdrawn' | 'en_revision'
   /** Resultado del cierre (solo en grupos finalizados): derivado de notes. */
   result?: 'aprobado' | 'reprobado' | null
+  /** GRU-3 · Contacto y cumpleaños del participante, para la lista del
+   *  dirigente y de gestión. Vienen en `undefined` para un estudiante: el
+   *  servidor no se los manda (recortarRoster). */
+  phone?: string | null
+  birth_date?: string | null
   grade: number | null
   attendance_pct: number
 }

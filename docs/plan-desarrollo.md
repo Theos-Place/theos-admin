@@ -813,7 +813,22 @@ terminó y de verdad no hay ficha. Revisar que ningún otro lugar use el mismo p
 Test del componente con los tres estados. tsc/lint/vitest al cierre.
 ```
 
-### [ ] GRU-3 · Detalle de grupo: lo que ve el estudiante y lo que ve el dirigente (pedido 2026-09-17)
+### [x] GRU-3 · Detalle de grupo: lo que ve el estudiante y lo que ve el dirigente — HECHO 2026-09-17
+
+La regla vive en `lib/studies/roster-por-alcance.ts` y el recorte lo hace el GET
+del grupo, no la UI: esconder una columna en pantalla no esconde el dato, viaja
+igual en el JSON.
+
+Dos cosas que salieron al hacerlo. (1) El estudiante NO veía a sus compañeros:
+el endpoint le devolvía solo su propia inscripción, así que el cambio no fue
+recortar sino AGREGAR la lista con nombres. (2) El bloqueo del perfil para el
+dirigente ya existía en el servidor —`canViewMemberProfile` exige módulo
+`miembros` más allá de 'own'—, así que lo único que faltaba era quitar el enlace,
+que llevaba a un 403. Hay un test que fija las dos cosas.
+
+Verificado contra un grupo real de 13 participantes: gestión y dirigente reciben
+`phone` y `birth_date`; el estudiante recibe solo `first_name` y `last_name`, sin
+`grade` ni `notes`.
 
 Reglas nuevas de visibilidad en el detalle de grupo:
 - **Estudiante**: solo info del grupo + lista de compañeros con NOMBRE. Nada
@@ -833,7 +848,8 @@ Autorización server-side además de UI — esconder tabs no basta.
 
 VISTA ESTUDIANTE (miembro matriculado en el grupo, sin rol de gestión ni ser su dirigente):
 - Ve: datos del grupo (nombre, horario, zona/ubicación, dirigente y su contacto —eso ya
-  se pidió antes—, fechas) y la lista de compañeros SOLO con nombre.
+  se pidió antes—, fechas) y la lista de compañeros SOLO con nombre. Explícito: al
+  estudiante NO se le muestran ni teléfono ni cumpleaños de nadie.
 - NO ve: tab de pasar asistencia, teléfonos/correos de compañeros, estados de pago, notas,
   ni ninguna acción administrativa. Verificar que los endpoints que devuelven la lista no
   manden esos campos a un estudiante (recortar en el server según quién pide, patrón de
@@ -848,7 +864,10 @@ VISTA DIRIGENTE (dirigente o co-dirigente del grupo, actual O histórico):
   requireRoles/requireModuleView del perfil: dirigente por sí solo NO abre perfiles.
 - Grupos PASADOS que dirigió: solo la lista (nombre, teléfono, cumpleaños), sin acciones.
 
-ROLES DE GESTIÓN (coordinador_estudios, admin, etc.): sin cambios, siguen viendo todo.
+ROLES DE GESTIÓN (coordinador_estudios, admin, etc.): siguen viendo todo, y ADEMÁS
+agregar las mismas dos columnas (teléfono y cumpleaños) a la lista de estudiantes que
+ellos ven en el detalle de grupo — hoy no las tienen a mano. Si la lista se exporta
+(XLSX/CSV), incluirlas en el export también.
 
 Tests: estudiante no recibe teléfonos ni ve tab de asistencia (assert sobre la respuesta
 del endpoint, no solo la UI); dirigente recibe teléfono+cumpleaños pero el perfil le da

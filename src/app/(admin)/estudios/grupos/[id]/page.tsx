@@ -12,6 +12,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { cn } from '@/lib/utils'
+import { permisosDelRoster, cumpleCorto } from '@/lib/studies/roster-por-alcance'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -511,7 +512,15 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const hayContactoDirigente = Boolean(
     group.leader_phone || group.leader_email || group.co_leader_phone || group.co_leader_email,
   )
-  const tabs = ['información', 'participantes', 'asistencia', 'comunicaciones']
+  // GRU-3: qué puede ver quien está mirando. La regla vive en
+  // lib/studies/roster-por-alcance.ts y el servidor ya recortó el payload — esto
+  // solo decide qué se dibuja.
+  const permisos = permisosDelRoster(group.viewer_scope ?? 'none')
+  // Al estudiante no se le ofrece la asistencia ni las comunicaciones del grupo:
+  // no son suyas.
+  const tabs = permisos.verAsistencia
+    ? ['información', 'participantes', 'asistencia', 'comunicaciones']
+    : ['información', 'participantes']
   const tabLabels: Record<string, string> = {
     participantes: 'Participantes',
     asistencia: 'Asistencia',
@@ -820,7 +829,15 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             <table className="w-full border-collapse min-w-[480px]">
               <thead>
                 <tr>
-                  {['Nombre', 'Estado', 'Asistencia', studyType?.requires_grade ? 'Nota' : '', 'Acciones'].filter(Boolean).map(h => (
+                  {[
+                    'Nombre',
+                    permisos.verTelefono ? 'Teléfono' : '',
+                    permisos.verCumple ? 'Cumpleaños' : '',
+                    'Estado',
+                    'Asistencia',
+                    studyType?.requires_grade ? 'Nota' : '',
+                    'Acciones',
+                  ].filter(Boolean).map(h => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
@@ -846,6 +863,23 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         </span>
                       </div>
                     </td>
+                    {/* GRU-3 · Teléfono y cumpleaños: para contactar y felicitar.
+                        Solo llegan al dirigente y a gestión; a un estudiante el
+                        servidor ni se los manda. */}
+                    {permisos.verTelefono && (
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">
+                        {p.phone
+                          ? <a href={`tel:${p.phone}`} className="hover:text-navy transition-colors">{p.phone}</a>
+                          : <span aria-hidden>—</span>}
+                      </td>
+                    )}
+                    {permisos.verCumple && (
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">
+                        {/* Día y mes, sin el año: para felicitar no hace falta, y
+                            así no se reparte la edad por toda la pantalla. */}
+                        {cumpleCorto(p.birth_date) ?? <span aria-hidden>—</span>}
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       {group.status === 'finalizado' ? (
                         <span className={cn(
@@ -924,7 +958,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                             Sacar del grupo
                           </button>
                         )}
-                        {!readOnly && (
+                        {/* GRU-3: el dirigente NO entra al perfil de sus
+                            estudiantes. El servidor ya se lo negaba
+                            (canViewMemberProfile pide módulo miembros más allá
+                            de 'own'), así que el enlace solo llevaba a un 403;
+                            ahora directamente no se ofrece. */}
+                        {permisos.verPerfil && (
                         <Link
                           href={`/miembros/${p.member_id}`}
                           className="rounded-lg px-2 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
