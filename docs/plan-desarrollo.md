@@ -746,7 +746,47 @@ tsc/lint/vitest al cierre.
 
 </details>
 
-### [ ] EVE-12 · Encargados de eventos con alcance por comité (pedido 2026-09-17)
+### [~] EVE-12 · Encargados de eventos con alcance por comité — ETAPA 1 HECHA 2026-09-17, BLOQUEADA
+
+**Diagnóstico hecho. NO se implementó: falta un dato sin el cual la regla rompe
+el check-in semanal de casi todas las sedes.**
+
+**1. ¿Se distingue el rol manual del automático?** SÍ, ya existe
+`member_roles.origen` ('manual' | 'automatico', con CHECK). **No hace falta la
+migración** que el prompt anticipaba. Hoy: 184 `encargado_eventos` activos con
+origen automático y 9 manuales.
+
+**2. El helper tampoco hay que inventarlo:** `lib/auth/events-scope.ts` ya
+existe con `eventViewerScope` ('admin' | 'manager' | 'none') y
+`requireEventAccess` lo aplica. El hueco está en `hasEventsModule(roles)`, que
+devuelve 'admin' a cualquiera con el rol sin mirar `origen`. Endpoints de
+eventos: 20 rutas; 11 ya pasan por `requireEventAccess`, 6 usan `requireRoles`
+con el rol directo (checkins, families, members, members/[memberId],
+onsite-charge, server-check) y son las que habría que migrar al helper.
+
+**3. EL BLOQUEADOR — eventos sin comité organizador.** De los 212 eventos de los
+últimos 3 meses, **175 no tienen comité**. Y desagregado por tipo:
+
+    charla         188 eventos ·  14 con comité   ← el problema
+    ayuda-social    10         ·  10
+    sports           6         ·   6
+    social           4         ·   4
+    campamento       2         ·   2
+    taller           2         ·   1
+
+Los 184 encargados automáticos vienen justamente de las SEDES (Meridiano Martes
+32, Pedregal Domingos 26, Pedregal Jueves 20, Antares 20…). Con la regla nueva
+perderían el check-in de **174 de las 188 charlas**, que es lo que hacen todas
+las semanas. La regla no se puede encender antes de asignar esos comités.
+
+**Salida propuesta:** asignar el comité de sede a cada charla por su título,
+reusando el diccionario de `lib/sedes-canonical.ts`. Medido: 45 de 184 matchean
+exacto y la mayoría del resto falla solo porque el canónico agrega el día
+("Charla Alajuela Jueves" vs comité "Sede Alajuela"). Quitando ese sufijo
+quedarían pocas por decidir a mano — las Youth son el caso dudoso: "Charla
+Pedregal Domingo Youth" no tiene comité propio (¿va a "Sede Pedregal Domingos"?).
+
+Falta decidir eso antes de seguir.
 
 Hoy el rol de eventos abre TODOS los eventos. La regla nueva: el rol asignado
 a mano sigue abriendo todo, pero el rol que llega automático por el puesto
