@@ -304,18 +304,25 @@ export default function ReporteAsistenciaPage() {
                             comparar la serie unida puede tener semanas que la
                             principal no tiene. Con la lista corta, los colores
                             se corrían y una semana parcial pintaba a otra. */}
-                        {datosSemanales.map(w => (
+                        {datosSemanales.map(w => {
+                          // TRES estados y no dos. La SELECCIONADA manda sobre
+                          // todo —es la que la persona acaba de tocar y la que
+                          // está mostrando el panel de abajo— y va en navy, que
+                          // no se confunde con ningún tono de coral.
                           // La semana parcial se marca con relleno claro Y borde
                           // punteado: solo con el relleno no llegaba a 3:1 y se
                           // perdía contra el blanco de la tarjeta.
-                          <Cell
-                            key={w.week}
-                            fill={w.partial ? PARCIAL_RELLENO : w.week === highlightWeek ? CORAL : CORAL_ATENUADO}
-                            stroke={w.partial ? PARCIAL_BORDE : undefined}
-                            strokeWidth={w.partial ? 1.5 : undefined}
-                            strokeDasharray={w.partial ? '3 2' : undefined}
-                          />
-                        ))}
+                          const activa = w.week === semanaSel?.week
+                          return (
+                            <Cell
+                              key={w.week}
+                              fill={activa ? NAVY : w.partial ? PARCIAL_RELLENO : w.week === highlightWeek ? CORAL : CORAL_ATENUADO}
+                              stroke={activa ? NAVY : w.partial ? PARCIAL_BORDE : undefined}
+                              strokeWidth={activa ? 2 : w.partial ? 1.5 : undefined}
+                              strokeDasharray={!activa && w.partial ? '3 2' : undefined}
+                            />
+                          )
+                        })}
                       </Bar>
                       {/* La sede comparada va como línea punteada teal: se lee
                           encima de las barras sin competir con el coral, y el

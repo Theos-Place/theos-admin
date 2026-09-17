@@ -520,3 +520,27 @@ body {
   background: #fff;
   cursor: zoom-in;
 }
+
+/* ─── Gráficos (Recharts) ────────────────────────────────────────────────────
+ *
+ * Recharts 3 le pone tabIndex al contenedor del gráfico para que se pueda
+ * recorrer con el teclado. El efecto secundario es que al hacer CLIC en una
+ * barra aparece el recuadro de foco del navegador rodeando el gráfico entero:
+ * un marco azul enorme que parece un error de la pantalla y que confunde con la
+ * selección real.
+ *
+ * Se quita solo para el foco por PUNTERO. Con :focus-visible —o sea, llegando
+ * por Tab— el anillo se mantiene y encima en coral de marca: el gráfico es
+ * operable con teclado y eso no se toca (AGENTS.md / accessibility.md).
+ */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus-visible {
+  outline: 2px solid var(--brand-coral, #D63E3D);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}

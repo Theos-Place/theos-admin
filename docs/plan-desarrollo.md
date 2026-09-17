@@ -794,6 +794,117 @@ ninguno) + test de un handler con 403. tsc/lint/vitest al cierre. DRY-RUN: si la
 requiere poblar la columna source, esa lista se aprueba antes de migrar.
 ```
 
+### [ ] UX-5 · Después del login: "Cargando…" en vez de "no hay cuenta asociada" (pedido 2026-09-17)
+
+Prompt para Claude Code:
+
+```
+FIX UX · Al entrar tras el login, mientras la página resuelve la sesión/ficha muestra
+"no hay cuenta asociada" y luego se corrige solo. Eso asusta: parece que la cuenta no
+existe.
+
+DIAGNÓSTICO: encontrar dónde se renderiza ese mensaje (¿layout admin? ¿hook de sesión/
+useMember?) y por qué aparece durante la carga: casi seguro el estado inicial es
+member=null y el componente no distingue "todavía cargando" de "cargó y no hay ficha".
+FIX: estado de tres valores (cargando | sin_cuenta | listo). Mientras carga → spinner o
+skeleton con "Cargando…"; el mensaje de "no hay cuenta asociada" SOLO cuando la consulta
+terminó y de verdad no hay ficha. Revisar que ningún otro lugar use el mismo patrón
+(buscar el texto del mensaje en src/ y arreglar todas las instancias).
+Test del componente con los tres estados. tsc/lint/vitest al cierre.
+```
+
+### [ ] GRU-3 · Detalle de grupo: lo que ve el estudiante y lo que ve el dirigente (pedido 2026-09-17)
+
+Reglas nuevas de visibilidad en el detalle de grupo:
+- **Estudiante**: solo info del grupo + lista de compañeros con NOMBRE. Nada
+  más: sin tab de asistencia, sin teléfonos, sin detalles administrativos.
+- **Dirigente**: la lista de estudiantes con nombre + **teléfono + fecha de
+  cumpleaños** (columnas nuevas), pero **nunca acceso al perfil** de la
+  persona (se elimina ese enlace/poder). Aplica igual a sus grupos pasados:
+  del histórico solo ve la lista, no perfiles.
+
+Prompt para Claude Code:
+
+```
+PERMISOS + UI · Detalle de grupo de estudio: vistas por rol
+
+PANTALLA: src/app/(admin)/estudios/grupos/[id]/page.tsx + los endpoints que la alimentan.
+Autorización server-side además de UI — esconder tabs no basta.
+
+VISTA ESTUDIANTE (miembro matriculado en el grupo, sin rol de gestión ni ser su dirigente):
+- Ve: datos del grupo (nombre, horario, zona/ubicación, dirigente y su contacto —eso ya
+  se pidió antes—, fechas) y la lista de compañeros SOLO con nombre.
+- NO ve: tab de pasar asistencia, teléfonos/correos de compañeros, estados de pago, notas,
+  ni ninguna acción administrativa. Verificar que los endpoints que devuelven la lista no
+  manden esos campos a un estudiante (recortar en el server según quién pide, patrón de
+  studies-scope.ts).
+
+VISTA DIRIGENTE (dirigente o co-dirigente del grupo, actual O histórico):
+- Ve la lista de estudiantes con: nombre, TELÉFONO y FECHA DE CUMPLEAÑOS (día y mes; el
+  año no hace falta para felicitar — incluirlo solo si ya se muestra en otros lados).
+- Puede pasar asistencia y cerrar (lo operativo de HOY se mantiene en grupos activos).
+- Se ELIMINA cualquier enlace/navegación de la lista al perfil del miembro (/miembros/[id])
+  y el server debe negarle ese endpoint si no tiene otro rol que se lo permita — revisar
+  requireRoles/requireModuleView del perfil: dirigente por sí solo NO abre perfiles.
+- Grupos PASADOS que dirigió: solo la lista (nombre, teléfono, cumpleaños), sin acciones.
+
+ROLES DE GESTIÓN (coordinador_estudios, admin, etc.): sin cambios, siguen viendo todo.
+
+Tests: estudiante no recibe teléfonos ni ve tab de asistencia (assert sobre la respuesta
+del endpoint, no solo la UI); dirigente recibe teléfono+cumpleaños pero el perfil le da
+403; gestión intacta. tsc/lint/vitest al cierre.
+```
+
+### [ ] NOT-2 · Campanita: cobro pendiente de matrícula + desmatrícula a las 24h (pedido 2026-09-17)
+
+Si tengo un cobro pendiente de un estudio (me matriculé y no adjunté
+comprobante, o me inscribieron manualmente), que la campanita me avise: tengo
+un pendiente y la matrícula dura 24 horas; si no, se desmatricula para liberar
+el cupo.
+
+**⚠️ Conflicto a resolver antes de correr**: la regla vigente es que el cron NO
+expira matrículas y que el cupo se libera a las 72h solo tras comprobante
+RECHAZADO. Esto introduce: sin comprobante → 24h y desmatrícula. Confirmar con
+Floriana si las 24h aplican también a inscripciones manuales (caso: Ari
+inscribe a alguien que va a pagar por SINPE después) y si conviven o se
+unifican con las 72h.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Notificación de cobro pendiente + desmatrícula automática a las 24h
+
+ANTES DE CODIFICAR: leé la regla vigente de pagos (matrícula efectiva de inmediato, cupo
+se libera a las 72h tras comprobante rechazado, cron no expira matrículas). Esta feature
+la MODIFICA: matrícula con pago requerido y SIN comprobante subido → 24 horas de plazo y
+desmatrícula automática. Reportá cómo queda el cuadro completo de reglas (sin comprobante
+= 24h; comprobante rechazado = 72h para resubir; beca 100% = sin plazo) y señalá cualquier
+contradicción que encontrés antes de implementar.
+
+PARTE 1 — CAMPANITA (notificación in-app, NO correo — EMAIL_SILENT_MODE aparte, esto es
+in-app y no depende de él):
+- Al crear una matrícula con pago requerido sin comprobante (auto-matrícula o inscripción
+  manual de staff), crear notificación para el miembro: "Tenés un pago pendiente de
+  [estudio]. Subí tu comprobante antes de [hora límite] o tu matrícula se liberará para
+  darle el cupo a otra persona", con link directo a Mis pagos.
+- Reutilizar el sistema de notificaciones existente de la campanita — REUTILIZAR, NO
+  INVENTAR. Si hay recordatorio intermedio barato (ej. a las 20h), agregarlo.
+
+PARTE 2 — DESMATRÍCULA AUTOMÁTICA:
+- Cron (patrón de vercel.json + CRON_SECRET + healthcheck, como los existentes): matrículas
+  con pago requerido, sin comprobante subido, sin beca aplicada y con más de 24h → cancelar
+  la matrícula, liberar el cupo, marcar el cobro como vencido/cancelado (no dejarlo
+  huérfano) y registrar en audit_log. Notificación in-app al miembro de que se liberó.
+- EXCLUIR: becas 100%, pagos ya en revisión (comprobante subido cuenta como cumplido
+  aunque no esté aprobado), matrículas migradas/históricas, y datos [prueba].
+- El plazo va en una constante configurable (HORAS_PLAZO_COMPROBANTE = 24) con comentario
+  de por qué.
+- DRY-RUN primero: modo lista que muestre a quiénes desmatricularía HOY con los datos
+  reales, para revisión antes de activar el cron.
+Tests: matrícula nueva genera notificación; a las 24h sin comprobante se cancela y libera
+cupo; con comprobante subido NO se toca; beca 100% NO se toca; idempotente. tsc/lint/vitest.
+```
+
 ## Fase 18 — Pedido el 2026-09-16
 
 ### [ ] AUD-2 · El historial de cambios no se puede ver desde ninguna pantalla
