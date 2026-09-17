@@ -2,6 +2,9 @@ import { toCurrency } from '@/lib/money'
 import { ADMIN_ONLY_STATUSES, type LeaderStatus } from '@/lib/studies/leader-admin-status'
 import { isPrematGroup, prematGroupError } from '@/lib/studies/premat-group'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
+import {
+  COMITE_DIRIGENTES, PUESTO_POR_DEFECTO, esPuestoDeDirigente,
+} from '@/lib/studies/comite-de-dirigentes'
 import { groupLocksLeader } from '@/lib/studies/leader-activation'
 import { isGroupFull, occupiesSpot, OCCUPYING_STATUSES } from '@/lib/studies/enrollment-capacity'
 import { isEnrollmentWindowOpen } from '@/lib/studies/enrollment-window'
@@ -606,28 +609,42 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
   return (data ?? []) as unknown as DbLeaderEnriched[]
 }
 
-/** Dirigentes ACTIVOS = servidores activos del comité "Comité de Dirigentes".
- *  Fuente de verdad para el estado "activo" de un dirigente. */
+/** Busca el comité. Tira si no está: devolver null dejaba la pantalla de
+ *  dirigentes en blanco sin que nadie se enterara, que es justo como el nombre
+ *  equivocado pasó meses sin detectarse. */
+async function idDelComiteDirigentes(
+  supabase: ReturnType<typeof createAdminClient>,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('areas').select('id').eq('area_type', 'committee').eq('name', COMITE_DIRIGENTES).maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error(`COMITE_DIRIGENTES_NO_EXISTE: no hay un comité llamado "${COMITE_DIRIGENTES}"`)
+  return (data as { id: string }).id
+}
+
+/** Dirigentes ACTIVOS = servidores activos del Comité Dirigentes en un puesto
+ *  de dirigente. Fuente de verdad para el estado "activo" de un dirigente. */
 export async function getActiveDirigentes(): Promise<Array<{ member_id: string; member_name: string }>> {
   const supabase = createAdminClient()
-  const { data: area, error: aErr } = await supabase
-    .from('areas')
-    .select('id')
-    .eq('area_type', 'committee')
-    .ilike('name', 'Comité de Dirigentes')
-    .maybeSingle()
-  if (aErr) throw aErr
-  if (!area) return []
+  const areaId = await idDelComiteDirigentes(supabase)
 
   const { data, error } = await supabase
     .from('volunteers')
-    .select('member_id, member:members(first_name, last_name), service_positions!inner(area_id)')
+    .select('member_id, member:members(first_name, last_name), service_positions!inner(area_id, title)')
     .eq('status', 'active')
-    .eq('service_positions.area_id', (area as { id: string }).id)
+    .eq('service_positions.area_id', areaId)
   if (error) throw error
 
   const seen = new Map<string, string>()
-  for (const v of (data ?? []) as Array<{ member_id: string; member: { first_name: string; last_name: string } | null }>) {
+  for (const v of (data ?? []) as unknown as Array<{
+    member_id: string
+    member: { first_name: string; last_name: string } | null
+    service_positions: { title: string | null } | { title: string | null }[] | null
+  }>) {
+    // El comité tiene puestos que NO dan estudios (Encargado, Colaborador de
+    // retroalimentación). Solo los "Dirigente*" cuentan como dirigente activo.
+    const sp = Array.isArray(v.service_positions) ? v.service_positions[0] : v.service_positions
+    if (!esPuestoDeDirigente(sp?.title)) continue
     if (!seen.has(v.member_id)) {
       seen.set(v.member_id, v.member ? `${v.member.first_name} ${v.member.last_name}`.trim() : '')
     }
@@ -635,8 +652,60 @@ export async function getActiveDirigentes(): Promise<Array<{ member_id: string; 
   return [...seen].map(([member_id, member_name]) => ({ member_id, member_name }))
 }
 
+
+/**
+ * Mete a la persona en el Comité Dirigentes como voluntaria activa.
+ *
+ * Si YA tuvo un puesto de dirigente ahí (aunque esté inactivo) se reactiva ESE,
+ * no se la muda: así quien era "Dirigente Madrid" no termina de "Dirigente CR"
+ * por haber pasado por la pantalla de dirigentes. Solo si no tiene ninguno se
+ * usa el puesto por defecto.
+ *
+ * Antes se tomaba `posIds[0]` —el primer puesto que devolviera la consulta, sin
+ * criterio— y el comité tiene cinco: podía dejarla de "Encargado Dirigentes".
+ */
+async function ponerEnElComiteDirigentes(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberId: string,
+): Promise<void> {
+  const areaId = await idDelComiteDirigentes(supabase)
+  const { data: positions } = await supabase
+    .from('service_positions').select('id, title').eq('area_id', areaId)
+  const puestos = ((positions ?? []) as Array<{ id: string; title: string | null }>)
+    .filter(p => esPuestoDeDirigente(p.title))
+  if (puestos.length === 0) return
+
+  const { data: previos } = await supabase
+    .from('volunteers').select('position_id').eq('member_id', memberId)
+    .in('position_id', puestos.map(p => p.id))
+  const yaTenia = ((previos ?? []) as Array<{ position_id: string }>)[0]?.position_id
+  const destino = yaTenia ?? (puestos.find(p => p.title === PUESTO_POR_DEFECTO) ?? puestos[0]).id
+
+  const { error } = await supabase.from('volunteers').upsert(
+    { member_id: memberId, position_id: destino, status: 'active' },
+    { onConflict: 'member_id,position_id' },
+  )
+  if (error) throw error
+}
+
+/** La saca del comité: todos sus puestos de dirigente pasan a inactivo. */
+async function sacarDelComiteDirigentes(
+  supabase: ReturnType<typeof createAdminClient>,
+  memberId: string,
+): Promise<void> {
+  const areaId = await idDelComiteDirigentes(supabase)
+  const { data: positions } = await supabase
+    .from('service_positions').select('id, title').eq('area_id', areaId)
+  const ids = ((positions ?? []) as Array<{ id: string; title: string | null }>)
+    .filter(p => esPuestoDeDirigente(p.title)).map(p => p.id)
+  if (ids.length === 0) return
+  const { error } = await supabase.from('volunteers')
+    .update({ status: 'inactive' }).eq('member_id', memberId).in('position_id', ids)
+  if (error) throw error
+}
+
 /** Marca a un miembro como dirigente. Crea la designación (study_leaders).
- *  Si `active`, además lo agrega como servidor activo al Comité de Dirigentes
+ *  Si `active`, además lo agrega como servidor activo al Comité Dirigentes
  *  (puesto "Dirigente"). Inactivo = solo designación, sin comité. */
 export async function addDirigente(memberId: string, active: boolean): Promise<void> {
   const supabase = createAdminClient()
@@ -652,21 +721,7 @@ export async function addDirigente(memberId: string, active: boolean): Promise<v
   )
   if (lErr) throw lErr
 
-  if (active) {
-    const { data: area } = await supabase
-      .from('areas').select('id').eq('area_type', 'committee').ilike('name', 'Comité de Dirigentes').maybeSingle()
-    if (area) {
-      const { data: pos } = await supabase
-        .from('service_positions').select('id').eq('area_id', (area as { id: string }).id).eq('is_active', true).limit(1).maybeSingle()
-      if (pos) {
-        const { error: vErr } = await supabase.from('volunteers').upsert(
-          { member_id: memberId, position_id: (pos as { id: string }).id, status: 'active' },
-          { onConflict: 'member_id,position_id' },
-        )
-        if (vErr) throw vErr
-      }
-    }
-  }
+  if (active) await ponerEnElComiteDirigentes(supabase, memberId)
 }
 
 /** Ids (de `memberIds`) marcados como "no recomendado para dar estudios"
@@ -703,7 +758,7 @@ async function enRevisionIds(
 }
 
 /** Activa/desactiva manualmente a un dirigente. Estado = servidor activo en el
- *  Comité de Dirigentes. ACTIVAR: study_leaders.is_active + voluntario activo del
+ *  Comité Dirigentes. ACTIVAR: study_leaders.is_active + voluntario activo del
  *  comité + rol 'dirigente'. DESACTIVAR: study_leaders inactivo + sale del comité
  *  (voluntariado inactive) + se revoca el rol 'dirigente'. No pisa su config.
  *  Guard: no se puede ACTIVAR a alguien marcado "no recomendado para dar
@@ -747,29 +802,8 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
     if (error) throw error
   }
 
-  const { data: area } = await supabase
-    .from('areas').select('id').eq('area_type', 'committee').ilike('name', 'Comité de Dirigentes').maybeSingle()
-  if (!area) return
-  const areaId = (area as { id: string }).id
-  const { data: positions } = await supabase
-    .from('service_positions').select('id').eq('area_id', areaId)
-  const posIds = ((positions ?? []) as Array<{ id: string }>).map(p => p.id)
-
-  if (active) {
-    const activePos = posIds[0]
-    if (activePos) {
-      const { error } = await supabase.from('volunteers').upsert(
-        { member_id: memberId, position_id: activePos, status: 'active' },
-        { onConflict: 'member_id,position_id' },
-      )
-      if (error) throw error
-    }
-  } else if (posIds.length > 0) {
-    const { error } = await supabase.from('volunteers')
-      .update({ status: 'inactive' })
-      .eq('member_id', memberId).in('position_id', posIds)
-    if (error) throw error
-  }
+  if (active) await ponerEnElComiteDirigentes(supabase, memberId)
+  else await sacarDelComiteDirigentes(supabase, memberId)
 
   // Rol 'dirigente' en member_roles: se asigna al activar y se revoca al desactivar.
   const { assignMemberRole, revokeMemberRole } = await import('./members')
@@ -927,7 +961,7 @@ export async function updatePlan(id: string, patch: Partial<PlanWriteInput>): Pr
 
 // Grupos
 /** D1 / Punto 1: al asignarle un grupo a un dirigente, pasa a ACTIVO. La regla:
- *  activo = voluntario activo del Comité de Dirigentes. Por eso, además de
+ *  activo = voluntario activo del Comité Dirigentes. Por eso, además de
  *  study_leaders.is_active, se agrega al comité (igual que setDirigenteActive).
  *  Nunca revierte a inactivo automáticamente. */
 async function activateLeaders(
