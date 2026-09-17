@@ -233,10 +233,17 @@ export default function CommitteeDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ position_id, member_id }),
       })
-      if (!res.ok) throw new Error('disconnect failed')
+      if (!res.ok) {
+        // El servidor manda el motivo (p. ej. "tiene un grupo de estudio en
+        // curso"). Tragárselo y decir "intentá de nuevo" hacía que la persona
+        // reintentara para siempre sin saber qué pasaba.
+        const d = await res.json().catch(() => null)
+        toast(d?.error ?? 'No se pudo desvincular al servidor. Intentá de nuevo.', 'error')
+        return
+      }
       await refetch()
     } catch {
-      toast('No se pudo desconectar al servidor. Intentá de nuevo.', 'error')
+      toast('No se pudo desvincular al servidor. Intentá de nuevo.', 'error')
     }
   }
 
@@ -294,7 +301,13 @@ export default function CommitteeDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ position_id: positionId, member_id: memberId }),
       })
-      if (!res.ok) throw new Error('add position failed')
+      if (!res.ok) {
+        // Agregar a un puesto de dirigente puede rechazarse con su motivo (p. ej.
+        // "está en revisión"): se muestra ese, no un "intentá de nuevo".
+        const d = await res.json().catch(() => null)
+        toast(d?.error ?? 'No se pudo agregar el puesto. Intentá de nuevo.', 'error')
+        return
+      }
       await refetch()
       toast(`Puesto agregado a ${nombre}.`, 'success')
     } catch {
@@ -321,7 +334,20 @@ export default function CommitteeDetailPage() {
     }
   }
 
-  // Cambiar puesto = baja del puesto actual + alta en el nuevo (newPosition es el position_id destino).
+  /**
+   * Cambiar puesto = ALTA en el nuevo y después baja del viejo. En ese orden.
+   *
+   * Antes iba al revés y tenía dos problemas. El resultado del DELETE se
+   * ignoraba —`await fetch(...)` sin mirar `res.ok`—, así que si la baja se
+   * rechazaba igual se hacía el alta y la persona quedaba en LOS DOS puestos.
+   * Y entre una llamada y la otra quedaba sin ningún puesto.
+   *
+   * Dar de alta primero también arregla el caso de los dirigentes: mover a
+   * alguien de "Dirigente CR" a "Dirigente Madrid" ya no lo desactiva, porque
+   * cuando se procesa la baja ya tiene el puesto nuevo. Y moverlo a un puesto
+   * que NO es de dirigente sigue bloqueado si está dando un grupo, que es lo
+   * correcto.
+   */
   async function updateMemberPosition() {
     if (!changePositionTarget || !newPosition) return
     const { member_id, position_id: oldPositionId } = changePositionTarget
@@ -330,19 +356,31 @@ export default function CommitteeDetailPage() {
     setNewPosition('')
     if (newPositionId === oldPositionId) return
     try {
-      if (oldPositionId) {
-        await fetch('/api/servers/volunteers', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ position_id: oldPositionId, member_id }),
-        })
-      }
-      const res = await fetch('/api/servers/volunteers', {
+      const alta = await fetch('/api/servers/volunteers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ position_id: newPositionId, member_id }),
       })
-      if (!res.ok) throw new Error('change position failed')
+      if (!alta.ok) {
+        const d = await alta.json().catch(() => null)
+        toast(d?.error ?? 'No se pudo cambiar el puesto del servidor.', 'error')
+        return
+      }
+      if (oldPositionId) {
+        const baja = await fetch('/api/servers/volunteers', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position_id: oldPositionId, member_id }),
+        })
+        if (!baja.ok) {
+          // El alta ya se hizo: queda en los dos puestos y hay que decirlo, no
+          // dejar a alguien creyendo que el cambio salió limpio.
+          const d = await baja.json().catch(() => null)
+          toast(`Quedó en el puesto nuevo, pero no se pudo quitar del anterior. ${d?.error ?? ''}`.trim(), 'error')
+          await refetch()
+          return
+        }
+      }
       await refetch()
     } catch {
       toast('No se pudo cambiar el puesto del servidor. Revisá su asignación e intentá de nuevo.', 'error')
