@@ -14,10 +14,18 @@
   · `report-snapshots` **SÍ debe pingear** — decidido e implementado 2026-08-06: su modo de
   fallo es silencioso (los reportes siguen abriendo, con datos viejos). Ya no queda ningún
   cron sin ping, y hay un test que lo vigila (`src/lib/health.test.ts`).
-- [ ] Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`).
+- [ ] Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`) — **solo falta pegar el
+  DSN**. El 2026-09-16 se cerró el hueco que lo volvía inútil: las 338 rutas de /api
+  atrapaban su propio error y devolvían un 500, así que Next nunca veía la excepción y
+  `onRequestError` no disparaba. Ahora todas pasan por `reportarError`/`reportarFalla`
+  (`src/lib/observabilidad.ts`), más 22 fallos silenciosos de `src/lib`. Sin DSN todo eso
+  es no-op, igual que antes. Crear el proyecto en sentry.io (plataforma Next.js) y pegar
+  el mismo DSN en las dos variables, solo en Production; después redeploy y verificar con
+  un error de prueba ANTES de apagar Observability Plus.
 - [ ] Copiar las env vars de Supabase a los deploys **Preview** de Vercel (hoy solo están en Production y los previews fallan).
 - [ ] Confirmar el SMTP de Supabase Auth.
-- [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase.
+- [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase (lo sigue
+  reportando el linter: `auth_otp_long_expiry`, 2026-09-16).
 
 ## Backlog (fases siguientes, requieren definición de producto)
 
@@ -674,3 +682,87 @@ pero tampoco tocar nada que dispare correos masivos.
 Actualizar la infografía/tutorial "Tu primera vez en el sistema" en /ayuda si el flujo
 cambia. Probar el camino completo con un usuario de prueba. tsc/lint/vitest al cierre.
 ```
+
+## Fase 18 — Pedido el 2026-09-16
+
+### [ ] AUD-2 · El historial de cambios no se puede ver desde ninguna pantalla
+
+**El caso que lo pidió.** Preguntaron quién había movido a Pamela Fonseca entre
+dos grupos de SCJ y cuándo. La respuesta estaba en la base, pero llegar a ella
+necesitó escribir un script: no hay ninguna pantalla donde ver qué le pasó a una
+persona, a un pago o a una matrícula.
+
+**Lo que hoy tenemos y no se usa.** `audit_log` tiene 370 mil filas y pesa
+315 MB, el 65% de la base entera. La app lo consulta en UN solo lugar:
+`getRecentActivity()` (dashboard.ts), que trae los últimos 10 por fecha para el
+feed de actividad. Nada más. Es una tabla de solo escritura.
+
+**Por qué ahora sí vale la pena.** Hasta el 2026-09-16 el log no servía ni
+aunque se mirara: `log_changes` guardaba `auth.uid()`, que con la llave de
+servicio es siempre NULL, así que 369.772 de 370.002 filas no tienen autor.
+Desde la migración `20260916190000` (más `20260917000000`, que le quitó el
+bloque EXCEPTION que la hacía 4× más lenta) el actor sí queda registrado. O sea:
+el dato útil empieza hoy.
+
+**Qué hacer.**
+
+1. Panel de historial en el detalle de una persona, un pago y una matrícula.
+   Leer de `audit_log` por `entity_type` + `entity_id`, más reciente primero.
+2. Renderizar el diff de forma legible. El dato ya viene acotado a lo que
+   cambió (AUD-1): `old: {"birth_date":"1965-09-09"} new: {"birth_date":null}`.
+   Traducir los nombres de columna a etiquetas humanas y formatear fechas y
+   montos; un JSON crudo no lo lee nadie.
+3. Resolver el nombre de quien hizo el cambio. `actor_id` referencia
+   `auth.users`, así que el puente es `members.auth_user_id` (ver
+   `resolverNombresDeQuienCancelo` en `queries/scholarships.ts`, que ya hace
+   exactamente eso). Sin actor → "el sistema".
+4. Permisos: es información sensible. Restringir con `requireModuleView` del
+   módulo correspondiente, no dejarlo abierto a cualquier sesión.
+
+**Rendimiento — medido el 2026-09-16, no estimar.** El índice es
+`(entity_type, entity_id)` y una consulta que filtra SOLO por `entity_id` no lo
+puede aprovechar: **1.301 ms en frío y 2.278 buffers para traer 7 filas**. Con
+un índice por `entity_id` solo baja a **4 buffers**. Ese índice NO se agregó
+todavía a propósito: hoy costaría en cada escritura para una consulta que nadie
+hace. Va junto con esta pantalla, no antes. Si la pantalla filtra por las dos
+columnas (`entity_type` + `entity_id`), el índice actual ya alcanza y no hace
+falta agregar nada — medirlo antes de decidir.
+
+**Dos cosas de retención que hay que resolver acá.**
+
+- `prune_audit_log()` borra todo lo de más de 90 días (pg_cron, 04:00 UTC). Con
+  el autor recién guardándose desde hoy, **el historial útil solo llegará hasta
+  diciembre de 2026**. Si el historial va a ser una función del producto, hay que
+  decidir la retención antes de que se venza lo primero.
+- Las cargas masivas deberían correr con el trigger apagado. 294.613 de las
+  370 mil filas son del reimport de estudios del 18-jul (223.601 en un solo
+  día), no le sirven a nadie para auditar y empujan lo útil fuera de la ventana
+  de 90 días. Eso se drena solo el 16-oct-2026, pero vuelve con el próximo
+  import.
+
+
+### [ ] SEC-3 · Warnings del linter de Supabase (reportados 2026-09-16)
+
+Cinco avisos de seguridad. **Ninguno explica lentitud** —se revisaron el mismo día
+que se reportó el sistema lento y la causa era otra (ver el commit de
+`20260917000000`)—, pero valen por sí solos.
+
+1. **`merge_no_copia` sin `search_path`.** Es el único de los tres que es
+   trivial: `alter function ... set search_path to 'public'`. Todas las demás
+   funciones del esquema ya lo tienen.
+2. **`member_por_external_id(text)` es SECURITY DEFINER y la puede llamar
+   `anon`** por `/rest/v1/rpc/`. Ésta es la que importa: devuelve la ficha que
+   corresponde a un id de CCB, o sea datos de una persona, y hoy la puede
+   invocar cualquiera sin sesión probando ids. Es SECURITY DEFINER a propósito
+   (tiene que ver fichas inactivas para resolver las fusionadas), así que la
+   salida es `revoke execute ... from anon, authenticated` y dejarla solo para
+   `service_role`, que es como la llama la app. Verificar antes que ningún
+   cliente la invoque directo.
+3. **`report_charla_attendance()` con el mismo problema.** Agrega asistencia de
+   toda la organización; que la pueda pedir `anon` no tiene sentido. Mismo
+   `revoke`. OJO: `fetchAllRpc` la llama paginada desde el servidor con la
+   llave de servicio, así que revocarle a `anon` y `authenticated` no rompe la
+   app — confirmarlo corriendo el reporte después.
+
+Cerrar junto con **DAT-9**, que es sobre la misma función
+`member_por_external_id` y hoy está sin llamadores en el código.
