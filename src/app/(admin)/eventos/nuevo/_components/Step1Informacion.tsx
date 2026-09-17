@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { type EventType } from '@/data/event-config'
 import { useEventTypes } from '@/hooks/useEventTypes'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
+import { useMiAlcanceDeEventos } from '@/lib/events/use-mi-alcance'
 import { inputCls, ICON_MAP, FieldLabel, Toggle } from './shared'
 
 interface Step1Props {
@@ -42,6 +43,12 @@ export function Step1Informacion({
   onFlyerDragOver,
   onFlyerRemove,
 }: Step1Props) {
+  // EVE-12: quien tiene el rol de eventos por su puesto solo puede poner de
+  // organizador a SUS comités; el servidor rechaza el resto con 403. Ofrecerle
+  // los demás sería ofrecerle un error.
+  const miAlcance = useMiAlcanceDeEventos()
+  const comitesPermitidos = miAlcance?.alcance === 'comites' ? miAlcance.comites : undefined
+
   const activeEventTypes = useEventTypes() // catálogo real de la BD (solo activos)
   return (
     <div className="card py-5 px-6 w-full">
@@ -95,6 +102,7 @@ export function Step1Informacion({
           <CommitteeMultiSelect
             value={organizing_committee_ids}
             onChange={onCommitteesChange}
+            soloEstos={comitesPermitidos}
           />
         </div>
         <div>

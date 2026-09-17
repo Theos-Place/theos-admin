@@ -1454,3 +1454,38 @@ export async function revokeEventManager(eventId: string, memberId: string): Pro
     .delete().eq('event_id', eventId).eq('member_id', memberId)
   if (error) throw error
 }
+
+/**
+ * EVE-12 · Los datos que necesita `alcanceDeEventos` para decidir hasta dónde
+ * llega el rol de eventos de esta persona.
+ *
+ * Va en UNA consulta por cosa y con la FK explícita: el embed
+ * `service_positions → areas` es AMBIGUO (hay dos, `area_id` y `base_area_id`)
+ * y sin nombrarla PostgREST devuelve "more than one relationship was found" —
+ * que en un `catch` silencioso se vería como "no tiene ningún comité", o sea
+ * como quitarle el permiso a todo el mundo.
+ */
+export async function datosDeAlcanceDeEventos(memberId: string | null): Promise<{
+  rolesAutomaticos: string[]
+  comitesDeSusPuestos: string[]
+}> {
+  if (!memberId) return { rolesAutomaticos: [], comitesDeSusPuestos: [] }
+  const supabase = createAdminClient()
+  const [rolesRes, puestosRes] = await Promise.all([
+    supabase.from('member_roles')
+      .select('role').eq('member_id', memberId).eq('is_active', true).eq('origen', 'automatico'),
+    supabase.from('volunteers')
+      .select('position:service_positions!inner(area_id, area:areas!service_positions_area_id_fkey(area_type))')
+      .eq('member_id', memberId).eq('status', 'active'),
+  ])
+  if (rolesRes.error) throw rolesRes.error
+  if (puestosRes.error) throw puestosRes.error
+  type Fila = { position: { area_id: string; area: { area_type: string } | null } | null }
+  const comites = ((puestosRes.data ?? []) as unknown as Fila[])
+    .filter(f => f.position?.area?.area_type === 'committee')
+    .map(f => f.position!.area_id)
+  return {
+    rolesAutomaticos: ((rolesRes.data ?? []) as Array<{ role: string }>).map(r => r.role),
+    comitesDeSusPuestos: [...new Set(comites)],
+  }
+}

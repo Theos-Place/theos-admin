@@ -13,11 +13,23 @@ interface CommitteeMultiSelectProps {
   /** AUD-1 · id del input de búsqueda, para que un <label htmlFor> de afuera
    *  quede asociado de verdad. */
   inputId?: string
+  /**
+   * EVE-12 · Limita la lista a estos comités. Se usa con quien tiene el rol de
+   * eventos por su PUESTO: el servidor le rechaza crear un evento a nombre de
+   * otro comité, así que ofrecérselos sería ofrecerle un 403.
+   *
+   * `undefined` = sin límite (dirección, admin y el rol puesto a mano).
+   */
+  soloEstos?: readonly string[]
 }
 
 /** Buscador de comités con selección múltiple (chips). value = ids de áreas-comité. */
-export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar comité…', inputId }: CommitteeMultiSelectProps) {
-  const { adminCommittees } = useOrg()
+export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar comité…', inputId, soloEstos }: CommitteeMultiSelectProps) {
+  const { adminCommittees: todos } = useOrg()
+  const adminCommittees = useMemo(
+    () => (soloEstos ? todos.filter(c => soloEstos.includes(c.id)) : todos),
+    [todos, soloEstos],
+  )
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)

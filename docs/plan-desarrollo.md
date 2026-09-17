@@ -746,93 +746,52 @@ tsc/lint/vitest al cierre.
 
 </details>
 
-### [~] EVE-12 · Encargados de eventos con alcance por comité — ETAPA 1 HECHA 2026-09-17, BLOQUEADA
+### [x] EVE-12 · Encargados de eventos con alcance por comité — HECHO 2026-09-17
 
-**Diagnóstico hecho. NO se implementó: falta un dato sin el cual la regla rompe
-el check-in semanal de casi todas las sedes.**
+El rol de eventos ya no abre todos los eventos. El que se pone A MANO sigue
+abriendo todo (9 personas); el que llega por el PUESTO —184 personas, se los dio
+`position-role-sync` por ocupar logística, bienvenida o información en el comité
+de su sede— solo alcanza los eventos donde alguno de sus comités es organizador.
 
-**1. ¿Se distingue el rol manual del automático?** SÍ, ya existe
-`member_roles.origen` ('manual' | 'automatico', con CHECK). **No hace falta la
-migración** que el prompt anticipaba. Hoy: 184 `encargado_eventos` activos con
-origen automático y 9 manuales.
+La regla vive en `lib/auth/alcance-de-eventos.ts` (pura, con tests) y la aplica
+`requireEventAccess`, que es la única puerta. Los seis endpoints que autorizaban
+con el rol suelto —checkins, families, members, members/[memberId],
+onsite-charge y server-check— pasaron al guard por evento. Un test recorre el
+directorio `api/events/[id]` y falla si aparece una ruta nueva con
+`requireRoles`, con una lista corta de exentas y su razón.
 
-**2. El helper tampoco hay que inventarlo:** `lib/auth/events-scope.ts` ya
-existe con `eventViewerScope` ('admin' | 'manager' | 'none') y
-`requireEventAccess` lo aplica. El hueco está en `hasEventsModule(roles)`, que
-devuelve 'admin' a cualquiera con el rol sin mirar `origen`. Endpoints de
-eventos: 20 rutas; 11 ya pasan por `requireEventAccess`, 6 usan `requireRoles`
-con el rol directo (checkins, families, members, members/[memberId],
-onsite-charge, server-check) y son las que habría que migrar al helper.
+**Etapa 1 (el dato).** No se podía encender sin él: 174 de 188 charlas no decían
+de quién eran, así que la regla le quitaba a esas 184 personas justamente el
+check-in que hacen cada semana. Se etiquetaron 170 charlas por su título con
+`lib/events/comite-de-la-charla.ts`, aprobadas antes de escribir. Hoy 184 de 185
+eventos de los últimos 90 días tienen comité.
 
-**3. EL BLOQUEADOR — eventos sin comité organizador.** De los 212 eventos de los
-últimos 3 meses, **175 no tienen comité**. Y desagregado por tipo:
+**Las Youth van todas al Comité Youth**, que ya existía con cinco puestos.
+Llegué a crear tres comités Youth aparte (Pedregal Domingo, Pedregal Miércoles y
+Cartago) y fue un error: partía en tres un equipo que es uno solo y dejaba a esos
+cinco sin alcance sobre ninguna de sus 28 charlas. Se borraron el mismo día.
 
-    charla         188 eventos ·  14 con comité   ← el problema
-    ayuda-social    10         ·  10
-    sports           6         ·   6
-    social           4         ·   4
-    campamento       2         ·   2
-    taller           2         ·   1
+Medido antes de encender (últimos 90 días): **nadie queda en cero**. Cada quien
+alcanza entre 9 y 42 eventos, los de su sede. Verificado después con personas
+reales: Natalia (Sede Meridiano Martes) opera 3 de 58 charlas; Mariana (Comité
+Youth) las 7 Youth de las tres sedes; Finanzas, con el rol manual, las 58.
 
-Los 184 encargados automáticos vienen justamente de las SEDES (Meridiano Martes
-32, Pedregal Domingos 26, Pedregal Jueves 20, Antares 20…). Con la regla nueva
-perderían el check-in de **174 de las 188 charlas**, que es lo que hacen todas
-las semanas. La regla no se puede encender antes de asignar esos comités.
+Dos huecos que aparecieron al implementar y se cerraron:
 
-**Salida propuesta:** asignar el comité de sede a cada charla por su título,
-reusando el diccionario de `lib/sedes-canonical.ts`. Medido: 45 de 184 matchean
-exacto y la mayoría del resto falla solo porque el canónico agrega el día
-("Charla Alajuela Jueves" vs comité "Sede Alajuela"). Quitando ese sufijo
-quedarían pocas por decidir a mano — las Youth son el caso dudoso: "Charla
-Pedregal Domingo Youth" no tiene comité propio (¿va a "Sede Pedregal Domingos"?).
+- **Crear un evento a nombre de otro comité** esquivaba la regla entera: bastaba
+  poner "Sede Cartago" de organizador. El POST rechaza con 403 en vez de
+  recortar la lista en silencio, y además exige elegir comité.
+- **Editar el evento propio y cambiarle el organizador** era poder firmarle un
+  evento a otra sede. El PUT valida los comités nuevos contra el alcance.
 
-Falta decidir eso antes de seguir.
+**Pendiente operativo:** el taller **"Entre Mujeres"** es el único evento sin
+comité organizador, así que hoy solo lo operan los roles manuales y dirección.
+Asignarle comité desde la pantalla del evento lo resuelve.
 
-Hoy el rol de eventos abre TODOS los eventos. La regla nueva: el rol asignado
-a mano sigue abriendo todo, pero el rol que llega automático por el puesto
-(position-role-sync) solo da edición sobre los eventos donde el comité de la
-persona es organizador (ej. bienvenida de Alajuela → solo eventos de Alajuela).
-
-Prompt para Claude Code:
-
-```
-PERMISOS · Eventos: alcance por comité para el rol automático de eventos
-
-REGLA DE NEGOCIO:
-- Rol de eventos asignado MANUALMENTE → sin cambio: ve y edita todos los eventos.
-- Rol de eventos otorgado AUTOMÁTICAMENTE por el puesto (position-role-sync) → solo puede
-  EDITAR y operar (check-in, inscripciones, etc.) los eventos donde alguno de SUS comités
-  (los de sus puestos activos) esté en event_organizing_committees. Los demás eventos:
-  solo lectura, como cualquier miembro (lo que ya vea todo el mundo del calendario).
-
-ETAPA 1 — DIAGNÓSTICO (reportar antes de codificar):
-1. ¿Cómo distingue hoy el sistema un rol manual de uno que puso position-role-sync?
-   (¿member_roles tiene source/granted_by? Si NO hay forma de distinguirlos, proponer la
-   migración mínima —una columna source 'manual'|'puesto'— y cómo poblarla: los que
-   coinciden con un puesto activo que otorga el rol → 'puesto'; el resto → 'manual'.
-   Listar quiénes quedarían en cada grupo para revisión de la usuaria ANTES de aplicar.)
-2. Inventario de TODOS los handlers /api de eventos que hoy autorizan con
-   requireRoles(eventos): crear, editar, borrar, check-in, inscripciones, compartir,
-   sub-eventos, excepciones de recurrencia.
-3. Eventos SIN comité organizador asignado: ¿cuántos hay? Con la regla nueva nadie con rol
-   automático los podría operar — listarlos para que la usuaria les asigne comité.
-
-ETAPA 2 — IMPLEMENTACIÓN:
-- Helper central (ej. src/lib/auth/events-scope.ts, espejo de studies-scope.ts —
-  REUTILIZAR ese patrón, NO INVENTAR uno nuevo): dado un member, devuelve
-  { alcance: 'todos' } | { alcance: 'comites', committeeIds: [...] } | { alcance: 'ninguno' }.
-  'todos' si tiene el rol manual (o admin/direccion); 'comites' si solo lo tiene por
-  puesto, con los comités de sus puestos ACTIVOS (si el puesto se desactiva, el alcance
-  cae solo — verificar que position-role-sync ya le quite el rol).
-- Aplicarlo en TODOS los handlers del inventario (server-side, no solo esconder botones)
-  → 403 con mensaje claro ("Este evento no es de tu comité") si no alcanza.
-- UI: en la lista/calendario de gestión, quien tiene alcance por comité ve sus eventos
-  editables y el resto sin acciones de edición; el botón de crear evento le preselecciona
-  (o limita) el comité organizador a los suyos.
-Tests del helper (manual=todos, puesto=sus comités, puesto inactivo=pierde, sin rol=
-ninguno) + test de un handler con 403. tsc/lint/vitest al cierre. DRY-RUN: si la etapa 1
-requiere poblar la columna source, esa lista se aprueba antes de migrar.
-```
+En la pantalla: el selector de comités organizadores se limita a los suyos, el
+detalle de un evento ajeno no muestra las pestañas de gestión (mostrar una
+pestaña que devuelve 403 es peor que no mostrarla) y el buscador de check-in
+solo lista los eventos que puede operar.
 
 ### [ ] UX-5 · Después del login: "Cargando…" en vez de "no hay cuenta asociada" (pedido 2026-09-17)
 

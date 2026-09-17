@@ -1,8 +1,35 @@
 import 'server-only'
 import { NextResponse } from 'next/server'
 import { getAuthContext, type AuthContext } from '@/lib/auth/guard'
-import { eventViewerScope, canManageEvent, NO_ES_ENCARGADO, type EventViewerScope } from '@/lib/auth/events-scope'
-import { isEventManager, isManagerOfFormEvent } from '@/lib/supabase/queries/events'
+import {
+  eventViewerScope, canManageEvent, isEventAdmin, hasEventsModule, NO_ES_ENCARGADO, type EventViewerScope,
+} from '@/lib/auth/events-scope'
+import { alcanceDeEventos, puedeOperarEvento, NO_ES_DE_TU_COMITE, type AlcanceDeEventos } from '@/lib/auth/alcance-de-eventos'
+import {
+  isEventManager, isManagerOfFormEvent, datosDeAlcanceDeEventos, eventOrganizingCommitteeIds,
+} from '@/lib/supabase/queries/events'
+import type { RoleId } from '@/types/auth'
+
+/**
+ * EVE-12 · Hasta dónde llega el rol de eventos de ESTA sesión.
+ *
+ * Atajo deliberado: si administra eventos (dirección, staff, comunicaciones,
+ * admin) se responde sin tocar la base. El check-in de un miércoles corre por
+ * acá en cada marca, y esas dos consultas solo hacen falta para los 184 que
+ * tienen el rol por su puesto.
+ */
+export async function alcanceDeEventosDeLaSesion(ctx: AuthContext): Promise<AlcanceDeEventos> {
+  // Las dos salidas que no dependen de la base van primero, y no por elegancia:
+  // esto corre en cada marca de check-in.
+  if (isEventAdmin(ctx.roles)) return { alcance: 'todos' }
+  if (!hasEventsModule(ctx.roles)) return { alcance: 'ninguno' }
+  const datos = await datosDeAlcanceDeEventos(ctx.memberId)
+  return alcanceDeEventos({
+    roles: ctx.roles,
+    rolesAutomaticos: datos.rolesAutomaticos as RoleId[],
+    comitesDeSusPuestos: datos.comitesDeSusPuestos,
+  })
+}
 
 /**
  * Guard de UN evento (FRM-1 parte B): pasa si la sesión administra eventos o si
@@ -17,6 +44,22 @@ export async function requireEventAccess(eventId: string): Promise<
 > {
   const ctx = await getAuthContext()
   if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+
+  // EVE-12: quien tiene el rol por su PUESTO solo opera los eventos de sus
+  // comités. Se resuelve antes que eventViewerScope porque esa función le da
+  // 'admin' a cualquiera con el módulo, que es justamente lo que se acota.
+  const alcance = await alcanceDeEventosDeLaSesion(ctx)
+  if (alcance.alcance === 'comites') {
+    if (puedeOperarEvento(alcance, await eventOrganizingCommitteeIds(eventId))) {
+      // Sobre SU evento puede lo mismo que antes; no se le recorta el payload.
+      return { ctx, scope: 'admin' }
+    }
+    // Todavía le queda la otra puerta: que la hayan nombrado encargada de ESE
+    // evento a mano, aunque no sea de su comité.
+    if (await isEventManager(eventId, ctx.memberId)) return { ctx, scope: 'manager' }
+    return { res: NextResponse.json({ error: NO_ES_DE_TU_COMITE, code: 'otro_comite' }, { status: 403 }) }
+  }
+
   const scope = eventViewerScope({
     roles: ctx.roles,
     memberId: ctx.memberId,

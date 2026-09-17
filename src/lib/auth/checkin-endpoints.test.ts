@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import {
   CAMPOS_ALTA_CHECKIN, CAMPOS_CORRECCION_CHECKIN,
@@ -20,8 +20,12 @@ const PADRON = readFileSync('src/app/api/members/route.ts', 'utf8')
 const PERFIL = readFileSync('src/app/api/members/[id]/route.ts', 'utf8')
 
 describe('alta desde el check-in', () => {
-  it('está gateada a EVENT_CHECKIN_ROLES', () => {
-    expect(ALTA).toContain('requireRoles(...EVENT_CHECKIN_ROLES)')
+  it('está gateada POR EVENTO (EVE-12), no por rol suelto', () => {
+    // Hasta el 2026-09-17 era requireRoles(...EVENT_CHECKIN_ROLES): el rol
+    // bastaba y abría CUALQUIER evento. Ahora el guard mira si el evento es de
+    // un comité de la persona. Si alguien lo devuelve a requireRoles, esto cae.
+    expect(ALTA).toContain('requireEventAccess(eventId)')
+    expect(ALTA).not.toContain('requireRoles(')
   })
 
   it('construye el payload SOLO con la lista de campos permitidos', () => {
@@ -41,8 +45,9 @@ describe('alta desde el check-in', () => {
 })
 
 describe('corrección desde el check-in', () => {
-  it('está gateada a EVENT_CHECKIN_ROLES', () => {
-    expect(CORRECCION).toContain('requireRoles(...EVENT_CHECKIN_ROLES)')
+  it('está gateada POR EVENTO (EVE-12), no por rol suelto', () => {
+    expect(CORRECCION).toContain('requireEventAccess(eventId)')
+    expect(CORRECCION).not.toContain('requireRoles(')
   })
 
   it('solo documento y teléfono', () => {
@@ -139,9 +144,52 @@ describe('el flujo de check-in nunca llama al padrón', () => {
 
   it('las familias del check-in van por el endpoint del evento', () => {
     const ruta = readFileSync('src/app/api/events/[id]/families/route.ts', 'utf8')
-    expect(ruta).toContain('requireRoles(...EVENT_CHECKIN_ROLES)')
+    expect(ruta).toContain('requireEventAccess(eventId)')
+    expect(ruta).not.toContain('requireRoles(')
     // Agrupa fichas existentes; no puede crear ni modificar personas.
     expect(ruta).not.toContain('createMember')
     expect(ruta).not.toContain('updateMember')
+  })
+})
+
+/**
+ * EVE-12 · Ningún endpoint de UN evento puede autorizar con el rol a secas.
+ *
+ * El inventario de la etapa 1 encontró seis que lo hacían —checkins, families,
+ * members, members/[memberId], onsite-charge y server-check— y por eso quien
+ * hace el check-in de su sede podía borrar asistencias de otra. Este test
+ * recorre el directorio en vez de listarlos: una ruta NUEVA bajo [id] que use
+ * requireRoles se cae acá sola.
+ */
+describe('los endpoints de UN evento autorizan por evento', () => {
+  const DIR = 'src/app/api/events/[id]'
+
+  /** Rutas que a propósito NO usan el guard por evento, con su razón. */
+  const EXENTAS: Record<string, string> = {
+    'route.ts': 'GET público del detalle, PATCH de cancelación (solo dirección) y DELETE: no son operación del evento',
+    'managers/route.ts': 'nombrar encargados es de quien ADMINISTRA eventos; el encargado recibe el permiso, no lo reparte',
+    'register/route.ts': 'inscripción propia: solo exige sesión',
+    'duplicate/route.ts': 'crear un evento nuevo, no operar este',
+  }
+
+  const rutas = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap(e =>
+      e.isDirectory() ? rutas(`${dir}/${e.name}`) : e.name === 'route.ts' ? [`${dir}/${e.name}`] : [])
+
+  it('ninguna ruta nueva se cuela con requireRoles', () => {
+    const ofensoras: string[] = []
+    for (const ruta of rutas(DIR)) {
+      const rel = ruta.slice(DIR.length + 1)
+      if (EXENTAS[rel]) continue
+      if (readFileSync(ruta, 'utf8').includes('requireRoles(')) ofensoras.push(rel)
+    }
+    expect(ofensoras).toEqual([])
+  })
+
+  it('las seis que se migraron usan requireEventAccess', () => {
+    for (const rel of ['checkins/route.ts', 'families/route.ts', 'members/route.ts',
+      'members/[memberId]/route.ts', 'onsite-charge/route.ts', 'server-check/route.ts']) {
+      expect(readFileSync(`${DIR}/${rel}`, 'utf8'), rel).toContain('requireEventAccess(')
+    }
   })
 })

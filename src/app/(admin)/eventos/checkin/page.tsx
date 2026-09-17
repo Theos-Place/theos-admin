@@ -7,6 +7,7 @@ import { useAllEventsLight } from '@/hooks/useEvents'
 import { usePermissions } from '@/hooks/usePermissions'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { todaysCheckinEvents, CHECKIN_STATUS_LABEL, type CheckinStatus } from '@/lib/events/checkin-window'
+import { useMiAlcanceDeEventos, puedoOperar } from '@/lib/events/use-mi-alcance'
 import { cn } from '@/lib/utils'
 import { Search, ChevronRight, QrCode, ChevronLeft } from 'lucide-react'
 
@@ -27,8 +28,22 @@ export default function CheckinPickerPage() {
   const router = useRouter()
   const { can, loaded } = usePermissions()
   const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
-  const { events, loading } = useAllEventsLight()
+  const { events: todosLosEventos, loading } = useAllEventsLight()
   const [search, setSearch] = useState('')
+
+  /**
+   * EVE-12 · Quien tiene el rol de eventos por su PUESTO solo hace check-in en
+   * los eventos de sus comités. Se filtra la lista ANTES de armar la ventana de
+   * hoy y la búsqueda: ofrecerle un evento de otra sede para que al entrar le
+   * salga 403 es peor que no ofrecérselo.
+   */
+  const miAlcance = useMiAlcanceDeEventos()
+  const events = useMemo(
+    () => (miAlcance?.alcance === 'comites'
+      ? todosLosEventos.filter(e => puedoOperar(miAlcance, e.organizing_committee_ids))
+      : todosLosEventos),
+    [todosLosEventos, miAlcance],
+  )
 
   // Sin permiso → AccessDenied explícito (redirigir en silencio a /dashboard
   // hacía creer que el link estaba roto).

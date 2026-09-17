@@ -10,6 +10,7 @@ import { useEventTypes } from '@/hooks/useEventTypes'
 import { useEvent } from '@/hooks/useEvents'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
 import { CommitteeMultiSelect } from '@/components/events/CommitteeMultiSelect'
+import { useMiAlcanceDeEventos } from '@/lib/events/use-mi-alcance'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
 import { ymdCR, crFormParts, CURRENCIES, currencySymbol, amountStep } from '@/lib/format'
@@ -144,6 +145,11 @@ function RecurringSaveModal({
 }
 
 export default function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
+  // EVE-12: quien tiene el rol de eventos por su puesto solo puede poner de
+  // organizador a SUS comités; el servidor rechaza el resto con 403. Ofrecerle
+  // los demás sería ofrecerle un error.
+  const miAlcance = useMiAlcanceDeEventos()
+  const comitesPermitidos = miAlcance?.alcance === 'comites' ? miAlcance.comites : undefined
   const toast = useToast()
   const { id } = use(params)
   // El encargado puede editar su evento, pero NO repartir el permiso.
@@ -493,7 +499,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </div>
           <div className="space-y-1">
             <label htmlFor="ev-comites" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Comités organizadores</label>
-            <CommitteeMultiSelect inputId="ev-comites" value={committeeIds} onChange={setCommitteeIds} />
+            <CommitteeMultiSelect inputId="ev-comites" value={committeeIds} onChange={setCommitteeIds} soloEstos={comitesPermitidos} />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">

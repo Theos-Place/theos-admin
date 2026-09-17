@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { alcanceDeEventosDeLaSesion } from '@/lib/auth/event-guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
@@ -43,7 +44,29 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles(...EVENT_WRITE_ROLES)
     if (auth.res) return auth.res
     const body = await req.json()
-    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId, formToOrganizingCommittees(body))
+    const comites = formToOrganizingCommittees(body)
+    /**
+     * EVE-12: quien tiene el rol por su PUESTO no puede crear un evento a
+     * nombre de otro comité. Sin esto, la regla del guard se esquiva sola:
+     * bastaba crear el evento poniendo "Sede Cartago" de organizador para
+     * después poder operarlo… o para dejárselo firmado a otra sede.
+     *
+     * Se RECHAZA en vez de recortar la lista en silencio: un evento con un
+     * organizador distinto del que la persona eligió es peor que un error.
+     */
+    const alcance = await alcanceDeEventosDeLaSesion(auth.ctx)
+    if (alcance.alcance === 'comites') {
+      const ajenos = comites.filter(c => !alcance.comites.includes(c))
+      if (ajenos.length || comites.length === 0) {
+        return NextResponse.json({
+          error: comites.length === 0
+            ? 'Elegí el comité organizador: solo podés crear eventos para tus comités.'
+            : 'Solo podés crear eventos para tus propios comités.',
+          code: 'otro_comite',
+        }, { status: 403 })
+      }
+    }
+    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId, comites)
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
     reportarError('POST /api/events:', error)

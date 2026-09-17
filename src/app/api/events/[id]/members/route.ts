@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireRoles } from '@/lib/auth/guard'
-import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
+import { requireEventAccess } from '@/lib/auth/event-guard'
 import { isUuid } from '@/lib/validate'
 import { CAMPOS_ALTA_CHECKIN, camposRechazados, soloCamposPermitidos } from '@/lib/members/alta-desde-checkin'
 import { motivoQueImpideCrear, fichaDeMenorProtegido } from '@/lib/members/menor-protegido'
@@ -41,11 +40,13 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireRoles(...EVENT_CHECKIN_ROLES)
+  const { id: eventId } = await params
+  if (!isUuid(eventId)) return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+  // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
+  // llega por el puesto solo alcanza los eventos de sus comités.
+  const auth = await requireEventAccess(eventId)
   if (auth.res) return auth.res
   try {
-    const { id: eventId } = await params
-    if (!isUuid(eventId)) return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
 
     const crudo = await req.json().catch(() => null)
     const PERMITIDOS = [...CAMPOS_ALTA_CHECKIN, 'datos_protegidos', 'familiar_id'] as const

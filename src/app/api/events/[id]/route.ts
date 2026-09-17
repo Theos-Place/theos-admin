@@ -8,7 +8,7 @@ import {
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
 } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
-import { requireEventAccess } from '@/lib/auth/event-guard'
+import { requireEventAccess, alcanceDeEventosDeLaSesion } from '@/lib/auth/event-guard'
 import { reportarError } from '@/lib/observabilidad'
 
 /** Lee el alcance (all/future/single) y la ocurrencia del body, si vienen.
@@ -83,6 +83,21 @@ export async function PUT(
 
     const subEvents = 'sub_events' in body ? formToSubEvents(body) : undefined
     const committees = 'organizing_committee_ids' in body ? formToOrganizingCommittees(body) : undefined
+    /**
+     * EVE-12: el guard de arriba ya comprobó que el evento es de un comité
+     * suyo, pero al EDITARLO podría cambiarle el organizador. Dejarlo sería
+     * poder firmarle un evento a otra sede —o quitárselo— desde el detalle de
+     * uno propio. Solo se le permite repartirlo entre SUS comités.
+     */
+    if (committees) {
+      const alcance = await alcanceDeEventosDeLaSesion(auth.ctx)
+      if (alcance.alcance === 'comites' && committees.some(c => !alcance.comites.includes(c))) {
+        return NextResponse.json(
+          { error: 'Solo podés poner como organizador a tus propios comités.', code: 'otro_comite' },
+          { status: 403 },
+        )
+      }
+    }
     const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId, committees)
     return NextResponse.json(event)
   } catch (error) {

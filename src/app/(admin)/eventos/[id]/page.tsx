@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useToast } from '@/components/shared/Toast'
 import { useOrg } from '@/lib/org'
+import { useMiAlcanceDeEventos, puedoOperar } from '@/lib/events/use-mi-alcance'
 import { generateCSV } from '@/lib/export'
 import { Send, Download, Check, X } from 'lucide-react'
 import { TOAST_MS } from '@/lib/constants'
@@ -195,9 +196,21 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // Gating de tabs: los miembros normales solo ven Información. encargado_eventos
   // (edit/export en eventos) ve check-in y reportes; gestión (inscripciones,
   // servidores, comunicaciones) requiere create → solo dirección/admin.
-  const canCheckin = can('eventos', 'edit')
-  const canReport  = can('eventos', 'export')
-  const canManage  = can('eventos', 'create')
+  /**
+   * EVE-12 · El permiso de eventos ya no basta: si llegó por el PUESTO, solo
+   * alcanza los eventos de sus comités. Sin este recorte la pantalla abre las
+   * pestañas de gestión de un evento ajeno y cada llamada devuelve 403 —el
+   * mismo hueco que se cerró en el detalle de grupo: esconder el dato en la
+   * pantalla no es esconderlo, pero MOSTRAR una pestaña que no se puede usar
+   * es peor que no mostrarla.
+   */
+  const miAlcance = useMiAlcanceDeEventos()
+  const esDeMiComite = miAlcance?.alcance === 'comites'
+    ? puedoOperar(miAlcance, event?.organizing_committee_ids)
+    : true
+  const canCheckin = can('eventos', 'edit') && esDeMiComite
+  const canReport  = can('eventos', 'export') && esDeMiComite
+  const canManage  = can('eventos', 'create') && esDeMiComite
   // El envío usa los endpoints de comunicaciones, que exigen ese rol.
   const canSendMessage = can('comunicaciones', 'create')
   // Regla pura compartida (src/lib/events/detail-access.ts): Información es de

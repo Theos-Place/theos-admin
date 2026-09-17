@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireEventAccess } from '@/lib/auth/event-guard'
 import {
   createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente, NotRegisteredError,
 } from '@/lib/supabase/queries/events'
@@ -12,10 +12,12 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('comunicaciones', 'direccion', 'encargado_eventos')
+  const { id } = await params
+  // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
+  // llega por el puesto solo alcanza los eventos de sus comités.
+  const auth = await requireEventAccess(id)
   if (auth.res) return auth.res
   try {
-    const { id } = await params
     const member_ids = await getEventAttendeeIds(id)
     return NextResponse.json({ count: member_ids.length, member_ids })
   } catch (error) {
@@ -30,12 +32,13 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    // Check-in operable por encargado_eventos, dirección y admin (admin pasa siempre).
-    const auth = await requireRoles('encargado_eventos', 'direccion')
-    if (auth.res) return auth.res
   // Fuera del try: el catch los necesita para armar el 409 informativo, y el
   // body de un Request se puede leer UNA sola vez.
   const { id } = await params
+  // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
+  // llega por el puesto solo alcanza los eventos de sus comités.
+  const auth = await requireEventAccess(id)
+  if (auth.res) return auth.res
   const body = await req.json().catch(() => null)
   const memberId = body?.member_id ?? null
   try {
@@ -91,10 +94,12 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('encargado_eventos', 'direccion')
+  const { id } = await params
+  // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
+  // llega por el puesto solo alcanza los eventos de sus comités.
+  const auth = await requireEventAccess(id)
   if (auth.res) return auth.res
   try {
-    const { id } = await params
     const checkinId = req.nextUrl.searchParams.get('checkinId')
     if (!checkinId) return NextResponse.json({ error: 'Falta checkinId' }, { status: 400 })
     await deleteCheckin(id, checkinId)
