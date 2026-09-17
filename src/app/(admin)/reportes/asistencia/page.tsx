@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, Legend, Cell, LabelList,
+  ReferenceLine, Legend, Cell, LabelList, ComposedChart, Line,
 } from 'recharts'
 import { ReportShell } from '@/components/reportes/ReportShell'
 import { KpiCard } from '@/components/reportes/KpiCard'
@@ -15,10 +15,11 @@ import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
+import { unirSeries } from '@/lib/reports/comparar-series'
 import { useSearchParams } from 'next/navigation'
 import type { DetalleDeSemana } from '@/lib/reports/semana-detalle'
 import {
-  CORAL, CORAL_ATENUADO, PARCIAL_RELLENO, PARCIAL_BORDE, NAVY, GRIS,
+  CORAL, CORAL_ATENUADO, PARCIAL_RELLENO, PARCIAL_BORDE, NAVY, GRIS, TEAL_CLARO,
   COLORES_POR_ANIO, EJE_TICK, REJILLA, CURSOR_BARRA,
   ESTILO_TOOLTIP, ETIQUETA_VALOR, ETIQUETA_CATEGORIA,
   anchoDeEjeCategoria, margenParaEtiquetas,
@@ -43,6 +44,11 @@ export default function ReporteAsistenciaPage() {
   // título de otra.
   const [resultado, setResultado] = useState<{ clave: string; detalle: DetalleDeSemana | null; error: string | null } | null>(null)
   const [tab, setTab] = useState<'asistencia' | 'crecimiento'>('asistencia')
+  // Comparación de dos sedes en el mismo gráfico. La serie comparada se guarda
+  // CON su clave (sede|año) por la misma razón que el detalle de semana: así no
+  // se muestra la serie de una sede bajo el rótulo de otra mientras carga.
+  const [comparar, setComparar] = useState<string>('')
+  const [serieComp, setSerieComp] = useState<{ clave: string; puntos: { week: number; total: number; partial: boolean }[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -67,6 +73,23 @@ export default function ReporteAsistenciaPage() {
   }, [])
 
   useEffect(() => { load(null, ALL_SEDES) }, [load])
+
+  // Serie de la sede con la que se compara. Se pide al mismo endpoint cambiando
+  // `sede`: no hace falta nada nuevo en el servidor.
+  const claveComp = comparar && report ? `${comparar}|${report.year}` : null
+  useEffect(() => {
+    // Sin comparación no se limpia el estado: `hayComparacion` compara la
+    // clave, así que una serie vieja ahí no se muestra. Limpiarla sería un
+    // setState síncrono dentro del efecto, que dispara renders en cascada.
+    if (!claveComp) return
+    let vivo = true
+    const [s2, y2] = claveComp.split('|')
+    fetch(`/api/reports/charla-attendance?year=${y2}&sede=${encodeURIComponent(s2)}`)
+      .then(r => (r.ok ? r.json() as Promise<CharlaReport> : Promise.reject(new Error('no'))))
+      .then(d => { if (vivo) setSerieComp({ clave: claveComp, puntos: d.weekly }) })
+      .catch(() => { if (vivo) setSerieComp(null) })
+    return () => { vivo = false }
+  }, [claveComp])
 
   // El detalle de la semana se pide UNA vez acá y lo comparten el panel y el
   // gráfico de sedes: dos fetch del mismo dato podrían mostrar números
@@ -94,8 +117,13 @@ export default function ReporteAsistenciaPage() {
   const errorSemana = listo ? resultado!.error : null
   const cargandoSemana = !!claveConSede && !listo
 
-  function onYear(y: number) { setYear(y); load(y, sede); setSemana(null) }
-  function onSede(s: string) { setSede(s); load(year, s) }
+  function onYear(y: number) { setYear(y); load(y, sede); setSemana(null); setComparar('') }
+  function onSede(s: string) {
+    setSede(s); load(year, s)
+    // La comparación se limpia al cambiar la sede principal: dejarla pegada
+    // mostraría dos series que ya no son las que se eligieron.
+    setComparar('')
+  }
 
   /** REP-2 · La semana abierta va en la URL (?semana=2026-W37) para poder
    *  mandar el enlace. Se lee de ahí, no de un estado suelto, así el back del
@@ -144,6 +172,12 @@ export default function ReporteAsistenciaPage() {
   const hasPartialWeek = report.weekly.some(w => w.partial)
   // Card de promedio semanal del año seleccionado (cambia con el pill).
   const selectedCard = report.annualCards.find(c => c.year === report.year)
+
+  // Serie del gráfico: la principal sola, o unida con la comparada.
+  const hayComparacion = !!comparar && serieComp?.clave === claveComp
+  // Siempre la misma forma, con o sin comparación: así los <Cell> y el <Line>
+  // leen un único tipo y no hay que ramificar el gráfico.
+  const datosSemanales = unirSeries(report?.weekly ?? [], hayComparacion ? serieComp!.puntos : [])
 
   // ── Asistencia semanal: semana a destacar + línea fantasma del año anterior ──
   const isCurrentYear = report.year === new Date().getFullYear()
@@ -241,7 +275,7 @@ export default function ReporteAsistenciaPage() {
                   footnote={`Tocá una barra para ver esa semana sola.${hasPartialWeek ? ' Las barras en tono claro son semanas parciales (feriado o pocos días con charlas), no caídas reales.' : ''}`}
                 >
                   <ResponsiveContainer>
-                    <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                    <ComposedChart data={datosSemanales} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
                       {/* REP-4: el tick muestra el lunes ("14 set"), no el
                           número ISO. Con ~52 puntos no cabe el rango completo;
@@ -265,7 +299,12 @@ export default function ReporteAsistenciaPage() {
                           if (typeof w === 'number') abrirSemana(w)
                         }}
                       >
-                        {report.weekly.map(w => (
+                        {/* Los Cell se mapean desde datosSemanales, NO desde
+                            report.weekly: Recharts los aplica POR POSICIÓN, y al
+                            comparar la serie unida puede tener semanas que la
+                            principal no tiene. Con la lista corta, los colores
+                            se corrían y una semana parcial pintaba a otra. */}
+                        {datosSemanales.map(w => (
                           // La semana parcial se marca con relleno claro Y borde
                           // punteado: solo con el relleno no llegaba a 3:1 y se
                           // perdía contra el blanco de la tarjeta.
@@ -278,8 +317,47 @@ export default function ReporteAsistenciaPage() {
                           />
                         ))}
                       </Bar>
-                    </BarChart>
+                      {/* La sede comparada va como línea punteada teal: se lee
+                          encima de las barras sin competir con el coral, y el
+                          punteado la distingue de la línea de promedio (navy).
+                          `connectNulls={false}`: donde esa sede no tuvo datos la
+                          línea se corta, en vez de inventar una recta. */}
+                      {hayComparacion && (
+                        <Line
+                          type="monotone" dataKey="comparado" name={comparar}
+                          stroke={TEAL_CLARO} strokeWidth={2} strokeDasharray="5 4"
+                          dot={false} connectNulls={false} isAnimationActive={false}
+                        />
+                      )}
+                    </ComposedChart>
                   </ResponsiveContainer>
+                  {/* Comparar con otra sede. Solo tiene sentido con UNA sede
+                      elegida: contra "todas" la línea sería un subconjunto de
+                      las barras y no compara nada. */}
+                  {sede !== ALL_SEDES && report.sedes.length > 1 && (
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <label htmlFor="comparar-sede" className="text-[13px] text-navy-light/80 font-body">
+                        Comparar con
+                      </label>
+                      <select
+                        id="comparar-sede"
+                        value={comparar}
+                        onChange={e => setComparar(e.target.value)}
+                        className="rounded-xl border border-outline bg-surface-card px-2.5 py-1 text-[13px] text-navy font-body"
+                      >
+                        <option value="">— ninguna —</option>
+                        {report.sedes.filter(s => s !== sede).map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {hayComparacion && (
+                        <span className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
+                          <span className="inline-block w-5 border-t-2 border-dashed" style={{ borderColor: TEAL_CLARO }} />
+                          {comparar}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </ChartCard>
                 {semanaSel && (
                   <div className="mt-4">

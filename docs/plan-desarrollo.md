@@ -683,7 +683,26 @@ Actualizar la infografía/tutorial "Tu primera vez en el sistema" en /ayuda si e
 cambia. Probar el camino completo con un usuario de prueba. tsc/lint/vitest al cierre.
 ```
 
-### [ ] REP-4 · Reporte de asistencia: semanas con fechas, no números ISO (pedido 2026-09-17)
+### [x] REP-4 · Reporte de asistencia: semanas con fechas, no números ISO — HECHO 2026-09-17
+
+Hecho, incluido el EXTRA (comparar dos sedes en el mismo gráfico). La regla de
+fechas vive en `lib/reports/rango-de-semana.ts` y la unión de series en
+`lib/reports/comparar-series.ts`, las dos con tests. Dos cosas que salieron al
+hacerlo y quedaron documentadas en el código: las fechas se anclan a medianoche
+de Costa Rica porque `semanaISO()` convierte a hora CR y si no daba off-by-one;
+y los `<Cell>` del gráfico se mapean desde la serie unida y no desde
+`report.weekly`, porque Recharts los aplica por posición y con la comparación
+activa los colores se corrían.
+
+Verificado con datos reales: Meridiano Miércoles arranca el 13–19 jul y
+Meridiano Martes baja de ~220 a ~190 por esas fechas — que era justo la
+pregunta que originó el ítem.
+
+<details><summary>Prompt original</summary>
+
+</details>
+
+### REP-4 (original)
 
 "Semana 38" no le dice nada a nadie; debe leerse "14–20 set". El caso que lo
 disparó: querer saber si el decrecimiento de Meridiano Martes desde la semana

@@ -3,7 +3,7 @@ import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
 import { getCharlaAttendanceReport } from '@/lib/supabase/queries/reports'
 
 async function main() {
-  const r = await getCharlaAttendanceReport(2026, 'all')
+  const r = await getCharlaAttendanceReport({ year: 2026 })
   console.log(`año ${r.year} · ${r.weekly.length} semanas con datos\n`)
   console.log('ANTES → AHORA (eje)            |  tooltip')
   for (const w of r.weekly.slice(0, 4)) {
