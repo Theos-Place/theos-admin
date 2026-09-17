@@ -2,7 +2,6 @@ import { createAdminClient, type Insertable, type Updatable } from '@/lib/supaba
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 import { todayCR } from '@/lib/format'
-import { reportarFalla } from '@/lib/observabilidad'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -467,22 +466,6 @@ async function syncRolesForApprovedApplications(ids: string[], actorUserId?: str
     const vacancy = Array.isArray(row.vacancy) ? row.vacancy[0] : row.vacancy
     if (!vacancy?.position_id) continue
     await syncRolesOnAssign(row.applicant_id, vacancy.position_id, actorUserId)
-    // Aprobar una aplicación mete al voluntario por el RPC `approve_applications`,
-    // saltándose assignVolunteer. Si el puesto es del Comité Dirigentes hay que
-    // sincronizar igual, o entrar por acá volvería a desalinear las listas.
-    //
-    // ACÁ SÍ ES BEST-EFFORT, a diferencia de assignVolunteer: el RPC ya
-    // escribió y esto puede venir de un lote. Si la persona está "no
-    // recomendada" o "en revisión", tirar dejaría a medias las aprobaciones
-    // siguientes. Se reporta y se sigue: queda en Sentry y en los logs, y la
-    // persona queda en el comité para que la coordinación lo resuelva.
-    try {
-      await sincronizarDirigente(row.applicant_id, vacancy.position_id, true)
-    } catch (e) {
-      reportarFalla('aprobar aplicación: no se pudo activar como dirigente:', e, {
-        memberId: row.applicant_id, positionId: vacancy.position_id,
-      })
-    }
   }
 }
 

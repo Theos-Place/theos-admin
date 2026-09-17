@@ -17,6 +17,18 @@
  * Al medirlo había tres números para la misma pregunta: 227 en el comité, 167
  * en `study_leaders.is_active` y 193 con el rol.
  *
+ * POR DÓNDE SE ENTRA Y SE SALE. Solo hay dos puertas, y las dos sincronizan lo
+ * mismo: la pantalla de dirigentes (`setDirigenteActive`/`addDirigente`) y la de
+ * servidores (`assignVolunteer`/`removeVolunteer`, que detectan el comité y
+ * llaman a la primera).
+ *
+ * A un dirigente NO se llega por vacante ni por aplicación: ese proceso no
+ * existe para este comité (confirmado por el usuario el 2026-09-17, y medido:
+ * cero vacantes y cero aplicaciones para cualquiera de sus puestos). Por eso
+ * `syncRolesForApprovedApplications` no engancha nada de dirigentes. Si algún
+ * día se abre ese camino, hay que engancharlo ahí también o las listas vuelven
+ * a separarse en silencio.
+ *
  * POR QUÉ EL NOMBRE VIVE ACÁ Y NO SUELTO EN LA QUERY. Estaba escrito a mano en
  * tres lugares distintos de `queries/studies.ts`, todos mal y todos fallando en
  * silencio. Con una sola constante, si alguien renombra el comité rompe un test
