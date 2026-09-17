@@ -63,6 +63,14 @@ export const SEDE_CANONICAL: Record<string, string> = {
   'antares miercoles': 'Charla Antares Miércoles',
   'cartago miercoles': 'Charla Cartago Miércoles',
   'cartago youth': 'Charla Cartago Youth',
+  // Desde la semana 37 de 2026 los youth son un SUB-EVENTO llamado "Youth"
+  // dentro de la charla de la sede, así que el reporte etiqueta
+  // "<evento> Youth". Estos tres alias hacen que esa etiqueta caiga en el mismo
+  // canónico que el nombre viejo, y la serie de cada youth no se parta en dos
+  // al cambiar el modelo (migración 20260917120000).
+  'cartago miercoles youth': 'Charla Cartago Youth',
+  'pedregal miercoles youth': 'Charla Pedregal Miércoles Youth',
+  'pedregal domingo youth': 'Charla Pedregal Domingo Youth',
   'liberia miercoles': 'Charla Liberia Miércoles',
   'guapiles miercoles': 'Charla Guápiles Miércoles',
   'alajuela jueves': 'Charla Alajuela Jueves',
