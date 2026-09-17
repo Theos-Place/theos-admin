@@ -58,14 +58,21 @@ export function ScheduleSection({
             <label htmlFor="fecha-y-hora" className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
               <Clock size={13} className="text-navy-light/80 shrink-0" /> Fecha y hora
             </label>
+            {/* step=3600 → el selector solo ofrece horas en punto. El cron
+                corre a la hora en punto, así que dejar elegir 15:30 sería
+                prometer una precisión que no existe: ese envío saldría a las
+                16:00 igual. El servidor lo valida aparte (minutos_no_cero), que
+                este atributo no es una garantía. */}
             <input id="fecha-y-hora"
               type="datetime-local"
+              step={3600}
               className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
               value={scheduledAt}
               onChange={e => setScheduledAt(e.target.value)}
             />
             <p className="text-[13px] text-navy-light/80 font-body">
-              La cola se revisa cada {TICK_MINUTES} min: puede salir hasta {TICK_MINUTES} minutos después.
+              Los envíos salen en horas en punto. La cola se revisa cada hora, así que puede salir
+              hasta {TICK_MINUTES} minutos después.
             </p>
           </div>
           <div className="space-y-1">

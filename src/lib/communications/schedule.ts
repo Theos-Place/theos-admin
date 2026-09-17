@@ -9,10 +9,21 @@
 /** Estado de un comunicado que espera su hora. */
 export const SCHEDULED_STATUS = 'scheduled'
 
-/** Cada cuánto corre el cron. La hora elegida no es exacta: el envío sale en el
- *  primer tick posterior, así que hay que decirlo en la pantalla y no fingir
- *  precisión al minuto. */
-export const TICK_MINUTES = 15
+/**
+ * Cada cuánto corre el cron. La hora elegida no es exacta: el envío sale en el
+ * primer tick posterior, así que hay que decirlo en la pantalla y no fingir
+ * precisión al minuto.
+ *
+ * Pasó de 15 a 60 el 2026-09-17. El cron de cada 15 minutos era el 90% de todas
+ * las corridas programadas del sistema —2.880 de 3.219 al mes— y despertaba a
+ * buscar trabajo que casi nunca hay: 13 comunicados programados en toda la
+ * historia y cero pendientes. Con la hora en punto se pierde precisión que
+ * nadie usaba y se ahorran 2.160 invocaciones al mes.
+ *
+ * Y por lo mismo la programación ahora EXIGE hora en punto: ofrecer minutos que
+ * el cron no puede respetar es prometer algo que no se cumple.
+ */
+export const TICK_MINUTES = 60
 
 /**
  * Offset de una zona horaria (en minutos) en un instante dado. Sale de comparar
@@ -58,12 +69,21 @@ export function zonedToUtc(localDateTime: string, timeZone: string): string | nu
   return instante.toISOString()
 }
 
-export type ScheduleError = 'sin_fecha' | 'fecha_invalida' | 'en_el_pasado'
+export type ScheduleError = 'sin_fecha' | 'fecha_invalida' | 'en_el_pasado' | 'minutos_no_cero'
 
 export const SCHEDULE_MESSAGES: Record<ScheduleError, string> = {
   sin_fecha: 'Elegí la fecha y la hora del envío.',
   fecha_invalida: 'La fecha y hora del envío no son válidas.',
   en_el_pasado: 'La hora del envío ya pasó. Elegí un momento futuro.',
+  minutos_no_cero: 'Los envíos salen en horas en punto. Elegí una hora exacta (por ejemplo 15:00).',
+}
+
+/** ¿La hora elegida cae en punto? El cron corre a la hora en punto, así que un
+ *  15:30 saldría a las 16:00 igual: mejor decirlo que dejar elegir algo que no
+ *  se va a respetar. */
+export function esHoraEnPunto(localDateTime: string): boolean {
+  const m = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:(\d{2})/.exec(localDateTime ?? '')
+  return !!m && m[1] === '00'
 }
 
 /**
@@ -78,6 +98,9 @@ export function resolveScheduledAt(
   if (!localDateTime?.trim()) return { ok: false, error: 'sin_fecha' }
   const iso = zonedToUtc(localDateTime, timeZone)
   if (!iso) return { ok: false, error: 'fecha_invalida' }
+  // Se RECHAZA en vez de redondear: mover el envío sin avisar es peor que
+  // pedirle a la persona que elija una hora que sí se va a cumplir.
+  if (!esHoraEnPunto(localDateTime)) return { ok: false, error: 'minutos_no_cero' }
   if (new Date(iso).getTime() <= now.getTime()) return { ok: false, error: 'en_el_pasado' }
   return { ok: true, iso }
 }

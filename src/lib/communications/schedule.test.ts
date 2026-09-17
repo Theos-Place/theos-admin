@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   zonedToUtc, resolveScheduledAt, isBroadcastDue, scheduleSummary, SCHEDULED_STATUS,
+  SCHEDULE_MESSAGES, TICK_MINUTES, esHoraEnPunto,
 } from './schedule'
 
 describe('de hora local + zona a instante', () => {
@@ -36,8 +37,10 @@ describe('validación de lo que eligió el usuario', () => {
   const ahora = new Date('2026-08-10T12:00:00.000Z')
 
   it('una hora futura pasa y devuelve el instante', () => {
-    const r = resolveScheduledAt('2026-08-10T15:30', 'America/Costa_Rica', ahora)
-    expect(r).toEqual({ ok: true, iso: '2026-08-10T21:30:00.000Z' })
+    // En punto: desde 2026-09-17 los envíos van a la hora exacta (ver el bloque
+    // de abajo). Antes este caso usaba 15:30.
+    const r = resolveScheduledAt('2026-08-10T15:00', 'America/Costa_Rica', ahora)
+    expect(r).toEqual({ ok: true, iso: '2026-08-10T21:00:00.000Z' })
   })
 
   it('una hora que YA PASÓ se rechaza: si no, saldría de inmediato', () => {
@@ -50,8 +53,11 @@ describe('validación de lo que eligió el usuario', () => {
       .toEqual({ ok: false, error: 'sin_fecha' })
   })
 
-  it('dentro del próximo tick SÍ se acepta: "en 5 minutos" es legítimo', () => {
-    const r = resolveScheduledAt('2026-08-10T06:05', 'America/Costa_Rica', ahora)
+  it('la próxima hora en punto SÍ se acepta, aunque falte poco', () => {
+    // La intención original era "programar algo cercano es legítimo". Con el
+    // tick en una hora, lo cercano es la siguiente hora en punto: no se exige
+    // margen, solo que no haya pasado.
+    const r = resolveScheduledAt('2026-08-10T07:00', 'America/Costa_Rica', ahora)
     expect(r.ok).toBe(true)
   })
 })
@@ -83,5 +89,43 @@ describe('lo que se le muestra a quien programa', () => {
     const t = scheduleSummary('2026-08-10T13:30:00.000Z', 'Europe/Madrid')
     expect(t).toContain('3:30')
     expect(t).toContain('Madrid')
+  })
+})
+
+describe('los envíos van en horas en punto (2026-09-17)', () => {
+  // El cron pasó de cada 15 min a cada hora: era el 90% de las corridas
+  // programadas del sistema y despertaba a buscar trabajo que casi nunca hay.
+  // Con eso, ofrecer minutos sería prometer una precisión que no existe.
+  const futuro = (hhmm: string) => `2099-08-10T${hhmm}`
+
+  it('acepta una hora en punto', () => {
+    expect(resolveScheduledAt(futuro('15:00'), 'America/Costa_Rica').ok).toBe(true)
+  })
+
+  it('rechaza cualquier minuto que no sea cero', () => {
+    for (const hhmm of ['15:30', '15:01', '15:59', '00:15']) {
+      const r = resolveScheduledAt(futuro(hhmm), 'America/Costa_Rica')
+      expect(r.ok, hhmm).toBe(false)
+      if (!r.ok) expect(r.error).toBe('minutos_no_cero')
+    }
+  })
+
+  it('NO redondea en silencio', () => {
+    // Mover el envío sin avisar es peor que pedir que elijan otra hora.
+    const r = resolveScheduledAt(futuro('15:30'), 'America/Costa_Rica')
+    expect(r.ok).toBe(false)
+  })
+
+  it('el mensaje dice qué hacer, no solo que está mal', () => {
+    expect(SCHEDULE_MESSAGES.minutos_no_cero).toMatch(/hora exacta|en punto/i)
+  })
+
+  it('el tick coincide con el cron: una hora', () => {
+    // Si alguien cambia vercel.json sin tocar esto, la pantalla mentiría.
+    expect(TICK_MINUTES).toBe(60)
+  })
+
+  it('esHoraEnPunto no se confunde con basura', () => {
+    for (const v of ['', 'hola', '2099-08-10', '2099-08-10T15']) expect(esHoraEnPunto(v), v).toBe(false)
   })
 })

@@ -318,7 +318,7 @@ function NuevaComunicacionContent() {
           </p>
           {scheduledIso && (
             <p className="text-[13px] text-navy-light/80 mt-2 font-body max-w-sm">
-              El envío se revisa cada {TICK_MINUTES} minutos, así que puede salir hasta
+              El envío se revisa cada hora, así que puede salir hasta
               {' '}{TICK_MINUTES} minutos después de esa hora. Podés cancelarlo desde el
               historial mientras no haya salido.
             </p>
