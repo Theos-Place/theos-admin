@@ -2,15 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { HORAS_DE_GRACIA, MOTIVO_EXPIRADA, reservaExpirada, relojDeLaReserva } from './enrollment-hold'
 
 const ahora = new Date('2026-09-02T12:00:00Z')
+// Las horas van RELATIVAS a HORAS_DE_GRACIA, nunca fijas: cuando el plazo pasó
+// de 24 a 72 (NOT-2) los casos de 25h y 40h quedaron dentro de la ventana y el
+// test empezó a fallar en silencio.
 const haceHoras = (h: number) => new Date(ahora.getTime() - h * 3600_000).toISOString()
 
 describe('reservaExpirada', () => {
   it('sin comprobante y pasada la ventana, se suelta el cupo', () => {
-    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: haceHoras(25), ahora })).toBe(true)
+    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: haceHoras(HORAS_DE_GRACIA + 1), ahora })).toBe(true)
   })
 
   it('dentro de la ventana, se respeta', () => {
-    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: haceHoras(23), ahora })).toBe(false)
+    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: haceHoras(HORAS_DE_GRACIA - 1), ahora })).toBe(false)
   })
 
   it('justo en el borde, expira', () => {
@@ -94,7 +97,7 @@ describe('relojDeLaReserva', () => {
   })
 
   it('la que de verdad quedó abandonada sí expira', () => {
-    const reloj = relojDeLaReserva({ enrollmentCreatedAt: haceHoras(40), pagos: [pago({ created_at: haceHoras(40) })] })
+    const reloj = relojDeLaReserva({ enrollmentCreatedAt: haceHoras(HORAS_DE_GRACIA + 8), pagos: [pago({ created_at: haceHoras(HORAS_DE_GRACIA + 8) })] })
     expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: reloj, ahora })).toBe(true)
   })
 })

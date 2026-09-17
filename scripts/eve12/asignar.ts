@@ -1,6 +1,5 @@
 /**
- * EVE-12 · Crea los tres comités Youth y le asigna comité organizador a cada
- * charla (2026-09-17).
+ * EVE-12 · Le asigna comité organizador a cada charla (2026-09-17).
  *
  * POR QUÉ. El alcance por comité necesita que cada evento diga de quién es, y
  * hoy 174 de 188 charlas no tienen comité organizador. Con la regla encendida,
@@ -8,13 +7,15 @@
  * check-in semanal de casi todas.
  *
  * El mapeo sale del TÍTULO, con la regla de lib/events/comite-de-la-charla.ts:
- * nombre exacto, después plural ("Sede Pedregal DomingoS"), y de último sin el
- * día pero SOLO si queda un candidato. Esa última condición es la que evita el
- * error que tuvo el primer intento: Pedregal tiene tres comités y sin ella las
- * charlas del domingo caían en el del miércoles.
+ * Youth primero (todas al Comité Youth), después nombre exacto, plural ("Sede
+ * Pedregal DomingoS") y de último sin el día pero SOLO si queda un candidato.
+ * Esa última condición evita el error del primer intento: Pedregal tiene tres
+ * comités y sin ella las charlas del domingo caían en el del miércoles.
  *
- * Los comités Youth se crean porque no existían: decisión del usuario de
- * tenerlos aparte y no colgados de la sede.
+ * LIMPIEZA. Este script llegó a crear tres comités Youth aparte (Pedregal
+ * Domingo, Pedregal Miércoles y Cartago). Era innecesario: el Comité Youth ya
+ * existía con cinco puestos, y las charlas Youth son suyas sin importar la
+ * sede. --limpiar borra esos tres, y solo si siguen vacíos.
  *
  * Con --aplicar escribe; sin la bandera hace dry-run y no toca nada.
  */
@@ -23,36 +24,40 @@ import { canonicalCharlaTitle } from '@/lib/sedes-canonical'
 import { comiteDeLaCharla, type Comite } from '@/lib/events/comite-de-la-charla'
 
 const APLICAR = process.argv.includes('--aplicar')
-/** Crear los comités SIN tocar las asignaciones: son dos decisiones separadas y
- *  la segunda se aprueba viendo la lista. */
-const SOLO_COMITES = process.argv.includes('--solo-comites')
-const YOUTH = ['Sede Pedregal Domingo Youth', 'Sede Pedregal Miércoles Youth', 'Sede Cartago Youth']
+/** Borra los tres comités Youth de más, sin tocar las asignaciones. */
+const LIMPIAR = process.argv.includes('--limpiar')
+const SOBRAN = ['Sede Pedregal Domingo Youth', 'Sede Pedregal Miércoles Youth', 'Sede Cartago Youth']
 /** Solo lo vigente: no tiene sentido etiquetar 3.400 charlas históricas. */
 const DESDE = new Date(Date.now() - 90 * 86400000).toISOString()
 
 async function main() {
   const sb = createAdminClient()
-  const { data: padre } = await sb.from('areas').select('id').eq('name', 'Sedes').maybeSingle()
-  const parentId = (padre as { id: string } | null)?.id ?? null
-  if (!parentId) throw new Error('GUARDA: no encuentro el área padre "Sedes"')
 
-  // ── 1. Los tres comités Youth ──────────────────────────────────────────
+  // ── 1. Los comités Youth que sobran ────────────────────────────────────
   const { data: existentes } = await sb.from('areas').select('id, name').eq('area_type', 'committee')
-  const yaEstan = new Map(((existentes ?? []) as Comite[]).map(a => [a.name, a]))
-  const crear = YOUTH.filter(n => !yaEstan.has(n))
-  console.log(`=== 1. comités Youth ===`)
-  for (const n of YOUTH) console.log(`  ${n}  ${yaEstan.has(n) ? '(ya existe)' : '→ CREAR'}`)
-  if ((APLICAR || SOLO_COMITES) && crear.length) {
-    const { data, error } = await sb.from('areas')
-      .insert(crear.map(name => ({ name, area_type: 'committee', parent_id: parentId, is_active: true })))
-      .select('id, name')
-    if (error) throw error
-    for (const a of (data ?? []) as Comite[]) yaEstan.set(a.name, a)
-    console.log(`  creados: ${crear.length}`)
+  const todos = (existentes ?? []) as Comite[]
+  const aBorrar = todos.filter(a => SOBRAN.includes(a.name))
+  if (LIMPIAR || APLICAR) {
+    console.log('=== 1. comités Youth de más ===')
+    for (const a of aBorrar) {
+      // GUARDA: nunca borrar uno que ya tenga gente o charlas colgando.
+      const { count: puestos } = await sb.from('service_positions')
+        .select('id', { count: 'exact', head: true }).eq('area_id', a.id)
+      const { count: charlas } = await sb.from('event_organizing_committees')
+        .select('event_id', { count: 'exact', head: true }).eq('committee_id', a.id)
+      if (puestos || charlas) { console.log(`  ‼ ${a.name}: puestos=${puestos} charlas=${charlas} → NO se borra`); continue }
+      if (LIMPIAR) {
+        const { error } = await sb.from('areas').delete().eq('id', a.id)
+        if (error) throw error
+        console.log(`  ✓ borrado ${a.name}`)
+      } else console.log(`  ${a.name} → vacío, se puede borrar`)
+    }
+    if (!aBorrar.length) console.log('  ninguno (ya limpio)')
   }
 
   // ── 2. El mapeo ────────────────────────────────────────────────────────
-  const comites = [...yaEstan.values()]
+  const borrados = new Set(LIMPIAR ? aBorrar.map(a => a.id) : [])
+  const comites = todos.filter(a => !borrados.has(a.id) && !SOBRAN.includes(a.name))
   const { data: ev } = await sb.from('events')
     .select('id, title').eq('event_type', 'charla').gte('starts_at', DESDE)
   const { data: yaCon } = await sb.from('event_organizing_committees').select('event_id')
@@ -64,12 +69,10 @@ async function main() {
   for (const e of (ev ?? []) as Array<{ id: string; title: string }>) {
     if (conComite.has(e.id)) continue
     const canon = canonicalCharlaTitle(e.title) ?? e.title
-    // Los Youth recién creados pueden no estar si esto es un dry-run.
-    const c = comiteDeLaCharla(canon, comites) ?? (YOUTH.includes(`Sede ${canon.replace(/^Charla /, '')}`)
-      ? { id: '(por crear)', name: `Sede ${canon.replace(/^Charla /, '')}` } : null)
+    const c = comiteDeLaCharla(canon, comites)
     if (!c) { sinResolver.set(e.title, (sinResolver.get(e.title) ?? 0) + 1); continue }
     resumen.set(c.name, (resumen.get(c.name) ?? 0) + 1)
-    if (c.id !== '(por crear)') asignar.push({ event_id: e.id, committee_id: c.id })
+    asignar.push({ event_id: e.id, committee_id: c.id })
   }
 
   console.log(`\n=== 2. charlas sin comité a asignar (${(ev ?? []).length} revisadas) ===`)
@@ -79,8 +82,7 @@ async function main() {
     ;[...sinResolver].forEach(([t, k]) => console.log(`     ${k}×  ${t}`))
   } else console.log('\n  sin resolver: ninguna')
 
-  if (SOLO_COMITES) { console.log('\n>>> comités creados; las asignaciones quedan pendientes de aprobación'); return }
-  if (!APLICAR) { console.log('\n>>> DRY-RUN: no se escribió nada'); return }
+  if (!APLICAR) { console.log(`\n>>> ${LIMPIAR ? 'LIMPIEZA hecha; las asignaciones quedan' : 'DRY-RUN: no se escribió nada'}`); return }
   if (asignar.length) {
     const { error } = await sb.from('event_organizing_committees').insert(asignar)
     if (error) throw error

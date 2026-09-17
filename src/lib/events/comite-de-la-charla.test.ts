@@ -36,8 +36,28 @@ describe('comiteDeLaCharla', () => {
   })
 
   it('sin comité posible devuelve null, no adivina', () => {
-    expect(comiteDeLaCharla('Charla Pedregal Domingo Youth', COMITES)).toBeNull()
     expect(comiteDeLaCharla('Charla Inventada', COMITES)).toBeNull()
+  })
+
+  it('TODAS las charlas Youth van al mismo comité, sea la sede que sea', () => {
+    // Decisión del usuario el 2026-09-17, después de que yo creara tres comités
+    // Youth separados: el Comité Youth ya existía y es uno solo para todas.
+    const conYouth = [...COMITES, C('Comité Youth')]
+    expect(comiteDeLaCharla('Charla Pedregal Domingo Youth', conYouth)?.name).toBe('Comité Youth')
+    expect(comiteDeLaCharla('Charla Pedregal Miércoles Youth', conYouth)?.name).toBe('Comité Youth')
+    expect(comiteDeLaCharla('Charla Cartago Youth', conYouth)?.name).toBe('Comité Youth')
+  })
+
+  it('una charla Youth NUNCA cae en el comité de la sede', () => {
+    // Sin el Comité Youth en la lista, la tentación sería mandar "Charla
+    // Cartago Youth" a "Sede Cartago". Son equipos distintos: mejor null y que
+    // el script lo reporte.
+    expect(comiteDeLaCharla('Charla Cartago Youth', COMITES)).toBeNull()
+  })
+
+  it('y si hubiera más de un comité Youth, tampoco adivina', () => {
+    const dos = [C('Comité Youth'), C('Sede Cartago Youth')]
+    expect(comiteDeLaCharla('Charla Cartago Youth', dos)).toBeNull()
   })
 
   it('si hay DOS candidatos, tampoco adivina', () => {
