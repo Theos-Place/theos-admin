@@ -683,6 +683,52 @@ Actualizar la infografía/tutorial "Tu primera vez en el sistema" en /ayuda si e
 cambia. Probar el camino completo con un usuario de prueba. tsc/lint/vitest al cierre.
 ```
 
+### [ ] REP-4 · Reporte de asistencia: semanas con fechas, no números ISO (pedido 2026-09-17)
+
+"Semana 38" no le dice nada a nadie; debe leerse "14–20 set". El caso que lo
+disparó: querer saber si el decrecimiento de Meridiano Martes desde la semana
+26 (= 22–28 jun) coincide con la apertura de los miércoles.
+
+Prompt para Claude Code:
+
+```
+UX · Reporte de asistencia: etiquetar las semanas con su rango de fechas
+
+PANTALLA: src/app/(admin)/reportes/asistencia/page.tsx y sus componentes
+(SemanaDetallePanel, el gráfico de asistencia semanal, el selector/lista de semanas).
+
+QUÉ: en todo lo que el usuario VE, la semana se muestra como rango de fechas en español
+corto: "14–20 set" (mismo mes) o "28 set–4 oct" (cruza mes); si el año mostrado no es el
+del reporte (semana 1 que arranca en diciembre), incluir el año. El número ISO puede
+quedar como dato secundario en el tooltip ("Semana 38 · 14–20 set"), pero nunca como
+etiqueta principal.
+
+DÓNDE APLICA:
+1. Eje X del gráfico semanal: con ~52 puntos no caben 52 rangos — mostrar ticks espaciados
+   (ya existe xTickInterval) con el formato corto "14 set" (lunes de la semana) y el rango
+   completo en el tooltip al pasar el mouse.
+2. Tooltip del gráfico: "14–20 set · N asistencias" (+ semana ISO como secundario).
+3. El panel de detalle de semana (REP-2) y su título.
+4. Cualquier tabla o lista que hoy diga "Semana N".
+5. La URL se queda como está (?semana=2026-W37) — es la clave técnica, no se toca.
+
+IMPLEMENTACIÓN:
+- Función pura en src/lib/reports/ (ej. rangoDeSemana(year, week) → { desde, hasta,
+  etiqueta, etiquetaCorta }) desde la semana ISO: lunes a domingo. Usá la misma definición
+  ISO que ya usa el reporte (ojo con REP-3: ya se arregló la mezcla año calendario/semana
+  ISO — no reintroducirla). Meses en minúscula estilo es-CR: ene, feb, mar, abr, may, jun,
+  jul, ago, set, oct, nov, dic (SET, no sep).
+- Tests: semana normal, semana que cruza mes, semana 1 que arranca en diciembre del año
+  anterior, semana 53.
+
+EXTRA (mismo esfuerzo, mucha ganancia): en el reporte por charla/sede, permitir COMPARAR
+dos series en el mismo gráfico (ej. Meridiano Martes vs Pedregal Miércoles) para ver si
+la caída de una coincide con la apertura de la otra. Si el filtro actual es de una sola
+sede/charla, agregar un "comparar con…" que superponga la segunda serie con línea punteada
+y leyenda. Si esto crece mucho, dejalo para un ítem aparte y reportalo.
+tsc/lint/vitest al cierre.
+```
+
 ## Fase 18 — Pedido el 2026-09-16
 
 ### [ ] AUD-2 · El historial de cambios no se puede ver desde ninguna pantalla

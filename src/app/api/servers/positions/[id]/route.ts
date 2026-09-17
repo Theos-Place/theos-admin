@@ -64,6 +64,15 @@ export async function DELETE(
     await deleteServicePosition(id)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    // Convención del repo: DELETE con referencias → 409 con el conteo, para que
+    // la pantalla pueda decir cuántos hay que reasignar primero.
+    const m = error instanceof Error ? /^(?:PUESTO|AREA)_CON_SERVIDORES:(\d+)$/.exec(error.message) : null
+    if (m) {
+      return NextResponse.json(
+        { error: `No se puede eliminar: el puesto tiene {n} servidor(es) activo(s). Reasignalos o desactivalos primero.`.replace('{n}', m[1]), code: 'tiene_servidores_activos', activeVolunteers: Number(m[1]) },
+        { status: 409 },
+      )
+    }
     reportarError('DELETE /api/servers/positions/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

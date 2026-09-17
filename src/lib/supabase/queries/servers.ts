@@ -613,7 +613,12 @@ export async function updateArea(
 
 /** Elimina un área o comité (fila de `areas`). El caller debe verificar antes que
  *  no tenga servidores activos / puestos / comités hijos. */
+/** Borra un área/comité. TIRA si todavía tiene servidores activos: misma razón
+ *  que deleteServicePosition —la comprobación vivía solo en la pantalla y el
+ *  cascade de `volunteers` se lleva todo por delante—. */
 export async function deleteArea(id: string): Promise<void> {
+  const { activeVolunteers } = await countAreaLinks(id)
+  if (activeVolunteers > 0) throw new Error(`AREA_CON_SERVIDORES:${activeVolunteers}`)
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').delete().eq('id', id)
   if (error) throw error
@@ -685,7 +690,24 @@ export async function countActivePositionVolunteers(positionId: string): Promise
   return count ?? 0
 }
 
+/**
+ * Borra un puesto. TIRA si todavía tiene servidores activos.
+ *
+ * La comprobación vivía SOLO en la pantalla (`ActiveWarningModal`), y el proxy
+ * excluye /api: pegarle al endpoint directo borraba igual. Y no es un borrado
+ * inocuo — `volunteers.position_id` es ON DELETE CASCADE, así que se llevaba
+ * por delante todas las filas de voluntariado sin dejar rastro.
+ *
+ * En el Comité Dirigentes eso era peor todavía: borrar "Dirigente CR" habría
+ * barrido a los 218 de un saque, dejando `study_leaders` y el rol intactos y la
+ * pantalla de dirigentes mostrando a todos como inactivos — exactamente el
+ * desajuste que se acaba de reconciliar a mano.
+ *
+ * Convención del repo (AGENTS.md): DELETE con referencias → 409 con conteo.
+ */
 export async function deleteServicePosition(id: string): Promise<void> {
+  const activos = await countActivePositionVolunteers(id)
+  if (activos > 0) throw new Error(`PUESTO_CON_SERVIDORES:${activos}`)
   const supabase = createAdminClient()
   const { error } = await supabase.from('service_positions').delete().eq('id', id)
   if (error) throw error
