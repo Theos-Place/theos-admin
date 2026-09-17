@@ -698,11 +698,7 @@ Verificado con datos reales: Meridiano Miércoles arranca el 13–19 jul y
 Meridiano Martes baja de ~220 a ~190 por esas fechas — que era justo la
 pregunta que originó el ítem.
 
-<details><summary>Prompt original</summary>
-
-</details>
-
-### REP-4 (original)
+<details><summary>Prompt original del ítem</summary>
 
 "Semana 38" no le dice nada a nadie; debe leerse "14–20 set". El caso que lo
 disparó: querer saber si el decrecimiento de Meridiano Martes desde la semana
@@ -747,6 +743,8 @@ sede/charla, agregar un "comparar con…" que superponga la segunda serie con l�
 y leyenda. Si esto crece mucho, dejalo para un ítem aparte y reportalo.
 tsc/lint/vitest al cierre.
 ```
+
+</details>
 
 ### [ ] EVE-12 · Encargados de eventos con alcance por comité (pedido 2026-09-17)
 
