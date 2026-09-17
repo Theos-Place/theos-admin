@@ -68,3 +68,28 @@ export function diaQueSeEstaViendo(
   }
   return hoyYmd
 }
+
+/**
+ * Con qué fecha se muestra una asistencia en el historial de una persona.
+ *
+ * EL BUG (2026-09-17). El historial usaba `events.starts_at`, y en un evento
+ * RECURRENTE esa es el ancla de la serie: la misma para todas las ocurrencias.
+ * Floriana veía dos veces la charla del 8 de setiembre y ninguna del 15 — eran
+ * sus dos asistencias a "Charla Meridiano Martes", pintadas las dos con la
+ * fecha de la serie.
+ *
+ * En un evento recurrente manda el instante del CHECK-IN, que es el único dato
+ * que distingue una semana de otra. En uno que pasa una sola vez sigue mandando
+ * `starts_at`: ahí el check-in puede haberse digitado al día siguiente y la
+ * fecha del evento es la correcta.
+ */
+export function fechaDeLaAsistencia(input: {
+  esRecurrente: boolean | null | undefined
+  /** `events.starts_at`. */
+  inicioDelEvento: string | null | undefined
+  /** `event_checkins.checked_in_at`. */
+  marcadoEn: string
+}): string {
+  if (input.esRecurrente) return input.marcadoEn
+  return input.inicioDelEvento ?? input.marcadoEn
+}

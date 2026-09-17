@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRole } from '@/types/member'
 import type { DbMember, DbMemberEnriched } from './members'
+import { fechaDeLaAsistencia } from '@/lib/events/checkins-del-dia'
 import { getAreaNameMap, parentAreaName } from './_area-map'
 import { meetsAttendanceCriteria } from '@/lib/attendance'
 import { esComiteDirigentes } from '@/lib/dirigentes'
@@ -171,7 +172,7 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         event_id,
         checked_in_at,
         sub_event_id,
-        events(title, event_type, starts_at),
+        events(title, event_type, starts_at, is_recurring),
         sub_event:sub_events(name)
       `)
       .eq('member_id', id)
@@ -431,12 +432,19 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   // 4. Aplanar histórico
   const attendance: DbAttendance[] = (checkinsRes.data ?? []).map((c) => {
     const row = c as Record<string, unknown>
-    const ev = row.events as { title: string; event_type: string; starts_at: string } | null
+    const ev = row.events as { title: string; event_type: string; starts_at: string; is_recurring: boolean | null } | null
     const sub = row.sub_event as { name: string } | null
     return {
       event_name: ev?.title ?? '',
       event_type: ev?.event_type ?? 'otro',
-      event_date: ev?.starts_at ?? row.checked_in_at as string,
+      // En un evento RECURRENTE, starts_at es el ancla de la serie: la misma
+      // para todas las semanas. Usarla acá hacía que el historial repitiera la
+      // misma fecha por cada asistencia y nunca mostrara las otras.
+      event_date: fechaDeLaAsistencia({
+        esRecurrente: ev?.is_recurring,
+        inicioDelEvento: ev?.starts_at,
+        marcadoEn: row.checked_in_at as string,
+      }),
       was_volunteer: volunteerEventIds.has(row.event_id as string),
       sub_event_name: sub?.name ?? null,
     }
