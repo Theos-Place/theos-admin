@@ -26,6 +26,15 @@ export async function DELETE(req: NextRequest) {
     await removeVolunteer(position_id, member_id, auth.ctx.userId)
     return NextResponse.json({ ok: true })
   } catch (error) {
+    // Quitar a alguien del Comité Dirigentes lo desactiva como dirigente; si
+    // está dando un grupo, no se hace. Mismo criterio que la pantalla de
+    // dirigentes, para que dé igual por dónde se entre.
+    if (error instanceof Error && error.message === 'DIRIGENTE_CON_GRUPO_ACTIVO') {
+      return NextResponse.json({
+        error: 'No se puede quitar del Comité Dirigentes: tiene un grupo de estudio en curso o abierto. Cerrá o reasigná el grupo primero.',
+        code: 'has_active_groups',
+      }, { status: 409 })
+    }
     reportarError('DELETE /api/servers/volunteers:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

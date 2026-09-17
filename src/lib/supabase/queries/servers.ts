@@ -2,6 +2,7 @@ import { createAdminClient, type Insertable, type Updatable } from '@/lib/supaba
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 import { todayCR } from '@/lib/format'
+import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -463,7 +464,12 @@ async function syncRolesForApprovedApplications(ids: string[], actorUserId?: str
   const { syncRolesOnAssign } = await import('./position-role-sync')
   for (const row of (data ?? []) as Array<{ applicant_id: string; vacancy: { position_id: string | null } | { position_id: string | null }[] | null }>) {
     const vacancy = Array.isArray(row.vacancy) ? row.vacancy[0] : row.vacancy
-    if (vacancy?.position_id) await syncRolesOnAssign(row.applicant_id, vacancy.position_id, actorUserId)
+    if (!vacancy?.position_id) continue
+    await syncRolesOnAssign(row.applicant_id, vacancy.position_id, actorUserId)
+    // Aprobar una aplicación mete al voluntario por el RPC `approve_applications`,
+    // saltándose assignVolunteer. Si el puesto es del Comité Dirigentes hay que
+    // sincronizar igual, o entrar por acá volvería a desalinear las listas.
+    await sincronizarDirigente(row.applicant_id, vacancy.position_id, true)
   }
 }
 
@@ -767,6 +773,77 @@ export async function importServicePositions(rows: ImportPositionRow[]): Promise
 }
 
 // Servidores (volunteers en una posición)
+
+/**
+ * Si el puesto es del Comité Dirigentes, mover a alguien ahí tiene que mover
+ * TODO lo demás: la ficha de dirigente y el rol.
+ *
+ * EL HUECO QUE ESTO CIERRA (2026-09-17). El comité es la fuente de verdad del
+ * estado "dirigente activo", y la pantalla de dirigentes lo respeta llamando a
+ * `setDirigenteActive`, que sincroniza las tres cosas. Pero desde la pantalla
+ * de SERVIDORES se podía agregar o quitar gente del mismo comité y no se
+ * enteraba nadie: `syncRoles*` solo aplica el mapeo puesto→rol y no hay regla
+ * para dirigente, y `study_leaders` no se tocaba.
+ *
+ * Así se generaron las 80 diferencias que hubo que reconciliar a mano: 70
+ * personas en el comité que la lista de dirigentes daba por inactivas.
+ *
+ * NO hay recursión: `setDirigenteActive` escribe en `volunteers` directo, no
+ * pasa por assignVolunteer/removeVolunteer.
+ */
+async function esPuestoDelComiteDirigentes(positionId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('service_positions')
+    .select('title, area:areas!service_positions_area_id_fkey(name)')
+    .eq('id', positionId).maybeSingle()
+  if (!data) return false
+  const row = data as { title: string; area: unknown }
+  const area = (Array.isArray(row.area) ? row.area[0] : row.area) as { name: string } | null
+  return area?.name === COMITE_DIRIGENTES && esPuestoDeDirigente(row.title)
+}
+
+/** ¿Le quedaría algún OTRO puesto de dirigente activo si sale de éste?
+ *  Alguien puede ser "Dirigente CR" y "Dirigente Madrid" a la vez. */
+async function leQuedaOtroPuestoDeDirigente(memberId: string, exceptoPositionId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data: area } = await supabase
+    .from('areas').select('id').eq('area_type', 'committee').eq('name', COMITE_DIRIGENTES).maybeSingle()
+  if (!area) return false
+  const { data: puestos } = await supabase
+    .from('service_positions').select('id, title').eq('area_id', (area as { id: string }).id)
+  const ids = ((puestos ?? []) as Array<{ id: string; title: string | null }>)
+    .filter(p => esPuestoDeDirigente(p.title) && p.id !== exceptoPositionId).map(p => p.id)
+  if (ids.length === 0) return false
+  const { data: quedan } = await supabase
+    .from('volunteers').select('id').eq('member_id', memberId).eq('status', 'active').in('position_id', ids)
+  return (quedan ?? []).length > 0
+}
+
+/**
+ * Valida ANTES de escribir que sacar a esta persona del comité no la deje sin
+ * rol en mitad de un grupo.
+ *
+ * Va antes y no después a propósito: si tirara al final, el voluntario ya
+ * estaría dado de baja y el cambio quedaría a medias —voluntario fuera,
+ * dirigente adentro—, que es justo el desajuste que todo esto viene a cerrar.
+ */
+async function validarSalidaDeDirigente(memberId: string, positionId: string): Promise<void> {
+  if (!(await esPuestoDelComiteDirigentes(positionId))) return
+  if (await leQuedaOtroPuestoDeDirigente(memberId, positionId)) return
+  const { membersWithActiveGroups } = await import('./studies')
+  const conGrupo = await membersWithActiveGroups([memberId])
+  if (conGrupo.has(memberId)) throw new Error('DIRIGENTE_CON_GRUPO_ACTIVO')
+}
+
+async function sincronizarDirigente(memberId: string, positionId: string, entra: boolean): Promise<void> {
+  if (!(await esPuestoDelComiteDirigentes(positionId))) return
+  const { setDirigenteActive } = await import('./studies')
+  if (entra) { await setDirigenteActive(memberId, true); return }
+  if (await leQuedaOtroPuestoDeDirigente(memberId, positionId)) return
+  await setDirigenteActive(memberId, false)
+}
+
 export async function assignVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase
@@ -782,9 +859,13 @@ export async function assignVolunteer(positionId: string, memberId: string, acto
   if (error) throw error
   const { syncRolesOnAssign } = await import('./position-role-sync')
   await syncRolesOnAssign(memberId, positionId, actorUserId)
+  await sincronizarDirigente(memberId, positionId, true)
 }
 
 export async function removeVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
+  // Antes de tocar nada: sacarlo del Comité Dirigentes lo desactiva como
+  // dirigente, y eso no se le hace a quien está dando un grupo.
+  await validarSalidaDeDirigente(memberId, positionId)
   const supabase = createAdminClient()
   const { error } = await supabase
     .from('volunteers')
@@ -794,6 +875,7 @@ export async function removeVolunteer(positionId: string, memberId: string, acto
   if (error) throw error
   const { syncRolesOnRemove } = await import('./position-role-sync')
   await syncRolesOnRemove(memberId, positionId, actorUserId)
+  await sincronizarDirigente(memberId, positionId, false)
 }
 
 // ── Solicitudes de puesto nuevo (position_requests) ──────────────────────────

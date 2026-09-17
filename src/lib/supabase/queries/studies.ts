@@ -775,6 +775,16 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
     if (blocked.has(memberId)) throw new Error('DIRIGENTE_NO_RECOMENDADO')
     const enRevision = await enRevisionIds(supabase, [memberId])
     if (enRevision.has(memberId)) throw new Error('DIRIGENTE_EN_REVISION')
+  } else {
+    // No se desactiva a quien está dando un grupo. El guard vive ACÁ y no solo
+    // en la ruta de la pantalla de dirigentes porque ahora también se llega
+    // desde servidores (quitar a alguien del Comité Dirigentes). Si la
+    // protección viviera únicamente en una pantalla, entrar por la otra le
+    // quitaría el rol a alguien en mitad de su grupo — que es exactamente lo
+    // que estuvo a punto de pasar con 6 personas al reconciliar las listas.
+    // La ruta individual y el lote ya filtran antes, así que acá no cambian.
+    const conGrupo = await membersWithActiveGroups([memberId])
+    if (conGrupo.has(memberId)) throw new Error('DIRIGENTE_CON_GRUPO_ACTIVO')
   }
 
   // study_leaders: actualizar estado sin tocar el resto (o crear si no existe).
