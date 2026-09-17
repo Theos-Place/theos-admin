@@ -729,6 +729,54 @@ y leyenda. Si esto crece mucho, dejalo para un ítem aparte y reportalo.
 tsc/lint/vitest al cierre.
 ```
 
+### [ ] EVE-12 · Encargados de eventos con alcance por comité (pedido 2026-09-17)
+
+Hoy el rol de eventos abre TODOS los eventos. La regla nueva: el rol asignado
+a mano sigue abriendo todo, pero el rol que llega automático por el puesto
+(position-role-sync) solo da edición sobre los eventos donde el comité de la
+persona es organizador (ej. bienvenida de Alajuela → solo eventos de Alajuela).
+
+Prompt para Claude Code:
+
+```
+PERMISOS · Eventos: alcance por comité para el rol automático de eventos
+
+REGLA DE NEGOCIO:
+- Rol de eventos asignado MANUALMENTE → sin cambio: ve y edita todos los eventos.
+- Rol de eventos otorgado AUTOMÁTICAMENTE por el puesto (position-role-sync) → solo puede
+  EDITAR y operar (check-in, inscripciones, etc.) los eventos donde alguno de SUS comités
+  (los de sus puestos activos) esté en event_organizing_committees. Los demás eventos:
+  solo lectura, como cualquier miembro (lo que ya vea todo el mundo del calendario).
+
+ETAPA 1 — DIAGNÓSTICO (reportar antes de codificar):
+1. ¿Cómo distingue hoy el sistema un rol manual de uno que puso position-role-sync?
+   (¿member_roles tiene source/granted_by? Si NO hay forma de distinguirlos, proponer la
+   migración mínima —una columna source 'manual'|'puesto'— y cómo poblarla: los que
+   coinciden con un puesto activo que otorga el rol → 'puesto'; el resto → 'manual'.
+   Listar quiénes quedarían en cada grupo para revisión de la usuaria ANTES de aplicar.)
+2. Inventario de TODOS los handlers /api de eventos que hoy autorizan con
+   requireRoles(eventos): crear, editar, borrar, check-in, inscripciones, compartir,
+   sub-eventos, excepciones de recurrencia.
+3. Eventos SIN comité organizador asignado: ¿cuántos hay? Con la regla nueva nadie con rol
+   automático los podría operar — listarlos para que la usuaria les asigne comité.
+
+ETAPA 2 — IMPLEMENTACIÓN:
+- Helper central (ej. src/lib/auth/events-scope.ts, espejo de studies-scope.ts —
+  REUTILIZAR ese patrón, NO INVENTAR uno nuevo): dado un member, devuelve
+  { alcance: 'todos' } | { alcance: 'comites', committeeIds: [...] } | { alcance: 'ninguno' }.
+  'todos' si tiene el rol manual (o admin/direccion); 'comites' si solo lo tiene por
+  puesto, con los comités de sus puestos ACTIVOS (si el puesto se desactiva, el alcance
+  cae solo — verificar que position-role-sync ya le quite el rol).
+- Aplicarlo en TODOS los handlers del inventario (server-side, no solo esconder botones)
+  → 403 con mensaje claro ("Este evento no es de tu comité") si no alcanza.
+- UI: en la lista/calendario de gestión, quien tiene alcance por comité ve sus eventos
+  editables y el resto sin acciones de edición; el botón de crear evento le preselecciona
+  (o limita) el comité organizador a los suyos.
+Tests del helper (manual=todos, puesto=sus comités, puesto inactivo=pierde, sin rol=
+ninguno) + test de un handler con 403. tsc/lint/vitest al cierre. DRY-RUN: si la etapa 1
+requiere poblar la columna source, esa lista se aprueba antes de migrar.
+```
+
 ## Fase 18 — Pedido el 2026-09-16
 
 ### [ ] AUD-2 · El historial de cambios no se puede ver desde ninguna pantalla

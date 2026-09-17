@@ -14,6 +14,7 @@ import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
+import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
 import { useSearchParams } from 'next/navigation'
 import type { DetalleDeSemana } from '@/lib/reports/semana-detalle'
 import {
@@ -242,12 +243,18 @@ export default function ReporteAsistenciaPage() {
                   <ResponsiveContainer>
                     <BarChart data={report.weekly} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
-                      <XAxis dataKey="week" interval={xTickInterval} tick={EJE_TICK} tickLine={false} axisLine={false} />
+                      {/* REP-4: el tick muestra el lunes ("14 set"), no el
+                          número ISO. Con ~52 puntos no cabe el rango completo;
+                          ese va en el tooltip. */}
+                      <XAxis
+                        dataKey="week" interval={xTickInterval} tick={EJE_TICK} tickLine={false} axisLine={false}
+                        tickFormatter={(w) => rangoDeSemana(report.year, Number(w), report.year).etiquetaCorta}
+                      />
                       <YAxis tick={EJE_TICK} tickLine={false} axisLine={false} />
                       <Tooltip
                         contentStyle={ESTILO_TOOLTIP}
                         formatter={(v, _n, p) => [Number(v), (p?.payload as { partial?: boolean })?.partial ? 'Check-ins (semana parcial)' : 'Check-ins']}
-                        labelFormatter={(l) => `Semana ${l}`}
+                        labelFormatter={(l) => rangoDeSemana(report.year, Number(l), report.year).conNumero}
                       />
                       <ReferenceLine y={report.weeklyAvg} stroke={NAVY} strokeDasharray="5 4" strokeWidth={1.5} />
                       <Bar
@@ -297,7 +304,7 @@ export default function ReporteAsistenciaPage() {
                   cosas distintas creyendo que eran la misma. */}
               <ChartCard
                 title={rankingSemanal
-                  ? `Comparación por sede — semana ${semanaSel!.week} de ${semanaSel!.year}`
+                  ? `Comparación por sede — ${rangoDeSemana(semanaSel!.year, semanaSel!.week, semanaSel!.year).etiqueta}`
                   : `Comparación por sede — ${report.year}`}
                 subtitle={rankingSemanal
                   ? 'Check-ins de esa semana por sede. La sede seleccionada se resalta.'

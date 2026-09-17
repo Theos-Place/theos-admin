@@ -3,6 +3,7 @@
 import { ArrowLeft, Loader2, TrendingDown, TrendingUp, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Comparacion, DetalleDeSemana } from '@/lib/reports/semana-detalle'
+import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
 
 /**
  * REP-2 · El detalle de UNA semana, debajo del gráfico anual.
@@ -53,7 +54,10 @@ export function SemanaDetallePanel({
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h3 className="text-base font-bold text-navy font-display">
-            Semana {week} de {year}
+            {/* REP-4: el rango manda y el número ISO va detrás. "Semana 38" no
+                le dice a nadie qué semana fue. */}
+            {rangoDeSemana(year, week, year).etiqueta}
+            <span className="ml-2 font-normal text-navy-light/80">Semana {week} de {year}</span>
             {detalle?.enCurso && (
               <span className="ml-2 rounded-full bg-surface-low px-2.5 py-0.5 text-[11px] font-medium text-navy-light align-middle font-body">
                 semana en curso
@@ -92,7 +96,7 @@ export function SemanaDetallePanel({
             </p>
           </div>
           <Delta c={detalle.vsSemanaAnterior} etiqueta="vs semana anterior" />
-          <Delta c={detalle.vsAnoPasado} etiqueta={`vs semana ${week} de ${year - 1}`} />
+          <Delta c={detalle.vsAnoPasado} etiqueta={`vs ${rangoDeSemana(year - 1, week, year - 1).etiqueta} de ${year - 1}`} />
         </div>
       ) : null}
     </div>
