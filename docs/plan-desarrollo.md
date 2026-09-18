@@ -550,6 +550,10 @@ La función y la regla en AGENTS.md quedaron listas el 2026-09-15, pero hoy no
 hay ningún import de CCB dentro de `src/` que la use — son todos scripts
 puntuales. Cuando se escriba el próximo import, tiene que entrar por ahí.
 
+**No es trabajo pendiente: es una nota para el próximo import.** SEC-3
+(2026-09-17) la dejó ejecutable solo con la llave de servicio, que es como la
+llamaría ese import de todos modos.
+
 ## Fase 17 — Pedido el 2026-09-15
 
 ### [x] MAT-2 · La tarjeta de grupo en mobile — HECHO 2026-09-15
@@ -798,9 +802,10 @@ Dos huecos que aparecieron al implementar y se cerraron:
 - **Editar el evento propio y cambiarle el organizador** era poder firmarle un
   evento a otra sede. El PUT valida los comités nuevos contra el alcance.
 
-**Pendiente operativo:** el taller **"Entre Mujeres"** es el único evento sin
-comité organizador, así que hoy solo lo operan los roles manuales y dirección.
-Asignarle comité desde la pantalla del evento lo resuelve.
+El único evento que quedó sin comité —el taller "Entre Mujeres"— lo asignó la
+usuaria a mano el 2026-09-17: va al Comité Mujeres. Verificado: **0 de 208
+eventos de los últimos 90 días quedan sin comité organizador**, así que la regla
+no le cierra la puerta a nadie.
 
 En la pantalla: el selector de comités organizadores se limita a los suyos, el
 detalle de un evento ajeno no muestra las pestañas de gestión (mostrar una
