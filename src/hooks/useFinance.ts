@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
+import { useCargaRemota } from './useCargaRemota'
 import type {
   DbPayment, DbDonation, DbRefund, DbImportBatch,
 } from '@/lib/supabase/queries/finance'
@@ -31,55 +32,58 @@ const cache = new Map<FinanceSlice, { data: unknown[]; ts: number }>()
 /** Datos de finanzas por slice. `useFinance('refunds')` descarga SOLO
  *  devoluciones; sin argumentos trae todo (compatibilidad). Los slices no
  *  pedidos quedan como []. */
+/** Lo que trae una carga. La constante vacía evita que un `?? {...}` cambie de
+ *  identidad en cada render y deje en bucle a quien lo consuma. */
+type Datos = {
+  payments: DbPayment[]; donations: DbDonation[]; refunds: DbRefund[]
+  scholarships: Scholarship[]; batches: DbImportBatch[]
+}
+const NINGUNO: Datos = { payments: [], donations: [], refunds: [], scholarships: [], batches: [] }
+
 export function useFinance(...slices: FinanceSlice[]) {
   const wantedKey = (slices.length ? slices : ALL_SLICES).join(',')
 
-  const [dbPayments, setDbPayments]   = useState<DbPayment[]>([])
-  const [dbDonations, setDbDonations] = useState<DbDonation[]>([])
-  const [dbRefunds, setDbRefunds]     = useState<DbRefund[]>([])
-  const [dbScholar, setDbScholar]     = useState<Scholarship[]>([])
-  const [dbBatches, setDbBatches]     = useState<DbImportBatch[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [error, setError]             = useState<string | null>(null)
-
-  const fetchAll = useCallback(async (force = false) => {
+  /**
+   * LINT-1 · Sin `setLoading` dentro del efecto: useCargaRemota lo deriva del
+   * sello de la petición. `forzar` va por ref y no en la clave porque no cambia
+   * QUÉ se pide, solo si se ignora el caché.
+   */
+  const forzarRef = useRef(false)
+  const { datos, cargando, error, recargar } = useCargaRemota<Datos>(wantedKey, async () => {
+    const forzar = forzarRef.current
+    forzarRef.current = false
     const wanted = wantedKey.split(',') as FinanceSlice[]
-    setLoading(true)
-    setError(null)
-    try {
-      const results = await Promise.all(wanted.map(async (slice): Promise<[FinanceSlice, unknown[]]> => {
-        const hit = cache.get(slice)
-        if (!force && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
-        const res = await fetch(ENDPOINT[slice])
-        if (!res.ok) throw new Error('Error cargando finanzas')
-        const json = await res.json()
-        // Algunos endpoints devuelven el array pelado y otros lo envuelven con
-        // metadata (donations con su total; refunds con can_resolve desde
-        // FIN-6). La clave del sobre coincide con el nombre del slice.
-        const rows: unknown[] = Array.isArray(json)
-          ? json
-          : (json[slice] ?? json.donations ?? [])
-        cache.set(slice, { data: rows, ts: Date.now() })
-        return [slice, rows]
-      }))
-      for (const [slice, rows] of results) {
-        if (slice === 'payments') setDbPayments(rows as DbPayment[])
-        else if (slice === 'donations') setDbDonations(rows as DbDonation[])
-        else if (slice === 'refunds') setDbRefunds(rows as DbRefund[])
-        else if (slice === 'scholarships') setDbScholar(rows as Scholarship[])
-        else setDbBatches(rows as DbImportBatch[])
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally {
-      setLoading(false)
+    const results = await Promise.all(wanted.map(async (slice): Promise<[FinanceSlice, unknown[]]> => {
+      const hit = cache.get(slice)
+      if (!forzar && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
+      const res = await fetch(ENDPOINT[slice])
+      if (!res.ok) throw new Error('Error cargando finanzas')
+      const json = await res.json()
+      // Algunos endpoints devuelven el array pelado y otros lo envuelven con
+      // metadata (donations con su total; refunds con can_resolve desde
+      // FIN-6). La clave del sobre coincide con el nombre del slice.
+      const rows: unknown[] = Array.isArray(json) ? json : (json[slice] ?? json.donations ?? [])
+      cache.set(slice, { data: rows, ts: Date.now() })
+      return [slice, rows]
+    }))
+    const out: Datos = { payments: [], donations: [], refunds: [], scholarships: [], batches: [] }
+    for (const [slice, rows] of results) {
+      if (slice === 'payments') out.payments = rows as DbPayment[]
+      else if (slice === 'donations') out.donations = rows as DbDonation[]
+      else if (slice === 'refunds') out.refunds = rows as DbRefund[]
+      else if (slice === 'scholarships') out.scholarships = rows as Scholarship[]
+      else out.batches = rows as DbImportBatch[]
     }
-  }, [wantedKey])
+    return out
+  })
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  // refetch fuerza red (salta la caché): se usa tras mutaciones. Devuelve la
+  // promesa para quien haga `await refetch()` antes de navegar.
+  const refetch = useCallback(() => { forzarRef.current = true; return recargar() }, [recargar])
 
-  // refetch fuerza red (salta la caché): se usa tras mutaciones.
-  const refetch = useCallback(() => fetchAll(true), [fetchAll])
+  const d = datos ?? NINGUNO
+  const dbPayments = d.payments, dbDonations = d.donations, dbRefunds = d.refunds
+  const dbScholar = d.scholarships, dbBatches = d.batches
 
   const payments: Payment[]         = useMemo(() => dbPayments.map(toDomainPayment), [dbPayments])
   const donations: Donation[]       = useMemo(() => dbDonations.map(toDomainDonation), [dbDonations])
@@ -87,5 +91,5 @@ export function useFinance(...slices: FinanceSlice[]) {
   const scholarships: Scholarship[] = dbScholar
   const importBatches: ImportBatch[] = useMemo(() => dbBatches.map(toDomainImportBatch), [dbBatches])
 
-  return { payments, donations, refunds, scholarships, importBatches, loading, error, refetch }
+  return { payments, donations, refunds, scholarships, importBatches, loading: cargando, error, refetch }
 }

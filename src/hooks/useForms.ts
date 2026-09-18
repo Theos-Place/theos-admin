@@ -1,30 +1,21 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import type { DbFormTemplate } from '@/lib/supabase/queries/forms'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
 import type { FormTemplate } from '@/types/forms'
+import { useCargaRemota, json } from './useCargaRemota'
+
+const NINGUNO: DbFormTemplate[] = []
 
 export function useForms() {
-  const [dbForms, setDbForms] = useState<DbFormTemplate[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-
-  const fetchForms = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/forms')
-      if (!res.ok) throw new Error('Error cargando formularios')
-      setDbForms(await res.json())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { fetchForms() }, [fetchForms])
-
+  // LINT-1: "cargando" sale de useCargaRemota, que lo deriva del sello de la
+  // petición en vez de encenderlo dentro del efecto.
+  const { datos, cargando, error, recargar } = useCargaRemota<DbFormTemplate[]>(
+    'forms', () => json('/api/forms', 'Error cargando formularios'),
+  )
+  // El array vacío es una constante: `?? []` crearía uno nuevo en cada render y
+  // cualquier efecto de quien consuma esto entraría en bucle.
+  const dbForms = datos ?? NINGUNO
   const forms: FormTemplate[] = useMemo(() => dbForms.map(toDomainFormTemplate), [dbForms])
 
-  return { forms, loading, error, refetch: fetchForms }
+  return { forms, loading: cargando, error, refetch: recargar }
 }

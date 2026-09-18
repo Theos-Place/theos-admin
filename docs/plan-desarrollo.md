@@ -325,27 +325,55 @@ asignara. No es un bug: es plata que hay que devolver o acreditar, y **la
 decisión es del usuario**, saldo a favor o devolución. Las de Gisselle y
 Valeria ya se resolvieron el 2026-09-11.
 
-### [ ] LINT-1 · Quedan 70 warnings, y 67 son el mismo patrón
+### [~] LINT-1 · De 70 a 60 warnings — la mitad de los hooks migrados
 
-Van dos tandas (93 → 70). Lo que queda es casi todo
-`useEffect(() => { cargar() })` con un `setLoading(true)` antes del fetch.
+Van tres tandas (93 → 70 → 60). El techo del gate bajó a **60**.
+
+**La pieza nueva es `useCargaRemota`** (`src/hooks/`), con la regla pura y
+testeada en `lib/hooks/estado-de-carga.ts`. La idea: se guarda UN estado con el
+SELLO de la petición que lo produjo, así que "cargando" es una comparación —"lo
+que tengo no es de la petición que quiero"— y no un booleano que alguien tiene
+que acordarse de apagar. De paso desaparece la clase entera de bug en que
+`loading` se queda en true porque una rama del `try` se olvidó del `finally`.
+
+Migrados (10 hooks, −10 avisos): useForms, useEmployees, useCommunications,
+useStudyPlans, useGroup, useEventTypes, useMember, useFinance, useServers,
+useStudies. Ninguno cambió la forma de lo que devuelve, así que **ninguna
+pantalla se tocó**.
+
+**Dos cosas que casi se rompen en silencio y ahora tienen test:**
+ · `recargar()` devuelve una PROMESA. Hay pantallas que hacen `await refetch()`
+   y recién después navegan (p. ej. editar un grupo); con un recargar que solo
+   dispara y se olvida, la navegación pasaba antes de que llegaran los datos.
+   Lo cazó el compilador, no yo.
+ · La CLAVE tiene que ser un string estable. Un objeto o un `?? []` cambia de
+   identidad en cada render y deja la pantalla en bucle. Hay un test que revisa
+   todas las llamadas y un inventario explícito de las claves de hoy.
+
+**Lo que falta (60):**
+ · **57 `set-state-in-effect`.** Los hooks que quedan son los PAGINADOS
+   —useDonations, useMembers, usePaginatedList, useEvents, useDashboard,
+   useDirigentes—: acumulan páginas con `setDatos(prev => [...prev, ...])`, que
+   no encaja con un estado derivado y pide pensar el caso aparte. El resto son
+   ~45 avisos repartidos en pantallas, cada uno con su forma propia (sincronizar
+   un formulario con lo que llegó, resetear un filtro): no hay una pieza que los
+   cubra a todos.
+ · **3 `purity`**, que son `Date.now()` en render y hay que hacerlos junto con
+   estos: anclar el reloj pide guardarlo en estado desde un efecto, o sea un
+   `set-state-in-effect` nuevo.
 
 **Ojo con el camino corto**: reordenar el async NO los apaga. Está comprobado
-que la regla marca igual un `useCallback` async cuyo único `setState` va
-después del `await`, y solo se calla si el `setState` vive dentro de un
-`.then(...)`. Convertir `await` en `.then` sería maquillaje —el `setState`
-corre en el mismo tick— así que el arreglo real es derivar el estado o mover el
-`setState` a un manejador de evento.
+que la regla marca igual un `useCallback` async cuyo único `setState` va después
+del `await`, y solo se calla si el `setState` vive dentro de un `.then(...)`.
+Convertir `await` en `.then` sería maquillaje —el `setState` corre en el mismo
+tick— así que el arreglo real es derivar el estado o moverlo a un manejador.
 
-Y el patrón de "ajustar el estado durante el render" que se usó en la segunda
-tanda tiene una trampa: el valor con el que se compara **tiene que ser estable
-entre renders**. Un `?? []` o un objeto literal hace que el render se llame a sí
-mismo sin parar. Con un efecto eso solo re-disparaba el efecto; durante el
-render, tumba la pantalla.
-
-Los 3 de `purity` son `Date.now()` en render y hay que hacerlos junto con estos:
-anclar el reloj pide guardarlo en estado desde un efecto, o sea un
-`set-state-in-effect` nuevo.
+**Verificación pendiente:** tsc, lint, 3.028 tests y build pasan, y la regla
+pura tiene sus tests, pero **no hay render tests en el repo** (vitest corre en
+`node`), así que los 10 hooks no se probaron contra el navegador. Conviene
+abrir una vez cada pantalla afectada: estudios, finanzas, servidores,
+comunicaciones, empleados, formularios, la ficha de un miembro y tipos de
+evento.
 
 ## Fase 16 — Pedido el 2026-09-14
 

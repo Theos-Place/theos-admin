@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
+import { useCargaRemota } from './useCargaRemota'
 import type {
   DbStudyPlan, DbGroupListItem, DbLeaderEnriched,
 } from '@/lib/supabase/queries/studies'
@@ -24,46 +25,51 @@ const cache = new Map<StudiesSlice, { data: unknown[]; ts: number }>()
 /** Datos de estudios por slice: `useStudies('plans')` descarga solo el
  *  catálogo de planes. Sin argumentos trae todo (compatibilidad). `leaders`
  *  arrastra `groups` (los stats del dirigente se derivan de sus grupos). */
+/** Lo que trae una carga. La constante vacía evita que un `?? {...}` cambie de
+ *  identidad en cada render y deje en bucle a quien lo consuma. */
+type Datos = { plans: DbStudyPlan[]; groups: DbGroupListItem[]; leaders: DbLeaderEnriched[] }
+const NINGUNO: Datos = { plans: [], groups: [], leaders: [] }
+
 export function useStudies(...slices: StudiesSlice[]) {
   const wanted = slices.length ? [...slices] : (['plans', 'groups', 'leaders'] as StudiesSlice[])
   if (wanted.includes('leaders') && !wanted.includes('groups')) wanted.push('groups')
   const wantedKey = wanted.join(',')
 
-  const [dbPlans, setDbPlans]     = useState<DbStudyPlan[]>([])
-  const [dbGroups, setDbGroups]   = useState<DbGroupListItem[]>([])
-  const [dbLeaders, setDbLeaders] = useState<DbLeaderEnriched[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
 
-  const fetchAll = useCallback(async (force = false) => {
+  /**
+   * LINT-1 · Sin `setLoading` dentro del efecto: useCargaRemota deriva
+   * "cargando" del sello de la petición. `forzar` va por ref y no en la clave
+   * porque no cambia QUÉ se pide, solo si se ignora el caché — si fuera parte
+   * de la clave, volvería a cargar sola al apagarse.
+   */
+  const forzarRef = useRef(false)
+  const { datos, cargando, error, recargar } = useCargaRemota<Datos>(wantedKey, async () => {
+    const forzar = forzarRef.current
+    forzarRef.current = false
     const want = wantedKey.split(',') as StudiesSlice[]
-    setLoading(true)
-    setError(null)
-    try {
-      const results = await Promise.all(want.map(async (slice): Promise<[StudiesSlice, unknown[]]> => {
-        const hit = cache.get(slice)
-        if (!force && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
-        const res = await fetch(ENDPOINT[slice])
-        if (!res.ok) throw new Error('Error cargando estudios')
-        const rows = (await res.json()) as unknown[]
-        cache.set(slice, { data: rows, ts: Date.now() })
-        return [slice, rows]
-      }))
-      for (const [slice, rows] of results) {
-        if (slice === 'plans') setDbPlans(rows as DbStudyPlan[])
-        else if (slice === 'groups') setDbGroups(rows as DbGroupListItem[])
-        else setDbLeaders(rows as DbLeaderEnriched[])
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally {
-      setLoading(false)
+    const results = await Promise.all(want.map(async (slice): Promise<[StudiesSlice, unknown[]]> => {
+      const hit = cache.get(slice)
+      if (!forzar && hit && Date.now() - hit.ts < TTL_MS) return [slice, hit.data]
+      const res = await fetch(ENDPOINT[slice])
+      if (!res.ok) throw new Error('Error cargando estudios')
+      const rows = (await res.json()) as unknown[]
+      cache.set(slice, { data: rows, ts: Date.now() })
+      return [slice, rows]
+    }))
+    const out: Datos = { plans: [], groups: [], leaders: [] }
+    for (const [slice, rows] of results) {
+      if (slice === 'plans') out.plans = rows as DbStudyPlan[]
+      else if (slice === 'groups') out.groups = rows as DbGroupListItem[]
+      else out.leaders = rows as DbLeaderEnriched[]
     }
-  }, [wantedKey])
+    return out
+  })
 
-  useEffect(() => { fetchAll() }, [fetchAll])
-
-  const refetch = useCallback(() => fetchAll(true), [fetchAll])
+  // Devuelve la promesa: hay pantallas que hacen `await refetch()` y recién
+  // después navegan.
+  const refetch = useCallback(() => { forzarRef.current = true; return recargar() }, [recargar])
+  const d = datos ?? NINGUNO
+  const dbPlans = d.plans, dbGroups = d.groups, dbLeaders = d.leaders
 
   const studyTypes: StudyType[] = useMemo(() => dbPlans.map(toDomainStudyType), [dbPlans])
   const groups: StudyGroup[]    = useMemo(() => dbGroups.map(toDomainStudyGroup), [dbGroups])
@@ -79,5 +85,5 @@ export function useStudies(...slices: StudiesSlice[]) {
     return dbLeaders.map((l) => toDomainStudyLeader(l, byLeader.get(l.member_id) ?? []))
   }, [dbLeaders, groups])
 
-  return { studyTypes, groups, leaders, loading, error, refetch: refetch }
+  return { studyTypes, groups, leaders, loading: cargando, error, refetch }
 }

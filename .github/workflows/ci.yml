@@ -26,6 +26,6 @@ jobs:
         # tanda: migrados los 18 set-state-in-effect que eran estado derivado o
         # reset por cambio de prop; quedan 67 set-state-in-effect + 3 purity) —
         # bajar este número conforme se migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=70
+        run: npx eslint src --max-warnings=60
       - name: Tests
         run: npm test --if-present

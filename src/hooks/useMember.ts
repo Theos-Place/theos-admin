@@ -1,61 +1,41 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import type { DbMemberFull } from '@/lib/supabase/queries/members'
 import { toDomainMemberFull } from '@/lib/members/adapter'
 import type { Member } from '@/types/member'
+import { useCargaRemota } from './useCargaRemota'
 
-type State =
-  | { status: 'loading' }
-  | { status: 'not_found' }
-  | { status: 'error'; error: string }
-  | { status: 'ready'; raw: DbMemberFull }
+/** `null` es "no existe esa ficha" — distinto de un error de red, que va por
+ *  `error`. La pantalla los muestra distinto: uno se reintenta, el otro no. */
+type Resultado = { raw: DbMemberFull | null }
 
 /** Trae un miembro completo desde /api/members/[id] con todo el histórico
  *  (attendance, service, donations, form_responses). Devuelve `Member` ya adaptado. */
 export function useMember(id: string | undefined) {
-  const [state, setState] = useState<State>({ status: 'loading' })
-  const [reload, setReload] = useState(0)
-  const refetch = useCallback(() => setReload(n => n + 1), [])
-
-  useEffect(() => {
-    if (!id) {
-      setState({ status: 'not_found' })
-      return
+  // LINT-1: el `setState({ status: 'loading' })` síncrono del efecto viejo
+  // desaparece — "cargando" lo deriva useCargaRemota del sello de la petición.
+  const { datos, cargando, error, recargar } = useCargaRemota<Resultado>(id ?? '', async () => {
+    if (!id) return { raw: null }
+    const res = await fetch(`/api/members/${id}`)
+    if (res.status === 404) return { raw: null }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.detail?.message ?? body.error ?? 'Error cargando miembro')
     }
-
-    let cancelled = false
-    setState({ status: 'loading' })
-
-    fetch(`/api/members/${id}`)
-      .then(async (res) => {
-        if (res.status === 404) {
-          if (!cancelled) setState({ status: 'not_found' })
-          return
-        }
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          throw new Error(body.detail?.message ?? body.error ?? 'Error cargando miembro')
-        }
-        const data: DbMemberFull = await res.json()
-        if (!cancelled) setState({ status: 'ready', raw: data })
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return
-        setState({ status: 'error', error: e instanceof Error ? e.message : 'Error desconocido' })
-      })
-
-    return () => { cancelled = true }
-  }, [id, reload])
+    return { raw: (await res.json()) as DbMemberFull }
+  })
 
   const member: Member | null = useMemo(
-    () => (state.status === 'ready' ? toDomainMemberFull(state.raw) : null),
-    [state],
+    () => (datos?.raw ? toDomainMemberFull(datos.raw) : null),
+    [datos],
   )
 
   return {
     member,
-    loading: state.status === 'loading',
-    notFound: state.status === 'not_found',
-    error: state.status === 'error' ? state.error : null,
-    refetch,
+    loading: cargando,
+    // "No encontrado" solo cuando la respuesta YA llegó y vino vacía: durante la
+    // carga, datos es null y eso no significa que la ficha no exista.
+    notFound: !cargando && !error && !!datos && datos.raw === null,
+    error,
+    refetch: recargar,
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useMemo, useCallback } from 'react'
+import { useCargaRemota } from './useCargaRemota'
 
 export type EventTypeOption = { id: string; name: string; color: string; icon: string }
 
@@ -33,24 +34,21 @@ export function useEventTypeStyle() {
 // aparece automáticamente en los filtros de todas las vistas.
 let cache: EventTypeOption[] | null = null
 
+const NINGUNO: EventTypeOption[] = []
+
 /** Tipos de evento ACTIVOS desde la BD (no el mock). Para los filtros. */
 export function useEventTypes() {
-  const [types, setTypes] = useState<EventTypeOption[]>(() => cache ?? [])
-
-  useEffect(() => {
-    if (cache) { setTypes(cache); return }
-    let alive = true
-    fetch('/api/events/types')
-      .then(r => (r.ok ? r.json() : []))
-      .then((d: EventTypeOption[]) => {
-        if (!alive) return
-        const active = (Array.isArray(d) ? d : []).filter(t => (t as { is_active?: boolean }).is_active !== false)
-        cache = active
-        setTypes(active)
-      })
-      .catch(() => {})
-    return () => { alive = false }
-  }, [])
-
-  return types
+  // LINT-1: el `setState` síncrono era el del caché (`if (cache) setTypes(cache)`).
+  // Ahora el caché se lee DENTRO de la carga, que ya es asíncrona, y "cargando"
+  // lo deriva useCargaRemota. Quien consume esto solo quiere la lista.
+  const { datos } = useCargaRemota<EventTypeOption[]>('event-types', async () => {
+    if (cache) return cache
+    const r = await fetch('/api/events/types')
+    const d = (r.ok ? await r.json() : []) as EventTypeOption[]
+    cache = (Array.isArray(d) ? d : []).filter(t => (t as { is_active?: boolean }).is_active !== false)
+    return cache
+  })
+  // Constante: `?? []` daría un array nuevo por render y cualquier efecto de
+  // quien lo consuma entraría en bucle.
+  return datos ?? NINGUNO
 }
