@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
-import { isUuid } from '@/lib/validate'
 import { getScholarshipsQueue, createGenericScholarship } from '@/lib/supabase/queries/scholarships'
+import { couponCreateSchema, idDelDestino } from '../schema'
+import { datosInvalidos } from '@/lib/api/datos-invalidos'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: lista becas/cupones (?kind=asignada|generica, ?status=active|used|revoked).
@@ -29,40 +30,19 @@ export async function POST(req: NextRequest) {
   const auth = await requireModuleView('becas', { action: 'edit' })
   if (auth.res) return auth.res
   try {
-    const body = await req.json()
-    const entityType = body?.entity_type
-    if (entityType !== 'study_plan' && entityType !== 'event') {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { entity_type: 'debe ser study_plan o event' } }, { status: 400 })
-    }
-    const targetId = entityType === 'study_plan' ? body?.plan_id : body?.event_id
-    if (typeof targetId !== 'string' || !isUuid(targetId)) {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { target: 'se requiere un destino válido' } }, { status: 400 })
-    }
-    const discountType = body?.discount_type
-    if (discountType !== 'percentage' && discountType !== 'fixed') {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { discount_type: 'debe ser percentage o fixed' } }, { status: 400 })
-    }
-    const discountValue = Number(body?.discount_value)
-    if (!Number.isFinite(discountValue) || discountValue <= 0) {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { discount_value: 'debe ser mayor a 0' } }, { status: 400 })
-    }
-    const code = typeof body?.code === 'string' ? body.code.trim().toUpperCase() : ''
-    if (!code) {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { code: 'requerido' } }, { status: 400 })
-    }
-    const expiresAt = typeof body?.expires_at === 'string' && body.expires_at ? body.expires_at : null
-    if (!expiresAt) {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { expires_at: 'requerido para cupones genéricos' } }, { status: 400 })
-    }
+    const parsed = couponCreateSchema.safeParse(await req.json().catch(() => null))
+    if (!parsed.success) return datosInvalidos(parsed.error)
+    const d = parsed.data
+    const targetId = idDelDestino(d)
 
     const created = await createGenericScholarship({
-      entity_type: entityType,
-      plan_id: entityType === 'study_plan' ? targetId : null,
-      event_id: entityType === 'event' ? targetId : null,
-      discount_type: discountType,
-      discount_value: discountValue,
-      code,
-      expires_at: expiresAt,
+      entity_type: d.entity_type,
+      plan_id: d.entity_type === 'study_plan' ? targetId : null,
+      event_id: d.entity_type === 'event' ? targetId : null,
+      discount_type: d.discount_type,
+      discount_value: d.discount_value,
+      code: d.code,
+      expires_at: d.expires_at,
       created_by: auth.ctx.userId,
     })
     return NextResponse.json(created, { status: 201 })

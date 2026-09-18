@@ -4,9 +4,11 @@ import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revokeScholarship, moveScholarship } from '@/lib/supabase/queries/scholarships'
 import { MENSAJE_BLOQUEO, type MotivoBloqueo } from '@/lib/finance/cambio-de-destino-beca'
+import { MENSAJE_BLOQUEO_CANCELACION, MENSAJE_MOTIVO_CORTO } from '@/lib/finance/cancelacion-de-beca'
 import {
-  MENSAJE_BLOQUEO_CANCELACION, MENSAJE_MOTIVO_CORTO, motivoNormalizado,
-} from '@/lib/finance/cancelacion-de-beca'
+  scholarshipActionSchema, scholarshipMoveSchema, scholarshipCancelSchema, idDelDestino,
+} from '../schema'
+import { datosInvalidos } from '@/lib/api/datos-invalidos'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET ?usage=1: cuántas veces se usó (para decidir DeleteConfirmModal vs ActiveWarningModal en el cliente).
@@ -41,23 +43,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Id inválido' }, { status: 400 })
     const body = await req.json().catch(() => null)
-    if (body?.action === 'cancelar') return cancelar(id, body, auth.ctx.userId)
-    if (body?.action !== 'mover') {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { action: "debe ser 'mover' o 'cancelar'" } }, { status: 400 })
-    }
-    const entityType = body?.entity_type
-    if (entityType !== 'study_plan' && entityType !== 'event') {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { entity_type: 'debe ser study_plan o event' } }, { status: 400 })
-    }
-    const entityId = entityType === 'study_plan' ? body?.plan_id : body?.event_id
-    if (typeof entityId !== 'string' || !isUuid(entityId)) {
-      return NextResponse.json({ error: 'Datos inválidos', detalles: { target: 'se requiere un destino válido' } }, { status: 400 })
-    }
+    // `action` primero: decide QUÉ campos hacen falta, así que validar todo
+    // junto haría que una acción mal escrita se reportara como una lista de
+    // campos faltantes de una acción que nadie pidió.
+    const accion = scholarshipActionSchema.safeParse(body)
+    if (!accion.success) return datosInvalidos(accion.error)
+    if (accion.data.action === 'cancelar') return cancelar(id, body, auth.ctx.userId)
 
-    const result = await moveScholarship(id, { entity_type: entityType, entity_id: entityId }, {
-      motivo: typeof body?.motivo === 'string' ? body.motivo : null,
-      notificar: body?.notificar !== false,
-    })
+    const parsed = scholarshipMoveSchema.safeParse(body)
+    if (!parsed.success) return datosInvalidos(parsed.error)
+
+    const result = await moveScholarship(
+      id,
+      { entity_type: parsed.data.entity_type, entity_id: idDelDestino(parsed.data) },
+      { motivo: parsed.data.motivo ?? null, notificar: parsed.data.notificar },
+    )
     if (!result.ok) {
       if (result.error === 'no_encontrada') return NextResponse.json({ error: 'La beca no existe.' }, { status: 404 })
       // 'mismo_destino' y 'moneda_distinta' son datos que no cuadran (400); que
@@ -86,11 +86,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  * deja de valer.
  */
 async function cancelar(id: string, body: unknown, actorUserId: string): Promise<NextResponse> {
-  const motivo = motivoNormalizado((body as { motivo?: unknown })?.motivo)
-  if (!motivo) {
-    return NextResponse.json({ error: 'Datos inválidos', detalles: { motivo: MENSAJE_MOTIVO_CORTO } }, { status: 400 })
-  }
-  const result = await revokeScholarship(id, { motivo, actorUserId })
+  const parsed = scholarshipCancelSchema.safeParse(body)
+  if (!parsed.success) return datosInvalidos(parsed.error)
+  const result = await revokeScholarship(id, { motivo: parsed.data.motivo, actorUserId })
   if (result.ok) return NextResponse.json({ ok: true })
   if (result.error === 'no_encontrada') return NextResponse.json({ error: 'La beca no existe.' }, { status: 404 })
   if (result.error === 'motivo_invalido') {

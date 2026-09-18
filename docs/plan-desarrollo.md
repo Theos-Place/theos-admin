@@ -286,12 +286,31 @@ insertando una redención de mentira sobre una asignada: la cola pasó a 1, el
 tag a "Usada", el perfil vio lo mismo y el movimiento quedó bloqueado; borrada
 la fila, todo volvió a 0.
 
-### [ ] API-1 · El PATCH de becas valida a mano, no con zod
+### [x] API-1 · El PATCH de becas valida a mano, no con zod — HECHO 2026-09-17
 
-`PATCH /api/scholarships/[id]` (mover una beca) valida `action`, `entity_type`
-y el uuid del destino con `if`s. La convención del repo (AGENTS.md) es zod con
-`detalles: z.treeifyError(...)`. El `POST /api/scholarships/coupons` de al lado
-tiene el mismo problema y es más viejo: conviene migrar los dos juntos.
+Los dos handlers (`PATCH /api/scholarships/[id]` y `POST .../coupons`) pasaron a
+zod, con los esquemas en `api/scholarships/schema.ts`. Eran quince `if`s
+armando cada uno su propio 400.
+
+**No es cosmético.** Con `if`s encadenados el handler contesta SOLO el primer
+campo malo, así que quien llena el formulario de un cupón con tres errores los
+descubre de a uno. Hay un test que lo fija: los cuatro campos malos salen juntos.
+
+Y apareció un agujero real: la versión vieja elegía el destino con
+`entity_type === 'study_plan' ? plan_id : event_id`, así que un body con
+`entity_type: 'event'` y un `plan_id` válido pasaba la validación con el destino
+en `undefined`. Ahora el destino es una unión discriminada por `entity_type` y
+ese caso se rechaza. También hay test.
+
+Dos cosas que se conservaron a propósito y casi se pierden: el monto del cupón
+acepta texto (lo hacía el `Number(...)` de antes, y el input lo manda así), y la
+pantalla envía SIEMPRE `plan_id` y `event_id`, uno en null. Los dos tienen test
+con el body literal que manda la pantalla — sin eso, mover una beca se habría
+caído con 400 en producción sin que ningún test lo dijera.
+
+De paso, el 400 salió a `lib/api/datos-invalidos.ts`: esa línea está copiada en
+decenas de handlers y en algunos salía distinta, así que el cliente no podía
+confiar en la forma de `detalles`.
 
 ### [ ] FIN-7 · Josué Valverde pagó ₡20.000 de más
 
