@@ -8,20 +8,21 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { readFileSync } from 'node:fs'
 
-const ASUNTO = '¿Te perdiste el campa? Debbie tiene una mega noticia 🎥'
+const ASUNTO = '¿No pudiste ir al campa? Te armamos otro 🏁'
 
-/** Las dos opciones que se mandaron a revisar el 2026-09-18. Cuando se elija
- *  una, la otra se borra desde la pantalla de plantillas. */
 const OPCIONES = [
-  { nombre: 'Hacia la Meta — 10 oct (A · flyer)', archivo: '/tmp/cuerpo.html' },
-  { nombre: 'Hacia la Meta — 10 oct (B · video)', archivo: '/tmp/cuerpo-b.html' },
+  { nombre: 'Mini Campa — 10 oct (servidores que no fueron)', archivo: '/tmp/cuerpo.html' },
 ]
 
 async function main() {
   const sb = createAdminClient()
-  // La primera versión se guardó con otro nombre; se retira para no dejar tres.
-  await sb.from('message_templates').delete()
-    .eq('name', 'Hacia la Meta — 10 oct (servidores que no fueron al campa)')
+  // Se retiran las versiones descartadas: la primera y las dos opciones A/B.
+  // Decisión del usuario 2026-09-18: una sola, con el flyer.
+  for (const viejo of [
+    'Hacia la Meta — 10 oct (servidores que no fueron al campa)',
+    'Hacia la Meta — 10 oct (A · flyer)',
+    'Hacia la Meta — 10 oct (B · video)',
+  ]) await sb.from('message_templates').delete().eq('name', viejo)
 
   for (const o of OPCIONES) {
     const body = readFileSync(o.archivo, 'utf8')
@@ -41,6 +42,6 @@ async function main() {
     }
     console.log(`             ${body.length} caracteres de HTML`)
   }
-  console.log(`\nasunto de las dos: ${ASUNTO}`)
+  console.log(`\nasunto: ${ASUNTO}`)
 }
 main().catch(e => { console.error('ERROR:', e.message); process.exit(1) })

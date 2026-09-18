@@ -21,11 +21,15 @@ const DESTINOS = [
   'operaciones@theosplace.org',
 ]
 
-const ASUNTO = '¿Te perdiste el campa? Debbie tiene una mega noticia 🎥'
+/**
+ * El asunto lleva la NOTICIA, no la pregunta sola: lo que hace abrir es que
+ * hay algo nuevo y que se hizo para quien lo lee. "Te armamos otro" cabe
+ * entero en la bandeja del celular (43 caracteres).
+ */
+const ASUNTO = '¿No pudiste ir al campa? Te armamos otro 🏁'
 
 const OPCIONES = [
-  { clave: 'A', archivo: '/tmp/cuerpo.html',   nota: 'miniatura = flyer' },
-  { clave: 'B', archivo: '/tmp/cuerpo-b.html', nota: 'miniatura = cuadro del video, flyer abajo' },
+  { clave: 'única', archivo: '/tmp/cuerpo.html', nota: 'flyer + guion de Debbie' },
 ]
 
 async function main() {
@@ -37,12 +41,12 @@ async function main() {
 
   for (const o of OPCIONES) {
     const plantilla = readFileSync(o.archivo, 'utf8')
-    console.log(`\n── Opción ${o.clave} (${o.nota})`)
+    console.log(`\n── ${o.clave} (${o.nota})  ·  asunto: ${ASUNTO}`)
     for (const email of DESTINOS) {
       const quien = nombre.get(email.toLowerCase()) ?? 'Theos'
       const r = await sendEmail({
         to: { email, name: quien },
-        subject: `Opción ${o.clave} · ${ASUNTO}`,
+        subject: ASUNTO,
         html: renderEmail(plantilla.replace(/\{nombre\}/g, quien)),
         kind: 'transactional', // prueba: sin pie de baja
       })
