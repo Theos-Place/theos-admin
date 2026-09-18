@@ -1037,28 +1037,37 @@ falta agregar nada — medirlo antes de decidir.
   import.
 
 
-### [ ] SEC-3 · Warnings del linter de Supabase (reportados 2026-09-16)
+### [x] SEC-3 · Warnings del linter de Supabase — HECHO 2026-09-17
 
-Cinco avisos de seguridad. **Ninguno explica lentitud** —se revisaron el mismo día
-que se reportó el sistema lento y la causa era otra (ver el commit de
-`20260917000000`)—, pero valen por sí solos.
+Migración `20260917210000`. Eran tres cosas, no cinco: el linter repetía.
 
-1. **`merge_no_copia` sin `search_path`.** Es el único de los tres que es
-   trivial: `alter function ... set search_path to 'public'`. Todas las demás
-   funciones del esquema ya lo tienen.
-2. **`member_por_external_id(text)` es SECURITY DEFINER y la puede llamar
-   `anon`** por `/rest/v1/rpc/`. Ésta es la que importa: devuelve la ficha que
-   corresponde a un id de CCB, o sea datos de una persona, y hoy la puede
-   invocar cualquiera sin sesión probando ids. Es SECURITY DEFINER a propósito
-   (tiene que ver fichas inactivas para resolver las fusionadas), así que la
-   salida es `revoke execute ... from anon, authenticated` y dejarla solo para
-   `service_role`, que es como la llama la app. Verificar antes que ningún
-   cliente la invoque directo.
-3. **`report_charla_attendance()` con el mismo problema.** Agrega asistencia de
-   toda la organización; que la pueda pedir `anon` no tiene sentido. Mismo
-   `revoke`. OJO: `fetchAllRpc` la llama paginada desde el servidor con la
-   llave de servicio, así que revocarle a `anon` y `authenticated` no rompe la
-   app — confirmarlo corriendo el reporte después.
+**Y el hueco era real, no una advertencia genérica.** Antes de tocar nada lo
+comprobé contra producción con la llave pública que va en el bundle del
+navegador y nada más:
 
-Cerrar junto con **DAT-9**, que es sobre la misma función
-`member_por_external_id` y hoy está sin llamadores en el código.
+    POST /rest/v1/rpc/report_charla_attendance  → 200 · la asistencia de TODA
+        la organización, año por año y charla por charla
+    POST /rest/v1/rpc/member_por_external_id    → 200 · el uuid de la ficha de
+        un id de CCB, o sea que se podían enumerar personas
+
+Después de la migración las dos responden **401 permission denied**.
+
+La causa: una función en `public` nace con EXECUTE para PUBLIC y PostgREST
+publica el esquema entero en `/rest/v1/rpc/`. Las otras **30** funciones
+SECURITY DEFINER ya estaban cerradas; estas dos se quedaron atrás.
+
+Se revocó en vez de quitarles SECURITY DEFINER, que lo necesitan:
+`member_por_external_id` tiene que ver fichas inactivas para resolver las
+fusionadas. Verificado que la app sigue: el reporte de charlas 2026 devuelve 37
+semanas y 31.668 asistencias con la llave de servicio.
+
+`merge_no_copia()` era la única del esquema sin `search_path` fijo. Arreglada.
+
+La migración se aplicó dentro de una transacción que COMPRUEBA los permisos
+antes de confirmar y hace rollback si no quedaron como se esperaba.
+
+Para que no vuelva a pasar: la regla quedó en AGENTS.md ("Funciones nuevas en
+`public`") y hay un auditor, `node scripts/sec3/auditar.cjs`, que sale con
+código 1 si algo queda abierto. Hoy: 52 funciones, 0 abiertas, 0 sin
+search_path.
+

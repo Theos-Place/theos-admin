@@ -28,6 +28,33 @@ Dentro del ancho, el contenido se distribuye en grids responsive (`grid-cols-1` 
 
 El proxy (`src/proxy.ts`) excluye `/api`: **todo handler de ruta API debe llamar `requireRoles(...)` de `src/lib/auth/guard.ts`** (las queries usan service role y saltan RLS). Escrituras (POST/PUT/PATCH/DELETE) exigen roles explícitos, no solo sesión, salvo decisión documentada en el propio handler.
 
+## Funciones nuevas en `public`
+
+Una función creada en `public` nace con **EXECUTE para PUBLIC**, y PostgREST
+publica todo ese esquema en `/rest/v1/rpc/`. O sea que por defecto la puede
+llamar cualquiera con la llave pública que va en el bundle del navegador, sin
+sesión. Toda migración que cree una función termina con:
+
+```sql
+revoke execute on function public.<nombre>(<args>) from public, anon, authenticated;
+grant  execute on function public.<nombre>(<args>) to service_role;
+alter  function public.<nombre>(<args>) set search_path to 'public';
+```
+
+No es teórico (SEC-3, 2026-09-17): `report_charla_attendance()` devolvía con
+200 la asistencia de toda la organización a quien solo tuviera la llave
+pública, y `member_por_external_id(text)` dejaba enumerar fichas. Las dos son
+SECURITY DEFINER a propósito y la app las llama desde el servidor con la llave
+de servicio, así que revocar no rompió nada — pero las otras 30 funciones del
+esquema ya estaban cerradas y estas dos se quedaron atrás sin que nadie lo
+notara.
+
+`search_path` fijo va también en las que no son SECURITY DEFINER: si no, la
+función resuelve sus nombres contra el path de quien la llama.
+
+Para revisarlo: `node scripts/sec3/auditar.cjs` (sale con código 1 si algo
+quedó abierto).
+
 ## Convención de rutas API
 
 1. Errores: `{ error }` con mensaje humano; si el cliente distingue casos, campo `code` aparte.
