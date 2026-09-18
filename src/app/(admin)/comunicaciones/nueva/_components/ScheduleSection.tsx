@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
-import { TICK_MINUTES } from '@/lib/communications/schedule'
+import {
+  TICK_MINUTES, HORAS_EN_PUNTO, partesDeLaProgramacion, componerProgramacion,
+} from '@/lib/communications/schedule'
 
 const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 
@@ -29,6 +31,10 @@ export function ScheduleSection({
   timezone,
   setTimezone,
 }: Props) {
+  // El estado sigue siendo UN string ('YYYY-MM-DDTHH:00'): así el resto del
+  // formulario y la validación no se enteran de que la pantalla cambió.
+  const { dia, hora } = partesDeLaProgramacion(scheduledAt)
+
   return (
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
       <p className={cn(SECTION_TITLE)}>
@@ -55,21 +61,38 @@ export function ScheduleSection({
       {scheduled && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label htmlFor="fecha-y-hora" className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
-              <Clock size={13} className="text-navy-light/80 shrink-0" /> Fecha y hora
-            </label>
-            {/* step=3600 → el selector solo ofrece horas en punto. El cron
-                corre a la hora en punto, así que dejar elegir 15:30 sería
-                prometer una precisión que no existe: ese envío saldría a las
-                16:00 igual. El servidor lo valida aparte (minutos_no_cero), que
-                este atributo no es una garantía. */}
-            <input id="fecha-y-hora"
-              type="datetime-local"
-              step={3600}
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-              value={scheduledAt}
-              onChange={e => setScheduledAt(e.target.value)}
-            />
+            <span className={cn('text-[13px] text-navy-light/80 font-body flex items-center gap-1.5')}>
+              <Clock size={13} className="text-navy-light/80 shrink-0" aria-hidden /> Fecha y hora
+            </span>
+            {/* DÍA Y HORA POR SEPARADO, y no un datetime-local.
+                Comprobado en el navegador el 2026-09-18: `step=3600` NO alcanza
+                —el campo igual dibuja los minutos, deja escribir "15:37" y solo
+                protesta al enviar, con un mensaje del navegador en inglés—. O
+                sea que ofrecía una precisión que el cron no puede cumplir.
+                Con una lista de 24 horas, el minuto no existe en la pantalla.
+                El servidor sigue validando aparte (minutos_no_cero). */}
+            <div className="flex gap-2">
+              <input
+                id="fecha-envio"
+                type="date"
+                aria-label="Día del envío"
+                className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                value={dia}
+                onChange={e => setScheduledAt(componerProgramacion(e.target.value, hora))}
+              />
+              <select
+                id="hora-envio"
+                aria-label="Hora del envío"
+                className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                value={hora}
+                onChange={e => setScheduledAt(componerProgramacion(dia, e.target.value))}
+              >
+                <option value="">Hora…</option>
+                {HORAS_EN_PUNTO.map(h => (
+                  <option key={h.valor} value={h.valor}>{h.etiqueta}</option>
+                ))}
+              </select>
+            </div>
             <p className="text-[13px] text-navy-light/80 font-body">
               Los envíos salen en horas en punto. La cola se revisa cada hora, así que puede salir
               hasta {TICK_MINUTES} minutos después.

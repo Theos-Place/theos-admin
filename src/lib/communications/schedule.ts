@@ -125,3 +125,40 @@ export function scheduleSummary(iso: string, timeZone: string): string {
   })
   return `${fecha} (${timeZone.split('/')[1]?.replace(/_/g, ' ') ?? timeZone})`
 }
+
+/**
+ * El día y la hora por separado, para que la PANTALLA no pueda ofrecer minutos.
+ *
+ * `<input type="datetime-local" step="3600">` no alcanza: comprobado en el
+ * navegador el 2026-09-18, el campo igual dibuja los minutos, deja escribir
+ * "15:37" y solo protesta al enviar el formulario —y con un mensaje del
+ * navegador, en inglés—. O sea que ofrece una precisión que el cron no puede
+ * cumplir, que es justo lo que había que evitar.
+ *
+ * Con un selector de día y una lista de 24 horas, el minuto no existe como
+ * concepto en la pantalla. El servidor sigue validando aparte
+ * (`minutos_no_cero`): esto es la cortesía, no la garantía.
+ */
+const PARTES = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):/
+
+export function partesDeLaProgramacion(valor: string | null | undefined): { dia: string; hora: string } {
+  const m = PARTES.exec(valor ?? '')
+  return m ? { dia: m[1], hora: m[2] } : { dia: '', hora: '' }
+}
+
+/** Devuelve '' mientras falte una de las dos: media selección no es una fecha,
+ *  y mandar `2026-09-20T:00` haría fallar la validación con un mensaje que no
+ *  explica nada. */
+export function componerProgramacion(dia: string, hora: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || !/^\d{2}$/.test(hora)) return ''
+  return `${dia}T${hora}:00`
+}
+
+/** Las 24 horas en punto, etiquetadas como se dicen en Costa Rica. */
+export const HORAS_EN_PUNTO: ReadonlyArray<{ valor: string; etiqueta: string }> =
+  Array.from({ length: 24 }, (_, h) => ({
+    valor: String(h).padStart(2, '0'),
+    etiqueta: new Date(Date.UTC(2000, 0, 1, h)).toLocaleTimeString('es-CR', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC',
+    }),
+  }))

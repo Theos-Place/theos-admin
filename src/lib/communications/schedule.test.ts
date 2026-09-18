@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import {
   zonedToUtc, resolveScheduledAt, isBroadcastDue, scheduleSummary, SCHEDULED_STATUS,
   SCHEDULE_MESSAGES, TICK_MINUTES, esHoraEnPunto,
+  partesDeLaProgramacion, componerProgramacion, HORAS_EN_PUNTO,
 } from './schedule'
 
 describe('de hora local + zona a instante', () => {
@@ -127,5 +128,49 @@ describe('los envíos van en horas en punto (2026-09-17)', () => {
 
   it('esHoraEnPunto no se confunde con basura', () => {
     for (const v of ['', 'hola', '2099-08-10', '2099-08-10T15']) expect(esHoraEnPunto(v), v).toBe(false)
+  })
+})
+
+describe('la pantalla solo ofrece horas en punto (2026-09-18)', () => {
+  // `datetime-local step=3600` NO alcanza: comprobado en el navegador, el campo
+  // dibuja los minutos, acepta "15:37" y solo protesta al enviar, en inglés.
+  it('parte un valor guardado en día y hora', () => {
+    expect(partesDeLaProgramacion('2026-09-20T15:00')).toEqual({ dia: '2026-09-20', hora: '15' })
+  })
+
+  it('un valor vacío o raro no revienta', () => {
+    for (const v of ['', null, undefined, 'mañana', '2026-09-20']) {
+      expect(partesDeLaProgramacion(v as string)).toEqual({ dia: '', hora: '' })
+    }
+  })
+
+  it('compone siempre con los minutos en cero', () => {
+    expect(componerProgramacion('2026-09-20', '15')).toBe('2026-09-20T15:00')
+    expect(componerProgramacion('2026-09-20', '00')).toBe('2026-09-20T00:00')
+  })
+
+  it('MEDIA SELECCIÓN NO ES UNA FECHA: devuelve vacío, no algo inválido', () => {
+    // Mandar "2026-09-20T:00" haría fallar la validación con un mensaje que no
+    // explica nada; con '' el formulario dice "elegí la fecha y la hora".
+    expect(componerProgramacion('2026-09-20', '')).toBe('')
+    expect(componerProgramacion('', '15')).toBe('')
+  })
+
+  it('ida y vuelta: lo que se parte se vuelve a componer igual', () => {
+    const v = '2026-09-20T08:00'
+    const { dia, hora } = partesDeLaProgramacion(v)
+    expect(componerProgramacion(dia, hora)).toBe(v)
+  })
+
+  it('las 24 horas, y TODAS pasan la validación de hora en punto', () => {
+    expect(HORAS_EN_PUNTO).toHaveLength(24)
+    for (const h of HORAS_EN_PUNTO) {
+      expect(esHoraEnPunto(componerProgramacion('2099-01-01', h.valor)), h.valor).toBe(true)
+    }
+  })
+
+  it('las etiquetas se leen en español', () => {
+    expect(HORAS_EN_PUNTO[0].etiqueta).toMatch(/12:00/)
+    expect(HORAS_EN_PUNTO[15].etiqueta).toMatch(/3:00/)
   })
 })
