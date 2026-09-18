@@ -29,13 +29,18 @@ import { AsyncLocalStorage } from 'node:async_hooks'
  * POR QUÉ ES UNA CAJA Y NO EL ID PELADO (arreglado el 2026-09-18).
  *
  * La primera versión hacía `enterWith(userId)` justo después de resolver la
- * sesión, o sea DESPUÉS de `await supabase.auth.getUser()`. Eso no funciona, y
- * falla en silencio: `enterWith` vale "para el resto de la ejecución SÍNCRONA
- * actual y las llamadas asíncronas que salgan de ahí", pero la continuación
- * del llamador —el handler, después de su `await requireRoles(...)`— ya tenía
- * tomada su foto del contexto desde ANTES de que el guard corriera. El handler
- * seguía viendo el contexto vacío, el cliente admin no mandaba header y la
- * bitácora seguía sin autor.
+ * sesión, o sea DESPUÉS de `await supabase.auth.getUser()`. `enterWith` vale
+ * "para el resto de la ejecución SÍNCRONA actual y las llamadas asíncronas que
+ * salgan de ahí", y en ese punto la continuación del llamador —el handler,
+ * después de su `await requireRoles(...)`— ya tenía tomada su foto del
+ * contexto. El handler veía el contexto vacío, el cliente admin no mandaba
+ * header y la bitácora seguía sin autor.
+ *
+ * Y PEOR QUE ROTO: DEPENDÍA DE LA VERSIÓN DE NODE. Medido el 2026-09-18 con el
+ * mismo script — en node 22 el `enterWith` tardío SÍ se propaga y en node 24 no.
+ * Así que ese código andaba en unos runtimes y no en otros, y se habría caído
+ * solo el día de un upgrade sin que nadie lo relacionara. La caja funciona en
+ * los dos.
  *
  * Medido el 2026-09-18, dos días después de darlo por hecho: de 1.135 UPDATE
  * sobre `members` posteriores a la migración, CERO tenían actor. Los únicos 37

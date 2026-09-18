@@ -368,7 +368,7 @@ del `await`, y solo se calla si el `setState` vive dentro de un `.then(...)`.
 Convertir `await` en `.then` sería maquillaje —el `setState` corre en el mismo
 tick— así que el arreglo real es derivar el estado o moverlo a un manejador.
 
-**Verificación pendiente:** tsc, lint, 3.028 tests y build pasan, y la regla
+**Verificación pendiente:** tsc, lint, los tests y el build pasan, y la regla
 pura tiene sus tests, pero **no hay render tests en el repo** (vitest corre en
 `node`), así que los 10 hooks no se probaron contra el navegador. Conviene
 abrir una vez cada pantalla afectada: estudios, finanzas, servidores,
@@ -1107,6 +1107,23 @@ correspondiente con alcance más allá de `own`. `entity_type` viaja en la URL y
 entra en la consulta; sin lista, cualquiera pediría el historial de tablas que
 ningún módulo cubre. Y cualquier miembro tiene `miembros:view` sobre su ficha:
 eso no puede abrirle la bitácora.
+
+**VERIFICADO EN PRODUCCIÓN el 2026-09-18**: desde el despliegue, 17 de 43
+cambios llevan autor (los otros 26 son de crons, que legítimamente no tienen).
+Antes del arreglo eran 0 de 1.135.
+
+**Y salió algo que importa más que el bug.** El primer test que escribí exigía
+que el patrón viejo fallara, pasó en local y **reventó en CI**. La causa: eso no
+era nuestro código sino comportamiento del runtime, y cambia con la versión.
+Medido con el mismo script — **node 22 (CI): el `enterWith` tardío SÍ se
+propaga; node 24 (local): no**. O sea que el código original andaba en unos
+runtimes y no en otros: se habría caído solo el día de un upgrade sin que nadie
+lo relacionara. Los tests ahora fijan NUESTRO contrato (con la caja, el actor
+llega en las dos versiones) y nunca el del runtime.
+
+**Lección para el gate local:** CI corre Node 22 y la máquina de desarrollo 24.
+Un `npx -y node@22 ./node_modules/.bin/vitest run` antes de pushear habría
+evitado dos runs rojos seguidos.
 
 **Queda pendiente de decidir (retención).** `prune_audit_log()` borra todo lo de
 más de 90 días. Con el autor guardándose de verdad recién desde hoy, el
