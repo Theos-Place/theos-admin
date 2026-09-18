@@ -8,6 +8,7 @@ import { puedeEditarColumna } from '@/lib/members/autoedicion'
 import { OPCIONES_GENERO } from '@/lib/members/campo-editable'
 import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
 import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
+import { AutorizacionDeImagen } from '@/components/members/AutorizacionDeImagen'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -182,6 +183,21 @@ export function MemberPersonalTab({ member, onActualizado }: Props) {
                 {textoDeRestricciones(member.dietary_restrictions)}
               </p>
             )}
+          </div>
+        </div>
+        {/* FAM-3 · Autorización de imagen. Va con el candado como los demás
+            datos sensibles: es un consentimiento, no una preferencia. */}
+        <div className="flex items-start gap-3 py-2.5">
+          <div className="mt-0.5 text-navy-light/80 shrink-0"><Lock size={15} strokeWidth={1.75} /></div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] uppercase tracking-wider text-navy-light/80 mb-1.5 font-display">
+              Autorización de imagen
+            </p>
+            <AutorizacionDeImagen
+              valor={member.autorizacion_imagen}
+              memberId={member.id}
+              soloLectura={!edita('dietary_restrictions')}
+            />
           </div>
         </div>
       </div>

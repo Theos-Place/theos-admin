@@ -49,6 +49,8 @@ export type Member = {
   address: string | null
   allergies: string | null
   dietary_restrictions: string[]
+  /** FAM-3 · null = no se ha preguntado, true = autoriza, false = no autoriza. */
+  autorizacion_imagen: boolean | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
   photo_url: string | null

@@ -15,6 +15,9 @@ export const MEMBER_WRITE_FIELDS = [
   'workplace', 'allergies', 'medications',
   'dietary_restrictions', 'emergency_contact_name',
   'emergency_contact_phone', 'photo_url', 'is_donor', 'is_active',
+  // FAM-3 · autorización para aparecer en fotos y publicaciones. Tres estados:
+  // null = no se preguntó, true = sí, false = no. Ver lib/members/autorizacion-de-imagen.
+  'autorizacion_imagen',
 ] as const
 
 /** Correo normalizado para guardar/comparar: trim + minúsculas ('' → null).

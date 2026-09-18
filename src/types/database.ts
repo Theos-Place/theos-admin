@@ -2478,6 +2478,7 @@ export type Database = {
           allergies: string | null
           datos_protegidos: boolean
           dietary_restrictions: string[]
+          autorizacion_imagen: boolean | null
           auth_user_id: string | null
           birth_date: string | null
           canton: string | null
@@ -2531,6 +2532,7 @@ export type Database = {
           allergies?: string | null
           datos_protegidos?: boolean
           dietary_restrictions?: string[]
+          autorizacion_imagen?: boolean | null
           auth_user_id?: string | null
           birth_date?: string | null
           canton?: string | null
@@ -2584,6 +2586,7 @@ export type Database = {
           allergies?: string | null
           datos_protegidos?: boolean
           dietary_restrictions?: string[]
+          autorizacion_imagen?: boolean | null
           auth_user_id?: string | null
           birth_date?: string | null
           canton?: string | null

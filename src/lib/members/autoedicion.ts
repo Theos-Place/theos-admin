@@ -27,6 +27,10 @@ export const CAMPOS_AUTOEDITABLES = [
   'province', 'canton', 'district', 'address',
   'allergies', 'medications',
   'dietary_restrictions',
+  // FAM-3: la propia persona decide si su imagen se publica. Para un menor lo
+  // marca quien gestiona su ficha o su familia desde el formulario, que es el
+  // caso que el campo viene a cubrir.
+  'autorizacion_imagen',
   'emergency_contact_name', 'emergency_contact_phone',
   'occupation', 'workplace',
 ] as const

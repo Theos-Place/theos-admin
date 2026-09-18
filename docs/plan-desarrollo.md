@@ -1290,44 +1290,85 @@ Tests: líder ve solo su comité (403 en otro), reglas de compromisos con fixtur
 funciones reutilizadas), export. tsc/lint/vitest al cierre.
 ```
 
-### [ ] FAM-3 · Autorización de fotos para menores + lista de menores asistentes (pedido 2026-09-18)
+### [x] FAM-3 · Autorización de imagen + lista de menores asistentes — HECHO 2026-09-18
 
-Dos partes: (a) casilla de "autorizado para salir en fotos del grupo, redes
-sociales, etc." en la ficha, especialmente para menores; (b) reporte de todos
-los menores de edad que asistieron en los últimos 2 años, con nombre, lugar al
-que asistió y padre/madre de familia (o si no pertenece a ninguna familia).
+**El campo tiene TRES estados y ahí está toda la regla:** NULL = no se le
+preguntó a nadie, true = dijo que sí, false = dijo que NO. Un `default false`
+habría sido más cómodo y habría estado mal: se pierde para siempre a quién
+falta consultar, y se afirma una negativa que nadie dio. `puedePublicarse` trata
+pendiente como NO — quien consulta eso está por publicar una foto, y la ausencia
+de respuesta no es un permiso.
+
+En la pantalla son TRES BOTONES y no una casilla: una casilla solo sabe decir sí
+o no, y destildarla significaría "dijo que no" sin forma de volver a pendiente.
+
+En la ficha de un MENOR el estado va en el encabezado, junto al nombre, y no
+enterrado en los datos personales: quien está por publicar una foto lo tiene que
+ver sin buscarlo. Pendiente se pinta en coral porque es una tarea.
+
+`esMenor` se reutiliza de FAM-2; no hay una segunda definición de quién es menor.
+
+**El reporte** (`scripts/reporte-menores-asistentes.ts`) da **545 menores** con
+check-in en los últimos 2 años. Una fila por persona y no por lugar: con una por
+lugar, quien revisa tiene que juntar mentalmente las filas de un mismo chico
+para saber si ya le preguntó, y la lista existe para ir marcando. El lugar
+habitual va con su conteo y los demás en una columna aparte.
+
+**451 de los 545 no tienen familia registrada** — o sea que hoy no hay a quién
+pedirle la autorización. Van en una hoja propia: es el pendiente de FAM-2/DAT-8
+y ahora tiene una consecuencia concreta.
+
+**Hallazgo del camino:** `donations` y `refunds` eran las únicas tablas de plata
+SIN bitácora. Se vio borrando una donación de prueba, que no dejó ningún rastro.
+Migración `20260918210000` les pone el trigger — importa más desde DON-2, porque
+ahora se crean donaciones a mano y la pregunta "¿quién registró esto?" dejó de
+responderse sola con el nombre del archivo.
+
+
+### [ ] SRV-5 · Marcar encargados de comité desde la lista + rol automático (pedido 2026-09-18)
+
+En el detalle de cada comité, un check en la lista de personas para marcarlas
+como encargado del comité (puede ser más de una), y que al marcarlo se le
+asigne automáticamente el rol lider_comite (el que abre la pantalla SRV-4).
 
 Prompt para Claude Code:
 
 ```
-FEATURE + REPORTE · Menores: autorización de imagen y lista de asistentes
+FEATURE · Comités: marcar encargados desde la lista de miembros del comité
 
-PARTE A — CAMPO DE AUTORIZACIÓN DE IMAGEN:
-- Nuevo campo en members (ej. autorizacion_imagen boolean NULL): NULL = no se ha
-  preguntado (el default para todo el padrón existente), true = autorizado, false =
-  negado explícito. NO usar default false: "no me han preguntado" y "dijeron que no"
-  son cosas distintas y legalmente importa la diferencia.
-- UI: checkbox en la ficha del miembro (sección de datos personales), con texto claro:
-  "Autorizado para aparecer en fotos del grupo, redes sociales y publicaciones".
-  Visible para todos pero DESTACADO en fichas de menores (badge/aviso "Menor de edad —
-  autorización de imagen: pendiente/sí/no" cerca del nombre).
-- Guardar quién y cuándo lo marcó (audit_log ya lo cubre — verificar que este campo entre).
-- Incluir el campo en los formularios donde se editan datos personales (mismo patrón del
-  campo de restricción alimenticia que ya se agregó) para que los papás lo puedan marcar.
-- Regla de menor de edad: la que ya usa el sistema (FAM-2) — REUTILIZAR el cálculo de
-  minoría, no duplicarlo.
+CONTEXTO: hoy el comité tiene un campo de encargado. La regla nueva: los encargados se
+marcan directamente en la lista de personas del comité, y pueden ser VARIOS.
 
-PARTE B — REPORTE DE MENORES ASISTENTES (últimos 2 años):
-- Script scripts/reporte-menores-asistentes.ts que genere un XLSX con: todos los miembros
-  MENORES DE EDAD HOY con al menos un check-in desde 2024-09-18. Columnas:
-  nombre completo, edad, lugar(es) a los que asistió (sede/charla/evento — si son varios,
-  el más frecuente + conteo, o una fila por lugar: elegí lo más legible y explicá),
-  fecha del último check-in, padre/madre/encargado (desde su familia: los adultos con
-  posición de papá/mamá/cabeza de familia) o "SIN FAMILIA REGISTRADA" bien visible,
-  y la columna de autorización de imagen (pendiente/sí/no) de la parte A.
-- Los "sin familia registrada" van ADEMÁS en una hoja aparte — son el pendiente de FAM-2/
-  DAT-8 y esta lista sirve para trabajarlos.
-- Excluir datos [prueba]. Solo lectura, no modifica nada.
-Tests de la parte A (regla del campo, NULL vs false). tsc/lint/vitest al cierre.
+ETAPA 1 — DIAGNÓSTICO: ¿cómo se guarda hoy el encargado del comité (campo único en
+committees? ¿puesto de "Encargado"?)? Ya hay ALGUNOS comités con encargado definido, no
+todos. Si es campo único, proponer la migración a un flag en la membresía (ej.
+is_encargado en la tabla de asignaciones persona-comité) y cómo migrar los encargados
+existentes sin perder ninguno. Reportar antes de aplicar.
+
+ETAPA 2 — UI, con UNA SOLA FUENTE DE VERDAD en dos vistas sincronizadas:
+- El dato es UNO (el flag de la etapa 1). El campo "Encargado" del comité y la lista de
+  personas son dos vistas del mismo dato: marcar en cualquiera de los dos lados se refleja
+  en el otro al instante — nunca pueden decir cosas distintas.
+- En la lista de personas del comité, el encargado se distingue con una ESTRELLA (★) junto
+  al nombre; marcar/desmarcar encargado se hace tocando la estrella de la fila (relleno =
+  encargado, contorno = no). Tooltip "Encargado del comité".
+- El campo de encargado del comité pasa a mostrar los nombres (varios si hay varios),
+  derivados del flag — deja de ser editable por separado si hoy lo era.
+- Solo pueden tocar la estrella quienes administran comités (verificar requireRoles del
+  módulo servidores); el lider_comite NO puede nombrarse a sí mismo ni a otros. Para el
+  resto la estrella es solo indicador visual.
+
+ETAPA 3 — ROL AUTOMÁTICO:
+- Al marcar: asignar el rol lider_comite si no lo tiene. Al desmarcar: quitárselo SOLO si
+  no quedó como encargado de ningún otro comité Y el rol no fue asignado manualmente —
+  usar la distinción manual/automático de EVE-12 (columna source): este rol entra como
+  'puesto'/automático. Si EVE-12 aún no corrió, coordinar: este ítem la necesita.
+- Integrar con position-role-sync si es quien gestiona roles automáticos hoy — REUTILIZAR
+  ese mecanismo, no crear un segundo camino que después pelee con la sync.
+- El alcance de SRV-4 ("mi comité") debe leer de esta marca: líder de comité = encargado
+  marcado aquí.
+- Todo cambio queda en audit_log (quién nombró/quitó a quién).
+Tests: marcar asigna rol, desmarcar lo quita solo si no es encargado en otro lado ni
+manual, lider_comite no puede tocar el check (403 server-side). tsc/lint/vitest al cierre.
 ```
 

@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import { esMenor } from '@/lib/members/reglas-de-menores'
+import {
+  estadoDeAutorizacion, ETIQUETA as ETIQUETA_AUTORIZACION,
+} from '@/lib/members/autorizacion-de-imagen'
 import Link from 'next/link'
 import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -160,6 +164,22 @@ export function MemberHeader({
               <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-body bg-surface-low text-navy-light/80">
                 <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-navy-light/30" />
                 Inactivo
+              </span>
+            )}
+            {/* FAM-3 · En una ficha de MENOR, el estado de la autorización de
+                imagen va arriba y no enterrado en los datos personales: quien
+                está por publicar una foto lo tiene que ver sin buscarlo.
+                Pendiente se pinta en coral porque es una tarea, no un estado
+                tranquilo: hay que ir a preguntarle a la familia. */}
+            {esMenor({ birth_date: member.birth_date }) && (
+              <span
+                title="Autorización para aparecer en fotos y publicaciones"
+                className={cn('rounded-full px-2.5 py-0.5 text-xs font-body',
+                  member.autorizacion_imagen === true ? 'bg-teal-soft/30 text-teal-deep'
+                    : member.autorizacion_imagen === false ? 'bg-coral/15 text-coral-deep'
+                    : 'bg-coral-soft/25 text-coral-deep')}
+              >
+                Menor · fotos: {ETIQUETA_AUTORIZACION[estadoDeAutorizacion(member.autorizacion_imagen)].toLowerCase()}
               </span>
             )}
             {member.is_donor && (

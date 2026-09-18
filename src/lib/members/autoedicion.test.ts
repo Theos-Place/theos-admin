@@ -6,7 +6,12 @@ import {
 describe('qué puede editar alguien de su propia ficha', () => {
   it('los datos personales que pidió el negocio, y nada más', () => {
     expect([...CAMPOS_AUTOEDITABLES].sort()).toEqual([
-      'address', 'allergies', 'birth_date', 'canton',
+      'address', 'allergies',
+      // FAM-3 (2026-09-18): la propia persona decide si su imagen se publica.
+      // Para un menor lo marca quien gestiona su ficha o su familia desde el
+      // formulario, que es el caso que el campo viene a cubrir.
+      'autorizacion_imagen',
+      'birth_date', 'canton',
       'dietary_restrictions',
       'district', 'emergency_contact_name', 'emergency_contact_phone',
       'first_name', 'gender', 'last_name',
