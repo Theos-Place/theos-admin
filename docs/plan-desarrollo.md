@@ -190,41 +190,47 @@ TESTS: seleccionar una semana muestra solo sus números; el desglose por sede
 suma el total; la semana parcial queda marcada; el deep link abre la semana
 correcta; la vista anual no cambia.
 
-### [~] DAT-8 · Menores de 12 con correo y sin familia — de 54 a 26
+### [x] DAT-8 · Menores de 12 con correo y sin familia — CERRADO 2026-09-18, de 54 a 2
 
 Salió de limpiar los correos de menores (2026-09-10). Quedaban 54 a los que NO
 se les podía quitar el correo: sin familia detrás se quedaban sin ninguna forma
 de contacto.
 
-**Bajaron a 26.** Primero a 30 solos, de rebote de FAM-2 y del vaciado de las
-26 fechas falsas. Los otros 4 el 2026-09-15.
-
 LA CLAVE FUE SEPARAR DOS PROBLEMAS que vivían mezclados, con una señal
 mecánica: si el correo lleva el **nombre de pila** de la propia persona
 (`src/lib/members/correo-de-quien.ts`). El apellido NO cuenta — madre e hijo lo
 comparten, y `cristellopeztorres@` daría por propio el correo de la ficha de
-Camilia Sanabria **Lopez**. Es la misma trampa que ya advertía este pendiente
-sobre los apellidos, colándose por la puerta del correo.
+Camilia Sanabria **Lopez**.
 
-De los 30:
- · **12 · el correo es suyo** → no son menores, la fecha está mal. Todos con
-   correo que lleva su nombre y teléfono propio; un niño de 4 años no tiene
-   `andres.herreram1802@gmail.com` ni `pilar@rojasarquitectos.com`.
-   **Pendiente: confirmar el criterio antes de vaciarles la fecha.**
-   `data-import/dat8-fecha-mal-2026-09-15.csv`.
- · **4 · el correo es de un adulto identificado** → HECHO. Se les armó la
-   familia y RECIÉN DESPUÉS se les quitó el correo: al revés los dejaba sin
-   ninguna vía de contacto, que es exactamente por lo que este pendiente estaba
-   trabado. Elena y Alana a la familia de Carlos Blanco —el duplicado que las
-   bloqueaba se resolvió el 15-set— y Samuel a la de Elena Sanabria.
-   El cuarto caso, Camilia Sanabria Lopez, resultó ser un DUPLICADO de Camila
-   (misma fecha de nacimiento, mismo día de creación): confirmado por el usuario
-   y fusionado. Los check-ins suman 1+1=2, no se deduplican — se verificó antes
-   de correr, que es lo que faltó con Steven Angulo.
- · **14 · sin pista** → a mano. Varios tienen correo con diminutivo o iniciales
-   (`moniqu2601@` de Mónica Umaña, `macarygc@` de Mariana García) que la regla
-   no reconoce a propósito: aflojarla para atraparlos arriesga borrarle el
-   correo a un menor de verdad. `data-import/dat8-a-mano-2026-09-15.csv`.
+**CERRADO el 2026-09-18.** Se clasificaron los 24 que quedaban contra el padrón
+completo y salió un dato que cambió la conclusión: **ninguno tenía el correo ni
+el teléfono de un adulto del padrón**. O sea que lo que quedaba NO era un
+problema de familias sin vincular: eran fichas de adultos con la fecha mal.
+
+El usuario decidió vaciar la fecha de **22 de las 24**. Las dos que se salvan,
+Lucía y Naomy Sánchez Arguedas, son hermanas de verdad: comparten el correo de
+un adulto que no tiene ficha y son las ÚNICAS con check-in en un evento Youth.
+El resto que asistió fue a charlas, que son de adultos.
+
+La exclusión se hizo por esa señal y no por una lista de nombres escrita a mano
+(`scripts/dat8/borrar-fechas.cjs`): así no depende de copiar bien dos nombres y
+un caso nuevo igual se salva solo.
+
+Por qué vaciar y no corregir: nadie sabe la fecha real, y con una falsa el
+sistema los trata como menores —no les crea cuenta, les exige familia, los
+cuenta mal en todo reporte por edad—. Sin fecha simplemente no se sabe, que es
+la verdad; FAM-2 ya contempla que sin fecha NO se asuma menor.
+
+**Se puede deshacer:** el valor viejo quedó en `audit_log.old_data`, y ahora se
+ve desde la pantalla de historial (AUD-2) con el nombre de quien lo pidió — son
+los primeros cambios del sistema que quedan firmados.
+
+No se creó ni se invitó ninguna cuenta: vaciar la fecha es un update de esa
+columna y nada más. Decisión explícita del usuario.
+
+Queda una nota para después: **el mismo criterio sirve para todo el padrón.**
+Si hay fichas con fecha falsa que SÍ tienen familia, no salieron en esta lista y
+nadie las ha buscado.
 
 ### [x] BEC-2 · El destino de una beca sin cupo — HECHO 2026-09-15
 
@@ -422,9 +428,24 @@ específica; si no, el insert choca contra el único de `family_members`.
    8 años, tenía el correo de su mamá Karin Buscemi y el login era de ELLA,
    que no tenía cuenta propia porque ese usuario le ocupaba el correo.
    Deshabilitarla la habría dejado sin acceso: se le MUDÓ la cuenta a su ficha.
- · [ ] **66 cumplieron 18 sin cuenta** en el último año: candidatos a que se les
-   ofrezca el alta. Nada automatizado, como pide el brief —
-   `data-import/cumplieron-18-sin-cuenta-2026-09-15.csv`.
+ · [~] **66 cumplieron 18 sin cuenta** en el último año. Nada automatizado, como
+   pide el brief — `data-import/cumplieron-18-sin-cuenta-2026-09-15.csv`.
+
+   **Filtro decidido el 2026-09-18:** solo se invita a quien haya asistido a una
+   charla al menos DOS veces en 2026. Medido (`scripts/fam2/charlas.cjs`):
+   **solo 4 califican** —Salome Bermudez 14×, Jose Ángel Guido 5×, Camila Chaves
+   3×, Gabriel Gonzalez 3×—. Seis fueron una vez y 56 ninguna.
+
+   **Y ninguno de los 4 tiene correo.** No es casualidad: solo 1 de los 66 lo
+   tiene. Es consecuencia directa de este mismo pendiente —se les quitó el correo
+   POR SER MENORES— y ahora deja incomunicados justo a los que se quiere invitar.
+   La invitación no se puede mandar hasta conseguirlo: Camila y Gabriel tienen
+   familia con correos de adultos a quienes pedírselo (no usarlos para la cuenta:
+   es el enredo de Miguel Andrés y Karin Buscemi); Salome y Jose Ángel tienen
+   teléfono propio.
+
+   Esto se repite cada mes: cada quien que cumple 18 queda sin correo por diseño.
+   Valdría la pena avisarlo al cumplirlos en vez de descubrirlo un año después.
  · [ ] Quedan **281 menores sin familia vinculada**, o sea sin vía de contacto.
    Se cruza con DAT-8. **Pero 48 de esos probablemente NO son menores**: tienen
    la fecha de nacimiento mal (pista del usuario, 15-set). Las señales, en
