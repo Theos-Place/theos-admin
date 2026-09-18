@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
+import { campoVisible, type Respuestas } from '@/lib/forms/logica-condicional'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -68,43 +69,15 @@ const PREVIEW_MEMBER: Partial<Member> = {
 }
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
+//
+// La regla vive en lib/forms/logica-condicional.ts, con tests. Estaba acá
+// adentro y por eso nadie vio el bug del operador `eq` sobre casillas, que
+// escondía preguntas obligatorias cuando se marcaba más de una opción.
 
 type AnswerMap = Record<string, string | string[] | number>
 
-function evaluateRule(rule: LogicRule, answers: AnswerMap): boolean {
-  const results = rule.conditions.map(condition => {
-    const answer = answers[condition.field_id]
-    const val = condition.value
-    switch (condition.operator) {
-      case 'eq': return String(answer ?? '') === val
-      case 'neq': return String(answer ?? '') !== val
-      case 'contains':
-        if (Array.isArray(answer)) return answer.includes(val)
-        return String(answer ?? '').toLowerCase().includes(val.toLowerCase())
-      case 'not_contains':
-        if (Array.isArray(answer)) return !answer.includes(val)
-        return !String(answer ?? '').toLowerCase().includes(val.toLowerCase())
-      case 'is_empty': return !answer || answer === '' || (Array.isArray(answer) && answer.length === 0)
-      case 'is_not_empty': return !!answer && answer !== '' && (!Array.isArray(answer) || answer.length > 0)
-      case 'gt': return Number(answer) > Number(val)
-      case 'lt': return Number(answer) < Number(val)
-      default: return false
-    }
-  })
-  const met = rule.condition_operator === 'AND' ? results.every(Boolean) : results.some(Boolean)
-  return met
-}
-
 function isFieldVisible(field: FormFieldNew, answers: AnswerMap): boolean {
-  const rules = field.logic_rules ?? []
-  if (rules.length === 0) return true
-  for (const rule of rules) {
-    const met = evaluateRule(rule, answers)
-    if (rule.action === 'hide' && met) return false
-    if (rule.action === 'show' && met) return true
-  }
-  const hasShowRules = rules.some(r => r.action === 'show')
-  return !hasShowRules
+  return campoVisible(field, answers)
 }
 
 // ─── Multi-step helpers ───────────────────────────────────────────────────────
