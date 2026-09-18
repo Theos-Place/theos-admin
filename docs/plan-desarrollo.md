@@ -1242,3 +1242,47 @@ Para que no vuelva a pasar: la regla quedó en AGENTS.md ("Funciones nuevas en
 código 1 si algo queda abierto. Hoy: 52 funciones, 0 abiertas, 0 sin
 search_path.
 
+### [ ] SRV-4 · Pantalla "Mi comité" para líderes/encargados (pedido 2026-09-18)
+
+Pantalla nueva donde el líder o encargado de un comité ve SOLO a la gente de
+su comité, con su puesto y el estado de sus compromisos: asistencia
+comprometida, dando o llevando un estudio en el último año, donante activo, y
+la fecha del último check-in a un evento.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Pantalla "Mi comité": la gente de mi comité y sus compromisos
+
+QUIÉN LA VE: líderes/encargados de comité (lider_comite y equivalentes — verificar cómo se
+identifica hoy al encargado de un comité: ¿rol + puesto de encargado?). Cada uno ve
+ÚNICAMENTE su(s) comité(s) — mismo patrón de alcance por comité de EVE-12/events-scope:
+si EVE-12 ya creó el helper de "mis comités", REUTILIZAR. Los roles de gestión amplia
+(coordinador_servidores, direccion, admin) pueden ver cualquier comité con un selector.
+
+QUÉ MUESTRA — tabla, una fila por servidor ACTIVO del comité:
+1. Nombre + puesto(s) en el comité.
+2. Asistencia comprometida: cumple/no cumple según LA REGLA EXISTENTE de asistencia activa
+   (≥6 charlas en 6 meses completos + 1 en los últimos 60 días) — REUTILIZAR la función
+   que ya calcula esto para elegibilidad de estudios, NO reimplementarla.
+3. Estudio en el último año: badge "llevando" (matrícula activa o cerrada en los últimos
+   12 meses) y/o "dando" (dirigente de un grupo activo o cerrado en los últimos 12 meses).
+4. Donante activo: según la definición ya usada en el módulo de donaciones (donación en
+   los últimos 2 trimestres — reutilizar esa query/regla de FIN-1).
+5. Último check-in a un evento: fecha (y nombre del evento en tooltip); "—" si nunca.
+Indicadores visuales simples (✓/✗ o verde/gris), con el detalle en tooltip. Filtro rápido
+"solo los que no cumplen algo". Export XLSX/CSV de la tabla.
+
+IMPLEMENTACIÓN:
+- Server-side todo el cálculo (endpoint /api con requireRoles + recorte al comité del
+  solicitante — el server valida que el comité pedido sea suyo, no confiar en la UI).
+- Cuidado con el costo: calcular compromisos para ~30-80 personas por comité está bien en
+  una consulta agregada; nada de N+1 por fila.
+- PRIVACIDAD: esta pantalla NO da acceso al perfil completo del miembro ni muestra datos
+  financieros (montos de donaciones) — solo el binario "donante activo sí/no". Nada de
+  teléfonos/correos acá salvo que ya los vea por otro camino.
+- Entrada en el menú solo para quienes tienen alcance (patrón de módulos existente).
+Tests: líder ve solo su comité (403 en otro), reglas de compromisos con fixtures (usa las
+funciones reutilizadas), export. tsc/lint/vitest al cierre.
+```
+
