@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Lock, ChevronDown, ChevronUp, Loader2, GraduationCap } from 'lucide-react'
+import { Lock, ChevronDown, ChevronUp, Loader2, GraduationCap, History } from 'lucide-react'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } from '@/components/members/MemberPaymentsList'
+import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import { cn } from '@/lib/utils'
 import { formatDate, formatCRC } from '@/lib/format'
 import { studyGradeDisplay } from '@/lib/studies/grade-display'
@@ -173,6 +174,8 @@ export function MemberParticipationTab({
   ledStudies = [],
   onAddStudy,
 }: Props) {
+  // AUD-2 · Qué matrícula tiene el historial abierto (una a la vez).
+  const [historialDe, setHistorialDe] = useState<string | null>(null)
   const { studyTypes } = useStudyPlans()
   return (
     <div className="space-y-3">
@@ -276,6 +279,19 @@ export function MemberParticipationTab({
                     })()}
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-3 flex-wrap">
+                        {/* AUD-2 · Acá se contesta "¿quién movió a esta persona
+                            de grupo y cuándo?", que es la pregunta que pidió la
+                            pantalla de historial. */}
+                        <button
+                          type="button"
+                          onClick={() => setHistorialDe(v => v === row.enrollmentId ? null : row.enrollmentId)}
+                          aria-expanded={historialDe === row.enrollmentId}
+                          aria-label={`Historial de ${row.name}`}
+                          title="Historial de esta matrícula"
+                          className="text-navy-light/80 hover:text-navy transition-colors"
+                        >
+                          <History size={15} aria-hidden />
+                        </button>
                         {/* Inscripción que quedó sin resultado al cerrarse el
                             grupo: se resuelve desde acá o desde el detalle del
                             grupo, lo que le quede más a mano a quien revisa. */}
@@ -338,6 +354,22 @@ export function MemberParticipationTab({
                   </tr>
                 )
               })}
+              {/* Se renderiza aparte para no meter un panel dentro de una celda
+                  de la tabla: ocupa el ancho completo, como corresponde. */}
+              {estudiosTable.sorted.slice(0, visibleEstudios)
+                .filter(r => r.enrollmentId === historialDe)
+                .map(r => (
+                  <tr key={`h-${r.enrollmentId}`}>
+                    <td colSpan={5} className="px-4 pb-3">
+                      <HistorialPanel
+                        entityType="study_enrollments"
+                        entityId={r.enrollmentId}
+                        titulo={`Historial · ${r.name}`}
+                        inicialmenteAbierto
+                      />
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

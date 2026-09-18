@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import { AlertCircle, Ban, BookOpen, Check, GraduationCap, KeyRound, Link2, Loader2, Mail, UserCheck, UserX, UserPlus, Clock, Video } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -838,6 +839,10 @@ export function MemberAdminTab({ memberId, onChanged }: {
           coordinador_estudios y admin — NI el propio miembro, NI el dirigente
           que la escribió, NI dirección (con 403 no se pinta). */}
       {admin?.can_view_studies && <CdebRecommendationsPanel memberId={memberId} />}
+
+      {/* AUD-2 · El historial va acá y no en el resumen: es información de
+          gestión —quién tocó qué— y este tab ya exige permisos de staff. */}
+      <HistorialPanel entityType="members" entityId={memberId} titulo="Historial de la ficha" />
     </div>
   )
 }

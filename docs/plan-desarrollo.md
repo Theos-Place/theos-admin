@@ -986,60 +986,61 @@ cupo; con comprobante subido NO se toca; beca 100% NO se toca; idempotente. tsc/
 
 ## Fase 18 — Pedido el 2026-09-16
 
-### [ ] AUD-2 · El historial de cambios no se puede ver desde ninguna pantalla
+### [x] AUD-2 · El historial de cambios se puede ver — HECHO 2026-09-18
 
-**El caso que lo pidió.** Preguntaron quién había movido a Pamela Fonseca entre
-dos grupos de SCJ y cuándo. La respuesta estaba en la base, pero llegar a ella
-necesitó escribir un script: no hay ninguna pantalla donde ver qué le pasó a una
-persona, a un pago o a una matrícula.
+Panel de historial en la ficha de una persona, en el detalle de un pago y por
+matrícula (en el historial de estudios de la ficha, que es donde se contesta
+"¿quién movió a esta persona de grupo?"). Carga perezosa: solo se consulta si
+alguien lo abre.
 
-**Lo que hoy tenemos y no se usa.** `audit_log` tiene 370 mil filas y pesa
-315 MB, el 65% de la base entera. La app lo consulta en UN solo lugar:
-`getRecentActivity()` (dashboard.ts), que trae los últimos 10 por fecha para el
-feed de actividad. Nada más. Es una tabla de solo escritura.
+**PRIMERO HUBO QUE ARREGLAR EL DATO, y era un error mío de anteayer.** Di por
+hecho que desde la migración `20260916190000` el actor quedaba registrado.
+Medido antes de construir nada: de **1.135 UPDATE sobre `members` posteriores a
+esa migración, CERO tenían actor**. Los únicos 37 que sí venían de funciones que
+reciben el actor como parámetro y nunca pasaron por ahí.
 
-**Por qué ahora sí vale la pena.** Hasta el 2026-09-16 el log no servía ni
-aunque se mirara: `log_changes` guardaba `auth.uid()`, que con la llave de
-servicio es siempre NULL, así que 369.772 de 370.002 filas no tienen autor.
-Desde la migración `20260916190000` (más `20260917000000`, que le quitó el
-bloque EXCEPTION que la hacía 4× más lenta) el actor sí queda registrado. O sea:
-el dato útil empieza hoy.
+El trigger estaba bien —comprobado con una transacción que le pone el header a
+mano: extrae el actor correctamente—. Lo que fallaba era el lado de la app:
+`recordarActor()` corría DESPUÉS de `await supabase.auth.getUser()`, y
+`enterWith` en ese punto ya no lo ve la continuación del handler, que tomó su
+foto del contexto antes. Falla en silencio: nada se rompe, solo no se guarda el
+autor. Ahora se entra con una CAJA vacía antes del primer `await` y se rellena
+al resolver la sesión. Hay tests con la forma exacta del bug y con dos
+peticiones concurrentes, porque firmar un cambio con el nombre equivocado sería
+peor que no firmarlo.
 
-**Qué hacer.**
+**Rendimiento: NO hizo falta el índice** que el plan dejaba a decidir. Medido
+sobre las 359 mil filas: filtrando por `entity_type` + `entity_id` son **87
+buffers**; solo por el id, **2.357**. La consulta usa las dos columnas.
 
-1. Panel de historial en el detalle de una persona, un pago y una matrícula.
-   Leer de `audit_log` por `entity_type` + `entity_id`, más reciente primero.
-2. Renderizar el diff de forma legible. El dato ya viene acotado a lo que
-   cambió (AUD-1): `old: {"birth_date":"1965-09-09"} new: {"birth_date":null}`.
-   Traducir los nombres de columna a etiquetas humanas y formatear fechas y
-   montos; un JSON crudo no lo lee nadie.
-3. Resolver el nombre de quien hizo el cambio. `actor_id` referencia
-   `auth.users`, así que el puente es `members.auth_user_id` (ver
-   `resolverNombresDeQuienCancelo` en `queries/scholarships.ts`, que ya hace
-   exactamente eso). Sin actor → "el sistema".
-4. Permisos: es información sensible. Restringir con `requireModuleView` del
-   módulo correspondiente, no dejarlo abierto a cualquier sesión.
+**Tres cosas que solo se vieron con datos reales** y que el plan no anticipaba:
 
-**Rendimiento — medido el 2026-09-16, no estimar.** El índice es
-`(entity_type, entity_id)` y una consulta que filtra SOLO por `entity_id` no lo
-puede aprovechar: **1.301 ms en frío y 2.278 buffers para traer 7 filas**. Con
-un índice por `entity_id` solo baja a **4 buffers**. Ese índice NO se agregó
-todavía a propósito: hoy costaría en cada escritura para una consulta que nadie
-hace. Va junto con esta pantalla, no antes. Si la pantalla filtra por las dos
-columnas (`entity_type` + `entity_id`), el índice actual ya alcanza y no hace
-falta agregar nada — medirlo antes de decidir.
+- Los uuids no contestan nada. "Grupo #1a9acbce → #b89a3066" era literalmente
+  la pregunta sin responder. Ahora se resuelven los nombres:
+  **"SCJ — Oeste SJ → SCJ — Este SJ"**, que es el caso de Pamela.
+- Hasta el 15-set el trigger NO guardaba `old_data` y volcaba la fila entera
+  (44 claves de promedio). Pintar eso como "Correo vacío → ana@x.com" afirma
+  algo falso. Esas entradas dicen que hubo un cambio y que no quedó guardado
+  cuál.
+- Estados crudos (`pendiente_de_pago`), rutas de comprobante de tres líneas y
+  `created_at` repitiendo la fecha de la entrada. Traducidos, resumidos y
+  quitados.
 
-**Dos cosas de retención que hay que resolver acá.**
+El ruido se filtra: `sede_last_checkin` sola son 19.239 filas de `members` en un
+mes, todas del cron nocturno, y tapaba lo que hizo una persona.
 
-- `prune_audit_log()` borra todo lo de más de 90 días (pg_cron, 04:00 UTC). Con
-  el autor recién guardándose desde hoy, **el historial útil solo llegará hasta
-  diciembre de 2026**. Si el historial va a ser una función del producto, hay que
-  decidir la retención antes de que se venza lo primero.
-- Las cargas masivas deberían correr con el trigger apagado. 294.613 de las
-  370 mil filas son del reimport de estudios del 18-jul (223.601 en un solo
-  día), no le sirven a nadie para auditar y empujan lo útil fuera de la ventana
-  de 90 días. Eso se drena solo el 16-oct-2026, pero vuelve con el próximo
-  import.
+**Permisos:** lista blanca de entidades (`lib/audit/entidades.ts`) y el módulo
+correspondiente con alcance más allá de `own`. `entity_type` viaja en la URL y
+entra en la consulta; sin lista, cualquiera pediría el historial de tablas que
+ningún módulo cubre. Y cualquier miembro tiene `miembros:view` sobre su ficha:
+eso no puede abrirle la bitácora.
+
+**Queda pendiente de decidir (retención).** `prune_audit_log()` borra todo lo de
+más de 90 días. Con el autor guardándose de verdad recién desde hoy, el
+historial útil llegará hasta mediados de diciembre de 2026 y después se empieza
+a vencer. Si el historial va a ser una función del producto, hay que subir esa
+ventana antes. Lo otro: las cargas masivas deberían correr con el trigger
+apagado — 294.628 de las 359 mil filas son del reimport del 18-jul.
 
 
 ### [x] SEC-3 · Warnings del linter de Supabase — HECHO 2026-09-17

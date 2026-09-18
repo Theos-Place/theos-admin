@@ -5,19 +5,24 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
 import { cuentaHabilitada } from '@/lib/auth/account-active'
-import { recordarActor } from '@/lib/auth/actor-actual'
+import { abrirContextoDeActor, recordarActor } from '@/lib/auth/actor-actual'
 
 export type AuthContext = { userId: string; memberId: string | null; roles: RoleId[] }
 
 /** Lee la sesión y resuelve member + roles activos. null si no hay sesión. */
 export async function getAuthContext(): Promise<AuthContext | null> {
+  // ANTES de cualquier await: acá todavía se corre dentro del contexto async
+  // del handler, así que la caja que se abre acá es la que él va a ver. Movido
+  // más abajo, el actor no llega y la bitácora se queda sin autor sin avisar
+  // (ver el comentario largo en actor-actual.ts).
+  abrirContextoDeActor()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  // Desde acá, todo lo que escriba esta petición queda firmado en audit_log.
-  // Va antes de resolver la ficha a propósito: los roles se leen con el cliente
-  // admin y esas lecturas ya no cambian nada, pero cualquier escritura posterior
-  // del handler sí.
+  // Se rellena la caja abierta arriba: desde acá, todo lo que escriba esta
+  // petición queda firmado en audit_log. Va antes de resolver la ficha a
+  // propósito — los roles se leen con el cliente admin y esas lecturas no
+  // cambian nada, pero cualquier escritura posterior del handler sí.
   recordarActor(user.id)
 
   const admin = createAdminClient()

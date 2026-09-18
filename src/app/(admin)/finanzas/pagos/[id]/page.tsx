@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useMemo } from 'react'
+import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import Link from 'next/link'
 import { ArrowLeft, Check, Image as ImageIcon } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -278,6 +279,13 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
           payment={payment}
         />
       )}
+
+      {/* AUD-2 · Quién aprobó, quién revirtió, quién cambió el monto. La línea
+          de tiempo de arriba muestra los hitos del pago; esto muestra las
+          manos que lo tocaron, que es otra pregunta. */}
+      <div className="mt-4">
+        <HistorialPanel entityType="payments" entityId={id} titulo="Historial del pago" />
+      </div>
 
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
