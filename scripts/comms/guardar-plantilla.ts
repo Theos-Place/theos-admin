@@ -8,10 +8,10 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { readFileSync } from 'node:fs'
 
-const ASUNTO = '¿No pudiste ir al campa? Te armamos otro 🏁'
+const ASUNTO = 'Lo que te perdiste del campa, en un día 🏁'
 
 const OPCIONES = [
-  { nombre: 'Mini Campa — 10 oct (servidores que no fueron)', archivo: '/tmp/cuerpo.html' },
+  { nombre: 'Actividad de un día — 10 oct (servidores que no fueron al campa)', archivo: '/tmp/cuerpo.html' },
 ]
 
 async function main() {
@@ -22,6 +22,7 @@ async function main() {
     'Hacia la Meta — 10 oct (servidores que no fueron al campa)',
     'Hacia la Meta — 10 oct (A · flyer)',
     'Hacia la Meta — 10 oct (B · video)',
+    'Mini Campa — 10 oct (servidores que no fueron)',
   ]) await sb.from('message_templates').delete().eq('name', viejo)
 
   for (const o of OPCIONES) {

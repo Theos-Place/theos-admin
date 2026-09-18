@@ -26,10 +26,15 @@ const DESTINOS = [
  * hay algo nuevo y que se hizo para quien lo lee. "Te armamos otro" cabe
  * entero en la bandeja del celular (43 caracteres).
  */
-const ASUNTO = '¿No pudiste ir al campa? Te armamos otro 🏁'
+/**
+ * El asunto NO dice "campa": prometerlo sería prometer otra cosa (Comité
+ * Servidores, 2026-09-18). Dice qué se recupera —lo que se perdió— y en
+ * cuánto. 40 caracteres: entra entero en la bandeja del celular.
+ */
+const ASUNTO = 'Lo que te perdiste del campa, en un día 🏁'
 
 const OPCIONES = [
-  { clave: 'única', archivo: '/tmp/cuerpo.html', nota: 'flyer + guion de Debbie' },
+  { clave: 'única', archivo: '/tmp/cuerpo.html', nota: 'más corta, sin la palabra campa para el evento' },
 ]
 
 async function main() {
