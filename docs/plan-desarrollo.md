@@ -793,24 +793,31 @@ detalle de un evento ajeno no muestra las pestañas de gestión (mostrar una
 pestaña que devuelve 403 es peor que no mostrarla) y el buscador de check-in
 solo lista los eventos que puede operar.
 
-### [ ] UX-5 · Después del login: "Cargando…" en vez de "no hay cuenta asociada" (pedido 2026-09-17)
+### [x] UX-5 · Después del login: "Cargando…" en vez de "no hay cuenta asociada" — HECHO 2026-09-17
 
-Prompt para Claude Code:
+La causa era una sola línea en `/matricula`: `if (!effectiveMemberId)`. El
+`AuthProvider` arranca en `{ user: null, loaded: false }` y resuelve la sesión
+con un fetch a /api/auth/me, así que mientras ese fetch viaja el miembro es
+`null` — el mismo valor que tiene alguien que de verdad no tiene ficha. Dos
+situaciones distintas con el mismo valor, y por eso una se veía como la otra.
 
-```
-FIX UX · Al entrar tras el login, mientras la página resuelve la sesión/ficha muestra
-"no hay cuenta asociada" y luego se corrige solo. Eso asusta: parece que la cuenta no
-existe.
+La regla de los tres estados (`cargando | sin_ficha | lista`) vive en
+`lib/auth/estado-de-la-sesion.ts` y no en la pantalla, porque el error es fácil
+de repetir: la pregunta natural al escribir la pantalla es "¿hay miembro?", y
+esa es justamente la pregunta equivocada.
 
-DIAGNÓSTICO: encontrar dónde se renderiza ese mensaje (¿layout admin? ¿hook de sesión/
-useMember?) y por qué aparece durante la carga: casi seguro el estado inicial es
-member=null y el componente no distingue "todavía cargando" de "cargó y no hay ficha".
-FIX: estado de tres valores (cargando | sin_cuenta | listo). Mientras carga → spinner o
-skeleton con "Cargando…"; el mensaje de "no hay cuenta asociada" SOLO cuando la consulta
-terminó y de verdad no hay ficha. Revisar que ningún otro lugar use el mismo patrón
-(buscar el texto del mensaje en src/ y arreglar todas las instancias).
-Test del componente con los tres estados. tsc/lint/vitest al cierre.
-```
+Barrí el resto de `src/`: **la única pantalla rota era matrícula**. `/mis-pagos`
+ya esperaba a `loaded`, pero pasó a usar la misma función y el mismo texto para
+que no queden dos versiones de la regla.
+
+De paso el mensaje dice qué hacer. Antes era "No hay un miembro asociado a tu
+cuenta", que suena a culpa de quien lo lee y no ofrece salida; ahora incluye el
+correo al que escribir, porque esto no lo puede arreglar la persona sola.
+
+**No se verificó en el navegador**: /matricula exige sesión y no puedo entrar
+con las credenciales del usuario. Lo que sí está fijado son los tres estados y
+un test que lee el fuente y falla si la condición vuelve a colgarse solo del
+miembro (verificado contra el código viejo: lo detecta).
 
 ### [x] GRU-3 · Detalle de grupo: lo que ve el estudiante y lo que ve el dirigente — HECHO 2026-09-17
 

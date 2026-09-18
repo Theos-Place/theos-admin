@@ -17,6 +17,7 @@ import { MemberPaymentsList } from '@/components/members/MemberPaymentsList'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
 import { formatDate } from '@/lib/format'
+import { estadoDeLaSesion, SIN_FICHA_ASOCIADA } from '@/lib/auth/estado-de-la-sesion'
 
 type ScholarshipRow = {
   id: string
@@ -122,10 +123,13 @@ function MisPagosContent() {
 
   const [showAll, setShowAll] = useState(false)
 
-  if (loaded && !selfId) {
+  // UX-5: ya esperaba a `loaded` (acá el bug no se daba), pero el texto y la
+  // condición salen ahora del mismo lugar que el resto — si mañana alguien
+  // cambia la regla, no quedan dos versiones.
+  if (estadoDeLaSesion({ loaded, memberId: selfId }) === 'sin_ficha') {
     return (
       <div className="page">
-        <p className="rounded-2xl bg-surface-card p-6 text-sm text-navy-light/80 font-body">Tu sesión no tiene un perfil de miembro asociado.</p>
+        <p className="rounded-2xl bg-surface-card p-6 text-sm text-navy-light/80 font-body">{SIN_FICHA_ASOCIADA}</p>
       </div>
     )
   }

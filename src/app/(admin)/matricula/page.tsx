@@ -16,6 +16,7 @@ import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequest
 import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { estadoDeLaSesion, SIN_FICHA_ASOCIADA } from '@/lib/auth/estado-de-la-sesion'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import type { EligibilityResult, EligibleGroup, MemberStudyProfile } from '@/lib/studies/eligibility'
 import { DEBT_BLOCK_REASON } from '@/lib/studies/eligibility'
@@ -56,7 +57,7 @@ type ConfirmState = { group: EligibleGroup; study: EligibilityResult }
 export default function MatriculaPage() {
   const router = useRouter()
 
-  const { user } = useAuth()
+  const { user, loaded: sesionCargada } = useAuth()
   const { studyTypes } = useStudyPlans()
   const userRoles = user?.roles ?? []
   // "Ver disponibilidad como": admin, dirección y coordinación de estudios
@@ -227,11 +228,26 @@ export default function MatriculaPage() {
     }
   }
 
-  if (!effectiveMemberId) {
+  /**
+   * UX-5 · Mientras /api/auth/me viaja, `effectiveMemberId` es null igual que
+   * para alguien sin ficha. Preguntar solo por el miembro mostraba el mensaje
+   * de error a quien acababa de entrar bien, y se corregía solo un instante
+   * después. La regla de los tres estados vive en lib/auth/estado-de-la-sesion.
+   */
+  const estado = estadoDeLaSesion({ loaded: sesionCargada, memberId: effectiveMemberId })
+  if (estado === 'cargando') {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-navy-light/80 font-body">
-          No hay un miembro asociado a tu cuenta.
+      <div className="flex items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
+        <div className="h-6 w-6 rounded-full border-2 border-coral border-t-transparent animate-spin" />
+        <span className="sr-only">Cargando…</span>
+      </div>
+    )
+  }
+  if (estado === 'sin_ficha') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <p className="max-w-md text-center text-sm text-navy-light/80 font-body">
+          {SIN_FICHA_ASOCIADA}
         </p>
       </div>
     )
