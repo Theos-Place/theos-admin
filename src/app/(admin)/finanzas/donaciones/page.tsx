@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react'
+import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff, Plus } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { AgregarDonacionModal } from '@/components/finance/AgregarDonacionModal'
 import { FilterChips } from '@/components/shared/FilterChips'
 import Link from 'next/link'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -37,6 +38,8 @@ export default function DonacionesPage() {
     useDonations({ search, status: statusFilter, from: dateFrom, to: dateTo })
 
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
+  // DON-2 · alta manual de una donación.
+  const [agregando, setAgregando] = useState(false)
   const [unidentified, setUnidentified] = useState<Donation[]>([])
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const [linkConfirm, setLinkConfirm] = useState<{ donationId: string; memberId: string; memberName: string } | null>(null)
@@ -114,6 +117,13 @@ export default function DonacionesPage() {
             >
               {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
               {revealAll ? 'Ocultar montos' : 'Mostrar montos'}
+            </button>
+            <button
+              onClick={() => setAgregando(true)}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-[rgba(255,255,255,0.10)] hover:bg-[rgba(255,255,255,0.18)] font-body"
+            >
+              <Plus size={15} />
+              Agregar donación
             </button>
             <Link
               href="/finanzas/donaciones/importar"
@@ -426,6 +436,9 @@ export default function DonacionesPage() {
           <Check size={15} className="text-[#3DB97A]" />
           {toast}
         </div>
+      )}
+      {agregando && (
+        <AgregarDonacionModal onClose={() => setAgregando(false)} onCreada={() => refetch()} />
       )}
     </FinanceGuard>
   )

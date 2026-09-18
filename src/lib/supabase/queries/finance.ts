@@ -676,3 +676,37 @@ export async function importDonations(
   if (bErr) throw bErr
   return batch as DbImportBatch
 }
+
+/**
+ * DON-2 · Registra UNA donación cargada a mano.
+ *
+ * `is_identified` va en true siempre: el alta manual exige elegir a la persona,
+ * así que por construcción está identificada — a diferencia del import, donde
+ * la cédula puede no resolver.
+ */
+export async function crearDonacionAMano(input: {
+  member_id: string
+  donation_date: string
+  amount: number | null
+  currency: string
+  note: string | null
+  created_by: string
+}): Promise<{ id: string }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('donations')
+    .insert({ ...input, is_identified: true } as never)
+    .select('id')
+    .single()
+  if (error) throw error
+  return data as { id: string }
+}
+
+/** ¿Existe esa ficha y está activa? El alta manual no puede colgar una donación
+ *  de una ficha dada de baja: quedaría fuera de todo reporte y nadie la
+ *  encontraría después. */
+export async function miembroActivoExiste(memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('members').select('id, is_active').eq('id', memberId).maybeSingle()
+  return !!(data as { is_active: boolean | null } | null)?.is_active
+}

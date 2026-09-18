@@ -1033,6 +1033,81 @@ Tests: matrícula nueva genera notificación; a las 24h sin comprobante se cance
 cupo; con comprobante subido NO se toca; beca 100% NO se toca; idempotente. tsc/lint/vitest.
 ```
 
+### [ ] DON-1 · Importar donaciones con match asistido (pedido 2026-09-18)
+
+Los reportes de donaciones llegan como Fecha / Cliente (solo nombre) / Notas,
+sin ID. Se necesita asignar cada donación a la persona correcta. Mientras esto
+se construye, el match lo hace Claude (Cowork) contra el padrón, como con los
+puestos. La solución de sistema: pantalla de importación con vista previa.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Donaciones: importar CSV/Excel con match asistido de donantes
+
+PANTALLA: nueva acción "Importar" en la página de donaciones (/finanzas o donde viva hoy;
+rol: finanzas/admin — verificar requireRoles existente del módulo).
+
+USUARIA OBJETIVO: una persona NO técnica que recibe el Excel y lo sube tal cual. La
+pantalla debe ser un asistente guiado paso a paso (subir → revisar matches → confirmar),
+con lenguaje simple, sin jerga ("No encontramos a esta persona, buscala aquí"), y sin
+que tenga que preparar/limpiar el archivo antes.
+
+FLUJO:
+1. Subir CSV o XLSX con columnas flexibles: Fecha, Cliente/Nombre, Notas/Descripción y
+   Monto/Moneda si vienen (mapear encabezados con tolerancia; mostrar el mapeo detectado
+   para confirmar).
+2. MATCH server-side por fila, en este orden de confianza:
+   a) Cédula/documento si la columna existe → match exacto (member_por_external_id() /
+      documento — DAT-9: los imports entran por ahí).
+   b) Nombre completo normalizado (sin tildes, case-insensitive, tolerar iniciales tipo
+      "Ana Patricia Salazar A.") → único candidato = match "por nombre"; varios candidatos
+      o parecido parcial = AMBIGUO.
+3. VISTA PREVIA obligatoria antes de importar (patrón dry-run): tabla con cada fila →
+   persona matcheada + nivel de confianza; los ambiguos con dropdown de candidatos
+   (buscador por nombre/cédula) para resolver ahí mismo; opción "dejar sin importar".
+   NUNCA auto-importar un match por nombre con múltiples candidatos.
+4. Importar solo lo confirmado. SOLO INSERT (regla de imports); idempotencia: si la misma
+   fila (fecha+persona+monto+nota) ya existe, marcarla como duplicada en la vista previa
+   y no reinsertarla. Registrar lote de importación (quién, cuándo, archivo) para auditar.
+5. Al final: resumen (importadas / duplicadas / sin match) + descarga CSV de las sin match
+   para trabajarlas aparte.
+NOTAS: monto puede venir vacío (donación registrada sin monto — permitirlo igual que el
+alta manual de DON-2); multimoneda: si hay columna de moneda respetarla, JAMÁS convertir
+ni sumar entre monedas (INT-3). Nada de correos. Tests del matcher (exacto, con inicial,
+ambiguo, sin candidato) + test de idempotencia. tsc/lint/vitest al cierre.
+```
+
+### [x] DON-2 · Botón para registrar una donación a mano — HECHO 2026-09-18
+
+Botón "Agregar donación" en la pantalla de donaciones. Buscador de persona por
+nombre o cédula reutilizando `MemberCombobox` —el mismo de siempre, que además
+no exige el módulo miembros, que el rol finanzas no tiene—, fecha con tope en
+hoy, moneda, monto y nota.
+
+**La tabla no contemplaba nada de esto** (migración `20260918180000`):
+`amount` era NOT NULL, no había columna de nota y no quedaba rastro de quién
+registraba.
+
+**El monto vacío se guarda NULL, nunca 0.** Cero es un monto real: sumaría en
+los reportes y la donación se leería como "₡0" en vez de "sin monto". Pasa que
+se sabe que alguien dio pero el reporte del banco todavía no llegó.
+`donation_stats` usa `sum(amount)`, que ignora los nulos, así que esa donación
+cuenta como donación sin mover los totales — que es justo lo que se quiere.
+Verificado al aplicar: las 15.147 donaciones existentes conservaron su monto.
+
+La regla vive en `lib/finance/donacion-a-mano.ts` (pura, 14 tests). Rechaza
+fechas futuras —siempre son un error de tecleo— pero no acota el pasado, porque
+se cargan reportes viejos. La moneda inventada se rechaza en vez de convertir
+(INT-3), y "hoy" se juzga en hora de Costa Rica: con la de UTC, una donación
+cargada un martes a las 7 p.m. se rechazaría por futura.
+
+El endpoint exige el mismo rol que el import ('finanzas', 'direccion'): quien
+puede cargar un archivo entero puede cargar una fila. Comprueba además que la
+ficha exista y esté activa — una donación colgada de una ficha de baja queda
+fuera de todo reporte.
+
+
 ## Fase 18 — Pedido el 2026-09-16
 
 ### [x] CHK-3 · El modal de familia tapaba la opción "Servidor" (reportado 2026-09-18)

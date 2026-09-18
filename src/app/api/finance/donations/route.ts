@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
-import { getDonations, getDonationStats, getDonationsFilteredSum, type DonationFilters } from '@/lib/supabase/queries/finance'
+import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import {
+  getDonations, getDonationStats, getDonationsFilteredSum, crearDonacionAMano,
+  miembroActivoExiste, type DonationFilters,
+} from '@/lib/supabase/queries/finance'
+import { normalizarDonacion, MENSAJES } from '@/lib/finance/donacion-a-mano'
+import { todayCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: donaciones paginadas con filtros server-side.
@@ -45,6 +50,40 @@ export async function GET(req: NextRequest) {
     })
   } catch (error) {
     reportarError('GET /api/finance/donations:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+/**
+ * DON-2 · POST: registra UNA donación a mano.
+ *
+ * Mismo rol que el import de donaciones ('finanzas', 'direccion'): quien puede
+ * cargar un archivo entero puede cargar una fila. No se usa el módulo a secas
+ * porque `finanzas:view` lo tienen también admin y dirección solo para MIRAR —
+ * los montos ya se les ocultan en el GET de arriba.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await requireRoles('finanzas', 'direccion')
+  if (auth.res) return auth.res
+  try {
+    const body = await req.json().catch(() => null)
+    const r = // todayCR: la fecha CIVIL de acá. Con la de UTC, una donación cargada un
+    // martes a las 7 p.m. se rechazaría por "futura".
+    normalizarDonacion(body ?? {}, todayCR())
+    if (!r.ok) return NextResponse.json({ error: MENSAJES[r.motivo], code: r.motivo }, { status: 400 })
+
+    // La ficha se comprueba ACÁ y no solo en la pantalla: una donación colgada
+    // de una ficha dada de baja queda fuera de todo reporte.
+    if (!(await miembroActivoExiste(r.datos.member_id))) {
+      return NextResponse.json(
+        { error: 'Esa persona no existe o está dada de baja.', code: 'sin_persona' },
+        { status: 400 },
+      )
+    }
+    const creada = await crearDonacionAMano({ ...r.datos, created_by: auth.ctx.userId })
+    return NextResponse.json(creada, { status: 201 })
+  } catch (error) {
+    reportarError('POST /api/finance/donations:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
