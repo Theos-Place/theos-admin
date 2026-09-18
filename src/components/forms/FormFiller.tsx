@@ -1,11 +1,11 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { campoVisible, type Respuestas } from '@/lib/forms/logica-condicional'
+import { campoVisible } from '@/lib/forms/logica-condicional'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import Image from 'next/image'
-import { type FormFieldNew, type LogicRule, type FormTemplate } from '@/types/forms'
+import { type FormFieldNew, type FormTemplate } from '@/types/forms'
 import { esCampoCalculado } from '@/lib/forms/computed-fields'
 import { PERSONAL_DATA_FIELDS } from '@/data/form-config'
 import { toDomainFormTemplate } from '@/lib/forms/adapter'
