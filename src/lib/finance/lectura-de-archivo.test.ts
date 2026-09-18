@@ -53,3 +53,42 @@ describe('aFilas', () => {
     expect(aFilas(matriz, mapa, 0)[0].cedula).toBe('')
   })
 })
+
+describe('la plantilla que ofrece la pantalla se puede volver a importar', () => {
+  /**
+   * Es el punto de tenerla: si la plantilla y el lector se separan, alguien
+   * descarga el archivo, lo llena y descubre al subirlo que no se entiende.
+   * Estas son las columnas y las filas que genera `descargarPlantilla()`.
+   */
+  const csv = '\ufeff' + [
+    'cedula,nombre,fecha,monto,moneda,nota',
+    '1-0847-0291,RUIZ MORENO ALEJANDRO,2026-05-05,50000,CRC,Edificio',
+    ',FERNANDEZ LOPEZ SOFIA,2026-05-10,35000,CRC,',
+    ',MORA VARGAS ANA,2026-05-12,,CRC,Monto por confirmar',
+  ].join('\n')
+
+  const matriz = partirCSV(csv)
+  const encabezado = filaDelEncabezado(matriz)
+  const mapa = detectarColumnas(matriz[encabezado])
+
+  it('las seis columnas se reconocen', () => {
+    expect(Object.values(mapa).every(v => v !== null)).toBe(true)
+  })
+
+  it('las tres filas se leen', () => {
+    expect(aFilas(matriz, mapa, encabezado)).toHaveLength(3)
+  })
+
+  it('la fila SIN MONTO se lee igual: el monto es opcional', () => {
+    // Va en la plantilla a propósito; sin verlo en el ejemplo nadie sabría que
+    // se puede dejar vacío.
+    const f = aFilas(matriz, mapa, encabezado)[2]
+    expect(f.nombre).toBe('MORA VARGAS ANA')
+    expect(f.monto).toBe('')
+    expect(f.nota).toBe('Monto por confirmar')
+  })
+
+  it('la cédula vacía no estorba: se cruza por nombre', () => {
+    expect(aFilas(matriz, mapa, encabezado)[1].cedula).toBe('')
+  })
+})

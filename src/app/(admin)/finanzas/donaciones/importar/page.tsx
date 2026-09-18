@@ -132,6 +132,26 @@ export default function ImportarDonacionesPage() {
     } finally { setCargando(false) }
   }
 
+  /**
+   * La plantilla para quien NO tiene un reporte del banco a mano y arma la
+   * lista a mano. No es el camino principal —el asistente lee el archivo del
+   * banco tal cual— pero sirve cuando los datos vienen de una libreta.
+   *
+   * Lleva la nota y deja el monto vacío en una fila a propósito: las dos cosas
+   * son válidas y sin verlas en el ejemplo nadie sabría que se pueden usar.
+   */
+  function descargarPlantilla() {
+    generateCSV(
+      ['cedula', 'nombre', 'fecha', 'monto', 'moneda', 'nota'],
+      [
+        ['1-0847-0291', 'RUIZ MORENO ALEJANDRO', '2026-05-05', '50000', 'CRC', 'Edificio'],
+        ['', 'FERNANDEZ LOPEZ SOFIA', '2026-05-10', '35000', 'CRC', ''],
+        ['', 'MORA VARGAS ANA', '2026-05-12', '', 'CRC', 'Monto por confirmar'],
+      ],
+      `plantilla-donaciones-${todayCR()}.csv`,
+    )
+  }
+
   function descargarPendientes() {
     const sinResolver = filas.filter(f => !elegido[f.indice] || f.fecha_invalida)
     generateCSV(
@@ -185,6 +205,19 @@ export default function ImportarDonacionesPage() {
             </button>
             <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="sr-only"
               onChange={e => { const f = e.target.files?.[0]; if (f) void tomarArchivo(f) }} />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-navy-light/80 font-body">
+              <span>
+                Las columnas se reconocen solas. Solo hacen falta la <strong className="text-navy">fecha</strong>
+                {' '}y el <strong className="text-navy">nombre</strong> (o la cédula) de quien donó.
+              </span>
+              <button
+                type="button" onClick={descargarPlantilla}
+                className="inline-flex items-center gap-1.5 shrink-0 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-navy-light/80 hover:bg-surface-low transition-colors"
+              >
+                <Download size={14} aria-hidden /> Descargar plantilla
+              </button>
+            </div>
 
             {mapa && (
               <div className="space-y-3">
