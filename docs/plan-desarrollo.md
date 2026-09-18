@@ -986,6 +986,30 @@ cupo; con comprobante subido NO se toca; beca 100% NO se toca; idempotente. tsc/
 
 ## Fase 18 — Pedido el 2026-09-16
 
+### [x] CHK-3 · El modal de familia tapaba la opción "Servidor" (reportado 2026-09-18)
+
+**Lo que se vio.** "El modal se ve azul y no me sale participante/servidor."
+No era la cuenta de quien opera: es la PERSONA a la que se le hace check-in. Si
+tiene familiares registrados —el 17% del padrón activo— se abre el modal de
+familia en vez de la tarjeta de confirmación, y ese modal registraba a todos
+como participante sin preguntar.
+
+**Por qué importa.** Medido: de los **497 servidores activos** de comités
+organizadores, **231 tienen familia** (46%). A casi la mitad de los servidores
+no se les podía marcar como servidor desde el check-in, y eso ensucia el conteo
+de servidores de cada charla.
+
+Ahora la calidad va POR PERSONA dentro del modal: puede llegar una mamá
+servidora con dos hijos participantes. El selector solo aparece para quien de
+verdad califica, preguntándole al mismo endpoint que usa la tarjeta normal — la
+regla no se duplica.
+
+**Y el segundo hueco:** mientras la consulta de elegibilidad viajaba, el botón
+"Servidor" no salía Y TAMPOCO ningún aviso; si la consulta fallaba, se quedaba
+así para siempre sin decir nada. "Cargando" pasó a ser un estado propio
+(`lib/events/puerta-de-servidor.ts`, con tests) y ahora dice "Verificando si
+puede marcarse como servidor…".
+
 ### [x] AUD-2 · El historial de cambios se puede ver — HECHO 2026-09-18
 
 Panel de historial en la ficha de una persona, en el detalle de un pago y por

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { type AttendanceType } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
 import { textoDelCumple, type AvisoDeCumple } from '@/lib/members/cumple-esta-semana'
+import { ofreceServidor, type PuertaDeServidor } from '@/lib/events/puerta-de-servidor'
 
 interface CheckinCardProps {
   member: { id: string; name: string }
@@ -14,10 +15,13 @@ interface CheckinCardProps {
   onCancel: () => void
   /** Destino del check-in (subevento o evento) — se muestra en la confirmación. */
   targetLabel?: string
-  /** Validación 2: si false, no se ofrece marcar como Servidor (solo Participante). */
-  allowServer?: boolean
-  /** Aviso suave sobre el estado del comité organizador. */
-  serverNotice?: string | null
+  /**
+   * Validación 2 — hasta dónde llega la opción de "Servidor". Es el objeto
+   * entero y no un booleano porque "todavía no sé" no es lo mismo que "no
+   * puede": el primero se dice en pantalla, el segundo también pero con otro
+   * texto. Ver lib/events/puerta-de-servidor.
+   */
+  puerta?: PuertaDeServidor
 }
 
 const AVATAR_COLORS: Record<string, string> = {
@@ -37,7 +41,10 @@ function getAvatarColor(name: string) {
   return AVATAR_COLORS[first] ?? 'bg-navy text-white'
 }
 
-export function CheckinCard({ member, cumple, onConfirm, onCancel, targetLabel, allowServer = true, serverNotice }: CheckinCardProps) {
+export function CheckinCard({
+  member, cumple, onConfirm, onCancel, targetLabel,
+  puerta = { estado: 'permitido', aviso: null },
+}: CheckinCardProps) {
   const initials = getInitials(member.name)
   const avatarColor = getAvatarColor(member.name)
 
@@ -83,7 +90,7 @@ export function CheckinCard({ member, cumple, onConfirm, onCancel, targetLabel, 
           <span>✓</span>
           Participante
         </button>
-        {allowServer && (
+        {ofreceServidor(puerta) && (
           <button
             onClick={() => onConfirm('server')}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm font-medium text-white hover:bg-coral-deep transition-all duration-150 font-body"
@@ -92,8 +99,13 @@ export function CheckinCard({ member, cumple, onConfirm, onCancel, targetLabel, 
             Servidor
           </button>
         )}
-        {serverNotice && (
-          <p className="text-[13px] text-navy-light/80 text-center font-body">{serverNotice}</p>
+        {puerta.aviso && (
+          <p
+            className="text-[13px] text-navy-light/80 text-center font-body"
+            role={puerta.estado === 'cargando' ? 'status' : undefined}
+          >
+            {puerta.aviso}
+          </p>
         )}
         <button
           onClick={onCancel}

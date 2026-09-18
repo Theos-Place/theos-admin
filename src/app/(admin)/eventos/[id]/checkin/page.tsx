@@ -6,6 +6,7 @@ import { type AttendanceType, type EventCheckin } from '@/types/event'
 import { useEvent } from '@/hooks/useEvents'
 import { usePermissions } from '@/hooks/usePermissions'
 import { CheckinCard } from '@/components/events/CheckinCard'
+import { puertaDeServidor, ofreceServidor, type InfoDeServidor } from '@/lib/events/puerta-de-servidor'
 import { cumpleEstaSemana, textoDelCumple } from '@/lib/members/cumple-esta-semana'
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
@@ -472,12 +473,19 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Registra varios miembros (familia) al evento. Cada entrada lleva su subevento.
   // Los no inscritos de un evento pago se reportan (mismo gate que los otros
   // métodos) — el cobro en sitio es por persona, no en lote.
-  async function registerFamily(entries: Array<{ id: string; name: string; sub_event_id: string | null }>) {
+  async function registerFamily(
+    entries: Array<{ id: string; name: string; sub_event_id: string | null; tipo: AttendanceType }>,
+  ) {
     if (!familyCheckin) return
     setCheckingFamily(true)
     const notRegistered: string[] = []
     for (const e of entries) {
-      const r = await persistCheckin({ id: e.id, name: e.name }, 'participant', 'manual', e.sub_event_id)
+      // La calidad viaja POR PERSONA: a una mamá servidora con dos hijos
+      // participantes hay que poder marcarla como lo que es. Antes este modal
+      // registraba a todos como 'participant' sin preguntar, y por eso 231 de
+      // los 497 servidores activos —los que tienen familia— no podían quedar
+      // como servidores nunca (reportado 2026-09-18).
+      const r = await persistCheckin({ id: e.id, name: e.name }, e.tipo, 'manual', e.sub_event_id)
       if (r === 'not_registered') notRegistered.push(e.name)
     }
     setCheckingFamily(false)
@@ -520,17 +528,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     .filter(c => !hasSubs || c.sub_event_id === targetSub)
     .sort((a, b) => (b.checked_at ?? '').localeCompare(a.checked_at ?? ''))
   const targetLabel = targetSub ? (subName(targetSub) ?? event.name) : event.name
-  // Check-in de servidor: solo servidores activos de los comités organizadores.
-  // Sin comités organizadores → permisivo (históricos). Mientras carga la consulta
-  // no se ofrece "Servidor" para no permitirlo de más.
-  const serverGate: { allow: boolean; notice: string | null } =
-    serverInfo === null
-      ? { allow: false, notice: null }
-      : !serverInfo.hasCommittees
-        ? { allow: true, notice: 'Sin comité organizador asignado.' }
-        : serverInfo.isServer
-          ? { allow: true, notice: null }
-          : { allow: false, notice: 'Solo servidores activos del comité organizador pueden marcarse como servidor.' }
+  // La regla (y el estado "todavía no sé", que antes se callaba) vive en
+  // lib/events/puerta-de-servidor, compartida con el modal de familia.
+  const serverGate = puertaDeServidor(serverInfo)
 
   // Eventos pagos: el gate "solo inscritos" vive en persistCheckin (choke point)
   // y en el server; un no inscrito cae en requestCobro (cobro en sitio, Fase 2).
@@ -682,8 +682,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 onConfirm={handleConfirm}
                 onCancel={() => { setSelectedMember(null); setQuery('') }}
                 targetLabel={targetLabel}
-                allowServer={serverGate.allow}
-                serverNotice={serverGate.notice}
+                puerta={serverGate}
               />
             </div>
           ) : searchResults.length > 0 ? (
@@ -879,6 +878,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
       {familyCheckin && (
         <FamilyCheckinModal
+          eventId={id}
           member={familyCheckin.member}
           family={familyCheckin.family}
           subEvents={event.sub_events}
@@ -974,26 +974,43 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
 // ─── Modal: check-in en familia (miembro existente con familia) ──────────────────
 
-function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onRegister, onClose }: {
+function FamilyCheckinModal({ eventId, member, family, subEvents, defaultSub, busy, onRegister, onClose }: {
+  eventId: string
   member: { id: string; name: string }
   family: { member_id: string; name: string; relation: string }[]
   subEvents: { id: string; name: string }[]
   defaultSub: string | null
   busy: boolean
-  onRegister: (entries: Array<{ id: string; name: string; sub_event_id: string | null }>) => void
+  onRegister: (entries: Array<{ id: string; name: string; sub_event_id: string | null; tipo: AttendanceType }>) => void
   onClose: () => void
 }) {
   const hasSubs = subEvents.length > 0
-  const everyone = [
+  const everyone = useMemo(() => [
     { member_id: member.id, name: member.name, relation: 'Titular' as const },
     ...family,
-  ]
+  ], [member.id, member.name, family])
   // El titular arranca seleccionado; los familiares deseleccionados (solo se
   // registra a quien se marque). Cada quien con el subevento por defecto.
   const [selected, setSelected] = useState<Set<string>>(new Set([member.id]))
   const [subById, setSubById] = useState<Record<string, string | null>>(
     () => Object.fromEntries(everyone.map(p => [p.member_id, defaultSub])),
   )
+  /**
+   * Quién de los que llegaron puede marcarse como SERVIDOR. Se pregunta por
+   * cada uno al mismo endpoint que usa la tarjeta normal —la regla no se
+   * duplica— y en paralelo, que son dos o tres personas.
+   */
+  const [puertas, setPuertas] = useState<Record<string, InfoDeServidor | null>>({})
+  const [tipoPorPersona, setTipoPorPersona] = useState<Record<string, AttendanceType>>({})
+  useEffect(() => {
+    let vivo = true
+    void Promise.all(everyone.map(async p => {
+      const r = await fetch(`/api/events/${eventId}/server-check?member_id=${p.member_id}`).catch(() => null)
+      const d = r?.ok ? await r.json().catch(() => null) : null
+      return [p.member_id, d ? { hasCommittees: !!d.hasCommittees, isServer: !!d.isServer } : null] as const
+    })).then(pares => { if (vivo) setPuertas(Object.fromEntries(pares)) })
+    return () => { vivo = false }
+  }, [eventId, everyone])
 
   function toggle(id: string) {
     if (id === member.id) return // el titular siempre va
@@ -1007,10 +1024,16 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
     setSubById(prev => ({ ...prev, [id]: sub }))
   }
 
-  function buildEntries(ids: string[]): Array<{ id: string; name: string; sub_event_id: string | null }> {
+  function buildEntries(ids: string[]) {
     return ids.map(id => {
       const p = everyone.find(x => x.member_id === id)!
-      return { id, name: p.name, sub_event_id: hasSubs ? (subById[id] ?? null) : defaultSub }
+      return {
+        id, name: p.name,
+        sub_event_id: hasSubs ? (subById[id] ?? null) : defaultSub,
+        // Por omisión participante: es lo que era antes y lo que corresponde a
+        // la mayoría. Solo cambia si alguien lo marca a propósito.
+        tipo: tipoPorPersona[id] ?? ('participant' as AttendanceType),
+      }
     })
   }
 
@@ -1044,6 +1067,26 @@ function FamilyCheckinModal({ member, family, subEvents, defaultSub, busy, onReg
                     <p className="text-[13px] text-white/80">{p.relation}</p>
                   </div>
                 </div>
+                {on && ofreceServidor(puertaDeServidor(puertas[p.member_id])) && (
+                  <div className="mt-2 pl-7 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Cómo asiste ${p.name}`}>
+                    {([['participant', 'Participante'], ['server', 'Servidor']] as const).map(([valor, texto]) => {
+                      const checked = (tipoPorPersona[p.member_id] ?? 'participant') === valor
+                      return (
+                        <button
+                          key={valor}
+                          type="button"
+                          role="radio"
+                          aria-checked={checked}
+                          onClick={() => setTipoPorPersona(prev => ({ ...prev, [p.member_id]: valor }))}
+                          className={cn('rounded-full px-3 py-1 text-[13px] font-body transition-colors',
+                            checked ? 'bg-teal-deep text-white' : 'bg-white/10 text-white/80 hover:bg-white/15')}
+                        >
+                          {texto}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
                 {hasSubs && on && (
                   <div className="mt-2 pl-7 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Subevento de ${p.name}`}>
                     {[{ id: null as string | null, name: 'Evento general' }, ...subEvents.map(se => ({ id: se.id as string | null, name: se.name }))].map(opt => {
