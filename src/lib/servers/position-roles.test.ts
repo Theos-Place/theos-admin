@@ -205,3 +205,41 @@ describe('el "de" no cambia si un puesto de sede da check-in', () => {
     })).not.toContain('encargado_eventos')
   })
 })
+
+describe('Bienvenida del Comité Youth (2026-09-18)', () => {
+  const youth = (title: string) => rolesGrantedByPosition({
+    title, areaName: 'Comité Youth', areaType: 'committee', parentAreaName: 'Area de Comunidad',
+  })
+
+  it('Bienvenida da el rol de eventos', () => {
+    // Quien recibe en la puerta es quien marca la asistencia. Es el mismo
+    // criterio que ya rige en los comités de SEDE, donde bienvenida está desde
+    // siempre; en Youth faltaba porque la regla se escribió mirando un caso
+    // puntual (los 4 "Colaborador").
+    expect(youth('Bienvenida')).toContain('encargado_eventos')
+  })
+
+  it('con o sin artículos, y sin importar mayúsculas', () => {
+    expect(youth('BIENVENIDA')).toContain('encargado_eventos')
+    expect(youth('  Bienvenida  ')).toContain('encargado_eventos')
+  })
+
+  it('Colaborador sigue dándolo', () => {
+    expect(youth('Colaborador')).toContain('encargado_eventos')
+    expect(youth('Colaborador Youth')).toContain('encargado_eventos')
+  })
+
+  it('LOS DEMÁS PUESTOS DEL COMITÉ SIGUEN SIN DARLO', () => {
+    // Esto da permiso para hacer check-in: la lista se amplía cuando alguien lo
+    // decide, no por parecido de nombre.
+    for (const t of ['Teacher', 'Asistente Teacher', 'Asistente de Encargado']) {
+      expect(youth(t), t).not.toContain('encargado_eventos')
+    }
+  })
+
+  it('"Bienvenida" en un comité que NO es Youth ni sede no da nada', () => {
+    expect(rolesGrantedByPosition({
+      title: 'Bienvenida', areaName: 'Comité Oración', areaType: 'committee', parentAreaName: 'Area de Comunidad',
+    })).not.toContain('encargado_eventos')
+  })
+})

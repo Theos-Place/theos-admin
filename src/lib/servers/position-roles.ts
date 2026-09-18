@@ -94,21 +94,28 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
   {
     role: 'encargado_eventos',
     description:
-      'Colaborador del Comité Youth: hacen el check-in del subevento de Youth en las charlas.',
+      'Colaborador y Bienvenida del Comité Youth: hacen el check-in del subevento de Youth '
+      + 'en las charlas.',
     /**
      * Vuelve el 2026-09-12 por decisión del usuario. Había existido apuntando al
      * título exacto "Colaborador", que la sincronización del Excel Madre fusionó
      * en "Colaborador Youth"; entonces se quitó y los 4 que lo tenían lo
      * perdieron. Ahora apunta al nombre oficial.
      *
-     * Sigue acotada a ESE título: el comité tiene además Teacher, Asistente
+     * Sigue acotada a ESOS títulos: el comité tiene además Teacher, Asistente
      * Teacher y Encargado, y esto da permiso para hacer check-in — la lista se
      * amplía cuando alguien lo decida, no por parecido de nombre.
+     *
+     * "Bienvenida" entra el 2026-09-18 por decisión del usuario. Es el mismo
+     * criterio que ya rige en los comités de SEDE, donde bienvenida está desde
+     * siempre en SEDE_EVENTOS_TITLES: quien recibe en la puerta es quien marca
+     * la asistencia. Faltaba solo porque la regla de Youth se escribió mirando
+     * un caso puntual (los 4 "Colaborador") y no el puesto equivalente.
      */
     matches: (ctx) =>
       ctx.areaType === 'committee'
       && esComiteYouth(ctx.areaName)
-      && ['colaborador', 'colaborador youth'].includes(normSinArticulos(ctx.title)),
+      && ['colaborador', 'colaborador youth', 'bienvenida'].includes(normSinArticulos(ctx.title)),
   },
   {
     role: 'solicitudes_estudio',
