@@ -158,3 +158,23 @@ describe('UI-2 · el coral retirado no vuelve', () => {
     expect(salida.split('\n').filter(Boolean).filter(f => !f.includes('contrast.test'))).toEqual([])
   })
 })
+
+/**
+ * CHK-2 · El aviso de cumpleaños del check-in.
+ *
+ * Es texto coral-deep sobre un tinte `bg-coral/10` puesto sobre la tarjeta
+ * blanca. Se mide y no se estima: con coral a secas el par da 3.97:1 y NO
+ * pasaría — es exactamente la trampa que AGENTS.md advierte sobre los tintes
+ * coral, y la diferencia entre las dos clases es una letra.
+ */
+describe('CHK-2 · el aviso de cumpleaños se lee', () => {
+  const fondo = composite(hexToRgb(TOKENS.coral), hexToRgb(TOKENS.surfaceCard), 0.10)
+
+  it('coral-deep sobre el tinte pasa AA', () => {
+    expect(contrastRatio(hexToRgb(TOKENS.coralDeep), fondo)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('y coral a secas NO pasaría: por eso la clase es coral-deep', () => {
+    expect(contrastRatio(hexToRgb(TOKENS.coral), fondo)).toBeLessThan(AA_NORMAL)
+  })
+})

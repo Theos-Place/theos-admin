@@ -1,11 +1,12 @@
 'use client'
 
-import { use, useState, useEffect, useRef } from 'react'
+import { use, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { type AttendanceType, type EventCheckin } from '@/types/event'
 import { useEvent } from '@/hooks/useEvents'
 import { usePermissions } from '@/hooks/usePermissions'
 import { CheckinCard } from '@/components/events/CheckinCard'
+import { cumpleEstaSemana, textoDelCumple } from '@/lib/members/cumple-esta-semana'
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -109,9 +110,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [deleting, setDeleting] = useState(false)
   const lastScanRef = useRef<{ id: string; t: number } | null>(null)
   const [query, setQuery] = useState('')
-  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null)
+  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string; birth_md?: string | null } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
-  const [memberResults, setMemberResults] = useState<{ id: string; name: string; has_document?: boolean }[]>([])
+  const [memberResults, setMemberResults] = useState<{ id: string; name: string; has_document?: boolean; birth_md?: string | null }[]>([])
   // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
   // flujo de la fila: se puede ignorar y seguir registrando gente.
   const [docCapture, setDocCapture] = useState<{ id: string; name: string } | null>(null)
@@ -162,6 +163,20 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     return () => { alive = false }
   }, [selectedMember, id])
 
+  /**
+   * CHK-2 · El día de HOY en hora de Costa Rica, para saber quién cumple años
+   * esta semana. Se calcula una vez: en la fila se marcan decenas de personas y
+   * no tiene sentido rehacerlo por fila. 'en-CA' da YYYY-MM-DD.
+   */
+  const hoyCR = useMemo(
+    () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Costa_Rica' }),
+    [],
+  )
+  const avisoDeCumple = useCallback(
+    (birthMd: string | null | undefined) => cumpleEstaSemana(birthMd, hoyCR),
+    [hoyCR],
+  )
+
   // Búsqueda real entre TODOS los miembros (debounced). Va por /lookup y no
   // por /api/members: el rol encargado_eventos —el que hace check-in— no tiene
   // el módulo miembros, así que ahí la búsqueda devolvía siempre vacío
@@ -176,13 +191,16 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return
-          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula?: string | null }>
+          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula?: string | null; birth_md?: string | null }>
           // FIN-2: el lookup ya trae el documento; se conserva para marcar a
           // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
           setMemberResults(list.map(m => ({
             id: m.id,
             name: `${m.first_name} ${m.last_name}`.trim(),
             has_document: !!String(m.cedula ?? '').trim(),
+            // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
+            // para felicitar a alguien).
+            birth_md: m.birth_md ?? null,
           })))
         })
         .catch(() => { if (alive) setMemberResults([]) })
@@ -329,7 +347,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         return
       }
       const mem = res?.ok
-        ? ((await res.json().catch(() => null))?.members ?? [])[0] as { first_name: string; last_name: string } | undefined
+        ? ((await res.json().catch(() => null))?.members ?? [])[0] as { first_name: string; last_name: string; birth_md?: string | null } | undefined
         : undefined
       // Sin nombre se sigue igual. Solo se corta si el lookup respondió BIEN y
       // dijo que ese id no es de nadie: ahí el QR sí está mal.
@@ -341,7 +359,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const dest = targetSub ? subName(targetSub) : null
       if (r === 'ok') {
         scanFeedback(true)
-        flash('ok', `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`)
+        // CHK-2: por QR no hay tarjeta de confirmación —se registra y ya—, así
+        // que el aviso va en el mismo flash o el operador no se entera.
+        const cumple = avisoDeCumple(mem?.birth_md)
+        flash('ok', cumple
+          ? `✓ ${name} registrado${dest ? ` → ${dest}` : ''} · ${textoDelCumple(name, cumple)}`
+          : `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`)
         // Se registró sin haber podido leer el nombre: se refresca para que la
         // lista muestre a quién, en vez de dejar "Persona registrada".
         if (!mem) void refetch()
@@ -394,7 +417,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
-  async function handleSelectMember(member: { id: string; name: string }) {
+  async function handleSelectMember(member: { id: string; name: string; birth_md?: string | null }) {
     // Ya registrado: se muestra el estado y no se intenta de nuevo. El servidor
     // igual devuelve el 409 informativo si el estado local está viejo.
     const ya = checkinPorMiembro.get(member.id)
@@ -655,6 +678,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <div className="flex justify-center">
               <CheckinCard
                 member={selectedMember}
+                cumple={avisoDeCumple(selectedMember.birth_md)}
                 onConfirm={handleConfirm}
                 onCancel={() => { setSelectedMember(null); setQuery('') }}
                 targetLabel={targetLabel}
@@ -674,7 +698,19 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     {getInitials(r.name)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-navy font-medium font-body truncate">{r.name}</p>
+                    <p className="text-navy font-medium font-body truncate">
+                      {/* CHK-2: se ve ANTES de marcar, igual que la marca de
+                          "ya registrado" — en la fila, enterarse después es
+                          enterarse tarde. El emoji va con texto alternativo:
+                          solo no dice nada a quien usa lector de pantalla. */}
+                      {avisoDeCumple(r.birth_md) && (
+                        <>
+                          <span aria-hidden className="mr-1">🎂</span>
+                          <span className="sr-only">Cumple años esta semana. </span>
+                        </>
+                      )}
+                      {r.name}
+                    </p>
                     <p className="text-navy-light/80 text-[13px] font-body">
                       {registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}
                       {r.has_document === false && (

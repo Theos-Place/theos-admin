@@ -560,41 +560,36 @@ Gotcha: el micro-label quedó como componente a NIVEL DE MÓDULO. Definido
 dentro de `GroupRow`, `react-hooks/static-components` lo marca como ERROR —no
 advertencia— porque un componente creado en cada render remonta su subárbol.
 
-### [ ] CHK-2 · Aviso de cumpleaños en el check-in (pedido 2026-09-15)
+### [x] CHK-2 · Aviso de cumpleaños en el check-in — HECHO 2026-09-17
 
-Al hacer check-in de alguien que cumple años en la semana actual, avisarle al
-operador para felicitarlo en el momento.
+La regla vive en `lib/members/cumple-esta-semana.ts`. La semana es de LUNES a
+DOMINGO y se recorren los siete días de verdad, no se compara "MM-DD entre A y
+B": esa comparación se rompe justo en la semana que cruza el año —un cumpleaños
+el 02-01 es "menor" que el 12-30 del lunes— que es cuando más gente felicita.
+Hay un test con ese caso.
 
-Prompt para Claude Code:
+El 29 de febrero NO se resuelve ahí: se le pregunta a `birthdayMatchDays`, que
+ya decide que en año no bisiesto esa gente se festeja el 28. Reutilizado, no
+reescrito, como pedía el ítem.
 
-```
-FEATURE · Check-in: avisar cuando la persona cumple años esta semana
+**El cumpleaños viaja SIN AÑO.** `/api/members/lookup` devuelve `birth_md`
+("MM-DD"): el operador necesita el día para felicitar, no la edad de la persona.
+El recorte se hace en la consulta, no escondiendo una columna en pantalla —misma
+línea que GRU-3—. Verificado contra 8 fichas reales: ninguna trae el año, ningún
+`birth_date` suelto se cuela, y el MM-DD coincide con la ficha en 8 de 8.
 
-PANTALLA: src/app/(admin)/eventos/[id]/checkin/page.tsx (y el flujo de QR/smart link si
-muestra confirmación al operador).
+Se ve en tres lugares: 🎂 junto al nombre en los resultados de búsqueda (antes
+de marcar, igual que la marca de "ya registrado"), el aviso completo en la
+tarjeta de confirmación, y dentro del flash del QR —por ahí no hay tarjeta, se
+registra y ya, así que si no va en el flash el operador no se entera—.
 
-QUÉ: cuando se hace check-in de una persona cuyo cumpleaños cae en la SEMANA ACTUAL
-(lunes a domingo de la semana del evento, comparando solo día y mes de birth_date),
-mostrar un aviso visible en la confirmación del check-in: "🎂 [Nombre] cumple años el
-[día de semana + fecha] — ¡felicitalo!". Si el cumpleaños es HOY, decirlo explícito
-("¡Hoy es su cumpleaños!").
+Verificado en el navegador con la tarjeta servida aparte (la pantalla real exige
+sesión). El contraste del aviso está MEDIDO y fijado en `contrast.test.ts`:
+coral-deep sobre `bg-coral/10` da 4.66:1; con coral a secas serían 3.97:1 y no
+pasaría — la diferencia entre las dos clases es una letra.
 
-IMPLEMENTACIÓN:
-- El cálculo va en una función pura testeable (ej. src/lib/members/cumple-esta-semana.ts)
-  que recibe birth_date y la fecha de referencia. Ojo con: birth_date null, cumpleaños
-  29 de febrero (tratarlo como 28-feb en años no bisiestos), y semanas que cruzan de año
-  (ej. evento 30-dic, cumpleaños 2-ene). Ya hay lógica de cumpleaños en
-  src/lib/notifications/birthday-rules — revisala primero: si ahí ya existe "cumple en
-  rango", REUTILIZAR, NO INVENTAR.
-- El endpoint de check-in (o la búsqueda) ya trae datos del miembro — incluir birth_date
-  si no viene, sin consulta extra por fila.
-- Es solo un aviso al operador en pantalla: NO manda correos ni notificaciones
-  (EMAIL_SILENT_MODE sigue activo y esto no debe depender de él).
-- También mostrar el mismo indicador (🎂) junto al nombre en los resultados de búsqueda
-  del check-in, para que se vea antes de registrarla.
-Tests de la función pura (casos: hoy, dentro de la semana, semana cruzando año, 29-feb,
-birth_date null). tsc/lint/vitest al cierre.
-```
+No manda correos ni notificaciones: es un aviso en pantalla. El saludo por
+correo (DIR-2) sigue siendo otra cosa y no se tocó.
 
 ### [ ] AUT-2 · Limpieza de cuentas de auth sin uso (pedido 2026-09-15)
 

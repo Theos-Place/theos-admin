@@ -3,9 +3,13 @@
 import { cn } from '@/lib/utils'
 import { type AttendanceType } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
+import { textoDelCumple, type AvisoDeCumple } from '@/lib/members/cumple-esta-semana'
 
 interface CheckinCardProps {
   member: { id: string; name: string }
+  /** CHK-2 · Cumple años esta semana, o null. El aviso va acá y no después de
+   *  marcar: felicitar cuando la persona ya se fue no sirve de nada. */
+  cumple?: AvisoDeCumple | null
   onConfirm: (type: AttendanceType) => void
   onCancel: () => void
   /** Destino del check-in (subevento o evento) — se muestra en la confirmación. */
@@ -33,7 +37,7 @@ function getAvatarColor(name: string) {
   return AVATAR_COLORS[first] ?? 'bg-navy text-white'
 }
 
-export function CheckinCard({ member, onConfirm, onCancel, targetLabel, allowServer = true, serverNotice }: CheckinCardProps) {
+export function CheckinCard({ member, cumple, onConfirm, onCancel, targetLabel, allowServer = true, serverNotice }: CheckinCardProps) {
   const initials = getInitials(member.name)
   const avatarColor = getAvatarColor(member.name)
 
@@ -62,6 +66,13 @@ export function CheckinCard({ member, onConfirm, onCancel, targetLabel, allowSer
             </p>
           )}
         </div>
+        {/* El tinte coral lleva el texto en coral-deep, no en coral: sobre el
+            tinte, coral no llega a 4.5:1 (ver lib/contrast.ts). */}
+        {cumple && (
+          <p className="w-full rounded-xl bg-coral/10 px-3 py-2 text-center text-[13px] font-semibold text-coral-deep font-body">
+            {textoDelCumple(member.name, cumple)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

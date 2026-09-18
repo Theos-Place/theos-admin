@@ -1049,22 +1049,37 @@ export type { DuplicateMember, DuplicatePair } from '@/lib/supabase/queries/memb
  *  llega al evento con su pase está presente, y su bandera no es asunto de la
  *  fila. Son 12 personas hoy, pero la que llegue no se queda afuera.
  */
+/**
+ * CHK-2 · El cumpleaños que viaja al buscador va SIN AÑO ('MM-DD').
+ *
+ * El aviso del check-in solo necesita el día y el mes; el año diría la edad de
+ * la persona, que no hace falta para felicitarla. El buscador ya devuelve
+ * cédula y correo porque el alta dedupea con ellos — esto no es excusa para
+ * sumarle un dato más completo del que el caso de uso pide (misma línea que
+ * GRU-3: el recorte se hace en el servidor, no escondiendo una columna).
+ */
+function soloDiaYMes(birthDate: string | null | undefined): string | null {
+  return birthDate && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate.slice(5) : null
+}
+
 export async function getMemberForLookupById(
   id: string,
-): Promise<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null } | null> {
+): Promise<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null } | null> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('members')
-    .select('id, first_name, last_name, cedula, document_type, email')
+    .select('id, first_name, last_name, cedula, document_type, email, birth_date')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
-  return (data ?? null) as { id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null } | null
+  if (!data) return null
+  const { birth_date, ...resto } = data as Record<string, unknown> & { birth_date: string | null }
+  return { ...resto, birth_md: soloDiaYMes(birth_date) } as { id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }
 }
 
 export async function searchMembersForLookup(
   search: string, limit = 8,
-): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null }>> {
+): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }>> {
   const q = search.trim()
   if (q.length < 2) return []
   const supabase = createAdminClient()
@@ -1078,12 +1093,16 @@ export async function searchMembersForLookup(
       // document_type va incluido porque el documento dedupea por PAREJA
       // (tipo, número) — INT-1: sin el tipo, un pasaporte y una cédula con el
       // mismo número parecerían la misma persona.
-      .select('id, first_name, last_name, cedula, document_type, email')
+      // birth_date sale de acá recortado a 'MM-DD' (ver soloDiaYMes): CHK-2.
+      .select('id, first_name, last_name, cedula, document_type, email, birth_date')
       .eq('is_active', true),
     q,
   )
     .order('first_name')
     .limit(Math.min(limit, 20))
   if (error) throw error
-  return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null }>
+  const filas = (data ?? []) as Array<Record<string, unknown> & { birth_date: string | null }>
+  return filas.map(({ birth_date, ...resto }) => ({
+    ...resto, birth_md: soloDiaYMes(birth_date),
+  })) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }>
 }
