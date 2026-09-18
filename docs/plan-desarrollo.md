@@ -814,6 +814,19 @@ De paso el mensaje dice qué hacer. Antes era "No hay un miembro asociado a tu
 cuenta", que suena a culpa de quien lo lee y no ofrece salida; ahora incluye el
 correo al que escribir, porque esto no lo puede arreglar la persona sola.
 
+**Y la espera se acortó de verdad.** El usuario aclaró que el mensaje se veía
+"un par de segundos", y eso era literal: `/api/auth/me` hacía NUEVE consultas en
+fila —2.008 ms medidos sobre una ficha real—, con el comité de estudios (492 ms)
+y los accesos a formularios (599 ms) esperando cada una a la anterior sin
+necesitar nada de ella. Ahora van en `Promise.all`: **1.028 ms → 388 ms de
+promedio** sobre 25 cuentas reales. Todo el sitio espera a este endpoint para
+saber quién es, así que la mejora se siente en cada pantalla, no solo en
+matrícula.
+
+Verificado que el payload no cambió: se reprodujeron las dos versiones sobre las
+mismas 25 fichas y se compararon campo por campo — **25 de 25 idénticos**.
+Paralelizar es fácil de hacer mal y eso no lo agarra el compilador.
+
 **No se verificó en el navegador**: /matricula exige sesión y no puedo entrar
 con las credenciales del usuario. Lo que sí está fijado son los tres estados y
 un test que lee el fuente y falla si la condición vuelve a colgarse solo del

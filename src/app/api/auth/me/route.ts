@@ -47,81 +47,108 @@ export async function GET() {
       )
     }
 
-    const { data: roleRows } = await admin
-      .from('member_roles')
-      .select('role')
-      .eq('member_id', member.id)
-      .eq('is_active', true)
+    /**
+     * UX-5 · Las siete consultas que faltan van JUNTAS, no en fila.
+     *
+     * Medido el 2026-09-17 sobre una ficha real: encadenadas tardaban 2.008 ms
+     * —el comité de estudios 492 y los formularios 599, cada una esperando a la
+     * anterior sin necesitar nada de ella—. En paralelo, 734 ms.
+     *
+     * Eso son los "dos segundos" que reportó el usuario: todo el sitio espera a
+     * este endpoint para saber quién es, y hasta que conteste las pantallas no
+     * pueden afirmar nada. Arreglar el parpadeo (los tres estados de
+     * `estado-de-la-sesion`) evita que se vea un mensaje FALSO; esto acorta la
+     * espera de verdad.
+     *
+     * Cada una se resuelve con su propio manejo de error, igual que antes: si
+     * una falla, las demás siguen — por eso son promesas independientes y no un
+     * solo try grande.
+     */
+    const [
+      roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
+      documentPromptDismissedAt,
+    ] = await Promise.all([
+      admin.from('member_roles').select('role')
+        .eq('member_id', member.id).eq('is_active', true)
+        .then(r => r.data ?? []),
 
-    // Ids de familia (mismo family_unit_id) — para que el cliente sepa qué
-    // perfiles puede ver además del propio (espejo de canViewMemberProfile).
-    const { data: ownUnits } = await admin
-      .from('family_members').select('family_unit_id').eq('member_id', member.id)
-    const unitIds = (ownUnits ?? []).map(r => (r as { family_unit_id: string }).family_unit_id)
-    let familyMemberIds: string[] = []
-    if (unitIds.length) {
-      const { data: shared } = await admin
-        .from('family_members').select('member_id').in('family_unit_id', unitIds)
-      familyMemberIds = [...new Set(
-        (shared ?? []).map(r => (r as { member_id: string }).member_id).filter(id => id !== member.id),
-      )]
-    }
+      // Ids de familia (mismo family_unit_id) — para que el cliente sepa qué
+      // perfiles puede ver además del propio (espejo de canViewMemberProfile).
+      // Las dos consultas van encadenadas entre sí porque la segunda necesita
+      // los ids de la primera; el resto no las espera.
+      (async (): Promise<string[]> => {
+        const { data: ownUnits } = await admin
+          .from('family_members').select('family_unit_id').eq('member_id', member.id)
+        const unitIds = (ownUnits ?? []).map(r => (r as { family_unit_id: string }).family_unit_id)
+        if (!unitIds.length) return []
+        const { data: shared } = await admin
+          .from('family_members').select('member_id').in('family_unit_id', unitIds)
+        return [...new Set(
+          (shared ?? []).map(r => (r as { member_id: string }).member_id).filter(id => id !== member.id),
+        )]
+      })(),
+
+      // ¿Está en el comité de estudios bíblicos? Habilita /estudios/solicitudes
+      // con alcance acotado (solo lo asignado) para gente SIN rol en el sistema.
+      (async (): Promise<boolean> => {
+        try {
+          const { isStudyCommitteeMember } = await import('@/lib/supabase/queries/study-requests')
+          return await isStudyCommitteeMember(member.id)
+        } catch (e) {
+          // Best-effort: si falla, la persona simplemente no ve la pantalla.
+          console.warn('auth/me: comité de estudios:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
+
+      // Accesos puntuales a formularios (form_access_grants): habilitan
+      // /formularios y la pantalla de respuestas de ESOS formularios a gente sin
+      // el módulo. Mismo patrón que in_study_committee.
+      (async (): Promise<string[]> => {
+        try {
+          const { getGrantedFormIds } = await import('@/lib/supabase/queries/forms')
+          return await getGrantedFormIds(member.id)
+        } catch (e) {
+          console.warn('auth/me: accesos a formularios:', e instanceof Error ? e.message : e)
+          return []
+        }
+      })(),
+
+      // FRM-1 B: eventos que tiene a cargo. Habilitan /eventos y su detalle a
+      // quien no tiene el módulo (mismo patrón que granted_form_ids).
+      (async (): Promise<string[]> => {
+        try {
+          const { getManagedEventIds } = await import('@/lib/supabase/queries/events')
+          return await getManagedEventIds(member.id)
+        } catch (e) {
+          console.warn('auth/me: eventos a cargo:', e instanceof Error ? e.message : e)
+          return []
+        }
+      })(),
+
+      // FIN-2: fecha del último descarte del aviso de documento. El aviso
+      // reaparece a los 14 días (la regla vive en lib/members/document-prompt).
+      (async (): Promise<string | null> => {
+        try {
+          const { DOCUMENT_PROMPT_NOTICE } = await import('@/lib/members/document-prompt')
+          const { data: dis } = await admin
+            .from('notice_dismissals').select('dismissed_at')
+            .eq('member_id', member.id).eq('notice_key', DOCUMENT_PROMPT_NOTICE).maybeSingle()
+          return (dis as { dismissed_at?: string } | null)?.dismissed_at ?? null
+        } catch (e) {
+          // Best-effort: si falla, el aviso simplemente se muestra.
+          console.warn('auth/me: descarte del aviso de documento:', e instanceof Error ? e.message : e)
+          return null
+        }
+      })(),
+    ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
     // por defecto (solo ve su propio perfil) si no tiene otros roles activos.
     // La decide withBaseRole, igual que getAuthContext: el servidor y el cliente
     // TIENEN que coincidir — si el layout cree que no hay rol y la API cree que
     // sí, la pantalla queda denegada con datos que sí llegaron.
-    const explicitRoles = (roleRows ?? []).map(r => r.role as RoleId)
-    const roles: RoleId[] = withBaseRole(explicitRoles)
-    // ¿Está en el comité de estudios bíblicos? Habilita /estudios/solicitudes
-    // con alcance acotado (solo lo asignado) para gente SIN rol en el sistema.
-    let inStudyCommittee = false
-    try {
-      const { isStudyCommitteeMember } = await import('@/lib/supabase/queries/study-requests')
-      inStudyCommittee = await isStudyCommitteeMember(member.id)
-    } catch (e) {
-      // Best-effort: si falla, la persona simplemente no ve la pantalla.
-      console.warn('auth/me: comité de estudios:', e instanceof Error ? e.message : e)
-    }
-
-    // Accesos puntuales a formularios (form_access_grants): habilitan
-    // /formularios y la pantalla de respuestas de ESOS formularios a gente sin
-    // el módulo. Mismo patrón que in_study_committee.
-    let grantedFormIds: string[] = []
-    try {
-      const { getGrantedFormIds } = await import('@/lib/supabase/queries/forms')
-      grantedFormIds = await getGrantedFormIds(member.id)
-    } catch (e) {
-      console.warn('auth/me: accesos a formularios:', e instanceof Error ? e.message : e)
-    }
-
-    // FRM-1 B: eventos que tiene a cargo. Habilitan /eventos y su detalle a
-    // quien no tiene el módulo (mismo patrón que granted_form_ids).
-    let managedEventIds: string[] = []
-    try {
-      const { getManagedEventIds } = await import('@/lib/supabase/queries/events')
-      managedEventIds = await getManagedEventIds(member.id)
-    } catch (e) {
-      console.warn('auth/me: eventos a cargo:', e instanceof Error ? e.message : e)
-    }
-
-    // FIN-2: fecha del último descarte del aviso de documento. El aviso
-    // reaparece a los 14 días (la regla vive en lib/members/document-prompt).
-    let documentPromptDismissedAt: string | null = null
-    try {
-      const { DOCUMENT_PROMPT_NOTICE } = await import('@/lib/members/document-prompt')
-      const { data: dis } = await admin
-        .from('notice_dismissals')
-        .select('dismissed_at')
-        .eq('member_id', member.id)
-        .eq('notice_key', DOCUMENT_PROMPT_NOTICE)
-        .maybeSingle()
-      documentPromptDismissedAt = (dis as { dismissed_at?: string } | null)?.dismissed_at ?? null
-    } catch (e) {
-      // Best-effort: si falla, el aviso simplemente se muestra.
-      console.warn('auth/me: descarte del aviso de documento:', e instanceof Error ? e.message : e)
-    }
+    const roles: RoleId[] = withBaseRole((roleRows as Array<{ role: RoleId }>).map(r => r.role))
 
     const name = `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim() || (member.email ?? '')
 
