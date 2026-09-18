@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useCallback, useEffect } from 'react'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -215,12 +216,16 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
-      if (!res.ok) throw new Error('Error en el cierre de estudio')
+      // Mismo criterio que crear un grupo: el motivo lo sabe el servidor y
+      // antes se perdía acá.
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo completar el cierre de estudio.'))
       setClosed(true)
       router.refresh()
     } catch (e) {
       console.error(e)
-      toast('No se pudo completar el cierre de estudio. Intentá de nuevo.', 'error')
+      toast(e instanceof Error && e.message
+        ? e.message
+        : 'No se pudo completar el cierre de estudio. Intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }

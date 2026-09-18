@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
@@ -204,11 +205,18 @@ export default function NuevoGrupoPage() {
           enrollment_restrictions: restriction,
         }),
       })
-      if (!res.ok) throw new Error('Error creando el grupo')
+      // El servidor explica POR QUÉ falló —dirigente no recomendado, dirigente
+      // en revisión, pareja del prematrimonial, fechas de matrícula— y antes
+      // acá se tiraba la respuesta y se mostraba siempre el mismo texto. Se
+      // reportó como "el encargado de estudios no puede crear grupos"; el
+      // permiso estaba bien, lo que faltaba era poder leer el motivo.
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo crear el grupo.'))
       setCreated(true)
     } catch (e) {
       console.error(e)
-      toast('No se pudo crear el grupo. Revisá los datos e intentá de nuevo.', 'error')
+      toast(e instanceof Error && e.message
+        ? e.message
+        : 'No se pudo crear el grupo. Revisá los datos e intentá de nuevo.', 'error')
       setSubmitting(false)
     }
   }
