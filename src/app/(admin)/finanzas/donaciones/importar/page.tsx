@@ -1,383 +1,384 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { CloudUpload, Download, Check, CheckCircle2, XCircle, ArrowLeft, ChevronRight } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import { ArrowLeft, CloudUpload, Download, Check, AlertTriangle, Users } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
+import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { generateCSV } from '@/lib/export'
-import { formatMoney, type Currency } from '@/lib/format'
-import { sumByCurrency, formatTotalsInline, toCurrency } from '@/lib/money'
+import { formatMoney, todayCR, type Currency } from '@/lib/format'
+import { toCurrency } from '@/lib/money'
+import { leerArchivoDeDonaciones, aFilas } from '@/lib/finance/lectura-de-archivo'
+import { columnasSuficientes, type ColumnaDonacion } from '@/lib/finance/columnas-de-donaciones'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
+import { cn } from '@/lib/utils'
 
-interface PreviewRow {
-  cedula: string
-  csv_name: string
-  date: string
-  amount: number
-  /** INT-3: columna opcional del CSV; sin ella, colones. */
-  currency: Currency
+/**
+ * DON-1 · Importar donaciones con match asistido.
+ *
+ * TRES PASOS, y el del medio es el que importa: los reportes llegan sin ningún
+ * id, así que el cruce es por NOMBRE y una fila mal emparejada le acredita la
+ * donación a otra persona. Por eso la vista previa es obligatoria y las filas
+ * dudosas NO se importan solas — hay que elegir a quién.
+ *
+ * Quien usa esto no es técnica: sube el archivo tal como se lo mandaron, sin
+ * renombrar columnas ni limpiar filas.
+ */
+type Candidato = { id: string; nombre: string; cedula?: string | null }
+type Emparejamiento =
+  | { estado: 'por_cedula'; persona: Candidato }
+  | { estado: 'por_nombre'; persona: Candidato }
+  | { estado: 'ambiguo'; candidatos: Candidato[] }
+  | { estado: 'sin_candidato' }
+
+type FilaPrevia = {
+  indice: number
+  nombre_archivo: string
+  cedula_archivo: string | null
+  fecha: string | null
+  monto: number | null
+  moneda: string
+  nota: string | null
+  fecha_invalida: boolean
+  motivo_fecha: string | null
+  duplicada: boolean
+  emparejamiento: Emparejamiento
+  member_id: string | null
 }
 
-type ImportResult = {
-  total_rows: number
-  identified: number
-  unidentified: number
-  duplicates: number
-  status: string
-}
-
-// Parser CSV simple (maneja comas entre comillas). Espera columnas: cedula,
-// nombre, fecha, monto — y OPCIONALMENTE moneda (INT-3). Sin la columna, todo
-// entra como colones, que es lo que trae el histórico.
-function parseDonationsCSV(text: string): PreviewRow[] {
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '')
-  if (lines.length === 0) return []
-  const split = (line: string) => {
-    const out: string[] = []; let f = '', q = false
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i]
-      if (q) { if (c === '"') { if (line[i+1] === '"') { f += '"'; i++ } else q = false } else f += c }
-      else if (c === '"') q = true
-      else if (c === ',') { out.push(f); f = '' }
-      else f += c
-    }
-    out.push(f); return out.map(s => s.trim())
-  }
-  const header = split(lines[0]).map(h => h.toLowerCase())
-  const idx = (names: string[]) => header.findIndex(h => names.some(n => h.includes(n)))
-  const ci = idx(['cedula', 'cédula']), ni = idx(['nombre']), fi = idx(['fecha']), mi = idx(['monto', 'amount'])
-  const cui = idx(['moneda', 'currency'])
-  return lines.slice(1).map(line => {
-    const cols = split(line)
-    return {
-      cedula: ci >= 0 ? cols[ci] ?? '' : '',
-      csv_name: ni >= 0 ? cols[ni] ?? '' : '',
-      date: fi >= 0 ? cols[fi] ?? '' : '',
-      amount: Number((mi >= 0 ? cols[mi] ?? '0' : '0').replace(/[^\d.-]/g, '')) || 0,
-      currency: toCurrency(cui >= 0 ? cols[cui] : null),
-    }
-  }).filter(r => r.date && r.amount > 0)
+const ETIQUETA: Record<ColumnaDonacion, string> = {
+  fecha: 'Fecha', nombre: 'Nombre del donante', cedula: 'Cédula',
+  monto: 'Monto', moneda: 'Moneda', nota: 'Nota',
 }
 
 export default function ImportarDonacionesPage() {
-  const router = useRouter()
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [fileName, setFileName] = useState('')
-  const [rows, setRows] = useState<PreviewRow[]>([])
-  const [updateDonorStatus, setUpdateDonorStatus] = useState(true)
-  const [toast, setToast] = useState('')
-  const [importing, setImporting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [paso, setPaso] = useState<1 | 2 | 3>(1)
+  const [archivo, setArchivo] = useState<File | null>(null)
+  const [matriz, setMatriz] = useState<string[][]>([])
+  const [encabezado, setEncabezado] = useState(0)
+  const [mapa, setMapa] = useState<Record<ColumnaDonacion, number | null> | null>(null)
+  const [filas, setFilas] = useState<FilaPrevia[]>([])
+  /** Elección manual por fila: id de persona, o '' para no importarla. */
+  const [elegido, setElegido] = useState<Record<number, string>>({})
+  const [buscando, setBuscando] = useState<number | null>(null)
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [resultado, setResultado] = useState<{ insertadas: number; descartadas: number } | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3500)
-  }
+  const columnas = matriz[encabezado] ?? []
 
-  async function loadFile(file: File) {
-    setFileName(file.name)
-    const text = await file.text()
-    const parsed = parseDonationsCSV(text)
-    // Avisar cuántas filas se descartaron (sin fecha o sin monto válido).
-    const dataLines = text.split(/\r?\n/).filter(l => l.trim()).length - 1
-    const dropped = Math.max(0, dataLines - parsed.length)
-    if (dropped > 0) showToast(`${dropped} fila${dropped !== 1 ? 's' : ''} sin fecha o monto válido se descartaron.`)
-    setRows(parsed)
-    setStep(2)
-  }
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    await loadFile(file)
-  }
-
-  function downloadTemplate() {
-    generateCSV(
-      // La columna moneda es opcional: si no viene, se importa en colones.
-      ['cedula', 'nombre', 'fecha', 'monto', 'moneda'],
-      [
-        ['1-0847-0291', 'RUIZ MORENO ALEJANDRO', '2026-05-05', '50000', 'CRC'],
-        ['2-0738-1094', 'FERNANDEZ LOPEZ SOFIA', '2026-05-10', '35000', 'CRC'],
-      ],
-      'plantilla-donaciones'
-    )
-  }
-
-  async function handleConfirmImport() {
-    if (importing || rows.length === 0) return
-    setImporting(true)
+  async function tomarArchivo(f: File) {
+    setError(null)
     try {
-      const res = await fetch('/api/finance/donations/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: fileName || 'donaciones.csv',
-          rows: rows.map(r => ({ cedula: r.cedula || null, donation_date: r.date, amount: r.amount, currency: r.currency })),
-          update_donor_status: updateDonorStatus,
-        }),
-      })
-      if (!res.ok) throw new Error()
-      const batch = (await res.json()) as ImportResult
-      showToast(`Importación completada — ${batch.identified} identificadas, ${batch.unidentified} sin identificar, ${batch.duplicates} duplicadas`)
-      setTimeout(() => router.push('/finanzas/donaciones'), 2200)
+      const r = await leerArchivoDeDonaciones(f)
+      setArchivo(f); setMatriz(r.matriz); setEncabezado(r.encabezado); setMapa(r.mapa)
     } catch {
-      showToast('Error al importar las donaciones')
-      setImporting(false)
+      setError('No se pudo leer el archivo. Tiene que ser un CSV o un Excel (.xlsx).')
     }
   }
 
-  // En el preview solo sabemos si la fila trae cédula; la identificación real
-  // (match contra miembros + duplicados) la hace el backend al importar.
-  const conCedula = rows.filter(r => r.cedula).length
-  const sinCedula = rows.length - conCedula
+  async function verPrevia() {
+    if (!mapa) return
+    setCargando(true); setError(null)
+    try {
+      const crudas = aFilas(matriz, mapa, encabezado)
+      const res = await fetch('/api/finance/donations/preview', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filas: crudas }),
+      })
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo leer el archivo.'))
+      const d = await res.json() as { filas: FilaPrevia[] }
+      setFilas(d.filas)
+      // Lo que el servidor resolvió solo queda preseleccionado; lo dudoso, vacío.
+      setElegido(Object.fromEntries(d.filas.map(f => [f.indice, f.member_id ?? ''])))
+      setPaso(2)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo leer el archivo.')
+    } finally { setCargando(false) }
+  }
+
+  /** Lo que de verdad se va a importar: con persona, con fecha y sin duplicar. */
+  const aImportar = useMemo(
+    () => filas.filter(f => elegido[f.indice] && !f.fecha_invalida && !f.duplicada),
+    [filas, elegido],
+  )
+
+  async function importar() {
+    if (!archivo || cargando) return
+    setCargando(true); setError(null)
+    try {
+      const res = await fetch('/api/finance/donations/import', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: archivo.name,
+          filas: aImportar.map(f => ({
+            member_id: elegido[f.indice], donation_date: f.fecha,
+            amount: f.monto, currency: f.moneda, note: f.nota,
+          })),
+          descartadas: {
+            total_filas: filas.length,
+            duplicadas: filas.filter(f => f.duplicada).length,
+            sin_persona: filas.filter(f => !elegido[f.indice]).length,
+          },
+        }),
+      })
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo importar.'))
+      const d = await res.json() as { insertadas: number }
+      setResultado({ insertadas: d.insertadas, descartadas: filas.length - d.insertadas })
+      setPaso(3)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo importar.')
+    } finally { setCargando(false) }
+  }
+
+  function descargarPendientes() {
+    const sinResolver = filas.filter(f => !elegido[f.indice] || f.fecha_invalida)
+    generateCSV(
+      ['nombre_en_el_archivo', 'cedula', 'fecha', 'monto', 'motivo'],
+      sinResolver.map(f => [
+        f.nombre_archivo, f.cedula_archivo ?? '',
+        f.fecha ?? '', f.monto ?? '',
+        f.fecha_invalida ? `fecha ${f.motivo_fecha ?? 'inválida'}`
+          : f.emparejamiento.estado === 'ambiguo' ? 'varios candidatos' : 'sin candidato',
+      ]),
+      `donaciones-sin-importar-${todayCR()}.csv`,
+    )
+  }
+
+  const chip = 'rounded-full px-2.5 py-0.5 text-[11px] font-body'
 
   return (
     <FinanceGuard>
-      <div className="space-y-6">
-
-        {/* Header */}
-        <div
-          className="rounded-2xl px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-navy shadow-[var(--shadow-md)]"
-        >
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => step === 1 ? router.push('/finanzas/donaciones') : setStep(s => (s - 1) as 1 | 2 | 3)}
-              className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <div>
-              <h1 className="text-xl text-white font-display font-extrabold">
-                Importar donaciones
-              </h1>
-              <p className="text-[13px] text-white/80 mt-0.5 font-body">
-                {fileName || 'Cargá el archivo CSV del banco'}
-              </p>
-            </div>
-          </div>
-
-          {/* Stepper */}
-          <div className="flex items-center gap-2">
-            {[1, 2, 3].map((s, idx) => (
-              <div key={s} className="flex items-center gap-2">
-                <div
-                  className="h-7 w-7 rounded-full flex items-center justify-center text-[13px] font-bold transition-all font-display"
-                  style={{
-                    background: step > s ? '#3DB97A' : step === s ? '#D63E3D' : 'rgba(255,255,255,0.15)',
-                    color: step >= s ? 'white' : 'rgba(255,255,255,0.40)',
-                  }}
-                >
-                  {step > s ? <Check size={13} /> : s}
-                </div>
-                <span className="text-[13px] hidden sm:block font-body" style={{ color: step === s ? 'white' : 'rgba(255,255,255,0.40)' }}>
-                  {s === 1 ? 'Cargar' : s === 2 ? 'Previsualizar' : 'Confirmar'}
-                </span>
-                {idx < 2 && <ChevronRight size={14} className="text-[rgba(255,255,255,0.30)]" />}
-              </div>
-            ))}
-          </div>
+      <div className="space-y-5">
+        <div className="rounded-2xl bg-navy px-6 py-5 shadow-[var(--shadow-md)]">
+          <Link href="/finanzas/donaciones" className="inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
+            <ArrowLeft size={14} /> Donaciones
+          </Link>
+          <h1 className="text-2xl font-extrabold text-white font-display">Importar donaciones</h1>
+          <p className="text-[13px] text-white/80 mt-1 font-body">
+            {paso === 1 && 'Subí el archivo tal como te lo mandaron. No hace falta prepararlo.'}
+            {paso === 2 && 'Revisá a quién le corresponde cada donación antes de importar.'}
+            {paso === 3 && 'Listo.'}
+          </p>
         </div>
 
-        {/* Step 1 — Upload */}
-        {step === 1 && (
-          <div className="rounded-2xl p-8 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
-            <div
-              className="border-2 border-dashed rounded-2xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-all hover:border-navy/30 hover:bg-navy/2 border-[rgba(22,20,64,0.20)]"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => e.preventDefault()}
-              onDrop={async e => {
-                // Sin preventDefault, soltar el archivo NAVEGABA fuera de la página.
-                e.preventDefault()
-                const file = e.dataTransfer.files?.[0]
-                if (!file) return
-                if (!file.name.toLowerCase().endsWith('.csv')) {
-                  showToast('El archivo debe ser un CSV.')
-                  return
-                }
-                await loadFile(file)
-              }}
+        {error && (
+          <p className="rounded-2xl bg-coral/10 px-4 py-3 text-sm text-coral-deep font-body" role="alert">{error}</p>
+        )}
+
+        {/* ───────── Paso 1 · el archivo y sus columnas ───────── */}
+        {paso === 1 && (
+          <div className="rounded-2xl bg-surface-card p-6 shadow-[var(--shadow-md)] space-y-5">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="w-full rounded-2xl border-2 border-dashed border-[var(--outline-variant)] px-6 py-10 text-center hover:bg-surface-low transition-colors"
             >
-              <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-[rgba(81,157,162,0.10)]">
-                <CloudUpload size={32} className="text-teal-deep" />
-              </div>
-              <div className="text-center">
-                <p className="text-base font-bold font-display text-navy">
-                  Arrastrá el CSV aquí
-                </p>
-                <p className="text-sm mt-1 font-body text-[rgba(22,20,64,0.60)]">
-                  o hacé clic para seleccionar
-                </p>
-                <p className="text-[13px] mt-2 text-[rgba(22,20,64,0.35)] font-body">
-                  Formato: cédula, nombre, fecha, monto
-                </p>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
+              <CloudUpload size={28} className="mx-auto text-navy-light/80" aria-hidden />
+              <p className="mt-2 text-sm text-navy font-body">
+                {archivo ? archivo.name : 'Elegí un archivo CSV o Excel'}
+              </p>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                {archivo ? `${matriz.length - encabezado - 1} filas` : 'También sirve el que exporta el banco'}
+              </p>
+            </button>
+            <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) void tomarArchivo(f) }} />
 
-            <div className="flex justify-center">
-              <button
-                onClick={downloadTemplate}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all border border-[var(--outline-variant)] text-navy font-body"
-              >
-                <Download size={15} />
-                Descargar plantilla CSV
-              </button>
-            </div>
+            {mapa && (
+              <div className="space-y-3">
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Esto es lo que entendimos de tu archivo. Corregilo si algo no cuadra:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(Object.keys(ETIQUETA) as ColumnaDonacion[]).map(c => (
+                    <label key={c} className="space-y-1 block">
+                      <span className="text-[13px] text-navy-light/80 font-body">
+                        {ETIQUETA[c]}
+                        {(c === 'fecha' || c === 'nombre') && <span className="text-coral"> *</span>}
+                      </span>
+                      <select
+                        className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                        value={mapa[c] ?? ''}
+                        onChange={e => setMapa({ ...mapa, [c]: e.target.value === '' ? null : Number(e.target.value) })}
+                      >
+                        <option value="">— no está en el archivo —</option>
+                        {columnas.map((h, i) => <option key={i} value={i}>{h || `columna ${i + 1}`}</option>)}
+                      </select>
+                    </label>
+                  ))}
+                </div>
+                {!columnasSuficientes(mapa) && (
+                  <p className="text-[13px] text-coral-deep font-body">
+                    Falta la fecha, o el nombre/cédula del donante. Sin eso no se puede saber
+                    de quién es cada donación.
+                  </p>
+                )}
+                <button
+                  type="button" onClick={verPrevia} disabled={!columnasSuficientes(mapa) || cargando}
+                  className={cn('w-full rounded-full py-3 text-sm font-semibold text-white transition-colors font-body',
+                    columnasSuficientes(mapa) && !cargando ? 'bg-coral hover:bg-coral-deep' : 'bg-coral/40')}
+                >
+                  {cargando ? 'Revisando…' : 'Revisar antes de importar'}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Step 2 — Preview */}
-        {step === 2 && (
-          <div className="space-y-5">
-            {/* Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* ───────── Paso 2 · la revisión ───────── */}
+        {paso === 2 && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Filas en el archivo', count: rows.length, color: '#161440', bg: 'rgba(22,20,64,0.06)', Icon: CheckCircle2 },
-                { label: 'Con cédula', count: conCedula, color: '#3DB97A', bg: 'rgba(61,185,122,0.10)', Icon: CheckCircle2 },
-                { label: 'Sin cédula', count: sinCedula, color: '#C43635', bg: 'rgba(239,85,84,0.10)', Icon: XCircle },
-              ].map(({ label, count, color, bg, Icon }) => (
-                <div key={label} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: bg }}>
-                  <Icon size={20} className="shrink-0" style={{ color }} />
-                  <div>
-                    <p className="text-xl font-extrabold font-display" style={{ color }}>{count}</p>
-                    <p className="text-[13px] font-body text-[rgba(22,20,64,0.60)]">{label}</p>
+                ['Se van a importar', aImportar.length, 'text-teal-deep'],
+                ['Hay que elegir', filas.filter(f => !elegido[f.indice] && !f.duplicada && !f.fecha_invalida).length, 'text-coral-deep'],
+                ['Ya estaban', filas.filter(f => f.duplicada).length, 'text-navy-light/80'],
+                ['Fecha con problema', filas.filter(f => f.fecha_invalida).length, 'text-navy-light/80'],
+              ].map(([t, n, color]) => (
+                <div key={t as string} className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-sm)]">
+                  <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">{t}</p>
+                  <p className={cn('mt-1 text-2xl font-extrabold tabular-nums font-display', color as string)}>{n as number}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+              {filas.map(f => {
+                const m = f.emparejamiento
+                const seguro = m.estado === 'por_cedula' || m.estado === 'por_nombre'
+                const candidatos = m.estado === 'ambiguo' ? m.candidatos : seguro ? [m.persona] : []
+                return (
+                  <div key={f.indice} className="border-b border-[var(--outline-variant)] px-4 py-3 last:border-0">
+                    <div className="flex flex-wrap items-center gap-2 justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm text-navy font-body truncate">
+                          {f.nombre_archivo || <span className="italic text-navy-light/80">sin nombre</span>}
+                          {f.cedula_archivo && <span className="text-navy-light/80"> · {f.cedula_archivo}</span>}
+                        </p>
+                        <p className="text-[13px] text-navy-light/80 font-body">
+                          {f.fecha_invalida
+                            ? <span className="text-coral-deep">fecha {f.motivo_fecha ?? 'inválida'}{f.fecha ? `: ${f.fecha}` : ''}</span>
+                            : f.fecha}
+                          {f.monto !== null && ` · ${formatMoney(f.monto, toCurrency(f.moneda) as Currency)}`}
+                          {f.monto === null && ' · sin monto'}
+                          {f.nota && ` · ${f.nota}`}
+                        </p>
+                      </div>
+                      <span className={cn(chip,
+                        f.duplicada ? 'bg-navy/10 text-navy-light'
+                          : m.estado === 'por_cedula' ? 'bg-teal-soft/40 text-teal-deep'
+                          : m.estado === 'por_nombre' ? 'bg-teal-soft/30 text-teal-deep'
+                          : m.estado === 'ambiguo' ? 'bg-coral/10 text-coral-deep'
+                          : 'bg-navy/5 text-navy-light')}>
+                        {f.duplicada ? 'ya estaba'
+                          : m.estado === 'por_cedula' ? 'por cédula'
+                          : m.estado === 'por_nombre' ? 'por nombre'
+                          : m.estado === 'ambiguo' ? 'hay que elegir'
+                          : 'sin candidato'}
+                      </span>
+                    </div>
+
+                    {!f.duplicada && !f.fecha_invalida && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <select
+                          aria-label={`A quién le corresponde la donación de ${f.nombre_archivo}`}
+                          className="rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body max-w-full"
+                          value={elegido[f.indice] ?? ''}
+                          onChange={e => setElegido(p => ({ ...p, [f.indice]: e.target.value }))}
+                        >
+                          <option value="">No importar esta fila</option>
+                          {candidatos.map(c => (
+                            <option key={c.id} value={c.id}>{c.nombre}{c.cedula ? ` · ${c.cedula}` : ''}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setBuscando(buscando === f.indice ? null : f.indice)}
+                          className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
+                        >
+                          <Users size={13} aria-hidden /> Buscar otra persona
+                        </button>
+                      </div>
+                    )}
+                    {buscando === f.indice && (
+                      <div className="mt-2">
+                        <MemberCombobox
+                          dropdown autoFocus placeholder="Buscar por nombre o cédula…"
+                          onSelect={(m2: MemberHit) => {
+                            // Se agrega como candidato de ESTA fila para que quede
+                            // visible en el desplegable, no solo elegido a ciegas.
+                            setFilas(prev => prev.map(x => x.indice !== f.indice ? x : {
+                              ...x,
+                              emparejamiento: { estado: 'ambiguo', candidatos: [
+                                ...(x.emparejamiento.estado === 'ambiguo' ? x.emparejamiento.candidatos
+                                  : x.emparejamiento.estado === 'sin_candidato' ? [] : [x.emparejamiento.persona]),
+                                { id: m2.id, nombre: `${m2.first_name} ${m2.last_name}`, cedula: m2.cedula },
+                              ] },
+                            }))
+                            setElegido(p => ({ ...p, [f.indice]: m2.id }))
+                            setBuscando(null)
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
-            {/* Table */}
-            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--outline-variant)]">
-                      {['Cédula', 'Nombre del CSV', 'Fecha', 'Monto'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, i) => (
-                      <tr key={i} className="border-b hover:bg-gray-50 transition-colors border-[var(--outline-variant)]">
-                        <td className="px-5 py-3">
-                          <p className="text-[13px] font-body text-[rgba(22,20,64,0.70)]">{row.cedula}</p>
-                        </td>
-                        <td className="px-5 py-3">
-                          <p className="text-[13px] font-body text-navy">{row.csv_name || '—'}</p>
-                        </td>
-                        <td className="px-5 py-3">
-                          <p className="text-[13px] whitespace-nowrap text-[rgba(22,20,64,0.60)] font-body">
-                            {new Date(row.date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
-                          </p>
-                        </td>
-                        <td className="px-5 py-3">
-                          <p className="text-[13px] font-medium text-navy font-body">
-                            {formatMoney(row.amount, row.currency)}
-                          </p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setStep(3)}
-                className="rounded-full px-6 py-2.5 text-sm text-white font-medium bg-coral font-body"
-              >
-                Continuar →
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setPaso(1)}
+                className="rounded-full border border-[var(--outline-variant)] px-5 py-2.5 text-sm text-navy-light/80 hover:bg-surface-low transition-colors font-body">
+                Volver
+              </button>
+              <button type="button" onClick={importar} disabled={cargando || aImportar.length === 0}
+                className={cn('flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-colors font-body',
+                  cargando || aImportar.length === 0 ? 'bg-coral/40' : 'bg-coral hover:bg-coral-deep')}>
+                {cargando ? 'Importando…' : `Importar ${aImportar.length} ${aImportar.length === 1 ? 'donación' : 'donaciones'}`}
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 3 — Confirm */}
-        {step === 3 && (
-          <div className="rounded-2xl p-8 space-y-6 bg-surface-card shadow-[var(--shadow-md)]">
-            <div className="space-y-2">
-              <p className="text-base font-bold font-display text-navy">
-                Resumen de importación
+        {/* ───────── Paso 3 · el resumen ───────── */}
+        {paso === 3 && resultado && (
+          <div className="rounded-2xl bg-surface-card p-8 text-center shadow-[var(--shadow-md)] space-y-4">
+            <Check size={34} className="mx-auto text-teal-deep" aria-hidden />
+            <p className="text-lg font-bold text-navy font-display">
+              Se importaron {resultado.insertadas} {resultado.insertadas === 1 ? 'donación' : 'donaciones'}
+            </p>
+            {resultado.descartadas > 0 && (
+              <p className="text-sm text-navy-light/80 font-body">
+                Quedaron {resultado.descartadas} sin importar: las que ya estaban, las que no tenían
+                fecha válida y las que no se pudo decidir a quién corresponden.
               </p>
-              <p className="text-sm font-body text-[rgba(22,20,64,0.60)]">
-                Revisá el resumen antes de confirmar
-              </p>
-            </div>
-
-            <div className="rounded-xl p-5 space-y-3 bg-[rgba(22,20,64,0.03)] border border-[rgba(22,20,64,0.08)]">
-              {[
-                { label: 'Archivo', value: fileName || 'donaciones.csv' },
-                { label: 'Total filas', value: `${rows.length}` },
-                { label: 'Con cédula', value: `${conCedula}` },
-                { label: 'Sin cédula', value: `${sinCedula}` },
-                { label: 'Monto total', value: formatTotalsInline(sumByCurrency(rows)) },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between text-sm font-body">
-                  <span className="text-[rgba(22,20,64,0.55)]">{label}</span>
-                  <span className="font-medium text-navy">{value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={updateDonorStatus}
-                  onChange={e => setUpdateDonorStatus(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded accent-navy"
-                />
-                <div>
-                  <p className="text-sm font-medium font-body text-navy">
-                    Actualizar estado “Donante” en perfiles
-                  </p>
-                  <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
-                    Marcará como donantes a los miembros identificados en esta importación
-                  </p>
-                </div>
-              </label>
-              {/* "Lógica familiar" se quitó: el backend no la implementa y el
-                  checkbox se descartaba en silencio. */}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setStep(2)}
-                className="rounded-full border px-5 py-2.5 text-sm transition-colors border-[var(--outline-variant)] text-[rgba(22,20,64,0.70)] font-body"
-              >
-                ← Atrás
-              </button>
-              <button
-                onClick={handleConfirmImport}
-                disabled={importing || rows.length === 0}
-                className="flex-1 rounded-full py-2.5 text-sm text-white font-medium transition-all disabled:opacity-50 bg-[#3DB97A] font-body"
-              >
-                {importing ? 'Importando...' : 'Confirmar importación'}
-              </button>
+            )}
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              {resultado.descartadas > 0 && (
+                <button type="button" onClick={descargarPendientes}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--outline-variant)] px-5 py-2.5 text-sm text-navy-light/80 hover:bg-surface-low transition-colors font-body">
+                  <Download size={15} aria-hidden /> Descargar las que faltan
+                </button>
+              )}
+              <Link href="/finanzas/donaciones"
+                className="inline-flex items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body">
+                Ver donaciones
+              </Link>
             </div>
           </div>
+        )}
+
+        {paso === 2 && filas.some(f => f.emparejamiento.estado === 'ambiguo') && (
+          <p className="flex items-start gap-2 text-[13px] text-navy-light/80 font-body">
+            <AlertTriangle size={15} className="shrink-0 mt-0.5" aria-hidden />
+            Las marcadas como &laquo;hay que elegir&raquo; tienen varias personas posibles con ese
+            nombre. No se importan solas a propósito: acreditarle una donación a quien no es
+            cuesta más que dejarla pendiente.
+          </p>
         )}
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body"
-        >
-          <Check size={15} className="text-[#3DB97A]" />
-          {toast}
-        </div>
-      )}
     </FinanceGuard>
   )
 }

@@ -1033,50 +1033,54 @@ Tests: matrícula nueva genera notificación; a las 24h sin comprobante se cance
 cupo; con comprobante subido NO se toca; beca 100% NO se toca; idempotente. tsc/lint/vitest.
 ```
 
-### [ ] DON-1 · Importar donaciones con match asistido (pedido 2026-09-18)
+### [x] DON-1 · Importar donaciones con match asistido — HECHO 2026-09-18
 
-Los reportes de donaciones llegan como Fecha / Cliente (solo nombre) / Notas,
-sin ID. Se necesita asignar cada donación a la persona correcta. Mientras esto
-se construye, el match lo hace Claude (Cowork) contra el padrón, como con los
-puestos. La solución de sistema: pantalla de importación con vista previa.
+Asistente de tres pasos en `/finanzas/donaciones/importar`: subir → revisar →
+confirmar. Lee CSV y XLSX (la librería de Excel se carga solo si hace falta,
+pesa 400 KB).
 
-Prompt para Claude Code:
+**El matcher es todo el ítem.** Los reportes llegan con Fecha / Cliente / Notas
+y sin ningún id, así que el cruce es por nombre. Se compara el nombre como
+CONJUNTO DE PALABRAS y no como texto: el banco escribe "RUIZ MORENO ALEJANDRO"
+y eso, como texto, no se parece a "Alejandro Ruiz Moreno". Se descartan tildes,
+mayúsculas, partículas ("de los") e iniciales sueltas ("Salazar A.").
 
-```
-FEATURE · Donaciones: importar CSV/Excel con match asistido de donantes
+El riesgo de comparar conjuntos: "María Rodríguez Vargas" y "María Vargas
+Rodríguez" son DOS personas con las mismas palabras. Por eso **nunca gana el
+mejor parecido**: si el conjunto lo comparten dos fichas es AMBIGUO, y un
+nombre incompleto ("Alejandro Ruiz") tampoco se importa solo aunque haya un
+único parecido.
 
-PANTALLA: nueva acción "Importar" en la página de donaciones (/finanzas o donde viva hoy;
-rol: finanzas/admin — verificar requireRoles existente del módulo).
+Medido contra el padrón real (23.963 fichas) con los nombres al estilo banco:
+**97% emparejados, 3% ambiguos, CERO con la persona equivocada**. Por cédula,
+43 de 43.
 
-USUARIA OBJETIVO: una persona NO técnica que recibe el Excel y lo sube tal cual. La
-pantalla debe ser un asistente guiado paso a paso (subir → revisar matches → confirmar),
-con lenguaje simple, sin jerga ("No encontramos a esta persona, buscala aquí"), y sin
-que tenga que preparar/limpiar el archivo antes.
+**Lo que evita que alguien tenga que preparar el archivo:** los encabezados se
+reconocen por palabra contenida ("Fecha de transacción", "Detalle del Cliente",
+"Crédito"), el encabezado se busca en las primeras 20 filas —los exports traen
+título y filas en blanco arriba; el del campa lo tenía en la quinta— y los
+montos se entienden en formato tico y gringo.
 
-FLUJO:
-1. Subir CSV o XLSX con columnas flexibles: Fecha, Cliente/Nombre, Notas/Descripción y
-   Monto/Moneda si vienen (mapear encabezados con tolerancia; mostrar el mapeo detectado
-   para confirmar).
-2. MATCH server-side por fila, en este orden de confianza:
-   a) Cédula/documento si la columna existe → match exacto (member_por_external_id() /
-      documento — DAT-9: los imports entran por ahí).
-   b) Nombre completo normalizado (sin tildes, case-insensitive, tolerar iniciales tipo
-      "Ana Patricia Salazar A.") → único candidato = match "por nombre"; varios candidatos
-      o parecido parcial = AMBIGUO.
-3. VISTA PREVIA obligatoria antes de importar (patrón dry-run): tabla con cada fila →
-   persona matcheada + nivel de confianza; los ambiguos con dropdown de candidatos
-   (buscador por nombre/cédula) para resolver ahí mismo; opción "dejar sin importar".
-   NUNCA auto-importar un match por nombre con múltiples candidatos.
-4. Importar solo lo confirmado. SOLO INSERT (regla de imports); idempotencia: si la misma
-   fila (fecha+persona+monto+nota) ya existe, marcarla como duplicada en la vista previa
-   y no reinsertarla. Registrar lote de importación (quién, cuándo, archivo) para auditar.
-5. Al final: resumen (importadas / duplicadas / sin match) + descarga CSV de las sin match
-   para trabajarlas aparte.
-NOTAS: monto puede venir vacío (donación registrada sin monto — permitirlo igual que el
-alta manual de DON-2); multimoneda: si hay columna de moneda respetarla, JAMÁS convertir
-ni sumar entre monedas (INT-3). Nada de correos. Tests del matcher (exacto, con inicial,
-ambiguo, sin candidato) + test de idempotencia. tsc/lint/vitest al cierre.
-```
+**Las fechas mes/día/año se rechazan a propósito:** con los dos formatos vivos
+no hay forma de distinguir 03/04 y elegir mal cambiaría la fecha sin avisar.
+
+**Las fechas futuras se marcan en la VISTA PREVIA**, no al importar: el endpoint
+rechaza el lote entero por una fila mala, así que descubrirlo al final sería
+llegar hasta el botón para que no pase nada.
+
+Idempotencia por huella persona+fecha+monto, contra la base. Solo INSERT. El
+endpoint de importación recibe `member_id` ya resuelto y nunca nombres, así que
+no puede adivinar a quién acreditar; y cada fila pasa por la MISMA validación
+que el alta manual, para que un archivo no meta por la puerta de atrás algo que
+el formulario rechaza.
+
+Al final: resumen y descarga de las que quedaron sin importar, con el motivo.
+
+Probado de punta a punta con un archivo que imita un reporte de banco —título
+arriba, encabezados propios, fechas DD/MM/YYYY, una fila duplicada, una persona
+inexistente, una fecha futura y una en formato gringo—: las seis se
+clasificaron como corresponde.
+
 
 ### [x] DON-2 · Botón para registrar una donación a mano — HECHO 2026-09-18
 
@@ -1254,11 +1258,11 @@ Prompt para Claude Code:
 ```
 FEATURE · Pantalla "Mi comité": la gente de mi comité y sus compromisos
 
-QUIÉN LA VE: líderes/encargados de comité (lider_comite y equivalentes — verificar cómo se
-identifica hoy al encargado de un comité: ¿rol + puesto de encargado?). Cada uno ve
-ÚNICAMENTE su(s) comité(s) — mismo patrón de alcance por comité de EVE-12/events-scope:
-si EVE-12 ya creó el helper de "mis comités", REUTILIZAR. Los roles de gestión amplia
-(coordinador_servidores, direccion, admin) pueden ver cualquier comité con un selector.
+QUIÉN LA VE: ÚNICAMENTE el rol lider_comite, y cada líder ve SOLO el/los comité(s) de los
+que es líder — nadie más tiene acceso a esta pantalla (ni coordinador_servidores, ni
+direccion; admin la ve porque admin ve todo, pero no se agrega selector de comités ni
+acceso ampliado para nadie). Alcance con el mismo patrón por comité de EVE-12/events-scope:
+si EVE-12 ya creó el helper de "mis comités", REUTILIZAR.
 
 QUÉ MUESTRA — tabla, una fila por servidor ACTIVO del comité:
 1. Nombre + puesto(s) en el comité.
@@ -1284,5 +1288,46 @@ IMPLEMENTACIÓN:
 - Entrada en el menú solo para quienes tienen alcance (patrón de módulos existente).
 Tests: líder ve solo su comité (403 en otro), reglas de compromisos con fixtures (usa las
 funciones reutilizadas), export. tsc/lint/vitest al cierre.
+```
+
+### [ ] FAM-3 · Autorización de fotos para menores + lista de menores asistentes (pedido 2026-09-18)
+
+Dos partes: (a) casilla de "autorizado para salir en fotos del grupo, redes
+sociales, etc." en la ficha, especialmente para menores; (b) reporte de todos
+los menores de edad que asistieron en los últimos 2 años, con nombre, lugar al
+que asistió y padre/madre de familia (o si no pertenece a ninguna familia).
+
+Prompt para Claude Code:
+
+```
+FEATURE + REPORTE · Menores: autorización de imagen y lista de asistentes
+
+PARTE A — CAMPO DE AUTORIZACIÓN DE IMAGEN:
+- Nuevo campo en members (ej. autorizacion_imagen boolean NULL): NULL = no se ha
+  preguntado (el default para todo el padrón existente), true = autorizado, false =
+  negado explícito. NO usar default false: "no me han preguntado" y "dijeron que no"
+  son cosas distintas y legalmente importa la diferencia.
+- UI: checkbox en la ficha del miembro (sección de datos personales), con texto claro:
+  "Autorizado para aparecer en fotos del grupo, redes sociales y publicaciones".
+  Visible para todos pero DESTACADO en fichas de menores (badge/aviso "Menor de edad —
+  autorización de imagen: pendiente/sí/no" cerca del nombre).
+- Guardar quién y cuándo lo marcó (audit_log ya lo cubre — verificar que este campo entre).
+- Incluir el campo en los formularios donde se editan datos personales (mismo patrón del
+  campo de restricción alimenticia que ya se agregó) para que los papás lo puedan marcar.
+- Regla de menor de edad: la que ya usa el sistema (FAM-2) — REUTILIZAR el cálculo de
+  minoría, no duplicarlo.
+
+PARTE B — REPORTE DE MENORES ASISTENTES (últimos 2 años):
+- Script scripts/reporte-menores-asistentes.ts que genere un XLSX con: todos los miembros
+  MENORES DE EDAD HOY con al menos un check-in desde 2024-09-18. Columnas:
+  nombre completo, edad, lugar(es) a los que asistió (sede/charla/evento — si son varios,
+  el más frecuente + conteo, o una fila por lugar: elegí lo más legible y explicá),
+  fecha del último check-in, padre/madre/encargado (desde su familia: los adultos con
+  posición de papá/mamá/cabeza de familia) o "SIN FAMILIA REGISTRADA" bien visible,
+  y la columna de autorización de imagen (pendiente/sí/no) de la parte A.
+- Los "sin familia registrada" van ADEMÁS en una hoja aparte — son el pendiente de FAM-2/
+  DAT-8 y esta lista sirve para trabajarlos.
+- Excluir datos [prueba]. Solo lectura, no modifica nada.
+Tests de la parte A (regla del campo, NULL vs false). tsc/lint/vitest al cierre.
 ```
 

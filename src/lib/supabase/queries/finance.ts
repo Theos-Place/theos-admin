@@ -710,3 +710,81 @@ export async function miembroActivoExiste(memberId: string): Promise<boolean> {
   const { data } = await supabase.from('members').select('id, is_active').eq('id', memberId).maybeSingle()
   return !!(data as { is_active: boolean | null } | null)?.is_active
 }
+
+/**
+ * DON-1 · El padrón mínimo para emparejar donantes.
+ *
+ * Se trae ENTERO y en trozos de 1.000 (PostgREST corta ahí): 24 mil filas de
+ * tres columnas son ~2 MB y el cruce las necesita todas — un nombre que no está
+ * en el trozo consultado se reportaría como "sin candidato" y alguien lo
+ * crearía de nuevo.
+ */
+export async function padronParaEmparejar(): Promise<
+  Array<{ id: string; nombre: string; cedula: string | null }>
+> {
+  const supabase = createAdminClient()
+  const salida: Array<{ id: string; nombre: string; cedula: string | null }> = []
+  for (let p = 0; ; p++) {
+    const { data, error } = await supabase
+      .from('members').select('id, first_name, last_name, cedula')
+      .eq('is_active', true).range(p * 1000, p * 1000 + 999)
+    if (error) throw error
+    const filas = (data ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null }>
+    if (!filas.length) break
+    salida.push(...filas.map(m => ({
+      id: m.id, nombre: `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim(), cedula: m.cedula,
+    })))
+    if (filas.length < 1000) break
+  }
+  return salida
+}
+
+/**
+ * DON-1 · Donaciones ya registradas de estas personas, para no importar dos
+ * veces lo mismo.
+ *
+ * La huella es persona + fecha + monto: es lo que identifica una donación en un
+ * reporte, porque el archivo no trae ningún id propio. Dos donaciones iguales
+ * el mismo día de la misma persona son indistinguibles, y ante la duda se
+ * marca duplicada — reimportar un archivo por error es mucho más común que
+ * donar dos veces lo mismo el mismo día.
+ */
+export async function huellasDeDonacionesExistentes(
+  memberIds: readonly string[],
+): Promise<Set<string>> {
+  const huellas = new Set<string>()
+  if (!memberIds.length) return huellas
+  const supabase = createAdminClient()
+  const ids = [...new Set(memberIds)]
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await supabase
+      .from('donations').select('member_id, donation_date, amount').in('member_id', ids.slice(i, i + 300))
+    if (error) throw error
+    for (const d of (data ?? []) as Array<{ member_id: string; donation_date: string; amount: number | null }>) {
+      huellas.add(`${d.member_id}|${d.donation_date}|${d.amount ?? ''}`)
+    }
+  }
+  return huellas
+}
+
+/** DON-1 · Inserta las donaciones YA confirmadas y registra el lote. */
+export async function importarDonacionesConfirmadas(
+  filename: string,
+  filas: Array<{ member_id: string; donation_date: string; amount: number | null; currency: string; note: string | null }>,
+  meta: { total_rows: number; duplicates: number; unidentified: number; created_by: string },
+): Promise<{ batchId: string; insertadas: number }> {
+  const supabase = createAdminClient()
+  // SOLO INSERT (regla de imports): nunca se pisa una donación existente.
+  if (filas.length) {
+    const { error } = await supabase.from('donations')
+      .insert(filas.map(f => ({ ...f, is_identified: true, source_file: filename, created_by: meta.created_by })) as never)
+    if (error) throw error
+  }
+  const { data, error } = await supabase.from('import_batches').insert({
+    filename, total_rows: meta.total_rows, identified: filas.length,
+    unidentified: meta.unidentified, duplicates: meta.duplicates,
+    status: 'completed', imported_by: meta.created_by,
+  } as never).select('id').single()
+  if (error) throw error
+  return { batchId: (data as { id: string }).id, insertadas: filas.length }
+}
