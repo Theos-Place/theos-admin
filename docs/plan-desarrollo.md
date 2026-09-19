@@ -87,13 +87,46 @@ su propio proyecto de Supabase y su propio deploy de Vercel quita ese riesgo.
 Depende de resolver antes las env de Supabase en los deploys Preview (Bloque E),
 porque es el mismo problema.
 
-### [ ] FIN-4 · Planes de pago para matrículas e inscripciones
+### [x] FIN-4 · Planes de pago para matrículas e inscripciones — YA EXISTE (verificado 2026-09-18)
 
-Poder partir el monto de una matrícula (o de la inscripción a un evento) en
-varios pagos, con sus fechas y su saldo. Necesita definición de producto: si el
-plan bloquea o no la matrícula, qué pasa si alguien deja de pagar, y cómo se ve
-en la ficha y en los reportes de finanzas. Convive con la regla de 2026-08-04
-(la matrícula es efectiva de inmediato, `pendiente_de_pago` ya no se escribe).
+Los arreglos en tractos ya están implementados (`lib/finance/installments.ts`,
+`queries/payment-plans.ts`): reparto exacto por moneda, tracto vencido bloquea
+matrícula/inscripción, cancelar ≠ condonar. Lo que falta es la frecuencia
+quincenal → FIN-8.
+
+### [ ] FIN-8 · Arreglos de pago: frecuencia mensual o quincenal (pedido 2026-09-18)
+
+Hoy los tractos vencen solo mensual. Al crear el arreglo se debe poder elegir
+mensual o quincenal, y que los cobros/recordatorios corran sobre esas fechas.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Arreglos de pago (FIN-4): elegir frecuencia mensual o quincenal
+
+BASE EXISTENTE (no rehacer): lib/finance/installments.ts (splitAmount,
+monthlyDueDates, planInstallments, isOverdue) y queries/payment-plans.ts
+(createPaymentPlan). Los tractos son filas normales de payments — eso no cambia.
+
+CAMBIOS:
+1. installments.ts: nueva biweeklyDueDates(firstDue, count) — vencimientos cada 15 días
+   exactos a partir del primer vencimiento (firstDue, firstDue+15d, +30d…). Es la
+   interpretación simple y predecible de "quincenal"; NO amarrar a los días 15/30 del
+   mes salvo que finanzas lo pida distinto. planInstallments recibe
+   frequency: 'mensual' | 'quincenal' (default 'mensual' para no romper llamadores).
+2. payment_plans: columna frequency ('mensual'|'quincenal', default 'mensual' — las
+   existentes quedan mensuales sin migración de datos).
+3. createPaymentPlan y el endpoint POST /api/payments/[id]/payment-plan aceptan
+   frequency; validación con zod si el endpoint ya la usa.
+4. UI del modal de crear arreglo: selector Mensual/Quincenal junto a "primer
+   vencimiento" y "número de tractos", con vista previa de las fechas generadas antes
+   de confirmar (si el modal ya muestra los tractos, solo recalcula con la frecuencia).
+5. Todo lo que consume due_date (isOverdue, bloqueos, cron payment-reminders,
+   vista de finanzas) ya lee fechas — verificar que NINGUNO asuma "un tracto por mes"
+   (buscar usos de monthlyDueDates y lógica de meses); ajustar el que lo asuma.
+Tests: biweeklyDueDates (cruce de mes y de año, 15 tractos), planInstallments con las
+dos frecuencias, endpoint rechaza frecuencia inválida. tsc/lint/vitest al cierre.
+```
 
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
@@ -1325,7 +1358,7 @@ ahora se crean donaciones a mano y la pregunta "¿quién registró esto?" dejó 
 responderse sola con el nombre del archivo.
 
 
-### [ ] SRV-5 · Marcar encargados de comité desde la lista + rol automático (pedido 2026-09-18)
+### [x] SRV-5 · Marcar encargados de comité desde la lista + rol automático — HECHO 2026-09-18
 
 En el detalle de cada comité, un check en la lista de personas para marcarlas
 como encargado del comité (puede ser más de una), y que al marcarlo se le
@@ -1370,5 +1403,71 @@ ETAPA 3 — ROL AUTOMÁTICO:
 - Todo cambio queda en audit_log (quién nombró/quitó a quién).
 Tests: marcar asigna rol, desmarcar lo quita solo si no es encargado en otro lado ni
 manual, lider_comite no puede tocar el check (403 server-side). tsc/lint/vitest al cierre.
+```
+
+**Cierre 2026-09-18.** El diagnóstico cambió el ítem: el mecanismo ya existía.
+Había DOS fuentes — el puesto "Encargado…" (35 de 46 comités, ya otorgaba
+`lider_comite`, ya admitía varios) y `areas.leader_id` (13 comités, campo
+único). En 2 comités apuntaban a personas DISTINTAS (Ayuda Social,
+Contabilidad; verificado que no eran fichas duplicadas). Agregar un
+`is_encargado` nuevo, como decía el prompt, habría sido una tercera fuente.
+
+Por decisión del usuario la fuente única es EL PUESTO, y nadie perdió nada: los
+4 encargados que solo vivían en `leader_id` recibieron su puesto (Carolina Salas
+Amador, Melissa Acon Chaves, Sofia Valverde Mora y Camila Artavia Trejos; a las
+dos sedes hubo que crearles el puesto "Encargado Sede"). `lider_comite`
+automático pasó de 24 a 26. Verificado: 0 discrepancias y 0 personas que
+pierdan el permiso de pedir vacantes.
+
+`areas.leader_id` quedó fuera de uso — la columna sigue ahí pero no se lee ni se
+escribe. `getManageableCommitteeIds` y el aviso de solicitud de vacantes ahora
+salen del puesto, y el aviso le llega a TODOS los encargados, no a uno.
+
+Queda como dato operativo: **16 comités activos sin encargado marcado**, casi
+todos sedes cuyo único puesto "Encargado" es "Encargado Logística", que es
+operación y no la cabeza. La estrella existe justamente para que alguien los
+marque.
+
+### [ ] AYU-2 · Centro de ayuda: donaciones, puestos/comités/áreas y roles (pedido 2026-09-18)
+
+Tres tutoriales nuevos: importar donaciones (individual y por Excel), crear
+puestos de servicio/comités/áreas, y asignar o desvincular un rol.
+
+Prompt para Claude Code:
+
+```
+DOCS · Centro de ayuda: tres tutoriales nuevos en content/ayuda/
+
+Seguir el formato existente de content/ayuda/*.md (frontmatter con titulo, seccion, tipo,
+visibilidad por roles, orden). ANTES de escribir cada uno, leé el código real de la
+pantalla que documenta — los pasos deben reflejar la UI actual, no una supuesta. Lenguaje
+de Theos, tono simple, sin jerga.
+
+1. "Registrar donaciones" — visibilidad: finanzas, direccion.
+   Dos secciones: (a) UNA POR UNA con el botón "Agregar donación" (buscador por nombre o
+   cédula, fecha, monto optativo —explicar que se puede dejar vacío si el reporte del
+   banco no ha llegado—, nota); (b) POR EXCEL con la pantalla de importación (subir el
+   archivo tal como llega, revisar los matches, resolver los dudosos con el buscador,
+   confirmar; qué pasa con duplicados y con los que quedan sin match).
+   OJO: la parte (b) solo si DON-1 ya está implementado; si no, dejar el artículo con la
+   parte (a) y un TODO comentado para la (b).
+
+2. "Crear áreas, comités y puestos de servicio" — visibilidad: los roles que administran
+   el módulo servidores (verificar en el código cuáles son).
+   El orden jerárquico real (área → comité → puesto), dónde se crea cada cosa, y cómo
+   asignar personas a un puesto (incluyendo varios puestos a la misma persona, y
+   reactivar a un servidor inactivo si eso ya está implementado). Si SRV-5 (estrella de
+   encargado) ya corrió, incluir cómo nombrar encargados.
+
+3. "Asignar y quitar roles a una persona" — visibilidad: admin, direccion (quien pueda
+   gestionar roles según el código).
+   Dónde se asignan, qué implica cada familia de roles (referenciar la infografía "Quién
+   ve qué" si existe), cómo quitar un rol, y la diferencia entre un rol asignado a mano y
+   uno automático por puesto (que la sync puede volver a poner — explicar qué hacer en
+   cada caso).
+
+Verificar que cada artículo renderice bien en /ayuda y que la visibilidad por roles
+funcione (un rol sin acceso no lo ve en el índice). Sin capturas por ahora — texto claro
+paso a paso; las capturas se agregan después como en los demás tutoriales.
 ```
 

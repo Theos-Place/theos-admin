@@ -11,12 +11,14 @@ const committeeUpdateSchema = z
     name: z.string().trim().min(1),
     description: z.string().trim().nullish(),
     parent_id: z.string().trim().min(1).nullish(),
-    leader_id: z.string().trim().min(1).nullish(),
+    // leader_id NO se acepta (SRV-5): el encargado se marca con la estrella en
+    // la lista de personas, que es lo que le da el puesto y el rol. `.strict()`
+    // hace que mandarlo devuelva 400 en vez de escribir un dato en desuso.
   })
   .strict()
   .partial()
 
-// PUT: edita el comité (nombre, líder, capacidad ideal).
+// PUT: edita el comité (nombre y área padre).
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

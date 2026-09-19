@@ -3,6 +3,13 @@ import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 import { todayCR } from '@/lib/format'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
+import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
+import { esComiteDeSede } from '@/lib/servers/position-roles'
+
+/** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
+function one<T>(v: unknown): T | null {
+  return (Array.isArray(v) ? (v[0] ?? null) : (v ?? null)) as T | null
+}
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -14,8 +21,6 @@ export type DbCommittee = {
   ideal_capacity: number | null
   parent_id: string | null
   parent: { id: string; name: string } | null
-  leader: { first_name: string; last_name: string } | null
-  leader_id: string | null
   positions: Array<{
     id: string
     title: string
@@ -122,8 +127,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
   const { data, error } = await supabase
     .from('areas')
     .select(`
-      id, name, ideal_capacity, leader_id, parent_id,
-      leader:members!areas_leader_id_fkey(first_name, last_name),
+      id, name, ideal_capacity, parent_id,
       positions:service_positions!service_positions_area_id_fkey(
         id, title, description, functions, profile, skills, study_requirement,
         volunteers(
@@ -151,26 +155,34 @@ export async function getCommittees(): Promise<DbCommittee[]> {
   })) as DbCommittee[]
 }
 
-/** Comités (area_type='committee') que un miembro puede gestionar para solicitar
- *  vacantes/puestos: los que coordina directamente (areas.leader_id = memberId) y
- *  los que cuelgan de un ÁREA que lidera (parent_id ∈ áreas con leader_id = memberId).
- *  Los roles administrativos globales (admin/dirección/encargado_staff/coord.
- *  servidores) no se limitan por acá — eso se decide en el route. */
+/**
+ * Comités que un miembro puede gestionar para pedir vacantes/puestos: aquellos
+ * donde ocupa un puesto de ENCARGADO (ver `@/lib/servers/encargados`).
+ *
+ * Antes esto miraba `areas.leader_id`, un campo único que solo tenían 13 de 46
+ * comités y que en 2 apuntaba a otra persona distinta de la del puesto (SRV-5,
+ * 2026-09-18). Los roles administrativos globales (admin/dirección/
+ * encargado_staff/coord. servidores) no se limitan por acá — eso se decide en
+ * el route.
+ */
 export async function getManageableCommitteeIds(memberId: string): Promise<string[]> {
   const supabase = createAdminClient()
-  const { data: led, error } = await supabase
-    .from('areas').select('id, area_type').eq('leader_id', memberId)
+  const { data, error } = await supabase
+    .from('volunteers')
+    .select('position:service_positions!inner(title, is_active, area:areas!service_positions_area_id_fkey(id, area_type, is_active))')
+    .eq('member_id', memberId)
+    .eq('status', 'active')
   if (error) throw error
-  const rows = (led ?? []) as Array<{ id: string; area_type: 'area' | 'committee' }>
-  const direct = rows.filter(r => r.area_type === 'committee').map(r => r.id)
-  const ledAreas = rows.filter(r => r.area_type === 'area').map(r => r.id)
-  let children: string[] = []
-  if (ledAreas.length) {
-    const { data: kids } = await supabase
-      .from('areas').select('id').eq('area_type', 'committee').in('parent_id', ledAreas)
-    children = ((kids ?? []) as Array<{ id: string }>).map(r => r.id)
+  const ids = new Set<string>()
+  for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
+    const pos = one<{ title: string; is_active: boolean | null; area: unknown }>(fila.position)
+    if (!pos || pos.is_active === false) continue
+    if (!esPuestoDeEncargado(pos.title)) continue
+    const area = one<{ id: string; area_type: string; is_active: boolean | null }>(pos.area)
+    if (!area || area.area_type !== 'committee' || area.is_active === false) continue
+    ids.add(area.id)
   }
-  return [...new Set([...direct, ...children])]
+  return [...ids]
 }
 
 /** Comité (area_id) de una vacante — para verificar permiso de gestión. */
@@ -576,9 +588,11 @@ export async function deleteGoal(id: string): Promise<void> {
 }
 
 // Comité (area). parent_id = área padre; leader_id = encargado del comité.
+/** El encargado NO se edita acá: se marca con la estrella en la lista de
+ *  personas del comité (SRV-5). `areas.leader_id` quedó fuera de uso. */
 export async function updateCommittee(
   id: string,
-  patch: { name?: string; description?: string | null; leader_id?: string | null; parent_id?: string | null },
+  patch: { name?: string; description?: string | null; parent_id?: string | null },
 ): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').update(patch).eq('id', id)
@@ -907,6 +921,111 @@ export async function assignVolunteer(positionId: string, memberId: string, acto
   const { syncRolesOnAssign } = await import('./position-role-sync')
   await syncRolesOnAssign(memberId, positionId, actorUserId)
   await sincronizarDirigente(memberId, positionId, true)
+}
+
+/** member_ids de quienes están a cargo de un comité (derivado de los puestos). */
+export async function getEncargadosDeComite(committeeId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('service_positions')
+    .select('title, volunteers(member_id, status)')
+    .eq('area_id', committeeId)
+    .eq('is_active', true)
+  if (error) throw error
+  const ids = new Set<string>()
+  for (const p of (data ?? []) as Array<Record<string, unknown>>) {
+    if (!esPuestoDeEncargado(p.title as string)) continue
+    for (const v of (p.volunteers ?? []) as Array<{ member_id: string; status: string }>) {
+      if (v.status === 'active') ids.add(v.member_id)
+    }
+  }
+  return [...ids]
+}
+
+/** No se le puede quitar la estrella a alguien cuyo ÚNICO puesto en el comité
+ *  es el de encargado: eso lo dejaría fuera del comité sin decirlo. */
+export const ENCARGADO_UNICO_PUESTO = 'ENCARGADO_UNICO_PUESTO'
+
+async function puestosDelComite(committeeId: string, memberId: string) {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('service_positions')
+    .select('id, title, created_at, volunteers(member_id, status)')
+    .eq('area_id', committeeId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return ((data ?? []) as Array<Record<string, unknown>>).map(p => {
+    const activos = ((p.volunteers ?? []) as Array<{ member_id: string; status: string }>)
+      .filter(v => v.status === 'active')
+    return {
+      id: p.id as string,
+      title: p.title as string,
+      ocupa: activos.some(v => v.member_id === memberId),
+      ocupantes: activos.length,
+    }
+  })
+}
+
+/**
+ * Marca o desmarca a alguien como encargado del comité (SRV-5).
+ *
+ * El dato es el PUESTO, así que marcar = sumarle el puesto de encargado y
+ * desmarcar = quitárselo. Pasa por assignVolunteer/removeVolunteer a propósito:
+ * ahí ya vive la sincronización del rol `lider_comite` y la del Comité
+ * Dirigentes, y un segundo camino se habría desincronizado con el primero.
+ *
+ * La decisión de QUÉ hacer vive en `planDeEncargado` (módulo puro, con tests);
+ * acá solo se ejecuta.
+ */
+export async function setEncargadoDeComite(
+  committeeId: string,
+  memberId: string,
+  encargado: boolean,
+  actorUserId?: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const puestos = await puestosDelComite(committeeId, memberId)
+  const plan = planDeEncargado(puestos, encargado)
+
+  if (plan.accion === 'nada') return
+  if (plan.accion === 'bloqueado') throw new Error(ENCARGADO_UNICO_PUESTO)
+  if (plan.accion === 'quitar') {
+    for (const id of plan.puestos) await removeVolunteer(id, memberId, actorUserId)
+    return
+  }
+
+  let puestoId: string
+  let ocupantesPrevios = 0
+  if (plan.accion === 'crear_y_sumar') {
+    const { data: area } = await supabase
+      .from('areas').select('name, parent_id').eq('id', committeeId).maybeSingle()
+    const a = area as { name: string; parent_id: string | null } | null
+    let padre: string | null = null
+    if (a?.parent_id) {
+      const { data: p } = await supabase.from('areas').select('name').eq('id', a.parent_id).maybeSingle()
+      padre = (p as { name: string } | null)?.name ?? null
+    }
+    const esSede = esComiteDeSede({ title: '', areaName: a?.name ?? '', areaType: 'committee', parentAreaName: padre })
+    const { data: creado, error } = await supabase
+      .from('service_positions')
+      .insert({ area_id: committeeId, title: esSede ? 'Encargado Sede' : 'Encargado Comité', quantity: 1, max_volunteers: 1, is_active: true })
+      .select('id').single()
+    if (error) throw error
+    puestoId = (creado as { id: string }).id
+  } else {
+    puestoId = plan.puestoId
+    ocupantesPrevios = puestos.find(p => p.id === puestoId)?.ocupantes ?? 0
+  }
+
+  await assignVolunteer(puestoId, memberId, actorUserId)
+  // Que el cupo no quede por debajo de la gente que realmente hay: un comité
+  // puede tener varios encargados (Matrimonios tiene 4).
+  const ocupantes = ocupantesPrevios + 1
+  await supabase.from('service_positions')
+    .update({ max_volunteers: ocupantes })
+    .eq('id', puestoId)
+    .lt('max_volunteers', ocupantes)
 }
 
 export async function removeVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {

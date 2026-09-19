@@ -7,6 +7,7 @@ import type {
   CommitteeData, CommitteeServer, Vacancy, Application, CommitteeGoal,
 } from '@/types/server'
 import { getInitials } from '@/lib/format'
+import { encargadosDelComite } from './encargados'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   return m ? `${m.first_name} ${m.last_name}`.trim() : ''
@@ -14,7 +15,6 @@ function fullName(m: { first_name: string; last_name: string } | null): string {
 
 /** Convierte un comité. `openVacancies` se pasa aparte (derivado de vacancies). */
 export function toDomainCommittee(db: DbCommittee, openVacancies = 0): CommitteeData {
-  const leaderName = fullName(db.leader)
   const members: CommitteeServer[] = db.positions.flatMap((pos) =>
     pos.volunteers.map((v) => {
       const name = fullName(v.member)
@@ -40,11 +40,14 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
     // como area_code (coincide con el id de área que expone useOrg para agrupar/filtrar).
     area: db.parent?.name ?? '',
     area_code: db.parent_id ?? db.parent?.id ?? '',
-    leader: {
-      member_id: db.leader_id ?? '',
-      name: leaderName,
-      initials: getInitials(leaderName),
-    },
+    // Los encargados SE DERIVAN de los puestos (SRV-5): no hay un campo aparte
+    // que pueda decir otra cosa. `areas.leader_id` quedó fuera de uso — en 2 de
+    // los 13 comités que lo tenían apuntaba a una persona distinta de la del
+    // puesto, y nadie sabía cuál de los dos mandaba.
+    encargados: encargadosDelComite(members.map(m => ({ title: m.position, status: m.status, member_id: m.member_id }))).map(id => {
+      const m = members.find(x => x.member_id === id)
+      return { member_id: id, name: m?.name ?? '', initials: m ? m.initials : '' }
+    }),
     ideal_capacity: db.ideal_capacity ?? 0,
     members,
     positions: db.positions.map((p) => ({

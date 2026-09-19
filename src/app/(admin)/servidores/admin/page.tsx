@@ -25,6 +25,7 @@ import { miembrosDelPuesto, conteoDelPuesto, tituloDelPuesto, filasParaExport, n
 import { leerSeleccion, escribirSeleccion, alElegir, type SeleccionAdmin } from '@/lib/servers/deep-link'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { formatDateNumeric } from '@/lib/format'
+import { nombresDeEncargados } from '@/lib/servers/encargados'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
@@ -447,7 +448,7 @@ export default function ServidoresAdminPage() {
   const ctxExport = useMemo(() => ({
     comite: selectedComm?.name ?? '',
     area: selectedArea?.name ?? '',
-    lider: comiteDeServidores?.leader.name ?? '',
+    lider: nombresDeEncargados(comiteDeServidores?.encargados ?? []),
   }), [selectedComm, selectedArea, comiteDeServidores])
   // Lo que se ve es lo que se baja: la misma lista alimenta la tabla y el
   // archivo (antecedente de committee-filter, donde eran dos y se separaron).

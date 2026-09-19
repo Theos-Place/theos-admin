@@ -40,7 +40,9 @@ export type CommitteeData = {
   name: string
   area: string
   area_code: string
-  leader: CommitteeLeader
+  /** Quienes están a cargo. Derivado de los puestos "Encargado…" (SRV-5);
+   *  pueden ser varios — Comité Matrimonios tiene 4. */
+  encargados: CommitteeLeader[]
   ideal_capacity: number
   members: CommitteeServer[]
   positions?: CommitteePosition[]

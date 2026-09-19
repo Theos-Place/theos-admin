@@ -9,6 +9,7 @@ import { SortableHeader } from '@/components/shared/SortableHeader'
 import { type SortDirection } from '@/hooks/useSortableTable'
 import { agruparPorPersona } from '@/lib/servers/committee-filter'
 import { formatDate } from '@/lib/format'
+import { EstrellaDeEncargado } from './EstrellaDeEncargado'
 
 type StatusFilter = 'active' | 'inactive' | 'all'
 
@@ -47,6 +48,13 @@ type Props = {
   onDisconnect: (member: CommitteeServer) => void
   onAddServerClick: () => void
   toolbarExtra?: React.ReactNode
+  /** member_ids a cargo del comité — la estrella (SRV-5). */
+  encargados: readonly string[]
+  /** Nombrar encargados es de staff/dirección, no del propio lider_comite. */
+  puedeMarcarEncargado: boolean
+  /** member_id con el guardado en curso, para deshabilitar solo esa estrella. */
+  marcandoEncargado: string | null
+  onToggleEncargado: (memberId: string, encargado: boolean) => void
 }
 
 export function MembersTab({
@@ -67,6 +75,10 @@ export function MembersTab({
   onDisconnect,
   onAddServerClick,
   toolbarExtra,
+  encargados,
+  puedeMarcarEncargado,
+  marcandoEncargado,
+  onToggleEncargado,
 }: Props) {
   // Se agrupa DESPUÉS de ordenar: agruparPorPersona respeta el orden de entrada,
   // así que el orden que eligió quien mira la tabla se conserva.
@@ -163,6 +175,13 @@ export function MembersTab({
                       <span className="text-sm font-medium text-navy font-body">
                         {m.name}
                       </span>
+                      <EstrellaDeEncargado
+                        nombre={g.name}
+                        encargado={encargados.includes(g.member_id)}
+                        puedeEditar={puedeMarcarEncargado}
+                        guardando={marcandoEncargado === g.member_id}
+                        onToggle={() => onToggleEncargado(g.member_id, !encargados.includes(g.member_id))}
+                      />
                     </div>
                   </td>
                   {/* TODOS sus puestos. Antes cada puesto era una fila y la
@@ -243,7 +262,16 @@ export function MembersTab({
                 <span className="text-[11px] font-bold text-white font-display">{m.initials}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-navy font-body">{m.name}</p>
+                <p className="flex items-center gap-1.5 truncate text-sm font-medium text-navy font-body">
+                  <span className="truncate">{m.name}</span>
+                  <EstrellaDeEncargado
+                    nombre={g.name}
+                    encargado={encargados.includes(g.member_id)}
+                    puedeEditar={puedeMarcarEncargado}
+                    guardando={marcandoEncargado === g.member_id}
+                    onToggle={() => onToggleEncargado(g.member_id, !encargados.includes(g.member_id))}
+                  />
+                </p>
                 <p className="truncate text-[13px] text-navy-light/80 font-body">
                   {g.puestos.map(p2 => p2.position).join(' · ')} · {calcularAntiguedad(m.start_date)}
                 </p>

@@ -35,7 +35,7 @@ function norm(s: string): string {
  *  recién creado en Sede Pedregal Jueves, no daba check-in aunque
  *  "Coordinador Información" sí. Comparar sin artículos cierra esa clase
  *  entera de error en vez de tapar el caso. */
-function normSinArticulos(s: string): string {
+export function normSinArticulos(s: string): string {
   return norm(s).replace(/\b(de|del|la|el|los|las)\b/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
@@ -78,7 +78,7 @@ function esComiteYouth(areaName: string): boolean {
   return palabras.has('comite') && palabras.has('youth')
 }
 
-function esComiteDeSede(ctx: PositionContext): boolean {
+export function esComiteDeSede(ctx: PositionContext): boolean {
   if (ctx.areaType !== 'committee') return false
   return norm(ctx.parentAreaName ?? '') === 'sedes' || norm(ctx.areaName).startsWith('sede ')
 }

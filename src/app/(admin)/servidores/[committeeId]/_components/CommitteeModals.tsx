@@ -2,7 +2,6 @@
 
 import { Search, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
-import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import type { CommitteeServer, CommitteePosition } from '@/types/server'
 
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
@@ -127,9 +126,6 @@ export type CommitteeFormState = {
   name: string
   /** Área padre (areas.parent_id). */
   parent_id: string
-  /** Encargado del comité (areas.leader_id). */
-  leader_id: string
-  leader_name: string
 }
 
 type EditCommitteeModalProps = {
@@ -157,27 +153,10 @@ export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel
               {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
-          <div className="space-y-1">
-            <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Encargado de comité</span>
-            {form.leader_id ? (
-              <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2">
-                <span className="flex-1 text-sm text-navy font-body">{form.leader_name || 'Encargado asignado'}</span>
-                <button
-                  type="button"
-                  onClick={() => onFormChange(p => ({ ...p, leader_id: '', leader_name: '' }))}
-                  className="text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
-                >
-                  Quitar
-                </button>
-              </div>
-            ) : (
-              <MemberCombobox
-                dropdown
-                placeholder="Buscar miembro por nombre o cédula…"
-                onSelect={m => onFormChange(p => ({ ...p, leader_id: m.id, leader_name: `${m.first_name} ${m.last_name}`.trim() }))}
-              />
-            )}
-          </div>
+          {/* El encargado NO se elige acá (SRV-5): se marca con la estrella
+              en la lista de personas del comité, que es la misma acción que le
+              da el puesto y el rol. Un selector aparte era la segunda fuente
+              que terminó diciendo otra cosa que el puesto en 2 comités. */}
         </div>
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>

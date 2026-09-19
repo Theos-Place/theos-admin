@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useToast } from '@/components/shared/Toast'
+import { useAuth } from '@/hooks/useAuth'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
 import { esComiteDirigentes } from '@/lib/dirigentes'
@@ -21,6 +23,7 @@ import { GoalsTab } from './_components/GoalsTab'
 import { seOcultaDelBuscador, candidaturaEnComite, puestosQueSePuedenSumar } from '@/lib/servers/reintegro'
 import { Modal } from '@/components/shared/Modal'
 import { conteoDelComite, textoDelConteo } from '@/lib/servers/committee-filter'
+import { nombresDeEncargados } from '@/lib/servers/encargados'
 import {
   DisconnectModal,
   EditCommitteeModal,
@@ -37,6 +40,11 @@ export default function CommitteeDetailPage() {
   const { committeeId } = useParams<{ committeeId: string }>()
   const router = useRouter()
   const toast = useToast()
+  const { user } = useAuth()
+  // Nombrar encargados es de staff/dirección: un lider_comite puede asignar
+  // gente a puestos, pero no puede nombrarse a sí mismo ni nombrar a otro.
+  const puedeMarcarEncargado = (user?.roles ?? []).some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+  const [marcandoEncargado, setMarcandoEncargado] = useState<string | null>(null)
   const { committees, vacancies, goalsByCommittee, refetch } = useServers('committees', 'vacancies', 'goals')
 
   const committee = useMemo(
@@ -65,15 +73,13 @@ export default function CommitteeDetailPage() {
   // Edit committee modal
   const [editCommitteeOpen, setEditCommitteeOpen] = useState(false)
   const [committeeForm, setCommitteeForm] = useState<CommitteeFormState>({
-    name: '', parent_id: '', leader_id: '', leader_name: '',
+    name: '', parent_id: '',
   })
   useEffect(() => {
     if (!committee) return
     setCommitteeForm({
       name: committee.name,
       parent_id: committee.area_code, // area_code = parent_id en el dominio
-      leader_id: committee.leader.member_id ?? '',
-      leader_name: committee.leader.name ?? '',
     })
   }, [committee])
   // Áreas reales (tipo area) para el dropdown de área padre.
@@ -147,12 +153,36 @@ export default function CommitteeDetailPage() {
   // inactivos, que el filtro por defecto esconde. Quien exporta espera bajar lo
   // que está viendo, no la tabla entera — y sin darse cuenta manda una lista con
   // gente que ya no sirve ahí.
+  /** La estrella: marca o desmarca encargado del comité (SRV-5). */
+  async function handleToggleEncargado(memberId: string, encargado: boolean) {
+    if (marcandoEncargado) return
+    setMarcandoEncargado(memberId)
+    try {
+      const res = await fetch(`/api/servers/committees/${committeeId}/encargados`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, encargado }),
+      })
+      if (!res.ok) {
+        // El mensaje del servidor explica el caso (ej. es su único puesto);
+        // tragárselo y poner un genérico deja a la persona sin saber qué hacer.
+        const cuerpo = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(cuerpo?.error ?? 'No se pudo cambiar el encargado. Intentá de nuevo.')
+      }
+      await refetch()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo cambiar el encargado.', 'error')
+    } finally {
+      setMarcandoEncargado(null)
+    }
+  }
+
   const flatServers = useMemo<FlatServer[]>(
     () => displayedMembers.map(m => ({
       member_id: m.member_id, name: m.name, initials: m.initials,
       position: m.position, start_date: m.start_date, status: m.status,
       committee: committee?.name ?? '', area: committee?.area ?? '',
-      leader_name: committee?.leader.name ?? '',
+      leader_name: nombresDeEncargados(committee?.encargados ?? []),
       email: m.email ?? null, phone: m.phone ?? null, birth_date: m.birth_date ?? null,
     })),
     [displayedMembers, committee],
@@ -248,7 +278,7 @@ export default function CommitteeDetailPage() {
   }
 
   async function updateCommitteeInMock() {
-    // Reflejo inmediato del nombre; el área padre y el encargado se ven al refetch.
+    // Reflejo inmediato del nombre; el área padre se ve al refetch.
     setCommitteeOverride({ name: committeeForm.name })
     setEditCommitteeOpen(false)
     try {
@@ -258,7 +288,6 @@ export default function CommitteeDetailPage() {
         body: JSON.stringify({
           name: committeeForm.name,
           parent_id: committeeForm.parent_id || null,
-          leader_id: committeeForm.leader_id || null,
         }),
       })
       if (!res.ok) throw new Error('update failed')
@@ -445,8 +474,6 @@ export default function CommitteeDetailPage() {
           setCommitteeForm({
             name: committeeOverride.name ?? committee.name,
             parent_id: committee.area_code,
-            leader_id: committee.leader.member_id ?? '',
-            leader_name: committee.leader.name ?? '',
           })
           setEditCommitteeOpen(true)
         }}
@@ -475,6 +502,10 @@ export default function CommitteeDetailPage() {
         {/* Tab: Miembros */}
         {tab === 'miembros' && (
           <MembersTab
+            encargados={committee.encargados.map(e => e.member_id)}
+            puedeMarcarEncargado={puedeMarcarEncargado}
+            marcandoEncargado={marcandoEncargado}
+            onToggleEncargado={handleToggleEncargado}
             sortedMembers={sortedMembers}
             memberSortKey={memberSortKey}
             memberSortDir={memberSortDir}

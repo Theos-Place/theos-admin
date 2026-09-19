@@ -24,7 +24,7 @@ export function CommitteeHeader({
   onAddServerClick,
   onBack,
 }: Props) {
-  const hasLeader = !!committee.leader.member_id
+  const encargados = committee.encargados
 
   return (
     <div className="ph">
@@ -40,27 +40,27 @@ export function CommitteeHeader({
           <div className="psub">
             {committeeOverride.area ?? committee.area} · {conteoTexto ?? `${activeCount} activos`}
           </div>
-          {/* Encargado del comité (areas.leader_id) */}
+          {/* Derivado de los puestos "Encargado…" (SRV-5). Pueden ser
+              varios: se marcan con la estrella en la lista de personas. */}
           <div className="mt-3">
             <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1.5">
-              Encargado
+              {encargados.length > 1 ? 'Encargadas' : 'Encargado'}
             </p>
-            {hasLeader ? (
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
-                  <span className="text-[11px] font-bold text-white font-display">
-                    {committee.leader.initials}
-                  </span>
-                </div>
-                <span className="text-[13px] text-[rgba(41,54,92,0.7)] font-body">
-                  {committee.leader.name}
-                </span>
-                <Link
-                  href={`/miembros/${committee.leader.member_id}`}
-                  className="text-[13px] text-coral hover:underline font-body"
-                >
-                  Ver perfil
-                </Link>
+            {encargados.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                {encargados.map(e => (
+                  <div key={e.member_id} className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-navy flex items-center justify-center shrink-0">
+                      <span className="text-[11px] font-bold text-white font-display">{e.initials}</span>
+                    </div>
+                    <Link
+                      href={`/miembros/${e.member_id}`}
+                      className="text-[13px] text-[rgba(41,54,92,0.7)] hover:text-coral hover:underline font-body"
+                    >
+                      {e.name}
+                    </Link>
+                  </div>
+                ))}
               </div>
             ) : (
               <span className="text-[13px] text-navy-light/80 italic font-body">

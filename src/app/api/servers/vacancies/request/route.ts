@@ -65,17 +65,23 @@ export async function POST(req: NextRequest) {
     try {
       const supabase = createAdminClient()
       const { data: committee } = await supabase
-        .from('areas').select('name, leader_id').eq('id', committeeId).maybeSingle()
-      const com = committee as { name: string | null; leader_id: string | null } | null
+        .from('areas').select('name').eq('id', committeeId).maybeSingle()
+      const com = committee as { name: string | null } | null
       const committeeName = com?.name ?? 'tu comité'
+      // Les avisa a TODOS los encargados, no a uno solo: el comité puede tener
+      // varios (Matrimonios tiene 4) y antes `areas.leader_id` guardaba uno
+      // — cuando no coincidía con el del puesto, el aviso le llegaba a quien
+      // ya no estaba a cargo (SRV-5, 2026-09-18).
+      const { getEncargadosDeComite } = await import('@/lib/supabase/queries/servers')
+      const encargados = await getEncargadosDeComite(committeeId)
       const link = '/servidores/vacantes/solicitudes'
 
       const notifs: Array<{ recipient_member_id: string; type: string; title: string; body: string; link: string }> = []
 
-      // 1) Confirmación al líder del comité.
-      if (com?.leader_id) {
+      // 1) Confirmación a los encargados del comité.
+      for (const encargadoId of encargados) {
         notifs.push({
-          recipient_member_id: com.leader_id,
+          recipient_member_id: encargadoId,
           type: 'vacancy_request_sent',
           title: 'Solicitud de vacantes enviada',
           body: `${slots} vacante${slots !== 1 ? 's' : ''} solicitada${slots !== 1 ? 's' : ''} para ${committeeName}.`,

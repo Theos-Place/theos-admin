@@ -11,6 +11,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
 import { cn } from '@/lib/utils'
 import { Plus, Users, Briefcase, ClipboardList, AlertCircle } from 'lucide-react'
+import { nombresDeEncargados } from '@/lib/servers/encargados'
 
 function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onClick: () => void }) {
   const activeMembers = committee.members.filter(m => m.status === 'active')
@@ -37,15 +38,15 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
         )}
       </div>
 
-      {/* Leader */}
+      {/* Encargados: derivados de los puestos, pueden ser varios (SRV-5). */}
       <div className="flex items-center gap-2">
         <div className="h-6 w-6 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
           <span className="text-[11px] font-bold text-navy font-display">
-            {committee.leader.initials}
+            {committee.encargados[0]?.initials ?? '—'}
           </span>
         </div>
         <p className="text-[13px] text-navy-light/80 truncate font-body">
-          {committee.leader.name}
+          {nombresDeEncargados(committee.encargados) || 'Sin encargado'}
         </p>
       </div>
 
@@ -129,7 +130,7 @@ export default function ServidoresPage() {
         ...m,
         committee: c.name,
         area: c.area,
-        leader_name: c.leader.name,
+        leader_name: nombresDeEncargados(c.encargados),
         email: m.email ?? null,
         phone: m.phone ?? null,
         birth_date: m.birth_date ?? null,
