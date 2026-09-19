@@ -3,6 +3,7 @@ import type { DbMemberEnriched } from '@/lib/supabase/queries/members'
 import { toDomainMember } from '@/lib/members/adapter'
 import type { Member } from '@/types/member'
 import type { FilterCondition, ConditionGroup } from '@/types/filters'
+import { planDeCargaCompleta, TOPE_DE_CARGA_COMPLETA } from '@/lib/members/carga-completa'
 
 export type MemberSearchParams = {
   search?: string
@@ -19,7 +20,7 @@ export type MemberSearchParams = {
 
 const PAGE_SIZE = 50
 
-function buildQuery(params: MemberSearchParams, page: number): string {
+function buildQuery(params: MemberSearchParams, page: number, pageSize: number = PAGE_SIZE): string {
   const u = new URLSearchParams()
   u.set('is_active', 'true')
   if (params.search && params.search.trim().length >= 2) u.set('search', params.search.trim())
@@ -32,7 +33,7 @@ function buildQuery(params: MemberSearchParams, page: number): string {
     if (params.topLevelOps && Object.keys(params.topLevelOps).length) u.set('ops', JSON.stringify(params.topLevelOps))
   }
   u.set('page', String(page))
-  u.set('pageSize', String(PAGE_SIZE))
+  u.set('pageSize', String(pageSize))
   return u.toString()
 }
 
@@ -44,6 +45,9 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
   const [members, setMembers] = useState<Member[]>([])
   const [total, setTotal]     = useState(0)
   const [page, setPage]       = useState(1)
+  // Tamaño de la última tanda pedida. "Cargar todos" usa tandas grandes, y
+  // loadMore tiene que seguir con ESE tamaño o el offset se corre.
+  const [tamano, setTamano]   = useState(PAGE_SIZE)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
 
@@ -52,7 +56,7 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
 
   // Primera página: corre cuando cambia el query o el enabled.
   useEffect(() => {
-    if (!enabled) { setMembers([]); setTotal(0); setPage(1); setError(null); setLoading(false); return }
+    if (!enabled) { setMembers([]); setTotal(0); setPage(1); setTamano(PAGE_SIZE); setError(null); setLoading(false); return }
     let cancelled = false
     setLoading(true); setError(null)
     fetch(`/api/members?${key}`)
@@ -68,6 +72,7 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
         setMembers((d.members ?? []).map(toDomainMember))
         setTotal(d.total ?? 0)
         setPage(1)
+        setTamano(PAGE_SIZE)
       })
       .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Error desconocido') })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -78,7 +83,7 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
     const next = page + 1
     setLoading(true)
     try {
-      const res = await fetch(`/api/members?${buildQuery(params, next)}`)
+      const res = await fetch(`/api/members?${buildQuery(params, next, tamano)}`)
       if (!res.ok) throw new Error('Error cargando más miembros')
       const d = (await res.json()) as { members: DbMemberEnriched[]; total: number }
       setMembers(prev => [...prev, ...(d.members ?? []).map(toDomainMember)])
@@ -89,9 +94,44 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
     } finally {
       setLoading(false)
     }
-  }, [page, params])
+  }, [page, params, tamano])
+
+  /**
+   * Trae de un solo golpe todos los resultados del filtro. Relee desde la
+   * página 1 en tandas grandes (ver `carga-completa.ts`) y solo reemplaza la
+   * lista si la lectura completa salió bien: a medio camino, dejar media
+   * tanda pegada sería peor que no haber hecho nada.
+   */
+  const cargarTodo = useCallback(async () => {
+    const plan = planDeCargaCompleta(members.length, total)
+    if (!plan.puede) return
+    setLoading(true); setError(null)
+    try {
+      const acumulado: Member[] = []
+      let ultimoTotal = total
+      for (const p of plan.paginas) {
+        const res = await fetch(`/api/members?${buildQuery(params, p, plan.tamano)}`)
+        if (!res.ok) throw new Error(`No se pudieron cargar todos los resultados (${res.status}).`)
+        const d = (await res.json()) as { members: DbMemberEnriched[]; total: number }
+        const lote = (d.members ?? []).map(toDomainMember)
+        acumulado.push(...lote)
+        ultimoTotal = d.total ?? ultimoTotal
+        if (lote.length < plan.tamano) break
+      }
+      setMembers(acumulado)
+      setTotal(ultimoTotal)
+      setPage(plan.paginas.length)
+      setTamano(plan.tamano)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }, [members.length, total, params])
 
   const hasMore = members.length < total
+  /** Se ofrece "cargar todos" solo si falta gente y el total cabe en la tabla. */
+  const puedeCargarTodo = hasMore && total <= TOPE_DE_CARGA_COMPLETA
 
-  return { members, total, loading, error, hasMore, loadMore, pageSize: PAGE_SIZE }
+  return { members, total, loading, error, hasMore, loadMore, cargarTodo, puedeCargarTodo, pageSize: PAGE_SIZE }
 }

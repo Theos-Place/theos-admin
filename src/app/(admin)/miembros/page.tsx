@@ -92,7 +92,7 @@ function MiembrosContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [searchActive, debouncedSearch, showDonors, showServers, showActive, showStudyAttendance, conditionsKey])
 
-  const { members: loadedMembers, total: resultTotal, loading, error, hasMore, loadMore } = useMembers(searchParams, shouldFetch)
+  const { members: loadedMembers, total: resultTotal, loading, error, hasMore, loadMore, cargarTodo, puedeCargarTodo } = useMembers(searchParams, shouldFetch)
 
   // Guardar lista modal
   const [saveListOpen,    setSaveListOpen]    = useState(false)
@@ -468,7 +468,7 @@ function MiembrosContent() {
         >
           <span className="text-[13px] font-semibold text-navy font-body">
             {allFilteredSelected
-              ? `${displayMembers.length.toLocaleString('es-CR')} miembros seleccionados (todos los resultados)`
+              ? `${displayMembers.length.toLocaleString('es-CR')} miembros seleccionados (${hasMore ? 'los cargados' : 'todos los resultados'})`
               : `${selectedIds.size} miembro${selectedIds.size !== 1 ? 's' : ''} seleccionado${selectedIds.size !== 1 ? 's' : ''}`
             }
           </span>
@@ -478,7 +478,9 @@ function MiembrosContent() {
               onClick={() => setSelectedIds(new Set(displayMembers.map(m => m.id)))}
               className="text-[13px] font-semibold underline transition-colors text-[var(--coral,#D63E3D)] cursor-pointer font-body bg-transparent border-0"
             >
-              Seleccionar los {displayMembers.length.toLocaleString('es-CR')} resultados filtrados
+              {hasMore
+                ? `Seleccionar los ${displayMembers.length.toLocaleString('es-CR')} cargados`
+                : `Seleccionar los ${displayMembers.length.toLocaleString('es-CR')} resultados filtrados`}
             </button>
           )}
 
@@ -744,13 +746,32 @@ function MiembrosContent() {
               <strong className="text-navy">{resultTotal.toLocaleString('es-CR')}</strong> resultados
             </span>
             {hasMore && (
-              <button
-                onClick={() => loadMore()}
-                disabled={loading}
-                className="flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
-              >
-                {loading ? 'Cargando…' : 'Cargar 50 más'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => loadMore()}
+                  disabled={loading}
+                  className="flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                >
+                  {loading ? 'Cargando…' : 'Cargar 50 más'}
+                </button>
+                {/* Con 300 resultados, ir de 50 en 50 son seis clics. Arriba
+                    del tope no se ofrece: la tabla no virtualiza y para eso
+                    está Exportar. */}
+                {puedeCargarTodo && (
+                  <button
+                    onClick={() => cargarTodo()}
+                    disabled={loading}
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--outline-variant)] px-3 py-1.5 text-xs text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+                  >
+                    {loading ? 'Cargando…' : `Cargar los ${resultTotal.toLocaleString('es-CR')}`}
+                  </button>
+                )}
+              </div>
+            )}
+            {hasMore && !puedeCargarTodo && (
+              <span className="w-full text-xs text-navy-light/80 font-body">
+                Son demasiados para mostrarlos todos en la tabla. Usá Exportar para bajar los {resultTotal.toLocaleString('es-CR')}.
+              </span>
             )}
           </div>
         )}
