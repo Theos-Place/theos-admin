@@ -5233,6 +5233,10 @@ export type Database = {
         Args: { p_member_ids: string[] }
         Returns: { member_id: string; first_checkin_at: string }[]
       }
+      ultimo_checkin_de_miembros: {
+        Args: { p_member_ids: string[] }
+        Returns: { member_id: string; checked_in_at: string; event_title: string | null }[]
+      }
       close_payment_ticket: {
         Args: { p_payment_id: string; p_reviewer?: string | null; p_reason?: string | null }
         Returns: boolean

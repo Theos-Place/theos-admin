@@ -237,7 +237,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
   const canServiceAdmin = userRoles.some(r => SERVICE_ADMIN.includes(r))
+  // SRV-4: "Mi comité" es del encargado y de nadie más. Ni staff ni dirección
+  // la ven: ellos tienen el padrón completo por otro lado, y esta pantalla es
+  // la vista de una persona sobre SU gente.
+  const esLiderDeComite = userRoles.includes('lider_comite') || userRoles.includes('admin')
   const servidoresSub: SubItem[] = [
+    ...(esLiderDeComite ? [{ href: '/servidores/mi-comite', label: 'Mi comité', icon: UsersRound }] : []),
     ...SERVIDORES_SUB,
     ...(canSeeServiceApplications(userRoles) ? [SERVIDORES_APPS_SUB] : []),
     ...(canServiceAdmin ? [{ href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }] : []),

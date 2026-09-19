@@ -1279,7 +1279,7 @@ Para que no vuelva a pasar: la regla quedó en AGENTS.md ("Funciones nuevas en
 código 1 si algo queda abierto. Hoy: 52 funciones, 0 abiertas, 0 sin
 search_path.
 
-### [ ] SRV-4 · Pantalla "Mi comité" para líderes/encargados (pedido 2026-09-18)
+### [x] SRV-4 · Pantalla "Mi comité" para líderes/encargados — HECHO 2026-09-18
 
 Pantalla nueva donde el líder o encargado de un comité ve SOLO a la gente de
 su comité, con su puesto y el estado de sus compromisos: asistencia
@@ -1322,6 +1322,29 @@ IMPLEMENTACIÓN:
 Tests: líder ve solo su comité (403 en otro), reglas de compromisos con fixtures (usa las
 funciones reutilizadas), export. tsc/lint/vitest al cierre.
 ```
+
+**Cierre 2026-09-18.** `/servidores/mi-comite`. El alcance sale de la estrella
+de SRV-5 (`getManageableCommitteeIds`), nunca de la UI: pedir el id de otro
+comité da 403 aunque exista. Solo `lider_comite` y admin — ni
+coordinador_servidores ni dirección, que ya tienen el padrón completo.
+
+Las cuatro reglas se REUTILIZAN, ninguna se reimplementó:
+asistencia = `getActiveAttendanceMemberIds()` (la misma de elegibilidad de
+estudios), donante = `members.is_donor` (el flag por trimestres de FIN-1),
+estudios y último check-in salen de consultas agregadas.
+
+Sin N+1: son 6 consultas fijas por comité, no importa el tamaño. El último
+check-in necesitaba un `DISTINCT ON` y por eso hay una RPC nueva
+(`ultimo_checkin_de_miembros`, migración `20260918230000`) cerrada a anon según
+la regla de AGENTS.md; el auditor de SEC-3 sigue en 0 abiertas.
+
+"Estudio" cumple con LLEVAR o con DAR: exigir las dos cosas marcaría en rojo a
+media planilla de dirigentes. El último check-in NO cuenta como incumplimiento
+— es un dato para mirar, y la asistencia ya se mide con su propia regla.
+
+Medido contra producción: Comité Youth 39 personas (24 con algo pendiente) en
+~1s; Matrimonios 22 y Ayuda Social 38. Contraste medido, no estimado: el ✗ va
+en `coral-deep` porque `coral` sobre la fila cebra daba 4.39 (ahora 5.16).
 
 ### [x] FAM-3 · Autorización de imagen + lista de menores asistentes — HECHO 2026-09-18
 
