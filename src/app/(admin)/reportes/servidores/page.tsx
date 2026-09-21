@@ -32,9 +32,12 @@ type Respuesta = {
   servidores: Servidor[]
 }
 
-const COLUMNAS: ColumnDef<Servidor>[] = [
+/** Las columnas dependen de los nombres de los comités, que llegan con los
+ *  datos: la fila trae ids y en pantalla hay que ver el nombre. */
+const columnas = (nombreDeComite: (id: string) => string): ColumnDef<Servidor>[] => [
   { key: 'nombre', label: 'Nombre', defaultVisible: true },
   { key: 'puestos', label: 'Puesto(s)', defaultVisible: true, exportValue: s => s.puestos.join(' · ') },
+  { key: 'comites', label: 'Comité(s)', defaultVisible: true, exportValue: s => s.comites.map(nombreDeComite).join(' · ') },
   { key: 'asistencia', label: 'Asistencia', defaultVisible: true, exportValue: s => (s.asistencia ? 'Cumple' : 'No cumple') },
   { key: 'estudio', label: 'Estudio', defaultVisible: true, exportValue: s => textoDeEstudio(s.estudio) || 'Ninguno' },
   { key: 'donante', label: 'Donante activo', defaultVisible: true, exportValue: s => (s.donante ? 'Sí' : 'No') },
@@ -88,6 +91,11 @@ export default function ReporteServidoresPage() {
   const total = useMemo(() => cumplimiento(servidores), [servidores])
   const pcts = useMemo(() => porcentajes(total), [total])
   const compartida = useMemo(() => hayGenteCompartida(servidores), [servidores])
+  const nombreDeComite = useMemo(() => {
+    const m = new Map((datos?.comites ?? []).map(c => [c.id, c.name]))
+    return (id: string) => m.get(id) ?? '—'
+  }, [datos])
+  const COLUMNAS = useMemo(() => columnas(nombreDeComite), [nombreDeComite])
 
   // En global el desglose es por ÁREA; dentro de un área, por comité.
   const filas = useMemo(() => {
@@ -264,7 +272,7 @@ export default function ReporteServidoresPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {['Persona', 'Asistencia', 'Estudio', 'Donante', 'Último check-in'].map(h => (
+                      {['Persona', 'Puesto', 'Comité', 'Asistencia', 'Estudio', 'Donante', 'Último check-in'].map(h => (
                         <th key={h} className="px-3 py-2 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -273,6 +281,10 @@ export default function ReporteServidoresPage() {
                     {detalle.map((s, i) => (
                       <tr key={s.member_id} className={cn(i % 2 === 1 ? 'bg-surface-low/40' : '')}>
                         <td className="px-3 py-2 text-[13px] text-navy font-body whitespace-nowrap">{s.nombre}</td>
+                        <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{s.puestos.join(' · ')}</td>
+                        <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">
+                          {s.comites.map(nombreDeComite).join(' · ')}
+                        </td>
                         <td className="px-3 py-2">
                           {s.asistencia
                             ? <Check size={15} strokeWidth={2.5} className="text-teal-deep" aria-label="Asistencia: cumple" />

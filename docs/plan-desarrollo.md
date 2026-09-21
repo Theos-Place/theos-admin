@@ -1944,7 +1944,7 @@ MEJORAS · /reportes/asistencia: seis ajustes sobre el detalle de semana y las l
 tsc/lint/vitest al cierre; actualizar los tests de REP-5 a las definiciones nuevas.
 ```
 
-### [ ] REP-9 · Reporte de estudios: página nueva (pedido 2026-09-21)
+### [x] REP-9 · Reporte de estudios: página nueva — HECHO 2026-09-21
 
 Página nueva en /reportes con el detalle de los estudios por año: por tipo de
 estudio, cantidad de estudiantes, dirigentes, personas nuevas por estudio,
@@ -1989,6 +1989,32 @@ contra los roles reales del módulo de reportes/estudios). Entrada en el índice
 Tests de las definiciones (estudiante del año que cruza años, des-duplicación, % finalizó).
 tsc/lint/vitest al cierre.
 ```
+
+**Cierre 2026-09-21.** `/reportes/estudios`, con selector de año y de tipo.
+
+**"Estudiante del año" es quien estuvo en un grupo EN CURSO ese año**, no en uno
+creado ese año: un grupo que arranca en noviembre y cierra en febrero tiene
+estudiantes en los dos, y contarlos solo en el primero escondería medio
+cuatrimestre.
+
+La edad se calcula **a la fecha de inicio del grupo** y no a hoy — quien llevó
+Nivel 1 en 2019 lo llevó con la edad que tenía entonces. Sin fecha de
+nacimiento queda fuera del promedio, nunca como 0.
+
+"Finalizó" cuenta solo `completed`: `reprobado` llegó al final pero no aprobó.
+**Y el año en curso se lee distinto**: los grupos que todavía no cierran están
+en el denominador, así que 2026 marca 54% contra el 97% de 2025. Eso está dicho
+en el tooltip, porque sin eso el número parece una caída y es el calendario.
+
+"Llegaron por un estudio" reutiliza el canal de entrada de REP-6, no una
+definición propia: son la misma pregunta desde otro reporte.
+
+Medido: 2026 → 255 grupos, 1.145 estudiantes, 186 dirigentes, edad 38, 766M/344H.
+2025 → 325 grupos, 1.800 estudiantes, 227 dirigentes. Un año en ~660 ms.
+
+Roles: coordinación de estudios, de dirigentes, dirección y admin. Un rol de
+reportes "a secas" no entra — el reporte nombra planes y cuenta dirigentes, que
+es información del módulo de estudios.
 
 ### [x] REP-10 · Personas nuevas: dos ajustes sobre lo entregado — HECHO 2026-09-21
 

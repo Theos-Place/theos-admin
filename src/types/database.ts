@@ -5256,6 +5256,19 @@ export type Database = {
           volvio: boolean; se_matriculo: boolean; es_servidor: boolean
         }[]
       }
+      report_estudios_del_anio: {
+        Args: { p_anio: number }
+        Returns: {
+          plan_code: string; plan_nombre: string; grupo_id: string; grupo_estado: string | null
+          member_id: string; matricula_estado: string | null; birth_date: string | null
+          gender: string | null; inicio_del_grupo: string
+          leader_id: string | null; co_leader_id: string | null
+        }[]
+      }
+      report_estudios_series: {
+        Args: never
+        Returns: { anio: number; plan_code: string; plan_nombre: string; estudiantes: number }[]
+      }
       report_demografia_por_sede: {
         Args: { p_desde: string; p_hasta: string }
         Returns: { title: string; member_id: string; birth_date: string | null; gender: string | null }[]

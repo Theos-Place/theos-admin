@@ -89,6 +89,14 @@ export function assignableRoleIds(actorRoles: RoleId[]): 'all' | Set<RoleId> {
   return new Set<RoleId>()
 }
 
+/** REP-9 · Quién ve el reporte de estudios. Coordinación de estudios y de
+ *  dirigentes lo necesitan para planear cuántos grupos abrir; dirección y admin
+ *  ven todo. Un rol de reportes "a secas" no entra: el reporte nombra planes y
+ *  cuenta dirigentes, que es información del módulo de estudios. */
+export const ESTUDIOS_REPORTE_ROLES: RoleId[] = [
+  'coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin',
+]
+
 /** Roles que administran servidores: comités, áreas, puestos y aplicaciones
  *  (mantenimiento CRUD, importación, asignación de responsables). Reutilizar en
  *  guards de UI (usePermissions/hasRole) y de API (requireRoles). */

@@ -14,6 +14,7 @@ import {
 import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
 import type { PersonaNueva, Canal, FilaDeSerie } from '@/lib/reports/personas-nuevas'
 import type { FilaCruda as FilaCrudaDemografia } from '@/lib/reports/demografia'
+import type { FilaDeEstudios } from '@/lib/reports/estudios'
 import {
   attendanceWindowStart, attendanceRecencyStart,
   ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
@@ -328,4 +329,21 @@ export async function getDemografiaPorSede(desde: string, hasta: string): Promis
       .order('member_id').range(d, h),
   )
   return filas.map(r => ({ sede: sedeFromTitle(r.title), member_id: r.member_id, birth_date: r.birth_date, gender: r.gender }))
+}
+
+/** REP-9 · Una fila por (plan, persona) de los estudios en curso en un año. */
+export async function getEstudiosDelAnio(anio: number): Promise<FilaDeEstudios[]> {
+  const supabase = createAdminClient()
+  return todasLasFilas<FilaDeEstudios>(
+    (d, h) => supabase.rpc('report_estudios_del_anio', { p_anio: anio }).order('member_id').range(d, h),
+  )
+}
+
+/** REP-9 · Estudiantes por año y por plan, para la evolución. */
+export async function getSerieDeEstudios(): Promise<Array<{ anio: number; plan_code: string; plan_nombre: string; estudiantes: number }>> {
+  const supabase = createAdminClient()
+  const filas = await todasLasFilas<{ anio: number; plan_code: string; plan_nombre: string; estudiantes: number }>(
+    (d, h) => supabase.rpc('report_estudios_series').order('anio').range(d, h),
+  )
+  return filas.map(f => ({ ...f, estudiantes: Number(f.estudiantes) }))
 }

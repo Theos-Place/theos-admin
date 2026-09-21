@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, HeartHandshake, type LucideIcon } from 'lucide-react'
+import { SERVICE_ADMIN_ROLES, ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, HeartHandshake, BookOpen, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
@@ -43,6 +43,14 @@ const REPORTS: ReportTile[] = [
     description: 'Asistentes por grupo etario, retención año a año, flujo al cambiar de grupo (transición/dropout) y proyección a 2030.',
     icon: TrendingUp,
     ready: true,
+  },
+  {
+    href: '/reportes/estudios',
+    title: 'Estudios',
+    description: 'Grupos, estudiantes y dirigentes por tipo de estudio y por año, con cuántos finalizaron, edad y género.',
+    icon: BookOpen,
+    ready: true,
+    roles: ESTUDIOS_REPORTE_ROLES,
   },
   {
     href: '/reportes/servidores',
