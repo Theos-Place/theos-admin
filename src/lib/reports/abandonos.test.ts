@@ -123,5 +123,7 @@ describe('los textos de ayuda', () => {
     expect(INFO_DEJARON).toContain(`hace ${SEMANAS_DE_CORTE} semanas`)
     // NO dice "esta semana": esta gente justamente no vino esta semana.
     expect(INFO_DEJARON).not.toMatch(/asistieron esta semana/i)
+    // Y el número va UNA sola vez: dos "5" en la misma frase se leían "5las 5".
+    expect(INFO_DEJARON.match(new RegExp(String(SEMANAS_DE_CORTE), 'g'))).toHaveLength(1)
   })
 })

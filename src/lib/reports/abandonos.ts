@@ -39,13 +39,18 @@ export const INFO_ASISTIERON =
   + 'Los que vienen por primera vez no se cuentan acá.'
 
 /**
- * Dice "hace 5 semanas" y no "esta semana" a propósito. Esta gente NO vino esta
- * semana: vino hace cinco y no ha vuelto desde entonces. El encabezado de la
- * lista pone la fecha exacta de esa semana.
+ * Dice el número UNA vez.
+ *
+ * Antes era "hace 5 semanas y dejaron de asistir las 5 semanas seguidas" y en
+ * pantalla se leía "hace 5las 5" (reportado 2026-09-21): dos cincos en la misma
+ * frase, con la segunda mitad repitiendo la primera. Una sola cadena, un solo
+ * número.
+ *
+ * Y dice "hace N semanas", no "esta semana": esta gente justamente NO vino esta
+ * semana. La fecha exacta va en el encabezado de la lista.
  */
 export const INFO_DEJARON =
-  `Personas que asistieron hace ${SEMANAS_DE_CORTE} semanas y dejaron de asistir `
-  + `las ${SEMANAS_DE_CORTE} semanas seguidas, incluida esta.`
+  `Vinieron hace ${SEMANAS_DE_CORTE} semanas y no han vuelto ninguna semana desde entonces, incluida esta.`
 
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10)
