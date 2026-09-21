@@ -41,20 +41,23 @@ export default async function AyudaArticuloPage(
   const html = renderMarkdown(doc.content)
   const hasImages = html.includes('<img')
 
-  // El TEXTO va en ancho de lectura. Las imágenes —infografías y los GIF de los
-  // tutoriales— son diagramas anchos: en una columna de 768 px quedan
-  // ilegibles, así que la página se abre al ancho de trabajo. Cualquier imagen
-  // además se ve a pantalla completa al tocarla.
+  // TODAS las guías van en ancho de trabajo, y el TEXTO se acota adentro con
+  // una medida legible (`.help-prose`, en globals.css). Es la excepción que
+  // pide el design system: el ancho de lectura aplica al texto, no al cascarón.
   //
-  // Depende de si HAY imágenes, no del `tipo`. Antes miraba `tipo ===
-  // 'infografia'`, que funcionaba solo porque hasta ahora las imágenes vivían
-  // únicamente ahí. El primer tutorial con infografía —"Soy nuevo en Theos y
-  // quiero crear mi cuenta"— salió apretado en la columna angosta: el diagrama
-  // era el mismo, la etiqueta era otra. La etiqueta nunca fue la razón.
-  const width = hasImages ? 'work' : 'reading'
+  // Antes esto dependía de si el artículo TENÍA IMÁGENES: con GIF se abría a
+  // 1600 px y sin GIF quedaba en una columna de 768 px. O sea que dos guías
+  // vecinas de la misma sección se veían de dos anchos distintos según si a
+  // alguien le había dado tiempo de grabar el tutorial — y las tres guías
+  // nuevas del 2026-09-21 (donaciones, áreas/comités, roles), que todavía no
+  // tienen GIF, salieron como una tira angosta perdida en la pantalla.
+  // Reportado en producción ese mismo día.
+  //
+  // Capar el texto adentro en vez de encoger la página deja además que las
+  // tablas y las infografías usen todo el ancho, que es lo que necesitan.
 
   return (
-    <PageContainer width={width}>
+    <PageContainer width="work">
       <article className="space-y-5">
       <div className="space-y-2">
         <Link

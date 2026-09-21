@@ -404,6 +404,22 @@ body {
   line-height: 1.75;
 }
 .help-prose > * + * { margin-top: 1rem; }
+
+/* MEDIDA DE LECTURA (2026-09-21). La página va full-width como el resto del
+   sistema, así que el que se acota es el TEXTO: pasados los ~70 caracteres por
+   línea el ojo pierde el renglón al bajar. Lo que NO se acota son las tablas y
+   las imágenes, que es justamente lo que necesita el ancho.
+
+   Va en el hijo directo y no en `.help-prose` entero porque encoger el
+   contenedor volvería a encoger también las tablas. */
+.help-prose > * { max-width: 70ch; }
+.help-prose > .tabla-scroll,
+.help-prose > .media-duo,
+.help-prose > figure,
+.help-prose > hr,
+/* El renderizador envuelve las imágenes sueltas en un <p>: ese párrafo no es
+   texto y no se acota, o la infografía volvería a salir chiquita. */
+.help-prose > p:has(img) { max-width: none; }
 .help-prose h1 {
   font-family: var(--font-display);
   font-size: 1.5rem;
