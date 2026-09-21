@@ -210,15 +210,16 @@ function MiComiteContenido() {
                         </td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{f.puestos.join(' · ')}</td>
                         <td className="px-4 py-3"><Marca ok={f.asistencia} titulo="Asistencia" /></td>
+                        {/* SRV-7 · Dice CUÁL estudio. Sin la píldora verde, que
+                            competía con los ✓/✗ de las columnas de al lado: lo
+                            que separa el estudio EN CURSO del que ya terminó es
+                            el peso del texto más el "Último:" y su fecha, no un
+                            color. Así la columna se lee igual en toda la tabla. */}
                         <td className="px-4 py-3 text-[13px] font-body">
-                          {/* SRV-7 · Dice CUÁL estudio. Si hoy no lleva ninguno,
-                              el último va apagado: es historia, no cumplimiento. */}
-                          {f.llevandoEstudio || f.dandoEstudio ? (
-                            <span className="rounded-full bg-teal-deep/10 px-2 py-0.5 text-[11px] text-teal-deep font-semibold">
-                              {textoDeEstudio(f.estudio)}
-                            </span>
+                          {f.estudio.llevando.length || f.estudio.dando.length ? (
+                            <span className="text-navy">{textoDeEstudio(f.estudio)}</span>
                           ) : f.estudio.ultimo ? (
-                            <span className="text-[13px] text-navy-light/80">{textoDeEstudio(f.estudio)}</span>
+                            <span className="text-navy-light/80">{textoDeEstudio(f.estudio)}</span>
                           ) : (
                             <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />
                           )}
