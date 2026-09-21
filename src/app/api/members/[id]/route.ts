@@ -82,8 +82,9 @@ async function handleUpdate(
       const { filtrarAutoedicion } = await import('@/lib/members/autoedicion')
       const { createAdminClient } = await import('@/lib/supabase/admin')
       const { data: actual } = await createAdminClient()
-        .from('members').select('cedula').eq('id', id).maybeSingle()
-      const filtro = filtrarAutoedicion(body, (actual as { cedula: string | null } | null)?.cedula)
+        .from('members').select('cedula, document_type').eq('id', id).maybeSingle()
+      const fichaActual = actual as { cedula: string | null; document_type: string | null } | null
+      const filtro = filtrarAutoedicion(body, fichaActual?.cedula, fichaActual?.document_type)
       // Se responde 403 en vez de guardar a medias: alguien que edita su
       // dirección y su correo en el mismo formulario tiene que enterarse de que
       // el correo no se guardó, no descubrirlo después.

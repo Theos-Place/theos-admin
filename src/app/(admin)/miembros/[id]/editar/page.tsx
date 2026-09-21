@@ -12,6 +12,7 @@ import { normalizePhoneOrNull } from '@/lib/phone'
 import { isValidDocument, documentFormatMessage, isDocumentType, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL, type DocumentType } from '@/lib/cedula'
 import { useAuth } from '@/hooks/useAuth'
 import { RESTRICCIONES_ALIMENTICIAS, normalizarRestricciones } from '@/lib/members/restriccion-alimenticia'
+import { mensajeDelError } from '@/lib/api/mensaje-del-error'
 
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -159,18 +160,16 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (res.status === 409) {
-        notify('Ya existe otro miembro con ese documento o correo.', 'error')
+      if (!res.ok) {
+        // El mensaje del servidor, siempre. Antes solo se leía en 400 y 409, y
+        // el 403 de autoedición —"ese dato lo maneja el equipo", con a quién
+        // pedirlo— caía en el genérico "intentá de nuevo", que manda a repetir
+        // algo que nunca va a funcionar (reportado 2026-09-21).
+        const cuerpo = await res.json().catch(() => null)
+        notify(mensajeDelError(cuerpo, res.status, 'No se pudieron guardar los cambios.'), 'error')
         setSaving(false)
         return
       }
-      if (res.status === 400) {
-        const d = await res.json().catch(() => null) as { error?: string } | null
-        notify(d?.error || 'Datos inválidos.', 'error')
-        setSaving(false)
-        return
-      }
-      if (!res.ok) throw new Error('Error guardando cambios')
       setSaving(false)
       setToast(true)
       setTimeout(() => {

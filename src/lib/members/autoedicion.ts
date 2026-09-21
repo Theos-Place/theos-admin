@@ -69,15 +69,29 @@ export type ResultadoAutoedicion = {
   rechazados: Array<{ campo: string; motivo: string }>
 }
 
+/** Mismo documento aunque esté escrito distinto: 1-1381-0347 y 113810347 son
+ *  el mismo. Se comparan solo letras y números, en mayúsculas. */
+function mismoDocumento(a: unknown, b: unknown): boolean {
+  const limpio = (v: unknown) => String(v ?? '').replace(/[^0-9a-zA-Z]/g, '').toUpperCase()
+  return limpio(a) === limpio(b)
+}
+
 /**
  * Filtra un cuerpo de edición propia.
  *
- * `documentoActual` es el documento que la persona YA tiene registrado: si tiene
- * uno, los campos de documento se rechazan; si no tiene, se permiten.
+ * `documentoActual` es el documento que la persona YA tiene registrado.
+ *
+ * SE RECHAZA CAMBIARLO, NO MANDARLO. Esa diferencia era un bug (reportado
+ * 2026-09-21): el formulario manda SIEMPRE todos los campos, así que quien ya
+ * tenía cédula recibía 403 al guardar cualquier cosa —el teléfono, la
+ * dirección— porque el cuerpo incluía su propia cédula sin cambios. Andres
+ * Aiello no podía tocar nada de su perfil. Ahora solo se rechaza si el valor
+ * llega DISTINTO al que ya está.
  */
 export function filtrarAutoedicion(
   cuerpo: unknown,
   documentoActual: string | null | undefined,
+  tipoActual?: string | null,
 ): ResultadoAutoedicion {
   const permitidos: Record<string, unknown> = {}
   const rechazados: Array<{ campo: string; motivo: string }> = []
@@ -90,14 +104,18 @@ export function filtrarAutoedicion(
   for (const [campo, valor] of Object.entries(cuerpo as Record<string, unknown>)) {
     if (libres.has(campo)) { permitidos[campo] = valor; continue }
     if (documento.has(campo)) {
-      if (yaTieneDocumento) {
+      const actual = campo === 'cedula' ? documentoActual : tipoActual
+      // Sin documento registrado se puede completar; con documento, solo se
+      // rechaza si viene DISTINTO. Mandar el mismo no es cambiarlo.
+      if (yaTieneDocumento && !mismoDocumento(valor, actual)) {
         rechazados.push({
           campo,
           motivo: 'Ya tenés un documento registrado. Para corregirlo, pedilo en tu sede o a soporte@theosplace.org.',
         })
-      } else {
+      } else if (!yaTieneDocumento) {
         permitidos[campo] = valor
       }
+      // Si es el mismo, no se rechaza ni se reescribe: no hay nada que guardar.
       continue
     }
     rechazados.push({ campo, motivo: mensajeDeCampoBloqueado(campo) })

@@ -139,3 +139,36 @@ describe('puedeEditarColumna — quién edita qué', () => {
     }
   })
 })
+
+describe('el documento: se rechaza CAMBIARLO, no mandarlo', () => {
+  it('mandar la misma cédula que ya tiene no es un cambio', () => {
+    // El bug del 2026-09-21: el formulario manda SIEMPRE todos los campos, así
+    // que Andres Aiello recibía 403 al guardar cualquier cosa de su perfil.
+    const r = filtrarAutoedicion({ phone: '88887777', cedula: '113810347' }, '113810347')
+    expect(r.rechazados).toEqual([])
+    expect(r.permitidos).toEqual({ phone: '88887777' })
+  })
+
+  it('la misma cédula escrita con guiones tampoco es un cambio', () => {
+    expect(filtrarAutoedicion({ cedula: '1-1381-0347' }, '113810347').rechazados).toEqual([])
+  })
+
+  it('una cédula DISTINTA sí se rechaza', () => {
+    const r = filtrarAutoedicion({ cedula: '999999999' }, '113810347')
+    expect(r.rechazados).toHaveLength(1)
+    expect(r.rechazados[0].motivo).toMatch(/pedilo en tu sede/i)
+  })
+
+  it('sin documento registrado, se puede completar', () => {
+    expect(filtrarAutoedicion({ cedula: '113810347' }, null).permitidos).toEqual({ cedula: '113810347' })
+  })
+
+  it('mandar el mismo documento no lo reescribe: no hay nada que guardar', () => {
+    expect(filtrarAutoedicion({ cedula: '113810347' }, '113810347').permitidos).toEqual({})
+  })
+
+  it('el tipo de documento sigue la misma regla', () => {
+    expect(filtrarAutoedicion({ document_type: 'cedula' }, '113810347', 'cedula').rechazados).toEqual([])
+    expect(filtrarAutoedicion({ document_type: 'pasaporte' }, '113810347', 'cedula').rechazados).toHaveLength(1)
+  })
+})
