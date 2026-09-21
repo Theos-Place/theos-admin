@@ -1828,7 +1828,7 @@ Sin N+1 — se ampliaron las consultas agregadas que ya había. El test de embed
 ambiguos pescó que `study_enrollments → study_groups` tiene dos llaves y hubo
 que nombrarla. SRV-6 lo hereda solo porque comparte endpoint.
 
-### [ ] REP-7 · Reporte global de servidores y sus compromisos (pedido 2026-09-21)
+### [x] REP-7 · Reporte global de servidores y sus compromisos — HECHO 2026-09-21
 
 Vista a groso modo de los servidores: cuántos y quiénes además son donantes,
 están en estudios y asisten — a nivel global, por área o por comité.
@@ -1890,3 +1890,28 @@ meses" en el tooltip habría sido la segunda definición de siempre.
 
 De paso, la carga de la pantalla pasó a `useCargaRemota` (LINT-1): el
 `setCargando(true)` dentro del efecto costaba el warning 61 de 60.
+
+**Cierre 2026-09-21.** `/reportes/servidores`. Global, por área o por comité.
+
+**La verificación que pedía el plan —"si los números difieren de Mi comité, es
+un bug"— encontró uno de verdad, y no el que se esperaba.** Comité Youth daba 24
+pendientes en la pantalla y 25 en el reporte. La causa: PostgREST corta en 1.000
+filas por consulta y no avisa; la consulta partía la lista de IDS en tandas de
+100 pero no paginaba los RESULTADOS, y las matrículas de 100 servidores son
+exactamente 1.000. O sea que "Mi comité" venía mostrando sin estudio a gente que
+sí lo tenía, desde SRV-4. Al paginar, "en estudio" pasó de 71% a 75% y "cumplen
+todo" de 36% a 39%.
+
+Quien sirve en varios comités cuenta en CADA uno del desglose —para su encargado
+esa persona es suya— pero UNA vez en los totales: 1.141 filas contra 749
+personas. La pantalla lo explica en vez de dejar que parezca un error de cuadre.
+
+El desglose ordena del peor al mejor. Los comités [prueba] quedan fuera: salían
+de primeros con 0% en todo.
+
+La tarjeta del índice se filtra por rol — hasta ahora el índice mostraba todas
+y esta lleva a una pantalla que responde "Acceso restringido" a quien tiene el
+módulo reportes pero no es staff ni dirección.
+
+Hoy: 749 servidores · asistencia 79% · en estudio 75% · donantes 51% · cumplen
+los tres 39%. Global en ~4 s.
