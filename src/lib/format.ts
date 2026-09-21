@@ -65,6 +65,23 @@ function parseFlexibleDate(d: string): Date {
   return new Date(d)
 }
 
+/**
+ * Cumpleaños como "14 de mayo" — sin año, que es lo que sirve para felicitar.
+ *
+ * Existe para no volver a escribir `new Date(f).toLocaleDateString(...)`, que
+ * es lo que hacía el export de servidores y CORRÍA TODOS LOS CUMPLEAÑOS UN DÍA
+ * (encontrado 2026-09-21): `new Date('1990-05-14')` se interpreta como
+ * medianoche UTC, y en Costa Rica —UTC-6— eso es el 13 de mayo a las 6 p.m.
+ * Todo el archivo salía con la fecha de la víspera. `parseFlexibleDate` arma la
+ * fecha en hora local y no tiene ese corrimiento.
+ */
+export function formatBirthday(d: string | null | undefined): string {
+  if (!d) return ''
+  const date = parseFlexibleDate(d)
+  if (isNaN(date.getTime())) return ''
+  return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })
+}
+
 /** Edad en años cumplidos a partir de la fecha de nacimiento. 0 si falta/ inválida. */
 export function calcAge(birthDate: string | null | undefined): number {
   if (!birthDate) return 0

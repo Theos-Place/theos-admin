@@ -12,7 +12,7 @@ import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { SelectorDeComite } from '@/components/servers/SelectorDeComite'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatBirthday } from '@/lib/format'
 import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
@@ -24,6 +24,9 @@ type Fila = Compromisos & {
   nombre: string
   puestos: string[]
   encargado: boolean
+  telefono: string | null
+  email: string | null
+  cumpleanos: string | null
 }
 type Comite = { id: string; nombre: string; filas: Fila[] }
 
@@ -38,6 +41,16 @@ const COLUMNAS: ColumnDef<Fila>[] = [
   { key: 'donante',   label: 'Donante activo',defaultVisible: true, exportValue: f => (f.donante ? 'Sí' : 'No') },
   { key: 'ultimo',    label: 'Último check-in', defaultVisible: true, exportValue: f => f.ultimoCheckin ?? '' },
   { key: 'falta',     label: 'Le falta',      defaultVisible: true, exportValue: f => faltantes(f).join(', ') },
+  // Contacto: va en el ARCHIVO y no en la tabla. La lista se baja para llamar a
+  // quien tiene algo pendiente, y en pantalla esas tres columnas solo apretarían
+  // lo que sí se mira. Mismas etiquetas y mismo formato que el export de
+  // /servidores, para que los dos archivos se lean igual.
+  { key: 'phone',     label: 'Teléfono / WhatsApp', defaultVisible: true, exportValue: f => f.telefono ?? '' },
+  { key: 'email',     label: 'Email del servidor',  defaultVisible: true, exportValue: f => f.email ?? '' },
+  {
+    key: 'birth_date', label: 'Fecha de cumpleaños', defaultVisible: true,
+    exportValue: f => formatBirthday(f.cumpleanos),
+  },
 ]
 
 /** Los criterios se leen de donde VIVEN, no se escriben a mano: el de

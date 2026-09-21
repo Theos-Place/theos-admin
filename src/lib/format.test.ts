@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric } from './format'
+import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric, formatBirthday } from './format'
 
 describe('ymdCR', () => {
   it('un instante de madrugada UTC es el día ANTERIOR en CR (UTC-6)', () => {
@@ -102,5 +102,25 @@ describe('fechas puras: no se corren un día en Costa Rica', () => {
     // una zona negativa, y de eso se cuida no usar new Date() en las pantallas.
     expect(formatDateNumeric('2026-09-27T23:30:00.000Z')).toBe('27/09/2026')
     expect(formatDateNumeric('2026-09-28T00:30:00.000Z')).toBe('28/09/2026')
+  })
+})
+
+describe('formatBirthday', () => {
+  it('no corre el día: el bug del export de servidores (2026-09-21)', () => {
+    // `new Date('1990-05-14')` es medianoche UTC = 13 de mayo 6 p.m. en CR, y
+    // por eso TODO el archivo salía con la fecha de la víspera.
+    expect(formatBirthday('1990-05-14')).toBe('14 de mayo')
+    expect(formatBirthday('2001-01-01')).toBe('1 de enero')
+    expect(formatBirthday('1985-12-31')).toBe('31 de diciembre')
+  })
+
+  it('va sin año: sirve para felicitar, no para saber la edad', () => {
+    expect(formatBirthday('1990-05-14')).not.toMatch(/1990/)
+  })
+
+  it('sin fecha devuelve vacío, no "—": va en una celda de Excel', () => {
+    expect(formatBirthday(null)).toBe('')
+    expect(formatBirthday(undefined)).toBe('')
+    expect(formatBirthday('no es fecha')).toBe('')
   })
 })

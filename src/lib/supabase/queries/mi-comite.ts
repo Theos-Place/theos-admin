@@ -13,6 +13,12 @@ export type FilaDeMiComite = {
   nombre: string
   puestos: string[]
   encargado: boolean
+  /** Contacto. Solo viaja para el EXPORT, no se dibuja en la tabla: la lista
+   *  existe para llamar a quien tiene algo pendiente. No abre nada nuevo — el
+   *  mismo encargado ya los exporta desde /servidores con SERVER_COLUMNS. */
+  telefono: string | null
+  email: string | null
+  cumpleanos: string | null
 } & Compromisos
 
 /** Hace 12 meses, en fecha ISO. */
@@ -63,9 +69,12 @@ export async function getMiComite(committeeId: string): Promise<{ nombre: string
     // 2) Nombre y el flag de donante (criterio por trimestres, FIN-1).
     enTandas(ids, async tanda => {
       const { data, error } = await supabase
-        .from('members').select('id, first_name, last_name, is_donor').in('id', tanda)
+        .from('members').select('id, first_name, last_name, is_donor, phone, email, birth_date').in('id', tanda)
       if (error) throw error
-      return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; is_donor: boolean | null }>
+      return (data ?? []) as Array<{
+        id: string; first_name: string; last_name: string; is_donor: boolean | null
+        phone: string | null; email: string | null; birth_date: string | null
+      }>
     }),
     // 3) Asistencia activa: la MISMA función que usa la elegibilidad de estudios.
     getActiveAttendanceMemberIds(),
@@ -110,6 +119,9 @@ export async function getMiComite(committeeId: string): Promise<{ nombre: string
     nombre: `${p.first_name} ${p.last_name}`.trim(),
     puestos: puestosPorMiembro.get(p.id) ?? [],
     encargado: encargados.has(p.id),
+    telefono: p.phone ?? null,
+    email: p.email ?? null,
+    cumpleanos: p.birth_date ?? null,
     asistencia: setActivos.has(p.id),
     llevandoEstudio: setLlevando.has(p.id),
     dandoEstudio: setDando.has(p.id),

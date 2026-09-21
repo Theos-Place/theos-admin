@@ -1,4 +1,5 @@
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
+import { formatBirthday } from '@/lib/format'
 
 // Fila aplanada de servidor, compartida entre el listado general y el detalle de comité.
 export type FlatServer = {
@@ -49,7 +50,9 @@ export const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
   { key: 'email', label: 'Email del servidor', defaultVisible: false, exportValue: s => s.email ?? '' },
   {
     key: 'birth_date', label: 'Fecha de cumpleaños', defaultVisible: false,
-    exportValue: s => (s.birth_date ? new Date(s.birth_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'long' }) : ''),
+    // Con `new Date(...)` pelado, todo el archivo salía con la fecha de la
+    // víspera: UTC-6 corre la medianoche UTC al día anterior (2026-09-21).
+    exportValue: s => formatBirthday(s.birth_date),
   },
   { key: 'phone', label: 'Teléfono / WhatsApp', defaultVisible: false, exportValue: s => s.phone ?? '' },
 ]
