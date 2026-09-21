@@ -5262,7 +5262,7 @@ export type Database = {
           plan_code: string; plan_nombre: string; grupo_id: string; grupo_estado: string | null
           member_id: string; matricula_estado: string | null; birth_date: string | null
           gender: string | null; inicio_del_grupo: string
-          leader_id: string | null; co_leader_id: string | null
+          leader_id: string | null; co_leader_id: string | null; bloque: string | null
         }[]
       }
       report_estudios_series: {

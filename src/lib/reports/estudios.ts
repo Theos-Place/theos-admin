@@ -37,6 +37,42 @@ export type FilaDeEstudios = {
   inicio_del_grupo: string
   leader_id: string | null
   co_leader_id: string | null
+  /** Bloque del cuatrimestre, o null si el grupo no está en ninguno. */
+  bloque: string | null
+}
+
+/** La etiqueta de "ningún bloque". Es una opción del filtro, no un vacío: de
+ *  los 255 grupos en curso en 2026, 199 no tienen bloque, así que esconderlos
+ *  al filtrar dejaría afuera a la mayoría sin decirlo. */
+export const SIN_BLOQUE = 'Sin bloque'
+
+/** Los bloques presentes en los datos, con cuántos grupos tiene cada uno. Los
+ *  del año más reciente primero y "Sin bloque" al final. */
+export function bloquesDisponibles(
+  filas: readonly FilaDeEstudios[],
+): Array<{ bloque: string; grupos: number }> {
+  const porBloque = new Map<string, Set<string>>()
+  for (const f of filas) {
+    const k = f.bloque ?? SIN_BLOQUE
+    const ya = porBloque.get(k)
+    if (ya) ya.add(f.grupo_id); else porBloque.set(k, new Set([f.grupo_id]))
+  }
+  return [...porBloque.entries()]
+    .map(([bloque, grupos]) => ({ bloque, grupos: grupos.size }))
+    .sort((a, b) => {
+      if (a.bloque === SIN_BLOQUE) return 1
+      if (b.bloque === SIN_BLOQUE) return -1
+      return b.bloque.localeCompare(a.bloque, 'es')
+    })
+}
+
+/** Recorta por bloque. '' = todos. */
+export function filtrarPorBloque(
+  filas: readonly FilaDeEstudios[],
+  bloque: string,
+): FilaDeEstudios[] {
+  if (!bloque) return [...filas]
+  return filas.filter(f => (f.bloque ?? SIN_BLOQUE) === bloque)
 }
 
 /** Estados de matrícula que cuentan como haber terminado BIEN. */

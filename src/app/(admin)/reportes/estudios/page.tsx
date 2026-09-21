@@ -18,6 +18,7 @@ import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import {
   resumirEstudios, porPlan, serieDeEstudios, aniosConEstudios,
+  bloquesDisponibles, filtrarPorBloque,
   type FilaDeEstudios, type FilaPorPlan,
 } from '@/lib/reports/estudios'
 import {
@@ -83,6 +84,7 @@ export default function ReporteEstudiosPage() {
 
   const [anio, setAnio] = useState(ANIO_ACTUAL)
   const [plan, setPlan] = useState('')
+  const [bloque, setBloque] = useState('')
 
   const { datos, cargando, error } = useCargaRemota<Respuesta>(
     loaded && puedeVer ? `estudios:${anio}` : '',
@@ -93,12 +95,19 @@ export default function ReporteEstudiosPage() {
     },
   )
 
-  const filas = useMemo(() => datos?.filas ?? [], [datos])
+  const todas = useMemo(() => datos?.filas ?? [], [datos])
+  const bloques = useMemo(() => bloquesDisponibles(todas), [todas])
+  // El bloque recorta ANTES que el plan: la tabla por tipo y los KPI tienen que
+  // hablar del mismo universo que el selector de arriba.
+  const filas = useMemo(() => filtrarPorBloque(todas, bloque), [todas, bloque])
   const visibles = useMemo(() => (plan ? filas.filter(f => f.plan_code === plan) : filas), [filas, plan])
   const total = useMemo(() => resumirEstudios(visibles), [visibles])
   const tabla = useMemo(() => porPlan(filas), [filas])
   const serie = useMemo(() => serieDeEstudios(datos?.serie ?? [], plan || undefined), [datos, plan])
   const anios = useMemo(() => aniosConEstudios(datos?.serie ?? []), [datos])
+  // Al cambiar de año, el bloque del año viejo ya no existe.
+  const bloqueVigente = bloques.some(b => b.bloque === bloque) ? bloque : ''
+  if (bloqueVigente !== bloque) setBloque('')
   const hayCompartida = tabla.reduce((n, p) => n + p.estudiantes, 0) > resumirEstudios(filas).estudiantes
 
   if (!loaded) return null
@@ -133,6 +142,20 @@ export default function ReporteEstudiosPage() {
             {a}
           </button>
         ))}
+        {/* El bloque lleva su conteo de grupos: en 2026, 199 de 255 grupos no
+            tienen bloque, así que elegir uno deja fuera a la mayoría — y eso hay
+            que verlo antes de elegir, no después. */}
+        <select
+          aria-label="Filtrar por bloque"
+          value={bloque}
+          onChange={e => setBloque(e.target.value)}
+          className="rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
+        >
+          <option value="">Todos los bloques</option>
+          {bloques.map(b => (
+            <option key={b.bloque} value={b.bloque}>{b.bloque} ({b.grupos})</option>
+          ))}
+        </select>
         <select
           aria-label="Filtrar por tipo de estudio"
           value={plan}
@@ -198,7 +221,9 @@ export default function ReporteEstudiosPage() {
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5 space-y-3">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
-                <h2 className="text-base font-bold text-navy font-display">Por tipo de estudio · {anio}</h2>
+                <h2 className="text-base font-bold text-navy font-display">
+                  Por tipo de estudio · {anio}{bloque && ` · ${bloque}`}
+                </h2>
                 <p className="text-[13px] text-navy-light/80 font-body">{tabla.length} estudios con gente este año.</p>
               </div>
               {tabla.length > 0 && (
