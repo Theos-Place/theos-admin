@@ -10,14 +10,14 @@
  * y no le cierre.
  */
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, ArrowUp, ArrowDown, Minus, AlertTriangle } from 'lucide-react'
+import { ArrowUp, ArrowDown, Minus, AlertTriangle } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList,
 } from 'recharts'
 import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
 import type { DirigentesReport, LeaderHistoryPoint } from '@/lib/reports/dirigentes'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   NAVY, TEAL, EJE_TICK, ESTILO_TOOLTIP, ETIQUETA_VALOR,
   ETIQUETA_CATEGORIA, anchoDeEjeCategoria,
@@ -119,12 +119,7 @@ export default function ReporteDirigentesPage() {
   return (
     <div className="space-y-5">
       <div>
-        <Link
-          href="/reportes"
-          className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 font-body hover:text-navy transition-colors"
-        >
-          <ChevronLeft size={14} aria-hidden="true" /> Reportes
-        </Link>
+        <VolverAReportes />
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">
           Dirigentes
         </h1>

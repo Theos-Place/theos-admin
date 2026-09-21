@@ -12,6 +12,7 @@ import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { calcAge, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnual, aniosDeLaSerie, SEMANAS_PARA_VOLVER,
   ETIQUETA_DE_CANAL, type PersonaNueva, type Canal, type FiltrosDeNuevos,
@@ -96,7 +97,8 @@ export default function PersonasNuevasPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Personas nuevas</h1>
+        <VolverAReportes />
+        <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Personas nuevas</h1>
         <p className="text-[13px] text-navy-light/80 font-body mt-1">
           Alguien es nuevo cuando registra su <strong className="text-navy">primera actividad</strong>: la primera charla,
           la primera matrícula o la primera inscripción a un evento — lo que haya pasado antes.{' '}

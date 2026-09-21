@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, LabelList,
@@ -10,6 +8,7 @@ import {
 import { ChartCard } from '@/components/reportes/ChartCard'
 import { Tabs } from '@/components/shared/Tabs'
 import { cn } from '@/lib/utils'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   MAIN_GROUPS, G1_SUBS, GROUP_LABELS, type MainGroup, type RetencionReport,
 } from '@/lib/reports/retencion'
@@ -75,9 +74,7 @@ export default function ReporteRetencionPage() {
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
-          <ChevronLeft size={15} /> Reportes
-        </Link>
+        <VolverAReportes />
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Retención y Transición en Grupos</h1>
         <p className="mt-1 text-sm text-navy-light/80 font-body">
           Cómo se retiene y transiciona la gente entre grupos etarios. Clasificado por edad al momento de asistir.

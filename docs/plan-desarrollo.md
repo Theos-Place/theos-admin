@@ -1463,7 +1463,7 @@ todos sedes cuyo único puesto "Encargado" es "Encargado Logística", que es
 operación y no la cabeza. La estrella existe justamente para que alguien los
 marque.
 
-### [ ] AYU-2 · Centro de ayuda: donaciones, puestos/comités/áreas y roles (pedido 2026-09-18)
+### [x] AYU-2 · Centro de ayuda: donaciones, puestos/comités/áreas y roles — HECHO 2026-09-21
 
 Tres tutoriales nuevos: importar donaciones (individual y por Excel), crear
 puestos de servicio/comités/áreas, y asignar o desvincular un rol.
@@ -1507,6 +1507,30 @@ paso a paso; las capturas se agregan después como en los demás tutoriales.
 ```
 
 ## Fase 19 — Pedido el 2026-09-21
+
+**Cierre 2026-09-21.** Tres artículos, escritos LEYENDO las pantallas, no de
+memoria: los nombres de los campos, los mensajes de error y las reglas salen del
+código, así que dicen lo que la pantalla dice hoy.
+
+`registrar-donaciones.md` (finanzas, dirección) · las dos formas, y lo que más
+se pregunta: **el monto vacío no es cero**. En la importación, el paso 2 es el
+que importa y el artículo lo dice — "hay varias posibles" es donde hay que
+decidir, porque el sistema no adivina.
+
+`areas-comites-y-puestos.md` (staff, coordinación de servidores, dirección) · el
+orden área → comité → puesto, y que **la gente se asigna al PUESTO**, nunca al
+comité. Incluye la estrella de encargado (SRV-5) y la advertencia que no es
+obvia: **el nombre del puesto otorga permisos** — "Encargado…" da líder de
+comité, los de sede dan check-in—, así que conviene copiar el nombre de otro
+comité antes de inventar uno.
+
+`asignar-y-quitar-roles.md` (admin, gestor de accesos, coordinación de estudios)
+· lo que más confunde, con su sección propia: **un rol que vino de un puesto
+vuelve si lo quitás a mano**, porque el puesto sigue diciendo que esa persona
+tiene esa función. Y la tabla de quién puede repartir qué, con el porqué de que
+al gestor de accesos se le niegue `admin`.
+
+Los tres pasan el guard de contenido de `visibility.test.ts`.
 
 ### [x] CHK-4 · Check-in de subeventos: el comité del subevento no ve el evento — HECHO 2026-09-21
 

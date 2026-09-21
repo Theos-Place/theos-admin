@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ALL_SEDES } from '@/lib/reports/charla-attendance'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 
 /** Normaliza para buscar sin tildes ni mayúsculas. */
 function norm(s: string): string {
@@ -43,9 +43,7 @@ export function ReportShell({
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
-          <ChevronLeft size={15} /> Reportes
-        </Link>
+        <VolverAReportes />
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">{title}</h1>
         {description && <p className="mt-1 text-sm text-navy-light/80 font-body">{description}</p>}
       </div>

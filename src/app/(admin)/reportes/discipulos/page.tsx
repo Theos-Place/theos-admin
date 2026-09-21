@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList,
 } from 'recharts'
@@ -12,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import type { DiscipulosReport } from '@/lib/reports/discipulos'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   NAVY, CORAL, TEAL, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
   ETIQUETA_CATEGORIA, anchoDeEjeCategoria, margenParaEtiquetas,
@@ -75,9 +74,7 @@ export default function ReporteDiscipulosPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <Link href="/reportes" className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body">
-          <ChevronLeft size={15} /> Reportes
-        </Link>
+        <VolverAReportes />
         <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Discípulos Multiplicadores</h1>
         <p className="mt-1 text-sm text-navy-light/80 font-body">
           Personas que cumplen los 3 criterios a la vez: son asistentes comprometidos, sirven y donan activamente.

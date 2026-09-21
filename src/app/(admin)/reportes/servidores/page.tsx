@@ -16,6 +16,7 @@ import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { leFaltaAlgo, faltantes } from '@/lib/servers/compromisos'
 import { textoDeEstudio, type EstudioDeLaPersona } from '@/lib/studies/estudio-actual'
+import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   cumplimiento, porcentajes, desglose, hayGenteCompartida, type ServidorDelReporte,
 } from '@/lib/reports/servidores-compromisos'
@@ -121,7 +122,8 @@ export default function ReporteServidoresPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Servidores y compromisos</h1>
+        <VolverAReportes />
+        <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Servidores y compromisos</h1>
         <p className="text-[13px] text-navy-light/80 font-body mt-1">
           Lo mismo que ve cada encargado en “Mi comité”, pero de toda la organización.
           Las reglas son las mismas: si un comité diera números distintos en los dos lados, es un error.
