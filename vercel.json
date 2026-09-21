@@ -19,6 +19,10 @@
       "schedule": "0 14 * * *"
     },
     {
+      "path": "/api/cron/desbloquear-mayores",
+      "schedule": "0 13 1 * *"
+    },
+    {
       "path": "/api/cron/storage-orphans",
       "schedule": "0 15 * * 1"
     },
