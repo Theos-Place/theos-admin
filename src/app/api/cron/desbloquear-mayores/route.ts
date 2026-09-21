@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { repartir, type CuentaBloqueada } from '@/lib/members/desbloqueo-al-cumplir-18'
 import { reportarError } from '@/lib/observabilidad'
+import { pingHealthcheck } from '@/lib/health'
 
 /**
  * AUT-4 · Quita el bloqueo a las cuentas de quienes ya cumplieron 18.
@@ -78,6 +79,8 @@ export async function GET(req: NextRequest) {
         new_data: { op: 'desbloqueo_por_mayoria_de_edad', nombre: c.nombre, nacio: c.birth_date },
       }).then(({ error: e2 }) => { if (e2) console.warn('audit desbloqueo:', e2.message) })
     }
+
+    await pingHealthcheck('HEALTHCHECK_URL_DESBLOQUEAR_MAYORES')
 
     return NextResponse.json({
       ok: true,

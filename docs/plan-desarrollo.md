@@ -55,8 +55,8 @@
 
 ## Fase 20 — Lo que salió el 2026-09-21 y espera decisión
 
-Nada de esto es trabajo que yo pueda arrancar solo: los cuatro necesitan que
-alguien decida.
+Nada de esto es trabajo que yo pueda arrancar solo: necesitan que alguien
+decida. EVE-13 ya se decidió.
 
 ### [ ] SEC-4 · Las cuentas de PRUEBA siguen vivas
 
@@ -90,12 +90,14 @@ accidentales) o permitirlo **solo cuando la persona es menor**, que mantiene el
 bloqueo donde importa y abre exactamente el caso legítimo. Me inclino por la
 segunda.
 
-### [ ] EVE-13 · Semillitas: quedan dos eventos y hay que elegir cuál
+### [x] EVE-13 · Semillitas: los dos eventos se quedan — DECIDIDO 2026-09-21
 
 Del enredo de duplicar del 2026-09-21 sobrevivieron dos "Semillitas Kids&Teens":
 uno que arranca el **12 de setiembre cada dos sábados** y otro el **17 de octubre
-cada sábado**. La copia ya se borró. Ninguno tiene check-ins ni inscripciones.
-Decir cuál se queda y borro el otro.
+cada sábado**. La copia ya se borró y ninguno de los dos tenía check-ins ni
+inscripciones.
+
+Comunicación decidió dejar los dos como están. No se borra ninguno.
 
 
 ## Fase 13 — Cola nueva (pedida 2026-09-10)
