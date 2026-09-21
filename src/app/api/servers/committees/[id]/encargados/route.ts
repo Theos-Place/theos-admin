@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
-import { setEncargadoDeComite, ENCARGADO_UNICO_PUESTO } from '@/lib/supabase/queries/servers'
+import { setEncargadoDeComite, ENCARGADO_UNICO_PUESTO, SIN_PUESTO_DE_ENCARGADO } from '@/lib/supabase/queries/servers'
 import { reportarError } from '@/lib/observabilidad'
 
 const schema = z.object({
@@ -40,6 +40,13 @@ export async function PATCH(
         error: 'Encargado es su único puesto en el comité. Quitarle la estrella la dejaría fuera: '
           + 'primero dale otro puesto, o usá Desvincular si ya no sirve acá.',
         code: 'encargado_unico_puesto',
+      }, { status: 409 })
+    }
+    if (error instanceof Error && error.message === SIN_PUESTO_DE_ENCARGADO) {
+      return NextResponse.json({
+        error: 'Este comité no tiene ningún puesto de Encargado. Creálo primero en Áreas y comités '
+          + 'y asigná a la persona ahí — la estrella no inventa puestos.',
+        code: 'sin_puesto_de_encargado',
       }, { status: 409 })
     }
     reportarError('PATCH /api/servers/committees/[id]/encargados:', error)

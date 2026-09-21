@@ -4,7 +4,6 @@ import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-
 import { todayCR } from '@/lib/format'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
-import { esComiteDeSede } from '@/lib/servers/position-roles'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
 function one<T>(v: unknown): T | null {
@@ -946,6 +945,9 @@ export async function getEncargadosDeComite(committeeId: string): Promise<string
  *  es el de encargado: eso lo dejaría fuera del comité sin decirlo. */
 export const ENCARGADO_UNICO_PUESTO = 'ENCARGADO_UNICO_PUESTO'
 
+/** El comité no tiene ningún puesto de encargado al que sumar a la persona. */
+export const SIN_PUESTO_DE_ENCARGADO = 'SIN_PUESTO_DE_ENCARGADO'
+
 async function puestosDelComite(committeeId: string, memberId: string) {
   const supabase = createAdminClient()
   const { data, error } = await supabase
@@ -995,28 +997,14 @@ export async function setEncargadoDeComite(
     return
   }
 
-  let puestoId: string
-  let ocupantesPrevios = 0
-  if (plan.accion === 'crear_y_sumar') {
-    const { data: area } = await supabase
-      .from('areas').select('name, parent_id').eq('id', committeeId).maybeSingle()
-    const a = area as { name: string; parent_id: string | null } | null
-    let padre: string | null = null
-    if (a?.parent_id) {
-      const { data: p } = await supabase.from('areas').select('name').eq('id', a.parent_id).maybeSingle()
-      padre = (p as { name: string } | null)?.name ?? null
-    }
-    const esSede = esComiteDeSede({ title: '', areaName: a?.name ?? '', areaType: 'committee', parentAreaName: padre })
-    const { data: creado, error } = await supabase
-      .from('service_positions')
-      .insert({ area_id: committeeId, title: esSede ? 'Encargado Sede' : 'Encargado Comité', quantity: 1, max_volunteers: 1, is_active: true })
-      .select('id').single()
-    if (error) throw error
-    puestoId = (creado as { id: string }).id
-  } else {
-    puestoId = plan.puestoId
-    ocupantesPrevios = puestos.find(p => p.id === puestoId)?.ocupantes ?? 0
-  }
+  // La estrella NO inventa puestos. Antes creaba uno "Encargado Comité" o
+  // "Encargado Sede" cuando no encontraba ninguno, y eso hizo aparecer un puesto
+  // que nadie pidió en Sede Antares (reportado 2026-09-21): "ese puesto no
+  // existe". Un puesto es una entrada del organigrama; se crea a propósito, no
+  // de rebote por tocar una estrella.
+  if (plan.accion === 'crear_y_sumar') throw new Error(SIN_PUESTO_DE_ENCARGADO)
+  const puestoId = plan.puestoId
+  const ocupantesPrevios = puestos.find(p => p.id === puestoId)?.ocupantes ?? 0
 
   await assignVolunteer(puestoId, memberId, actorUserId)
   // Que el cupo no quede por debajo de la gente que realmente hay: un comité

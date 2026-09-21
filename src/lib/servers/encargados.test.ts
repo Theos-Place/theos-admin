@@ -9,9 +9,11 @@ describe('esPuestoDeEncargado', () => {
     ]) expect(esPuestoDeEncargado(t), t).toBe(true)
   })
 
-  it('"Encargado Logística" no es la cabeza: es operación de la sede', () => {
-    expect(esPuestoDeEncargado('Encargado Logística')).toBe(false)
-    expect(esPuestoDeEncargado('Encargado de Logistica')).toBe(false)
+  it('"Encargado Logística" SÍ es la cabeza de una sede', () => {
+    // Reportado por el Comité de Servidores el 2026-09-21: al no calificar, la
+    // estrella creaba un "Encargado Sede" que nadie había pedido.
+    expect(esPuestoDeEncargado('Encargado Logística')).toBe(true)
+    expect(esPuestoDeEncargado('Encargado de Logistica')).toBe(true)
   })
 
   it('"Asistente de Encargado" tampoco', () => {
@@ -111,9 +113,14 @@ describe('planDeEncargado', () => {
     expect(planDeEncargado([puesto('p1', 'Colaborador', true)], false)).toEqual({ accion: 'nada' })
   })
 
-  it('"Encargado Logística" no cuenta: no es la cabeza de la sede', () => {
-    // Sofía tenía Encargado Logística en Sede Madrid y aun así era leader_id.
+  it('quien ya tiene "Encargado Logística" en una sede YA es encargado', () => {
     expect(planDeEncargado([puesto('p1', 'Encargado Logística', true)], true))
+      .toEqual({ accion: 'nada' })
+  })
+
+  it('sin ningún puesto de encargado, el plan pide crearlo y la ruta lo rechaza', () => {
+    // La estrella no inventa puestos: un puesto es una entrada del organigrama.
+    expect(planDeEncargado([puesto('p1', 'Colaborador', true)], true))
       .toEqual({ accion: 'crear_y_sumar' })
   })
 })

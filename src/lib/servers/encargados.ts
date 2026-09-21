@@ -24,10 +24,20 @@ import { normSinArticulos } from './position-roles'
 
 /**
  * Títulos que NO son la cabeza del comité aunque empiecen con "Encargado".
- * "Encargado Logística" es un puesto de la operación de la sede, no quien la
- * dirige — la misma exclusión que ya hace la regla de `lider_comite`.
+ *
+ * Estaba "Encargado Logística" y ERA UN ERROR, reportado por el Comité de
+ * Servidores el 2026-09-21: en una sede, quien tiene ese puesto SÍ es quien la
+ * encabeza. Como el título no calificaba, la estrella no lo encontraba y creaba
+ * un puesto "Encargado Sede" que nadie había pedido — "ese puesto no existe".
+ *
+ * El puesto existe solo en comités de sede (11, verificado), así que aceptarlo
+ * no le pone la estrella a nadie de otro lado.
+ *
+ * OJO, no confundir con el rol `lider_comite`: ahí los comités de sede siguen
+ * excluidos por decisión del 2026-09-11. Una cosa es encabezar la sede —llevar
+ * la estrella, poder pedir vacantes— y otra es el rol que abre "Mi comité".
  */
-const NO_SON_CABEZA = new Set(['encargado logistica'])
+const NO_SON_CABEZA = new Set<string>()
 
 /**
  * ¿Este título es el de la persona a cargo del comité?
