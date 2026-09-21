@@ -1,11 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, type LucideIcon } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, HeartHandshake, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
-type ReportTile = { href: string; title: string; description: string; icon: LucideIcon; ready: boolean }
+type ReportTile = {
+  href: string; title: string; description: string; icon: LucideIcon; ready: boolean
+  /** Si está, solo estos roles ven la tarjeta. Sin esto, la tarjeta llevaba a
+   *  una pantalla que respondía "Acceso restringido" — el módulo `reportes` no
+   *  implica poder ver todos los reportes. */
+  roles?: readonly string[]
+}
 
 const REPORTS: ReportTile[] = [
   {
@@ -37,6 +45,14 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    href: '/reportes/servidores',
+    title: 'Servidores y compromisos',
+    description: 'Cuántos servidores asisten, están en estudios y donan — global, por área o por comité, con el detalle de quién.',
+    icon: HeartHandshake,
+    ready: true,
+    roles: SERVICE_ADMIN_ROLES,
+  },
+  {
     href: '/reportes/dirigentes',
     title: 'Dirigentes',
     description: 'Cuántos dirigentes hay y cuántos están dando estudio, capacidad por tipo de estudio y por zona, con evolución a 3 y 6 meses.',
@@ -46,6 +62,8 @@ const REPORTS: ReportTile[] = [
 ]
 
 export default function ReportesIndexPage() {
+  const { user } = useAuth()
+  const roles = user?.roles ?? []
   return (
     <div className="space-y-6">
       <div>
@@ -56,7 +74,7 @@ export default function ReportesIndexPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {REPORTS.filter(r => r.ready).map(r => {
+        {REPORTS.filter(r => r.ready && (!r.roles || r.roles.some(rol => (roles as string[]).includes(rol)))).map(r => {
           const Icon = r.icon
           return (
             <Link

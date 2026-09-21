@@ -38,6 +38,9 @@ export async function GET(req: NextRequest) {
     const { data: comitesData, error } = await q
     if (error) throw error
     const comites = ((comitesData ?? []) as Array<{ id: string; name: string; parent_id: string | null }>)
+      // Los comités de prueba no son gente a la que haya que ayudar. Salían de
+      // primeros en el desglose —0% en todo— tapando los reales.
+      .filter(c => !/\[prueba\]/i.test(c.name))
       .sort((a, b) => a.name.localeCompare(b.name, 'es'))
 
     const { data: areasData } = await supabase
