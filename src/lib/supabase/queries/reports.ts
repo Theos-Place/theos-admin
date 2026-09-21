@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Json } from '@/types/database'
-import { buildCharlaReport, type CharlaAggRow, type CharlaReport } from '@/lib/reports/charla-attendance'
+import { buildCharlaReport, sedeFromTitle, type CharlaAggRow, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { buildGrowthReport, type GrowthAggRow, type GrowthReport } from '@/lib/reports/member-growth'
 import { buildDiscipulosReport, type DmFlagRow, type DmMilestoneRow, type DiscipulosReport } from '@/lib/reports/discipulos'
 import { buildRetencionReport, type GroupAttRow, type RetencionReport } from '@/lib/reports/retencion'
@@ -11,6 +11,7 @@ import {
   type LeaderRow, type ActiveGroupRow, type PlanRow, type LeaderHistoryPoint,
   type DirigentesReport,
 } from '@/lib/reports/dirigentes'
+import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
 import {
   attendanceWindowStart, attendanceRecencyStart,
   ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
@@ -223,4 +224,34 @@ export async function getDiscipulosReport(): Promise<DiscipulosReport> {
 export async function getRetencionReport(): Promise<RetencionReport> {
   const supabase = createAdminClient()
   return (await readSnapshot<RetencionReport>(supabase, KEY_RETENCION)) ?? computeRetencion(supabase)
+}
+
+/**
+ * REP-5 · Los asistentes de una semana, con la fecha en que volvieron.
+ *
+ * Una consulta para las DOS listas: los abandonos se derivan de estas mismas
+ * filas en `lib/reports/abandonos.ts`, comparando `regreso` contra el cierre de
+ * la ventana. Traer los check-ins al cliente para filtrarlos serían 168k filas.
+ */
+export async function getAsistentesDeLaSemana(
+  desde: string,
+  hasta: string,
+): Promise<AsistenteDeLaSemana[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('report_asistentes_de_la_semana', {
+    p_desde: desde, p_hasta: hasta,
+  })
+  if (error) throw error
+  return ((data ?? []) as Array<{
+    member_id: string; nombre: string; telefono: string | null
+    email: string | null; sedes: string[] | null; regreso: string | null
+  }>).map(r => ({
+    member_id: r.member_id,
+    nombre: r.nombre,
+    telefono: r.telefono,
+    email: r.email,
+    // La sede sale del título con la MISMA función que el resto del reporte.
+    sedes: (r.sedes ?? []).map(sedeFromTitle),
+    regreso: r.regreso,
+  }))
 }

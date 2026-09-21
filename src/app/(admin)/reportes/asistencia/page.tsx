@@ -13,6 +13,7 @@ import { Tabs } from '@/components/shared/Tabs'
 import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
+import { ListasDeLaSemana } from '@/components/reports/ListasDeLaSemana'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
 import { unirSeries } from '@/lib/reports/comparar-series'
@@ -376,6 +377,11 @@ export default function ReporteAsistenciaPage() {
                       error={errorSemana}
                       onVolver={() => setSemana(null)}
                     />
+                    {/* REP-5 · Las dos listas de la semana, debajo del panel:
+                        quiénes vinieron y quiénes dejaron de venir después. */}
+                    <div className="mt-4">
+                      <ListasDeLaSemana clave={claveSemana} />
+                    </div>
                   </div>
                 )}
               </div>

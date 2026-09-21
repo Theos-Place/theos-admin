@@ -5240,6 +5240,13 @@ export type Database = {
         Args: { p_member_ids: string[] }
         Returns: { member_id: string; checked_in_at: string; event_title: string | null }[]
       }
+      report_asistentes_de_la_semana: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          member_id: string; nombre: string; telefono: string | null
+          email: string | null; sedes: string[]; regreso: string | null
+        }[]
+      }
       close_payment_ticket: {
         Args: { p_payment_id: string; p_reviewer?: string | null; p_reason?: string | null }
         Returns: boolean

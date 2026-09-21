@@ -1569,7 +1569,7 @@ Morales, Marco Acuña, Johana Forero, Carolina Fernández, Sharon Sánchez, Mari
 Avellaneda, María Madrigal y Naomi Castro). Los otros 29 del Comité Youth siguen
 sin poder porque no tienen el rol de eventos, que es lo correcto.
 
-### [ ] REP-5 · Reporte: asistentes de una semana + quiénes dejaron de venir (pedido 2026-09-21)
+### [x] REP-5 · Reporte: asistentes de una semana + quiénes dejaron de venir — HECHO 2026-09-21
 
 Al seleccionar una semana en reportes, dos listas: (a) los asistentes de esa
 semana (a cualquier evento tipo charla) y (b) los que asistieron esa semana y
@@ -1617,6 +1617,38 @@ semana N+5 incompleta (no evaluable), vuelve en N+7 (abandono con "volvió el").
 tsc/lint/vitest al cierre.
 ```
 
+**Cierre 2026-09-21.** Dos pestañas debajo del panel de semana que ya existía.
+
+**Lo que más importa de la regla: la lista NO se muestra hasta que la ventana
+cierre.** "Llevás 2 semanas sin venir" no es abandono — esa persona puede
+aparecer el domingo. Antes de que terminen las 5 semanas se dice cuánto falta y
+en qué fecha está la respuesta, en vez de una lista a medias que cambia sola.
+Con esta lista se llama por teléfono; llamar a quien vino ayer la quema entera.
+
+Volver después NO saca a nadie de la lista —la pregunta es quién cortó cinco
+semanas seguidas, y eso ya pasó— pero el regreso va en su propia columna y esas
+personas quedan al final: a quien ya volvió no hay que llamarlo.
+
+**Permisos: son DOS, no uno.** Las listas son del módulo `reportes`, como el
+resto de la pantalla. El teléfono y el correo exigen además `miembros` con
+alcance total, porque —verificado— el rol `reportes` NO tiene el módulo de
+miembros en absoluto: es de métricas. Darle el directorio de 889 personas por la
+puerta de un reporte habría sido abrirlo sin decirlo. A quien no lo tiene, los
+campos ni siquiera viajan al navegador, y la pantalla se lo dice.
+
+Si alguien asistió a dos sedes esa semana salen LAS DOS separadas por coma:
+"la más frecuente" escondería que estuvo en dos, y quien llama necesita saber a
+cuál volvería.
+
+Una RPC (`report_asistentes_de_la_semana`, migración `20260921200000`), cerrada
+a anon —devuelve teléfonos— y verificada con el auditor de SEC-3. La regla de
+negocio no bajó a SQL: acá vive el dato y en `lib/reports/abandonos.ts` la
+decisión, que es la que tiene los 17 tests.
+
+Medido contra producción: 2026-W24 (8–14 jun) → 945 asistentes, **167 dejaron de
+venir** (101 no han vuelto, 66 volvieron después), en 426 ms. 2026-W10 → 163 de
+822. La semana 37 todavía no es evaluable, faltan 4 semanas.
+
 ### [x] SRV-6 · "Mi comité" con selector para RH, dirección y admin — HECHO 2026-09-21
 
 En /servidores/mi-comite (SRV-4, ya hecha), agregar para el encargado de RH,
@@ -1646,6 +1678,130 @@ selector de comité:
 - Entrada de menú visible para estos roles.
 Tests: rol amplio ve cualquier comité; lider sigue limitado al suyo; la vista para el rol
 amplio es idéntica a la del líder (mismo payload). tsc/lint/vitest al cierre.
+```
+
+### [ ] REP-6 · Reporte de personas nuevas (pedido 2026-09-21, réplica del BI + retención)
+
+Réplica del dashboard de Power BI "¿Cuántas personas nuevas estamos captando?"
+dentro de /reportes, con una corrección de fondo (nueva = primera ASISTENCIA,
+no ficha creada) y el agregado de retención (¿volvieron? ¿se matricularon?).
+
+Prompt para Claude Code:
+
+```
+FEATURE · Reporte de personas nuevas en /reportes
+
+DEFINICIÓN CENTRAL — discutida y decidida: "persona nueva" = miembro cuya PRIMERA
+ACTIVIDAD cae en el período mostrado, donde primera actividad = la más antigua entre:
+(a) primer check-in a evento tipo charla, (b) primera matrícula a un estudio, (c) primera
+inscripción a un evento. Así cuenta también la gente nueva que entra matriculándose sin
+haber asistido aún. Cada persona trae su CANAL DE ENTRADA (charla / estudio / evento)
+según cuál actividad fue la primera — mostrarlo como columna en la tabla y como desglose
+en un KPI o gráfico chico (¿por dónde entra la gente?).
+NO usar la fecha de creación de la ficha como métrica principal: se infla con imports (la
+migración de 23k de CCB); una ficha creada sin NINGUNA actividad no cuenta como persona
+nueva todavía. La fecha de creación puede ir como serie secundaria comparativa ("fichas
+creadas"), claramente etiquetada.
+OJO con las actividades MIGRADAS de CCB: las matrículas/asistencias históricas importadas
+sí cuentan (son actividad real de esa persona en su fecha real) — lo que no cuenta es la
+mera creación de la ficha por el import.
+
+LAYOUT (siguiendo el BI que se usa hoy, misma info):
+1. KPI cards del período/filtro activo: Nuevos (por primera asistencia), Edad promedio,
+   Edad mediana, y cuántos de esos nuevos ya son servidores.
+2. Gráfico de barras mensual (últimos 24 meses) de personas nuevas; clic en un mes filtra
+   la tabla (mismo patrón de interacción del reporte de asistencia).
+3. Gráfico anual (desde 2020) para la vista larga.
+4. Filtros: sede/charla (la de su PRIMERA asistencia), rango de edad, servidor sí/no.
+5. Tabla de detalle del mes/filtro seleccionado: nombre, edad, fecha de primera
+   actividad, canal de entrada (charla/estudio/evento), sede/charla o estudio de esa
+   primera vez, celular, servidor sí/no. Export XLSX/CSV.
+
+LO QUE EL BI NO TIENE — RETENCIÓN (columnas/KPIs extra):
+- "Volvió": ≥1 check-in adicional dentro de las 8 semanas siguientes a la primera
+  asistencia (sí/no + KPI "% que vuelve" del período).
+- "Se matriculó": tiene alguna matrícula de estudio posterior a su primera asistencia
+  (sí/no + KPI %).
+- Estas dos van en la tabla y el export — son la diferencia entre medir captación y
+  medir permanencia.
+
+IMPLEMENTACIÓN:
+- Primera asistencia por miembro: query agregada (MIN(fecha) por member sobre check-ins a
+  charlas) — con 168k+ check-ins debe ir en SQL, valorar índice o vista/función si la
+  consulta lo pide. Excluir datos [prueba].
+- Edades: calculadas a la fecha del reporte; sin birth_date → fuera de promedio/mediana
+  (no tratarlos como 0) y "—" en la tabla.
+- PERMISOS: mismos roles que ven /reportes hoy; el export trae celulares — aplicar el
+  mismo criterio de REP-5 (si el rol de reportes es solo métricas, gate del export).
+- Entrada en el índice de /reportes.
+Tests de la lógica pura (primera asistencia con múltiples check-ins el mismo día, "volvió"
+en el borde de 8 semanas, sin birth_date). tsc/lint/vitest al cierre.
+```
+
+### [ ] SRV-7 · "Mi comité": nombre del estudio en la columna de estudio (pedido 2026-09-21)
+
+Prompt para Claude Code:
+
+```
+MEJORA · /servidores/mi-comite: la columna de estudio debe decir CUÁL estudio
+
+HOY (SRV-4): la columna muestra badges "llevando"/"dando" sin decir cuál estudio.
+
+CAMBIO:
+- Si la persona está LLEVANDO un estudio ahora (matrícula activa): mostrar el nombre del
+  estudio (ej. "Nivel 2"). Si además/aparte está DANDO uno, igual con su nombre
+  ("Dirige: SCJ"). Varios a la vez → listarlos (son pocos casos).
+- Si NO está llevando ninguno ahora: mostrar el ÚLTIMO estudio al que llegó y la fecha,
+  en estilo apagado/secundario (ej. "Último: Nivel 3 · mar 2026"). Usar la matrícula más
+  reciente cerrada/finalizada; la fecha = cierre del grupo (o fin de matrícula si no hay
+  cierre). Si nunca ha llevado ninguno: "—".
+- Mismo dato en el export XLSX/CSV (columna "Estudio actual" y "Último estudio").
+- Sin N+1: extender la query agregada existente del endpoint de mi-comite. La vista de
+  SRV-6 (selector para roles amplios) lo hereda solita porque comparte endpoint.
+Tests: llevando, dando, llevando+dando, sin estudio con histórico, sin estudio nunca.
+tsc/lint/vitest al cierre.
+```
+
+### [ ] REP-7 · Reporte global de servidores y sus compromisos (pedido 2026-09-21)
+
+Vista a groso modo de los servidores: cuántos y quiénes además son donantes,
+están en estudios y asisten — a nivel global, por área o por comité.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Reporte de servidores y compromisos en /reportes
+
+QUÉ ES: la vista agregada de lo que "Mi comité" (SRV-4) muestra por comité, pero para
+dirección: elegir GLOBAL / un ÁREA / un COMITÉ y ver el cumplimiento de compromisos de
+los servidores activos de ese alcance.
+
+REUTILIZAR, NO INVENTAR: las MISMAS reglas y (idealmente) la misma query agregada de
+SRV-4 — asistencia comprometida (regla de asistencia activa), llevando/dando estudio en
+los últimos 12 meses (con el nombre del estudio, SRV-7), donante activo (definición
+FIN-1, solo sí/no, sin montos), último check-in. Si los números de este reporte y los de
+"Mi comité" difieren para el mismo comité, es un bug.
+
+UI:
+1. Selector de alcance: Global / por Área / por Comité (árbol área → comité, como SRV-6).
+2. KPI cards del alcance elegido: total de servidores activos, % donantes activos,
+   % en estudios (llevando o dando), % con asistencia comprometida, % que cumple TODO.
+3. Desglose comparativo: tabla o barras por área (en global) o por comité (dentro de un
+   área) con esos mismos porcentajes — para ver de un vistazo qué área/comité está flojo
+   en qué compromiso.
+4. Lista de detalle (drill-down al hacer clic): las personas del alcance con sus ✓/✗ por
+   compromiso — la misma fila de SRV-4. Filtro "solo los que no cumplen algo".
+5. Export XLSX del detalle y del desglose.
+
+PERMISOS: encargado_staff, coordinador_servidores, direccion, admin (los mismos roles
+amplios de SRV-6). NO lider_comite — para eso tiene su pantalla.
+Una persona en VARIOS comités: en el desglose por comité cuenta en cada uno, pero en los
+KPI globales cuenta UNA vez (des-duplicar por member_id — dejarlo dicho en un tooltip
+del KPI para que las sumas no "cuadren" a propósito).
+RENDIMIENTO: SQL agregado; el alcance global son ~1.000 servidores — una consulta, no mil.
+Excluir datos [prueba]. Entrada en el índice de /reportes visible solo a esos roles.
+Tests: alcances (global/área/comité), des-duplicación del multi-comité, coincidencia con
+el endpoint de mi-comite para un comité dado. tsc/lint/vitest al cierre.
 ```
 
 
