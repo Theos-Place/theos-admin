@@ -56,7 +56,7 @@
 ## Fase 20 — Lo que salió el 2026-09-21 y espera decisión
 
 Nada de esto es trabajo que yo pueda arrancar solo: necesitan que alguien
-decida. EVE-13 ya se decidió.
+decida. EVE-13 y DAT-11 ya se resolvieron.
 
 ### [ ] SEC-4 · Las cuentas de PRUEBA siguen vivas
 
@@ -69,15 +69,52 @@ Decidir: borrarlas o bloquearlas. Bloquear es reversible y conserva el historial
 —mismo criterio que los menores—; borrar deja el padrón limpio. El seed vive en
 `scripts/seed-datos-de-prueba.ts` y puede volver a crearlas cuando haga falta.
 
-### [ ] DAT-11 · Nueve correos están en dos fichas activas a la vez
+### [x] DAT-11 · Nueve correos en dos fichas a la vez — HECHO 2026-09-21
 
-Ninguno es urgente —esas personas ven su propia ficha— pero **los correos
-dirigidos a una caen en la bandeja de la otra**. Algunos parecen familia
-compartiendo (Job Morales y Graciela Segura; dos hermanas Sánchez Arguedas) y
-otros no. La lista sale de `scripts/dat10/alcance.cjs`.
+Los correos dirigidos a una persona caían en la bandeja de otra. Comunicación
+confirmó uno por uno de quién era cada correo y se le quitó a la otra ficha
+(`scripts/dat11/corregir.cjs`, dry-run y después aplicado):
 
-Hay que confirmar de quién es cada correo antes de tocar nada. Es el mismo
-patrón que DAT-10 y solo se resuelve preguntando.
+| Correo | Se lo queda | Lo pierde |
+|---|---|---|
+| adripicadom.ap@gmail.com | Adriana Picado Marin | Francisco Viquez Picado |
+| aduarte86@gmail.com | Alejandro Duarte Torres | Alejandro Monge |
+| avm150593@hotmail.com | Andrea Viquez Murillo | Santi Sanchez |
+| cuellarcr@hotmail.com | Monica Cuellar Gonzalez | Ofelina Gomez Gomez |
+| davromen@gmail.com | David Enrique Mendez Roman | Mariela Saravia Valverde |
+| job.morales231099@hotmail.com | Job Morales Segura | Graciela Segura Hernandez |
+| katygose@gmail.com | Kathia Gomez Sequeiera | Sussy Mariela Barrantes Loaiciga |
+| lilliana.chavesb30@gmail.com | Lilliana Chaves | Lilliam Bermúdez Pérez |
+
+Ninguna de las fichas que perdió el correo tenía cuenta de auth, así que nadie
+dejó de poder entrar: lo que estaba mal era el correo de contacto, no el
+vínculo. El guard del script se habría negado a correr si alguna la tuviera.
+
+**El noveno no se tocó a propósito.** `sarguedas@icloud.com` es del papá o
+encargado de Lucía y Naomy Sánchez Arguedas, nacidas en 2018 y 2024. Que esté
+en las dos fichas está bien, y es exactamente el caso que DAT-12 tiene que
+dejar pasar.
+
+**De paso, una cédula cruzada:** la 107130768 estaba en la ficha de Sussy
+Barrantes y es de Kathia Gómez. Se movió. Ojo que la ficha de Sussy quedó con
+nombre y fecha de nacimiento nada más — si resultara ser la misma persona, eso
+es una fusión y se hace aparte.
+
+Verificado contra la base después de aplicar: queda 1 correo repetido (el del
+papá) y la cédula en una sola ficha. Como efecto secundario, de las 6 cuentas
+que apuntaban a la ficha equivocada —el patrón de Tatiana— quedan 2 casos
+sueltos anotados abajo.
+
+### [ ] DAT-13 · Dos cuentas sueltas que quedaron del barrido
+
+Salieron de medir DAT-11 y son de otra naturaleza, por eso van aparte:
+
+- **`mflores1909@gmail.com`** — hay DOS fichas de "Manuel Flores", una con
+  cédula 114400578 y otra sin. La cuenta está vinculada a la que no tiene
+  cédula. Huele a duplicado para fusionar, no a dos personas.
+- **`sebasgaes@hotmail.com`** — Sebastián Garro Escalante entró el 9 de
+  setiembre con una cuenta que NO tiene ficha vinculada, aunque su correo sí
+  está en una ficha. Hay que amarrar la cuenta a la ficha.
 
 ### [ ] DAT-12 · La validación de correo duplicado choca con FAM-2
 
