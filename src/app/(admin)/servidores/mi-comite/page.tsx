@@ -17,7 +17,8 @@ import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { cn } from '@/lib/utils'
-import { leFaltaAlgo, faltantes, etiquetaDeEstudio, type Compromisos } from '@/lib/servers/compromisos'
+import { leFaltaAlgo, faltantes, type Compromisos } from '@/lib/servers/compromisos'
+import { textoDeEstudio, type EstudioDeLaPersona } from '@/lib/studies/estudio-actual'
 
 type Fila = Compromisos & {
   member_id: string
@@ -27,6 +28,7 @@ type Fila = Compromisos & {
   telefono: string | null
   email: string | null
   cumpleanos: string | null
+  estudio: EstudioDeLaPersona
 }
 type Comite = { id: string; nombre: string; filas: Fila[] }
 
@@ -37,7 +39,14 @@ const COLUMNAS: ColumnDef<Fila>[] = [
   { key: 'puestos',   label: 'Puesto(s)',     defaultVisible: true, exportValue: f => f.puestos.join(' · ') },
   { key: 'encargado', label: 'Encargado',     defaultVisible: true, exportValue: f => (f.encargado ? 'Sí' : '') },
   { key: 'asistencia',label: 'Asistencia',    defaultVisible: true, exportValue: f => (f.asistencia ? 'Cumple' : 'No cumple') },
-  { key: 'estudio',   label: 'Estudio',       defaultVisible: true, exportValue: f => etiquetaDeEstudio(f) || 'Ninguno' },
+  // SRV-7: dos columnas en el archivo y no una. "Nivel 2" y "Último: Nivel 3 ·
+  // mar 2026" responden preguntas distintas, y en una sola celda hay que leer
+  // el prefijo para saber cuál de las dos te están diciendo.
+  { key: 'estudioActual', label: 'Estudio actual', defaultVisible: true,
+    exportValue: f => [f.estudio.llevando.join(', '), f.estudio.dando.length ? `Dirige: ${f.estudio.dando.join(', ')}` : ''].filter(Boolean).join(' · ') },
+  { key: 'ultimoEstudio', label: 'Último estudio', defaultVisible: true,
+    exportValue: f => (f.estudio.llevando.length || f.estudio.dando.length || !f.estudio.ultimo)
+      ? '' : `${f.estudio.ultimo.nombre}${f.estudio.ultimo.fecha ? ` (${f.estudio.ultimo.fecha})` : ''}` },
   { key: 'donante',   label: 'Donante activo',defaultVisible: true, exportValue: f => (f.donante ? 'Sí' : 'No') },
   { key: 'ultimo',    label: 'Último check-in', defaultVisible: true, exportValue: f => f.ultimoCheckin ?? '' },
   { key: 'falta',     label: 'Le falta',      defaultVisible: true, exportValue: f => faltantes(f).join(', ') },
@@ -202,9 +211,17 @@ function MiComiteContenido() {
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{f.puestos.join(' · ')}</td>
                         <td className="px-4 py-3"><Marca ok={f.asistencia} titulo="Asistencia" /></td>
                         <td className="px-4 py-3 text-[13px] font-body">
-                          {etiquetaDeEstudio(f)
-                            ? <span className="rounded-full bg-teal-deep/10 px-2 py-0.5 text-[11px] text-teal-deep font-semibold">{etiquetaDeEstudio(f)}</span>
-                            : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: ninguno en el último año" />}
+                          {/* SRV-7 · Dice CUÁL estudio. Si hoy no lleva ninguno,
+                              el último va apagado: es historia, no cumplimiento. */}
+                          {f.llevandoEstudio || f.dandoEstudio ? (
+                            <span className="rounded-full bg-teal-deep/10 px-2 py-0.5 text-[11px] text-teal-deep font-semibold">
+                              {textoDeEstudio(f.estudio)}
+                            </span>
+                          ) : f.estudio.ultimo ? (
+                            <span className="text-[13px] text-navy-light/80">{textoDeEstudio(f.estudio)}</span>
+                          ) : (
+                            <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />
+                          )}
                         </td>
                         <td className="px-4 py-3"><Marca ok={f.donante} titulo="Donante activo" /></td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">

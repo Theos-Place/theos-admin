@@ -1771,7 +1771,7 @@ Medido: serie 241 filas en ~1,1 s; detalle de un mes ~800 ms. Por año:
 2020:1.094 · 2021:1.481 · 2022:1.779 · 2023:1.809 · 2024:1.793 · 2025:2.075 ·
 2026:1.843 (parcial).
 
-### [ ] SRV-7 · "Mi comité": nombre del estudio en la columna de estudio (pedido 2026-09-21)
+### [x] SRV-7 · "Mi comité": nombre del estudio en la columna de estudio — HECHO 2026-09-21
 
 Prompt para Claude Code:
 
@@ -1794,6 +1794,27 @@ CAMBIO:
 Tests: llevando, dando, llevando+dando, sin estudio con histórico, sin estudio nunca.
 tsc/lint/vitest al cierre.
 ```
+
+**Cierre 2026-09-21.** La columna dice cuál: "Discípulos 2", "Dirige: Nivel 3",
+"Exploring · Dirige: Nivel 4". Quien hoy no lleva ninguno muestra el último
+apagado ("Último: Sirviendo como Jesús · dic 2025"), y quien nunca llevó, ✗.
+
+**Dónde estaba la trampa:** al mostrar el nombre casi estrecho el COMPROMISO sin
+querer. El ✓/✗ sigue siendo "llevó o dio algo en los últimos 12 meses"; el
+NOMBRE es solo del estudio que está pasando ahora. Medido: en Comité Youth
+cumplen 30 pero están estudiando ahora 19 — mezclarlos habría puesto en rojo a
+11 personas de un comité solo.
+
+Y para "ahora" manda el estado del GRUPO, no el de la matrícula: hay 675
+matrículas `enrolled` contra 68 grupos `en_curso`, así que mirar la matrícula
+diría que media iglesia está estudiando.
+
+Export con DOS columnas, "Estudio actual" y "Último estudio": en una sola celda
+hay que leer el prefijo para saber cuál te están diciendo.
+
+Sin N+1 — se ampliaron las consultas agregadas que ya había. El test de embeds
+ambiguos pescó que `study_enrollments → study_groups` tiene dos llaves y hubo
+que nombrarla. SRV-6 lo hereda solo porque comparte endpoint.
 
 ### [ ] REP-7 · Reporte global de servidores y sus compromisos (pedido 2026-09-21)
 
