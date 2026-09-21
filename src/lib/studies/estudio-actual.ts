@@ -57,7 +57,10 @@ export function mesYAnio(fecha: string | null | undefined): string {
  */
 export function textoDeEstudio(e: EstudioDeLaPersona): string {
   const partes: string[] = []
-  if (e.llevando.length) partes.push(e.llevando.join(', '))
+  // "Cursando:" y "Dirige:" al frente (pedido del usuario 2026-09-21): sin la
+  // palabra, "Nivel 2" a secas no dice si lo está llevando o si lo dio, y en una
+  // columna donde la otra opción empieza con "Último:" la asimetría confunde.
+  if (e.llevando.length) partes.push(`Cursando: ${e.llevando.join(', ')}`)
   if (e.dando.length) partes.push(`Dirige: ${e.dando.join(', ')}`)
   if (partes.length) return partes.join(' · ')
   if (e.ultimo) {

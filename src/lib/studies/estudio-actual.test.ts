@@ -25,8 +25,16 @@ describe('qué cuenta como "ahora"', () => {
 })
 
 describe('textoDeEstudio', () => {
-  it('llevando dice cuál', () => {
-    expect(textoDeEstudio(e({ llevando: ['Nivel 2'] }))).toBe('Nivel 2')
+  it('las tres formas empiezan con una palabra que dice qué son', () => {
+    // "Nivel 2" a secas no dice si lo está llevando o si ya lo dio, y al lado de
+    // "Último: …" la asimetría confunde.
+    expect(textoDeEstudio(e({ llevando: ['X'] }))).toMatch(/^Cursando: /)
+    expect(textoDeEstudio(e({ dando: ['X'] }))).toMatch(/^Dirige: /)
+    expect(textoDeEstudio(e({ ultimo: { nombre: 'X', fecha: null } }))).toMatch(/^Último: /)
+  })
+
+  it('llevando dice cuál, con la palabra adelante', () => {
+    expect(textoDeEstudio(e({ llevando: ['Nivel 2'] }))).toBe('Cursando: Nivel 2')
   })
 
   it('dando lleva la palabra Dirige', () => {
@@ -35,11 +43,11 @@ describe('textoDeEstudio', () => {
 
   it('llevando y dando a la vez, los dos', () => {
     expect(textoDeEstudio(e({ llevando: ['Nivel 3'], dando: ['Nivel 1'] })))
-      .toBe('Nivel 3 · Dirige: Nivel 1')
+      .toBe('Cursando: Nivel 3 · Dirige: Nivel 1')
   })
 
   it('varios a la vez se listan', () => {
-    expect(textoDeEstudio(e({ llevando: ['Nivel 2', 'SCJ'] }))).toBe('Nivel 2, SCJ')
+    expect(textoDeEstudio(e({ llevando: ['Nivel 2', 'SCJ'] }))).toBe('Cursando: Nivel 2, SCJ')
   })
 
   it('sin estudio ahora, muestra el último con su mes', () => {
@@ -49,7 +57,7 @@ describe('textoDeEstudio', () => {
 
   it('el último NO se muestra si está llevando algo: la columna se vuelve ilegible', () => {
     expect(textoDeEstudio(e({ llevando: ['Nivel 2'], ultimo: { nombre: 'Nivel 1', fecha: '2025-06-01' } })))
-      .toBe('Nivel 2')
+      .toBe('Cursando: Nivel 2')
   })
 
   it('último sin fecha no inventa una', () => {

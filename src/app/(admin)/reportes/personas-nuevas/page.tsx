@@ -164,12 +164,20 @@ export default function PersonasNuevasPage() {
           empty={!filas.length}
         >
           <ResponsiveContainer>
-            <BarChart data={mensual} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <BarChart data={mensual} margin={{ top: 20, right: 8, left: -18, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
               <XAxis dataKey="etiqueta" tick={EJE_TICK} interval="preserveStartEnd" />
               <YAxis tick={EJE_TICK} allowDecimals={false} />
               <Tooltip contentStyle={ESTILO_TOOLTIP} cursor={CURSOR_BARRA} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
               <Bar dataKey="n" name="Nuevos" radius={[4, 4, 0, 0]} onClick={(d: { payload?: { periodo: string } }) => d.payload && setMes(d.payload.periodo)}>
+                {/* El número encima, igual que en el gráfico por año: en una
+                    tablet no hay hover y comparar dos meses obligaba a pasar
+                    por encima de cada barra. El cero no se imprime — llenaría
+                    de ceros los meses que todavía no llegaron. */}
+                <LabelList
+                  dataKey="n" position="top" {...ETIQUETA_VALOR}
+                  formatter={(v) => (Number(v ?? 0) === 0 ? '' : Number(v).toLocaleString('es-CR'))}
+                />
                 {mensual.map(p => (
                   <Cell key={p.periodo} fill={p.periodo === mes ? CORAL : CORAL_ATENUADO} cursor="pointer" />
                 ))}
