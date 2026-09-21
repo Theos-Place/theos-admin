@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Users, Star, Check, X } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -8,7 +8,14 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
+import { useUrlFilter } from '@/hooks/useUrlFilter'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { SelectorDeComite } from '@/components/servers/SelectorDeComite'
 import { formatDate } from '@/lib/format'
+import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
+import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
+import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { cn } from '@/lib/utils'
 import { leFaltaAlgo, faltantes, etiquetaDeEstudio, type Compromisos } from '@/lib/servers/compromisos'
 
@@ -33,38 +40,54 @@ const COLUMNAS: ColumnDef<Fila>[] = [
   { key: 'falta',     label: 'Le falta',      defaultVisible: true, exportValue: f => faltantes(f).join(', ') },
 ]
 
+/** Los criterios se leen de donde VIVEN, no se escriben a mano: el de
+ *  asistencia se arma con las constantes de `lib/attendance` y el de donante
+ *  con la ventana real de `refresh_donor_flags()`, que además pone el mes. */
+const COLUMNAS_TABLA: Array<{ label: string; info?: string }> = [
+  { label: 'Persona' },
+  { label: 'Puesto' },
+  { label: 'Asistencia', info: ATTENDANCE_GENERAL_TOOLTIP },
+  { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos.' },
+  { label: 'Donante', info: explicacionDeDonantes(new Date()) },
+  { label: 'Último check-in' },
+]
+
 function Marca({ ok, titulo }: { ok: boolean; titulo: string }) {
   return ok
     ? <Check size={15} strokeWidth={2.5} className="text-teal-deep" aria-label={`${titulo}: cumple`} />
     : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label={`${titulo}: no cumple`} />
 }
 
-export default function MiComitePage() {
+function MiComiteContenido() {
   const { loaded } = usePermissions()
   const { user } = useAuth()
-  const esLider = (user?.roles ?? []).includes('lider_comite') || (user?.roles ?? []).includes('admin')
+  const roles = user?.roles ?? []
+  // SRV-6: staff, coordinación de servidores, dirección y admin eligen cualquier
+  // comité. El encargado sigue viendo los suyos y nada más — el servidor lo
+  // vuelve a comprobar, esto solo decide si se dibuja el selector.
+  const esAmplio = roles.some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+  const esLider = roles.includes('lider_comite') || esAmplio
+  const [comiteElegido, setComiteElegido] = useUrlFilter('comite')
 
-  const [comites, setComites] = useState<Comite[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [soloPendientes, setSoloPendientes] = useState(false)
 
-  useEffect(() => {
-    if (!loaded || !esLider) return
-    let vivo = true
-    fetch('/api/servers/mi-comite')
-      .then(async r => {
-        if (!r.ok) {
-          const d = await r.json().catch(() => null) as { error?: string } | null
-          throw new Error(d?.error ?? 'No se pudo cargar tu comité.')
-        }
-        return r.json()
-      })
-      .then((d: { comites: Comite[] }) => { if (vivo) setComites(d.comites ?? []) })
-      .catch(e => { if (vivo) setError(e instanceof Error ? e.message : 'Error desconocido') })
-      .finally(() => { if (vivo) setCargando(false) })
-    return () => { vivo = false }
-  }, [loaded, esLider])
+  // LINT-1: la carga se DERIVA de la clave de la petición, en vez de encender y
+  // apagar `cargando` dentro del efecto.
+  const clave = loaded && esLider ? `mi-comite:${comiteElegido}` : ''
+  const { datos, cargando, error } = useCargaRemota<{ comites: Comite[] }>(
+    clave,
+    async () => {
+      if (!clave) return { comites: [] }
+      const r = await fetch(`/api/servers/mi-comite${comiteElegido ? `?committee_id=${encodeURIComponent(comiteElegido)}` : ''}`)
+      if (!r.ok) {
+        const d = await r.json().catch(() => null) as { error?: string } | null
+        throw new Error(d?.error ?? 'No se pudo cargar el comité.')
+      }
+      return r.json()
+    },
+    { generico: 'No se pudo cargar el comité.' },
+  )
+  const comites = useMemo(() => datos?.comites ?? [], [datos])
 
   const visibles = useMemo(
     () => comites.map(c => ({ ...c, filas: soloPendientes ? c.filas.filter(leFaltaAlgo) : c.filas })),
@@ -81,20 +104,28 @@ export default function MiComitePage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="ptitle">Mi comité</h1>
-        <p className="psub">Tu gente y cómo va cada quien con sus compromisos.</p>
+        <h1 className="ptitle">{esAmplio ? 'Comités' : 'Mi comité'}</h1>
+        <p className="psub">
+          {esAmplio
+            ? 'Elegí un comité y vas a ver lo mismo que ve su encargado.'
+            : 'Tu gente y cómo va cada quien con sus compromisos.'}
+        </p>
       </div>
+
+      {esAmplio && <SelectorDeComite value={comiteElegido || null} onChange={id => setComiteElegido(id ?? '')} />}
 
       {error && (
         <div className="card p-4 text-[13px] text-coral-deep font-body">{error}</div>
       )}
 
       {!error && !cargando && comites.length === 0 && (
-        <EmptyState
-          icon={Users}
-          title="Todavía no sos encargada de ningún comité"
-          description="La estrella de encargado la ponen staff o dirección en la lista de personas del comité."
-        />
+        esAmplio
+          ? <EmptyState icon={Users} title="Elegí un comité" description="Arriba están todos, agrupados por área." />
+          : <EmptyState
+              icon={Users}
+              title="Todavía no sos encargada de ningún comité"
+              description="La estrella de encargado la ponen staff o dirección en la lista de personas del comité."
+            />
       )}
 
       {comites.length > 0 && (
@@ -136,9 +167,12 @@ export default function MiComitePage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {['Persona', 'Puesto', 'Asistencia', 'Estudio', 'Donante', 'Último check-in'].map(h => (
-                        <th key={h} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">
-                          {h}
+                      {COLUMNAS_TABLA.map(h => (
+                        <th key={h.label} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">
+                          {h.label}
+                          {/* Las dos columnas que marcan a alguien en rojo con
+                              un criterio que no se adivina del título. */}
+                          {h.info && <InfoDelEncabezado texto={h.info} />}
                         </th>
                       ))}
                     </tr>
@@ -199,5 +233,16 @@ export default function MiComitePage() {
         <Link href="/servidores" className="text-coral hover:underline">Servidores</Link>.
       </p>
     </div>
+  )
+}
+
+/**
+ * useUrlFilter usa useSearchParams, que en el App Router exige <Suspense>.
+ */
+export default function MiComitePage() {
+  return (
+    <Suspense fallback={null}>
+      <MiComiteContenido />
+    </Suspense>
   )
 }

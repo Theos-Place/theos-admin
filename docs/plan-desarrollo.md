@@ -1617,3 +1617,54 @@ semana N+5 incompleta (no evaluable), vuelve en N+7 (abandono con "volvió el").
 tsc/lint/vitest al cierre.
 ```
 
+### [x] SRV-6 · "Mi comité" con selector para RH, dirección y admin — HECHO 2026-09-21
+
+En /servidores/mi-comite (SRV-4, ya hecha), agregar para el encargado de RH,
+direccion y admin un selector de comités agrupados por área, para ver
+exactamente lo que ve cada líder de comité pero escogiendo el comité.
+
+Prompt para Claude Code:
+
+```
+FEATURE · /servidores/mi-comite: selector de comité para roles amplios
+
+BASE: la pantalla "Mi comité" (SRV-4) ya existe y hoy es exclusiva de lider_comite, que ve
+solo su(s) comité(s). Eso NO cambia para los líderes.
+
+NUEVO: los roles amplios — encargado_staff, coordinador_servidores, direccion y admin
+(confirmado por Floriana 2026-09-21) — también pueden entrar a la pantalla, con un
+selector de comité:
+- Lista agrupada por ÁREA (área → comités), con buscador. Al elegir un comité, ven
+  EXACTAMENTE la misma vista que ve el líder de ese comité (misma tabla, mismos
+  compromisos, mismo export) — reutilizar el componente y el endpoint tal cual, solo
+  cambia la autorización del parámetro de comité.
+- Server-side: el endpoint acepta ?committee_id= solo si el solicitante es rol amplio;
+  un lider_comite que mande el id de otro comité sigue recibiendo 403 (test existente
+  de SRV-4 no debe aflojarse).
+- El selector recuerda el último comité elegido (query param en la URL, como REP-2, para
+  poder compartir el enlace).
+- Entrada de menú visible para estos roles.
+Tests: rol amplio ve cualquier comité; lider sigue limitado al suyo; la vista para el rol
+amplio es idéntica a la del líder (mismo payload). tsc/lint/vitest al cierre.
+```
+
+
+**Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
+comité elegido viaja en `?comite=` para poder pasar el link. Sin comité elegido,
+un rol amplio NO carga nada: traer los 46 "por si acaso" sería casi un minuto de
+consultas para una pantalla que mira uno a la vez.
+
+El recorte del encargado no se aflojó — el test de SRV-4 sigue verde y se le
+sumaron los de SRV-6. Verificado contra producción: TI (admin) puede pedir
+Comité de Worship y lo ve completo (25 personas); Karina, que es
+`lider_comite` de Youth, recibe 403 por el mismo id.
+
+**Info en los encabezados** (pedido del usuario en el momento): Asistencia,
+Estudio y Donante explican su criterio al pasar el mouse o con el teclado. Los
+textos NO se escriben a mano: el de asistencia se arma con las constantes de
+`lib/attendance` y el de donante con `explicacionDeDonantes()`, que ya existía y
+además pone el mes real desde el que cuentan las donaciones. Escribir "últimos 6
+meses" en el tooltip habría sido la segunda definición de siempre.
+
+De paso, la carga de la pantalla pasó a `useCargaRemota` (LINT-1): el
+`setCargando(true)` dentro del efecto costaba el warning 61 de 60.
