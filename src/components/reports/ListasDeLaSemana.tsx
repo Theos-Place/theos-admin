@@ -7,7 +7,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
-import { INFO_ASISTIERON, INFO_DEJARON } from '@/lib/reports/abandonos'
+import { INFO_ASISTIERON, INFO_DEJARON, SEMANAS_DE_CORTE } from '@/lib/reports/abandonos'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -188,17 +188,50 @@ export function ListasDeLaSemana({ clave }: { clave: string | null }) {
   if (error) return <p className="text-[13px] text-coral-deep font-body py-4" role="alert">{error}</p>
   if (!datos) return null
 
+  const dejaron = datos.dejaron.personas.length
+  const sinVolver = datos.dejaron.personas.filter(p => !p.volvioEl).length
+
   return (
-    <div className="space-y-3">
-      <div>
-        <h2 className="text-base font-bold text-navy font-display">Las personas de la semana</h2>
-        <p className="text-[13px] text-navy-light/80 font-body">
-          {/* Los DOS números: no es lo mismo un check-in que un asistente, y la
-              diferencia son los que vinieron por primera vez. */}
-          {datos.checkins.toLocaleString('es-CR')} check-ins ·{' '}
-          {datos.asistentes.length.toLocaleString('es-CR')} asistentes (2+ visitas)
-        </p>
+    /* Un bloque APARTE, con su borde y su fondo: las dos listas no son otro
+       gráfico de la semana, son la tarea que sale del reporte. Mezcladas con lo
+       demás se leían como un apéndice. */
+    <section
+      aria-label="Seguimiento de la semana"
+      className="rounded-2xl border border-[var(--outline-variant)] bg-surface-low/50 p-4 space-y-3"
+    >
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-base font-bold text-navy font-display">Seguimiento de la semana</h2>
+          <p className="text-[13px] text-navy-light/80 font-body">
+            Quiénes vinieron y quiénes dejaron de venir. La segunda lista es la de llamar.
+          </p>
+        </div>
+        {/* Los tres números que resumen el bloque. Check-ins y asistentes NO son
+            lo mismo, y la diferencia son los que vinieron por primera vez. */}
+        <div className="flex items-center gap-5">
+          {[
+            { n: datos.checkins, t: 'check-ins' },
+            { n: datos.asistentes.length, t: 'asistentes' },
+            { n: dejaron, t: 'dejaron de venir', alerta: true },
+          ].map(k => (
+            <div key={k.t} className="text-right">
+              <p className={cn('text-xl font-extrabold tabular-nums font-display leading-none',
+                k.alerta && k.n > 0 ? 'text-coral-deep' : 'text-navy')}>
+                {k.n.toLocaleString('es-CR')}
+              </p>
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mt-1">{k.t}</p>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {dejaron > 0 && (
+        <p className="text-[13px] text-navy-light/80 font-body">
+          De los {dejaron.toLocaleString('es-CR')} que cumplen {SEMANAS_DE_CORTE} semanas sin venir,{' '}
+          <strong className="text-navy">{sinVolver.toLocaleString('es-CR')}</strong> no han vuelto todavía —
+          esos son los que vale la pena llamar.
+        </p>
+      )}
 
       <Lista
         titulo="Asistieron esta semana"
@@ -226,6 +259,6 @@ export function ListasDeLaSemana({ clave }: { clave: string | null }) {
           Tu rol ve el reporte pero no el directorio, así que la descarga va sin teléfonos ni correos.
         </p>
       )}
-    </div>
+    </section>
   )
 }
