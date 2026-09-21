@@ -2043,6 +2043,45 @@ Tests: el endpoint filtrado por sede devuelve consistente el mismo universo para
 año y tabla (mismos totales); apilado anual suma el total. tsc/lint/vitest al cierre.
 ```
 
+### [~] DAT-10 · A Tatiana Brenes le aparece la información de la mamá — CASO RESUELTO 2026-09-21, quedan dos decisiones
+
+Datos del reporte: Tatiana Brenes Arroyo (cédula 4-0204-0583, pareja/familia
+con Dennis Zabala), mamá María Eugenia Arroyo (cédula 4-0106-1311), correo
+tati_brenes02@hotmail.com. Al entrar, Tatiana ve la información de la mamá.
+
+Prompt para Claude Code:
+
+```
+BUG DATOS · Cuenta de Tatiana Brenes muestra la ficha de su mamá
+
+CASO: Tatiana Brenes Arroyo (cédula 4-0204-0583) entra con tati_brenes02@hotmail.com y ve
+la información de María Eugenia Arroyo (su mamá, cédula 4-0106-1311).
+
+ETAPA 1 — DIAGNÓSTICO (solo lectura, reportar antes de tocar):
+1. Buscar tati_brenes02@hotmail.com en members: ¿en cuántas fichas está? ¿en la de
+   Tatiana, en la de la mamá, o en ambas? (Sospecha: correo prestado — el patrón de
+   FAM-2 con papás e hijos.)
+2. ¿A qué member_id apunta la cuenta de auth de ese correo? ¿Coincide con la ficha de
+   Tatiana (por cédula 4-0204-0583) o con la de la mamá?
+3. Revisar las dos fichas por cédula: ¿existen ambas? ¿alguna fusión previa las mezcló?
+   (revisar audit_log/merges de esas fichas). ¿La familia (con Dennis Zabala) está bien
+   armada o la vinculación familiar movió algo?
+4. MEDIR EL ALCANCE: ¿cuántos casos más hay del mismo patrón? — correos que aparecen en
+   más de una ficha ACTIVA de adultos, y cuentas de auth cuyo email hoy vive en una ficha
+   distinta a la que apunta su member_id. Listarlos (van a ser más Tatianas).
+
+ETAPA 2 — CORRECCIÓN (tras aprobación de la lista):
+- Caso Tatiana: dejar el correo en la ficha CORRECTA (confirmar con ella cuál es su
+  correo real y el de la mamá), re-apuntar la cuenta de auth al member_id de Tatiana, y
+  quitar el correo de la ficha de la mamá si es prestado (la mamá queda sin correo o con
+  el suyo real). Registrar en audit_log.
+- Regla preventiva: al crear/editar, avisar si el correo ya está en otra ficha activa
+  (¿ya existe esta validación? si no, proponerla — al menos advertencia, no bloqueo duro,
+  por los correos compartidos legítimos de FAM-2 en menores).
+NO enviar ningún correo (EMAIL_SILENT_MODE). No fusionar fichas: son dos personas
+distintas, el problema es el correo/cuenta, no duplicados.
+```
+
 
 **Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
 comité elegido viaja en `?comite=` para poder pasar el link. Sin comité elegido,
@@ -2103,3 +2142,37 @@ dan lo mismo en las 15, y sin filtro los dos dan 204.
 
 De paso, el selector de charla sale de la serie completa y no del mes cargado:
 antes cambiaba de opciones según qué mes estuvieras viendo.
+
+**Caso resuelto 2026-09-21.** El sistema no estaba fallando: el correo
+`tati_brenes02@hotmail.com` estaba escrito **en la ficha de la mamá**, y la
+ficha de Tatiana no tenía correo. La cuenta hacía lo correcto —abrir la ficha
+que tiene ese correo— y esa era la de la mamá.
+
+Se movió la CUENTA COMPLETA, no solo el correo: `auth_user_id` y las marcas de
+ingreso. Dejar el vínculo de auth en la ficha de la mamá la habría seguido
+abriendo aunque el correo estuviera bien puesto.
+
+Los datos NO estaban mezclados: cada una conserva su teléfono y su fecha de
+nacimiento. Del audit_log, lo único con rastro legible son dos UPDATE del propio
+login (16-set); los cuatro anteriores son previos a AUD-1 y no guardaron el
+valor viejo. De paso se le puso la cédula a la mamá (401061311), verificando
+antes que ninguna otra ficha la usara. Decisión del usuario: la mamá queda
+FUERA de la unidad familiar, que solo tiene a Dennis (titular) y Tatiana.
+Dennis ya estaba correcto: cédula 114590150 y correo propio.
+
+**EL PATRÓN NO SE PUEDE DETECTAR SOLO.** Se intentó: correos cuya parte antes de
+la @ no se parece al nombre de la ficha. Da 4.656 de 18.533 cuentas —puro
+apodo y abreviatura—, así que no sirve como detector y no se deja el script como
+si sirviera.
+
+Lo que sí se puede listar, y queda pendiente de decisión:
+
+1. **9 correos están en dos fichas activas a la vez.** Ninguno es urgente como el
+   de Tatiana —esas personas ven su propia ficha— pero los correos dirigidos a
+   una caerían en la bandeja de la otra. Hay que confirmar de quién es cada uno.
+2. **La validación de correo duplicado YA existe y bloquea DURO** (409 al crear y
+   al editar). Eso choca con FAM-2: hoy un menor no puede llevar el correo del
+   papá desde la pantalla. Decidir si se relaja a advertencia o se permite solo
+   cuando la persona es menor.
+
+Scripts en `scripts/dat10/`.
