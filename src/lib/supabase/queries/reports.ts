@@ -13,11 +13,36 @@ import {
 } from '@/lib/reports/dirigentes'
 import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
 import type { PersonaNueva, Canal } from '@/lib/reports/personas-nuevas'
+import type { FilaCruda as FilaCrudaDemografia } from '@/lib/reports/demografia'
 import {
   attendanceWindowStart, attendanceRecencyStart,
   ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
   ACTIVE_ATTENDANCE_MONTHS, ACTIVE_ATTENDANCE_MIN,
 } from '@/lib/attendance'
+
+/**
+ * Trae TODAS las filas de un RPC, no las primeras 1.000.
+ *
+ * PostgREST corta en `db-max-rows` (1.000) y no avisa. Costó dos veces el mismo
+ * día (2026-09-21): la demografía de un año son 7.135 filas y llegaban 1.000, o
+ * sea 849 personas en vez de 4.355. Un reporte que devuelve exactamente 1.000
+ * de algo casi siempre está truncado.
+ */
+const TOPE_POSTGREST = 1000
+
+async function todasLasFilas<T>(
+  pedir: (desde: number, hasta: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+): Promise<T[]> {
+  const out: T[] = []
+  for (let desde = 0; ; desde += TOPE_POSTGREST) {
+    const { data, error } = await pedir(desde, desde + TOPE_POSTGREST - 1)
+    if (error) throw error
+    const lote = (data ?? []) as T[]
+    out.push(...lote)
+    if (lote.length < TOPE_POSTGREST) break
+  }
+  return out
+}
 
 // Caché de reportes (tabla report_snapshots, refrescada por el cron nocturno
 // /api/cron/report-snapshots). Dos estrategias según el peso del dataset:
@@ -239,13 +264,14 @@ export async function getAsistentesDeLaSemana(
   hasta: string,
 ): Promise<AsistenteDeLaSemana[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.rpc('report_asistentes_de_la_semana', {
-    p_desde: desde, p_hasta: hasta,
-  })
-  if (error) throw error
-  return ((data ?? []) as Array<{
+  const filas = await todasLasFilas<{
     member_id: string; nombre: string; telefono: string | null
-    email: string | null; sedes: string[] | null; regreso: string | null
+    email: string | null; sedes: string[] | null; regreso: string | null; visitas: number | null
+  }>((d: number, h: number) => supabase.rpc('report_asistentes_de_la_semana', { p_desde: desde, p_hasta: hasta })
+    .order('member_id').range(d, h))
+  return (filas as Array<{
+    member_id: string; nombre: string; telefono: string | null
+    email: string | null; sedes: string[] | null; regreso: string | null; visitas: number | null
   }>).map(r => ({
     member_id: r.member_id,
     nombre: r.nombre,
@@ -254,6 +280,7 @@ export async function getAsistentesDeLaSemana(
     // La sede sale del título con la MISMA función que el resto del reporte.
     sedes: (r.sedes ?? []).map(sedeFromTitle),
     regreso: r.regreso,
+    visitas: Number(r.visitas ?? 0),
   }))
 }
 
@@ -268,9 +295,13 @@ export async function getSeriePersonasNuevas(): Promise<Array<{ anio: number; me
 /** REP-6 · El detalle de las personas nuevas de un período. */
 export async function getPersonasNuevas(desde: string, hasta: string): Promise<PersonaNueva[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.rpc('report_personas_nuevas', { p_desde: desde, p_hasta: hasta })
-  if (error) throw error
-  return ((data ?? []) as Array<{
+  const filas = await todasLasFilas<{
+    member_id: string; nombre: string; birth_date: string | null; phone: string | null
+    fecha: string; canal: string; origen: string | null
+    volvio: boolean; se_matriculo: boolean; es_servidor: boolean
+  }>((d: number, h: number) => supabase.rpc('report_personas_nuevas', { p_desde: desde, p_hasta: hasta })
+    .order('member_id').range(d, h))
+  return (filas as Array<{
     member_id: string; nombre: string; birth_date: string | null; phone: string | null
     fecha: string; canal: string; origen: string | null
     volvio: boolean; se_matriculo: boolean; es_servidor: boolean
@@ -286,4 +317,14 @@ export async function getPersonasNuevas(desde: string, hasta: string): Promise<P
     seMatriculo: r.se_matriculo,
     esServidor: r.es_servidor,
   }))
+}
+
+/** REP-8 · Quiénes asistieron en un rango, por sede, con edad y género. */
+export async function getDemografiaPorSede(desde: string, hasta: string): Promise<FilaCrudaDemografia[]> {
+  const supabase = createAdminClient()
+  const filas = await todasLasFilas<{ title: string; member_id: string; birth_date: string | null; gender: string | null }>(
+    (d: number, h: number) => supabase.rpc('report_demografia_por_sede', { p_desde: desde, p_hasta: hasta })
+      .order('member_id').range(d, h),
+  )
+  return filas.map(r => ({ sede: sedeFromTitle(r.title), member_id: r.member_id, birth_date: r.birth_date, gender: r.gender }))
 }
