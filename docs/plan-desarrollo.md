@@ -56,7 +56,7 @@
 ## Fase 20 — Lo que salió el 2026-09-21 y espera decisión
 
 Nada de esto es trabajo que yo pueda arrancar solo: necesitan que alguien
-decida. EVE-13 y DAT-11 ya se resolvieron.
+decida. EVE-13, DAT-11 y DAT-13 ya se resolvieron.
 
 ### [ ] SEC-4 · Las cuentas de PRUEBA siguen vivas
 
@@ -102,19 +102,40 @@ es una fusión y se hace aparte.
 
 Verificado contra la base después de aplicar: queda 1 correo repetido (el del
 papá) y la cédula en una sola ficha. Como efecto secundario, de las 6 cuentas
-que apuntaban a la ficha equivocada —el patrón de Tatiana— quedan 2 casos
-sueltos anotados abajo.
+que apuntaban a la ficha equivocada —el patrón de Tatiana— cuatro se arreglaron
+solas; las otras dos son DAT-13, acá abajo.
 
-### [ ] DAT-13 · Dos cuentas sueltas que quedaron del barrido
+### [x] DAT-13 · Dos cuentas sueltas del barrido — HECHO 2026-09-21
 
-Salieron de medir DAT-11 y son de otra naturaleza, por eso van aparte:
+Salieron de medir DAT-11, y al mirarlas de cerca **los dos casos eran otra cosa
+de la que yo había anotado**. Lo dejo escrito porque la lección se repite: el
+primer diagnóstico salió de una consulta que filtraba por `is_active`, y las dos
+fichas culpables estaban inactivas.
 
-- **`mflores1909@gmail.com`** — hay DOS fichas de "Manuel Flores", una con
-  cédula 114400578 y otra sin. La cuenta está vinculada a la que no tiene
-  cédula. Huele a duplicado para fusionar, no a dos personas.
-- **`sebasgaes@hotmail.com`** — Sebastián Garro Escalante entró el 9 de
-  setiembre con una cuenta que NO tiene ficha vinculada, aunque su correo sí
-  está en una ficha. Hay que amarrar la cuenta a la ficha.
+**Manuel Flores — no eran dos fichas vivas.** La vieja ya se había fusionado el
+2026-08-04. Lo que quedó mal es que la CUENTA DE AUTH se quedó colgando de la
+ficha MUERTA, así que al entrar no veía su ficha real: el bug de Tatiana otra
+vez, con otra causa. Se le movió la cuenta a la ficha viva y se le quitó el
+correo a la muerta.
+
+De paso, un check-in huérfano. La fusión dejó 6 en la ficha muerta: **cinco son
+del mismo evento que la ficha viva ya tenía** —duplicados, y moverlos lo
+contaría dos veces, por eso `merge_members` los deja—, pero el del 16-jul-2026
+es de un evento que la viva no tenía. Ese se movió: Manuel asistió y no le
+contaba. Quedó en 37 check-ins.
+
+**Sebastián Garro — tenía dos cuentas.** La buena, `sebasgarro1@gmail.com`, se
+la hizo él el 9 de setiembre y está bien amarrada a su ficha (cédula 111760822,
+21 check-ins). La otra, `sebasgaes@hotmail.com`, salió de la creación masiva del
+29-jul y la ficha a la que apuntaba se fusionó el 11-set: hoy no apunta a nada,
+o sea que quien entrara con ella veía el sistema vacío y sin permisos — que es
+justo lo que él hizo el 9 de setiembre.
+
+Se **bloqueó** la vieja, no se borró: bloquear se deshace con un clic. Si
+resulta que prefiere el hotmail, se desbloquea y se le mueve el vínculo.
+
+Verificado contra la base: las dos consultas que los encontraron —cuentas que
+apuntan a otra ficha, y cuentas sin ficha— quedaron en cero.
 
 ### [ ] DAT-12 · La validación de correo duplicado choca con FAM-2
 
