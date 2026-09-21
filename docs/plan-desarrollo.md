@@ -7,7 +7,7 @@
 
 ## Fase 0 — Operativo (sin código, sesión de configuración)
 
-- [ ] Agregar las env `HEALTHCHECK_URL_*` en Vercel. **La lista completa (9, una por cron)
+- [ ] Agregar las env `HEALTHCHECK_URL_*` en Vercel. **La lista completa (16, una por cron)
   quedó en `.env.example` con su horario al lado** — antes solo estaban 4 y por eso "las
   faltantes" no se sabía cuáles eran. Crear un check por cron en healthchecks.io y pegar la
   URL. Sin la variable el cron corre igual; solo no avisa si falla.
