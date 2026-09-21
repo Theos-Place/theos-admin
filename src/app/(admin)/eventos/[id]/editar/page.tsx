@@ -24,7 +24,7 @@ import { RegistrationFormPicker } from '@/components/events/RegistrationFormPick
 import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 import { puedeApagarInscripcion } from '@/lib/events/inscripcion-visible'
 import { SubEventCommitteeSelect } from '@/components/events/SubEventCommitteeSelect'
-import { hayQuePreguntarElAlcance, ALCANCE_SIN_PREGUNTAR } from '@/lib/events/alcance-de-edicion'
+import { hayQuePreguntarElAlcance, esLaPrimeraOcurrencia, ALCANCE_SIN_PREGUNTAR } from '@/lib/events/alcance-de-edicion'
 import { AvisosDeLaSerie } from '@/components/events/AvisosDeLaSerie'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
@@ -374,7 +374,11 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     // eso "solo esta instancia" no tiene respuesta correcta y el guardado creaba
     // un hijo en la fecha nueva dejando el evento en la vieja — ver
     // lib/events/alcance-de-edicion.ts.
-    if (hayQuePreguntarElAlcance(!!event!.is_recurring, !!occParam)) {
+    if (hayQuePreguntarElAlcance(
+      !!event!.is_recurring,
+      !!occParam,
+      esLaPrimeraOcurrencia(event!.start_at, occParam),
+    )) {
       setShowRecurringModal(true)
     } else {
       doSave(ALCANCE_SIN_PREGUNTAR)
