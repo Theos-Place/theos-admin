@@ -38,7 +38,8 @@
 
 
 - Un punto por sesión/PR. Pegar el prompt tal cual y pedir además: correr `tsc --noEmit`,
-  lint y `vitest` antes de dar por terminado (la verja de CI usa `--max-warnings=70`, solo baja).
+  lint y `vitest` antes de dar por terminado (la verja de CI usa `--max-warnings=60`, solo baja).
+  Contar SIEMPRE con la caché borrada: `rm -rf .eslintcache && npx eslint src --max-warnings=60`.
 - Reglas del repo que ningún cambio debe romper (de AGENTS.md y docs/sistema-overview.md):
   - Todo handler de /api se autoriza solo con `requireRoles(...)` o `requireModuleView(...)`
     (el middleware excluye /api).
@@ -50,6 +51,51 @@
 - Después de cada punto completado, marcar el checkbox acá y anotar el commit/PR.
 
 ---
+
+
+## Fase 20 — Lo que salió el 2026-09-21 y espera decisión
+
+Nada de esto es trabajo que yo pueda arrancar solo: los cuatro necesitan que
+alguien decida.
+
+### [ ] SEC-4 · Las cuentas de PRUEBA siguen vivas
+
+17 fichas `[prueba]` y 7 cuentas de auth con correo `@prueba.theosplace.invalid`,
+**sin bloquear**, y tres de ellas se usaron el 10 de setiembre. Comparten una
+contraseña que estaba escrita en el centro de ayuda; ese artículo se borró el
+2026-09-21 pero las cuentas quedaron.
+
+Decidir: borrarlas o bloquearlas. Bloquear es reversible y conserva el historial
+—mismo criterio que los menores—; borrar deja el padrón limpio. El seed vive en
+`scripts/seed-datos-de-prueba.ts` y puede volver a crearlas cuando haga falta.
+
+### [ ] DAT-11 · Nueve correos están en dos fichas activas a la vez
+
+Ninguno es urgente —esas personas ven su propia ficha— pero **los correos
+dirigidos a una caen en la bandeja de la otra**. Algunos parecen familia
+compartiendo (Job Morales y Graciela Segura; dos hermanas Sánchez Arguedas) y
+otros no. La lista sale de `scripts/dat10/alcance.cjs`.
+
+Hay que confirmar de quién es cada correo antes de tocar nada. Es el mismo
+patrón que DAT-10 y solo se resuelve preguntando.
+
+### [ ] DAT-12 · La validación de correo duplicado choca con FAM-2
+
+Hoy crear o editar con un correo que ya existe en otra ficha devuelve 409, un
+bloqueo duro. Eso impide lo que FAM-2 sí quiere: **que un menor lleve el correo
+de su papá**. Hoy no se puede hacer desde la pantalla.
+
+Opciones: relajarlo a advertencia (deja pasar todos los duplicados, incluidos los
+accidentales) o permitirlo **solo cuando la persona es menor**, que mantiene el
+bloqueo donde importa y abre exactamente el caso legítimo. Me inclino por la
+segunda.
+
+### [ ] EVE-13 · Semillitas: quedan dos eventos y hay que elegir cuál
+
+Del enredo de duplicar del 2026-09-21 sobrevivieron dos "Semillitas Kids&Teens":
+uno que arranca el **12 de setiembre cada dos sábados** y otro el **17 de octubre
+cada sábado**. La copia ya se borró. Ninguno tiene check-ins ni inscripciones.
+Decir cuál se queda y borro el otro.
 
 
 ## Fase 13 — Cola nueva (pedida 2026-09-10)
@@ -140,7 +186,7 @@ antes de escribir código.
 Pasarela de pago. Hay que revisar qué reemplaza y qué convive con lo que ya
 existe, y si entra en el mismo flujo que FIN-4.
 
-### [~] REP-1 · Actualizar todos los reportes — SE ESTÁ HACIENDO con REP-5/6/7
+### [x] REP-1 · Actualizar todos los reportes — HECHO 2026-09-21 (REP-2 a REP-10)
 
 Revisión completa de `/reportes`: qué sigue sirviendo, qué quedó desactualizado
 y qué falta. Decisión del usuario 2026-09-21: **esto es lo que se está haciendo
@@ -154,9 +200,15 @@ ni la etiqueta aprobado/reprobado, que es justo lo que falta en los 11.420. La
 dato SÍ está bien: DAT-5 dice explícitamente que nadie quedó `enrolled` en un
 grupo cerrado. Así que REP-1 nunca estuvo bloqueado.
 
-Hecho hasta ahora: REP-2 (semana sola), REP-3 (año ISO), REP-4 (semanas con
-fecha), REP-5 (asistentes de la semana + abandonos), REP-6 (personas nuevas con
-la definición corregida). Queda REP-7.
+Completo el 2026-09-21. REP-2 (semana sola), REP-3 (año ISO), REP-4 (semanas
+con fecha), REP-5 (asistentes + abandonos), REP-6 (personas nuevas con la
+definición corregida), REP-7 (servidores y compromisos), REP-8 (seis ajustes al
+detalle de semana + demografía), REP-9 (estudios) y REP-10 (canal en el anual +
+el filtro que aplica a todo).
+
+Dos bugs que salieron de hacerlo, los dos de datos truncados en 1.000 filas por
+el tope de PostgREST: uno en "Mi comité" —mostraba sin estudio a gente que sí
+tenía— y otro en la demografía, que decía 849 personas cuando son 4.355.
 
 ### [x] DAT-7 · El campo de alergias — HECHO 2026-09-15
 
@@ -2092,6 +2144,52 @@ NO enviar ningún correo (EMAIL_SILENT_MODE). No fusionar fichas: son dos person
 distintas, el problema es el correo/cuenta, no duplicados.
 ```
 
+### [ ] AYU-3 · Centro de ayuda: finanzas (planes de pago, devoluciones, donaciones, becas) (pedido 2026-09-21)
+
+Cuatro piezas, cada una con el trío completo: artículo + infografía + video
+(los videos con el pipeline de Playwright + usuario @prueba. de siempre).
+
+Prompt para Claude Code:
+
+```
+DOCS · Centro de ayuda: cuatro piezas de finanzas (artículo + infografía + video c/u)
+
+Formato de content/ayuda/*.md con frontmatter (titulo, seccion, tipo, visibilidad, orden).
+ANTES de escribir: leer el código real de cada flujo. Infografías: SVG vertical con los
+colores de Theos en public/ayuda/infografias/ (ver docs/plan-infografias.md — la #3 "La
+ruta de un pago" ya definió el estilo). Videos: pipeline de tutoriales con Playwright y
+usuario de prueba (@prueba.) ya montado — grabar el flujo real con datos [prueba].
+
+1. "Cómo funcionan los planes de pago" — visibilidad: interna para finanzas/direccion, y
+   evaluar una versión pública corta para el miembro que pide un arreglo.
+   Contenido según el código real (lib/finance/installments.ts): qué es un arreglo en
+   tractos, quién lo crea, mensual o quincenal (si FIN-8 ya corrió), el primer tracto
+   aprobado libera lo pagado, un tracto vencido bloquea matricularse/inscribirse, y
+   cancelar ≠ condonar. Infografía: línea de tiempo de un arreglo con sus vencimientos.
+
+2. "Solicitudes de devolución" — visibilidad: finanzas, direccion.
+   Documentar el flujo REAL implementado (revisar el código: cómo entra la solicitud,
+   quién aprueba, y la opción de convertir la devolución en donación si existe). Si el
+   flujo no está implementado aún, REPORTARLO y no inventar el artículo.
+
+3. ARREGLAR "Registrar donaciones" (artículo de AYU-2): agregarle la infografía (flujo:
+   llega el reporte del banco → importar Excel → resolver dudosos → confirmar; y el
+   camino individual) y el video de ambos caminos (alta manual e importación).
+
+4. "Cómo aplicar una beca que me asignaron" — visibilidad: PÚBLICA (es para el
+   estudiante/miembro).
+   Paso a paso desde la vista del miembro: me asignaron una beca (¿cómo me entero? correo
+   con código / campanita), y al pagar la matrícula dónde ingreso el cupón o dónde
+   aparece el descuento (modal de pago según BEC-1: beca de porcentaje, de monto fijo —
+   solo en su moneda, INT-2 — y beca 100% sin comprobante). Infografía: el camino
+   solicitud → asignación → canje en el pago (es la #11 del plan de infografías —
+   reutilizar ese diseño). Video con usuario de prueba y una beca [prueba].
+
+Cada artículo con su visibilidad correcta en frontmatter; verificar render en /ayuda y
+que el índice respete roles. Los videos se suben con el patrón de hosting existente
+(Supabase Storage, rutas estables).
+```
+
 
 **Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
 comité elegido viaja en `?comite=` para poder pasar el link. Sin comité elegido,
@@ -2238,7 +2336,5 @@ La respuesta del cron dice a quién desbloqueó y cuántos se quedaron por cada
 motivo: sin eso, un cron que no hace nada y uno que se saltó a alguien se ven
 igual.
 
-**Pendiente aparte:** las cuentas de PRUEBA (`@prueba.theosplace.invalid`) siguen
-vivas y sin bloquear —17 fichas y 7 cuentas de auth, tres usadas en setiembre—
-con una contraseña compartida que estaba escrita en el centro de ayuda. El
-artículo se borró; las cuentas no. Decidir si se borran o se bloquean.
+**Pendiente aparte:** las cuentas de PRUEBA siguen vivas. Está anotado como
+SEC-4 en la Fase 20.
