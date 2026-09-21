@@ -38,9 +38,14 @@ export const INFO_ASISTIERON =
   `Personas con check-in esta semana que han venido al menos ${VISITAS_MINIMAS} veces. `
   + 'Los que vienen por primera vez no se cuentan acá.'
 
+/**
+ * Dice "hace 5 semanas" y no "esta semana" a propósito. Esta gente NO vino esta
+ * semana: vino hace cinco y no ha vuelto desde entonces. El encabezado de la
+ * lista pone la fecha exacta de esa semana.
+ */
 export const INFO_DEJARON =
-  `Personas que asistieron hace ${SEMANAS_DE_CORTE} semanas y no han vuelto desde entonces: `
-  + `esta semana cumplen ${SEMANAS_DE_CORTE} semanas sin asistir.`
+  `Personas que asistieron hace ${SEMANAS_DE_CORTE} semanas y dejaron de asistir `
+  + `las ${SEMANAS_DE_CORTE} semanas seguidas, incluida esta.`
 
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10)

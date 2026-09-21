@@ -121,5 +121,7 @@ describe('los textos de ayuda', () => {
   it('salen de las constantes y no de un número escrito a mano', () => {
     expect(INFO_ASISTIERON).toContain(`al menos ${VISITAS_MINIMAS} veces`)
     expect(INFO_DEJARON).toContain(`hace ${SEMANAS_DE_CORTE} semanas`)
+    // NO dice "esta semana": esta gente justamente no vino esta semana.
+    expect(INFO_DEJARON).not.toMatch(/asistieron esta semana/i)
   })
 })
