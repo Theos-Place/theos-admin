@@ -25,6 +25,7 @@ import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/E
 import { puedeApagarInscripcion } from '@/lib/events/inscripcion-visible'
 import { SubEventCommitteeSelect } from '@/components/events/SubEventCommitteeSelect'
 import { hayQuePreguntarElAlcance, ALCANCE_SIN_PREGUNTAR } from '@/lib/events/alcance-de-edicion'
+import { AvisosDeLaSerie } from '@/components/events/AvisosDeLaSerie'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -618,6 +619,12 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                   startDate={startDate}
                   endDate={recurrenceEnd}
                   onEndDateChange={setRecurrenceEnd}
+                />
+                <AvisosDeLaSerie
+                  esRecurrente={isRecurring}
+                  fechaInicio={startDate}
+                  fechaFin={endDate}
+                  finDeLaSerie={recurrenceEnd}
                 />
               </div>
             )}

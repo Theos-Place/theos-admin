@@ -1313,7 +1313,15 @@ export async function updateEventScoped(
     ...base, ...input,
     is_recurring: true,
     recurrence_rule: input.recurrence_rule ?? parent.recurrence_rule,
-    recurrence_end: parent.recurrence_end ?? null, // conserva el fin original de la serie
+    // EL FIN DE LA SERIE, si el formulario lo mandó, MANDA.
+    //
+    // Acá decía `parent.recurrence_end ?? null` a secas, "conserva el fin
+    // original de la serie" — y eso pisaba lo que la persona acababa de
+    // escribir. Reportado el 2026-09-21: la pantalla decía "Termina el 16 de
+    // octubre" y en la base quedaba el 18 de setiembre, o sea ANTES del inicio,
+    // así que la serie no generaba ninguna fecha y el evento se veía una sola
+    // vez. Conservar el fin viejo solo tiene sentido cuando nadie lo tocó.
+    recurrence_end: input.recurrence_end !== undefined ? input.recurrence_end : (parent.recurrence_end ?? null),
     parent_event_id: null,
   }
   const newParent = await createEvent(newParentInput, subs, createdBy, committees)

@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 import { RecurrenceSelector } from '@/components/events/RecurrenceSelector'
+import { AvisosDeLaSerie } from '@/components/events/AvisosDeLaSerie'
 import { DatePicker } from '@/components/events/DatePicker'
 import { TimePicker } from '@/components/events/TimePicker'
 import { inputCls, Toggle, FieldLabel } from './shared'
@@ -212,6 +213,12 @@ export function Step2Programacion({
               startDate={start_date}
               endDate={recurrence_end}
               onEndDateChange={onRecurrenceEndChange}
+            />
+            <AvisosDeLaSerie
+              esRecurrente={is_recurring}
+              fechaInicio={start_date}
+              fechaFin={end_date}
+              finDeLaSerie={recurrence_end}
             />
           </div>
         )}

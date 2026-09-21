@@ -4,6 +4,7 @@ import { alcanceDeEventosDeLaSesion } from '@/lib/auth/event-guard'
 import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
+import { problemaDeLaSerie, impideGuardar, mensajeDelProblema } from '@/lib/events/fin-de-la-serie'
 import type { EventType, EventStatus } from '@/types/event'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -66,7 +67,15 @@ export async function POST(req: NextRequest) {
         }, { status: 403 })
       }
     }
-    const event = await createEvent(formToWriteInput(body), formToSubEvents(body), auth.ctx.userId, comites)
+    const entrada = formToWriteInput(body)
+    // La misma regla que avisa en el formulario, también acá: una serie que
+    // termina antes de empezar no crea ninguna repetición y el evento se ve una
+    // sola vez, sin nada que lo explique (2026-09-21).
+    const problema = problemaDeLaSerie(entrada.is_recurring ?? false, entrada.starts_at, entrada.recurrence_end)
+    if (impideGuardar(problema)) {
+      return NextResponse.json({ error: mensajeDelProblema(problema) }, { status: 400 })
+    }
+    const event = await createEvent(entrada, formToSubEvents(body), auth.ctx.userId, comites)
     return NextResponse.json(event, { status: 201 })
   } catch (error) {
     reportarError('POST /api/events:', error)

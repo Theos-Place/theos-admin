@@ -8,6 +8,7 @@ import {
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
 } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
+import { problemaDeLaSerie, impideGuardar, mensajeDelProblema } from '@/lib/events/fin-de-la-serie'
 import { requireEventAccess, alcanceDeEventosDeLaSesion } from '@/lib/auth/event-guard'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -98,7 +99,16 @@ export async function PUT(
         )
       }
     }
-    const event = await updateEventScoped(id, scope, formToPartialWriteInput(body), subEvents, occurrence, auth.ctx.userId, committees)
+    const entrada = formToPartialWriteInput(body)
+    // Misma verja que al crear: una serie que termina antes de empezar no genera
+    // ninguna repetición. El inicio puede venir en el body o quedarse el del
+    // evento, así que se compara contra el que vaya a quedar (2026-09-21).
+    const inicio = entrada.starts_at ?? (await getEventById(id))?.starts_at ?? null
+    const problema = problemaDeLaSerie(entrada.is_recurring ?? false, inicio, entrada.recurrence_end)
+    if (impideGuardar(problema)) {
+      return NextResponse.json({ error: mensajeDelProblema(problema) }, { status: 400 })
+    }
+    const event = await updateEventScoped(id, scope, entrada, subEvents, occurrence, auth.ctx.userId, committees)
     return NextResponse.json(event)
   } catch (error) {
     // Solo los errores de dominio conocidos exponen su mensaje al cliente;

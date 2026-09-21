@@ -47,6 +47,9 @@ export type FilaDeMiComite = {
   nombre: string
   puestos: string[]
   encargado: boolean
+  /** Comités donde tiene un puesto activo DENTRO del alcance consultado. Para
+   *  REP-7: alguien puede servir en varios y hay que des-duplicarlo. */
+  comites: string[]
   /** Contacto. Solo viaja para el EXPORT, no se dibuja en la tabla: la lista
    *  existe para llamar a quien tiene algo pendiente. No abre nada nuevo — el
    *  mismo encargado ya los exporta desde /servidores con SERVER_COLUMNS. */
@@ -71,33 +74,47 @@ async function enTandas<T>(ids: string[], fn: (tanda: string[]) => Promise<T[]>)
   return out
 }
 
-export async function getMiComite(committeeId: string): Promise<{ nombre: string; filas: FilaDeMiComite[] }> {
+/**
+ * REP-7 · Lo mismo pero para VARIOS comités a la vez.
+ *
+ * La misma consulta que "Mi comité", que por eso da los mismos números: si el
+ * reporte global y la pantalla del encargado difirieran para un mismo comité,
+ * sería un bug. `getMiComite` es el caso de uno.
+ *
+ * Sigue sin ser una consulta por persona: son ~6 por cada tanda de 100, así que
+ * el alcance global (≈1.000 servidores) son unas 30 y no mil.
+ */
+export async function getCompromisosDeComites(
+  committeeIds: readonly string[],
+): Promise<FilaDeMiComite[]> {
   const supabase = createAdminClient()
+  if (!committeeIds.length) return []
 
-  const { data: area } = await supabase.from('areas').select('name').eq('id', committeeId).maybeSingle()
-  const nombre = (area as { name: string } | null)?.name ?? ''
-
-  // 1) Puestos del comité con su gente activa.
+  // 1) Puestos de los comités con su gente activa.
   const { data: puestosData, error: ePuestos } = await supabase
     .from('service_positions')
-    .select('title, volunteers(member_id, status)')
-    .eq('area_id', committeeId)
+    .select('area_id, title, volunteers(member_id, status)')
+    .in('area_id', committeeIds as string[])
     .eq('is_active', true)
   if (ePuestos) throw ePuestos
 
   const puestosPorMiembro = new Map<string, string[]>()
+  const comitesPorMiembro = new Map<string, Set<string>>()
   const encargados = new Set<string>()
   for (const p of (puestosData ?? []) as Array<Record<string, unknown>>) {
     const title = p.title as string
+    const areaId = p.area_id as string
     for (const v of (p.volunteers ?? []) as Array<{ member_id: string; status: string }>) {
       if (v.status !== 'active') continue
       const ya = puestosPorMiembro.get(v.member_id)
       if (ya) ya.push(title); else puestosPorMiembro.set(v.member_id, [title])
+      const cs = comitesPorMiembro.get(v.member_id)
+      if (cs) cs.add(areaId); else comitesPorMiembro.set(v.member_id, new Set([areaId]))
       if (esPuestoDeEncargado(title)) encargados.add(v.member_id)
     }
   }
   const ids = [...puestosPorMiembro.keys()]
-  if (!ids.length) return { nombre, filas: [] }
+  if (!ids.length) return []
 
   const desde = haceUnAnio()
 
@@ -200,6 +217,7 @@ export async function getMiComite(committeeId: string): Promise<{ nombre: string
     nombre: `${p.first_name} ${p.last_name}`.trim(),
     puestos: puestosPorMiembro.get(p.id) ?? [],
     encargado: encargados.has(p.id),
+    comites: [...(comitesPorMiembro.get(p.id) ?? [])],
     telefono: p.phone ?? null,
     email: p.email ?? null,
     cumpleanos: p.birth_date ?? null,
@@ -211,5 +229,15 @@ export async function getMiComite(committeeId: string): Promise<{ nombre: string
     ultimoCheckin: checkins.get(p.id)?.checked_in_at?.slice(0, 10) ?? null,
   }))
   filas.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-  return { nombre, filas }
+  return filas
+}
+
+/** SRV-4 · Un comité. Es `getCompromisosDeComites` con uno solo. */
+export async function getMiComite(committeeId: string): Promise<{ nombre: string; filas: FilaDeMiComite[] }> {
+  const supabase = createAdminClient()
+  const { data: area } = await supabase.from('areas').select('name').eq('id', committeeId).maybeSingle()
+  return {
+    nombre: (area as { name: string } | null)?.name ?? '',
+    filas: await getCompromisosDeComites([committeeId]),
+  }
 }
