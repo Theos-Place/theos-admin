@@ -67,10 +67,32 @@ function haceUnAnio(): string {
   return d.toISOString().slice(0, 10)
 }
 
-/** `.in()` con listas largas arma URLs gigantes; se parte en tandas de 100. */
-async function enTandas<T>(ids: string[], fn: (tanda: string[]) => Promise<T[]>): Promise<T[]> {
+/** Tope de filas que PostgREST devuelve por consulta (`db-max-rows`). */
+const TOPE_POSTGREST = 1000
+
+/**
+ * Parte la lista de ids en tandas de 100 —`.in()` con listas largas arma URLs
+ * gigantes— Y ADEMÁS pagina los RESULTADOS de cada tanda.
+ *
+ * Lo segundo faltaba y no se notaba: PostgREST corta en 1.000 filas sin decir
+ * nada. Medido el 2026-09-21, las matrículas de 100 servidores son exactamente
+ * 1.000 — o sea que venían truncadas, y "Mi comité" mostraba a gente sin
+ * estudio que sí lo tenía. Se descubrió porque el reporte global y la pantalla
+ * del comité daban números distintos para el mismo comité.
+ */
+async function enTandas<T>(
+  ids: string[],
+  fn: (tanda: string[], desde: number, hasta: number) => Promise<T[]>,
+): Promise<T[]> {
   const out: T[] = []
-  for (let i = 0; i < ids.length; i += 100) out.push(...await fn(ids.slice(i, i + 100)))
+  for (let i = 0; i < ids.length; i += 100) {
+    const tanda = ids.slice(i, i + 100)
+    for (let desde = 0; ; desde += TOPE_POSTGREST) {
+      const lote = await fn(tanda, desde, desde + TOPE_POSTGREST - 1)
+      out.push(...lote)
+      if (lote.length < TOPE_POSTGREST) break
+    }
+  }
   return out
 }
 
@@ -120,9 +142,10 @@ export async function getCompromisosDeComites(
 
   const [personas, activos, matriculas, gruposDados, ultimos] = await Promise.all([
     // 2) Nombre y el flag de donante (criterio por trimestres, FIN-1).
-    enTandas(ids, async tanda => {
+    enTandas(ids, async (tanda, desde, hasta) => {
       const { data, error } = await supabase
-        .from('members').select('id, first_name, last_name, is_donor, phone, email, birth_date').in('id', tanda)
+        .from('members').select('id, first_name, last_name, is_donor, phone, email, birth_date')
+        .in('id', tanda).order('id').range(desde, hasta)
       if (error) throw error
       return (data ?? []) as Array<{
         id: string; first_name: string; last_name: string; is_donor: boolean | null
@@ -135,20 +158,21 @@ export async function getCompromisosDeComites(
     //    año: SRV-7 pide mostrar el último estudio de quien hoy no lleva
     //    ninguno, y ese puede ser de hace tres años. Sigue siendo una consulta
     //    por tanda de 100, no una por persona.
-    enTandas(ids, async tanda => {
+    enTandas(ids, async (tanda, desde, hasta) => {
       const { data, error } = await supabase
         .from('study_enrollments')
         .select('member_id, status, enrolled_at, completed_at, plan:study_plans(name), grupo:study_groups!study_enrollments_group_id_fkey(name, status, closed_at, plan:study_plans(name))')
-        .in('member_id', tanda)
+        .in('member_id', tanda).order('id').range(desde, hasta)
       if (error) throw error
       return (data ?? []) as unknown as Array<MatriculaCruda>
     }),
     // 5) Dando un estudio: dirigente o co-dirigente de un grupo del último año.
-    enTandas(ids, async tanda => {
+    enTandas(ids, async (tanda, desde, hasta) => {
       const { data, error } = await supabase
         .from('study_groups')
         .select('leader_id, co_leader_id, starts_at, closed_at, status, name, plan:study_plans(name)')
         .or(`leader_id.in.(${tanda.join(',')}),co_leader_id.in.(${tanda.join(',')})`)
+        .order('id').range(desde, hasta)
       if (error) throw error
       return (data ?? []) as unknown as Array<GrupoCrudo>
     }),
