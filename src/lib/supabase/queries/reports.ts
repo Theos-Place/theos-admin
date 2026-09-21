@@ -12,6 +12,7 @@ import {
   type DirigentesReport,
 } from '@/lib/reports/dirigentes'
 import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
+import type { PersonaNueva, Canal } from '@/lib/reports/personas-nuevas'
 import {
   attendanceWindowStart, attendanceRecencyStart,
   ATTENDANCE_MONTHS, ATTENDANCE_RECENCY_DAYS, ATTENDANCE_MIN_CHARLAS,
@@ -253,5 +254,36 @@ export async function getAsistentesDeLaSemana(
     // La sede sale del título con la MISMA función que el resto del reporte.
     sedes: (r.sedes ?? []).map(sedeFromTitle),
     regreso: r.regreso,
+  }))
+}
+
+/** REP-6 · La serie mensual de personas nuevas (para los dos gráficos). */
+export async function getSeriePersonasNuevas(): Promise<Array<{ anio: number; mes: number; canal: string; n: number }>> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('report_personas_nuevas_series')
+  if (error) throw error
+  return (data ?? []) as Array<{ anio: number; mes: number; canal: string; n: number }>
+}
+
+/** REP-6 · El detalle de las personas nuevas de un período. */
+export async function getPersonasNuevas(desde: string, hasta: string): Promise<PersonaNueva[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.rpc('report_personas_nuevas', { p_desde: desde, p_hasta: hasta })
+  if (error) throw error
+  return ((data ?? []) as Array<{
+    member_id: string; nombre: string; birth_date: string | null; phone: string | null
+    fecha: string; canal: string; origen: string | null
+    volvio: boolean; se_matriculo: boolean; es_servidor: boolean
+  }>).map(r => ({
+    member_id: r.member_id,
+    nombre: r.nombre,
+    birth_date: r.birth_date,
+    phone: r.phone,
+    fecha: r.fecha,
+    canal: (r.canal === 'estudio' || r.canal === 'evento' ? r.canal : 'charla') as Canal,
+    origen: r.origen ?? '',
+    volvio: r.volvio,
+    seMatriculo: r.se_matriculo,
+    esServidor: r.es_servidor,
   }))
 }

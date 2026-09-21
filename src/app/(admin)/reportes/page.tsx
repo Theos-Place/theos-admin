@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, type LucideIcon } from 'lucide-react'
+import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
@@ -13,6 +13,13 @@ const REPORTS: ReportTile[] = [
     title: 'Crecimiento y Asistencia',
     description: 'Personas nuevas por sede y mes, y asistencia a charlas por sede/semana con comparativos por año.',
     icon: BarChart2,
+    ready: true,
+  },
+  {
+    href: '/reportes/personas-nuevas',
+    title: 'Personas nuevas',
+    description: 'Quién llegó y por dónde entró (charla, estudio o evento), con edad, y si volvió o se matriculó después.',
+    icon: UserPlus,
     ready: true,
   },
   {

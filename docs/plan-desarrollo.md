@@ -1680,7 +1680,7 @@ Tests: rol amplio ve cualquier comité; lider sigue limitado al suyo; la vista p
 amplio es idéntica a la del líder (mismo payload). tsc/lint/vitest al cierre.
 ```
 
-### [ ] REP-6 · Reporte de personas nuevas (pedido 2026-09-21, réplica del BI + retención)
+### [x] REP-6 · Reporte de personas nuevas — HECHO 2026-09-21
 
 Réplica del dashboard de Power BI "¿Cuántas personas nuevas estamos captando?"
 dentro de /reportes, con una corrección de fondo (nueva = primera ASISTENCIA,
@@ -1737,6 +1737,39 @@ IMPLEMENTACIÓN:
 Tests de la lógica pura (primera asistencia con múltiples check-ins el mismo día, "volvió"
 en el borde de 8 semanas, sin birth_date). tsc/lint/vitest al cierre.
 ```
+
+**Cierre 2026-09-21.** `/reportes/personas-nuevas`.
+
+**La corrección de fondo, con número:** hay **9.181 fichas sin ninguna
+actividad**, en su mayoría de la carga de 23k de CCB. Con el criterio viejo
+—fecha de creación— todas aparecerían como "personas nuevas" el día del import.
+Una ficha no es una persona que llegó. Al revés sí cuenta: las asistencias y
+matrículas migradas son actividad real en su fecha real.
+
+El empate se desempata a favor de la charla: quien se matriculó y asistió el
+mismo día entró por la charla, que es donde lo vieron primero.
+
+**Quien no tiene fecha de nacimiento queda FUERA del promedio y la mediana**, y
+se reporta aparte ("36 sin fecha de nacimiento"). Contarlo como 0 años hundiría
+el promedio y nadie sabría por qué. Un filtro de edad también lo deja fuera: no
+se puede afirmar que tenga entre 18 y 25 si no se sabe.
+
+**Retención, que el BI no tiene:** volvió dentro de 8 semanas y se matriculó
+después. En agosto de 2026, de 204 nuevos volvió el **39 %** y se matriculó el
+**3 %**; en marzo, 47 % y 12 %.
+
+Tres funciones nuevas (migración `20260921210000`), todas cerradas a anon —el
+detalle devuelve teléfonos— y verificadas con el auditor de SEC-3.
+`primera_actividad_por_miembro()` existe aparte para que la serie y el detalle
+no tengan cada una su copia del cálculo: dos definiciones de "primera
+actividad" se desincronizan y el gráfico deja de cuadrar con la tabla.
+
+Teléfono con el mismo criterio que REP-5: el módulo `reportes` abre el reporte,
+el directorio exige `miembros` con alcance total.
+
+Medido: serie 241 filas en ~1,1 s; detalle de un mes ~800 ms. Por año:
+2020:1.094 · 2021:1.481 · 2022:1.779 · 2023:1.809 · 2024:1.793 · 2025:2.075 ·
+2026:1.843 (parcial).
 
 ### [ ] SRV-7 · "Mi comité": nombre del estudio en la columna de estudio (pedido 2026-09-21)
 

@@ -5240,6 +5240,22 @@ export type Database = {
         Args: { p_member_ids: string[] }
         Returns: { member_id: string; checked_in_at: string; event_title: string | null }[]
       }
+      primera_actividad_por_miembro: {
+        Args: never
+        Returns: { member_id: string; fecha: string; canal: string; origen: string | null }[]
+      }
+      report_personas_nuevas_series: {
+        Args: never
+        Returns: { anio: number; mes: number; canal: string; n: number }[]
+      }
+      report_personas_nuevas: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          member_id: string; nombre: string; birth_date: string | null; phone: string | null
+          fecha: string; canal: string; origen: string | null
+          volvio: boolean; se_matriculo: boolean; es_servidor: boolean
+        }[]
+      }
       report_asistentes_de_la_semana: {
         Args: { p_desde: string; p_hasta: string }
         Returns: {
