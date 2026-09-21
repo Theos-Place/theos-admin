@@ -17,7 +17,6 @@ describe('eventoDuplicado — lo que SÍ se copia', () => {
       location: 'Pedregal', max_capacity: 80,
       requires_registration: true, requires_payment: true, payment_amount: 15000,
       registration_form_id: 'form-1', flyer_url: base.flyer_url,
-      is_recurring: true, recurrence_rule: 'FREQ=MONTHLY;BYDAY=1SA',
     })
   })
   it('el título lleva "(copia)" para poder distinguirlos en la lista', () => {
@@ -52,5 +51,17 @@ describe('eventoDuplicado — defaults sanos', () => {
     expect(d.currency).toBe('CRC')
     expect(d.requires_payment).toBe(false)
     expect(d.max_capacity).toBeNull()
+  })
+})
+
+describe('la copia NO hereda la serie (bug de producción 2026-09-21)', () => {
+  it('nace como evento puntual aunque el original se repita', () => {
+    // Heredarla hacía que al cambiarle la fecha apareciera el diálogo de
+    // alcance, y con "solo esta instancia" quedaban dos eventos: el hijo en la
+    // fecha nueva y la copia en la vieja.
+    const copia = eventoDuplicado(base)
+    expect(copia.is_recurring).toBe(false)
+    expect(copia.recurrence_rule).toBeNull()
+    expect(copia.recurrence_end).toBeNull()
   })
 })

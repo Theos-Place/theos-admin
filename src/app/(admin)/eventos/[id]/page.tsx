@@ -39,6 +39,7 @@ import { getInitials, formatMoney, todayCR } from '@/lib/format'
 import { contarPorCalidad } from '@/lib/events/calidad-checkin'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
+import { hayQuePreguntarElAlcance } from '@/lib/events/alcance-de-edicion'
 
 /** Envío REAL vía el módulo de comunicaciones (correo + notificación interna
  *  a los inscritos con miembro asociado). El botón que abre este modal está
@@ -438,7 +439,10 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // Inicia el flujo de borrado desde el menú.
   function startDelete() {
     setShowMenu(false)
-    if (rawEvent?.is_recurring) { setShowDeleteScope(true); return }
+    // Igual que al guardar: el alcance solo se pregunta si hay una ocurrencia
+    // en contexto. Sin ?date, "eliminar solo esta instancia" escribía una
+    // excepción y dejaba el evento en la lista — "no deja borrarlo".
+    if (hayQuePreguntarElAlcance(!!rawEvent?.is_recurring, !!occParam)) { setShowDeleteScope(true); return }
     if (hasAttendance) { setShowActiveWarning(true); return }
     setConfirmScope('all') // puntual sin asistencia → confirmar escribiendo "eliminar"
   }

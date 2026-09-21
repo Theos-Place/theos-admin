@@ -24,6 +24,7 @@ import { RegistrationFormPicker } from '@/components/events/RegistrationFormPick
 import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 import { puedeApagarInscripcion } from '@/lib/events/inscripcion-visible'
 import { SubEventCommitteeSelect } from '@/components/events/SubEventCommitteeSelect'
+import { hayQuePreguntarElAlcance, ALCANCE_SIN_PREGUNTAR } from '@/lib/events/alcance-de-edicion'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -368,10 +369,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   }
 
   function handleSave() {
-    if (event!.is_recurring) {
+    // Preguntar el alcance solo si se llegó desde UNA ocurrencia (?date). Sin
+    // eso "solo esta instancia" no tiene respuesta correcta y el guardado creaba
+    // un hijo en la fecha nueva dejando el evento en la vieja — ver
+    // lib/events/alcance-de-edicion.ts.
+    if (hayQuePreguntarElAlcance(!!event!.is_recurring, !!occParam)) {
       setShowRecurringModal(true)
     } else {
-      doSave('all')
+      doSave(ALCANCE_SIN_PREGUNTAR)
     }
   }
 

@@ -39,6 +39,20 @@ type Origen = Partial<EventWriteInput> & {
  *  · `parent_event_id` — la copia es un evento nuevo, no una ocurrencia de la
  *    serie del original.
  *
+ *  · LA RECURRENCIA (`is_recurring`, `recurrence_rule`, `recurrence_end`) —
+ *    2026-09-21, reportado en producción. La copia heredaba la serie, y como
+ *    duplicar lleva directo a editar la fecha, al guardar aparecía el diálogo
+ *    "¿solo esta instancia / esta y futuras / toda la serie?" con "solo esta"
+ *    preseleccionado. El resultado: un evento hijo en la fecha nueva y la copia
+ *    quieta en la fecha vieja — "me hace una copia ese mismo día aunque le
+ *    pongo otras fechas". Y después no se podía borrar, porque "eliminar solo
+ *    esta instancia" escribe una excepción y deja la fila donde estaba.
+ *
+ *    Una copia recién hecha no tiene ninguna ocurrencia que nadie haya visto,
+ *    así que la pregunta por el alcance no tiene respuesta correcta. La copia
+ *    nace como evento puntual; si tiene que repetirse, se enciende en el
+ *    editor, que es una casilla.
+ *
  * Las inscripciones y las excepciones de recurrencia no aparecen acá porque
  * viven en otras tablas: nada las arrastra.
  */
@@ -56,9 +70,6 @@ export function eventoDuplicado(origen: Origen): EventWriteInput {
     virtual_url: origen.virtual_url ?? null,
     max_capacity: origen.max_capacity ?? null,
     flyer_url: origen.flyer_url ?? null,
-    is_recurring: origen.is_recurring ?? false,
-    recurrence_rule: origen.recurrence_rule ?? null,
-    recurrence_end: origen.recurrence_end ?? null,
     requires_registration: origen.requires_registration ?? false,
     requires_payment: origen.requires_payment ?? false,
     payment_amount: origen.payment_amount ?? null,
@@ -70,9 +81,12 @@ export function eventoDuplicado(origen: Origen): EventWriteInput {
     survey_form_id: origen.survey_form_id ?? null,
     survey_template_id: origen.survey_template_id ?? null,
     survey_offset_hours: origen.survey_offset_hours ?? null,
-    // Ver arriba: los tres que NO se heredan.
+    // Ver arriba: lo que NO se hereda.
     is_public: false,
     status: 'upcoming',
     survey_send_at: null,
+    is_recurring: false,
+    recurrence_rule: null,
+    recurrence_end: null,
   }
 }
