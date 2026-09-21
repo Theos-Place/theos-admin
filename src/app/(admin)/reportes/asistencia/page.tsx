@@ -14,6 +14,7 @@ import { ALL_SEDES, type CharlaReport } from '@/lib/reports/charla-attendance'
 import { NO_SEDE, type GrowthReport } from '@/lib/reports/member-growth'
 import { SemanaDetallePanel } from '@/components/reports/SemanaDetallePanel'
 import { ListasDeLaSemana } from '@/components/reports/ListasDeLaSemana'
+import { DemografiaPorSede } from '@/components/reports/DemografiaPorSede'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
 import { unirSeries } from '@/lib/reports/comparar-series'
@@ -44,7 +45,7 @@ export default function ReporteAsistenciaPage() {
   // renders en cascada— y nunca se muestra el dato de una semana bajo el
   // título de otra.
   const [resultado, setResultado] = useState<{ clave: string; detalle: DetalleDeSemana | null; error: string | null } | null>(null)
-  const [tab, setTab] = useState<'asistencia' | 'crecimiento'>('asistencia')
+  const [tab, setTab] = useState<'asistencia' | 'crecimiento' | 'demografia'>('asistencia')
   // Comparación de dos sedes en el mismo gráfico. La serie comparada se guarda
   // CON su clave (sede|año) por la misma razón que el detalle de semana: así no
   // se muestra la serie de una sede bajo el rótulo de otra mientras carga.
@@ -131,7 +132,11 @@ export default function ReporteAsistenciaPage() {
    *  navegador vuelve al año como cualquiera esperaría. */
   function abrirSemana(week: number) {
     if (!report) return
-    setSemana(`${report.year}-W${String(week).padStart(2, '0')}`)
+    const clave = `${report.year}-W${String(week).padStart(2, '0')}`
+    // REP-8 · Tocar la MISMA semana la cierra. Antes solo se podía salir con
+    // "Volver al año", que está arriba del todo y se pierde de vista apenas se
+    // baja al detalle.
+    setSemana(claveSemana === clave ? null : clave)
   }
   function setSemana(clave: string | null) {
     setSemanaLocal(clave)
@@ -234,9 +239,10 @@ export default function ReporteAsistenciaPage() {
           tabs={[
             { key: 'asistencia', label: 'Asistencia' },
             { key: 'crecimiento', label: 'Crecimiento' },
+            { key: 'demografia', label: 'Demografía' },
           ]}
           active={tab}
-          onChange={k => setTab(k as 'asistencia' | 'crecimiento')}
+          onChange={k => setTab(k as 'asistencia' | 'crecimiento' | 'demografia')}
         />
 
         {/* ───────────────────────── Asistencia ───────────────────────── */}
@@ -377,11 +383,6 @@ export default function ReporteAsistenciaPage() {
                       error={errorSemana}
                       onVolver={() => setSemana(null)}
                     />
-                    {/* REP-5 · Las dos listas de la semana, debajo del panel:
-                        quiénes vinieron y quiénes dejaron de venir después. */}
-                    <div className="mt-4">
-                      <ListasDeLaSemana clave={claveSemana} />
-                    </div>
                   </div>
                 )}
               </div>
@@ -543,6 +544,19 @@ export default function ReporteAsistenciaPage() {
                 </ResponsiveContainer>
               </ChartCard>
             </div>
+          </div>
+        )}
+
+        {/* REP-8 · Quiénes asisten a cada sede. Sigue la semana elegida si hay
+            una; si no, el año del reporte. */}
+        {tab === 'demografia' && <DemografiaPorSede clave={claveSemana} year={report.year} />}
+
+        {/* REP-8 · Las listas de la semana van AL FINAL y arrancan colapsadas:
+            abiertas y arriba, empujaban todos los gráficos fuera de la pantalla
+            apenas se elegía una semana. */}
+        {tab === 'asistencia' && semanaSel && (
+          <div className="mt-4">
+            <ListasDeLaSemana clave={claveSemana} />
           </div>
         )}
       </ReportShell>

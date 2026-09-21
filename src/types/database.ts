@@ -5256,11 +5256,15 @@ export type Database = {
           volvio: boolean; se_matriculo: boolean; es_servidor: boolean
         }[]
       }
+      report_demografia_por_sede: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: { title: string; member_id: string; birth_date: string | null; gender: string | null }[]
+      }
       report_asistentes_de_la_semana: {
         Args: { p_desde: string; p_hasta: string }
         Returns: {
           member_id: string; nombre: string; telefono: string | null
-          email: string | null; sedes: string[]; regreso: string | null
+          email: string | null; sedes: string[]; regreso: string | null; visitas: number
         }[]
       }
       close_payment_ticket: {

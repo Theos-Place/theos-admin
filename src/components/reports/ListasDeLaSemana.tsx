@@ -1,12 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Loader2, PhoneOff, Users } from 'lucide-react'
+import { ChevronDown, ChevronRight, Loader2, PhoneOff, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ExportButton } from '@/components/shared/ExportButton'
+import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
-import { SEMANAS_DE_CORTE } from '@/lib/reports/abandonos'
+import { INFO_ASISTIERON, INFO_DEJARON } from '@/lib/reports/abandonos'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +15,7 @@ type Persona = {
   member_id: string
   nombre: string
   sede: string
+  visitas: number
   telefono: string | null
   email: string | null
   volvioEl?: string | null
@@ -23,18 +25,16 @@ type Respuesta = {
   semana: string
   etiqueta: string
   puedeVerContacto: boolean
+  checkins: number
   asistentes: Persona[]
-  abandono:
-    | { evaluable: true; hasta: string; personas: Persona[] }
-    | { evaluable: false; faltanSemanas: number; hasta: string }
+  dejaron: { etiqueta: string; personas: Persona[] }
 }
-
-type Pestana = 'asistieron' | 'dejaron'
 
 function columnas(conContacto: boolean, conRegreso: boolean): ColumnDef<Persona>[] {
   const base: ColumnDef<Persona>[] = [
     { key: 'nombre', label: 'Nombre', defaultVisible: true },
     { key: 'sede', label: 'Sede', defaultVisible: true },
+    { key: 'visitas', label: 'Veces que ha venido', defaultVisible: true, exportValue: p => String(p.visitas) },
   ]
   if (conRegreso) {
     base.push({
@@ -54,16 +54,113 @@ function columnas(conContacto: boolean, conRegreso: boolean): ColumnDef<Persona>
 }
 
 /**
- * REP-5 · Las dos listas de una semana: quiénes vinieron y quiénes dejaron de
- * venir después.
+ * Una de las dos listas, colapsada por defecto (REP-8).
  *
- * La segunda es la que se usa: se baja para llamar por teléfono. Por eso los
- * que NO han vuelto van primero y el "volvió el" es una columna propia — a
- * quien ya regresó no hay que llamarlo.
+ * ARRANCAN CERRADAS a propósito: son cientos de filas y, abiertas, empujaban
+ * los gráficos fuera de la pantalla al elegir una semana. El conteo —que es lo
+ * que se mira de reojo— y la descarga quedan afuera, así que bajar el archivo
+ * no obliga a desplegar nada.
+ */
+function Lista({
+  titulo, info, personas, conContacto, conRegreso, nombreArchivo, vacio,
+}: {
+  titulo: string
+  info: string
+  personas: Persona[]
+  conContacto: boolean
+  conRegreso: boolean
+  nombreArchivo: string
+  vacio: string
+}) {
+  const [abierta, setAbierta] = useState(false)
+  const cols = useMemo(() => columnas(conContacto, conRegreso), [conContacto, conRegreso])
+
+  return (
+    <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
+      <div className="flex items-center justify-between gap-3 flex-wrap p-4">
+        <button
+          type="button"
+          onClick={() => setAbierta(a => !a)}
+          aria-expanded={abierta}
+          className="flex items-center gap-2 text-left bg-transparent border-0 cursor-pointer"
+        >
+          {abierta ? <ChevronDown size={16} className="text-navy-light/80" aria-hidden /> : <ChevronRight size={16} className="text-navy-light/80" aria-hidden />}
+          <span className="text-base font-bold text-navy font-display">
+            {titulo} <span className="tabular-nums">({personas.length.toLocaleString('es-CR')})</span>
+          </span>
+        </button>
+        <div className="flex items-center gap-2">
+          <InfoDelEncabezado texto={info} />
+          {personas.length > 0 && (
+            <ExportButton<Persona>
+              data={personas} columns={cols} allColumns={cols} filename={nombreArchivo}
+            />
+          )}
+          {!abierta && personas.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setAbierta(true)}
+              className="rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              Mostrar lista
+            </button>
+          )}
+        </div>
+      </div>
+
+      {abierta && (
+        personas.length === 0 ? (
+          <div className="px-4 pb-4"><EmptyState icon={Users} title={vacio} /></div>
+        ) : (
+          <div className="overflow-x-auto border-t border-[var(--outline-variant)]">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[var(--outline-variant)]">
+                  {cols.map(c => (
+                    <th key={String(c.key)} className="px-3 py-2 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">
+                      {c.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {personas.map((p, i) => (
+                  <tr key={p.member_id} className={cn(i % 2 === 1 ? 'bg-surface-low/40' : '')}>
+                    <td className="px-3 py-2 text-[13px] text-navy font-body whitespace-nowrap">{p.nombre}</td>
+                    <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{p.sede}</td>
+                    <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body tabular-nums">{p.visitas}</td>
+                    {conRegreso && (
+                      <td className="px-3 py-2 text-[13px] font-body whitespace-nowrap">
+                        {p.volvioEl
+                          ? <span className="text-teal-deep">{formatDate(p.volvioEl)}</span>
+                          : <span className="text-navy-light/80">No ha vuelto</span>}
+                      </td>
+                    )}
+                    {conContacto && (
+                      <>
+                        <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{p.telefono ?? '—'}</td>
+                        <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{p.email ?? '—'}</td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
+/**
+ * REP-5 / REP-8 · Las dos listas de una semana.
+ *
+ * "Asistieron" son los de ESTA semana con al menos dos visitas; "dejaron de
+ * venir" son los de hace cinco semanas que no han vuelto. Las dos definiciones
+ * y el porqué están en `lib/reports/abandonos.ts`.
  */
 export function ListasDeLaSemana({ clave }: { clave: string | null }) {
-  const [pestana, setPestana] = useState<Pestana>('asistieron')
-
   const { datos, cargando, error } = useCargaRemota<Respuesta>(
     clave ? `semana-listas:${clave}` : '',
     async () => {
@@ -78,115 +175,56 @@ export function ListasDeLaSemana({ clave }: { clave: string | null }) {
     { generico: 'No se pudieron cargar las listas de la semana.' },
   )
 
-  const abandono = datos?.abandono
-  const personas = useMemo<Persona[]>(() => {
-    if (!datos) return []
-    if (pestana === 'asistieron') return datos.asistentes
-    return abandono?.evaluable ? abandono.personas : []
-  }, [datos, pestana, abandono])
-
-  const cols = useMemo(
-    () => columnas(datos?.puedeVerContacto ?? false, pestana === 'dejaron'),
-    [datos?.puedeVerContacto, pestana],
-  )
-
   if (!clave) return null
 
+  if (cargando) {
+    return (
+      <div className="flex items-center gap-2 py-8 justify-center text-navy-light/80">
+        <Loader2 size={16} className="animate-spin" aria-hidden />
+        <span className="text-sm font-body">Cargando las listas…</span>
+      </div>
+    )
+  }
+  if (error) return <p className="text-[13px] text-coral-deep font-body py-4" role="alert">{error}</p>
+  if (!datos) return null
+
   return (
-    <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5 space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex gap-1.5">
-          {([
-            ['asistieron', `Asistieron${datos ? ` (${datos.asistentes.length.toLocaleString('es-CR')})` : ''}`],
-            ['dejaron', `Dejaron de venir${abandono?.evaluable ? ` (${abandono.personas.length.toLocaleString('es-CR')})` : ''}`],
-          ] as Array<[Pestana, string]>).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setPestana(id)}
-              aria-pressed={pestana === id}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[13px] transition-colors font-body border',
-                pestana === id
-                  ? 'bg-navy text-white border-navy'
-                  : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {personas.length > 0 && (
-          <ExportButton<Persona>
-            data={personas}
-            columns={cols}
-            allColumns={cols}
-            filename={`${pestana === 'dejaron' ? 'dejaron-de-venir' : 'asistentes'}-${datos?.semana ?? ''}`}
-          />
-        )}
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-base font-bold text-navy font-display">Las personas de la semana</h2>
+        <p className="text-[13px] text-navy-light/80 font-body">
+          {/* Los DOS números: no es lo mismo un check-in que un asistente, y la
+              diferencia son los que vinieron por primera vez. */}
+          {datos.checkins.toLocaleString('es-CR')} check-ins ·{' '}
+          {datos.asistentes.length.toLocaleString('es-CR')} asistentes (2+ visitas)
+        </p>
       </div>
 
-      {!datos?.puedeVerContacto && datos && (
+      <Lista
+        titulo="Asistieron esta semana"
+        info={INFO_ASISTIERON}
+        personas={datos.asistentes}
+        conContacto={datos.puedeVerContacto}
+        conRegreso={false}
+        nombreArchivo={`asistentes-${datos.semana}`}
+        vacio="Nadie con dos o más visitas hizo check-in esa semana"
+      />
+
+      <Lista
+        titulo={`Dejaron de venir · vinieron el ${datos.dejaron.etiqueta}`}
+        info={INFO_DEJARON}
+        personas={datos.dejaron.personas}
+        conContacto={datos.puedeVerContacto}
+        conRegreso
+        nombreArchivo={`dejaron-de-venir-${datos.semana}`}
+        vacio="Nadie cumple cinco semanas sin venir esta semana"
+      />
+
+      {!datos.puedeVerContacto && (
         <p className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
           <PhoneOff size={13} className="mt-0.5 shrink-0" aria-hidden />
           Tu rol ve el reporte pero no el directorio, así que la descarga va sin teléfonos ni correos.
         </p>
-      )}
-
-      {cargando ? (
-        <div className="flex items-center gap-2 py-8 justify-center text-navy-light/80">
-          <Loader2 size={16} className="animate-spin" aria-hidden />
-          <span className="text-sm font-body">Cargando las listas…</span>
-        </div>
-      ) : error ? (
-        <p className="text-[13px] text-coral-deep font-body py-4" role="alert">{error}</p>
-      ) : pestana === 'dejaron' && abandono && !abandono.evaluable ? (
-        // Una lista a medias que cambia sola es peor que decir cuánto falta:
-        // con esta lista se llama por teléfono.
-        <EmptyState
-          icon={Users}
-          title={`Todavía no se puede calcular`}
-          description={`Hacen falta ${SEMANAS_DE_CORTE} semanas completas después de esta para saber quién cortó. Faltan ${abandono.faltanSemanas} ${abandono.faltanSemanas === 1 ? 'semana' : 'semanas'}: la respuesta está el ${formatDate(abandono.hasta)}.`}
-        />
-      ) : personas.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title={pestana === 'dejaron' ? 'Nadie cortó cinco semanas' : 'Nadie hizo check-in esa semana'}
-        />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--outline-variant)]">
-                {cols.map(c => (
-                  <th key={String(c.key)} className="px-3 py-2 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">
-                    {c.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {personas.map((p, i) => (
-                <tr key={p.member_id} className={cn(i % 2 === 1 ? 'bg-surface-low/40' : '')}>
-                  <td className="px-3 py-2 text-[13px] text-navy font-body whitespace-nowrap">{p.nombre}</td>
-                  <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{p.sede}</td>
-                  {pestana === 'dejaron' && (
-                    <td className="px-3 py-2 text-[13px] font-body whitespace-nowrap">
-                      {p.volvioEl
-                        ? <span className="text-teal-deep">{formatDate(p.volvioEl)}</span>
-                        : <span className="text-navy-light/80">No ha vuelto</span>}
-                    </td>
-                  )}
-                  {datos?.puedeVerContacto && (
-                    <>
-                      <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{p.telefono ?? '—'}</td>
-                      <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{p.email ?? '—'}</td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       )}
     </div>
   )

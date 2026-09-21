@@ -4,8 +4,7 @@ import { hasModulePermission, moduleScope } from '@/lib/auth/roles'
 import { getAsistentesDeLaSemana } from '@/lib/supabase/queries/reports'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
 import { rangoDeSemana } from '@/lib/reports/rango-de-semana'
-import { ventanaDeAbandono, abandonos, sedeDeLaSemana } from '@/lib/reports/abandonos'
-import { todayCR } from '@/lib/format'
+import { ventanaHaciaAtras, abandonos, asistentes, sedeDeLaSemana } from '@/lib/reports/abandonos'
 import { reportarError } from '@/lib/observabilidad'
 
 /**
@@ -37,35 +36,44 @@ export async function GET(req: NextRequest) {
     const desde = rango.desde.toISOString().slice(0, 10)
     const hasta = rango.hasta.toISOString().slice(0, 10)
 
-    const crudos = await getAsistentesDeLaSemana(desde, hasta)
-    const ventana = ventanaDeAbandono(semana, todayCR())
+    // REP-8 · Son DOS consultas a semanas distintas: los que asistieron salen de
+    // la semana que se está mirando, y los que dejaron de venir salen de la de
+    // cinco semanas antes. Así la lista siempre se puede calcular, también para
+    // la semana en curso.
+    const atras = ventanaHaciaAtras(semana)
+    const [deEstaSemana, deLaDeAtras] = await Promise.all([
+      getAsistentesDeLaSemana(desde, hasta),
+      getAsistentesDeLaSemana(atras.desde, atras.hasta),
+    ])
 
-    const limpiar = (a: (typeof crudos)[number]) => ({
+    const limpiar = (a: (typeof deEstaSemana)[number]) => ({
       member_id: a.member_id,
       nombre: a.nombre,
       sede: sedeDeLaSemana(a.sedes),
+      visitas: a.visitas,
       telefono: puedeVerContacto ? a.telefono : null,
       email: puedeVerContacto ? a.email : null,
     })
+
+    const conHistoria = asistentes(deEstaSemana)
+    const rangoRef = rangoDeSemana(atras.semanaDeReferencia.year, atras.semanaDeReferencia.week)
 
     return NextResponse.json({
       semana: `${semana.year}-W${String(semana.week).padStart(2, '0')}`,
       etiqueta: rango.etiqueta,
       puedeVerContacto,
-      asistentes: crudos.map(limpiar),
-      // Antes de que cierre la ventana la lista NO se manda: una lista a medias
-      // que cambia sola es peor que decir cuánto falta, porque con ella se
-      // llama por teléfono.
-      abandono: ventana.evaluable
-        ? {
-            evaluable: true as const,
-            hasta: ventana.finDeLaVentana,
-            personas: abandonos(crudos, ventana.finDeLaVentana).map(a => ({
-              ...limpiar(a),
-              volvioEl: a.volvioEl,
-            })),
-          }
-        : { evaluable: false as const, faltanSemanas: ventana.faltanSemanas, hasta: ventana.finDeLaVentana },
+      // Los dos números, sin ambigüedad: no es lo mismo un check-in que un
+      // asistente, y la diferencia son los que vinieron por primera vez.
+      checkins: deEstaSemana.length,
+      asistentes: conHistoria.map(limpiar),
+      dejaron: {
+        /** De qué semana salen: "10–16 ago". */
+        etiqueta: rangoRef.etiqueta,
+        personas: abandonos(deLaDeAtras, atras.finDeLaEspera).map(a => ({
+          ...limpiar(a),
+          volvioEl: a.volvioEl,
+        })),
+      },
     })
   } catch (error) {
     reportarError('GET /api/reports/semana-asistentes:', error)

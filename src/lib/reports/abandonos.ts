@@ -1,104 +1,147 @@
 /**
- * REP-5 · Quiénes dejaron de venir después de una semana.
+ * REP-5 / REP-8 · Las dos listas de una semana: quiénes asistieron y quiénes
+ * dejaron de venir.
  *
- * LA PREGUNTA que contesta: "de los que vinieron la semana del 14 de setiembre,
- * ¿a quiénes no hemos vuelto a ver?". La lista se baja para llamarlos, así que
- * lo que importa es no meter a nadie que ya volvió.
+ * DOS DEFINICIONES QUE CAMBIARON EL 2026-09-21, y las dos por lo mismo — la
+ * lista se baja para llamar por teléfono, así que lo que importa es a quién NO
+ * hay que llamar.
  *
- * LA REGLA: asistió en la semana N y no tiene ningún check-in de charla en las
- * semanas N+1 a N+5 completas. Cinco semanas seguidas sin aparecer.
+ * 1. ASISTENTE, no visitante. Solo cuenta quien ya vino al menos
+ *    `VISITAS_MINIMAS` veces en total. Alguien que vino una sola vez y no
+ *    volvió no es un asistente que se perdió: es alguien que visitó. Para esa
+ *    pregunta está el reporte de personas nuevas, que además mide si volvió.
+ *    Son números distintos y la pantalla muestra los dos: "889 check-ins · 826
+ *    asistentes".
  *
- * SOLO SE EVALÚA SI LA SEMANA N+5 YA TERMINÓ. Antes de eso la respuesta no
- * existe todavía: alguien que "lleva 2 semanas sin venir" puede aparecer el
- * domingo. Mostrar una lista a medias que cambia sola es peor que decir cuánto
- * falta — quien la usa llama por teléfono, y llamar a quien vino ayer quema la
- * lista entera.
+ * 2. LA LISTA MIRA HACIA ATRÁS. Antes, al abrir la semana N se preguntaba
+ *    quiénes de esa semana no volverían en las 5 siguientes — y eso no se podía
+ *    contestar hasta que pasaran, así que la semana actual no tenía respuesta.
+ *    Ahora, al abrir la semana N la lista es de quienes asistieron en la semana
+ *    N-5 y no han vuelto desde entonces: EN la semana N cumplen cinco semanas
+ *    sin aparecer. Siempre es calculable, incluso hoy.
  *
- * VOLVER DESPUÉS NO LO SACA de la lista: la pregunta es quién cortó cinco
- * semanas tras la N, y eso ya pasó. Pero el regreso se muestra en su propia
- * columna, porque a quien ya volvió no hay que llamarlo.
+ * Volver después NO saca a nadie de la lista —cortó las cinco semanas y eso ya
+ * pasó— pero el regreso va en su columna, porque a quien ya volvió no hay que
+ * llamarlo.
  *
  * Módulo PURO: el caller trae las fechas y esto decide.
  */
 import { lunesDeSemanaISO } from '@/lib/reports/rango-de-semana'
 
-/** Cuántas semanas completas sin aparecer cuentan como abandono. */
+/** Cuántas semanas completas sin aparecer cuentan como que dejó de venir. */
 export const SEMANAS_DE_CORTE = 5
 
-export type VentanaDeAbandono = {
-  /** Último día de la semana N+5, como 'YYYY-MM-DD'. */
-  finDeLaVentana: string
-  /** ¿Ya terminó la semana N+5? Si no, la lista no se puede calcular. */
-  evaluable: boolean
-  /** Cuántas semanas faltan para poder calcularla. 0 si ya se puede. */
-  faltanSemanas: number
-}
+/** Cuántas visitas hacen falta para contar como asistente y no como visitante. */
+export const VISITAS_MINIMAS = 2
+
+export const INFO_ASISTIERON =
+  `Personas con check-in esta semana que han venido al menos ${VISITAS_MINIMAS} veces. `
+  + 'Los que vienen por primera vez no se cuentan acá.'
+
+export const INFO_DEJARON =
+  `Personas que asistieron hace ${SEMANAS_DE_CORTE} semanas y no han vuelto desde entonces: `
+  + `esta semana cumplen ${SEMANAS_DE_CORTE} semanas sin asistir.`
 
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
+export type VentanaHaciaAtras = {
+  /** La semana de la que salen los candidatos: N menos el corte. */
+  semanaDeReferencia: { year: number; week: number }
+  /** Lunes y domingo de esa semana, para pedir sus asistentes. */
+  desde: string
+  hasta: string
+  /** Domingo de la semana N: si volvieron hasta acá, no cortaron. */
+  finDeLaEspera: string
+}
+
 /**
- * Hasta cuándo hay que mirar, y si ya se puede.
+ * De la semana que se está mirando a la semana que hay que consultar.
  *
- * `hoy` entra por parámetro para poder probarlo; el caller le pasa la fecha de
- * Costa Rica (`todayCR()`), no `new Date()` crudo.
+ * Se resta en DÍAS sobre el lunes real y no en número de semana: restarle 5 al
+ * número se rompe en enero, donde la semana 2 menos 5 no es la semana -3 sino
+ * la 49 del año anterior.
  */
-export function ventanaDeAbandono(
+export function ventanaHaciaAtras(
   semana: { year: number; week: number },
-  hoy: string,
   semanasDeCorte: number = SEMANAS_DE_CORTE,
-): VentanaDeAbandono {
-  // El domingo de la semana N+corte: lunes de esa semana más 6 días.
-  const lunes = lunesDeSemanaISO(semana.year, semana.week)
-  const finVentana = new Date(lunes)
-  finVentana.setUTCDate(lunes.getUTCDate() + semanasDeCorte * 7 + 6)
-  const finDeLaVentana = ymd(finVentana)
+): VentanaHaciaAtras {
+  const lunesN = lunesDeSemanaISO(semana.year, semana.week)
+  const lunesRef = new Date(lunesN)
+  lunesRef.setUTCDate(lunesN.getUTCDate() - semanasDeCorte * 7)
+  const domingoRef = new Date(lunesRef)
+  domingoRef.setUTCDate(lunesRef.getUTCDate() + 6)
+  const domingoN = new Date(lunesN)
+  domingoN.setUTCDate(lunesN.getUTCDate() + 6)
 
-  const evaluable = hoy > finDeLaVentana
-  if (evaluable) return { finDeLaVentana, evaluable, faltanSemanas: 0 }
+  // El año ISO de la semana de referencia se toma de su jueves, que es la
+  // definición: la semana pertenece al año donde cae su jueves.
+  const jueves = new Date(lunesRef)
+  jueves.setUTCDate(lunesRef.getUTCDate() + 3)
+  const eneCuatro = new Date(Date.UTC(jueves.getUTCFullYear(), 0, 4, 6))
+  const diaEne = eneCuatro.getUTCDay() || 7
+  const lunesSemana1 = new Date(eneCuatro)
+  lunesSemana1.setUTCDate(eneCuatro.getUTCDate() - diaEne + 1)
+  const week = Math.round((lunesRef.getTime() - lunesSemana1.getTime()) / (7 * 86_400_000)) + 1
 
-  // Cuántas semanas completas faltan, redondeando hacia arriba: si faltan 3
-  // días es "1 semana", porque la respuesta llega recién cuando cierra.
-  const dias = Math.ceil((finVentana.getTime() - new Date(`${hoy}T00:00:00Z`).getTime()) / 86_400_000)
-  return { finDeLaVentana, evaluable, faltanSemanas: Math.max(1, Math.ceil(dias / 7)) }
+  return {
+    semanaDeReferencia: { year: jueves.getUTCFullYear(), week },
+    desde: ymd(lunesRef),
+    hasta: ymd(domingoRef),
+    finDeLaEspera: ymd(domingoN),
+  }
 }
 
 export type AsistenteDeLaSemana = {
   member_id: string
   nombre: string
-  /** Sedes donde hizo check-in ESA semana. Puede ser más de una. */
+  /** Sedes donde hizo check-in esa semana. Puede ser más de una. */
   sedes: string[]
   telefono: string | null
   email: string | null
-  /**
-   * Fecha del primer check-in de charla DESPUÉS de la semana N, o null si no
-   * volvió nunca.
-   */
+  /** Primer check-in de charla DESPUÉS de esa semana, o null si no volvió. */
   regreso: string | null
+  /** Total histórico de check-ins a charlas. */
+  visitas: number
 }
 
 export type Abandono = AsistenteDeLaSemana & {
-  /** Fecha en que volvió, si volvió DESPUÉS de la ventana. null = no ha vuelto. */
+  /** Fecha en que volvió, si volvió DESPUÉS de la espera. null = no ha vuelto. */
   volvioEl: string | null
 }
 
-/** ¿Cortó las cinco semanas? `regreso` dentro de la ventana dice que no. */
-export function esAbandono(regreso: string | null, finDeLaVentana: string): boolean {
-  return regreso === null || regreso > finDeLaVentana
+/** ¿Es asistente y no alguien que pasó una vez? */
+export function esAsistente(a: { visitas: number }): boolean {
+  return a.visitas >= VISITAS_MINIMAS
+}
+
+/** Los asistentes de la semana: con check-in y con historia. */
+export function asistentes(
+  filas: readonly AsistenteDeLaSemana[],
+): AsistenteDeLaSemana[] {
+  return filas.filter(esAsistente)
+}
+
+/** ¿Cortó las cinco semanas? Un regreso dentro de la espera dice que no. */
+export function esAbandono(regreso: string | null, finDeLaEspera: string): boolean {
+  return regreso === null || regreso > finDeLaEspera
 }
 
 /**
  * Los que cortaron, en el orden en que conviene llamarlos: primero quienes NO
- * han vuelto, y dentro de cada grupo por nombre. A quien ya volvió no hay que
- * llamarlo, así que va al final en vez de quedar mezclado.
+ * han vuelto, y dentro de cada grupo por nombre.
+ *
+ * Solo asistentes: quien vino una vez y no volvió es un visitante, no un
+ * abandono.
  */
 export function abandonos(
-  asistentes: readonly AsistenteDeLaSemana[],
-  finDeLaVentana: string,
+  filas: readonly AsistenteDeLaSemana[],
+  finDeLaEspera: string,
 ): Abandono[] {
-  return asistentes
-    .filter(a => esAbandono(a.regreso, finDeLaVentana))
+  return filas
+    .filter(esAsistente)
+    .filter(a => esAbandono(a.regreso, finDeLaEspera))
     .map(a => ({ ...a, volvioEl: a.regreso }))
     .sort((x, y) => {
       if (!x.volvioEl !== !y.volvioEl) return x.volvioEl ? 1 : -1

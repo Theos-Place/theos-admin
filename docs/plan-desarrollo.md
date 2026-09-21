@@ -1894,6 +1894,129 @@ Tests: alcances (global/área/comité), des-duplicación del multi-comité, coin
 el endpoint de mi-comite para un comité dado. tsc/lint/vitest al cierre.
 ```
 
+### [ ] REP-8 · Reporte de asistencia: seis ajustes sobre lo entregado (pedido 2026-09-21)
+
+Ajustes sobre REP-2/REP-5 ya en producción.
+
+Prompt para Claude Code:
+
+```
+MEJORAS · /reportes/asistencia: seis ajustes sobre el detalle de semana y las listas
+
+1. TOGGLE DE SEMANA: clic en una semana la selecciona (como hoy); clic en la MISMA semana
+   la deselecciona (quita ?semana= de la URL y cierra el panel).
+
+2. LAS LISTAS VAN AL FINAL: las listas de "asistieron" y "dejaron de venir" (REP-5) se
+   mueven al FINAL de la página, para que no oculten los demás gráficos al abrir una
+   semana. Cada lista arranca COLAPSADA mostrando solo el conteo + botón "Mostrar lista"
+   (expande/colapsa). El export XLSX queda disponible sin necesidad de expandir.
+
+3. DEFINICIÓN DE "ASISTENTE" EN ESTAS LISTAS — CAMBIO: solo cuenta quien, además del
+   check-in en la semana seleccionada, tiene AL MENOS 2 asistencias en total (histórico).
+   Los nuevos (primera vez) y los de una sola visita NO se cuentan acá — es un número
+   distinto al de check-ins de la semana. Mostrar ambos números sin ambigüedad:
+   "N check-ins · M asistentes (2+ visitas)". La misma regla aplica a la lista de
+   "dejaron de venir" (alguien que vino UNA sola vez y no volvió no es un abandono de
+   asistente, es un visitante — para eso está REP-6).
+
+4. "DEJARON DE VENIR" MIRA HACIA ATRÁS — CAMBIO de la lógica de REP-5: al seleccionar la
+   semana N, la lista es de quienes asistieron en la semana N-5 y NO tienen ningún
+   check-in a charlas en las semanas N-4 a N (es decir: EN la semana N cumplen 5 semanas
+   sin asistir). Ventaja: siempre es calculable, incluso para la semana actual — eliminar
+   el estado "aún no se puede calcular" de la versión anterior. Mantener la columna
+   "volvió el" si la persona reaparece después de N. Ajustar la función pura
+   (lib/reports/abandonos.ts) y sus tests a esta definición.
+
+5. DOS INFO BOXES: junto a cada conteo, un ícono ⓘ con explicación en lenguaje simple:
+   - Asistieron: "Personas con check-in esta semana que han venido al menos 2 veces.
+     Los que vienen por primera vez no se cuentan aquí."
+   - Dejaron de venir: "Personas que asistieron hace 5 semanas y no han vuelto desde
+     entonces — esta semana cumplen 5 semanas sin asistir."
+   Reutilizar el componente de tooltip/info existente si hay.
+
+6. TERCER TAB — DEMOGRAFÍA POR SEDE: nuevo tab/sección con un gráfico o tabla por sede:
+   número de personas (asistentes únicos del período/año seleccionado), edad promedio
+   del grupo, y desglose por género (barras apiladas o columnas H/M/sin dato). Sin
+   birth_date → fuera del promedio de edad (no como 0); sin género → "sin dato", no
+   adivinarlo. Respeta el filtro de año y, si hay semana seleccionada, muestra la
+   demografía de ESA semana.
+
+tsc/lint/vitest al cierre; actualizar los tests de REP-5 a las definiciones nuevas.
+```
+
+### [ ] REP-9 · Reporte de estudios: página nueva (pedido 2026-09-21)
+
+Página nueva en /reportes con el detalle de los estudios por año: por tipo de
+estudio, cantidad de estudiantes, dirigentes, personas nuevas por estudio,
+género y edad.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Página nueva /reportes/estudios
+
+QUÉ MUESTRA — con selector de AÑO (como el reporte de asistencia) y filtro por tipo/plan
+de estudio:
+
+1. RESUMEN DEL AÑO (KPI cards): grupos impartidos, estudiantes (matrículas únicas por
+   persona), dirigentes distintos que dirigieron, personas NUEVAS que entraron por un
+   estudio ese año (primera actividad = matrícula, misma definición de canal de entrada
+   de REP-6 — REUTILIZAR esa lógica).
+
+2. TABLA/GRÁFICO POR TIPO DE ESTUDIO (Nivel 1..4, Discípulos, SCJ, prematrimonial, etc. —
+   usar el catálogo real de planes): por cada uno, en el año elegido:
+   - grupos abiertos/cerrados, estudiantes matriculados, % que finalizó (cerró con
+     resultado aprobado — mismo criterio del cierre de grupos), dirigentes que lo dieron,
+     personas nuevas que entraron por ahí, edad promedio de los estudiantes y desglose
+     por género (H/M/sin dato — sin adivinar).
+
+3. EVOLUCIÓN POR AÑO: gráfico de barras/líneas de estudiantes por año (desde el histórico
+   migrado) con desglose por tipo de estudio (apiladas o selector) — para ver el
+   crecimiento de cada cadena (N1→N4, DIS1→DIS3).
+
+DEFINICIONES:
+- "Estudiante del año" = matrícula activa o cerrada cuyo grupo estuvo EN CURSO en ese año
+  (no solo creadas ese año). Una persona en 2 estudios el mismo año cuenta 1 vez en el KPI
+  global y 1 vez en cada tipo (tooltip aclarándolo, como REP-7).
+- Edad: a la fecha de inicio del grupo; sin birth_date → fuera del promedio, no 0.
+- Excluir matrículas canceladas y datos [prueba].
+
+IMPLEMENTACIÓN: SQL agregado (hay años con miles de matrículas migradas); reutilizar
+studies-scope/queries existentes donde aplique. Export XLSX de la tabla por tipo.
+PERMISOS: coordinador_estudios, coordinador_dirigentes, direccion, admin (verificar
+contra los roles reales del módulo de reportes/estudios). Entrada en el índice de
+/reportes solo para ellos.
+Tests de las definiciones (estudiante del año que cruza años, des-duplicación, % finalizó).
+tsc/lint/vitest al cierre.
+```
+
+### [ ] REP-10 · Personas nuevas: dos ajustes sobre lo entregado (pedido 2026-09-21)
+
+Sobre el reporte de personas nuevas (REP-6, ya en producción).
+
+Prompt para Claude Code:
+
+```
+MEJORAS · Reporte de personas nuevas: canal en el gráfico anual + filtro que aplique al
+gráfico mensual
+
+1. GRÁFICO ANUAL POR CANAL DE ENTRADA: el gráfico "por año" pasa a barras APILADAS con
+   los tres canales de entrada que el reporte ya calcula: entró por ESTUDIO, por CHARLA,
+   por EVENTO. Una barra por año, tres segmentos con leyenda y tooltip con el desglose
+   (número y %). Mantener el total visible encima de cada barra.
+
+2. EL FILTRO DE SEDE/CHARLA APLICA A TODO: al elegir una charla/sede específica en el
+   filtro, el gráfico de personas nuevas POR MES debe actualizarse mostrando solo las
+   personas cuya primera actividad fue en esa sede/charla — hoy no se actualiza (o no
+   completamente). Revisar que TODOS los elementos de la página reaccionen al filtro:
+   KPI cards, gráfico mensual, gráfico anual (con sus 3 segmentos) y la tabla de detalle.
+   Un solo estado de filtro que alimente todo — si hoy cada gráfico pide sus datos por
+   aparte, unificar en el endpoint para que no vuelva a divergir.
+
+Tests: el endpoint filtrado por sede devuelve consistente el mismo universo para mes,
+año y tabla (mismos totales); apilado anual suma el total. tsc/lint/vitest al cierre.
+```
+
 
 **Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
 comité elegido viaja en `?comite=` para poder pasar el link. Sin comité elegido,
