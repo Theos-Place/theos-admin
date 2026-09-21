@@ -20,14 +20,13 @@
 import type { RoleId } from '@/types/auth'
 
 /**
- * Únicos roles que reciben el aviso. Decisión del usuario 2026-09-21: solo
- * quien tiene el rol `folletos`.
+ * Únicos roles que reciben el aviso (decisión del usuario 2026-09-21).
  *
- * `admin` NO está, aunque el módulo se lo abra: hasta hoy entraban ti@ y
- * operaciones@ por esa vía y el pedido fue explícito. Administrar el sistema no
- * es estar a cargo de los folletos; quien quiera el aviso, que tenga el rol.
+ * `admin` entra por decisión explícita, no porque el módulo se lo abra: si
+ * entrara por permisos volveríamos al bug. Los demás roles con lectura general
+ * —`solo_lectura`— quedan afuera, que era el reporte.
  */
-export const FOLLETO_NOTIFY_ROLES: RoleId[] = ['folletos']
+export const FOLLETO_NOTIFY_ROLES: RoleId[] = ['folletos', 'admin']
 
 export type FilaDeRol = {
   member_id: string

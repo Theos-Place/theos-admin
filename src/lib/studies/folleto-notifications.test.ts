@@ -17,8 +17,8 @@ describe('destinatariosDeFolletos', () => {
     expect(destinatariosDeFolletos([fila({ member_id: 'comunicacion', role: 'solo_lectura' })])).toEqual([])
   })
 
-  it('tampoco a admin: administrar el sistema no es estar a cargo de folletos', () => {
-    expect(destinatariosDeFolletos([fila({ member_id: 'ti', role: 'admin' })])).toEqual([])
+  it('a admin sí, pero porque está en la lista y no por sus permisos', () => {
+    expect(destinatariosDeFolletos([fila({ member_id: 'ti', role: 'admin' })])).toEqual(['ti'])
   })
 
   it('ignora el rol revocado y a la persona inactiva', () => {
