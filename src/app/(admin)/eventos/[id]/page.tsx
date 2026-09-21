@@ -35,7 +35,7 @@ import { EventServersTab } from './_components/EventServersTab'
 import type { VolunteerBooking } from './_components/EventServersTab'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { getInitials, formatMoney, todayCR } from '@/lib/format'
+import { getInitials, formatMoney, todayCR, formatDate } from '@/lib/format'
 import { contarPorCalidad } from '@/lib/events/calidad-checkin'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
@@ -478,6 +478,16 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       if (scope === 'all' || !rawEvent?.is_recurring) {
         router.push('/eventos')
       } else {
+        // Acá la pantalla NO cambia: el evento sigue existiendo y solo se tocó
+        // la serie. Sin decirlo, se lee como que el botón no hizo nada — fue el
+        // reporte del 2026-09-21.
+        const fecha = formatDate(occ.date)
+        toast(
+          scope === 'single'
+            ? `Se canceló la fecha del ${fecha}. El evento y el resto de sus fechas siguen.`
+            : `La serie termina antes del ${fecha}. Las fechas anteriores se conservan.`,
+          'success',
+        )
         setConfirmScope(null)
         setDeleting(false)
         refetch()
@@ -988,11 +998,14 @@ function DeleteEventModal({ busy, onConfirm, onClose }: {
   onConfirm: (scope: 'all' | 'future' | 'single') => void
   onClose: () => void
 }) {
-  const [scope, setScope] = useState<'all' | 'future' | 'single'>('single')
+  // NADA preseleccionado a propósito (2026-09-21). Venía con "Solo este evento"
+  // marcado, así que un clic en Continuar cancelaba UNA fecha —dejando el evento
+  // en la lista— y eso se lee como "le doy continuar y no lo borra".
+  const [scope, setScope] = useState<'all' | 'future' | 'single' | null>(null)
   const OPTIONS: { key: 'all' | 'future' | 'single'; title: string; desc: string }[] = [
-    { key: 'single', title: 'Solo este evento', desc: 'Cancela únicamente esta fecha; el resto de la serie no cambia.' },
-    { key: 'future', title: 'Esta y las siguientes', desc: 'Termina la serie justo antes de esta fecha (las anteriores se conservan).' },
-    { key: 'all', title: 'Toda la serie', desc: 'Elimina todos los eventos de la serie. No se puede deshacer.' },
+    { key: 'single', title: 'Solo esta fecha', desc: 'Cancela únicamente esta fecha. El evento y el resto de la serie siguen existiendo.' },
+    { key: 'future', title: 'Esta y las siguientes', desc: 'Termina la serie justo antes de esta fecha; las anteriores se conservan.' },
+    { key: 'all', title: 'El evento completo', desc: 'Elimina el evento y todas sus fechas. No se puede deshacer.' },
   ]
 
   return (
@@ -1026,8 +1039,8 @@ function DeleteEventModal({ busy, onConfirm, onClose }: {
         ))}
         <div className="flex gap-2 pt-1">
           <button
-            onClick={() => onConfirm(scope)}
-            disabled={busy}
+            onClick={() => scope && onConfirm(scope)}
+            disabled={busy || !scope}
             className="flex-1 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
           >
             {busy ? 'Procesando…' : 'Continuar'}
