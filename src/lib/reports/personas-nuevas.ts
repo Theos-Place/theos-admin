@@ -150,7 +150,67 @@ export function filtrarNuevos(
   })
 }
 
+export type FilaDeSerie = { anio: number; mes: number; canal: string; origen: string | null; n: number }
+
 export type PuntoDeSerie = { periodo: string; etiqueta: string; n: number }
+
+/**
+ * REP-10 · El filtro de charla/sede se aplica acá, sobre la MISMA serie que
+ * alimenta los dos gráficos.
+ *
+ * Antes el filtro solo llegaba a la tabla de detalle, porque el agregado de los
+ * gráficos no tenía la dimensión del origen: al filtrar cambiaba la tabla y los
+ * gráficos se quedaban igual, mostrando dos universos distintos en la misma
+ * pantalla.
+ */
+export function filtrarSerie(
+  filas: readonly FilaDeSerie[],
+  f: { origen?: string; canal?: Canal | '' } = {},
+): FilaDeSerie[] {
+  return filas.filter(x => {
+    if (f.origen && x.origen !== f.origen) return false
+    if (f.canal && x.canal !== f.canal) return false
+    return true
+  })
+}
+
+/** Los orígenes que existen en la serie, para el selector. Solo los de CHARLA:
+ *  los estudios los cubre el selector de canal con una sola opción. */
+export function origenesDeCharla(filas: readonly FilaDeSerie[]): string[] {
+  return [...new Set(filas.filter(x => x.canal === 'charla').map(x => x.origen).filter((o): o is string => !!o))]
+    .sort((a, b) => a.localeCompare(b, 'es'))
+}
+
+export type BarraAnualPorCanal = {
+  periodo: string
+  etiqueta: string
+  n: number
+  charla: number
+  estudio: number
+  evento: number
+}
+
+/** Por año y partido por canal de entrada, para las barras apiladas. */
+export function serieAnualPorCanal(
+  filas: readonly FilaDeSerie[],
+  desde = 2020,
+): BarraAnualPorCanal[] {
+  const porAnio = new Map<number, BarraAnualPorCanal>()
+  for (const f of filas) {
+    if (f.anio < desde) continue
+    const ya = porAnio.get(f.anio) ?? {
+      periodo: String(f.anio), etiqueta: String(f.anio), n: 0, charla: 0, estudio: 0, evento: 0,
+    }
+    ya.n += f.n
+    if (f.canal === 'estudio') ya.estudio += f.n
+    else if (f.canal === 'evento') ya.evento += f.n
+    // Cualquier cosa que no sea estudio ni evento cuenta como charla: es el
+    // canal por defecto y un valor raro no debe desaparecer del gráfico.
+    else ya.charla += f.n
+    porAnio.set(f.anio, ya)
+  }
+  return [...porAnio.values()].sort((a, b) => Number(a.periodo) - Number(b.periodo))
+}
 
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic']
 

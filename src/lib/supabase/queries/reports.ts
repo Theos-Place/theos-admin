@@ -12,7 +12,7 @@ import {
   type DirigentesReport,
 } from '@/lib/reports/dirigentes'
 import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
-import type { PersonaNueva, Canal } from '@/lib/reports/personas-nuevas'
+import type { PersonaNueva, Canal, FilaDeSerie } from '@/lib/reports/personas-nuevas'
 import type { FilaCruda as FilaCrudaDemografia } from '@/lib/reports/demografia'
 import {
   attendanceWindowStart, attendanceRecencyStart,
@@ -285,11 +285,12 @@ export async function getAsistentesDeLaSemana(
 }
 
 /** REP-6 · La serie mensual de personas nuevas (para los dos gráficos). */
-export async function getSeriePersonasNuevas(): Promise<Array<{ anio: number; mes: number; canal: string; n: number }>> {
+export async function getSeriePersonasNuevas(): Promise<FilaDeSerie[]> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.rpc('report_personas_nuevas_series')
-  if (error) throw error
-  return (data ?? []) as Array<{ anio: number; mes: number; canal: string; n: number }>
+  const filas = await todasLasFilas<{ anio: number; mes: number; canal: string; origen: string | null; n: number }>(
+    (d, h) => supabase.rpc('report_personas_nuevas_series').order('anio').range(d, h),
+  )
+  return filas.map(f => ({ ...f, n: Number(f.n) }))
 }
 
 /** REP-6 · El detalle de las personas nuevas de un período. */

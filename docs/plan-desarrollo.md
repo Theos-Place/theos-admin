@@ -1894,7 +1894,7 @@ Tests: alcances (global/área/comité), des-duplicación del multi-comité, coin
 el endpoint de mi-comite para un comité dado. tsc/lint/vitest al cierre.
 ```
 
-### [ ] REP-8 · Reporte de asistencia: seis ajustes sobre lo entregado (pedido 2026-09-21)
+### [x] REP-8 · Reporte de asistencia: seis ajustes sobre lo entregado — HECHO 2026-09-21
 
 Ajustes sobre REP-2/REP-5 ya en producción.
 
@@ -1990,7 +1990,7 @@ Tests de las definiciones (estudiante del año que cruza años, des-duplicación
 tsc/lint/vitest al cierre.
 ```
 
-### [ ] REP-10 · Personas nuevas: dos ajustes sobre lo entregado (pedido 2026-09-21)
+### [x] REP-10 · Personas nuevas: dos ajustes sobre lo entregado — HECHO 2026-09-21
 
 Sobre el reporte de personas nuevas (REP-6, ya en producción).
 
@@ -2062,3 +2062,18 @@ módulo reportes pero no es staff ni dirección.
 
 Hoy: 749 servidores · asistencia 79% · en estudio 75% · donantes 51% · cumplen
 los tres 39%. Global en ~4 s.
+
+**Cierre 2026-09-21.** El gráfico anual pasa a barras apiladas por canal de
+entrada, con el total encima. Suma verificada: charla + estudio + evento = el
+total, año por año.
+
+**El filtro ahora aplica a TODO, y esa era la parte de fondo.** La serie que
+alimenta los gráficos no tenía la dimensión del origen, así que al elegir una
+charla cambiaba la tabla y los gráficos se quedaban igual: dos universos
+distintos en la misma pantalla. La función SQL devuelve el origen y los dos
+gráficos y la tabla se recortan con el MISMO filtro. Verificado contra
+producción en las 15 charlas con gente nueva en agosto: el gráfico y la tabla
+dan lo mismo en las 15, y sin filtro los dos dan 204.
+
+De paso, el selector de charla sale de la serie completa y no del mes cargado:
+antes cambiaba de opciones según qué mes estuvieras viendo.

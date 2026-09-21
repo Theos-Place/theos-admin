@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Legend,
 } from 'recharts'
 import { UserPlus, PhoneOff } from 'lucide-react'
 import { ChartCard } from '@/components/reportes/ChartCard'
@@ -14,14 +14,13 @@ import { calcAge, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
-  resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnual, aniosDeLaSerie, SEMANAS_PARA_VOLVER,
-  ETIQUETA_DE_CANAL, type PersonaNueva, type Canal, type FiltrosDeNuevos,
+  resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnualPorCanal, aniosDeLaSerie,
+  filtrarSerie, origenesDeCharla, SEMANAS_PARA_VOLVER,
+  ETIQUETA_DE_CANAL, type PersonaNueva, type Canal, type FiltrosDeNuevos, type FilaDeSerie,
 } from '@/lib/reports/personas-nuevas'
 import {
-  CORAL, CORAL_ATENUADO, NAVY, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
+  CORAL, CORAL_ATENUADO, NAVY, TEAL_CLARO, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
 } from '@/lib/reports/paleta'
-
-type FilaSerie = { anio: number; mes: number; canal: string; n: number }
 
 function Kpi({ titulo, valor, pie }: { titulo: string; valor: string; pie?: string }) {
   return (
@@ -57,7 +56,7 @@ export default function PersonasNuevasPage() {
   const [anio, setAnio] = useState(ANIO_ACTUAL)
   const [filtros, setFiltros] = useState<FiltrosDeNuevos>({ canal: '', servidor: null })
 
-  const serie = useCargaRemota<{ serie: FilaSerie[] }>(
+  const serie = useCargaRemota<{ serie: FilaDeSerie[] }>(
     'personas-nuevas-serie',
     async () => {
       const r = await fetch('/api/reports/personas-nuevas')
@@ -75,8 +74,15 @@ export default function PersonasNuevasPage() {
   )
 
   const filas = useMemo(() => serie.datos?.serie ?? [], [serie.datos])
-  const mensual = useMemo(() => serieDelAnio(filas, anio), [filas, anio])
-  const anual = useMemo(() => serieAnual(filas), [filas])
+  // REP-10 · UN solo filtro para todo. La serie y el detalle se recortan con el
+  // mismo criterio, así que los gráficos y la tabla nunca muestran universos
+  // distintos — que es lo que pasaba cuando el filtro solo llegaba a la tabla.
+  const serieFiltrada = useMemo(
+    () => filtrarSerie(filas, { origen: filtros.origen, canal: filtros.canal }),
+    [filas, filtros.origen, filtros.canal],
+  )
+  const mensual = useMemo(() => serieDelAnio(serieFiltrada, anio), [serieFiltrada, anio])
+  const anual = useMemo(() => serieAnualPorCanal(serieFiltrada), [serieFiltrada])
   const anios = useMemo(() => aniosDeLaSerie(filas), [filas])
 
   const personas = useMemo(() => detalle.datos?.personas ?? [], [detalle.datos])
@@ -84,15 +90,9 @@ export default function PersonasNuevasPage() {
   const resumen = useMemo(() => resumenDeNuevos(visibles), [visibles])
   const cols = useMemo(() => COLUMNAS(detalle.datos?.puedeVerContacto ?? false), [detalle.datos?.puedeVerContacto])
 
-  // Solo las CHARLAS. Antes listaba también cada estudio —Nivel 1, Nivel 2,
-  // Nivel 3…— y la lista se llenaba de nombres que ya cubre el selector de al
-  // lado con una sola opción, "Estudio". Acá lo que se quiere elegir es la sede
-  // por la que entró la persona.
-  const origenes = useMemo(
-    () => [...new Set(personas.filter(p => p.canal === 'charla').map(p => p.origen).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'es')),
-    [personas],
-  )
+  // Solo las CHARLAS, y salen de la SERIE completa y no del mes cargado: con el
+  // mes, el selector cambiaba de opciones según qué mes estuvieras viendo.
+  const origenes = useMemo(() => origenesDeCharla(filas), [filas])
 
   return (
     <div className="space-y-4">
@@ -188,22 +188,30 @@ export default function PersonasNuevasPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Por año" subtitle="Desde 2020. Tocá un año para verlo mes a mes." empty={!anual.length}>
+        <ChartCard
+          title="Por año, y por dónde entraron"
+          subtitle="Desde 2020. Tocá un año para verlo mes a mes."
+          empty={!anual.length}
+        >
           <ResponsiveContainer>
             <BarChart data={anual} margin={{ top: 20, right: 8, left: -18, bottom: 0 }}
               onClick={(e) => { const a = Number(e?.activeLabel); if (a) setAnio(a) }}>
               <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
               <XAxis dataKey="etiqueta" tick={EJE_TICK} />
               <YAxis tick={EJE_TICK} allowDecimals={false} />
-              <Tooltip contentStyle={ESTILO_TOOLTIP} cursor={CURSOR_BARRA} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
-              {/* El número encima: que el valor esté a la vista y no solo en
-                  el hover — en una tablet no hay hover, y comparar dos años
-                  obliga a pasar por encima de cada barra. */}
-              <Bar dataKey="n" name="Nuevos" radius={[4, 4, 0, 0]}>
+              <Tooltip
+                contentStyle={ESTILO_TOOLTIP}
+                cursor={CURSOR_BARRA}
+                formatter={(v, n) => [Number(v).toLocaleString('es-CR'), String(n)]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'var(--font-body)' }} />
+              {/* Apiladas: la altura sigue siendo el total del año y los colores
+                  dicen por dónde entró la gente. El total va encima de la ÚLTIMA
+                  pila, que es donde termina la barra. */}
+              <Bar dataKey="charla" stackId="canal" name="Charla" fill={CORAL} />
+              <Bar dataKey="estudio" stackId="canal" name="Estudio" fill={NAVY} />
+              <Bar dataKey="evento" stackId="canal" name="Evento" fill={TEAL_CLARO} radius={[4, 4, 0, 0]}>
                 <LabelList dataKey="n" position="top" {...ETIQUETA_VALOR} formatter={(v) => Number(v ?? 0).toLocaleString('es-CR')} />
-                {anual.map(p => (
-                  <Cell key={p.periodo} fill={Number(p.periodo) === anio ? CORAL : NAVY} cursor="pointer" />
-                ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>

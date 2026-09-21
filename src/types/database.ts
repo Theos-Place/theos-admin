@@ -5246,7 +5246,7 @@ export type Database = {
       }
       report_personas_nuevas_series: {
         Args: never
-        Returns: { anio: number; mes: number; canal: string; n: number }[]
+        Returns: { anio: number; mes: number; canal: string; origen: string | null; n: number }[]
       }
       report_personas_nuevas: {
         Args: { p_desde: string; p_hasta: string }

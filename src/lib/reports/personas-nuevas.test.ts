@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnual, aniosDeLaSerie, SEMANAS_PARA_VOLVER,
-  type PersonaNueva,
+  filtrarSerie, origenesDeCharla, serieAnualPorCanal,
+  type PersonaNueva, type FilaDeSerie,
 } from './personas-nuevas'
 import { SEMANAS_DE_CORTE } from './abandonos'
 
@@ -161,5 +162,45 @@ describe('SEMANAS_PARA_VOLVER', () => {
     // este test no lo pesca, pero deja escrito cuál es el número que debe estar
     // en `report_personas_nuevas`.
     expect(SEMANAS_PARA_VOLVER * 7).toBe(35)
+  })
+})
+
+describe('REP-10 · un solo universo para gráficos y tabla', () => {
+  const serie: FilaDeSerie[] = [
+    { anio: 2026, mes: 1, canal: 'charla', origen: 'Cartago', n: 10 },
+    { anio: 2026, mes: 1, canal: 'charla', origen: 'Madrid', n: 5 },
+    { anio: 2026, mes: 2, canal: 'estudio', origen: 'Nivel 1', n: 3 },
+    { anio: 2025, mes: 6, canal: 'evento', origen: 'Campa', n: 7 },
+  ]
+
+  it('filtrar por charla deja fuera al resto', () => {
+    expect(filtrarSerie(serie, { origen: 'Cartago' }).reduce((n, x) => n + x.n, 0)).toBe(10)
+  })
+
+  it('el mismo filtro sirve para el gráfico mensual y el anual', () => {
+    // Era el punto: antes el filtro solo llegaba a la tabla.
+    const soloCartago = filtrarSerie(serie, { origen: 'Cartago' })
+    expect(serieDelAnio(soloCartago, 2026)[0].n).toBe(10)
+    expect(serieAnualPorCanal(soloCartago).reduce((n, x) => n + x.n, 0)).toBe(10)
+  })
+
+  it('el selector solo ofrece charlas, no estudios', () => {
+    expect(origenesDeCharla(serie)).toEqual(['Cartago', 'Madrid'])
+  })
+
+  it('el apilado suma el total de la barra', () => {
+    const b = serieAnualPorCanal(serie).find(x => x.etiqueta === '2026')!
+    expect(b.charla + b.estudio + b.evento).toBe(b.n)
+    expect(b.n).toBe(18)
+  })
+
+  it('un canal desconocido cuenta como charla y no desaparece del gráfico', () => {
+    const raro = serieAnualPorCanal([{ anio: 2026, mes: 1, canal: 'vaya uno a saber', origen: null, n: 4 }])
+    expect(raro[0].charla).toBe(4)
+    expect(raro[0].n).toBe(4)
+  })
+
+  it('corta antes de 2020, igual que el gráfico anual', () => {
+    expect(serieAnualPorCanal([{ anio: 2019, mes: 1, canal: 'charla', origen: null, n: 9 }])).toEqual([])
   })
 })
