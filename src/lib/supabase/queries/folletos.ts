@@ -1,6 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { ROLES } from '@/lib/auth/roles'
+import { FOLLETO_NOTIFY_ROLES, destinatariosDeFolletos } from '@/lib/studies/folleto-notifications'
 import type { FolletoState } from '@/lib/studies/folletos'
 import { estimatedAvailableDate, levelLabel } from '@/lib/studies/folletos'
 import { hasOwnFolleto, shouldCreateAutoFolleto, type AutoFolletoTipo } from '@/lib/studies/folleto-auto-rules'
@@ -37,34 +37,41 @@ export type DbFolletoRequest = {
   desglose: DesgloseFolletos
 }
 
-/** Ids de rol que otorgan el módulo 'folletos' (derivado de ROLES, no hardcodeado). */
-function folletoRoleIds(): string[] {
-  return ROLES
-    .filter(r => r.permissions.some(p =>
-      (p.module === 'all' || p.module === 'folletos') && (p.actions as string[]).includes('view')))
-    .map(r => r.id)
-}
-
-/** Personas con el permiso de folletos activo (para notificaciones + correos). */
+/** Personas a cargo de los folletos (para notificaciones + correos).
+ *
+ *  La audiencia la decide `destinatariosDeFolletos` (módulo puro, con tests).
+ *  Antes se derivaba de los permisos —"todo rol que pueda ver el módulo"— y por
+ *  eso `solo_lectura`, cuyo permiso es `module: 'all'`, recibía los correos:
+ *  comunicacion@theosplace.org los estuvo recibiendo hasta el 2026-09-21. */
 export async function getFolletoRecipients(): Promise<Array<{ member_id: string; email: string | null; name: string }>> {
   const supabase = createAdminClient()
-  const roleIds = folletoRoleIds()
-  if (roleIds.length === 0) return []
+  if (FOLLETO_NOTIFY_ROLES.length === 0) return []
   const { data, error } = await supabase
     .from('member_roles')
-    .select('member_id, member:members!member_roles_member_id_fkey(email, first_name, last_name, is_active, email_bounced, email_complained)')
-    .in('role', roleIds)
+    .select('member_id, role, is_active, member:members!member_roles_member_id_fkey(email, first_name, last_name, is_active, email_bounced, email_complained)')
+    .in('role', FOLLETO_NOTIFY_ROLES as unknown as string[])
     .eq('is_active', true)
   if (error) { console.warn('getFolletoRecipients:', error.message); return [] }
-  const byId = new Map<string, { member_id: string; email: string | null; name: string }>()
-  for (const r of (data ?? []) as Array<{
+  type Fila = {
     member_id: string
+    role: string
+    is_active: boolean
     member: {
       email: string | null; first_name: string; last_name: string; is_active: boolean
       email_bounced: boolean | null; email_complained: boolean | null
     } | null
-  }>) {
-    if (!r.member || r.member.is_active === false) continue
+  }
+  const filas = (data ?? []) as Fila[]
+  const permitidos = new Set(destinatariosDeFolletos(filas.map(f => ({
+    member_id: f.member_id,
+    role: f.role,
+    role_active: f.is_active !== false,
+    member_active: f.member?.is_active === true,
+  }))))
+
+  const byId = new Map<string, { member_id: string; email: string | null; name: string }>()
+  for (const r of filas) {
+    if (!r.member || !permitidos.has(r.member_id)) continue
     // La campana sí les llega; el correo no. Una dirección marcada como
     // rebotada o con queja vuelve a rebotar en cada envío, y cada rebote le
     // pega a la reputación del dominio en SES. Se detectó el 2026-09-02:
