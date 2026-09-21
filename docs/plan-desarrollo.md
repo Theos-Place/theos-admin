@@ -1494,3 +1494,126 @@ funcione (un rol sin acceso no lo ve en el índice). Sin capturas por ahora — 
 paso a paso; las capturas se agregan después como en los demás tutoriales.
 ```
 
+## Fase 19 — Pedido el 2026-09-21
+
+### [x] CHK-4 · Check-in de subeventos: el comité del subevento no ve el evento — HECHO 2026-09-21
+
+Caso real: bienvenida de Youth no puede hacer check-in porque el evento
+principal es de otra sede y el de Youth es un SUBEVENTO de ese principal. La
+regla: quien organiza el subevento puede operar el check-in del subevento Y del
+evento principal (la gente hace check-in desde cualquiera de las dos
+estaciones), y viceversa.
+
+Prompt para Claude Code:
+
+```
+FIX PERMISOS · Check-in: el alcance por comité debe cubrir la familia completa
+evento principal + subeventos
+
+PROBLEMA: un evento principal tiene subeventos (sub_events). El comité organizador del
+SUBEVENTO (ej. Youth) no ve el evento en su lista de check-in, porque el comité
+organizador registrado está solo en el evento PRINCIPAL (de otra sede) — o al revés. En
+la puerta hay dos estaciones y la gente hace check-in en cualquiera: ambos comités deben
+poder operar ambos.
+
+REGLA: para efectos de VER y OPERAR EL CHECK-IN, el alcance por comité se evalúa sobre la
+FAMILIA del evento: los comités organizadores del principal + los de cada subevento. Si
+mi comité organiza el subevento, puedo hacer check-in en el principal y en el subevento;
+si organiza el principal, igual. (La EDICIÓN del evento sigue la regla de EVE-12 sin este
+ensanche — esto es solo check-in y lo operativo de puerta.)
+
+IMPLEMENTACIÓN:
+1. Diagnóstico: ¿los subeventos tienen sus propios event_organizing_committees o heredan
+   del padre? Si un subevento no puede declarar comité propio, agregarlo (es la causa raíz:
+   el de Youth debería poder decir "me organiza el comité Youth de X sede").
+2. Donde se filtra "qué eventos puedo operar" (lista de check-in y el endpoint de
+   registrar check-in): calcular los comités de la familia (padre + subeventos) y comparar
+   contra los comités del operador. Server-side, no solo el filtro de la lista.
+3. Si EVE-12 (events-scope) ya corrió, extender ese helper con la noción de familia; si no
+   ha corrido, implementar esto donde hoy se decide qué eventos ve el encargado y dejar
+   nota para que EVE-12 lo absorba.
+4. Verificar el caso concreto: operador del comité de Youth ve el evento principal y su
+   subevento, y puede registrar check-in en ambos.
+Tests: comité del subevento opera padre y subevento; comité del padre opera subevento;
+comité ajeno a la familia → 403. tsc/lint/vitest al cierre.
+```
+
+**Cierre 2026-09-21.** El diagnóstico corrigió la causa raíz que suponía el
+prompt. No es que el subevento "herede" mal: el permiso se evalúa sobre el
+EVENTO y un subevento no es un evento, así que Youth no aparecía por ningún
+lado. En producción hay 4 subeventos, todos "Youth", dentro de charlas de sede.
+
+**Por qué no bastaba sumar Comité Youth a los comités de la charla**, que era lo
+obvio y no requería migración: esa misma lista decide quién cuenta como SERVIDOR
+del evento para el precio y la exención (`eventPricingFor`). Meter a Youth ahí
+convertiría a todo el comité en servidor de la charla de Pedregal para efectos
+de cobro. Por eso el comité del subevento vive en `sub_events.committee_id` y se
+une aparte, SOLO para el alcance de puerta.
+
+`requireEventAccess(id, { puerta: true })` en las 6 rutas de puerta —checkins,
+families, server-check, members, members/[memberId], onsite-charge—. El default
+es el ANGOSTO a propósito: olvidarse de `puerta` deja a alguien sin poder marcar
+y se reporta en el momento; un default ancho abriría la edición en silencio. Hay
+un test que lista qué rutas son de puerta y cuáles NO.
+
+Editar el evento, exportar su reporte y las inscripciones siguen midiéndose con
+la lista angosta: operar la estación de Youth no es administrar la charla.
+
+El comité de la estación se elige en el asistente y en el editor (editable en la
+fila, para arreglar un subevento que ya existe sin borrarlo) y VIAJA AL DUPLICAR
+— las charlas se crean cada semana copiando la anterior, y sin eso habría que
+volver a elegirlo cada vez, o sea olvidarlo.
+
+Medido contra producción: destraba entre 6 y 8 personas por charla (Irina
+Morales, Marco Acuña, Johana Forero, Carolina Fernández, Sharon Sánchez, Mariana
+Avellaneda, María Madrigal y Naomi Castro). Los otros 29 del Comité Youth siguen
+sin poder porque no tienen el rol de eventos, que es lo correcto.
+
+### [ ] REP-5 · Reporte: asistentes de una semana + quiénes dejaron de venir (pedido 2026-09-21)
+
+Al seleccionar una semana en reportes, dos listas: (a) los asistentes de esa
+semana (a cualquier evento tipo charla) y (b) los que asistieron esa semana y
+después dejaron de asistir 5 semanas consecutivas. Con export a Excel: nombre,
+sede a la que asistió, teléfono y email — es la lista para llamarlos y
+recuperarlos.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Reporte de asistencia: asistentes de la semana + abandonos (5 semanas sin volver)
+
+DÓNDE: dentro de /reportes/asistencia, integrado al detalle de semana que ya existe
+(REP-2: ?semana=YYYY-Www) — al abrir una semana, además de lo actual, dos listas nuevas.
+REUTILIZAR la selección de semana, el patrón de panel y las etiquetas de fecha de REP-4
+si ya corrió.
+
+DEFINICIONES (fijarlas en una función pura testeable, ej. lib/reports/abandonos.ts):
+- "Asistente de la semana N": persona con ≥1 check-in en la semana ISO N a cualquier
+  evento TIPO CHARLA (mismo criterio de tipo que ya usa el reporte de charlas).
+- "Dejó de asistir": asistió en la semana N y NO tiene ningún check-in a charlas en las
+  semanas N+1 a N+5 completas. Solo evaluable si la semana N+5 ya terminó — si no, mostrar
+  "aún no se puede calcular (faltan X semanas)" en vez de una lista a medias que después
+  cambie.
+- Si volvió en N+6 o después igual cuenta como abandono EN ESA VENTANA (la lista es de
+  quiénes cortaron 5 semanas seguidas tras N); el matiz "volvió después" se muestra como
+  columna extra "volvió el [fecha]" si es barato de calcular — sirve para no llamar a
+  quien ya regresó.
+
+UI: dos tabs o dos secciones en el panel de la semana:
+1. "Asistieron esta semana" (conteo + lista: nombre, sede/charla a la que asistió).
+2. "Dejaron de venir" (conteo + lista con la columna "volvió el" si aplica).
+Ambas con botón de descarga XLSX: nombre completo, sede a la que asistió (la de esa
+semana; si asistió a varias, la más frecuente o ambas separadas por coma — elegí y
+documentá), teléfono, email. Generación server-side con el patrón de exports existente.
+
+PERMISOS: los mismos roles que hoy ven /reportes/asistencia — pero OJO: el export trae
+teléfonos y correos; verificar que ese módulo ya implique ver datos de contacto (si el
+rol de reportes es de solo métricas, restringir el botón de export a quienes tengan
+miembros:view amplio y reportarlo).
+RENDIMIENTO: todo en SQL agregado (las 168k+ filas de check-ins ya están; nada de traer
+check-ins al cliente). Excluir datos [prueba].
+Tests de la función pura: asiste y vuelve en N+3 (no abandono), corta exactamente 5 (sí),
+semana N+5 incompleta (no evaluable), vuelve en N+7 (abandono con "volvió el").
+tsc/lint/vitest al cierre.
+```
+

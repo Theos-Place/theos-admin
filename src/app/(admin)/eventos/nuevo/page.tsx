@@ -21,7 +21,7 @@ import { EventSummary } from './_components/EventSummary'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type SubEventInput = { id: string; name: string; max_capacity: string }
+type SubEventInput = { id: string; name: string; max_capacity: string; committee_id: string | null }
 
 interface FormData {
   name: string
@@ -111,6 +111,7 @@ function NuevoEventoForm() {
   const [showSubEventForm, setShowSubEventForm] = useState(false)
   const [newSubName, setNewSubName]             = useState('')
   const [newSubCap, setNewSubCap]               = useState('')
+  const [newSubComite, setNewSubComite]         = useState<string | null>(null)
   const [flyer, setFlyer]                       = useState<string | null>(null)
   const [flyerDragOver, setFlyerDragOver]       = useState(false)
   const flyerInputRef                           = useRef<HTMLInputElement>(null)
@@ -182,9 +183,11 @@ function NuevoEventoForm() {
       id: `sub-${Date.now()}`,
       name: newSubName.trim(),
       max_capacity: newSubCap || '50',
+      committee_id: newSubComite,
     }])
     setNewSubName('')
     setNewSubCap('')
+    setNewSubComite(null)
     setShowSubEventForm(false)
   }
 
@@ -254,7 +257,7 @@ function NuevoEventoForm() {
       // confirmar con el botón "Agregar" se descartaba en silencio al publicar.
       // Se auto-incluye (la intención del usuario es clara: lo escribió).
       const pendingSub = showSubEventForm && newSubName.trim()
-        ? [{ id: `sub-${Date.now()}`, name: newSubName.trim(), max_capacity: newSubCap || '50' }]
+        ? [{ id: `sub-${Date.now()}`, name: newSubName.trim(), max_capacity: newSubCap || '50', committee_id: newSubComite }]
         : []
       const sub_events = [...form.sub_events, ...pendingSub]
       const res = await fetch('/api/events', {
@@ -428,6 +431,8 @@ function NuevoEventoForm() {
               showSubEventForm={showSubEventForm}
               newSubName={newSubName}
               newSubCap={newSubCap}
+              newSubComite={newSubComite}
+              onNewSubComiteChange={setNewSubComite}
               requires_registration={form.requires_registration}
               max_capacity={form.max_capacity}
               has_satisfaction_survey={form.has_satisfaction_survey}

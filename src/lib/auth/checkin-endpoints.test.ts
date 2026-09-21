@@ -24,8 +24,12 @@ describe('alta desde el check-in', () => {
     // Hasta el 2026-09-17 era requireRoles(...EVENT_CHECKIN_ROLES): el rol
     // bastaba y abría CUALQUIER evento. Ahora el guard mira si el evento es de
     // un comité de la persona. Si alguien lo devuelve a requireRoles, esto cae.
-    expect(ALTA).toContain('requireEventAccess(eventId)')
+    expect(ALTA).toContain('requireEventAccess(eventId')
     expect(ALTA).not.toContain('requireRoles(')
+    // CHK-4: y como es PUERTA, el alcance cuenta también el comité del
+    // subevento. Sin `puerta`, la bienvenida de Youth no puede dar de alta a
+    // alguien en la charla de la sede donde está su estación.
+    expect(ALTA).toContain('{ puerta: true }')
   })
 
   it('construye el payload SOLO con la lista de campos permitidos', () => {
@@ -46,8 +50,9 @@ describe('alta desde el check-in', () => {
 
 describe('corrección desde el check-in', () => {
   it('está gateada POR EVENTO (EVE-12), no por rol suelto', () => {
-    expect(CORRECCION).toContain('requireEventAccess(eventId)')
+    expect(CORRECCION).toContain('requireEventAccess(eventId')
     expect(CORRECCION).not.toContain('requireRoles(')
+    expect(CORRECCION).toContain('{ puerta: true }')
   })
 
   it('solo documento y teléfono', () => {
@@ -144,8 +149,9 @@ describe('el flujo de check-in nunca llama al padrón', () => {
 
   it('las familias del check-in van por el endpoint del evento', () => {
     const ruta = readFileSync('src/app/api/events/[id]/families/route.ts', 'utf8')
-    expect(ruta).toContain('requireEventAccess(eventId)')
+    expect(ruta).toContain('requireEventAccess(eventId')
     expect(ruta).not.toContain('requireRoles(')
+    expect(ruta).toContain('{ puerta: true }')
     // Agrupa fichas existentes; no puede crear ni modificar personas.
     expect(ruta).not.toContain('createMember')
     expect(ruta).not.toContain('updateMember')
@@ -192,4 +198,44 @@ describe('los endpoints de UN evento autorizan por evento', () => {
       expect(readFileSync(`${DIR}/${rel}`, 'utf8'), rel).toContain('requireEventAccess(')
     }
   })
+})
+
+/**
+ * CHK-4 (2026-09-21) · Las rutas de PUERTA miden el alcance sobre la familia
+ * del evento (evento + subeventos); las demás, solo sobre los comités del
+ * evento.
+ *
+ * El default de `requireEventAccess` es el ANGOSTO a propósito: olvidarse de
+ * `puerta` deja a alguien sin poder marcar —se reporta en el momento, como pasó
+ * con la bienvenida de Youth— mientras que un default ancho abriría la edición
+ * del evento de otra sede en silencio. Esta lista es el candado.
+ */
+describe('CHK-4 · qué rutas son de puerta', () => {
+  const DE_PUERTA = [
+    'events/[id]/checkins/route.ts',
+    'events/[id]/families/route.ts',
+    'events/[id]/server-check/route.ts',
+    'events/[id]/members/route.ts',
+    'events/[id]/members/[memberId]/route.ts',
+    'events/[id]/onsite-charge/route.ts',
+  ]
+  /** Operar la puerta no es editar el evento ni llevarse su reporte. */
+  const NO_SON_DE_PUERTA = [
+    'events/[id]/route.ts',
+    'events/[id]/attendees/export/route.ts',
+    'events/[id]/registrations/route.ts',
+    'events/[id]/volunteers/route.ts',
+  ]
+
+  for (const rel of DE_PUERTA) {
+    it(`${rel} pasa { puerta: true }`, () => {
+      expect(readFileSync(`src/app/api/${rel}`, 'utf8'), rel).toContain('{ puerta: true }')
+    })
+  }
+
+  for (const rel of NO_SON_DE_PUERTA) {
+    it(`${rel} NO lo pasa`, () => {
+      expect(readFileSync(`src/app/api/${rel}`, 'utf8'), rel).not.toContain('{ puerta: true }')
+    })
+  }
 })

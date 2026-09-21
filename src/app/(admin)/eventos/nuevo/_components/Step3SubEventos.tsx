@@ -1,15 +1,20 @@
 import { Plus, X } from 'lucide-react'
 import { inputCls, Toggle, FieldLabel } from './shared'
 import { RegistrationFormPicker } from '@/components/events/RegistrationFormPicker'
+import { SubEventCommitteeSelect } from '@/components/events/SubEventCommitteeSelect'
+import { useOrg } from '@/lib/org'
 import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 
-type SubEventInput = { id: string; name: string; max_capacity: string }
+type SubEventInput = { id: string; name: string; max_capacity: string; committee_id: string | null }
 
 interface Step3Props {
   sub_events: SubEventInput[]
   showSubEventForm: boolean
   newSubName: string
   newSubCap: string
+  /** CHK-4 · Comité que opera la estación (null = el del evento). */
+  newSubComite: string | null
+  onNewSubComiteChange: (id: string | null) => void
   requires_registration: boolean
   max_capacity: string
   has_satisfaction_survey: boolean
@@ -36,6 +41,8 @@ export function Step3SubEventos({
   showSubEventForm,
   newSubName,
   newSubCap,
+  newSubComite,
+  onNewSubComiteChange,
   requires_registration,
   max_capacity,
   has_satisfaction_survey,
@@ -53,6 +60,9 @@ export function Step3SubEventos({
   onSurveyChange,
   endsAt,
 }: Step3Props) {
+  const { adminCommittees } = useOrg()
+  const nombreDeComite = (id: string) => adminCommittees.find(c => c.id === id)?.name ?? 'otro comité'
+
   return (
     <div className="space-y-4">
       {/* Sub-eventos */}
@@ -72,7 +82,10 @@ export function Step3SubEventos({
                   >
                     {se.name}
                   </p>
-                  <p className="text-[13px] text-navy-light/80">Cap. {se.max_capacity}</p>
+                  <p className="text-[13px] text-navy-light/80">
+                    Cap. {se.max_capacity}
+                    {se.committee_id && ` · ${nombreDeComite(se.committee_id)}`}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -106,6 +119,9 @@ export function Step3SubEventos({
                 onChange={e => onNewSubCapChange(e.target.value)}
               />
             </div>
+            {/* CHK-4: sin esto, quien opera esta estación no puede hacer
+                check-in si es de otro comité que el del evento. */}
+            <SubEventCommitteeSelect value={newSubComite} onChange={onNewSubComiteChange} />
             <div className="flex gap-2">
               <button
                 type="button"

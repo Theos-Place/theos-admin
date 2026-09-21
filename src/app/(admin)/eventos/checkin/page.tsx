@@ -40,7 +40,10 @@ export default function CheckinPickerPage() {
   const miAlcance = useMiAlcanceDeEventos()
   const events = useMemo(
     () => (miAlcance?.alcance === 'comites'
-      ? todosLosEventos.filter(e => puedoOperar(miAlcance, e.organizing_committee_ids))
+      // CHK-4: la lista de check-in mide con los comités de PUERTA (evento +
+      // subeventos). Con la lista angosta, la bienvenida de Youth no veía la
+      // charla de la sede donde está su estación.
+      ? todosLosEventos.filter(e => puedoOperar(miAlcance, e.puerta_committee_ids))
       : todosLosEventos),
     [todosLosEventos, miAlcance],
   )

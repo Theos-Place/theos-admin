@@ -4,7 +4,7 @@ import { useOrg } from '@/lib/org'
 import { SummaryRow } from './shared'
 import { formatMoney } from '@/lib/format'
 
-type SubEventInput = { id: string; name: string; max_capacity: string }
+type SubEventInput = { id: string; name: string; max_capacity: string; committee_id: string | null }
 
 interface EventSummaryProps {
   name: string

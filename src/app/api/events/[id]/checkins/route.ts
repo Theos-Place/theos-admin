@@ -15,7 +15,7 @@ export async function GET(
   const { id } = await params
   // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
   // llega por el puesto solo alcanza los eventos de sus comités.
-  const auth = await requireEventAccess(id)
+  const auth = await requireEventAccess(id, { puerta: true })
   if (auth.res) return auth.res
   try {
     const member_ids = await getEventAttendeeIds(id)
@@ -37,7 +37,7 @@ export async function POST(
   const { id } = await params
   // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
   // llega por el puesto solo alcanza los eventos de sus comités.
-  const auth = await requireEventAccess(id)
+  const auth = await requireEventAccess(id, { puerta: true })
   if (auth.res) return auth.res
   const body = await req.json().catch(() => null)
   const memberId = body?.member_id ?? null
@@ -97,7 +97,7 @@ export async function DELETE(
   const { id } = await params
   // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
   // llega por el puesto solo alcanza los eventos de sus comités.
-  const auth = await requireEventAccess(id)
+  const auth = await requireEventAccess(id, { puerta: true })
   if (auth.res) return auth.res
   try {
     const checkinId = req.nextUrl.searchParams.get('checkinId')

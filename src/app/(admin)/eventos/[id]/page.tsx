@@ -208,7 +208,13 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const esDeMiComite = miAlcance?.alcance === 'comites'
     ? puedoOperar(miAlcance, event?.organizing_committee_ids)
     : true
-  const canCheckin = can('eventos', 'edit') && esDeMiComite
+  // CHK-4: el check-in mide con la PUERTA (evento + subeventos) y el resto no.
+  // Quien opera la estación de Youth marca asistencia en la charla de la sede,
+  // pero no edita ese evento ni exporta su reporte: eso sigue siendo de la sede.
+  const esDeMiPuerta = miAlcance?.alcance === 'comites'
+    ? puedoOperar(miAlcance, event?.puerta_committee_ids)
+    : true
+  const canCheckin = can('eventos', 'edit') && esDeMiPuerta
   const canReport  = can('eventos', 'export') && esDeMiComite
   const canManage  = can('eventos', 'create') && esDeMiComite
   // El envío usa los endpoints de comunicaciones, que exigen ese rol.

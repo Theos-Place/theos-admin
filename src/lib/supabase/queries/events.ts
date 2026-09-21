@@ -59,7 +59,7 @@ export type DbEventEnriched = {
   updated_at: string
   exceptions: Array<{ exception_date: string; override_event_id: string | null }>
   organizing_committees: Array<{ committee_id: string }>
-  sub_events: Array<{ id: string; name: string; max_capacity: number }>
+  sub_events: Array<{ id: string; name: string; max_capacity: number; committee_id: string | null }>
   registrations: Array<{
     // `id` hace falta para poder volver a abrir el modal del comprobante desde
     // la tarjeta del evento: sin él, quien cerraba el modal con "Más tarde" no
@@ -128,7 +128,7 @@ const SELECT = `
   *,
   exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id),
   organizing_committees:event_organizing_committees(committee_id),
-  sub_events(id, name, max_capacity),
+  sub_events(id, name, max_capacity, committee_id),
   registrations:event_registrations(
     id,
     member_id,
@@ -195,7 +195,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
 
   // select como string plano: el parser de tipos de supabase-js no soporta el ternario
   const select: string = filters.light
-    ? '*, exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id), organizing_committees:event_organizing_committees(committee_id), sub_events(id, name, max_capacity)'
+    ? '*, exceptions:event_exceptions!event_exceptions_parent_event_id_fkey(exception_date, override_event_id), organizing_committees:event_organizing_committees(committee_id), sub_events(id, name, max_capacity, committee_id)'
     : SELECT
   let query = supabase
     .from('events')
@@ -381,7 +381,7 @@ export type EventWriteInput = {
   cancellation_reason?: string | null
 }
 
-type SubEventInput = { name: string; max_capacity: number }
+type SubEventInput = { name: string; max_capacity: number; committee_id?: string | null }
 
 /** Reemplaza el set de comités organizadores (m2m) de un evento. */
 async function setOrganizingCommittees(
@@ -866,6 +866,22 @@ export async function eventOrganizingCommitteeIds(eventId: string): Promise<stri
   return ((data ?? []) as Array<{ committee_id: string }>).map((r) => r.committee_id)
 }
 
+/**
+ * CHK-4 · Comités que operan la PUERTA: los del evento más el de cada
+ * subevento. Solo para el alcance de check-in — la lista angosta de arriba es
+ * la que decide precio, exención y edición.
+ */
+export async function comitesDePuertaDelEvento(eventId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const [propios, subs] = await Promise.all([
+    eventOrganizingCommitteeIds(eventId),
+    supabase.from('sub_events').select('committee_id').eq('event_id', eventId),
+  ])
+  const deSubeventos = ((subs.data ?? []) as Array<{ committee_id: string | null }>).map(r => r.committee_id)
+  const { comitesDeLaPuerta } = await import('@/lib/events/familia-del-evento')
+  return comitesDeLaPuerta(propios, deSubeventos)
+}
+
 /** Error de validación: la persona no pertenece a ningún comité organizador. */
 export class NotCommitteeServerError extends Error {
   constructor(msg = 'La persona no es servidora activa de ningún comité organizador del evento.') { super(msg); this.name = 'NotCommitteeServerError' }
@@ -1231,7 +1247,10 @@ function toWriteInput(e: DbEventEnriched): EventWriteInput {
 }
 
 function parentSubEvents(e: DbEventEnriched): SubEventInput[] {
-  return e.sub_events.map((s) => ({ name: s.name, max_capacity: s.max_capacity }))
+  // CHK-4: el comité de la estación viaja con la copia. Las charlas se crean
+  // cada semana duplicando/repitiendo la anterior, y sin esto habría que volver
+  // a elegirlo cada vez — o sea, olvidarlo.
+  return e.sub_events.map((s) => ({ name: s.name, max_capacity: s.max_capacity, committee_id: s.committee_id ?? null }))
 }
 
 function parentCommitteeIds(e: DbEventEnriched): string[] {

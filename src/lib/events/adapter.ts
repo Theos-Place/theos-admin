@@ -3,6 +3,7 @@
 
 import type { DbEventEnriched } from '@/lib/supabase/queries/events'
 import type { AdminEvent, EventType, AttendanceType } from '@/types/event'
+import { comitesDeLaPuerta } from '@/lib/events/familia-del-evento'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   if (!m) return ''
@@ -32,6 +33,12 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     server_price: db.server_price ?? null,
     servers_pay: db.servers_pay ?? true,
     organizing_committee_ids: (db.organizing_committees ?? []).map((c) => c.committee_id),
+    // CHK-4: lo que habilita la PUERTA. Se calcula acá y no en la pantalla para
+    // que la lista de check-in y el servidor usen exactamente la misma unión.
+    puerta_committee_ids: comitesDeLaPuerta(
+      (db.organizing_committees ?? []).map((c) => c.committee_id),
+      (db.sub_events ?? []).map((s) => s.committee_id),
+    ),
     requires_survey: db.requires_survey,
     registration_form_id: db.registration_form_id ?? null,
     survey_form_id: db.survey_form_id ?? null,
@@ -54,6 +61,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
       id: s.id,
       name: s.name,
       max_capacity: s.max_capacity,
+      committee_id: s.committee_id ?? null,
     })),
 
     registrations: db.registrations.map((r) => ({

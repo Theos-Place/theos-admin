@@ -13,7 +13,7 @@ export async function GET(
     const { id } = await params
   // EVE-12: el guard es POR EVENTO, no por rol suelto. El rol de eventos que
   // llega por el puesto solo alcanza los eventos de sus comités.
-    const auth = await requireEventAccess(id)
+    const auth = await requireEventAccess(id, { puerta: true })
     if (auth.res) return auth.res
     const memberId = req.nextUrl.searchParams.get('member_id')
     if (!memberId) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })

@@ -46,11 +46,16 @@ export function formToOrganizingCommittees(body: Record<string, unknown>): strin
     : []
 }
 
-export function formToSubEvents(body: Record<string, unknown>): { name: string; max_capacity: number }[] {
+export function formToSubEvents(
+  body: Record<string, unknown>,
+): { name: string; max_capacity: number; committee_id: string | null }[] {
   return Array.isArray(body.sub_events)
-    ? (body.sub_events as Array<{ name: string; max_capacity: unknown }>).map((s) => ({
+    ? (body.sub_events as Array<{ name: string; max_capacity: unknown; committee_id?: unknown }>).map((s) => ({
         name: s.name,
         max_capacity: Number(s.max_capacity) || 0,
+        // CHK-4 · Comité que opera la estación. Cadena vacía = "el del evento",
+        // y se guarda como null: '' no es un uuid y reventaría el insert.
+        committee_id: typeof s.committee_id === 'string' && s.committee_id ? s.committee_id : null,
       }))
     : []
 }

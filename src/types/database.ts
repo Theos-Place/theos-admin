@@ -4977,6 +4977,7 @@ export type Database = {
       }
       sub_events: {
         Row: {
+          committee_id: string | null
           created_at: string | null
           event_id: string
           id: string
@@ -4984,6 +4985,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          committee_id?: string | null
           created_at?: string | null
           event_id: string
           id?: string
@@ -4991,6 +4993,7 @@ export type Database = {
           name: string
         }
         Update: {
+          committee_id?: string | null
           created_at?: string | null
           event_id?: string
           id?: string

@@ -23,6 +23,7 @@ import { canGrantEventManagers } from '@/lib/auth/events-scope'
 import { RegistrationFormPicker } from '@/components/events/RegistrationFormPicker'
 import { EventSurveyFields, type SurveyFieldsValue } from '@/components/events/EventSurveyFields'
 import { puedeApagarInscripcion } from '@/lib/events/inscripcion-visible'
+import { SubEventCommitteeSelect } from '@/components/events/SubEventCommitteeSelect'
 import {
   ChevronLeft, ChevronDown, ChevronUp, Mic, Tent, Heart, BookOpen, Plus, X,
   Users, Star, MapPin, Music, Coffee, Zap,
@@ -35,7 +36,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   heart: Heart, 'map-pin': MapPin, music: Music, coffee: Coffee, zap: Zap,
 }
 
-type SubEventInput = { id: string; name: string; max_capacity: string }
+type SubEventInput = { id: string; name: string; max_capacity: string; committee_id: string | null }
 
 type RecurringScope = 'single' | 'future' | 'all'
 
@@ -188,10 +189,11 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [recurrenceRule, setRecurrenceRule] = useState<string | null>(event?.recurrence_rule ?? null)
   const [recurrenceEnd, setRecurrenceEnd] = useState<string>(event?.recurrence_end ? ymdCR(new Date(event.recurrence_end)) : '')
   const [subEvents, setSubEvents] = useState<SubEventInput[]>(
-    event?.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })) ?? []
+    event?.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity), committee_id: se.committee_id ?? null })) ?? []
   )
   const [showSubEventForm, setShowSubEventForm] = useState(false)
   const [newSubName, setNewSubName] = useState('')
+  const [newSubComite, setNewSubComite] = useState<string | null>(null)
   const [newSubCap, setNewSubCap] = useState('')
   const [requiresRegistration, setRequiresRegistration] = useState(event?.requires_registration ?? false)
   // Con gente inscrita, la bandera no se apaga: quedarían en un evento que dice
@@ -255,7 +257,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
     setIsRecurring(event.is_recurring ?? false)
     setRecurrenceRule(event.recurrence_rule ?? null)
     setRecurrenceEnd(event.recurrence_end ? ymdCR(new Date(event.recurrence_end)) : '')
-    setSubEvents(event.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity) })))
+    setSubEvents(event.sub_events.map(se => ({ id: se.id, name: se.name, max_capacity: String(se.max_capacity), committee_id: se.committee_id ?? null })))
     setRequiresRegistration(event.requires_registration ?? false)
     setIsPublic(event.is_public ?? true)
     setMaxCapacity(String(event.max_capacity ?? ''))
@@ -299,7 +301,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
 
   function addSubEvent() {
     if (!newSubName.trim()) return
-    setSubEvents(prev => [...prev, { id: `sub-${Date.now()}`, name: newSubName.trim(), max_capacity: newSubCap || '50' }])
+    setSubEvents(prev => [...prev, { id: `sub-${Date.now()}`, name: newSubName.trim(), max_capacity: newSubCap || '50', committee_id: newSubComite }])
+    setNewSubComite(null)
     setNewSubName('')
     setNewSubCap('')
     setShowSubEventForm(false)
@@ -621,10 +624,18 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       <Section id="subevents" title="③ Sub-eventos" open={openSections.has('subevents')} onToggle={() => toggleSection('subevents')}>
         <div className="space-y-3">
           {subEvents.map(se => (
-            <div key={se.id} className="flex items-center justify-between rounded-xl px-3 py-2.5 bg-surface-low">
-              <div>
+            <div key={se.id} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 bg-surface-low">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-navy font-body">{se.name}</p>
                 <p className="text-[13px] text-navy-light/80">Cap. {se.max_capacity}</p>
+                {/* CHK-4: editable en la fila y no solo al crear — es acá donde
+                    se arregla un subevento que ya existe sin borrarlo. */}
+                <div className="mt-1.5 max-w-xs">
+                  <SubEventCommitteeSelect
+                    value={se.committee_id}
+                    onChange={id => setSubEvents(prev => prev.map(x => x.id === se.id ? { ...x, committee_id: id } : x))}
+                  />
+                </div>
               </div>
               <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
                 <X size={14} />
@@ -637,6 +648,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <input className={cn(inputCls, 'font-body')} placeholder="Nombre" value={newSubName} onChange={e => setNewSubName(e.target.value)} autoFocus />
                 <input type="number" className={cn(inputCls, 'font-body')} placeholder="Capacidad" value={newSubCap} onChange={e => setNewSubCap(e.target.value)} />
               </div>
+              <SubEventCommitteeSelect value={newSubComite} onChange={setNewSubComite} />
               <div className="flex gap-2">
                 <button type="button" onClick={addSubEvent} className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:bg-navy/80 transition-colors font-body">Agregar</button>
                 <button type="button" onClick={() => setShowSubEventForm(false)} className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>

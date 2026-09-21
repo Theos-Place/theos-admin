@@ -7,6 +7,7 @@ import {
 import { alcanceDeEventos, puedeOperarEvento, NO_ES_DE_TU_COMITE, type AlcanceDeEventos } from '@/lib/auth/alcance-de-eventos'
 import {
   isEventManager, isManagerOfFormEvent, datosDeAlcanceDeEventos, eventOrganizingCommitteeIds,
+  comitesDePuertaDelEvento,
 } from '@/lib/supabase/queries/events'
 import type { RoleId } from '@/types/auth'
 
@@ -39,7 +40,10 @@ export async function alcanceDeEventosDeLaSesion(ctx: AuthContext): Promise<Alca
  * Existe para no repetir en cada ruta "requireRoles(...EVENT_ADMIN) O buscar en
  * event_managers": era exactamente el olvido fácil que deja un endpoint abierto.
  */
-export async function requireEventAccess(eventId: string): Promise<
+export async function requireEventAccess(
+  eventId: string,
+  opciones: { puerta?: boolean } = {},
+): Promise<
   { ctx: AuthContext; scope: EventViewerScope; res?: undefined } | { ctx?: undefined; scope?: undefined; res: NextResponse }
 > {
   const ctx = await getAuthContext()
@@ -50,7 +54,14 @@ export async function requireEventAccess(eventId: string): Promise<
   // 'admin' a cualquiera con el módulo, que es justamente lo que se acota.
   const alcance = await alcanceDeEventosDeLaSesion(ctx)
   if (alcance.alcance === 'comites') {
-    if (puedeOperarEvento(alcance, await eventOrganizingCommitteeIds(eventId))) {
+    // CHK-4: en la PUERTA cuenta la familia (evento + subeventos); en todo lo
+    // demás, solo los comités del evento. El default es el angosto a propósito:
+    // olvidarse de `puerta` deja a alguien sin poder marcar —se reporta en el
+    // momento— mientras que un default ancho abriría la edición en silencio.
+    const comites = opciones.puerta
+      ? await comitesDePuertaDelEvento(eventId)
+      : await eventOrganizingCommitteeIds(eventId)
+    if (puedeOperarEvento(alcance, comites)) {
       // Sobre SU evento puede lo mismo que antes; no se le recorta el payload.
       return { ctx, scope: 'admin' }
     }

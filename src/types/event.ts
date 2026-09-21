@@ -15,6 +15,8 @@ export type SubEvent = {
   id: string
   name: string
   max_capacity: number
+  /** CHK-4 · Comité que opera esta estación. null = la opera el del evento. */
+  committee_id: string | null
 }
 
 export type EventRegistration = {
@@ -97,6 +99,10 @@ export type AdminEvent = {
   servers_pay: boolean
   /** Ids de áreas-comité organizadoras (m2m). */
   organizing_committee_ids: string[]
+  /** CHK-4 · Comités que pueden operar la PUERTA: los del evento más el de cada
+   *  subevento. Es MÁS ANCHO que organizing_committee_ids y solo sirve para el
+   *  check-in — el precio, la exención y la edición usan el otro. */
+  puerta_committee_ids: string[]
   requires_survey: boolean
   /** EVE-4 · Formulario que se llena al inscribirse (null = sin formulario). */
   registration_form_id: string | null
