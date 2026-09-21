@@ -4,6 +4,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPasswordLink } from '@/lib/auth/password-link'
 import { patronDeCorreo } from '@/lib/email/correo-exacto'
+import { esMenor } from '@/lib/members/reglas-de-menores'
 import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 // POST { identifier } → manda el enlace para definir/restablecer la contraseña.
@@ -60,6 +61,29 @@ async function registrarSinDestinatario(identifier: string): Promise<void> {
   }
 }
 
+/**
+ * Deja constancia de un enlace que NO se mandó porque la cuenta está
+ * deshabilitada. Mismo motivo que `registrarSinDestinatario`: la respuesta al
+ * usuario es neutral y sin este registro no hay forma de contestar "¿por qué no
+ * me llega?".
+ */
+async function registrarCuentaDeshabilitada(identifier: string, correo: string): Promise<void> {
+  try {
+    const db = createAdminClient() as unknown as {
+      from: (t: string) => { insert: (v: Record<string, unknown>) => Promise<{ error: unknown }> }
+    }
+    await db.from('message_logs').insert({
+      channel: 'email',
+      recipient: correo,
+      subject: 'Enlace de contraseña — la cuenta está deshabilitada',
+      status: 'failed',
+      last_error: `cuenta_deshabilitada (${identifier})`,
+    })
+  } catch (e) {
+    console.warn('registrarCuentaDeshabilitada:', e instanceof Error ? e.message : e)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const parsed = schema.safeParse(await req.json().catch(() => ({})))
@@ -97,16 +121,55 @@ export async function POST(req: NextRequest) {
     // Resolver a un miembro: se acepta correo o documento, igual que el login.
     const supabase = createAdminClient()
     const esCorreo = identifier.includes('@')
-    const query = supabase.from('members').select('first_name, email, auth_user_id').limit(1)
+    const query = supabase.from('members').select('first_name, email, auth_user_id, birth_date').limit(1)
     const { data } = esCorreo
       ? await query.ilike('email', patronDeCorreo(identifier))
       : await query.eq('cedula_normalized', identifier.replace(/[\s-]/g, '').toUpperCase())
     const member = (data ?? [])[0] as
-      | { first_name: string | null; email: string | null; auth_user_id: string | null }
+      | { first_name: string | null; email: string | null; auth_user_id: string | null; birth_date: string | null }
       | undefined
 
     const email = member?.email?.trim()
-    if (!email) {
+
+    // Cuenta DESHABILITADA: no se manda nada. El enlace se generaría bien y al
+    // usarlo diría "vencido", que es lo que reportó Nathaly Avendaño el
+    // 2026-09-21 — tiene 15 años y su cuenta está bloqueada por la regla de
+    // menores (FAM-2). Mandar un enlace que no va a funcionar la deja pidiendo
+    // otro para siempre.
+    //
+    // A la persona se le responde lo MISMO de siempre: la pantalla no puede
+    // volverse un detector de qué cuentas existen o están bloqueadas. Lo que
+    // cambia es que queda constancia, que era lo que faltaba para poder
+    // contestarle a alguien que pregunta por qué no le llega.
+    let deshabilitada = false
+    if (member?.auth_user_id) {
+      const { data: cuenta } = await supabase.auth.admin.getUserById(member.auth_user_id)
+      const hasta = (cuenta?.user as { banned_until?: string | null } | undefined)?.banned_until
+      deshabilitada = !!hasta && new Date(hasta) > new Date()
+    }
+
+    // A UN MENOR SE LE DICE, no se le deja adivinando (pedido del usuario
+    // 2026-09-21). Nathaly Avendaño, 15 años, pidió el enlace y le llegaba uno
+    // que al abrirlo decía "vencido": su cuenta está bloqueada por la regla de
+    // menores. Reintentar no iba a servir nunca y la pantalla no lo decía.
+    //
+    // Sí, esto revela que esa dirección pertenece a un menor registrado. Se
+    // acepta a cambio de que la persona entienda qué pasa: el caso real es una
+    // chica de 15 atrapada en un bucle, no alguien sondeando correos.
+    if (deshabilitada && member && esMenor({ birth_date: member.birth_date })) {
+      await registrarCuentaDeshabilitada(identifier, email ?? identifier)
+      return NextResponse.json({
+        ok: true,
+        message: 'Todavía no podés tener cuenta propia porque sos menor de edad. '
+          + 'Tu información la maneja tu papá, mamá o encargado desde la cuenta de ellos. '
+          + 'Si necesitás algo, escribinos a soporte@theosplace.org.',
+        code: 'menor_de_edad',
+      })
+    }
+
+    if (deshabilitada) {
+      await registrarCuentaDeshabilitada(identifier, email ?? identifier)
+    } else if (!email) {
       await registrarSinDestinatario(identifier)
     } else {
       // El tipo (definir vs restablecer) lo resuelve sendPasswordLink: acá solo

@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { useSearchParams } from 'next/navigation'
-import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail } from 'lucide-react'
+import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail, ShieldAlert } from 'lucide-react'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -25,6 +25,7 @@ function RecuperarContent() {
   const a11yEmail = fieldA11y('correo', emailErr, { required: true, id: 'recuperar-email' })
   const [loading, setLoading]   = useState(false)
   const [sent, setSent]         = useState(false)
+  const [aviso, setAviso] = useState('')
   const [error, setError]       = useState('')
 
   function validate() {
@@ -55,12 +56,37 @@ function RecuperarContent() {
         return
       }
       // La respuesta es neutral a propósito: no revela si el correo existe.
+      // La excepción es el menor de edad: ahí SÍ se le dice por qué, porque si
+      // no se queda pidiendo un enlace que nunca le va a servir.
+      const cuerpo = await res.json().catch(() => null) as { message?: string; code?: string } | null
+      if (cuerpo?.code === 'menor_de_edad' && cuerpo.message) setAviso(cuerpo.message)
       setSent(true)
     } catch {
       setError('No pudimos enviar el correo. Revisá tu conexión e intentá de nuevo.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // El menor de edad NO ve "correo enviado": no se le mandó ninguno y decirle
+  // que sí lo deja esperando. Ve por qué no puede tener cuenta.
+  if (aviso) {
+    return (
+      <div className="w-full text-center max-w-[400px]">
+        <div className="flex justify-center mb-5">
+          <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-coral/10">
+            <ShieldAlert size={28} className="text-coral-deep" aria-hidden />
+          </div>
+        </div>
+        <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">
+          Todavía no podés tener cuenta
+        </h2>
+        <p className="text-sm text-navy-light/80 leading-relaxed mb-4 font-body">{aviso}</p>
+        <Link href="/login" className="text-sm text-coral hover:underline font-body">
+          Volver al inicio
+        </Link>
+      </div>
+    )
   }
 
   if (sent) {

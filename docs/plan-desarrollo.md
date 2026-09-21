@@ -2186,3 +2186,35 @@ Lo que sí se puede listar, y queda pendiente de decisión:
    cuando la persona es menor.
 
 Scripts en `scripts/dat10/`.
+
+### [ ] AUT-4 · Quitar el bloqueo al cumplir 18 años (encontrado 2026-09-21)
+
+El script de FAM-2 bloquea las cuentas de menores hasta el año 2126, y su propio
+comentario dice que "al cumplir 18 basta con quitar el ban" — pero **nada lo
+hace**. Se descubrió porque Nathaly Avendaño (15) reportó que el enlace de
+contraseña siempre salía vencido; al medirlo aparecieron **Saul Sánchez y
+Esteban Quesada**, que cumplieron 18 el 18 y el 19 de setiembre y seguían sin
+poder entrar. Se desbloquearon a mano
+(`scripts/menores-2026-09-21/desbloquear-mayores.cjs`), pero **hay 8 más que
+cumplen en octubre** y va a pasar todos los meses.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Cron que desbloquea las cuentas al cumplir 18
+
+Correr a diario: quitar `banned_until` de las cuentas de auth cuya ficha ya tiene
+18 años cumplidos y siguen bloqueadas. Reutilizar `esMenor`/`esMenorDeEdad` de
+lib/members/reglas-de-menores — NO reimplementar el cálculo de edad.
+
+Solo desbloquea lo que el script de menores bloqueó: no tocar cuentas de fichas
+fusionadas (correo `fusionado+...@theosplace.invalid`), que están bloqueadas a
+propósito y para siempre.
+
+Dejar rastro de cada desbloqueo (audit_log o message_logs) y avisar a la persona
+de que ya puede crear su contraseña — decidir con el usuario si ese correo se
+manda o no.
+Tests de la regla pura con fechas de borde (cumple hoy, cumple mañana, sin fecha
+de nacimiento → NO se desbloquea, es un caso a revisar). tsc/lint/vitest.
+```
+
