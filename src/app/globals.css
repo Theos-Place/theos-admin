@@ -533,8 +533,12 @@ body {
  * por Tab— el anillo se mantiene y encima en coral de marca: el gráfico es
  * operable con teclado y eso no se toca (AGENTS.md / accessibility.md).
  */
-.recharts-wrapper:focus,
-.recharts-surface:focus {
+/* El descendiente también: en recharts 3 el clic puede dejar el foco en la
+ * BARRA y no en el contenedor, y ahí la regla de arriba no llegaba — seguía
+ * apareciendo el recuadro azul del navegador al escoger un mes (2026-09-21). */
+.recharts-wrapper:focus:not(:focus-visible),
+.recharts-surface:focus:not(:focus-visible),
+.recharts-wrapper *:focus:not(:focus-visible) {
   outline: none;
 }
 

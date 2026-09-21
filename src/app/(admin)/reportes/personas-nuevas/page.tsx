@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList,
 } from 'recharts'
 import { UserPlus, PhoneOff } from 'lucide-react'
 import { ChartCard } from '@/components/reportes/ChartCard'
@@ -13,11 +13,11 @@ import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { calcAge, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  resumenDeNuevos, filtrarNuevos, serieMensual, serieAnual,
+  resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnual, aniosDeLaSerie, SEMANAS_PARA_VOLVER,
   ETIQUETA_DE_CANAL, type PersonaNueva, type Canal, type FiltrosDeNuevos,
 } from '@/lib/reports/personas-nuevas'
 import {
-  CORAL, CORAL_ATENUADO, NAVY, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP,
+  CORAL, CORAL_ATENUADO, NAVY, EJE_TICK, REJILLA, CURSOR_BARRA, ESTILO_TOOLTIP, ETIQUETA_VALOR,
 } from '@/lib/reports/paleta'
 
 type FilaSerie = { anio: number; mes: number; canal: string; n: number }
@@ -39,7 +39,7 @@ const COLUMNAS = (conTelefono: boolean): ColumnDef<PersonaNueva>[] => {
     { key: 'fecha', label: 'Primera actividad', defaultVisible: true, exportValue: p => p.fecha },
     { key: 'canal', label: 'Entró por', defaultVisible: true, exportValue: p => ETIQUETA_DE_CANAL[p.canal] },
     { key: 'origen', label: 'Dónde', defaultVisible: true },
-    { key: 'volvio', label: 'Volvió (8 semanas)', defaultVisible: true, exportValue: p => (p.volvio ? 'Sí' : 'No') },
+    { key: 'volvio', label: `Volvió (${SEMANAS_PARA_VOLVER} semanas)`, defaultVisible: true, exportValue: p => (p.volvio ? 'Sí' : 'No') },
     { key: 'seMatriculo', label: 'Se matriculó', defaultVisible: true, exportValue: p => (p.seMatriculo ? 'Sí' : 'No') },
     { key: 'esServidor', label: 'Servidor', defaultVisible: true, exportValue: p => (p.esServidor ? 'Sí' : 'No') },
   ]
@@ -48,10 +48,12 @@ const COLUMNAS = (conTelefono: boolean): ColumnDef<PersonaNueva>[] => {
 }
 
 const HOY = new Date()
-const MES_ACTUAL = `${HOY.getUTCFullYear()}-${String(HOY.getUTCMonth() + 1).padStart(2, '0')}`
+const ANIO_ACTUAL = HOY.getUTCFullYear()
+const MES_ACTUAL = `${ANIO_ACTUAL}-${String(HOY.getUTCMonth() + 1).padStart(2, '0')}`
 
 export default function PersonasNuevasPage() {
   const [mes, setMes] = useState(MES_ACTUAL)
+  const [anio, setAnio] = useState(ANIO_ACTUAL)
   const [filtros, setFiltros] = useState<FiltrosDeNuevos>({ canal: '', servidor: null })
 
   const serie = useCargaRemota<{ serie: FilaSerie[] }>(
@@ -72,16 +74,22 @@ export default function PersonasNuevasPage() {
   )
 
   const filas = useMemo(() => serie.datos?.serie ?? [], [serie.datos])
-  const mensual = useMemo(() => serieMensual(filas, HOY, 24), [filas])
+  const mensual = useMemo(() => serieDelAnio(filas, anio), [filas, anio])
   const anual = useMemo(() => serieAnual(filas), [filas])
+  const anios = useMemo(() => aniosDeLaSerie(filas), [filas])
 
   const personas = useMemo(() => detalle.datos?.personas ?? [], [detalle.datos])
   const visibles = useMemo(() => filtrarNuevos(personas, filtros), [personas, filtros])
   const resumen = useMemo(() => resumenDeNuevos(visibles), [visibles])
   const cols = useMemo(() => COLUMNAS(detalle.datos?.puedeVerContacto ?? false), [detalle.datos?.puedeVerContacto])
 
+  // Solo las CHARLAS. Antes listaba también cada estudio —Nivel 1, Nivel 2,
+  // Nivel 3…— y la lista se llenaba de nombres que ya cubre el selector de al
+  // lado con una sola opción, "Estudio". Acá lo que se quiere elegir es la sede
+  // por la que entró la persona.
   const origenes = useMemo(
-    () => [...new Set(personas.map(p => p.origen).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
+    () => [...new Set(personas.filter(p => p.canal === 'charla').map(p => p.origen).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es')),
     [personas],
   )
 
@@ -98,7 +106,10 @@ export default function PersonasNuevasPage() {
       </div>
 
       {/* ── KPIs del mes y filtro activos ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* "Ya sirven" y "Se matricularon" son cosas DISTINTAS y por eso son dos
+          tarjetas: estaban juntas —el número de una con el pie de la otra— y se
+          leía como si fueran el mismo dato. */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <Kpi titulo="Nuevos" valor={resumen.total.toLocaleString('es-CR')} pie={mes} />
         <Kpi
           titulo="Edad promedio"
@@ -109,20 +120,47 @@ export default function PersonasNuevasPage() {
         <Kpi
           titulo="Volvieron"
           valor={resumen.pctVolvieron === null ? '—' : `${resumen.pctVolvieron}%`}
-          pie={`${resumen.volvieron} en las 8 semanas siguientes`}
+          pie={`${resumen.volvieron} en las ${SEMANAS_PARA_VOLVER} semanas siguientes`}
+        />
+        <Kpi
+          titulo="Se matricularon"
+          valor={resumen.pctSeMatricularon === null ? '—' : `${resumen.pctSeMatricularon}%`}
+          pie={`${resumen.seMatricularon} entró a un estudio después`}
         />
         <Kpi
           titulo="Ya sirven"
           valor={resumen.servidores.toLocaleString('es-CR')}
-          pie={resumen.pctSeMatricularon !== null ? `${resumen.seMatricularon} se matricularon` : undefined}
+          pie="tienen un puesto activo hoy"
         />
       </div>
 
       {/* ── Gráficos ── */}
+      {anios.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Año</span>
+          {anios.map(a => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => setAnio(a)}
+              aria-pressed={a === anio}
+              className={cn(
+                'rounded-full px-3 py-1 text-[13px] transition-colors font-body border tabular-nums',
+                a === anio
+                  ? 'bg-navy text-white border-navy'
+                  : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+              )}
+            >
+              {a}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <ChartCard
-          title="Personas nuevas por mes"
-          subtitle="Últimos 24 meses. Tocá una barra para ver ese mes abajo."
+          title={`Personas nuevas por mes · ${anio}`}
+          subtitle="Tocá una barra para ver ese mes abajo."
           empty={!filas.length}
         >
           <ResponsiveContainer>
@@ -140,14 +178,23 @@ export default function PersonasNuevasPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Por año" subtitle="Desde 2020, la vista larga." empty={!anual.length}>
+        <ChartCard title="Por año" subtitle="Desde 2020. Tocá un año para verlo mes a mes." empty={!anual.length}>
           <ResponsiveContainer>
-            <BarChart data={anual} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <BarChart data={anual} margin={{ top: 20, right: 8, left: -18, bottom: 0 }}
+              onClick={(e) => { const a = Number(e?.activeLabel); if (a) setAnio(a) }}>
               <CartesianGrid strokeDasharray="3 3" stroke={REJILLA} vertical={false} />
               <XAxis dataKey="etiqueta" tick={EJE_TICK} />
               <YAxis tick={EJE_TICK} allowDecimals={false} />
               <Tooltip contentStyle={ESTILO_TOOLTIP} cursor={CURSOR_BARRA} formatter={(v) => [Number(v).toLocaleString('es-CR'), 'Personas nuevas']} />
-              <Bar dataKey="n" name="Nuevos" fill={NAVY} radius={[4, 4, 0, 0]} />
+              {/* El número encima: que el valor esté a la vista y no solo en
+                  el hover — en una tablet no hay hover, y comparar dos años
+                  obliga a pasar por encima de cada barra. */}
+              <Bar dataKey="n" name="Nuevos" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="n" position="top" {...ETIQUETA_VALOR} formatter={(v) => Number(v ?? 0).toLocaleString('es-CR')} />
+                {anual.map(p => (
+                  <Cell key={p.periodo} fill={Number(p.periodo) === anio ? CORAL : NAVY} cursor="pointer" />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -174,12 +221,12 @@ export default function PersonasNuevasPage() {
         {/* ── Filtros ── */}
         <div className="flex flex-wrap gap-2">
           <select
-            aria-label="Filtrar por dónde entró"
+            aria-label="Filtrar por charla"
             value={filtros.origen ?? ''}
             onChange={e => setFiltros(f => ({ ...f, origen: e.target.value }))}
             className="rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
           >
-            <option value="">Todas las charlas y estudios</option>
+            <option value="">Todas las charlas</option>
             {origenes.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
           <select

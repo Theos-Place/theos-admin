@@ -17,6 +17,20 @@
  * Módulo PURO: la base trae las filas y acá se arman los números.
  */
 import { calcAge } from '@/lib/format'
+import { SEMANAS_DE_CORTE } from '@/lib/reports/abandonos'
+
+/**
+ * Cuántas semanas se le dan a alguien para volver.
+ *
+ * Es EL MISMO corte que usa REP-5 para decir que alguien dejó de venir
+ * (decisión del usuario 2026-09-21: eran 8 y pasaron a 5). Se importa en vez de
+ * escribir el número: los dos reportes se miran juntos y dos ventanas distintas
+ * para la misma idea obligan a recordar cuál aplica en cuál pantalla.
+ *
+ * El 35 correspondiente vive en la función `report_personas_nuevas` — SQL no
+ * puede importar esto, así que el comentario de la migración apunta acá.
+ */
+export const SEMANAS_PARA_VOLVER = SEMANAS_DE_CORTE
 
 export type Canal = 'charla' | 'estudio' | 'evento'
 
@@ -36,7 +50,7 @@ export type PersonaNueva = {
   canal: Canal
   /** Dónde fue esa primera vez: la charla, el estudio o el evento. */
   origen: string
-  /** Volvió a una charla dentro de las 8 semanas siguientes. */
+  /** Volvió a una charla dentro de las `SEMANAS_PARA_VOLVER` siguientes. */
   volvio: boolean
   /** Se matriculó en algún estudio después de esa primera vez. */
   seMatriculo: boolean
@@ -138,26 +152,34 @@ export function filtrarNuevos(
 
 export type PuntoDeSerie = { periodo: string; etiqueta: string; n: number }
 
-/** Los últimos `meses` meses, incluyendo los que no tuvieron a nadie: un hueco
- *  en el gráfico se lee como "no hay dato", y cero es un dato. */
-export function serieMensual(
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic']
+
+/** Los años que aparecen en los datos, del más nuevo al más viejo. */
+export function aniosDeLaSerie(filas: readonly { anio: number }[], desde = 2020): number[] {
+  return [...new Set(filas.map(f => f.anio).filter(a => a >= desde))].sort((a, b) => b - a)
+}
+
+/**
+ * Los 12 meses de UN año, incluidos los que no tuvieron a nadie.
+ *
+ * Un hueco en el gráfico se lee como "no hay dato", y cero es un dato. Los doce
+ * van siempre aunque el año esté en curso: ver que octubre, noviembre y
+ * diciembre están vacíos porque todavía no llegaron es parte de leer el año.
+ */
+export function serieDelAnio(
   filas: readonly { anio: number; mes: number; n: number }[],
-  hasta: Date,
-  meses = 24,
+  anio: number,
 ): PuntoDeSerie[] {
-  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic']
-  const porClave = new Map<string, number>()
+  const porMes = new Map<number, number>()
   for (const f of filas) {
-    const k = `${f.anio}-${String(f.mes).padStart(2, '0')}`
-    porClave.set(k, (porClave.get(k) ?? 0) + f.n)
+    if (f.anio !== anio) continue
+    porMes.set(f.mes, (porMes.get(f.mes) ?? 0) + f.n)
   }
-  const puntos: PuntoDeSerie[] = []
-  for (let i = meses - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(hasta.getUTCFullYear(), hasta.getUTCMonth() - i, 1))
-    const k = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-    puntos.push({ periodo: k, etiqueta: `${MESES[d.getUTCMonth()]} ${String(d.getUTCFullYear()).slice(2)}`, n: porClave.get(k) ?? 0 })
-  }
-  return puntos
+  return MESES_CORTOS.map((etiqueta, i) => ({
+    periodo: `${anio}-${String(i + 1).padStart(2, '0')}`,
+    etiqueta,
+    n: porMes.get(i + 1) ?? 0,
+  }))
 }
 
 /** Por año, de menor a mayor. Solo los años que existen en los datos. */

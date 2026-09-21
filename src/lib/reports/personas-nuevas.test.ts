@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  resumenDeNuevos, filtrarNuevos, serieMensual, serieAnual, type PersonaNueva,
+  resumenDeNuevos, filtrarNuevos, serieDelAnio, serieAnual, aniosDeLaSerie, SEMANAS_PARA_VOLVER,
+  type PersonaNueva,
 } from './personas-nuevas'
+import { SEMANAS_DE_CORTE } from './abandonos'
 
 // La edad se calcula contra "hoy", así que hoy se fija.
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-21T12:00:00Z')) })
@@ -93,24 +95,46 @@ describe('filtrarNuevos', () => {
   })
 })
 
-describe('serieMensual', () => {
-  it('incluye los meses en cero: un hueco se leería como "sin dato"', () => {
-    const s = serieMensual([{ anio: 2026, mes: 9, n: 5 }], new Date(Date.UTC(2026, 8, 21)), 3)
-    expect(s.map(x => x.periodo)).toEqual(['2026-07', '2026-08', '2026-09'])
-    expect(s.map(x => x.n)).toEqual([0, 0, 5])
+describe('serieDelAnio', () => {
+  it('siempre los 12 meses, también los que están en cero', () => {
+    // Un hueco se leería como "sin dato", y cero es un dato.
+    const s = serieDelAnio([{ anio: 2026, mes: 9, n: 5 }], 2026)
+    expect(s).toHaveLength(12)
+    expect(s.map(x => x.etiqueta)).toEqual(['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'])
+    expect(s[8].n).toBe(5)
+    expect(s[0].n).toBe(0)
   })
 
-  it('cruza el fin de año hacia atrás', () => {
-    const s = serieMensual([], new Date(Date.UTC(2026, 0, 15)), 3)
-    expect(s.map(x => x.periodo)).toEqual(['2025-11', '2025-12', '2026-01'])
+  it('ignora los otros años', () => {
+    const s = serieDelAnio([{ anio: 2025, mes: 9, n: 9 }, { anio: 2026, mes: 9, n: 5 }], 2026)
+    expect(s[8].n).toBe(5)
   })
 
   it('suma los canales del mismo mes', () => {
-    const s = serieMensual(
-      [{ anio: 2026, mes: 9, n: 3 }, { anio: 2026, mes: 9, n: 4 }],
-      new Date(Date.UTC(2026, 8, 21)), 1,
-    )
-    expect(s[0].n).toBe(7)
+    const s = serieDelAnio([{ anio: 2026, mes: 3, n: 3 }, { anio: 2026, mes: 3, n: 4 }], 2026)
+    expect(s[2].n).toBe(7)
+  })
+
+  it('usa "set" y no "sep", como el resto del sistema', () => {
+    expect(serieDelAnio([], 2026)[8].etiqueta).toBe('set')
+  })
+
+  it('el periodo sirve para pedir el detalle del mes', () => {
+    expect(serieDelAnio([], 2026)[0].periodo).toBe('2026-01')
+  })
+})
+
+describe('aniosDeLaSerie', () => {
+  it('del más nuevo al más viejo, sin repetir', () => {
+    expect(aniosDeLaSerie([{ anio: 2024 }, { anio: 2026 }, { anio: 2024 }])).toEqual([2026, 2024])
+  })
+
+  it('corta antes de 2020', () => {
+    expect(aniosDeLaSerie([{ anio: 2019 }, { anio: 2021 }])).toEqual([2021])
+  })
+
+  it('sin datos devuelve vacío', () => {
+    expect(aniosDeLaSerie([])).toEqual([])
   })
 })
 
@@ -122,5 +146,20 @@ describe('serieAnual', () => {
 
   it('suma los meses de un mismo año', () => {
     expect(serieAnual([{ anio: 2026, n: 3 }, { anio: 2026, n: 4 }])[0].n).toBe(7)
+  })
+})
+
+describe('SEMANAS_PARA_VOLVER', () => {
+  it('es el MISMO corte que usa REP-5 para decir que alguien dejó de venir', () => {
+    // Dos ventanas distintas para la misma idea obligan a recordar cuál aplica
+    // en cuál pantalla, y los dos reportes se miran juntos.
+    expect(SEMANAS_PARA_VOLVER).toBe(SEMANAS_DE_CORTE)
+  })
+
+  it('son 5 semanas, o sea los 35 días de la función SQL', () => {
+    // SQL no puede importar la constante: si alguien cambia una sin la otra,
+    // este test no lo pesca, pero deja escrito cuál es el número que debe estar
+    // en `report_personas_nuevas`.
+    expect(SEMANAS_PARA_VOLVER * 7).toBe(35)
   })
 })
