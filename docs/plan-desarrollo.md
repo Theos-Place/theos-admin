@@ -2187,7 +2187,7 @@ Lo que sí se puede listar, y queda pendiente de decisión:
 
 Scripts en `scripts/dat10/`.
 
-### [ ] AUT-4 · Quitar el bloqueo al cumplir 18 años (encontrado 2026-09-21)
+### [x] AUT-4 · Quitar el bloqueo al cumplir 18 años — HECHO 2026-09-21
 
 El script de FAM-2 bloquea las cuentas de menores hasta el año 2126, y su propio
 comentario dice que "al cumplir 18 basta con quitar el ban" — pero **nada lo
@@ -2218,3 +2218,27 @@ Tests de la regla pura con fechas de borde (cumple hoy, cumple mañana, sin fech
 de nacimiento → NO se desbloquea, es un caso a revisar). tsc/lint/vitest.
 ```
 
+**Cierre 2026-09-21.** Cron el **1 de cada mes** (decisión del usuario: mensual,
+no diario). La consecuencia queda dicha en el código: quien cumple el 2 espera
+hasta el 1 del mes siguiente.
+
+**NO CREA CUENTAS**, y eso fue lo que el usuario quiso dejar claro. Las cuentas
+ya existen desde AUTH-1 (julio 2026); lo único que se les hizo fue bloquearlas.
+El cron quita ese bloqueo y nada más. Quien nunca tuvo cuenta sigue sin tenerla.
+Y desbloquear tampoco da acceso por sí solo: ninguna se usó jamás, así que no
+tienen contraseña — lo que cambia es que "olvidé mi contraseña" empieza a
+funcionar.
+
+Dos exclusiones, con test: las cuentas de fichas **fusionadas** (dominio
+`.invalid`) siguen bloqueadas para siempre, y las que **no tienen fecha de
+nacimiento** tampoco se desbloquean — sin el dato no se puede afirmar que
+alguien cumplió 18, y en la duda no se abre una cuenta.
+
+La respuesta del cron dice a quién desbloqueó y cuántos se quedaron por cada
+motivo: sin eso, un cron que no hace nada y uno que se saltó a alguien se ven
+igual.
+
+**Pendiente aparte:** las cuentas de PRUEBA (`@prueba.theosplace.invalid`) siguen
+vivas y sin bloquear —17 fichas y 7 cuentas de auth, tres usadas en setiembre—
+con una contraseña compartida que estaba escrita en el centro de ayuda. El
+artículo se borró; las cuentas no. Decidir si se borran o se bloquean.
