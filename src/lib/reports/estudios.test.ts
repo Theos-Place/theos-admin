@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   edadAlIniciar, resumirEstudios, porPlan, serieDeEstudios, aniosConEstudios,
-  bloquesDisponibles, filtrarPorBloque, SIN_BLOQUE,
+  bloquesDisponibles, filtrarPorBloque, SIN_BLOQUE, INFO_BLOQUES,
   type FilaDeEstudios,
 } from './estudios'
 
@@ -154,9 +154,15 @@ describe('el filtro de bloque', () => {
   })
 
   it('"Sin bloque" va al final pero VA: son la mayoría de los grupos', () => {
-    // En 2026, 199 de 255 grupos no tienen bloque. Omitirlos del selector los
-    // escondería al filtrar sin que nadie se entere.
+    // En 2026, 168 de 255 grupos caen ahí porque los Niveles son mensuales y no
+    // van por bloque. Omitirlos del selector los escondería al filtrar.
     expect(bloquesDisponibles(filas).at(-1)!.bloque).toBe(SIN_BLOQUE)
+  })
+
+  it('el texto del selector explica que los Niveles son mensuales', () => {
+    // Sin eso, "168 sin bloque" se lee como datos faltantes y no como la regla.
+    expect(INFO_BLOQUES).toMatch(/niveles/i)
+    expect(INFO_BLOQUES).toMatch(/mensual/i)
   })
 
   it('los bloques van del más nuevo al más viejo', () => {

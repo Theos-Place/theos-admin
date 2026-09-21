@@ -2016,6 +2016,16 @@ Roles: coordinación de estudios, de dirigentes, dirección y admin. Un rol de
 reportes "a secas" no entra — el reporte nombra planes y cuenta dirigentes, que
 es información del módulo de estudios.
 
+**Filtro de bloque, 2026-09-21.** Cada bloque lleva su conteo de grupos y "Sin
+bloque" es una opción más, no un vacío: **los NIVELES no van por bloque, son
+mensuales** (confirmado por el usuario). Por eso en 2026 hay 168 de 255 grupos
+"sin bloque", con Nivel 4 (347 estudiantes) y Nivel 3 (233) adentro — así es
+como funciona, no falta asignar nada. Los bloques los llenan Sirviendo como
+Jesús, Discípulos y Panorama.
+
+Queda dicho en el selector con un info, porque "168 sin bloque" se lee como
+datos faltantes si nadie explica la regla.
+
 ### [x] REP-10 · Personas nuevas: dos ajustes sobre lo entregado — HECHO 2026-09-21
 
 Sobre el reporte de personas nuevas (REP-6, ya en producción).

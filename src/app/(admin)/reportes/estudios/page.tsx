@@ -18,7 +18,7 @@ import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import {
   resumirEstudios, porPlan, serieDeEstudios, aniosConEstudios,
-  bloquesDisponibles, filtrarPorBloque,
+  bloquesDisponibles, filtrarPorBloque, INFO_BLOQUES,
   type FilaDeEstudios, type FilaPorPlan,
 } from '@/lib/reports/estudios'
 import {
@@ -142,9 +142,11 @@ export default function ReporteEstudiosPage() {
             {a}
           </button>
         ))}
-        {/* El bloque lleva su conteo de grupos: en 2026, 199 de 255 grupos no
-            tienen bloque, así que elegir uno deja fuera a la mayoría — y eso hay
-            que verlo antes de elegir, no después. */}
+        {/* El bloque lleva su conteo de grupos: en 2026, 168 de 255 grupos caen
+            en "Sin bloque" —los Niveles son mensuales y no van por bloque—, así
+            que elegir uno deja fuera a la mayoría. Eso hay que verlo antes de
+            elegir, no después. */}
+        <span className="inline-flex items-center">
         <select
           aria-label="Filtrar por bloque"
           value={bloque}
@@ -156,6 +158,8 @@ export default function ReporteEstudiosPage() {
             <option key={b.bloque} value={b.bloque}>{b.bloque} ({b.grupos})</option>
           ))}
         </select>
+        <InfoDelEncabezado texto={INFO_BLOQUES} />
+        </span>
         <select
           aria-label="Filtrar por tipo de estudio"
           value={plan}

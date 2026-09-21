@@ -41,10 +41,25 @@ export type FilaDeEstudios = {
   bloque: string | null
 }
 
-/** La etiqueta de "ningún bloque". Es una opción del filtro, no un vacío: de
- *  los 255 grupos en curso en 2026, 199 no tienen bloque, así que esconderlos
- *  al filtrar dejaría afuera a la mayoría sin decirlo. */
+/**
+ * La etiqueta de "ningún bloque". Es una opción del filtro y NO un hueco de
+ * datos.
+ *
+ * Los NIVELES no van por bloque: son mensuales (confirmado por el usuario el
+ * 2026-09-21). Por eso en 2026 hay 168 grupos "sin bloque" con Nivel 4 (347
+ * estudiantes) y Nivel 3 (233) adentro — está bien así, no falta asignarlos.
+ * Los bloques los llenan Sirviendo como Jesús, Discípulos y Panorama.
+ *
+ * Esconderlos al filtrar dejaría fuera a la mayoría de los estudiantes sin
+ * decirlo, y además haría pensar que hay algo que arreglar.
+ */
 export const SIN_BLOQUE = 'Sin bloque'
+
+/** Lo que explica el selector, para que "sin bloque" no se lea como un error. */
+export const INFO_BLOQUES =
+  'Los bloques son los cuatrimestres de capacitación. Los Niveles NO van por bloque: '
+  + 'son mensuales, y por eso aparecen en «Sin bloque». El número entre paréntesis es '
+  + 'cuántos grupos tiene cada uno.'
 
 /** Los bloques presentes en los datos, con cuántos grupos tiene cada uno. Los
  *  del año más reciente primero y "Sin bloque" al final. */
