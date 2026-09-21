@@ -140,11 +140,23 @@ antes de escribir código.
 Pasarela de pago. Hay que revisar qué reemplaza y qué convive con lo que ya
 existe, y si entra en el mismo flujo que FIN-4.
 
-### [ ] REP-1 · Actualizar todos los reportes
+### [~] REP-1 · Actualizar todos los reportes — SE ESTÁ HACIENDO con REP-5/6/7
 
 Revisión completa de `/reportes`: qué sigue sirviendo, qué quedó desactualizado
-y qué falta. Conviene hacerlo DESPUÉS de DAT-5 y DAT-6, porque varios reportes
-leen justo esos datos y hoy dan un número que no es.
+y qué falta. Decisión del usuario 2026-09-21: **esto es lo que se está haciendo
+con los reportes nuevos**, no un ítem aparte.
+
+**La dependencia de DAT-5 NO existe, verificado el 2026-09-21.** El plan decía
+"hacerlo después de DAT-5 porque varios reportes leen esos datos". Se revisaron
+las tres funciones que alimentan los reportes de estudios: ninguna lee `grade`
+ni la etiqueta aprobado/reprobado, que es justo lo que falta en los 11.420. La
+única que toca el tema —`get_dm_milestones`— usa `status = 'completed'`, y ese
+dato SÍ está bien: DAT-5 dice explícitamente que nadie quedó `enrolled` en un
+grupo cerrado. Así que REP-1 nunca estuvo bloqueado.
+
+Hecho hasta ahora: REP-2 (semana sola), REP-3 (año ISO), REP-4 (semanas con
+fecha), REP-5 (asistentes de la semana + abandonos), REP-6 (personas nuevas con
+la definición corregida). Queda REP-7.
 
 ### [x] DAT-7 · El campo de alergias — HECHO 2026-09-15
 
