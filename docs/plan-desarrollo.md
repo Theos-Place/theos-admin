@@ -475,13 +475,6 @@ De paso, el 400 salió a `lib/api/datos-invalidos.ts`: esa línea está copiada 
 decenas de handlers y en algunos salía distinta, así que el cliente no podía
 confiar en la forma de `detalles`.
 
-### [ ] FIN-7 · Josué Valverde pagó ₡20.000 de más
-
-Se matriculó y pagó el estudio completo antes de que su beca —del 100%— se le
-asignara. No es un bug: es plata que hay que devolver o acreditar, y **la
-decisión es del usuario**, saldo a favor o devolución. Las de Gisselle y
-Valeria ya se resolvieron el 2026-09-11.
-
 ### [~] LINT-1 · De 70 a 60 warnings — la mitad de los hooks migrados
 
 Van tres tandas (93 → 70 → 60). El techo del gate bajó a **60**.
@@ -571,7 +564,15 @@ escrituras que pasan por las queries del app, la transacción no sirve de red.
 Queda anotado: el resumen de una condición de servicio sin área ni comité dice
 solo "Servicio". Es correcto pero vago; en uso real se elige un área.
 
-### [~] FAM-2 · Familias desde CCB + reglas de menores — PARTE A HECHA, PARTE B casi
+### [~] FAM-2 · Familias desde CCB + reglas de menores — PARTE A HECHA · PARTE B EN PAUSA, esperando correos
+
+> **EN PAUSA hasta que CHK-5 junte los correos (decidido 2026-09-22).** Lo que
+> falta de la parte B no se puede empezar: los 3 que califican para la
+> invitación no tienen correo, y de los 65 que cumplieron 18 solo 1 lo tiene.
+> No hay cómo invitarlos. El camino es la puerta: CHK-5 le pide el correo a
+> todo adulto que no lo tenga, así que esto se destraba solo a medida que la
+> gente vaya pasando por el check-in. **No retomar hasta entonces.**
+
 
 **PARTE A · APLICADA 2026-09-15.** De las 1.578 familias de CCB, 1.210 ya
 estaban completas. Se crearon **205 familias** y se sumaron **191 personas** a
@@ -2167,7 +2168,7 @@ Tests: el endpoint filtrado por sede devuelve consistente el mismo universo para
 año y tabla (mismos totales); apilado anual suma el total. tsc/lint/vitest al cierre.
 ```
 
-### [~] DAT-10 · A Tatiana Brenes le aparece la información de la mamá — CASO RESUELTO 2026-09-21, quedan dos decisiones
+### [x] DAT-10 · A Tatiana Brenes le aparece la información de la mamá — HECHO 2026-09-21
 
 Datos del reporte: Tatiana Brenes Arroyo (cédula 4-0204-0583, pareja/familia
 con Dennis Zabala), mamá María Eugenia Arroyo (cédula 4-0106-1311), correo
@@ -2205,6 +2206,9 @@ ETAPA 2 — CORRECCIÓN (tras aprobación de la lista):
 NO enviar ningún correo (EMAIL_SILENT_MODE). No fusionar fichas: son dos personas
 distintas, el problema es el correo/cuenta, no duplicados.
 ```
+
+**Las dos decisiones que quedaban: el usuario dijo dejarlo como está (2026-09-22).**
+Melissa Acon se queda en el Comité Contabilidad; no se replica lo de Carolina.
 
 ### [~] AYU-3 · Centro de ayuda: finanzas — ARTÍCULOS E INFOGRAFÍAS HECHOS 2026-09-21, faltan los videos
 
