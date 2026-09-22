@@ -18,9 +18,14 @@ import { renderEmail } from '@/lib/email/baseLayout'
  *   · 'restablecer'  → ya tenía contraseña y la perdió.
  *
  * Las dos apuntan al MISMO enlace de la pantalla de ingreso: desde el
- * 2026-09-01 hay uno solo, "Restablecé tu contraseña", porque los dos casos
- * siempre fueron el mismo flujo. Lo que cambia entre las variantes es el tono,
- * no el camino.
+ * 2026-09-01 hay uno solo, porque los dos casos siempre fueron el mismo flujo.
+ * Lo que cambia entre las variantes es el tono, no el camino.
+ *
+ * OJO: el texto del enlace se cita literal para que la persona lo BUSQUE en la
+ * pantalla. Si cambia en `login/page.tsx` hay que cambiarlo acá — mandar a
+ * alguien a tocar un botón que dice otra cosa es peor que no decirle nada. Pasó
+ * el 2026-09-21 con AUT-3, cuando el botón pasó a decir "Conseguí tu
+ * contraseña"; el test de abajo lo vigila.
  *
  * El correo CON token (password-link.ts) queda SOLO para el autoservicio: ahí
  * lo pide la persona y lo usa al toque.
@@ -49,7 +54,7 @@ const COPY: Record<AccessEmailKind, {
       + 'solo tenés que crear tu contraseña — toma menos de dos minutos.',
     cta: 'Entrar al sistema →',
     pasosTitulo: 'Cómo crear tu contraseña',
-    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Restablecé tu contraseña&raquo;',
+    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Conseguí tu contraseña&raquo;',
     ultimoPaso: 'Te llega un enlace al momento; abrilo y definí tu contraseña.',
   },
   restablecer: {
@@ -58,7 +63,7 @@ const COPY: Record<AccessEmailKind, {
       + 'nueva. Son cuatro pasos y no toma ni dos minutos.',
     cta: 'Ir a la pantalla de ingreso →',
     pasosTitulo: 'Cómo recuperar tu acceso',
-    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Restablecé tu contraseña&raquo;',
+    enlaceDeLogin: '&laquo;¿Primera vez en la nueva plataforma u olvidaste tu contraseña? Conseguí tu contraseña&raquo;',
     ultimoPaso: 'Te llega un enlace al momento; abrilo y definí tu contraseña nueva.',
   },
 }

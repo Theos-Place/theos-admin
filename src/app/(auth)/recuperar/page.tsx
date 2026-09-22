@@ -18,7 +18,12 @@ function RecuperarContent() {
   // contraseña" (las cuentas se crearon en lote con contraseña aleatoria; la
   // persona la define acá la primera vez, con un link a demanda que no expira
   // guardado en ningún correo viejo).
-  const isFirstTime = useSearchParams().get('nueva') === '1'
+  const params = useSearchParams()
+  const isFirstTime = params.get('nueva') === '1'
+  // AUT-3 · A dónde iba antes de caer acá. Se manda al servidor para que viaje
+  // dentro del enlace del correo: si no, al definir la contraseña aterrizaba en
+  // el dashboard en vez de en la matrícula que estaba tratando de hacer.
+  const destino = params.get('redirect')
   const [email, setEmail]       = useState('')
   const [emailErr, setEmailErr] = useState('')
   // AUD-1 · id explícito para no romper el autocompletado del navegador.
@@ -48,7 +53,7 @@ function RecuperarContent() {
       const res = await fetch('/api/auth/password-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: email.trim() }),
+        body: JSON.stringify({ identifier: email.trim(), destino: destino ?? undefined }),
       })
       if (res.status === 429) {
         const d = await res.json().catch(() => null)
@@ -112,9 +117,9 @@ function RecuperarContent() {
         </h2>
 
         <p className="text-sm text-navy-light/80 leading-relaxed mb-2 font-body">
-          {isFirstTime
-            ? 'Si el correo ingresado está registrado en el sistema, en los próximos minutos vas a recibir el enlace para crear tu contraseña. Abrilo y usalo de una vez.'
-            : 'Si el correo ingresado está registrado en el sistema, recibirás las instrucciones en los próximos minutos.'}
+          Si el correo ingresado está registrado en el sistema, en los próximos
+          minutos te llega el enlace para definir tu contraseña. Abrilo y usalo
+          de una vez: sirve una sola vez y vence.
         </p>
 
         <p className="text-[13px] text-navy-light/80 mb-8 font-body">
@@ -153,12 +158,19 @@ function RecuperarContent() {
         <h1
           className="text-3xl text-navy mb-2 font-display font-extrabold tracking-[-0.025em]"
         >
-          {isFirstTime ? 'Creá tu contraseña' : 'Recuperá tu acceso'}
+          {isFirstTime ? 'Creá tu contraseña' : 'Conseguí tu contraseña'}
         </h1>
         <p className="text-sm text-navy-light/80 leading-relaxed font-body">
+          {/* AUT-3 · Esta pantalla atiende los DOS casos con el mismo mecanismo
+              —nunca tuve contraseña / se me olvidó— y no sabe cuál es: eso lo
+              resuelve el servidor, que manda "Definí" o "Restablecé" según
+              corresponda. Por eso el texto de acá no puede decir "restablecer":
+              quien nunca tuvo una se queda pensando que está en el lugar
+              equivocado. Dice lo que sí es cierto en los dos casos. */}
           {isFirstTime
             ? 'Ingresá el correo con el que estás registrado en Theos Place y te enviaremos el enlace para definir tu contraseña.'
-            : <>Ingresá tu correo y te enviaremos<br />instrucciones para restablecer tu contraseña.</>}
+            : <>Ingresá tu correo y te mandamos un enlace para definir tu contraseña.<br />
+               Sirve igual si es tu primera vez o si se te olvidó.</>}
         </p>
       </div>
 
@@ -205,7 +217,7 @@ function RecuperarContent() {
         >
           {loading ? (
             <><Loader2 size={16} className="animate-spin" /> Enviando...</>
-          ) : isFirstTime ? 'Enviarme el enlace' : 'Enviar instrucciones'}
+          ) : 'Enviarme el enlace'}
         </button>
       </form>
     </div>

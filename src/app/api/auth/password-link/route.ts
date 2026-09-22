@@ -22,6 +22,10 @@ import { reportarError, reportarFalla } from '@/lib/observabilidad'
 const schema = z.object({
   /** Correo o documento de identidad. */
   identifier: z.string().min(3).max(120),
+  /** AUT-3 · A dónde iba antes de que le pidiéramos la contraseña. Viaja en el
+   *  enlace del correo para que al terminar aterrice ahí. `nextConDestino` lo
+   *  descarta si no es una ruta interna, así que acá basta con acotar el largo. */
+  destino: z.string().max(512).optional(),
 })
 
 const RESPUESTA_NEUTRAL = {
@@ -178,6 +182,7 @@ export async function POST(req: NextRequest) {
         email,
         tieneCuenta: !!member?.auth_user_id,
         nombre: member?.first_name ?? null,
+        destino: parsed.data.destino,
       })
       if (!res.sent && res.reason !== 'sin_cuenta') {
         reportarFalla('password-link:', res.reason)

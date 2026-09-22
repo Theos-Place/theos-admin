@@ -27,7 +27,7 @@ describe('correo de instrucciones para entrar', () => {
   })
 
   it('lleva el paso a paso y el correo con el que hay que pedirlo', () => {
-    expect(html).toContain('Restablecé tu contraseña')
+    expect(html).toContain('Conseguí tu contraseña')
     expect(html).toContain('floriana@theosplace.org')
     expect(html).toContain('Hola, Floriana')
   })
@@ -50,7 +50,7 @@ describe('variante "restablecer" (la manda un admin desde la ficha)', () => {
     // Los dos casos siempre fueron el mismo flujo, y desde el 2026-09-01 la
     // pantalla de ingreso tiene un solo enlace. El correo tiene que nombrar el
     // que la persona va a ver: si nombra uno que no existe, la deja buscando.
-    expect(reset).toContain('Restablecé tu contraseña')
+    expect(reset).toContain('Conseguí tu contraseña')
   })
 })
 
@@ -76,4 +76,22 @@ describe('los caminos de administración no mandan links con token', () => {
       expect(src).not.toContain('sendPasswordLink(')
     })
   }
+})
+
+// AUT-3 (2026-09-21) · El correo le dice a la persona que BUSQUE ese texto en
+// la pantalla de ingreso. Cuando el botón cambió de "Restablecé" a "Conseguí",
+// el correo siguió mandando a tocar algo que ya no existía. Este guard lee el
+// login de verdad: si alguien cambia el botón y no el correo, revienta acá.
+describe('el correo cita el botón que EXISTE en el login', () => {
+  const login = readFileSync('src/app/(auth)/login/page.tsx', 'utf8')
+
+  it('el texto del enlace del correo aparece tal cual en la pantalla de ingreso', () => {
+    for (const kind of ['primera_vez', 'restablecer'] as const) {
+      const html = accountReadyBody('Ana', loginUrlFor(SITE), 'ana@theosplace.org', kind)
+      // El copy del correo va con entidades (&laquo;…&raquo;); el botón, sin.
+      const citado = 'Conseguí tu contraseña'
+      expect(html, `el correo ${kind} no cita el botón`).toContain(citado)
+      expect(login, 'el login ya no dice eso: hay que actualizar account-ready.ts').toContain(citado)
+    }
+  })
 })

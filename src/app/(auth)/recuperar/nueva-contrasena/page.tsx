@@ -7,6 +7,7 @@ import { Eye, EyeOff, AlertCircle, Loader2, CheckCircle, Check, Lock } from 'luc
 import { createClient } from '@/lib/supabase/client'
 import { readAuthLinkError, authLinkMessage, type AuthLinkMessage } from '@/lib/auth/link-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { destinoTrasGuardar } from '@/lib/auth/destino-tras-la-contrasena'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -96,7 +97,15 @@ export default function NuevaContrasenaPage() {
         return
       }
       setDone(true)
-      setTimeout(() => router.push('/login'), 1800)
+      // AUT-3 · DERECHO ADENTRO, no al login. Al abrir el enlace del correo la
+      // sesión ya quedó abierta —por eso esta pantalla sabe su correo—, así que
+      // mandarlo a identificarse otra vez es pedirle algo que el sistema ya
+      // sabe. Quien nunca tuvo contraseña lee ese rebote como "no funcionó" y
+      // vuelve a pedir el enlace.
+      const destino = destinoTrasGuardar(
+        new URLSearchParams(window.location.search).get('redirect'),
+      )
+      setTimeout(() => { router.push(destino); router.refresh() }, 1200)
     } catch {
       setSubmitErr('No se pudo actualizar la contraseña. El enlace pudo expirar; solicitá uno nuevo.')
       setLoading(false)
@@ -156,15 +165,19 @@ export default function NuevaContrasenaPage() {
             <CheckCircle size={28} className="text-teal-deep" />
           </div>
         </div>
-        <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">Contraseña actualizada</h2>
+        <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">Listo, ya quedaste adentro</h2>
         <p className="text-sm text-navy-light/80 leading-relaxed mb-8 font-body">
-          Tu contraseña fue cambiada exitosamente. Te llevamos al login…
+          Tu contraseña quedó guardada y ya estás dentro del sistema. Te llevamos…
         </p>
+        {/* El botón va al MISMO lugar que el envío automático, por si el
+            redirect se demora o alguien le da antes. Nunca al login: en este
+            punto la sesión ya está abierta. */}
         <Link
-          href="/login"
+          href={destinoTrasGuardar(typeof window === 'undefined' ? null
+            : new URLSearchParams(window.location.search).get('redirect'))}
           className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
         >
-          Ir al login
+          Continuar →
         </Link>
       </div>
     )

@@ -6,6 +6,7 @@ import { linkAttemptOrder, shouldTryOtherKind, type PasswordLinkKind } from '@/l
 import { planDeEnlace, type FichaConCorreo } from '@/lib/auth/enlace-de-cuenta'
 import { patronDeCorreo, esMismoCorreo } from '@/lib/email/correo-exacto'
 import { reportarError, reportarFalla } from '@/lib/observabilidad'
+import { ATERRIZAJE, nextConDestino } from './destino-tras-la-contrasena'
 
 export type { PasswordLinkKind }
 
@@ -58,6 +59,10 @@ async function generar(email: string, kind: PasswordLinkKind): Promise<{ hashed?
 export async function buildPasswordLink(
   email: string,
   tieneCuenta: boolean,
+  /** A dónde iba la persona antes de que le pidiéramos la contraseña (AUT-3).
+   *  Viaja dentro del enlace para que al terminar aterrice ahí y no en el
+   *  dashboard. Se descarta si no es una ruta interna. */
+  destino?: string | null,
 ): Promise<{ url: string; kind: PasswordLinkKind } | null> {
   let hashed: string | undefined
   let kind: PasswordLinkKind | undefined
@@ -71,7 +76,10 @@ export async function buildPasswordLink(
   }
   if (!hashed || !kind) return null
 
-  const next = kind === 'invite' ? '/completar-perfil' : '/recuperar/nueva-contrasena'
+  const next = nextConDestino(
+    kind === 'invite' ? ATERRIZAJE.invite : ATERRIZAJE.recovery,
+    destino,
+  )
   // /auth/continuar (no /auth/confirm): abrir esta URL NO gasta el token. Los
   // filtros de seguridad del correo abren los enlaces antes que la persona; si el
   // enlace canjeara de una, llegarían a "el enlace ya venció" sin tocar nada.
@@ -154,8 +162,10 @@ export async function sendPasswordLink(input: {
   /** Pista de si ya tiene cuenta (members.auth_user_id). No hace falta acertar. */
   tieneCuenta: boolean
   nombre?: string | null
+  /** Ver buildPasswordLink: el destino sobrevive el viaje por el correo. */
+  destino?: string | null
 }): Promise<{ sent: boolean; reason?: string; kind?: PasswordLinkKind }> {
-  const link = await buildPasswordLink(input.email, input.tieneCuenta)
+  const link = await buildPasswordLink(input.email, input.tieneCuenta, input.destino)
   if (!link) return { sent: false, reason: 'sin_cuenta' }
   // 'invite' creó la cuenta de Auth: la ficha tiene que quedar apuntando a ella.
   if (link.kind === 'invite') await enlazarFichaConLaCuenta(input.email)

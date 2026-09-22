@@ -47,6 +47,19 @@ export default function LoginPage() {
     () => null,                                                  // en el servidor no hay URL
   )
   const avisoBaja = motivo === CUENTA_DESACTIVADA ? MENSAJE_CUENTA_DESACTIVADA : ''
+
+  // AUT-3 · /recuperar con el destino colgado, para que sobreviva el viaje por
+  // el correo y la persona aterrice donde iba. Se lee igual que `motivo` —es la
+  // misma fuente externa— y NO en el render, que daría mismatch de hidratación:
+  // en el servidor no hay URL y el href saldría distinto al del cliente.
+  const urlDeRecuperar = useSyncExternalStore(
+    () => () => {},
+    () => {
+      const d = safeDest(new URLSearchParams(window.location.search).get('redirect'))
+      return d === DEFAULT_DEST ? '/recuperar' : `/recuperar?redirect=${encodeURIComponent(d)}`
+    },
+    () => '/recuperar',                                          // en el servidor, la de siempre
+  )
   const [emailErr, setEmailErr]       = useState('')
   const [passErr, setPassErr]         = useState('')
   // AUD-1 · aria-invalid + aria-describedby. `id` explícito para NO cambiar los
@@ -436,8 +449,20 @@ export default function LoginPage() {
       <div className="mt-5 rounded-xl border border-teal-deep/25 bg-teal-soft/15 px-4 py-3 text-center">
         <p className="text-[13px] text-navy font-body">
           ¿Primera vez en la nueva plataforma u olvidaste tu contraseña?{' '}
-          <Link href="/recuperar" className="font-semibold text-teal-deep hover:underline">
-            Restablecé tu contraseña →
+          {/* AUT-3 · El destino viaja: se lo pasamos a /recuperar, que lo mete
+              en el enlace del correo, y al definir la contraseña la persona
+              aterriza donde iba. Antes se perdía justo acá.
+
+              Y el texto dice "conseguí", no "restablecé": el 60% de quien toca
+              esto nunca tuvo contraseña, y "restablecer" le suena a que está en
+              el lugar equivocado. El enlace sigue siendo UNO SOLO —ver el
+              comentario de arriba, del 2026-09-01— porque el mecanismo por
+              debajo es el mismo y elegir no cambiaba nada. */}
+          <Link
+            href={urlDeRecuperar}
+            className="font-semibold text-teal-deep hover:underline"
+          >
+            Conseguí tu contraseña →
           </Link>
         </p>
       </div>
