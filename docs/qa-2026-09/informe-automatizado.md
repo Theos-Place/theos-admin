@@ -24,7 +24,10 @@ Datos crudos en `axe-publicas.json`, capturas de móvil en `capturas/`.
 
 ---
 
-## CRÍTICO
+## CRÍTICO — los dos ARREGLADOS el 2026-09-22
+
+Se dejan escritos enteros: el informe es el registro de qué pasaba, y el
+"cómo se arregló" solo se entiende leyendo el problema completo.
 
 ### C1 · Todas las donaciones se reportan en el trimestre anterior
 
@@ -48,9 +51,21 @@ por trimestre y *todas* caen el día 1 (1-ene, 1-abr, 1-jul, 1-oct). O sea que
 cada una se cuenta un mes antes, y las **4.136 del 1.º de enero se cuentan en el
 año anterior** — se caen del filtro de año de la pestaña de Transparencia.
 
-**Fix:** `parseFlexibleDate(d.donation_date)` en vez de `new Date(...)`, o
-partir el string: `donation_date.slice(0,4)` para el año y `.slice(5,7)` para el
-mes. El helper ya existe y es el que usa el resto del sistema.
+**ARREGLADO** · `src/lib/fecha/partes-de-fecha.ts` (puro, con tests): `anioDe`,
+`mesDe`, `caeEn` y `fechaLocal`. De una fecha PURA no hace falta construir un
+`Date` para saber en qué mes cae — el mes está escrito en el string, y
+construirlo es justamente lo que mete la zona horaria en una pregunta que no la
+tiene. Aplicado en las tres pantallas.
+
+Medido contra producción después del cambio: las **39** fechas distintas se
+corrían, o sea las 15.147 donaciones. Por año, antes → después:
+
+| Año | Antes | Después |
+|---|---:|---:|
+| 2016 | 333 | — (eran del 1-ene-2017) |
+| 2024 | 1.947 | 1.925 |
+| 2025 | 2.058 | 1.980 |
+| 2026 | 981 | **1.557** |
 
 ### C2 · `/calendario` se desborda 405 px en celular
 
@@ -64,8 +79,21 @@ pantalla (ver `capturas/mobile_calendario.png`).
 
 Es la única página con desborde de las nueve públicas medidas.
 
-**Fix:** en móvil, lista por día en vez de rejilla, o rejilla con desplazamiento
-horizontal contenido y encabezado pegado.
+**ARREGLADO** · Dos cosas, y la primera es la de fondo:
+
+1. Las pistas eran `grid-cols-[repeat(7,1fr)]`, y `1fr` es `minmax(auto,1fr)`:
+   el mínimo de la columna es su min-content, y un chip con `whitespace-nowrap`
+   lo empuja al ancho completo del nombre del evento. Las celdas medían 144 px
+   donde les tocaban 44. Ahora es `minmax(0,1fr)`, que le pone techo al mínimo.
+2. En celular van **puntos de color** en vez de chips con nombre — una columna
+   de 44 px no muestra ningún nombre útil. Es el patrón que el `CalendarGrid`
+   del admin ya usaba; la página pública tenía su propia rejilla y se lo había
+   perdido. La vista semanal, que son siete tarjetas con el nombre completo,
+   pasa a una sola columna abajo de `sm`.
+
+Medido en el navegador a 360 px: de `scrollWidth` 795 a **360 exacto**, cero
+elementos desbordados, en las cuatro vistas (`monthly`, `weekly`, `list`,
+`grid`). El escritorio queda igual.
 
 ---
 

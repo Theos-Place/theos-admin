@@ -1722,7 +1722,7 @@ paso a paso; las capturas se agregan después como en los demás tutoriales.
 Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
 sembradas ahí, y desde staging el QA autenticado completo (QA-2).
 
-### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA 2026-09-22
+### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA, CRÍTICOS CERRADOS 2026-09-22
 
 Informe en **`docs/qa-2026-09/informe-automatizado.md`**, con capturas y datos
 crudos. Reproducible: `npx tsx scripts/qa/auditar-publicas.ts`.
@@ -1751,8 +1751,20 @@ color— y un enlace distinguible solo por color en `/registro`.
 Pasan limpio: cero imágenes sin `alt`, cero enlaces rotos en los 39 artículos de
 ayuda, y ocho de las nueve páginas públicas sin desborde.
 
-**Los fixes NO se aplicaron**, como pedía el ítem: el informe es el mapa y las
-tandas las prioriza Floriana.
+**Los dos críticos ya se arreglaron** (2026-09-22, primera tanda):
+
+- C1 → `src/lib/fecha/partes-de-fecha.ts`, módulo puro con tests. El año y el
+  mes se LEEN del string en vez de construir un `Date`, que es lo que metía la
+  zona horaria en una pregunta que no la tiene. Verificado contra producción:
+  las 39 fechas distintas se corrían —o sea las 15.147 donaciones— y 2026 pasa
+  de 981 a 1.557. Lo que se reportaba como "2016" era enero de 2017.
+- C2 → la rejilla pública usa `minmax(0,1fr)` en vez de `1fr`, y en celular van
+  puntos de color en lugar de chips con nombre (el patrón que ya usa el
+  `CalendarGrid` del admin). Medido en el navegador: de 795 px de ancho en una
+  pantalla de 360, a cero desborde en las cuatro vistas.
+
+**El resto sigue sin aplicar**: los medios y menores son el mapa, y las tandas
+las prioriza Floriana.
 
 ### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
 

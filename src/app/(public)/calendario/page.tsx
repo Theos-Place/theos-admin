@@ -221,7 +221,7 @@ function CalendarioWidget() {
             </button>
           </div>
           {/* Day headers */}
-          <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5 mb-1">
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-0.5 mb-1">
             {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => (
               <div key={d} className="text-center text-[11px] text-[rgba(0,0,0,0.65)] py-1 uppercase tracking-[0.05em]">{d}</div>
             ))}
@@ -236,7 +236,7 @@ function CalendarioWidget() {
             while (cells.length % 7 !== 0) cells.push(null)
             const monthEvs = monthEvents(baseEvents, currentMonth, currentYear)
             return (
-              <div className="grid grid-cols-[repeat(7,1fr)] gap-0.5">
+              <div className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-0.5">
                 {cells.map((day, i) => {
                   const dayEvents = day ? monthEvs.filter(e => new Date(e.start_at).getDate() === day) : []
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
@@ -245,23 +245,53 @@ function CalendarioWidget() {
                       {day && (
                         <>
                           <div className="text-[13px] mb-0.5 leading-none" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
-                          {dayEvents.slice(0, 2).map(ev => (
-                            <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
-                              className="text-[11px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
-                              {/* Ver la nota de CalendarGrid: el emoji 🖼 se
-                                  dibujaba como cuadrito en varios sistemas. */}
-                              {ev.flyer_url && <ImageIcon size={10} className="inline-block mr-1 -mt-px shrink-0 opacity-90" aria-hidden />}
-                              {ev.name}
-                            </div>
-                          ))}
-                          {dayEvents.length > 2 && (
-                            <button
-                              onClick={() => setDayModal({ date: day, events: dayEvents })}
-                              className="text-[11px] text-[rgba(0,0,0,0.65)] hover:underline"
-                            >
-                              +{dayEvents.length - 2} más
-                            </button>
-                          )}
+                          {/* QA-1/C2 · En celular van PUNTOS, no chips con nombre.
+                              Una columna de 44 px no muestra ningún nombre útil, y
+                              el chip con `whitespace-nowrap` empujaba el mínimo de
+                              la columna al ancho completo del texto: la rejilla
+                              medía 795 px en una pantalla de 360 y había que
+                              arrastrar de lado, con el encabezado quedándose atrás.
+                              Es el mismo patrón que ya usa CalendarGrid del admin. */}
+                          <div className="flex flex-wrap gap-1 pt-0.5 sm:hidden">
+                            {dayEvents.slice(0, 4).map(ev => (
+                              <button
+                                key={`${ev.id}-${ev.start_at}`}
+                                onClick={() => setSelectedEvent(ev)}
+                                aria-label={ev.name}
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ background: accent }}
+                              />
+                            ))}
+                            {dayEvents.length > 4 && (
+                              <button
+                                onClick={() => setDayModal({ date: day, events: dayEvents })}
+                                className="text-[11px] leading-none text-[rgba(0,0,0,0.65)]"
+                                aria-label={`Ver los ${dayEvents.length} eventos del día ${day}`}
+                              >
+                                +{dayEvents.length - 4}
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="hidden sm:block">
+                            {dayEvents.slice(0, 2).map(ev => (
+                              <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
+                                className="text-[11px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
+                                {/* Ver la nota de CalendarGrid: el emoji 🖼 se
+                                    dibujaba como cuadrito en varios sistemas. */}
+                                {ev.flyer_url && <ImageIcon size={10} className="inline-block mr-1 -mt-px shrink-0 opacity-90" aria-hidden />}
+                                {ev.name}
+                              </div>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <button
+                                onClick={() => setDayModal({ date: day, events: dayEvents })}
+                                className="text-[11px] text-[rgba(0,0,0,0.65)] hover:underline"
+                              >
+                                +{dayEvents.length - 2} más
+                              </button>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
@@ -280,7 +310,7 @@ function CalendarioWidget() {
         const weekEvs = eventsInRange(baseEvents, weekStart, weekEnd)
         return (
         <div className="p-5">
-          <div className="grid grid-cols-[repeat(7,1fr)] gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-[repeat(7,minmax(0,1fr))] gap-2">
             {Array.from({ length: 7 }, (_, i) => {
               const d = new Date()
               d.setDate(d.getDate() + i)

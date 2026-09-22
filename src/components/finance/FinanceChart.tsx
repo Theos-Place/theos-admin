@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { Payment, Donation } from '@/types/finance'
 import { formatMoney, currencySymbol, CURRENCIES, type Currency } from '@/lib/format'
 import { toCurrency } from '@/lib/money'
+import { caeEn } from '@/lib/fecha/partes-de-fecha'
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
 
@@ -41,10 +42,10 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
 
     const dTotal = donations
       .filter(d => toCurrency(d.currency) === cur)
-      .filter(d => {
-        const dt = new Date(d.donation_date)
-        return dt.getFullYear() === year && dt.getMonth() + 1 === month
-      })
+      // QA-1/C1: `donation_date` es columna `date`. `new Date(...)` la lee como
+      // medianoche UTC y en CR retrocede al día anterior, así que las donaciones
+      // del día 1 —que son todas— se dibujaban en la barra del mes previo.
+      .filter(d => caeEn(d.donation_date, year, month))
       .reduce((sum, d) => sum + d.amount, 0)
 
     return { label, payments: pTotal, donations: dTotal }

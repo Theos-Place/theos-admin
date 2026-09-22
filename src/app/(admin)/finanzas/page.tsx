@@ -15,6 +15,7 @@ import { requiereAtencion } from '@/lib/finance/payment-outcome'
 import { FinanceChart } from '@/components/finance/FinanceChart'
 import { useFinance } from '@/hooks/useFinance'
 import { formatDate } from '@/lib/format'
+import { anioDe, caeEn } from '@/lib/fecha/partes-de-fecha'
 
 export default function FinanzasPage() {
   const { payments, donations, refunds, scholarships } = useFinance('payments', 'donations', 'refunds', 'scholarships')
@@ -43,16 +44,15 @@ export default function FinanzasPage() {
   }, [payments, period, thisMonth, thisYear])
 
   const filteredDonations = useMemo(() => {
-    return donations.filter(d => {
-      const dt = new Date(d.donation_date)
-      if (period === 'month') return dt.getMonth() === thisMonth && dt.getFullYear() === thisYear
-      if (period === 'prev_month') {
-        const prev = thisMonth === 0 ? 11 : thisMonth - 1
-        const prevY = thisMonth === 0 ? thisYear - 1 : thisYear
-        return dt.getMonth() === prev && dt.getFullYear() === prevY
-      }
-      return dt.getFullYear() === thisYear
-    })
+    // QA-1/C1: `donation_date` es columna `date`, no timestamp. Con
+    // `new Date(...).getMonth()` toda donación caía un mes antes —las 15.147,
+    // porque todas están registradas el día 1 del trimestre— así que el panel
+    // del mes en curso salía vacío hasta bien entrado el mes siguiente.
+    // Los pagos de arriba sí usan `new Date`: `paid_at` es timestamp con hora.
+    const anio = period === 'prev_month' && thisMonth === 0 ? thisYear - 1 : thisYear
+    const mes = (period === 'prev_month' ? (thisMonth === 0 ? 11 : thisMonth - 1) : thisMonth) + 1
+    return donations.filter(d =>
+      period === 'year' ? anioDe(d.donation_date) === thisYear : caeEn(d.donation_date, anio, mes))
   }, [donations, period, thisMonth, thisYear])
 
   // INT-3: pagos y donaciones se juntan SIN mezclar monedas.

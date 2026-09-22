@@ -9,6 +9,7 @@ import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 import { formatDate } from '@/lib/format'
+import { anioDe, caeEn, fechaLocal } from '@/lib/fecha/partes-de-fecha'
 
 // Etiquetas en español para la tabla (los values crudos venían de la BD).
 const METHOD_LABEL: Record<string, string> = {
@@ -34,9 +35,12 @@ export default function ReportesPage() {
   // Donations tab
   const filteredDonations = useMemo(() => {
     return donations.filter(d => {
-      const dt = new Date(d.donation_date)
-      const matchFrom = !donDateFrom || dt >= new Date(donDateFrom)
-      const matchTo = !donDateTo || dt <= new Date(donDateTo)
+      // QA-1/C1: `fechaLocal` en los TRES lados. Con `new Date` la donación se
+      // arma en UTC y los límites del filtro también, pero una columna `date`
+      // y un input `date` no tienen por qué coincidir en el corrimiento.
+      const dt = fechaLocal(d.donation_date)
+      const matchFrom = !donDateFrom || dt >= fechaLocal(donDateFrom)
+      const matchTo = !donDateTo || dt <= fechaLocal(donDateTo)
       return matchFrom && matchTo
     })
   }, [donations, donDateFrom, donDateTo])
@@ -63,23 +67,27 @@ export default function ReportesPage() {
   // Transparency tab — month-by-month
   const yearDonations = useMemo(() => {
     const year = Number(yearFilter)
-    return donations.filter(d => new Date(d.donation_date).getFullYear() === year)
+    // QA-1/C1: el año se LEE del string. Con `new Date` las 4.136 donaciones
+    // del 1.º de enero caían en el año anterior y desaparecían de esta pestaña.
+    return donations.filter(d => anioDe(d.donation_date) === year)
   }, [donations, yearFilter])
 
   const monthlyData = useMemo(() => {
+    const year = Number(yearFilter)
     return MONTH_NAMES.map((name, i) => {
       const month = i + 1
       // INT-3: por moneda. Antes sumaba euros con colones en el mismo número.
+      // QA-1/C1: `caeEn` en vez de `getMonth()`, que corría todo un mes.
       const total = sumByCurrency(
-        yearDonations.filter(d => new Date(d.donation_date).getMonth() + 1 === month))
+        yearDonations.filter(d => caeEn(d.donation_date, year, month)))
       const uniqueDonors = new Set(
         yearDonations
-          .filter(d => d.is_identified && new Date(d.donation_date).getMonth() + 1 === month)
+          .filter(d => d.is_identified && caeEn(d.donation_date, year, month))
           .map(d => d.member_id)
       ).size
       return { name, total, uniqueDonors }
     })
-  }, [yearDonations])
+  }, [yearDonations, yearFilter])
 
   // Las barras del informe se dibujan en UNA moneda (la principal de los datos);
   // el texto muestra todas. Ver la nota de FinanceChart: una barra no puede
