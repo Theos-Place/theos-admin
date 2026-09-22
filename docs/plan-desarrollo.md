@@ -1716,6 +1716,52 @@ funcione (un rol sin acceso no lo ve en el índice). Sin capturas por ahora — 
 paso a paso; las capturas se agregan después como en los demás tutoriales.
 ```
 
+## Fase 21 — QA integral (pedido 2026-09-22, reordenado el mismo día)
+
+**Orden decidido por Floriana**: NO se re-siembran cuentas de prueba en producción.
+Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
+sembradas ahí, y desde staging el QA autenticado completo (QA-2).
+
+### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA 2026-09-22
+
+Informe en **`docs/qa-2026-09/informe-automatizado.md`**, con capturas y datos
+crudos. Reproducible: `npx tsx scripts/qa/auditar-publicas.ts`.
+
+**Se corrió SIN volver a sembrar cuentas de prueba** (decisión del usuario): el
+set se borró ese mismo día y recrearlo mete datos nuevos en producción. Eso deja
+completa la parte estática y la de páginas públicas, y pendiente la de pantallas
+con sesión — que se retoma con INF-1.
+
+**Dos hallazgos críticos:**
+
+1. **Todas las donaciones se reportan en el trimestre anterior.** El reporte usa
+   `new Date(donation_date).getMonth()`, y `donation_date` es columna `date`:
+   medianoche UTC es el día anterior en Costa Rica. No es un borde — las 15.147
+   están registradas por trimestre y todas caen el día 1, así que **todas** se
+   corren, y las 4.136 del 1.º de enero se van al año anterior y desaparecen del
+   filtro de año.
+2. **`/calendario` se desborda 405 px en celular.** Es pública, es la que se
+   comparte por WhatsApp, y el encabezado no acompaña el desplazamiento.
+
+Más 12 conversiones de fecha sin protección de zona horaria (el mismo mecanismo
+en otras pantallas, incluida una que ordena mal por edad), contraste de 3,80 en
+`/terminos` —medido con `lib/contrast.ts`; el culpable es la opacidad, no el
+color— y un enlace distinguible solo por color en `/registro`.
+
+Pasan limpio: cero imágenes sin `alt`, cero enlaces rotos en los 39 artículos de
+ayuda, y ocho de las nueve páginas públicas sin desborde.
+
+**Los fixes NO se aplicaron**, como pedía el ítem: el informe es el mapa y las
+tandas las prioriza Floriana.
+
+### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
+
+Con las cuentas de staging: axe + mobile + teclado sobre las pantallas de cada módulo,
+y el recorrido heurístico por rol (dirigente cerrando grupo, finanzas aprobando pagos,
+encargado en la puerta, miembro matriculándose desde el celular): ¿sé dónde estoy? ¿sé
+qué hacer? ¿el error me dice cómo salir? ¿cuántos clics costó? El prompt se detalla
+cuando staging exista, sumando lo aprendido en QA-1.
+
 ## Fase 19 — Pedido el 2026-09-21
 
 **Cierre 2026-09-21.** Tres artículos, escritos LEYENDO las pantallas, no de
