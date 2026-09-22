@@ -23,6 +23,7 @@ import { landsOnProfile } from '@/lib/auth/home-route'
 import { formatTotalsInline, type MoneyTotals } from '@/lib/money'
 import { checkinsDeLaOcurrencia } from '@/lib/events/checkins-del-dia'
 import { todayCR } from '@/lib/format'
+import { alcanceVeATodos } from '@/lib/auth/mando-de-comite'
 
 // Fallback en ceros mientras cargan las stats (evita null checks en el JSX).
 const EMPTY_STATS = {
@@ -229,7 +230,10 @@ export default function DashboardPage() {
   // criterio del payload recortado del API. can() no mira scope, por eso el
   // helper; el rol miembro ni siquiera dispara los fetches.
   const isMemberOnly = !loaded || landsOnProfile(user?.roles ?? [])
-  const canScope = (m: string) => can(m, 'view') && getScope(m) !== 'own'
+  // Mismo criterio que el payload del API (`beyondOwn`), que desde 2026-09-22
+  // exige alcance 'all'. Con `!== 'own'` el cliente pintaba bloques que el
+  // servidor ya recortaba: cajas vacías en vez de cajas ausentes.
+  const canScope = (m: string) => can(m, 'view') && alcanceVeATodos(getScope(m))
   const { events } = useEvents({}, { enabled: loaded && !isMemberOnly && can('eventos', 'view') })
   const { stats, activity: RECENT_ACTIVITY } = useDashboard({ enabled: loaded && !isMemberOnly })
   const DASHBOARD_STATS = { ...EMPTY_STATS, ...(stats ?? {}) }

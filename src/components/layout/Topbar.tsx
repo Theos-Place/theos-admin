@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { ROLES } from '@/lib/auth/roles'
 import { NotificationsBell } from './NotificationsDropdown'
 import { getInitials } from '@/lib/format'
+import { alcanceVeATodos } from '@/lib/auth/mando-de-comite'
 
 interface TopbarProps {
   title: string
@@ -21,7 +22,10 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
   const { user } = useAuth()
   // El buscador global va contra el PADRÓN: solo lo ve quien lo tiene.
   const { can, getScope } = usePermissions()
-  const canSearchMembers = can('miembros', 'view') && getScope('miembros') !== 'own'
+  // `alcanceVeATodos` y no `!== 'own'`: el alcance 'committee' del líder de
+  // comité colaba, así que le aparecía un buscador del padrón que el servidor
+  // ya no le contesta — buscaba, encontraba, y la ficha le daba 403.
+  const canSearchMembers = can('miembros', 'view') && alcanceVeATodos(getScope('miembros'))
   const [menuOpen, setMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 

@@ -54,3 +54,20 @@ export function puedeVerFichaPorComite(
  * (`puedeVerFichaPorComite`).
  */
 export const ALCANCE_DE_PADRON = 'all'
+
+/**
+ * ¿Este alcance alcanza para ver a CUALQUIERA?
+ *
+ * Es el espejo en el cliente de `hasModulePermission(..., { beyondOwn })`, y
+ * existe para que las dos mitades no se separen otra vez. La versión vieja de
+ * esta pregunta estaba escrita a mano como `scope !== 'own'` en cuatro
+ * pantallas, y por eso el buscador global del encabezado le seguía apareciendo
+ * al líder de comité después de cerrarle el padrón en el servidor: buscaba,
+ * encontraba, y al abrir la ficha recibía un 403.
+ *
+ * Un alcance acotado ('committee') NO es un padrón chiquito: la pantalla que lo
+ * quiera servir tiene que preguntar por su comité, no por todos.
+ */
+export function alcanceVeATodos(scope: string | null | undefined): boolean {
+  return scope === ALCANCE_DE_PADRON
+}

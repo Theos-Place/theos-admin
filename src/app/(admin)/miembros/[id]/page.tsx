@@ -26,6 +26,7 @@ import { ordenarServicios } from '@/lib/members/orden-de-servicios'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
 import { ResolucionDeFusion } from '@/components/members/ResolucionDeFusion'
 import { principalSugerido } from '@/lib/members/resolucion-de-fusion'
+import { SinAcceso, esFaltaDeAcceso } from '@/components/shared/SinAcceso'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -263,6 +264,10 @@ export default function MiembroDetailPage() {
 
   // ── Estados de carga (van DESPUÉS de todos los hooks por reglas de React) ──
   if (isNotFound) notFound()
+  // Un 403 no es un error: es que esa ficha no le toca. Antes decía «Error
+  // cargando miembro: No autorizado» en rojo, que suena a sistema roto — y se
+  // veía seguido desde que el líder de comité dejó de tener el padrón entero.
+  if (esFaltaDeAcceso(error)) return <SinAcceso que="esta ficha" />
   if (error) {
     return (
       <div className="p-8 text-center text-coral font-body">

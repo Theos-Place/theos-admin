@@ -19,6 +19,7 @@ import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { cn } from '@/lib/utils'
 import { leFaltaAlgo, faltantes, type Compromisos } from '@/lib/servers/compromisos'
 import { textoDeEstudio, type EstudioDeLaPersona } from '@/lib/studies/estudio-actual'
+import { SinAcceso, esFaltaDeAcceso } from '@/components/shared/SinAcceso'
 
 type Fila = Compromisos & {
   member_id: string
@@ -124,9 +125,7 @@ function MiComiteContenido() {
   // restringido" antes deja un parpadeo rojo en cada carga (ver usePermissions).
   if (!loaded) return null
   // El 403 lo manda el servidor cuando no encarga ningún comité.
-  if (error?.includes('No autorizado')) {
-    return <EmptyState icon={Users} title="Acceso restringido" description="Esta pantalla es para los encargados de comité." />
-  }
+  if (esFaltaDeAcceso(error)) return <SinAcceso que="esta pantalla" />
 
   return (
     <div className="space-y-4">
