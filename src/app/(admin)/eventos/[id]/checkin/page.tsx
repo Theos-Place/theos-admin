@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { ChevronLeft, UserPlus, X, Camera, Trash2, UserCheck } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { DocumentCapture } from '@/components/members/DocumentCapture'
+import { ContactCapture } from '@/components/members/ContactCapture'
 import { Modal } from '@/components/shared/Modal'
 import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { validarAltaDePersona } from '@/lib/members/alta-persona'
@@ -113,10 +114,17 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string; birth_md?: string | null } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
-  const [memberResults, setMemberResults] = useState<{ id: string; name: string; has_document?: boolean; birth_md?: string | null }[]>([])
+  const [memberResults, setMemberResults] = useState<{
+    id: string; name: string; has_document?: boolean; birth_md?: string | null
+    falta_contacto?: { email: boolean; phone: boolean }
+  }[]>([])
   // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
   // flujo de la fila: se puede ignorar y seguir registrando gente.
   const [docCapture, setDocCapture] = useState<{ id: string; name: string } | null>(null)
+  // CHK-5: a quién hay que pedirle el correo. Lo decide el SERVIDOR y viene en
+  // el lookup ya resuelto — la puerta no recibe la fecha de nacimiento.
+  const [contactCapture, setContactCapture] = useState<
+    { id: string; name: string; pedir: { email: boolean; phone: boolean } } | null>(null)
   const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
@@ -192,7 +200,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         .then(r => (r.ok ? r.json() : { members: [] }))
         .then(d => {
           if (!alive) return
-          const list = (d.members ?? []) as Array<{ id: string; first_name: string; last_name: string; cedula?: string | null; birth_md?: string | null }>
+          const list = (d.members ?? []) as Array<{
+            id: string; first_name: string; last_name: string; cedula?: string | null
+            birth_md?: string | null; falta_contacto?: { email: boolean; phone: boolean }
+          }>
           // FIN-2: el lookup ya trae el documento; se conserva para marcar a
           // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
           setMemberResults(list.map(m => ({
@@ -202,6 +213,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
             // para felicitar a alguien).
             birth_md: m.birth_md ?? null,
+            // CHK-5: ver el comentario de contactCapture.
+            falta_contacto: m.falta_contacto,
           })))
         })
         .catch(() => { if (alive) setMemberResults([]) })
@@ -460,7 +473,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const member = selectedMember
     // FIN-2 (3): ¿le faltaba documento? Se resuelve ANTES de limpiar la
     // búsqueda, que es de donde viene el dato.
-    const faltaDocumento = memberResults.find(m => m.id === member.id)?.has_document === false
+    const fila = memberResults.find(m => m.id === member.id)
+    const faltaDocumento = fila?.has_document === false
+    // CHK-5: mismo momento y mismo criterio que el documento.
+    const faltaContacto = fila?.falta_contacto
     setSelectedMember(null)
     setQuery('')
     const r = await persistCheckin(member, type)
@@ -468,6 +484,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     // Captura al vuelo, opcional y después del registro: el check-in nunca se
     // bloquea ni se retrasa por esto.
     if (faltaDocumento && r === 'ok') setDocCapture(member)
+    // El documento tiene prioridad si faltan los dos: es un panel a la vez,
+    // porque la fila sigue avanzando y dos formularios apilados la trancan.
+    if (!faltaDocumento && r === 'ok' && (faltaContacto?.email || faltaContacto?.phone)) {
+      setContactCapture({ ...member, pedir: faltaContacto })
+    }
   }
 
   // Registra varios miembros (familia) al evento. Cada entrada lleva su subevento.
@@ -658,6 +679,49 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                       m.id === docCapture.id ? { ...m, has_document: true } : m
                     )))
                     setDocCapture(null)
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* CHK-5: captura opcional del correo, ya registrado el check-in. A
+              un menor NO se le pide (regla de FAM-2) y a quien no tiene fecha
+              de nacimiento tampoco — eso lo decide el servidor, acá solo se
+              pinta lo que mandó. */}
+          {contactCapture && (
+            <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-sm)]">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  <span className="font-medium text-navy">{contactCapture.name}</span>{' '}
+                  {contactCapture.pedir.email && contactCapture.pedir.phone
+                    ? 'no tiene correo ni teléfono registrados. Si los tenés a mano, aprovechá — es opcional.'
+                    : contactCapture.pedir.email
+                      ? 'no tiene correo registrado. Sin correo no puede entrar al sistema — pedíselo si podés.'
+                      : 'no tiene teléfono registrado. Si lo tenés a mano, podés agregarlo — es opcional.'}
+                </p>
+                <button
+                  onClick={() => setContactCapture(null)}
+                  aria-label="Cerrar captura de contacto"
+                  className="shrink-0 rounded-lg p-1 text-navy-light/80 transition-colors hover:bg-navy/5 hover:text-navy"
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+              <div className="mt-3">
+                <ContactCapture
+                  memberId={contactCapture.id}
+                  eventId={id}
+                  pedir={contactCapture.pedir}
+                  idPrefix="checkin-contacto"
+                  onSaved={guardado => {
+                    setMemberResults(prev => prev.map(m => (m.id === contactCapture.id
+                      ? { ...m, falta_contacto: {
+                          email: (m.falta_contacto?.email ?? false) && !guardado.email,
+                          phone: (m.falta_contacto?.phone ?? false) && !guardado.phone,
+                        } }
+                      : m)))
+                    setContactCapture(null)
                   }}
                 />
               </div>

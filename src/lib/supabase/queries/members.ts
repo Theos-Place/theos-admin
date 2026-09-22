@@ -7,6 +7,7 @@ import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
+import { pedirContacto } from '@/lib/events/contacto-en-la-puerta'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -1063,24 +1064,43 @@ function soloDiaYMes(birthDate: string | null | undefined): string | null {
   return birthDate && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate.slice(5) : null
 }
 
+/** Lo que ve un buscador de gestión. CHK-2: la fecha va recortada a 'MM-DD',
+ *  sin año, porque para felicitar a alguien no hace falta su edad — y la puerta
+ *  no tiene por qué poder deducirla.
+ *
+ *  CHK-5: `falta_contacto` viaja YA RESUELTO por la misma razón. La pantalla
+ *  necesita saber si hay que pedirle el correo, no necesita su fecha de
+ *  nacimiento ni su teléfono para averiguarlo. */
+export type FichaDeLookup = {
+  id: string; first_name: string; last_name: string
+  cedula: string | null; document_type: string | null
+  email: string | null; birth_md: string | null
+  falta_contacto: { email: boolean; phone: boolean }
+}
+
 export async function getMemberForLookupById(
   id: string,
-): Promise<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null } | null> {
+): Promise<FichaDeLookup | null> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('members')
-    .select('id, first_name, last_name, cedula, document_type, email, birth_date')
+    .select('id, first_name, last_name, cedula, document_type, email, birth_date, phone, datos_protegidos')
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const { birth_date, ...resto } = data as Record<string, unknown> & { birth_date: string | null }
-  return { ...resto, birth_md: soloDiaYMes(birth_date) } as { id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }
+  const { birth_date, phone, datos_protegidos, ...resto } =
+    data as Record<string, unknown> & { birth_date: string | null; phone: string | null; datos_protegidos: boolean | null }
+  return {
+    ...resto,
+    birth_md: soloDiaYMes(birth_date),
+    falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
+  } as FichaDeLookup
 }
 
 export async function searchMembersForLookup(
   search: string, limit = 8,
-): Promise<Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }>> {
+): Promise<Array<FichaDeLookup>> {
   const q = search.trim()
   if (q.length < 2) return []
   const supabase = createAdminClient()
@@ -1095,15 +1115,19 @@ export async function searchMembersForLookup(
       // (tipo, número) — INT-1: sin el tipo, un pasaporte y una cédula con el
       // mismo número parecerían la misma persona.
       // birth_date sale de acá recortado a 'MM-DD' (ver soloDiaYMes): CHK-2.
-      .select('id, first_name, last_name, cedula, document_type, email, birth_date')
+      .select('id, first_name, last_name, cedula, document_type, email, birth_date, phone, datos_protegidos')
       .eq('is_active', true),
     q,
   )
     .order('first_name')
     .limit(Math.min(limit, 20))
   if (error) throw error
-  const filas = (data ?? []) as Array<Record<string, unknown> & { birth_date: string | null }>
-  return filas.map(({ birth_date, ...resto }) => ({
-    ...resto, birth_md: soloDiaYMes(birth_date),
-  })) as Array<{ id: string; first_name: string; last_name: string; cedula: string | null; document_type: string | null; email: string | null; birth_md: string | null }>
+  const filas = (data ?? []) as Array<Record<string, unknown> & {
+    birth_date: string | null; phone: string | null; datos_protegidos: boolean | null
+  }>
+  return filas.map(({ birth_date, phone, datos_protegidos, ...resto }) => ({
+    ...resto,
+    birth_md: soloDiaYMes(birth_date),
+    falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
+  })) as Array<FichaDeLookup>
 }

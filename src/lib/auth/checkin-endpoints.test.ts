@@ -18,6 +18,7 @@ const ALTA = readFileSync('src/app/api/events/[id]/members/route.ts', 'utf8')
 const CORRECCION = readFileSync('src/app/api/events/[id]/members/[memberId]/route.ts', 'utf8')
 const PADRON = readFileSync('src/app/api/members/route.ts', 'utf8')
 const PERFIL = readFileSync('src/app/api/members/[id]/route.ts', 'utf8')
+const CONTACTO = readFileSync('src/app/api/events/[id]/checkins/contact-info/route.ts', 'utf8')
 
 describe('alta desde el check-in', () => {
   it('está gateada POR EVENTO (EVE-12), no por rol suelto', () => {
@@ -238,4 +239,55 @@ describe('CHK-4 · qué rutas son de puerta', () => {
       expect(readFileSync(`src/app/api/${rel}`, 'utf8'), rel).not.toContain('{ puerta: true }')
     })
   }
+})
+
+
+/**
+ * CHK-5 · El endpoint que llena el correo en la puerta.
+ *
+ * Es el tercero de esta familia y el más fácil de aflojar sin querer: "ya que
+ * estamos, que también corrija el que está mal". No. Corregir es la edición
+ * normal; esto solo LLENA un campo vacío de alguien a quien se le acaba de
+ * hacer check-in.
+ */
+describe('captura de contacto en la puerta', () => {
+  it('está gateada POR EVENTO y como PUERTA, igual que el check-in', () => {
+    expect(CONTACTO).toContain("requireEventAccess(id, { puerta: true })")
+    expect(CONTACTO).not.toContain('requireRoles(')
+  })
+
+  it('exige check-in de HOY en ESE evento', () => {
+    // Sin esto, el endpoint sería una forma de editar a cualquiera del padrón
+    // desde la pantalla de la puerta.
+    expect(CONTACTO).toContain('getCheckinExistente(id, member_id)')
+  })
+
+  it('solo acepta email y phone — ningún otro campo', () => {
+    const esquema = CONTACTO.slice(CONTACTO.indexOf('const schema'), CONTACTO.indexOf('export async function POST'))
+    for (const prohibido of ['first_name', 'last_name', 'cedula', 'birth_date', 'is_active', 'datos_protegidos']) {
+      expect(esquema, `el esquema no debe aceptar ${prohibido}`).not.toContain(prohibido)
+    }
+    expect(esquema).toContain('email')
+    expect(esquema).toContain('phone')
+  })
+
+  it('delega la decisión en la regla probada, no la reimplementa', () => {
+    expect(CONTACTO).toContain('puedeGuardar(')
+    expect(CONTACTO).not.toContain('birth_date >')
+  })
+
+  it('valida el correo duplicado antes de escribir', () => {
+    expect(CONTACTO).toContain('findMemberByCedulaOrEmail')
+  })
+
+  it('deja rastro en audit_log con el evento', () => {
+    expect(CONTACTO).toContain('logAudit(')
+    expect(CONTACTO).toContain('capturado_en_checkin')
+  })
+
+  it('NO crea cuentas ni manda correos', () => {
+    for (const prohibido of ['inviteMemberToCompleteProfile', 'sendEmail', 'sendPasswordLink', 'admin.createUser']) {
+      expect(CONTACTO, `no debe llamar a ${prohibido}`).not.toContain(prohibido)
+    }
+  })
 })
