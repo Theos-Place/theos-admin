@@ -8,9 +8,9 @@
 -- sin frecuencia no significa nada, y dejarla en null obligaría a cada
 -- consumidor a decidir qué hacer con ese caso.
 --
--- "Quincenal" significa cada 15 días CORRIDOS desde el primer vencimiento, no
--- los días 15 y 30 del mes. El porqué está en `biweeklyDueDates`
--- (src/lib/finance/installments.ts), con sus tests.
+-- "Quincenal" son los días 15 y 30 de cada mes —así se paga el salario acá—,
+-- con el último día del mes cuando no hay 30 (febrero). La regla vive en
+-- `quincenalDueDates` (src/lib/finance/installments.ts), con sus tests.
 
 alter table public.payment_plans
   add column if not exists frequency text not null default 'mensual';
@@ -23,4 +23,4 @@ alter table public.payment_plans
   check (frequency in ('mensual', 'quincenal'));
 
 comment on column public.payment_plans.frequency is
-  'FIN-8: cada cuánto vencen los tractos. quincenal = cada 15 días corridos desde el primero, no los días 15 y 30.';
+  'FIN-8: cada cuánto vencen los tractos. quincenal = los días 15 y 30 de cada mes (el último día del mes cuando no hay 30).';

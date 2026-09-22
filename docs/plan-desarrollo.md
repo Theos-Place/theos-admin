@@ -241,12 +241,22 @@ servidor. Sin la vista previa había que crear el arreglo para enterarse de
 cuándo vence cada tracto, y deshacerlo no es gratis: el primero reusa el pago
 original.
 
-**"Quincenal" = cada 15 días CORRIDOS**, no los días 15 y 30 del mes. La otra
-lectura obliga a decidir qué pasa en febrero y da intervalos desiguales (del 30
-al 15 hay 16 días, del 15 al 30 hay 15). Con 15 corridos la persona sabe
-siempre cuándo le toca. Un test fija el intervalo exacto; si algún día finanzas
-pide los días fijos del mes, va como frecuencia **nueva** y no cambiando esta,
-porque habría arreglos vivos con la regla vieja.
+**"Quincenal" = los días 15 y 30 de cada mes.** Lo definió el usuario el
+2026-09-22, después de que yo lo implementara como "cada 15 días corridos" — que
+estaba mal: el 5 y el 20 de un mes no son una quincena para nadie acá. Es como
+se paga el salario en Costa Rica y es lo que la gente espera.
+
+Febrero no tiene 30, así que el corte de fin de mes es el **último día** (28, o
+29 en bisiesto). En los meses de 31 el corte es el 30, porque la quincena es el
+30 y no el 31.
+
+El primer vencimiento es el que elija finanzas, tal cual, aunque no sea un 15 ni
+un 30: el arreglo se pacta con el primer pago en la mano. De ahí en adelante las
+fechas saltan al siguiente corte.
+
+La función se llama `quincenalDueDates` y **no** `biweekly` a propósito:
+quincenal y bisemanal son cosas distintas, y el nombre en inglés invitaba justo
+al error que cometí.
 
 Los arreglos existentes quedan mensuales por el default de la columna, sin
 migrar datos. Es NOT NULL a propósito: un arreglo sin frecuencia no significa

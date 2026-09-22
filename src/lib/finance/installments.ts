@@ -61,30 +61,56 @@ export function monthlyDueDates(firstDue: string, count: number): string[] {
 }
 
 /**
- * Vencimientos QUINCENALES: cada 15 días exactos desde el primero.
+ * Vencimientos QUINCENALES: los días 15 y 30 de cada mes.
  *
- * "Quincenal" tiene dos lecturas y esta elige la simple a propósito: cada 15
- * días corridos, no los días 15 y 30 de cada mes. La otra obliga a decidir qué
- * pasa en febrero y en los meses de 31, y genera intervalos desiguales (del 30
- * al 15 hay 16 días, del 15 al 30 hay 15). Con 15 corridos la persona sabe
- * siempre cuándo le toca: dos semanas después de la anterior.
+ * Así lo definió finanzas (2026-09-22), y es lo que espera la gente porque es
+ * como se paga el salario en Costa Rica. La primera versión de esto hacía "cada
+ * 15 días corridos" y estaba mal: el 5 y el 20 de un mes no son una quincena
+ * para nadie acá.
  *
- * Si finanzas algún día pide los días fijos del mes, se agrega otra frecuencia
- * en vez de cambiar esta — habría arreglos vivos con la regla vieja.
+ * Por eso la función NO se llama `biweekly`: quincenal y bisemanal son cosas
+ * distintas, y el nombre en inglés invitaba justo al error que se cometió.
+ *
+ * CÓMO SE ARMAN. El PRIMER vencimiento es el que eligió finanzas, tal cual —
+ * suele ser hoy, porque el arreglo se pacta con el primer pago en la mano. De
+ * ahí en adelante cada fecha salta al siguiente corte: si la anterior cayó
+ * antes del 15, va al 15 del mismo mes; si cayó entre el 15 y el corte de fin
+ * de mes, va a ese corte; y si cayó en el corte de fin de mes, va al 15 del
+ * siguiente.
+ *
+ * FEBRERO NO TIENE 30, así que el corte de fin de mes es el ÚLTIMO DÍA del mes:
+ * 28, o 29 en bisiesto. Vale para los meses de 31 también — el corte es el 30,
+ * no el 31, porque la quincena es el 30.
  */
-export function biweeklyDueDates(firstDue: string, count: number): string[] {
+function corteDeFinDeMes(year: number, month0: number): number {
+  const ultimo = new Date(Date.UTC(year, month0 + 1, 0)).getUTCDate()
+  return Math.min(30, ultimo)
+}
+
+export function quincenalDueDates(firstDue: string, count: number): string[] {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDue)) return []
   if (!Number.isInteger(count) || count < 1) return []
 
   const [y, m, d] = firstDue.split('-').map(Number)
-  // En UTC y sumando días al epoch: así el cruce de mes y de año lo resuelve el
-  // calendario y no una cuenta a mano. Nada de horario local — un arreglo que
-  // vence el 1.º no puede correrse al 31 por la zona horaria (Costa Rica es
-  // UTC-6 y `new Date('YYYY-MM-DD')` es medianoche UTC).
-  const base = Date.UTC(y, m - 1, d)
-  const out: string[] = []
-  for (let i = 0; i < count; i++) {
-    out.push(new Date(base + i * 15 * 86400000).toISOString().slice(0, 10))
+  const ymd = (year: number, month0: number, day: number) =>
+    `${year}-${String(month0 + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+
+  const out = [firstDue]
+  let year = y, month0 = m - 1, day = d
+  while (out.length < count) {
+    const corte = corteDeFinDeMes(year, month0)
+    if (day < 15) {
+      day = 15
+    } else if (day < corte) {
+      day = corte
+    } else {
+      // Ya estaba en el corte de fin de mes (o pasado, si eligieron el 31):
+      // toca el 15 del mes siguiente.
+      month0 += 1
+      if (month0 > 11) { month0 = 0; year += 1 }
+      day = 15
+    }
+    out.push(ymd(year, month0, day))
   }
   return out
 }
@@ -94,13 +120,13 @@ export type PlanFrequency = 'mensual' | 'quincenal'
 export const FREQUENCIES: PlanFrequency[] = ['mensual', 'quincenal']
 export const FREQUENCY_LABEL: Record<PlanFrequency, string> = {
   mensual: 'Mensual',
-  quincenal: 'Quincenal (cada 15 días)',
+  quincenal: 'Quincenal (15 y 30 de cada mes)',
 }
 
 /** Los vencimientos según la frecuencia. */
 export function dueDates(firstDue: string, count: number, frequency: PlanFrequency = 'mensual'): string[] {
   return frequency === 'quincenal'
-    ? biweeklyDueDates(firstDue, count)
+    ? quincenalDueDates(firstDue, count)
     : monthlyDueDates(firstDue, count)
 }
 
