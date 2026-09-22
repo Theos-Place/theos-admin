@@ -2258,162 +2258,57 @@ distintas, el problema es el correo/cuenta, no duplicados.
 **Las dos decisiones que quedaban: el usuario dijo dejarlo como está (2026-09-22).**
 Melissa Acon se queda en el Comité Contabilidad; no se replica lo de Carolina.
 
-### [~] AYU-3 · Centro de ayuda: finanzas — 3 de 4 completas; faltan 3 videos internos
+### [x] AYU-3 · Centro de ayuda: finanzas — HECHO 2026-09-22
 
-Las cuatro piezas escritas y con su infografía. **El video de la beca quedó
-grabado el 2026-09-22**; los tres internos no.
+Las cuatro piezas con artículo, infografía y video.
 
-**Por qué faltan los tres.** Son flujos de finanzas y **no existe un usuario
-`[prueba]` con ese rol** — los ocho que hay son coordinador de estudios,
-encargado de eventos, miembro o sin rol. El grabador se niega a correr con una
-cuenta que no sea `@prueba.`, así que habría que crear una cuenta con permisos
-de finanzas en producción, con la contraseña compartida que decidimos no rotar.
-Finanzas puede crear devoluciones, aprobar pagos y ver el padrón: es otra clase
-de riesgo. **Decisión pendiente**, o esperar a INF-1 (staging).
+| Pieza | Visibilidad |
+|---|---|
+| Planes de pago | finanzas, dirección |
+| Solicitudes de devolución | finanzas, dirección |
+| Registrar donaciones | finanzas, dirección |
+| Me asignaron una beca | **pública** |
 
-**Y un problema más grande que salió de esto: los datos del seed ya no están.**
-El usuario de los tutoriales (`daniel.intermedio@`) no existe, no hay grupos
-`[prueba]`, y —lo que tranca todo— **no hay NINGÚN grupo con matrícula abierta
-en todo el sistema**. Hoy no se puede regrabar ningún tutorial, no solo estos.
+**Los datos se arman mínimos y se borran**, decisión del usuario: nada de seed
+completo, que deja grupos abiertos, eventos y formularios en producción hasta
+que alguien limpie. `scripts/tutoriales/datos-beca.ts` y `datos-finanzas.ts`
+crean lo justo y lo borran en la misma sesión. Verificado al final: cero
+fichas, cero cuentas, cero grupos, cero roles de prueba.
 
-Para el de la beca se hizo `scripts/tutoriales/datos-beca.ts`: crea lo mínimo y
-lo borra en la misma sesión, en vez de correr el seed completo que deja grupos,
-eventos, formularios y prematrimoniales en producción hasta que alguien limpie.
+**La cuenta con rol finanzas lleva clave ALEATORIA**, no la compartida. El rol
+puede registrar devoluciones, aprobar pagos y ver el padrón, así que esa cuenta
+se aparta de las otras siete y se borra al terminar.
 
-**Una decisión que vale anotar.** El primer intento fue con DIS1, pensando que
-sus requisitos —SCJ, servir, donar, asistir— lo volvían casi invisible. Pero
-para que el miembro de prueba fuera elegible había que fabricarle **doce
-check-ins dentro de los últimos seis meses**, y eso habría ensuciado los
-reportes de asistencia recién construidos: aparecerían como asistentes reales de
-la semana. Las campañas cuestan ₡25.000 y no piden nada, así que se grabó sobre
-una. Cero datos inventados pesa más que unos minutos de visibilidad de un grupo
-que dice "[prueba]" en el nombre.
+**Del importador de donaciones no hay video, a propósito:** pide un archivo real
+del banco y el paso que importa —resolver a quién le corresponde cada fila—
+depende de los nombres que traiga ese archivo. Queda en el artículo y en la
+infografía.
 
-| Pieza | Archivo | Visibilidad |
-|---|---|---|
-| Planes de pago | `planes-de-pago.md` | finanzas, dirección |
-| Solicitudes de devolución | `solicitudes-de-devolucion.md` | finanzas, dirección |
-| Registrar donaciones | ya existía; se le agregó la infografía | finanzas, dirección |
-| Me asignaron una beca | `me-asignaron-una-beca.md` | **pública** |
+**Seis trampas que costaron una corrida cada una** y quedan escritas en el
+código, porque se repiten al grabar cualquier flujo interno:
 
-El artículo 4 explica dónde aparece la casilla, qué pasa si la beca cubre el
-total, la diferencia entre beca asignada y código, y qué hacer si uno se
-matriculó ANTES de que le dieran la beca (ahí sí lo resuelve finanzas).
+1. Sin cédula, el AppShell levanta el modal "falta tu cédula" encima de todo.
+2. `getByRole('button', {name})` matchea por **subcadena**: "Abrir" pescaba
+   "Abrir menú" de la topbar y desplegaba el sidebar.
+3. La cola de revisión filtra con `.not('concept','is',null)`: un cobro sin
+   concepto no aparece nunca, y sin la cola no hay panel de arreglo.
+4. Un cobro suelto **no se puede partir en tractos**: tiene que colgar de una
+   matrícula.
+5. El primer tracto **reusa la fila** del cobro original, así que "restaurarlo"
+   entre tomas no funciona — hay que borrar el arreglo y recrear el cobro.
+6. Varias pantallas tienen su propio buscador con el mismo placeholder que el
+   del modal: hay que acotar al modal o se llena el de atrás.
 
-**Una corrección mía, anotada porque el error es instructivo.** Reporté que el
-miembro no podía aplicar su beca en ningún lado: busqué `apply-scholarship`, vi
-que su único llamador era la cola de revisión de finanzas, y concluí que el
-miembro no tenía dónde. **Era falso.** El miembro la aplica en la pantalla de
-confirmación de la matrícula y de la inscripción a eventos, con una casilla
-«Usar mi beca (X de descuento)» que además **viene marcada por defecto**
-(`matricula/page.tsx`, `useEventRegistration.tsx`, contra
-`/api/scholarships/applicable`). Y si no tiene beca asignada, ahí mismo hay un
-campo para un código de cupón.
+**Y la lección de fondo:** una toma puede terminar "bien" y haber grabado un
+error. El de planes de pago se publicó una vez mostrando *"el pago no está
+ligado a una matrícula"*. Ahora se revisa la captura final, no el código de
+salida — y se confirma contra la base que la acción ocurrió: arreglo de 3
+tractos por ₡60.000, devolución de ₡5.000 pendiente, donación de ₡25.000.
 
-Buscar por el nombre del endpoint no alcanzaba: la matrícula aplica la beca al
-CREAR el cobro, mandando `scholarship_id` en el enroll, no llamando a
-`apply-scholarship` después. La ruta de finanzas es el camino de rescate para
-cuando el cobro ya existe.
-
-O sea que los textos que yo había marcado como mentirosos —«se aplica
-automáticamente al pagar» en Mis pagos, y «podés aplicar al momento de hacer tu
-pago» en la plantilla `beca_aprobada`— **son correctos**. No hay nada que
-arreglar ahí.
-
-
-**Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
-comité elegido viaja en `?comite=` para poder pasar el link. Sin comité elegido,
-un rol amplio NO carga nada: traer los 46 "por si acaso" sería casi un minuto de
-consultas para una pantalla que mira uno a la vez.
-
-El recorte del encargado no se aflojó — el test de SRV-4 sigue verde y se le
-sumaron los de SRV-6. Verificado contra producción: TI (admin) puede pedir
-Comité de Worship y lo ve completo (25 personas); Karina, que es
-`lider_comite` de Youth, recibe 403 por el mismo id.
-
-**Info en los encabezados** (pedido del usuario en el momento): Asistencia,
-Estudio y Donante explican su criterio al pasar el mouse o con el teclado. Los
-textos NO se escriben a mano: el de asistencia se arma con las constantes de
-`lib/attendance` y el de donante con `explicacionDeDonantes()`, que ya existía y
-además pone el mes real desde el que cuentan las donaciones. Escribir "últimos 6
-meses" en el tooltip habría sido la segunda definición de siempre.
-
-De paso, la carga de la pantalla pasó a `useCargaRemota` (LINT-1): el
-`setCargando(true)` dentro del efecto costaba el warning 61 de 60.
-
-**Cierre 2026-09-21.** `/reportes/servidores`. Global, por área o por comité.
-
-**La verificación que pedía el plan —"si los números difieren de Mi comité, es
-un bug"— encontró uno de verdad, y no el que se esperaba.** Comité Youth daba 24
-pendientes en la pantalla y 25 en el reporte. La causa: PostgREST corta en 1.000
-filas por consulta y no avisa; la consulta partía la lista de IDS en tandas de
-100 pero no paginaba los RESULTADOS, y las matrículas de 100 servidores son
-exactamente 1.000. O sea que "Mi comité" venía mostrando sin estudio a gente que
-sí lo tenía, desde SRV-4. Al paginar, "en estudio" pasó de 71% a 75% y "cumplen
-todo" de 36% a 39%.
-
-Quien sirve en varios comités cuenta en CADA uno del desglose —para su encargado
-esa persona es suya— pero UNA vez en los totales: 1.141 filas contra 749
-personas. La pantalla lo explica en vez de dejar que parezca un error de cuadre.
-
-El desglose ordena del peor al mejor. Los comités [prueba] quedan fuera: salían
-de primeros con 0% en todo.
-
-La tarjeta del índice se filtra por rol — hasta ahora el índice mostraba todas
-y esta lleva a una pantalla que responde "Acceso restringido" a quien tiene el
-módulo reportes pero no es staff ni dirección.
-
-Hoy: 749 servidores · asistencia 79% · en estudio 75% · donantes 51% · cumplen
-los tres 39%. Global en ~4 s.
-
-**Cierre 2026-09-21.** El gráfico anual pasa a barras apiladas por canal de
-entrada, con el total encima. Suma verificada: charla + estudio + evento = el
-total, año por año.
-
-**El filtro ahora aplica a TODO, y esa era la parte de fondo.** La serie que
-alimenta los gráficos no tenía la dimensión del origen, así que al elegir una
-charla cambiaba la tabla y los gráficos se quedaban igual: dos universos
-distintos en la misma pantalla. La función SQL devuelve el origen y los dos
-gráficos y la tabla se recortan con el MISMO filtro. Verificado contra
-producción en las 15 charlas con gente nueva en agosto: el gráfico y la tabla
-dan lo mismo en las 15, y sin filtro los dos dan 204.
-
-De paso, el selector de charla sale de la serie completa y no del mes cargado:
-antes cambiaba de opciones según qué mes estuvieras viendo.
-
-**Caso resuelto 2026-09-21.** El sistema no estaba fallando: el correo
-`tati_brenes02@hotmail.com` estaba escrito **en la ficha de la mamá**, y la
-ficha de Tatiana no tenía correo. La cuenta hacía lo correcto —abrir la ficha
-que tiene ese correo— y esa era la de la mamá.
-
-Se movió la CUENTA COMPLETA, no solo el correo: `auth_user_id` y las marcas de
-ingreso. Dejar el vínculo de auth en la ficha de la mamá la habría seguido
-abriendo aunque el correo estuviera bien puesto.
-
-Los datos NO estaban mezclados: cada una conserva su teléfono y su fecha de
-nacimiento. Del audit_log, lo único con rastro legible son dos UPDATE del propio
-login (16-set); los cuatro anteriores son previos a AUD-1 y no guardaron el
-valor viejo. De paso se le puso la cédula a la mamá (401061311), verificando
-antes que ninguna otra ficha la usara. Decisión del usuario: la mamá queda
-FUERA de la unidad familiar, que solo tiene a Dennis (titular) y Tatiana.
-Dennis ya estaba correcto: cédula 114590150 y correo propio.
-
-**EL PATRÓN NO SE PUEDE DETECTAR SOLO.** Se intentó: correos cuya parte antes de
-la @ no se parece al nombre de la ficha. Da 4.656 de 18.533 cuentas —puro
-apodo y abreviatura—, así que no sirve como detector y no se deja el script como
-si sirviera.
-
-Lo que sí se puede listar, y queda pendiente de decisión:
-
-1. **9 correos están en dos fichas activas a la vez.** Ninguno es urgente como el
-   de Tatiana —esas personas ven su propia ficha— pero los correos dirigidos a
-   una caerían en la bandeja de la otra. Hay que confirmar de quién es cada uno.
-2. **La validación de correo duplicado YA existe y bloquea DURO** (409 al crear y
-   al editar). Eso choca con FAM-2: hoy un menor no puede llevar el correo del
-   papá desde la pantalla. Decidir si se relaja a advertencia o se permite solo
-   cuando la persona es menor.
-
-Scripts en `scripts/dat10/`.
+**Nota aparte:** los datos del seed general ya no están (no existe
+`daniel.intermedio@`, no hay grupos `[prueba]`, no hay ningún grupo con
+matrícula abierta). Los 13 tutoriales viejos **no se pueden regrabar hoy** sin
+volver a sembrar. No es parte de AYU-3 pero conviene tenerlo presente.
 
 ### [x] AUT-4 · Quitar el bloqueo al cumplir 18 años — HECHO 2026-09-21
 
