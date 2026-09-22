@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useStudies } from '@/hooks/useStudies'
-import { toYmdLocal } from '@/lib/format'
 import {
   Users, Clock, AlertTriangle, TrendingUp,
   BookOpen, UserCheck, BarChart2, ListChecks, LayoutList, Inbox,
@@ -12,6 +11,8 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import type { StudyDashboardStats } from '@/lib/supabase/queries/studies'
+import { useHoyCR } from '@/hooks/useReloj'
+import { ventanaDeDias } from '@/lib/fecha/ventana-de-dias'
 
 const EMPTY_COUNT = { grupos: 0, inscripciones: 0, unicos: 0 }
 const EMPTY_STATS: StudyDashboardStats = {
@@ -75,17 +76,23 @@ export default function EstudiosPage() {
   // días, sin contar los ya finalizados (si ya cerró, no está "por cerrar"). Así
   // el número del box coincide con la lista al hacer clic. Comparación por
   // fecha (slice 10) para evitar drift.
+  // El día viene del reloj REACTIVO, no de leerlo en pleno render. Antes esto
+  // hacía `Date.now()` dentro del memo, así que la ventana se calculaba una vez
+  // y se quedaba quieta: una pantalla abierta desde la noche seguía usando la
+  // fecha de ayer después de la medianoche. `useHoyCR` solo dispara un render
+  // cuando cambia el día.
+  //
+  // QA 2026-07-17: el día es el de COSTA RICA, no UTC — con toISOString() la
+  // ventana se corría un día entre las 6pm y la medianoche.
+  const hoy = useHoyCR()
   const closingSoon = useMemo(() => {
-    // QA 2026-07-17: fecha LOCAL del navegador (CR), no UTC — toISOString()
-    // corría la ventana un día entre 6pm y medianoche.
-    const todayStr = toYmdLocal(new Date())
-    const in30Str = toYmdLocal(new Date(Date.now() + 30 * 86400000))
+    const { desde, hasta } = ventanaDeDias(hoy, 30)
     return groups.filter(g => {
       if (!g.end_date || g.status === 'finalizado') return false
       const d = g.end_date.slice(0, 10)
-      return d >= todayStr && d <= in30Str
+      return d >= desde && d <= hasta
     })
-  }, [groups])
+  }, [groups, hoy])
 
   return (
     <div className="space-y-6">

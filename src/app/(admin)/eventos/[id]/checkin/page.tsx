@@ -346,6 +346,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // cámara abierta; ignora el mismo código por 3s para no duplicar lecturas.
   async function handleScan(text: string) {
     const memberId = text.trim()
+    // FALSO POSITIVO de react-hooks/purity: esto NO corre en render. `handleScan`
+    // es el manejador del escáner y solo lo llama <QrScanner onResult>. Leer el
+    // reloj acá es justo lo correcto: es el antirrebote que evita registrar dos
+    // veces el mismo QR cuando la cámara lo lee en ráfaga. Un valor estable
+    // rompería el antirrebote, que es lo contrario de lo que la regla busca.
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now()
     if (lastScanRef.current && lastScanRef.current.id === memberId && now - lastScanRef.current.t < 3000) return
     lastScanRef.current = { id: memberId, t: now }

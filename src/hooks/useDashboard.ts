@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { DashboardStats, DbActivity } from '@/lib/supabase/queries/dashboard'
+import { useMinutoActual } from '@/hooks/useReloj'
 
 /** Item del feed de actividad reciente del dashboard (vista). */
 export type ActivityItem = {
@@ -68,10 +69,14 @@ export function useDashboard(opts: { enabled?: boolean } = {}) {
 
   useEffect(() => { if (enabled) fetchAll() }, [enabled, fetchAll])
 
-  const activity: ActivityItem[] = useMemo(() => {
-    const now = Date.now()
-    return dbActivity.map((a) => toActivityItem(a, now))
-  }, [dbActivity])
+  // El "hace X min" avanza solo. Antes `Date.now()` se leía dentro del memo, que
+  // solo se recalcula cuando llegan datos nuevos: un dashboard abierto toda la
+  // mañana seguía diciendo "hace 2 min" de algo de hace tres horas.
+  const ahora = useMinutoActual()
+  const activity: ActivityItem[] = useMemo(
+    () => dbActivity.map((a) => toActivityItem(a, ahora)),
+    [dbActivity, ahora],
+  )
 
   return { stats, activity, loading, error, refetch: fetchAll }
 }

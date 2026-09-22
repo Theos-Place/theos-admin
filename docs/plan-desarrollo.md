@@ -521,9 +521,34 @@ De paso, el 400 salió a `lib/api/datos-invalidos.ts`: esa línea está copiada 
 decenas de handlers y en algunos salía distinta, así que el cliente no podía
 confiar en la forma de `detalles`.
 
-### [~] LINT-1 · De 70 a 60 warnings — la mitad de los hooks migrados
+### [~] LINT-1 · De 93 a 57 warnings — quedan los hooks paginados
 
-Van tres tandas (93 → 70 → 60). El techo del gate bajó a **60**.
+Van cuatro tandas (93 → 70 → 60 → 57). El techo del gate bajó a **57**.
+
+**Tanda 4 (2026-09-22): los tres de `react-hooks/purity`.** Eran tres
+`Date.now()`, y resultaron ser dos cosas distintas.
+
+**Dos eran un bug de verdad, no un detalle de pureza.** El de "grupos que
+cierran en 30 días" y el de "hace X minutos" del dashboard leían el reloj
+DENTRO de un `useMemo`, que solo se recalcula cuando cambian los datos. O sea
+que el valor se congelaba: un dashboard abierto toda la mañana seguía diciendo
+"hace 2 min" de algo de hace tres horas, y la ventana de 30 días no se movía
+aunque pasara la medianoche. Se arreglaron con `useReloj` (`useHoyCR` y
+`useMinutoActual`), que vuelve el tiempo un valor reactivo.
+
+El hook se re-renderiza lo mínimo, y eso es lo que hay que cuidar: el tic
+interno es de 30 s, pero lo que React compara es la INSTANTÁNEA. `useHoyCR`
+devuelve un `'YYYY-MM-DD'` —render solo a la medianoche— y `useMinutoActual`
+redondea al minuto. Sin ese redondeo serían dos renders por minuto en cada
+pantalla. Un solo temporizador compartido para todos los suscriptores, y
+ninguno si nadie está suscrito.
+
+**El tercero era un falso positivo.** El `Date.now()` del escáner de QR está en
+`handleScan`, que es el manejador del evento y no corre en render. Ahí leer el
+reloj es lo correcto: es el antirrebote que evita registrar dos veces el mismo
+QR cuando la cámara lo lee en ráfaga. Queda con un `eslint-disable` de una sola
+línea y el porqué escrito — un valor estable rompería el antirrebote, que es lo
+contrario de lo que la regla busca.
 
 **La pieza nueva es `useCargaRemota`** (`src/hooks/`), con la regla pura y
 testeada en `lib/hooks/estado-de-carga.ts`. La idea: se guarda UN estado con el
