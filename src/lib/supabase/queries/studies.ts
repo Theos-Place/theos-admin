@@ -19,6 +19,7 @@ import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-ex
 import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-read'
 import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
+import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -103,6 +104,9 @@ export type DbGroupEnriched = {
     notes: string | null
     member: { first_name: string; last_name: string; phone?: string | null; birth_date?: string | null } | null
   }>
+  /** Porcentaje de asistencia por member_id. Lo calcula getGroupById aparte:
+   *  no sale de un embed porque hay que contar sobre las sesiones del grupo. */
+  asistencia?: { pct: Map<string, number> }
 }
 
 // ── Queries ────────────────────────────────────────────────
@@ -547,7 +551,23 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
-  return (data as DbGroupEnriched) ?? null
+  if (!data) return null
+  // El porcentaje de asistencia va aparte y no en GROUP_SELECT: hay que contar
+  // sobre las sesiones del grupo, y eso no se expresa en un embed.
+  return { ...(data as DbGroupEnriched), asistencia: await asistenciaDelGrupo(id) }
+}
+
+/** Presencias por miembro y cuántas sesiones hubo. Ver `asistencia-del-grupo`. */
+async function asistenciaDelGrupo(groupId: string): Promise<{ pct: Map<string, number> }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .select('id, study_attendance(member_id, present)')
+    .eq('group_id', groupId)
+  if (error) throw error
+  const sesiones = (data ?? []) as Array<{ id: string; study_attendance: Array<{ member_id: string; present: boolean }> }>
+  const filas = sesiones.flatMap(s => s.study_attendance ?? [])
+  return { pct: porcentajesPorMiembro(filas, sesiones.length) }
 }
 
 // ── Análisis de demanda: extraído a ./studies-demand. Re-exportado acá. ────────

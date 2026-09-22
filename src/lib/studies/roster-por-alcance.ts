@@ -29,6 +29,8 @@ export type PermisosDelRoster = {
   verLista: boolean
   verTelefono: boolean
   verCumple: boolean
+  /** La EDAD en años. Ver el comentario del caso 'leader'. */
+  verEdad: boolean
   /** Nota, notas del cierre, estado de pago: cosas de gestión. */
   verDatosDeGestion: boolean
   /** Enlace al perfil del miembro. NUNCA para un dirigente. */
@@ -40,14 +42,25 @@ export type PermisosDelRoster = {
 export function permisosDelRoster(scope: AlcanceDeVista): PermisosDelRoster {
   switch (scope) {
     case 'admin':
-      return { verLista: true, verTelefono: true, verCumple: true, verDatosDeGestion: true, verPerfil: true, verAsistencia: true }
+      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: true, verAsistencia: true }
     case 'leader':
       // El dirigente necesita contactar y felicitar, no auditar a la persona.
-      return { verLista: true, verTelefono: true, verCumple: true, verDatosDeGestion: true, verPerfil: false, verAsistencia: true }
+      //
+      // `verEdad` (2026-09-22, pedido del dirigente): los grupos tienen
+      // `age_min`/`age_max` y él es quien tiene que ver si su gente calza. No
+      // puede mirarlo en la ficha —su alcance sobre miembros es 'own'— así que
+      // sin esta columna el dato no existe para él en ninguna parte.
+      //
+      // Es una excepción CONSCIENTE a lo del cumpleaños, que viaja sin año
+      // justamente para no repartir la edad. La diferencia: el cumpleaños se
+      // muestra para felicitar y ahí el año sobra; la edad se muestra porque la
+      // regla del grupo depende de ella.
+      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: false, verAsistencia: true }
     case 'member':
-      return { verLista: true, verTelefono: false, verCumple: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
+      // El estudiante ve la lista y nada personal de sus compañeros.
+      return { verLista: true, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
     default:
-      return { verLista: false, verTelefono: false, verCumple: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
+      return { verLista: false, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
   }
 }
 

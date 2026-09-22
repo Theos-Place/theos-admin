@@ -9,6 +9,7 @@ import type {
 // Mapa nivel→etapa: fuente única en eligibility.ts (QA 2026-07-17).
 import { LEVEL_TO_STAGE } from '@/lib/studies/eligibility'
 import { hasRestriction, normalizeRestriction } from '@/lib/studies/group-restrictions'
+import { edadEnAnios } from '@/lib/members/alta-persona'
 
 export function toDomainStudyType(db: DbStudyPlan): StudyType {
   // El frontend usa `id` como clave de catálogo (== code en el mock).
@@ -101,8 +102,16 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
           : e.notes === 'aprobado' || e.status === 'completed' ? 'aprobado' as const
           : null,
         grade: e.grade,
-        // attendance_pct se calcula en la vista de detalle (Fase 2b) con study_attendance.
-        attendance_pct: 0,
+        // Estuvo FIJO EN 0 desde siempre, con un comentario que prometía
+        // calcularlo "en la fase 2b". La barra mostraba 0% para todo el mundo y
+        // lo destapó una dirigente el 2026-09-22 al pasar su primera lista.
+        // Quien no tiene ninguna presencia no está en el mapa: eso es 0.
+        attendance_pct: db.asistencia?.pct.get(e.member_id) ?? 0,
+        // GRU-3 + 2026-09-22: la edad la pidió el dirigente, que no tiene
+        // acceso al padrón y no puede mirarla en la ficha. Se manda calculada,
+        // no la fecha: el año de nacimiento no hace falta para saber la edad
+        // (mismo criterio que el cumpleaños, que viaja sin año — CHK-2).
+        edad: e.member?.birth_date ? edadEnAnios(e.member.birth_date) : null,
       }))
     : stubParticipants(db.enrollment_counts ?? { enrolled: 0, pending: 0, withdrawn: 0 })
 

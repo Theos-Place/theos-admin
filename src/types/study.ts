@@ -56,6 +56,8 @@ export type GroupParticipant = {
   birth_date?: string | null
   grade: number | null
   attendance_pct: number
+  /** Años cumplidos. null si la ficha no tiene fecha de nacimiento. */
+  edad?: number | null
 }
 
 export type StudyGroup = {

@@ -833,6 +833,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     'Nombre',
                     permisos.verTelefono ? 'Teléfono' : '',
                     permisos.verCumple ? 'Cumpleaños' : '',
+                    permisos.verEdad ? 'Edad' : '',
                     'Estado',
                     'Asistencia',
                     studyType?.requires_grade ? 'Nota' : '',
@@ -878,6 +879,13 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         {/* Día y mes, sin el año: para felicitar no hace falta, y
                             así no se reparte la edad por toda la pantalla. */}
                         {cumpleCorto(p.birth_date) ?? <span aria-hidden>—</span>}
+                      </td>
+                    )}
+                    {permisos.verEdad && (
+                      <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap tabular-nums">
+                        {/* Los grupos tienen age_min/age_max y el dirigente es
+                            quien revisa si su gente calza. */}
+                        {p.edad != null ? `${p.edad}` : <span aria-hidden>—</span>}
                       </td>
                     )}
                     <td className="px-4 py-3">

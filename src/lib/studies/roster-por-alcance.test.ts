@@ -25,7 +25,7 @@ describe('permisosDelRoster', () => {
 
   it('gestión sigue viendo todo, incluido el perfil', () => {
     expect(permisosDelRoster('admin')).toEqual({
-      verLista: true, verTelefono: true, verCumple: true,
+      verLista: true, verTelefono: true, verCumple: true, verEdad: true,
       verDatosDeGestion: true, verPerfil: true, verAsistencia: true,
     })
   })
@@ -98,5 +98,28 @@ describe('cumpleCorto', () => {
 
   it('aguanta un timestamp completo', () => {
     expect(cumpleCorto('1990-09-14T00:00:00.000Z')).toBe('14 set')
+  })
+})
+
+describe('la edad en el roster (2026-09-22)', () => {
+  it('la ven el dirigente y quien administra', () => {
+    // El dirigente la pidió: los grupos tienen age_min/age_max y él revisa si
+    // su gente calza. Su alcance sobre miembros es 'own', así que sin esta
+    // columna el dato no existe para él en ninguna parte.
+    expect(permisosDelRoster('leader').verEdad).toBe(true)
+    expect(permisosDelRoster('admin').verEdad).toBe(true)
+  })
+
+  it('NO la ve el estudiante ni quien no tiene relación con el grupo', () => {
+    expect(permisosDelRoster('member').verEdad).toBe(false)
+    expect(permisosDelRoster('none').verEdad).toBe(false)
+  })
+
+  it('va junto al cumpleaños, no en vez de él', () => {
+    // El cumpleaños sigue viajando sin año (es para felicitar); la edad es otra
+    // cosa y responde a la regla del grupo. Quien ve una ve la otra.
+    for (const s of ['leader', 'admin'] as const) {
+      expect(permisosDelRoster(s).verCumple).toBe(permisosDelRoster(s).verEdad)
+    }
   })
 })
