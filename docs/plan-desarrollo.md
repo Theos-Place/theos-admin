@@ -58,16 +58,24 @@
 Nada de esto es trabajo que yo pueda arrancar solo: necesitan que alguien
 decida. EVE-13, DAT-11 y DAT-13 ya se resolvieron.
 
-### [ ] SEC-4 · Las cuentas de PRUEBA siguen vivas
+### [~] SEC-4 · Las cuentas de PRUEBA — DECIDIDO 2026-09-22, se borran después de los videos
 
 17 fichas `[prueba]` y 7 cuentas de auth con correo `@prueba.theosplace.invalid`,
-**sin bloquear**, y tres de ellas se usaron el 10 de setiembre. Comparten una
-contraseña que estaba escrita en el centro de ayuda; ese artículo se borró el
-2026-09-21 pero las cuentas quedaron.
+sin bloquear. Comparten la contraseña `Prueba.Agosto.2026`, que estaba escrita en
+el artículo del centro de ayuda borrado el 2026-09-21.
 
-Decidir: borrarlas o bloquearlas. Bloquear es reversible y conserva el historial
-—mismo criterio que los menores—; borrar deja el padrón limpio. El seed vive en
-`scripts/seed-datos-de-prueba.ts` y puede volver a crearlas cuando haga falta.
+**Las dos decisiones del usuario, tomadas el 2026-09-22:**
+
+- **Las cuentas se quedan**, porque los videos que faltan de AYU-3 las necesitan:
+  el grabador (`scripts/tutoriales/lib.ts`) se NIEGA a correr si la cuenta no
+  contiene `@prueba.`, y quedan 24 artículos sin video.
+- **La contraseña NO se rota.** Se preguntó explícitamente y la respuesta fue
+  dejarla. Queda anotado para que no se vuelva a proponer.
+
+**Lo único que falta es borrarlas cuando los videos estén listos**, y eso ya está
+resuelto: `scripts/limpiar-datos-de-prueba.ts`, con dry-run por defecto y un
+guard que se niega si algún objeto no trae el marcador `[prueba]`. El seed
+(`scripts/seed-datos-de-prueba.ts`) las vuelve a crear si hacen falta otra vez.
 
 ### [x] DAT-11 · Nueve correos en dos fichas a la vez — HECHO 2026-09-21
 
