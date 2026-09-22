@@ -10,7 +10,7 @@ resumen: Las dos formas de registrar una donación —una por una o subiendo el 
 
 # Registrar donaciones
 
-![Los dos caminos para registrar una donación, los tres resultados del emparejamiento y qué hacer con las que quedan sin dueño](/ayuda/infografias/registrar-donaciones.svg)
+![Los dos caminos para registrar una donación, los tres resultados del emparejamiento y qué hacer con las que quedan sin dueño](/ayuda/infografias/registrar-donaciones.svg) ![Registrar una donación una por una, paso a paso](/ayuda/tutoriales/donaciones/donaciones.gif)
 
 Hay dos caminos y sirven para cosas distintas. Si te llegó el reporte del banco,
 subilo: el sistema se encarga de buscar a cada persona. Si es una donación
@@ -87,3 +87,5 @@ reporte.
 
 **Cada cambio queda registrado.** Quién agregó, quién borró y cuándo. Si algo se
 ve raro, se puede rastrear.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/donaciones/donaciones.mp4)

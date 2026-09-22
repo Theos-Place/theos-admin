@@ -10,7 +10,7 @@ resumen: Cómo se registra una devolución, los cuatro estados por los que pasa,
 
 # Solicitudes de devolución
 
-![Los cuatro estados de una devolución —pendiente, procesando, completada, rechazada— y la salida alterna de convertirla en donación](/ayuda/infografias/solicitudes-de-devolucion.svg)
+![Los cuatro estados de una devolución —pendiente, procesando, completada, rechazada— y la salida alterna de convertirla en donación](/ayuda/infografias/solicitudes-de-devolucion.svg) ![Registrar una devolución sobre un cobro ya cobrado, paso a paso](/ayuda/tutoriales/devoluciones/devoluciones.gif)
 
 Una devolución es plata que ya entró y que hay que sacar: alguien pagó de más,
 pagó dos veces, o se salió de un estudio que ya había pagado.
@@ -98,3 +98,5 @@ antes. El mensaje te dice el máximo que queda.
 
 **"Ya la procesé y sigue apareciendo."** Refrescá la pantalla; si sigue,
 probablemente alguien más la tomó primero y quedó con el estado de esa persona.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/devoluciones/devoluciones.mp4)
