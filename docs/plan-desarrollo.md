@@ -2429,7 +2429,18 @@ datos con los que se tomó.
 teléfono (2.882 solo sin correo, 463 solo sin teléfono, 358 sin nada), y **64 de
 los 65** que cumplieron 18 sin cuenta.
 
-**Falta:** el aviso hoy sale en el check-in por búsqueda. En el modal de familia
-y en el QR todavía no — ahí el flujo registra a varias personas de una y el
-panel de una sola persona no encaja sin repensarlo.
+**Los tres caminos cubiertos** (búsqueda, familia y QR). El panel es una COLA y
+no una persona, que es lo que pedía la familia: registra a varios de una, y con
+un solo panel de una familia de cuatro se le pedía el dato a uno y los otros
+tres se perdían en silencio. Se atiende de a uno —la fila sigue avanzando— y
+cuando hay varios el panel dice "1 de N".
+
+La cola no repite a quien ya está (con el QR es fácil escanear dos veces) y solo
+encola a quien QUEDÓ registrado: el endpoint exige check-in de hoy, así que
+ofrecerle el formulario a alguien que rebotó por falta de inscripción sería
+ofrecer algo que después falla.
+
+`/api/members/[id]/family` también manda ahora `falta_contacto` resuelto por el
+servidor. La puerta sigue sin recibir la fecha de nacimiento ni el teléfono de
+nadie.
 
