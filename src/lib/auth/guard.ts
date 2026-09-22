@@ -6,6 +6,7 @@ import type { RoleId } from '@/types/auth'
 import { withBaseRole } from '@/lib/auth/roles'
 import { cuentaHabilitada } from '@/lib/auth/account-active'
 import { abrirContextoDeActor, recordarActor } from '@/lib/auth/actor-actual'
+import { mandaEnAlgunComite, puedeVerFichaPorComite } from '@/lib/auth/mando-de-comite'
 
 export type AuthContext = { userId: string; memberId: string | null; roles: RoleId[] }
 
@@ -130,10 +131,22 @@ export async function requireModuleView(
 }
 
 /**
- * ¿La sesión puede ver el perfil de `targetMemberId`? Sí cuando es su propio
- * perfil o un integrante de su familia; cualquier otro perfil exige permiso
- * de módulo miembros con alcance más allá de 'own' (decisión 2026-06-11:
- * el padrón es solo para coordinaciones/dirección/admin).
+ * ¿La sesión puede ver el perfil de `targetMemberId`?
+ *
+ * Tres caminos, y ninguno abre el padrón:
+ *   · es su propio perfil;
+ *   · es alguien de su familia;
+ *   · es alguien de un comité que ESA PERSONA ENCARGA (2026-09-22).
+ *
+ * El tercero existe porque el rol `lider_comite` promete "su comité y sus
+ * miembros" y hasta hoy eso no se verificaba contra nada: el alcance
+ * 'committee' colaba por `beyondOwn` y entregaba el padrón entero. Ahora el
+ * comité se comprueba de verdad, y se deriva de los PUESTOS —igual que la
+ * estrellita de SRV-5— así que también alcanza a quien encarga un comité sin
+ * tener el rol escrito.
+ *
+ * Cualquier otro perfil sigue exigiendo alcance 'all' sobre `miembros`, que es
+ * lo que decide el llamador.
  */
 export async function canViewMemberProfile(ctx: AuthContext, targetMemberId: string): Promise<boolean> {
   if (!ctx.memberId) return false
@@ -142,9 +155,20 @@ export async function canViewMemberProfile(ctx: AuthContext, targetMemberId: str
   const { data: own } = await admin
     .from('family_members').select('family_unit_id').eq('member_id', ctx.memberId)
   const unitIds = (own ?? []).map(r => (r as { family_unit_id: string }).family_unit_id)
-  if (unitIds.length === 0) return false
-  const { data: shared } = await admin
-    .from('family_members').select('member_id')
-    .in('family_unit_id', unitIds).eq('member_id', targetMemberId).limit(1)
-  return (shared ?? []).length > 0
+  if (unitIds.length > 0) {
+    const { data: shared } = await admin
+      .from('family_members').select('member_id')
+      .in('family_unit_id', unitIds).eq('member_id', targetMemberId).limit(1)
+    if ((shared ?? []).length > 0) return true
+  }
+  return await compartenComiteGestionado(ctx.memberId, targetMemberId)
+}
+
+/** ¿`targetMemberId` sirve en algún comité que `memberId` encarga? */
+async function compartenComiteGestionado(memberId: string, targetMemberId: string): Promise<boolean> {
+  const { getManageableCommitteeIds, getCommitteeIdsOfMember } =
+    await import('@/lib/supabase/queries/servers')
+  const mios = await getManageableCommitteeIds(memberId)
+  if (!mandaEnAlgunComite(mios)) return false
+  return puedeVerFichaPorComite(mios, await getCommitteeIdsOfMember(targetMemberId))
 }

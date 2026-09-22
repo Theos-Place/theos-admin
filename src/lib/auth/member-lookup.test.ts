@@ -30,9 +30,22 @@ describe('quién puede el padrón completo', () => {
     expect(puedeElPadron('dirigente')).toBe(false)
   })
 
+  it('EL LÍDER DE COMITÉ TAMPOCO — su alcance es su comité, no el padrón', () => {
+    // Reportado el 2026-09-22: alguien con lider_comite buscó a una persona
+    // cualquiera y le abrió la ficha completa. Su permiso sobre `miembros` es
+    // de alcance 'committee', pero `beyondOwn` solo excluía 'own', así que
+    // pasaba — y con él la lista completa, el export, los conteos y la ficha
+    // de cualquiera. Eran 29 personas.
+    //
+    // Este test AFIRMABA que sí podía: el bug estaba escrito acá adentro y por
+    // eso nadie lo vio. Lo que su rol sí le da —su comité y su gente— se
+    // resuelve en lib/auth/mando-de-comite.ts, verificando el comité de verdad.
+    expect(puedeElPadron('lider_comite')).toBe(false)
+  })
+
   it('sí pueden las coordinaciones, staff, comunicaciones, finanzas y dirección', () => {
     for (const r of ['coordinador_estudios', 'coordinador_dirigentes', 'coordinador_servidores',
-      'encargado_staff', 'comunicaciones', 'finanzas', 'editor_perfiles', 'lider_comite',
+      'encargado_staff', 'comunicaciones', 'finanzas', 'editor_perfiles',
       'direccion', 'admin', 'solo_lectura'] as RoleId[]) {
       expect(puedeElPadron(r)).toBe(true)
     }

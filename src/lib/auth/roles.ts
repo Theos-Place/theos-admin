@@ -226,7 +226,13 @@ export function hasModulePermission(
     return role?.permissions.some(p =>
       (p.module === 'all' || wanted.includes(p.module))
       && p.actions.includes(action as never)
-      && (!opts.beyondOwn || p.scope !== 'own'))
+      // `beyondOwn` = puede ver a CUALQUIERA del padrón, y eso es alcance
+      // 'all'. Antes bastaba con "no ser own", así que el alcance 'committee'
+      // de lider_comite abría el padrón entero: la lista, el export, los
+      // conteos y la ficha de cualquier persona. Eran 29 personas (2026-09-22).
+      // Un alcance acotado no es un padrón chiquito: es otra cosa, y se
+      // resuelve donde corresponde — ver lib/auth/mando-de-comite.ts.
+      && (!opts.beyondOwn || p.scope === 'all'))
   })
 }
 

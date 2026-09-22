@@ -88,14 +88,18 @@ function MiComiteContenido() {
   // comité. El encargado sigue viendo los suyos y nada más — el servidor lo
   // vuelve a comprobar, esto solo decide si se dibuja el selector.
   const esAmplio = roles.some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
-  const esLider = roles.includes('lider_comite') || esAmplio
   const [comiteElegido, setComiteElegido] = useUrlFilter('comite')
 
   const [soloPendientes, setSoloPendientes] = useState(false)
 
   // LINT-1: la carga se DERIVA de la clave de la petición, en vez de encender y
   // apagar `cargando` dentro del efecto.
-  const clave = loaded && esLider ? `mi-comite:${comiteElegido}` : ''
+  // Se pide SIEMPRE y el servidor decide. Antes esta pantalla exigía el rol
+  // `lider_comite` para siquiera preguntar, y por eso George Vivas —encargado
+  // de dos comités, sin ese rol— veía "Acceso restringido" en su propia
+  // pantalla (2026-09-22). Quién encarga un comité se sabe mirando los PUESTOS,
+  // y eso el navegador no lo tiene: solo el servidor puede contestarlo.
+  const clave = loaded ? `mi-comite:${comiteElegido}` : ''
   const { datos, cargando, error } = useCargaRemota<{ comites: Comite[] }>(
     clave,
     async () => {
@@ -119,7 +123,8 @@ function MiComiteContenido() {
   // Hasta que carguen los roles no se sabe si tiene permiso: pintar "Acceso
   // restringido" antes deja un parpadeo rojo en cada carga (ver usePermissions).
   if (!loaded) return null
-  if (!esLider) {
+  // El 403 lo manda el servidor cuando no encarga ningún comité.
+  if (error?.includes('No autorizado')) {
     return <EmptyState icon={Users} title="Acceso restringido" description="Esta pantalla es para los encargados de comité." />
   }
 

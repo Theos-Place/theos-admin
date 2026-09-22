@@ -4,6 +4,7 @@ import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-
 import { todayCR } from '@/lib/format'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
+import { reportarFalla } from '@/lib/observabilidad'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
 function one<T>(v: unknown): T | null {
@@ -994,6 +995,7 @@ export async function setEncargadoDeComite(
   if (plan.accion === 'bloqueado') throw new Error(ENCARGADO_UNICO_PUESTO)
   if (plan.accion === 'quitar') {
     for (const id of plan.puestos) await removeVolunteer(id, memberId, actorUserId)
+    await sincronizarRolDeLider(memberId)
     return
   }
 
@@ -1014,6 +1016,39 @@ export async function setEncargadoDeComite(
     .update({ max_volunteers: ocupantes })
     .eq('id', puestoId)
     .lt('max_volunteers', ocupantes)
+  await sincronizarRolDeLider(memberId)
+}
+
+/**
+ * El rol `lider_comite` sigue a la ESTRELLITA, no al revés.
+ *
+ * Los dos datos existían por separado y se desincronizaron: el 2026-09-22 había
+ * 17 personas con la estrellita sin el rol, y por eso George Vivas —encargado
+ * de dos comités— veía "Acceso restringido" en Mi comité. Cada vez que la
+ * estrella se pone o se quita, el rol se recalcula.
+ *
+ * Best-effort a propósito: si esto falla, la estrella YA quedó puesta y eso es
+ * lo que manda —la API de Mi comité mira los puestos, no el rol—. Reventar acá
+ * dejaría a la persona con el puesto a medias por un permiso que el sistema
+ * puede recalcular después.
+ */
+async function sincronizarRolDeLider(memberId: string): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const debeTenerlo = (await getManageableCommitteeIds(memberId)).length > 0
+    const { data: fila } = await supabase
+      .from('member_roles').select('id, is_active')
+      .eq('member_id', memberId).eq('role', 'lider_comite').maybeSingle()
+    const actual = fila as { id: string; is_active: boolean | null } | null
+    if (debeTenerlo === !!actual?.is_active) return
+    if (actual) {
+      await supabase.from('member_roles').update({ is_active: debeTenerlo }).eq('id', actual.id)
+    } else if (debeTenerlo) {
+      await supabase.from('member_roles').insert({ member_id: memberId, role: 'lider_comite', is_active: true })
+    }
+  } catch (e) {
+    reportarFalla('sincronizarRolDeLider:', e instanceof Error ? e.message : String(e), { memberId })
+  }
 }
 
 export async function removeVolunteer(positionId: string, memberId: string, actorUserId?: string): Promise<void> {
@@ -1119,4 +1154,31 @@ export async function rejectPositionRequest(id: string, reviewerId: string | nul
     status: 'rejected', reviewed_by: reviewerId, reviewed_at: new Date().toISOString(),
   }).eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Los comités en los que esta persona SIRVE (no los que encarga).
+ *
+ * Lo usa `canViewMemberProfile` para el permiso del encargado: hay que saber
+ * si la persona buscada pertenece a alguno de sus comités. Cuenta cualquier
+ * puesto activo, no solo los de encargado — la gente del comité es la gente
+ * del comité.
+ */
+export async function getCommitteeIdsOfMember(memberId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('volunteers')
+    .select('position:service_positions!inner(is_active, area:areas!service_positions_area_id_fkey(id, area_type, is_active))')
+    .eq('member_id', memberId)
+    .eq('status', 'active')
+  if (error) throw error
+  const ids = new Set<string>()
+  for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
+    const pos = one<{ is_active: boolean | null; area: unknown }>(fila.position)
+    if (!pos || pos.is_active === false) continue
+    const area = one<{ id: string; area_type: string; is_active: boolean | null }>(pos.area)
+    if (!area || area.area_type !== 'committee' || area.is_active === false) continue
+    ids.add(area.id)
+  }
+  return [...ids]
 }

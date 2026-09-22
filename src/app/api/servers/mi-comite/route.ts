@@ -5,6 +5,7 @@ import { getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
 import { getMiComite } from '@/lib/supabase/queries/mi-comite'
 import { comitesAConsultar } from '@/lib/servers/alcance-de-mi-comite'
 import { reportarError } from '@/lib/observabilidad'
+import { mandaEnAlgunComite } from '@/lib/auth/mando-de-comite'
 
 /**
  * GET: la gente de un comité y el estado de sus compromisos (SRV-4 / SRV-6).
@@ -17,11 +18,22 @@ import { reportarError } from '@/lib/observabilidad'
  * mismo que vería su encargado (SRV-6, 2026-09-21).
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireRoles('lider_comite', ...SERVICE_ADMIN_ROLES)
+  // Solo sesión: quién entra se decide abajo, y para eso hay que saber qué
+  // comités encarga —o sea, consultar los puestos—.
+  //
+  // BUG 2026-09-22: el guard exigía el ROL `lider_comite`, y George Vivas
+  // —encargado de dos comités— no lo tenía, así que recibía "acceso
+  // restringido" en su propia pantalla. Encargar un comité se deriva de los
+  // PUESTOS desde SRV-5; el rol es un dato aparte que se desincroniza. Manda
+  // el puesto.
+  const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
     const mios = auth.ctx.memberId ? await getManageableCommitteeIds(auth.ctx.memberId) : []
     const amplio = auth.ctx.roles.some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+    if (!amplio && !mandaEnAlgunComite(mios)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
     const alcance = comitesAConsultar({ propios: mios, amplio }, req.nextUrl.searchParams.get('committee_id'))
     if (!alcance.ok) return NextResponse.json({ error: 'Ese comité no es tuyo.' }, { status: 403 })
     const comites = await Promise.all(alcance.comites.map(async id => ({ id, ...(await getMiComite(id)) })))
