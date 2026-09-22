@@ -53,6 +53,10 @@ export async function GET(req: NextRequest) {
       visitas: a.visitas,
       telefono: puedeVerContacto ? a.telefono : null,
       email: puedeVerContacto ? a.email : null,
+      // La edad NO va detrás del permiso de contacto: no es un dato para
+      // localizar a nadie, es para saber a quién se está llamando. Quien ve el
+      // reporte ya ve el nombre y la sede.
+      edad: a.edad ?? null,
     })
 
     const conHistoria = asistentes(deEstaSemana)

@@ -268,11 +268,13 @@ export async function getAsistentesDeLaSemana(
   const filas = await todasLasFilas<{
     member_id: string; nombre: string; telefono: string | null
     email: string | null; sedes: string[] | null; regreso: string | null; visitas: number | null
+    edad: number | null
   }>((d: number, h: number) => supabase.rpc('report_asistentes_de_la_semana', { p_desde: desde, p_hasta: hasta })
     .order('member_id').range(d, h))
   return (filas as Array<{
     member_id: string; nombre: string; telefono: string | null
     email: string | null; sedes: string[] | null; regreso: string | null; visitas: number | null
+    edad: number | null
   }>).map(r => ({
     member_id: r.member_id,
     nombre: r.nombre,
@@ -282,6 +284,7 @@ export async function getAsistentesDeLaSemana(
     sedes: (r.sedes ?? []).map(sedeFromTitle),
     regreso: r.regreso,
     visitas: Number(r.visitas ?? 0),
+    edad: r.edad,
   }))
 }
 

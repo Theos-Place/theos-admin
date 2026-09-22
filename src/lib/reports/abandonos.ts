@@ -114,6 +114,10 @@ export type AsistenteDeLaSemana = {
   regreso: string | null
   /** Total histórico de check-ins a charlas. */
   visitas: number
+  /** Años cumplidos, o null si la ficha no tiene fecha de nacimiento (51 de
+   *  913 en la semana que se midió). Va calculada desde la base: la lista se
+   *  usa para LLAMAR, y no es lo mismo llamar a un chico de 15 que a un adulto. */
+  edad?: number | null
 }
 
 export type Abandono = AsistenteDeLaSemana & {

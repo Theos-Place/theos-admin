@@ -19,6 +19,8 @@ type Persona = {
   telefono: string | null
   email: string | null
   volvioEl?: string | null
+  /** Años cumplidos, o null si la ficha no tiene fecha de nacimiento. */
+  edad?: number | null
 }
 
 type Respuesta = {
@@ -50,6 +52,10 @@ function columnas(conContacto: boolean, conRegreso: boolean): ColumnDef<Persona>
       { key: 'email', label: 'Email', defaultVisible: true, exportValue: p => p.email ?? '' },
     )
   }
+  // La edad va al final y SIN depender del permiso de contacto: no sirve para
+  // localizar a nadie, sirve para saber a quién se está llamando — no es lo
+  // mismo marcarle a un chico de 15 que a un adulto.
+  base.push({ key: 'edad', label: 'Edad', defaultVisible: true, exportValue: p => (p.edad != null ? String(p.edad) : '') })
   return base
 }
 
@@ -142,6 +148,9 @@ function Lista({
                         <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body">{p.email ?? '—'}</td>
                       </>
                     )}
+                    <td className="px-3 py-2 text-[13px] text-navy-light/80 font-body tabular-nums">
+                      {p.edad != null ? p.edad : '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
