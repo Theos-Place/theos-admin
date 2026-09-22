@@ -2219,45 +2219,29 @@ depende de SEC-4.
 | Registrar donaciones | ya existía; se le agregó la infografía | finanzas, dirección |
 | Me asignaron una beca | `me-asignaron-una-beca.md` | **pública** |
 
-**Dos cosas que salieron de leer el código y no coincidían con el ítem.**
+El artículo 4 explica dónde aparece la casilla, qué pasa si la beca cubre el
+total, la diferencia entre beca asignada y código, y qué hacer si uno se
+matriculó ANTES de que le dieran la beca (ahí sí lo resuelve finanzas).
 
-**1. El miembro NO ingresa ningún cupón.** El ítem pedía documentar "al pagar la
-matrícula dónde ingreso el cupón". Ese lugar no existe. `apply-scholarship`
-tiene un solo llamador —la cola de revisión de pagos— y exige permiso de `becas`
-o `revision_pagos`: **la beca la aplica finanzas**, no el miembro. En "Mis
-pagos" la sección "Mis becas" es de solo lectura.
+**Una corrección mía, anotada porque el error es instructivo.** Reporté que el
+miembro no podía aplicar su beca en ningún lado: busqué `apply-scholarship`, vi
+que su único llamador era la cola de revisión de finanzas, y concluí que el
+miembro no tenía dónde. **Era falso.** El miembro la aplica en la pantalla de
+confirmación de la matrícula y de la inscripción a eventos, con una casilla
+«Usar mi beca (X de descuento)» que además **viene marcada por defecto**
+(`matricula/page.tsx`, `useEventRegistration.tsx`, contra
+`/api/scholarships/applicable`). Y si no tiene beca asignada, ahí mismo hay un
+campo para un código de cupón.
 
-Por eso el artículo 4 documenta lo que de verdad pasa, que además es lo que la
-gente necesita saber: **tu cobro sigue mostrando el monto completo** hasta que
-finanzas revise tu pago y aplique la beca. Sin eso, alguien con beca paga el
-precio entero y después hay que tramitarle una devolución.
+Buscar por el nombre del endpoint no alcanzaba: la matrícula aplica la beca al
+CREAR el cobro, mandando `scholarship_id` en el enroll, no llamando a
+`apply-scholarship` después. La ruta de finanzas es el camino de rescate para
+cuando el cobro ya existe.
 
-**2. La UI y el correo le dicen al miembro que él la aplica, y es mentira.**
-"Mis pagos" dice «se aplica automáticamente al pagar» y la plantilla
-`beca_aprobada` dice «un descuento que podés aplicar al momento de hacer tu
-pago». Las dos frases prometen algo que no ocurre: no hay automatismo y el
-miembro no tiene dónde aplicarla. Queda como DAT-14, abajo.
-
-### [ ] DAT-14 · A quien tiene beca le decimos que la aplica él, y no es así
-
-Dos textos se lo prometen:
-
-- **"Mis pagos"**, sección Mis becas: «se aplica automáticamente al pagar».
-  No hay nada automático — la aplica una persona de finanzas.
-- **Plantilla `beca_aprobada`** (y `beca_aprobada_parcial`): «Se te asignó un
-  descuento de {{descuento}} que podés aplicar al momento de hacer tu pago».
-  El miembro no tiene dónde aplicarlo.
-
-El riesgo concreto: alguien con beca ve su cobro por el monto completo, cree que
-el descuento ya debería estar, y paga de más. Después hay que tramitarle una
-devolución.
-
-Dos salidas, y es decisión de producto:
-
-- **Arreglar el texto** (barato): que digan que finanzas la aplica al revisar el
-  pago. Es lo que ya dice el artículo nuevo de ayuda.
-- **Arreglar el sistema** (caro): aplicar la beca sola al crear el cobro, o
-  darle al miembro dónde hacerlo. Es lo que los textos prometen hoy.
+O sea que los textos que yo había marcado como mentirosos —«se aplica
+automáticamente al pagar» en Mis pagos, y «podés aplicar al momento de hacer tu
+pago» en la plantilla `beca_aprobada`— **son correctos**. No hay nada que
+arreglar ahí.
 
 
 **Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
