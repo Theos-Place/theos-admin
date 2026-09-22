@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar,
+  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar, encolarPendientes,
 } from './contacto-en-la-puerta'
 
 const HOY = '2026-09-22'
@@ -89,5 +89,40 @@ describe('puedeGuardar · la decisión del servidor', () => {
   it('un valor vacío no es un guardado', () => {
     expect(puedeGuardar({ ...adulta, email: null }, 'email', '   ', HOY))
       .toEqual({ ok: false, motivo: 'vacio' })
+  })
+})
+
+describe('encolarPendientes', () => {
+  const p = (id: string, email = true) => ({ id, name: id, pedir: { email, phone: false } })
+
+  it('agrega al final: se atiende en el orden en que pasaron por la puerta', () => {
+    expect(encolarPendientes([p('a')], [p('b'), p('c')]).map(x => x.id))
+      .toEqual(['a', 'b', 'c'])
+  })
+
+  it('no encola a quien no hay nada que pedirle', () => {
+    expect(encolarPendientes([], [{ id: 'a', name: 'A', pedir: { email: false, phone: false } }]))
+      .toEqual([])
+  })
+
+  it('no repite a quien ya está en la cola', () => {
+    // Con el QR es fácil escanear dos veces a la misma persona.
+    expect(encolarPendientes([p('a')], [p('a')]).map(x => x.id)).toEqual(['a'])
+  })
+
+  it('tampoco repite dentro del mismo lote', () => {
+    expect(encolarPendientes([], [p('a'), p('a')]).map(x => x.id)).toEqual(['a'])
+  })
+
+  it('devuelve el MISMO array si no hay nada que agregar', () => {
+    // Para no provocar un render por cada check-in de alguien con sus datos.
+    const actual = [p('a')]
+    expect(encolarPendientes(actual, [])).toBe(actual)
+    expect(encolarPendientes(actual, [p('a')])).toBe(actual)
+  })
+
+  it('una familia de cuatro entra completa', () => {
+    const familia = [p('mama'), p('papa'), p('hijo1'), p('hijo2')]
+    expect(encolarPendientes([], familia)).toHaveLength(4)
   })
 })

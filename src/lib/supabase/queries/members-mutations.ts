@@ -6,6 +6,7 @@ import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
 import { casoDeVinculo, type CasoDeVinculo } from '@/lib/members/fusion-familias'
 import { reportarFalla } from '@/lib/observabilidad'
+import { pedirContacto } from '@/lib/events/contacto-en-la-puerta'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
  *  campos que no existen en la tabla o que no deben tocarse por este camino). */
@@ -427,7 +428,13 @@ export async function unlinkFamilyMember(ownerId: string, linkMemberId: string):
 }
 
 /** Devuelve los OTROS integrantes de la(s) familia(s) de un miembro (para check-in). */
-export async function getMemberFamily(memberId: string): Promise<Array<{ member_id: string; name: string; relation: string }>> {
+/** CHK-5: `falta_contacto` viaja resuelto por el servidor, igual que en
+ *  /lookup — la puerta necesita saber a quién pedirle el correo, no la fecha
+ *  de nacimiento de la familia entera. */
+export async function getMemberFamily(memberId: string): Promise<Array<{
+  member_id: string; name: string; relation: string
+  falta_contacto: { email: boolean; phone: boolean }
+}>> {
   const supabase = createAdminClient()
   // Unidades familiares a las que pertenece el miembro.
   const { data: own, error: oErr } = await supabase
@@ -440,19 +447,40 @@ export async function getMemberFamily(memberId: string): Promise<Array<{ member_
 
   const { data, error } = await supabase
     .from('family_members')
-    .select('member_id, relation, member:members!family_members_member_id_fkey(first_name, last_name)')
+    .select('member_id, relation, member:members!family_members_member_id_fkey(first_name, last_name, email, phone, birth_date, datos_protegidos)')
     .in('family_unit_id', unitIds)
     .neq('member_id', memberId)
   if (error) throw error
 
-  const rows = (data ?? []) as Array<{ member_id: string; relation: string; member: { first_name: string; last_name: string } | null }>
+  type FilaFamiliar = {
+    member_id: string; relation: string
+    member: {
+      first_name: string; last_name: string
+      email: string | null; phone: string | null
+      birth_date: string | null; datos_protegidos: boolean | null
+    } | null
+  }
+  const rows = (data ?? []) as Array<FilaFamiliar>
   // Dedupe por member_id (puede aparecer en varias unidades).
   const seen = new Set<string>()
-  const out: Array<{ member_id: string; name: string; relation: string }> = []
+  const out: Array<{
+    member_id: string; name: string; relation: string
+    falta_contacto: { email: boolean; phone: boolean }
+  }> = []
   for (const r of rows) {
     if (seen.has(r.member_id)) continue
     seen.add(r.member_id)
-    out.push({ member_id: r.member_id, name: `${r.member?.first_name ?? ''} ${r.member?.last_name ?? ''}`.trim(), relation: r.relation })
+    out.push({
+      member_id: r.member_id,
+      name: `${r.member?.first_name ?? ''} ${r.member?.last_name ?? ''}`.trim(),
+      relation: r.relation,
+      falta_contacto: pedirContacto({
+        birth_date: r.member?.birth_date ?? null,
+        datos_protegidos: r.member?.datos_protegidos ?? null,
+        email: r.member?.email ?? null,
+        phone: r.member?.phone ?? null,
+      }),
+    })
   }
   return out
 }

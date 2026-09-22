@@ -24,6 +24,7 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { todayCR } from '@/lib/format'
+import { encolarPendientes, type PendienteDeContacto } from '@/lib/events/contacto-en-la-puerta'
 import {
   marcaEnLaBusqueda, textoYaRegistrado, textoDeshacer, textoQrRepetido,
   esYaRegistrado, type CheckinExistente,
@@ -121,13 +122,27 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
   // flujo de la fila: se puede ignorar y seguir registrando gente.
   const [docCapture, setDocCapture] = useState<{ id: string; name: string } | null>(null)
-  // CHK-5: a quién hay que pedirle el correo. Lo decide el SERVIDOR y viene en
-  // el lookup ya resuelto — la puerta no recibe la fecha de nacimiento.
-  const [contactCapture, setContactCapture] = useState<
-    { id: string; name: string; pedir: { email: boolean; phone: boolean } } | null>(null)
+  // CHK-5: a quién hay que pedirle el correo. Lo decide el SERVIDOR y viene ya
+  // resuelto en /lookup y en /family — la puerta no recibe la fecha de
+  // nacimiento de nadie.
+  //
+  // Es una COLA y no una persona porque el check-in en familia registra a
+  // varios de una: si fuera una sola, de una familia de cuatro se le pediría el
+  // dato a uno y los otros tres se perderían en silencio. Se atiende de a uno
+  // —la fila sigue avanzando y dos formularios apilados la trancan— y cerrar
+  // pasa al siguiente.
+  const [colaDeContacto, setColaDeContacto] = useState<PendienteDeContacto[]>([])
+  const contactCapture = colaDeContacto[0] ?? null
+  const siguienteContacto = () => setColaDeContacto(prev => prev.slice(1))
+  const encolarContacto = (p: PendienteDeContacto[]) =>
+    setColaDeContacto(prev => encolarPendientes(prev, p))
   const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
-  const [familyCheckin, setFamilyCheckin] = useState<{ member: { id: string; name: string }; family: { member_id: string; name: string; relation: string }[] } | null>(null)
+  const [familyCheckin, setFamilyCheckin] = useState<{
+    member: { id: string; name: string }
+    family: { member_id: string; name: string; relation: string
+              falta_contacto?: { email: boolean; phone: boolean } }[]
+  } | null>(null)
   const [checkingFamily, setCheckingFamily] = useState(false)
   // Persona NO inscrita en un evento pago (los 3 métodos convergen acá). En
   // Fase 2 abre el modal de cobro en sitio; en Fase 1 avisa de forma consistente.
@@ -361,7 +376,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         return
       }
       const mem = res?.ok
-        ? ((await res.json().catch(() => null))?.members ?? [])[0] as { first_name: string; last_name: string; birth_md?: string | null } | undefined
+        ? ((await res.json().catch(() => null))?.members ?? [])[0] as {
+            first_name: string; last_name: string; birth_md?: string | null
+            falta_contacto?: { email: boolean; phone: boolean }
+          } | undefined
         : undefined
       // Sin nombre se sigue igual. Solo se corta si el lookup respondió BIEN y
       // dijo que ese id no es de nadie: ahí el QR sí está mal.
@@ -382,6 +400,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         // Se registró sin haber podido leer el nombre: se refresca para que la
         // lista muestre a quién, en vez de dejar "Persona registrada".
         if (!mem) void refetch()
+        // CHK-5: el panel se queda abierto mientras la cámara sigue escaneando.
+        // No estorba —es una tarjeta más en la columna— y si el operador sigue
+        // sin atenderlo, los siguientes se apilan en la cola.
+        if (mem?.falta_contacto) encolarContacto([{ id: memberId, name, pedir: mem.falta_contacto }])
       }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
       else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }, 'qr') }
@@ -431,7 +453,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   // Al elegir un miembro existente: si tiene familia, ofrecer registrar a todos.
-  async function handleSelectMember(member: { id: string; name: string; birth_md?: string | null }) {
+  async function handleSelectMember(member: {
+    id: string; name: string; birth_md?: string | null
+    falta_contacto?: { email: boolean; phone: boolean }
+  }) {
     // Ya registrado: se muestra el estado y no se intenta de nuevo. El servidor
     // igual devuelve el 409 informativo si el estado local está viejo.
     const ya = checkinPorMiembro.get(member.id)
@@ -486,8 +511,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     if (faltaDocumento && r === 'ok') setDocCapture(member)
     // El documento tiene prioridad si faltan los dos: es un panel a la vez,
     // porque la fila sigue avanzando y dos formularios apilados la trancan.
-    if (!faltaDocumento && r === 'ok' && (faltaContacto?.email || faltaContacto?.phone)) {
-      setContactCapture({ ...member, pedir: faltaContacto })
+    if (!faltaDocumento && r === 'ok' && faltaContacto) {
+      encolarContacto([{ ...member, pedir: faltaContacto }])
     }
   }
 
@@ -500,6 +525,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     if (!familyCheckin) return
     setCheckingFamily(true)
     const notRegistered: string[] = []
+    // CHK-5: a quiénes se les va a pedir el contacto. Se arma ANTES de limpiar
+    // `familyCheckin`, que es de donde sale el dato de cada familiar.
+    const faltantes = new Map<string, { email: boolean; phone: boolean }>()
+    for (const f of familyCheckin.family) {
+      if (f.falta_contacto) faltantes.set(f.member_id, f.falta_contacto)
+    }
+    const delTitular = memberResults.find(m => m.id === familyCheckin.member.id)?.falta_contacto
+    if (delTitular) faltantes.set(familyCheckin.member.id, delTitular)
+    const registrados: Array<{ id: string; name: string; pedir: { email: boolean; phone: boolean } }> = []
     for (const e of entries) {
       // La calidad viaja POR PERSONA: a una mamá servidora con dos hijos
       // participantes hay que poder marcarla como lo que es. Antes este modal
@@ -508,10 +542,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       // como servidores nunca (reportado 2026-09-18).
       const r = await persistCheckin({ id: e.id, name: e.name }, e.tipo, 'manual', e.sub_event_id)
       if (r === 'not_registered') notRegistered.push(e.name)
+      // Solo a quien SÍ quedó registrado: el endpoint exige check-in de hoy.
+      const pedir = r === 'ok' ? faltantes.get(e.id) : undefined
+      if (pedir) registrados.push({ id: e.id, name: e.name, pedir })
     }
     setCheckingFamily(false)
     setFamilyCheckin(null)
     setQuery('')
+    encolarContacto(registrados)
     if (notRegistered.length > 0) {
       setScanMsg({ kind: 'error', text: `Sin inscripción en este evento pago: ${notRegistered.join(', ')}. Cobralos por separado.` })
     }
@@ -693,6 +731,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-sm)]">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-[13px] text-navy-light/80 font-body">
+                  {colaDeContacto.length > 1 && (
+                    <span className="mr-1.5 rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-display tracking-wide text-navy">
+                      1 de {colaDeContacto.length}
+                    </span>
+                  )}
                   <span className="font-medium text-navy">{contactCapture.name}</span>{' '}
                   {contactCapture.pedir.email && contactCapture.pedir.phone
                     ? 'no tiene correo ni teléfono registrados. Si los tenés a mano, aprovechá — es opcional.'
@@ -701,7 +744,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                       : 'no tiene teléfono registrado. Si lo tenés a mano, podés agregarlo — es opcional.'}
                 </p>
                 <button
-                  onClick={() => setContactCapture(null)}
+                  onClick={siguienteContacto}
                   aria-label="Cerrar captura de contacto"
                   className="shrink-0 rounded-lg p-1 text-navy-light/80 transition-colors hover:bg-navy/5 hover:text-navy"
                 >
@@ -721,7 +764,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                           phone: (m.falta_contacto?.phone ?? false) && !guardado.phone,
                         } }
                       : m)))
-                    setContactCapture(null)
+                    siguienteContacto()
                   }}
                 />
               </div>

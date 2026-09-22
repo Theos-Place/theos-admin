@@ -109,3 +109,39 @@ export const MENSAJE_RECHAZO: Record<RechazoDeGuardado, string> = {
  *  puerta no tiene por qué ver el padrón (mismo criterio que DAT-10). */
 export const MENSAJE_CORREO_DUPLICADO =
   'Ese correo ya está registrado a nombre de otra persona. Confirmá el dato con ella.'
+
+/** Una persona esperando que le pidan el dato. */
+export type PendienteDeContacto = {
+  id: string
+  name: string
+  pedir: { email: boolean; phone: boolean }
+}
+
+/**
+ * La cola del panel de la puerta.
+ *
+ * ES UNA COLA Y NO UNA PERSONA porque el check-in en familia registra a varios
+ * de una: con una sola, de una familia de cuatro se le pediría el dato a uno y
+ * los otros tres se perderían en silencio. Se atiende de a uno —la fila sigue
+ * avanzando y dos formularios apilados la trancan— y cerrar pasa al siguiente.
+ *
+ * Deja fuera a quien no tiene nada que pedir, y no repite a quien ya está: con
+ * el QR es fácil escanear dos veces a la misma persona, y verla aparecer dos
+ * veces parece un error de la pantalla.
+ */
+export function encolarPendientes(
+  actual: PendienteDeContacto[],
+  nuevos: PendienteDeContacto[],
+): PendienteDeContacto[] {
+  const ya = new Set(actual.map(x => x.id))
+  const utiles: PendienteDeContacto[] = []
+  for (const n of nuevos) {
+    if (!n.pedir.email && !n.pedir.phone) continue
+    if (ya.has(n.id)) continue
+    ya.add(n.id)
+    utiles.push(n)
+  }
+  // Devuelve el MISMO array si no hay nada que agregar: en React eso evita un
+  // render de más por cada check-in de alguien que ya tiene sus datos.
+  return utiles.length > 0 ? [...actual, ...utiles] : actual
+}
