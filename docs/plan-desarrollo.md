@@ -137,16 +137,32 @@ resulta que prefiere el hotmail, se desbloquea y se le mueve el vínculo.
 Verificado contra la base: las dos consultas que los encontraron —cuentas que
 apuntan a otra ficha, y cuentas sin ficha— quedaron en cero.
 
-### [ ] DAT-12 · La validación de correo duplicado choca con FAM-2
+### [x] DAT-12 · El menor que no tiene a quién asociarle la cuenta — HECHO 2026-09-22
 
-Hoy crear o editar con un correo que ya existe en otra ficha devuelve 409, un
-bloqueo duro. Eso impide lo que FAM-2 sí quiere: **que un menor lleve el correo
-de su papá**. Hoy no se puede hacer desde la pantalla.
+**El pedido era otro y el problema de fondo apareció al mirarlo.** Esto nació
+como "aflojar el bloqueo de correo duplicado para que un menor pueda llevar el
+del papá". Pero en los casos que lo motivaron —Lucía y Naomy Sánchez Arguedas—
+**el papá no tiene ficha**. No hay a quién asociarlas. Aflojar la validación no
+resolvía nada: lo que falta es el adulto.
 
-Opciones: relajarlo a advertencia (deja pasar todos los duplicados, incluidos los
-accidentales) o permitirlo **solo cuando la persona es menor**, que mantiene el
-bloqueo donde importa y abre exactamente el caso legítimo. Me inclino por la
-segunda.
+Decisión del usuario (2026-09-22): en vez de tocar la validación, **avisar en el
+check-in**. Cualquier menor que pase por la puerta sin ningún adulto activo en
+su familia levanta un aviso en coral, para que el operador pregunte con quién
+viene mientras la persona todavía está ahí.
+
+**Solo avisa, no captura.** Vincular familias es trabajo de padrón y necesita
+otro permiso; dárselo a la puerta para resolver esto sería abrir mucho más de lo
+que el problema pide.
+
+Reusa la cola de CHK-5 y sale en los tres caminos. Tiene prioridad sobre el
+aviso de contacto y sobre el de documento: de los tres es el más grave.
+
+**Medido:** 297 menores activos sin ningún adulto, pero solo ~5 por semana pasan
+por la puerta. Verificado contra la base que Lucía y Naomy salen marcadas.
+
+**La validación de correo duplicado NO se tocó** y sigue siendo un 409 duro. Si
+algún día aparece un menor que sí tiene al papá con ficha y hay que darle su
+correo, ahí se retoma — pero no era este caso.
 
 ### [x] EVE-13 · Semillitas: los dos eventos se quedan — DECIDIDO 2026-09-21
 
