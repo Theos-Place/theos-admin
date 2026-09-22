@@ -105,8 +105,9 @@ export type DbGroupEnriched = {
     member: { first_name: string; last_name: string; phone?: string | null; birth_date?: string | null } | null
   }>
   /** Porcentaje de asistencia por member_id. Lo calcula getGroupById aparte:
-   *  no sale de un embed porque hay que contar sobre las sesiones del grupo. */
-  asistencia?: { pct: Map<string, number> }
+   *  no sale de un embed porque hay que contar sobre las sesiones del grupo.
+   *  Objeto plano y NO Map: esto viaja por JSON hasta el cliente. */
+  asistencia?: { pct: Record<string, number> }
 }
 
 // ── Queries ────────────────────────────────────────────────
@@ -557,8 +558,15 @@ export async function getGroupById(id: string): Promise<DbGroupEnriched | null> 
   return { ...(data as DbGroupEnriched), asistencia: await asistenciaDelGrupo(id) }
 }
 
-/** Presencias por miembro y cuántas sesiones hubo. Ver `asistencia-del-grupo`. */
-async function asistenciaDelGrupo(groupId: string): Promise<{ pct: Map<string, number> }> {
+/**
+ * Presencias por miembro. Ver `asistencia-del-grupo`.
+ *
+ * Devuelve un OBJETO PLANO y no el Map: la ruta del detalle manda este payload
+ * tal cual por JSON y el adapter corre en el CLIENTE. Un Map se serializa como
+ * `{}`, así que el `.get()` del adapter reventaba y la pantalla decía "Grupo no
+ * encontrado". Roto y arreglado el 2026-09-22, en la misma hora.
+ */
+async function asistenciaDelGrupo(groupId: string): Promise<{ pct: Record<string, number> }> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('study_sessions')
@@ -567,7 +575,7 @@ async function asistenciaDelGrupo(groupId: string): Promise<{ pct: Map<string, n
   if (error) throw error
   const sesiones = (data ?? []) as Array<{ id: string; study_attendance: Array<{ member_id: string; present: boolean }> }>
   const filas = sesiones.flatMap(s => s.study_attendance ?? [])
-  return { pct: porcentajesPorMiembro(filas, sesiones.length) }
+  return { pct: Object.fromEntries(porcentajesPorMiembro(filas, sesiones.length)) }
 }
 
 // ── Análisis de demanda: extraído a ./studies-demand. Re-exportado acá. ────────

@@ -106,7 +106,7 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
         // calcularlo "en la fase 2b". La barra mostraba 0% para todo el mundo y
         // lo destapó una dirigente el 2026-09-22 al pasar su primera lista.
         // Quien no tiene ninguna presencia no está en el mapa: eso es 0.
-        attendance_pct: db.asistencia?.pct.get(e.member_id) ?? 0,
+        attendance_pct: db.asistencia?.pct?.[e.member_id] ?? 0,
         // GRU-3 + 2026-09-22: la edad la pidió el dirigente, que no tiene
         // acceso al padrón y no puede mirarla en la ficha. Se manda calculada,
         // no la fecha: el año de nacimiento no hace falta para saber la edad

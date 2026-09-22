@@ -43,3 +43,29 @@ describe('porcentajesPorMiembro', () => {
     expect(porcentajesPorMiembro([{ member_id: 'x', present: false }], 3).has('x')).toBe(false)
   })
 })
+
+describe('el payload cruza JSON: nada de Map', () => {
+  // ROTO Y ARREGLADO EL 2026-09-22, EN LA MISMA HORA. La primera versión
+  // mandaba `asistencia.pct` como Map. La ruta del detalle devuelve el objeto
+  // del servidor TAL CUAL y el adapter corre en el CLIENTE, así que el Map
+  // llegaba como `{}`, el `.get()` reventaba y la pantalla decía "Grupo no
+  // encontrado" — un dirigente se quedó sin ver su grupo.
+  it('un Map NO sobrevive la serialización, un objeto sí', () => {
+    const mapa = porcentajesPorMiembro([{ member_id: 'a', present: true }], 1)
+    expect(JSON.parse(JSON.stringify({ pct: mapa })).pct).toEqual({})
+
+    const plano = Object.fromEntries(mapa)
+    expect(JSON.parse(JSON.stringify({ pct: plano })).pct).toEqual({ a: 100 })
+  })
+
+  it('leer el porcentaje del objeto plano da lo mismo que del Map', () => {
+    const filas = [
+      { member_id: 'a', present: true }, { member_id: 'b', present: false },
+    ]
+    const mapa = porcentajesPorMiembro(filas, 1)
+    const plano: Record<string, number> = Object.fromEntries(mapa)
+    // Así lo lee el adapter. Quien faltó no está, y eso es 0.
+    expect(plano['a'] ?? 0).toBe(100)
+    expect(plano['b'] ?? 0).toBe(0)
+  })
+})
