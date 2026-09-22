@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
-  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar, encolarPendientes, avisarMenorSinAdulto,
+  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar, encolarPendientes, avisarMenorSinAdulto, pedirDocumento,
+  MENSAJE_MENOR_SIN_ADULTO,
 } from './contacto-en-la-puerta'
 
 const HOY = '2026-09-22'
@@ -165,5 +166,37 @@ describe('DAT-12 · el menor sin adulto asociado', () => {
   it('tampoco se repite en la cola', () => {
     const uno = [{ id: 'x', name: 'Lucía', tipo: 'menor_sin_adulto' as const }]
     expect(encolarPendientes(uno, uno)).toBe(uno)
+  })
+})
+
+describe('pedirDocumento · solo a mayores de 18', () => {
+  const HOY2 = '2026-09-22'
+
+  it('al adulto sin cédula, sí', () => {
+    expect(pedirDocumento({ birth_date: '1990-01-01', tieneDocumento: false }, HOY2)).toBe(true)
+  })
+
+  it('AL MENOR NO — casi nunca tiene, y preguntarla en la fila hace perder tiempo', () => {
+    expect(pedirDocumento({ birth_date: '2012-01-01', tieneDocumento: false }, HOY2)).toBe(false)
+  })
+
+  it('sin fecha de nacimiento tampoco: no sabemos si es menor', () => {
+    expect(pedirDocumento({ birth_date: null, tieneDocumento: false }, HOY2)).toBe(false)
+  })
+
+  it('si ya la tiene, no se pide a nadie', () => {
+    expect(pedirDocumento({ birth_date: '1990-01-01', tieneDocumento: true }, HOY2)).toBe(false)
+  })
+
+  it('el día que cumple 18 empieza a pedirse', () => {
+    expect(pedirDocumento({ birth_date: '2008-09-22', tieneDocumento: false }, HOY2)).toBe(true)
+    expect(pedirDocumento({ birth_date: '2008-09-23', tieneDocumento: false }, HOY2)).toBe(false)
+  })
+})
+
+describe('el aviso del menor manda a soporte', () => {
+  it('dice a dónde escribir, o el operador no sabe qué hacer con el dato', () => {
+    expect(MENSAJE_MENOR_SIN_ADULTO).toContain('soporte@theosplace.org')
+    expect(MENSAJE_MENOR_SIN_ADULTO).toContain('vinculación')
   })
 })

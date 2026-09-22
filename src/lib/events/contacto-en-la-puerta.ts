@@ -141,8 +141,10 @@ export type PendienteDeContacto = {
  * Son 297 menores activos sin ningún adulto en su familia, pero solo unos 5 por
  * semana pasan por la puerta: el aviso no inunda a nadie.
  */
+export const CORREO_DE_SOPORTE = 'soporte@theosplace.org'
+
 export const MENSAJE_MENOR_SIN_ADULTO =
-  'es menor y no tiene ningún adulto asociado en el sistema. Preguntá con quién viene y pasá el dato: sin un adulto no se le puede dar acceso ni contactar a su familia.'
+  `es menor y no tiene ningún adulto asociado en el sistema. Preguntá con quién viene y mandá el nombre a ${CORREO_DE_SOPORTE} para que hagan la vinculación: sin un adulto no se le puede dar acceso ni contactar a su familia.`
 
 /** ¿Hay que avisar por este menor? */
 export function avisarMenorSinAdulto(
@@ -183,4 +185,25 @@ export function encolarPendientes(
   // Devuelve el MISMO array si no hay nada que agregar: en React eso evita un
   // render de más por cada check-in de alguien que ya tiene sus datos.
   return utiles.length > 0 ? [...actual, ...utiles] : actual
+}
+
+
+/**
+ * ¿Se le pide el DOCUMENTO en la puerta?
+ *
+ * Solo a los mayores de 18 (pedido del usuario, 2026-09-22). A un menor casi
+ * nunca se le saca cédula, así que preguntarla en la fila es hacer perder
+ * tiempo a los dos — y además es la señal que usamos para sospechar que una
+ * fecha de nacimiento está mal (ver FAM-2: "14 tienen cédula registrada").
+ * Llenarla desde acá ensuciaría esa señal.
+ *
+ * Mismo criterio conservador que el resto del módulo: sin fecha de nacimiento
+ * NO se pide, porque no sabemos si es menor.
+ */
+export function pedirDocumento(
+  f: FichaConEdad & { tieneDocumento: boolean },
+  hoy?: string,
+): boolean {
+  if (f.tieneDocumento) return false
+  return !!f.birth_date && !esMenor(f, hoy)
 }

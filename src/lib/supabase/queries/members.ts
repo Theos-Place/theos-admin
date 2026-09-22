@@ -7,7 +7,7 @@ import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
-import { pedirContacto, avisarMenorSinAdulto } from '@/lib/events/contacto-en-la-puerta'
+import { pedirContacto, avisarMenorSinAdulto, pedirDocumento } from '@/lib/events/contacto-en-la-puerta'
 import { conAdultoEnLaFamilia } from '@/lib/supabase/queries/members-mutations'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
@@ -1080,6 +1080,8 @@ export type FichaDeLookup = {
   falta_contacto: { email: boolean; phone: boolean }
   /** DAT-12: menor sin NINGÚN adulto en su familia. También resuelto acá. */
   menor_sin_adulto: boolean
+  /** Si hay que pedirle la cédula en la puerta: solo a mayores de 18. */
+  pedir_documento: boolean
 }
 
 export async function getMemberForLookupById(
@@ -1102,6 +1104,9 @@ export async function getMemberForLookupById(
     falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
     menor_sin_adulto: avisarMenorSinAdulto({
       birth_date, datos_protegidos, tieneAdultoEnLaFamilia: conAdulto.has(id),
+    }),
+    pedir_documento: pedirDocumento({
+      birth_date, tieneDocumento: !!String(resto.cedula ?? '').trim(),
     }),
   } as FichaDeLookup
 }
@@ -1141,6 +1146,9 @@ export async function searchMembersForLookup(
     falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
     menor_sin_adulto: avisarMenorSinAdulto({
       birth_date, datos_protegidos, tieneAdultoEnLaFamilia: conAdulto.has(resto.id as string),
+    }),
+    pedir_documento: pedirDocumento({
+      birth_date, tieneDocumento: !!String(resto.cedula ?? '').trim(),
     }),
   })) as Array<FichaDeLookup>
 }

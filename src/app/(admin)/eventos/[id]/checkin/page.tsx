@@ -119,6 +119,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
   const [memberResults, setMemberResults] = useState<{
     id: string; name: string; has_document?: boolean; birth_md?: string | null
+    pedir_documento?: boolean
     falta_contacto?: { email: boolean; phone: boolean }
     menor_sin_adulto?: boolean
   }[]>([])
@@ -222,7 +223,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           const list = (d.members ?? []) as Array<{
             id: string; first_name: string; last_name: string; cedula?: string | null
             birth_md?: string | null; falta_contacto?: { email: boolean; phone: boolean }
-            menor_sin_adulto?: boolean
+            menor_sin_adulto?: boolean; pedir_documento?: boolean
           }>
           // FIN-2: el lookup ya trae el documento; se conserva para marcar a
           // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
@@ -230,6 +231,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             id: m.id,
             name: `${m.first_name} ${m.last_name}`.trim(),
             has_document: !!String(m.cedula ?? '').trim(),
+            // FIN-2 + 2026-09-22: la cédula se pide SOLO a mayores de 18, y
+            // quién lo es lo decide el servidor (la puerta no recibe el año de
+            // nacimiento — ver CHK-2).
+            pedir_documento: m.pedir_documento === true,
             // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
             // para felicitar a alguien).
             birth_md: m.birth_md ?? null,
@@ -507,7 +512,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     // FIN-2 (3): ¿le faltaba documento? Se resuelve ANTES de limpiar la
     // búsqueda, que es de donde viene el dato.
     const fila = memberResults.find(m => m.id === member.id)
-    const faltaDocumento = fila?.has_document === false
+    const faltaDocumento = fila?.pedir_documento === true
     // CHK-5: mismo momento y mismo criterio que el documento.
     const faltaContacto = fila?.falta_contacto
     const menorSolo = fila?.menor_sin_adulto === true
@@ -736,7 +741,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   submitLabel="Guardar documento"
                   onSaved={() => {
                     setMemberResults(prev => prev.map(m => (
-                      m.id === docCapture.id ? { ...m, has_document: true } : m
+                      m.id === docCapture.id ? { ...m, has_document: true, pedir_documento: false } : m
                     )))
                     setDocCapture(null)
                   }}
@@ -859,7 +864,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     </p>
                     <p className="text-navy-light/80 text-[13px] font-body">
                       {registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}
-                      {r.has_document === false && (
+                      {r.pedir_documento === true && (
                         <span className="ml-2 rounded-md bg-navy/5 px-1.5 py-0.5 text-[11px] text-navy-light/80">
                           sin documento
                         </span>
