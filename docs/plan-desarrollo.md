@@ -2466,15 +2466,18 @@ El test que prohíbe `console.error` suelto en `src/app/api` sigue vigilando eso
 — con el comentario actualizado, porque su razón cambió: ya no es que
 `onRequestError` no dispare, es no perder el embudo.
 
-### [~] OPS-1 · Healthchecks manda 30-40 correos al día — DIAGNOSTICADO 2026-09-22
+### [~] OPS-1 · Healthchecks: 30-40 correos al día — CAUSA ENCONTRADA Y CONFIGURADO 2026-09-22
 
-**La causa no era el período de los checks: es que solo UNO de los 16 crons
-tiene su variable configurada en Vercel.**
+**La causa no era el período de los checks: era que solo UNO de los 16 crons
+tenía su variable configurada en Vercel.**
 
-`vercel env ls production` devuelve exactamente una: `HEALTHCHECK_URL_SCHEDULED_BROADCASTS`.
-Las otras quince no existen, y `pingHealthcheck` es no-op sin variable — o sea
-que **quince crons no pingean nada**. Los checks que estén creados en
-healthchecks.io para ellos nunca reciben un ping.
+Cuando se diagnosticó, `vercel env ls production` devolvía exactamente una,
+`HEALTHCHECK_URL_SCHEDULED_BROADCASTS`. Las otras quince no existían, y
+`pingHealthcheck` es no-op sin variable — o sea que **quince crons no pingeaban
+nada** y sus checks nunca recibían un ping.
+
+**Ya están las 16** (verificado el mismo día). Queda mirar unos días si el
+volumen de correos bajó de verdad: eso solo se sabe con el tiempo pasando.
 
 Y el único que sí pingea es **el que corre cada hora**. Ahí está el volumen: 24
 pings al día, y si el período/grace de ese check es ajustado, el atraso normal de
