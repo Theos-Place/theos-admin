@@ -123,3 +123,28 @@ describe('la edad en el roster (2026-09-22)', () => {
     }
   })
 })
+
+describe('el estudiante no ve columnas de gestión (2026-09-22)', () => {
+  // Reportado abriendo el grupo como estudiante: le salía la columna
+  // "Acciones" VACÍA —todos los botones de adentro son de gestión— y el botón
+  // de "ver 2 retirados", que es información de sus compañeros.
+  it('verDatosDeGestion es lo que decide, y el estudiante no lo tiene', () => {
+    expect(permisosDelRoster('member').verDatosDeGestion).toBe(false)
+    expect(permisosDelRoster('none').verDatosDeGestion).toBe(false)
+    expect(permisosDelRoster('leader').verDatosDeGestion).toBe(true)
+    expect(permisosDelRoster('admin').verDatosDeGestion).toBe(true)
+  })
+
+  it('y el servidor ya le recortaba la nota, así que la columna sobraba', () => {
+    const fila = {
+      id: 'e1', member_id: 'm1', status: 'enrolled', grade: 90, notes: 'aprobado',
+      member: { first_name: 'Ana', last_name: 'Ruiz', phone: '8888', birth_date: '1990-01-01' },
+    }
+    const [paraElEstudiante] = recortarRoster([fila], 'member')
+    expect(paraElEstudiante.grade).toBeUndefined()
+    expect(paraElEstudiante.notes).toBeUndefined()
+    // Lo que sí ve: con quién lleva el grupo.
+    expect(paraElEstudiante.member?.first_name).toBe('Ana')
+    expect(paraElEstudiante.member?.phone).toBeUndefined()
+  })
+})

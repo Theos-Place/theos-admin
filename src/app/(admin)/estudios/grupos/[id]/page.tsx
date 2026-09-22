@@ -794,7 +794,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <p className="text-sm text-navy-light/80 font-body">
                 {enrolled.length} inscritos de {group.max_capacity} lugares
               </p>
-              {textoRetirados && (
+              {/* Al ESTUDIANTE no se le ofrece. Quién se retiró del grupo es
+                  información de gestión: a él no le sirve para nada y son
+                  compañeros suyos. Reportado el 2026-09-22. */}
+              {permisos.verDatosDeGestion && textoRetirados && (
                 <button
                   onClick={() => setMostrarRetirados(v => !v)}
                   aria-pressed={mostrarRetirados}
@@ -836,8 +839,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     permisos.verEdad ? 'Edad' : '',
                     'Estado',
                     'Asistencia',
-                    studyType?.requires_grade ? 'Nota' : '',
-                    'Acciones',
+                    // La nota tampoco: el servidor ya la recorta para el
+                    // estudiante (recortarRoster), así que la columna le salía
+                    // llena de guiones. Mismo defecto que el de abajo.
+                    studyType?.requires_grade && permisos.verDatosDeGestion ? 'Nota' : '',
+                    // Para el estudiante la columna salía VACÍA: todos los
+                    // botones de adentro son de gestión, así que veía un
+                    // encabezado "Acciones" sobre una franja en blanco.
+                    permisos.verDatosDeGestion ? 'Acciones' : '',
                   ].filter(Boolean).map(h => (
                     <th
                       key={h}
@@ -912,75 +921,77 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     <td className="px-4 py-3">
                       <AttendanceBar pct={p.attendance_pct} />
                     </td>
-                    {studyType?.requires_grade && (
+                    {studyType?.requires_grade && permisos.verDatosDeGestion && (
                       <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                         {p.grade ?? '—'}
                       </td>
                     )}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {/* Inscripción que quedó sin resultado al cerrarse el
-                            grupo. Solo lo ven los roles que pueden resolverla. */}
-                        {p.status === 'en_revision' && (
-                          <ResolverInscripcion
-                            groupId={id}
-                            memberId={p.member_id}
-                            memberName={p.member_name}
-                            onResuelto={() => refetch()}
-                          />
-                        )}
-                        {/* Mover de grupo es de COORDINACIÓN, no del dirigente:
-                            mueve plata. Para él existe la solicitud de
-                            reubicación, que pasa por coordinación.
-                            STUDY_ADMIN y no canManageGroups: este último
-                            incluye editor_grupos_estudio, que veía el botón y
-                            se comía un 403 del API. */}
-                        {puedeMover && group.status !== 'finalizado'
-                          && p.status !== 'withdrawn' && p.enrollment_id && (
-                          <button
-                            onClick={() => setMoverTarget({ enrollment_id: p.enrollment_id!, member_name: p.member_name })}
+                    {permisos.verDatosDeGestion && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {/* Inscripción que quedó sin resultado al cerrarse el
+                              grupo. Solo lo ven los roles que pueden resolverla. */}
+                          {p.status === 'en_revision' && (
+                            <ResolverInscripcion
+                              groupId={id}
+                              memberId={p.member_id}
+                              memberName={p.member_name}
+                              onResuelto={() => refetch()}
+                            />
+                          )}
+                          {/* Mover de grupo es de COORDINACIÓN, no del dirigente:
+                              mueve plata. Para él existe la solicitud de
+                              reubicación, que pasa por coordinación.
+                              STUDY_ADMIN y no canManageGroups: este último
+                              incluye editor_grupos_estudio, que veía el botón y
+                              se comía un 403 del API. */}
+                          {puedeMover && group.status !== 'finalizado'
+                            && p.status !== 'withdrawn' && p.enrollment_id && (
+                            <button
+                              onClick={() => setMoverTarget({ enrollment_id: p.enrollment_id!, member_name: p.member_name })}
+                              className="rounded-lg px-2 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+                            >
+                              Mover de grupo…
+                            </button>
+                          )}
+                          {/* Sacar del grupo es de COORDINACIÓN (decisión del
+                              usuario, 2026-09-10). Antes bastaba con no ser
+                              de solo lectura, así que el dirigente del grupo
+                              podía hacerlo — y sacar a alguien le toca su
+                              matrícula y su pago. Para el dirigente existe la
+                              solicitud de reubicación. */}
+                          {puedeMover && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
+                            <button
+                              onClick={() => {
+                                setWithdrawError(false); setWithdrawReason('')
+                                // El default es 'cancelar': sacar a alguien por
+                                // error es más frecuente que un retiro real, y
+                                // es la opción que NO le escribe nada en el
+                                // expediente. Si de verdad se retiró, se marca.
+                                setTipoBaja('cancelar')
+                                setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name, enrollment_id: p.enrollment_id })
+                              }}
+                              className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
+                            >
+                              Sacar del grupo
+                            </button>
+                          )}
+                          {/* GRU-3: el dirigente NO entra al perfil de sus
+                              estudiantes. El servidor ya se lo negaba
+                              (canViewMemberProfile pide módulo miembros más allá
+                              de 'own'), así que el enlace solo llevaba a un 403;
+                              ahora directamente no se ofrece. */}
+                          {permisos.verPerfil && (
+                          <Link
+                            href={`/miembros/${p.member_id}`}
                             className="rounded-lg px-2 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
                           >
-                            Mover de grupo…
-                          </button>
-                        )}
-                        {/* Sacar del grupo es de COORDINACIÓN (decisión del
-                            usuario, 2026-09-10). Antes bastaba con no ser
-                            de solo lectura, así que el dirigente del grupo
-                            podía hacerlo — y sacar a alguien le toca su
-                            matrícula y su pago. Para el dirigente existe la
-                            solicitud de reubicación. */}
-                        {puedeMover && group.status !== 'finalizado' && p.status !== 'withdrawn' && (
-                          <button
-                            onClick={() => {
-                              setWithdrawError(false); setWithdrawReason('')
-                              // El default es 'cancelar': sacar a alguien por
-                              // error es más frecuente que un retiro real, y
-                              // es la opción que NO le escribe nada en el
-                              // expediente. Si de verdad se retiró, se marca.
-                              setTipoBaja('cancelar')
-                              setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name, enrollment_id: p.enrollment_id })
-                            }}
-                            className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
-                          >
-                            Sacar del grupo
-                          </button>
-                        )}
-                        {/* GRU-3: el dirigente NO entra al perfil de sus
-                            estudiantes. El servidor ya se lo negaba
-                            (canViewMemberProfile pide módulo miembros más allá
-                            de 'own'), así que el enlace solo llevaba a un 403;
-                            ahora directamente no se ofrece. */}
-                        {permisos.verPerfil && (
-                        <Link
-                          href={`/miembros/${p.member_id}`}
-                          className="rounded-lg px-2 py-1 text-[11px] text-navy-light border hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-                        >
-                          Perfil
-                        </Link>
-                        )}
-                      </div>
-                    </td>
+                            Perfil
+                          </Link>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
