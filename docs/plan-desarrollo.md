@@ -58,24 +58,33 @@
 Nada de esto es trabajo que yo pueda arrancar solo: necesitan que alguien
 decida. EVE-13, DAT-11 y DAT-13 ya se resolvieron.
 
-### [~] SEC-4 · Las cuentas de PRUEBA — DECIDIDO 2026-09-22, se borran después de los videos
+### [x] SEC-4 · Las cuentas de PRUEBA — BORRADAS 2026-09-22
 
-17 fichas `[prueba]` y 7 cuentas de auth con correo `@prueba.theosplace.invalid`,
-sin bloquear. Comparten la contraseña `Prueba.Agosto.2026`, que estaba escrita en
-el artículo del centro de ayuda borrado el 2026-09-21.
+Se esperó a terminar los videos de AYU-3 y se borró todo el set. Verificado
+contra la base: **cero** fichas con `[prueba]` en el nombre, cero correos
+`@prueba.theosplace.invalid`, cero cuentas de auth de prueba, cero external_id
+`PRUEBA-*`, cero grupos, eventos y puestos marcados.
 
-**Las dos decisiones del usuario, tomadas el 2026-09-22:**
+Con eso muere también el riesgo de la contraseña compartida —la que estuvo
+publicada en el centro de ayuda y se decidió no rotar—: ya no hay ninguna
+cuenta que la use.
 
-- **Las cuentas se quedan**, porque los videos que faltan de AYU-3 las necesitan:
-  el grabador (`scripts/tutoriales/lib.ts`) se NIEGA a correr si la cuenta no
-  contiene `@prueba.`, y quedan 24 artículos sin video.
-- **La contraseña NO se rota.** Se preguntó explícitamente y la respuesta fue
-  dejarla. Queda anotado para que no se vuelva a proponer.
+**Dos cosas que el limpiador oficial no hizo, y quedan anotadas por si se
+vuelve a sembrar:**
 
-**Lo único que falta es borrarlas cuando los videos estén listos**, y eso ya está
-resuelto: `scripts/limpiar-datos-de-prueba.ts`, con dry-run por defecto y un
-guard que se niega si algún objeto no trae el marcador `[prueba]`. El seed
-(`scripts/seed-datos-de-prueba.ts`) las vuelve a crear si hacen falta otra vez.
+1. **`auth.admin.deleteUser` falló en las cinco cuentas** (`⚠ auth ...: {}`),
+   que es el mismo 500 de AUTH-1. Las fichas se borraron y las cuentas quedaron
+   huérfanas; hubo que borrarlas por SQL directo.
+2. **Nueve fichas `SRV Sirve` / `SRV No Sirve` / `SRV Inactivo`** —triplicadas—
+   no las veía: el script identifica por `external_id` con prefijo `PRUEBA-` y
+   esas lo tenían en null. Venían de otro script de pruebas. Si el limpiador se
+   va a usar de nuevo, conviene que también mire el marcador `[prueba]` del
+   nombre y el dominio del correo, no solo el external_id.
+
+**Consecuencia a tener presente:** los 13 tutoriales viejos ya no se pueden
+regrabar sin volver a correr `scripts/seed-datos-de-prueba.ts`. Los cuatro de
+AYU-3 sí, porque sus datos los arman `datos-beca.ts` y `datos-finanzas.ts`, que
+crean lo mínimo y lo borran solos.
 
 ### [x] DAT-11 · Nueve correos en dos fichas a la vez — HECHO 2026-09-21
 
