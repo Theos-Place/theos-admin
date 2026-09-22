@@ -14,8 +14,11 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { formatMoney } from '@/lib/format'
+import { formatMoney, formatDate } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
+import {
+  planInstallments, FREQUENCIES, FREQUENCY_LABEL, type PlanFrequency,
+} from '@/lib/finance/installments'
 
 type PaymentConcept = 'matricula' | 'folletos' | 'evento'
 type QueueStatus = 'pendiente' | 'en_revision' | 'cerrado'
@@ -82,7 +85,11 @@ type PaymentReviewQueueProps = {
 }
 
 // FIN-4: estado del panel "Convertir en arreglo de pago".
-type PlanPanel = { installments: number; firstDue: string; notes: string; busy: boolean }
+// FIN-8: `frequency` — mensual o cada 15 días.
+type PlanPanel = {
+  installments: number; firstDue: string; notes: string
+  frequency: PlanFrequency; busy: boolean
+}
 
 // BEC-1: estado del panel "Aplicar beca / cupón" dentro del detalle.
 type ScholarshipPanel = {
@@ -297,7 +304,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   }
 
   // FIN-4: parte el pago pendiente en tractos. El primero puede vencer hoy o
-  // más adelante; los siguientes van mes a mes.
+  // más adelante; los siguientes van según la frecuencia (FIN-8).
   async function createPlan(row: QueueRow, panel: PlanPanel) {
     setPlanPanel(p => p ? { ...p, busy: true } : p)
     try {
@@ -306,6 +313,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
         body: JSON.stringify({
           installments: panel.installments,
           first_due: panel.firstDue,
+          frequency: panel.frequency,
           notes: panel.notes.trim() || undefined,
         }),
       })
@@ -692,6 +700,9 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       // acordar el arreglo con el primer pago en el momento.
                       firstDue: new Date().toISOString().slice(0, 10),
                       notes: '',
+                      // Mensual por defecto: es lo que había antes de FIN-8 y
+                      // lo que se pacta casi siempre.
+                      frequency: 'mensual',
                       busy: false,
                     })}
                     className="text-[13px] text-navy underline decoration-navy/30 hover:decoration-navy font-body"
@@ -726,6 +737,39 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                         />
                       </div>
+                      <div className="space-y-1">
+                        <label htmlFor="plan-frecuencia" className="block text-[13px] text-navy-light/80 font-display">Frecuencia</label>
+                        <select
+                          id="plan-frecuencia"
+                          value={planPanel.frequency}
+                          onChange={e => setPlanPanel(p => p ? { ...p, frequency: e.target.value as PlanFrequency } : p)}
+                          className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                        >
+                          {FREQUENCIES.map(f => <option key={f} value={f}>{FREQUENCY_LABEL[f]}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    {/* FIN-8 · Las fechas ANTES de confirmar. Sin esto hay que
+                        crear el arreglo para enterarse de cuándo vence cada
+                        tracto, y deshacerlo no es gratis: el primer tracto
+                        REUSA el pago original. Se calculan con la misma función
+                        que usa el servidor, así que no pueden discrepar. */}
+                    <div className="rounded-xl bg-surface-low/60 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1">
+                        Vencimientos
+                      </p>
+                      <p className="text-[13px] text-navy font-body">
+                        {planInstallments({
+                          total: detail.amount, count: planPanel.installments,
+                          firstDue: planPanel.firstDue, currency: detail.currency,
+                          frequency: planPanel.frequency,
+                        // formatDate y NO el fmtDate de arriba: ese hace
+                        // `new Date('2026-01-20')`, que es medianoche UTC y en
+                        // Costa Rica (UTC-6) se pinta como el 19. Para una
+                        // fecha sin hora hay que pasar por parseFlexibleDate.
+                        }).map(t => `${formatDate(t.due_date)} · ${money(t.amount, detail.currency)}`).join('   ·   ')
+                          || 'Revisá el número de tractos y la fecha.'}
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <label htmlFor="plan-notas" className="block text-[13px] text-navy-light/80 font-display">Notas (opcional)</label>

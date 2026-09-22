@@ -4,7 +4,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/validate'
 import { createPaymentPlan, getPlanForPayment, getPlanInstallments } from '@/lib/supabase/queries/payment-plans'
-import { MIN_INSTALLMENTS, MAX_INSTALLMENTS } from '@/lib/finance/installments'
+import { MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCIES } from '@/lib/finance/installments'
 import { reportarError } from '@/lib/observabilidad'
 
 // Arreglo de pago en tractos sobre un pago PENDIENTE (FIN-4). Uso interno: solo
@@ -13,6 +13,8 @@ const PLAN_ROLES = ['finanzas', 'direccion', 'admin'] as const
 
 const bodySchema = z.object({
   installments: z.number().int().min(MIN_INSTALLMENTS).max(MAX_INSTALLMENTS),
+  // FIN-8. Opcional: sin esto el arreglo sale mensual, como siempre.
+  frequency: z.enum(FREQUENCIES).optional(),
   // Vencimiento del primer tracto; los demás van mes a mes desde ahí.
   first_due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD'),
   notes: z.string().trim().max(500).optional(),
@@ -61,7 +63,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const result = await createPaymentPlan(
       id,
-      { installments: parsed.data.installments, firstDue: parsed.data.first_due, notes: parsed.data.notes ?? null },
+      {
+        installments: parsed.data.installments,
+        firstDue: parsed.data.first_due,
+        notes: parsed.data.notes ?? null,
+        frequency: parsed.data.frequency,
+      },
       auth.ctx.memberId,
     )
 

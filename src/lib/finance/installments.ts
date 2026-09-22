@@ -60,6 +60,50 @@ export function monthlyDueDates(firstDue: string, count: number): string[] {
   return out
 }
 
+/**
+ * Vencimientos QUINCENALES: cada 15 días exactos desde el primero.
+ *
+ * "Quincenal" tiene dos lecturas y esta elige la simple a propósito: cada 15
+ * días corridos, no los días 15 y 30 de cada mes. La otra obliga a decidir qué
+ * pasa en febrero y en los meses de 31, y genera intervalos desiguales (del 30
+ * al 15 hay 16 días, del 15 al 30 hay 15). Con 15 corridos la persona sabe
+ * siempre cuándo le toca: dos semanas después de la anterior.
+ *
+ * Si finanzas algún día pide los días fijos del mes, se agrega otra frecuencia
+ * en vez de cambiar esta — habría arreglos vivos con la regla vieja.
+ */
+export function biweeklyDueDates(firstDue: string, count: number): string[] {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDue)) return []
+  if (!Number.isInteger(count) || count < 1) return []
+
+  const [y, m, d] = firstDue.split('-').map(Number)
+  // En UTC y sumando días al epoch: así el cruce de mes y de año lo resuelve el
+  // calendario y no una cuenta a mano. Nada de horario local — un arreglo que
+  // vence el 1.º no puede correrse al 31 por la zona horaria (Costa Rica es
+  // UTC-6 y `new Date('YYYY-MM-DD')` es medianoche UTC).
+  const base = Date.UTC(y, m - 1, d)
+  const out: string[] = []
+  for (let i = 0; i < count; i++) {
+    out.push(new Date(base + i * 15 * 86400000).toISOString().slice(0, 10))
+  }
+  return out
+}
+
+/** Cada cuánto vencen los tractos. */
+export type PlanFrequency = 'mensual' | 'quincenal'
+export const FREQUENCIES: PlanFrequency[] = ['mensual', 'quincenal']
+export const FREQUENCY_LABEL: Record<PlanFrequency, string> = {
+  mensual: 'Mensual',
+  quincenal: 'Quincenal (cada 15 días)',
+}
+
+/** Los vencimientos según la frecuencia. */
+export function dueDates(firstDue: string, count: number, frequency: PlanFrequency = 'mensual'): string[] {
+  return frequency === 'quincenal'
+    ? biweeklyDueDates(firstDue, count)
+    : monthlyDueDates(firstDue, count)
+}
+
 export type PlannedInstallment = { number: number; amount: number; due_date: string }
 
 /** Los tractos listos para insertar: número, monto y vencimiento. */
@@ -68,9 +112,11 @@ export function planInstallments(input: {
   count: number
   firstDue: string
   currency?: string | null
+  /** FIN-8. Default 'mensual' para no romper a quien ya llamaba sin esto. */
+  frequency?: PlanFrequency
 }): PlannedInstallment[] {
   const amounts = splitAmount(input.total, input.count, input.currency ?? 'CRC')
-  const dates = monthlyDueDates(input.firstDue, input.count)
+  const dates = dueDates(input.firstDue, input.count, input.frequency ?? 'mensual')
   if (amounts.length !== input.count || dates.length !== input.count) return []
   return amounts.map((amount, i) => ({ number: i + 1, amount, due_date: dates[i] }))
 }

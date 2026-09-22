@@ -13,7 +13,9 @@
 //    condonar está "Cerrar sin cobrar" de cada pago.
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS } from '@/lib/finance/installments'
+import {
+  planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
+} from '@/lib/finance/installments'
 
 export type PaymentPlan = {
   id: string
@@ -24,6 +26,7 @@ export type PaymentPlan = {
   currency: string
   installments: number
   status: 'activo' | 'completado' | 'cancelado'
+  frequency: PlanFrequency
   notes: string | null
   created_at: string
 }
@@ -50,7 +53,11 @@ export type PaymentPlanInstallment = {
  */
 export async function createPaymentPlan(
   paymentId: string,
-  opts: { installments: number; firstDue: string; notes?: string | null },
+  opts: {
+    installments: number; firstDue: string; notes?: string | null
+    /** FIN-8. Default 'mensual': los llamadores viejos no cambian. */
+    frequency?: PlanFrequency
+  },
   createdByMemberId: string | null,
 ): Promise<{ plan: PaymentPlan; installments: PaymentPlanInstallment[] }> {
   const supabase = createAdminClient()
@@ -84,8 +91,9 @@ export async function createPaymentPlan(
 
   const total = Number(p.amount)
   const currency = p.currency ?? 'CRC'
+  const frequency: PlanFrequency = opts.frequency ?? 'mensual'
   const tractos = planInstallments({
-    total, count: opts.installments, firstDue: opts.firstDue, currency,
+    total, count: opts.installments, firstDue: opts.firstDue, currency, frequency,
   })
   // Con montos muy chicos no se puede repartir (ej. ₡2 en 3 tractos).
   if (tractos.length !== opts.installments) throw new Error('MONTO_INSUFICIENTE')
@@ -100,6 +108,7 @@ export async function createPaymentPlan(
       total_amount: total,
       currency,
       installments: opts.installments,
+      frequency,
       notes: opts.notes?.trim() || null,
       created_by: createdByMemberId,
     })

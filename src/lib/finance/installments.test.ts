@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  splitAmount, monthlyDueDates, planInstallments, isOverdue, overdueBlockMessage,
-  financeOverdueSummary,
+  splitAmount, monthlyDueDates, planInstallments, isOverdue, overdueBlockMessage, financeOverdueSummary, biweeklyDueDates, dueDates,
 } from './installments'
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
@@ -181,5 +180,95 @@ describe('financeOverdueSummary', () => {
     ])
     expect(r.totals).toContain('+')
     expect(r.members).toBe(2)
+  })
+})
+
+// ── FIN-8 · frecuencia quincenal ────────────────────────────────────────────
+describe('biweeklyDueDates', () => {
+  it('cada 15 días exactos desde el primero', () => {
+    expect(biweeklyDueDates('2026-01-05', 4))
+      .toEqual(['2026-01-05', '2026-01-20', '2026-02-04', '2026-02-19'])
+  })
+
+  it('cruza el fin de mes sin corrimientos', () => {
+    // Del 25 de enero: +15 = 9 de febrero, +30 = 24 de febrero.
+    expect(biweeklyDueDates('2026-01-25', 3))
+      .toEqual(['2026-01-25', '2026-02-09', '2026-02-24'])
+  })
+
+  it('cruza el fin de AÑO', () => {
+    expect(biweeklyDueDates('2026-12-20', 3))
+      .toEqual(['2026-12-20', '2027-01-04', '2027-01-19'])
+  })
+
+  it('aguanta el tope de 24 tractos sin desviarse', () => {
+    const d = biweeklyDueDates('2026-03-01', 24)
+    expect(d).toHaveLength(24)
+    // El último es exactamente 23 quincenas después: 345 días.
+    const dias = (Date.parse(d[23]) - Date.parse(d[0])) / 86400000
+    expect(dias).toBe(23 * 15)
+  })
+
+  it('el intervalo es SIEMPRE de 15 días, nunca 14 ni 16', () => {
+    // La otra lectura de "quincenal" —los días 15 y 30— da saltos desiguales.
+    // Esta no: el test lo fija para que nadie la cambie sin darse cuenta.
+    const d = biweeklyDueDates('2026-01-31', 12)
+    for (let i = 1; i < d.length; i++) {
+      expect((Date.parse(d[i]) - Date.parse(d[i - 1])) / 86400000, `tracto ${i}`).toBe(15)
+    }
+  })
+
+  it('febrero no lo descuadra (año bisiesto incluido)', () => {
+    expect(biweeklyDueDates('2028-02-20', 2)).toEqual(['2028-02-20', '2028-03-06'])
+  })
+
+  it('rechaza lo inválido igual que la mensual', () => {
+    expect(biweeklyDueDates('no-es-fecha', 3)).toEqual([])
+    expect(biweeklyDueDates('2026-01-05', 0)).toEqual([])
+    expect(biweeklyDueDates('2026-01-05', 1.5)).toEqual([])
+  })
+})
+
+describe('planInstallments con frecuencia', () => {
+  it('sin frecuencia sigue siendo MENSUAL — no se rompe quien ya llamaba', () => {
+    const sinNada = planInstallments({ total: 30000, count: 3, firstDue: '2026-01-10' })
+    const explicito = planInstallments({ total: 30000, count: 3, firstDue: '2026-01-10', frequency: 'mensual' })
+    expect(sinNada).toEqual(explicito)
+    expect(sinNada.map(t => t.due_date)).toEqual(['2026-01-10', '2026-02-10', '2026-03-10'])
+  })
+
+  it('quincenal reparte los mismos montos en otras fechas', () => {
+    const mensual = planInstallments({ total: 30000, count: 3, firstDue: '2026-01-10' })
+    const quincenal = planInstallments({ total: 30000, count: 3, firstDue: '2026-01-10', frequency: 'quincenal' })
+    expect(quincenal.map(t => t.amount)).toEqual(mensual.map(t => t.amount))
+    expect(quincenal.map(t => t.due_date)).toEqual(['2026-01-10', '2026-01-25', '2026-02-09'])
+  })
+
+  it('la suma sigue dando el total exacto con cualquier frecuencia', () => {
+    for (const frequency of ['mensual', 'quincenal'] as const) {
+      const t = planInstallments({ total: 100000, count: 7, firstDue: '2026-05-31', frequency })
+      expect(t.reduce((a, x) => a + x.amount, 0), frequency).toBe(100000)
+    }
+  })
+})
+
+describe('lo que consume los vencimientos no sabe de frecuencias', () => {
+  // FIN-8 pedía revisar que nada asumiera "un tracto por mes". No lo asume
+  // nadie: isOverdue y el resumen comparan FECHAS, no cuentan meses. Este test
+  // lo fija, porque el día que alguien meta aritmética de meses acá los
+  // arreglos quincenales se romperían en silencio.
+  it('isOverdue solo mira si la fecha ya pasó', () => {
+    const hoy = '2026-03-10'
+    // Dos tractos quincenales consecutivos: uno vencido, el otro no.
+    const [a, b] = biweeklyDueDates('2026-03-01', 2)   // 01-mar y 16-mar
+    expect(isOverdue({ due_date: a, status: 'pending' }, hoy)).toBe(true)
+    expect(isOverdue({ due_date: b, status: 'pending' }, hoy)).toBe(false)
+  })
+
+  it('un tracto ya pagado nunca está vencido, sea de la frecuencia que sea', () => {
+    for (const f of ['mensual', 'quincenal'] as const) {
+      const [d] = dueDates('2020-01-01', 1, f)
+      expect(isOverdue({ due_date: d, status: 'paid' }, '2026-03-10'), f).toBe(false)
+    }
   })
 })

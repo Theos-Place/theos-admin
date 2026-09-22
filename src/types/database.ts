@@ -2972,6 +2972,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          frequency: string
           enrollment_id: string | null
           event_registration_id: string | null
           id: string
@@ -2986,6 +2987,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          frequency?: string
           enrollment_id?: string | null
           event_registration_id?: string | null
           id?: string
@@ -3000,6 +3002,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          frequency?: string
           enrollment_id?: string | null
           event_registration_id?: string | null
           id?: string
