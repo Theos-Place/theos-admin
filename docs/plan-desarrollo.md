@@ -7,25 +7,31 @@
 
 ## Fase 0 — Operativo (sin código, sesión de configuración)
 
-- [ ] Agregar las env `HEALTHCHECK_URL_*` en Vercel. **La lista completa (16, una por cron)
-  quedó en `.env.example` con su horario al lado** — antes solo estaban 4 y por eso "las
-  faltantes" no se sabía cuáles eran. Crear un check por cron en healthchecks.io y pegar la
-  URL. Sin la variable el cron corre igual; solo no avisa si falla.
-  · `report-snapshots` **SÍ debe pingear** — decidido e implementado 2026-08-06: su modo de
-  fallo es silencioso (los reportes siguen abriendo, con datos viejos). Ya no queda ningún
-  cron sin ping, y hay un test que lo vigila (`src/lib/health.test.ts`).
-- [ ] Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`) — **solo falta pegar el
-  DSN**. El 2026-09-16 se cerró el hueco que lo volvía inútil: las 338 rutas de /api
-  atrapaban su propio error y devolvían un 500, así que Next nunca veía la excepción y
-  `onRequestError` no disparaba. Ahora todas pasan por `reportarError`/`reportarFalla`
-  (`src/lib/observabilidad.ts`), más 22 fallos silenciosos de `src/lib`. Sin DSN todo eso
-  es no-op, igual que antes. Crear el proyecto en sentry.io (plataforma Next.js) y pegar
-  el mismo DSN en las dos variables, solo en Production; después redeploy y verificar con
-  un error de prueba ANTES de apagar Observability Plus.
-- [ ] Copiar las env vars de Supabase a los deploys **Preview** de Vercel (hoy solo están en Production y los previews fallan).
-- [ ] Confirmar el SMTP de Supabase Auth.
-- [ ] Bajar el vencimiento del OTP a menos de 1 h en el panel de Supabase (lo sigue
-  reportando el linter: `auth_otp_long_expiry`, 2026-09-16).
+- [x] Agregar las env `HEALTHCHECK_URL_*` en Vercel — HECHO 2026-09-22. Los 16 checks
+  creados/actualizados en healthchecks.io con schedule tipo Cron (expresión de
+  vercel.json, timezone UTC) y grace 60 min los diarios / 30 min el horario
+  (scheduled-broadcasts, que corre `0 * * * *` — el comentario de .env.example decía
+  "cada 15 min" y era la causa de los 30-40 correos falsos/día, ver OPS-1). URLs
+  pegadas en Vercel como Secret, solo Production, con redeploy.
+  **Verificar al día siguiente**: todos los checks verdes y cero correos. Si alguno
+  queda rojo, es falla real del cron → parte b de OPS-1.
+- [x] Sentry — **DESCARTADO (decisión de Floriana 2026-09-22)**: se creó cuenta directa
+  en sentry.io pero el selector de plan solo mostraba Team/Business (el Developer gratis
+  queda escondido durante el trial) y se decidió no seguir. La cuenta se CERRÓ el mismo
+  día — no queda nada colgado ni riesgo de cobro. No hay integración instalada en Vercel
+  (verificado). Observability Plus (incluido en el plan de Vercel) cubre errores por ahora.
+  Si se retoma algún día: en sentry.io → Settings → Subscription existe el downgrade a
+  Developer (gratis, 5k errores/mes, 1 usuario). **El SDK se quitó del código el
+  2026-09-22** — ver OBS-2. Retomarlo no sería "pegar el DSN": habría que reinstalar
+  `@sentry/nextjs`, envolver `next.config.ts` con `withSentryConfig` (nunca estuvo, así
+  que los sourcemaps no se subían) y agregar `SENTRY_AUTH_TOKEN`/`ORG`/`PROJECT` además
+  del DSN. Todo eso se reconecta en un solo archivo: `src/lib/observabilidad.ts`.
+- [x] Copiar las env vars de Supabase a los deploys **Preview** de Vercel — YA ESTABAN
+  (verificado 2026-09-22: todas en Prod+Preview salvo `EMBED_ALLOWED_ORIGINS`, que es
+  solo-producción a propósito: controla quién puede incrustar el sitio).
+- [x] Confirmar el SMTP de Supabase Auth — HECHO 2026-09-22 (verificado con correo real).
+- [x] Bajar el vencimiento del OTP a menos de 1 h — HECHO 2026-09-22 (Email OTP
+  Expiration en el proveedor Email).
 
 ## Backlog (fases siguientes, requieren definición de producto)
 
@@ -2431,6 +2437,34 @@ ofrecer algo que después falla.
 `/api/members/[id]/family` también manda ahora `falta_contacto` resuelto por el
 servidor. La puerta sigue sin recibir la fecha de nacimiento ni el teléfono de
 nadie.
+
+### [x] OBS-2 · Quitado el SDK de Sentry — HECHO 2026-09-22
+
+Se decidió no usar Sentry, y sin DSN el SDK era no-op pero seguía costando:
+bundle del cliente, tiempo de build y una aprobación de install script para
+`@sentry/cli`.
+
+**Fuera:** `@sentry/nextjs`, `src/instrumentation.ts`,
+`src/instrumentation-client.ts` y las capturas de los tres error boundaries
+(`app/error.tsx`, `(admin)/error.tsx`, `ErrorBoundary.tsx`). El lockfile quedó
+con cero referencias a sentry y la aprobación de `@sentry/cli` se sacó de
+`allowScripts`, que ya no apuntaba a nada.
+
+`next.config.ts` no hubo que tocarlo: **nunca tuvo `withSentryConfig`**. Ese era
+el hallazgo que motivó todo esto — aunque se hubiera pegado el DSN, los
+sourcemaps no se subían y los stack traces del navegador habrían llegado
+minificados.
+
+**INTACTO el contrato de `src/lib/observabilidad.ts`.** `reportarError` y
+`reportarFalla` conservan su firma y sus ~360 llamadas no se tocaron. Por dentro
+quedan en `console.error`/`console.warn`, que es lo que lee Observability Plus.
+
+Y ahí está la razón de que el embudo siga existiendo aunque hoy solo haga un
+`console`: es el único punto por donde pasa todo. El día que se adopte un
+servicio de errores se reconecta ahí y quedan cubiertas las 338 rutas de una.
+El test que prohíbe `console.error` suelto en `src/app/api` sigue vigilando eso
+— con el comentario actualizado, porque su razón cambió: ya no es que
+`onRequestError` no dispare, es no perder el embudo.
 
 ### [~] OPS-1 · Healthchecks manda 30-40 correos al día — DIAGNOSTICADO 2026-09-22
 

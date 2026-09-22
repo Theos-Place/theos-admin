@@ -1,7 +1,6 @@
 'use client'
 
 import { Component, type ReactNode, type ErrorInfo } from 'react'
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 
 interface Props {
@@ -25,7 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    Sentry.captureException(error, { extra: { componentStack: info.componentStack } }) // no-op sin DSN
+    // El componentStack va junto al error y no en otra línea: separados, en
+    // los logs de Vercel quedan a metros uno del otro y hay que reconstruir
+    // cuál stack era de cuál error.
     console.error('[ErrorBoundary]', error, info.componentStack)
   }
 

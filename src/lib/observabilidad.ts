@@ -1,43 +1,44 @@
 /**
- * Reportar un error del servidor: al log Y a Sentry.
+ * Reportar un error del servidor. UN SOLO LUGAR por donde pasa todo.
  *
- * POR QUÉ HACE FALTA. Las 338 rutas de `/api` atrapan sus propios errores en un
- * `catch`, escriben un `console.error` y devuelven un 500 con un mensaje
- * humano. Eso está bien para quien usa la app, pero significa que Next NUNCA ve
- * la excepción — y el hook `onRequestError`, que es lo que conecta Next con
- * Sentry, solo se dispara con los errores que Next sí ve.
+ * POR QUÉ EXISTE. Las 338 rutas de `/api` atrapan sus propios errores en un
+ * `catch`, escriben el log y devuelven un 500 con un mensaje humano. Eso está
+ * bien para quien usa la app, pero significa que Next NUNCA ve la excepción:
+ * cualquier servicio de errores enchufado al hook `onRequestError` se quedaría
+ * vacío. Encendido y vacío es peor que apagado, porque da sensación falsa de
+ * cobertura. Por eso el reporte se hace acá, a mano, en el `catch`.
  *
- * O sea: con el DSN puesto y sin esto, Sentry no capturaría ni uno solo de los
- * errores de API. Estaría encendido y vacío, que es peor que apagado porque da
- * una sensación falsa de cobertura.
+ * HOY LA OBSERVABILIDAD SON LOS LOGS DE VERCEL. El 2026-09-22 se decidió no
+ * usar Sentry y se quitó el SDK: sin DSN era no-op, pero seguía costando bundle
+ * del cliente, tiempo de build y una aprobación de install script. Observability
+ * Plus, que ya viene en el plan de Vercel, cubre lo que hace falta.
  *
- * El `console.error` se conserva a propósito: los logs de Vercel siguen siendo
- * donde se mira en caliente, y Sentry es el que agrupa, cuenta y avisa.
+ * SI ALGÚN DÍA SE READOPTA UN SERVICIO DE ERRORES, SE RECONECTA ACÁ Y EN NINGÚN
+ * OTRO LADO. Las ~360 llamadas a `reportarError` y `reportarFalla` que hay en el
+ * código no se tocan: la firma es el contrato, y este archivo es la única
+ * implementación.
  */
-import * as Sentry from '@sentry/nextjs'
 
 /**
- * @param contexto  Qué ruta y método falló. Se usa tal cual en el log y, ya
- *                  sin los dos puntos finales, como etiqueta en Sentry para
- *                  poder filtrar por ruta.
+ * @param contexto  Qué ruta y método falló. Va tal cual en el log; también se
+ *                  normaliza con `etiquetaDeRuta` para poder agrupar por ruta.
  */
 export function reportarError(contexto: string, error: unknown, datos?: Datos): void {
   if (datos) console.error(contexto, error, datos)
   else console.error(contexto, error)
-  Sentry.captureException(error, { tags: { ruta: etiquetaDeRuta(contexto) }, extra: datos })
 }
 
 /**
  * Datos sueltos del caso concreto: el id del pago, el nombre del bloque.
  *
- * Van como `extra`, NUNCA como etiqueta. Sentry agrupa por etiqueta, así que un
- * id ahí crearía un grupo distinto por cada fila y el problema — que es uno
- * solo — se vería como mil incidentes de uno.
+ * Van aparte del contexto a propósito. Si algún día vuelve un agrupador, el
+ * contexto es la etiqueta y esto el detalle: un id como etiqueta crearía un
+ * grupo por fila y un problema —que es uno solo— se vería como mil incidentes.
  */
 export type Datos = Record<string, unknown>
 
-/** 'GET /api/members/[id]:' → 'GET /api/members/[id]'. Sentry no acepta
- *  etiquetas vacías ni demasiado largas, así que además se acota. */
+/** 'GET /api/members/[id]:' → 'GET /api/members/[id]'. Sin los dos puntos
+ *  finales y acotada: es la forma normalizada de nombrar una ruta. */
 export function etiquetaDeRuta(contexto: string): string {
   const limpio = contexto.trim().replace(/:$/, '').trim()
   return (limpio || 'sin-ruta').slice(0, 200)
@@ -47,18 +48,14 @@ export function etiquetaDeRuta(contexto: string): string {
  * Reportar un fallo que NO viene como excepción, sino como un motivo en texto:
  * una subida de comprobante que devolvió error, una invitación que no salió.
  *
- * Son fallos parciales — la operación principal sí tuvo éxito, así que la ruta
- * responde 200 y nadie se entera de que algo quedó a medias. Van a Sentry como
- * `warning`, no como error, para que no compitan con los 500 de verdad.
+ * Son fallos PARCIALES — la operación principal sí tuvo éxito, así que la ruta
+ * responde 200 y nadie se entera de que algo quedó a medias. Se distinguen de
+ * `reportarError` para que no compitan con los 500 de verdad.
  */
 export function reportarFalla(contexto: string, motivo: unknown, datos?: Datos): void {
-  if (datos) console.error(contexto, motivo, datos)
-  else console.error(contexto, motivo)
-  Sentry.captureMessage(`${etiquetaDeRuta(contexto)}: ${textoDelMotivo(motivo)}`, {
-    level: 'warning',
-    tags: { ruta: etiquetaDeRuta(contexto) },
-    extra: datos,
-  })
+  const linea = `${etiquetaDeRuta(contexto)}: ${textoDelMotivo(motivo)}`
+  if (datos) console.warn(linea, datos)
+  else console.warn(linea)
 }
 
 export function textoDelMotivo(motivo: unknown): string {

@@ -1,7 +1,6 @@
 'use client' // Los error boundaries deben ser Client Components
 
 import { useEffect } from 'react'
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 
 /** Error boundary del segmento admin: un throw en cualquier pantalla ya no
@@ -14,7 +13,6 @@ export default function AdminError({
   unstable_retry: () => void
 }) {
   useEffect(() => {
-    Sentry.captureException(error) // no-op sin NEXT_PUBLIC_SENTRY_DSN
     console.error('[admin/error]', error)
   }, [error])
 

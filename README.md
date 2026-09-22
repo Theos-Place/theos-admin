@@ -54,8 +54,10 @@ falta algo, el error dice exactamente qué. Usuarios de prueba:
   `Authorization: Bearer $CRON_SECRET` automáticamente; las rutas lo validan.
 - Cada cron hace ping a Healthchecks.io al terminar OK (variables
   `HEALTHCHECK_URL_*`) — si el ping no llega, alerta por correo.
-- Errores de producción: Sentry (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`);
-  sin DSN es no-op.
+- Errores de producción: los logs de Vercel (Observability Plus). Todo pasa por
+  `reportarError`/`reportarFalla` de `src/lib/observabilidad.ts` — ese es el
+  único embudo, y donde se reconectaría un servicio de errores si algún día se
+  adopta uno. El SDK de Sentry se quitó el 2026-09-22.
 - Cola de correos: edge function `process-email-queue` (Supabase) + plantillas
   del sistema en la BD.
 

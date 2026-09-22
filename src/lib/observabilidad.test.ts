@@ -11,7 +11,7 @@ describe('etiquetaDeRuta', () => {
   })
 
   it('un contexto vacío no produce una etiqueta vacía', () => {
-    // Sentry rechaza las etiquetas vacías y el evento se perdería entero.
+    // Una línea de log que empieza con ": " no dice de dónde salió el fallo.
     expect(etiquetaDeRuta('')).toBe('sin-ruta')
     expect(etiquetaDeRuta('  :  ')).toBe('sin-ruta')
   })
@@ -37,10 +37,12 @@ describe('textoDelMotivo', () => {
 })
 
 describe('contrato: ninguna ruta de API se queda con console.error a secas', () => {
-  // POR QUÉ ESTE TEST. Un `console.error` dentro del catch de una ruta se ve en
-  // los logs de Vercel y en ningún lado más: el handler devuelve un 500 propio,
-  // Next nunca ve la excepción y `onRequestError` no dispara. Así estuvieron
-  // ciegos 338 errores. Este test evita que la próxima ruta lo reintroduzca.
+  // POR QUÉ ESTE TEST. Hoy `reportarError` termina en un `console.error`, así
+  // que parece dar igual llamarlo o escribir el console a mano. No da igual: es
+  // el ÚNICO embudo. El día que se vuelva a enchufar un servicio de errores, se
+  // reconecta en `observabilidad.ts` y todas las rutas quedan cubiertas de una
+  // — menos las que se saltaron el embudo, que quedarían mudas sin que nadie lo
+  // note. Así estuvieron ciegos 338 errores antes.
   it('todas usan reportarError / reportarFalla', async () => {
     const { readdirSync, readFileSync } = await import('node:fs')
     const { join } = await import('node:path')

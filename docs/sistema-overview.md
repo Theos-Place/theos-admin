@@ -6,7 +6,7 @@
 
 **theos-admin** es el sistema administrativo de Theos Place: gestiona el padrón de miembros (~23k), estudios bíblicos y capacitaciones (planes, grupos, matrícula, folletos, bloques por cuatrimestre), eventos con check-in (170k+ check-ins históricos), estructura de servicio (áreas → comités → puestos → vacantes), empleados, finanzas (pagos, becas, donaciones, devoluciones), comunicaciones masivas por email, formularios, reportes y un centro de ayuda público con tutoriales grabados.
 
-**Stack:** Next.js 16 (App Router) en Vercel + Supabase (Postgres, Auth con MFA TOTP y passkeys, Storage). Email por AWS SES (SMTP/nodemailer) con webhook SNS para rebotes. Sentry para errores (pendiente de configurar en prod). Sin ORM: queries directas con `supabase-js` usando service role en `/api`, con adapters por dominio en `src/lib/*`.
+**Stack:** Next.js 16 (App Router) en Vercel + Supabase (Postgres, Auth con MFA TOTP y passkeys, Storage). Email por AWS SES (SMTP/nodemailer) con webhook SNS para rebotes. Errores a los logs de Vercel vía `lib/observabilidad.ts` (Sentry se descartó el 2026-09-22). Sin ORM: queries directas con `supabase-js` usando service role en `/api`, con adapters por dominio en `src/lib/*`.
 
 **Arquitectura de acceso:** tres grupos de rutas — `(admin)` protegido con sidebar, `(auth)` login/MFA/recuperación, `(public)` sin sesión (`/calendario`, `/vacantes`, `/completar-perfil`, `/terminos`, `/ayuda`). El middleware `src/proxy.ts` gatea sesión + MFA + CSP con nonce, pero **excluye `/api`**: cada handler API se autoriza solo con `requireRoles(...)` o `requireModuleView(...)` de `src/lib/auth/guard.ts` (regla de AGENTS.md). 106 páginas y 199 route handlers.
 
@@ -379,7 +379,6 @@ Permisos fuera del catálogo de roles: `event_managers` (gestionar UN evento) y 
 **Operativos (fuera del código, acciones del usuario/administración — Fase 0 del plan):**
 - Agregar las **11** `HEALTHCHECK_URL_*` en Vercel (lista con horarios en `.env.example`).
 - Env vars de Supabase en Vercel solo están en Production; los deploys Preview fallan.
-- Configurar Sentry (`SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`).
 - Confirmar el SMTP de Supabase Auth en producción (invitaciones de cuenta).
 - **No existe ambiente de staging**: los tutoriales grabados y las pruebas corren contra producción con datos `[prueba]`.
 

@@ -7,7 +7,7 @@ import { z } from 'zod'
  * con un "TypeError: Invalid URL" indescifrable. Esto truena al importar con
  * un mensaje claro de QUÉ falta.
  *
- * Solo las obligatorias son estrictas; las opcionales (Sentry, health checks,
+ * Solo las obligatorias son estrictas; las opcionales (health checks,
  * SES) degradan a no-op en sus módulos y no se validan acá.
  */
 const schema = z.object({
