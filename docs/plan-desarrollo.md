@@ -863,49 +863,51 @@ si no funciona, reportarlo ANTES de la etapa 2. Test del criterio de selección 
 fixtures. tsc/lint/vitest al cierre.
 ```
 
-### [ ] AUT-3 · Primer ingreso y matrícula: flujo fluido para usuarios nuevos (pedido 2026-09-15)
+### [x] AUT-3 · Primer ingreso y matrícula — HECHO 2026-09-21
 
-El camino de un usuario nuevo (entrar por primera vez → crear contraseña →
-volver a la matrícula) se siente enredado: hoy pasa por "olvidé mi contraseña",
-que confunde a quien nunca ha tenido una.
-
-Prompt para Claude Code:
+**Etapa 1, el diagnóstico.** El camino de alguien que nunca tuvo contraseña era:
 
 ```
-UX · Primer ingreso: que un usuario nuevo entre y se matricule sin fricción
-
-PROBLEMA: la primera vez de un usuario nuevo depende del flujo de "olvidé mi contraseña",
-que es confuso para alguien que nunca tuvo contraseña, y el camino hasta matricularse se
-siente enredado.
-
-ETAPA 1 — DIAGNÓSTICO (reportar antes de tocar nada):
-- Mapear el flujo actual completo de un usuario nuevo: página de login → cómo descubre
-  que debe crear contraseña → correo (¿qué plantilla, qué asunto, cuánto dura el enlace?
-  ver el pendiente de Fase 0 de OTP < 1h) → dónde aterriza al definirla → cómo regresa
-  a lo que quería hacer (¿se respeta ?redirect= de src/proxy.ts en TODO el camino,
-  incluido el enlace del correo?).
-- Listar cada punto de fricción con captura del estado actual.
-
-ETAPA 2 — MEJORAS (según lo que salga, pero como mínimo):
-1. En el login, separar claramente "Primera vez aquí → Creá tu contraseña" de
-   "Olvidé mi contraseña" (pueden compartir mecanismo por debajo, pero el usuario nuevo
-   no debe leer 'olvidé' ni 'recuperar'). Copys en el lenguaje de Theos.
-2. El correo de creación debe decir "Creá tu contraseña", no "restablecer" — revisar la
-   plantilla de Supabase Auth / SMTP y ajustar asunto y cuerpo (usar el molde visual de
-   baseLayout si el correo sale por nuestro SES; si sale por Supabase, ajustar el template
-   en el dashboard y documentar el cambio en docs/).
-3. Tras definir la contraseña, aterrizar directo donde iba (?redirect= a /matricula si
-   venía de ahí) con sesión ya iniciada — no mandarlo de vuelta al login a reescribir todo.
-4. Mensajes de error humanos: correo no registrado ("Este correo no está en nuestra
-   base — escribí a X"), enlace vencido ("El enlace venció, pedí uno nuevo aquí" con botón).
-5. Estado de carga y confirmación visible al pedir el correo ("Te enviamos un enlace a
-   ma***@gmail.com") para que no lo pida cinco veces.
-NOTA: los correos de auth de Supabase son transaccionales del propio login — confirmar si
-pasan por EMAIL_SILENT_MODE; NO deben quedar silenciados (sin ellos nadie puede entrar),
-pero tampoco tocar nada que dispare correos masivos.
-Actualizar la infografía/tutorial "Tu primera vez en el sistema" en /ayuda si el flujo
-cambia. Probar el camino completo con un usuario de prueba. tsc/lint/vitest al cierre.
+/login?redirect=/matricula
+  → "Restablecé tu contraseña"      ← acá se PERDÍA el destino
+  → correo → /auth/continuar → /recuperar/nueva-contrasena
+  → define la contraseña
+  → router.push('/login')           ← y acá a escribirla otra vez
 ```
+
+**Etapa 2, tres arreglos.**
+
+1. **No más rebote al login.** Al abrir el enlace del correo la sesión YA quedó
+   abierta —por eso esa pantalla puede leer su correo y saludarlo—, así que
+   devolverlo al login es pedirle que se identifique cuando el sistema ya sabe
+   quién es. Quien nunca tuvo contraseña lee ese rebote como "no funcionó" y
+   vuelve a pedir el enlace.
+
+2. **El destino sobrevive el viaje.** Va del login a `/recuperar`, de ahí al
+   cuerpo del POST, de ahí al `next` dentro del enlace del correo, y de vuelta.
+   Quien venía de la matrícula aterriza en la matrícula.
+
+3. **El botón ya no dice "Restablecé"**, que es la palabra que confunde a quien
+   nunca tuvo contraseña. Dice "Conseguí tu contraseña", cierto en los dos
+   casos. **Sigue siendo un solo enlace**: partirlo en dos es justo lo que se
+   quitó el 2026-09-01 porque los dos iban al mismo flujo. El que sí distingue
+   es el correo, porque el servidor sí sabe cuál es ("Definí" vs "Restablecé").
+
+**Lo que NO se hizo, de lo que pedía el ítem:** decirle a alguien "este correo
+no está en nuestra base". La respuesta es neutral a propósito — si no,
+cualquiera averigua quién está en el padrón escribiendo correos. La única
+excepción es el menor de edad, que se agregó aparte el mismo día.
+
+Lo del enlace vencido ya estaba resuelto de antes: tiene su mensaje y su botón
+de "pedir un enlace nuevo".
+
+La regla vive pura y testeada en `lib/auth/destino-tras-la-contrasena.ts`. Y hay
+un guard nuevo que lee el login de verdad: el correo de "tu cuenta ya está
+lista" CITA el texto del botón para que la persona lo busque en la pantalla, así
+que cuando el botón cambió el correo quedó mandando a tocar algo que ya no
+existía. El test revienta si se vuelven a desincronizar.
+
+Actualizada también la guía "Entrar al sistema por primera vez".
 
 ### [x] REP-4 · Reporte de asistencia: semanas con fechas, no números ISO — HECHO 2026-09-17
 
