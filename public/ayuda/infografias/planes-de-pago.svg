@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1080" role="img" aria-labelledby="t-plan d-plan" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-plan">Cómo funciona un plan de pago</title>
+  <desc id="d-plan">Un arreglo parte un cobro pendiente en tractos mensuales. El primer tracto aprobado libera la matrícula o el tiquete; un tracto vencido e impago bloquea matricularse o inscribirse; y cancelar el arreglo no perdona la deuda, para eso está cerrar sin cobrar.</desc>
+
+  <rect width="720" height="1080" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Un plan de pago, paso a paso</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Partir un cobro en tractos. Lo arma finanzas, no lo pide el miembro.</text>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="150" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="198" r="20" fill="#161440"/>
+    <text x="88" y="205" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="124" y="186" font-size="18" font-weight="bold" fill="#161440">Un cobro pendiente</text>
+    <text x="124" y="212" font-size="14" fill="#5B5975">Solo se parte lo que todavía no se cobró. Si ya se aprobó</text>
+    <text x="124" y="232" font-size="14" fill="#5B5975">o ya está en otro arreglo, el sistema no deja.</text>
+  </g>
+  <path d="M360 246 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#pl)"/>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="276" width="624" height="116" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="334" r="20" fill="#161440"/>
+    <text x="88" y="341" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="124" y="312" font-size="18" font-weight="bold" fill="#161440">Se elige en cuántos y desde cuándo</text>
+    <text x="124" y="338" font-size="14" fill="#5B5975">Entre 2 y 24 tractos, y la fecha del primer vencimiento.</text>
+    <text x="124" y="358" font-size="14" fill="#5B5975">Los demás caen mes a mes. Lo que sobra al partir el monto</text>
+    <text x="124" y="378" font-size="14" fill="#5B5975">va a los PRIMEROS tractos, no a los últimos.</text>
+  </g>
+  <path d="M360 392 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#pl)"/>
+
+  <!-- Paso 3 -->
+  <g>
+    <rect x="48" y="422" width="624" height="116" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <circle cx="88" cy="480" r="20" fill="#2C7A7F"/>
+    <text x="88" y="487" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="124" y="458" font-size="18" font-weight="bold" fill="#161440">El primer tracto aprobado LIBERA</text>
+    <text x="124" y="484" font-size="14" fill="#5B5975">Apenas entra el primer pago, la matrícula queda hecha o el</text>
+    <text x="124" y="504" font-size="14" fill="#5B5975">tiquete confirmado. No hay que esperar a terminar de pagar.</text>
+    <text x="124" y="526" font-size="13" fill="#2C7A7F">El resto queda como deuda.</text>
+  </g>
+
+  <!-- Los tractos son pagos normales -->
+  <g>
+    <rect x="48" y="566" width="624" height="84" rx="14" fill="#EEF4F5" stroke="#70BDC2"/>
+    <text x="76" y="596" font-size="15" font-weight="bold" fill="#2C7A7F">Cada tracto es un cobro normal</text>
+    <text x="76" y="620" font-size="14" fill="#5B5975">Misma cola de revisión, mismo comprobante, mismos reportes.</text>
+    <text x="76" y="640" font-size="14" fill="#5B5975">Lo único que los une es que pertenecen al mismo arreglo.</text>
+  </g>
+
+  <!-- Lo que bloquea -->
+  <text x="48" y="700" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LO QUE BLOQUEA</text>
+  <g>
+    <rect x="48" y="716" width="624" height="112" rx="14" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
+    <text x="76" y="748" font-size="16" font-weight="bold" fill="#C4383A">Un tracto VENCIDO e impago</text>
+    <text x="76" y="774" font-size="14" fill="#5B5975">Mientras haya uno pasado de fecha sin pagar, esa persona no se</text>
+    <text x="76" y="794" font-size="14" fill="#5B5975">puede matricular en otro estudio ni inscribir en otro evento pago.</text>
+    <text x="76" y="816" font-size="13" fill="#8B8AA0">Un tracto futuro al día NO bloquea.</text>
+  </g>
+
+  <!-- Cancelar vs condonar -->
+  <text x="48" y="878" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA QUE MÁS SE CONFUNDE</text>
+  <g>
+    <rect x="48" y="894" width="304" height="140" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="924" font-size="15" font-weight="bold" fill="#161440">Cancelar el arreglo</text>
+    <text x="76" y="950" font-size="14" fill="#5B5975">Cierra el plan y nada más.</text>
+    <text x="76" y="970" font-size="14" fill="#5B5975">Los tractos impagos SIGUEN</text>
+    <text x="76" y="990" font-size="14" fill="#5B5975">pendientes: siguen bloqueando</text>
+    <text x="76" y="1010" font-size="14" fill="#5B5975">y siguen en los recordatorios.</text>
+  </g>
+  <g>
+    <rect x="368" y="894" width="304" height="140" rx="14" fill="#161440"/>
+    <text x="396" y="924" font-size="15" font-weight="bold" fill="#FFFFFF">Cerrar sin cobrar</text>
+    <text x="396" y="950" font-size="14" fill="#D7DAEA">Esto sí perdona la plata.</text>
+    <text x="396" y="970" font-size="14" fill="#D7DAEA">Se hace cobro por cobro, no</text>
+    <text x="396" y="990" font-size="14" fill="#D7DAEA">de un solo clic: condonar es</text>
+    <text x="396" y="1010" font-size="14" fill="#9FA8C7">una decisión, no un atajo.</text>
+  </g>
+
+  <text x="48" y="1062" font-size="13" fill="#8B8AA0">Por ahora todos los arreglos son mensuales. La opción quincenal está pedida y todavía no existe.</text>
+
+  <defs>
+    <marker id="pl" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
+    </marker>
+  </defs>
+</svg>

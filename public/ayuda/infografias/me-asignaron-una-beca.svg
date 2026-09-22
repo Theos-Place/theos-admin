@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1020" role="img" aria-labelledby="t-beca d-beca" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-beca">Me asignaron una beca, ¿ahora qué?</title>
+  <desc id="d-beca">El camino de una beca desde que te la asignan: te llega un correo, la ves en Mis pagos, tu cobro sigue mostrando el monto completo hasta que finanzas aplica la beca, y ahí baja. Si cubre el 100 por ciento, el cobro se aprueba solo sin comprobante.</desc>
+
+  <rect width="720" height="1020" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Me asignaron una beca</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">No hay código que escribir ni casillero que marcar. Esto es lo que pasa.</text>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="150" width="624" height="116" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="208" r="20" fill="#161440"/>
+    <text x="88" y="215" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="124" y="186" font-size="18" font-weight="bold" fill="#161440">Te llega un correo</text>
+    <text x="124" y="212" font-size="14" fill="#5B5975">Dice cuánto te dieron y para cuál estudio o evento. Puede ser</text>
+    <text x="124" y="232" font-size="14" fill="#5B5975">la beca completa, un apoyo parcial, o el aviso de que te la</text>
+    <text x="124" y="252" font-size="14" fill="#5B5975">pasaron a otro grupo porque el tuyo se llenó.</text>
+  </g>
+  <path d="M360 266 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#bc)"/>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="296" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="344" r="20" fill="#161440"/>
+    <text x="88" y="351" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="124" y="332" font-size="18" font-weight="bold" fill="#161440">La ves en Mis pagos</text>
+    <text x="124" y="358" font-size="14" fill="#5B5975">Hay una sección "Mis becas" con las que tenés activas.</text>
+    <text x="124" y="378" font-size="14" fill="#5B5975">Es solo para mirar.</text>
+  </g>
+  <path d="M360 392 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#bc)"/>
+
+  <!-- Paso 3 · el que confunde -->
+  <g>
+    <rect x="48" y="422" width="624" height="140" rx="14" fill="#161440"/>
+    <circle cx="88" cy="492" r="20" fill="#D63E3D"/>
+    <text x="88" y="499" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="124" y="458" font-size="19" font-weight="bold" fill="#FFFFFF">Tu cobro sigue en el monto completo</text>
+    <text x="124" y="486" font-size="14" fill="#D7DAEA">Esto es NORMAL y es lo que confunde a todo el mundo. La beca no</text>
+    <text x="124" y="506" font-size="14" fill="#D7DAEA">cambia el monto sola: lo cambia una persona de finanzas cuando</text>
+    <text x="124" y="526" font-size="14" fill="#D7DAEA">revisa tu pago.</text>
+    <text x="124" y="550" font-size="14" font-weight="bold" fill="#FFB4B3">No pagués el monto entero apurado. Esperá o escribí a soporte.</text>
+  </g>
+  <path d="M360 562 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#bc)"/>
+
+  <!-- Paso 4 -->
+  <g>
+    <rect x="48" y="592" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <circle cx="88" cy="640" r="20" fill="#2C7A7F"/>
+    <text x="88" y="647" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+    <text x="124" y="628" font-size="18" font-weight="bold" fill="#161440">Finanzas la aplica y el monto baja</text>
+    <text x="124" y="654" font-size="14" fill="#5B5975">Ahí sí ves el precio con el descuento y pagás esa diferencia.</text>
+    <text x="124" y="674" font-size="13" fill="#2C7A7F">Si la beca cubre el 100%, el cobro queda en cero y se aprueba solo.</text>
+  </g>
+
+  <!-- Las tres reglas -->
+  <text x="48" y="738" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">TRES COSAS QUE CONVIENE SABER</text>
+  <g>
+    <rect x="48" y="754" width="196" height="120" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="72" y="784" font-size="15" font-weight="bold" fill="#161440">Una sola vez</text>
+    <text x="72" y="810" font-size="13" fill="#5B5975">Se aplica a un cobro</text>
+    <text x="72" y="830" font-size="13" fill="#5B5975">y se acabó. No queda</text>
+    <text x="72" y="850" font-size="13" fill="#5B5975">saldo para después.</text>
+  </g>
+  <g>
+    <rect x="262" y="754" width="196" height="120" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="286" y="784" font-size="15" font-weight="bold" fill="#161440">Una por cobro</text>
+    <text x="286" y="810" font-size="13" fill="#5B5975">No se acumulan dos</text>
+    <text x="286" y="830" font-size="13" fill="#5B5975">descuentos sobre la</text>
+    <text x="286" y="850" font-size="13" fill="#5B5975">misma matrícula.</text>
+  </g>
+  <g>
+    <rect x="476" y="754" width="196" height="120" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="500" y="784" font-size="15" font-weight="bold" fill="#161440">En su moneda</text>
+    <text x="500" y="810" font-size="13" fill="#5B5975">Las de monto fijo no</text>
+    <text x="500" y="830" font-size="13" fill="#5B5975">se convierten. Las de</text>
+    <text x="500" y="850" font-size="13" fill="#5B5975">porcentaje sí sirven.</text>
+  </g>
+
+  <!-- Pie -->
+  <g>
+    <rect x="48" y="906" width="624" height="76" rx="14" fill="#EEF4F5" stroke="#70BDC2"/>
+    <text x="76" y="936" font-size="15" font-weight="bold" fill="#2C7A7F">¿Algo no cuadra?</text>
+    <text x="76" y="962" font-size="14" fill="#5B5975">Escribí a soporte@theosplace.org. Si ya pagaste de más, se tramita una devolución.</text>
+  </g>
+
+  <defs>
+    <marker id="bc" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
+    </marker>
+  </defs>
+</svg>

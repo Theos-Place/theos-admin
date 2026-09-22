@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1060" role="img" aria-labelledby="t-don d-don" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-don">Registrar donaciones</title>
+  <desc id="d-don">Los dos caminos para registrar una donación: una por una con el formulario, o importando el reporte del banco en tres pasos. El emparejamiento devuelve tres resultados —encontrada, varias posibles y no encontrada— y las que quedan sin dueño se resuelven con el filtro No identificado.</desc>
+
+  <rect width="720" height="1060" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Registrar donaciones</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Dos caminos, para cosas distintas. Los dos en Finanzas → Donaciones.</text>
+
+  <!-- Bifurcación -->
+  <g stroke="#D63E3D" stroke-width="2" fill="none">
+    <path d="M360 130 v18"/>
+    <path d="M200 148 h320"/>
+    <path d="M200 148 v22" marker-end="url(#dn)"/>
+    <path d="M520 148 v22" marker-end="url(#dn)"/>
+  </g>
+
+  <!-- Camino A -->
+  <g>
+    <rect x="48" y="178" width="304" height="172" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="208" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">UNA SUELTA</text>
+    <text x="76" y="236" font-size="17" font-weight="bold" fill="#161440">Agregar donación</text>
+    <text x="76" y="264" font-size="14" fill="#5B5975">1. La persona (obligatoria)</text>
+    <text x="76" y="286" font-size="14" fill="#5B5975">2. La fecha, nunca futura</text>
+    <text x="76" y="308" font-size="14" fill="#5B5975">3. El monto — opcional</text>
+    <text x="76" y="330" font-size="14" fill="#5B5975">4. La nota, para la campaña</text>
+  </g>
+
+  <!-- Camino B -->
+  <g>
+    <rect x="368" y="178" width="304" height="172" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="396" y="208" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LLEGÓ EL REPORTE</text>
+    <text x="396" y="236" font-size="17" font-weight="bold" fill="#161440">Importar donaciones</text>
+    <text x="396" y="264" font-size="14" fill="#5B5975">Subí el archivo TAL CUAL te lo</text>
+    <text x="396" y="286" font-size="14" fill="#5B5975">mandaron. No hay que renombrar</text>
+    <text x="396" y="308" font-size="14" fill="#5B5975">columnas ni borrar encabezados:</text>
+    <text x="396" y="330" font-size="14" fill="#5B5975">el sistema busca los datos solo.</text>
+  </g>
+  <path d="M520 350 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#dn)"/>
+
+  <!-- El emparejamiento -->
+  <text x="48" y="402" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">EL PASO QUE IMPORTA · A QUIÉN LE CORRESPONDE CADA FILA</text>
+  <g>
+    <rect x="48" y="418" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <text x="76" y="448" font-size="15" font-weight="bold" fill="#2C7A7F">Encontrada</text>
+    <text x="76" y="474" font-size="14" fill="#5B5975">Por cédula, o el nombre coincide con una sola persona. No hay que hacer nada.</text>
+  </g>
+  <g>
+    <rect x="48" y="506" width="624" height="96" rx="14" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
+    <text x="76" y="536" font-size="15" font-weight="bold" fill="#C4383A">Hay varias posibles</text>
+    <text x="76" y="562" font-size="14" fill="#5B5975">El nombre coincide con más de una, o coincide a medias. ELEGÍS VOS.</text>
+    <text x="76" y="584" font-size="14" fill="#5B5975">El sistema no adivina: preferir una al azar es darle la plata de alguien a otro.</text>
+  </g>
+  <g>
+    <rect x="48" y="614" width="624" height="76" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="644" font-size="15" font-weight="bold" fill="#161440">No se encontró</text>
+    <text x="76" y="670" font-size="14" fill="#5B5975">Nadie con ese nombre ni esa cédula. La buscás a mano o la dejás para después.</text>
+  </g>
+
+  <!-- Sin identificar -->
+  <text x="48" y="740" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LAS QUE QUEDARON SIN DUEÑO</text>
+  <g>
+    <rect x="48" y="756" width="624" height="112" rx="14" fill="#EEF4F5" stroke="#70BDC2"/>
+    <text x="76" y="786" font-size="16" font-weight="bold" fill="#2C7A7F">Filtro "No identificado" → Vincular a miembro</text>
+    <text x="76" y="812" font-size="14" fill="#5B5975">Vale la pena vaciar esa lista cada tanto. Una donación sin dueño no cuenta</text>
+    <text x="76" y="832" font-size="14" fill="#5B5975">para el reporte de donantes ni para los requisitos de estudios de esa</text>
+    <text x="76" y="852" font-size="14" fill="#5B5975">persona: es como si no existiera.</text>
+  </g>
+
+  <!-- Las dos que se olvidan -->
+  <g>
+    <rect x="48" y="900" width="304" height="124" rx="14" fill="#161440"/>
+    <text x="76" y="932" font-size="15" font-weight="bold" fill="#FFFFFF">Vacío no es cero</text>
+    <text x="76" y="958" font-size="14" fill="#D7DAEA">Vacío dice "donó, no</text>
+    <text x="76" y="978" font-size="14" fill="#D7DAEA">sabemos cuánto". Cero</text>
+    <text x="76" y="998" font-size="14" fill="#D7DAEA">dice "donó cero colones".</text>
+  </g>
+  <g>
+    <rect x="368" y="900" width="304" height="124" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="396" y="932" font-size="15" font-weight="bold" fill="#161440">Donante activo</text>
+    <text x="396" y="958" font-size="14" fill="#5B5975">Se marca si la fecha cae</text>
+    <text x="396" y="978" font-size="14" fill="#5B5975">en los últimos 6 meses. Ese</text>
+    <text x="396" y="998" font-size="14" fill="#5B5975">criterio usan los reportes.</text>
+  </g>
+
+  <defs>
+    <marker id="dn" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1060" role="img" aria-labelledby="t-dev d-dev" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-dev">Solicitudes de devolución</title>
+  <desc id="d-dev">Una devolución cuelga de un pago cobrado, pasa por cuatro estados —pendiente, procesando, completada o rechazada— y la plata siempre la mueve una persona a mano. Como salida alterna, se puede convertir en donación si la persona está de acuerdo.</desc>
+
+  <rect width="720" height="1060" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Una devolución, paso a paso</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Plata que ya entró y hay que sacar. La registran finanzas y dirección.</text>
+
+  <!-- Aviso grande -->
+  <g>
+    <rect x="48" y="146" width="624" height="92" rx="14" fill="#161440"/>
+    <text x="76" y="182" font-size="19" font-weight="bold" fill="#FFFFFF">El sistema NO mueve la plata</text>
+    <text x="76" y="208" font-size="14" fill="#D7DAEA">Registrar la devolución deja el rastro y cuadra los reportes. El SINPE o la</text>
+    <text x="76" y="228" font-size="14" fill="#D7DAEA">transferencia de vuelta la hace una persona, a mano, siempre.</text>
+  </g>
+
+  <!-- Paso 1 -->
+  <g>
+    <rect x="48" y="266" width="624" height="116" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="324" r="20" fill="#161440"/>
+    <text x="88" y="331" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="124" y="302" font-size="18" font-weight="bold" fill="#161440">Cuelga de un pago cobrado</text>
+    <text x="124" y="328" font-size="14" fill="#5B5975">No se crea en el aire. Si el pago está pendiente o rechazado,</text>
+    <text x="124" y="348" font-size="14" fill="#5B5975">no hay nada que devolver: lo que corresponde es cerrarlo</text>
+    <text x="124" y="368" font-size="14" fill="#5B5975">sin cobrar.</text>
+  </g>
+  <path d="M360 382 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#dv)"/>
+
+  <!-- Paso 2 -->
+  <g>
+    <rect x="48" y="412" width="624" height="116" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="470" r="20" fill="#161440"/>
+    <text x="88" y="477" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="124" y="448" font-size="18" font-weight="bold" fill="#161440">Monto y clasificación</text>
+    <text x="124" y="474" font-size="14" fill="#5B5975">Nunca más de lo que entró, y cuenta lo ya devuelto antes.</text>
+    <text x="124" y="494" font-size="14" fill="#5B5975">Se clasifica en estudio, campaña, evento, prematrimonial,</text>
+    <text x="124" y="514" font-size="14" fill="#5B5975">folletos u otro: eso es lo que hace legibles los reportes.</text>
+  </g>
+  <path d="M360 528 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#dv)"/>
+
+  <!-- Los cuatro estados -->
+  <text x="48" y="578" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LOS CUATRO ESTADOS</text>
+  <g>
+    <rect x="48" y="594" width="304" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="76" y="622" font-size="15" font-weight="bold" fill="#161440">Pendiente</text>
+    <text x="76" y="648" font-size="14" fill="#5B5975">Registrada. Todavía nadie</text>
+    <text x="76" y="668" font-size="14" fill="#5B5975">movió plata.</text>
+  </g>
+  <g>
+    <rect x="368" y="594" width="304" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <text x="396" y="622" font-size="15" font-weight="bold" fill="#161440">Procesando</text>
+    <text x="396" y="648" font-size="14" fill="#5B5975">Alguien la tomó y está</text>
+    <text x="396" y="668" font-size="14" fill="#5B5975">haciendo la transferencia.</text>
+  </g>
+  <g>
+    <rect x="48" y="706" width="304" height="112" rx="14" fill="#FFFFFF" stroke="#70BDC2" stroke-width="2"/>
+    <text x="76" y="736" font-size="12" font-weight="bold" fill="#2C7A7F" letter-spacing="2">COMPLETADA</text>
+    <text x="76" y="762" font-size="14" fill="#5B5975">La plata salió. Pegá el número</text>
+    <text x="76" y="782" font-size="14" fill="#5B5975">de confirmación: es lo único</text>
+    <text x="76" y="802" font-size="14" fill="#5B5975">que la rastrea después.</text>
+  </g>
+  <g>
+    <rect x="368" y="706" width="304" height="112" rx="14" fill="#FFFFFF" stroke="#D63E3D" stroke-width="2"/>
+    <text x="396" y="736" font-size="12" font-weight="bold" fill="#C4383A" letter-spacing="2">RECHAZADA</text>
+    <text x="396" y="762" font-size="14" fill="#5B5975">No procede. Se guarda el</text>
+    <text x="396" y="782" font-size="14" fill="#5B5975">motivo, para que después se</text>
+    <text x="396" y="802" font-size="14" fill="#5B5975">pueda explicar.</text>
+  </g>
+  <text x="48" y="844" font-size="13" fill="#8B8AA0">Se procesa UNA sola vez: si dos personas la abren a la vez, la segunda recibe un aviso.</text>
+
+  <!-- Convertir en donación -->
+  <text x="48" y="890" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA SALIDA ALTERNA</text>
+  <g>
+    <rect x="48" y="906" width="624" height="124" rx="14" fill="#EEF4F5" stroke="#70BDC2" stroke-width="2"/>
+    <text x="76" y="938" font-size="16" font-weight="bold" fill="#2C7A7F">Convertirla en donación</text>
+    <text x="76" y="964" font-size="14" fill="#5B5975">En vez de devolver, la persona deja la plata. Queda a su nombre: le cuenta</text>
+    <text x="76" y="984" font-size="14" fill="#5B5975">como donante y le aparece en su historial.</text>
+    <text x="76" y="1008" font-size="13" fill="#C4383A">Preguntale antes. No es la manera de cerrar una devolución incómoda.</text>
+  </g>
+
+  <defs>
+    <marker id="dv" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 0 L5 10 z" fill="#D63E3D"/>
+    </marker>
+  </defs>
+</svg>
