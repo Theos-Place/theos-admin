@@ -2391,3 +2391,45 @@ igual.
 
 **Pendiente aparte:** las cuentas de PRUEBA siguen vivas. Está anotado como
 SEC-4 en la Fase 20.
+
+### [x] CHK-5 · Pedir el correo en la puerta — HECHO 2026-09-22
+
+El aviso sale DESPUÉS de registrar el check-in y se puede cerrar: la fila nunca
+se frena. Mismo patrón que la captura de documento de FIN-2, que vive tres
+líneas más arriba en la misma pantalla.
+
+**El permiso** se resolvió con un endpoint nuevo y angosto
+(`POST /api/events/[id]/checkins/contact-info`) en vez de abrirle la edición de
+miembros a la puerta. Cuatro candados, ninguno solo en la pantalla:
+
+- el mismo `requireEventAccess(..., puerta)` del check-in, que ya trae la regla
+  por comité de EVE-12 y la del subevento de CHK-4;
+- **tiene que haber check-in de HOY en ESE evento** — sin eso el endpoint sería
+  una forma de editar a cualquiera del padrón desde la puerta;
+- **el campo tiene que estar vacío**: esto LLENA, no corrige. Si ya hay valor,
+  409 y a la edición normal;
+- correo duplicado, 409 sin decir de quién (criterio de DAT-10).
+
+No crea cuentas ni manda correos. Todo queda en `audit_log` con el evento desde
+el que se capturó. `src/lib/auth/checkin-endpoints.test.ts` lo blinda: es el
+tercero de esa familia y el más fácil de aflojar sin querer.
+
+**Una decisión que vale la pena mirar.** Solo se le pide a quien **sabemos** que
+es adulto: sin fecha de nacimiento no se pregunta, aunque el resto del sistema
+trate la edad desconocida como adulta para no bloquear a nadie. Acá el riesgo va
+al revés —guardarle el correo propio a un chico de 15 es justo lo que FAM-2 no
+quiere— y son 3.260 fichas sin fecha. Está en un test para que aflojarlo sea
+deliberado.
+
+El lookup manda `falta_contacto` **ya resuelto por el servidor**, siguiendo lo
+que hizo CHK-2 con la fecha de nacimiento: la puerta recibe la decisión, no los
+datos con los que se tomó.
+
+**Alcance medido el 2026-09-22:** 3.703 adultos activos sin correo o sin
+teléfono (2.882 solo sin correo, 463 solo sin teléfono, 358 sin nada), y **64 de
+los 65** que cumplieron 18 sin cuenta.
+
+**Falta:** el aviso hoy sale en el check-in por búsqueda. En el modal de familia
+y en el QR todavía no — ahí el flujo registra a varias personas de una y el
+panel de una sola persona no encaja sin repensarlo.
+
