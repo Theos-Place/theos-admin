@@ -233,39 +233,36 @@ Los arreglos en tractos ya están implementados (`lib/finance/installments.ts`,
 matrícula/inscripción, cancelar ≠ condonar. Lo que falta es la frecuencia
 quincenal → FIN-8.
 
-### [ ] FIN-8 · Arreglos de pago: frecuencia mensual o quincenal (pedido 2026-09-18)
+### [x] FIN-8 · Arreglos de pago: mensual o quincenal — HECHO 2026-09-22
 
-Hoy los tractos vencen solo mensual. Al crear el arreglo se debe poder elegir
-mensual o quincenal, y que los cobros/recordatorios corran sobre esas fechas.
+Al crear el arreglo hay un selector de frecuencia y una **vista previa de las
+fechas** antes de confirmar, calculada con la misma función que usa el
+servidor. Sin la vista previa había que crear el arreglo para enterarse de
+cuándo vence cada tracto, y deshacerlo no es gratis: el primero reusa el pago
+original.
 
-Prompt para Claude Code:
+**"Quincenal" = cada 15 días CORRIDOS**, no los días 15 y 30 del mes. La otra
+lectura obliga a decidir qué pasa en febrero y da intervalos desiguales (del 30
+al 15 hay 16 días, del 15 al 30 hay 15). Con 15 corridos la persona sabe
+siempre cuándo le toca. Un test fija el intervalo exacto; si algún día finanzas
+pide los días fijos del mes, va como frecuencia **nueva** y no cambiando esta,
+porque habría arreglos vivos con la regla vieja.
 
-```
-FEATURE · Arreglos de pago (FIN-4): elegir frecuencia mensual o quincenal
+Los arreglos existentes quedan mensuales por el default de la columna, sin
+migrar datos. Es NOT NULL a propósito: un arreglo sin frecuencia no significa
+nada, y nullable obligaría a cada consumidor a inventarse ese caso.
 
-BASE EXISTENTE (no rehacer): lib/finance/installments.ts (splitAmount,
-monthlyDueDates, planInstallments, isOverdue) y queries/payment-plans.ts
-(createPaymentPlan). Los tractos son filas normales de payments — eso no cambia.
+**Verificado lo que el ítem mandaba revisar:** nada asume "un tracto por mes".
+`isOverdue`, el resumen para finanzas y la consulta de vencidos comparan
+**fechas**, no cuentan meses. Queda un test que lo fija, porque el día que
+alguien meta aritmética de meses los quincenales se romperían en silencio.
 
-CAMBIOS:
-1. installments.ts: nueva biweeklyDueDates(firstDue, count) — vencimientos cada 15 días
-   exactos a partir del primer vencimiento (firstDue, firstDue+15d, +30d…). Es la
-   interpretación simple y predecible de "quincenal"; NO amarrar a los días 15/30 del
-   mes salvo que finanzas lo pida distinto. planInstallments recibe
-   frequency: 'mensual' | 'quincenal' (default 'mensual' para no romper llamadores).
-2. payment_plans: columna frequency ('mensual'|'quincenal', default 'mensual' — las
-   existentes quedan mensuales sin migración de datos).
-3. createPaymentPlan y el endpoint POST /api/payments/[id]/payment-plan aceptan
-   frequency; validación con zod si el endpoint ya la usa.
-4. UI del modal de crear arreglo: selector Mensual/Quincenal junto a "primer
-   vencimiento" y "número de tractos", con vista previa de las fechas generadas antes
-   de confirmar (si el modal ya muestra los tractos, solo recalcula con la frecuencia).
-5. Todo lo que consume due_date (isOverdue, bloqueos, cron payment-reminders,
-   vista de finanzas) ya lee fechas — verificar que NINGUNO asuma "un tracto por mes"
-   (buscar usos de monthlyDueDates y lógica de meses); ajustar el que lo asuma.
-Tests: biweeklyDueDates (cruce de mes y de año, 15 tractos), planInstallments con las
-dos frecuencias, endpoint rechaza frecuencia inválida. tsc/lint/vitest al cierre.
-```
+De paso casi entra el bug de zona horaria de siempre: el modal tiene un
+`fmtDate` que hace `new Date('2026-01-20')` —medianoche UTC, o sea el 19 en
+Costa Rica—. Para una fecha sin hora va `formatDate`, que pasa por
+`parseFlexibleDate`.
+
+Migración `20260922100000`.
 
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
