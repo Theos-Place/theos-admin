@@ -2432,3 +2432,47 @@ ofrecer algo que después falla.
 servidor. La puerta sigue sin recibir la fecha de nacimiento ni el teléfono de
 nadie.
 
+### [~] OPS-1 · Healthchecks manda 30-40 correos al día — DIAGNOSTICADO 2026-09-22
+
+**La causa no era el período de los checks: es que solo UNO de los 16 crons
+tiene su variable configurada en Vercel.**
+
+`vercel env ls production` devuelve exactamente una: `HEALTHCHECK_URL_SCHEDULED_BROADCASTS`.
+Las otras quince no existen, y `pingHealthcheck` es no-op sin variable — o sea
+que **quince crons no pingean nada**. Los checks que estén creados en
+healthchecks.io para ellos nunca reciben un ping.
+
+Y el único que sí pingea es **el que corre cada hora**. Ahí está el volumen: 24
+pings al día, y si el período/grace de ese check es ajustado, el atraso normal de
+Vercel lo hace caerse y levantarse en cada vuelta — hasta 24 caídas + 24
+recuperaciones = 48 correos. Los 30-40 reportados caen justo ahí.
+
+**Lo que SÍ está bien, verificado en el código:** los 16 handlers pingean AL
+FINAL, después del éxito. No hay ninguno que reporte sano algo que reventó a la
+mitad. (El punto 4 del prompt original queda cerrado.)
+
+**Lo que falta y necesita acceso que no tengo:** leer los checks en
+healthchecks.io —período, grace y el log de caídas— para confirmar cuál de los
+dos efectos pesa más. Hace falta la API key, o el detalle de cómo está
+configurado el check de `scheduled-broadcasts`.
+
+**Qué hacer, en orden:**
+
+1. **Alivio inmediato**, en healthchecks.io: apagar los correos de recuperación
+   ("is UP"). Corta la mitad del volumen sin perder ninguna alerta real.
+2. **Arreglar el que flapea**: el check de `scheduled-broadcasts` va con período
+   de 1 hora y grace de 30 minutos. Con grace corto se cae por el jitter normal.
+3. **Configurar las otras quince variables** en Vercel. Es el pendiente de
+   Fase 0 y es lo que hace que hoy el monitoreo no sirva: quince crons pueden
+   fallar sin que nadie se entere.
+
+La tabla completa —cron, horario real en UTC y en hora de Costa Rica, variable,
+período y grace— quedó en **`docs/healthchecks.md`**, con el criterio para
+elegir esos números y los pasos para agregar un cron nuevo sin repetir esto.
+
+**De paso, un hallazgo aparte:** producción tiene cinco variables
+`NEXT_PUBLIC_MOCK_*_PASSWORD` de la época del auth simulado. El prefijo
+`NEXT_PUBLIC_` significa que **viajan en el bundle del navegador**. Hoy no
+abren nada —el auth es real desde hace meses— pero son cadenas públicas que se
+llaman "password" y no tienen por qué seguir ahí. Borrarlas es un minuto.
+
