@@ -10,7 +10,7 @@ resumen: Un arreglo parte un cobro pendiente en tractos. Quién lo crea, qué li
 
 # Cómo funcionan los planes de pago
 
-![Un arreglo de pago paso a paso: partir el cobro en tractos, qué libera el primero, qué bloquea uno vencido y la diferencia entre cancelar y condonar](/ayuda/infografias/planes-de-pago.svg)
+![Un arreglo de pago paso a paso: partir el cobro en tractos, qué libera el primero, qué bloquea uno vencido y la diferencia entre cancelar y condonar](/ayuda/infografias/planes-de-pago.svg) ![Partir un cobro pendiente en tractos, paso a paso](/ayuda/tutoriales/planes-de-pago/planes-de-pago.gif)
 
 Un **arreglo de pago** parte un cobro que la persona no puede pagar de una en
 varios **tractos** con su propia fecha de vencimiento.
@@ -79,3 +79,5 @@ perdonar.
 
 **"El último tracto quedó con un monto distinto."** También es lo esperado: el
 sobrante va a los primeros. La suma de todos da exacto el total original.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/planes-de-pago/planes-de-pago.mp4)
