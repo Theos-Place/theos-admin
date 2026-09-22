@@ -2258,11 +2258,36 @@ distintas, el problema es el correo/cuenta, no duplicados.
 **Las dos decisiones que quedaban: el usuario dijo dejarlo como está (2026-09-22).**
 Melissa Acon se queda en el Comité Contabilidad; no se replica lo de Carolina.
 
-### [~] AYU-3 · Centro de ayuda: finanzas — ARTÍCULOS E INFOGRAFÍAS HECHOS 2026-09-21, faltan los videos
+### [~] AYU-3 · Centro de ayuda: finanzas — 3 de 4 completas; faltan 3 videos internos
 
-Las cuatro piezas escritas y con su infografía. **Los videos quedan para una
-tanda aparte**, decidido con el usuario: necesitan las cuentas `@prueba.` y eso
-depende de SEC-4.
+Las cuatro piezas escritas y con su infografía. **El video de la beca quedó
+grabado el 2026-09-22**; los tres internos no.
+
+**Por qué faltan los tres.** Son flujos de finanzas y **no existe un usuario
+`[prueba]` con ese rol** — los ocho que hay son coordinador de estudios,
+encargado de eventos, miembro o sin rol. El grabador se niega a correr con una
+cuenta que no sea `@prueba.`, así que habría que crear una cuenta con permisos
+de finanzas en producción, con la contraseña compartida que decidimos no rotar.
+Finanzas puede crear devoluciones, aprobar pagos y ver el padrón: es otra clase
+de riesgo. **Decisión pendiente**, o esperar a INF-1 (staging).
+
+**Y un problema más grande que salió de esto: los datos del seed ya no están.**
+El usuario de los tutoriales (`daniel.intermedio@`) no existe, no hay grupos
+`[prueba]`, y —lo que tranca todo— **no hay NINGÚN grupo con matrícula abierta
+en todo el sistema**. Hoy no se puede regrabar ningún tutorial, no solo estos.
+
+Para el de la beca se hizo `scripts/tutoriales/datos-beca.ts`: crea lo mínimo y
+lo borra en la misma sesión, en vez de correr el seed completo que deja grupos,
+eventos, formularios y prematrimoniales en producción hasta que alguien limpie.
+
+**Una decisión que vale anotar.** El primer intento fue con DIS1, pensando que
+sus requisitos —SCJ, servir, donar, asistir— lo volvían casi invisible. Pero
+para que el miembro de prueba fuera elegible había que fabricarle **doce
+check-ins dentro de los últimos seis meses**, y eso habría ensuciado los
+reportes de asistencia recién construidos: aparecerían como asistentes reales de
+la semana. Las campañas cuestan ₡25.000 y no piden nada, así que se grabó sobre
+una. Cero datos inventados pesa más que unos minutos de visibilidad de un grupo
+que dice "[prueba]" en el nombre.
 
 | Pieza | Archivo | Visibilidad |
 |---|---|---|
