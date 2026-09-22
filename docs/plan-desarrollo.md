@@ -2206,51 +2206,58 @@ NO enviar ningún correo (EMAIL_SILENT_MODE). No fusionar fichas: son dos person
 distintas, el problema es el correo/cuenta, no duplicados.
 ```
 
-### [ ] AYU-3 · Centro de ayuda: finanzas (planes de pago, devoluciones, donaciones, becas) (pedido 2026-09-21)
+### [~] AYU-3 · Centro de ayuda: finanzas — ARTÍCULOS E INFOGRAFÍAS HECHOS 2026-09-21, faltan los videos
 
-Cuatro piezas, cada una con el trío completo: artículo + infografía + video
-(los videos con el pipeline de Playwright + usuario @prueba. de siempre).
+Las cuatro piezas escritas y con su infografía. **Los videos quedan para una
+tanda aparte**, decidido con el usuario: necesitan las cuentas `@prueba.` y eso
+depende de SEC-4.
 
-Prompt para Claude Code:
+| Pieza | Archivo | Visibilidad |
+|---|---|---|
+| Planes de pago | `planes-de-pago.md` | finanzas, dirección |
+| Solicitudes de devolución | `solicitudes-de-devolucion.md` | finanzas, dirección |
+| Registrar donaciones | ya existía; se le agregó la infografía | finanzas, dirección |
+| Me asignaron una beca | `me-asignaron-una-beca.md` | **pública** |
 
-```
-DOCS · Centro de ayuda: cuatro piezas de finanzas (artículo + infografía + video c/u)
+**Dos cosas que salieron de leer el código y no coincidían con el ítem.**
 
-Formato de content/ayuda/*.md con frontmatter (titulo, seccion, tipo, visibilidad, orden).
-ANTES de escribir: leer el código real de cada flujo. Infografías: SVG vertical con los
-colores de Theos en public/ayuda/infografias/ (ver docs/plan-infografias.md — la #3 "La
-ruta de un pago" ya definió el estilo). Videos: pipeline de tutoriales con Playwright y
-usuario de prueba (@prueba.) ya montado — grabar el flujo real con datos [prueba].
+**1. El miembro NO ingresa ningún cupón.** El ítem pedía documentar "al pagar la
+matrícula dónde ingreso el cupón". Ese lugar no existe. `apply-scholarship`
+tiene un solo llamador —la cola de revisión de pagos— y exige permiso de `becas`
+o `revision_pagos`: **la beca la aplica finanzas**, no el miembro. En "Mis
+pagos" la sección "Mis becas" es de solo lectura.
 
-1. "Cómo funcionan los planes de pago" — visibilidad: interna para finanzas/direccion, y
-   evaluar una versión pública corta para el miembro que pide un arreglo.
-   Contenido según el código real (lib/finance/installments.ts): qué es un arreglo en
-   tractos, quién lo crea, mensual o quincenal (si FIN-8 ya corrió), el primer tracto
-   aprobado libera lo pagado, un tracto vencido bloquea matricularse/inscribirse, y
-   cancelar ≠ condonar. Infografía: línea de tiempo de un arreglo con sus vencimientos.
+Por eso el artículo 4 documenta lo que de verdad pasa, que además es lo que la
+gente necesita saber: **tu cobro sigue mostrando el monto completo** hasta que
+finanzas revise tu pago y aplique la beca. Sin eso, alguien con beca paga el
+precio entero y después hay que tramitarle una devolución.
 
-2. "Solicitudes de devolución" — visibilidad: finanzas, direccion.
-   Documentar el flujo REAL implementado (revisar el código: cómo entra la solicitud,
-   quién aprueba, y la opción de convertir la devolución en donación si existe). Si el
-   flujo no está implementado aún, REPORTARLO y no inventar el artículo.
+**2. La UI y el correo le dicen al miembro que él la aplica, y es mentira.**
+"Mis pagos" dice «se aplica automáticamente al pagar» y la plantilla
+`beca_aprobada` dice «un descuento que podés aplicar al momento de hacer tu
+pago». Las dos frases prometen algo que no ocurre: no hay automatismo y el
+miembro no tiene dónde aplicarla. Queda como DAT-14, abajo.
 
-3. ARREGLAR "Registrar donaciones" (artículo de AYU-2): agregarle la infografía (flujo:
-   llega el reporte del banco → importar Excel → resolver dudosos → confirmar; y el
-   camino individual) y el video de ambos caminos (alta manual e importación).
+### [ ] DAT-14 · A quien tiene beca le decimos que la aplica él, y no es así
 
-4. "Cómo aplicar una beca que me asignaron" — visibilidad: PÚBLICA (es para el
-   estudiante/miembro).
-   Paso a paso desde la vista del miembro: me asignaron una beca (¿cómo me entero? correo
-   con código / campanita), y al pagar la matrícula dónde ingreso el cupón o dónde
-   aparece el descuento (modal de pago según BEC-1: beca de porcentaje, de monto fijo —
-   solo en su moneda, INT-2 — y beca 100% sin comprobante). Infografía: el camino
-   solicitud → asignación → canje en el pago (es la #11 del plan de infografías —
-   reutilizar ese diseño). Video con usuario de prueba y una beca [prueba].
+Dos textos se lo prometen:
 
-Cada artículo con su visibilidad correcta en frontmatter; verificar render en /ayuda y
-que el índice respete roles. Los videos se suben con el patrón de hosting existente
-(Supabase Storage, rutas estables).
-```
+- **"Mis pagos"**, sección Mis becas: «se aplica automáticamente al pagar».
+  No hay nada automático — la aplica una persona de finanzas.
+- **Plantilla `beca_aprobada`** (y `beca_aprobada_parcial`): «Se te asignó un
+  descuento de {{descuento}} que podés aplicar al momento de hacer tu pago».
+  El miembro no tiene dónde aplicarlo.
+
+El riesgo concreto: alguien con beca ve su cobro por el monto completo, cree que
+el descuento ya debería estar, y paga de más. Después hay que tramitarle una
+devolución.
+
+Dos salidas, y es decisión de producto:
+
+- **Arreglar el texto** (barato): que digan que finanzas la aplica al revisar el
+  pago. Es lo que ya dice el artículo nuevo de ayuda.
+- **Arreglar el sistema** (caro): aplicar la beca sola al crear el cobro, o
+  darle al miembro dónde hacerlo. Es lo que los textos prometen hoy.
 
 
 **Cierre 2026-09-21.** El selector va agrupado por ÁREA con buscador, y el
