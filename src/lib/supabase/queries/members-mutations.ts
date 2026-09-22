@@ -6,7 +6,7 @@ import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
 import { casoDeVinculo, type CasoDeVinculo } from '@/lib/members/fusion-familias'
 import { reportarFalla } from '@/lib/observabilidad'
-import { pedirContacto } from '@/lib/events/contacto-en-la-puerta'
+import { pedirContacto, avisarMenorSinAdulto } from '@/lib/events/contacto-en-la-puerta'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
  *  campos que no existen en la tabla o que no deben tocarse por este camino). */
@@ -463,9 +463,19 @@ export async function getMemberFamily(memberId: string): Promise<Array<{
   const rows = (data ?? []) as Array<FilaFamiliar>
   // Dedupe por member_id (puede aparecer en varias unidades).
   const seen = new Set<string>()
+  // DAT-12 · se pregunta POR CADA INTEGRANTE, no una vez por la familia.
+  //
+  // Parece que bastaría con mirar al titular y repartir la respuesta, pero no:
+  // `conAdultoEnLaFamilia` responde "hay un adulto QUE NO SOS VOS". En el caso
+  // más común —una mamá con dos hijos— la mamá sale sin adulto (ella es el
+  // único, y no cuenta para sí misma) y los hijos sí lo tienen. Repartir la
+  // respuesta de la mamá habría marcado a los dos hijos como desamparados
+  // teniéndola a ella al lado.
+  const conAdulto = await conAdultoEnLaFamilia(rows.map(r => r.member_id))
   const out: Array<{
     member_id: string; name: string; relation: string
     falta_contacto: { email: boolean; phone: boolean }
+    menor_sin_adulto: boolean
   }> = []
   for (const r of rows) {
     if (seen.has(r.member_id)) continue
@@ -479,6 +489,10 @@ export async function getMemberFamily(memberId: string): Promise<Array<{
         datos_protegidos: r.member?.datos_protegidos ?? null,
         email: r.member?.email ?? null,
         phone: r.member?.phone ?? null,
+      }),
+      menor_sin_adulto: avisarMenorSinAdulto({
+        birth_date: r.member?.birth_date ?? null,
+        tieneAdultoEnLaFamilia: conAdulto.has(r.member_id),
       }),
     })
   }
@@ -538,4 +552,59 @@ export async function deactivateMember(
   }
 
   return data as DbMember
+}
+
+/**
+ * DAT-12 · De estos ids, cuáles tienen al menos un ADULTO ACTIVO en su familia.
+ *
+ * En LOTE y no de a uno: el buscador de la puerta devuelve ocho resultados por
+ * tecleo y una consulta por persona ahí se siente.
+ *
+ * "Adulto" es alguien con fecha de nacimiento conocida y 18 o más. Quien no
+ * tiene fecha NO cuenta como adulto: si contara, un hermano sin fecha taparía
+ * el aviso y el menor se quedaría igual de solo. Es el mismo criterio
+ * conservador de `pedirContacto`.
+ */
+export async function conAdultoEnLaFamilia(ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>()
+  if (ids.length === 0) return out
+  const supabase = createAdminClient()
+  // Las unidades de cada uno.
+  const { data: unidades } = await supabase
+    .from('family_members').select('member_id, family_unit_id').in('member_id', ids)
+  const filas = (unidades ?? []) as Array<{ member_id: string; family_unit_id: string | null }>
+  const unitIds = [...new Set(filas.map(f => f.family_unit_id).filter((x): x is string => !!x))]
+  if (unitIds.length === 0) return out
+
+  // Todos los integrantes de esas unidades, con la edad de cada uno.
+  const { data: integrantes } = await supabase
+    .from('family_members')
+    .select('family_unit_id, member_id, member:members!family_members_member_id_fkey(birth_date, is_active)')
+    .in('family_unit_id', unitIds)
+  const hoy = new Date()
+  const mayoria = new Date(hoy.getFullYear() - 18, hoy.getMonth(), hoy.getDate())
+    .toISOString().slice(0, 10)
+
+  // unidad → ids de los ADULTOS activos que hay en ella.
+  const adultosPorUnidad = new Map<string, Set<string>>()
+  for (const r of (integrantes ?? []) as Array<{
+    family_unit_id: string | null; member_id: string | null
+    member: { birth_date: string | null; is_active: boolean | null } | null
+  }>) {
+    if (!r.family_unit_id || !r.member_id || !r.member?.is_active) continue
+    if (!r.member.birth_date || r.member.birth_date > mayoria) continue
+    const set = adultosPorUnidad.get(r.family_unit_id) ?? new Set<string>()
+    set.add(r.member_id)
+    adultosPorUnidad.set(r.family_unit_id, set)
+  }
+
+  for (const f of filas) {
+    if (!f.family_unit_id) continue
+    const adultos = adultosPorUnidad.get(f.family_unit_id)
+    if (!adultos) continue
+    // El adulto tiene que ser OTRA persona: nadie es su propio adulto — y un
+    // mayor de edad sin familia aparecería como su propio acompañante.
+    if (adultos.size > 1 || !adultos.has(f.member_id)) out.add(f.member_id)
+  }
+  return out
 }

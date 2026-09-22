@@ -17,7 +17,7 @@
  * Módulo puro: sin React ni Supabase, para poder probar la decisión sola.
  */
 
-import { exigeContacto, type FichaConEdad } from '@/lib/members/reglas-de-menores'
+import { esMenor, exigeContacto, type FichaConEdad } from '@/lib/members/reglas-de-menores'
 
 export type FichaEnLaPuerta = FichaConEdad & {
   email?: string | null
@@ -110,11 +110,48 @@ export const MENSAJE_RECHAZO: Record<RechazoDeGuardado, string> = {
 export const MENSAJE_CORREO_DUPLICADO =
   'Ese correo ya está registrado a nombre de otra persona. Confirmá el dato con ella.'
 
-/** Una persona esperando que le pidan el dato. */
+/**
+ * Una persona esperando algo en el panel de la puerta. Dos casos, y son
+ * distintos a propósito:
+ *
+ *  · `contacto` — adulto sin correo o sin teléfono. Se le pide y se guarda ahí
+ *    mismo (CHK-5).
+ *  · `menor_sin_adulto` — menor que no tiene NINGÚN adulto en su familia. Acá
+ *    no hay nada que escribir en la puerta: vincular familias es trabajo de
+ *    padrón y necesita otro permiso. Lo que se hace es AVISAR, para que alguien
+ *    consiga el dato mientras la persona todavía está ahí (DAT-12).
+ */
 export type PendienteDeContacto = {
   id: string
   name: string
-  pedir: { email: boolean; phone: boolean }
+} & (
+  | { tipo?: 'contacto'; pedir: { email: boolean; phone: boolean } }
+  | { tipo: 'menor_sin_adulto'; pedir?: undefined }
+)
+
+/**
+ * DAT-12 · El menor que no tiene a quién asociarle la cuenta.
+ *
+ * DE DÓNDE SALE. El pedido original era aflojar el bloqueo de correo duplicado
+ * para que un menor pudiera llevar el del papá. Pero el problema de fondo
+ * apareció al mirarlo: en los casos que lo motivaron —Lucía y Naomy Sánchez
+ * Arguedas— **el papá no tiene ficha**. No hay a quién asociarlas. Aflojar la
+ * validación no resolvía nada; lo que falta es el adulto.
+ *
+ * Son 297 menores activos sin ningún adulto en su familia, pero solo unos 5 por
+ * semana pasan por la puerta: el aviso no inunda a nadie.
+ */
+export const MENSAJE_MENOR_SIN_ADULTO =
+  'es menor y no tiene ningún adulto asociado en el sistema. Preguntá con quién viene y pasá el dato: sin un adulto no se le puede dar acceso ni contactar a su familia.'
+
+/** ¿Hay que avisar por este menor? */
+export function avisarMenorSinAdulto(
+  f: FichaConEdad & { tieneAdultoEnLaFamilia?: boolean },
+  hoy?: string,
+): boolean {
+  if (!f.birth_date) return false          // sin fecha no se sabe, y no se inventa
+  if (!esMenor(f, hoy)) return false
+  return !f.tieneAdultoEnLaFamilia
 }
 
 /**
@@ -136,7 +173,9 @@ export function encolarPendientes(
   const ya = new Set(actual.map(x => x.id))
   const utiles: PendienteDeContacto[] = []
   for (const n of nuevos) {
-    if (!n.pedir.email && !n.pedir.phone) continue
+    // El aviso del menor siempre tiene algo que decir; el de contacto solo si
+    // falta algún campo.
+    if (n.tipo !== 'menor_sin_adulto' && !n.pedir.email && !n.pedir.phone) continue
     if (ya.has(n.id)) continue
     ya.add(n.id)
     utiles.push(n)

@@ -24,7 +24,9 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { todayCR } from '@/lib/format'
-import { encolarPendientes, type PendienteDeContacto } from '@/lib/events/contacto-en-la-puerta'
+import {
+  encolarPendientes, MENSAJE_MENOR_SIN_ADULTO, type PendienteDeContacto,
+} from '@/lib/events/contacto-en-la-puerta'
 import {
   marcaEnLaBusqueda, textoYaRegistrado, textoDeshacer, textoQrRepetido,
   esYaRegistrado, type CheckinExistente,
@@ -118,6 +120,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [memberResults, setMemberResults] = useState<{
     id: string; name: string; has_document?: boolean; birth_md?: string | null
     falta_contacto?: { email: boolean; phone: boolean }
+    menor_sin_adulto?: boolean
   }[]>([])
   // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
   // flujo de la fila: se puede ignorar y seguir registrando gente.
@@ -141,7 +144,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [familyCheckin, setFamilyCheckin] = useState<{
     member: { id: string; name: string }
     family: { member_id: string; name: string; relation: string
-              falta_contacto?: { email: boolean; phone: boolean } }[]
+              falta_contacto?: { email: boolean; phone: boolean }
+              menor_sin_adulto?: boolean }[]
   } | null>(null)
   const [checkingFamily, setCheckingFamily] = useState(false)
   // Persona NO inscrita en un evento pago (los 3 métodos convergen acá). En
@@ -218,6 +222,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           const list = (d.members ?? []) as Array<{
             id: string; first_name: string; last_name: string; cedula?: string | null
             birth_md?: string | null; falta_contacto?: { email: boolean; phone: boolean }
+            menor_sin_adulto?: boolean
           }>
           // FIN-2: el lookup ya trae el documento; se conserva para marcar a
           // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
@@ -228,8 +233,9 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
             // para felicitar a alguien).
             birth_md: m.birth_md ?? null,
-            // CHK-5: ver el comentario de contactCapture.
+            // CHK-5 y DAT-12: ver el comentario de colaDeContacto.
             falta_contacto: m.falta_contacto,
+            menor_sin_adulto: m.menor_sin_adulto,
           })))
         })
         .catch(() => { if (alive) setMemberResults([]) })
@@ -379,6 +385,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         ? ((await res.json().catch(() => null))?.members ?? [])[0] as {
             first_name: string; last_name: string; birth_md?: string | null
             falta_contacto?: { email: boolean; phone: boolean }
+            menor_sin_adulto?: boolean
           } | undefined
         : undefined
       // Sin nombre se sigue igual. Solo se corta si el lookup respondió BIEN y
@@ -403,7 +410,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         // CHK-5: el panel se queda abierto mientras la cámara sigue escaneando.
         // No estorba —es una tarjeta más en la columna— y si el operador sigue
         // sin atenderlo, los siguientes se apilan en la cola.
-        if (mem?.falta_contacto) encolarContacto([{ id: memberId, name, pedir: mem.falta_contacto }])
+        if (mem?.menor_sin_adulto) encolarContacto([{ id: memberId, name, tipo: 'menor_sin_adulto' }])
+        else if (mem?.falta_contacto) encolarContacto([{ id: memberId, name, pedir: mem.falta_contacto }])
       }
       else if (r === 'dup') { scanFeedback(false); flash('dup', `${name} ya estaba registrado`) }
       else if (r === 'not_registered') { scanFeedback(false); requestCobro({ id: memberId, name }, 'qr') }
@@ -502,6 +510,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     const faltaDocumento = fila?.has_document === false
     // CHK-5: mismo momento y mismo criterio que el documento.
     const faltaContacto = fila?.falta_contacto
+    const menorSolo = fila?.menor_sin_adulto === true
     setSelectedMember(null)
     setQuery('')
     const r = await persistCheckin(member, type)
@@ -511,7 +520,10 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     if (faltaDocumento && r === 'ok') setDocCapture(member)
     // El documento tiene prioridad si faltan los dos: es un panel a la vez,
     // porque la fila sigue avanzando y dos formularios apilados la trancan.
-    if (!faltaDocumento && r === 'ok' && faltaContacto) {
+    if (r === 'ok' && menorSolo) {
+      // DAT-12 va aunque falte el documento: es lo más grave de los dos.
+      encolarContacto([{ id: member.id, name: member.name, tipo: 'menor_sin_adulto' }])
+    } else if (!faltaDocumento && r === 'ok' && faltaContacto) {
       encolarContacto([{ ...member, pedir: faltaContacto }])
     }
   }
@@ -528,12 +540,17 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
     // CHK-5: a quiénes se les va a pedir el contacto. Se arma ANTES de limpiar
     // `familyCheckin`, que es de donde sale el dato de cada familiar.
     const faltantes = new Map<string, { email: boolean; phone: boolean }>()
+    const menoresSolos = new Set<string>()
     for (const f of familyCheckin.family) {
       if (f.falta_contacto) faltantes.set(f.member_id, f.falta_contacto)
+      if (f.menor_sin_adulto) menoresSolos.add(f.member_id)
     }
-    const delTitular = memberResults.find(m => m.id === familyCheckin.member.id)?.falta_contacto
-    if (delTitular) faltantes.set(familyCheckin.member.id, delTitular)
-    const registrados: Array<{ id: string; name: string; pedir: { email: boolean; phone: boolean } }> = []
+    // El titular no está en `family` —esa lista son los OTROS—, así que su
+    // bandera sale del resultado de la búsqueda.
+    const titular = memberResults.find(m => m.id === familyCheckin.member.id)
+    if (titular?.falta_contacto) faltantes.set(familyCheckin.member.id, titular.falta_contacto)
+    if (titular?.menor_sin_adulto) menoresSolos.add(familyCheckin.member.id)
+    const registrados: PendienteDeContacto[] = []
     for (const e of entries) {
       // La calidad viaja POR PERSONA: a una mamá servidora con dos hijos
       // participantes hay que poder marcarla como lo que es. Antes este modal
@@ -543,7 +560,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const r = await persistCheckin({ id: e.id, name: e.name }, e.tipo, 'manual', e.sub_event_id)
       if (r === 'not_registered') notRegistered.push(e.name)
       // Solo a quien SÍ quedó registrado: el endpoint exige check-in de hoy.
-      const pedir = r === 'ok' ? faltantes.get(e.id) : undefined
+      if (r !== 'ok') continue
+      if (menoresSolos.has(e.id)) {
+        registrados.push({ id: e.id, name: e.name, tipo: 'menor_sin_adulto' })
+        continue
+      }
+      const pedir = faltantes.get(e.id)
       if (pedir) registrados.push({ id: e.id, name: e.name, pedir })
     }
     setCheckingFamily(false)
@@ -723,12 +745,18 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* CHK-5: captura opcional del correo, ya registrado el check-in. A
-              un menor NO se le pide (regla de FAM-2) y a quien no tiene fecha
-              de nacimiento tampoco — eso lo decide el servidor, acá solo se
-              pinta lo que mandó. */}
+          {/* El panel de la puerta. Dos avisos distintos, uno a la vez:
+              · CHK-5 — adulto sin correo: se le pide y se guarda acá mismo.
+              · DAT-12 — menor sin ningún adulto asociado: solo se AVISA.
+                Vincular familias es trabajo de padrón y necesita otro permiso;
+                lo que hace falta es que alguien consiga el dato mientras la
+                persona todavía está enfrente.
+              A quién le toca cuál lo decide el servidor: acá solo se pinta. */}
           {contactCapture && (
-            <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-sm)]">
+            <div className={cn(
+              'rounded-2xl p-4 shadow-[var(--shadow-sm)]',
+              contactCapture.tipo === 'menor_sin_adulto' ? 'bg-coral/5 ring-1 ring-coral/30' : 'bg-surface-card',
+            )}>
               <div className="flex items-start justify-between gap-3">
                 <p className="text-[13px] text-navy-light/80 font-body">
                   {colaDeContacto.length > 1 && (
@@ -737,37 +765,49 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     </span>
                   )}
                   <span className="font-medium text-navy">{contactCapture.name}</span>{' '}
-                  {contactCapture.pedir.email && contactCapture.pedir.phone
-                    ? 'no tiene correo ni teléfono registrados. Si los tenés a mano, aprovechá — es opcional.'
-                    : contactCapture.pedir.email
-                      ? 'no tiene correo registrado. Sin correo no puede entrar al sistema — pedíselo si podés.'
-                      : 'no tiene teléfono registrado. Si lo tenés a mano, podés agregarlo — es opcional.'}
+                  {contactCapture.tipo === 'menor_sin_adulto'
+                    ? MENSAJE_MENOR_SIN_ADULTO
+                    : contactCapture.pedir.email && contactCapture.pedir.phone
+                      ? 'no tiene correo ni teléfono registrados. Si los tenés a mano, aprovechá — es opcional.'
+                      : contactCapture.pedir.email
+                        ? 'no tiene correo registrado. Sin correo no puede entrar al sistema — pedíselo si podés.'
+                        : 'no tiene teléfono registrado. Si lo tenés a mano, podés agregarlo — es opcional.'}
                 </p>
                 <button
                   onClick={siguienteContacto}
-                  aria-label="Cerrar captura de contacto"
+                  aria-label="Cerrar aviso"
                   className="shrink-0 rounded-lg p-1 text-navy-light/80 transition-colors hover:bg-navy/5 hover:text-navy"
                 >
                   <X size={16} aria-hidden />
                 </button>
               </div>
-              <div className="mt-3">
-                <ContactCapture
-                  memberId={contactCapture.id}
-                  eventId={id}
-                  pedir={contactCapture.pedir}
-                  idPrefix="checkin-contacto"
-                  onSaved={guardado => {
-                    setMemberResults(prev => prev.map(m => (m.id === contactCapture.id
-                      ? { ...m, falta_contacto: {
-                          email: (m.falta_contacto?.email ?? false) && !guardado.email,
-                          phone: (m.falta_contacto?.phone ?? false) && !guardado.phone,
-                        } }
-                      : m)))
-                    siguienteContacto()
-                  }}
-                />
-              </div>
+              {contactCapture.tipo === 'menor_sin_adulto' ? (
+                <button
+                  type="button"
+                  onClick={siguienteContacto}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-coral-deep font-body"
+                >
+                  Entendido
+                </button>
+              ) : (
+                <div className="mt-3">
+                  <ContactCapture
+                    memberId={contactCapture.id}
+                    eventId={id}
+                    pedir={contactCapture.pedir}
+                    idPrefix="checkin-contacto"
+                    onSaved={guardado => {
+                      setMemberResults(prev => prev.map(m => (m.id === contactCapture.id
+                        ? { ...m, falta_contacto: {
+                            email: (m.falta_contacto?.email ?? false) && !guardado.email,
+                            phone: (m.falta_contacto?.phone ?? false) && !guardado.phone,
+                          } }
+                        : m)))
+                      siguienteContacto()
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
 

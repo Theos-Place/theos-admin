@@ -7,7 +7,8 @@ import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
-import { pedirContacto } from '@/lib/events/contacto-en-la-puerta'
+import { pedirContacto, avisarMenorSinAdulto } from '@/lib/events/contacto-en-la-puerta'
+import { conAdultoEnLaFamilia } from '@/lib/supabase/queries/members-mutations'
 
 // NOTA: usamos createAdminClient (service role key) porque la app todavía
 // corre con mock auth — sin JWT de Supabase, RLS bloquearía todas las reads.
@@ -1028,6 +1029,7 @@ export type {
 // ./members-mutations. Re-exportadas acá para no tocar a los consumidores. ─────
 export {
   findMemberByCedulaOrEmail, mergeMembers, getDuplicatePairs, dismissDuplicatePair,
+  conAdultoEnLaFamilia,
   createMember, createFamily, getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember, updateFamilyRelation,
   updateMember, deactivateMember,
   MEMBER_WRITE_FIELDS, normalizeEmail,
@@ -1076,6 +1078,8 @@ export type FichaDeLookup = {
   cedula: string | null; document_type: string | null
   email: string | null; birth_md: string | null
   falta_contacto: { email: boolean; phone: boolean }
+  /** DAT-12: menor sin NINGÚN adulto en su familia. También resuelto acá. */
+  menor_sin_adulto: boolean
 }
 
 export async function getMemberForLookupById(
@@ -1091,10 +1095,14 @@ export async function getMemberForLookupById(
   if (!data) return null
   const { birth_date, phone, datos_protegidos, ...resto } =
     data as Record<string, unknown> & { birth_date: string | null; phone: string | null; datos_protegidos: boolean | null }
+  const conAdulto = await conAdultoEnLaFamilia([id])
   return {
     ...resto,
     birth_md: soloDiaYMes(birth_date),
     falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
+    menor_sin_adulto: avisarMenorSinAdulto({
+      birth_date, datos_protegidos, tieneAdultoEnLaFamilia: conAdulto.has(id),
+    }),
   } as FichaDeLookup
 }
 
@@ -1125,9 +1133,14 @@ export async function searchMembersForLookup(
   const filas = (data ?? []) as Array<Record<string, unknown> & {
     birth_date: string | null; phone: string | null; datos_protegidos: boolean | null
   }>
+  // En lote: una consulta para los ocho resultados, no una por persona.
+  const conAdulto = await conAdultoEnLaFamilia(filas.map(f => f.id as string))
   return filas.map(({ birth_date, phone, datos_protegidos, ...resto }) => ({
     ...resto,
     birth_md: soloDiaYMes(birth_date),
     falta_contacto: pedirContacto({ birth_date, datos_protegidos, email: resto.email as string | null, phone }),
+    menor_sin_adulto: avisarMenorSinAdulto({
+      birth_date, datos_protegidos, tieneAdultoEnLaFamilia: conAdulto.has(resto.id as string),
+    }),
   })) as Array<FichaDeLookup>
 }

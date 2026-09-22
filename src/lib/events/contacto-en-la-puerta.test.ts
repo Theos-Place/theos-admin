@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar, encolarPendientes,
+  pedirContacto, faltaAlgunContacto, avisoDeContacto, puedeGuardar, encolarPendientes, avisarMenorSinAdulto,
 } from './contacto-en-la-puerta'
 
 const HOY = '2026-09-22'
@@ -124,5 +124,46 @@ describe('encolarPendientes', () => {
   it('una familia de cuatro entra completa', () => {
     const familia = [p('mama'), p('papa'), p('hijo1'), p('hijo2')]
     expect(encolarPendientes([], familia)).toHaveLength(4)
+  })
+})
+
+describe('DAT-12 · el menor sin adulto asociado', () => {
+  const HOY_ = '2026-09-22'
+
+  it('avisa por el menor que no tiene ningún adulto', () => {
+    expect(avisarMenorSinAdulto({ birth_date: '2012-01-01', tieneAdultoEnLaFamilia: false }, HOY_))
+      .toBe(true)
+  })
+
+  it('no avisa si sí tiene un adulto', () => {
+    expect(avisarMenorSinAdulto({ birth_date: '2012-01-01', tieneAdultoEnLaFamilia: true }, HOY_))
+      .toBe(false)
+  })
+
+  it('no avisa por un ADULTO que no tiene familia — no es el problema de este aviso', () => {
+    expect(avisarMenorSinAdulto({ birth_date: '1990-01-01', tieneAdultoEnLaFamilia: false }, HOY_))
+      .toBe(false)
+  })
+
+  it('SIN FECHA no se inventa: no se sabe si es menor', () => {
+    expect(avisarMenorSinAdulto({ birth_date: null, tieneAdultoEnLaFamilia: false }, HOY_)).toBe(false)
+  })
+
+  it('el día que cumple 18 deja de avisar', () => {
+    expect(avisarMenorSinAdulto({ birth_date: '2008-09-22', tieneAdultoEnLaFamilia: false }, HOY_)).toBe(false)
+    expect(avisarMenorSinAdulto({ birth_date: '2008-09-23', tieneAdultoEnLaFamilia: false }, HOY_)).toBe(true)
+  })
+
+  it('el aviso del menor SÍ entra en la cola aunque no tenga campos que pedir', () => {
+    // Su `pedir` viene vacío porque a un menor no se le piden datos (FAM-2).
+    // Si la cola filtrara solo por eso, este aviso no aparecería nunca.
+    const cola = encolarPendientes([], [{ id: 'x', name: 'Lucía', tipo: 'menor_sin_adulto' }])
+    expect(cola).toHaveLength(1)
+    expect(cola[0].tipo).toBe('menor_sin_adulto')
+  })
+
+  it('tampoco se repite en la cola', () => {
+    const uno = [{ id: 'x', name: 'Lucía', tipo: 'menor_sin_adulto' as const }]
+    expect(encolarPendientes(uno, uno)).toBe(uno)
   })
 })
