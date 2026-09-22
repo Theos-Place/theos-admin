@@ -9,7 +9,7 @@ resumen: Dónde aparece tu beca cuando te matriculás o te inscribís a un event
 
 # Me asignaron una beca, ¿ahora qué?
 
-![Dónde aparece la beca al matricularte: la casilla "Usar mi beca" viene marcada, el monto ya sale con el descuento, y si cubre el total no hay comprobante que subir](/ayuda/infografias/me-asignaron-una-beca.svg)
+![Dónde aparece la beca al matricularte: la casilla "Usar mi beca" viene marcada, el monto ya sale con el descuento, y si cubre el total no hay comprobante que subir](/ayuda/infografias/me-asignaron-una-beca.svg) ![Dónde aparece la beca al matricularte: la casilla ya viene marcada y el monto sale con el descuento](/ayuda/tutoriales/beca/beca.gif)
 
 La respuesta corta: **aparece sola cuando te matriculás**. No hay que buscarla
 ni escribir ningún código.
@@ -81,3 +81,5 @@ aplicar al cobro desde su lado.
 
 **"Ya pagué el monto completo sin querer."** Escribí a soporte y se tramita una
 devolución.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/beca/beca.mp4)
