@@ -50,6 +50,10 @@ describe('la clave de useCargaRemota es estable', () => {
       for (const m of texto.matchAll(/useCargaRemota<[^>]*>\(\s*([^,]+),/g)) claves.add(m[1].trim())
     }
     expect([...claves].sort()).toEqual([
+      // 'donaciones:stats' es FIJA a propósito: las estadísticas son del padrón
+      // entero y no dependen del filtro. Con una clave que incluyera la
+      // búsqueda, cada tecleo dispararía una consulta agregada.
+      "'donaciones:stats'",
       "'employees'", "'event-types'", "'forms'", "'plans'", 'id ?? \'\'', 'wantedKey',
     ])
   })

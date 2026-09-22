@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import type { DbDonation } from '@/lib/supabase/queries/finance'
 import { toDomainDonation } from '@/lib/finance/adapter'
 import type { Donation } from '@/types/finance'
@@ -40,81 +42,54 @@ function buildQuery(params: DonationSearchParams, page: number): string {
   return u.toString()
 }
 
-/** Donaciones paginadas server-side con acumulación + stats globales (SQL). */
+/**
+ * Donaciones paginadas server-side con acumulación + stats globales (SQL).
+ *
+ * LINT-1 (2026-09-22): la paginación la lleva `usePaginatedList`, que deriva
+ * "cargando" del sello en vez de encenderlo dentro del efecto. Acá quedan las
+ * dos cosas propias de donaciones: las STATS globales —que no dependen del
+ * filtro y por eso son su propia carga— y `filtered_sum`, que sí depende del
+ * filtro y por eso viaja como `extra` de la lista. Si se guardara aparte, al
+ * cambiar de filtro se vería la suma vieja junto a la lista nueva.
+ */
 export function useDonations(params: DonationSearchParams) {
-  const [donations, setDonations] = useState<Donation[]>([])
-  const [total, setTotal]     = useState(0)
-  const [page, setPage]       = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-  const [stats, setStats]     = useState<DonationStats | null>(null)
-  // FIN-1: suma de montos del filtro completo (null sin filtros o sin permiso de montos).
-  const [filteredSum, setFilteredSum] = useState<MoneyTotals | null>(null)
+  const lista = usePaginatedList<DbDonation, Donation, MoneyTotals | null>(
+    page => `/api/finance/donations?${buildQuery(params, page)}`,
+    {
+      pageSize: PAGE_SIZE,
+      itemsKey: 'donations',
+      mapItem: toDomainDonation,
+      leerExtra: d => (d.filtered_sum as MoneyTotals | null) ?? null,
+    },
+  )
 
-  const key = buildQuery(params, 1)
+  // Las stats NO dependen del filtro: son del padrón entero. Por eso van por su
+  // cuenta y con clave fija — recargarlas en cada tecleo de la búsqueda sería
+  // una consulta agregada por letra.
+  const { datos: stats, recargar: recargarStats } = useCargaRemota<DonationStats>(
+    'donaciones:stats',
+    () => json<DonationStats>('/api/finance/donations?stats=1', 'Error cargando las estadísticas.'),
+  )
 
-  // Primera página (corre cuando cambian los filtros).
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true); setError(null)
-    fetch(`/api/finance/donations?${key}`)
-      .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: MoneyTotals | null }) => {
-        if (cancelled) return
-        setDonations((d.donations ?? []).map(toDomainDonation))
-        setTotal(d.total ?? 0)
-        setFilteredSum(d.filtered_sum ?? null)
-        setPage(1)
-      })
-      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Error desconocido') })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [key])
-
-  // Stats globales — se recargan con refreshStats() tras vincular una donación.
-  const loadStats = useCallback(() => {
-    fetch('/api/finance/donations?stats=1')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) setStats(d) })
-      .catch(() => {})
-  }, [])
-  useEffect(() => { loadStats() }, [loadStats])
-
-  const loadMore = useCallback(async () => {
-    const next = page + 1
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/finance/donations?${buildQuery(params, next)}`)
-      if (!res.ok) throw new Error('Error cargando más donaciones')
-      const d = (await res.json()) as { donations: DbDonation[]; total: number }
-      setDonations(prev => [...prev, ...(d.donations ?? []).map(toDomainDonation)])
-      setTotal(d.total ?? 0)
-      setPage(next)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally {
-      setLoading(false)
-    }
-  }, [page, params])
-
+  // Depende de las FUNCIONES, no del objeto `lista`: ese es nuevo en cada
+  // render, y un `refetch` inestable en la lista de dependencias de un efecto
+  // del consumidor es un bucle.
+  const recargarLista = lista.reload
   const refetch = useCallback(() => {
-    setLoading(true); setError(null)
-    fetch(`/api/finance/donations?${buildQuery(params, 1)}`)
-      .then(r => { if (!r.ok) throw new Error('Error cargando donaciones'); return r.json() })
-      .then((d: { donations: DbDonation[]; total: number; filtered_sum?: MoneyTotals | null }) => {
-        setDonations((d.donations ?? []).map(toDomainDonation))
-        setTotal(d.total ?? 0)
-        setFilteredSum(d.filtered_sum ?? null)
-        setPage(1)
-      })
-      .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
-      .finally(() => setLoading(false))
-    loadStats()
-  }, [params, loadStats])
+    recargarLista()
+    void recargarStats()
+  }, [recargarLista, recargarStats])
 
   return {
-    donations, total, stats, filteredSum, loading, error,
-    hasMore: donations.length < total,
-    loadMore, refetch, pageSize: PAGE_SIZE,
+    donations: lista.items,
+    total: lista.total,
+    stats,
+    filteredSum: lista.extra,
+    loading: lista.loading,
+    error: lista.error,
+    hasMore: lista.hasMore,
+    loadMore: lista.loadMore,
+    refetch,
+    pageSize: PAGE_SIZE,
   }
 }
