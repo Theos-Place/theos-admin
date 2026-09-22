@@ -28,7 +28,15 @@
  * entró nunca creó nada. Igual se verifica antes de cada borrado, porque el
  * día que deje de ser cierto quiero enterarme acá y no por un error suelto.
  *
- * IDEMPOTENTE: la segunda corrida no encuentra nada.
+ * IDEMPOTENTE: la segunda corrida no encuentra nada — el criterio se recalcula,
+ * así que lo ya borrado simplemente no aparece.
+ *
+ * UNA TRANSACCIÓN POR LOTE Y NO POR CUENTA. La primera versión abría una
+ * transacción por persona: cuatro viajes al servidor cada una, unas 50 cuentas
+ * por minuto, tres horas para las 9.600. Por lote de 200 son los mismos cuatro
+ * viajes para todo el lote. Sigue siendo atómico —si algo falla, ese lote
+ * entero se revierte y los anteriores quedan— y como el borrado es recuperable,
+ * un lote revertido no deja a nadie a medias.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -135,28 +143,28 @@ async function main() {
   let hechas = 0, fallidas = 0
   for (let i = 0; i < aBorrar.length; i += TAMANO_LOTE) {
     const lote = aBorrar.slice(i, i + TAMANO_LOTE)
-    for (const r of lote) {
-      const id = r.id as string
-      if (!APLICAR) {
-        log.push([id, (r.email as string) ?? '', r.nombre as string, 'dry-run'])
-        hechas++
-        continue
-      }
+    const ids = lote.map(r => r.id as string)
+    if (!APLICAR) {
+      for (const r of lote) log.push([r.id as string, (r.email as string) ?? '', r.nombre as string, 'dry-run'])
+      hechas += lote.length
+    } else {
       try {
-        // El NULL de la ficha y el borrado, en la MISMA transacción.
+        // El NULL de las fichas y el borrado, en la MISMA transacción.
         await c.query('begin')
-        await c.query('update members set auth_user_id = null where auth_user_id = $1', [id])
-        const del = await c.query('delete from auth.users where id = $1', [id])
-        if (del.rowCount !== 1) throw new Error(`delete afectó ${del.rowCount} filas`)
+        await c.query('update members set auth_user_id = null where auth_user_id = any($1::uuid[])', [ids])
+        const del = await c.query('delete from auth.users where id = any($1::uuid[])', [ids])
+        if (del.rowCount !== ids.length) {
+          throw new Error(`el delete afectó ${del.rowCount} filas y el lote tiene ${ids.length}`)
+        }
         await c.query('commit')
-        log.push([id, (r.email as string) ?? '', r.nombre as string, 'borrada'])
-        hechas++
+        for (const r of lote) log.push([r.id as string, (r.email as string) ?? '', r.nombre as string, 'borrada'])
+        hechas += lote.length
       } catch (e) {
         await c.query('rollback').catch(() => {})
         const msg = e instanceof Error ? e.message : String(e)
-        log.push([id, (r.email as string) ?? '', r.nombre as string, `ERROR: ${msg}`])
-        fallidas++
-        console.log(`  ✗ ${r.email}: ${msg}`)
+        for (const r of lote) log.push([r.id as string, (r.email as string) ?? '', r.nombre as string, `ERROR: ${msg}`])
+        fallidas += lote.length
+        console.log(`  ✗ lote ${i}-${i + lote.length}: ${msg}`)
       }
     }
     console.log(`  ${Math.min(i + TAMANO_LOTE, aBorrar.length)}/${aBorrar.length}`)

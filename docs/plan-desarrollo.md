@@ -845,48 +845,72 @@ pasaría — la diferencia entre las dos clases es una letra.
 No manda correos ni notificaciones: es un aviso en pantalla. El saludo por
 correo (DIR-2) sigue siendo otra cosa y no se tocó.
 
-### [ ] AUT-2 · Limpieza de cuentas de auth sin uso (pedido 2026-09-15)
+### [x] AUT-2 · Limpieza de cuentas de acceso sin uso — HECHO 2026-09-22
 
-Optimizar auth.users: dejar cuenta de login solo a quien (a) se haya logueado
-alguna vez, o (b) tenga un estudio o una asistencia en los últimos 2 años. Al
-resto, borrarle la cuenta de ingreso. **Se borra solo la cuenta de login, nunca
-la ficha del miembro** — y como "Creá tu contraseña" recrea la cuenta cuando la
-persona vuelve, el borrado es recuperable en la práctica.
+De **18.560 cuentas, solo 714 se habían logueado alguna vez**. El resto salió de
+la creación masiva de AUTH-1 (2026-07-28), que le hizo cuenta a todo el padrón
+por si acaso: cada una es un correo ocupado y una fila más en auth.
 
-Prompt para Claude Code:
+**Se queda una cuenta si cumple al menos uno:**
 
-```
-MANTENIMIENTO · Limpieza de cuentas auth.users sin uso — DRY-RUN OBLIGATORIO
+| Motivo | Cuentas |
+|---|---|
+| Entró alguna vez | 714 |
+| Bloqueada (menores de FAM-2) | 204 |
+| Tiene rol activo | 292 |
+| Asistió en los últimos 2 años | 4.401 |
+| Estudió en los últimos 2 años | 3.324 |
+| Cuenta de prueba (la maneja SEC-4) | 4 |
+| **Se quedan** | **8.939** |
+| **Candidatas** | **9.621** |
 
-OBJETIVO: reducir auth.users dejando cuenta de login únicamente a quien la usa o
-probablemente la va a usar. NUNCA se toca la tabla de miembros ni ningún dato del
-perfil: solo la cuenta de autenticación.
+El criterio vive puro y testeado en `src/lib/auth/limpieza-de-cuentas.ts`, y cada
+cuenta cuenta una sola vez por su motivo más fuerte, así que los números suman.
 
-CRITERIO — una cuenta SE QUEDA si cumple AL MENOS UNO:
-1. Se logueó alguna vez (auth.users.last_sign_in_at IS NOT NULL).
-2. Su miembro tiene una matrícula de estudio (cualquier estado menos cancelada) con
-   actividad en los últimos 2 años (creada, iniciada o cerrada desde 2024-09-15).
-3. Su miembro tiene al menos un check-in de evento/charla desde 2024-09-15.
-4. Tiene algún rol asignado (staff/dirigentes/etc. — jamás borrar cuenta con rol).
-5. Es cuenta de prueba marcada ([prueba] / @prueba.theosplace.invalid) — esas las
-   maneja scripts/limpiar-datos-de-prueba.ts, no este proceso.
-Todo lo demás es candidato a borrar.
+**TRES CORRECCIONES AL PEDIDO ORIGINAL, las tres medidas antes de tocar nada.**
 
-ETAPA 1 — DRY-RUN (única etapa de esta corrida):
-- Script scripts/limpiar-cuentas-auth.ts que genere un reporte (XLSX o CSV) con: total
-  de auth.users, cuántas se quedan por cada criterio, y la LISTA COMPLETA de candidatas
-  a borrar (email, nombre del miembro, fecha de creación de la cuenta, último
-  estudio/asistencia si tiene). NO BORRAR NADA en esta corrida — la lista la revisa y
-  aprueba la usuaria primero.
-ETAPA 2 — (solo tras aprobación explícita): borrar con supabase.auth.admin.deleteUser(),
-  en lotes con pausa, registrando cada borrado en un log. Verificar antes qué pasa con
-  las FK: si members referencia auth.users (user_id), poner user_id en NULL, no fallar.
-  Idempotente: segunda corrida = cero cambios.
-NOTAS: nada de correos a nadie (EMAIL_SILENT_MODE). Confirmar que el flujo "Creá tu
-contraseña" funciona para un miembro cuya cuenta fue borrada (debe poder recrearla solo);
-si no funciona, reportarlo ANTES de la etapa 2. Test del criterio de selección con
-fixtures. tsc/lint/vitest al cierre.
-```
+**1. Las cuentas BLOQUEADAS no se borran — casi se nos pasa.** Las 204 de
+menores que FAM-2 deshabilitó cumplen todo lo que este proceso busca: nunca
+entraron, sin rol, muchas sin asistencia. Borrarlas rompería AUT-4 —el cron del
+1.º de mes no tendría nada que desbloquear al cumplir 18— y liberaría el correo,
+que es justo lo que se decidió NO hacer. Una cuenta bloqueada no es una cuenta
+sin usar: es una cuenta guardada.
+
+**2. No es solo `members` la que bloquea el borrado.** Hay **19 columnas de
+`public` con FK NO ACTION** hacia auth.users (`created_by`, `recorded_by`,
+`checked_in_by`…). Se midieron las 19: ninguna candidata aparece en las otras
+18 —lógico, quien nunca entró nunca creó nada— pero el script lo verifica antes
+de cada corrida por si deja de ser cierto. `members.auth_user_id` sí bloquea
+siempre, así que el NULL va en la MISMA transacción que el delete.
+
+**3. `auth.admin.deleteUser` y `listUsers` no sirven acá.** `listUsers` devuelve
+500 con 18.560 filas aunque se pagine de a mil. Y el borrado va por SQL directo
+porque el NULL de la ficha y el delete tienen que ser atómicos: sueltos, un
+fallo del segundo dejaría la cuenta viva y la ficha desconectada.
+
+**VERIFICADO DE VERDAD, no solo leyendo el código.** Se borró un lote de 20 y se
+comprobó contra la base: las 20 cuentas fuera, las 20 fichas activas e intactas
+con `auth_user_id` en NULL, cero fichas apuntando a una cuenta muerta. Después
+se tomó una de ellas (Flor Vargas Tenorio), se pidió el enlace de contraseña y
+**la cuenta se recreó sola** con tipo `invite`; se volvió a borrar para dejarla
+como las otras. Eso es lo que hace que este borrado sea recuperable en la
+práctica, y era la condición que el pedido mandaba confirmar antes de la etapa 2.
+
+**APLICADO el 2026-09-22: se borraron 9.621 cuentas.** `auth.users` pasó de
+**18.560 a 8.939**. Verificado después contra la base: cero candidatas sin
+borrar, cero fichas apuntando a una cuenta que ya no existe, las 205 bloqueadas
+intactas, y **23.972 fichas activas — no se tocó ninguna**.
+
+Un detalle de rendimiento que costó una corrida: la primera versión abría una
+transacción POR CUENTA —cuatro viajes al servidor cada una, unas 50 por minuto,
+tres horas para las 9.600—. Por lote de 200 son los mismos cuatro viajes para
+todo el lote y tardó segundos. Sigue siendo atómico; si un lote falla se
+revierte entero y los anteriores quedan.
+
+**Scripts:** `limpiar-cuentas-auth.ts` (solo lee, saca el reporte) y
+`limpiar-cuentas-auth-borrar.ts` (dry-run por defecto, `--limite` para ir de a
+poco, lotes de 200 con pausa, log de cada cuenta, idempotente). Los CSV van a
+`data-import/`, que está en gitignore como los demás respaldos.
 
 ### [x] AUT-3 · Primer ingreso y matrícula — HECHO 2026-09-21
 
