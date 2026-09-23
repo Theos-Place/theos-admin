@@ -199,3 +199,51 @@ esperando que RLS la acote, se va a encontrar con esto.
 
 El arreglo habitual es una función SECURITY DEFINER que devuelva los roles de
 quien llama sin volver a leer `members`, y reescribir las políticas contra ella.
+
+## Las migraciones se aplican solas al desplegar (2026-09-22)
+
+`vercel.json` ejecuta `node scripts/migraciones/aplicar.cjs && next build`. El
+orden ES la garantía: **migrar → construir → desplegar**, y si la migración
+falla el build falla y no hay deploy.
+
+Va en el build y no en un workflow de GitHub porque un workflow corre EN
+PARALELO con el deploy, y esa carrera se pierde en silencio: el código nuevo
+llega a una base vieja y la pantalla se rompe hasta que alguien se acuerde del
+SQL.
+
+**Solo en producción.** En los Preview las `POSTGRES_*` apuntan a la base real
+(ver arriba), así que si esto corriera ahí, cada rama migraría producción.
+Staging se migra a mano, a propósito: ahí es donde se prueba la migración antes.
+
+`supabase/migrations/` **salió** de las rutas ignorables del build. Antes el SQL
+se aplicaba a mano y un commit con solo una migración no tenía nada que
+desplegar; ahora el build es quien la aplica, y saltárselo la dejaría sin correr.
+
+### Lo que hubo que arreglar antes de encenderlo
+
+**El registro de producción no cuadraba con el repo.** Había 17 migraciones
+registradas con otro sello de tiempo pero el mismo nombre que 16 archivos: se
+aplicaron en su momento y después el archivo se renombró. El runner las habría
+visto pendientes y **las habría vuelto a correr**.
+
+No era teórico. Una de ellas hace
+`UPDATE study_enrollments SET status='enrolled' WHERE status='pendiente_de_pago'`,
+y en producción hay **dos matrículas en ese estado** — de Irina Morales (14-set)
+y Maureen Arguedas (21-set). Reaplicarla las habría cambiado solas.
+
+Se verificó objeto por objeto que las 16 ya estaban aplicadas y se reconcilió el
+registro **sin correr una línea de SQL**. Después el runner contra producción
+dice «al día» y las dos matrículas siguen intactas.
+
+### Un hallazgo suelto
+
+Esas dos matrículas son del 14 y el 21 de setiembre, o sea **posteriores** a la
+decisión del 2026-08-04 de no volver a escribir `pendiente_de_pago`. Algo lo
+sigue escribiendo. No se tocó: es su propio ítem.
+
+### Cuidado al escribir una migración
+
+El build migra **antes** de que el código nuevo esté arriba, así que entre una
+cosa y la otra la versión vieja corre contra el esquema nuevo. Conviene que las
+migraciones sean aditivas: agregar columna sí, renombrarla o borrarla en el
+mismo deploy no.

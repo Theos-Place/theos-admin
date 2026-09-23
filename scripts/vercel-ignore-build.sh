@@ -41,11 +41,26 @@ CAMBIOS="$(git diff --name-only "$ANTERIOR" "$ACTUAL" 2>/dev/null)" \
 #  · scripts/        one-off que corren desde la máquina, nunca en el server
 #  · docs/           el plan de desarrollo y las notas
 #  · data-import/    CSV de trabajo
-#  · supabase/migrations/  SQL que se aplica a mano contra la base (ver AGENTS)
 #  · .claude/        configuración del asistente
-IGNORABLES='^(scripts/|docs/|data-import/|supabase/migrations/|\.claude/|README|AGENTS\.md|\.gitignore$)'
+#
+# `supabase/migrations/` SALIÓ de esta lista el 2026-09-22 y es importante que
+# no vuelva. Antes el SQL se aplicaba a mano, así que un commit con solo una
+# migración no tenía nada que desplegar. Ahora el build ES el que las aplica
+# (`buildCommand` en vercel.json): si se saltara, la migración no correría
+# nunca y el esquema se quedaría atrás en silencio — exactamente el problema
+# que se quiso resolver.
+#
+# Por lo mismo `scripts/migraciones/` tampoco se ignora: ese código corre en el
+# build, no desde una máquina.
+IGNORABLES='^(scripts/|docs/|data-import/|\.claude/|README|AGENTS\.md|\.gitignore$)'
 
-RELEVANTES="$(echo "$CAMBIOS" | grep -vE "$IGNORABLES" || true)"
+# Rutas que FUERZAN el build aunque caigan bajo una ignorable. Se evalúan
+# aparte y no con un lookahead porque `grep -E` no los soporta — se probó.
+FORZADAS='^(supabase/migrations/|scripts/migraciones/)'
+
+RELEVANTES="$( { echo "$CAMBIOS" | grep -vE "$IGNORABLES" || true
+                 echo "$CAMBIOS" | grep -E  "$FORZADAS"   || true
+               } | sort -u | grep -v '^$' || true )"
 
 if [ -z "$RELEVANTES" ]; then
   saltar "solo cambió $(echo "$CAMBIOS" | wc -l | tr -d ' ') archivo(s) que no se despliegan"

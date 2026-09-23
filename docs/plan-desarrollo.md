@@ -264,6 +264,17 @@ que este ítem servía para descubrir:
   ciego (solo miraba SECURITY DEFINER) y se amplió.
 - El catálogo exportado traía **cuatro correos** en textos libres; se tapan.
 
+### [ ] INF-3 · Algo sigue escribiendo `pendiente_de_pago` (2026-09-22)
+
+La decisión del 2026-08-04 fue que la matrícula es efectiva de inmediato y que
+ese estado no se vuelve a escribir. Pero hay dos matrículas con él, del **14 y
+el 21 de setiembre**: Irina Morales (CDEB — Finca Sasso) y Maureen Arguedas
+(Nivel 2 Virtual). Apareció al revisar qué pasaría si se reaplicaba la migración
+que las convierte a `enrolled`.
+
+Hay que encontrar quién lo escribe. Y decidir qué hacer con esas dos: si el
+estado ya no significa nada, están en un limbo que ninguna pantalla contempla.
+
 ### [ ] INF-2 · RLS sobre `members` recursiva (encontrado en INF-1, 2026-09-22)
 
 Toda consulta a `members` como `authenticated` muere con *infinite recursion
