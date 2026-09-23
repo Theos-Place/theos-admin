@@ -46,7 +46,7 @@ export function DeleteConfirmModal({
     <Modal onClose={onCancel} titleId="delete-confirm-title" width={384}>
       <div className="p-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(239,85,84,0.12)]">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(214,62,61,0.12)]">
             <Trash2 size={18} className="text-coral" />
           </div>
           <div className="flex-1 min-w-0">

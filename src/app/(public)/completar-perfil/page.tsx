@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { createClient } from '@/lib/supabase/client'
 import { Check, Lock, Mail, AlertTriangle } from 'lucide-react'
 import { readAuthLinkError, authLinkMessage, type AuthLinkMessage } from '@/lib/auth/link-error'
@@ -128,13 +129,9 @@ export default function CompletarPerfilPage() {
               </div>
               <div className="flex flex-col gap-2">
                 {(linkMsg?.acciones ?? ['login', 'pedir_enlace']).map(accion => accion === 'login' ? (
-                  <Link
-                    key="login"
-                    href="/login"
-                    className="rounded-2xl bg-coral px-4 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
-                  >
+                  <Button key="login" href="/login" tamano="lg" radio="2xl">
                     Iniciar sesión
-                  </Link>
+                  </Button>
                 ) : (
                   <Link
                     key="pedir"
@@ -191,13 +188,9 @@ export default function CompletarPerfilPage() {
                   lo describe el segundo: es donde uno está cuando falla. */}
               {error && <p {...a11yConfirm.error} className="text-[13px] text-coral font-body">{error}</p>}
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
-              >
+              <Button type="submit" disabled={saving} tamano="lg" ancho="full" radio="2xl">
                 {saving ? 'Guardando…' : isRecovery ? 'Guardar contraseña' : 'Activar mi cuenta'}
-              </button>
+              </Button>
             </form>
           )}
         </div>

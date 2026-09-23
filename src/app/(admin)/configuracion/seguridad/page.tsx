@@ -148,8 +148,16 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
             {reqs.map(req => (
               <div
                 key={req.label}
-                className="flex items-center gap-2 text-[13px] transition-colors font-body"
-                style={{ color: newPass.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#3B7579' : 'rgba(239,85,84,0.7)' }}
+                // QA-1/N3 · Los tres estados son TEXTO INFORMATIVO: dicen las
+                // reglas de la contraseña y se leen antes de escribir nada, así
+                // que ninguno está exento del piso de AA. Los dos que no eran un
+                // color pleno fallaban: el coral al 70 % daba 2.92 y el estado
+                // inicial (navy-light al 35 %) daba 1.96, contra el 4.5 que pide
+                // la norma. Ahora los tres son tokens del sistema, medidos en
+                // `lib/contrast.test.ts`.
+                className={cn('flex items-center gap-2 text-[13px] transition-colors font-body',
+                  newPass.length === 0 ? 'text-navy-light/80'
+                    : req.met ? 'text-teal-deep' : 'text-coral-deep')}
               >
                 {req.met && newPass.length > 0
                   ? <Check size={12} className="shrink-0" />

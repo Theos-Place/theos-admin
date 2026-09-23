@@ -1785,7 +1785,28 @@ Verificado volviendo a correr la auditoría: **0 violaciones, 0 desbordes** en
 las 18 combinaciones. De paso se arregló un defecto del propio script, que con
 el dev server caído imprimía "violaciones: 0" en vez de fallar.
 
-**Quedan los menores** (N1–N4), que son de consistencia y no rompen nada.
+**N3 hecho en parte** (tercera tanda, el mismo día): `lib/ui/clases-de-boton`
+(puro, con tests) + `components/shared/Button`, que renderiza `<button>` o
+`<Link>` según haya `href` —sin eso la mitad de los sitios seguiría a mano—.
+Migradas y comprobadas en el navegador las 9 pantallas de acceso y públicas.
+Quedan 188 en pantallas con sesión, con un TRINQUETE que impide que crezcan.
+
+Contado bien: de 1.321 clicables, 204 con fondo de marca, y los 182 primarios
+escritos de **86 formas distintas**.
+
+**N3-bis, hallado al hacerlo:** la guardia UI-2 vigilaba el coral retirado solo
+como hex, y el mismo color como `rgba(239, 85, 84, …)` estaba en 60 lugares de
+31 archivos, incluido `--shadow-pulse`. Barridos; la guardia ahora ve las dos
+notaciones. Dos de esos 60 eran TEXTO y fallaban AA: la lista de requisitos de
+contraseña, con 2,92 y 1,96 contra el 4,5 de la norma.
+
+**DOS DECISIONES PENDIENTES DE FLORIANA**, las dos cambios visibles:
+1. El design system dice «primary buttons — pill, always», y hay 53 que no lo
+   son. ¿Se unifican?
+2. Dice que el primario lleva el halo coral siempre, y lo llevan unos pocos.
+   ¿Se enciende en todos?
+
+**Quedan N1, N2 y N4**, que son de consistencia y no rompen nada.
 
 ### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
 
@@ -1794,6 +1815,46 @@ y el recorrido heurístico por rol (dirigente cerrando grupo, finanzas aprobando
 encargado en la puerta, miembro matriculándose desde el celular): ¿sé dónde estoy? ¿sé
 qué hacer? ¿el error me dice cómo salir? ¿cuántos clics costó? El prompt se detalla
 cuando staging exista, sumando lo aprendido en QA-1.
+
+### [ ] QA-3 · Auditoría de código: endpoints, llamados a la BD y rendimiento
+
+No necesita cuentas ni staging — es sobre el código. Puede correr en paralelo con QA-1.
+
+Prompt para Claude Code:
+
+```
+QA PARTE 3 · Auditoría de código: los ~340 endpoints y sus llamados a la base
+
+MISMO ESPÍRITU QUE QA-1: LEVANTAR EL MAPA, NO ARREGLAR. Informe a
+docs/qa-2026-09/informe-codigo.md, hallazgos CRÍTICO/MEDIO/MENOR con archivo:línea y fix
+propuesto de una línea. Los fixes salen después en tandas.
+
+1. CENSO DE ENDPOINTS (todo src/app/api/**): tabla ruta → método → autorización
+   (requireRoles/requireModuleView/ninguna) → validación de entrada (zod/a mano/ninguna)
+   → cuántas consultas a la BD hace. Marcar: endpoints SIN autorización (crítico salvo
+   los públicos a propósito — cotejar con PUBLIC_PREFIXES), sin validación de entrada,
+   y los que no usan reportarError en sus catch.
+
+2. PATRONES DE BD CAROS — buscar sistemáticamente:
+   - N+1: consultas dentro de loops (for/map con await de supabase adentro).
+   - El bug de las 1.000 filas de PostgREST (ya mordió en REP-7): TODA consulta que pueda
+     devolver >1.000 filas sin .range()/paginación — censarlas, es un patrón repetido.
+   - SELECT * o embeds anchos donde se usan 2 campos; consultas sin filtro de sede/estado
+     que traen el padrón entero al server para filtrar en JS.
+   - Consultas repetidas en el mismo request (mismo dato pedido 2+ veces sin caché).
+   - Falta de índices: cruzar las columnas más filtradas/ordenadas en queries contra los
+     índices del baseline SQL; listar candidatos con su consulta de evidencia.
+3. RENDIMIENTO DE PÁGINA (estático): páginas que cargan todo al montar sin paginación,
+   imports pesados que entran al bundle del cliente (revisar con next build --profile o
+   @next/bundle-analyzer si está), useEffect en cascada (patrón que ya costó renders en
+   matrícula).
+4. HALLAZGOS TRANSVERSALES: código muerto evidente (exports sin importadores en src/),
+   duplicaciones de reglas de negocio (la misma regla escrita en dos lados — riesgo de
+   divergencia, como pasó con las definiciones de donante), y TODOs/FIXMEs con más de un
+   mes.
+MEDIR ANTES DE AFIRMAR (regla de la casa): cada hallazgo de rendimiento con evidencia
+(conteo de filas, número de consultas por request, tamaño de bundle), no impresiones.
+```
 
 ## Fase 19 — Pedido el 2026-09-21
 

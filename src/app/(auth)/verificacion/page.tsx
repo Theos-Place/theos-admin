@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/shared/Button'
 
 const LABEL = 'block text-[13px] font-medium text-navy-light/80 mb-1.5 font-body'
 const INPUT = [
@@ -111,7 +112,7 @@ export default function VerificacionPage() {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body">
+        <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(214,62,61,0.07)] border border-[rgba(214,62,61,0.2)] font-body">
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
           {error}
         </div>
@@ -132,17 +133,9 @@ export default function VerificacionPage() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading || code.length !== 6}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50 bg-coral hover:bg-coral-deep"
-          style={{
-            boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
-            cursor: loading || code.length !== 6 ? 'not-allowed' : 'pointer',
-          }}
-        >
+        <Button type="submit" disabled={loading || code.length !== 6} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
           {loading ? <><Loader2 size={16} className="animate-spin" /> Verificando...</> : 'Verificar'}
-        </button>
+        </Button>
       </form>
 
       <button

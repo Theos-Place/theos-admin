@@ -127,7 +127,7 @@ export default function DonacionesPage() {
             </button>
             <Link
               href="/finanzas/donaciones/importar"
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.30)]"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[0_8px_24px_rgba(214,62,61,0.30)]"
             >
               <Upload size={15} />
               Importar donaciones
@@ -266,7 +266,7 @@ export default function DonacionesPage() {
                         className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
                         style={{
                           color: d.is_identified ? '#3DB97A' : '#D63E3D',
-                          background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
+                          background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(214,62,61,0.10)',
                         }}
                       >
                         {d.is_identified ? 'Identificado' : 'Sin identificar'}
@@ -311,7 +311,7 @@ export default function DonacionesPage() {
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                     style={{
                       color: d.is_identified ? '#3DB97A' : '#D63E3D',
-                      background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(239,85,84,0.10)',
+                      background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(214,62,61,0.10)',
                     }}
                   >
                     {d.is_identified ? 'Identificado' : 'Sin identificar'}

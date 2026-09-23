@@ -19,7 +19,7 @@ export default function AdminError({
   return (
     <div className="flex min-h-[60vh] items-center justify-center p-6">
       <div className="flex w-full max-w-md flex-col items-center rounded-2xl bg-surface-card p-8 text-center shadow-[var(--shadow-md)]">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(239,85,84,0.08)]">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(214,62,61,0.08)]">
           <AlertTriangle size={22} className="text-coral" />
         </div>
         <p className="mb-1 font-display text-base font-semibold text-navy">

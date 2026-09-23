@@ -21,7 +21,7 @@ function RefundStatusBadge({ status }: { status: RefundStatus }) {
     pending:    { label: 'Pendiente',   color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
     processing: { label: 'En proceso',  color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
     completed:  { label: 'Completada',  color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
-    rejected:   { label: 'Rechazada',   color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
+    rejected:   { label: 'Rechazada',   color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
     convertida_donacion: { label: 'Convertida en donación', color: '#7C5EC2', bg: 'rgba(155,127,212,0.15)' },
   }
   const c = cfg[status]
@@ -265,7 +265,7 @@ export default function DevolucionesPage() {
             <p className="text-sm font-bold font-display text-navy">
               Devoluciones
             </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(214,62,61,0.10)] text-coral">
               Proceso manual
             </span>
           </div>
@@ -315,7 +315,7 @@ export default function DevolucionesPage() {
                           </button>
                           <button
                             onClick={() => setRejectTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
                           >
                             Rechazar
                           </button>
@@ -370,7 +370,7 @@ export default function DevolucionesPage() {
                     </button>
                     <button
                       onClick={() => setRejectTarget(r)}
-                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
                     >
                       Rechazar
                     </button>

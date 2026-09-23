@@ -437,7 +437,7 @@ function PagosContent() {
                         {canFinanceEdit && p.status === 'paid' && (
                           <button
                             onClick={() => setRefundTarget(p)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
                           >
                             Devolver
                           </button>
@@ -498,7 +498,7 @@ function PagosContent() {
                   {canFinanceEdit && p.status === 'paid' && (
                     <button
                       onClick={() => setRefundTarget(p)}
-                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(239,85,84,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
                     >
                       Devolver
                     </button>

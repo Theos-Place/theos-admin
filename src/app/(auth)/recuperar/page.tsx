@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { useSearchParams } from 'next/navigation'
 import { AlertCircle, Loader2, CheckCircle, ChevronLeft, Mail, ShieldAlert } from 'lucide-react'
@@ -126,12 +127,9 @@ function RecuperarContent() {
           Revisá también tu carpeta de spam.
         </p>
 
-        <Link
-          href="/login"
-          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
-        >
+        <Button href="/login" tamano="lg" ancho="full" radio="xl" resplandor>
           Volver al login
-        </Link>
+        </Button>
       </div>
     )
   }
@@ -206,19 +204,11 @@ function RecuperarContent() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body bg-coral hover:bg-coral-deep disabled:opacity-50"
-          style={{
-            boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.28)',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
+        <Button type="submit" disabled={loading} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
           {loading ? (
             <><Loader2 size={16} className="animate-spin" /> Enviando...</>
           ) : 'Enviarme el enlace'}
-        </button>
+        </Button>
       </form>
     </div>
   )

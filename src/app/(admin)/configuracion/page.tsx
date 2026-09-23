@@ -217,7 +217,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
         type="submit"
         disabled={saving}
         className="flex items-center gap-2 rounded-xl bg-coral px-6 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-60 font-body"
-        style={{ boxShadow: saving ? 'none' : '0 8px 24px rgba(239,85,84,0.25)' }}
+        style={{ boxShadow: saving ? 'none' : '0 8px 24px rgba(214,62,61,0.25)' }}
       >
         {saving ? <><Loader2 size={15} className="animate-spin" /> Guardando...</> : 'Guardar preferencias'}
       </button>

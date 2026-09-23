@@ -204,13 +204,75 @@ ancho de una pantalla no se puede saber leyéndola — hay que deducirlo del
 cascarón. Un solo `max-w` de página escrito a mano en todo el repo
 (`miembros/listas/[id]`, `max-w-5xl`), que sí conviene mirar.
 
-### N3 · No hay componente de botón
+### N3 · No hay componente de botón — HECHO EN PARTE el 2026-09-22
 
 `bg-coral` aparece 205 veces, `bg-coral-deep` 192, `bg-navy` 240 y `bg-teal-deep`
 24 — todas como clases sueltas. El único componente compartido es
 `ExportButton`. Cambiar el estilo del botón primario hoy es buscar y reemplazar
 en cientos de sitios, y cualquier variante nueva nace desalineada sin que nada
 avise.
+
+**Contado bien:** de 1.321 elementos clicables, 204 llevan fondo de marca, y los
+**182 primarios están escritos de 86 formas distintas**. Las tres familias
+reales, contadas y no inventadas: primario (182), secundario con borde fantasma
+(~121) y navy (~19).
+
+**HECHO:**
+
+- `src/lib/ui/clases-de-boton.ts` — puro, con tests: variante, tamaño, ancho,
+  radio y resplandor.
+- `src/components/shared/Button.tsx` — renderiza `<button>` o `<Link>` según
+  haya `href`. Sin eso, la mitad de los sitios seguiría a mano: buena parte de
+  los 204 son enlaces.
+- **Migradas las 9 pantallas de acceso y públicas** (13 botones), que son las
+  que se pueden abrir en el navegador y por lo tanto comprobar. Quedan **0** ahí.
+- **Trinquete** en `boton-compartido.test.ts`: techo de 188, y el techo tiene
+  que bajar cuando bajen los botones. Una pantalla nueva que escriba las clases
+  a mano rompe el test.
+
+**PENDIENTE:** los 188 de las pantallas con sesión. No se migran a ciegas —
+`ExportButton`, por ejemplo, usa un cuarto tamaño (`px-3.5 py-2 text-sm`) que no
+es ninguno de los tres, y equivocarlo se ve en las ~30 pantallas donde aparece.
+Va con QA-2, cuando haya staging para mirarlas.
+
+**DOS DECISIONES PARA FLORIANA**, las dos porque son cambios VISIBLES y no las
+decide un refactor:
+
+1. El README del design system dice «Primary buttons — pill. Always». En el
+   código hay 129 pill, 44 `rounded-xl`, 7 `rounded-2xl` y 2 sueltos. El
+   componente usa pill por defecto pero deja conservar el de cada pantalla.
+   ¿Se unifican los 53 que se desvían?
+2. El mismo README dice que el primario lleva el halo coral SIEMPRE. En el
+   código lo llevan unos pocos. ¿Se enciende en todos?
+
+**UNA COSA DEL README QUE NO SE SIGUE, y a propósito:** dice que el hover del
+botón primario *aclara* a coral-soft. Con texto blanco eso da **2,46:1**, menos
+de la mitad de AA. El hover oscurece a coral-deep (5,35), que es lo que ya
+hacían 164 de los 182. `accessibility.md` es posterior y manda sobre el README.
+
+### N3-bis · El coral retirado seguía vivo, escrito como rgb
+
+Hallado al hacer N3. Ya existía una guardia (`UI-2` en `contrast.test.ts`) que
+impide que vuelva `#EF5554` —el coral que se retiró en agosto de 2026 por no
+pasar AA— pero **solo vigilaba el hex**. El mismo color como
+`rgba(239, 85, 84, …)` pasaba libre, y estaba en **60 lugares de 31 archivos**,
+incluido el token `--shadow-pulse`: o sea que el halo del botón primario seguía
+siendo el color retirado.
+
+Son tintes y sombras, no texto, así que no había falla de contraste — había
+medio cambio sin terminar. Barridos los 60, y la guardia ahora vigila las dos
+notaciones.
+
+**Salvo dos, que sí eran texto y sí fallaban.** La lista de requisitos de
+contraseña en `configuracion/seguridad` los pintaba con opacidad:
+
+| Estado | Antes | Ahora |
+|---|---:|---|
+| requisito sin cumplir | coral /70 % → **2,92** | `text-coral-deep` |
+| antes de escribir nada | navy-light /35 % → **1,96** | `text-navy-light/80` |
+
+No están exentos: son las reglas de la contraseña y se leen *antes* de escribir,
+así que no son un control deshabilitado.
 
 ### N4 · Títulos de página: 15 de 132
 

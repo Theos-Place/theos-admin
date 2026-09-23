@@ -215,6 +215,25 @@ describe('UI-2 · el coral retirado no vuelve', () => {
     const salida = execSync(`grep -rl "${CORAL_RETIRADO.slice(1)}" src/ || true`, { encoding: 'utf8' })
     expect(salida.split('\n').filter(Boolean).filter(f => !f.includes('contrast.test'))).toEqual([])
   })
+
+  /**
+   * QA-1/N3 · El mismo color escrito como rgb tampoco.
+   *
+   * PUNTO CIEGO que tenía esta guardia: vigilaba el hex y nada más, así que
+   * `rgba(239, 85, 84, 0.28)` —que es el MISMO color— pasaba libre. Estaba en
+   * **60 lugares de 31 archivos**, incluido el token `--shadow-pulse` de
+   * globals.css, o sea que el halo del botón primario seguía siendo el color
+   * retirado trece meses después de retirarlo.
+   *
+   * Son tintes y sombras, no texto, así que no había falla de contraste: lo que
+   * había era la mitad de un cambio sin terminar. Barridos el 2026-09-22.
+   */
+  it('ni escrito como rgb, que era por donde se colaba', () => {
+    const [r, g, b] = hexToRgb(CORAL_RETIRADO)
+    const salida = execSync(
+      `grep -rlE "${r}, ?${g}, ?${b}" src/ public/ || true`, { encoding: 'utf8' })
+    expect(salida.split('\n').filter(Boolean).filter(f => !f.includes('contrast.test'))).toEqual([])
+  })
 })
 
 /**

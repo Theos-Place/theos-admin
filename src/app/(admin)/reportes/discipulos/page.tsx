@@ -240,7 +240,7 @@ function VennDiagram({ venn }: { venn: DiscipulosReport['venn'] }) {
   return (
     <svg viewBox="0 0 320 300" className="w-full h-full" role="img" aria-label="Diagrama de traslape de criterios">
       <g style={{ mixBlendMode: 'multiply' }}>
-        <circle cx="120" cy="115" r="82" fill="rgba(239,85,84,0.28)" />
+        <circle cx="120" cy="115" r="82" fill="rgba(214,62,61,0.28)" />
         <circle cx="200" cy="115" r="82" fill="rgba(22,20,64,0.22)" />
         <circle cx="160" cy="190" r="82" fill="rgba(81,157,162,0.28)" />
       </g>

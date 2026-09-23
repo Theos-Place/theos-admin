@@ -46,7 +46,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
         <div className="ph-actions">
           <Link href={`/empleados/${id}/editar`} className="btn btn-ghost btn-sm">Editar</Link>
           {employee.status === 'active' && (
-            <button type="button" onClick={onTerminate} className="btn btn-ghost btn-sm text-coral border-[rgba(239,85,84,0.3)]">Dar de baja</button>
+            <button type="button" onClick={onTerminate} className="btn btn-ghost btn-sm text-coral border-[rgba(214,62,61,0.3)]">Dar de baja</button>
           )}
         </div>
       </div>

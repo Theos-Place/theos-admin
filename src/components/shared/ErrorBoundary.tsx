@@ -36,10 +36,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div
-          className="flex flex-col items-center justify-center min-h-60 rounded-2xl p-8 text-center bg-surface-card border border-[rgba(239,85,84,0.15)]"
+          className="flex flex-col items-center justify-center min-h-60 rounded-2xl p-8 text-center bg-surface-card border border-[rgba(214,62,61,0.15)]"
         >
           <div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl mb-4 bg-[rgba(239,85,84,0.08)]"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl mb-4 bg-[rgba(214,62,61,0.08)]"
           >
             <AlertTriangle size={22} className="text-coral" />
           </div>

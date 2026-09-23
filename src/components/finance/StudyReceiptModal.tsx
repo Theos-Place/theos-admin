@@ -202,7 +202,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
                 quedaba la matrícula viva con su cobro abierto. */}
             {groupId && (
               confirmarCancelar ? (
-                <div className="rounded-xl bg-[rgba(239,85,84,0.06)] border border-[rgba(239,85,84,0.2)] px-3.5 py-3 space-y-2.5">
+                <div className="rounded-xl bg-[rgba(214,62,61,0.06)] border border-[rgba(214,62,61,0.2)] px-3.5 py-3 space-y-2.5">
                   <p className="text-[13px] text-navy font-body">
                     Se cancela la matrícula en {studyName} y se anula el cobro. El cupo queda libre
                     para otra persona; podés volver a matricularte después si querés.

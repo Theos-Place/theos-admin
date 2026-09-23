@@ -37,7 +37,7 @@
 
   --shadow-md:    0 20px 40px rgba(22, 20, 64, 0.06);
   --shadow-lg:    0 24px 56px rgba(22, 20, 64, 0.10);
-  --shadow-pulse: 0 12px 32px rgba(239, 85, 84, 0.28);
+  --shadow-pulse: 0 12px 32px rgba(214, 62, 61, 0.28);
 
   --glass-bg:   rgba(248, 250, 251, 0.80);
   --glass-blur: blur(16px);
@@ -215,7 +215,7 @@ body {
 .btn-primary {
   background: #D63E3D;
   color: white !important;
-  box-shadow: 0 4px 16px rgba(239, 85, 84, 0.25);
+  box-shadow: 0 4px 16px rgba(214, 62, 61, 0.25);
 }
 .btn-primary:hover:not(:disabled) { background: #C43635; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
@@ -269,7 +269,7 @@ body {
   transition: box-shadow 0.15s;
 }
 .form-input:focus {
-  box-shadow: 0 0 0 2px rgba(239, 85, 84, 0.2);
+  box-shadow: 0 0 0 2px rgba(214, 62, 61, 0.2);
 }
 
 .form-select {
@@ -287,7 +287,7 @@ body {
   cursor: pointer;
 }
 .form-select:focus {
-  box-shadow: 0 0 0 2px rgba(239, 85, 84, 0.2);
+  box-shadow: 0 0 0 2px rgba(214, 62, 61, 0.2);
 }
 
 .form-textarea {
@@ -304,7 +304,7 @@ body {
   resize: vertical;
 }
 .form-textarea:focus {
-  box-shadow: 0 0 0 2px rgba(239, 85, 84, 0.2);
+  box-shadow: 0 0 0 2px rgba(214, 62, 61, 0.2);
 }
 
 /* Section title (small uppercase label) */
@@ -328,7 +328,7 @@ body {
   font-size: 11px;
   font-weight: 500;
 }
-.b-donor  { background: rgba(239, 85, 84, 0.08);  color: #C43635; }
+.b-donor  { background: rgba(214, 62, 61, 0.08);  color: #C43635; }
 .b-server { background: rgba(112, 189, 194, 0.15); color: #3B7579; }
 .b-study  { background: rgba(22, 20, 64, 0.07);   color: #29365C; }
 

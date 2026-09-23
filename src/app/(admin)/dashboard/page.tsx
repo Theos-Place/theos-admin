@@ -146,7 +146,7 @@ function AlertRow({
   level: 'red' | 'yellow' | 'green'; text: string; href?: string
 }) {
   const colors = {
-    red:    { dot: '#D63E3D', bg: 'rgba(239,85,84,0.06)' },
+    red:    { dot: '#D63E3D', bg: 'rgba(214,62,61,0.06)' },
     yellow: { dot: '#E9B949', bg: 'rgba(233,185,73,0.06)' },
     green:  { dot: '#3DB97A', bg: 'rgba(61,185,122,0.06)' },
   }
@@ -192,7 +192,7 @@ function ModuleCard({
             <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full font-body"
               style={{
                 color: row.badge === 'coral' ? '#D63E3D' : '#C08A00',
-                background: row.badge === 'coral' ? 'rgba(239,85,84,0.10)' : 'rgba(233,185,73,0.15)',
+                background: row.badge === 'coral' ? 'rgba(214,62,61,0.10)' : 'rgba(233,185,73,0.15)',
               }}>
               {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
             </span>
@@ -342,7 +342,7 @@ export default function DashboardPage() {
             {isAdminOrDir && (
               <Link
                 href="/eventos"
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90 bg-coral font-body shadow-[0_4px_14px_rgba(239,85,84,0.35)]"
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90 bg-coral font-body shadow-[0_4px_14px_rgba(214,62,61,0.35)]"
               >
                 Check-in rápido →
               </Link>
@@ -541,7 +541,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-navy/80 font-body">Devoluciones pend.</span>
-                <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full text-coral bg-[rgba(239,85,84,0.10)] font-body">
+                <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full text-coral bg-[rgba(214,62,61,0.10)] font-body">
                   {DASHBOARD_STATS.finance.pending_refunds}
                 </span>
               </div>
@@ -708,7 +708,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[13px] px-2 py-1 rounded-full font-semibold bg-[rgba(239,85,84,0.10)] text-coral font-body">
+          <span className="text-[13px] px-2 py-1 rounded-full font-semibold bg-[rgba(214,62,61,0.10)] text-coral font-body">
             1 evaluación baja (≤2)
           </span>
           <Link href="/estudios/dirigentes"

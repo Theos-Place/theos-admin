@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { Eye, EyeOff, AlertCircle, Loader2, Fingerprint, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -251,7 +252,7 @@ export default function LoginPage() {
         </div>
 
         {mfaError && (
-          <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body">
+          <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(214,62,61,0.07)] border border-[rgba(214,62,61,0.2)] font-body">
             <AlertCircle size={15} className="shrink-0 mt-0.5" />
             {mfaError}
           </div>
@@ -274,17 +275,13 @@ export default function LoginPage() {
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={mfaLoading || mfaCode.length !== 6}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body disabled:opacity-50 bg-coral hover:bg-coral-deep"
-            style={{
-              boxShadow: mfaLoading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
-              cursor: mfaLoading || mfaCode.length !== 6 ? 'not-allowed' : 'pointer',
-            }}
+            tamano="lg" ancho="full" radio="xl" resplandor={!mfaLoading}
           >
             {mfaLoading ? <><Loader2 size={16} className="animate-spin" /> Verificando...</> : 'Verificar'}
-          </button>
+          </Button>
         </form>
 
         <button
@@ -322,7 +319,7 @@ export default function LoginPage() {
       {(authError || avisoBaja) && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body"
+          className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-6 text-[13px] text-coral-deep bg-[rgba(214,62,61,0.07)] border border-[rgba(214,62,61,0.2)] font-body"
         >
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
           {authError || avisoBaja}
@@ -388,22 +385,14 @@ export default function LoginPage() {
         </div>
 
         {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all font-body bg-coral hover:bg-coral-deep disabled:opacity-50"
-          style={{
-            boxShadow: loading ? 'none' : '0 8px 24px rgba(239,85,84,0.30)',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
+        <Button type="submit" disabled={loading} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Ingresando...
             </>
           ) : 'Iniciar sesión'}
-        </button>
+        </Button>
       </form>
 
       {/* Passkey: opción secundaria, solo si el dispositivo la soporta */}

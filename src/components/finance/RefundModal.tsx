@@ -56,7 +56,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--outline-variant)]">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-[rgba(239,85,84,0.10)]">
+            <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-[rgba(214,62,61,0.10)]">
               <AlertTriangle size={17} className="text-coral" />
             </div>
             <div>
@@ -100,7 +100,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                   className="rounded-xl p-3 text-sm font-medium border transition-all text-left font-body"
                   style={{
                     borderColor: type === t ? '#D63E3D' : 'var(--outline-variant)',
-                    background: type === t ? 'rgba(239,85,84,0.05)' : 'var(--surface-low)',
+                    background: type === t ? 'rgba(214,62,61,0.05)' : 'var(--surface-low)',
                     color: type === t ? '#D63E3D' : 'rgba(22,20,64,0.70)',
                   }}
                 >

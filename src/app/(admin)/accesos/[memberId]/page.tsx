@@ -310,7 +310,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                   )}
                   <div
                     className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ background: entry.action === 'assigned' ? 'rgba(61,185,122,0.12)' : 'rgba(239,85,84,0.10)', border: '2px solid var(--surface-card)', zIndex: 1 }}
+                    style={{ background: entry.action === 'assigned' ? 'rgba(61,185,122,0.12)' : 'rgba(214,62,61,0.10)', border: '2px solid var(--surface-card)', zIndex: 1 }}
                   >
                     {entry.action === 'assigned'
                       ? <Check size={12} className="text-success" />

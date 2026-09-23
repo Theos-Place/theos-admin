@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { AlertCircle, Check, Loader2 } from 'lucide-react'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { DOCUMENT_TYPE_LABEL, DOCUMENT_TYPES } from '@/lib/cedula'
@@ -102,7 +103,7 @@ export default function RegistroPage() {
       </p>
 
       {error && (
-        <div role="alert" className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-5 text-[13px] text-coral-deep bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)] font-body">
+        <div role="alert" className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-5 text-[13px] text-coral-deep bg-[rgba(214,62,61,0.07)] border border-[rgba(214,62,61,0.2)] font-body">
           <AlertCircle size={15} className="shrink-0 mt-0.5" />
           {error}
         </div>
@@ -154,10 +155,9 @@ export default function RegistroPage() {
           {errores.phone && <p {...a11y.phone.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.phone}</p>}
         </div>
 
-        <button type="submit" disabled={enviando}
-          className="w-full rounded-xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-60 font-body inline-flex items-center justify-center gap-2">
+        <Button type="submit" disabled={enviando} tamano="lg" ancho="full" radio="xl">
           {enviando ? <><Loader2 size={16} className="animate-spin" /> Creando…</> : 'Crear mi cuenta'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-center text-[13px] text-navy-light/80 font-body">

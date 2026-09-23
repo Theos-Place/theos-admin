@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, AlertCircle, Loader2, CheckCircle, Check, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -138,12 +139,9 @@ export default function NuevaContrasenaPage() {
           {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya cambiaste tu contraseña, entrá con la nueva.'}
         </p>
         <div className="space-y-2">
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
-          >
+          <Button href="/login" tamano="lg" ancho="full" radio="xl" resplandor>
             Iniciar sesión
-          </Link>
+          </Button>
           <Link
             href="/recuperar"
             className="inline-flex items-center justify-center w-full rounded-xl border border-[var(--outline-variant)] py-3.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
@@ -172,13 +170,13 @@ export default function NuevaContrasenaPage() {
         {/* El botón va al MISMO lugar que el envío automático, por si el
             redirect se demora o alguien le da antes. Nunca al login: en este
             punto la sesión ya está abierta. */}
-        <Link
+        <Button
           href={destinoTrasGuardar(typeof window === 'undefined' ? null
             : new URLSearchParams(window.location.search).get('redirect'))}
-          className="inline-flex items-center justify-center w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all bg-coral hover:bg-coral-deep font-body shadow-[0_8px_24px_rgba(239,85,84,0.28)]"
+          tamano="lg" ancho="full" radio="xl" resplandor
         >
           Continuar →
-        </Link>
+        </Button>
       </div>
     )
   }
@@ -217,7 +215,7 @@ export default function NuevaContrasenaPage() {
 
         <div className="space-y-1.5 px-1">
           {reqs.map(req => (
-            <div key={req.label} className="flex items-center gap-2 text-[13px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#3B7579' : 'rgba(239,85,84,0.7)' }}>
+            <div key={req.label} className="flex items-center gap-2 text-[13px] transition-all duration-200 font-body" style={{ color: password.length === 0 ? 'rgba(41,54,92,0.35)' : req.met ? '#3B7579' : 'rgba(214,62,61,0.7)' }}>
               {req.met && password.length > 0 ? <Check size={12} className="shrink-0" /> : <span className="h-3 w-3 rounded-full border shrink-0 border-current inline-block" />}
               {req.label}
             </div>
@@ -249,14 +247,13 @@ export default function NuevaContrasenaPage() {
           <p className="flex items-center gap-1.5 text-[13px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {submitErr}</p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={loading || !allReqsMet || !confirm}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-coral hover:bg-coral-deep font-body"
-          style={{ boxShadow: (!loading && allReqsMet && confirm) ? '0 8px 24px rgba(239,85,84,0.28)' : 'none' }}
+          tamano="lg" ancho="full" radio="xl" resplandor={!loading && allReqsMet && !!confirm}
         >
           {loading ? <><Loader2 size={16} className="animate-spin" /> Guardando...</> : 'Guardar nueva contraseña'}
-        </button>
+        </Button>
       </form>
     </div>
   )

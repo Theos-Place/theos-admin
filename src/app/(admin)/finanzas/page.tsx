@@ -185,7 +185,7 @@ export default function FinanzasPage() {
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
-                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -203,7 +203,7 @@ export default function FinanzasPage() {
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
-                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(239,85,84,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral">
                   Revisar
                 </span>
               )}
@@ -355,7 +355,7 @@ export default function FinanzasPage() {
 
             {/* Failed payments */}
             {failedRecent7.length > 0 && (
-              <Link href="/finanzas/pagos?estado=failed" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(239,85,84,0.08)] border border-[rgba(239,85,84,0.20)]">
+              <Link href="/finanzas/pagos?estado=failed" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.20)]">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle size={15} className="text-coral mt-[1px] shrink-0" />
                   <div>

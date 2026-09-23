@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/shared/Button'
 import { CalendarDays, MapPin, Video, Ticket, Users } from 'lucide-react'
 import { loginRedirectTo, registerDestination } from '@/lib/events/public-register-link'
 import { formatDateLong, formatMoney } from '@/lib/format'
@@ -162,13 +163,9 @@ export default function EventoPublicoPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          <button
-            type="button"
-            onClick={irAInscribirse}
-            className="block w-full rounded-xl bg-coral px-5 py-3 text-center text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
-          >
+          <Button onClick={irAInscribirse} ancho="full" radio="xl" className="py-3">
             Inscribirme
-          </button>
+          </Button>
           <p className="text-[13px] text-navy-light/80 font-body text-center">
             Para inscribirte necesitás entrar con tu cuenta. Después de entrar,
             la inscripción se abre sola.

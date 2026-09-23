@@ -10,7 +10,7 @@ const STATUS_CONFIG: Record<PaymentStatus, { label: string; color: string; bg: s
   // canceló, se venció el plazo) y no hay nada que atender. El rojo se reserva
   // para 'failed', que sí es una avería del sistema.
   cancelado:      { label: 'Cancelado',    color: '#29365C', bg: 'rgba(41,54,92,0.10)'    },
-  failed:         { label: 'Fallido',      color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
+  failed:         { label: 'Fallido',      color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {

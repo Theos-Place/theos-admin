@@ -8,7 +8,7 @@ import type { ActiveAlert, AlertType } from '@/lib/supabase/queries/alerts'
 import type { InternalNotification } from '@/types/notification'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string }> = {
-  alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(239,85,84,0.10)'   },
+  alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
   info:    { Icon: Info,          color: '#3B7579', bg: 'rgba(81,157,162,0.10)'  },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)'  },
 }

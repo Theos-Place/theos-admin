@@ -435,7 +435,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
                 cuenta— y la pantalla de ingreso le responde que sí se lo
                 mandaron. Le pasó a 12 personas antes de que existiera esto. */}
             {desincronizado && (
-              <div role="alert" className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 bg-[rgba(239,85,84,0.07)] border border-[rgba(239,85,84,0.2)]">
+              <div role="alert" className="flex items-start gap-2.5 rounded-xl px-3.5 py-3 bg-[rgba(214,62,61,0.07)] border border-[rgba(214,62,61,0.2)]">
                 <AlertCircle size={15} className="shrink-0 mt-0.5 text-coral-deep" aria-hidden />
                 <div className="text-[13px] font-body text-navy">
                   <p className="font-semibold text-coral-deep">El correo del perfil no es con el que entra.</p>
