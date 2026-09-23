@@ -139,7 +139,7 @@ export default function NuevaContrasenaPage() {
           {linkMsg?.detalle ?? 'Los enlaces sirven una sola vez. Si ya cambiaste tu contraseña, entrá con la nueva.'}
         </p>
         <div className="space-y-2">
-          <Button href="/login" tamano="lg" ancho="full" radio="xl" resplandor>
+          <Button href="/login" tamano="lg" ancho="full" resplandor>
             Iniciar sesión
           </Button>
           <Link
@@ -173,7 +173,7 @@ export default function NuevaContrasenaPage() {
         <Button
           href={destinoTrasGuardar(typeof window === 'undefined' ? null
             : new URLSearchParams(window.location.search).get('redirect'))}
-          tamano="lg" ancho="full" radio="xl" resplandor
+          tamano="lg" ancho="full" resplandor
         >
           Continuar →
         </Button>
@@ -250,7 +250,7 @@ export default function NuevaContrasenaPage() {
         <Button
           type="submit"
           disabled={loading || !allReqsMet || !confirm}
-          tamano="lg" ancho="full" radio="xl" resplandor={!loading && allReqsMet && !!confirm}
+          tamano="lg" ancho="full" resplandor={!loading && allReqsMet && !!confirm}
         >
           {loading ? <><Loader2 size={16} className="animate-spin" /> Guardando...</> : 'Guardar nueva contraseña'}
         </Button>

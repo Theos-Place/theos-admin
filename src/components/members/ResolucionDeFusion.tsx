@@ -243,7 +243,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
             Cancelar
           </button>
           <button onClick={fusionar} disabled={!listo || enviando}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50">
+            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50">
             <Merge size={14} aria-hidden /> {enviando ? 'Fusionando…' : 'Fusionar'}
           </button>
         </div>

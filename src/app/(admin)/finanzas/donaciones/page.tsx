@@ -127,7 +127,7 @@ export default function DonacionesPage() {
             </button>
             <Link
               href="/finanzas/donaciones/importar"
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[0_8px_24px_rgba(214,62,61,0.30)]"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"
             >
               <Upload size={15} />
               Importar donaciones

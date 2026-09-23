@@ -83,7 +83,7 @@ export function CancelarBecaModal({ titulo, detalle, cuantas = 1, onClose, onCon
           <button
             onClick={confirmar}
             disabled={!limpio || guardando}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
           >
             {guardando ? 'Cancelando…' : cuantas > 1 ? `Cancelar ${cuantas}` : 'Cancelar la beca'}
           </button>

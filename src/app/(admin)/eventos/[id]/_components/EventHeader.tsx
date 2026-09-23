@@ -254,7 +254,7 @@ export function EventHeader({
             {canCheckin && (
               <Link
                 href={`/eventos/${id}/checkin${occQuery}`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body"
               >
                 <QrCode size={13} />
                 Check-in →

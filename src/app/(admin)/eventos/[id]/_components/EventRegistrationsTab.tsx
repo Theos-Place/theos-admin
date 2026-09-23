@@ -197,7 +197,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
           {onSendMessage && (
             <button
               onClick={onSendMessage}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Send size={13} /> Enviar recordatorio
             </button>

@@ -62,7 +62,7 @@ export function CompartirInscripcion({ eventId, registrationFormId }: {
         <button
           type="button"
           onClick={copiar}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-coral px-3.5 py-2 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body"
         >
           {copiado ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
           {copiado ? 'Copiado' : 'Copiar'}

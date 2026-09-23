@@ -395,7 +395,7 @@ function EditarForm({ group, studyType, refetch }: {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

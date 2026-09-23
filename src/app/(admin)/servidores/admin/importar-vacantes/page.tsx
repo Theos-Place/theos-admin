@@ -260,7 +260,7 @@ export default function ImportarVacantesPage() {
             <button
               onClick={handleConfirmImport}
               disabled={importing || rows.length === 0}
-              className="rounded-full px-6 py-2.5 text-sm text-white font-medium bg-coral disabled:opacity-50 font-body"
+              className="rounded-full px-6 py-2.5 text-sm text-white font-medium bg-coral shadow-[var(--shadow-pulse-sm)] disabled:opacity-50 font-body"
             >
               {importing ? 'Importando…' : `Importar ${rows.length} vacantes`}
             </button>

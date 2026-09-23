@@ -262,7 +262,7 @@ export default function PlanDeEstudiosPage() {
         {canManage && (
           <Link
             href="/estudios/plan/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Plus size={14} strokeWidth={1.75} />
             Nuevo tipo

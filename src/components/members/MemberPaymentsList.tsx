@@ -181,7 +181,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
               <button
                 onClick={submit}
                 disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
               </button>
@@ -268,7 +268,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
               <button
                 onClick={submit}
                 disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
               </button>

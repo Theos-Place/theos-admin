@@ -95,7 +95,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
                 <button
                   onClick={handleConfirm}
                   disabled={!canConfirm}
-                  className="flex-1 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
+                  className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
                 >
                   {state === 'error' ? 'Reintentar' : 'Cancelar evento'}
                 </button>
@@ -138,7 +138,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               </p>
               <button
                 onClick={onClose}
-                className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Cerrar
               </button>

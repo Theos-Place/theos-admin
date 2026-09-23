@@ -228,7 +228,7 @@ export function ConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 flex items-center justify-center gap-2 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="flex-1 flex items-center justify-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Send size={14} />
             {sending ? 'Enviando...' : `Enviar a ${recipients.count.toLocaleString('es-CR')} persona${recipients.count !== 1 ? 's' : ''}`}

@@ -154,7 +154,7 @@ export default function AccesosPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all shrink-0 font-body shadow-[0_8px_24px_rgba(214,62,61,0.30)]"
+          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all shrink-0 font-body shadow-[var(--shadow-pulse-sm)]"
         >
           <UserPlus size={15} />
           Dar acceso

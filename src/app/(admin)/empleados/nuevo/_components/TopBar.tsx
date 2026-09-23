@@ -47,7 +47,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
             disabled={!canAdvance}
             className={cn(
               'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
-              canAdvance ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+              canAdvance ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
             Siguiente →
@@ -59,7 +59,7 @@ export function TopBar({ step, totalSteps, canAdvance, onNext, onFinish }: TopBa
             disabled={!canAdvance}
             className={cn(
               'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
-              canAdvance ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+              canAdvance ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
             Formalizar contrato

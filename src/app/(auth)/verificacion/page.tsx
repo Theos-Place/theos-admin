@@ -133,7 +133,7 @@ export default function VerificacionPage() {
           />
         </div>
 
-        <Button type="submit" disabled={loading || code.length !== 6} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
+        <Button type="submit" disabled={loading || code.length !== 6} tamano="lg" ancho="full" resplandor={!loading}>
           {loading ? <><Loader2 size={16} className="animate-spin" /> Verificando...</> : 'Verificar'}
         </Button>
       </form>

@@ -507,8 +507,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   href={mod.href}
                   onClick={onClose}
                   className={cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
-                    active ? 'bg-coral text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
+                    'group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
+                    active ? 'bg-coral shadow-[var(--shadow-pulse-sm)] text-white' : 'text-white/80 hover:bg-white/10 hover:text-white',
                   )}
                 >
                   <Icon
@@ -537,9 +537,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               href="/accesos"
               onClick={onClose}
               className={cn(
-                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
+                'group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition-all duration-150 min-h-[44px] lg:min-h-0',
                 pathname === '/accesos' || pathname.startsWith('/accesos/')
-                  ? 'bg-coral text-white'
+                  ? 'bg-coral shadow-[var(--shadow-pulse-sm)] text-white'
                   : 'text-white/80 hover:bg-white/10 hover:text-white'
               )}
             >

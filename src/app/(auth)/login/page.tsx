@@ -278,7 +278,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={mfaLoading || mfaCode.length !== 6}
-            tamano="lg" ancho="full" radio="xl" resplandor={!mfaLoading}
+            tamano="lg" ancho="full" resplandor={!mfaLoading}
           >
             {mfaLoading ? <><Loader2 size={16} className="animate-spin" /> Verificando...</> : 'Verificar'}
           </Button>
@@ -385,7 +385,7 @@ export default function LoginPage() {
         </div>
 
         {/* Submit */}
-        <Button type="submit" disabled={loading} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
+        <Button type="submit" disabled={loading} tamano="lg" ancho="full" resplandor={!loading}>
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />

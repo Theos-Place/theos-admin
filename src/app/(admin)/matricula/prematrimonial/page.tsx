@@ -204,7 +204,7 @@ export default function PrematrimonialWizardPage() {
           <AlertCircle className="mx-auto mb-3 text-coral-deep" size={28} />
           <h2 className="text-lg font-bold text-navy font-display">No se pudo cargar el miembro</h2>
           <p className="mt-2 text-sm text-navy-light/80 font-body">{enrolleeError}</p>
-          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
+          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm font-medium text-white">
             <ArrowLeft size={14} /> Volver a matrícula
           </Link>
         </div>
@@ -254,7 +254,7 @@ export default function PrematrimonialWizardPage() {
           <p className="mt-2 text-sm text-navy-light/80 font-body">
             El curso prematrimonial requiere <strong>{PREMAT_REQUIREMENT_LABEL}</strong>{onBehalf ? ` — ${enrolleeName} todavía no lo cumple.` : '. Matriculate en Nivel 2 y volvé.'}
           </p>
-          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-medium text-white">
+          <Link href="/matricula" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm font-medium text-white">
             <ArrowRight size={14} /> Ir a matrícula
           </Link>
         </div>
@@ -497,7 +497,7 @@ export default function PrematrimonialWizardPage() {
             </button>
           ) : (
             <button type="button" onClick={submit} disabled={submitting || !file}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm font-medium text-white disabled:opacity-50 font-body">
               {submitting ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : <><Check size={15} /> Enviar inscripción</>}
             </button>
           )}

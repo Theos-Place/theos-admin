@@ -249,7 +249,7 @@ export default function ImportarGruposPage() {
               type="button"
               onClick={confirmImport}
               disabled={busy || preview.valid === 0}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2 text-sm text-white disabled:opacity-50 font-body"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white disabled:opacity-50 font-body"
             >
               {busy ? <Loader2 size={15} className="animate-spin" /> : <ChevronRight size={15} />}
               Importar {preview.valid} grupo{preview.valid !== 1 ? 's' : ''}

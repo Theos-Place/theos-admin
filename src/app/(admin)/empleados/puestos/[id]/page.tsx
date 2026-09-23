@@ -140,7 +140,7 @@ export default function PuestoDetailPage() {
             </span>
             <Link
               href="/empleados/nuevo"
-              className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+              className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
             >
               Contratar empleado
             </Link>

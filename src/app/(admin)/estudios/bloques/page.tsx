@@ -160,7 +160,7 @@ export default function BloquesPage() {
           <button onClick={() => setGenConfirm(true)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body">
             Generar año siguiente
           </button>
-          <button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">
+          <button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">
             <Plus size={14} /> Nuevo bloque
           </button>
         </div>
@@ -271,7 +271,7 @@ export default function BloquesPage() {
               ¿Generar los 3 bloques sugeridos de {new Date().getFullYear() + 1}? Podés ajustar las fechas después.
             </p>
             <div className="flex gap-2">
-              <button onClick={generateYear} className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Generar</button>
+              <button onClick={generateYear} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Generar</button>
               <button onClick={() => setGenConfirm(false)} className="rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function BloquesPage() {
             )}
             {msg && <p className="text-[13px] text-coral font-body">{msg}</p>}
             <div className="flex gap-2 pt-1">
-              <button onClick={save} disabled={!valid || busy} className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (!valid || busy) && 'opacity-50 cursor-not-allowed')}>
+              <button onClick={save} disabled={!valid || busy} className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (!valid || busy) && 'opacity-50 cursor-not-allowed')}>
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Guardando…</> : (editing ? 'Guardar cambios' : 'Crear bloque')}
               </button>
               <button onClick={() => setModalOpen(false)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>

@@ -37,7 +37,15 @@
 
   --shadow-md:    0 20px 40px rgba(22, 20, 64, 0.06);
   --shadow-lg:    0 24px 56px rgba(22, 20, 64, 0.10);
-  --shadow-pulse: 0 12px 32px rgba(214, 62, 61, 0.28);
+  /* El halo del botón primario. DOS tamaños, y los dos salen de lo que el
+     código ya usaba a mano: había cuatro variantes escritas a pulso
+     (12px/32px, 8px/24px, 4px/16px, 4px/14px) porque no existía un token para
+     el botón chico. El grande no sirve para todos: 142 de los 170 botones
+     primarios miden py-2 o py-2.5 —unos 34px de alto— y un desenfoque de 32px
+     con 12 de desplazamiento es más grande que el propio botón, así que se ve
+     como una mancha en vez de un halo. */
+  --shadow-pulse:    0 12px 32px rgba(214, 62, 61, 0.28);
+  --shadow-pulse-sm: 0 4px 14px  rgba(214, 62, 61, 0.30);
 
   --glass-bg:   rgba(248, 250, 251, 0.80);
   --glass-blur: blur(16px);

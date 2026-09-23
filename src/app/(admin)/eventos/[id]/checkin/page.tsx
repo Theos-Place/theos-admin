@@ -796,7 +796,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <button
                   type="button"
                   onClick={siguienteContacto}
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-coral-deep font-body"
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-coral shadow-[var(--shadow-pulse)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-coral-deep font-body"
                 >
                   Entendido
                 </button>
@@ -919,7 +919,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     <button
                       onClick={deshacerCheckin}
                       disabled={deshaciendo}
-                      className="flex-1 rounded-xl bg-coral px-4 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-60 font-body min-h-[44px]"
+                      className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-60 font-body min-h-[44px]"
                     >
                       {deshaciendo ? 'Quitando…' : 'Sí, quitar el check-in'}
                     </button>
@@ -1121,7 +1121,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </p>
             <div className="flex gap-3 pt-1">
               <button onClick={() => setToDelete(null)} disabled={deleting} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body disabled:opacity-40">Cancelar</button>
-              <button onClick={confirmDelete} disabled={deleting} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50">{deleting ? 'Eliminando…' : 'Eliminar'}</button>
+              <button onClick={confirmDelete} disabled={deleting} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50">{deleting ? 'Eliminando…' : 'Eliminar'}</button>
             </div>
           </div>
         </Modal>
@@ -1667,7 +1667,7 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
         <button
           onClick={submit}
           disabled={saving || !!yaExiste}
-          className="w-full rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+          className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
         >
           {saving ? 'Creando…' : familyDrafts.length > 0 ? `Crear familia y check-in (${familyDrafts.length + 1})` : 'Crear y hacer check-in'}
         </button>

@@ -158,7 +158,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
               <button
                 onClick={confirmUndo}
                 disabled={busy}
-                className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
+                className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-50"
               >
                 {busy ? 'Deshaciendo…' : 'Deshacer check-in'}
               </button>

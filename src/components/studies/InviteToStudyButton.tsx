@@ -80,7 +80,7 @@ export function InviteToStudyButton({
                 <p className="text-sm text-navy-light/80 font-body">
                   Listo. {memberName} quedó invitado y ya puede matricularse en ese estudio (aparece con el sello “Por invitación”).
                 </p>
-                <button onClick={close} className="w-full rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Entendido</button>
+                <button onClick={close} className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Entendido</button>
               </div>
             ) : (
               <>
@@ -111,7 +111,7 @@ export function InviteToStudyButton({
                 {error && <p className="text-[13px] text-coral font-body">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-                  <button onClick={submit} disabled={!planId || saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">{saving ? 'Invitando…' : 'Invitar'}</button>
+                  <button onClick={submit} disabled={!planId || saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">{saving ? 'Invitando…' : 'Invitar'}</button>
                 </div>
               </>
             )}

@@ -100,7 +100,7 @@ export default function VacantesPage() {
                 <Link href="/servidores/puestos/solicitar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
                   <FilePlus2 size={14} /> Solicitar puesto nuevo
                 </Link>
-                <Link href="/servidores/vacantes/solicitar" className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
+                <Link href="/servidores/vacantes/solicitar" className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
                   <Plus size={14} /> Solicitar vacantes
                 </Link>
               </>
@@ -279,7 +279,7 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
               </button>
               <button
                 onClick={close}
-                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Cerrar puesto
               </button>

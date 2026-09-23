@@ -192,7 +192,7 @@ export default function BecasPage() {
           {canEdit && tab === 'cupones' && (
             <Link
               href="/finanzas/becas/nueva"
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
               <Plus size={15} /> Crear cupón
             </Link>
@@ -648,7 +648,7 @@ function ReviewRequestModal({ request, onClose, onDone }: {
               <button onClick={() => setAction(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Atrás</button>
               <button
                 onClick={submit} disabled={busy || !reason.trim()}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body bg-coral hover:bg-coral-deep', (busy || !reason.trim()) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !reason.trim()) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? 'Rechazando…' : 'Rechazar y avisar'}
               </button>

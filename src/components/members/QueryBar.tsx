@@ -52,10 +52,10 @@ function OpToggle({ op, onToggle }: { op: 'AND' | 'OR'; onToggle: () => void }) 
     <button
       onClick={onToggle}
       className={cn(
-        'rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
+        'rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
         op === 'AND'
           ? 'bg-navy text-white hover:bg-navy/80'
-          : 'bg-coral text-white hover:bg-coral/80',
+          : 'bg-coral shadow-[var(--shadow-pulse-sm)] text-white hover:bg-coral/80',
         'font-display',
       )}
       title={`Cambiar a ${op === 'AND' ? 'OR' : 'AND'}`}
@@ -125,7 +125,7 @@ function GroupBracket({
             <button
               onClick={onToggleOp}
               className={cn(
-                'rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
+                'rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
                 group.op === 'AND'
                   ? 'bg-navy/10 text-navy hover:bg-navy/20'
                   : 'bg-coral/10 text-coral hover:bg-coral/20',

@@ -214,7 +214,7 @@ export default function RespuestasPage() {
           <a
             href={`/api/forms/${id}/responses/export`}
             className={cn(
-              'flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body',
+              'flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body',
               responses.length === 0 && 'pointer-events-none opacity-40',
             )}
             aria-disabled={responses.length === 0 || undefined}

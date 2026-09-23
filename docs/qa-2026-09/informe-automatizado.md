@@ -270,15 +270,22 @@ reales, contadas y no inventadas: primario (182), secundario con borde fantasma
 es ninguno de los tres, y equivocarlo se ve en las ~30 pantallas donde aparece.
 Va con QA-2, cuando haya staging para mirarlas.
 
-**DOS DECISIONES PARA FLORIANA**, las dos porque son cambios VISIBLES y no las
-decide un refactor:
+**LAS DOS DECISIONES: aprobadas por Floriana el 2026-09-22 y aplicadas.**
 
-1. El README del design system dice «Primary buttons — pill. Always». En el
-   código hay 129 pill, 44 `rounded-xl`, 7 `rounded-2xl` y 2 sueltos. El
-   componente usa pill por defecto pero deja conservar el de cada pantalla.
-   ¿Se unifican los 53 que se desvían?
-2. El mismo README dice que el primario lleva el halo coral SIEMPRE. En el
-   código lo llevan unos pocos. ¿Se enciende en todos?
+1. **Pill siempre.** Los 41 que se desviaban (`rounded-xl`, `2xl`, `lg` y uno
+   con `rounded` a secas) pasan a `rounded-full`. Quedan 170 de 170.
+2. **Halo siempre**, pero **escalado al tamaño**, que es lo que el README no
+   dice. El token grande es `0 12px 32px` y **142 de los 170 botones miden unos
+   34 px de alto**: un desenfoque más grande que el botón se ve como una mancha,
+   y con tres botones juntos se funden en una sola. Comprobado en el navegador
+   poniendo las dos versiones lado a lado. Así que hay dos tokens —
+   `--shadow-pulse` para el CTA grande y `--shadow-pulse-sm` para los demás—,
+   los dos derivados de lo que el código ya escribía a mano: había **cuatro**
+   variantes a pulso (12/32, 8/24, 4/16, 4/14) justamente por no existir el
+   token del botón chico.
+
+Tres guardarraíles nuevos: nada de radios que no sean pill, nada de primarios
+sin halo, nada de sombras coral escritas a mano. Los tres probados con cebo.
 
 **UNA COSA DEL README QUE NO SE SIGUE, y a propósito:** dice que el hover del
 botón primario *aclara* a coral-soft. Con texto blanco eso da **2,46:1**, menos

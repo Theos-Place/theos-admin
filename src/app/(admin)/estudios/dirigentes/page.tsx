@@ -389,7 +389,7 @@ export default function DirigentesPage() {
             </p>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setConfirm(null)} disabled={applying} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-              <button onClick={applyBulkStatus} disabled={applying} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+              <button onClick={applyBulkStatus} disabled={applying} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
                 {applying ? 'Aplicando…' : `Sí, ${confirm.active ? 'activar' : 'desactivar'}`}
               </button>
             </div>
@@ -508,7 +508,7 @@ function BulkStudiesModal({
         )}
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-          <button onClick={submit} disabled={!code || saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+          <button onClick={submit} disabled={!code || saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
             {saving ? 'Aplicando…' : 'Aplicar'}
           </button>
         </div>
@@ -576,7 +576,7 @@ function AddDirigenteModal({ onClose, onSaved }: { onClose: () => void; onSaved:
 
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-          <button onClick={handleSave} disabled={!picked || saving} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+          <button onClick={handleSave} disabled={!picked || saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
             {saving ? 'Guardando…' : 'Agregar'}
           </button>
         </div>

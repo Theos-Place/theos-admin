@@ -145,7 +145,7 @@ export function ResolverInscripcion({ groupId, memberId, memberName, onResuelto 
                 onClick={guardar}
                 disabled={!resultado || (pideMotivo && !motivo.trim()) || enviando}
                 className={cn(
-                  'flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body',
+                  'flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body',
                   (!resultado || (pideMotivo && !motivo.trim()) || enviando) && 'opacity-50 cursor-not-allowed',
                 )}
               >

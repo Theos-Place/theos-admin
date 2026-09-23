@@ -1800,11 +1800,12 @@ como hex, y el mismo color como `rgba(239, 85, 84, …)` estaba en 60 lugares de
 notaciones. Dos de esos 60 eran TEXTO y fallaban AA: la lista de requisitos de
 contraseña, con 2,92 y 1,96 contra el 4,5 de la norma.
 
-**DOS DECISIONES PENDIENTES DE FLORIANA**, las dos cambios visibles:
-1. El design system dice «primary buttons — pill, always», y hay 53 que no lo
-   son. ¿Se unifican?
-2. Dice que el primario lleva el halo coral siempre, y lo llevan unos pocos.
-   ¿Se enciende en todos?
+**Las dos decisiones: aprobadas y aplicadas el 2026-09-22.** Pill en los 170
+primarios, y halo en todos — pero con DOS tokens, porque 142 de los 170 miden
+~34 px de alto y el halo grande (`0 12px 32px`) es más ancho que el botón:
+comprobado en el navegador, con tres botones juntos se funde en una mancha.
+`--shadow-pulse` para el CTA grande, `--shadow-pulse-sm` para el resto, los dos
+derivados de las cuatro variantes que el código ya tenía escritas a pulso.
 
 **N4, N2 y N1 hechos** el mismo día.
 

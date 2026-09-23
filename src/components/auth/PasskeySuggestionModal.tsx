@@ -66,7 +66,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             </p>
             <button
               onClick={onDone}
-              className="mt-5 w-full rounded-xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all font-body"
+              className="mt-5 w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all font-body"
             >
               Ir al dashboard
             </button>
@@ -82,7 +82,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             </p>
             <button
               onClick={onDone}
-              className="mt-5 w-full rounded-xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all font-body"
+              className="mt-5 w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all font-body"
             >
               Ir al dashboard
             </button>
@@ -97,7 +97,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
             <button
               onClick={handleActivate}
               disabled={phase === 'registering'}
-              className="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-60 disabled:cursor-not-allowed font-body"
+              className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-60 disabled:cursor-not-allowed font-body"
             >
               {phase === 'registering'
                 ? <><Loader2 size={15} className="animate-spin" /> Esperando confirmación...</>

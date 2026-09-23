@@ -212,7 +212,7 @@ export default function NuevoCuponPage() {
           <button
             onClick={handleCreate}
             disabled={!selectedEntity || !code.trim() || !expiresAt || saving}
-            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-coral font-body"
+            className="w-full rounded-full py-3 text-sm text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-coral shadow-[var(--shadow-pulse)] font-body"
           >
             {saving ? 'Creando…' : 'Crear cupón'}
           </button>

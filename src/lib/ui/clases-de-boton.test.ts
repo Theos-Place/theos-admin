@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { clasesDeBoton } from './clases-de-boton'
 
 const tiene = (c: string, clase: string) => c.split(' ').includes(clase)
@@ -67,11 +68,38 @@ describe('clases de botón', () => {
   })
 
   it('el resplandor sale del token, nunca de un rgba a mano', () => {
-    // Había botones con el coral retirado metido dentro de la sombra.
-    const c = clasesDeBoton({ resplandor: true })
-    expect(c).toContain('shadow-[var(--shadow-pulse)]')
-    expect(c).not.toContain('rgba')
-    expect(clasesDeBoton()).not.toContain('shadow')
+    // Había botones con el coral retirado metido dentro de la sombra, y cuatro
+    // tamaños de halo escritos a pulso por no existir el token chico.
+    expect(clasesDeBoton()).toContain('shadow-[var(--shadow-pulse')
+    expect(clasesDeBoton()).not.toContain('rgba')
+  })
+
+  it('el primario lo lleva por defecto: lo dice el design system', () => {
+    expect(clasesDeBoton({ variante: 'primario' })).toContain('shadow-[var(--shadow-pulse')
+  })
+
+  it('SE ESCALA con el tamaño, que es lo que el README no dice', () => {
+    // 142 de los 170 primarios miden ~34px de alto. Un desenfoque de 32px con
+    // 12 de desplazamiento es más grande que el botón: se ve como una mancha.
+    expect(clasesDeBoton({ tamano: 'lg' })).toContain('shadow-[var(--shadow-pulse)]')
+    expect(clasesDeBoton({ tamano: 'md' })).toContain('shadow-[var(--shadow-pulse-sm)]')
+    expect(clasesDeBoton({ tamano: 'sm' })).toContain('shadow-[var(--shadow-pulse-sm)]')
+  })
+
+  it('solo el primario: un secundario con halo no distingue nada', () => {
+    for (const v of ['secundario', 'navy', 'fantasma'] as const) {
+      expect(clasesDeBoton({ variante: v })).not.toContain('shadow')
+    }
+  })
+
+  it('se puede apagar, para un primario dentro de algo que ya flota', () => {
+    expect(clasesDeBoton({ resplandor: false })).not.toContain('shadow')
+  })
+
+  it('los dos tokens existen en el CSS', () => {
+    const css = readFileSync('src/app/globals.css', 'utf8')
+    expect(css).toContain('--shadow-pulse:')
+    expect(css).toContain('--shadow-pulse-sm:')
   })
 
   it('no salen espacios dobles ni sobrantes', () => {

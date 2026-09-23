@@ -129,7 +129,7 @@ export function MembersTab({
         )}
         {toolbarExtra}
         <button
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
           onClick={onAddServerClick}
         >
           <Plus size={13} />

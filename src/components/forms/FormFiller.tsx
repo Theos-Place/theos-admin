@@ -755,7 +755,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
                   >
                     Siguiente
                     <ChevronRight size={15} />
@@ -765,7 +765,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                     type="button"
                     onClick={handleSubmit}
                     disabled={enviando}
-                    className="flex-1 rounded-2xl bg-coral py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {enviando ? 'Enviando…' : 'Enviar respuesta'}
                   </button>
@@ -776,7 +776,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                 type="button"
                 onClick={handleSubmit}
                 disabled={enviando}
-                className="w-full rounded-2xl bg-coral py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {enviando ? 'Enviando…' : 'Enviar respuesta'}
               </button>

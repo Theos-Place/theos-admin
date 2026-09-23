@@ -251,7 +251,7 @@ export default function ImportarDonacionesPage() {
                 <button
                   type="button" onClick={verPrevia} disabled={!columnasSuficientes(mapa) || cargando}
                   className={cn('w-full rounded-full py-3 text-sm font-semibold text-white transition-colors font-body',
-                    columnasSuficientes(mapa) && !cargando ? 'bg-coral hover:bg-coral-deep' : 'bg-coral/40')}
+                    columnasSuficientes(mapa) && !cargando ? 'bg-coral shadow-[var(--shadow-pulse)] hover:bg-coral-deep' : 'bg-coral/40')}
                 >
                   {cargando ? 'Revisando…' : 'Revisar antes de importar'}
                 </button>
@@ -368,7 +368,7 @@ export default function ImportarDonacionesPage() {
               </button>
               <button type="button" onClick={importar} disabled={cargando || aImportar.length === 0}
                 className={cn('flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-colors font-body',
-                  cargando || aImportar.length === 0 ? 'bg-coral/40' : 'bg-coral hover:bg-coral-deep')}>
+                  cargando || aImportar.length === 0 ? 'bg-coral/40' : 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep')}>
                 {cargando ? 'Importando…' : `Importar ${aImportar.length} ${aImportar.length === 1 ? 'donación' : 'donaciones'}`}
               </button>
             </div>
@@ -396,7 +396,7 @@ export default function ImportarDonacionesPage() {
                 </button>
               )}
               <Link href="/finanzas/donaciones"
-                className="inline-flex items-center gap-2 rounded-full bg-coral px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body">
+                className="inline-flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body">
                 Ver donaciones
               </Link>
             </div>

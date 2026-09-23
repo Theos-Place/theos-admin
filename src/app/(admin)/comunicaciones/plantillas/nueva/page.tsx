@@ -203,7 +203,7 @@ export default function NuevaPlantillaPage() {
             disabled={saving || !name.trim() || !emailBody.trim() || (creatingCategory && !category.trim())}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body',
-              saved ? 'bg-teal-deep' : 'bg-coral hover:bg-coral-deep'
+              saved ? 'bg-teal-deep' : 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep'
             )}
           >
             {saved ? <><Check size={14} /> Guardada</> : 'Guardar plantilla'}

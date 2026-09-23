@@ -166,7 +166,7 @@ export default function EventoPublicoPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          <Button onClick={irAInscribirse} ancho="full" radio="xl" className="py-3">
+          <Button onClick={irAInscribirse} ancho="full" className="py-3">
             Inscribirme
           </Button>
           <p className="text-[13px] text-navy-light/80 font-body text-center">

@@ -99,7 +99,7 @@ export function EventInfoTab({
               <button
                 type="button"
                 onClick={onRegister}
-                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body shrink-0"
               >
                 <UserPlus size={15} />
                 Inscribirme

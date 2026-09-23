@@ -66,7 +66,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
           <button
             type="button"
             onClick={onOpenVacModal}
-            className="flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+            className="flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Plus size={13} />
             Registrar solicitud

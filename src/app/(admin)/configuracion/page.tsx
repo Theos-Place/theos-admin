@@ -216,8 +216,8 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
       <button
         type="submit"
         disabled={saving}
-        className="flex items-center gap-2 rounded-xl bg-coral px-6 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-60 font-body"
-        style={{ boxShadow: saving ? 'none' : '0 8px 24px rgba(214,62,61,0.25)' }}
+        className={cn('flex items-center gap-2 rounded-full bg-coral px-6 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-60 font-body',
+          !saving && 'shadow-[var(--shadow-pulse)]')}
       >
         {saving ? <><Loader2 size={15} className="animate-spin" /> Guardando...</> : 'Guardar preferencias'}
       </button>

@@ -381,7 +381,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
                 onClick={createAccount}
                 disabled={createBusy || !account?.email}
                 title={!account?.email ? 'El miembro no tiene correo registrado.' : undefined}
-                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
               >
                 {createBusy ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><UserPlus size={14} /> Crear cuenta de acceso</>}
               </button>
@@ -551,7 +551,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
                     type="button"
                     onClick={guardarCorreoDeAcceso}
                     disabled={correoBusy}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                   >
                     {correoBusy ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : 'Guardar'}
                   </button>
@@ -656,7 +656,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
             onClick={toggleNotRecommended}
             className={cn(
               'relative h-6 w-11 rounded-full transition-colors shrink-0 mt-0.5',
-              admin?.not_recommended_to_lead_studies ? 'bg-coral' : 'bg-navy/20',
+              admin?.not_recommended_to_lead_studies ? 'bg-coral shadow-[var(--shadow-pulse-sm)]' : 'bg-navy/20',
               (!admin?.can_edit || busy) && 'opacity-50 cursor-not-allowed',
             )}
           >
@@ -732,7 +732,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
             onClick={toggleVirtualAuth}
             className={cn(
               'relative h-6 w-11 rounded-full transition-colors shrink-0 mt-0.5',
-              admin?.authorized_virtual_studies ? 'bg-coral' : 'bg-navy/20',
+              admin?.authorized_virtual_studies ? 'bg-coral shadow-[var(--shadow-pulse-sm)]' : 'bg-navy/20',
               (!admin?.can_edit_virtual || busyVirtual) && 'opacity-50 cursor-not-allowed',
             )}
           >
@@ -815,7 +815,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
             onClick={toggleOnboarding}
             className={cn(
               'relative h-6 w-11 rounded-full transition-colors shrink-0 mt-0.5',
-              admin?.servers_onboarding ? 'bg-coral' : 'bg-navy/20',
+              admin?.servers_onboarding ? 'bg-coral shadow-[var(--shadow-pulse-sm)]' : 'bg-navy/20',
               (!admin?.can_edit_onboarding || busyOnboarding) && 'opacity-50 cursor-not-allowed',
             )}
           >

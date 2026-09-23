@@ -340,9 +340,14 @@ export default function DashboardPage() {
               </button>
             )}
             {isAdminOrDir && (
+              // Reportado 2026-09-22: decía "Check-in rápido" y llevaba a
+              // /eventos, el listado. El destino es el selector de check-in,
+              // que lista los eventos de HOY con su ventana abierta — el mismo
+              // al que esta pantalla ya redirige sola a un encargado (más
+              // arriba en este archivo).
               <Link
-                href="/eventos"
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90 bg-coral font-body shadow-[0_4px_14px_rgba(214,62,61,0.35)]"
+                href="/eventos/checkin"
+                className="flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:opacity-90 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"
               >
                 Check-in rápido →
               </Link>

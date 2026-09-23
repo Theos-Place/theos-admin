@@ -106,7 +106,7 @@ export function DocumentCapture({
         type="button"
         onClick={save}
         disabled={saving || !docNumber.trim()}
-        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-coral px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-coral-deep disabled:opacity-50 font-body"
+        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-coral-deep disabled:opacity-50 font-body"
       >
         {saving
           ? <><Loader2 size={14} className="animate-spin" aria-hidden /> Guardando…</>

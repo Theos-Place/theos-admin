@@ -895,7 +895,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               <button
                 onClick={doClose}
                 disabled={!closeReason.trim() || !!busyId}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (!closeReason.trim() || !!busyId) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (!closeReason.trim() || !!busyId) && 'opacity-50 cursor-not-allowed')}
               >
                 {busyId ? <><Loader2 size={15} className="animate-spin" /> Cerrando…</> : 'Cerrar tiquete'}
               </button>
@@ -951,7 +951,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               <button
                 onClick={doReject}
                 disabled={!reason.trim() || !!busyId}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (!reason.trim() || !!busyId) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (!reason.trim() || !!busyId) && 'opacity-50 cursor-not-allowed')}
               >
                 {busyId ? <><Loader2 size={15} className="animate-spin" /> Rechazando…</> : 'Rechazar y avisar'}
               </button>
@@ -991,7 +991,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                 disabled={bulkBusy || (bulkAction === 'reject' && !bulkReason.trim())}
                 className={cn(
                   'flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2',
-                  bulkAction === 'approve' ? 'bg-teal-deep hover:opacity-90' : 'bg-coral hover:bg-coral-deep',
+                  bulkAction === 'approve' ? 'bg-teal-deep hover:opacity-90' : 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep',
                   (bulkBusy || (bulkAction === 'reject' && !bulkReason.trim())) && 'opacity-50 cursor-not-allowed',
                 )}
               >

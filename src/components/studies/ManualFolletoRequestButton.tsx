@@ -127,7 +127,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
 
             <div className="flex justify-end gap-2 pt-1">
               <button onClick={() => setOpen(false)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">Cancelar</button>
-              <button onClick={submit} disabled={submitting} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
+              <button onClick={submit} disabled={submitting} className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
                 {submitting ? <><Loader2 size={14} className="animate-spin" /> Creando…</> : <><Check size={14} /> Crear solicitud</>}
               </button>
             </div>

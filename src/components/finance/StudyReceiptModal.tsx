@@ -123,7 +123,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
               Ya quedaste matriculado en {studyName}. Finanzas revisa el comprobante
               aparte; te avisamos si hay algún problema con el pago.
             </p>
-            <button onClick={onDone} className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
+            <button onClick={onDone} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
           </div>
         ) : (
           <>
@@ -190,7 +190,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
               <button
                 onClick={submit}
                 disabled={busy || !file}
-                className={cn('w-full rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                className={cn('w-full rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
               </button>
@@ -211,7 +211,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
                     <button
                       onClick={cancelarMatricula}
                       disabled={cancelando}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
                     >
                       {cancelando ? <><Loader2 size={14} className="animate-spin" /> Cancelando…</> : 'Sí, cancelar la matrícula'}
                     </button>

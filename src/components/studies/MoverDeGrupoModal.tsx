@@ -171,7 +171,7 @@ export function MoverDeGrupoModal({
           <button
             disabled={!destino || enviando}
             onClick={mover}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
           >
             {enviando ? 'Moviendo…' : 'Mover de grupo'}
           </button>

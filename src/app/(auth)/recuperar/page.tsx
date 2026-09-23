@@ -127,7 +127,7 @@ function RecuperarContent() {
           Revisá también tu carpeta de spam.
         </p>
 
-        <Button href="/login" tamano="lg" ancho="full" radio="xl" resplandor>
+        <Button href="/login" tamano="lg" ancho="full" resplandor>
           Volver al login
         </Button>
       </div>
@@ -204,7 +204,7 @@ function RecuperarContent() {
           </p>
         )}
 
-        <Button type="submit" disabled={loading} tamano="lg" ancho="full" radio="xl" resplandor={!loading}>
+        <Button type="submit" disabled={loading} tamano="lg" ancho="full" resplandor={!loading}>
           {loading ? (
             <><Loader2 size={16} className="animate-spin" /> Enviando...</>
           ) : 'Enviarme el enlace'}

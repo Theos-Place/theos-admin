@@ -67,7 +67,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
           <div className="flex flex-col gap-2">
             <button
               onClick={downloadPNG}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body min-h-[44px]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body min-h-[44px]"
             >
               <Download size={15} aria-hidden /> Descargar pase
             </button>

@@ -545,7 +545,7 @@ export default function VacanteDetailPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => setCloseVacancyOpen(false)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-              <button onClick={handleCloseVacancy} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar puesto</button>
+              <button onClick={handleCloseVacancy} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar puesto</button>
             </div>
           </div>
         </Modal>
@@ -582,7 +582,7 @@ export default function VacanteDetailPage() {
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
                 Confirmar
               </button>

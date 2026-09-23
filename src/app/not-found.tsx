@@ -16,7 +16,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 font-body text-sm font-medium text-white transition-colors"
+          className="inline-flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 font-body text-sm font-medium text-white transition-colors"
         >
           Ir al dashboard
         </Link>

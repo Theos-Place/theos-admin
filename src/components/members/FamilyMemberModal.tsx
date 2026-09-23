@@ -221,7 +221,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                   {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
                 {error && <p className="text-[13px] text-coral font-body">{error}</p>}
-                <button onClick={addLinked} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
+                <button onClick={addLinked} className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
                   Vincular integrante
                 </button>
               </div>
@@ -287,7 +287,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
             {error && <p className="text-[13px] text-coral font-body">{error}</p>}
-            <button onClick={addNew} className="w-full rounded-xl bg-coral py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
+            <button onClick={addNew} className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
               Agregar integrante
             </button>
           </div>

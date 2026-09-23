@@ -391,7 +391,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                 <div className="flex justify-end gap-2 pt-1">
                   <button onClick={() => setOpenModal(null)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">{blocked ? 'Cerrar' : 'Cancelar'}</button>
                   {!blocked && (
-                    <button onClick={submit} disabled={submitting} className="rounded-full bg-coral px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
+                    <button onClick={submit} disabled={submitting} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white font-body font-medium hover:bg-coral-deep transition-colors disabled:opacity-60">
                       {submitting ? 'Enviando…' : 'Enviar solicitud'}
                     </button>
                   )}

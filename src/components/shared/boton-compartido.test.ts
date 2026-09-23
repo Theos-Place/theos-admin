@@ -42,6 +42,57 @@ function aMano(): string[] {
   return encontrados
 }
 
+/**
+ * Decisión de Floriana, 2026-09-22: el botón primario es PILL siempre y lleva
+ * el halo coral siempre, como dice el README del design system. Hasta entonces
+ * había 129 pill contra 41 que no, y el halo lo llevaban cuatro.
+ *
+ * Los dos se fijan acá porque el barrido tocó 103 archivos y la mayoría son
+ * pantallas con sesión que no se pueden mirar: sin un test, vuelven de a una.
+ */
+const CORAL = /(?<![\w-])bg-coral(?![\w/-])/
+const RADIO_NO_PILL = /(?<![\w-])rounded(?:-(?:xl|2xl|3xl|lg|md|sm))?(?![\w-])/
+const SOMBRA_A_MANO = /rgba\(214, ?62, ?61/
+
+function primarios(): Array<{ ruta: string; linea: number; tag: string }> {
+  const out: Array<{ ruta: string; linea: number; tag: string }> = []
+  for (const ruta of TSX('src')) {
+    if (ruta.endsWith('shared/Button.tsx')) continue
+    const src = readFileSync(ruta, 'utf8')
+    for (const m of src.matchAll(CLICABLE)) {
+      if (CORAL.test(m[0])) {
+        out.push({ ruta, linea: src.slice(0, m.index).split('\n').length, tag: m[0] })
+      }
+    }
+  }
+  return out
+}
+
+describe('el botón primario sigue la forma del design system', () => {
+  it('es pill: ningún otro radio', () => {
+    const malos = primarios()
+      .filter(b => RADIO_NO_PILL.test(b.tag))
+      .map(b => `${b.ruta}:${b.linea}`)
+    expect(malos, 'El primario es pill. Usá rounded-full, o <Button>.').toEqual([])
+  })
+
+  it('lleva el halo, y sale del token', () => {
+    const sinHalo = primarios()
+      .filter(b => !b.tag.includes('shadow-pulse'))
+      .map(b => `${b.ruta}:${b.linea}`)
+    expect(sinHalo, 'Falta shadow-[var(--shadow-pulse)] o -sm.').toEqual([])
+  })
+
+  it('ninguna sombra coral escrita a mano', () => {
+    // Había CUATRO tamaños a pulso por no existir el token chico, y uno de
+    // ellos llevaba todavía el coral retirado.
+    const aMano = primarios()
+      .filter(b => SOMBRA_A_MANO.test(b.tag))
+      .map(b => `${b.ruta}:${b.linea}`)
+    expect(aMano, 'Usá --shadow-pulse o --shadow-pulse-sm.').toEqual([])
+  })
+})
+
 describe('el botón compartido', () => {
   it(`no hay más de ${TECHO} botones con las clases escritas a mano`, () => {
     const hallados = aMano()

@@ -500,7 +500,7 @@ export default function SeleccionPage() {
                 type="button"
                 onClick={sendConvocation}
                 disabled={sending || !convokeTemplateId}
-                className="rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-40"
+                className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-40"
               >
                 {sending ? 'Enviando…' : 'Enviar convocatoria'}
               </button>
@@ -557,7 +557,7 @@ export default function SeleccionPage() {
                 type="button"
                 onClick={sendInvitations}
                 disabled={sending || !templateId}
-                className="rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-40"
+                className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body disabled:opacity-40"
               >
                 {sending ? 'Enviando…' : 'Enviar invitaciones'}
               </button>

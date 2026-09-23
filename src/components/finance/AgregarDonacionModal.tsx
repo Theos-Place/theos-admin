@@ -127,7 +127,7 @@ export function AgregarDonacionModal({ onClose, onCreada }: {
           </button>
           <button type="button" onClick={guardar} disabled={!persona || guardando}
             className={cn('flex-1 rounded-full py-2.5 text-sm font-semibold text-white transition-colors font-body',
-              !persona || guardando ? 'bg-coral/40' : 'bg-coral hover:bg-coral-deep')}>
+              !persona || guardando ? 'bg-coral/40' : 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep')}>
             {guardando ? 'Guardando…' : 'Registrar donación'}
           </button>
         </div>

@@ -155,7 +155,7 @@ export default function RegistroPage() {
           {errores.phone && <p {...a11y.phone.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.phone}</p>}
         </div>
 
-        <Button type="submit" disabled={enviando} tamano="lg" ancho="full" radio="xl">
+        <Button type="submit" disabled={enviando} tamano="lg" ancho="full">
           {enviando ? <><Loader2 size={16} className="animate-spin" /> Creando…</> : 'Crear mi cuenta'}
         </Button>
       </form>

@@ -186,7 +186,7 @@ function SolicitarPuestoContent() {
 
         <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--outline-variant)]">
           <button type="button" onClick={submit} disabled={!valid || saving}
-            className={cn('rounded-full px-5 py-2.5 text-sm text-white transition-colors font-body', valid && !saving ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed')}>
+            className={cn('rounded-full px-5 py-2.5 text-sm text-white transition-colors font-body', valid && !saving ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed')}>
             {saving ? 'Enviando…' : 'Enviar solicitud'}
           </button>
         </div>

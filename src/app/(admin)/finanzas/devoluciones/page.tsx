@@ -488,7 +488,7 @@ export default function DevolucionesPage() {
               </button>
               <button onClick={handleReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral font-body disabled:opacity-40 disabled:cursor-not-allowed">
+                className="flex-1 rounded-full py-2.5 text-sm text-white bg-coral shadow-[var(--shadow-pulse-sm)] font-body disabled:opacity-40 disabled:cursor-not-allowed">
                 Rechazar
               </button>
             </div>

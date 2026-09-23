@@ -102,7 +102,7 @@ export default function EditarEmpleadoPage() {
           </p>
           <Link
             href={`/empleados/${id}`}
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Ver expediente
           </Link>
@@ -145,7 +145,7 @@ export default function EditarEmpleadoPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

@@ -65,7 +65,7 @@ export default function NuevoPuestoPage() {
           </p>
           <Link
             href="/empleados/puestos"
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Ver todos los puestos
           </Link>
@@ -110,7 +110,7 @@ export default function NuevoPuestoPage() {
             disabled={!canSave()}
             className={cn(
               'rounded-full px-3.5 py-1.5 text-[13px] text-white transition-colors font-body',
-              canSave() ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+              canSave() ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
             {saving ? 'Guardando...' : 'Guardar puesto'}

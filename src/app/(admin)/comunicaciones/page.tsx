@@ -210,7 +210,7 @@ export default function ComunicacionesPage() {
         </div>
         <Link
           href="/comunicaciones/nueva"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all shrink-0 font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all shrink-0 font-body"
         >
           <Plus size={14} />
           Nueva comunicación
@@ -544,7 +544,7 @@ export default function ComunicacionesPage() {
                   <div className="shrink-0 inline-flex items-center gap-2">
                     <Link
                       href={`/comunicaciones/nueva`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
                     >
                       <FileEdit size={12} />
                       Continuar editando

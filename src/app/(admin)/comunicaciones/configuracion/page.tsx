@@ -407,7 +407,7 @@ export default function ConfiguracionPage() {
               </div>
               <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">
                 <button type="button" onClick={() => setShowSmtpForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-                <button type="button" onClick={handleAddSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
+                <button type="button" onClick={handleAddSmtp} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
               </div>
             </div>
           )}
@@ -488,7 +488,7 @@ export default function ConfiguracionPage() {
               </div>
               <div className="flex items-center gap-3 pt-2 border-t border-[var(--outline-variant)]">
                 <button type="button" onClick={() => setShowWaForm(false)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-                <button type="button" onClick={handleAddWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
+                <button type="button" onClick={handleAddWa} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cuenta</button>
               </div>
             </div>
           )}
@@ -545,7 +545,7 @@ export default function ConfiguracionPage() {
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-[var(--outline-variant)]">
             <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-            <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
+            <button type="button" onClick={handleSaveEditSmtp} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
       </Modal>
     )}
@@ -581,7 +581,7 @@ export default function ConfiguracionPage() {
           </div>
           <div className="flex items-center gap-3 px-6 py-4 border-t border-[var(--outline-variant)]">
             <button type="button" onClick={() => setEditingConfig(null)} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-            <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
+            <button type="button" onClick={handleSaveEditWa} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
           </div>
       </Modal>
     )}

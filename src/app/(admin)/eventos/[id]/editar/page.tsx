@@ -405,7 +405,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           </p>
           <Link
             href={`/eventos/${id}`}
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2 font-body"
+            className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2 font-body"
           >
             Ver evento
           </Link>
@@ -469,7 +469,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
           <button
             onClick={handleSave}
             disabled={saving || endBeforeStart}
-            className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </button>

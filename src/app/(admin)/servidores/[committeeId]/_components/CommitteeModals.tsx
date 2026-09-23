@@ -110,7 +110,7 @@ export function DisconnectModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Confirmar salida
           </button>
@@ -160,7 +160,7 @@ export function EditCommitteeModal({ form, areas, onFormChange, onSave, onCancel
         </div>
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-          <button onClick={onSave} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
+          <button onClick={onSave} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Guardar cambios</button>
         </div>
       </div>
     </Modal>
@@ -292,7 +292,7 @@ export function ChangePositionModal({
         </div>
         <div className="flex gap-2">
           <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-          <button onClick={onConfirm} disabled={!newPosition} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors font-body">Confirmar</button>
+          <button onClick={onConfirm} disabled={!newPosition} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep disabled:opacity-40 transition-colors font-body">Confirmar</button>
         </div>
       </div>
     </Modal>

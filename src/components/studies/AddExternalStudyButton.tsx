@@ -215,7 +215,7 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
           <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
             Cancelar
           </button>
-          <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+          <button onClick={handleSave} disabled={saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
             {saving ? 'Guardando…' : 'Agregar'}
           </button>
         </div>

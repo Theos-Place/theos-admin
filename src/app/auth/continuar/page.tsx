@@ -55,7 +55,7 @@ export default async function ContinuarPage({
         {tokenHash ? (
           <a
             href={confirmUrl}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-coral px-4 py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-coral shadow-[var(--shadow-pulse)] px-4 py-3.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body"
           >
             Continuar
           </a>

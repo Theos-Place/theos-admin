@@ -21,7 +21,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
       <div className="flex justify-end">
         <Link
           href={`/servidores/vacantes/solicitar?comite=${committeeId}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={13} />
           Solicitar nuevo puesto

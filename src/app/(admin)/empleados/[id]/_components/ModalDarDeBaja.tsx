@@ -85,7 +85,7 @@ export function ModalDarDeBaja({
             disabled={terminateConfirm !== memberName}
             className={cn(
               'rounded-full px-4 py-2 text-sm text-white transition-colors font-body',
-              terminateConfirm === memberName ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+              terminateConfirm === memberName ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
             )}
           >
             Confirmar baja

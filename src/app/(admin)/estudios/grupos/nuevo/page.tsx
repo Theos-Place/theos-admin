@@ -235,7 +235,7 @@ export default function NuevoGrupoPage() {
           </p>
           <Link
             href="/estudios/grupos"
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2"
+            className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2"
           >
             Ver todos los grupos
           </Link>
@@ -742,7 +742,7 @@ export default function NuevoGrupoPage() {
             <button
               onClick={handleCreate}
               disabled={submitting}
-              className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {submitting ? 'Creando...' : 'Crear grupo'}
             </button>

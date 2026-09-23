@@ -108,7 +108,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
             Se envió a {memberIds.length} inscrito{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
             Podés ver el estado en Comunicaciones.
           </p>
-          <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar</button>
+          <button onClick={onClose} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar</button>
         </div>
       </Modal>
     )
@@ -139,7 +139,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
           <button
             onClick={handleSend}
             disabled={!msg.trim() || !subject.trim() || memberIds.length === 0 || sending}
-            className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
           >
             {sending ? 'Enviando…' : 'Enviar'}
           </button>

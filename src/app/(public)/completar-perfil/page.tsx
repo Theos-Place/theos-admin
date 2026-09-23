@@ -129,7 +129,7 @@ export default function CompletarPerfilPage() {
               </div>
               <div className="flex flex-col gap-2">
                 {(linkMsg?.acciones ?? ['login', 'pedir_enlace']).map(accion => accion === 'login' ? (
-                  <Button key="login" href="/login" tamano="lg" radio="2xl">
+                  <Button key="login" href="/login" tamano="lg">
                     Iniciar sesión
                   </Button>
                 ) : (
@@ -188,7 +188,7 @@ export default function CompletarPerfilPage() {
                   lo describe el segundo: es donde uno está cuando falla. */}
               {error && <p {...a11yConfirm.error} className="text-[13px] text-coral font-body">{error}</p>}
 
-              <Button type="submit" disabled={saving} tamano="lg" ancho="full" radio="2xl">
+              <Button type="submit" disabled={saving} tamano="lg" ancho="full">
                 {saving ? 'Guardando…' : isRecovery ? 'Guardar contraseña' : 'Activar mi cuenta'}
               </Button>
             </form>

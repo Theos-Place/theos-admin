@@ -452,7 +452,7 @@ export default function MatriculaPage() {
                   Reportado con Valeria Astorga Calvo (2026-09-08). */}
               <Link
                 href={deudaHref}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body"
               >
                 <CreditCard size={15} aria-hidden="true" />
                 {selectedMember ? 'Ver sus pagos pendientes' : 'Ir a pagar'}
@@ -1108,7 +1108,7 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
   const botonMatricular = (
     <button
       onClick={onEnroll}
-      className="rounded-lg bg-coral px-3 py-2 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body min-h-[40px]"
+      className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3 py-2 text-[13px] font-medium text-white hover:bg-coral-deep transition-colors font-body min-h-[40px]"
     >
       Matricular
     </button>
@@ -1382,7 +1382,7 @@ function ConfirmModal({
           <button
             onClick={handleConfirm}
             disabled={enrolling}
-            className={cn('flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', enrolling && 'opacity-50 cursor-not-allowed')}
+            className={cn('flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', enrolling && 'opacity-50 cursor-not-allowed')}
           >
             {enrolling ? 'Matriculando…' : 'Confirmar matrícula'}
           </button>

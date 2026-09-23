@@ -228,7 +228,7 @@ export default function FormulariosPage() {
         {puedeCrear && (
           <Link
             href="/formularios/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
           >
             <Plus size={14} />
             Nuevo formulario
@@ -306,7 +306,7 @@ export default function FormulariosPage() {
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+                className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
               >
                 <Trash2 size={13} />
                 {deleting ? 'Eliminando…' : 'Eliminar'}

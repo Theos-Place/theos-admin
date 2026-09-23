@@ -167,7 +167,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
             Cancelar
           </button>
           <button
-            className="rounded-full bg-coral px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             onClick={handleSave}
             disabled={submitting}
           >

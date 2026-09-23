@@ -118,8 +118,8 @@ function SedeButton({ label, count, active, onClick }: { label: string; count?: 
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center justify-between gap-2 text-left rounded-xl px-2.5 py-2 text-[13px] font-body transition-colors',
-        active ? 'bg-coral text-white' : 'text-navy-light/80 hover:bg-surface-low',
+        'w-full flex items-center justify-between gap-2 text-left rounded-full px-2.5 py-2 text-[13px] font-body transition-colors',
+        active ? 'bg-coral shadow-[var(--shadow-pulse)] text-white' : 'text-navy-light/80 hover:bg-surface-low',
       )}
     >
       <span className="min-w-0 truncate">{label}</span>

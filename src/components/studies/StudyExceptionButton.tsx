@@ -278,7 +278,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                   // permiso para repetir). Antes el botón exigía además un
                   // requisito eximido, así que ese caso no se podía guardar.
                   disabled={!planId || (!waiveAll && waived.size === 0 && !repetir) || !isValidExceptionReason(reason) || saving}
-                  className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+                  className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
                 >
                   {saving ? 'Creando…' : 'Crear excepción'}
                 </button>

@@ -94,7 +94,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
           type="button"
           onClick={save}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
         >
           {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : saved ? <><Check size={14} /> Guardado</> : 'Guardar'}
         </button>

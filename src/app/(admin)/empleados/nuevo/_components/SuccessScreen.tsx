@@ -32,7 +32,7 @@ export function SuccessScreen({ selected }: SuccessScreenProps) {
           </Link>
           <Link
             href="/empleados/nuevo"
-            className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Contratar otro
           </Link>

@@ -46,7 +46,7 @@ export function ModalAjusteSalarial({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+              className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
               Cerrar
             </button>
@@ -106,7 +106,7 @@ export function ModalAjusteSalarial({
                 disabled={!canRaise || !raiseReason}
                 className={cn(
                   'rounded-full px-4 py-2 text-sm text-white transition-colors font-body',
-                  canRaise && raiseReason ? 'bg-coral hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
+                  canRaise && raiseReason ? 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep' : 'bg-navy-light/20 cursor-not-allowed'
                 )}
               >
                 Guardar ajuste

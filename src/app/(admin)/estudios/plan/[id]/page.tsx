@@ -50,7 +50,7 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
         <div className="flex gap-2">
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             Sí, desactivar
           </button>
@@ -233,7 +233,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </button>
           )}
           <button
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             onClick={() => router.push(`/estudios/plan/${id}/editar`)}
           >
             <Pencil size={13} /> Editar
@@ -385,7 +385,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             </p>
           </div>
           <button
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             onClick={() => router.push('/estudios/grupos/nuevo')}
           >
             <Plus size={14} strokeWidth={1.75} /> Nuevo grupo

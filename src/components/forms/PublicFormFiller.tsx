@@ -164,7 +164,7 @@ export function PublicFormFiller({ formId, form, fields }: {
         type="button"
         onClick={enviar}
         disabled={enviando}
-        className={cn('w-full rounded-full bg-coral px-5 py-3 text-sm text-white transition-colors font-body',
+        className={cn('w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] px-5 py-3 text-sm text-white transition-colors font-body',
           'hover:bg-coral-deep disabled:opacity-50')}
       >
         {enviando ? <span className="inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" aria-hidden /> Enviando…</span> : 'Enviar'}

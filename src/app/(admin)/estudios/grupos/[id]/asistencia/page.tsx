@@ -107,7 +107,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           </p>
           <Link
             href={`/estudios/grupos/${id}`}
-            className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2"
+            className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2"
           >
             Volver al grupo
           </Link>
@@ -240,7 +240,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+            className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
           >
             {saving ? 'Guardando…' : 'Guardar asistencia'}
           </button>

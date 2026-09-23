@@ -263,7 +263,7 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
           <button
             onClick={handleConfirm}
             disabled={pideComprobante && !comprobante}
-            className={cn('flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', pideComprobante && !comprobante && 'opacity-50 cursor-not-allowed')}
+            className={cn('flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-medium font-body', pideComprobante && !comprobante && 'opacity-50 cursor-not-allowed')}
           >
             {pideComprobante ? 'Confirmar y enviar comprobante' : 'Confirmar inscripción'}
           </button>
@@ -316,7 +316,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
             <p className="text-[13px] text-navy-light/80 font-body">
               Tu inscripción a {eventTitle} quedó pendiente de aprobación de pago. Te avisamos si hay algún problema.
             </p>
-            <button onClick={onDone} className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
+            <button onClick={onDone} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Listo</button>
           </div>
         ) : (
           <>
@@ -350,7 +350,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
               <button
                 onClick={submit}
                 disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
+                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
               >
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
               </button>

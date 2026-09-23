@@ -196,7 +196,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
         <button
           type="submit"
           disabled={saving || !allMet || !confirm}
-          className="flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
+          className="flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
         >
           {saving ? <><Loader2 size={14} className="animate-spin" /> Actualizando...</> : 'Actualizar contraseña'}
         </button>
@@ -289,7 +289,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         <button
           onClick={handleRegister}
           disabled={registering || !supported}
-          className="flex items-center gap-1.5 rounded-xl bg-coral px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
+          className="flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
         >
           {registering
             ? <><Loader2 size={13} className="animate-spin" /> Registrando...</>
@@ -557,7 +557,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
                 <button
                   onClick={handleVerifyEnroll}
                   disabled={verifying || code.length !== 6}
-                  className="flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
+                  className="flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed font-body"
                 >
                   {verifying ? <><Loader2 size={14} className="animate-spin" /> Verificando...</> : 'Verificar y activar'}
                 </button>
@@ -587,7 +587,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
           <button
             onClick={handleStart}
             disabled={starting}
-            className="flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-50 font-body"
+            className="flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-all disabled:opacity-50 font-body"
           >
             {starting ? <><Loader2 size={14} className="animate-spin" /> Preparando...</> : 'Activar autenticación en dos pasos'}
           </button>

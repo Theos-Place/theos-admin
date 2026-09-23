@@ -317,7 +317,7 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
             Se envió a {memberIds.length} participante{memberIds.length !== 1 ? 's' : ''} (correo + notificación).
             Podés ver el estado en Comunicaciones.
           </p>
-          <button onClick={onClose} className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
+          <button onClick={onClose} className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors">
             Cerrar
           </button>
         </div>
@@ -351,7 +351,7 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
           <button
             onClick={handleSend}
             disabled={!msg.trim() || !subject.trim() || memberIds.length === 0 || sending}
-            className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
           >
             {sending ? 'Enviando…' : 'Enviar'}
           </button>
@@ -648,7 +648,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <button
                 onClick={confirmWithdraw}
                 disabled={withdrawing || !!motivoInvalido}
-                className="flex-1 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+                className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
               >
                 {withdrawing ? BAJA_COPY[tipoBaja].gerundio : BAJA_COPY[tipoBaja].boton}
               </button>
@@ -745,7 +745,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               {group.status === 'en_curso' && (
                 <Link
                   href={`/estudios/grupos/${id}/cierre`}
-                  className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
+                  className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
                 >
                   Cierre de estudio
                 </Link>
@@ -1037,7 +1037,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   <button
                     onClick={saveWhatsappUrl}
                     disabled={!waInput.trim() || waSaving}
-                    className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
+                    className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40"
                   >
                     {waSaving ? 'Guardando…' : 'Guardar'}
                   </button>
@@ -1059,7 +1059,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           <div className="flex justify-end">
             <Link
               href={`/estudios/grupos/${id}/asistencia`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
             >
               <Users size={14} /> Pasar lista hoy
             </Link>

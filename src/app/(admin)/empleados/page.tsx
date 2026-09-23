@@ -82,7 +82,7 @@ export default function EmpleadosPage() {
         {can('empleados', 'create') && (
           <Link
             href="/empleados/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
           >
             <Plus size={14} />
             Contratar empleado

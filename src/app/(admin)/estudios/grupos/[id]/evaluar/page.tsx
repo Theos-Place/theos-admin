@@ -95,7 +95,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
           <p className="text-[13px] text-navy-light/80 font-body">
             Tu evaluación quedó registrada. Le llega a la coordinación sin tu nombre.
           </p>
-          <Link href="/matricula" className="inline-flex rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">
+          <Link href="/matricula" className="inline-flex rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">
             Volver a Matrícula
           </Link>
         </div>
@@ -224,7 +224,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
           type="button"
           onClick={enviar}
           disabled={!!faltante || enviando}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral px-5 py-3 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse)] px-5 py-3 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
         >
           {enviando ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar evaluación'}
         </button>

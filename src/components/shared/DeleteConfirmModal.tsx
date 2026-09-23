@@ -81,7 +81,7 @@ export function DeleteConfirmModal({
           <button
             onClick={onConfirm}
             disabled={!enabled}
-            className="flex-1 rounded-xl bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
+            className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
           >
             {loading ? 'Procesando…' : (confirmLabel ?? 'Confirmar')}
           </button>

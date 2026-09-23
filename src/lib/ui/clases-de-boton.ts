@@ -97,13 +97,20 @@ export type OpcionesDeBoton = {
   /** Por defecto pill, que es la regla del design system. Ver la cabecera. */
   radio?: RadioDeBoton
   /**
-   * El halo coral de los CTA grandes. Sale del token `--shadow-pulse` y no de
-   * un `rgba(...)` escrito a mano: había botones con el coral RETIRADO metido
-   * dentro de la sombra (ver UI-2 en `lib/contrast.test.ts`).
+   * El halo coral. Encendido por defecto en el primario desde el 2026-09-22,
+   * por decisión de Floriana: el README del design system dice que el botón
+   * primario lo lleva SIEMPRE, y hasta entonces lo llevaban cuatro.
    *
-   * El README del design system dice que el primario lo lleva SIEMPRE. En el
-   * código lo llevan unos pocos, así que acá va apagado por defecto:
-   * encenderlo en todos es un cambio visible y no lo decide un refactor.
+   * SE ESCALA CON EL TAMAÑO, y eso no está en el README. El halo grande es
+   * `0 12px 32px`, y 142 de los 170 botones primarios miden unos 34px de alto:
+   * un desenfoque más grande que el propio botón se ve como una mancha, no
+   * como un halo. Así que `lg` usa `--shadow-pulse` y `sm`/`md` usan
+   * `--shadow-pulse-sm`. Los dos valores salen de lo que el código ya escribía
+   * a mano, en cuatro variantes distintas por no tener un token.
+   *
+   * Se puede apagar (`resplandor={false}`) para un primario que va dentro de
+   * algo que ya flota —un modal, una tarjeta elevada— donde una sombra sobre
+   * otra se ensucia.
    */
   resplandor?: boolean
 }
@@ -114,12 +121,17 @@ export function clasesDeBoton({
   tamano = 'md',
   ancho = 'auto',
   radio = 'pill',
-  resplandor = false,
+  resplandor,
 }: OpcionesDeBoton = {}): string {
   // La fantasma no tiene caja: ni radio, ni relleno horizontal de botón.
   const caja = variante === 'fantasma' ? '' : `${RADIO[radio]} ${TAMANO[tamano]}`
   const relleno = variante === 'fantasma' ? TAMANO[tamano].replace(/px-[\d.]+/, 'px-2') : ''
-  const halo = resplandor ? 'shadow-[var(--shadow-pulse)]' : ''
+  // Solo el primario lo lleva: es lo que el halo SIGNIFICA —«esta es la acción
+  // de la pantalla»—. Un secundario con halo no distingue nada.
+  const quiereHalo = resplandor ?? variante === 'primario'
+  const halo = !quiereHalo || variante !== 'primario'
+    ? ''
+    : tamano === 'lg' ? 'shadow-[var(--shadow-pulse)]' : 'shadow-[var(--shadow-pulse-sm)]'
   return [BASE, VARIANTE[variante], caja || relleno, ANCHO[ancho], halo]
     .filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
 }

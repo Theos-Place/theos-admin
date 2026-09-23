@@ -170,7 +170,7 @@ function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: s
           </p>
           <div className="flex gap-2 pt-1">
             <button onClick={() => setConfirm(false)} disabled={saving} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-            <button onClick={apply} disabled={saving} className="flex-1 rounded-full bg-coral py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+            <button onClick={apply} disabled={saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
               {saving ? 'Aplicando…' : (active ? 'Sí, desactivar' : 'Sí, activar')}
             </button>
           </div>
@@ -456,7 +456,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
 
       {editing && (
         <div className="flex items-center gap-2 pt-1">
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
           <button onClick={cancel} disabled={saving} className="rounded-full border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
