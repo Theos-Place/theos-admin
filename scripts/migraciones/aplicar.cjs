@@ -12,11 +12,20 @@
  * Y si la migración falla, el build falla y NO HAY DEPLOY. Falla cerrada, que
  * es lo que uno quiere de algo que toca el esquema de producción.
  *
- * SOLO EN PRODUCCIÓN, y esto no es pereza. En los deploys Preview las variables
- * `POSTGRES_*` las pone la integración Supabase–Vercel y apuntan a la base
- * REAL, no a staging (ver `docs/staging.md`). Si esto corriera en un preview,
- * cada rama migraría producción. Staging se migra a mano, a propósito: ahí es
- * donde se prueba la migración antes de que llegue acá.
+ * APLICA SOLO EN PRODUCCIÓN, y esto no es pereza. En los deploys Preview las
+ * variables `POSTGRES_*` las pone la integración Supabase–Vercel y apuntan a la
+ * base REAL, no a staging (ver `docs/staging.md`). Si esto aplicara en un
+ * preview, cada rama migraría producción.
+ *
+ * PERO EN PREVIEW SÍ CORRE, EN SECO: conecta, dice qué hay pendiente y no toca
+ * nada. No es un lujo — es la lección de por qué esto falló la primera vez. El
+ * runner estaba probado a fondo desde mi máquina y murió en el primer build
+ * real por una diferencia del ENTORNO (el `sslmode` de la URL de Vercel). Un
+ * ensayo en preview ejerce credenciales, red y SSL dentro del build, que es
+ * donde estaba el fallo, y no puede romper nada porque no escribe.
+ *
+ * Y si el ensayo falla, el build de la rama falla: el problema aparece en el
+ * PR y no en producción.
  *
  * UN CANDADO, porque dos deploys pueden construirse a la vez. `pg_advisory_lock`
  * es del servidor, así que sirve aunque las máquinas de build sean distintas.
@@ -55,10 +64,8 @@ function url() {
 
 async function main() {
   const entorno = process.env.VERCEL_ENV
-  if (entorno && entorno !== 'production') {
-    console.log(`· migraciones: se saltan (VERCEL_ENV=${entorno}; en preview los POSTGRES_* apuntan a producción)`)
-    return
-  }
+  // En cualquier cosa que no sea producción, ensayo: se mira y no se toca.
+  const enSeco = Boolean(entorno) && entorno !== 'production'
   const conn = url()
   if (!conn) {
     // Sin credencial no se adivina: si esto corriera igual, un deploy podría
@@ -70,7 +77,25 @@ async function main() {
   // Supabase en la nube exige SSL; una base local no lo habla. Decidirlo por la
   // URL evita tener una variable más solo para esto.
   const esLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(conn)
-  const c = new Client({ connectionString: conn, ssl: esLocal ? undefined : { rejectUnauthorized: false } })
+
+  /**
+   * SE LE QUITA EL `sslmode` A LA URL, y esto es lo que tumbó el primer intento
+   * de encender esto (2026-09-23).
+   *
+   * `POSTGRES_URL_NON_POOLING`, que la pone la integración Supabase–Vercel,
+   * viene con `?sslmode=require`. Desde pg 8.16 ese valor se interpreta como
+   * `verify-full` —lo avisa el propio warning de la librería— y **pisa** el
+   * `rejectUnauthorized: false` de acá. El certificado de Supabase es
+   * autofirmado, así que el build moría con «self-signed certificate in
+   * certificate chain» antes de tocar una sola migración.
+   *
+   * Quitando el parámetro, manda la opción `ssl` de abajo, que es lo que uno
+   * escribió. Reproducido con las dos variantes contra el pooler real: sin
+   * `sslmode` conecta, con él falla.
+   */
+  const limpia = conn.replace(/([?&])sslmode=[^&]*&?/gi, (_, sep) => (sep === '?' ? '?' : '&'))
+                     .replace(/[?&]$/, '')
+  const c = new Client({ connectionString: limpia, ssl: esLocal ? undefined : { rejectUnauthorized: false } })
   await c.connect()
   try {
     await c.query(`create schema if not exists supabase_migrations;
@@ -83,10 +108,15 @@ async function main() {
     const pendientes = archivos.filter(f => !ya.has(f.slice(0, 14)))
 
     if (!pendientes.length) {
-      console.log(`· migraciones: al día (${archivos.length} aplicadas)`)
+      console.log(`· migraciones${enSeco ? ' (ensayo)' : ''}: al día (${archivos.length} aplicadas)`)
       return
     }
-    console.log(`· migraciones: ${pendientes.length} pendiente(s) de ${archivos.length}`)
+    console.log(`· migraciones${enSeco ? ' (ensayo)' : ''}: ${pendientes.length} pendiente(s) de ${archivos.length}`)
+    if (enSeco) {
+      for (const f of pendientes) console.log(`   ${f}`)
+      console.log('· ensayo: no se aplicó ninguna (solo se aplican en producción)')
+      return
+    }
 
     // El search_path con el que se abrió la conexión, para reponerlo entre
     // archivos (ver la nota de arriba).
