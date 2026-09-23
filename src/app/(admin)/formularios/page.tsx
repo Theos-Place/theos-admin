@@ -37,6 +37,7 @@ import { sePuedeCompartir, formShareLink } from '@/lib/forms/share-link'
 import { accionesDelFormulario, puedeCrearFormularios } from '@/lib/forms/acciones-del-listado'
 import { formWindowStatus, FORM_WINDOW_LABEL, FORM_WINDOW_BADGE } from '@/lib/forms/active-window'
 import { normalizeRestriction, restrictionSummary } from '@/lib/audiencia/restriccion'
+import { formatDate } from '@/lib/format'
 
 /** Resumen legible de la restricción de audiencia, o '' si no tiene. */
 function resumenDeAudiencia(raw: unknown): string {
@@ -395,7 +396,7 @@ export default function FormulariosPage() {
                       <td className="px-4 py-3">
                         <span className="text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                           {form.last_response_at
-                            ? new Date(form.last_response_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
+                            ? formatDate(form.last_response_at)
                             : '—'}
                         </span>
                       </td>

@@ -189,20 +189,55 @@ su bloque se quedan como estaban, porque ahí la posición ya los distingue.
 
 ## MENOR (consistencia)
 
-### N1 · Las fechas se formatean a mano en 91 archivos
+### N1 · Las fechas se formatean a mano — HECHO EN PARTE el 2026-09-22
 
 208 llamadas a `toLocaleDateString` / `toLocaleString` / `toLocaleTimeString`
 fuera de `lib/format`. `lib/format` existe justamente para esto y es donde vive
 la protección de zona horaria — cada llamada suelta es una oportunidad de
 repetir C1.
 
-### N2 · `PageContainer` se usa en 9 de 117 páginas
+**ESA CUENTA ESTABA MEZCLADA.** Al separarla:
+
+| | Cuántas | Qué son |
+|---|---:|---|
+| `toLocaleString` sin opciones | **119** | NÚMEROS, separador de miles. Nada que ver con zonas horarias. |
+| `toLocaleDateString` | 64 | Fechas, en **29 formas distintas**. |
+| `toLocaleTimeString` | 16 | Horas, en 6 formas. |
+
+Y dos hallazgos que cambian el diagnóstico:
+
+- **22 de las 64 fechas eran copias EXACTAS** de `formatDate` y `formatDateLong`,
+  que ya existían. Tres de ellas escondidas dentro de envoltorios locales
+  (`fmtDate`, un `formatTime` propio) que reimplementaban el helper.
+- **`lib/format` no tenía formateador de hora.** Por eso había 16 llamadas
+  sueltas en 6 formas: cuando el helper falta, cada pantalla se lo inventa. Esa
+  es la causa raíz, no la desidia.
+
+**HECHO:** `formatTime` y `formatNumber` —los dos que faltaban—, migradas las 21
+copias exactas y borrados los tres envoltorios. Las fechas y horas sueltas pasan
+de **80 a 59**, con trinquete en `format-unico.test.ts` que cuenta solo fechas y
+horas (los 119 números no son un riesgo y no entran).
+
+Lo que queda hace algo que ningún helper cubre: zona horaria explícita, días de
+la semana, formatos de un solo uso. Bajan por tandas.
+
+### N2 · `PageContainer` se usa en 9 de 117 páginas — HECHO el 2026-09-22
 
 El `AppShell` ya aplica el ancho de trabajo, así que una pantalla de gestión no
 necesita envolver nada: esto no es un defecto por sí solo. Pero significa que el
 ancho de una pantalla no se puede saber leyéndola — hay que deducirlo del
 cascarón. Un solo `max-w` de página escrito a mano en todo el repo
 (`miembros/listas/[id]`, `max-w-5xl`), que sí conviene mirar.
+
+**Confirmado midiendo:** de los 22 `max-w` en la raíz de una página, 21 están
+exentos por la propia regla —tarjeta de acceso centrada, estado de confirmación,
+pantallas fuera del `AppShell`—. El único real era ése.
+
+**HECHO:** se le quitó. Es una pantalla de gestión (tabla con selector de
+columnas y exportación) y el `AppShell` ya le da `work`: el `max-w-5xl` la
+estrechaba a 1024 px teniendo 1600, o sea **576 px menos de tabla** antes de
+tener que arrastrar de lado. Queda un test que lo impide, con las dos exentas
+justificadas por escrito y comprobadas con un cebo.
 
 ### N3 · No hay componente de botón — HECHO EN PARTE el 2026-09-22
 

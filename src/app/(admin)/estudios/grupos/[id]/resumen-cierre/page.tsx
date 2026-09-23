@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { ChevronLeft, Loader2, Users, FileText, Video, MapPin, History } from 'lucide-react'
 import type { CierreDetalle, CierreParticipante } from '@/lib/supabase/queries/studies'
 import type { ResultadoCierre } from '@/lib/studies/close-result-read'
+import { formatDateLong } from '@/lib/format'
 
 const RESULTADO_LABEL: Record<ResultadoCierre, string> = {
   aprobado: 'Aprobó',
@@ -28,13 +29,6 @@ const RESULTADO_BADGE: Record<ResultadoCierre, string> = {
   sin_evaluar: 'bg-amber-500/10 text-amber-700',
   historico: 'bg-navy/5 text-navy-light',
   otro: 'bg-navy/5 text-navy-light',
-}
-
-function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—'
-  const [y, m, d] = iso.slice(0, 10).split('-').map(Number)
-  if (!y || !m || !d) return '—'
-  return new Date(y, m - 1, d).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function Conteo({ label, value, color }: { label: string; value: number; color: string }) {
@@ -118,7 +112,7 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
               </span>
             </p>
             <p className="text-[13px] text-navy-light font-body">
-              {fmtDate(d.grupo.starts_at)} — {fmtDate(d.grupo.ends_at)}
+              {formatDateLong(d.grupo.starts_at)} — {formatDateLong(d.grupo.ends_at)}
             </p>
           </div>
 

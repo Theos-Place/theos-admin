@@ -19,6 +19,7 @@ import { generateCSV } from '@/lib/export'
 import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
+import { formatDateLong } from '@/lib/format'
 
 function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   if (!form) return
@@ -373,7 +374,7 @@ export default function RespuestasPage() {
                   )}
                 </p>
                 <p className="text-[13px] text-navy-light/80 font-body">
-                  {new Date(detailResponse.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {formatDateLong(detailResponse.submitted_at)}
                 </p>
               </div>
             </div>

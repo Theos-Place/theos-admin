@@ -4,6 +4,7 @@ import { pingHealthcheck } from '@/lib/health'
 import { processBloqueMilestones } from '@/lib/supabase/queries/bloques'
 import { notifyFolletoRecipients } from '@/lib/supabase/queries/folletos'
 import { reportarError } from '@/lib/observabilidad'
+import { formatDateLong } from '@/lib/format'
 
 const MILESTONE_LABEL = { preliminar: 'Preliminar', confirmacion: 'Confirmación', final: 'Final' } as const
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     const results = await processBloqueMilestones(today)
 
     for (const r of results) {
-      const fmt = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+      const fmt = (iso: string) => formatDateLong(`${iso}T00:00:00`)
       const aperturaLabel = fmt(r.fecha_apertura)
       const cierreLabel = fmt(r.fecha_cierre_matricula)
       const hito = MILESTONE_LABEL[r.milestone]

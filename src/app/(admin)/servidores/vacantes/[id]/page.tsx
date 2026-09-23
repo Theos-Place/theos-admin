@@ -11,6 +11,7 @@ import { X, Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
+import { formatDate } from '@/lib/format'
 
 type Tab = 'descripcion' | 'aplicaciones'
 
@@ -162,7 +163,7 @@ export default function VacanteDetailPage() {
               </span>
               {vacancy.published_at && (
                 <span className="text-[13px] text-navy-light/80 font-body">
-                  Publicada {new Date(vacancy.published_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  Publicada {formatDate(vacancy.published_at)}
                 </span>
               )}
             </div>
@@ -358,7 +359,7 @@ export default function VacanteDetailPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                          {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {formatDate(a.applied_at)}
                         </td>
                         <td className="px-4 py-3">
                           <span

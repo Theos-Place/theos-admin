@@ -20,6 +20,7 @@ import {
   canInvite, inviteBlockReason,
   type SelectionStatus, type SelectionFilters, type SelectionRow,
 } from '@/lib/forms/selection-rules'
+import { formatDateLong } from '@/lib/format'
 
 type Row = SelectionRow & { answers: Array<{ label: string; value: string }> }
 type Data = {
@@ -413,7 +414,7 @@ export default function SeleccionPage() {
                 {detail.member_name}
               </p>
               <p className="text-[13px] text-navy-light/80 font-body">
-                Preinscrito el {new Date(detail.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                Preinscrito el {formatDateLong(detail.submitted_at)}
               </p>
             </div>
 

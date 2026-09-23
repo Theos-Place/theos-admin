@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { setPasskeySuggestion, clearPasskeySuggestion } from '@/lib/auth/passkey-suggestion'
 import type { PasskeyListItem, Factor } from '@supabase/supabase-js'
+import { formatDateLong } from '@/lib/format'
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -31,7 +32,7 @@ const REQS = [
 ]
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return formatDateLong(iso)
 }
 
 export default function SeguridadPage() {

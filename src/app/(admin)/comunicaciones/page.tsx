@@ -33,6 +33,7 @@ import { textoDeConfirmacion, resumenDelBorrado } from '@/lib/communications/bor
 import {
   resumenGeneral, desgloseDeTarjeta, APORTE_VACIO, type AporteAlResumen,
 } from '@/lib/communications/resumen-general'
+import { formatDate } from '@/lib/format'
 
 type MainTab = 'historial' | 'programados' | 'borradores' | 'sistema'
 type ChannelFilter = 'all' | CommunicationChannel
@@ -537,7 +538,7 @@ export default function ComunicacionesPage() {
                       {msg.subject || msg.body.split('\n')[0].slice(0, 60)}
                     </p>
                     <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
-                      Guardado el {new Date(msg.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      Guardado el {formatDate(msg.created_at)}
                     </p>
                   </div>
                   <div className="shrink-0 inline-flex items-center gap-2">

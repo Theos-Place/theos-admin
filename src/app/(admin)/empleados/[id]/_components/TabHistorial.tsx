@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 
 interface TimelineItem {
   date: string
@@ -36,7 +37,7 @@ export function TabHistorial({ timeline }: TabHistorialProps) {
                 <p className="text-[13px] text-navy-light/80 font-body">{item.sub}</p>
               )}
               <p className="text-[11px] text-navy-light/80 mt-0.5 font-mono">
-                {new Date(item.date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {formatDate(item.date + 'T00:00:00')}
               </p>
             </div>
           </div>

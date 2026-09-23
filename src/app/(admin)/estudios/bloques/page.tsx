@@ -12,7 +12,7 @@ import { CalendarRange, Loader2, Plus, Pencil, Trash2, Check } from 'lucide-reac
 import { bloqueMilestones, bloqueCierre, suggestedBlocksForYear, BLOQUE_ESTADO_LABEL, BLOQUE_ESTADO_BADGE, type BloqueEstado } from '@/lib/studies/bloques'
 import { BloqueCalendar } from '@/components/studies/BloqueCalendar'
 import { availableYears, type VentanaGrupo } from '@/lib/studies/bloque-calendar'
-import { ymdCR } from '@/lib/format'
+import { formatDate, ymdCR } from '@/lib/format'
 
 type Bloque = {
   id: string; nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
@@ -20,7 +20,7 @@ type Bloque = {
   preliminar_sent_at: string | null; confirmacion_sent_at: string | null; final_sent_at: string | null
 }
 
-const fmt = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })
+const fmt = (iso: string) => formatDate(`${iso}T00:00:00`)
 
 const emptyForm = { nombre: '', anio: new Date().getFullYear(), fecha_apertura: '', fecha_cierre_matricula: '' }
 

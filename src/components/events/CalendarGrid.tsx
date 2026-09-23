@@ -10,6 +10,7 @@ import { EventTypeBadge } from '@/components/events/EventTypeBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { MapPin, Clock, ExternalLink, Repeat, ChevronRight, Image as ImageIcon } from 'lucide-react'
+import { formatTime } from '@/lib/format'
 
 // Las ocurrencias virtuales de recurrentes traen occurrence_key (mismo id que
 // el padre → el clic lleva al detalle del padre, pero la key de React es única).
@@ -43,10 +44,6 @@ const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
-}
 
 function isRecurring(ev: CalendarEvent): boolean {
   return ev.is_recurring || ev.occurrence_key != null || ev.parent_event_id != null

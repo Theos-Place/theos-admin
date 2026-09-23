@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { generateCSV } from '@/lib/export'
 import { ChevronLeft, RotateCcw, CheckCircle2, XCircle, Users, Send, Clock, Zap, MinusCircle, Download } from 'lucide-react'
 import { skipReasonLabel, skipReasonAction } from '@/lib/communications/skip-reasons'
+import { formatDateLong } from '@/lib/format'
 
 type QueueStats = {
   total: number
@@ -225,7 +226,7 @@ export default function ComunicacionDetallePage() {
           <p className="text-sm text-navy-light/80 mt-1 font-body">
             {message.sent_at
               ? `Enviado el ${new Date(message.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} por ${message.sent_by}`
-              : `Creado el ${new Date(message.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })} por ${message.sent_by}`
+              : `Creado el ${formatDateLong(message.created_at)} por ${message.sent_by}`
             }
           </p>
         </div>

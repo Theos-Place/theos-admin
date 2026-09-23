@@ -16,13 +16,7 @@ import { textoDesfase, textoHorario } from '@/lib/email/folleto-request-notify'
 import { FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState } from '@/lib/studies/folletos'
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
 import type { FolletoDetalle } from '@/lib/supabase/queries/folletos'
-
-function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—'
-  const [y, m, d] = iso.slice(0, 10).split('-').map(Number)
-  if (!y || !m || !d) return '—'
-  return new Date(y, m - 1, d).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
+import { formatDateLong } from '@/lib/format'
 
 /** Una fila etiqueta/valor. `alerta` la pinta en coral: es para los datos que
  *  FALTAN y hay que ir a buscar, no para un dato que no aplica. */
@@ -204,8 +198,8 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
               curso arranca dos semanas después del cierre por estándar, así
               que la fecha de necesidad no aporta nada. */}
           <Tarjeta icon={CalendarDays} title="Fechas y pagos">
-            <Dato label="Estarían listos">{fmtDate(d.available_at)}</Dato>
-            <Dato label="Solicitud creada">{fmtDate(d.created_at)}</Dato>
+            <Dato label="Estarían listos">{formatDateLong(d.available_at)}</Dato>
+            <Dato label="Solicitud creada">{formatDateLong(d.created_at)}</Dato>
             {d.pagos.total > 0 && (
               <Dato label="Pagos" alerta={d.pagos.pagados < d.pagos.total}>
                 {d.pagos.pagados} de {d.pagos.total} ya pagaron su folleto

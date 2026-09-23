@@ -12,6 +12,7 @@ import {
 } from '@/lib/events/calendar-view-window'
 import { Modal } from '@/components/shared/Modal'
 import { Image as ImageIcon } from 'lucide-react'
+import { formatTime } from '@/lib/format'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -63,7 +64,7 @@ function CalendarioWidget() {
   const [dayModal, setDayModal] = useState<{ date: number; events: AdminEvent[] } | null>(null)
 
   function formatEventTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })
+    return formatTime(iso)
   }
   // EVE-1: fecha completa para el modal de detalle.
   function formatFullDate(iso: string) {

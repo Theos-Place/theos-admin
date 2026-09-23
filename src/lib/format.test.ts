@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric, formatDayMonth, formatMonthYear, formatBirthday } from './format'
+import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric, formatDayMonth, formatMonthYear, formatTime, formatNumber, formatBirthday } from './format'
 
 describe('ymdCR', () => {
   it('un instante de madrugada UTC es el día ANTERIOR en CR (UTC-6)', () => {
@@ -141,5 +141,35 @@ describe('formatBirthday', () => {
     expect(formatBirthday(null)).toBe('')
     expect(formatBirthday(undefined)).toBe('')
     expect(formatBirthday('no es fecha')).toBe('')
+  })
+})
+
+// QA-1/N1 · Los dos helpers que FALTABAN, y por eso 135 pantallas se los
+// inventaban: no había formateador de hora ni de número.
+describe('formatTime y formatNumber', () => {
+  it('la hora sale en formato de 12 horas, como el resto del sistema', () => {
+    const t = formatTime(new Date(2026, 8, 22, 14, 30).toISOString())
+    expect(t).toMatch(/02:30/)
+    expect(t.toLowerCase()).toMatch(/p\.?\s?m/)
+  })
+
+  it('formatTime da la raya cuando no hay dato, igual que los de fecha', () => {
+    expect(formatTime(null)).toBe('—')
+    expect(formatTime('')).toBe('—')
+    expect(formatTime('no es fecha')).toBe('—')
+  })
+
+  it('formatNumber da lo MISMO que la llamada suelta que reemplaza', () => {
+    // Si no, migrar los 119 sitios cambiaría lo que se ve.
+    for (const n of [0, 7, 1000, 15147, 1234567, -42]) {
+      expect(formatNumber(n)).toBe(n.toLocaleString('es-CR'))
+    }
+  })
+
+  it('formatNumber no imprime "NaN" ni "null"', () => {
+    expect(formatNumber(null)).toBe('—')
+    expect(formatNumber(undefined)).toBe('—')
+    expect(formatNumber(NaN)).toBe('—')
+    expect(formatNumber(0)).toBe('0')
   })
 })

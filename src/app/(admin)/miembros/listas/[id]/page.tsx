@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
-import { initialsFromParts, calcAge } from '@/lib/format'
+import { calcAge, formatDate, initialsFromParts } from '@/lib/format'
 import { mensajeRecalculo, motivoNoRecalculable } from '@/lib/members/list-refresh'
 
 function initials(m: Member) {
@@ -177,7 +177,12 @@ export default function ListaDetailPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    // QA-1/N2 · Sin `max-w` propio: el AppShell ya aplica el ancho 'work'
+    // (1600px) a todo el admin, y esta pantalla es de gestión —tabla con
+    // selector de columnas y exportación—. El `max-w-5xl` que había la
+    // estrechaba a 1024 a mano, o sea 576px menos de tabla antes de tener que
+    // arrastrar de lado. Ver `Theos Place Design System/layout.md`.
+    <div className="space-y-5">
       {/* Back */}
       <Link
         href="/miembros/listas"
@@ -217,7 +222,7 @@ export default function ListaDetailPage() {
               </p>
             )}
             <p className="text-[13px] text-navy-light/80 font-body">
-              Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+              Creada por {list.created_by} · {formatDate(list.created_at)}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -257,7 +262,7 @@ export default function ListaDetailPage() {
           <RefreshCw size={14} className="text-teal-deep shrink-0" />
           <p className="text-[13px] text-teal-deep font-body">
             Esta lista se recalcula con los filtros guardados cada vez que se abre
-            <span className="text-teal-deep/60"> · Recalculada el {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span className="text-teal-deep/60"> · Recalculada el {formatDate(list.updated_at)}</span>
           </p>
         </div>
       ) : (
@@ -265,7 +270,7 @@ export default function ListaDetailPage() {
           className="rounded-2xl px-5 py-3.5 flex items-center gap-3 bg-surface-low border border-[var(--outline-variant)]"
         >
           <p className="text-[13px] text-navy-light/80 font-body">
-            Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {new Date(list.updated_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            Esta lista contiene un snapshot de <strong className="text-navy">{list.member_count.toLocaleString('es-CR')}</strong> miembros del {formatDate(list.updated_at)}
             <span className="mx-2">·</span>
             {!motivoNoRecalculable(list.filters) && (
               <button

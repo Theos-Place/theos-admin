@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/hooks/useAuth'
 import { canSeeServiceApplications } from '@/lib/auth/service-applications'
+import { formatDate } from '@/lib/format'
 
 const APP_STATUS_COLORS: Record<ApplicationStatus, string> = {
   pending:   'bg-amber-500/10 text-amber-600',
@@ -264,7 +265,7 @@ export default function AplicacionesPage() {
                     <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-medium text-navy-light/80 font-display">{a.area}</span>
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                    {new Date(a.applied_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {formatDate(a.applied_at)}
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>

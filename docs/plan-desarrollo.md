@@ -1806,7 +1806,26 @@ contraseña, con 2,92 y 1,96 contra el 4,5 de la norma.
 2. Dice que el primario lleva el halo coral siempre, y lo llevan unos pocos.
    ¿Se enciende en todos?
 
-**Quedan N1, N2 y N4**, que son de consistencia y no rompen nada.
+**N4, N2 y N1 hechos** el mismo día.
+
+- **N4** · Eran 15 de 132 archivos con `metadata`, y los que había eran de
+  MÓDULO: las 23 pantallas de estudios se llamaban todas «Estudios». No se
+  arregla página por página —`metadata` solo va en componentes de servidor y 112
+  de las 132 páginas son cliente—. Catorce layouts de sección (ya no queda
+  ninguna con el título genérico, con test) + `useTituloDePantalla` para el
+  detalle, aplicado a evento público, miembro, grupo, empleado y comité.
+- **N2** · De los 22 `max-w` en la raíz de una página, 21 están exentos por la
+  propia regla. El único real (`miembros/listas/[id]`) estrechaba una tabla a
+  1024 px teniendo 1600. Quitado, con test y las dos exentas justificadas.
+- **N1** · **La cuenta del informe estaba mezclada**: de las 208, **119 son
+  números** (separador de miles), no fechas. De las 64 fechas, **22 eran copias
+  exactas** de helpers que ya existían —tres escondidas en envoltorios locales—
+  y las 16 horas existían porque **`lib/format` no tenía formateador de hora**:
+  cuando el helper falta, cada pantalla se lo inventa. Agregados `formatTime` y
+  `formatNumber`, migradas las 21 copias: de 80 a 59, con trinquete.
+
+**Los cuatro menores cerrados.** Lo único que queda de QA-1 es lo autenticado,
+que espera a INF-1.
 
 ### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
 

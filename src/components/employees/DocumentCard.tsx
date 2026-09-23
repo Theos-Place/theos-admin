@@ -2,6 +2,7 @@
 
 import { FileText, CreditCard, ShieldCheck, File, ExternalLink, Trash2 } from 'lucide-react'
 import type { EmployeeDocument, DocumentType } from '@/types/employee'
+import { formatDate } from '@/lib/format'
 
 const ICON_MAP: Record<DocumentType, React.ComponentType<{ size?: number; className?: string }>> = {
   contrato:       FileText,
@@ -36,7 +37,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
           {doc.name}
         </p>
         <p className="text-[13px] text-navy-light/80 font-body">
-          {TYPE_LABELS[doc.type]} · {new Date(doc.uploaded_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {TYPE_LABELS[doc.type]} · {formatDate(doc.uploaded_at)}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">

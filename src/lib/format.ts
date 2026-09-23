@@ -135,6 +135,33 @@ export function formatDateNumeric(d: string | null | undefined): string {
   return date.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+/**
+ * QA-1/N1 · Hora sola: "02:30 p. m.". null/inválida → '—'.
+ *
+ * NO EXISTÍA, y esa es exactamente la razón de que hubiera 16 llamadas a
+ * `toLocaleTimeString` sueltas en seis formas distintas: cuando el helper falta,
+ * cada pantalla se lo inventa. Siempre es un timestamp (una hora sin fecha no
+ * se guarda en este sistema), así que acá `new Date` es lo correcto.
+ */
+export function formatTime(d: string | null | undefined): string {
+  if (!d) return '—'
+  const date = new Date(d)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: true })
+}
+
+/**
+ * QA-1/N1 · Un número con separador de miles: 15147 → "15 147".
+ *
+ * Tampoco existía, y había 119 `toLocaleString('es-CR')` sueltos. Estos NO son
+ * un riesgo de zona horaria —son números, no fechas— pero que el formato de
+ * los miles viva en 60 archivos significa que cambiarlo es imposible.
+ */
+export function formatNumber(n: number | null | undefined): string {
+  if (n === null || n === undefined || isNaN(n)) return '—'
+  return n.toLocaleString(LOCALE)
+}
+
 /** Fecha y hora: "5 may 2026, 02:30 p. m.". null → '—'. */
 export function formatDateTime(d: string | null | undefined): string {
   if (!d) return '—'

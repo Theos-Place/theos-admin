@@ -13,6 +13,7 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { formatDate } from '@/lib/format'
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return 'Nunca'
@@ -320,7 +321,7 @@ export default function ListasGuardadasPage() {
 
               {/* Meta */}
               <p className="text-[13px] text-navy-light/80 font-body">
-                Creada por {list.created_by} · {new Date(list.created_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                Creada por {list.created_by} · {formatDate(list.created_at)}
                 {list.last_used_at && ` · Último uso: ${timeAgo(list.last_used_at)}`}
               </p>
 
