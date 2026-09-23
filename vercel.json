@@ -66,6 +66,10 @@
     {
       "path": "/api/cron/scheduled-broadcasts",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/dirigentes-activos",
+      "schedule": "0 11 1 * *"
     }
   ]
 }

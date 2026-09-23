@@ -800,14 +800,33 @@ async function enRevisionIds(
  *  DIR-6: tampoco se puede activar a alguien EN REVISIÓN — lanza
  *  'DIRIGENTE_EN_REVISION'. Sacarlo de revisión es una decisión explícita del
  *  coordinador, no algo que ocurra de rebote al asignarle un grupo. */
-export async function setDirigenteActive(memberId: string, active: boolean): Promise<void> {
+/**
+ * @param opts.porRecalculo lo llama el cron mensual de PAR-2, no una persona.
+ *
+ * Cambia dos cosas, y las dos por la misma razón: «en revisión» es una ETIQUETA
+ * sobre la persona, no un estado de actividad (corrección del usuario,
+ * 2026-09-23). Si está dando un grupo o lo dio dentro de los tres
+ * cuatrimestres, está activo, y la etiqueta se queda.
+ *
+ *  1. No rechaza a quien está en revisión. El guard sigue vivo para la acción
+ *     HUMANA —asignarle un grupo a alguien en revisión lo activaría en
+ *     silencio, y eso es justo lo que la revisión impide—, pero el recálculo no
+ *     concede nada: solo registra lo que ya pasó.
+ *  2. Conserva `en_revision` en vez de pisarlo con 'available'. Si no, el cron
+ *     borraría cada mes la marca de una situación abierta.
+ */
+export async function setDirigenteActive(
+  memberId: string, active: boolean, opts?: { porRecalculo?: boolean },
+): Promise<void> {
   const supabase = createAdminClient()
 
   if (active) {
     const blocked = await notRecommendedIds(supabase, [memberId])
     if (blocked.has(memberId)) throw new Error('DIRIGENTE_NO_RECOMENDADO')
-    const enRevision = await enRevisionIds(supabase, [memberId])
-    if (enRevision.has(memberId)) throw new Error('DIRIGENTE_EN_REVISION')
+    if (!opts?.porRecalculo) {
+      const enRevision = await enRevisionIds(supabase, [memberId])
+      if (enRevision.has(memberId)) throw new Error('DIRIGENTE_EN_REVISION')
+    }
   } else {
     // No se desactiva a quien está dando un grupo. El guard vive ACÁ y no solo
     // en la ruta de la pantalla de dirigentes porque ahora también se llega
@@ -828,7 +847,14 @@ export async function setDirigenteActive(memberId: string, active: boolean): Pro
     // pisarlo con 'inactive' perdería justamente el porqué que DIR-6 agrega.
     // (En revisión no llega acá al activar: lo cortó el guard de arriba.)
     const previo = (existing as { availability_status: string | null }).availability_status
-    const conserva = !active && (ADMIN_ONLY_STATUSES as readonly string[]).includes(previo ?? '')
+    // Al DESACTIVAR se conserva el matiz administrativo (pausa o revisión): es
+    // el porqué que DIR-6 agrega y pisarlo con 'inactive' lo perdería.
+    // Al ACTIVAR por recálculo se conserva SOLO 'en_revision', que es una
+    // situación abierta y no una disponibilidad. 'resting' sí se pisa: si la
+    // persona está dando un grupo, la pausa se acabó de hecho.
+    const conserva = !active
+      ? (ADMIN_ONLY_STATUSES as readonly string[]).includes(previo ?? '')
+      : Boolean(opts?.porRecalculo) && previo === 'en_revision'
     const { error } = await supabase.from('study_leaders')
       .update({
         is_active: active,

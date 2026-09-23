@@ -15,7 +15,8 @@ export async function pingHealthcheck(envKey: 'HEALTHCHECK_URL_FOLLETO_BLOCKS' |
   | 'HEALTHCHECK_URL_SCHEDULED_BROADCASTS'
   | 'HEALTHCHECK_URL_CUENTAS_SIN_FICHA'
   | 'HEALTHCHECK_URL_STUDY_REQUESTS_EXPIRE'
-  | 'HEALTHCHECK_URL_DESBLOQUEAR_MAYORES'): Promise<void> {
+  | 'HEALTHCHECK_URL_DESBLOQUEAR_MAYORES'
+  | 'HEALTHCHECK_URL_DIRIGENTES_ACTIVOS'): Promise<void> {
   const url = process.env[envKey]
   if (!url) return
   try {

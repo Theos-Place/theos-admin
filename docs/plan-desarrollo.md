@@ -2002,7 +2002,7 @@ y falla si el `INTERVAL` del SQL deja de coincidir — un `.sql` no puede import
 TypeScript, así que el número vive en dos lados por necesidad, pero ya no se
 pueden separar en silencio. Probado con un cebo.
 
-### [ ] PAR-2 · Dirigente activo: definición + recálculo mensual
+### [x] PAR-2 · Dirigente activo: definición + recálculo mensual — HECHO 2026-09-23
 
 Dirigente activo = tiene un estudio EN CURSO como dirigente, o su último estudio
 dirigido terminó dentro de los últimos 3 cuatrimestres (12 meses). Se recalcula
@@ -2030,6 +2030,42 @@ dirigentes con la definición central. Idempotente; cambios al audit_log; NADA d
 Tests de la regla pura (en curso, cerró hace 11 meses, hace 13, nunca dirigió) y del cron.
 tsc/lint/vitest.
 ```
+
+**QUÉ SIGNIFICABA "ACTIVO" ANTES:** no actividad reciente sino PERTENENCIA al
+comité de Dirigentes. Y desactivar no es cosmético — saca del comité y REVOCA
+el rol `dirigente`.
+
+**APLICADO** (aprobado por Floriana con los números a la vista): de 505
+dirigentes, **39 bajas y 12 altas**. Activos: 232 → 205.
+
+Las 39, por motivo: 16 inactividad real, 15 de la cohorte 2025-07-27 y **8 que
+nunca dirigieron un grupo**.
+
+**CORRECCIÓN DE UN DATO QUE YO MISMO DI:** primero reporté 31 bajas. Mi consulta
+SQL perdía 8 en silencio — quien nunca dirigió tiene `ultimo_fin` NULL, y
+`NULL >= fecha` es NULL y `NOT NULL` también, así que se caían del filtro.
+Lógica de tres valores. El módulo puro las cuenta bien.
+
+**CORRECCIÓN DEL USUARIO:** mi primera versión sacaba del cálculo a los
+`en_revision`. Está mal: la revisión es una ETIQUETA sobre la persona, no un
+estado de actividad. Si está dando o dio dentro de los tres cuatrimestres, está
+activo y la etiqueta se queda al lado. `setDirigenteActive` gana
+`{ porRecalculo: true }`, que salta el guard y CONSERVA la etiqueta. El guard
+sigue vivo para la acción humana de asignarle un grupo, que sí concede algo.
+Verificado: Luis Javier Hernández quedó activo con su `en_revision` intacto.
+
+**EL DATO INCÓMODO, aplicado con él a la vista:** 15 de las 39 salen de una
+fecha de COHORTE del importador de CCB (el 27 de julio se repite con 156 grupos
+en 2019, 135 en 2025 y 106 en 2017), no de un cierre real. Con 14 meses las
+bajas serían 11. Se eligió 12 meses igual. Si un mes las bajas se ven raras,
+mirar esto primero.
+
+**Cron:** `/api/cron/dirigentes-activos`, el 1 de cada mes a las 11:00 UTC.
+Acepta `?ensayo=1` para ver qué haría sin escribir. No manda correos; el rastro
+va al audit_log. Idempotente, comprobado: la segunda corrida da 0 y 0.
+
+**Falta configurar** `HEALTHCHECK_URL_DIRIGENTES_ACTIVOS` en Vercel (check nuevo
+en Healthchecks, schedule `0 11 1 * *`, grace 360).
 
 ### [ ] PAR-3 · Puesto "anfitrión" → rol de reportes automático
 
@@ -2072,6 +2108,33 @@ de miembros (/miembros), que hoy no le salen.
 3. El selector de columnas: mismas columnas que su rol ya ve, nada nuevo de datos.
 Tests: editor_perfiles exporta (200) y el payload no trae campos fuera de su alcance;
 un rol sin miembros sigue en 403. tsc/lint/vitest.
+```
+
+### [ ] PAR-5 · Búsqueda de miembros: filtro "cursando un estudio" + columna con el nombre
+
+Prompt para Claude Code:
+
+```
+FEATURE · /miembros: filtrar por quienes están llevando un estudio AHORA, y ver cuál
+
+1. FILTRO NUEVO en los filtros avanzados del padrón (AdvancedFilters — REUTILIZAR el
+   sistema de condiciones existente, el mismo que alimenta GRU-2/FRM-5; si ya existe una
+   condición parecida tipo "estudio activo", extenderla en vez de duplicar): "Cursando un
+   estudio" con opciones: cualquiera / un plan específico (dropdown del catálogo:
+   Nivel 1..4, Discípulos, etc.). Matrícula activa en grupo en curso = cursando.
+2. COLUMNA NUEVA "Estudio actual" en la tabla de resultados (disponible en el selector de
+   columnas): el nombre del estudio que cursa (los pocos con dos, separados por coma).
+   Vacío si no cursa ninguno.
+3. La columna entra al EXPORT (XLSX/CSV) — el objetivo declarado es poder sacar la lista
+   de quiénes llevan estudio y cuál.
+4. Rendimiento: la columna solo se calcula cuando está visible o al exportar (join
+   agregado, no N+1 sobre el padrón). El filtro en SQL.
+Al agregar la condición al sistema de filtros, verificar que GRU-2 (audiencia de grupos)
+y FRM-5 (audiencia de formularios) la heredan gratis — es la gracia de reutilizar; si
+la heredan, mencionarlo en el informe final porque habilita "formulario solo para quienes
+cursan Nivel 2", que nos han pedido variantes de eso.
+Tests: filtro por cualquiera y por plan específico, columna correcta con doble matrícula,
+export con la columna. tsc/lint/vitest.
 ```
 
 ## Fase 19 — Pedido el 2026-09-21
