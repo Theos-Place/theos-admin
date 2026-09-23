@@ -311,7 +311,13 @@ export const ROLES: Role[] = [
     description: 'Crear y editar perfiles de miembros',
     color: '#E9B949',
     permissions: [
-      { module: 'miembros', actions: ['view', 'create', 'edit'], scope: 'all' },
+      /**
+       * PAR-4 (2026-09-23): se le suma 'export'. El rol ya VE el padrón
+       * completo con alcance 'all', y las columnas de esa tabla no están
+       * gateadas por permiso — así que exportar no le muestra nada nuevo: le
+       * deja bajarse lo que ya tiene en pantalla, que es el trabajo del rol.
+       */
+      { module: 'miembros', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
     ],
   },
   {

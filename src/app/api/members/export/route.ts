@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
-import { moduleScope } from '@/lib/auth/roles'
+import { moduleScope, hasModulePermission } from '@/lib/auth/roles'
 import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
@@ -18,6 +18,25 @@ export async function GET(req: NextRequest) {
     // 'committee') pasaba el beyondOwn y podía listar/exportar todo; a su
     // gente la ve por /servidores (detalle del comité).
     if (auth.ctx && moduleScope(auth.ctx.roles, 'miembros') !== 'all') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+    /**
+     * PAR-4 · Y además la ACCIÓN `export`, que es lo que mira el botón.
+     *
+     * Hasta el 2026-09-23 esto guardaba solo por alcance, y con eso alcanzaba:
+     * SIETE roles sin el permiso pasaban igual —comunicaciones, los tres
+     * coordinadores, encargado_staff, finanzas y, el que más incomoda,
+     * solo_lectura— y podían bajarse las 24.000 fichas con cédula, correo y
+     * teléfono. No veían el botón, pero el proxy excluye `/api`: pegarle
+     * directo funcionaba.
+     *
+     * Se cerró por decisión de Floriana, con el dato de que nadie lo había
+     * usado: 10 exportaciones en el audit_log, todas del 2026-07-29 y con
+     * cuentas de prueba.
+     *
+     * Esconder un botón no es un permiso. El permiso es esto.
+     */
+    if (auth.ctx && !hasModulePermission(auth.ctx.roles, 'miembros', 'export')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
     if (auth.res) return auth.res

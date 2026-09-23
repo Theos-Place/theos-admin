@@ -157,7 +157,14 @@ export function MembersTab({
               <tr className="border-b border-[var(--outline-variant)]">
                 <SortableHeader label="Servidor"   sortKey="name"       currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Puesto"     sortKey="position"   currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
-                <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                {/* En el Comité Dirigentes no se muestra «Inicio»: esa fecha
+                    es la de la sincronización del Excel Madre (183 de 278 la
+                    tienen igual, el 2026-09-11) y otros 46 no la tienen. No
+                    dice cuándo entró nadie, así que ocupa una columna para
+                    confundir. En los demás comités sí es un dato real. */}
+                {!estudioPorMiembro && (
+                  <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                )}
                 <SortableHeader label={estudioPorMiembro ? 'Último estudio' : 'Antigüedad'} sortKey="seniority"  currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Estado"     sortKey="status"     currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <th className="px-4 py-3.5" />
@@ -209,9 +216,11 @@ export function MembersTab({
                       </span>
                     ))}
                   </td>
-                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                    {formatDate(m.start_date)}
-                  </td>
+                  {!estudioPorMiembro && (
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
+                      {formatDate(m.start_date)}
+                    </td>
+                  )}
                   {/*
                     EN EL COMITÉ DIRIGENTES esta columna muestra el estudio más
                     reciente en vez de la antigüedad. La antigüedad ahí no decía

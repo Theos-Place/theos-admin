@@ -2118,7 +2118,7 @@ código muerto para un camino inalcanzable. Quedó una nota en
 servidores activos. Es el puesto viejo que reemplazó «Dirigente CR» y no otorga
 roles automáticos, así que no filtra nada — pero nadie lo ha limpiado.
 
-### [ ] PAR-4 · editor_perfiles: botones de columnas y exportar en la búsqueda de miembros
+### [x] PAR-4 · editor_perfiles: botones de columnas y exportar — HECHO 2026-09-23
 
 Prompt para Claude Code:
 
@@ -2136,6 +2136,32 @@ de miembros (/miembros), que hoy no le salen.
 Tests: editor_perfiles exporta (200) y el payload no trae campos fuera de su alcance;
 un rol sin miembros sigue en 403. tsc/lint/vitest.
 ```
+
+**HECHO:** `editor_perfiles` suma la acción `export`. Ya veía el padrón con
+alcance `all` y las columnas de esa tabla no están gateadas por permiso, así que
+exportar no le muestra nada nuevo — le deja bajarse lo que ya tiene en pantalla.
+
+**EL PUNTO 2 DEL ÍTEM DESTAPÓ UN AGUJERO.** El endpoint NO miraba la acción
+`export`: guardaba por `view` con alcance `all`, y eso lo cumplían **siete
+roles** sin el permiso — comunicaciones, los tres coordinadores,
+encargado_staff, finanzas y **solo_lectura**. Podían bajarse las 24.000 fichas
+con cédula, correo y teléfono por API. No veían el botón, pero el proxy excluye
+`/api`.
+
+Cerrado por decisión de Floriana, con el dato de que nadie lo había usado: 10
+exportaciones en el audit_log, todas del 2026-07-29 y con cuentas de prueba.
+Ahora exportan `direccion`, `editor_perfiles` y `admin`.
+
+**Verificado en staging con sesiones reales:** `editor_perfiles` ve los dos
+botones y el endpoint le responde 200; `solo_lectura` recibe 403 donde hasta hoy
+recibía el padrón entero.
+
+### [x] Extra · Fuera la columna «Inicio» del Comité Dirigentes (2026-09-23)
+
+Misma razón que la de antigüedad: `start_date` ahí es la fecha de la
+sincronización del Excel Madre (183 de 278 la tienen igual) y 46 no la tienen.
+No dice cuándo entró nadie. En los demás comités se queda, que ahí sí es un dato
+real.
 
 ### [ ] PAR-5 · Búsqueda de miembros: filtro "cursando un estudio" + columna con el nombre
 
