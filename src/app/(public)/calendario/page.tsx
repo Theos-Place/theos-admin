@@ -240,10 +240,29 @@ function CalendarioWidget() {
                 {cells.map((day, i) => {
                   const dayEvents = day ? monthEvs.filter(e => new Date(e.start_at).getDate() === day) : []
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()
+                  const conEventos = day !== null && dayEvents.length > 0
                   return (
-                    <div key={i} className="min-h-[64px] rounded-md p-1.5" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
+                    <div key={i} className="min-h-[64px] pointer-coarse:sm:min-h-[112px] rounded-md p-1.5 relative" style={{ background: day ? 'rgba(255,255,255,0.8)' : 'transparent', border: isToday ? `2px solid ${accent}` : '1px solid rgba(0,0,0,0.06)' }}>
                       {day && (
                         <>
+                          {/* EN CELULAR EL BLANCO ES TODA LA CELDA.
+                              Las bolitas de abajo miden 6 px y el mínimo táctil
+                              son 44: apuntarle a una en un teléfono es imposible,
+                              y encima obligaba a acertarle AL EVENTO antes de
+                              saber cuál es. Este botón cubre la celda entera y
+                              abre la lista del día, para escoger a propósito.
+                              Va primero en el DOM y sin `z`, así que en pantalla
+                              grande —donde los chips llevan su propio clic— queda
+                              debajo y no los tapa; ahí está oculto igual. */}
+                          {conEventos && (
+                            <button
+                              type="button"
+                              onClick={() => setDayModal({ date: day, events: dayEvents })}
+                              aria-label={`${dayEvents.length} evento${dayEvents.length !== 1 ? 's' : ''} el ${day}: ver la lista`}
+                              className="absolute inset-0 rounded-md sm:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                              style={{ ['--tw-ring-color' as string]: accent }}
+                            />
+                          )}
                           <div className="text-[13px] mb-0.5 leading-none" style={{ fontWeight: isToday ? 700 : 400, color: isToday ? accent : primary }}>{day}</div>
                           {/* QA-1/C2 · En celular van PUNTOS, no chips con nombre.
                               Una columna de 44 px no muestra ningún nombre útil, y
@@ -251,32 +270,34 @@ function CalendarioWidget() {
                               la columna al ancho completo del texto: la rejilla
                               medía 795 px en una pantalla de 360 y había que
                               arrastrar de lado, con el encabezado quedándose atrás.
-                              Es el mismo patrón que ya usa CalendarGrid del admin. */}
-                          <div className="flex flex-wrap gap-1 pt-0.5 sm:hidden">
+                              Es el mismo patrón que ya usa CalendarGrid del admin.
+                              Los puntos son DECORATIVOS: quien toca es la celda. */}
+                          <div className="flex flex-wrap gap-1 pt-0.5 sm:hidden" aria-hidden>
                             {dayEvents.slice(0, 4).map(ev => (
-                              <button
+                              <span
                                 key={`${ev.id}-${ev.start_at}`}
-                                onClick={() => setSelectedEvent(ev)}
-                                aria-label={ev.name}
                                 className="h-1.5 w-1.5 rounded-full"
                                 style={{ background: accent }}
                               />
                             ))}
                             {dayEvents.length > 4 && (
-                              <button
-                                onClick={() => setDayModal({ date: day, events: dayEvents })}
-                                className="text-[11px] leading-none text-[rgba(0,0,0,0.65)]"
-                                aria-label={`Ver los ${dayEvents.length} eventos del día ${day}`}
-                              >
+                              <span className="text-[11px] leading-none text-[rgba(0,0,0,0.65)]">
                                 +{dayEvents.length - 4}
-                              </button>
+                              </span>
                             )}
                           </div>
 
+                          {/* En TABLETA los chips sí muestran el nombre, así que
+                              el problema no es saber qué se toca sino acertarle:
+                              medían 19 px de alto y el mínimo táctil son 44. La
+                              condición correcta no es el ancho de la pantalla
+                              sino SI EL PUNTERO ES UN DEDO, que es lo que dice
+                              `pointer-coarse`. En un portátil de 1280 con mouse
+                              los chips se quedan compactos. */}
                           <div className="hidden sm:block">
                             {dayEvents.slice(0, 2).map(ev => (
                               <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
-                                className="text-[11px] text-white rounded py-px px-1 mb-px cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
+                                className="text-[11px] text-white rounded py-px pointer-coarse:py-2 px-1 mb-px pointer-coarse:mb-1 cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis" style={{ background: accent }}>
                                 {/* Ver la nota de CalendarGrid: el emoji 🖼 se
                                     dibujaba como cuadrito en varios sistemas. */}
                                 {ev.flyer_url && <ImageIcon size={10} className="inline-block mr-1 -mt-px shrink-0 opacity-90" aria-hidden />}
@@ -286,7 +307,7 @@ function CalendarioWidget() {
                             {dayEvents.length > 2 && (
                               <button
                                 onClick={() => setDayModal({ date: day, events: dayEvents })}
-                                className="text-[11px] text-[rgba(0,0,0,0.65)] hover:underline"
+                                className="text-[11px] text-[rgba(0,0,0,0.65)] hover:underline py-px pointer-coarse:py-2"
                               >
                                 +{dayEvents.length - 2} más
                               </button>
@@ -378,7 +399,11 @@ function CalendarioWidget() {
         <Modal onClose={() => setDayModal(null)} titleId="dia-eventos-title" width={420}>
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[rgba(0,0,0,0.08)]">
             <p id="dia-eventos-title" className="font-bold text-sm" style={{ color: primary }}>
-              {dayModal.date} de {new Date(currentYear, currentMonth).toLocaleDateString('es-CR', { month: 'long' })} · {dayModal.events.length} eventos
+              {dayModal.date} de {new Date(currentYear, currentMonth).toLocaleDateString('es-CR', { month: 'long' })}
+              {' · '}
+              {/* El plural importa ahora que el modal se abre tocando la celda:
+                  antes solo salía desde "+N más", donde N siempre era 2 o más. */}
+              {dayModal.events.length} evento{dayModal.events.length !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="max-h-[60vh] overflow-y-auto p-2">

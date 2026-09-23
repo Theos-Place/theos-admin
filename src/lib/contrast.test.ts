@@ -132,7 +132,10 @@ describe('las clases retiradas no volvieron al código', () => {
   // sin que nadie lea mejor — pasó al hacer este cambio y hubo que revertirlo.
   const PROHIBIDAS = [
     'text-navy-light/50', 'text-navy-light/60', 'text-navy-light/70',
-    'text-gray-400', 'text-[9px]', 'text-[10px]',
+    // `text-[8px]` no estaba en la lista y había uno vivo en el calendario
+    // (el "+N" de los días con muchos eventos). El piso es 11px para micro-
+    // labels; por debajo de 9 ni siquiera hacía falta discutirlo.
+    'text-gray-400', 'text-[7px]', 'text-[8px]', 'text-[9px]', 'text-[10px]',
     'bg-teal text-white',
     // QA-1/M2 · Sobre un tinte el teal-deep ya arranca en 4.69: cualquier
     // opacidad encima lo baja de AA. Al /90 daba 3.87.

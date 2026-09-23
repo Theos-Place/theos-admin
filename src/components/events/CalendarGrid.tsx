@@ -166,7 +166,7 @@ export function CalendarGrid({
               key={i}
               onClick={day && onDayClick ? () => handleDayClick(day) : undefined}
               className={cn(
-                'min-h-[58px] p-1 sm:min-h-[80px] sm:p-1.5 border-b border-r border-[var(--outline-variant)]',
+                'relative min-h-[58px] p-1 sm:min-h-[80px] sm:p-1.5 pointer-coarse:sm:min-h-[128px] border-b border-r border-[var(--outline-variant)]',
                 isWeekend && 'bg-surface-low/40',
                 !day && 'opacity-0 pointer-events-none',
                 day && onDayClick && 'cursor-pointer hover:bg-coral/5 transition-colors'
@@ -174,6 +174,25 @@ export function CalendarGrid({
             >
               {day && (
                 <>
+                  {/* EN CELULAR EL BLANCO ES TODA LA CELDA.
+                      Los puntos de abajo miden 6 px y el mínimo táctil son 44:
+                      apuntarle a uno en un teléfono es imposible, y encima
+                      obligaba a acertarle AL EVENTO antes de saber cuál es.
+                      Este botón cubre la celda y abre la lista del día, para
+                      escoger a propósito.
+
+                      Se queda con el clic (`stopPropagation` va dentro de
+                      `openDay`): en móvil, tocar un día con eventos abre la
+                      lista y NO el "crear evento" de la celda, que sigue
+                      disponible en pantalla grande y desde el botón de arriba. */}
+                  {dayEvents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={e => openDay(day, dayEvents, e)}
+                      aria-label={`${dayEvents.length} evento${dayEvents.length !== 1 ? 's' : ''} el ${day}: ver la lista`}
+                      className="absolute inset-0 sm:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-coral"
+                    />
+                  )}
                   <div
                     className={cn(
                       'h-6 w-6 flex items-center justify-center rounded-full mb-1 text-[13px] font-medium font-display',
@@ -183,29 +202,21 @@ export function CalendarGrid({
                     {day}
                   </div>
 
-                  {/* Mobile: puntos de color (los nombres no caben) */}
+                  {/* Mobile: puntos de color (los nombres no caben). Son
+                      DECORATIVOS — quien recibe el toque es la celda entera. */}
                   {dayEvents.length > 0 && (
-                    <div className="flex flex-wrap gap-1 px-0.5 sm:hidden">
-                      {dayEvents.slice(0, 4).map(ev => {
-                        const past = isPastEvent(ev)
-                        return (
-                          <button
-                            key={ev.occurrence_key ?? ev.id}
-                            onClick={e => openEvent(ev, e)}
-                            aria-label={past ? `${ev.name} (realizado)` : ev.name}
-                            className={cn('h-1.5 w-1.5 rounded-full', past && 'opacity-40')}
-                            style={{ backgroundColor: typeStyle(ev.event_type).color }}
-                          />
-                        )
-                      })}
+                    <div className="flex flex-wrap gap-1 px-0.5 sm:hidden" aria-hidden>
+                      {dayEvents.slice(0, 4).map(ev => (
+                        <span
+                          key={ev.occurrence_key ?? ev.id}
+                          className={cn('h-1.5 w-1.5 rounded-full', isPastEvent(ev) && 'opacity-40')}
+                          style={{ backgroundColor: typeStyle(ev.event_type).color }}
+                        />
+                      ))}
                       {dayEvents.length > 4 && (
-                        <button
-                          onClick={e => openDay(day, dayEvents, e)}
-                          className="text-[8px] text-navy-light/80 leading-none font-body hover:text-navy"
-                          aria-label={`Ver los ${dayEvents.length} eventos del día`}
-                        >
+                        <span className="text-[11px] text-navy-light/80 leading-none font-body">
                           +{dayEvents.length - 4}
-                        </button>
+                        </span>
                       )}
                     </div>
                   )}
@@ -220,7 +231,10 @@ export function CalendarGrid({
                           onClick={e => openEvent(ev, e)}
                           title={past ? `${ev.name} — Realizado` : ev.name}
                           className={cn(
-                            'w-full text-left rounded px-1.5 py-0.5 text-[11px] font-medium truncate transition-opacity hover:opacity-80 font-body text-white',
+                            // Ver la nota del calendario público: en tableta el
+                            // chip es el blanco y medía 19 px. `pointer-coarse`
+                            // lo agranda solo cuando el puntero es un dedo.
+                            'w-full text-left rounded px-1.5 py-0.5 pointer-coarse:py-2 text-[11px] font-medium truncate transition-opacity hover:opacity-80 font-body text-white',
                             past && 'opacity-75 hover:opacity-90'
                           )}
                           style={{ backgroundColor: typeStyle(ev.event_type).color }}
@@ -236,7 +250,7 @@ export function CalendarGrid({
                     {dayEvents.length > 3 && (
                       <button
                         onClick={e => openDay(day, dayEvents, e)}
-                        className="text-[11px] text-navy-light/80 px-1 font-body hover:text-navy hover:underline"
+                        className="text-[11px] text-navy-light/80 px-1 py-0.5 pointer-coarse:py-2 font-body hover:text-navy hover:underline"
                       >
                         +{dayEvents.length - 3} más
                       </button>

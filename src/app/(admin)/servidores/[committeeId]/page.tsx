@@ -31,6 +31,7 @@ import {
   ChangePositionModal,
   type CommitteeFormState,
 } from './_components/CommitteeModals'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 
 type Tab = 'miembros' | 'vacantes' | 'metas' | 'estudios'
 type StatusFilter = FiltroEstado
@@ -51,6 +52,9 @@ export default function CommitteeDetailPage() {
     () => committees.find(c => c.id === committeeId),
     [committees, committeeId]
   )
+  // QA-1/N4 · Sin esto la pestaña dice solo el nombre del módulo, y en el
+  // historial todas las pantallas del módulo se ven iguales.
+  useTituloDePantalla(committee?.name, 'Servidores')
   // El comité de Dirigentes (de estudios) muestra una pestaña extra con el
   // resumen de estudios de cada servidor.
   const isDirigentes = !!committee && esComiteDirigentes(committee.name, { excludeAdministrativo: true })

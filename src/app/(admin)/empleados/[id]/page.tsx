@@ -4,6 +4,7 @@ import { useMemo, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { type VacationRecordType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import {
@@ -68,6 +69,9 @@ export default function EmpleadoDetailPage() {
   const toast = useToast()
   const { employees, refetch } = useEmployees()
   const employee = useMemo(() => employees.find(e => e.id === id), [employees, id])
+  // QA-1/N4 · Sin esto la pestaña dice solo el nombre del módulo, y en el
+  // historial todas las pantallas del módulo se ven iguales.
+  useTituloDePantalla(employee?.member_name, 'Empleados')
 
   const [tab, setTab] = useState<Tab>('resumen')
 

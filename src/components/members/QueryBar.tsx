@@ -125,7 +125,7 @@ function GroupBracket({
             <button
               onClick={onToggleOp}
               className={cn(
-                'rounded px-1 py-0.5 text-[8px] font-semibold tracking-wide transition-colors',
+                'rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
                 group.op === 'AND'
                   ? 'bg-navy/10 text-navy hover:bg-navy/20'
                   : 'bg-coral/10 text-coral hover:bg-coral/20',

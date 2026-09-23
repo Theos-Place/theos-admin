@@ -7,6 +7,7 @@ import { openSectionsFromParam } from '@/lib/members/profile-deeplink'
 import { notFound } from 'next/navigation'
 import { useMember } from '@/hooks/useMember'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { Modal } from '@/components/shared/Modal'
@@ -68,6 +69,9 @@ export default function MiembroDetailPage() {
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
 
   const { member, loading, notFound: isNotFound, error, refetch } = useMember(id || undefined)
+  // QA-1/N4 · Sin esto la pestaña dice solo el nombre del módulo, y en el
+  // historial todas las pantallas del módulo se ven iguales.
+  useTituloDePantalla(member && `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(), 'Miembros')
   const { studyTypes } = useStudyPlans()
   const { hasRole, member: viewer } = useAuth()
 

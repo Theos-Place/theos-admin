@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { Button } from '@/components/shared/Button'
 import { CalendarDays, MapPin, Video, Ticket, Users } from 'lucide-react'
 import { loginRedirectTo, registerDestination } from '@/lib/events/public-register-link'
@@ -47,6 +48,8 @@ export default function EventoPublicoPage() {
   const { id } = useParams<{ id: string }>()
   const [evento, setEvento] = useState<EventoPublico | null>(null)
   const [estado, setEstado] = useState<'cargando' | 'listo' | 'no-existe'>('cargando')
+  // QA-1/N4 · El título es lo que se ve cuando alguien comparte este enlace.
+  useTituloDePantalla(evento?.title, 'Calendario')
 
   useEffect(() => {
     if (!id) return

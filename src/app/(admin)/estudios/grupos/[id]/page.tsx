@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
 import { GROUP_ADMIN_ROLES, STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
@@ -370,6 +371,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params)
   const router = useRouter()
   const { group, studyTypes, refetch, loading } = useGroup(id)
+  // QA-1/N4 · Sin esto la pestaña dice solo el nombre del módulo, y en el
+  // historial todas las pantallas del módulo se ven iguales.
+  useTituloDePantalla(group?.name, 'Estudios')
   const { can } = usePermissions()
   const { user: actor } = useAuth()
   const toast = useToast()
