@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 // nonce y el browser bloquea sus scripts inline. Es el trade-off documentado
 // de nonce-CSP en Next; aceptable en un admin interno de tráfico modesto.
 export const dynamic = 'force-dynamic'
+import { AvisoDeAmbiente } from '@/components/layout/AvisoDeAmbiente'
 
 export const metadata: Metadata = {
   title: {
@@ -39,7 +40,13 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {/* INF-1 · Va en el layout RAÍZ para que salga también en las pantallas
+            públicas y de acceso, que están fuera del AppShell. En producción no
+            renderiza nada. */}
+        <AvisoDeAmbiente />
+        {children}
+      </body>
     </html>
   );
 }

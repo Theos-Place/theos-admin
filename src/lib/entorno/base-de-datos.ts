@@ -101,3 +101,28 @@ export function puedeEscribirDatosDePrueba(input: {
     ].join('\n'),
   }
 }
+
+/**
+ * INF-1 · El aviso que se pinta arriba cuando NO estás en producción.
+ *
+ * POR QUÉ HACE FALTA, y justo con la opción que se eligió: los deploys Preview
+ * de Vercel van a apuntar al Supabase de staging, pero se ven EXACTAMENTE igual
+ * que producción. Dos pestañas abiertas y la pregunta «¿esto era el padrón real
+ * o el de prueba?» no tiene respuesta mirando la pantalla.
+ *
+ * Producción no lleva aviso a propósito: un cartel que sale siempre deja de
+ * leerse, y entonces tampoco se lee el día que importa.
+ *
+ * `desconocido` es el caso más peligroso de todos —una URL que el sistema no
+ * reconoce— y por eso es el que grita.
+ */
+export type AvisoDeAmbiente = { texto: string; tono: 'aviso' | 'alerta' }
+
+export function avisoDeAmbiente(entorno: Entorno): AvisoDeAmbiente | null {
+  switch (entorno) {
+    case 'produccion': return null
+    case 'staging': return { texto: 'STAGING · los datos de esta pantalla son de prueba', tono: 'aviso' }
+    case 'local': return { texto: 'BASE LOCAL · los datos de esta pantalla son de prueba', tono: 'aviso' }
+    case 'desconocido': return { texto: 'BASE DESCONOCIDA · no se reconoce a qué Supabase apunta esto', tono: 'alerta' }
+  }
+}

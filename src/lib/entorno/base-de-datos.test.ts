@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
-  entornoDeSupabase, escrituraDePruebaLibre, puedeEscribirDatosDePrueba, REF_PRODUCCION,
+  entornoDeSupabase, escrituraDePruebaLibre, puedeEscribirDatosDePrueba, avisoDeAmbiente, REF_PRODUCCION,
 } from './base-de-datos'
 
 const prod = `https://${REF_PRODUCCION}.supabase.co`
@@ -78,5 +78,33 @@ describe('permiso para escribir datos de prueba', () => {
     const url = /^NEXT_PUBLIC_SUPABASE_URL=(.*)$/m.exec(env)?.[1]?.trim()
     if (!url) return
     expect(entornoDeSupabase(url)).toBe('produccion')
+  })
+})
+
+describe('el aviso de ambiente', () => {
+  it('producción NO lleva aviso', () => {
+    // Un cartel que sale siempre deja de leerse, y entonces tampoco se lee el
+    // día que importa.
+    expect(avisoDeAmbiente('produccion')).toBeNull()
+  })
+
+  it('staging y local avisan que los datos son de prueba', () => {
+    for (const e of ['staging', 'local'] as const) {
+      const a = avisoDeAmbiente(e)
+      expect(a).not.toBeNull()
+      expect(a!.texto).toContain('prueba')
+      expect(a!.tono).toBe('aviso')
+    }
+  })
+
+  it('una base desconocida es la que grita', () => {
+    const a = avisoDeAmbiente('desconocido')
+    expect(a!.tono).toBe('alerta')
+  })
+
+  it('cada entorno decide: no hay caso sin contemplar', () => {
+    for (const e of ['produccion', 'staging', 'local', 'desconocido'] as const) {
+      expect(() => avisoDeAmbiente(e)).not.toThrow()
+    }
   })
 })
