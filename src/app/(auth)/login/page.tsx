@@ -460,7 +460,7 @@ export default function LoginPage() {
               debajo es el mismo y elegir no cambiaba nada. */}
           <Link
             href={urlDeRecuperar}
-            className="font-semibold text-teal-deep hover:underline"
+            className="font-semibold text-teal-deep underline"
           >
             Conseguí tu contraseña →
           </Link>
@@ -472,7 +472,7 @@ export default function LoginPage() {
           dos es lo que hace que alguien termine con dos fichas. */}
       <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">
         ¿Nuevo en Theos y todavía no tenés perfil?{' '}
-        <Link href="/registro" className="font-semibold text-teal-deep hover:underline">
+        <Link href="/registro" className="font-semibold text-teal-deep underline">
           Registrate acá →
         </Link>
       </p>
@@ -481,7 +481,7 @@ export default function LoginPage() {
           está ahí, así que tiene que abrirse desde acá). */}
       <p className="mt-4 text-center text-[13px] text-navy-light/80 font-body">
         ¿No sabés cómo entrar?{' '}
-        <Link href="/ayuda" className="text-teal-deep hover:underline font-medium">
+        <Link href="/ayuda" className="text-teal-deep underline font-medium">
           Mirá el centro de ayuda →
         </Link>
       </p>

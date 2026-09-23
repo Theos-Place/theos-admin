@@ -60,7 +60,7 @@ export default function TerminosPage() {
         </p>
 
         {/* Nota de vigencia (discreta, de cara al público) */}
-        <div className="mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-deep/90 font-body leading-relaxed">
+        <div className="mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-deep font-body leading-relaxed">
           Este documento puede actualizarse periódicamente. La fecha de última
           actualización indicada arriba refleja la versión vigente. Te recomendamos
           revisarlo de vez en cuando.
@@ -81,7 +81,13 @@ export default function TerminosPage() {
         </nav>
 
         {/* Cuerpo */}
-        <article className="mt-8 space-y-10 font-body text-[15px] leading-relaxed text-navy-light/80 [&_h2]:scroll-mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy [&_h2]:font-display [&_h2]:tracking-[-0.01em] [&_h3]:font-semibold [&_h3]:text-navy [&_h3]:mt-4 [&_h3]:mb-1 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:space-y-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_a]:text-coral [&_a]:font-medium hover:[&_a]:underline">
+        {/* QA-1/M2 · Los enlaces van en coral-deep y SUBRAYADOS.
+            El coral pleno da 4.550 sobre blanco —pasa AA por un 1%— pero esta
+            página es papel (#F8FAFB) y ahí cae a 4.346. coral-deep da 5.109.
+            El subrayado es permanente porque son enlaces dentro de párrafos:
+            distinguirlos solo por color falla `link-in-text-block`, y el hover
+            que los delataba en escritorio no existe en un teléfono. */}
+        <article className="mt-8 space-y-10 font-body text-[15px] leading-relaxed text-navy-light/80 [&_h2]:scroll-mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy [&_h2]:font-display [&_h2]:tracking-[-0.01em] [&_h3]:font-semibold [&_h3]:text-navy [&_h3]:mt-4 [&_h3]:mb-1 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:space-y-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_a]:text-coral-deep [&_a]:font-medium [&_a]:underline">
 
           <section id="introduccion">
             <h2>1. Introducción y aceptación</h2>

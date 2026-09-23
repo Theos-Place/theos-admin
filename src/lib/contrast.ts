@@ -62,5 +62,7 @@ export const TOKENS = {
   tealSoft: '#B5DDE0',
   white: '#FFFFFF',
   surfaceLow: '#F2F4F5',
+  /** El papel de las páginas públicas (`bg-[#F8FAFB]`, `--color-surface`). */
+  surface: '#F8FAFB',
   surfaceCard: '#FFFFFF',
 } as const

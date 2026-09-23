@@ -91,9 +91,14 @@ export default function RegistroPage() {
   return (
     <div className="w-full max-w-[400px]">
       <h1 className="text-xl font-bold text-navy font-display mb-1">Crear mi cuenta</h1>
+      {/* QA-1/M3 · El subrayado es PERMANENTE, no `hover:underline`. Un enlace
+          metido en medio de una frase y distinguible solo por el color falla
+          `link-in-text-block`, y el hover —que es lo único que lo delataba— en
+          un teléfono no existe. Los enlaces que están SOLOS en su bloque no
+          llevan esto: ahí la posición ya los distingue. */}
       <p className="text-[13px] text-navy-light/80 font-body mb-6">
         Si ya sos parte de Theos y solo no podés entrar,{' '}
-        <Link href="/recuperar" className="text-teal-deep hover:underline">recuperá tu acceso</Link> en vez de registrarte.
+        <Link href="/recuperar" className="text-teal-deep underline">recuperá tu acceso</Link> en vez de registrarte.
       </p>
 
       {error && (
@@ -157,7 +162,7 @@ export default function RegistroPage() {
 
       <p className="mt-6 text-center text-[13px] text-navy-light/80 font-body">
         ¿Ya tenés cuenta?{' '}
-        <Link href="/login" className="text-teal-deep hover:underline font-medium">Ingresá acá</Link>
+        <Link href="/login" className="text-teal-deep underline font-medium">Ingresá acá</Link>
       </p>
     </div>
   )

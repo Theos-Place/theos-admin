@@ -1,43 +1,5 @@
 {
-  "hallazgos": [
-    {
-      "ruta": "/registro",
-      "ancho": "desktop",
-      "id": "link-in-text-block",
-      "impacto": "serious",
-      "descripcion": "Links must be distinguishable without relying on color",
-      "nodos": 1,
-      "ejemplo": "<a class=\"text-teal-deep hover:underline\" href=\"/recuperar\">recuperá tu acceso</a>"
-    },
-    {
-      "ruta": "/terminos",
-      "ancho": "desktop",
-      "id": "color-contrast",
-      "impacto": "serious",
-      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
-      "nodos": 7,
-      "ejemplo": "<div class=\"mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-deep/90 font-body leading-relaxed\">Este doc"
-    },
-    {
-      "ruta": "/registro",
-      "ancho": "mobile",
-      "id": "link-in-text-block",
-      "impacto": "serious",
-      "descripcion": "Links must be distinguishable without relying on color",
-      "nodos": 1,
-      "ejemplo": "<a class=\"text-teal-deep hover:underline\" href=\"/recuperar\">recuperá tu acceso</a>"
-    },
-    {
-      "ruta": "/terminos",
-      "ancho": "mobile",
-      "id": "color-contrast",
-      "impacto": "serious",
-      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
-      "nodos": 7,
-      "ejemplo": "<div class=\"mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-deep/90 font-body leading-relaxed\">Este doc"
-    }
-  ],
-  "desbordes": [
-    "/calendario: 405px de más"
-  ]
+  "hallazgos": [],
+  "desbordes": [],
+  "sinCargar": []
 }

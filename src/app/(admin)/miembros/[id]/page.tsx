@@ -389,7 +389,7 @@ export default function MiembroDetailPage() {
         <div className="rounded-2xl bg-teal-soft/25 px-4 py-3 flex items-start gap-2">
           <p className="flex-1 text-[13px] text-teal-deep font-body">{avisoFusion}</p>
           <button onClick={() => setAvisoFusion(null)} aria-label="Cerrar el aviso"
-            className="text-teal-deep/80 hover:text-teal-deep text-[13px]">✕</button>
+            className="text-teal-deep hover:text-navy text-[13px]">✕</button>
         </div>
       )}
 

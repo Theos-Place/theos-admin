@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Employee } from '@/types/employee'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 
 function calcularAntiguedad(startDate: string): string {
   const inicio = new Date(startDate)
@@ -53,7 +54,7 @@ export function EmployeeHeader({ employee, id, onTerminate }: EmployeeHeaderProp
         {[
           { label: 'Comité',     value: employee.committee_name },
           { label: 'Área',       value: employee.area },
-          { label: 'Desde',      value: new Date(employee.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' }) },
+          { label: 'Desde',      value: formatDate(employee.start_date) },
           { label: 'Antigüedad', value: calcularAntiguedad(employee.start_date) },
         ].map(({ label, value }) => (
           <div key={label}>

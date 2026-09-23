@@ -4,6 +4,7 @@ import type { Employee, VacationRecordType, VacationRecordStatus } from '@/types
 import { VacationTracker } from '@/components/employees/VacationTracker'
 import { cn } from '@/lib/utils'
 import { Calendar, Clock, Plus, Check, X } from 'lucide-react'
+import { formatDate, formatDayMonth } from '@/lib/format'
 
 const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
   vacaciones:          'Vacaciones',
@@ -95,9 +96,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
                     {VACATION_TYPE_LABELS[v.type]}
                   </p>
                   <p className="text-[13px] text-navy-light/80 font-body">
-                    {new Date(v.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })}
-                    {' — '}
-                    {new Date(v.end_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {formatDayMonth(v.start_date)}{' — '}{formatDate(v.end_date)}
                     {' · '}
                     {calcularDiasHabiles(v.start_date, v.end_date)} días hábiles
                   </p>

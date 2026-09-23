@@ -1,5 +1,6 @@
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
-import { formatBirthday } from '@/lib/format'
+import { formatBirthday, formatDateNumeric } from '@/lib/format'
+import { partesDeFecha } from '@/lib/fecha/partes-de-fecha'
 
 // Fila aplanada de servidor, compartida entre el listado general y el detalle de comité.
 export type FlatServer = {
@@ -19,9 +20,12 @@ export type FlatServer = {
 
 export function calcularAntiguedad(startDate: string): string {
   if (!startDate) return '—'
-  const start = new Date(startDate)
+  // QA-1/M1: `start_date` es columna `date`. Con `new Date` una fecha del día 1
+  // retrocede al mes anterior en Costa Rica y la antigüedad sale un mes larga.
+  const start = partesDeFecha(startDate)
+  if (!start) return '—'
   const now = new Date()
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+  const months = (now.getFullYear() - start.anio) * 12 + (now.getMonth() + 1 - start.mes)
   if (months < 12) return `${months} mes${months !== 1 ? 'es' : ''}`
   const years = Math.floor(months / 12)
   const rem = months % 12
@@ -35,7 +39,7 @@ export const SERVER_COLUMNS: ColumnDef<FlatServer>[] = [
   { key: 'area',       label: 'Área',               defaultVisible: true },
   {
     key: 'start_date', label: 'Fecha de inicio', defaultVisible: true,
-    exportValue: s => (s.start_date ? new Date(s.start_date).toLocaleDateString('es-CR') : '—'),
+    exportValue: s => formatDateNumeric(s.start_date),
   },
   {
     key: 'seniority', label: 'Antigüedad', defaultVisible: true,

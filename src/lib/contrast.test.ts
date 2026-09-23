@@ -31,7 +31,12 @@ describe('los pares del design system pasan AA para texto normal', () => {
     // Coral es la acción primaria: con el #EF5554 anterior daba 3.44 y fallaba.
     ['blanco sobre coral',               () => ratio(TOKENS.white, TOKENS.coral)],
     ['blanco sobre coral-deep',          () => ratio(TOKENS.white, TOKENS.coralDeep)],
+    // 4.550 — pasa por un 1%. Ver abajo: sobre el papel ya NO pasa.
     ['coral como texto sobre blanco',    () => ratio(TOKENS.coral, TOKENS.surfaceCard)],
+    // QA-1/M2 · El papel de las públicas es #F8FAFB, no blanco. Ahí el texto
+    // de acento va en coral-deep.
+    ['coral-deep como texto sobre papel', () => ratio(TOKENS.coralDeep, TOKENS.surface)],
+    ['teal-deep como texto sobre papel',  () => ratio(TOKENS.tealDeep, TOKENS.surface)],
     // El teal claro es fondo de chips: va con texto navy, no blanco (daba 2.15).
     ['navy sobre teal',                  () => ratio(TOKENS.navy, TOKENS.teal)],
     ['blanco sobre teal-deep',           () => ratio(TOKENS.white, TOKENS.tealDeep)],
@@ -58,9 +63,59 @@ describe('las combinaciones que se retiraron siguen fuera', () => {
     expect(ratio(TOKENS.white, TOKENS.teal)).toBeLessThan(AA_NORMAL)
   })
 
+  it('coral como TEXTO sobre el papel no llega: por eso /terminos usa coral-deep', () => {
+    // 4.346 contra el 4.5 de AA. El margen del coral sobre blanco es de 4.550,
+    // o sea un 1%: cualquier superficie que no sea blanco pura lo tumba. Es lo
+    // que hacía fallar los seis enlaces mailto del documento de términos.
+    expect(ratio(TOKENS.coral, TOKENS.surface)).toBeLessThan(AA_NORMAL)
+  })
+
   it('navy-light por debajo de /80 no alcanza', () => {
     expect(ratio(TOKENS.navyLight, TOKENS.white, 0.6)).toBeLessThan(AA_NORMAL)
     expect(ratio(TOKENS.navyLight, TOKENS.white, 0.5)).toBeLessThan(AA_NORMAL)
+  })
+})
+
+// QA-1/M2 · Los fondos TEÑIDOS son dos composiciones, no una: primero el tinte
+// sobre el papel, después el texto sobre ese resultado. `ratio()` solo compone
+// una vez, así que estos pares se arman a mano.
+//
+// El hallazgo: `/terminos` tenía `text-teal-deep/90` sobre `bg-teal-soft/20` y
+// daba 3.87. El color pleno da 4.69 — pasa, pero con poco margen, y ESA es la
+// razón de que el /90 esté prohibido arriba: el tinte ya se comió el colchón,
+// no queda nada para gastar en opacidad. Las otras nueve pantallas que usan
+// este par ya lo tenían pleno; `/terminos` era la excepción.
+describe('texto sobre fondos teñidos', () => {
+  const sobreTinte = (fgHex: string, tinteHex: string, alfaTinte: number, papelHex: string, alfaTexto = 1) => {
+    const fondo = composite(hexToRgb(tinteHex), hexToRgb(papelHex), alfaTinte)
+    const fg = alfaTexto === 1 ? hexToRgb(fgHex) : composite(hexToRgb(fgHex), fondo, alfaTexto)
+    return contrastRatio(fg, fondo)
+  }
+
+  it('teal-deep pleno sobre teal-soft/20, en el papel de las públicas', () => {
+    expect(sobreTinte(TOKENS.tealDeep, TOKENS.tealSoft, 0.2, TOKENS.surface))
+      .toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('teal-deep pleno sobre teal-soft/20, en una tarjeta blanca', () => {
+    expect(sobreTinte(TOKENS.tealDeep, TOKENS.tealSoft, 0.2, TOKENS.surfaceCard))
+      .toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('con /90 NO pasaba: por eso se le quitó a /terminos', () => {
+    expect(sobreTinte(TOKENS.tealDeep, TOKENS.tealSoft, 0.2, TOKENS.surface, 0.9))
+      .toBeLessThan(AA_NORMAL)
+  })
+
+  it('teal-deep pleno sobre teal-soft/25, el tinte más fuerte que se usa', () => {
+    expect(sobreTinte(TOKENS.tealDeep, TOKENS.tealSoft, 0.25, TOKENS.surfaceCard))
+      .toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('coral-deep sobre el tinte coral, que es la otra pareja teñida del sistema', () => {
+    // AGENTS.md: sobre un tinte coral el texto va en coral-deep, no en coral.
+    expect(sobreTinte(TOKENS.coralDeep, TOKENS.coral, 0.1, TOKENS.surfaceCard))
+      .toBeGreaterThanOrEqual(AA_NORMAL)
   })
 })
 
@@ -79,6 +134,9 @@ describe('las clases retiradas no volvieron al código', () => {
     'text-navy-light/50', 'text-navy-light/60', 'text-navy-light/70',
     'text-gray-400', 'text-[9px]', 'text-[10px]',
     'bg-teal text-white',
+    // QA-1/M2 · Sobre un tinte el teal-deep ya arranca en 4.69: cualquier
+    // opacidad encima lo baja de AA. Al /90 daba 3.87.
+    'text-teal-deep/90', 'text-teal-deep/80',
   ]
   const encontradas = () => {
     const patron = PROHIBIDAS.map(c => c.replace(/[[\]]/g, m => '\\' + m)).join('|')

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric, formatBirthday } from './format'
+import { ymdCR, toYmdLocal, calcAge, formatMoney, formatCRC, currencySymbol, formatDate, formatDateLong, formatDateNumeric, formatDayMonth, formatMonthYear, formatBirthday } from './format'
 
 describe('ymdCR', () => {
   it('un instante de madrugada UTC es el día ANTERIOR en CR (UTC-6)', () => {
@@ -102,6 +102,25 @@ describe('fechas puras: no se corren un día en Costa Rica', () => {
     // una zona negativa, y de eso se cuida no usar new Date() en las pantallas.
     expect(formatDateNumeric('2026-09-27T23:30:00.000Z')).toBe('27/09/2026')
     expect(formatDateNumeric('2026-09-28T00:30:00.000Z')).toBe('28/09/2026')
+  })
+})
+
+// QA-1/M1 · Los dos formatos que las pantallas de empleados armaban a mano con
+// `new Date(x + 'T00:00:00').toLocaleDateString(...)`. Salen exactamente igual
+// que antes; lo que cambia es que la protección de zona vive en un solo lugar.
+describe('formatMonthYear y formatDayMonth', () => {
+  it('mes y año, sin día', () => {
+    expect(formatMonthYear('2026-05-15')).toBe('may 2026')
+    expect(formatMonthYear('2026-01-01')).toBe('ene 2026')
+  })
+  it('día y mes, sin año', () => {
+    expect(formatDayMonth('2026-05-15')).toBe('15 may')
+    expect(formatDayMonth('2026-01-01')).toBe('1 ene')
+  })
+  it('null da la raya, igual que el resto', () => {
+    expect(formatMonthYear(null)).toBe('—')
+    expect(formatDayMonth(undefined)).toBe('—')
+    expect(formatMonthYear('cualquier cosa')).toBe('—')
   })
 })
 

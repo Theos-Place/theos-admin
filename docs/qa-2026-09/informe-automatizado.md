@@ -97,7 +97,7 @@ elementos desbordados, en las cuatro vistas (`monthly`, `weekly`, `list`,
 
 ---
 
-## MEDIO
+## MEDIO — los tres ARREGLADOS el 2026-09-22
 
 ### M1 · Doce conversiones de fecha sin protección de zona horaria
 
@@ -121,6 +121,25 @@ forma de hacerlo y no dos.
 El de `useSortableTable` es distinto y peor de detectar: calcula la edad restando
 años, así que ordena mal a quien todavía no ha cumplido años ese año.
 
+**ARREGLADO** · Ahora hay UNA sola forma: `lib/format` para mostrar,
+`lib/fecha/partes-de-fecha` para comparar o agrupar. `format.ts` tenía su propia
+copia de `parseFlexibleDate` y ahora usa la del módulo, que es la que tiene los
+tests.
+
+Fueron **18** sitios, no 12: al barrer aparecieron seis más en el detalle de
+empleados que la lista original no tenía porque *sí* estaban protegidos con
+`T00:00:00` — o sea, eran la segunda forma de hacerlo, que es exactamente lo que
+M1 señala. Y uno que no estaba en ninguna lista: `calcularAntiguedad` contaba
+meses sobre un `new Date`, así que la antigüedad de quien entró un día 1 salía
+un mes larga.
+
+Dos helpers nuevos para lo que las pantallas armaban a mano: `formatMonthYear`
+("may 2026") y `formatDayMonth` ("15 may").
+
+**Guardarraíl:** `src/lib/fecha/columnas-date.test.ts` falla si alguien vuelve a
+escribir `new Date(<algo>.<columna date>)`, incluso pegando `T00:00:00`.
+Comprobado con un cebo: el test muerde.
+
 ### M2 · Contraste bajo en `/terminos`
 
 7 nodos. `text-teal-deep/90` sobre `bg-teal-soft/20`.
@@ -129,7 +148,30 @@ Medido con `lib/contrast.ts`, que es la herramienta del propio repo: **3,80**
 contra el 4,5 que pide AA. El mismo teal sobre el fondo de papel da 5,16 — o sea
 que **el problema son las opacidades**, no el color.
 
-**Fix:** quitarle el `/90` al texto. Con el color pleno pasa.
+**ARREGLADO, y el diagnóstico de arriba estaba INCOMPLETO.** Al medir contra el
+fondo real de la página (`#F8FAFB`, no blanco) el `/90` da 3,87 y el pleno 4,69:
+quitar la opacidad era necesario, pero no era lo que axe estaba marcando. Los
+seis nodos eran los enlaces `mailto:` del cuerpo del documento:
+
+| Par | Ratio |
+|---|---:|
+| coral sobre **blanco** | 4,550 ✓ (por un 1%) |
+| coral sobre el **papel** `#F8FAFB` | **4,346** ✗ |
+| coral-deep sobre el papel | 5,109 ✓ |
+| teal-deep `/90` sobre el tinte teal | 3,87 ✗ |
+| teal-deep pleno sobre el tinte teal | 4,69 ✓ |
+
+O sea: **el coral como texto pasa AA solo sobre blanco puro, y por un 1%.**
+Cualquier superficie que no sea blanca lo tumba. El artículo de términos usa
+ahora `coral-deep`.
+
+Al prohibir `text-teal-deep/90` en el test, aparecieron dos `/80` más que la
+auditoría no había visto porque están en pantallas con sesión
+(`miembros/[id]`, `estudios/plan`). También corregidos.
+
+Los pares nuevos quedan medidos en `src/lib/contrast.test.ts`, incluida la
+composición doble de los fondos teñidos —tinte sobre papel, texto sobre el
+resultado— que `ratio()` no sabía hacer.
 
 ### M3 · Enlace distinguible solo por color en `/registro`
 
@@ -137,7 +179,11 @@ que **el problema son las opacidades**, no el color.
 tu acceso</a>` dentro de un párrafo. El subrayado aparece solo al pasar el mouse,
 que en un teléfono no existe.
 
-**Fix:** `underline` permanente, no solo en `hover`.
+**ARREGLADO** · En cinco enlaces, no uno. Axe marcó solo el de `/registro`,
+pero los de `/login` y el segundo de `/registro` tienen exactamente la misma
+forma: enlace coloreado dentro de una frase, con el subrayado solo en `hover`.
+Se arreglaron los cinco que van **dentro de una frase**; los que están solos en
+su bloque se quedan como estaban, porque ahí la posición ya los distingue.
 
 ---
 

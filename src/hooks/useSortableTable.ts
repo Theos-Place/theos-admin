@@ -1,5 +1,6 @@
 import { STUDY_CATALOG } from '@/data/study-catalog'
 import { claveAlfabetica } from '@/lib/utils'
+import { calcAge } from '@/lib/format'
 import { useState, useMemo } from 'react'
 
 export type SortDirection = 'asc' | 'desc'
@@ -53,8 +54,11 @@ export function getSortValue(row: Record<string, unknown>, key: string): string 
       return claveAlfabetica(porApellido || String(row.name ?? ''))
     }
     case 'age':
+      // QA-1/M1: restar años NO es la edad —quien todavía no cumple ese año
+      // sale un año mayor y la lista queda mal ordenada— y `new Date` sobre una
+      // columna `date` corre la fecha un día. `calcAge` resuelve las dos cosas.
       return typeof row.birth_date === 'string'
-        ? String(new Date().getFullYear() - new Date(row.birth_date).getFullYear()).padStart(3, '0')
+        ? String(calcAge(row.birth_date)).padStart(3, '0')
         : 'zzz'
     case 'status':
       return row.status === 'active' ? '0' : '1'

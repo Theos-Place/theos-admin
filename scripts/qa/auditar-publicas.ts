@@ -33,6 +33,11 @@ async function main() {
   const hallazgos: Hallazgo[] = []
   const desbordes: string[] = []
 
+  // Las rutas que ni siquiera cargaron. Sin esto el script mentía: con el dev
+  // server caído imprimía "violaciones: 0", que es exactamente lo que un
+  // auditor quiere leer y justo lo que no había medido (pasó el 2026-09-22).
+  const sinCargar: string[] = []
+
   for (const [ancho, opciones] of [
     ['desktop', { viewport: { width: 1280, height: 900 } }],
     ['mobile', devices['iPhone 13']],
@@ -44,6 +49,7 @@ async function main() {
         await page.goto(BASE + ruta, { waitUntil: 'networkidle', timeout: 30_000 })
       } catch {
         console.log(`  ✗ ${ancho} ${ruta}: no cargó`)
+        sinCargar.push(`${ancho} ${ruta}`)
         continue
       }
       const r = await new AxeBuilder({ page })
@@ -73,9 +79,16 @@ async function main() {
   }
   await browser.close()
 
-  writeFileSync(`${SALIDA}/axe-publicas.json`, JSON.stringify({ hallazgos, desbordes }, null, 2))
+  writeFileSync(`${SALIDA}/axe-publicas.json`, JSON.stringify({ hallazgos, desbordes, sinCargar }, null, 2))
   console.log(`\nviolaciones: ${hallazgos.length} · desbordes en móvil: ${desbordes.length}`)
   if (desbordes.length) console.log(desbordes.join('\n'))
+
+  if (sinCargar.length) {
+    console.error(`\n✗ ${sinCargar.length} rutas NO cargaron — el resultado de arriba NO vale:`)
+    console.error('  ' + sinCargar.join('\n  '))
+    console.error('\n  ¿Está corriendo el dev server en ' + BASE + '?')
+    process.exit(1)
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

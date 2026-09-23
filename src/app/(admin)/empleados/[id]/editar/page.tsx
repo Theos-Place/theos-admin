@@ -8,6 +8,7 @@ import { useEmployees } from '@/hooks/useEmployees'
 import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Check } from 'lucide-react'
+import { formatDateLong } from '@/lib/format'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
@@ -161,7 +162,7 @@ export default function EditarEmpleadoPage() {
           <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Persona</p>
           <p className="text-sm font-semibold text-navy font-display">{employee.member_name}</p>
           <p className="text-[13px] text-navy-light/80 font-body">
-            Inicio: {new Date(employee.start_date + 'T00:00:00').toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            Inicio: {formatDateLong(employee.start_date)}
           </p>
         </div>
 

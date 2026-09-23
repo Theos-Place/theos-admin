@@ -1722,7 +1722,7 @@ paso a paso; las capturas se agregan después como en los demás tutoriales.
 Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
 sembradas ahí, y desde staging el QA autenticado completo (QA-2).
 
-### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA, CRÍTICOS CERRADOS 2026-09-22
+### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA, CRÍTICOS Y MEDIOS CERRADOS 2026-09-22
 
 Informe en **`docs/qa-2026-09/informe-automatizado.md`**, con capturas y datos
 crudos. Reproducible: `npx tsx scripts/qa/auditar-publicas.ts`.
@@ -1763,8 +1763,29 @@ ayuda, y ocho de las nueve páginas públicas sin desborde.
   `CalendarGrid` del admin). Medido en el navegador: de 795 px de ancho en una
   pantalla de 360, a cero desborde en las cuatro vistas.
 
-**El resto sigue sin aplicar**: los medios y menores son el mapa, y las tandas
-las prioriza Floriana.
+**Los tres medios también** (segunda tanda, el mismo día):
+
+- M1 → una sola forma de leer una columna `date`: `lib/format` para mostrar,
+  `lib/fecha/partes-de-fecha` para comparar o agrupar. Fueron **18** sitios, no
+  12 — aparecieron seis que *sí* estaban protegidos con `T00:00:00`, que era
+  justo la segunda forma que M1 señalaba, y `calcularAntiguedad`, que contaba
+  meses sobre un `new Date` y daba un mes de más a quien entró un día 1. Queda
+  un test que falla si alguien vuelve a escribirlo, probado con un cebo.
+- M2 → **el diagnóstico original estaba incompleto**. Quitar el `/90` hacía
+  falta (3,87 → 4,69), pero los seis nodos que axe marcaba eran los enlaces
+  `mailto:` en coral: el coral como texto da 4,550 sobre blanco —pasa por un
+  1%— y **4,346 sobre el papel `#F8FAFB`**, que es el fondo real de la página.
+  Ahora van en `coral-deep` (5,109). Al prohibir la clase en el test salieron
+  dos `/80` más en pantallas con sesión, que la auditoría no podía ver.
+- M3 → cinco enlaces, no uno: axe marcó el de `/registro` pero los de `/login`
+  tienen la misma forma. Subrayado permanente en los que van dentro de una
+  frase; los que están solos en su bloque se quedan (la posición los distingue).
+
+Verificado volviendo a correr la auditoría: **0 violaciones, 0 desbordes** en
+las 18 combinaciones. De paso se arregló un defecto del propio script, que con
+el dev server caído imprimía "violaciones: 0" en vez de fallar.
+
+**Quedan los menores** (N1–N4), que son de consistencia y no rompen nada.
 
 ### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
 

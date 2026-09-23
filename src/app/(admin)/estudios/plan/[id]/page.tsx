@@ -18,6 +18,7 @@ import { Archive, Pencil, Search, X, Bus, ChevronLeft, Plus } from 'lucide-react
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { formatMoney } from '@/lib/format'
+import { anioDe } from '@/lib/fecha/partes-de-fecha'
 
 const PAGE_SIZE = 10
 
@@ -504,7 +505,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                         <GroupStatusBadge status={group.status} />
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                        {group.start_date ? new Date(group.start_date).getFullYear() : '—'}
+                        {anioDe(group.start_date) ?? '—'}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Link

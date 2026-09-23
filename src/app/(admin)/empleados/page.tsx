@@ -12,6 +12,7 @@ import { FilterChips } from '@/components/shared/FilterChips'
 import { cn } from '@/lib/utils'
 import { Plus, ChevronDown, ChevronUp, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { formatDate, formatMonthYear } from '@/lib/format'
 
 function calcularAntiguedad(startDate: string): string {
   const inicio = new Date(startDate)
@@ -174,7 +175,7 @@ export default function EmpleadosPage() {
                     <ContractTypeBadge type={emp.contract_type} size="sm" />
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                    {new Date(emp.start_date).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {formatDate(emp.start_date)}
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {calcularAntiguedad(emp.start_date)}
@@ -311,12 +312,7 @@ export default function EmpleadosPage() {
                           <ContractTypeBadge type={emp.contract_type} size="sm" />
                         </td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                          {new Date(emp.start_date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
-                          {' — '}
-                          {emp.end_date
-                            ? new Date(emp.end_date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })
-                            : '—'
-                          }
+{formatMonthYear(emp.start_date)}{' — '}{formatMonthYear(emp.end_date)}
                         </td>
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           <Link

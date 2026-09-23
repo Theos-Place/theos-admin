@@ -1,6 +1,8 @@
 // Helpers de formato compartidos (fechas e iniciales). Antes había ~19 copias
 // de formatDate y ~18 de initials regadas por las páginas (auditoría 2026-06-11).
 
+import { fechaLocal } from '@/lib/fecha/partes-de-fecha'
+
 const LOCALE = 'es-CR'
 
 const CR_TZ = 'America/Costa_Rica'
@@ -53,17 +55,14 @@ export function crFormParts(
   }
 }
 
-const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
-
 /** Parsea una fecha respetando las fechas PURAS (YYYY-MM-DD, columnas `date`) como
  *  locales — `new Date('1990-05-15')` las interpreta como medianoche UTC y en CR
- *  (UTC-6) retroceden un día. Los timestamps con hora se parsean normal. */
-function parseFlexibleDate(d: string): Date {
-  if (DATE_ONLY_RE.test(d)) {
-    return new Date(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10)))
-  }
-  return new Date(d)
-}
+ *  (UTC-6) retroceden un día. Los timestamps con hora se parsean normal.
+ *
+ *  QA-1/M1: había DOS implementaciones de esto, una acá y otra pegando
+ *  'T00:00:00' a mano en cada pantalla. Ahora hay una sola, en
+ *  `lib/fecha/partes-de-fecha`, y es la que tiene los tests. */
+const parseFlexibleDate = fechaLocal
 
 /**
  * Cumpleaños como "14 de mayo" — sin año, que es lo que sirve para felicitar.
@@ -108,6 +107,24 @@ export function formatDateLong(d: string | null | undefined): string {
   const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+/** Día y mes corto: "5 may", sin año. null → '—'. Para rangos dentro del mismo
+ *  año, donde repetir el año en los dos extremos sobra. */
+export function formatDayMonth(d: string | null | undefined): string {
+  if (!d) return '—'
+  const date = parseFlexibleDate(d)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' })
+}
+
+/** Mes y año: "may 2026". null → '—'. Para rangos de contrato y similares,
+ *  donde el día no aporta. */
+export function formatMonthYear(d: string | null | undefined): string {
+  if (!d) return '—'
+  const date = parseFlexibleDate(d)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString(LOCALE, { month: 'short', year: 'numeric' })
 }
 
 /** Fecha numérica: "05/05/2026". null → '—'. */

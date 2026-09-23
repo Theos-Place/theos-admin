@@ -4,6 +4,7 @@ import type { Employee } from '@/types/employee'
 import { ContractTypeBadge } from '@/components/employees/ContractTypeBadge'
 import { SalaryTimeline } from '@/components/employees/SalaryTimeline'
 import { TrendingUp, Briefcase } from 'lucide-react'
+import { formatMonthYear } from '@/lib/format'
 
 interface TabContratoProps {
   employee: Employee
@@ -43,11 +44,7 @@ export function TabContrato({ employee, onOpenRaiseModal }: TabContratoProps) {
               <div>
                 <p className="text-[13px] font-medium text-navy font-body">{p.position_name}</p>
                 <p className="text-[13px] text-navy-light/80 font-body">
-                  {new Date(p.start_date + 'T00:00:00').toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
-                  {' — '}
-                  {p.end_date
-                    ? new Date(p.end_date + 'T00:00:00').toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })
-                    : 'hoy'}
+                  {formatMonthYear(p.start_date)}{' — '}{p.end_date ? formatMonthYear(p.end_date) : 'hoy'}
                 </p>
               </div>
               <ContractTypeBadge type={p.contract_type} size="sm" />

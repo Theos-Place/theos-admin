@@ -339,7 +339,7 @@ export default function PlanDeEstudiosPage() {
                     {s.weeks}
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap font-body">
-                    <span className={s.cost === 0 ? 'text-teal-deep/80' : 'text-navy-light/80'}>
+                    <span className={s.cost === 0 ? 'text-teal-deep' : 'text-navy-light/80'}>
                       {studyCostLabel(s.code, s.cost)}
                     </span>
                   </td>
