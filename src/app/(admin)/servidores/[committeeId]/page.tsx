@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { ExportButton } from '@/components/shared/ExportButton'
 import { type FlatServer, SERVER_COLUMNS } from '@/lib/servers/columns'
-import { esComiteDirigentes } from '@/lib/dirigentes'
+import { esComiteDirigentes, estudioMasReciente } from '@/lib/dirigentes'
 import { CommitteeHeader } from './_components/CommitteeHeader'
 import { MembersTab } from './_components/MembersTab'
 import { VacanciesTab } from './_components/VacanciesTab'
@@ -58,6 +58,7 @@ export default function CommitteeDetailPage() {
   // El comité de Dirigentes (de estudios) muestra una pestaña extra con el
   // resumen de estudios de cada servidor.
   const isDirigentes = !!committee && esComiteDirigentes(committee.name, { excludeAdministrativo: true })
+
 
   const [tab, setTab] = useState<Tab>('miembros')
   const [search, setSearch] = useState('')
@@ -505,7 +506,8 @@ export default function CommitteeDetailPage() {
 
         {/* Tab: Miembros */}
         {tab === 'miembros' && (
-          <MembersTab
+          <MiembrosDelComite
+            conEstudios={isDirigentes}
             encargados={committee.encargados.map(e => e.member_id)}
             puedeMarcarEncargado={puedeMarcarEncargado}
             marcandoEncargado={marcandoEncargado}
@@ -686,6 +688,30 @@ export default function CommitteeDetailPage() {
 }
 
 // ─── Tab Estudios (solo comité de Dirigentes) ───────────────────────────────────
+/**
+ * `MembersTab`, y en el Comité Dirigentes además la columna del último estudio.
+ *
+ * Existe como COMPONENTE y no como un `if` adentro de la página porque el hook
+ * no se puede llamar condicionalmente — y llamarlo siempre significaría cargar
+ * los grupos de los 505 dirigentes en la pantalla de cualquier comité, para
+ * nada. Un componente sí se puede renderizar condicionalmente.
+ */
+function MiembrosDelComite(
+  { conEstudios, ...props }: React.ComponentProps<typeof MembersTab> & { conEstudios: boolean },
+) {
+  if (!conEstudios) return <MembersTab {...props} />
+  return <MiembrosConEstudios {...props} />
+}
+
+function MiembrosConEstudios(props: React.ComponentProps<typeof MembersTab>) {
+  const { dirigentes } = useDirigentes()
+  const estudioPorMiembro = useMemo(
+    () => new Map(dirigentes.map(d => [d.member_id, estudioMasReciente(d)])),
+    [dirigentes],
+  )
+  return <MembersTab {...props} estudioPorMiembro={estudioPorMiembro} />
+}
+
 function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
   const { dirigentes, loading } = useDirigentes()
   const byId = useMemo(() => new Map(dirigentes.map(d => [d.member_id, d])), [dirigentes])

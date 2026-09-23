@@ -137,3 +137,27 @@ export function buildDirigentes(
     || a.member_name.localeCompare(b.member_name),
   )
 }
+
+/**
+ * El estudio MÁS RECIENTE de un dirigente: el que está dando ahora, o el último
+ * que dio.
+ *
+ * Reemplaza a la columna «Antigüedad» en la lista del comité, que no decía
+ * nada (reportado por Floriana el 2026-09-23). Dos motivos, los dos de datos:
+ * 183 de los 278 servidores del comité tienen `start_date` del 2026-09-11 —la
+ * fecha de la sincronización del Excel Madre, no de cuándo entraron—, así que
+ * la columna decía «0 meses» para casi todos; y otros 46 la tienen nula, que es
+ * de donde salía el «NaN año».
+ *
+ * «Cuándo entró al comité» es un dato que no tenemos. «Qué está dando» sí, y es
+ * lo que alguien quiere saber mirando esa lista.
+ *
+ * EL QUE ESTÁ EN CURSO GANA SIEMPRE, aunque uno finalizado tenga fecha
+ * posterior: la pregunta es qué hace hoy, no qué terminó último.
+ */
+export function estudioMasReciente(d: Pick<Dirigente, 'estudios_activos' | 'estudios_completados'> | undefined): DirigenteGrupo | null {
+  if (!d) return null
+  const porFecha = (gs: DirigenteGrupo[]) =>
+    [...gs].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))[0] ?? null
+  return porFecha(d.estudios_activos) ?? porFecha(d.estudios_completados)
+}

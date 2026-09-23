@@ -2164,6 +2164,28 @@ Tests: filtro por cualquiera y por plan específico, columna correcta con doble 
 export con la columna. tsc/lint/vitest.
 ```
 
+### [ ] PAR-6 · Pantalla de dirigentes: botón de filtro "Dando ahora"
+
+Prompt para Claude Code:
+
+```
+MEJORA · Pantalla de dirigentes: filtro rápido "Dando ahora" como botón/toggle
+
+En la lista de dirigentes, agregar un botón-filtro "Dando ahora" (estilo pill/toggle,
+junto a los filtros existentes): activado, muestra solo los dirigentes que dirigen o
+co-dirigen un grupo EN CURSO en este momento.
+- La condición "dirige un grupo en curso" debe salir de la definición central de
+  dirigente activo (PAR-2, lib/dirigentes.ts) — es su inciso (a); NO escribir la
+  consulta aparte. Si PAR-2 no ha corrido, crear la función ahí igual y que PAR-2 la
+  complete después (dejarlo anotado).
+- Mostrar el conteo en el botón ("Dando ahora · N") y, con el filtro activo, la columna
+  del grupo que dirige si la tabla no la tiene ya.
+- El estado del filtro va en la URL (query param) para poder compartir el enlace.
+- Si la pantalla tiene export, el filtro aplica al export.
+Tests: toggle filtra correcto (dirigente con grupo en curso sí, con grupo cerrado no,
+co-dirigente sí), conteo. tsc/lint/vitest.
+```
+
 ## Fase 19 — Pedido el 2026-09-21
 
 **Cierre 2026-09-21.** Tres artículos, escritos LEYENDO las pantallas, no de

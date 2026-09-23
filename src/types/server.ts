@@ -8,7 +8,9 @@ export type CommitteeServer = {
   initials: string
   position: string
   position_id?: string
-  start_date: string
+  /** Puede venir NULA: 46 servidores del Comité Dirigentes no la tienen, y
+   *  decir `string` fue lo que dejó pasar el «NaN año» a la pantalla. */
+  start_date: string | null
   status: ServerStatus
   email?: string | null
   phone?: string | null

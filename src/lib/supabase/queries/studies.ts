@@ -703,9 +703,23 @@ async function ponerEnElComiteDirigentes(
 ): Promise<void> {
   const areaId = await idDelComiteDirigentes(supabase)
   const { data: positions } = await supabase
-    .from('service_positions').select('id, title').eq('area_id', areaId)
-  const puestos = ((positions ?? []) as Array<{ id: string; title: string | null }>)
+    .from('service_positions').select('id, title, is_active').eq('area_id', areaId)
+  const todos = ((positions ?? []) as Array<{ id: string; title: string | null; is_active: boolean | null }>)
     .filter(p => esPuestoDeDirigente(p.title))
+  /**
+   * SOLO PUESTOS VIGENTES.
+   *
+   * El bug (2026-09-23, reportado por Floriana): reusaba el puesto anterior de
+   * la persona sin mirar si seguía activo. El comité arrastra un puesto viejo
+   * llamado "Dirigente" —retirado, reemplazado por "Dirigente CR"— con 77 filas
+   * de voluntariado. Quien tuviera una fila vieja ahí revivía EN ESE PUESTO, y
+   * la pantalla del comité solo lista puestos activos: quedaba como dirigente
+   * activo e invisible en su propio comité.
+   *
+   * Pasó con 4 de los 12 que activó el recálculo de PAR-2, y es justo lo que
+   * hacía que el comité dijera 202 y los dirigentes activos 205.
+   */
+  const puestos = todos.filter(p => p.is_active !== false)
   if (puestos.length === 0) return
 
   const { data: previos } = await supabase

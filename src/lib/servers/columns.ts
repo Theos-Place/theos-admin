@@ -8,7 +8,8 @@ export type FlatServer = {
   name: string
   initials: string
   position: string
-  start_date: string
+  /** Puede venir NULA — ver `calcularAntiguedad`. */
+  start_date: string | null
   status: 'active' | 'inactive'
   committee: string
   area: string
@@ -18,7 +19,17 @@ export type FlatServer = {
   birth_date: string | null
 }
 
-export function calcularAntiguedad(startDate: string): string {
+/**
+ * Cuánto lleva en el puesto. Sin fecha o con una fecha que no se entiende
+ * devuelve '—', que es como el resto del sistema dice «no hay dato».
+ *
+ * EL TIPO ACEPTA NULL A PROPÓSITO. Antes decía `startDate: string` y la base
+ * tiene 46 servidores del Comité Dirigentes con `start_date` nulo: TypeScript
+ * dejaba pasar el null porque el tipo de la fila también mentía, y en pantalla
+ * salía «NaN año» (reportado por Floriana el 2026-09-23). Un tipo que promete
+ * lo que el dato no cumple no protege de nada.
+ */
+export function calcularAntiguedad(startDate: string | null | undefined): string {
   if (!startDate) return '—'
   // QA-1/M1: `start_date` es columna `date`. Con `new Date` una fecha del día 1
   // retrocede al mes anterior en Costa Rica y la antigüedad sale un mes larga.
@@ -26,6 +37,16 @@ export function calcularAntiguedad(startDate: string): string {
   if (!start) return '—'
   const now = new Date()
   const months = (now.getFullYear() - start.anio) * 12 + (now.getMonth() + 1 - start.mes)
+  /**
+   * Fuera de rango → '—'. Cubre dos casos que igual llegan a la pantalla como
+   * texto roto aunque no sean NaN:
+   *  · una fecha FUTURA daría meses negativos («-3 meses»);
+   *  · una fecha basura que igual parsea —'0000' se lee como el año cero— daría
+   *    «2026 años», que no es un dato sino un error disfrazado.
+   * Cien años es el techo: nadie lleva más en un puesto, así que pasado eso lo
+   * que está mal es el dato.
+   */
+  if (!Number.isFinite(months) || months < 0 || months > 100 * 12) return '—'
   if (months < 12) return `${months} mes${months !== 1 ? 'es' : ''}`
   const years = Math.floor(months / 12)
   const rem = months % 12

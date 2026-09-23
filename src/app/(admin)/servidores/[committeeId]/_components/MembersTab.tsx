@@ -9,23 +9,29 @@ import { SortableHeader } from '@/components/shared/SortableHeader'
 import { type SortDirection } from '@/hooks/useSortableTable'
 import { agruparPorPersona } from '@/lib/servers/committee-filter'
 import { formatDate } from '@/lib/format'
+import { calcularAntiguedad } from '@/lib/servers/columns'
+import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { EstrellaDeEncargado } from './EstrellaDeEncargado'
 
 type StatusFilter = 'active' | 'inactive' | 'all'
 
-function calcularAntiguedad(startDate: string): string {
-  const inicio = new Date(startDate)
-  const hoy = new Date()
-  const meses =
-    (hoy.getFullYear() - inicio.getFullYear()) * 12 +
-    (hoy.getMonth() - inicio.getMonth())
-  if (meses < 12) return `${meses} meses`
-  const años = Math.floor(meses / 12)
-  const mesesRest = meses % 12
-  return mesesRest > 0
-    ? `${años} año${años > 1 ? 's' : ''} y ${mesesRest} meses`
-    : `${años} año${años > 1 ? 's' : ''}`
+/** El estudio más reciente: el que está dando, o el último que dio. */
+function UltimoEstudio({ grupo }: { grupo: DirigenteGrupo | null }) {
+  if (!grupo) return <span className="text-navy-light/80">Sin estudios</span>
+  const enCurso = grupo.status === 'en_curso' || grupo.status === 'en_matricula'
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="font-medium text-navy">{grupo.plan_code}</span>
+      <span className="truncate max-w-[16ch]" title={grupo.group_name}>{grupo.group_name}</span>
+      {/* El punto solo marca «está dando ahora». Va con aria-label porque el
+          color por sí solo no comunica nada a quien no lo ve. */}
+      {enCurso && (
+        <span className="h-1.5 w-1.5 rounded-full bg-teal-deep shrink-0" aria-label="en curso" role="img" />
+      )}
+    </span>
+  )
 }
+
 
 type Props = {
   sortedMembers: CommitteeServer[]
@@ -50,6 +56,11 @@ type Props = {
   toolbarExtra?: React.ReactNode
   /** member_ids a cargo del comité — la estrella (SRV-5). */
   encargados: readonly string[]
+  /**
+   * Solo el Comité Dirigentes: el estudio más reciente de cada persona, para
+   * la columna que ahí reemplaza a «Antigüedad». Ver la nota de la columna.
+   */
+  estudioPorMiembro?: ReadonlyMap<string, DirigenteGrupo | null>
   /** Nombrar encargados es de staff/dirección, no del propio lider_comite. */
   puedeMarcarEncargado: boolean
   /** member_id con el guardado en curso, para deshabilitar solo esa estrella. */
@@ -76,6 +87,7 @@ export function MembersTab({
   onAddServerClick,
   toolbarExtra,
   encargados,
+  estudioPorMiembro,
   puedeMarcarEncargado,
   marcandoEncargado,
   onToggleEncargado,
@@ -146,7 +158,7 @@ export function MembersTab({
                 <SortableHeader label="Servidor"   sortKey="name"       currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Puesto"     sortKey="position"   currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
-                <SortableHeader label="Antigüedad" sortKey="seniority"  currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                <SortableHeader label={estudioPorMiembro ? 'Último estudio' : 'Antigüedad'} sortKey="seniority"  currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Estado"     sortKey="status"     currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <th className="px-4 py-3.5" />
               </tr>
@@ -200,8 +212,17 @@ export function MembersTab({
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                     {formatDate(m.start_date)}
                   </td>
+                  {/*
+                    EN EL COMITÉ DIRIGENTES esta columna muestra el estudio más
+                    reciente en vez de la antigüedad. La antigüedad ahí no decía
+                    nada: 183 de los 278 tienen `start_date` del 2026-09-11 —la
+                    fecha de la sincronización del Excel Madre, no de cuándo
+                    entraron— y otros 46 la tienen nula. La columna decía
+                    «0 meses» para casi todos y «NaN año» para el resto.
+                  */}
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                    {calcularAntiguedad(m.start_date)}
+                    {estudioPorMiembro ? <UltimoEstudio grupo={estudioPorMiembro.get(m.member_id) ?? null} />
+                      : calcularAntiguedad(m.start_date)}
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -273,7 +294,10 @@ export function MembersTab({
                   />
                 </p>
                 <p className="truncate text-[13px] text-navy-light/80 font-body">
-                  {g.puestos.map(p2 => p2.position).join(' · ')} · {calcularAntiguedad(m.start_date)}
+                  {g.puestos.map(p2 => p2.position).join(' · ')}
+                  {estudioPorMiembro
+                    ? <> · <UltimoEstudio grupo={estudioPorMiembro.get(m.member_id) ?? null} /></>
+                    : <> · {calcularAntiguedad(m.start_date)}</>}
                 </p>
               </div>
               <span
