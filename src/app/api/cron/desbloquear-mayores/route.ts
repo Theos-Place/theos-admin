@@ -37,12 +37,35 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createAdminClient()
 
-    // Las bloqueadas, con la ficha al lado. Son pocas (206 al 2026-09-21), así
-    // que caben en una consulta.
+    /**
+     * SOLO LAS QUE PUDIERON QUEDAR BLOQUEADAS, que son las de menores.
+     *
+     * El comentario que había acá decía «son pocas (206)» — cierto de las
+     * bloqueadas, falso de lo que la consulta pedía: `auth_user_id is not null`
+     * son **8.929** fichas. Sin paginar, PostgREST devolvía 1.000 y el cron
+     * revisaba el 11%. Quien cumplía 18 y no caía en esas mil no se
+     * desbloqueaba nunca, y nada lo delataba: el cron terminaba en verde.
+     *
+     * La salida NO es paginar las 8.929. Es preguntar menos. El bloqueo se puso
+     * por ser menor de edad (AUTH-1, julio 2026) y `decidir()` solo desbloquea
+     * a quien tiene fecha de nacimiento y ya cumplió, así que nadie nacido hace
+     * más de 19 años puede estar en esta lista: en julio de 2026 ya era mayor.
+     * Con ese corte quedan **246** fichas en vez de 8.929, entran de sobra en
+     * una consulta y el `getUserById` de abajo tarda segundos y no minutos.
+     *
+     * Los 19 y no 18 son el colchón: alguien bloqueado en julio siendo menor
+     * hoy tiene como mucho 18 y pico.
+     *
+     * (Se probó antes leer los baneos en lote con `listUsers`: la página 4
+     * devuelve 500, así que no sirve para enumerar 8.929 cuentas.)
+     */
+    const corte = new Date()
+    corte.setFullYear(corte.getFullYear() - 19)
     const { data, error } = await supabase
       .from('members')
       .select('auth_user_id, email, birth_date, first_name, last_name')
       .not('auth_user_id', 'is', null)
+      .gt('birth_date', corte.toISOString().slice(0, 10))
     if (error) throw error
 
     const fichas = (data ?? []) as Array<{
@@ -50,11 +73,12 @@ export async function GET(req: NextRequest) {
       first_name: string; last_name: string
     }>
 
+    const ahora = new Date()
     const bloqueadas: CuentaBloqueada[] = []
     for (const f of fichas) {
       const { data: u } = await supabase.auth.admin.getUserById(f.auth_user_id)
       const hasta = (u?.user as { banned_until?: string | null } | undefined)?.banned_until
-      if (!hasta || new Date(hasta) <= new Date()) continue
+      if (!hasta || new Date(hasta) <= ahora) continue
       bloqueadas.push({
         auth_user_id: f.auth_user_id,
         // El correo de la CUENTA, no el de la ficha: las fusionadas llevan el

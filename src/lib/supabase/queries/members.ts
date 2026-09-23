@@ -115,15 +115,17 @@ export type MemberFilters = {
 /** member_ids con al menos un voluntariado activo (mismo criterio que la página de servidores). */
 export async function getServerMemberIds(): Promise<string[]> {
   try {
-    const supabase = createAdminClient()
-    const { data, error } = await supabase
-      .from('volunteers').select('member_id').eq('status', 'active')
-    if (error) {
-      console.warn('getServerMemberIds:', error.message)
-      return []
-    }
-    return Array.from(new Set((data ?? []).map((r) => (r as { member_id: string }).member_id)))
+    // PAGINADO. Antes era un `.select()` pelado, y PostgREST corta en 1.000
+    // filas: con 1.224 voluntariados activos devolvía los primeros 1.000, que
+    // deduplicados daban 670 personas de las 744 que hay. `pagedIds` vive en
+    // este mismo archivo y hace exactamente esto bien — solo que esta función
+    // no lo usaba.
+    return Array.from(await pagedIds(
+      q => q.eq('status', 'active'), 'volunteers', 'member_id', 'member_id',
+    ))
   } catch (e) {
+    // Resiliente a propósito: quien la llama trata [] como "sin servidores"
+    // en vez de romper la pantalla entera.
     console.warn('getServerMemberIds:', e)
     return []
   }
@@ -171,13 +173,35 @@ export async function getMemberCounts(): Promise<MemberCounts> {
       return 0
     }
   })()
-  const [total, donantes, serverIds, attendanceIds] = await Promise.all([
+  /**
+   * El chip de servidores cuenta con LA MISMA CONSULTA que usa la lista al
+   * filtrar: un inner join contra `volunteers` activos, pidiendo solo el
+   * conteo. No es un detalle de rendimiento — es lo que impide que el número
+   * y la lista vuelvan a discrepar.
+   *
+   * Reportado el 2026-09-23: el chip decía 670 y al abrirlo salían 744. El
+   * conteo venía de traerse los ids y contarlos, y ahí PostgREST cortaba en
+   * 1.000 filas; la lista, en cambio, siempre usó el inner join. Dos caminos
+   * para la misma pregunta es dos respuestas.
+   */
+  const servidoresP = (async () => {
+    try {
+      const { count } = await supabase
+        .from('members').select('id, volunteers!inner(status)', { count: 'exact', head: true })
+        .eq('volunteers.status', 'active')
+      return count ?? 0
+    } catch (e) {
+      console.warn('getMemberCounts(servidores):', e)
+      return 0
+    }
+  })()
+  const [total, donantes, servidores, attendanceIds] = await Promise.all([
     totalP,
     countWhere('is_donor', true),
-    getServerMemberIds(),          // ya resiliente (devuelve [])
+    servidoresP,
     getActiveAttendanceMemberIds(),// ya resiliente (devuelve [])
   ])
-  return { total, donantes, servidores: serverIds.length, activos_asistencia: attendanceIds.length }
+  return { total, donantes, servidores, activos_asistencia: attendanceIds.length }
 }
 
 /** Quita acentos/diacríticos (NFD + corta los combining marks). */
