@@ -13,8 +13,10 @@
 #   scripts/staging/arrancar.sh              # usa el .env del entorno
 #   SOLO_ESQUEMA=1 scripts/staging/arrancar.sh   # migraciones y nada más
 #
-# Espera en el entorno: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-# SUPABASE_DB_URL (la de conexión directa) y SEED_TEST_PASSWORD.
+# Espera en el entorno: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y
+# SEED_TEST_PASSWORD. `SUPABASE_DB_URL` es OPCIONAL: solo la usa el paso del
+# esquema, y si no está, las migraciones se aplican por el API de gestión.
+# Todo lo demás va con la llave de servicio, que es un secreto menos que mover.
 #
 # LOS SEEDS SE PROTEGEN SOLOS: `src/lib/entorno/base-de-datos` mira a qué base
 # apunta la URL y en producción se niega. Este script no lleva un `--force`
@@ -24,14 +26,19 @@ set -euo pipefail
 
 falta() { echo "✗ Falta la variable $1"; exit 1; }
 : "${NEXT_PUBLIC_SUPABASE_URL:?$(falta NEXT_PUBLIC_SUPABASE_URL)}"
-: "${SUPABASE_DB_URL:?$(falta SUPABASE_DB_URL)}"
 
 echo "→ Base: $NEXT_PUBLIC_SUPABASE_URL"
 echo
-echo "── 1/4 · esquema ──────────────────────────────────────────"
-# --db-url explícito y NUNCA --linked: el CLI de este repo está enlazado al
-# proyecto de PRODUCCIÓN, así que un comando sin destino escribe ahí.
-npx supabase db push --db-url "$SUPABASE_DB_URL"
+echo "── 1/5 · esquema ──────────────────────────────────────────"
+if [[ -n "${SUPABASE_DB_URL:-}" ]]; then
+  # --db-url explícito y NUNCA --linked: el CLI de este repo está enlazado al
+  # proyecto de PRODUCCIÓN, así que un comando sin destino escribe ahí.
+  npx supabase db push --db-url "$SUPABASE_DB_URL"
+else
+  # Sin contraseña de la base, las migraciones se aplican por el API de
+  # gestión; ver docs/staging.md. Acá solo se comprueba que el esquema esté.
+  echo "   (sin SUPABASE_DB_URL — se asume el esquema ya aplicado)"
+fi
 
 if [[ "${SOLO_ESQUEMA:-}" == "1" ]]; then echo; echo "✓ Solo el esquema, como se pidió."; exit 0; fi
 
@@ -45,7 +52,7 @@ echo "── 2/5 · catálogo ────────────────�
 # NO se usa `seed-study-plans.ts` ni `seed-service-positions.ts`: el primero
 # importa `src/data/mock-studies`, que ya no existe, y el segundo pide un xlsx
 # que no está en el repo. Los dos están muertos y se descubrió corriéndolos.
-node scripts/staging/sembrar-catalogo.cjs
+npx tsx scripts/staging/sembrar-catalogo.ts
 
 echo
 echo "── 3/5 · plantillas de correo ─────────────────────────────"
@@ -62,7 +69,7 @@ npx tsx scripts/seed-charlas.ts
 # Y doce semanas hacia atrás: el set de prueba cuelga asistencia de charlas de
 # los últimos 170 días y se niega si hay menos de seis. En producción existen
 # porque llevan meses pasando; en una base nueva hay que fabricarlas.
-node scripts/staging/sembrar-charlas-pasadas.cjs
+npx tsx scripts/staging/sembrar-charlas-pasadas.ts
 npx tsx scripts/seed-datos-de-prueba.ts
 
 echo
