@@ -264,16 +264,43 @@ que este ítem servía para descubrir:
   ciego (solo miraba SECURITY DEFINER) y se amplió.
 - El catálogo exportado traía **cuatro correos** en textos libres; se tapan.
 
-### [ ] INF-3 · Algo sigue escribiendo `pendiente_de_pago` (2026-09-22)
+### [x] INF-3 · `pendiente_de_pago` — NO ERA UN BUG (cerrado 2026-09-23)
 
-La decisión del 2026-08-04 fue que la matrícula es efectiva de inmediato y que
-ese estado no se vuelve a escribir. Pero hay dos matrículas con él, del **14 y
-el 21 de setiembre**: Irina Morales (CDEB — Finca Sasso) y Maureen Arguedas
-(Nivel 2 Virtual). Apareció al revisar qué pasaría si se reaplicaba la migración
-que las convierte a `enrolled`.
+**La premisa estaba mal, y era mía.** Abrí este ítem apoyado en la decisión del
+2026-08-04 («la matrícula es efectiva de inmediato, ese estado no se vuelve a
+escribir») sin ver que el **2026-09-01 se revirtió**. Está escrito en el propio
+código, en `enrollMember`: con costo la matrícula nace pendiente y solo la
+confirma el comprobante. El caso que tumbó la regla de agosto fue Alexandra
+Forero — llegó a la pantalla del comprobante, la cerró, y quedó matriculada
+ocupando cupo con un correo de bienvenida a un curso que nunca llevó.
 
-Hay que encontrar quién lo escribe. Y decidir qué hacer con esas dos: si el
-estado ya no significa nada, están en un limbo que ninguna pantalla contempla.
+Así que las filas en `pendiente_de_pago` son correctas y esperadas. Al revisar
+había seis, cuatro creadas ese mismo día.
+
+**PERO investigándolo apareció otra cosa, esa sí real:** ver abajo.
+
+### [x] INF-4 · Las matrículas nacían sin `plan_id` (2026-09-23)
+
+El upsert de `enrollMember` escribía `group_id`, `member_id`, `status`,
+`recorded_by` y las dos columnas de baja — **y no `plan_id`**, teniendo el plan
+a mano.
+
+Empezó la semana del **2026-08-31**, con el rediseño de esa escritura. El corte
+es nítido: antes lo tenían 14.424 de 14.699 matrículas con grupo; después, 248
+de las 501 recientes venían en null.
+
+No se notó porque para MOSTRAR el plan se deriva del grupo. Lo que rompe son las
+consultas que FILTRAN por `enrollment.plan_id`, donde la fila se vuelve
+invisible — entre ellas el guard A3, el que impide rematricularse debiendo la
+matrícula del mismo plan. **Latente, no explotado**: se buscaron matrículas
+retiradas con deuda y `plan_id` nulo y hay cero.
+
+Arreglado en el upsert y rellenadas las 275 filas existentes desde el plan de su
+grupo. Quedan 0 con grupo y sin plan.
+
+**Suelto, por si vale mirarlo:** hay **77** matrículas cuyo `plan_id` DIFIERE
+del plan de su grupo. No se tocaron — pueden ser transferencias legítimas — pero
+nadie las ha revisado.
 
 ### [ ] INF-2 · RLS sobre `members` recursiva (encontrado en INF-1, 2026-09-22)
 

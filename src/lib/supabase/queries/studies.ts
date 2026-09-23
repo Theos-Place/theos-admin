@@ -1676,6 +1676,18 @@ export async function enrollMember(
     .from('study_enrollments')
     .upsert({
       group_id: groupId, member_id: memberId, status, recorded_by: opts?.recordedBy ?? null,
+      // El PLAN, que esta función ya conoce y se estaba dejando en null.
+      //
+      // Desde el rediseño de esta escritura (semana del 2026-08-31) toda
+      // matrícula hecha por acá nacía sin `plan_id`: 248 de las 501 recientes.
+      // Antes lo tenían prácticamente todas (14.424 de 14.699). Derivarlo del
+      // grupo funciona para mostrar, y por eso no se notó, pero hay consultas
+      // que FILTRAN por `enrollment.plan_id` y a esas la fila se les vuelve
+      // invisible — entre ellas el guard A3 de acá arriba, el que impide
+      // rematricularse debiendo la matrícula del mismo plan.
+      //
+      // Queda null solo si el grupo no tiene plan, que es lo correcto.
+      plan_id: plan?.id ?? null,
       // Reincorporar BORRA el rastro de la baja. Sin esto la fila quedaba
       // 'enrolled' con su dropped_at y su motivo puestos, o sea alguien
       // cursando con fecha de retiro: la ficha decía las dos cosas a la vez.
