@@ -2067,7 +2067,7 @@ va al audit_log. Idempotente, comprobado: la segunda corrida da 0 y 0.
 **Falta configurar** `HEALTHCHECK_URL_DIRIGENTES_ACTIVOS` en Vercel (check nuevo
 en Healthchecks, schedule `0 11 1 * *`, grace 360).
 
-### [ ] PAR-3 · Puesto "anfitrión" → rol de reportes automático
+### [x] PAR-3 · Puesto "anfitrión" → rol de reportes automático — HECHO 2026-09-23
 
 Prompt para Claude Code:
 
@@ -2090,6 +2090,33 @@ instante. DRY-RUN primero: lista de quiénes recibirían el rol hoy, para aproba
 Tests: asignar puesto da rol, quitar puesto quita rol, rol manual sobrevive, doble puesto
 anfitrión no duplica. tsc/lint/vitest.
 ```
+
+**EL CATÁLOGO, revisado antes de fijar el criterio:** los **10** puestos que
+matchean se llaman exactamente «Anfitrión», uno por sede, sin variantes. La
+regla quedó acotada al COMITÉ DE SEDE (decisión de Floriana): hoy da lo mismo,
+pero si mañana alguien crea un «Anfitrión» para un evento puntual, el rol no se
+reparte solo.
+
+**APLICADO:** 21 personas, todas con origen `automatico`. Ninguna lo tenía.
+El rol `reportes` pasa de 8 manuales a 8 manuales + 21 automáticos.
+
+**LO QUE NO HUBO QUE ESCRIBIR**, y es lo mejor del ítem: quitar el rol al salir
+del puesto, respetar el rol manual y no duplicar con dos puestos ya funcionaban.
+El RPC `revoke_position_role` lleva la cuenta en `member_role_position_grants`,
+solo revoca si `origen='automatico'` y no toca nada si queda otro puesto que lo
+otorgue. La regla nueva solo se enchufa al mecanismo que ya estaba.
+
+**EL «QUITAR DE INMEDIATO AL DESACTIVAR EL PUESTO» NO HIZO FALTA:** `is_active`
+no existe en el esquema de escritura ni en el PUT, así que desde la app un
+puesto no se puede desactivar — solo crear, editar o borrar, y borrarlo está
+bloqueado si tiene servidores activos. Medido: cero roles automáticos
+respaldados en un puesto inactivo. Llegué a escribir el hook y lo saqué: era
+código muerto para un camino inalcanzable. Quedó una nota en
+`updateServicePosition` para quien algún día agregue `is_active`.
+
+**Suelto:** hay un puesto inactivo, «Dirigente» del Comité Dirigentes, con 77
+servidores activos. Es el puesto viejo que reemplazó «Dirigente CR» y no otorga
+roles automáticos, así que no filtra nada — pero nadie lo ha limpiado.
 
 ### [ ] PAR-4 · editor_perfiles: botones de columnas y exportar en la búsqueda de miembros
 

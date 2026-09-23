@@ -243,3 +243,43 @@ describe('Bienvenida del Comité Youth (2026-09-18)', () => {
     })).not.toContain('encargado_eventos')
   })
 })
+
+/**
+ * PAR-3 · Anfitrión de sede → rol de reportes.
+ *
+ * El catálogo real se revisó antes de escribir la regla: los diez puestos que
+ * matchean se llaman exactamente "Anfitrión", uno por sede. Estos casos fijan
+ * lo que SÍ y lo que NO, que es donde una regla de permisos se rompe.
+ */
+describe('PAR-3 · anfitrión de sede da el rol de reportes', () => {
+  it('el anfitrión de una sede lo recibe', () => {
+    expect(rolesGrantedByPosition(enSede('Anfitrión'))).toContain('reportes')
+  })
+
+  it('sin acento y en minúscula también', () => {
+    expect(rolesGrantedByPosition(enSede('anfitrion'))).toContain('reportes')
+  })
+
+  it('NO se lo lleva un anfitrión fuera de un comité de sede', () => {
+    // Decisión de Floriana: acotado a sedes. Si mañana alguien crea un
+    // "Anfitrión" para un evento puntual, el rol no se reparte solo.
+    expect(rolesGrantedByPosition({
+      title: 'Anfitrión', areaName: 'Comité Administrativo',
+      areaType: 'committee', parentAreaName: null,
+    })).not.toContain('reportes')
+  })
+
+  it('NO se lo llevan los otros puestos de la misma sede', () => {
+    for (const t of ['Logística', 'Colaborador Bienvenida', 'Coordinador Información']) {
+      expect(rolesGrantedByPosition(enSede(t)), t).not.toContain('reportes')
+    }
+  })
+
+  it('el anfitrión CONSERVA su rol de check-in: son dos permisos, no uno', () => {
+    // `anfitrion` ya estaba en SEDE_EVENTOS_TITLES. Agregar reportes no le
+    // puede quitar encargado_eventos.
+    const roles = rolesGrantedByPosition(enSede('Anfitrión'))
+    expect(roles).toContain('encargado_eventos')
+    expect(roles).toContain('reportes')
+  })
+})

@@ -687,6 +687,22 @@ export async function createServicePosition(input: ServicePositionWriteInput): P
   return data as { id: string }
 }
 
+/**
+ * PAR-3 · SI ALGÚN DÍA SE PUEDE DESACTIVAR UN PUESTO DESDE ACÁ, hay que
+ * sincronizar los roles.
+ *
+ * Hoy no hace falta y por eso no está: `is_active` no existe en
+ * `ServicePositionWriteInput` ni en el esquema del PUT, así que desde la app un
+ * puesto solo se crea, se edita o se borra —y borrarlo está bloqueado si tiene
+ * servidores activos, que es lo que fuerza a sacarlos uno por uno y dispara
+ * `syncRolesOnRemove`—. Verificado el 2026-09-23: cero roles automáticos
+ * respaldados en un puesto inactivo.
+ *
+ * El día que se agregue `is_active` al esquema, quien lo haga tiene que llamar
+ * a `syncRolesOnRemove` por cada ocupante activo al desactivar, y a
+ * `syncRolesOnAssign` al reactivar. Sin lo segundo, reactivar dejaría a esa
+ * gente sin el rol para siempre y en silencio.
+ */
 export async function updateServicePosition(id: string, patch: Partial<ServicePositionWriteInput>): Promise<void> {
   const supabase = createAdminClient()
   const row: Record<string, unknown> = { ...patch }
