@@ -11,6 +11,7 @@
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import type { RoleId } from '../src/types/auth'
+import { puedeEscribirDatosDePrueba, NOMBRE_DE_ENTORNO } from '../src/lib/entorno/base-de-datos'
 
 // ── Cargar env desde .env.local (además de process.env) ──
 function loadEnv() {
@@ -32,6 +33,21 @@ const PASSWORD = process.env.SEED_TEST_PASSWORD
 
 if (!SUPA_URL || !KEY) { console.error('Falta NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SECRET_KEY'); process.exit(1) }
 if (!PASSWORD) { console.error('Falta SEED_TEST_PASSWORD (definila en .env.local o como env var)'); process.exit(1) }
+
+/**
+ * GUARD (INF-1). Este script NO TENÍA NINGUNO, y crea trece cuentas con acceso
+ * —una por rol, incluida `admin`— todas con la MISMA contraseña. Corriéndolo con
+ * el `.env.local` de siempre, esas trece cuentas nacían en producción sin que
+ * nada preguntara. En staging y en local corre libre, que es para lo que está.
+ */
+const veredicto = puedeEscribirDatosDePrueba({
+  url: SUPA_URL,
+  refStaging: process.env.SUPABASE_STAGING_REF,
+  permisoExplicito: process.env.PERMITIR_SEED_PRUEBA === '1',
+  comando: 'npx tsx scripts/seed-test-users.ts',
+})
+if (!veredicto.permitido) { console.error('\n' + veredicto.motivo); process.exit(1) }
+console.log(`\nBase: ${NOMBRE_DE_ENTORNO[veredicto.entorno]}`)
 
 const admin = createClient(SUPA_URL, KEY, { auth: { autoRefreshToken: false, persistSession: false } })
 

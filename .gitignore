@@ -55,3 +55,8 @@ scripts/output/
 docs/referencias/*.mp4
 docs/referencias/*.mov
 scripts/tutoriales/out/
+
+# INF-1 · La hoja de referencia del set de prueba la ESCRIBE el seed, y describe
+# los datos del ambiente donde se corrió. Versionarla publicaría en el centro de
+# ayuda de producción un artículo sobre datos que en producción no existen.
+content/ayuda/datos-de-prueba.md

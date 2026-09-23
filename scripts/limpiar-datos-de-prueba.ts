@@ -22,6 +22,7 @@
  */
 import { readFileSync } from 'node:fs'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { entornoDeSupabase, NOMBRE_DE_ENTORNO } from '../src/lib/entorno/base-de-datos'
 
 for (const f of ['.env', '.env.local']) {
   try {
@@ -38,6 +39,15 @@ if (!URL || !KEY) { console.error('Faltan NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SE
 const db = createClient(URL, KEY, { auth: { persistSession: false } }) as unknown as SupabaseClient
 
 const APLICAR = process.argv.includes('--aplicar')
+
+/**
+ * INF-1 · Decir a qué base apunta ANTES de listar nada. El script ya se niega a
+ * borrar lo que no esté marcado, así que no hace falta un permiso extra — lo
+ * que faltaba era que quien lo corre sepa dónde está parado. En producción se
+ * dice fuerte.
+ */
+const ENTORNO = entornoDeSupabase(URL, process.env.SUPABASE_STAGING_REF)
+console.log(`\nBase: ${NOMBRE_DE_ENTORNO[ENTORNO]}${ENTORNO === 'produccion' && APLICAR ? '  ← ESTO BORRA DE VERDAD' : ''}`)
 const MARCA = '[prueba]'
 const PREFIJO = 'PRUEBA-'
 const DOMINIO = 'prueba.theosplace.invalid'

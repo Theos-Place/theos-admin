@@ -22,6 +22,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { crearCuentaDeAcceso } from './lib/cuentas-de-prueba'
+import { puedeEscribirDatosDePrueba, NOMBRE_DE_ENTORNO } from '../src/lib/entorno/base-de-datos'
 
 // ── Entorno ──────────────────────────────────────────────────────────────────
 for (const f of ['.env', '.env.local']) {
@@ -33,23 +34,25 @@ for (const f of ['.env', '.env.local']) {
   } catch { /* sin archivo */ }
 }
 
-// GUARD: esto escribe en la base REAL. Que sea una decisión, no un accidente.
-if (process.env.PERMITIR_SEED_PRUEBA !== '1') {
-  console.error(`
-✋ Este script crea datos en la base de PRODUCCIÓN (no hay staging).
-
-   Todo queda marcado con "[prueba]" y external_id PRUEBA-xxxx, y se borra con
-   scripts/limpiar-datos-de-prueba.ts — pero mientras tanto vive en el padrón real.
-
-   Si es lo que querés:
-     PERMITIR_SEED_PRUEBA=1 npx tsx scripts/seed-datos-de-prueba.ts
-`)
-  process.exit(1)
-}
-
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const KEY = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!URL || !KEY) { console.error('Faltan NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY'); process.exit(1) }
+
+/**
+ * GUARD (INF-1). Antes era «¿puso la variable?», que no distingue nada: la
+ * misma variable habilitaba escribir en staging y en el padrón de 18.000
+ * personas. Ahora la pregunta es A QUÉ BASE APUNTA, que el programa sabe solo.
+ * En staging y en local corre sin pedir permiso — que es el punto de tener
+ * staging. La regla y su test están en `src/lib/entorno/base-de-datos`.
+ */
+const veredicto = puedeEscribirDatosDePrueba({
+  url: URL,
+  refStaging: process.env.SUPABASE_STAGING_REF,
+  permisoExplicito: process.env.PERMITIR_SEED_PRUEBA === '1',
+  comando: 'npx tsx scripts/seed-datos-de-prueba.ts',
+})
+if (!veredicto.permitido) { console.error('\n' + veredicto.motivo); process.exit(1) }
+console.log(`\nBase: ${NOMBRE_DE_ENTORNO[veredicto.entorno]}`)
 const db = createClient(URL, KEY, { auth: { persistSession: false, autoRefreshToken: false } }) as SupabaseClient<never, 'public', never>
 /** payments y otras tablas tienen columnas fuera de los tipos generados. */
 const laxo = db as unknown as SupabaseClient

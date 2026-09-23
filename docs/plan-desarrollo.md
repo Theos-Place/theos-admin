@@ -223,14 +223,56 @@ El archivo llegó y se importó. Verificado contra la base: jun 3.949, jul 4.117
 ago 4.012, set 1.958 check-ins, con el último del 13 de setiembre. La serie no
 tiene huecos.
 
-### [ ] INF-1 · Ambiente de staging
+### [~] INF-1 · Ambiente de staging — CÓDIGO LISTO 2026-09-22, falta la nube
 
 Hoy todo se prueba contra producción — los tutoriales se graban ahí, con el
 guard `@prueba.`, y los scripts de medición leen la base real. Un staging con
 su propio proyecto de Supabase y su propio deploy de Vercel quita ese riesgo.
 
-Depende de resolver antes las env de Supabase en los deploys Preview (Bloque E),
-porque es el mismo problema.
+**Runbook completo en `docs/staging.md`.**
+
+**HECHO Y PROBADO** contra una base local en blanco:
+`./scripts/staging/arrancar.sh` lleva una base vacía a un ambiente usable —
+esquema, 499 filas de catálogo, 14 cuentas (una por rol), 132 charlas y el set
+de prueba. Y los guards de siembra y borrado pasan a mirar **a qué base
+apuntan** en vez de depender de una variable que hay que acordarse de poner;
+`seed-test-users.ts`, que crea catorce cuentas con la misma contraseña, no tenía
+ningún guard.
+
+**LO QUE FALTA, y es del usuario:**
+1. Crear el proyecto de Supabase. El `SUPABASE_ACCESS_TOKEN` de `.env.local`
+   está **vencido** (401), así que el CLI no puede.
+2. Vercel: el token de la sesión solo lista proyectos (403 al leer variables o
+   deployments). Hace falta uno con escritura, o hacerlo a mano — incluidas las
+   env de Preview, que es el Bloque E y viene fallando desde julio.
+3. Definir `SUPABASE_STAGING_REF` para que los guards lo reconozcan.
+
+**LO QUE APARECIÓ AL LEVANTAR LA PRIMERA BASE DESDE CERO**, que es justamente lo
+que este ítem servía para descubrir:
+- Los seeds **no podían arrancar un ambiente nuevo**: `seed-study-plans` está
+  muerto (importa un módulo borrado), `seed-service-positions` pide un xlsx que
+  no está en el repo, `event_types` no tiene seed, y no había charlas
+  históricas. Resuelto con tres piezas nuevas.
+- **Tres funciones de `public` abiertas**, ninguna explotable, las tres
+  cerradas y aplicadas también a producción. El auditor SEC-3 tenía un punto
+  ciego (solo miraba SECURITY DEFINER) y se amplió.
+- El catálogo exportado traía **cuatro correos** en textos libres; se tapan.
+
+### [ ] INF-2 · RLS sobre `members` recursiva (encontrado en INF-1, 2026-09-22)
+
+Toda consulta a `members` como `authenticated` muere con *infinite recursion
+detected in policy*. Igual en local y en producción. La política consulta
+`members` para averiguar el rol de quien llama, y eso vuelve a dispararla.
+
+**No es una fuga: falla cerrada**, con error y sin datos. Y la app no la toca
+porque lee y escribe con la llave de servicio. Pero la capa de defensa en
+profundidad que todos damos por puesta hoy es un error, no una política — y el
+día que alguien mueva una consulta al cliente del navegador esperando que RLS
+la acote, se topa con esto.
+
+El arreglo habitual: una función SECURITY DEFINER que devuelva los roles de
+quien llama sin releer `members`, y reescribir las políticas contra ella. Hay
+que revisar las de las demás tablas con el mismo patrón.
 
 ### [x] FIN-4 · Planes de pago para matrículas e inscripciones — YA EXISTE (verificado 2026-09-18)
 
