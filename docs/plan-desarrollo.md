@@ -242,9 +242,13 @@ ningún guard.
 **LO QUE FALTA, y es del usuario:**
 1. Crear el proyecto de Supabase. El `SUPABASE_ACCESS_TOKEN` de `.env.local`
    está **vencido** (401), así que el CLI no puede.
-2. Vercel: el token de la sesión solo lista proyectos (403 al leer variables o
-   deployments). Hace falta uno con escritura, o hacerlo a mano — incluidas las
-   env de Preview, que es el Bloque E y viene fallando desde julio.
+2. Vercel: elegida la **opción A** (2026-09-22) — sin proyecto ni rama aparte,
+   los Preview que ya existen van a apuntar a staging. Solo falta cambiarles el
+   valor de las tres variables de Supabase cuando el proyecto exista.
+   **El Bloque E ya estaba arreglado**: las variables figuran en
+   `preview,production` y se comprobó subiendo una rama — el Preview compiló
+   hasta READY. En el historial no se veía porque hacía semanas que nadie
+   empujaba una rama.
 3. Definir `SUPABASE_STAGING_REF` para que los guards lo reconozcan.
 
 **LO QUE APARECIÓ AL LEVANTAR LA PRIMERA BASE DESDE CERO**, que es justamente lo

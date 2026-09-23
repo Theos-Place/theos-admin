@@ -32,18 +32,31 @@ npx supabase db reset --local
 **producción**, así que un comando sin destino explícito escribe ahí. Local
 siempre con `--local` o `--db-url`.
 
+## El Bloque E ya no existe (verificado 2026-09-22)
+
+La nota de julio decía que todo build de rama moría con
+`NEXT_PUBLIC_SUPABASE_URL: undefined` porque las variables de Supabase estaban
+solo en Production. **Está arreglado**: hoy `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_SECRET_KEY` figuran en
+`preview,production`.
+
+No se dio por bueno leyendo la configuración: se subió una rama y **el Preview
+compiló hasta READY**. En el historial no se veía porque hacía semanas que nadie
+empujaba una rama — todos los deploys eran de `main`.
+
+Falsa alarma que apareció de paso: `NEXT_PUBLIC_SUPABASE_ANON_KEY` no está en
+Vercel. No hace falta. `src/lib/env.ts` exige **una de las dos** y
+`PUBLISHABLE_KEY` está puesta.
+
 ## Lo que falta, y es tuyo
 
 1. **Crear el proyecto de Supabase** de staging. El `SUPABASE_ACCESS_TOKEN` de
    `.env.local` está **vencido** (la API contesta 401), así que el CLI no puede
    crearlo ni enlazarlo. Renovalo en <https://supabase.com/dashboard/account/tokens>.
-2. **Vercel.** El token de la sesión solo puede *listar* proyectos: leer
-   variables o deployments da 403. Hace falta uno con permiso de escritura, o
-   hacerlo a mano:
-   - un entorno (o proyecto) apuntando al Supabase de staging;
-   - las variables de Supabase habilitadas también para **Preview** — es el
-     problema del Bloque E, que viene desde el PR #2 en julio de 2026 y hace
-     fallar todo build de rama con `NEXT_PUBLIC_SUPABASE_URL: undefined`.
+2. **Vercel.** Se eligió la **opción A**: no hay proyecto ni rama aparte — los
+   deploys *Preview* que ya existen apuntan al Supabase de staging. Lo único que
+   falta es cambiarles el valor de las tres variables de Supabase en el alcance
+   Preview, cuando el proyecto del punto 1 exista.
 3. **`SUPABASE_STAGING_REF`** con el ref del proyecto nuevo, para que los guards
    lo reconozcan (abajo).
 
