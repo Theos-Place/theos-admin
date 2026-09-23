@@ -223,7 +223,7 @@ El archivo llegó y se importó. Verificado contra la base: jun 3.949, jul 4.117
 ago 4.012, set 1.958 check-ins, con el último del 13 de setiembre. La serie no
 tiene huecos.
 
-### [~] INF-1 · Ambiente de staging — CÓDIGO LISTO 2026-09-22, falta la nube
+### [x] INF-1 · Ambiente de staging — HECHO 2026-09-22
 
 Hoy todo se prueba contra producción — los tutoriales se graban ahí, con el
 guard `@prueba.`, y los scripts de medición leen la base real. Un staging con
@@ -239,17 +239,19 @@ apuntan** en vez de depender de una variable que hay que acordarse de poner;
 `seed-test-users.ts`, que crea catorce cuentas con la misma contraseña, no tenía
 ningún guard.
 
-**LO QUE FALTA, y es del usuario:**
-1. Crear el proyecto de Supabase. El `SUPABASE_ACCESS_TOKEN` de `.env.local`
-   está **vencido** (401), así que el CLI no puede.
-2. Vercel: elegida la **opción A** (2026-09-22) — sin proyecto ni rama aparte,
-   los Preview que ya existen van a apuntar a staging. Solo falta cambiarles el
-   valor de las tres variables de Supabase cuando el proyecto exista.
-   **El Bloque E ya estaba arreglado**: las variables figuran en
-   `preview,production` y se comprobó subiendo una rama — el Preview compiló
-   hasta READY. En el historial no se veía porque hacía semanas que nadie
-   empujaba una rama.
-3. Definir `SUPABASE_STAGING_REF` para que los guards lo reconozcan.
+**STAGING EXISTE**: proyecto `ellequrgrrqhtqksfrug`, us-east-2, PostgreSQL 17.6
+—misma región y versión que producción—, con 51 miembros (37 `[prueba]` + 14
+cuentas de rol) y **cero datos reales**, verificado. Los deploys Preview de
+Vercel apuntan ahí (**opción A**: sin proyecto ni rama aparte) y se comprobó en
+un deploy real — el Preview muestra la franja «STAGING» y
+`admin.theosplace.org` no muestra nada.
+
+**El Bloque E ya estaba arreglado** antes de empezar: las variables figuraban en
+`preview,production`, y se confirmó subiendo una rama (el Preview compiló hasta
+READY). En el historial no se veía porque hacía semanas que nadie empujaba una
+rama.
+
+Lo único pendiente: **borrar el token de Vercel** que se usó para configurarlo.
 
 **LO QUE APARECIÓ AL LEVANTAR LA PRIMERA BASE DESDE CERO**, que es justamente lo
 que este ítem servía para descubrir:

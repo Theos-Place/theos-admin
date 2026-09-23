@@ -48,17 +48,54 @@ Falsa alarma que apareció de paso: `NEXT_PUBLIC_SUPABASE_ANON_KEY` no está en
 Vercel. No hace falta. `src/lib/env.ts` exige **una de las dos** y
 `PUBLISHABLE_KEY` está puesta.
 
+## Staging existe (2026-09-22)
+
+| | |
+|---|---|
+| Proyecto | `Admin Theos Place — Staging` · ref `ellequrgrrqhtqksfrug` |
+| Región / versión | us-east-2 · PostgreSQL 17.6, **las mismas que producción** |
+| Contenido | 51 miembros (37 `[prueba]` + 14 cuentas de rol), 133 eventos, 12 grupos, catálogo completo |
+| Datos reales | **cero** — verificado: ninguna ficha fuera de las marcadas y las de rol |
+
+Los deploys **Preview** de Vercel apuntan ahí (opción A). Comprobado en un
+deploy real: el Preview muestra la franja «STAGING» y `admin.theosplace.org`
+no muestra nada.
+
+Las credenciales quedaron en `.env.staging.local`, que **no se versiona**:
+
+```bash
+set -a; . ./.env.staging.local; set +a
+```
+
+### Tres cosas que solo se ven montándolo
+
+- **El pooler de staging es `aws-0-us-east-2`**, el de producción `aws-1`, aunque
+  las dos estén en la misma región. Copiar la cadena de conexión de producción
+  y cambiarle el ref da `tenant not found`.
+- **La llave nueva `sb_secret_…` de este proyecto devuelve 401**; la
+  `service_role` clásica funciona. El código prefiere `SUPABASE_SECRET_KEY`, así
+  que esa variable **no** debe existir en el entorno de staging: si está, gana y
+  todo falla con «Invalid API key».
+- **Resetear la contraseña de la base por el API devuelve 200 y no surte
+  efecto.** Por eso los seeds nuevos van por la llave de servicio y
+  `SUPABASE_DB_URL` quedó opcional.
+
+### Lo que quedó apuntando a producción, a propósito
+
+En Vercel siguen en `preview,production` las variables que crea la integración
+Supabase–Vercel y que **la app no lee**: `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_JWT_SECRET` y los `POSTGRES_*`. Se dejaron
+porque tocarlas es pelearse con la integración.
+
+**Vale tenerlo presente:** los `POSTGRES_*` de Preview apuntan a la base de
+PRODUCCIÓN. Hoy nada en `src/` los lee —se verificó—, pero si algún día alguien
+los usa, un preview escribiría en producción.
+
 ## Lo que falta, y es tuyo
 
-1. **Crear el proyecto de Supabase** de staging. El `SUPABASE_ACCESS_TOKEN` de
-   `.env.local` está **vencido** (la API contesta 401), así que el CLI no puede
-   crearlo ni enlazarlo. Renovalo en <https://supabase.com/dashboard/account/tokens>.
-2. **Vercel.** Se eligió la **opción A**: no hay proyecto ni rama aparte — los
-   deploys *Preview* que ya existen apuntan al Supabase de staging. Lo único que
-   falta es cambiarles el valor de las tres variables de Supabase en el alcance
-   Preview, cuando el proyecto del punto 1 exista.
-3. **`SUPABASE_STAGING_REF`** con el ref del proyecto nuevo, para que los guards
-   lo reconozcan (abajo).
+Nada del montaje: está hecho. Queda **borrar el token de Vercel** que se usó
+para configurarlo (<https://vercel.com/account/settings/tokens>), porque pasó
+por el chat.
 
 ## Los guards ya no dependen de la memoria
 
