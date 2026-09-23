@@ -15,7 +15,8 @@ export type DonationSearchParams = {
 
 export type DonationStats = {
   unique_donors: number
-  /** FIN-1: miembros con is_donor=true (donó en los últimos ~2 trimestres). */
+  /** FIN-1: miembros con is_donor=true. La ventana la define
+   *  `lib/finance/ventana-de-donante` — no repetir el número acá. */
   active_donors: number
   /** INT-3: por moneda ({"CRC": 1250000}). null = sin permiso de ver montos. */
   total_this_month: MoneyTotals | null

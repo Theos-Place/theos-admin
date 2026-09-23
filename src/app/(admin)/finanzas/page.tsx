@@ -16,6 +16,7 @@ import { FinanceChart } from '@/components/finance/FinanceChart'
 import { useFinance } from '@/hooks/useFinance'
 import { formatDate } from '@/lib/format'
 import { anioDe, caeEn } from '@/lib/fecha/partes-de-fecha'
+import { criterioDeDonantes } from '@/lib/finance/ventana-de-donante'
 
 export default function FinanzasPage() {
   const { payments, donations, refunds, scholarships } = useFinance('payments', 'donations', 'refunds', 'scholarships')
@@ -171,7 +172,7 @@ export default function FinanzasPage() {
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}
             </p>
-            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">Donaron en los últimos 6 meses, contando el actual</p>
+            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">{criterioDeDonantes()}</p>
           </div>
 
           {/* Pagos pendientes */}

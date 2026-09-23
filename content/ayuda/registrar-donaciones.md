@@ -34,8 +34,10 @@ obligatorias.
    Por ejemplo: *Donación para Edificio — Campaña MyH*.
 
 Al guardar, la persona queda marcada como **donante activo** si la fecha cae
-dentro de los últimos 6 meses. Ese es el criterio que usan los reportes y la
-elegibilidad de estudios.
+dentro de los últimos 3 meses, contando el actual. Ese es el criterio que usan
+los reportes y la elegibilidad de estudios.
+
+> La ventana era de 6 meses hasta el 23 de setiembre de 2026.
 
 ## Por Excel, cuando llega el reporte del banco
 

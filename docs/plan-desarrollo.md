@@ -1962,6 +1962,118 @@ MEDIR ANTES DE AFIRMAR (regla de la casa): cada hallazgo de rendimiento con evid
 (conteo de filas, número de consultas por request, tamaño de bundle), no impresiones.
 ```
 
+## Fase 22 — Parámetros del sistema (pedido 2026-09-23)
+
+### [x] PAR-1 · Donante activo: de 6 meses a 3 meses — HECHO 2026-09-23
+
+Prompt para Claude Code:
+
+```
+CAMBIO DE REGLA · Donante activo = donó en los últimos 3 MESES (antes: 2 trimestres/6 meses)
+
+La definición debe vivir en UN solo lugar (hoy existe explicacionDeDonantes() y la regla
+de FIN-1 — encontrar dónde está el número y cambiarlo AHÍ; si está escrito en más de un
+lado, ese es un bug aparte: unificar primero, cambiar después).
+IMPACTO — verificar que el cambio llegue a todos los consumidores SIN tocarlos uno a uno
+(deben leer la definición central): filtro de donadores activos en donaciones (FIN-1),
+compromiso "donante activo" en Mi comité (SRV-4) y el reporte de servidores (REP-7), la
+elegibilidad de estudios que exige donante activo, y los tooltips que explican el
+criterio (se generan de la definición — verificar que ahora digan 3 meses solos).
+Actualizar tests y cualquier artículo de /ayuda que diga 6 meses o 2 trimestres.
+MEDIR el efecto antes/después (cuántos donantes activos hay con cada regla) y reportarlo
+— dirección debe saber cuánta gente cambia de estado. tsc/lint/vitest.
+```
+
+**EFECTO MEDIDO Y APLICADO:** los donantes activos bajan de **627 a 446**.
+Ciento ochenta y una personas dejan de serlo y **nadie entra** — achicar la
+ventana no puede sumar. De esas 181, **23 están hoy cursando** alguno de los 14
+estudios que exigen donante activo: siguen adentro (la elegibilidad se evalúa al
+matricular), pero no calificarían para el siguiente nivel sin volver a donar.
+Ventana: desde abril de 2026 → desde julio de 2026.
+
+**EL NÚMERO ESTABA EN CUATRO LADOS**, que es el "bug aparte" que el ítem
+anticipaba: las dos funciones SQL (`refresh_donor_flags` y el trigger
+`set_donor_on_donation`), el helper de TS, y una frase escrita a mano en la
+pantalla de finanzas. Más un comentario obsoleto en `useDonations` que todavía
+decía "2 trimestres".
+
+Ahora hay una constante (`MESES_DE_VENTANA`) y un test que **lee la migración**
+y falla si el `INTERVAL` del SQL deja de coincidir — un `.sql` no puede importar
+TypeScript, así que el número vive en dos lados por necesidad, pero ya no se
+pueden separar en silencio. Probado con un cebo.
+
+### [ ] PAR-2 · Dirigente activo: definición + recálculo mensual
+
+Dirigente activo = tiene un estudio EN CURSO como dirigente, o su último estudio
+dirigido terminó dentro de los últimos 3 cuatrimestres (12 meses). Se recalcula
+el 1° de cada mes.
+
+Prompt para Claude Code:
+
+```
+CAMBIO DE REGLA · Dirigente activo: en curso o cerrado en los últimos 3 cuatrimestres
+
+DEFINICIÓN (única, en lib — ej. lib/dirigentes.ts que ya existe): un dirigente está
+ACTIVO si (a) dirige o co-dirige un grupo en curso, o (b) su último grupo dirigido
+finalizó hace ≤12 meses (3 cuatrimestres). Inactivo si no cumple ninguna.
+
+ETAPA 1 — DIAGNÓSTICO: ¿dónde vive hoy el estado de dirigente activo/inactivo y quién lo
+consume? (lista de dirigentes aprobados para prematrimonial, selector de dirigentes al
+crear grupos, reportes de dirigentes, leader-activation.ts). Reportar la definición
+actual y cuánta gente cambia de estado con la nueva. Lista ANTES de aplicar: quiénes se
+desactivarían (regla de la casa: las sincronizaciones no desactivan a nadie sin
+aprobación).
+ETAPA 2 — CRON mensual el 1° (patrón vercel.json + CRON_SECRET + ping de Healthchecks
+NUEVO — crear el check con schedule '0 X 1 * *' y grace 360, documentar la URL en
+.env.example como HEALTHCHECK_URL_DIRIGENTES_ACTIVOS): recalcula el estado de todos los
+dirigentes con la definición central. Idempotente; cambios al audit_log; NADA de correos.
+Tests de la regla pura (en curso, cerró hace 11 meses, hace 13, nunca dirigió) y del cron.
+tsc/lint/vitest.
+```
+
+### [ ] PAR-3 · Puesto "anfitrión" → rol de reportes automático
+
+Prompt para Claude Code:
+
+```
+FEATURE · Rol automático: anfitriones reciben el rol de reportes por su puesto
+
+REGLA: toda persona con un puesto ACTIVO cuyo nombre/tipo sea "Anfitrión" (verificar en
+el catálogo real de puestos cuáles califican — listar los puestos que matchean y
+confirmarlos con Floriana antes de fijar el criterio: ¿es un tipo de puesto o nombres
+que contienen 'anfitrión'?) recibe automáticamente el rol de reportes. Si deja de tener
+ese puesto (desactivación o remoción), el rol se le quita DE INMEDIATO — salvo que lo
+tenga por asignación manual (distinción manual/automático de EVE-12, source='puesto').
+
+IMPLEMENTACIÓN: por el mecanismo EXISTENTE de position-role-sync — agregar el mapeo
+puesto-anfitrión → rol reportes donde viven los demás mapeos, NO crear un camino nuevo.
+La quita inmediata: si la sync corre programada y no al momento, engancharse al evento de
+desactivación del puesto (donde ya se quitan otros roles automáticos) para que sea al
+instante. DRY-RUN primero: lista de quiénes recibirían el rol hoy, para aprobación
+(regla de la casa con los cambios de rol masivos).
+Tests: asignar puesto da rol, quitar puesto quita rol, rol manual sobrevive, doble puesto
+anfitrión no duplica. tsc/lint/vitest.
+```
+
+### [ ] PAR-4 · editor_perfiles: botones de columnas y exportar en la búsqueda de miembros
+
+Prompt para Claude Code:
+
+```
+PERMISO UI · El rol editor_perfiles ve los botones de Columnas y Exportar en la búsqueda
+de miembros (/miembros), que hoy no le salen.
+
+1. Encontrar el gate actual de esos dos botones (¿qué roles los ven hoy?) y agregar
+   editor_perfiles.
+2. El EXPORT es server-side: verificar que el endpoint de exportación autorice también a
+   editor_perfiles (no solo esconder/mostrar el botón) y que exporte exactamente las
+   columnas/filtros que el rol ya puede ver en pantalla — sin campos extra que su alcance
+   no le muestre hoy.
+3. El selector de columnas: mismas columnas que su rol ya ve, nada nuevo de datos.
+Tests: editor_perfiles exporta (200) y el payload no trae campos fuera de su alcance;
+un rol sin miembros sigue en 403. tsc/lint/vitest.
+```
+
 ## Fase 19 — Pedido el 2026-09-21
 
 **Cierre 2026-09-21.** Tres artículos, escritos LEYENDO las pantallas, no de

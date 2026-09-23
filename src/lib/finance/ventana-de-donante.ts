@@ -1,14 +1,23 @@
 /**
  * Desde cuándo cuenta una donación para que la persona sea "donante activo".
  *
- * La definición (decisión del usuario, 2026-09-16): donó al menos una vez en
- * los últimos 6 meses, contando el mes actual. O sea, desde el primer día del
- * mes que está 5 meses atrás.
+ * LA DEFINICIÓN (decisión del usuario, cambiada el 2026-09-23): donó al menos
+ * una vez en los últimos **3 meses**, contando el mes actual. O sea, desde el
+ * primer día del mes que está 2 meses atrás. Antes eran 6 meses (2026-09-16), y
+ * antes de eso la pantalla decía "2 trimestres", que ya ni era cierto.
  *
- * Esto existe para PONERLE FECHA AL NÚMERO en pantalla. "Últimos 6 meses" es
- * ambiguo —¿rodante?, ¿por mes calendario?— y la tarjeta del dashboard decía
- * antes "los últimos 2 trimestres", que ya ni siquiera era cierto. Mostrar
- * "desde abril de 2026" no se presta a interpretación.
+ * Esto existe para PONERLE FECHA AL NÚMERO en pantalla. "Últimos 3 meses" es
+ * ambiguo —¿rodante?, ¿por mes calendario?— y mostrar "desde julio de 2026" no
+ * se presta a interpretación.
+ *
+ * EL NÚMERO VIVE ACÁ Y EN UN SOLO LUGAR MÁS, que no se puede evitar: la función
+ * `refresh_donor_flags()` de Postgres, que es la que realmente marca la bandera.
+ * Un `.sql` no puede importar TypeScript. Lo que sí se puede es que no se
+ * separen sin que nadie se entere, y de eso se encarga
+ * `ventana-de-donante.test.ts`: lee la migración y falla si el `INTERVAL` no
+ * coincide con `MESES_DE_VENTANA`. Antes de esto el número estaba escrito en
+ * CUATRO lados —las dos funciones SQL, este archivo y una frase a mano en la
+ * pantalla de finanzas— y cambiarlo era acordarse de los cuatro.
  *
  * SE CALCULA EN UTC A PROPÓSITO. Quien manda es la base: la ventana la aplica
  * `refresh_donor_flags()` con `date_trunc('month', CURRENT_DATE)`, y la sesión
@@ -19,6 +28,12 @@
  * el texto coincida con el número que mostrar el mes "correcto" para quien lee.
  */
 
+/** Cuántos meses mira la ventana, contando el actual. El único número. */
+export const MESES_DE_VENTANA = 3
+
+/** Cuántos meses hay que retroceder desde el actual. */
+const RETROCESO = MESES_DE_VENTANA - 1
+
 const MESES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre',
@@ -26,13 +41,13 @@ const MESES = [
 
 /** Primer día de la ventana, como fecha UTC (YYYY-MM-DD). */
 export function inicioDeLaVentana(ahora: Date): string {
-  const d = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 5, 1))
+  const d = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - RETROCESO, 1))
   return d.toISOString().slice(0, 10)
 }
 
-/** "abril de 2026" — el mes desde el que cuentan las donaciones. */
+/** "julio de 2026" — el mes desde el que cuentan las donaciones. */
 export function mesDeLaVentana(ahora: Date): string {
-  const d = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 5, 1))
+  const d = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - RETROCESO, 1))
   return `${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`
 }
 
@@ -43,5 +58,11 @@ export function subtituloDeDonantes(ahora: Date): string {
 
 /** La explicación completa, para el panel de detalle y los tooltips. */
 export function explicacionDeDonantes(ahora: Date): string {
-  return `Donaron al menos una vez desde ${mesDeLaVentana(ahora)}: los últimos 6 meses, contando el actual.`
+  return `Donaron al menos una vez desde ${mesDeLaVentana(ahora)}: los últimos ${MESES_DE_VENTANA} meses, contando el actual.`
+}
+
+/** La frase corta para una tarjeta, sin el mes. Existe para que la pantalla de
+ *  finanzas no la vuelva a escribir a mano — ahí estaba duplicada. */
+export function criterioDeDonantes(): string {
+  return `Donaron en los últimos ${MESES_DE_VENTANA} meses, contando el actual`
 }
