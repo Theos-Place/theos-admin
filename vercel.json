@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node scripts/migraciones/aplicar.cjs && next build",
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
   "crons": [
     {
