@@ -29,6 +29,31 @@
 /** Meses que vale el último grupo dirigido. Tres cuatrimestres. */
 export const MESES_DE_VIGENCIA = 12
 
+/**
+ * Los estados de GRUPO que significan «lo está dando ahora» — el inciso (a).
+ *
+ * `en_matricula` cuenta, y no es obvio: el grupo todavía no arrancó. Va
+ * incluido porque la persona YA está comprometida con ese grupo, que es lo que
+ * pregunta esta definición. Medido el 2026-09-23: 77 dirigentes con un grupo
+ * `en_curso` y 37 más que solo tienen uno `en_matricula`.
+ *
+ * NO confundir con `cursandoAhora` de `estudio-actual.ts`, que es estricto
+ * (solo `en_curso`). Son preguntas distintas a propósito: ahí se pregunta si
+ * alguien ya fue a una sesión; acá, si tiene un grupo a cargo.
+ */
+export const ESTADOS_DIRIGIENDO = ['en_curso', 'en_matricula'] as const
+
+/**
+ * ¿Alguno de estos grupos está a su cargo ahora?
+ *
+ * Existe para que el inciso (a) se calcule EN UN SOLO LUGAR. El cron lo
+ * derivaba con un `if` suelto y la pantalla de dirigentes con otro, así que la
+ * lista y el recálculo podían discrepar sin que nada lo notara.
+ */
+export function dirigeAhora(estadosDeSusGrupos: readonly (string | null | undefined)[]): boolean {
+  return estadosDeSusGrupos.some(e => (ESTADOS_DIRIGIENDO as readonly string[]).includes(e ?? ''))
+}
+
 export type SituacionDelDirigente = {
   /** ¿Dirige o co-dirige algún grupo en curso o en matrícula? */
   dirigeAhora: boolean

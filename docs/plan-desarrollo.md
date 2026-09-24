@@ -2220,9 +2220,32 @@ usa el mismo `AdvancedFilters` y `study` está en `ALLOWED_RESTRICTION_TYPES`. O
 sea que ya se puede armar **«formulario solo para quienes cursan Nivel 2»** y
 **«grupo restringido a quienes están cursando algo»** sin tocar una línea más.
 
-### [ ] PAR-6 · Pantalla de dirigentes: botón de filtro "Dando ahora"
+### [x] PAR-6 · Pantalla de dirigentes: botón de filtro "Dando ahora" — HECHO 2026-09-23
 
-Prompt para Claude Code:
+**Cómo quedó.** El inciso (a) de PAR-2 pasó a ser una función con nombre,
+`dirigeAhora(estados)` en `lib/studies/dirigente-activo.ts`, y ahora la usan los
+dos lados: el cron mensual (que antes tenía un `if` suelto) y la pantalla. Un
+test comprueba que la pantalla no escriba la comparación a mano.
+
+**Dos cosas que el pedido no preveía:**
+
+1. *Ya existía un control llamado «Dando ahora»* — un desplegable por tipo de
+   estudio. Preguntaba otra cosa: «¿QUÉ está dando?», no «¿está dando algo?».
+   Se renombró a **«Qué está dando»**; el toggle se queda con el nombre.
+2. *«En curso» no es una sola cosa.* El pedido dice «un grupo EN CURSO», pero la
+   definición central incluye `en_matricula`. Medido el 2026-09-23: **77**
+   dirigentes con un grupo `en_curso` y **37 más** que solo tienen uno
+   `en_matricula`, 114 en total. Se respetó la definición central —que es lo que
+   el propio pedido exige— y la diferencia se explica en el tooltip del botón en
+   vez de esconderla. Si algún día se quiere el número estricto, lo que hay que
+   cambiar es `ESTADOS_DIRIGIENDO`, y el recálculo mensual se mueve con él.
+
+El estado va en `?dando=1`, el conteo se calcula sobre todos (no sobre lo ya
+filtrado, que daría un parcial disfrazado de total), con el filtro puesto la fila
+nombra el grupo en vez del código, y el export toma `filtered`, así que aplica
+solo.
+
+Prompt original:
 
 ```
 MEJORA · Pantalla de dirigentes: filtro rápido "Dando ahora" como botón/toggle

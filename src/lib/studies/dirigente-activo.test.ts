@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   esDirigenteActivo, limiteDeVigencia, repartirDirigentes, MESES_DE_VIGENCIA,
+  dirigeAhora, ESTADOS_DIRIGIENDO,
 } from './dirigente-activo'
 
 const HOY = '2026-09-23'
@@ -77,5 +78,62 @@ describe('qué hacer con cada uno', () => {
     const r = repartirDirigentes(gente, HOY)
     expect(r.activar).toEqual([]); expect(r.desactivar).toEqual([])
     expect(r.sinCambio).toBe(2)
+  })
+})
+
+/**
+ * PAR-6 · El filtro «Dando ahora» de la pantalla de dirigentes.
+ *
+ * Lo que se testea acá no es el botón sino la REGLA que lo alimenta, que es el
+ * inciso (a) de esta misma definición. El pedido era explícito en que la
+ * pantalla no escribiera su propia consulta, y estos casos son los que fijan
+ * que siga saliendo de un solo lugar.
+ */
+describe('PAR-6 · dirigeAhora', () => {
+  it('un grupo en curso cuenta', () => {
+    expect(dirigeAhora(['en_curso'])).toBe(true)
+  })
+
+  it('un grupo cerrado NO cuenta, por reciente que sea', () => {
+    expect(dirigeAhora(['finalizado'])).toBe(false)
+  })
+
+  it('en matrícula cuenta: el grupo ya está a su cargo aunque no haya arrancado', () => {
+    expect(dirigeAhora(['en_matricula'])).toBe(true)
+  })
+
+  it('basta con UNO: quien cerró tres y tiene uno abierto está dando', () => {
+    expect(dirigeAhora(['finalizado', 'finalizado', 'finalizado', 'en_curso'])).toBe(true)
+  })
+
+  it('sin grupos, no está dando', () => {
+    expect(dirigeAhora([])).toBe(false)
+  })
+
+  it('aguanta nulos y estados que no conoce sin decir que sí', () => {
+    // El co-dirigente puede venir null y un estado nuevo puede aparecer en la
+    // base antes que acá. Ante la duda, NO está dando: equivocarse hacia el
+    // «sí» inflaría el conteo del botón sin que nadie lo note.
+    expect(dirigeAhora([null, undefined, 'planificado', ''])).toBe(false)
+  })
+
+  it('el co-dirigente entra por la misma puerta que el dirigente', () => {
+    // No hay dos funciones: quien llama junta los estados de los grupos que
+    // lidera Y de los que co-lidera, y pregunta una sola vez.
+    const comoCoDirigente = ['en_curso']
+    expect(dirigeAhora(comoCoDirigente)).toBe(true)
+  })
+
+  it('es EXACTAMENTE el inciso (a) de esDirigenteActivo', () => {
+    // Si esto se separa, la pantalla y el recálculo mensual dirían cosas
+    // distintas sobre la misma persona.
+    for (const estado of ['en_curso', 'en_matricula', 'finalizado']) {
+      const s = { dirigeAhora: dirigeAhora([estado]), ultimoCierre: null }
+      expect(esDirigenteActivo(s, '2026-09-23')).toBe(dirigeAhora([estado]))
+    }
+  })
+
+  it('ESTADOS_DIRIGIENDO no incluye finalizado', () => {
+    expect([...ESTADOS_DIRIGIENDO]).toEqual(['en_curso', 'en_matricula'])
   })
 })

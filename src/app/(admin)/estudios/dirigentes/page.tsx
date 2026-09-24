@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { Suspense, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useDirigentes } from '@/hooks/useDirigentes'
@@ -8,6 +8,7 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
 import { useRowSelection } from '@/hooks/useRowSelection'
+import { useUrlFlag } from '@/hooks/useUrlFilter'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
@@ -24,6 +25,19 @@ import { getInitials } from '@/lib/format'
 import {
   LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, type LeaderStatus,
 } from '@/lib/studies/leader-admin-status'
+import { dirigeAhora } from '@/lib/studies/dirigente-activo'
+
+/**
+ * PAR-6 · «Dando ahora» sale de la MISMA definición que decide quién es
+ * dirigente activo — el inciso (a) de `dirigente-activo.ts`, no una consulta
+ * aparte. Si la pantalla y el recálculo mensual usaran criterios distintos, la
+ * lista contradiría al estado que ella misma muestra.
+ *
+ * Incluye los grupos `en_matricula`, que todavía no arrancaron: eso lo decide
+ * la definición central, y acá se dice en el tooltip para que nadie tenga que
+ * adivinarlo leyendo el número.
+ */
+const estaDandoAhora = (d: Dirigente) => dirigeAhora(d.estudios_activos.map(g => g.status))
 
 const ESTADO_FILTERS = [
   { key: 'todos', label: 'Todos' },
@@ -45,10 +59,13 @@ type StudyBulk = { field: 'formation' | 'availability'; action: 'add' | 'remove'
 type DirigenteExportRow = Dirigente & { _email?: string; _phone?: string; _sede?: string }
 
 function DirigenteRow({
-  d, selectable, selected, onToggleSelect, onOpen,
+  d, selectable, selected, onToggleSelect, onOpen, mostrarGrupo,
 }: {
   d: Dirigente; selectable: boolean; selected: boolean
   onToggleSelect: () => void; onOpen: () => void
+  /** PAR-6: con el filtro «Dando ahora» puesto, el código de estudio no
+   *  alcanza —la pregunta pasa a ser CUÁL grupo—, así que se nombra. */
+  mostrarGrupo?: boolean
 }) {
   return (
     <div className={cn('flex items-center gap-3 px-3 sm:px-4 py-3 border-b border-[var(--outline-variant)] transition-colors', selected ? 'bg-coral/5' : 'hover:bg-surface-low')}>
@@ -89,7 +106,9 @@ function DirigenteRow({
           </div>
           <p className="text-xs text-navy-light/80 font-body mt-0.5 truncate">
             {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
-            {d.estudios_activos.length > 0 && ` · ${d.estudios_activos.map(g => g.plan_code).slice(0, 3).join(', ')}`}
+            {d.estudios_activos.length > 0 && ` · ${d.estudios_activos
+              .map(g => (mostrarGrupo ? g.group_name || g.plan_code : g.plan_code))
+              .slice(0, 3).join(', ')}`}
           </p>
         </div>
         <span className="hidden sm:flex items-center gap-1 text-xs text-navy-light/80 font-body shrink-0">
@@ -101,7 +120,19 @@ function DirigenteRow({
   )
 }
 
+/**
+ * `useUrlFlag` lee `useSearchParams`, y el App Router exige que eso viva bajo
+ * un <Suspense>: sin el límite, el build falla al prerenderizar la página.
+ */
 export default function DirigentesPage() {
+  return (
+    <Suspense fallback={<p className="py-16 text-center text-sm text-navy-light/80 font-body">Cargando dirigentes…</p>}>
+      <DirigentesContenido />
+    </Suspense>
+  )
+}
+
+function DirigentesContenido() {
   const router = useRouter()
   const toast = useToast()
   const { dirigentes, loading, refetch } = useDirigentes()
@@ -113,6 +144,8 @@ export default function DirigentesPage() {
   const [estado, setEstado] = useState<EstadoFiltro>('todos')
   // DIR-6: los filtros de matiz solo para la coordinación de dirigentes.
   const canAdminStatus = hasRole(...LEADER_ADMIN_ROLES)
+  // PAR-6: el toggle va en la URL para poder mandar el link ya filtrado.
+  const [soloDando, setSoloDando] = useUrlFlag('dando')
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
   const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio
   const [formadoTipo, setFormadoTipo] = useState('')  // capacitado/formado para darlo
@@ -133,17 +166,22 @@ export default function DirigentesPage() {
       if (estado === 'activo' || estado === 'inactivo') {
         if (d.status !== estado) return false
       } else if (estado !== 'todos' && d.availability_status !== estado) return false
+      if (soloDando && !estaDandoAhora(d)) return false
       if (dandoTipo && !matchesStudyFilter(d.estudios_activos.map(g => g.plan_code), dandoTipo)) return false
       if (formadoTipo && !matchesStudyFilter(d.formacion, formadoTipo)) return false
       if (dispTipo && !matchesStudyFilter(d.disponibilidad, dispTipo)) return false
       if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [dirigentes, estado, dandoTipo, formadoTipo, dispTipo, query])
+  }, [dirigentes, estado, soloDando, dandoTipo, formadoTipo, dispTipo, query])
 
   const counts = useMemo(() => ({
     activos: dirigentes.filter(d => d.status === 'activo').length,
     inactivos: dirigentes.filter(d => d.status === 'inactivo').length,
+    // El conteo del botón es sobre TODOS, no sobre lo ya filtrado: si bajara al
+    // aplicar otro filtro, el número dejaría de responder «cuántos están dando
+    // ahora» y pasaría a ser un resultado parcial disfrazado de total.
+    dando: dirigentes.filter(estaDandoAhora).length,
   }), [dirigentes])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
@@ -279,6 +317,21 @@ export default function DirigentesPage() {
               {f.label}
             </button>
           ))}
+          {/* PAR-6 · El toggle va entre los filtros de estado porque responde la
+              misma clase de pregunta —quién, no de qué estudio—, y el
+              desplegable de abajo ahora se llama distinto para que no haya dos
+              controles con el mismo nombre. */}
+          <button
+            onClick={() => setSoloDando(!soloDando)}
+            aria-pressed={soloDando}
+            title="Dirige o co-dirige un grupo en curso o en matrícula ahora mismo. Es el mismo criterio que usa el recálculo mensual de dirigentes activos."
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
+              soloDando ? 'bg-coral text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
+            )}
+          >
+            Dando ahora · {counts.dando}
+          </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-1.5 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
             <Search size={15} className="text-navy-light/80 shrink-0" />
@@ -294,7 +347,9 @@ export default function DirigentesPage() {
 
         {/* Tres filtros de estudio, etiquetados y separados (no se mezclan) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <StudyFilter label="Dando ahora" hint="Tiene un grupo en curso de ese estudio" value={dandoTipo} onChange={setDandoTipo} options={studyTypes} />
+          {/* Se llamaba «Dando ahora», igual que el botón de arriba, y son cosas
+              distintas: aquel es «¿está dando algo?» y este «¿qué está dando?». */}
+          <StudyFilter label="Qué está dando" hint="Tiene un grupo en curso de ese estudio" value={dandoTipo} onChange={setDandoTipo} options={studyTypes} />
           <StudyFilter label="Formado para darlo" hint="Capacitado para ese estudio (aunque no lo dé)" value={formadoTipo} onChange={setFormadoTipo} options={studyTypes} />
           <StudyFilter label="Disponibilidad" hint="Dispuesto a dar ese estudio ahora" value={dispTipo} onChange={setDispTipo} options={studyTypes} />
         </div>
@@ -362,6 +417,7 @@ export default function DirigentesPage() {
                 selected={sel.isSelected(d.member_id)}
                 onToggleSelect={() => sel.toggle(d.member_id)}
                 onOpen={() => router.push(`/estudios/dirigentes/${d.member_id}`)}
+                mostrarGrupo={soloDando}
               />
             ))}
           </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { setDirigenteActive } from '@/lib/supabase/queries/studies'
-import { repartirDirigentes, MESES_DE_VIGENCIA, type SituacionDelDirigente } from '@/lib/studies/dirigente-activo'
+import { repartirDirigentes, dirigeAhora, MESES_DE_VIGENCIA, type SituacionDelDirigente } from '@/lib/studies/dirigente-activo'
 import { todayCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 import { pingHealthcheck } from '@/lib/health'
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
           const fin = ((g.closed_at ?? g.ends_at) as string | null)?.slice(0, 10) ?? null
           const prev = situaciones.get(id) ?? { dirigeAhora: false, ultimoCierre: null }
           const estado = g.status as string | null
-          if (estado === 'en_curso' || estado === 'en_matricula') prev.dirigeAhora = true
+          if (dirigeAhora([estado])) prev.dirigeAhora = true
           else if (estado === 'finalizado' && fin && (!prev.ultimoCierre || fin > prev.ultimoCierre)) {
             prev.ultimoCierre = fin
           }
