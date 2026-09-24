@@ -187,7 +187,13 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
       <div>
         <Label>Estudio</Label>
         <Sel value={study} onChange={setStudy}>
-          <option value="">Seleccioná un estudio</option>
+          {/* PAR-5 · «Cualquiera» es una opción de verdad, no el vacío inicial:
+              «¿quiénes están cursando algo?» es la pregunta más frecuente y
+              antes obligaba a elegir plan por plan. Vale solo con «Ha llevado»:
+              «no ha llevado NINGUNO» es otra pregunta y no está pedida. */}
+          {mode === 'taken'
+            ? <option value="">Cualquier estudio</option>
+            : <option value="">Seleccioná un estudio</option>}
           {(Object.entries(STUDY_STAGES) as [string, { label: string }][]).map(([key, stage]) => (
             <optgroup key={key} label={stage.label}>
               {studyTypes.filter(s => s.stage === key).map(s => (
@@ -238,7 +244,10 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
             <RadioGroup<Exclude<StudyStatus, 'not_taken'>>
               options={[
                 { value: 'completed',   label: 'Completado' },
-                { value: 'in_progress', label: 'En progreso' },
+                // PAR-5: «cursando» = grupo ya arrancado. Antes esta opción
+                // decía «En progreso» y contaba también a quien está inscrito
+                // en un grupo que no empieza — 666 personas contra 431.
+                { value: 'in_progress', label: 'Cursando ahora' },
                 { value: 'any',         label: 'Cualquiera' },
               ]}
               value={status === 'not_taken' ? 'completed' : status}
@@ -255,10 +264,14 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         </>
       )}
 
+      {/* PAR-5 · Sin plan se puede agregar SOLO en «Ha llevado», donde el vacío
+          significa «cualquier estudio». En «No ha llevado» el vacío sigue siendo
+          «falta elegir»: un filtro de «no ha llevado nada» excluiría a media
+          iglesia y no es lo que nadie quiso pedir. */}
       <AddBtn
-        disabled={!study}
+        disabled={!study && mode !== 'taken'}
         onClick={() => {
-          if (!study) return
+          if (!study && mode !== 'taken') return
           const finalStatus: StudyStatus = mode === 'not_taken' ? 'not_taken' : status
           addCondition({
             group: 'study', type: 'study', study, status: finalStatus,

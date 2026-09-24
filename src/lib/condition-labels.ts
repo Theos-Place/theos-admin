@@ -5,9 +5,13 @@ import { ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
 export function conditionLabel(c: FilterCondition): string {
   switch (c.type) {
     case 'study': {
-      const name = c.study ? studyLabel(c.study) : '?'
+      // PAR-5: sin plan el filtro vale para CUALQUIER estudio, así que el chip
+      // tiene que decirlo. Antes el vacío era imposible y mostraba '?'.
+      const name = c.study ? studyLabel(c.study) : 'cualquier estudio'
       if (c.status === 'completed') return `Completó: ${name}`
-      if (c.status === 'in_progress') return `En progreso: ${name}`
+      // «Cursando» y no «En progreso»: desde PAR-5 exige que el grupo haya
+      // arrancado, y la etiqueta vieja se leía como «está matriculado».
+      if (c.status === 'in_progress') return c.study ? `Cursando: ${name}` : 'Cursando un estudio'
       if (c.status === 'not_taken') return `No llevó: ${name}`
       return `Estudio: ${name}`
     }

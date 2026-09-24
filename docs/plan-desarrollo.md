@@ -2163,7 +2163,7 @@ sincronización del Excel Madre (183 de 278 la tienen igual) y 46 no la tienen.
 No dice cuándo entró nadie. En los demás comités se queda, que ahí sí es un dato
 real.
 
-### [ ] PAR-5 · Búsqueda de miembros: filtro "cursando un estudio" + columna con el nombre
+### [x] PAR-5 · Búsqueda de miembros: filtro "cursando un estudio" + columna — HECHO 2026-09-23
 
 Prompt para Claude Code:
 
@@ -2189,6 +2189,36 @@ cursan Nivel 2", que nos han pedido variantes de eso.
 Tests: filtro por cualquiera y por plan específico, columna correcta con doble matrícula,
 export con la columna. tsc/lint/vitest.
 ```
+
+**NO SE CREÓ NADA NUEVO: se arregló lo que había.** Ya existían la condición
+`study` con estado «En progreso» y la columna «Nivel actual». Las dos estaban
+mal, y de la misma forma: no miraban el estado del GRUPO.
+
+| | Antes | Ahora |
+|---|---:|---:|
+| Filtro «En progreso» / «Cursando ahora» | 666 | **431** |
+
+Las 241 de diferencia son personas matriculadas en grupos que **todavía no
+arrancan**. Decir que están cursando es decir algo falso. Se cambió el
+significado en vez de agregar una opción al lado (decisión de Floriana) y se
+midió antes: **cero** listas guardadas, formularios o envíos usaban esa
+condición, así que no cambió el resultado de nada armado.
+
+La columna tenía TRES problemas, todos por un `.find()` sobre `'enrolled'`:
+mostraba **uno solo** a quien lleva dos, ignoraba los otros estados vigentes, y
+tampoco miraba el grupo. Ahora sale de la misma función que el filtro —
+`estudiosQueCursa`— así que el número y la columna no pueden discrepar.
+Verificado contra producción: filtro 431, columna llena en las 120 de la
+muestra, y aparece un caso real de doble matrícula («Nivel 4, Prematrimonial»).
+
+«Cualquier estudio» es ahora una opción de verdad en el selector, solo en «Ha
+llevado»: un filtro de «no ha llevado ninguno» excluiría a media iglesia y nadie
+lo pidió.
+
+**GRU-2 Y FRM-5 LO HEREDAN GRATIS**, como el ítem anticipaba: `RestriccionDeAudiencia`
+usa el mismo `AdvancedFilters` y `study` está en `ALLOWED_RESTRICTION_TYPES`. O
+sea que ya se puede armar **«formulario solo para quienes cursan Nivel 2»** y
+**«grupo restringido a quienes están cursando algo»** sin tocar una línea más.
 
 ### [ ] PAR-6 · Pantalla de dirigentes: botón de filtro "Dando ahora"
 

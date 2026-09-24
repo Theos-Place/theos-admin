@@ -29,6 +29,45 @@ export function matriculaVigente(estadoDeLaMatricula: string | null | undefined)
   return (MATRICULAS_VIGENTES as readonly string[]).includes(estadoDeLaMatricula ?? '')
 }
 
+/**
+ * PAR-5 · CURSANDO AHORA es más estricto que «en marcha», y la diferencia
+ * importa.
+ *
+ * `grupoEnMarcha` incluye `en_matricula` porque para el COMPROMISO de servicio
+ * (SRV-7) alguien inscrito en un grupo que arranca la otra semana ya está
+ * comprometido. Pero para la pregunta «¿quién está cursando hoy?» eso es falso:
+ * todavía no ha ido a una sola sesión.
+ *
+ * Medido el 2026-09-23: 666 personas con matrícula vigente contra 431 en un
+ * grupo que ya arrancó. Las otras 241 están esperando que empiece.
+ *
+ * Las dos definiciones conviven a propósito y por eso tienen nombres distintos.
+ * Si alguna vez se unifican, que sea una decisión y no un descuido.
+ */
+export function cursandoAhora(estadoDelGrupo: string | null | undefined): boolean {
+  return estadoDelGrupo === 'en_curso'
+}
+
+export type MatriculaParaColumna = {
+  status: string | null | undefined
+  grupo: { status?: string | null; planNombre?: string | null } | null | undefined
+}
+
+/**
+ * Los estudios que la persona CURSA hoy, por nombre.
+ *
+ * Devuelve TODOS, no el primero: hay gente con dos matrículas a la vez y la
+ * columna decía solo una —usaba `.find()`—, así que mostraba un dato incompleto
+ * sin avisar. Se ordenan alfabéticamente para que la celda no cambie de orden
+ * entre recargas por el capricho del join.
+ */
+export function estudiosQueCursa(matriculas: readonly MatriculaParaColumna[]): string[] {
+  const nombres = matriculas
+    .filter(m => matriculaVigente(m.status) && cursandoAhora(m.grupo?.status) && m.grupo?.planNombre)
+    .map(m => m.grupo!.planNombre!)
+  return [...new Set(nombres)].sort((a, b) => a.localeCompare(b, 'es'))
+}
+
 export type EstudioDeLaPersona = {
   /** Los que está llevando ahora, por nombre. */
   llevando: string[]

@@ -61,3 +61,23 @@ describe('server', () => {
     expect(conditionLabel(cond('no'))).toBe('No sirve actualmente')
   })
 })
+
+describe('PAR-5 · el chip del filtro de estudio', () => {
+  const study = (over: Partial<Extract<FilterCondition, { type: 'study' }>>) =>
+    conditionLabel({ id: 1, group: 'study', type: 'study', study: 'N1', status: 'completed', from: null, to: null, ...over } as FilterCondition)
+
+  it('sin plan dice «cualquier estudio», no «?»', () => {
+    // Antes el vacío era imposible de crear y el label mostraba '?'.
+    expect(study({ study: '', status: 'any' })).toContain('cualquier estudio')
+  })
+
+  it('«Cursando», no «En progreso»: la etiqueta vieja se leía como matriculado', () => {
+    expect(study({ status: 'in_progress' })).toMatch(/^Cursando: /)
+    expect(study({ study: '', status: 'in_progress' })).toBe('Cursando un estudio')
+  })
+
+  it('los otros estados no cambiaron', () => {
+    expect(study({ status: 'completed' })).toMatch(/^Completó: /)
+    expect(study({ status: 'not_taken' })).toMatch(/^No llevó: /)
+  })
+})

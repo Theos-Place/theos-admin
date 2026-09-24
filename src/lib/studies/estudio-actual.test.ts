@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   grupoEnMarcha, matriculaVigente, textoDeEstudio, estaEnEstudio, mesYAnio,
+  estudiosQueCursa,
   type EstudioDeLaPersona,
 } from './estudio-actual'
 
@@ -87,5 +88,49 @@ describe('mesYAnio', () => {
   it('sin fecha, vacío', () => {
     expect(mesYAnio(null)).toBe('')
     expect(mesYAnio('cualquier cosa')).toBe('')
+  })
+})
+
+describe('PAR-5 · estudios que cursa AHORA', () => {
+  const m = (status: string, grupoStatus: string | null, planNombre: string | null) =>
+    ({ status, grupo: grupoStatus === null ? null : { status: grupoStatus, planNombre } })
+
+  it('solo cuenta el grupo EN CURSO, no el que está en matrícula', () => {
+    // La diferencia real: 666 con matrícula vigente contra 431 cursando.
+    expect(estudiosQueCursa([m('enrolled', 'en_curso', 'Nivel 1')])).toEqual(['Nivel 1'])
+    expect(estudiosQueCursa([m('enrolled', 'en_matricula', 'Nivel 1')])).toEqual([])
+    expect(estudiosQueCursa([m('enrolled', 'finalizado', 'Nivel 1')])).toEqual([])
+  })
+
+  it('DEVUELVE LOS DOS cuando lleva dos: antes mostraba solo el primero', () => {
+    expect(estudiosQueCursa([
+      m('enrolled', 'en_curso', 'Nivel 2'),
+      m('enrolled', 'en_curso', 'Discípulos 1'),
+    ])).toEqual(['Discípulos 1', 'Nivel 2'])
+  })
+
+  it('cuenta las matrículas vigentes, no solo «enrolled»', () => {
+    // pendiente_de_pago vuelve a escribirse desde el 2026-09-01: quien está en
+    // el grupo cursando, cursa, aunque le falte el comprobante.
+    expect(estudiosQueCursa([m('pendiente_de_pago', 'en_curso', 'Nivel 3')])).toEqual(['Nivel 3'])
+    expect(estudiosQueCursa([m('en_revision', 'en_curso', 'Nivel 3')])).toEqual(['Nivel 3'])
+  })
+
+  it('no cuenta a quien ya salió', () => {
+    for (const s of ['dropped', 'cancelada', 'transferred', 'completed']) {
+      expect(estudiosQueCursa([m(s, 'en_curso', 'Nivel 1')]), s).toEqual([])
+    }
+  })
+
+  it('sin grupo, sin nombre de plan o sin nada: lista vacía, nunca undefined', () => {
+    expect(estudiosQueCursa([])).toEqual([])
+    expect(estudiosQueCursa([m('enrolled', null, 'Nivel 1')])).toEqual([])
+    expect(estudiosQueCursa([m('enrolled', 'en_curso', null)])).toEqual([])
+  })
+
+  it('no repite si hay dos matrículas del mismo plan', () => {
+    expect(estudiosQueCursa([
+      m('enrolled', 'en_curso', 'Nivel 1'), m('enrolled', 'en_curso', 'Nivel 1'),
+    ])).toEqual(['Nivel 1'])
   })
 })

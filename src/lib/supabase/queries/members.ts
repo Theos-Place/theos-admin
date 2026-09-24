@@ -4,6 +4,7 @@ import type { FilterCondition, ConditionGroup } from '@/types/filters'
 import { evaluateUnits } from '@/lib/filter-units'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
+import { MATRICULAS_VIGENTES, estudiosQueCursa } from '@/lib/studies/estudio-actual'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
@@ -296,11 +297,25 @@ function enrollmentInRange(r: EnrollDateRow, range: EnrollRange | undefined): bo
  *  Dos fuentes: inscripciones CON grupo (plan vía study_groups) e inscripciones
  *  SIN grupo (plan_id directo, migración 032 — así vino el histórico: ~19k
  *  completados sin grupo que el join !inner descartaba). */
-async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange, scopeIds?: string[]): Promise<Set<string>> {
+/**
+ * @param planCode código del plan, o CADENA VACÍA para «cualquier estudio»
+ *   (PAR-5). Con vacío se saltan los filtros por plan y entran todas las
+ *   matrículas que cumplan el estado.
+ * @param soloEnCurso exige además que el GRUPO esté `en_curso`. Es lo que
+ *   distingue «cursando ahora» de «matriculado»: al 2026-09-23 hay 666 personas
+ *   con matrícula `enrolled` pero solo 431 en un grupo que ya arrancó — las
+ *   otras 241 están en grupos `en_matricula`, inscritas en algo que todavía no
+ *   empieza. Decir que esas están «cursando» es decir algo falso.
+ */
+async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange, scopeIds?: string[], soloEnCurso = false): Promise<Set<string>> {
   const supabase = createAdminClient()
-  const { data: plan } = await supabase
-    .from('study_plans').select('id').eq('code', planCode).maybeSingle()
-  const planId = (plan as { id: string } | null)?.id
+  const cualquierPlan = planCode.trim() === ''
+  let planId: string | undefined
+  if (!cualquierPlan) {
+    const { data: plan } = await supabase
+      .from('study_plans').select('id').eq('code', planCode).maybeSingle()
+    planId = (plan as { id: string } | null)?.id
+  }
 
   const out = new Set<string>()
 
@@ -308,11 +323,14 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   for (let from = 0; ; from += 1000) {
     let q1 = supabase
       .from('study_enrollments')
-      .select('member_id, completed_at, enrolled_at, grp:study_groups!study_enrollments_group_id_fkey!inner(starts_at, plan:study_plans!inner(code))')
+      .select('member_id, completed_at, enrolled_at, grp:study_groups!study_enrollments_group_id_fkey!inner(starts_at, status, plan:study_plans!inner(code))')
       .in('status', statuses)
-      .eq('grp.plan.code', planCode)
       .order('id')
       .range(from, from + 999)
+    if (!cualquierPlan) q1 = q1.eq('grp.plan.code', planCode)
+    // El estado del GRUPO se filtra en la consulta, no en memoria: si no,
+    // habría que traerse las 37.000 matrículas para descartar la mayoría.
+    if (soloEnCurso) q1 = q1.eq('grp.status', 'en_curso')
     if (scopeIds) q1 = q1.in('member_id', scopeIds)
     const { data, error } = await q1
     if (error) throw error
@@ -327,7 +345,8 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   }
 
   // Fuente 2: enrollments SIN grupo (plan_id directo); la fecha es del enrollment.
-  if (planId) {
+  // Con `soloEnCurso` no aplica: sin grupo no hay grupo en curso.
+  if (planId && !soloEnCurso) {
     for (let from = 0; ; from += 1000) {
       let q2 = supabase
         .from('study_enrollments')
@@ -380,18 +399,31 @@ export async function resolveAdvancedConditions(
         // que 'any' ('completed'+'enrolled'), pero como EXCLUDE en vez de
         // INCLUDE. Sin rango de fecha (no aplica a "nunca lo llevó").
         if (c.status === 'not_taken') {
-          res.exclude.push(await idsByEnrollment(c.study, ['completed', 'enrolled'], undefined, scopeIds))
+          res.exclude.push(await idsByEnrollment(c.study, ['completed', ...MATRICULAS_VIGENTES], undefined, scopeIds))
           break
         }
         const statuses = c.status === 'completed' ? ['completed']
-          : c.status === 'in_progress' ? ['enrolled']
-          : ['completed', 'enrolled']
+          : c.status === 'in_progress' ? MATRICULAS_VIGENTES as unknown as string[]
+          : ['completed', ...MATRICULAS_VIGENTES]
+        /**
+         * PAR-5 · «En progreso» ahora significa CURSANDO: matrícula vigente en
+         * un grupo que ya arrancó.
+         *
+         * Antes era solo «matriculado», y eso metía a quien está inscrito en un
+         * grupo que todavía no empieza: 666 personas contra las 431 que de
+         * verdad están cursando. Se cambió el significado en vez de agregar una
+         * opción al lado (decisión de Floriana, 2026-09-23) porque dos filtros
+         * casi iguales se eligen mal. Se midió antes: CERO listas guardadas,
+         * formularios o envíos usaban esta condición, así que no cambió el
+         * resultado de nada que alguien hubiera armado.
+         */
+        const soloEnCurso = c.status === 'in_progress'
         // El rango de fecha se evalúa contra el MISMO enrollment del plan: para
         // "completado" → fecha de finalización; para "en progreso" → fecha de
         // inicio. Así "Nivel 1 completado + rango" devuelve solo a quienes
         // finalizaron Nivel 1 dentro del rango (no un filtro de fecha aparte).
         const basis: EnrollDateBasis = c.status === 'in_progress' ? 'start' : 'completion'
-        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }, scopeIds))
+        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }, scopeIds, soloEnCurso))
         break
       }
       case 'service': {
@@ -921,7 +953,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       ${volunteersEmbed},
       study_enrollments!study_enrollments_member_id_fkey(
         status,
-        study_groups!study_enrollments_group_id_fkey(plan:study_plans(name))
+        study_groups!study_enrollments_group_id_fkey(status, plan:study_plans(name))
       ),
       study_leaders(member_id),
       event_checkins(checked_in_at)
@@ -969,7 +1001,7 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
     }> | null) ?? []
     const enrollments = (row.study_enrollments as Array<{
       status: string
-      study_groups: { plan: { name: string } | null } | null
+      study_groups: { status: string | null; plan: { name: string } | null } | null
     }> | null) ?? []
 
     const activeRoles = memberRoles.filter(r => r.is_active).map(r => r.role)
@@ -981,9 +1013,23 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
       .filter(e => e.status === 'completed' && e.study_groups?.plan?.name)
       .map(e => e.study_groups!.plan!.name)
 
-    const currentStudy = enrollments
-      .find(e => e.status === 'enrolled' && e.study_groups?.plan?.name)
-      ?.study_groups?.plan?.name ?? null
+    /**
+     * PAR-5 · TODOS los que cursa, no el primero, y solo si el grupo arrancó.
+     *
+     * Antes era un `.find()` sobre `status === 'enrolled'`, con tres problemas:
+     * mostraba UNO solo a quien lleva dos, contaba los estados vigentes que no
+     * son 'enrolled' como si no existieran, y no miraba el grupo — así que
+     * incluía a 241 personas inscritas en grupos que todavía no empiezan.
+     *
+     * Sale de la misma función que el filtro «En progreso», que es lo que
+     * impide que la columna y el conteo digan cosas distintas.
+     */
+    const currentStudy = estudiosQueCursa(enrollments.map(e => ({
+      status: e.status,
+      grupo: e.study_groups
+        ? { status: e.study_groups.status, planNombre: e.study_groups.plan?.name }
+        : null,
+    }))).join(', ') || null
 
     const sede = (row.sede as { code: string; name: string } | null) ?? null
     const sedeCase = (row.sede_case as 'activo' | 'inactivo' | null) ?? null
