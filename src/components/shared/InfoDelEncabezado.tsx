@@ -88,7 +88,18 @@ export function InfoDelEncabezado({ texto }: Props) {
             // arriba del ícono en el primer frame.
             visibility: pos.medido ? 'visible' : 'hidden',
           }}
-          className="pointer-events-none z-[80] overflow-auto rounded-lg bg-navy px-3 py-2 text-[13px] font-normal normal-case tracking-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body"
+          /**
+           * `whitespace-normal` NO es de más: el globo vive dentro del `<th>`,
+           * y `position: fixed` lo saca del FLUJO pero no de la HERENCIA. El
+           * encabezado ordenable lleva `whitespace-nowrap` —que ahí está bien,
+           * para que el título no parta en dos— y el globo lo heredaba: el
+           * texto salía en UNA sola línea de 34px de alto, se iba por el
+           * costado y `overflow-auto` lo cortaba. Reportado por Floriana el
+           * 2026-09-24. `normal-case` y `tracking-normal` ya estaban acá por
+           * exactamente el mismo motivo (el `th` va en versalitas espaciadas);
+           * este faltaba, y no se notó hasta que un texto necesitó envolver.
+           */
+          className="pointer-events-none z-[80] overflow-auto whitespace-normal break-words rounded-lg bg-navy px-3 py-2 text-[13px] font-normal normal-case tracking-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body"
         >
           {texto}
         </span>
