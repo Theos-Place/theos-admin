@@ -37,6 +37,17 @@ export const MESES_DE_VIGENCIA = 12
  * pregunta esta definición. Medido el 2026-09-23: 77 dirigentes con un grupo
  * `en_curso` y 37 más que solo tienen uno `en_matricula`.
  *
+ * NO ES UN DESCUIDO: se propuso sacarlo dos veces —el 2026-09-23, al revisar
+ * el recálculo, y el 2026-09-24, al agregar el filtro del padrón— y las dos
+ * veces Floriana confirmó que la matrícula cuenta. Quien lea esto y piense
+ * «esto está mal, matricularse no es dar clase» tiene el mismo reflejo que ya
+ * se tuvo; la decisión fue a la inversa, a la vista de los números.
+ *
+ * Cambiar esta constante mueve TRES cosas a la vez, y esa es justamente la
+ * gracia: el recálculo mensual de dirigentes activos, el toggle «Dando ahora»
+ * de la pantalla de dirigentes y el filtro «Dando ahora (como dirigente)» del
+ * padrón. Hoy los tres dicen 114; en estricto dirían 77.
+ *
  * NO confundir con `cursandoAhora` de `estudio-actual.ts`, que es estricto
  * (solo `en_curso`). Son preguntas distintas a propósito: ahí se pregunta si
  * alguien ya fue a una sesión; acá, si tiene un grupo a cargo.
