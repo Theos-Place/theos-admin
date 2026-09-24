@@ -12,6 +12,7 @@ export function conditionLabel(c: FilterCondition): string {
       // «Cursando» y no «En progreso»: desde PAR-5 exige que el grupo haya
       // arrancado, y la etiqueta vieja se leía como «está matriculado».
       if (c.status === 'in_progress') return c.study ? `Cursando: ${name}` : 'Cursando un estudio'
+      if (c.status === 'leading') return c.study ? `Dando: ${name}` : 'Dando un estudio'
       if (c.status === 'not_taken') return `No llevó: ${name}`
       return `Estudio: ${name}`
     }

@@ -5,6 +5,7 @@ import { evaluateUnits } from '@/lib/filter-units'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { MATRICULAS_VIGENTES, estudiosQueCursa } from '@/lib/studies/estudio-actual'
+import { ESTADOS_DIRIGIENDO } from '@/lib/studies/dirigente-activo'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
@@ -373,6 +374,41 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   return out
 }
 
+/**
+ * Quién DIRIGE o co-dirige un grupo ahora mismo, opcionalmente de un plan.
+ *
+ * Las dos columnas se consultan por separado y se unen: PostgREST no permite
+ * un `.or()` sobre dos columnas cuando además hay que filtrar por una tabla
+ * embebida con `!inner`, y mezclarlo devolvía filas de más.
+ */
+async function idsByLeadership(planCode: string, scopeIds?: string[]): Promise<Set<string>> {
+  const supabase = createAdminClient()
+  const cualquierPlan = planCode.trim() === ''
+  const out = new Set<string>()
+  for (const col of ['leader_id', 'co_leader_id'] as const) {
+    for (let from = 0; ; from += 1000) {
+      let q = supabase
+        .from('study_groups')
+        .select(`${col}, plan:study_plans!inner(code)`)
+        .in('status', ESTADOS_DIRIGIENDO as unknown as string[])
+        .not(col, 'is', null)
+        .order('id')
+        .range(from, from + 999)
+      if (!cualquierPlan) q = q.eq('plan.code', planCode)
+      if (scopeIds) q = q.in(col, scopeIds)
+      const { data, error } = await q
+      if (error) throw error
+      const rows = (data ?? []) as unknown as Array<Record<string, unknown>>
+      for (const r of rows) {
+        const id = r[col] as string | null
+        if (id) out.add(id)
+      }
+      if (rows.length < 1000) break
+    }
+  }
+  return out
+}
+
 /** Resuelve cada condición avanzada a sus sets de inclusión/exclusión.
  *  `orGroupedIds`: ids de condiciones dentro de grupos OR — para esas, 'status'
  *  se resuelve como set (no como override global del escaneo base). */
@@ -398,6 +434,26 @@ export async function resolveAdvancedConditions(
         // Inverso: NO lo completó y NO lo está cursando ahora — mismo universo
         // que 'any' ('completed'+'enrolled'), pero como EXCLUDE en vez de
         // INCLUDE. Sin rango de fecha (no aplica a "nunca lo llevó").
+        /**
+         * DANDO AHORA · la persona como DIRIGENTE, no como estudiante.
+         *
+         * Vive en `study_groups.leader_id/co_leader_id` y no en
+         * `study_enrollments`, así que no comparte una línea con el resto de
+         * este caso: un dirigente casi nunca está matriculado en el grupo que
+         * da. Medido el 2026-09-23: de los 114 que dirigen algo ahora, solo 4
+         * aparecían en «cursando». Los otros 110 no salían en ningún filtro de
+         * estudio, y nada en la pantalla lo decía.
+         *
+         * Qué estados cuentan lo decide `ESTADOS_DIRIGIENDO`, la MISMA
+         * constante que el toggle «Dando ahora» de la pantalla de dirigentes.
+         * Si se separan, el mismo nombre daría dos números distintos en dos
+         * pantallas — que es exactamente el enredo que acabamos de desarmar con
+         * la columna «último estudio».
+         */
+        if (c.status === 'leading') {
+          res.include.push(await idsByLeadership(c.study, scopeIds))
+          break
+        }
         if (c.status === 'not_taken') {
           res.exclude.push(await idsByEnrollment(c.study, ['completed', ...MATRICULAS_VIGENTES], undefined, scopeIds))
           break

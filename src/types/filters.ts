@@ -1,4 +1,11 @@
-export type StudyStatus = 'completed' | 'in_progress' | 'any' | 'not_taken'
+/**
+ * `in_progress` es la persona como ESTUDIANTE (matrícula vigente en un grupo
+ * que arrancó) y `leading` como DIRIGENTE (dirige o co-dirige el grupo). Son
+ * dos poblaciones casi disjuntas: al 2026-09-23, 431 y 114, con solo 4 en
+ * ambas. Pedido de Floriana: hasta ahora el filtro solo sabía de la primera y
+ * los dirigentes quedaban fuera sin que la etiqueta lo dijera.
+ */
+export type StudyStatus = 'completed' | 'in_progress' | 'leading' | 'any' | 'not_taken'
 export type TicketStatus = 'pending' | 'paid' | 'exempted' | 'expired' | 'any'
 export type AttendanceType = 'participant' | 'server' | 'any'
 export type ServiceStatus = 'active' | 'historical' | 'any'

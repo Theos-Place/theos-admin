@@ -247,7 +247,14 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 // PAR-5: «cursando» = grupo ya arrancado. Antes esta opción
                 // decía «En progreso» y contaba también a quien está inscrito
                 // en un grupo que no empieza — 666 personas contra 431.
-                { value: 'in_progress', label: 'Cursando ahora' },
+                //
+                // «(como estudiante)» y «(como dirigente)» van EN EL RÓTULO y
+                // no en un tooltip: son dos poblaciones casi disjuntas —431 y
+                // 114, con 4 en común— y quien elige mal se lleva una lista
+                // equivocada sin enterarse. Pedido de Floriana, 2026-09-23:
+                // hasta hoy el filtro solo sabía de la primera.
+                { value: 'in_progress', label: 'Cursando ahora (como estudiante)' },
+                { value: 'leading',     label: 'Dando ahora (como dirigente)' },
                 { value: 'any',         label: 'Cualquiera' },
               ]}
               value={status === 'not_taken' ? 'completed' : status}
