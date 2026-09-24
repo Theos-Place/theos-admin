@@ -18,7 +18,9 @@ import { ATTENDANCE_GENERAL_TOOLTIP } from '@/lib/attendance'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { cn } from '@/lib/utils'
 import { leFaltaAlgo, faltantes, type Compromisos } from '@/lib/servers/compromisos'
-import { textoDeEstudio, type EstudioDeLaPersona } from '@/lib/studies/estudio-actual'
+import {
+  textoDeEstudio, INFO_ULTIMO_ESTUDIO_ESTUDIANTE, type EstudioDeLaPersona,
+} from '@/lib/studies/estudio-actual'
 import { SinAcceso, esFaltaDeAcceso } from '@/components/shared/SinAcceso'
 
 type Fila = Compromisos & {
@@ -45,7 +47,11 @@ const COLUMNAS: ColumnDef<Fila>[] = [
   // el prefijo para saber cuál de las dos te están diciendo.
   { key: 'estudioActual', label: 'Estudio actual', defaultVisible: true,
     exportValue: f => [f.estudio.llevando.join(', '), f.estudio.dando.length ? `Dirige: ${f.estudio.dando.join(', ')}` : ''].filter(Boolean).join(' · ') },
-  { key: 'ultimoEstudio', label: 'Último estudio', defaultVisible: true,
+  // «como estudiante» EN EL RÓTULO, no solo en un tooltip: el archivo se abre
+  // en Excel, lejos de la pantalla y de cualquier explicación. El comité de
+  // Dirigentes tiene una columna con el mismo nombre que significa lo
+  // contrario —lo que la persona DA—, y así los dos archivos no se confunden.
+  { key: 'ultimoEstudio', label: 'Último estudio (como estudiante)', defaultVisible: true,
     exportValue: f => (f.estudio.llevando.length || f.estudio.dando.length || !f.estudio.ultimo)
       ? '' : `${f.estudio.ultimo.nombre}${f.estudio.ultimo.fecha ? ` (${f.estudio.ultimo.fecha})` : ''}` },
   { key: 'donante',   label: 'Donante activo',defaultVisible: true, exportValue: f => (f.donante ? 'Sí' : 'No') },
@@ -70,7 +76,7 @@ const COLUMNAS_TABLA: Array<{ label: string; info?: string }> = [
   { label: 'Persona' },
   { label: 'Puesto' },
   { label: 'Asistencia', info: ATTENDANCE_GENERAL_TOOLTIP },
-  { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos.' },
+  { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos. ' + INFO_ULTIMO_ESTUDIO_ESTUDIANTE },
   { label: 'Donante', info: explicacionDeDonantes(new Date()) },
   { label: 'Último check-in' },
 ]

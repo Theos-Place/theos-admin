@@ -114,3 +114,22 @@ export function textoDeEstudio(e: EstudioDeLaPersona): string {
 export function estaEnEstudio(e: EstudioDeLaPersona): boolean {
   return e.llevando.length > 0 || e.dando.length > 0
 }
+
+/**
+ * «Último estudio» quiere decir DOS COSAS DISTINTAS según la pantalla, y por
+ * eso los textos viven acá juntos: leídos uno al lado del otro se ve la
+ * diferencia, y nadie puede cambiar uno y dejar el otro contradiciéndolo.
+ *
+ * El origen del dato es distinto de verdad, no es un matiz de redacción:
+ *  - en «Mi comité» sale de `study_enrollments` — la persona como ESTUDIANTE.
+ *  - en el comité de Dirigentes sale de `study_groups.leader_id/co_leader_id`
+ *    — la persona DANDO el estudio.
+ *
+ * Reportado por Floriana el 2026-09-23: las dos columnas se llamaban igual y
+ * la de dirigentes se leía como si fuera lo que la persona había llevado.
+ */
+export const INFO_ULTIMO_ESTUDIO_ESTUDIANTE =
+  'El último estudio que la persona LLEVÓ como estudiante. Solo aparece cuando hoy no está llevando ni dando ninguno.'
+
+export const INFO_ULTIMO_ESTUDIO_DIRIGENTE =
+  'El último estudio que la persona DIO como dirigente o co-dirigente — no el que llevó como estudiante. El punto verde marca que el grupo está en curso o en matrícula ahora.'

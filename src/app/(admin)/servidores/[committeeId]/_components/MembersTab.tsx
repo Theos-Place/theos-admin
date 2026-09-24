@@ -11,6 +11,7 @@ import { agruparPorPersona } from '@/lib/servers/committee-filter'
 import { formatDate } from '@/lib/format'
 import { calcularAntiguedad } from '@/lib/servers/columns'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
+import { INFO_ULTIMO_ESTUDIO_DIRIGENTE } from '@/lib/studies/estudio-actual'
 import { EstrellaDeEncargado } from './EstrellaDeEncargado'
 
 type StatusFilter = 'active' | 'inactive' | 'all'
@@ -20,9 +21,13 @@ function UltimoEstudio({ grupo }: { grupo: DirigenteGrupo | null }) {
   if (!grupo) return <span className="text-navy-light/80">Sin estudios</span>
   const enCurso = grupo.status === 'en_curso' || grupo.status === 'en_matricula'
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="font-medium text-navy">{grupo.plan_code}</span>
-      <span className="truncate max-w-[16ch]" title={grupo.group_name}>{grupo.group_name}</span>
+    // El nombre del grupo SE MUESTRA ENTERO y baja de línea si no cabe. Antes
+    // iba cortado a 16 caracteres con `truncate`, y los nombres de grupo
+    // empiezan casi todos igual ("Nivel 4 - Martes...") — cortados ahí, dos
+    // grupos distintos se leían idénticos. Pedido de Floriana, 2026-09-23.
+    <span className="inline-flex items-start gap-1.5">
+      <span className="font-medium text-navy shrink-0">{grupo.plan_code}</span>
+      <span className="min-w-0 break-words">{grupo.group_name}</span>
       {/* El punto solo marca «está dando ahora». Va con aria-label porque el
           color por sí solo no comunica nada a quien no lo ve. */}
       {enCurso && (
@@ -165,7 +170,14 @@ export function MembersTab({
                 {!estudioPorMiembro && (
                   <SortableHeader label="Inicio"     sortKey="start_date" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 )}
-                <SortableHeader label={estudioPorMiembro ? 'Último estudio' : 'Antigüedad'} sortKey="seniority"  currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
+                {/* Mismo `th`, dos columnas distintas: en el comité de
+                    Dirigentes se muestra qué DIO, no hace cuánto entró. Y por
+                    eso lleva explicación — el título solo se confunde con la
+                    columna homónima de «Mi comité», que es como estudiante. */}
+                <SortableHeader
+                  label={estudioPorMiembro ? 'Último estudio dado' : 'Antigüedad'}
+                  info={estudioPorMiembro ? INFO_ULTIMO_ESTUDIO_DIRIGENTE : undefined}
+                  sortKey="seniority" currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <SortableHeader label="Estado"     sortKey="status"     currentSortKey={memberSortKey} currentSortDir={memberSortDir} onSort={toggleMemberSort} />
                 <th className="px-4 py-3.5" />
               </tr>
@@ -229,7 +241,12 @@ export function MembersTab({
                     entraron— y otros 46 la tienen nula. La columna decía
                     «0 meses» para casi todos y «NaN año» para el resto.
                   */}
-                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
+                  {/* `whitespace-nowrap` sirve para «3 años 2 meses», no para el
+                      nombre de un grupo: con el estudio la celda envuelve y se
+                      le da un ancho mínimo, si no queda en tres letras cuando
+                      la tabla se comprime. */}
+                  <td className={cn('px-4 py-3 text-[13px] text-navy-light/80 font-body',
+                    estudioPorMiembro ? 'min-w-[22ch] align-top' : 'whitespace-nowrap')}>
                     {estudioPorMiembro ? <UltimoEstudio grupo={estudioPorMiembro.get(m.member_id) ?? null} />
                       : calcularAntiguedad(m.start_date)}
                   </td>
