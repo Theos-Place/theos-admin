@@ -75,8 +75,8 @@ export function RelocationResolveGroupPicker({
   const sortByPrefs = useMemo(() => {
     const prefs = { zones: requestZones(request), days: request.proposed_days ?? [] }
     return (list: GroupOption[]) => [...list].sort((a, b) =>
-      relocationGroupScore({ zoneName: b.zone ? sedeLabel(b.zone) : null, schedule_days: b.schedule_days }, prefs)
-      - relocationGroupScore({ zoneName: a.zone ? sedeLabel(a.zone) : null, schedule_days: a.schedule_days }, prefs))
+      relocationGroupScore({ zoneCode: b.zone, zoneName: b.zone ? sedeLabel(b.zone) : null, schedule_days: b.schedule_days }, prefs)
+      - relocationGroupScore({ zoneCode: a.zone, zoneName: a.zone ? sedeLabel(a.zone) : null, schedule_days: a.schedule_days }, prefs))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request.id])
 

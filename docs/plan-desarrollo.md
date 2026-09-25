@@ -3330,18 +3330,33 @@ Hecho (migraciones `20260924100000` y `20260924170000`, y commit `ca2c5bc2`):
 - **Un dato malo de verdad**, encontrado de paso: «HER — Santa Ana» tenía
   `zone = casona-pedregal` contra una ubicación en Santa Ana Centro. Corregido.
 
-QUEDA:
+**(2) Unificar a código: HECHO 2026-09-24** (migración `20260924210000`).
 
-1. **Santo Domingo**: decidir si va como zona aparte. Ari dice que Heredia y
-   Santo Domingo «son dos mundos». Es una decisión, no una tarea.
-2. **`proposed_zones` guarda NOMBRES y `study_groups.zone` guarda CÓDIGOS.**
-   `study_requests.proposed_zones` tiene «Casona Escalante», «Este SJ», y
-   `study_groups.zone` tiene `casona-escalante`, `este-sj`: dos
-   representaciones de lo mismo en dos tablas, así que nada las puede comparar
-   sin traducir. Es la causa más probable de lo que Ari vio (la tarjeta de
-   matrícula mostrando otra zona que el grupo) y no se tocó. Además ahí quedó
-   guardado el literal «Sede Pedregal Miércoles», que después del rename de hoy
-   ya no le corresponde a nada. Unificar a código, con migración de datos.
+`proposed_zones` guardaba NOMBRES y `study_groups.zone` guarda CÓDIGOS.
+Funcionaba porque el scoring traducía al leer, pero los nombres cambian y los
+códigos no — lo probó el rename de esta misma mañana. El formulario ahora
+guarda el código y muestra el nombre; `zonaCoincide` acepta las dos formas,
+porque `proposed_location` —de donde salen las solicitudes viejas y el «otra»—
+es texto libre y lo va a seguir siendo. Migrar limpia; no es lo que hace que
+funcione. Las 8 solicitudes convertidas, cero valores huérfanos.
+
+Queda documentado en la migración un caso ambiguo que se dejó como estaba: una
+solicitud pidió «Sede Pedregal Miércoles» cuando DOS sedes tenían ese nombre, y
+mapearla a `heredia` —la fila que la persona clickeó, hoy llamada «Heredia»—
+habría sido inventarle una preferencia por una zona que no pidió.
+
+QUEDA SOLO LA DECISIÓN:
+
+**Santo Domingo como zona aparte.** Ari dice que Heredia y Santo Domingo «son
+dos mundos». El dato al 2026-09-24 le da la razón: hay **4 grupos que se reúnen
+en «Santo Domingo, Heredia»** —tres Niveles en curso SIN zona asignada y un SCJ
+en matrícula puesto en la zona Heredia—. Para comparar, la zona Heredia entera
+tiene 3 grupos activos, Belén 2 y San Rafael de Alajuela 3: o sea que Santo
+Domingo solo ya es del tamaño de una zona existente.
+
+Si se crea, hay que: agregar la sede con `is_zone=true`, y mover esos 4 grupos
+(los tres sin zona ganan una, y el SCJ sale de Heredia). Es una migración
+chica. **Falta la decisión, no el trabajo.**
 
 ### [x] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN — HECHO 2026-09-24
 

@@ -7,6 +7,7 @@ import { useToast } from '@/components/shared/Toast'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
+import { ANY_ZONE } from '@/lib/studies/request-prefs'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
 import { textoFalta } from '@/lib/studies/relocation'
@@ -310,12 +311,19 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <span className={LABEL_CLS}>Zona(s) que te sirven</span>
                       <div className="flex flex-wrap gap-2">
-                        {[...zoneSedes.map(sd => sd.name), 'Cualquiera'].map(z => {
+                        {/* Se guarda el CÓDIGO y se muestra el NOMBRE. Antes se
+                            guardaba el nombre, y los nombres cambian: el
+                            2026-09-24 una zona pasó a llamarse «Heredia» y las
+                            preferencias guardadas por nombre se habrían quedado
+                            apuntando a la nada. `ANY_ZONE` va tal cual: es un
+                            centinela, no una sede. */}
+                        {[...zoneSedes.map(sd => ({ valor: sd.id, texto: sd.name })),
+                          { valor: ANY_ZONE, texto: ANY_ZONE }].map(({ valor: z, texto }) => {
                           const on = zones.includes(z)
                           return (
                             <button key={z} type="button" onClick={() => toggleZone(z)}
                               className={cn('rounded-full px-3 py-1.5 text-[13px] font-body border transition-colors',
-                                on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{z}</button>
+                                on ? 'bg-teal text-navy border-teal' : 'bg-white text-navy border-navy/15 hover:border-navy/30')}>{texto}</button>
                           )
                         })}
                       </div>

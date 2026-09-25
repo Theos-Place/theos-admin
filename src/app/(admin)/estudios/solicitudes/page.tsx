@@ -23,6 +23,7 @@ import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { RelocationResolveGroupPicker } from '@/components/studies/RelocationResolveGroupPicker'
 import type { StudyRequest } from '@/types/study'
 import { getInitials } from '@/lib/format'
+import { useSedes } from '@/lib/sedes'
 import { requestQueueScope } from '@/lib/studies/request-assignment'
 import { resolveRequestSection, type RequestSection } from '@/lib/studies/request-deeplink'
 
@@ -47,6 +48,7 @@ function classLabel(v: string | null): string {
 
 export default function SolicitudesPage() {
   const { user, loaded } = useAuth()
+  const { zoneLabel } = useSedes()
   const toast = useToast()
   const [requests, setRequests] = useState<StudyRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -249,7 +251,10 @@ export default function SolicitudesPage() {
             {r.proposed_zones.length > 0 && (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin size={13} className="text-navy-light/80" />
-                {r.proposed_zones.join(', ')}
+                {/* Se guardan CÓDIGOS desde el 2026-09-24; `zoneLabel` los
+                    vuelve nombre y deja pasar tal cual lo que no reconoce —las
+                    solicitudes viejas y el «otra» de texto libre—. */}
+                {r.proposed_zones.map(z => zoneLabel(z)).join(', ')}
               </span>
             )}
             {r.proposed_schedule && (
