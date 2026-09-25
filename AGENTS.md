@@ -12,7 +12,14 @@ empujando directo a producción.
 
 Cómo se ve en la práctica:
 
-- Terminar algo = `git push origin <rama>:staging`. Eso lo deja en
+**EL FLUJO VA EN UNA SOLA DIRECCIÓN: se commitea sobre `staging` y de ahí sube
+a `main`.** No al revés. `staging` está siempre ADELANTE de `main`, así que
+subir a producción es un fast-forward y nunca hace falta forzar nada. Empujar
+`main:staging` falla —y está bien que falle—: significa que alguien commiteó
+directo a producción, que es justo lo que esta regla evita.
+
+- Trabajar = `git checkout staging`, commitear ahí, `git push origin staging`.
+  Eso lo publica en
   https://theos-admin-git-staging-theos-ti-s-projects.vercel.app, que apunta al
   Supabase de staging y lleva el banner que lo dice.
 - Subir a producción = `git push origin staging:main`, **y solo cuando lo pidan
