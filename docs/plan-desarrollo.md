@@ -3186,12 +3186,31 @@ Reglas decididas:
     ₡10.000 generado, y los cupos libres quedan en matrícula abierta ~2
     semanas (el break decidido entre N2 y N3). Inicio del grupo: fecha que
     elige el dirigente.
-  · NO → el grupo cierra y los estudiantes se matriculan por la oferta
+  · NO → el grupo cierra y NO se genera el N3: queda a mano del comité de
+    estudios crear los grupos correspondientes para esos estudiantes. Al
+    cerrarse así, el sistema manda UN CORREO INTERNO al comité de estudios y
+    de dirigentes (roles coordinador_estudios y coordinador_dirigentes)
+    planteando el cierre y la necesidad de crear un grupo nuevo en la misma
+    zona, con los datos que necesitan para decidir: grupo cerrado, dirigente
+    (que no continúa), zona/horario, y la lista/conteo de estudiantes que
+    quedaron sin sucesor. Correo interno de operación — no toca a los
+    miembros y respeta EMAIL_SILENT_MODE con el mismo criterio de los avisos
+    internos existentes. Los estudiantes luego se matriculan por la oferta
     abierta de niveles 3 (lista tipo capacitaciones).
 - La creación automática de grupo sucesor queda SOLO para 1→2 y 3→4. De 2→3
   únicamente vía "el grupo continúa".
-- El cierre de folletos entre N1→N2 NO genera pedido de folletos (ya los
-  tienen); entre N3→N4 tampoco.
+- FOLLETOS — ajustar el proceso completo al esquema nuevo:
+  · El cierre N1→N2 y N3→N4 NO genera pedido de folletos (ya los tienen: se
+    entregan en pares 1+2 y 3+4 al matricular).
+  · El disparador de folletos pasa a ser la MATRÍCULA de cada bloque: grupo
+    de N1 (folletos 1+2) y grupo de N3 (folletos 3+4) — mismo mecanismo
+    actual de generación por cupo lleno / fin de matrícula, pero con el par
+    de folletos del bloque.
+  · Cuando el dirigente dice SÍ en el cierre de N2, el grupo N3 generado
+    entra al flujo de folletos normal (3+4) con sus matriculados automáticos
+    + los que entren en las 2 semanas de cupos libres.
+  · Revisar el bloque/lote de folletos (folleto-blocks) y el tiquete del
+    dirigente para que cuenten pares, no niveles sueltos.
 - El registro del estudiante conserva niveles individuales (N1, N2, N3, N4
   por separado — clave para reubicaciones y elegibilidad).
 - TRANSICIÓN: los grupos en curso siguen el esquema viejo; los que arrancan

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload, ShieldCheck } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload, ShieldCheck, Download } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
@@ -720,16 +720,28 @@ export default function ServidoresAdminPage() {
         </div>
         {/* Importar vacantes: solo admin + coordinación de staff. La importación de
             PUESTOS se eliminó (el catálogo se mantiene como está en la BD). */}
-        {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
-          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {/* El catálogo completo en un archivo: la pantalla se navega de a un
+              nivel a la vez y para revisarlo entero había que ir abriendo
+              comité por comité. Descarga de un route handler, no una página,
+              así que va como <a> y no como Link. */}
+          {hasRole('admin', ...SERVICE_ADMIN_ROLES) && (
+            <a
+              href="/api/servers/structure-export"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              <Download size={14} /> Exportar estructura
+            </a>
+          )}
+          {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
             <Link
               href="/servidores/admin/importar-vacantes"
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               <Upload size={14} /> Importar vacantes
             </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Solicitudes de puesto nuevo pendientes (Flujo 2) — Staff/admin las aprueba. */}
