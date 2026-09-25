@@ -4,6 +4,34 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Dónde se trabaja: staging primero, producción cuando se diga
+
+**El trabajo va a `staging`. `main` es producción y solo se toca cuando Floriana
+lo pide explícitamente.** Regla del 2026-09-25, después de un día entero
+empujando directo a producción.
+
+Cómo se ve en la práctica:
+
+- Terminar algo = `git push origin <rama>:staging`. Eso lo deja en
+  https://theos-admin-git-staging-theos-ti-s-projects.vercel.app, que apunta al
+  Supabase de staging y lleva el banner que lo dice.
+- Subir a producción = `git push origin staging:main`, **y solo cuando lo pidan
+  con esas palabras**. «Ya funciona» o «se ve bien» NO es la autorización:
+  es la señal de que se puede preguntar.
+- Si Vercel no construye la rama, es porque el SHA ya estaba desplegado y
+  deduplicó. Un commit vacío en `staging` lo destraba.
+
+**Las MIGRACIONES no siguen este camino solas, y es la trampa.** El runner del
+build las aplica únicamente con `VERCEL_ENV=production`; en Preview hace dry
+run. O sea que empujar a `staging` NO cambia el esquema de staging: hay que
+aplicarlas ahí a mano antes de probar, o la prueba corre contra un esquema
+viejo y no prueba nada. Los scripts que reciben `ENV_FILE=.env.staging.local`
+existen para eso.
+
+**Un cambio de DATOS en producción es aparte de esto.** Corregir una fila mal
+puesta no es «desplegar», y seguir pidiéndolo dos veces sería trabarse. Lo que
+no cambia es el resto: medir primero, dry-run con rollback, y aplicar.
+
 # Accesibilidad
 
 Toda UI nueva sigue `Theos Place Design System/accessibility.md` (estándar de la marca, meta WCAG 2.1 AA). Resumen: texto informativo mínimo `text-navy-light/80` (`/50`, `/60` y `/70` se eliminaron del código — no reintroducirlos; nada de `text-gray-400` ni hexes grises), nunca `/20`–`/30` para texto; `/40` SOLO para decorativo (separadores, íconos con `aria-hidden`) y controles deshabilitados, que están exentos de AA; tamaño mínimo de texto informativo `text-[13px]` (micro-labels uppercase pueden ser 11px; nunca 10px ni 9px); `aria-label` en botones solo-ícono y en inputs sin label visible; modales solo con el `Modal.tsx` compartido; todo operable con teclado.
