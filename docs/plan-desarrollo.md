@@ -3343,9 +3343,36 @@ QUEDA:
    guardado el literal «Sede Pedregal Miércoles», que después del rename de hoy
    ya no le corresponde a nada. Unificar a código, con migración de datos.
 
-### [ ] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN
+### [~] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN
 
-Continuación de PAR-5 (pedido por Ari en la reunión):
+**El (3), el bug del export: HECHO 2026-09-24.** No era caché.
+
+La pregunta «¿hay algo filtrado?» estaba escrita TRES VECES en la misma
+pantalla —`shouldFetch`, `hasAnyFilter` y `exportConfirm`—, cada una con su
+lista de banderas. Dos estaban completas; a `exportConfirm` le faltaban las
+condiciones avanzadas y el chip de asistencia a estudios. Con una condición
+avanzada puesta se creía «sin filtros» y sacaba el modal con `counts.total`, el
+padrón entero.
+
+Medido contra producción, y los números dan exacto con lo que Ari reportó: sin
+filtro el export son **23.985** (el «24.000» del aviso) y con la condición
+«cursando ahora» son **431** (lo que tenía en pantalla). O sea que **el archivo
+salía bien**; el que mentía era el aviso. Un aviso que dice 24.000 cuando vas a
+bajar 431 es peor que no tener aviso: o lo cancelás sin necesidad, o dejás de
+creerle.
+
+La regla se mudó a `lib/members/filtros-activos.ts`, pura y con tests, y la
+pantalla la importa en los tres usos. Un guard falla si vuelve a aparecer una
+lista de banderas escrita a mano.
+
+**Un segundo defecto encontrado de paso:** el pie del menú de export contaba
+`data.length` —las filas CARGADAS en la tabla— mientras el archivo trae todas
+las que calzan. En el padrón eso son 50 contra 431. `ExportButton` recibe ahora
+`totalACargar`.
+
+QUEDA: (1) la condición «en matrícula» y (2) las condiciones de EXCLUSIÓN.
+
+Prompt original (pedido por Ari en la reunión):
 
 ```
 MEJORA · Filtros del padrón: (1) condición "en matrícula" (matriculado en grupo cuyo

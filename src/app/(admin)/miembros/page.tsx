@@ -37,6 +37,7 @@ import {
   initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel, AccountBadge,
 } from './_members-columns'
 import { SaveListModal } from './_save-list-modal'
+import { hayFiltroActivo, avisoDeExportacion, type FiltrosDelPadron } from '@/lib/members/filtros-activos'
 
 
 function MiembrosContent() {
@@ -77,7 +78,18 @@ function MiembrosContent() {
   // con miembros reales de Supabase.
   const filters = useMemberFilters([])
   const searchActive = debouncedSearch.trim().length >= 2
-  const shouldFetch  = searchActive || showDonors || showServers || showActive || showStudyAttendance || filters.conditions.length > 0
+  // PAR-5b · «¿hay algo filtrado?» se calcula UNA vez y de un solo lugar. Vivía
+  // en tres, y la copia de `exportConfirm` se había quedado sin las condiciones
+  // avanzadas: con 431 resultados en pantalla el aviso decía 24.000.
+  const filtrosPuestos: FiltrosDelPadron = {
+    busqueda: searchActive,
+    donantes: showDonors,
+    servidores: showServers,
+    activos: showActive,
+    asistenciaDeEstudios: showStudyAttendance,
+    condiciones: filters.conditions.length,
+  }
+  const shouldFetch  = hayFiltroActivo(filtrosPuestos)
   const conditionsKey = JSON.stringify([filters.conditions, filters.groups, filters.topLevelOps])
   const searchParams = useMemo(() => ({
     search: searchActive ? debouncedSearch.trim() : undefined,
@@ -124,7 +136,7 @@ function MiembrosContent() {
     setTimeout(() => setToast(''), TOAST_LONG_MS)
   }
 
-  const hasAnyFilter = filters.conditions.length > 0 || showDonors || showServers || showActive || showStudyAttendance || searchActive
+  const hasAnyFilter = hayFiltroActivo(filtrosPuestos)
   const quickActiveCount = (showDonors ? 1 : 0) + (showServers ? 1 : 0) + (showActive ? 1 : 0) + (showStudyAttendance ? 1 : 0)
 
   async function handleComunicarLista() {
@@ -237,9 +249,7 @@ function MiembrosContent() {
     const d = await res.json()
     return (d.members ?? []).map(toDomainMember) as Member[]
   }
-  const exportConfirm = (!searchActive && !showDonors && !showServers && !showActive)
-    ? `Vas a exportar ${(counts?.total ?? 0).toLocaleString('es-CR')} miembros. Esto puede tardar unos segundos. ¿Continuás?`
-    : undefined
+  const exportConfirm = avisoDeExportacion(filtrosPuestos, counts?.total ?? 0)
 
   return (
     <div className="space-y-4">
@@ -272,6 +282,7 @@ function MiembrosContent() {
                 allColumns={MEMBER_COLUMNS}
                 filename="miembros-theos"
                 fetchData={fetchAllForExport}
+                totalACargar={resultTotal}
                 confirmMessage={exportConfirm}
                 label={hasAnyFilter && resultTotal > 0 ? `Exportar ${resultTotal.toLocaleString('es-CR')}` : undefined}
               />

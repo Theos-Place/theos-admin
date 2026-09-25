@@ -14,6 +14,18 @@ interface Props<T> {
   label?: string
   /** Si se pasa, al exportar se piden los datos completos (no solo los de `data`). */
   fetchData?: () => Promise<T[]>
+  /**
+   * Cuántas filas va a traer `fetchData`, cuando el caller lo sabe.
+   *
+   * PAR-5b · El pie del menú contaba `data.length`, que con `fetchData` es otra
+   * cosa: `data` son las filas CARGADAS en la tabla y el archivo trae TODAS las
+   * que calzan. En el padrón eso son 50 contra 431, y el menú decía 50.
+   *
+   * Se pide explícito en vez de adivinarlo: el componente no puede saber cuánto
+   * va a devolver una función que todavía no corrió, y poner un «?» sería peor
+   * que un número.
+   */
+  totalACargar?: number
   /** Si se pasa, se confirma con el usuario antes de exportar (p. ej. export sin filtros). */
   confirmMessage?: string
   /** Exportaciones con OTRA forma de fila (no la tabla de la pantalla): se
@@ -79,7 +91,7 @@ function exportToExcel<T>(data: T[], columns: ColumnDef<T>[], filename: string) 
   })
 }
 
-export function ExportButton<T>({ data, columns, allColumns, filename, label, fetchData, confirmMessage, extraExports }: Props<T>) {
+export function ExportButton<T>({ data, columns, allColumns, filename, label, fetchData, totalACargar, confirmMessage, extraExports }: Props<T>) {
   const [open, setOpen] = useState(false)
   const [onlyVisible, setOnlyVisible] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -219,8 +231,11 @@ export function ExportButton<T>({ data, columns, allColumns, filename, label, fe
 
           {/* Record count */}
           <div className="border-t px-4 py-3 border-[var(--outline-variant)]">
+            {/* El número del archivo, no el de la tabla: ver `totalACargar`. */}
             <p className="text-[13px] text-navy-light/80 font-body">
-              <span className="font-semibold text-navy">{data.length.toLocaleString('es-CR')}</span> registros a exportar
+              <span className="font-semibold text-navy">
+                {(totalACargar ?? data.length).toLocaleString('es-CR')}
+              </span> registros a exportar
             </p>
           </div>
         </div>
