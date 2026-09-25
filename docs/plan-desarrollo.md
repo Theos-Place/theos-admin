@@ -3243,6 +3243,17 @@ Detalles que conviene saber:
   arreglar era A NOMBRE DE QUIÉN se guarda. Ahora la respuesta es de quien se
   matricula, con el control anti-suplantación de `resolveOnBehalf` y el rastro
   en `recorded_by`.
+- **ES UN FILTRO, NO UN MENSAJE.** Quien contesta «quería unirme a los estudios
+  y continuar en mi iglesia» NO se matricula, y el bloqueo vive en el endpoint
+  que CREA la matrícula, no solo en el modal: con el bloqueo solo en pantalla,
+  cerrarlo y volver a confirmar —o llamar al endpoint a mano— pasaba igual.
+  **Ni el staff lo saltea**: los otros dos bloqueos de esa ruta (pago pendiente,
+  restricción de grupo) tienen override explícito porque son administrativos;
+  este es a quién están dirigidos los estudios, y eso no se decide persona por
+  persona en una pantalla. Se mira la respuesta MÁS NUEVA, y sin respuesta no
+  bloquea —exigirla también en el servidor rompería import, transferencia y
+  corrección a mano—. Verificado contra staging: bloquea con la respuesta
+  puesta, deja pasar al contestar distinto, y deja pasar sin respuesta.
 - **El veredicto lo calcula el SERVIDOR.** La pantalla lo recalcula para
   dibujar, pero el que vale es el del endpoint — el del navegador se cambia con
   la consola abierta.

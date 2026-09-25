@@ -11,6 +11,9 @@ import { withdrawReasonError } from '@/lib/studies/close-payload'
 import { esTipoDeBaja } from '@/lib/studies/baja-matricula'
 import { resolveOnBehalf } from '@/lib/auth/on-behalf'
 import { reportarError } from '@/lib/observabilidad'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { bloqueaElCuestionarioDeN1 } from '@/lib/supabase/queries/cuestionario-n1'
+import { PLAN_CON_CUESTIONARIO } from '@/lib/studies/cuestionario-de-matricula'
 
 // POST: inscribe un miembro. Body: { member_id, scholarship_id?, coupon_code? }.
 // Autoservicio real: cualquier autenticado puede matricularse a sí mismo; el
@@ -42,6 +45,32 @@ export async function POST(
     // se mostraba con GROUP_ADMIN_ROLES — las dos listas en desacuerdo son lo
     // que produjo el bug de matricular a la persona equivocada.
     const isStaff = auth.ctx.roles.some(r => (GROUP_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
+
+    /**
+     * EST-15 · EL FILTRO DE NIVEL 1, acá y no solo en la pantalla.
+     *
+     * Quien contesta que quiere los estudios para continuar en su iglesia no se
+     * matricula. Con el bloqueo únicamente en el modal, cerrarlo y volver a
+     * confirmar —o llamar a este endpoint a mano— pasaba igual: era un mensaje,
+     * no un filtro.
+     *
+     * NI SIQUIERA EL STAFF LO SALTA. Los otros dos bloqueos de esta ruta —pago
+     * pendiente y restricción de grupo— tienen override explícito porque son
+     * administrativos: alguien con criterio decide cobrar después. Este no es
+     * administrativo, es a quién están dirigidos los estudios, y esa decisión
+     * no se toma persona por persona en una pantalla.
+     */
+    const { data: grupo } = await createAdminClient()
+      .from('study_groups').select('plan:study_plans(code)').eq('id', id).maybeSingle()
+    const plan = (grupo as { plan?: { code?: string } | { code?: string }[] } | null)?.plan
+    const codigoDelPlan = (Array.isArray(plan) ? plan[0] : plan)?.code
+    if (codigoDelPlan === PLAN_CON_CUESTIONARIO && await bloqueaElCuestionarioDeN1(targetMemberId)) {
+      return NextResponse.json({
+        error: 'Según las respuestas del cuestionario, estos estudios no son para este caso.',
+        code: 'cuestionario_n1_no_aplica',
+      }, { status: 403 })
+    }
+
     const result = await enrollMember(id, targetMemberId, { scholarship_id, coupon_code }, {
       recordedBy,
       enforceEnrollmentWindow: !isStaff,

@@ -235,3 +235,64 @@ describe('el cuestionario no se puede saltar', () => {
     expect(endpoint).toContain('recorded_by: destino.recordedBy')
   })
 })
+
+/**
+ * EL FILTRO ES UN FILTRO, no un mensaje.
+ *
+ * «Cuando la persona escoge esa opción, la matrícula no se da» (Floriana,
+ * 2026-09-25). Con el bloqueo solo en el modal, cerrarlo y volver a confirmar
+ * —o llamar al endpoint a mano— creaba la matrícula igual.
+ */
+describe('el filtro vive donde se CREA la matrícula', () => {
+  const ruta = readFileSync('src/app/api/studies/groups/[id]/enrollments/route.ts', 'utf8')
+  const consulta = readFileSync('src/lib/supabase/queries/cuestionario-n1.ts', 'utf8')
+
+  it('el endpoint de matrícula lo comprueba antes de crear', () => {
+    expect(ruta).toContain('bloqueaElCuestionarioDeN1(targetMemberId)')
+    expect(ruta).toContain('cuestionario_n1_no_aplica')
+    // Antes de `enrollMember`, no después: si no, la matrícula ya existe.
+    expect(ruta.indexOf('bloqueaElCuestionarioDeN1')).toBeLessThan(ruta.indexOf('await enrollMember('))
+  })
+
+  it('NI SIQUIERA el staff lo saltea', () => {
+    // Los otros dos bloqueos de esa ruta —pago pendiente y restricción de
+    // grupo— sí tienen override explícito, porque son administrativos. Este no:
+    // es a quién están dirigidos los estudios.
+    //
+    // Se miran SOLO las líneas de código: el comentario de arriba del bloque
+    // explica justamente que no hay override, y sin quitarlo el test se
+    // aprobaba a sí mismo leyendo la palabra. Ya pasó una vez con otro guard.
+    const bloque = ruta.slice(ruta.indexOf('EST-15'), ruta.indexOf('await enrollMember('))
+    const soloCodigo = bloque
+      .split('\n')
+      .filter(l => !/^\s*(\*|\/\/|\/\*)/.test(l))
+      .join('\n')
+    expect(soloCodigo).not.toMatch(/isStaff|override/)
+  })
+
+  it('solo aplica a Nivel 1, y el código del plan sale de UN lugar', () => {
+    expect(ruta).toContain('codigoDelPlan === PLAN_CON_CUESTIONARIO')
+    expect(ruta).toContain("from '@/lib/studies/cuestionario-de-matricula'")
+    const pantalla = readFileSync('src/app/(admin)/matricula/page.tsx', 'utf8')
+    expect(pantalla).toContain("from '@/lib/studies/cuestionario-de-matricula'")
+    // Si cada lado tuviera su constante, uno preguntaría y el otro no filtraría.
+    expect(pantalla).not.toContain("const PLAN_CON_CUESTIONARIO = 'N1'")
+  })
+
+  it('mira la respuesta MÁS NUEVA, no la primera', () => {
+    // Cada matrícula deja la suya: una vieja no puede dejar a alguien bloqueado
+    // para siempre.
+    expect(consulta).toContain("order('submitted_at', { ascending: false })")
+  })
+
+  it('sin respuesta NO bloquea', () => {
+    // La pantalla ya obliga a contestar. Exigirlo también acá rompería los
+    // caminos que no pasan por ahí —import, transferencia, corrección a mano—
+    // y volvería una falla de datos en gente que no se puede matricular.
+    expect(consulta).toContain('if (!resp) return false')
+  })
+
+  it('usa la MISMA regla pura que la pantalla', () => {
+    expect(consulta).toContain("veredicto(respuestas).estado === 'otras_opciones'")
+  })
+})

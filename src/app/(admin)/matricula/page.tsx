@@ -28,9 +28,7 @@ import { studyCostLabel } from '@/lib/studies/cost-label'
 import { buildPaymentBreakdown, formatDiscount } from '@/lib/finance/payment-breakdown'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { CuestionarioNivel1 } from '@/components/studies/CuestionarioNivel1'
-
-/** EST-15 · El cuestionario es de Nivel 1 y de nadie más. */
-const PLAN_CON_CUESTIONARIO = 'N1'
+import { PLAN_CON_CUESTIONARIO } from '@/lib/studies/cuestionario-de-matricula'
 
 // 'prematrimonial' NO es una etapa: es una pestaña propia (pedido 2026-07-31),
 // porque el curso tiene su propio flujo (pareja, logística, ceremonia y pago) y

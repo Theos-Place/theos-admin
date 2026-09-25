@@ -13,6 +13,11 @@
  * para su propia iglesia.
  */
 
+/** El cuestionario es de Nivel 1 y de nadie más. Vive acá porque lo usan la
+ *  pantalla de matrícula y el endpoint que la crea, y tienen que coincidir: si
+ *  se separan, uno pregunta y el otro no filtra. */
+export const PLAN_CON_CUESTIONARIO = 'N1'
+
 /** El formulario se resuelve por TÍTULO, no por un uuid escrito a mano: así el
  *  seed y el endpoint no se pueden desincronizar sin que falle el mismo día. */
 export const TITULO_DEL_FORMULARIO = 'Matrícula a Nivel 1 — preguntas iniciales'
