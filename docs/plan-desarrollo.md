@@ -3087,3 +3087,248 @@ elegir esos números y los pasos para agregar un cron nuevo sin repetir esto.
 abren nada —el auth es real desde hace meses— pero son cadenas públicas que se
 llaman "password" y no tienen por qué seguir ahí. Borrarlas es un minuto.
 
+
+## Fase 23 — Reuniones de estudios y dirigentes (2026-09-24, dos llamadas grabadas)
+
+Decisiones tomadas con Yeya, Fabiola (dirigentes) y Ariana (estudios). Minuta
+completa en `docs/minutas/estudios-2026-09-24.md`. Orden sugerido: RET-1 y
+SRV-10 son urgentes (privacidad); EST-14 es el grande y se prueba en staging
+antes de producción (dicho en la reunión).
+
+### [ ] RET-1 · Retroalimentaciones de estudiantes: permisos, confirmación y flujo de revisión — URGENTE
+
+Hoy CUALQUIERA con acceso a grupos ve las respuestas de la encuesta de
+satisfacción (se comprobó en vivo: Ariana las veía), y el botón de compartir
+al dirigente envía SIN confirmación (se le mandó una a Fernando Gutiérrez por
+accidente en la reunión).
+
+Prompt para Claude Code:
+
+```
+SEGURIDAD + FLUJO · Retroalimentación estudiante→dirigente (EST-12/EST-13)
+
+1. ROL NUEVO "retroalimentaciones" (nombre en el catálogo de roles: revisar convención):
+   SOLO quien lo tenga ve las respuestas de la encuesta de satisfacción (en el detalle
+   del grupo, en formularios/comunicaciones y en cualquier endpoint que las devuelva —
+   censar TODOS los caminos y cerrarlos server-side). Ni estudiantes, ni dirigentes, ni
+   comité de área con acceso a grupos las ven. admin/dirección quedan cubiertos como
+   siempre.
+2. ROL AUTOMÁTICO POR PUESTO: mapear el puesto "Colaborador de Evaluación y
+   Retroalimentación" (comité de dirigentes — verificar nombre exacto; hoy Amy y Cari)
+   → rol retroalimentaciones, por el mecanismo de position-role-sync + source de EVE-12
+   (mismo patrón que PAR-3 anfitriones).
+3. BOTÓN "Compartir con el dirigente": agregar CONFIRMACIÓN ("¿Enviar la
+   retroalimentación de [grupo] a [dirigente]? Esta acción le manda un correo") — hoy
+   envía de una. Registrar quién compartió y cuándo (audit_log).
+4. BOTÓN NUEVO "Enviar a revisión": para respuestas delicadas, notifica al comité
+   (rol coordinador_dirigentes — Fabi; evaluar copia a dirección/Debi) SIN compartir al
+   dirigente. Estado visible: pendiente / en revisión / compartida.
+5. LISTA DE RESPUESTAS: mostrar DIRIGENTE y GRUPO en cada respuesta (hoy salen sueltas
+   y hay que abrir persona por persona para saber de qué grupo son).
+6. Verificar el digest a la revisora (¿existe el compilado cada 2 semanas? reportar
+   qué hay hoy).
+Tests: rol ve / sin rol 403 (incluidos dirigente del propio grupo y estudiante),
+compartir exige confirmación y audita, puesto da y quita el rol. tsc/lint/vitest.
+```
+
+### [ ] SRV-10 · Ocultar la columna "Donante" en Mi comité — URGENTE (orden de dirección)
+
+Prompt para Claude Code:
+
+```
+CAMBIO · /servidores/mi-comite y /reportes/servidores: OCULTAR todo lo de donante
+(columna, KPI "% donantes", filtro) para líderes de comité. Decisión de dirección
+2026-09-24: es dato sensible y no se muestra a líderes mientras definen cómo usarlo.
+- NO borrar el código: gate por rol. Los roles amplios de dirección/staff (los de SRV-6)
+  y admin lo SIGUEN viendo; el lider_comite no.
+- El recorte va también en el ENDPOINT (el payload al líder no trae el campo, no solo
+  esconder la columna) y en el export.
+- Las columnas de asistencia y estudio quedan igual.
+Tests: payload del líder sin campo donante; rol amplio lo conserva. tsc/lint/vitest.
+```
+
+### [ ] EST-14 · Niveles en dos bloques: N1+N2 y N3+N4 — EL GRANDE (probar en staging primero)
+
+Reglas decididas:
+- Matricularse a Nivel 1 cubre N1+N2 (₡5.000): el paso 1→2 sigue automático y
+  sin cobro nuevo. Folletos de 1 y 2 se entregan juntos al inicio.
+- Al terminar N2 hay CORTE: matrícula nueva para N3+N4 (₡10.000, se paga junto,
+  como discípulos). Folletos de 3 y 4 juntos al matricular N3.
+- En el CIERRE de N2 el dirigente responde: "¿El grupo continúa a nivel 3-4?"
+  · SÍ → se crea el grupo sucesor (mismo dirigente/horario/zona), los
+    estudiantes actuales quedan matriculados automáticamente CON su cobro de
+    ₡10.000 generado, y los cupos libres quedan en matrícula abierta ~2
+    semanas (el break decidido entre N2 y N3). Inicio del grupo: fecha que
+    elige el dirigente.
+  · NO → el grupo cierra y los estudiantes se matriculan por la oferta
+    abierta de niveles 3 (lista tipo capacitaciones).
+- La creación automática de grupo sucesor queda SOLO para 1→2 y 3→4. De 2→3
+  únicamente vía "el grupo continúa".
+- El cierre de folletos entre N1→N2 NO genera pedido de folletos (ya los
+  tienen); entre N3→N4 tampoco.
+- El registro del estudiante conserva niveles individuales (N1, N2, N3, N4
+  por separado — clave para reubicaciones y elegibilidad).
+- TRANSICIÓN: los grupos en curso siguen el esquema viejo; los que arrancan
+  ahora (octubre) entran al nuevo. Los ~11 grupos de N2 actuales: contacto
+  puntual a sus dirigentes (Ari/Fabi). Quienes pagaron paquete completo
+  (₡13-15k): lista para ajuste de finanzas (pinpoint, son poquitos).
+
+Prompt para Claude Code: (armarlo conmigo cuando se vaya a correr — es
+grande y toca planes, precios, folletos, cierres y matrícula; el diseño de
+arriba es la spec. DRY-RUN de los cambios de catálogo de planes y staging
+antes de producción.)
+
+### [ ] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva
+
+Al matricular Nivel 1, preguntas condicionales integradas al flujo (NO un
+formulario aparte): ¿sos parte de una iglesia? → cuál (atea/católica/
+evangélica/otra) → si evangélica y quiere quedarse en su iglesia → mensaje
+amable de que los estudios no son para eso y SE OCULTA el botón de
+matricular. Ari pasa las preguntas exactas. Pendiente de sus preguntas para
+armar el prompt.
+
+### [ ] EST-16 · Cierre: el dirigente elige la fecha de inicio del siguiente nivel + recordatorio más suave
+
+Prompt para Claude Code:
+
+```
+MEJORA · Cierre de grupos de niveles: fechas reales y recordatorios humanos
+
+1. Al hacer el CIERRE de un grupo de niveles, el dirigente ELIGE la fecha de inicio del
+   siguiente nivel (date picker, default la calculada; se permite fecha pasada porque a
+   veces cierran tarde). El grupo sucesor y los correos usan ESA fecha — hoy se calcula
+   por semanas del plan y "siempre está mal" (feriados, atrasos). Solo niveles; verificar
+   si discípulos lo necesita igual y reportar.
+2. RECORDATORIO de cierre: enviarlo 1 SEMANA antes del fin calculado (hoy 2 — muy
+   prematuro porque los grupos van atrasados). Revisar el copy de toda la cadena de
+   recordatorios: quitar el tono de escalamiento ("último recordatorio automático, de acá
+   en adelante te busca la coordinación" estresó a una dirigente que iba bien); tono:
+   acompañar, no regañar. Verificar si de verdad es "el último" o sigue insistiendo — que
+   el texto diga la verdad.
+Tests: fecha elegida viaja al sucesor y a los correos; recordatorio a 1 semana.
+tsc/lint/vitest. EMAIL_SILENT_MODE se respeta como siempre.
+```
+
+### [ ] EST-17 · Encuesta de satisfacción solo al cerrar Nivel 2 y Nivel 4
+
+Prompt para Claude Code:
+
+```
+CAMBIO · La encuesta de satisfacción del estudiante se envía SOLO al cierre de nivel 2 y
+nivel 4 (decidido 2026-09-24) — ya no en N1 ni N3 (con los bloques nuevos serían dos
+encuestas del mismo tramo). Discípulos y demás estudios quedan como están. Configurable
+por plan (flag en el catálogo, no hardcode de nombres). Test: cierre de N1 no envía, N2
+sí. tsc/lint/vitest.
+```
+
+### [ ] REU-2 · Reubicaciones: estado "en espera" con fecha de reactivación
+
+Prompt para Claude Code:
+
+```
+FEATURE · Solicitudes de reubicación: pausa con despertador
+
+Caso real (Ari): a la persona no le sirve ningún grupo y quiere esperar (ej. "cuando el
+grupo X llegue a discípulos 2"). Hoy la solicitud queda pendiente ensuciando la cola.
+1. Estado nuevo "en_espera" para solicitudes de reubicación, con FECHA de reactivación
+   (por semanas — selector simple) y nota opcional del motivo.
+2. Cron semanal (reutilizar un cron existente de recordatorios si el patrón calza — la
+   reunión pidió "una vez a la semana"): las solicitudes en espera cuya fecha llegó
+   vuelven al estado inicial y notifican a quien resuelve reubicaciones (campanita, no
+   correo al miembro).
+3. En la cola, las "en espera" se ven aparte (colapsadas) con su fecha.
+Tests: pausar, despertar en fecha, no despertar antes. tsc/lint/vitest.
+```
+
+### [ ] SRV-9 · Perfil del dirigente: tab de disponibilidad editable + actualización de datos
+
+Lo que pidió Fabiola para matar los formularios de Linktree (disponibilidad,
+suplente, actualización de datos — 3 veces al año: marzo/julio/noviembre).
+
+Prompt para Claude Code:
+
+```
+FEATURE · "Mis datos de dirigente": tab en el perfil propio, editable y sincronizado
+
+QUIÉN: miembros que son dirigentes (registro en el módulo de dirigentes) ven en SU
+perfil un tab "Dirigente" con sus datos, PRELLENADO con lo que ya tenemos:
+- DISPONIBILIDAD (editable por el dirigente): días y horas que puede dar, ofrece casa
+  sí/no, zonas disponibles, qué estudios QUIERE dar (de su catálogo de formación),
+  disponible como suplente sí/no, desde cuándo puede empezar niveles, dónde recibir
+  folletos. Botón "Confirmar datos" que guarda fecha de última confirmación aunque no
+  cambie nada — así el comité sabe quién revisó y quién no.
+- FORMACIÓN (solo lectura para el dirigente: qué estudios está capacitado para dar) —
+  la edita solo el comité. Distinguir SIEMPRE capacitado-para vs disponible-para: la
+  gente puede marcar interés en algo sin capacitación → eso es "interesado", no
+  "disponible" (alimenta la lista de interesados para capacitaciones).
+- Guardado directo por campo (patrón de edición en sitio de los formularios FRM).
+PARA EL COMITÉ (coordinador_dirigentes): vista/export de disponibilidades con fecha de
+última confirmación, para filtrar en los reclutamientos (marzo/julio/noviembre) quién
+confirmó y quién no. La campaña de "actualizá tus datos" se manda como comunicación
+normal cuando EMAIL_SILENT_MODE lo permita — no automatizar el envío en este ítem.
+NOTA formación migrada: puede tener sobras de CCB (grupos que se abrieron y nunca se
+dieron — caso "Amor Sin Fronteras" de Ariana). No limpiar automático: el tab le muestra
+su formación y un botón "esto no es correcto" que abre tiquete al comité.
+Tests: dirigente edita solo disponibilidad (403 al tocar formación), confirmación
+guarda fecha, no-dirigente no ve el tab. tsc/lint/vitest.
+```
+
+### [ ] FIN-9 · Saldos a favor: limitados a su rubro y con vencimiento — PENDIENTE DECISIÓN DE MELI
+
+Lo hablado: el saldo a favor (ya existe, "en pañales") se usa SOLO en el rubro
+donde se pagó (matrícula→estudios, evento→eventos) para no enredar la
+contabilidad, y con límite de tiempo (~1 año o 1-2 bloques). Responde al
+pedido frecuente de "congelar matrícula". NO CORRER hasta que Floriana lo
+valide con Melissa (finanzas) — quedó explícito en la reunión que no se
+decide por ellos.
+
+### [~] DAT-13b · Zonas de Heredia + caso Stanley — CASI, 2026-09-24
+
+Hecho (migraciones `20260924100000` y `20260924170000`, y commit `ca2c5bc2`):
+
+- **La zona de Pedregal Miércoles y la de Heredia eran LA MISMA FILA.** La sede
+  de código `heredia` es Heredia —su `location` dice «Heredia Centro»— pero el
+  nombre se lo pisó la fusión de sedes del 2026-09-14
+  (`scripts/series-charlas-2026-09-14`), que a la sede retirada le hizo
+  `name = name || ' (código viejo)'`. Para la SEDE la fusión estuvo bien (0
+  miembros, 0 eventos); se llevó puesta la ZONA sin querer, porque los grupos
+  la guardan por CÓDIGO. Un rename la arregló: aparece Heredia y desaparece la
+  entrada falsa. **Casona Pedregal ya existía** como zona con 6 grupos: no
+  había nada que crear.
+- **El caso Stanley NO era lo que parecía.** El campo estaba bien (`zone =
+  la-sabana`, ubicación en Pavas); lo viejo era el NOMBRE del grupo, «SCJ —
+  Este SJ». Es un patrón: el nombre lleva la zona escrita a mano y nadie
+  renombra al mudar el grupo — 7 grupos activos así. Se arregló mostrando la
+  zona del CAMPO en las tres vistas de dirigentes, para que el nombre no pueda
+  engañar. Los 7 nombres quedan como están, por decisión de Floriana.
+- **Un dato malo de verdad**, encontrado de paso: «HER — Santa Ana» tenía
+  `zone = casona-pedregal` contra una ubicación en Santa Ana Centro. Corregido.
+
+QUEDA:
+
+1. **Santo Domingo**: decidir si va como zona aparte. Ari dice que Heredia y
+   Santo Domingo «son dos mundos». Es una decisión, no una tarea.
+2. **`proposed_zones` guarda NOMBRES y `study_groups.zone` guarda CÓDIGOS.**
+   `study_requests.proposed_zones` tiene «Casona Escalante», «Este SJ», y
+   `study_groups.zone` tiene `casona-escalante`, `este-sj`: dos
+   representaciones de lo mismo en dos tablas, así que nada las puede comparar
+   sin traducir. Es la causa más probable de lo que Ari vio (la tarjeta de
+   matrícula mostrando otra zona que el grupo) y no se tocó. Además ahí quedó
+   guardado el literal «Sede Pedregal Miércoles», que después del rename de hoy
+   ya no le corresponde a nada. Unificar a código, con migración de datos.
+
+### [ ] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN
+
+Continuación de PAR-5 (pedido por Ari en la reunión):
+
+```
+MEJORA · Filtros del padrón: (1) condición "en matrícula" (matriculado en grupo cuyo
+estado es matrícula, aún sin empezar — hoy 'cursando' solo cubre en curso y el export
+de Ari dejó por fuera a los de discípulos 1 por iniciar); (2) EXCLUIR: poder negar una
+condición (ej. cursando un estudio EXCEPTO niveles / excluir a quienes llevan X) — un
+toggle incluir/excluir en la condición, reutilizable por GRU-2/FRM-5. (3) BUG: Ari
+seleccionó 431 resultados y el export dijo "vas a exportar 24.000" y descargó otra
+cosa — reproducir: el conteo del botón de export no respeta los filtros activos en
+algún camino (¿caché de 30s? ¿estado del selector?). Arreglarlo con test.
+tsc/lint/vitest.
+```
