@@ -4,8 +4,19 @@
     {
       "name": "theos-admin",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "theos-admin (staging)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/staging/dev.mjs"
+      ],
+      "port": 3001
     }
   ]
 }

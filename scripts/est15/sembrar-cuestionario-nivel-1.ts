@@ -24,6 +24,9 @@
  * Uso:
  *   npx tsx scripts/est15/sembrar-cuestionario-nivel-1.ts
  *   npx tsx scripts/est15/sembrar-cuestionario-nivel-1.ts --aplicar
+ *
+ * Contra STAGING (o cualquier otra base), con el .env que corresponda:
+ *   ENV_FILE=.env.staging.local npx tsx scripts/est15/... --aplicar
  */
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
@@ -37,8 +40,13 @@ import {
 
 const APLICAR = process.argv.includes('--aplicar')
 
+// `.env.local` por defecto, y `ENV_FILE` para apuntar a otra base sin editar
+// nada: probar esto en staging antes que en producción es justamente el punto
+// de tener staging.
+const ARCHIVO_ENV = process.env.ENV_FILE || '.env.local'
+
 const env = Object.fromEntries(
-  readFileSync('.env.local', 'utf8').split('\n')
+  readFileSync(ARCHIVO_ENV, 'utf8').split('\n')
     .filter(l => l.includes('=') && !l.startsWith('#'))
     .map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]),
 )
@@ -58,6 +66,7 @@ const ID = {
 const CAMPOS = camposDelCuestionario(ID, randomUUID)
 
 async function main() {
+  console.log(`Base: ${env.NEXT_PUBLIC_SUPABASE_URL}\n`)
   const { data: existente } = await db.from('forms')
     .select('id').eq('title', TITULO_DEL_FORMULARIO).maybeSingle()
 
