@@ -3,6 +3,52 @@
 Cómo levantar un ambiente desde cero, qué falta para tener el de la nube, y qué
 se encontró al hacerlo por primera vez.
 
+## El link para quien prueba (2026-09-25)
+
+**https://theos-admin-git-staging-theos-ti-s-projects.vercel.app**
+
+Público, sin cuenta de Vercel, y con el banner de STAGING arriba de todo.
+`admin.theosplace.org` es y sigue siendo PRODUCCIÓN: son dos links distintos a
+propósito.
+
+Sale del alias de rama que Vercel le da a la rama `staging`. Los Preview de
+este proyecto usan las variables de Preview, que apuntan al Supabase de staging
+— verificado revisando el bundle servido, no la configuración: trae
+`ellequrgrrqhtqksfrug` y no la base de producción.
+
+**LA RAMA NO SE ACTUALIZA SOLA.** Para que quien prueba vea lo último de `main`:
+
+```
+git push origin main:staging
+```
+
+Y si Vercel no construye nada, es porque el SHA ya está desplegado y
+**deduplicó** — pasó al crear la rama—. Un commit vacío en `staging` le da un
+SHA propio y dispara el build.
+
+**Cuentas de prueba**, todas con la contraseña de `SEED_TEST_PASSWORD`:
+
+| Cuenta | Para probar como |
+| --- | --- |
+| `ti@theosplace.org` | admin |
+| `estudios@theosplace.org` | coordinación de estudios (9 roles, los mismos que en producción) |
+| `dirigentes@theosplace.org` | coordinación de dirigentes |
+
+Se crean o se sincronizan con:
+
+```
+node scripts/staging/crear-usuario.mjs <email> <nombre> <apellido> <roles...>
+```
+
+Gotcha que costó una corrida: la columna que une la ficha con el usuario es
+`auth_user_id`, no `user_id`. Sin eso la sesión entra pero queda sin ficha y
+media app se apaga.
+
+**AL VERIFICAR UN LINK, MIRAR EL CONTENIDO Y NO EL CÓDIGO DE RESPUESTA.** El
+alias devolvía 200 mientras el build todavía corría, porque Vercel sirve una
+página propia de «instant preview site» en el interín. Estuve a punto de pasar
+ese link como listo.
+
 ## Con un comando
 
 ```bash
