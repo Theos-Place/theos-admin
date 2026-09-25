@@ -16,11 +16,16 @@ este proyecto usan las variables de Preview, que apuntan al Supabase de staging
 — verificado revisando el bundle servido, no la configuración: trae
 `ellequrgrrqhtqksfrug` y no la base de producción.
 
-**LA RAMA NO SE ACTUALIZA SOLA.** Para que quien prueba vea lo último de `main`:
+**EL FLUJO VA EN UNA SOLA DIRECCIÓN.** Se commitea sobre `staging` y de ahí
+sube a `main` cuando se pide:
 
 ```
-git push origin main:staging
+git push origin staging:main
 ```
+
+`staging` está siempre adelante, así que eso es un fast-forward y nunca hay que
+forzar. Lo contrario —`main:staging`— falla, y está bien que falle: significa
+que algo se commiteó directo a producción, que es lo que la regla evita.
 
 Y si Vercel no construye nada, es porque el SHA ya está desplegado y
 **deduplicó** — pasó al crear la rama—. Un commit vacío en `staging` le da un
