@@ -81,3 +81,37 @@ describe('PAR-5 · el chip del filtro de estudio', () => {
     expect(study({ status: 'not_taken' })).toMatch(/^No llevó: /)
   })
 })
+
+/**
+ * PAR-5b · El chip tiene que avisar que la condición está NEGADA. Un filtro que
+ * quita gente y se ve igual que uno que la suma es una trampa.
+ */
+describe('condiciones negadas', () => {
+  it('antepone «Excepto —»', () => {
+    expect(conditionLabel({
+      id: 1, group: 'study', type: 'study', study: 'N1',
+      status: 'in_progress', from: null, to: null, negate: true,
+    })).toBe('Excepto — Cursando: N1 — Nivel 1')
+  })
+
+  it('sin negar, el chip no cambia', () => {
+    expect(conditionLabel({
+      id: 1, group: 'donor', type: 'donor', value: 'yes',
+    })).toBe('Donante')
+    expect(conditionLabel({
+      id: 1, group: 'donor', type: 'donor', value: 'yes', negate: true,
+    })).toBe('Excepto — Donante')
+  })
+
+  it('asistencia e inscripción conservan SU redacción', () => {
+    // «No asistió» suena mejor que «Excepto — Asistencia» y ya existía antes de
+    // que la negación fuera general; cambiarlo habría movido chips que la gente
+    // ya reconoce.
+    const a = conditionLabel({
+      id: 1, group: 'attend', type: 'attendance', eventType: '', eventTypeName: 'Charla',
+      sedes: [], camp: '', attendanceType: 'any', qtyOp: 'any', qty: '', from: '', to: '', negate: true,
+    })
+    expect(a.startsWith('No asistió')).toBe(true)
+    expect(a).not.toContain('Excepto')
+  })
+})

@@ -5,21 +5,47 @@
  * ambas. Pedido de Floriana: hasta ahora el filtro solo sabía de la primera y
  * los dirigentes quedaban fuera sin que la etiqueta lo dijera.
  */
-export type StudyStatus = 'completed' | 'in_progress' | 'leading' | 'any' | 'not_taken'
+export type StudyStatus =
+  | 'completed'
+  /** Cursando: matrícula vigente en un grupo que YA arrancó. */
+  | 'in_progress'
+  /** PAR-5b · En matrícula: inscrita en un grupo que todavía NO arranca. */
+  | 'enrolling'
+  /** Dando: dirige o co-dirige el grupo. */
+  | 'leading'
+  | 'any'
+  | 'not_taken'
 export type TicketStatus = 'pending' | 'paid' | 'exempted' | 'expired' | 'any'
 export type AttendanceType = 'participant' | 'server' | 'any'
 export type ServiceStatus = 'active' | 'historical' | 'any'
 export type FormResponseStatus = 'filled' | 'not_filled' | 'any'
 export type QtyOperator = 'gte' | 'lte' | 'eq' | 'any'
 
-export type FilterCondition =
+/**
+ * PAR-5b · NEGAR cualquier condición.
+ *
+ * `negate` vale para TODAS y no solo para asistencia e inscripción, que eran
+ * las dos que lo tenían. Está acá arriba, intersecado con la unión, en vez de
+ * repetido en cada miembro: así una condición nueva lo hereda sola y no hay
+ * forma de agregar una que no se pueda negar.
+ *
+ * Se resuelve en UN punto —`resolveAdvancedConditions` intercambia `include` y
+ * `exclude` al cerrar la condición—, así que ningún `case` tiene que saber de
+ * esto. Vale porque cada `case` aporta EXACTAMENTE UN set: con dos, negar sería
+ * ¬(A∧B) = ¬A ∨ ¬B y el intercambio daría ¬A ∧ ¬B, que es otra cosa.
+ *
+ * Opcional para no romper las listas guardadas: `member_lists` persiste el
+ * `FilterState` como JSON y las viejas no lo traen (FIL-1).
+ */
+export type NegableCondition = { negate?: boolean }
+
+export type FilterCondition = NegableCondition & (
   | { id: number; group: 'study'; type: 'study'; study: string; status: StudyStatus; from: string | null; to: string | null }
-  // negate/eventId/eventName son opcionales para no romper listas guardadas
-  // (member_lists persiste FilterState como JSON): FIL-1.
-  | { id: number; group: 'attend'; type: 'attendance'; eventType: string; eventTypeName?: string; sedes: string[]; camp: string; attendanceType: AttendanceType; qtyOp: QtyOperator; qty: string; from: string; to: string; negate?: boolean; eventId?: string; eventName?: string }
-  // FIL-2: inscripción a eventos (event_registrations), con estado del tiquete
-  // y la misma negación que attendance. El rango de fechas es del EVENTO.
-  | { id: number; group: 'attend'; type: 'registration'; eventId: string; eventName?: string; eventType: string; eventTypeName?: string; ticketStatus: TicketStatus; from: string; to: string; negate?: boolean }
+  // eventId/eventName son opcionales para no romper listas guardadas (FIL-1).
+  | { id: number; group: 'attend'; type: 'attendance'; eventType: string; eventTypeName?: string; sedes: string[]; camp: string; attendanceType: AttendanceType; qtyOp: QtyOperator; qty: string; from: string; to: string; eventId?: string; eventName?: string }
+  // FIL-2: inscripción a eventos (event_registrations), con estado del tiquete.
+  // El rango de fechas es del EVENTO.
+  | { id: number; group: 'attend'; type: 'registration'; eventId: string; eventName?: string; eventType: string; eventTypeName?: string; ticketStatus: TicketStatus; from: string; to: string }
   | { id: number; group: 'service'; type: 'service'; area: string; committee: string; position: string; status: ServiceStatus; from: string; to: string }
   | { id: number; group: 'form'; type: 'form'; formId: string; formName: string; status: FormResponseStatus; from: string; to: string; field: string; fieldVal: string }
   | { id: number; group: 'donor'; type: 'donor'; value: 'yes' | 'no' }
@@ -32,6 +58,7 @@ export type FilterCondition =
   | { id: number; group: 'marital'; type: 'marital'; value: string }
   | { id: number; group: 'account'; type: 'account'; value: 'none' | 'never_entered' | 'active' }
   | { id: number; group: 'created'; type: 'created'; from: string; to: string }
+)
 
 export interface ConditionGroup {
   id: number

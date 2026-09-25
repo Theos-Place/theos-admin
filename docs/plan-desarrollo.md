@@ -3343,7 +3343,7 @@ QUEDA:
    guardado el literal «Sede Pedregal Miércoles», que después del rename de hoy
    ya no le corresponde a nada. Unificar a código, con migración de datos.
 
-### [~] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN
+### [x] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN — HECHO 2026-09-24
 
 **El (3), el bug del export: HECHO 2026-09-24.** No era caché.
 
@@ -3370,7 +3370,40 @@ lista de banderas escrita a mano.
 las que calzan. En el padrón eso son 50 contra 431. `ExportButton` recibe ahora
 `totalACargar`.
 
-QUEDA: (1) la condición «en matrícula» y (2) las condiciones de EXCLUSIÓN.
+**(1) «En matrícula» y (2) EXCLUSIÓN: HECHOS 2026-09-24.** PAR-5b queda cerrado.
+
+*En matrícula.* Tercer sentido de «lo está llevando», al lado de «cursando» y
+«dando». Los tres miran la misma matrícula vigente y se separan por el estado
+del GRUPO: `en_curso`, `en_matricula` y —para el dirigente— cualquiera de los
+dos. Son disjuntos, así que combinarlos con OR no cuenta a nadie dos veces.
+Medido contra producción: **431 cursando, 249 en matrícula, 114 dando**.
+
+*Exclusión.* `negate` pasó a valer para TODAS las condiciones, no solo para
+asistencia e inscripción: está intersecado con la unión en `FilterCondition`,
+así que una condición nueva lo hereda sola y no se puede agregar una que no se
+pueda negar. Se resuelve en UN punto —intercambiar `include` y `exclude`, en
+`lib/members/negacion-de-condicion`—, así que los quince `case` no se enteran.
+Asistencia e inscripción perdieron su negación a mano, que con la general
+habría sido doble negativo.
+
+El toggle «Incluye / Excluye» vive en el shell de `AdvancedFilters` y envuelve
+`addCondition`: un solo control para cinco paneles y quince tipos. Aplica XOR y
+no OR, porque «Excepto — no asistió» es literalmente quienes SÍ asistieron.
+
+Verificado contra producción, que es lo que convence: para cinco tipos
+distintos de condición —donante, dirigente, sirve hoy, edad y «no llevó N1»— la
+condición y su negada PARTEN el padrón activo exacto, sin huecos ni repetidos.
+Ej.: 431 cursando + 23.554 no cursando = 23.985.
+
+**Dónde deja de valer el truco**, y está escrito en el módulo: el intercambio
+sirve mientras cada condición aporte UN conjunto. Con dos en `include`, negar
+sería ¬(A∧B) = ¬A ∨ ¬B y el intercambio da ¬A ∧ ¬B, más estricto y silencioso.
+Un ratchet cuenta los `push` para obligar a leer eso antes de romperlo.
+
+**Un borde que se arregló de paso:** la negación de asistencia con un filtro de
+sedes que no resolvía ningún uuid empujaba un conjunto vacío sin mirar
+`negate`, así que «no asistió» no devolvía a nadie. Con la negación general
+devuelve a todos, que es lo correcto.
 
 Prompt original (pedido por Ari en la reunión):
 

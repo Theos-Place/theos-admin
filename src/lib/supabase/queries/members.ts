@@ -6,6 +6,7 @@ import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
 import { MATRICULAS_VIGENTES, estudiosQueCursa } from '@/lib/studies/estudio-actual'
 import { ESTADOS_DIRIGIENDO } from '@/lib/studies/dirigente-activo'
+import { negarCondicion } from '@/lib/members/negacion-de-condicion'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
@@ -302,13 +303,16 @@ function enrollmentInRange(r: EnrollDateRow, range: EnrollRange | undefined): bo
  * @param planCode código del plan, o CADENA VACÍA para «cualquier estudio»
  *   (PAR-5). Con vacío se saltan los filtros por plan y entran todas las
  *   matrículas que cumplan el estado.
- * @param soloEnCurso exige además que el GRUPO esté `en_curso`. Es lo que
- *   distingue «cursando ahora» de «matriculado»: al 2026-09-23 hay 666 personas
- *   con matrícula `enrolled` pero solo 431 en un grupo que ya arrancó — las
- *   otras 241 están en grupos `en_matricula`, inscritas en algo que todavía no
- *   empieza. Decir que esas están «cursando» es decir algo falso.
+ * @param estadosDeGrupo exige además que el GRUPO esté en alguno de esos
+ *   estados. Es lo que separa los tres sentidos de «lo está llevando»: al
+ *   2026-09-23 hay 666 personas con matrícula vigente, pero solo 431 en un
+ *   grupo que ya arrancó — las otras 241 están en `en_matricula`, inscritas en
+ *   algo que todavía no empieza—. Decir que esas están «cursando» es falso, y
+ *   dejarlas fuera de todo filtro también: por eso son dos opciones (PAR-5b,
+ *   pedido de Ari, cuyo export dejó por fuera a los de Discípulos 1 por
+ *   iniciar). `undefined` = cualquier estado de grupo.
  */
-async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange, scopeIds?: string[], soloEnCurso = false): Promise<Set<string>> {
+async function idsByEnrollment(planCode: string, statuses: string[], range?: EnrollRange, scopeIds?: string[], estadosDeGrupo?: readonly string[]): Promise<Set<string>> {
   const supabase = createAdminClient()
   const cualquierPlan = planCode.trim() === ''
   let planId: string | undefined
@@ -331,7 +335,7 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
     if (!cualquierPlan) q1 = q1.eq('grp.plan.code', planCode)
     // El estado del GRUPO se filtra en la consulta, no en memoria: si no,
     // habría que traerse las 37.000 matrículas para descartar la mayoría.
-    if (soloEnCurso) q1 = q1.eq('grp.status', 'en_curso')
+    if (estadosDeGrupo) q1 = q1.in('grp.status', estadosDeGrupo as string[])
     if (scopeIds) q1 = q1.in('member_id', scopeIds)
     const { data, error } = await q1
     if (error) throw error
@@ -346,8 +350,8 @@ async function idsByEnrollment(planCode: string, statuses: string[], range?: Enr
   }
 
   // Fuente 2: enrollments SIN grupo (plan_id directo); la fecha es del enrollment.
-  // Con `soloEnCurso` no aplica: sin grupo no hay grupo en curso.
-  if (planId && !soloEnCurso) {
+  // Si se exige un estado de grupo no aplica: sin grupo no hay estado que mirar.
+  if (planId && !estadosDeGrupo) {
     for (let from = 0; ; from += 1000) {
       let q2 = supabase
         .from('study_enrollments')
@@ -459,7 +463,7 @@ export async function resolveAdvancedConditions(
           break
         }
         const statuses = c.status === 'completed' ? ['completed']
-          : c.status === 'in_progress' ? MATRICULAS_VIGENTES as unknown as string[]
+          : (c.status === 'in_progress' || c.status === 'enrolling') ? MATRICULAS_VIGENTES as unknown as string[]
           : ['completed', ...MATRICULAS_VIGENTES]
         /**
          * PAR-5 · «En progreso» ahora significa CURSANDO: matrícula vigente en
@@ -473,13 +477,29 @@ export async function resolveAdvancedConditions(
          * formularios o envíos usaban esta condición, así que no cambió el
          * resultado de nada que alguien hubiera armado.
          */
-        const soloEnCurso = c.status === 'in_progress'
+        /**
+         * PAR-5b · «EN MATRÍCULA» es el tercer sentido, y hacía falta.
+         *
+         * Las dos opciones miran la MISMA matrícula vigente y se distinguen por
+         * el estado del GRUPO: `in_progress` exige que haya arrancado
+         * (`en_curso`) y `enrolling` que todavía no (`en_matricula`). Son
+         * disjuntas a propósito, así nadie sale dos veces si se combinan con OR.
+         *
+         * Lo pidió Ari después de que su export dejara por fuera a los de
+         * Discípulos 1 por iniciar: con PAR-5 «cursando» pasó a ser estricto, y
+         * quienes están inscritos en grupos que no empiezan se quedaron sin
+         * ningún filtro que los alcanzara. Medido el 2026-09-24: 431 cursando,
+         * 249 en matrícula, 114 dando.
+         */
+        const estadosDeGrupo = c.status === 'in_progress' ? ['en_curso' as const]
+          : c.status === 'enrolling' ? ['en_matricula' as const]
+          : undefined
         // El rango de fecha se evalúa contra el MISMO enrollment del plan: para
         // "completado" → fecha de finalización; para "en progreso" → fecha de
         // inicio. Así "Nivel 1 completado + rango" devuelve solo a quienes
         // finalizaron Nivel 1 dentro del rango (no un filtro de fecha aparte).
-        const basis: EnrollDateBasis = c.status === 'in_progress' ? 'start' : 'completion'
-        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }, scopeIds, soloEnCurso))
+        const basis: EnrollDateBasis = (c.status === 'in_progress' || c.status === 'enrolling') ? 'start' : 'completion'
+        res.include.push(await idsByEnrollment(c.study, statuses, { from: c.from, to: c.to, basis }, scopeIds, estadosDeGrupo))
         break
       }
       case 'service': {
@@ -507,9 +527,11 @@ export async function resolveAdvancedConditions(
         break
       }
       case 'attendance': {
-        // FIL-1: con negate=true el set matcheado va a EXCLUDE (anti-join sobre
-        // el conjunto base: quedan quienes NO tienen asistencia que cumpla).
-        const target = (set: Set<string>) => (c.negate ? res.exclude.push(set) : res.include.push(set))
+        // PAR-5b · `target` ya no mira `c.negate`: la negación pasó a aplicarse
+        // una sola vez al cerrar la condición, igual para los quince tipos.
+        // Antes esto lo hacía a mano (FIL-1) y dejarlo habría sido doble
+        // negativo. Se llama desde ramas EXCLUYENTES: una sola por corrida.
+        const target = (set: Set<string>) => res.include.push(set)
         // Evento puntual: solo si es un UUID válido (anti filter-injection, mismo criterio que c.area).
         const eventId = c.eventId && UUID_RE.test(c.eventId) ? c.eventId : ''
         // Sin refinamiento → criterio de asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días).
@@ -592,7 +614,9 @@ export async function resolveAdvancedConditions(
         // FIL-2: inscripción a eventos (event_registrations), con estado del
         // tiquete y la misma negación anti-join que attendance. El rango de
         // fechas se evalúa sobre la fecha del EVENTO (no de la inscripción).
-        const target = (set: Set<string>) => (c.negate ? res.exclude.push(set) : res.include.push(set))
+        // PAR-5b · `target` YA NO mira `c.negate`: la negación se aplica una
+        // sola vez al cerrar la condición, para todos los tipos por igual.
+        const target = (set: Set<string>) => res.include.push(set)
         const eventId = c.eventId && UUID_RE.test(c.eventId) ? c.eventId : ''
         const set = new Set<string>()
         for (let from = 0; ; from += 1000) {
@@ -717,8 +741,12 @@ export async function resolveAdvancedConditions(
         break
       }
     }
-    if (res.isActiveOverride !== undefined) isActiveOverride = res.isActiveOverride
-    perCondition.push({ id: c.id, include: res.include, exclude: res.exclude })
+    // PAR-5b · La negación es un intercambio include/exclude, y vale para los
+    // quince `case` sin que ninguno se entere. El porqué —y dónde dejaría de
+    // valer— está en `lib/members/negacion-de-condicion`.
+    const fin = c.negate ? negarCondicion(res) : res
+    if (fin.isActiveOverride !== undefined) isActiveOverride = fin.isActiveOverride
+    perCondition.push({ id: c.id, include: fin.include, exclude: fin.exclude })
   }
   void supabase
   return { perCondition, isActiveOverride }

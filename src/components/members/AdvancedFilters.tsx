@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
@@ -254,6 +254,12 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
                 // equivocada sin enterarse. Pedido de Floriana, 2026-09-23:
                 // hasta hoy el filtro solo sabía de la primera.
                 { value: 'in_progress', label: 'Cursando ahora (como estudiante)' },
+                // PAR-5b · El tercer sentido. «Cursando» quedó estricto en
+                // PAR-5 y quienes están inscritos en grupos que no arrancan se
+                // habían quedado sin ningún filtro que los alcanzara: el export
+                // de Ari dejó por fuera a los de Discípulos 1 por iniciar.
+                // Medido el 2026-09-24: 431 cursando, 249 en matrícula.
+                { value: 'enrolling',   label: 'En matrícula (aún no empieza)' },
                 { value: 'leading',     label: 'Dando ahora (como dirigente)' },
                 { value: 'any',         label: 'Cualquiera' },
               ]}
@@ -906,8 +912,26 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
 // ─── main component ───────────────────────────────────────────────────────────
 
-export function AdvancedFilters({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
+export function AdvancedFilters({ conditions, addCondition: agregarCruda, removeCondition, allowedTypes }: Props) {
   const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
+
+  /**
+   * PAR-5b · INCLUIR / EXCLUIR, una vez y para todos los paneles.
+   *
+   * El toggle vive en el shell y envuelve `addCondition` en lugar de repetirse
+   * en cada formulario: son cinco paneles y quince tipos de condición, y
+   * cualquiera que se agregue después lo hereda sin acordarse. La negación la
+   * resuelve el servidor en un punto (ver `NegableCondition`), así que acá solo
+   * hay que marcar la condición.
+   */
+  const [excluir, setExcluir] = useState(false)
+  const addCondition = useCallback((c: AddableCondition) => {
+    // XOR y no OR: «Excepto — no asistió» es, literalmente, quienes SÍ
+    // asistieron. Los paneles de asistencia e inscripción traen su propio
+    // `negate` («No asistió»), y con OR el doble negativo se perdería.
+    agregarCruda(excluir ? ({ ...c, negate: !c.negate } as AddableCondition) : c)
+    setExcluir(false)
+  }, [agregarCruda, excluir])
 
   const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
     study:   (['study'] as const).filter(permite),
@@ -948,6 +972,35 @@ export function AdvancedFilters({ conditions, addCondition, removeCondition, all
             )}
           </button>
         ))}
+      </div>
+
+      {/* Incluir / excluir — aplica a la condición que se agregue abajo. */}
+      <div className="flex items-center gap-2 border-b border-[var(--outline-variant)] px-5 py-2.5">
+        <span className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
+          La condición que agregue
+        </span>
+        <div className="flex gap-1">
+          {([[false, 'Incluye'], [true, 'Excluye']] as const).map(([v, etiqueta]) => (
+            <button
+              key={etiqueta}
+              onClick={() => setExcluir(v)}
+              aria-pressed={excluir === v}
+              className={cn(
+                'rounded-full px-3 py-1 text-[13px] transition-colors font-body',
+                excluir === v
+                  ? (v ? 'bg-coral text-white' : 'bg-navy text-white')
+                  : 'bg-surface-low text-navy-light hover:bg-surface-container',
+              )}
+            >
+              {etiqueta}
+            </button>
+          ))}
+        </div>
+        {excluir && (
+          <span className="text-[13px] text-navy-light/80 font-body">
+            Se van a QUITAR del resultado quienes la cumplan.
+          </span>
+        )}
       </div>
 
       {/* Two-column body */}

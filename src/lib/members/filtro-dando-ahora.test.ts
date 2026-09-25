@@ -51,3 +51,37 @@ describe('filtro «dando ahora» (como dirigente)', () => {
     expect(ui).toContain("label: 'Dando ahora (como dirigente)'")
   })
 })
+
+/**
+ * PAR-5b · «En matrícula»: el tercer sentido de «lo está llevando».
+ *
+ * Con PAR-5 «cursando» pasó a exigir que el grupo haya arrancado, y quienes
+ * están inscritos en uno que no empieza se quedaron sin filtro: el export de
+ * Ari dejó por fuera a los de Discípulos 1 por iniciar. Medido contra
+ * producción el 2026-09-24: 431 cursando, 249 en matrícula, 114 dando.
+ */
+describe('filtro «en matrícula»', () => {
+  const src = readFileSync('src/lib/supabase/queries/members.ts', 'utf8')
+
+  it('exige que el grupo esté en_matricula, y cursando que esté en_curso', () => {
+    expect(src).toContain("c.status === 'in_progress' ? ['en_curso' as const]")
+    expect(src).toContain("c.status === 'enrolling' ? ['en_matricula' as const]")
+  })
+
+  it('son DISJUNTAS: un grupo no puede estar en los dos estados', () => {
+    // Importa para combinarlas con OR sin contar a nadie dos veces.
+    expect(['en_curso']).not.toContain('en_matricula')
+  })
+
+  it('las dos miran la misma matrícula vigente', () => {
+    // La diferencia es el estado del GRUPO, no el de la matrícula: si una
+    // pidiera otros estados de matrícula, serían dos reglas y no una con dos
+    // recortes.
+    expect(src).toContain("(c.status === 'in_progress' || c.status === 'enrolling') ? MATRICULAS_VIGENTES")
+  })
+
+  it('el chip la nombra sin confundirla con «cursando»', () => {
+    const ui = readFileSync('src/components/members/AdvancedFilters.tsx', 'utf8')
+    expect(ui).toContain("label: 'En matrícula (aún no empieza)'")
+  })
+})

@@ -2,7 +2,23 @@ import type { FilterCondition } from '@/types/filters'
 import { studyLabel } from '@/data/study-catalog'
 import { ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
 
+/**
+ * PAR-5b · El chip tiene que decir que la condición está NEGADA.
+ *
+ * Va como prefijo «Excepto —» y no metido en cada etiqueta: quince `case` con
+ * su propia forma de negar darían quince redacciones distintas, y alguno se
+ * quedaría sin. Asistencia e inscripción conservan su texto propio —«No
+ * asistió», «No inscrito»— porque en español suenan mejor que «Excepto — …» y
+ * ya estaban así antes de que la negación fuera general.
+ */
 export function conditionLabel(c: FilterCondition): string {
+  const base = etiquetaSinNegar(c)
+  if (!c.negate) return base
+  if (c.type === 'attendance' || c.type === 'registration') return base
+  return `Excepto — ${base}`
+}
+
+function etiquetaSinNegar(c: FilterCondition): string {
   switch (c.type) {
     case 'study': {
       // PAR-5: sin plan el filtro vale para CUALQUIER estudio, así que el chip
