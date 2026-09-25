@@ -37,7 +37,8 @@ type Comite = { id: string; nombre: string; filas: Fila[] }
 
 /** Columnas del export. La pantalla los pinta con íconos; el archivo va en
  *  palabras — un ✓ en una celda de Excel no se puede filtrar ni contar. */
-const COLUMNAS: ColumnDef<Fila>[] = [
+const columnasDelExport = (verDonante: boolean): ColumnDef<Fila>[] => {
+  const todas: ColumnDef<Fila>[] = [
   { key: 'nombre',    label: 'Nombre',        defaultVisible: true },
   { key: 'puestos',   label: 'Puesto(s)',     defaultVisible: true, exportValue: f => f.puestos.join(' · ') },
   { key: 'encargado', label: 'Encargado',     defaultVisible: true, exportValue: f => (f.encargado ? 'Sí' : '') },
@@ -54,6 +55,8 @@ const COLUMNAS: ColumnDef<Fila>[] = [
   { key: 'ultimoEstudio', label: 'Último estudio (como estudiante)', defaultVisible: true,
     exportValue: f => (f.estudio.llevando.length || f.estudio.dando.length || !f.estudio.ultimo)
       ? '' : `${f.estudio.ultimo.nombre}${f.estudio.ultimo.fecha ? ` (${f.estudio.ultimo.fecha})` : ''}` },
+  // SRV-10 · La columna de donante SOLO para roles amplios. Se filtra abajo con
+  // `verDonante`; acá queda declarada para no perder el formato del archivo.
   { key: 'donante',   label: 'Donante activo',defaultVisible: true, exportValue: f => (f.donante ? 'Sí' : 'No') },
   { key: 'ultimo',    label: 'Último check-in', defaultVisible: true, exportValue: f => f.ultimoCheckin ?? '' },
   { key: 'falta',     label: 'Le falta',      defaultVisible: true, exportValue: f => faltantes(f).join(', ') },
@@ -67,17 +70,21 @@ const COLUMNAS: ColumnDef<Fila>[] = [
     key: 'birth_date', label: 'Fecha de cumpleaños', defaultVisible: true,
     exportValue: f => formatBirthday(f.cumpleanos),
   },
-]
+  ]
+  // SRV-10 · Si no le toca verlo, la columna no existe: ni en la tabla, ni en
+  // el selector de columnas, ni en el archivo.
+  return todas.filter(c => verDonante || c.key !== 'donante')
+}
 
 /** Los criterios se leen de donde VIVEN, no se escriben a mano: el de
  *  asistencia se arma con las constantes de `lib/attendance` y el de donante
  *  con la ventana real de `refresh_donor_flags()`, que además pone el mes. */
-const COLUMNAS_TABLA: Array<{ label: string; info?: string }> = [
+const columnasDeLaTabla = (verDonante: boolean): Array<{ label: string; info?: string }> => [
   { label: 'Persona' },
   { label: 'Puesto' },
   { label: 'Asistencia', info: ATTENDANCE_GENERAL_TOOLTIP },
   { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos. ' + INFO_ULTIMO_ESTUDIO_ESTUDIANTE },
-  { label: 'Donante', info: explicacionDeDonantes(new Date()) },
+  ...(verDonante ? [{ label: 'Donante', info: explicacionDeDonantes(new Date()) }] : []),
   { label: 'Último check-in' },
 ]
 
@@ -107,7 +114,7 @@ function MiComiteContenido() {
   // pantalla (2026-09-22). Quién encarga un comité se sabe mirando los PUESTOS,
   // y eso el navegador no lo tiene: solo el servidor puede contestarlo.
   const clave = loaded ? `mi-comite:${comiteElegido}` : ''
-  const { datos, cargando, error } = useCargaRemota<{ comites: Comite[] }>(
+  const { datos, cargando, error } = useCargaRemota<{ comites: Comite[]; verDonante?: boolean }>(
     clave,
     async () => {
       if (!clave) return { comites: [] }
@@ -121,6 +128,15 @@ function MiComiteContenido() {
     { generico: 'No se pudo cargar el comité.' },
   )
   const comites = useMemo(() => datos?.comites ?? [], [datos])
+  /**
+   * SRV-10 · Manda el SERVIDOR, no el rol que el navegador cree tener.
+   *
+   * Por defecto NO se ve: si la respuesta viniera vieja o incompleta, la
+   * pantalla se equivoca hacia esconder, que es el lado seguro.
+   */
+  const verDonante = datos?.verDonante === true
+  const COLUMNAS = useMemo(() => columnasDelExport(verDonante), [verDonante])
+  const CABECERAS = useMemo(() => columnasDeLaTabla(verDonante), [verDonante])
 
   const visibles = useMemo(
     () => comites.map(c => ({ ...c, filas: soloPendientes ? c.filas.filter(leFaltaAlgo) : c.filas })),
@@ -199,7 +215,7 @@ function MiComiteContenido() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {COLUMNAS_TABLA.map(h => (
+                      {CABECERAS.map(h => (
                         <th key={h.label} className="px-4 py-2.5 text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display whitespace-nowrap">
                           {h.label}
                           {/* Las dos columnas que marcan a alguien en rojo con
@@ -234,7 +250,9 @@ function MiComiteContenido() {
                             <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />
                           )}
                         </td>
-                        <td className="px-4 py-3"><Marca ok={f.donante} titulo="Donante activo" /></td>
+                        {verDonante && (
+                          <td className="px-4 py-3"><Marca ok={f.donante === true} titulo="Donante activo" /></td>
+                        )}
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                           {f.ultimoCheckin ? formatDate(f.ultimoCheckin) : '—'}
                         </td>

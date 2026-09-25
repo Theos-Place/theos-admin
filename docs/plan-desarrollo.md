@@ -3131,9 +3131,35 @@ Tests: rol ve / sin rol 403 (incluidos dirigente del propio grupo y estudiante),
 compartir exige confirmación y audita, puesto da y quita el rol. tsc/lint/vitest.
 ```
 
-### [ ] SRV-10 · Ocultar la columna "Donante" en Mi comité — URGENTE (orden de dirección)
+### [x] SRV-10 · Ocultar la columna "Donante" en Mi comité — HECHO 2026-09-24
 
-Prompt para Claude Code:
+El recorte va en el ENDPOINT: `/api/servers/mi-comite` no manda el campo al
+líder, y la respuesta trae `verDonante` para que la pantalla sepa si dibujar la
+columna sin adivinarlo por la ausencia. Esconder la columna nada más habría
+dejado el dato en el JSON, a un clic de la pestaña de red.
+
+`/reportes/servidores` NO necesitó cambios: ya exigía `SERVICE_ADMIN_ROLES`, o
+sea que el líder nunca llega al endpoint. El KPI de «% donantes» vive ahí, no
+en Mi comité.
+
+**Lo que el pedido no preveía, y era la mitad del trabajo:** la columna «Le
+falta» decía `donación`. Esconder la columna y dejar esa lista delata
+exactamente el mismo dato, y encima ya filtrado —el toggle «solo los que no
+cumplen algo» se volvía un listado de no donantes—. `Compromisos.donante` pasó
+a ser OPCIONAL y `leFaltaAlgo`/`faltantes` preguntan si el campo VINO
+(`=== false`) en vez de si es falso. Que sea opcional es lo que hace que el
+compilador señale a quien lo lea sin preguntarse si está.
+
+La regla vive en `lib/servers/visibilidad-de-donante.ts`, que usan las dos
+puntas. `recortarDonante` BORRA la propiedad en vez de ponerla en `false`: un
+`false` diría «no es donante», que es justo lo que no debe salir. La pantalla
+esconde POR DEFECTO (`datos?.verDonante === true`), así que una respuesta vieja o
+incompleta se equivoca hacia el lado seguro.
+
+Guard verificado con cebo: si alguien saca el `recortarDonante` del endpoint,
+el test falla.
+
+Prompt original:
 
 ```
 CAMBIO · /servidores/mi-comite y /reportes/servidores: OCULTAR todo lo de donante

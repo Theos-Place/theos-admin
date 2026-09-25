@@ -22,8 +22,18 @@ export type Compromisos = {
   llevandoEstudio: boolean
   /** Dirigente o co-dirigente de un grupo en los últimos 12 meses. */
   dandoEstudio: boolean
-  /** Donante activo (criterio por trimestres). */
-  donante: boolean
+  /**
+   * Donante activo (criterio por trimestres).
+   *
+   * OPCIONAL A PROPÓSITO (SRV-10, dirección, 2026-09-24): al líder de comité no
+   * se le muestra, y el recorte se hace en el ENDPOINT — el campo no viaja—,
+   * no escondiendo la columna. `undefined` significa «no me toca verlo», y por
+   * eso las reglas de abajo lo SALTAN en vez de tratarlo como incumplido.
+   *
+   * Que sea opcional y no `boolean` es lo que hace que el compilador encuentre
+   * a quien lo lea sin preguntarse si está.
+   */
+  donante?: boolean
   /** Fecha del último check-in a un evento, o null si nunca. */
   ultimoCheckin: string | null
 }
@@ -38,9 +48,16 @@ export type Compromisos = {
  * El último check-in NO entra: es un dato para mirar, no un requisito — no hay
  * una fecha a partir de la cual "no cumple", y la asistencia ya se mide con su
  * propia regla.
+ *
+ * SRV-10 · SI NO VIENE EL DATO DE DONANTE, NO CUENTA COMO FALTA. Esto no es un
+ * detalle de implementación: es la mitad del recorte. Esconder la columna y
+ * dejar que «Le falta: donación» siga apareciendo delata exactamente lo mismo
+ * que se quiso ocultar, y encima con una lista lista para filtrar. Por eso la
+ * regla mira si el campo VINO, no si es falso.
  */
 export function leFaltaAlgo(c: Compromisos): boolean {
-  return !c.asistencia || !(c.llevandoEstudio || c.dandoEstudio) || !c.donante
+  const faltaDonar = c.donante === false
+  return !c.asistencia || !(c.llevandoEstudio || c.dandoEstudio) || faltaDonar
 }
 
 /** Lo que le falta, en palabras, para el tooltip y el export. */
@@ -48,7 +65,8 @@ export function faltantes(c: Compromisos): string[] {
   const f: string[] = []
   if (!c.asistencia) f.push('asistencia')
   if (!c.llevandoEstudio && !c.dandoEstudio) f.push('estudio')
-  if (!c.donante) f.push('donación')
+  // Solo cuando el dato vino: ver `leFaltaAlgo`.
+  if (c.donante === false) f.push('donación')
   return f
 }
 

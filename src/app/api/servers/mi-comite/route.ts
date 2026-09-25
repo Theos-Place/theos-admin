@@ -6,6 +6,7 @@ import { getMiComite } from '@/lib/supabase/queries/mi-comite'
 import { comitesAConsultar } from '@/lib/servers/alcance-de-mi-comite'
 import { reportarError } from '@/lib/observabilidad'
 import { mandaEnAlgunComite } from '@/lib/auth/mando-de-comite'
+import { puedeVerDonante, recortarDonante } from '@/lib/servers/visibilidad-de-donante'
 
 /**
  * GET: la gente de un comité y el estado de sus compromisos (SRV-4 / SRV-6).
@@ -36,8 +37,16 @@ export async function GET(req: NextRequest) {
     }
     const alcance = comitesAConsultar({ propios: mios, amplio }, req.nextUrl.searchParams.get('committee_id'))
     if (!alcance.ok) return NextResponse.json({ error: 'Ese comité no es tuyo.' }, { status: 403 })
-    const comites = await Promise.all(alcance.comites.map(async id => ({ id, ...(await getMiComite(id)) })))
-    return NextResponse.json({ comites })
+    // SRV-10 · El dato de donante NO VIAJA al líder de comité. Se recorta acá y
+    // no en la pantalla: esconder una columna deja el campo en el JSON, a un
+    // clic de la pestaña de red. `verDonante` se manda también, para que la UI
+    // sepa si tiene que dibujar la columna sin adivinarlo por la ausencia.
+    const verDonante = puedeVerDonante(auth.ctx.roles)
+    const comites = await Promise.all(alcance.comites.map(async id => {
+      const { filas, ...resto } = await getMiComite(id)
+      return { id, ...resto, filas: recortarDonante(filas, verDonante) }
+    }))
+    return NextResponse.json({ comites, verDonante })
   } catch (error) {
     reportarError('GET /api/servers/mi-comite:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
