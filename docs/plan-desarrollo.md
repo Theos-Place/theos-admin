@@ -3308,7 +3308,7 @@ pedido frecuente de "congelar matrícula". NO CORRER hasta que Floriana lo
 valide con Melissa (finanzas) — quedó explícito en la reunión que no se
 decide por ellos.
 
-### [~] DAT-13b · Zonas de Heredia + caso Stanley — CASI, 2026-09-24
+### [x] DAT-13b · Zonas de Heredia + caso Stanley — HECHO 2026-09-24
 
 Hecho (migraciones `20260924100000` y `20260924170000`, y commit `ca2c5bc2`):
 
@@ -3345,18 +3345,24 @@ solicitud pidió «Sede Pedregal Miércoles» cuando DOS sedes tenían ese nombr
 mapearla a `heredia` —la fila que la persona clickeó, hoy llamada «Heredia»—
 habría sido inventarle una preferencia por una zona que no pidió.
 
-QUEDA SOLO LA DECISIÓN:
+**Santo Domingo: creado** (migración `20260924230000`). Decisión de Floriana el
+2026-09-24, con el dato a la vista: había cuatro grupos reuniéndose ahí contra
+los tres activos que tenía la zona Heredia entera. Tres de esos cuatro —Niveles
+1, 2 y 3, EN CURSO— no tenían NINGUNA zona, así que no salían en ningún filtro
+ni reporte. Hoy Santo Domingo queda con 4 y Heredia con 2.
 
-**Santo Domingo como zona aparte.** Ari dice que Heredia y Santo Domingo «son
-dos mundos». El dato al 2026-09-24 le da la razón: hay **4 grupos que se reúnen
-en «Santo Domingo, Heredia»** —tres Niveles en curso SIN zona asignada y un SCJ
-en matrícula puesto en la zona Heredia—. Para comparar, la zona Heredia entera
-tiene 3 grupos activos, Belén 2 y San Rafael de Alajuela 3: o sea que Santo
-Domingo solo ya es del tamaño de una zona existente.
+QUEDA REPORTADO, SIN TOCAR — no es parte de DAT-13b, es para quien administre
+los grupos:
 
-Si se crea, hay que: agregar la sede con `is_zone=true`, y mover esos 4 grupos
-(los tres sin zona ganan una, y el SCJ sale de Heredia). Es una migración
-chica. **Falta la decisión, no el trabajo.**
+- **«RDM — Casona Escalante»** se reúne en «San Miguel, **Sto.** Domingo de
+  Heredia» —abreviado, por eso no salió en la primera búsqueda— y no tiene
+  zona. Su nombre apunta a otra zona, así que no se asumió.
+- **«SCJ — Heredia» con ubicación «Pedregal, Belén»**: nombre y zona dicen
+  Heredia, la ubicación dice Belén. Puede ser que convoque a gente de Heredia
+  reuniéndose en Pedregal, o puede ser un dato mal puesto.
+- **15 grupos activos siguen sin zona.** La mayoría son Prematrimoniales,
+  Discípulos y virtuales sin `location`, donde quizás no aplique; conviene
+  decidir si la zona es obligatoria para los presenciales.
 
 ### [x] PAR-5b · Filtros de miembros: "en matrícula" + condiciones de EXCLUSIÓN — HECHO 2026-09-24
 
