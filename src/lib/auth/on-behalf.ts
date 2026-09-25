@@ -75,6 +75,12 @@ export const EVENT_ON_BEHALF_ROLES: RoleId[] = ['direccion', 'encargado_staff', 
 /** Quién puede crear una SOLICITUD financiera a nombre de otro. */
 export const FINANCE_ON_BEHALF_ROLES: RoleId[] = ['finanzas', 'direccion']
 
+/** Quién puede MATRICULAR a otra persona en un estudio — y por lo tanto
+ *  contestar por ella el cuestionario de Nivel 1 (EST-15). Es la misma lista
+ *  que habilita el selector de miembro en la pantalla de matrícula; `admin` no
+ *  va acá porque `resolveOnBehalf` ya lo trata aparte. */
+export const STUDY_ON_BEHALF_ROLES: RoleId[] = ['direccion', 'coordinador_estudios']
+
 /** Etiqueta para la respuesta registrada por alguien más. Se usa en la vista de
  *  respuestas y en el export: la misma frase en los dos lados, para que nadie la
  *  confunda con una respuesta directa. */

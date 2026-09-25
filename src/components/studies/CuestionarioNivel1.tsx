@@ -39,12 +39,21 @@ type Campo = {
 }
 
 type Props = {
+  /** Quién SE MATRICULA. Con el selector de miembro puesto, no es quien tiene
+   *  la sesión — y la respuesta es de quien se matricula. */
+  memberId: string | null
+  /** El staff está matriculando a alguien más: cambia el encabezado, para que
+   *  quede claro de quién se están contestando las preguntas. */
+  paraOtraPersona?: boolean
+  nombreDeLaPersona?: string | null
   onCancel: () => void
   /** Se llama cuando la persona puede seguir: la pantalla abre la confirmación. */
   onPuedeMatricular: () => void
 }
 
-export function CuestionarioNivel1({ onCancel, onPuedeMatricular }: Props) {
+export function CuestionarioNivel1({
+  memberId, paraOtraPersona, nombreDeLaPersona, onCancel, onPuedeMatricular,
+}: Props) {
   const [campos, setCampos] = useState<Campo[] | null>(null)
   const [respuestas, setRespuestas] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
@@ -53,13 +62,17 @@ export function CuestionarioNivel1({ onCancel, onPuedeMatricular }: Props) {
 
   useEffect(() => {
     let vivo = true
-    fetch('/api/studies/cuestionario-nivel-1')
+    fetch(`/api/studies/cuestionario-nivel-1?member_id=${encodeURIComponent(memberId ?? '')}`)
       .then(r => (r.ok ? r.json() : { disponible: false, campos: [] }))
       .then(d => {
         if (!vivo) return
         // Sin cuestionario sembrado, o ya contestado, la matrícula sigue
         // derecho: esto no puede ser un muro nuevo por una falla de datos.
-        if (!d.disponible || d.ya_respondio) { onPuedeMatricular(); return }
+        // `ya_respondio` YA NO SALTA EL PASO: toda matrícula a Nivel 1 lleva su
+        // cuestionario (pedido de Floriana, 2026-09-24). Solo se salta si el
+        // formulario no está sembrado o está desactivado — eso es una falla de
+        // datos y no puede volverse un muro.
+        if (!d.disponible) { onPuedeMatricular(); return }
         setCampos(d.campos ?? [])
       })
       .catch(() => { if (vivo) onPuedeMatricular() })
@@ -86,7 +99,7 @@ export function CuestionarioNivel1({ onCancel, onPuedeMatricular }: Props) {
     try {
       const res = await fetch('/api/studies/cuestionario-nivel-1', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ respuestas }),
+        body: JSON.stringify({ respuestas, member_id: memberId }),
       })
       const d = await res.json().catch(() => null)
       if (!res.ok) throw new Error(d?.error ?? 'No se pudo guardar.')
@@ -128,7 +141,9 @@ export function CuestionarioNivel1({ onCancel, onPuedeMatricular }: Props) {
             Antes de matricularte
           </h3>
           <p className="mt-1 text-[13px] text-navy-light/80 font-body">
-            Dos o tres preguntas para conocerte mejor.
+            {paraOtraPersona
+              ? `Contestá estas preguntas por ${nombreDeLaPersona ?? 'la persona que estás matriculando'}. Las respuestas quedan en su ficha.`
+              : 'Dos o tres preguntas para conocerte mejor.'}
           </p>
         </div>
 

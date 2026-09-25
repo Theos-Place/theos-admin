@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
+import { resolveOnBehalf, STUDY_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { reportarError } from '@/lib/observabilidad'
 import {
@@ -41,10 +42,18 @@ async function formularioYCampos(supabase: ReturnType<typeof createAdminClient>)
   return { form: form as { id: string; is_active: boolean }, campos: campos ?? [] }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
+    // `member_id` es de quien SE MATRICULA, que con el selector puesto no es
+    // quien tiene la sesión. Pasa por el mismo control anti-suplantación que
+    // los formularios: sin el rol, el pedido se ignora y queda el propio.
+    const destino = resolveOnBehalf(
+      auth.ctx, req.nextUrl.searchParams.get('member_id'), STUDY_ON_BEHALF_ROLES)
+    if (destino.denegado) {
+      return NextResponse.json({ error: 'No podés consultar por otra persona.' }, { status: 403 })
+    }
     const supabase = createAdminClient()
     const encontrado = await formularioYCampos(supabase)
     // Sin formulario sembrado el flujo SIGUE: la matrícula no se cae porque
@@ -53,13 +62,15 @@ export async function GET() {
     if (!encontrado || !encontrado.form.is_active) {
       return NextResponse.json({ disponible: false, campos: [] })
     }
+    // Se informa por si alguna pantalla lo quiere, pero YA NO SALTA EL PASO:
+    // toda matrícula a Nivel 1 lleva su cuestionario.
     let yaRespondio = false
-    if (auth.ctx.memberId) {
+    if (destino.memberId) {
       const { count } = await supabase
         .from('form_responses')
         .select('id', { count: 'exact', head: true })
         .eq('form_id', encontrado.form.id)
-        .eq('member_id', auth.ctx.memberId)
+        .eq('member_id', destino.memberId)
       yaRespondio = (count ?? 0) > 0
     }
     return NextResponse.json({
@@ -78,12 +89,21 @@ export async function POST(req: NextRequest) {
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
-    const body = await req.json().catch(() => null) as { respuestas?: Record<string, string> } | null
+    const body = await req.json().catch(() => null) as
+      { respuestas?: Record<string, string>; member_id?: string } | null
     const respuestas = body?.respuestas
     if (!respuestas || typeof respuestas !== 'object') {
       return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
     }
-    if (!auth.ctx.memberId) {
+    // LA RESPUESTA ES DE QUIEN SE MATRICULA, no de quien la digita. Guardarla
+    // bajo la sesión fue el bug que dejó una matrícula a N1 sin cuestionario en
+    // staging (2026-09-24): el staff matriculaba a otro y el paso se saltaba
+    // para no ensuciar su ficha, cuando lo que había que arreglar era esto.
+    const destino = resolveOnBehalf(auth.ctx, body?.member_id, STUDY_ON_BEHALF_ROLES)
+    if (destino.denegado) {
+      return NextResponse.json({ error: 'No podés contestar por otra persona.' }, { status: 403 })
+    }
+    if (!destino.memberId) {
       return NextResponse.json({ error: 'Tu sesión no tiene una ficha asociada.' }, { status: 400 })
     }
 
@@ -104,7 +124,10 @@ export async function POST(req: NextRequest) {
 
     const { data: resp, error: eResp } = await supabase.from('form_responses').insert({
       form_id: encontrado.form.id,
-      member_id: auth.ctx.memberId,
+      member_id: destino.memberId,
+      // Queda el rastro de quién lo digitó cuando no fue la propia persona,
+      // igual que en el resto de los formularios.
+      recorded_by: destino.recordedBy,
     }).select('id').single()
     if (eResp) throw eResp
 

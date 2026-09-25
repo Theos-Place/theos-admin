@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   PREGUNTAS, IGLESIA_EVANGELICA, QUIERE_SEGUIR_EN_SU_IGLESIA,
   OPCIONES_ASISTE_A_IGLESIA, OPCIONES_QUE_TE_MOTIVA,
@@ -188,5 +189,49 @@ describe('qué preguntas se ven, según lo que va contestando', () => {
       [ID.queTeMotiva]: QUIERE_SEGUIR_EN_SU_IGLESIA,
     }).includes(ID.otrasOpciones)
     expect(veredicto(resp).estado === 'otras_opciones').toBe(porCampo)
+  })
+})
+
+/**
+ * TODA matrícula a Nivel 1 lleva su cuestionario.
+ *
+ * El bug que esto ataja (staging, 2026-09-24): mi primera versión no preguntaba
+ * cuando el staff matriculaba a otra persona, con el argumento de que
+ * preguntarle al staff por SU iglesia guardaría la respuesta a nombre
+ * equivocado. El argumento estaba bien y la conclusión mal — había que arreglar
+ * A NOMBRE DE QUIÉN se guarda, no dejar de preguntar—. Resultado: una matrícula
+ * a N1 hecha por un admin quedó con CERO respuestas.
+ */
+describe('el cuestionario no se puede saltar', () => {
+  const pantalla = readFileSync('src/app/(admin)/matricula/page.tsx', 'utf8')
+  const modal = readFileSync('src/components/studies/CuestionarioNivel1.tsx', 'utf8')
+  const endpoint = readFileSync('src/app/api/studies/cuestionario-nivel-1/route.ts', 'utf8')
+
+  it('la pantalla NO condiciona el paso a quién matricula', () => {
+    expect(pantalla).toContain("if (result.study_code === PLAN_CON_CUESTIONARIO) {")
+    expect(pantalla).not.toContain('PLAN_CON_CUESTIONARIO && !selectedMember')
+  })
+
+  it('haber contestado antes ya NO saltea el paso', () => {
+    expect(modal).not.toContain('d.ya_respondio')
+    // Lo único que lo saltea es que el formulario no exista o esté apagado, que
+    // es una falla de datos y no puede volverse un muro.
+    expect(modal).toContain('if (!d.disponible) { onPuedeMatricular(); return }')
+  })
+
+  it('la respuesta se guarda a nombre de QUIEN SE MATRICULA', () => {
+    expect(endpoint).toContain('member_id: destino.memberId')
+    expect(endpoint).not.toContain('member_id: auth.ctx.memberId')
+  })
+
+  it('y con el control anti-suplantación de siempre', () => {
+    // Sin esto, cualquiera con sesión podría contestar por otra ficha mandando
+    // un member_id en el body.
+    expect(endpoint).toContain('resolveOnBehalf(auth.ctx, body?.member_id, STUDY_ON_BEHALF_ROLES)')
+    expect(endpoint).toContain('destino.denegado')
+  })
+
+  it('queda el rastro de quién lo digitó', () => {
+    expect(endpoint).toContain('recorded_by: destino.recordedBy')
   })
 })

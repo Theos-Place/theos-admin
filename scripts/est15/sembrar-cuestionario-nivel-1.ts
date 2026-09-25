@@ -92,7 +92,10 @@ async function main() {
       is_public: false,
       requires_auth: true,
       is_active: true,
-      allow_multiple_responses: false,
+      // TODA matrícula a Nivel 1 lleva su cuestionario, así que una persona
+      // que se matricula dos veces lo contesta dos veces. La bandera tiene que
+      // decir la verdad o el módulo de formularios muestra otra cosa.
+      allow_multiple_responses: true,
       category: 'study_registration',
       entity_type: 'general',
     }).select('id').single()

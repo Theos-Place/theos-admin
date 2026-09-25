@@ -3234,9 +3234,15 @@ solicitudes).
 
 Detalles que conviene saber:
 
-- **Solo Nivel 1, y solo para quien se matricula a sí mismo.** Si el staff
-  matricula a otra persona no se pregunta: la respuesta quedaría guardada a
-  nombre equivocado.
+- **TODA matrícula a Nivel 1 lleva su cuestionario**, sin excepciones, y
+  tampoco lo saltea haber contestado antes. La primera versión no preguntaba
+  cuando el staff matriculaba a otra persona —para no guardar la respuesta a
+  nombre equivocado—, y en staging eso dejó una matrícula a N1 con CERO
+  respuestas: quien la hizo era admin y había elegido a la persona en el
+  selector. El argumento estaba bien y la conclusión mal; lo que había que
+  arreglar era A NOMBRE DE QUIÉN se guarda. Ahora la respuesta es de quien se
+  matricula, con el control anti-suplantación de `resolveOnBehalf` y el rastro
+  en `recorded_by`.
 - **El veredicto lo calcula el SERVIDOR.** La pantalla lo recalcula para
   dibujar, pero el que vale es el del endpoint — el del navegador se cambia con
   la consola abierta.

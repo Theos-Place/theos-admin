@@ -611,11 +611,21 @@ export default function MatriculaPage() {
                           setDocGate({ group, study: result })
                           return
                         }
-                        // EST-15 · Solo Nivel 1, y solo para quien se matricula
-                        // a sí mismo: cuando el staff matricula a otra persona
-                        // no tiene sentido preguntarle por SU iglesia, y la
-                        // respuesta quedaría guardada a nombre equivocado.
-                        if (result.study_code === PLAN_CON_CUESTIONARIO && !selectedMember) {
+                        // EST-15 · TODA matrícula a Nivel 1 pasa por el
+                        // cuestionario. Sin excepciones, tampoco cuando el
+                        // staff matricula a otra persona.
+                        //
+                        // Mi primera versión sí lo saltaba en ese caso, con el
+                        // argumento de que preguntarle al staff por SU iglesia
+                        // guardaría la respuesta a nombre equivocado. El
+                        // argumento estaba bien; la conclusión, mal. Lo que
+                        // había que arreglar era A NOMBRE DE QUIÉN se guarda
+                        // —del que se matricula, no del que está en sesión—, no
+                        // dejar de preguntar. Se descubrió en staging el
+                        // 2026-09-24: una matrícula a N1 quedó hecha con CERO
+                        // respuestas, porque quien la hizo era admin y había
+                        // elegido a la persona en el selector.
+                        if (result.study_code === PLAN_CON_CUESTIONARIO) {
                           setCuestionarioGate({ group, study: result })
                           return
                         }
@@ -703,6 +713,11 @@ export default function MatriculaPage() {
 
       {cuestionarioGate && (
         <CuestionarioNivel1
+          // A nombre de quien SE MATRICULA. Con el selector puesto, esa no es
+          // la persona en sesión.
+          memberId={effectiveMemberId}
+          paraOtraPersona={!!selectedMember}
+          nombreDeLaPersona={selectedMember?.name ?? null}
           onCancel={() => setCuestionarioGate(null)}
           onPuedeMatricular={() => {
             setConfirmModal(cuestionarioGate)
