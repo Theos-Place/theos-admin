@@ -3512,3 +3512,132 @@ cosa — reproducir: el conteo del botón de export no respeta los filtros activ
 algún camino (¿caché de 30s? ¿estado del selector?). Arreglarlo con test.
 tsc/lint/vitest.
 ```
+
+## Fase 24 — Rediseño de vacantes → puestos de servicio (reunión de servidores, 2026-09-25)
+
+Reestructuración completa del flujo de vacantes, dictada por Floriana.
+
+**MAPA DE ACCESOS (aclarado 2026-09-25)** — los puestos YA EXISTEN en el
+comité de servidores (área de staff); lo nuevo son los accesos/roles que se
+les asocian automáticamente (position-role-sync + source):
+
+| Puesto existente (comité servidores/staff) | Acceso nuevo que otorga |
+|---|---|
+| Colaborador de solicitud de puestos | Página "Solicitudes de puestos de servicio" (SRV-12) y vista por comité del solicitar (SRV-11) |
+| Colaborador de aplicaciones | Página "Aplicaciones" (SRV-14) |
+| Colaborador de seguimiento | Página "Aplicaciones" (SRV-14) |
+
+Además: **coordinador_servidores** (el encargado del comité de servidores)
+tiene acceso a TODAS las páginas del menú de servidores y sus funciones, por
+default. **admin** y **direccion** siempre, dirección como vista. Verificar
+los nombres exactos de los tres puestos en el catálogo antes de fijar los
+mapeos.
+
+### [ ] SRV-11 · Parte 1: "Solicitar puestos de servicio" (reemplaza solicitar vacantes)
+
+Reglas dictadas:
+- ELIMINAR la página/funcionalidad de "importar vacantes" completa: botón,
+  página, Excel y plantilla. Ya no se usa.
+- La página "Solicitar vacantes" se RENOMBRA a "Solicitar puestos de
+  servicio". Acceso: personas de servicio y líderes de comité.
+- El LÍDER DE COMITÉ ve únicamente la lista de puestos de SU comité (el
+  alcance de EVE-12/SRV-4). Por cada puesto: nombre + contador que arranca
+  en 0 + botones +/− para agregar o quitar cupos solicitados.
+- La subpantalla "Detalles de la vacante" DESAPARECE: los detalles ya viven
+  en la página del comité. Opcional: botón "ver detalles" que abre un modal
+  de solo lectura (descripción, funciones, nivel) del puesto.
+- Al final, botón "Enviar solicitud": manda de una vez todos los puestos con
+  cupos > 0 como la solicitud del líder para su comité.
+- El puesto EXISTENTE "colaborador de solicitud de puestos" (staff, comité
+  de servidores) recibe el acceso automáticamente (position-role-sync +
+  source, como PAR-3/RET-1). Quien lo tiene —igual que coordinador_servidores,
+  admin y direccion (ver mapa de accesos de la Fase 24)— puede ver esta
+  pantalla COMO cualquier líder, eligiendo el comité arriba, y también
+  solicitar a nombre del líder.
+- VENTANA: la página solo está ACTIVA del 25 al 30 de cada mes. Fuera de la
+  ventana muestra una nota: "El período para solicitar puestos de servicio
+  es del 25 al 30 de cada mes". EXCEPCIÓN puntual: este octubre la ventana
+  se extiende hasta el 5 de octubre; después queda fija 25–30. (La ventana
+  va configurable — constante o setting — para no redeployar por esto.)
+  El cierre se valida server-side, no solo escondiendo el botón.
+
+### [ ] SRV-12 · Parte 2: página "Solicitudes de puestos de servicio" + publicación mensual
+
+- Página nueva en el menú de servidores: "Solicitudes de puestos de
+  servicio" (la página actual de solicitudes de servicio deja de funcionar
+  como está y se transforma en esto).
+- Lista TODOS los puestos solicitados, detallados por comité y asociados al
+  encargado que los pidió, con cantidad de cupos.
+- Quién la usa: el rol "colaborador de puestos de servicio" (+ admin/RH).
+  Operación prevista: los primeros de cada mes. Dos botones:
+  1. "Descargar Excel": todos los puestos solicitados por comité, con líder
+     asociado, cantidad de cupos y las definiciones/descripciones que ya
+     están en el sistema.
+  2. "Publicar puestos": al publicar, PRIMERO desactiva todo lo publicado
+     del mes anterior (estado desactivado — no DELETE) y luego publica los
+     puestos nuevos en la página de puestos de servicio. Confirmación antes
+     de ejecutar (borra la publicación vigente) y registro en audit_log de
+     quién publicó y cuántos entraron/salieron.
+
+### [ ] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
+
+Reglas dictadas (2026-09-25):
+- Página PÚBLICA, sin login — se va a incrustar por IFRAME en theosplace.org.
+  Reutilizar el mecanismo que ya existe para /calendario: PUBLIC_PREFIXES +
+  EMBED_ALLOWED_ORIGINS (hoy solo permite el calendario — extender el CSP a
+  esta ruta con los mismos orígenes).
+- Lista de todos los puestos PUBLICADOS del mes (lo que publicó SRV-12).
+  Filtros: búsqueda por nombre del puesto, por comité y por ubicación.
+- Al tocar un puesto se abre el detalle mostrando ÚNICAMENTE la descripción
+  y el requisito de niveles. El resto de campos (funciones, perfil, etc.)
+  NO se muestra en público — solo en la página interna de solicitudes.
+- Botón "Aplicar al puesto":
+  · Con sesión: UN clic y se crea la aplicación a nombre de la persona.
+  · Sin sesión: pide login y al volver REGRESA al mismo puesto para aplicar
+    sin perder nada (reutilizar el ?redirect= de src/proxy.ts — ya
+    implementado; verificar que funcione desde el iframe: si el login dentro
+    de iframe da problemas de cookies/CSP, abrir en pestaña nueva y volver).
+- Botón adicional: "¿No ves el puesto que necesitás? Sugerinos acá" → enlaza
+  a la página EXISTENTE de solicitar puesto nuevo, dejando claro que es para
+  puestos que NO existen en el catálogo.
+
+### [ ] SRV-14 · Parte 4: página "Aplicaciones" + PDF + estados + alta automática del servidor
+
+Reglas dictadas (2026-09-25):
+- Página nueva "Aplicaciones" como submenú de servidores. La ven quienes
+  tienen los puestos EXISTENTES "colaborador de aplicaciones" y "colaborador
+  de seguimiento" (staff, comité de servidores) vía rol automático
+  (position-role-sync + source) — más coordinador_servidores, admin y
+  direccion (ver mapa de accesos de la Fase 24).
+- Lista de aplicaciones con filtros por comité y ubicación, y conteo de
+  aplicantes por puesto.
+- ESTADOS de la aplicación (5):
+  1. "recibida" (al crearse),
+  2. "enviada al encargado" (recomendación de nombre — ver nota abajo),
+  3. "aceptada",
+  4. "en revisión" (la persona fue aceptada pero para OTRO puesto u otra
+     situación que requiere aprobación),
+  5. "rechazada".
+- PDF por aplicación (botón "Descargar PDF"): datos de la persona — nombre,
+  apellidos, teléfono, email, último estudio llevado con su dirigente y el
+  teléfono del dirigente. El archivo se nombra "[puesto] - [persona]".
+  Botón hermano "Enviar al encargado": manda por email el mismo detalle al
+  encargado que solicitó ese puesto (SRV-11) y cambia el estado a "enviada
+  al encargado". (Correo interno de operación; baseLayout; respeta
+  EMAIL_SILENT_MODE con el criterio de avisos internos.)
+- SEGUIMIENTO (humano, entrevistas fuera del sistema):
+  · "aceptada" → además de cambiar el estado, EL SISTEMA ASIGNA
+    AUTOMÁTICAMENTE a la persona como servidor de ese puesto en ese comité
+    (alta en la tabla de asignaciones; position-role-sync le da los roles
+    que el puesto tenga mapeados). Email informativo a RH/staff de que fue
+    aceptada.
+  · "en revisión" → campo de texto OPCIONAL para explicar el motivo; email
+    automático a rh@theosplace.org y a los roles de staff
+    (encargado_staff/coordinador_servidores) con el detalle de la solicitud
+    y el motivo.
+  · "rechazada" → solo cambia el estado, sin correos.
+- Todo cambio de estado queda en audit_log (quién y cuándo).
+
+NOTA de nombre del estado 2: recomendado "enviada al encargado" — dice qué
+pasó y a quién, sin amarrarse al medio (sirve igual si fue PDF descargado y
+mandado a mano o email automático).

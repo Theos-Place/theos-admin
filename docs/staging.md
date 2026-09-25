@@ -54,6 +54,26 @@ alias devolvía 200 mientras el build todavía corría, porque Vercel sirve una
 página propia de «instant preview site» en el interín. Estuve a punto de pasar
 ese link como listo.
 
+## Traer la estructura de producción (2026-09-25)
+
+```
+node scripts/staging/sincronizar-estructura.mjs            # dry run
+node scripts/staging/sincronizar-estructura.mjs --aplicar
+```
+
+Copia áreas, comités y puestos con todos sus datos. **No trae servidores**:
+staging es de datos sintéticos y copiar `volunteers` arrastraría a personas
+reales —quién sirve dónde— a una base que se comparte con quien prueba.
+
+Tampoco copia `areas.leader_id`: apunta a una ficha de producción que en
+staging no existe. No se pierde nada, porque desde SRV-5 quién encarga un
+comité se deriva del puesto «Encargado…» y ese campo dejó de ser la fuente.
+
+**No borra.** Lo que exista en staging y no en producción se reporta y se deja
+—ahí viven los datos de prueba, y `[prueba] Puesto de servicio` tiene
+voluntarios colgando—. Los IDs se conservan, así que `area_id` sigue apuntando
+al comité correcto y volver a correrlo actualiza en vez de duplicar.
+
 ## Con un comando
 
 ```bash
