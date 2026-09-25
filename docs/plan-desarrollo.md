@@ -3204,14 +3204,51 @@ grande y toca planes, precios, folletos, cierres y matrícula; el diseño de
 arriba es la spec. DRY-RUN de los cambios de catálogo de planes y staging
 antes de producción.)
 
-### [ ] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva
+### [x] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva — HECHO 2026-09-24
 
-Al matricular Nivel 1, preguntas condicionales integradas al flujo (NO un
-formulario aparte): ¿sos parte de una iglesia? → cuál (atea/católica/
-evangélica/otra) → si evangélica y quiere quedarse en su iglesia → mensaje
-amable de que los estudios no son para eso y SE OCULTA el botón de
-matricular. Ari pasa las preguntas exactas. Pendiente de sus preguntas para
-armar el prompt.
+Las preguntas las pasó Ari por captura del formulario que hoy vive en CCB.
+
+**Se reusó el módulo de formularios en vez de inventar tabla.** Ya tenía todo:
+lógica condicional con tests (`lib/forms/logica-condicional`), respuestas en
+`form_responses`, y acceso POR FORMULARIO con `form_access_grants` (FRM-4). Eso
+último pesa: acá se guarda afiliación religiosa, dato sensible bajo la Ley
+8968, y con los grants se le da a quien corresponda sin abrir un rol nuevo. El
+«NO un formulario aparte» del pedido se respeta igual, porque es sobre la
+EXPERIENCIA: las preguntas van embebidas en el paso de matrícula.
+
+**Lo único que las capturas dejaban ambiguo, y es lo que más importaba.** La
+sección «¡Exploremos otras opciones!» tiene en CCB DOS reglas «Only show this
+section if…» apiladas, y un constructor puede combinarlas con «y» o con «o». Va
+con **Y**, por dos razones: el mensaje dice «nos alegra mucho que seas parte
+activa de una iglesia» —está escrito para quien eligió seguir en la suya, y con
+«o» le saldría también a quien contestó «estoy considerando unirme a Theos»,
+que es justo a quien sí se quiere recibir—; y además no cambia nada en la
+práctica, porque la pregunta de motivación solo aparece si ya contestó
+«evangélica». En el motor del repo dos reglas se resuelven con «o», así que va
+como UNA regla con dos condiciones.
+
+**Qué NO se trajo del formulario de CCB**, porque el sistema ya lo hace: la
+selección de grupos (eso ES la pantalla de matrícula), los avisos de rango de
+edad (la elegibilidad ya los cubre) y días/zona/modalidad (eso es el flujo de
+solicitudes).
+
+Detalles que conviene saber:
+
+- **Solo Nivel 1, y solo para quien se matricula a sí mismo.** Si el staff
+  matricula a otra persona no se pregunta: la respuesta quedaría guardada a
+  nombre equivocado.
+- **El veredicto lo calcula el SERVIDOR.** La pantalla lo recalcula para
+  dibujar, pero el que vale es el del endpoint — el del navegador se cambia con
+  la consola abierta.
+- **Interruptor de apagado:** desactivar el formulario (`forms.is_active`) hace
+  que el endpoint conteste `disponible:false` y la matrícula siga derecho, sin
+  desplegar nada.
+- **La tilde de «Sí, Evángelica» está mal en el formulario de Ari** y se copió
+  TAL CUAL: la comparación es por texto exacto. Corregirla hay que hacerlo en
+  la constante, de donde salen el seed y la regla a la vez.
+
+Sembrar / re-sembrar: `npx tsx scripts/est15/sembrar-cuestionario-nivel-1.ts
+--aplicar` (sin `--aplicar` es dry-run).
 
 ### [ ] EST-16 · Cierre: el dirigente elige la fecha de inicio del siguiente nivel + recordatorio más suave
 

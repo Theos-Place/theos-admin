@@ -27,6 +27,10 @@ import { formatDate, formatDateLong, formatCRC, formatMoney } from '@/lib/format
 import { studyCostLabel } from '@/lib/studies/cost-label'
 import { buildPaymentBreakdown, formatDiscount } from '@/lib/finance/payment-breakdown'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
+import { CuestionarioNivel1 } from '@/components/studies/CuestionarioNivel1'
+
+/** EST-15 · El cuestionario es de Nivel 1 y de nadie más. */
+const PLAN_CON_CUESTIONARIO = 'N1'
 
 // 'prematrimonial' NO es una etapa: es una pestaña propia (pedido 2026-07-31),
 // porque el curso tiene su propio flujo (pareja, logística, ceremonia y pago) y
@@ -82,6 +86,9 @@ export default function MatriculaPage() {
   // FIN-2: matrícula pedida por alguien sin documento — se captura antes de
   // confirmar y luego sigue con la confirmación que quedó pendiente.
   const [docGate, setDocGate]             = useState<ConfirmState | null>(null)
+  // EST-15 · Mismo patrón que `docGate`: se interpone entre «Matricular» y la
+  // confirmación, y si todo está bien entrega el control.
+  const [cuestionarioGate, setCuestionarioGate] = useState<ConfirmState | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodValue>('sinpe')
   const [enrolling, setEnrolling]         = useState(false)
   const [pendingReceipt, setPendingReceipt] = useState<{ enrollmentId: string; groupId: string; studyName: string; amount: number; currency: string | null } | null>(null)
@@ -604,6 +611,14 @@ export default function MatriculaPage() {
                           setDocGate({ group, study: result })
                           return
                         }
+                        // EST-15 · Solo Nivel 1, y solo para quien se matricula
+                        // a sí mismo: cuando el staff matricula a otra persona
+                        // no tiene sentido preguntarle por SU iglesia, y la
+                        // respuesta quedaría guardada a nombre equivocado.
+                        if (result.study_code === PLAN_CON_CUESTIONARIO && !selectedMember) {
+                          setCuestionarioGate({ group, study: result })
+                          return
+                        }
                         setConfirmModal({ group, study: result })
                       }}
                       deudaHref={deudaHref}
@@ -684,6 +699,16 @@ export default function MatriculaPage() {
             </button>
           </div>
         </Modal>
+      )}
+
+      {cuestionarioGate && (
+        <CuestionarioNivel1
+          onCancel={() => setCuestionarioGate(null)}
+          onPuedeMatricular={() => {
+            setConfirmModal(cuestionarioGate)
+            setCuestionarioGate(null)
+          }}
+        />
       )}
 
       {confirmModal && (
