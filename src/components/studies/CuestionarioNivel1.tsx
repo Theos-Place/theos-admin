@@ -87,8 +87,20 @@ export function CuestionarioNivel1({
   const porId: RespuestasDelCuestionario = Object.fromEntries(
     (campos ?? []).map(c => [c.id, respuestas[c.label] ?? '']),
   )
+  /**
+   * LOS CAMPOS `info` NO SE DIBUJAN ACÁ, y el de la despedida es uno.
+   *
+   * Existe en el formulario para que se lea completo desde el módulo de
+   * formularios, con su condición y todo. Pero en el flujo de matrícula el
+   * mensaje ya se muestra al final, después de guardar, y dibujarlo también
+   * inline lo mostraba DOS VECES: aparecía al elegir la opción y otra vez al
+   * tocar Continuar (reportado por Floriana, 2026-09-25). Va solo al final:
+   * antes de guardar todavía se puede cambiar la respuesta, así que despedir a
+   * alguien que aún está eligiendo es adelantarse.
+   */
   const visibles = (campos ?? []).filter(c =>
-    campoVisible({ logic_rules: (c.conditions ?? undefined) as never }, porId))
+    c.field_type !== 'info'
+    && campoVisible({ logic_rules: (c.conditions ?? undefined) as never }, porId))
 
   const v = veredicto(respuestas)
   const puedeEnviar = v.estado !== 'incompleto'
@@ -182,21 +194,8 @@ export function CuestionarioNivel1({
 function CampoDelCuestionario({ campo, valor, onChange }: {
   campo: Campo; valor: string; onChange: (v: string) => void
 }) {
-  // El campo `info` es la sección de despedida: se dibuja sola cuando la
-  // condición se cumple, y no pide nada.
-  if (campo.field_type === 'info') {
-    return (
-      <div className="rounded-xl bg-surface-low p-4">
-        <p className="text-sm font-semibold text-navy font-display">{campo.label}</p>
-        {campo.description && (
-          <p className="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-navy-light font-body">
-            {campo.description}
-          </p>
-        )}
-      </div>
-    )
-  }
-
+  // Los campos `info` no llegan acá: se filtran antes, porque el mensaje de
+  // despedida va solo al final. Ver el filtro de `visibles`.
   const id = `cuest-${campo.id}`
   return (
     <div className="space-y-1.5">

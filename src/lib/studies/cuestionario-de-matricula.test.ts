@@ -296,3 +296,26 @@ describe('el filtro vive donde se CREA la matrícula', () => {
     expect(consulta).toContain("veredicto(respuestas).estado === 'otras_opciones'")
   })
 })
+
+describe('el mensaje de despedida se muestra UNA vez, al final', () => {
+  const modal = readFileSync('src/components/studies/CuestionarioNivel1.tsx', 'utf8')
+
+  it('los campos `info` no se dibujan dentro del cuestionario', () => {
+    // Salía dos veces: inline al elegir la opción, y otra vez al tocar
+    // Continuar (reportado el 2026-09-25). Antes de guardar todavía se puede
+    // cambiar la respuesta, así que despedir a alguien que aún está eligiendo
+    // es adelantarse.
+    expect(modal).toContain("c.field_type !== 'info'")
+  })
+
+  it('y el renderer ya no tiene una rama para ellos', () => {
+    // Código muerto que haría pensar que sí se dibujan.
+    const renderer = modal.slice(modal.indexOf('function CampoDelCuestionario'))
+    expect(renderer).not.toContain("=== 'info'")
+  })
+
+  it('el que se muestra al final sale del veredicto del SERVIDOR', () => {
+    expect(modal).toContain("d?.veredicto?.estado === 'otras_opciones'")
+    expect(modal).toContain('setBloqueo({ titulo: d.veredicto.titulo, mensaje: d.veredicto.mensaje })')
+  })
+})
