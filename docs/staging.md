@@ -74,6 +74,29 @@ comité se deriva del puesto «Encargado…» y ese campo dejó de ser la fuente
 voluntarios colgando—. Los IDs se conservan, así que `area_id` sigue apuntando
 al comité correcto y volver a correrlo actualiza en vez de duplicar.
 
+## Una persona en cada puesto
+
+```
+node scripts/staging/sembrar-servidores.mjs            # dry run
+node scripts/staging/sembrar-servidores.mjs --aplicar
+```
+
+Las pantallas de servidores —el detalle del comité, los conteos por área, el
+export de estructura— se ven vacías sin gente asignada. Esto pone UNA ficha de
+prueba en cada puesto que no tenga a nadie.
+
+**Una ficha por puesto, no unas pocas repartidas.** Con 53 fichas y 357 puestos
+habría que repetir cada una siete veces, y los conteos de «cuánta gente sirve»
+dejarían de parecerse a la realidad, que es lo que se quiere mirar.
+
+**La ficha se deriva del ID del puesto**, no de un contador: por eso volver a
+correrlo no duplica a nadie y solo llena lo que falte, aunque cambie el orden o
+entren puestos nuevos.
+
+Van marcadas `[prueba]` y con correo en **`.invalid`**, un TLD reservado que no
+existe: ni por error puede salir un envío hacia una dirección real. Corrido el
+2026-09-25: 356 fichas, y los 357 puestos quedaron con alguien.
+
 ## Con un comando
 
 ```bash
