@@ -43,6 +43,17 @@ type SedesCtx = {
   zoneSedes: Sede[]
   loading: boolean
   sedeLabel: (id: string) => string
+  /**
+   * Nombre de una ZONA a partir de su código (`study_groups.zone`).
+   *
+   * Busca en TODAS las sedes y no solo en `zoneSedes`: `VIRTUAL` es una sede
+   * con `is_zone = false` que igual se usa como zona de grupos, así que
+   * filtrar por `is_zone` la dejaría sin nombre.
+   *
+   * Si el código no existe devuelve el código tal cual, que dice más que un
+   * guion: un código huérfano es un dato a arreglar y conviene verlo.
+   */
+  zoneLabel: (code: string | null | undefined) => string
 }
 
 const Ctx = createContext<SedesCtx | null>(null)
@@ -72,6 +83,12 @@ export function SedesProvider({ children }: { children: React.ReactNode }) {
     zoneSedes: sedes.filter((s) => s.is_zone),
     loading,
     sedeLabel,
+    zoneLabel: (code) => {
+      if (!code) return ''
+      // `Sede.id` ES el código: histórico del dominio, el uuid real va aparte
+      // en `sede_id`. Buscar por `id` acá no es un error de tipeo.
+      return sedes.find((s) => s.id === code)?.name ?? code
+    },
   }), [sedes, loading])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
@@ -81,7 +98,10 @@ export function useSedes(): SedesCtx {
   const ctx = useContext(Ctx)
   if (!ctx) {
     // Fallback si se usa fuera del provider: caché + listas vacías.
-    return { sedes: [], activeSedes: [], historicalSedes: [], zoneSedes: [], loading: false, sedeLabel }
+    return {
+      sedes: [], activeSedes: [], historicalSedes: [], zoneSedes: [], loading: false, sedeLabel,
+      zoneLabel: (code) => code ?? '',
+    }
   }
   return ctx
 }

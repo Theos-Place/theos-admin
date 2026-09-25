@@ -52,6 +52,10 @@ function SectionLabel({ text, tooltip }: { text: string; tooltip: string }) {
 }
 
 function GrupoRow({ g }: { g: DirigenteGrupo }) {
+  // La zona sale del campo `zone`, no del nombre: el nombre la lleva escrita a
+  // mano y no se actualiza cuando el grupo se muda (ver DirigenteGrupo.zone).
+  const { zoneLabel } = useSedes()
+  const zona = zoneLabel(g.zone)
   return (
     <Link
       href={`/estudios/grupos/${g.group_id}`}
@@ -60,7 +64,9 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
       <StudyTypeBadge code={g.plan_code} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-navy font-body truncate">{g.group_name}</p>
-        <p className="text-[13px] text-navy-light/80 font-body">{fmtDate(g.date)}</p>
+        <p className="text-[13px] text-navy-light/80 font-body">
+          {[fmtDate(g.date), zona].filter(Boolean).join(' · ')}
+        </p>
       </div>
       <span className="flex items-center gap-1 text-xs text-navy-light/80 font-body shrink-0">
         <Users size={12} /> {g.students_count}

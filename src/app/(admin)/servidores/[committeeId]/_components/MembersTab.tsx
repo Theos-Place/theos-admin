@@ -12,14 +12,19 @@ import { formatDate } from '@/lib/format'
 import { calcularAntiguedad } from '@/lib/servers/columns'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { INFO_ULTIMO_ESTUDIO_DIRIGENTE } from '@/lib/studies/estudio-actual'
+import { useSedes } from '@/lib/sedes'
 import { EstrellaDeEncargado } from './EstrellaDeEncargado'
 
 type StatusFilter = 'active' | 'inactive' | 'all'
 
 /** El estudio más reciente: el que está dando, o el último que dio. */
 function UltimoEstudio({ grupo }: { grupo: DirigenteGrupo | null }) {
+  // Hooks antes de cualquier return: no pueden ir condicionados.
+  const { zoneLabel } = useSedes()
   if (!grupo) return <span className="text-navy-light/80">Sin estudios</span>
   const enCurso = grupo.status === 'en_curso' || grupo.status === 'en_matricula'
+  // La zona del CAMPO, no la del nombre (ver DirigenteGrupo.zone).
+  const zona = zoneLabel(grupo.zone)
   return (
     // El nombre del grupo SE MUESTRA ENTERO y baja de línea si no cabe. Antes
     // iba cortado a 16 caracteres con `truncate`, y los nombres de grupo
@@ -27,7 +32,10 @@ function UltimoEstudio({ grupo }: { grupo: DirigenteGrupo | null }) {
     // grupos distintos se leían idénticos. Pedido de Floriana, 2026-09-23.
     <span className="inline-flex items-start gap-1.5">
       <span className="font-medium text-navy shrink-0">{grupo.plan_code}</span>
-      <span className="min-w-0 break-words">{grupo.group_name}</span>
+      <span className="min-w-0 break-words">
+        {grupo.group_name}
+        {zona && <span className="text-navy-light/80"> · {zona}</span>}
+      </span>
       {/* El punto solo marca «está dando ahora». Va con aria-label porque el
           color por sí solo no comunica nada a quien no lo ve. */}
       {enCurso && (

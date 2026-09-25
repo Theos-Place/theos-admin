@@ -33,6 +33,18 @@ export type DirigenteGrupo = {
   students_count: number
   status: StudyGroup['status']
   date: string | null
+  /**
+   * CÓDIGO de la zona (`study_groups.zone`), no su nombre: el nombre se resuelve
+   * en la pantalla con el catálogo de sedes, que ya está cargado ahí.
+   *
+   * Existe porque EL NOMBRE DEL GRUPO NO ES FUENTE DE VERDAD DE LA ZONA. Por
+   * convención los grupos se llaman «SCJ — Este SJ», con la zona escrita a
+   * mano, y cuando el grupo se muda nadie renombra: el grupo de Stanley
+   * Benavides se llamaba «SCJ — Este SJ» con `zone = la-sabana` y ubicación en
+   * Pavas (reportado el 2026-09-24). Al 2026-09-24 hay 7 grupos activos así.
+   * Mostrar la zona del campo hace que el nombre viejo no pueda engañar.
+   */
+  zone: string | null
 }
 
 export type Dirigente = {
@@ -102,6 +114,7 @@ export function buildDirigentes(
         students_count: enrolled(g),
         status: g.status,
         date: g.end_date ?? g.start_date ?? null,
+        zone: g.zone || null,
       }
       if (g.status === 'finalizado') acc.completados.push(entry)
       else acc.activos.push(entry)

@@ -8,6 +8,7 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
 import { useRowSelection } from '@/hooks/useRowSelection'
+import { useSedes } from '@/lib/sedes'
 import { useUrlFlag } from '@/hooks/useUrlFilter'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
@@ -67,6 +68,7 @@ function DirigenteRow({
    *  alcanza —la pregunta pasa a ser CUÁL grupo—, así que se nombra. */
   mostrarGrupo?: boolean
 }) {
+  const { zoneLabel } = useSedes()
   return (
     <div className={cn('flex items-center gap-3 px-3 sm:px-4 py-3 border-b border-[var(--outline-variant)] transition-colors', selected ? 'bg-coral/5' : 'hover:bg-surface-low')}>
       {selectable && (
@@ -106,8 +108,18 @@ function DirigenteRow({
           </div>
           <p className="text-xs text-navy-light/80 font-body mt-0.5 truncate">
             {d.total_grupos} grupo{d.total_grupos === 1 ? '' : 's'} · {d.total_activos} activo{d.total_activos === 1 ? '' : 's'}
+            {/* LA ZONA SALE DEL CAMPO, no del nombre del grupo. Por convención
+                el grupo se llama «SCJ — Este SJ», con la zona escrita a mano, y
+                cuando se muda nadie lo renombra: al 2026-09-24 hay 7 grupos
+                activos cuyo nombre contradice su `zone` —y la ubicación le da
+                la razón al campo, no al nombre—. Mostrarla acá hace que el
+                nombre viejo no pueda engañar. */}
             {d.estudios_activos.length > 0 && ` · ${d.estudios_activos
-              .map(g => (mostrarGrupo ? g.group_name || g.plan_code : g.plan_code))
+              .map(g => {
+                const base = mostrarGrupo ? g.group_name || g.plan_code : g.plan_code
+                const zona = zoneLabel(g.zone)
+                return zona ? `${base} (${zona})` : base
+              })
               .slice(0, 3).join(', ')}`}
           </p>
         </div>
