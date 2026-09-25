@@ -754,6 +754,22 @@
       "is_historical": false,
       "currency": "CRC",
       "is_zone": true
+    },
+    {
+      "id": "a1d0f6c2-7b3e-4a55-9f21-0c8e5b4d7e90",
+      "code": "santo-domingo",
+      "name": "Santo Domingo",
+      "is_active": false,
+      "created_at": "2026-09-24T23:00:00.000Z",
+      "updated_at": "2026-09-24T23:00:00.000Z",
+      "day": null,
+      "time": null,
+      "location": null,
+      "age_group": null,
+      "waze_url": null,
+      "is_historical": false,
+      "currency": "CRC",
+      "is_zone": true
     }
   ],
   "areas": [
