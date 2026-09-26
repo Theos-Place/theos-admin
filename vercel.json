@@ -70,6 +70,10 @@
     {
       "path": "/api/cron/dirigentes-activos",
       "schedule": "0 11 1 * *"
+    },
+    {
+      "path": "/api/cron/evaluation-digest",
+      "schedule": "0 13 1,15 * *"
     }
   ]
 }

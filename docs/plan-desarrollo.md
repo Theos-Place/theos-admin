@@ -3095,7 +3095,7 @@ completa en `docs/minutas/estudios-2026-09-24.md`. Orden sugerido: RET-1 y
 SRV-10 son urgentes (privacidad); EST-14 es el grande y se prueba en staging
 antes de producción (dicho en la reunión).
 
-### [~] RET-1 · Retroalimentaciones de estudiantes — PARTES 1 A 5 HECHAS 2026-09-25
+### [x] RET-1 · Retroalimentaciones de estudiantes — HECHO 2026-09-25
 
 **1 · Quién ve las respuestas: de 25 personas a 10.** El censo dio DOS caminos
 —el endpoint del grupo abierto a todo `STUDY_ADMIN_ROLES`, y el módulo de
@@ -3130,10 +3130,22 @@ el export. El vínculo ya existía en `leader_evaluations`; nadie lo leía.
 solicitudes y pagos, ninguno para evaluaciones pendientes. Lo que hay es la cola
 `/estudios/evaluaciones`, que hay que ir a mirar.
 
-**Y se nota:** al 2026-09-25 hay 8 tiquetes, TODOS en `open`, el más viejo de
-hace 34 días. El primero de la lista es justamente el de Fernando Gutiérrez.
-Con el aviso de escalación recién hecho, la pieza que falta es un cron que
-resuma lo pendiente cada dos semanas — decisión pendiente, no trabajo pendiente.
+**Y se notaba:** al 2026-09-25 había 8 tiquetes, TODOS en `open`, el más viejo
+de hace 34 días. El primero de la lista era justamente el de Fernando
+Gutiérrez. **Se construyó** (`/api/cron/evaluation-digest`, el 1 y el 15).
+
+Va el 1 y el 15 y no «cada 14 días»: cron no sabe de quincenas —un paso de 14
+sobre el día del mes salta raro a fin de mes— y una fecha fija se puede
+anticipar. **No manda nada si no hay pendientes**: un resumen que llega
+diciendo «cero» enseña a archivarlo sin leer, y el día que traiga ocho también
+se archiva. Y no lleva el contenido de ninguna respuesta — es un recordatorio
+de que hay trabajo, no el trabajo.
+
+Probado contra producción: hoy diría «8 evaluaciones esperan revisión · La más
+vieja lleva 33 días esperando», a 7 personas.
+
+FALTA DE TU LADO: crear el check de Healthchecks para
+`HEALTHCHECK_URL_EVALUATION_DIGEST` (13:00 UTC, el 1 y el 15, grace 360).
 
 Prompt original:
 
