@@ -143,6 +143,57 @@ export function FormCanvas({
           )
         }
 
+        /**
+         * SRV-9 · La disponibilidad del dirigente se dibuja como una tarjeta
+         * cerrada y sin opciones: no hay nada que configurar. El bloque es el
+         * MISMO que está en el perfil, y esa es la gracia — si acá se pudieran
+         * elegir campos, el formulario y el perfil empezarían a preguntar
+         * cosas distintas.
+         */
+        if (field.type === 'leader_availability') {
+          return (
+            <div
+              key={field.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={e => handleDragOver(e, index)}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              onClick={() => onSelectField(field.id)}
+              className={cn('group relative cursor-pointer transition-all bg-[rgba(112,189,194,.06)] rounded-xl py-3 px-[14px]', isDragging ? 'opacity-30' : '', isOver ? 'ring-2 ring-teal-deep/40 rounded-xl' : '')}
+              style={{ border: isActive ? '1.5px solid var(--brand-teal-deep)' : '1.5px dashed rgba(112,189,194,.5)' }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GripVertical size={14} className="text-teal-deep/50 cursor-grab shrink-0" />
+                  <FlechasDeOrden indice={index} total={fields.length} etiqueta="el campo"
+                    onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
+                  <User size={14} color="var(--brand-teal-deep, #2a8b8f)" />
+                  <span className="text-[13px] font-bold text-[var(--brand-teal-deep,#2a8b8f)] font-display">
+                    Disponibilidad del dirigente
+                  </span>
+                  <span className="text-[11px] text-[rgba(42,139,143,.6)] font-display">#{index + 1}</span>
+                </div>
+                <div className={cn('flex gap-1 transition-opacity', ACCIONES)}>
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); onDeleteField(field.id) }}
+                    className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-coral/10 transition-colors"
+                    aria-label="Eliminar el bloque de disponibilidad"
+                  >
+                    <Trash2 size={11} className="text-coral" />
+                  </button>
+                </div>
+              </div>
+              <p className="mt-1 text-[13px] text-[var(--fg-muted,#8c8fb0)] font-body">
+                Escribe directo en la ficha del dirigente: no queda como respuesta.
+                Viene prellenado con lo que la persona ya tiene.
+              </p>
+              {isActive && <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--brand-teal-deep,#2a8b8f)]" />}
+            </div>
+          )
+        }
+
         // personal_data gets its own card
         if (field.type === 'personal_data') {
           const selectedLabels = (field.options ?? []).map(

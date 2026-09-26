@@ -10,6 +10,7 @@ const FIELD_TYPE_MAP: Record<string, FieldType> = {
   text: 'text', textarea: 'textarea', number: 'number', date: 'date',
   select: 'select', radio: 'radio', checkbox: 'checkbox', scale: 'scale',
   yes_no: 'yes_no', personal_data: 'personal_data', page_break: 'page_break',
+  leader_availability: 'leader_availability',
   section: 'section', section_header: 'section', info: 'info',
   // aproximaciones de tipos que el builder no tiene:
   email: 'text', phone: 'text', multiselect: 'select',

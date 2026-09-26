@@ -3460,7 +3460,56 @@ grupo X llegue a discípulos 2"). Hoy la solicitud queda pendiente ensuciando la
 Tests: pausar, despertar en fecha, no despertar antes. tsc/lint/vitest.
 ```
 
-### [ ] SRV-9 · Perfil del dirigente: tab de disponibilidad editable + actualización de datos
+### [x] SRV-9 · Perfil del dirigente: tab de disponibilidad editable + actualización de datos
+
+HECHO el 2026-09-25 (en staging, tres commits). Qué quedó:
+
+**1 · El tab «Dirigente» en el perfil.** Aparece solo si la persona TIENE ficha
+de dirigente, y lo edita solo ella (el comité lo ve, pero edita desde
+`/estudios/dirigentes`, que además maneja la formación). Días × franjas, zonas,
+casa, suplente, ventana del año y dónde recibir folletos. Guardado directo por
+campo, sin botón «Guardar» general: con uno, tocar tres casillas y cerrar la
+pestaña pierde las tres — y esto se llena desde el teléfono.
+
+**Las tres palabras que no son sinónimos** quedaron como tres columnas, y la
+pantalla lo dice en voz alta: CAPACITADO lo certifica el comité (solo lectura),
+DISPONIBLE lo dice la persona, e INTERESADO —nuevo— es «quiero aprender a darlo
+y todavía no puedo». Sin esa tercera casilla, quien marca interés en algo para
+lo que no está capacitado se cuela entre los disponibles y termina asignado a
+un grupo que no puede dar.
+
+**La puerta.** El endpoint lo abre ahora también el propio dirigente, así que
+el chequeo es campo por campo contra una lista de PERMITIDOS. Y solo si YA
+tiene ficha: sin eso, `updateDirigenteConfig` se la CREARÍA a cualquiera con
+sesión y el comité vería crecer su lista con gente que nunca nombró.
+
+**2 · Vista y Excel para el comité** en `/estudios/dirigentes/confirmaciones`,
+con filtro por defecto en «Pendientes» y los pendientes arriba en las dos.
+«Nunca confirmó» y «Desactualizada» son dos estados distintos: al primero nunca
+se le preguntó (hoy son las 505 fichas), el segundo dejó de contestar. El Excel
+lleva una columna POR FRANJA (21) para que se pueda filtrar por «los martes en
+la noche». El enlace viejo «Disponibilidad» pasó a «Respuestas del formulario»:
+los dos decían lo mismo y son cosas distintas.
+
+**3 · El formulario espejo.** Tipo de campo nuevo `leader_availability` que
+renderiza EL MISMO componente del perfil — no una copia, o la campaña de marzo
+y el perfil empezarían a preguntar cosas distintas. Viene prellenado, guarda
+campo por campo y no deja respuesta que transcribir. Audiencia: solo
+dirigentes, con la condición `leader` de FRM-5. Seed idempotente en
+`scripts/srv9/sembrar-formulario-de-disponibilidad.ts`; ya sembrado en staging.
+
+**El «esto no es correcto»** de la formación abre campanita a la coordinación
+sin tocar el dato. La formación migrada de CCB trae sobras (grupos que se
+abrieron y nunca se dieron, caso «Amor Sin Fronteras»), y borrar automático lo
+que parece sobra borraría también formación real registrada raro.
+
+PENDIENTE: el correo de campaña (marzo/julio/noviembre) se manda como
+comunicación normal enlazando al formulario. No se automatizó, como pedía el
+ítem.
+
+SIN VERIFICAR EN PANTALLA: la lógica está probada y el formulario sembrado y
+verificado en la base de staging, pero no se abrió en un navegador — eso pide
+una sesión de dirigente real.
 
 Lo que pidió Fabiola para matar los formularios de Linktree (disponibilidad,
 suplente, actualización de datos — 3 veces al año: marzo/julio/noviembre).

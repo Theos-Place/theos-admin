@@ -22,7 +22,7 @@ import { MemberAdminTab } from './_components/MemberAdminTab'
 import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
-import { MemberLeaderTab } from './_components/MemberLeaderTab'
+import { ConfiguracionDelDirigente } from '@/components/studies/ConfiguracionDelDirigente'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
 import { ordenarServicios } from '@/lib/members/orden-de-servicios'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
@@ -445,7 +445,7 @@ export default function MiembroDetailPage() {
           comité la ve completa pero la edita desde /estudios/dirigentes, que
           es donde además maneja la formación y el estado. */}
       {activeTab === 'dirigente' && tieneFichaDeDirigente && (isOwnProfile || isStudyAdmin) && (
-        <MemberLeaderTab memberId={member.id} editable={isOwnProfile} />
+        <ConfiguracionDelDirigente memberId={member.id} editable={isOwnProfile} />
       )}
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}

@@ -21,7 +21,7 @@ const sinComentarios = (ruta: string): string =>
 
 const RUTA = 'src/app/api/studies/dirigentes/[id]/route.ts'
 const REPORTE = 'src/app/api/studies/dirigentes/formacion-reporte/route.ts'
-const TAB = 'src/app/(admin)/miembros/[id]/_components/MemberLeaderTab.tsx'
+const BLOQUE = 'src/components/studies/ConfiguracionDelDirigente.tsx'
 const PERFIL = 'src/app/(admin)/miembros/[id]/page.tsx'
 
 describe('SRV-9 · la puerta del endpoint', () => {
@@ -91,11 +91,11 @@ describe('SRV-9 · el tab del perfil', () => {
     expect(src).toMatch(/tieneFichaDeDirigente && \(isOwnProfile \|\| isStudyAdmin\)/)
     // El comité la VE pero no la edita desde acá: para eso está la pantalla de
     // dirigentes, que además maneja la formación y el estado.
-    expect(src).toMatch(/<MemberLeaderTab[\s\S]*?editable=\{isOwnProfile\}/)
+    expect(src).toMatch(/<ConfiguracionDelDirigente[\s\S]*?editable=\{isOwnProfile\}/)
   })
 
   it('la formación se muestra sin controles de edición', () => {
-    const src = sinComentarios(TAB)
+    const src = sinComentarios(BLOQUE)
     const bloque = src.slice(src.indexOf('Tu formación'), src.indexOf('¿Qué querés dar?'))
     expect(bloque).not.toContain('alternarLista')
     expect(bloque).not.toContain('guardar(')
@@ -104,8 +104,37 @@ describe('SRV-9 · el tab del perfil', () => {
   it('guarda campo por campo y no con un botón «Guardar» general', () => {
     // Con un botón general, tocar tres casillas y cerrar la pestaña pierde las
     // tres — y esto se llena desde el teléfono.
-    const src = sinComentarios(TAB)
+    const src = sinComentarios(BLOQUE)
     expect(src).toContain('onBlur')
     expect(src).not.toMatch(/>\s*Guardar cambios\s*</)
+  })
+})
+
+describe('SRV-9 · el formulario espejo', () => {
+  it('usa EL MISMO bloque del perfil, no una copia', () => {
+    // Si fueran dos, la campaña de marzo y el perfil empezarían a preguntar
+    // cosas distintas y nadie se enteraría hasta que los datos no cuadren.
+    const filler = sinComentarios('src/components/forms/FormFiller.tsx')
+    expect(filler).toContain("from '@/components/studies/ConfiguracionDelDirigente'")
+    expect(filler).toContain('<ConfiguracionDelDirigente')
+    const perfil = sinComentarios('src/app/(admin)/miembros/[id]/page.tsx')
+    expect(perfil).toContain("from '@/components/studies/ConfiguracionDelDirigente'")
+  })
+
+  it('no se muestra en preview ni respondiendo por otra persona', () => {
+    // Un bloque que promete guardar y no guarda es peor que no mostrarlo, y el
+    // endpoint solo deja escribir la ficha PROPIA.
+    const filler = sinComentarios('src/components/forms/FormFiller.tsx')
+    const bloque = filler.slice(filler.indexOf("field.type === 'leader_availability'"))
+    expect(bloque.slice(0, 400)).toMatch(/isPreview \|\| onBehalf \|\| !user\?\.member_id/)
+  })
+
+  it('no cuenta como pregunta: ni obligatoria ni columna en el export', () => {
+    // No guarda respuesta — escribe en la ficha. Exigirlo bloquearía el envío
+    // para siempre, y su columna en el Excel saldría vacía.
+    expect(sinComentarios('src/components/forms/FormFiller.tsx'))
+      .toContain("f.type !== 'leader_availability'")
+    expect(sinComentarios('src/lib/forms/xlsx-export.ts'))
+      .toContain("'leader_availability'")
   })
 })

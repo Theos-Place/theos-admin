@@ -31,6 +31,17 @@ export type FieldType =
   | 'info'
   | 'page_break'
   | 'personal_data'
+  /**
+   * SRV-9 · El bloque de «Configuración del dirigente», el MISMO que está en
+   * el perfil. No guarda una respuesta: escribe directo en `study_leaders`,
+   * igual que `personal_data` escribe en la ficha del miembro.
+   *
+   * Es un TIPO DE CAMPO y no un formulario aparte para que la campaña de
+   * marzo/julio/noviembre pueda armarse con el módulo de formularios —con su
+   * portada, su audiencia y sus preguntas extra— sin que lo que la gente
+   * conteste se quede en respuestas que alguien tiene que transcribir.
+   */
+  | 'leader_availability'
   /** Imagen adjunta a la respuesta (pensado para comprobantes). El valor que se
    *  guarda es el PATH del bucket privado, no una URL — ver lib/forms/attachment. */
   | 'image'

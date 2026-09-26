@@ -17,7 +17,13 @@ import { formatDateLong, ymdCR } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 /**
- * SRV-9 · «Configuración del dirigente» en el perfil.
+ * SRV-9 · «Configuración del dirigente».
+ *
+ * VIVE EN components/ Y NO EN LA CARPETA DEL PERFIL porque lo usan DOS
+ * pantallas: el tab del perfil y el formulario espejo de las campañas. Y es
+ * el mismo componente en los dos, no una copia — si fueran dos, la campaña de
+ * marzo y el perfil empezarían a preguntar cosas distintas y nadie se
+ * enteraría hasta que los datos no cuadren.
  *
  * LO QUE VIENE A MATAR: la disponibilidad se recoge tres veces al año con
  * formularios de Linktree y lo que la gente contesta no vuelve al sistema —
@@ -56,7 +62,7 @@ const CHIP = 'rounded-full px-3 py-1.5 text-[13px] font-body border transition-a
 const CHIP_ON = 'bg-navy text-white border-navy'
 const CHIP_OFF = 'bg-transparent text-navy/80 border-outline hover:text-navy'
 
-export function MemberLeaderTab({ memberId, editable }: {
+export function ConfiguracionDelDirigente({ memberId, editable }: {
   /** De quién es la ficha. */
   memberId: string
   /** ¿Esta sesión puede escribirla? La propia persona o el comité. Alguien del

@@ -59,6 +59,11 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
     types: [
       { type: 'page_break',    label: 'Bloque / Página'  },
       { type: 'personal_data', label: 'Datos personales' },
+      // SRV-9: no guarda respuesta — escribe en la ficha del dirigente, igual
+      // que 'Datos personales' escribe en la del miembro. Es lo que deja armar
+      // la campaña de marzo/julio/noviembre con este módulo sin que lo
+      // contestado quede en respuestas que alguien transcribe.
+      { type: 'leader_availability', label: 'Disponibilidad del dirigente' },
       { type: 'studies_done',  label: 'Estudios aprobados (oculto)' },
     ],
   },
@@ -97,6 +102,9 @@ function defaultField(type: FieldType, order: number): FormFieldNew {
   if (type === 'personal_data') {
     base.label = 'Datos personales del miembro'
     base.options = ['full_name', 'cedula', 'phone', 'email']
+  }
+  if (type === 'leader_availability') {
+    base.label = 'Tu disponibilidad como dirigente'
   }
   return base
 }
@@ -599,7 +607,9 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     activeField.type === 'number' ? 'Número' :
                     activeField.type === 'date' ? 'Fecha' :
                   activeField.type === 'page_break' ? 'Bloque / Página' :
-                  activeField.type === 'personal_data' ? 'Datos personales' : activeField.type}
+                  activeField.type === 'personal_data' ? 'Datos personales'
+                  : activeField.type === 'leader_availability' ? 'Disponibilidad del dirigente'
+                  : activeField.type}
                 </p>
                 <button
                   type="button"
