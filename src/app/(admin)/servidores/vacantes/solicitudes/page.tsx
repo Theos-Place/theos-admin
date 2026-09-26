@@ -11,6 +11,17 @@
  * AGRUPADA POR COMITÉ y no una lista plana: el repaso se hace comité por
  * comité, que es como está organizada la conversación con los encargados.
  *
+ * ABRE EN «LISTAS PARA PUBLICAR» (SRV-15b) y no en todas: la tarea de los
+ * primeros del mes es repasar lo que se pidió, y las publicadas, las bajadas y
+ * las denegadas son una pila que crece un poco cada mes. El historial está a
+ * un clic, con el número en el chip — un filtro por defecto que no se ve es
+ * una lista incompleta que parece completa.
+ *
+ * CADA FILA SE PUEDE MOVER A MANO (SRV-15b), y para eso está el menú de la
+ * derecha: bajar una publicada antes de fin de mes, denegar, y sobre todo
+ * DEVOLVER a la cola una bajada o una denegada. Lo que el menú nunca ofrece es
+ * «publicar»: eso lo hace la corrida del mes, que además sella la fecha.
+ *
  * «PUBLICAR» NO ES SOLO AGREGAR, y por eso pide confirmación diciendo los DOS
  * números: sube lo nuevo y BAJA lo que está en la calle del mes pasado. Lo que
  * baja no se borra —queda desactivado con sus aplicaciones—, y eso también lo
@@ -22,7 +33,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Loader2, Download, Upload, Users, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, Loader2, Download, Upload, Users, AlertTriangle, MoveRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
@@ -31,10 +42,20 @@ import { useToast } from '@/components/shared/Toast'
 import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { formatDate } from '@/lib/format'
-import { VACANCY_STATE_LABEL, VACANCY_STATE_BADGE, isVacancyState } from '@/lib/servers/vacancy-states'
+import {
+  VACANCY_STATE_LABEL, VACANCY_STATE_BADGE, isVacancyState, type VacancyState,
+} from '@/lib/servers/vacancy-states'
 import {
   textoDeConfirmacion, hayAlgoQuePublicar, motivoParaNoPublicar, type PlanDePublicacion,
 } from '@/lib/servers/publicacion-mensual'
+import {
+  FILTROS, FILTRO_LABEL, FILTRO_POR_DEFECTO, vacioSegunFiltro,
+  type FiltroDeSolicitudes,
+} from '@/lib/servers/filtro-de-solicitudes'
+import {
+  estadosDestinoAMano, ACCION_HACIA, CONSECUENCIA_HACIA,
+} from '@/lib/servers/cambio-de-estado-de-solicitud'
+import { FilterChips } from '@/components/shared/FilterChips'
 
 type Solicitud = {
   id: string
@@ -60,20 +81,27 @@ export default function SolicitudesDePuestosPage() {
 
   const [items, setItems] = useState<Solicitud[] | null>(null)
   const [plan, setPlan] = useState<PlanDePublicacion>({ aPublicar: [], aDesactivar: [] })
+  const [conteos, setConteos] = useState<Partial<Record<FiltroDeSolicitudes, number>>>({})
+  const [filtro, setFiltro] = useState<FiltroDeSolicitudes>(FILTRO_POR_DEFECTO)
   const [confirmando, setConfirmando] = useState(false)
   const [publicando, setPublicando] = useState(false)
+  const [moviendo, setMoviendo] = useState<Solicitud | null>(null)
 
-  const cargar = useCallback(() => {
-    fetch('/api/servers/vacancies/requests')
+  // El filtro va en el servidor y no en memoria: lo mismo que se ve tiene que
+  // salir en el Excel, y el Excel lo arma la misma ruta con el mismo
+  // parámetro. Filtrar acá dejaría los dos caminos libres de separarse.
+  const cargar = useCallback((f: FiltroDeSolicitudes) => {
+    fetch(`/api/servers/vacancies/requests?estado=${encodeURIComponent(f)}`)
       .then(r => (r.ok ? r.json() : { items: [], plan: { aPublicar: [], aDesactivar: [] } }))
       .then(d => {
         setItems((d.items ?? []) as Solicitud[])
         setPlan(d.plan ?? { aPublicar: [], aDesactivar: [] })
+        if (d.conteos) setConteos(d.conteos)
       })
       .catch(() => setItems([]))
   }, [])
 
-  useEffect(() => { if (puedeVer) cargar() }, [puedeVer, cargar])
+  useEffect(() => { if (puedeVer) cargar(filtro) }, [puedeVer, cargar, filtro])
 
   /** Agrupadas por comité, y dentro por puesto. */
   const porComite = useMemo(() => {
@@ -107,11 +135,27 @@ export default function SolicitudesDePuestosPage() {
         'success',
       )
       setConfirmando(false)
-      cargar()
+      cargar(filtro)
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo publicar.', 'error')
     } finally {
       setPublicando(false)
+    }
+  }
+
+  async function mover(solicitud: Solicitud, hacia: VacancyState) {
+    try {
+      const res = await fetch(`/api/servers/vacancies/requests/${solicitud.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: hacia }),
+      })
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo cambiar el estado.'))
+      toast(`«${solicitud.puesto}» quedó ${VACANCY_STATE_LABEL[hacia].toLowerCase()}.`, 'success')
+      setMoviendo(null)
+      cargar(filtro)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo cambiar el estado.', 'error')
     }
   }
 
@@ -136,7 +180,7 @@ export default function SolicitudesDePuestosPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button
-            href="/api/servers/vacancies/requests?formato=xlsx"
+            href={`/api/servers/vacancies/requests?formato=xlsx&estado=${encodeURIComponent(filtro)}`}
             variante="secundario"
             className="inline-flex items-center gap-1.5"
           >
@@ -173,13 +217,24 @@ export default function SolicitudesDePuestosPage() {
         </div>
       )}
 
+      <FilterChips
+        ariaLabel="Filtrar solicitudes por estado"
+        chips={FILTROS.map(f => ({ key: f, label: FILTRO_LABEL[f], count: conteos[f] ?? 0 }))}
+        activeKey={filtro}
+        // Vacía la lista al cambiar de chip, acá y no dentro de `cargar`: así
+        // se ve el spinner en vez de las filas del filtro anterior, y el
+        // refresco que viene después de publicar deja las que ya están (no
+        // parpadea la pantalla entera por un cambio de estado).
+        onSelect={k => { setItems(null); setFiltro(k as FiltroDeSolicitudes) }}
+      />
+
       {items === null ? (
         <div className="flex items-center justify-center py-16"><Loader2 size={18} className="animate-spin text-navy-light/80" /></div>
       ) : porComite.length === 0 ? (
         <div className="rounded-2xl bg-surface-card shadow-card">
           <EmptyState
-            title="Todavía no hay solicitudes"
-            description="Los comités piden sus cupos del 25 al 30 de cada mes."
+            title={vacioSegunFiltro(filtro).titulo}
+            description={vacioSegunFiltro(filtro).detalle}
           />
         </div>
       ) : (
@@ -221,6 +276,15 @@ export default function SolicitudesDePuestosPage() {
                         <span className="text-sm font-bold text-navy font-display tabular-nums w-8 text-right">
                           {f.cupos}
                         </span>
+                        {puedePublicar && estadosDestinoAMano(f.estado).length > 0 && (
+                          <button
+                            onClick={() => setMoviendo(f)}
+                            aria-label={`Cambiar el estado de ${f.puesto}`}
+                            className="rounded-full p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors"
+                          >
+                            <MoveRight size={15} aria-hidden="true" />
+                          </button>
+                        )}
                       </span>
                     </li>
                   ))}
@@ -229,6 +293,61 @@ export default function SolicitudesDePuestosPage() {
             ))}
           </div>
         </>
+      )}
+
+      {moviendo && (
+        <Modal onClose={() => setMoviendo(null)} titleId="mover-title">
+          <div className="p-6 space-y-4">
+            <div>
+              <h2 id="mover-title" className="text-lg font-semibold text-navy font-display">
+                Cambiar el estado
+              </h2>
+              <p className="mt-1 text-sm text-navy-light/80 font-body">
+                {moviendo.puesto} · {moviendo.comite}
+              </p>
+              {isVacancyState(moviendo.estado) && (
+                <span className={cn('mt-2 inline-block rounded-full px-2 py-0.5 text-[13px] font-body', VACANCY_STATE_BADGE[moviendo.estado])}>
+                  Hoy: {VACANCY_STATE_LABEL[moviendo.estado]}
+                </span>
+              )}
+            </div>
+
+            {/* Las opciones salen de la tabla de transiciones, no de una lista
+                escrita acá: la misma que valida el servidor. */}
+            <div className="space-y-1.5">
+              {estadosDestinoAMano(moviendo.estado).map(destino => (
+                <button
+                  key={destino}
+                  onClick={() => void mover(moviendo, destino)}
+                  className="w-full text-left rounded-xl p-3 bg-surface-low hover:bg-surface-card transition-colors"
+                >
+                  <span className="block text-sm font-semibold text-navy font-display">
+                    {ACCION_HACIA[destino]}
+                  </span>
+                  <span className="block text-[13px] text-navy-light/80 font-body">
+                    {CONSECUENCIA_HACIA[destino]}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Por qué no está «Publicar»: es la pregunta que sigue, y sin
+                respuesta a la vista se contesta abriendo un ticket. */}
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Publicar no se hace desde acá: los puestos salen a la página con
+              «Publicar puestos», la corrida del mes.
+            </p>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setMoviendo(null)}
+                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {confirmando && (

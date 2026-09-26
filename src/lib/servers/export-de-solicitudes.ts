@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import { VACANCY_STATE_LABEL, isVacancyState } from './vacancy-states'
 
 /**
  * SRV-12 · El Excel de los puestos solicitados.
@@ -53,7 +54,11 @@ export function filaDeSolicitud(s: SolicitudParaExportar): Array<string | number
     s.encargados.join(', '),
     s.puesto,
     s.cupos,
-    s.estado,
+    // La etiqueta y no el slug: la columna la lee una persona, y
+    // «lista_para_publicar» en una celda es un identificador, no una palabra.
+    // Si el estado no se reconoce va tal cual, que es la señal de que esa fila
+    // quedó con un nombre viejo.
+    isVacancyState(s.estado) ? VACANCY_STATE_LABEL[s.estado] : s.estado,
     s.solicitada.slice(0, 10),
     s.descripcion ?? '',
     s.funciones ?? '',

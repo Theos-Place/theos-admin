@@ -3926,6 +3926,53 @@ tsc/lint/vitest.
   reescrito. Los tres cebos —volver la auto-aprobación, encender el botón solo
   por bajar, aceptar el estado viejo al publicar— hacen fallar un test cada uno.
 
+### [x] SRV-15b · Filtro por estado y cambio de estado a mano (pedido 2026-09-26, hecho 2026-09-26)
+
+**HECHO**, sin migración: es todo código.
+
+- **La pantalla abre en «listas para publicar»**, que es la tarea de los
+  primeros del mes. El historial está en chips con el número de cada estado.
+  El Excel baja lo mismo que se está viendo —el filtro va en la misma ruta— y
+  el nombre del archivo lo dice.
+- **El plan de publicación se calcula sobre TODAS**, nunca sobre lo filtrado:
+  la mitad del plan son las publicadas que hay que bajar, y en la vista por
+  defecto ninguna está a la vista. Con el plan filtrado el botón diría que no
+  baja nada y después bajaría cinco.
+- **Cada fila se puede mover a mano** (`PATCH /api/servers/vacancies/requests/[id]`),
+  con la tabla `TRANSICIONES_A_MANO` compartida entre la pantalla y el
+  servidor. Lo pedido: devolver a la cola una denegada o una bajada. Lo que
+  nunca se ofrece: publicar — eso sella `published_at`, y una publicada sin
+  fecha la baja la corrida siguiente, o sea que el atajo sale a la calle y se
+  cae solo. De `publicada` tampoco se vuelve derecho a la cola: primero se
+  baja, porque mientras esté publicada la gente puede aplicar.
+- La regla se aplica contra el estado que hay en la BASE, y el UPDATE lleva
+  `.eq('status', anterior)`: si otra persona la movió en el medio, no escribe.
+  El cambio se firma en `audit_log` con el estado del que venía.
+
+**Tres cosas rotas que aparecieron al hacerlo**, todas secuela del renombre de
+SRV-15:
+
+1. Los dos botones de «Cerrar puesto» seguían mandando `status: 'cerrada'` por
+   el PUT genérico. El enum del schema todavía lo aceptaba, así que el clic
+   guardaba un estado inexistente: la fila quedaba fuera de la página pública
+   Y fuera de todos los filtros, sin forma de recuperarla desde la interfaz.
+2. El badge del detalle pedía las clases de `'cerrada'` — una píldora sin
+   color ni fondo.
+3. `status` salió del schema de edición del puesto: el estado tiene una sola
+   puerta, la que valida la transición.
+
+Además: se borró `/api/servers/vacancies/bulk`, que no la llamaba nadie y
+escribía estados con service role; y el «Motivo de cierre (opcional)» del
+modal, que no guardaba nada (escribía en un estado local que no viajaba en el
+body) — **si el motivo hace falta, va en el PATCH y en el audit_log**.
+
+Tests: `srv15b-filtro-y-cambio-de-estado.test.ts` (20). Cinco cebos —publicar
+a mano desde denegada, plan sobre lo filtrado, UPDATE sin `.eq(status)`,
+volver a mandar `'cerrada'`, abrir en «todas»— hacen fallar un test cada uno.
+Verificado en staging contra la base de staging: denegar y devolver a la cola,
+el filtro, los tres nombres de archivo del Excel, y los 409 de las
+transiciones que no valen.
+
 ### [x] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
 
 HECHO el 2026-09-25 (en staging). Qué quedó:

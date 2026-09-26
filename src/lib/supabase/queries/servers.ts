@@ -1,5 +1,6 @@
 import type { ApplicationState } from '@/lib/servers/application-states'
 import { ESTADO_INICIAL, type VacancyState } from '@/lib/servers/vacancy-states'
+import { motivoQueImpideCambiar } from '@/lib/servers/cambio-de-estado-de-solicitud'
 import { ESTADO_PUBLICADO, ESTADO_DESACTIVADO } from '@/lib/servers/publicacion-mensual'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
@@ -577,25 +578,58 @@ export async function approveApplications(ids: string[], actorUserId?: string): 
   return { activated: typeof data === 'number' ? data : 0 }
 }
 
-/** Cambia el estado de varias vacantes (solicitud de cupos) a la vez (bulk, punto 6).
- *  No toca aplicaciones ni servidores — es el flujo de la solicitud de cupos. */
-export async function setVacanciesStatus(
-  ids: string[],
+/**
+ * SRV-15b · Mueve UNA solicitud a mano.
+ *
+ * LA REGLA SE APLICA CONTRA LO QUE HAY EN LA BASE, no contra lo que traía la
+ * pantalla: quien tiene la pestaña abierta desde ayer ve los botones del
+ * estado de ayer. Por eso se lee primero y se valida acá con
+ * `motivoQueImpideCambiar` —el mismo módulo puro que dibuja los botones—, y
+ * por eso el UPDATE lleva `.eq('status', anterior)`: si otra persona la movió
+ * entre la lectura y la escritura, no escribe ninguna de las dos cosas a
+ * medias, no escribe nada.
+ *
+ * NO TOCA `published_at`. Al devolver una bajada a la cola se podría borrar
+ * la fecha para que quede «limpia», pero eso tiraría el único registro de
+ * cuándo estuvo en la calle. Es inerte: `planDePublicacion` solo la mira en
+ * las que están `publicada`, y la corrida del mes la reescribe al publicar.
+ *
+ * Devuelve el estado ANTERIOR, y no es adorno: es lo que se firma en el
+ * audit_log. «Quedó denegada» no contesta la pregunta que se hace después
+ * —«¿estaba publicada cuando la denegaron?»— y esa fila ya no lo puede decir.
+ */
+export type ResultadoDelCambio =
+  | { ok: true; anterior: string }
+  | { ok: false; motivo: string }
+  | null
+
+export async function cambiarEstadoDeSolicitud(
+  id: string,
   status: VacancyState,
-): Promise<{ updated: number }> {
-  if (ids.length === 0) return { updated: 0 }
+): Promise<ResultadoDelCambio> {
   const supabase = createAdminClient()
-  // SRV-15: publicar sella la fecha. Sin ella, la corrida del mes siguiente
-  // no sabría de qué ciclo es y la bajaría de inmediato (ver
-  // `planDePublicacion`, que trata como vieja a la publicada sin fecha).
-  const row: Record<string, unknown> = { status }
-  if (status === 'publicada') row.published_at = new Date().toISOString()
+  const { data: antes, error: eLeer } = await supabase
+    .from('vacancies').select('status').eq('id', id).maybeSingle()
+  if (eLeer) throw eLeer
+  if (!antes) return null
+
+  const anterior = String((antes as { status: string | null }).status ?? '')
+  const motivo = motivoQueImpideCambiar(anterior, status)
+  if (motivo) return { ok: false, motivo }
+
   const { error, count } = await supabase
     .from('vacancies')
-    .update(row as Updatable<'vacancies'>, { count: 'exact' })
-    .in('id', ids)
+    .update(
+      { status, updated_at: new Date().toISOString() } as Updatable<'vacancies'>,
+      { count: 'exact' },
+    )
+    .eq('id', id)
+    .eq('status', anterior)
   if (error) throw error
-  return { updated: count ?? ids.length }
+  if ((count ?? 0) === 0) {
+    return { ok: false, motivo: 'Alguien más movió esta solicitud. Actualizá la pantalla.' }
+  }
+  return { ok: true, anterior }
 }
 
 /** Coordinadores de servidores activos (candidatos para asignar aplicaciones). */

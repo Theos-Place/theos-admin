@@ -4,6 +4,9 @@ import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { getSolicitudesDePuestos } from '@/lib/supabase/queries/servers'
 import { construirExcelDeSolicitudes } from '@/lib/servers/export-de-solicitudes'
 import { planDePublicacion } from '@/lib/servers/publicacion-mensual'
+import {
+  filtroDesde, solicitudesConEstado, conteoPorFiltro, FILTRO_LABEL,
+} from '@/lib/servers/filtro-de-solicitudes'
 import { ymdCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -25,26 +28,36 @@ export async function GET(req: NextRequest) {
     const auth = await requireRoles(...VIEW_ROLES)
     if (auth.res) return auth.res
 
-    const items = await getSolicitudesDePuestos()
+    const todas = await getSolicitudesDePuestos()
+    const filtro = filtroDesde(req.nextUrl.searchParams.get('estado'))
+    const items = solicitudesConEstado(todas, filtro)
 
     if (req.nextUrl.searchParams.get('formato') === 'xlsx') {
+      // El Excel lleva LO FILTRADO, lo mismo que se está viendo. Con la lista
+      // completa, quien filtró «denegadas» y bajó el archivo se encontraría
+      // adentro las publicadas sin ninguna señal de por qué.
       const buf = await construirExcelDeSolicitudes(items)
+      const sufijo = FILTRO_LABEL[filtro].toLowerCase().replace(/ /g, '-')
       return new NextResponse(new Uint8Array(buf), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Disposition': `attachment; filename="solicitudes-de-puestos-${ymdCR()}.xlsx"`,
+          'Content-Disposition':
+            `attachment; filename="solicitudes-de-puestos-${sufijo}-${ymdCR()}.xlsx"`,
         },
       })
     }
 
-    // El plan viaja con la lista para que el botón pueda decir los dos números
-    // ANTES de apretarlo. Se recalcula en el POST con la hora del servidor: lo
-    // que va acá es para mostrar, no para decidir.
+    // EL PLAN SE CALCULA SOBRE TODAS, nunca sobre lo filtrado: la mitad del
+    // plan son las publicadas que hay que bajar, y en la vista por defecto
+    // —«listas para publicar»— ninguna de esas está a la vista. Filtrarlo
+    // haría que el botón dijera que no baja nada y después bajara cinco.
     const plan = planDePublicacion(
-      items.map(i => ({ id: i.id, status: i.estado, published_at: i.published_at })),
+      todas.map(i => ({ id: i.id, status: i.estado, published_at: i.published_at })),
       new Date(),
     )
-    return NextResponse.json({ items, total: items.length, plan })
+    return NextResponse.json({
+      items, total: items.length, plan, filtro, conteos: conteoPorFiltro(todas),
+    })
   } catch (error) {
     reportarError('GET /api/servers/vacancies/requests:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

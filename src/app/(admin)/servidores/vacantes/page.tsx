@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
 
 export default function VacantesPage() {
@@ -262,7 +263,16 @@ export default function VacantesPage() {
   )
 }
 
-// Cerrar puesto (solo admin). PUT status=cerrada; recarga la lista.
+/**
+ * Bajar un puesto de la página pública (solo admin).
+ *
+ * SRV-15b: manda `despublicada` por la ruta que valida la transición. Antes
+ * mandaba `status: 'cerrada'` por el PUT genérico de la vacante — un estado
+ * que SRV-15 renombró y que el enum del schema seguía aceptando, así que el
+ * clic guardaba una fila que ningún filtro mostraba y que la publicación del
+ * mes ignoraba: quedaba fuera de la página y fuera de las listas, para
+ * siempre.
+ */
 function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClosed: () => void }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
@@ -272,29 +282,35 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
     setConfirmOpen(false)
     setBusy(true)
     try {
-      const res = await fetch(`/api/servers/vacancies/${vacancyId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cerrada' }),
+      const res = await fetch(`/api/servers/vacancies/requests/${vacancyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'despublicada' }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo bajar el puesto.'))
       onClosed()
     } catch (e) {
-      console.error('No se pudo cerrar el puesto:', e)
-      toast('No se pudo cerrar el puesto. Intentá de nuevo.', 'error')
+      // El mensaje del servidor y no uno genérico: si la transición no vale
+      // —porque alguien ya la bajó—, «intentá de nuevo» manda a repetir algo
+      // que va a fallar igual.
+      toast(e instanceof Error ? e.message : 'No se pudo bajar el puesto.', 'error')
       setBusy(false)
     }
   }
   return (
     <>
       <button onClick={() => setConfirmOpen(true)} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
-        <XCircle size={12} aria-hidden /> {busy ? 'Cerrando…' : 'Cerrar'}
+        <XCircle size={12} aria-hidden /> {busy ? 'Bajando…' : 'Bajar'}
       </button>
       {confirmOpen && (
         <Modal onClose={() => setConfirmOpen(false)} titleId="cerrar-puesto-title" width={384}>
           <div className="p-6 space-y-4">
             <div>
-              <p id="cerrar-puesto-title" className="text-base font-bold text-navy font-display">¿Cerrar este puesto?</p>
+              <p id="cerrar-puesto-title" className="text-base font-bold text-navy font-display">¿Bajar este puesto de la página?</p>
               <p className="text-[13px] text-navy-light/80 mt-1 leading-relaxed font-body">
-                Dejará de estar disponible para aplicar. Podés volver a publicarlo más adelante desde la edición del puesto.
+                Sale de la página pública y deja de recibir aplicaciones. Las que ya
+                tiene se conservan. Para volver a publicarlo, se devuelve a la cola
+                desde «Solicitudes de puestos de servicio».
               </p>
             </div>
             <div className="flex gap-2">
@@ -308,7 +324,7 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
                 onClick={close}
                 className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
               >
-                Cerrar puesto
+                Sí, bajarlo
               </button>
             </div>
           </div>

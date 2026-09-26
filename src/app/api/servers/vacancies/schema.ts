@@ -14,9 +14,14 @@ export const vacancyWriteSchema = z
     schedule: z.string().trim().nullish(),
     commitment: z.string().trim().nullish(),
     slots_total: z.number().int().min(1).max(1000).optional(),
-    status: z
-      .enum(['creado', 'enviado_lider', 'aprobado', 'denegado', 'cerrada'])
-      .optional(),
+    // SRV-15b · `status` NO va acá. Este schema es el del formulario de
+    // edición del puesto (horario, cupos, ubicación…), y el estado de la
+    // solicitud tiene una sola puerta: PATCH
+    // /api/servers/vacancies/requests/[id], que valida la transición. Mientras
+    // estuvo acá el enum se quedó con los nombres viejos —'creado',
+    // 'aprobado', 'cerrada'— y los dos botones de «Cerrar puesto» seguían
+    // mandando 'cerrada': un estado que ya no existe, que pasaba la
+    // validación y dejaba la fila invisible para todos los filtros.
     expires_at: z.string().trim().min(1).nullish(),
     location: z.string().trim().nullish(),
     notes: z.string().trim().nullish(),

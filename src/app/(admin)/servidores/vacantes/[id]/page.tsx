@@ -9,6 +9,7 @@ import { TOAST_LONG_MS } from '@/lib/constants'
 import { Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
 import { formatDate } from '@/lib/format'
 import { PanelDeAplicacion } from '@/components/servers/PanelDeAplicacion'
@@ -52,7 +53,6 @@ export default function VacanteDetailPage() {
   // tampoco se perdió — nunca se mandaba al servidor.
   const [toast, setToast] = useState<string | null>(null)
   const [closeVacancyOpen, setCloseVacancyOpen] = useState(false)
-  const [closeReason, setCloseReason] = useState('')
   const [vacancyClosed, setVacancyClosed] = useState(false)
 
   if (!vacancy) {
@@ -101,16 +101,16 @@ export default function VacanteDetailPage() {
     setVacancyClosed(true)
     setCloseVacancyOpen(false)
     try {
-      const res = await fetch(`/api/servers/vacancies/${id}`, {
-        method: 'PUT',
+      const res = await fetch(`/api/servers/vacancies/requests/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'cerrada' }),
+        body: JSON.stringify({ status: 'despublicada' }),
       })
-      if (!res.ok) throw new Error('No se pudo cerrar el puesto')
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo bajar el puesto.'))
       await refetch()
     } catch (e) {
       setVacancyClosed(false)
-      showToast(e instanceof Error ? e.message : 'Error al cerrar el puesto')
+      showToast(e instanceof Error ? e.message : 'No se pudo bajar el puesto.')
     }
   }
 
@@ -137,8 +137,12 @@ export default function VacanteDetailPage() {
               <span className="rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-semibold text-navy-light/80 font-display">
                 {vacancy.committee_name}
               </span>
-              <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display', vacancyClosed ? VACANCY_STATUS_COLORS['cerrada'] : VACANCY_STATUS_COLORS[vacancy.status])}>
-                {vacancyClosed ? 'Cerrada' : VACANCY_STATUS_LABELS[vacancy.status]}
+              {/* SRV-15b · 'cerrada' se renombró a 'despublicada' y este badge
+                  se quedó pidiéndole las clases a una llave que ya no existe:
+                  quedaba una píldora sin color ni fondo. */}
+              <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
+                vacancyClosed ? VACANCY_STATUS_COLORS['despublicada'] : VACANCY_STATUS_COLORS[vacancy.status])}>
+                {vacancyClosed ? VACANCY_STATUS_LABELS['despublicada'] : VACANCY_STATUS_LABELS[vacancy.status]}
               </span>
               {vacancy.published_at && (
                 <span className="text-[13px] text-navy-light/80 font-body">
@@ -153,7 +157,7 @@ export default function VacanteDetailPage() {
             <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
             {!vacancyClosed && vacancy.status !== 'despublicada' && (
               <button className="btn btn-ghost btn-sm text-coral border-[rgba(214,62,61,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
-                Cerrar puesto
+                Bajar de la página
               </button>
             )}
           </div>
@@ -394,27 +398,25 @@ export default function VacanteDetailPage() {
 
       </div>{/* end .card */}
 
-      {/* ── Modal: Cerrar puesto ── */}
+      {/* ── Modal: bajar de la página ── */}
       {closeVacancyOpen && (
         <Modal onClose={() => setCloseVacancyOpen(false)} titleId="close-vacancy-title" width={384}>
           <div className="p-6 space-y-4">
-            <p id="close-vacancy-title" className="text-base font-bold text-navy font-display">Cerrar puesto</p>
+            <p id="close-vacancy-title" className="text-base font-bold text-navy font-display">¿Bajar este puesto de la página?</p>
             <p className="text-sm text-navy-light/80 font-body">
-              El puesto <strong>{vacancy.title}</strong> será marcado como cerrado y dejará de recibir aplicaciones.
+              <strong>{vacancy.title}</strong> sale de la página pública y deja de recibir
+              aplicaciones. Las que ya tiene se conservan. Para volver a publicarlo, se
+              devuelve a la cola desde «Solicitudes de puestos de servicio».
             </p>
-            <div className="space-y-1">
-              <label htmlFor="motivo-de-cierre-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Motivo de cierre (opcional)</label>
-              <textarea id="motivo-de-cierre-opcional"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none font-body"
-                rows={2}
-                placeholder="¿Por qué se cierra este puesto?"
-                value={closeReason}
-                onChange={e => setCloseReason(e.target.value)}
-              />
-            </div>
+            {/* SRV-15b · Acá había un «Motivo de cierre (opcional)» que no
+                guardaba nada: escribía en un estado local que no viajaba en el
+                body. Se quita en vez de dejarlo: un campo que se traga lo que
+                uno escribe es peor que no tenerlo, porque deja creyendo que
+                quedó registrado. Si el motivo hace falta, va en el PATCH y en
+                el audit_log, no en la pantalla sola. */}
             <div className="flex gap-2">
               <button onClick={() => setCloseVacancyOpen(false)} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">Cancelar</button>
-              <button onClick={handleCloseVacancy} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Cerrar puesto</button>
+              <button onClick={handleCloseVacancy} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Sí, bajarlo</button>
             </div>
           </div>
         </Modal>
