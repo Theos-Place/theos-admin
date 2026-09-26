@@ -21,6 +21,8 @@ export type InternalNotificationType =
   | 'vacancy_request_new'
   // Estudios:
   | 'folleto_created'
+  // SRV-9: el dirigente avisa que su formación registrada está mal.
+  | 'leader_formation_report'
   // Pagos:
   | 'payment_rejected'
   | 'payment_pending'

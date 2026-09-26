@@ -4540,6 +4540,14 @@ export type Database = {
       }
       study_leaders: {
         Row: {
+          available_as_substitute: boolean
+          available_from: string | null
+          available_slots: string[]
+          available_to: string | null
+          availability_confirmed_at: string | null
+          folleto_location: string | null
+          interested_study_codes: string[]
+          offers_home: boolean
           availability_status: string | null
           created_at: string | null
           formation_study_codes: string[]
@@ -4551,6 +4559,14 @@ export type Database = {
           zone_preference: string[] | null
         }
         Insert: {
+          available_as_substitute?: boolean
+          available_from?: string | null
+          available_slots?: string[]
+          available_to?: string | null
+          availability_confirmed_at?: string | null
+          folleto_location?: string | null
+          interested_study_codes?: string[]
+          offers_home?: boolean
           availability_status?: string | null
           created_at?: string | null
           formation_study_codes?: string[]
@@ -4562,6 +4578,14 @@ export type Database = {
           zone_preference?: string[] | null
         }
         Update: {
+          available_as_substitute?: boolean
+          available_from?: string | null
+          available_slots?: string[]
+          available_to?: string | null
+          availability_confirmed_at?: string | null
+          folleto_location?: string | null
+          interested_study_codes?: string[]
+          offers_home?: boolean
           availability_status?: string | null
           created_at?: string | null
           formation_study_codes?: string[]

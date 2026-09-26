@@ -1880,9 +1880,84 @@ export async function createLeader(input: LeaderWriteInput): Promise<{ id: strin
 
 /** Actualiza (o crea) la configuración de un dirigente por member_id: estudios
  *  que imparte (qualified_study_codes) y zonas dispuesto (zone_preference). */
+/**
+ * SRV-9 · El parche acepta también los campos de disponibilidad que edita el
+ * PROPIO dirigente. Quién puede mandar cada uno lo decide la ruta con
+ * `motivoQueImpideEditar`; acá solo se escribe.
+ */
+export type DirigenteConfigPatch = {
+  qualified_study_codes?: string[]
+  interested_study_codes?: string[]
+  zone_preference?: string[]
+  available_slots?: string[]
+  offers_home?: boolean
+  available_as_substitute?: boolean
+  available_from?: string | null
+  available_to?: string | null
+  folleto_location?: string | null
+  /** Se sella AUNQUE no cambie nada: para el comité, «no cambió» y «no
+   *  contestó» son cosas distintas. */
+  availability_confirmed_at?: string
+}
+
+/**
+ * SRV-9 · La ficha de disponibilidad de UN dirigente, para su propio perfil.
+ *
+ * Consulta aparte y no el listado completo: el listado resuelve grupos,
+ * evaluaciones y compromisos de las 505 fichas, y acá hace falta una fila con
+ * nueve columnas. `null` = no tiene ficha, que es lo que decide si el tab
+ * siquiera aparece.
+ */
+export type FichaDeDisponibilidad = {
+  member_id: string
+  is_active: boolean
+  /** Lo que el comité certificó: SOLO LECTURA para la persona. */
+  formation_study_codes: string[]
+  qualified_study_codes: string[]
+  interested_study_codes: string[]
+  zone_preference: string[]
+  available_slots: string[]
+  offers_home: boolean
+  available_as_substitute: boolean
+  available_from: string | null
+  available_to: string | null
+  folleto_location: string | null
+  availability_confirmed_at: string | null
+}
+
+export async function getFichaDeDisponibilidad(memberId: string): Promise<FichaDeDisponibilidad | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_leaders')
+    .select(`member_id, is_active, formation_study_codes, qualified_study_codes,
+             interested_study_codes, zone_preference, available_slots, offers_home,
+             available_as_substitute, available_from, available_to, folleto_location,
+             availability_confirmed_at`)
+    .eq('member_id', memberId)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const r = data as Record<string, unknown>
+  return {
+    member_id: String(r.member_id),
+    is_active: r.is_active === true,
+    formation_study_codes: (r.formation_study_codes as string[]) ?? [],
+    qualified_study_codes: (r.qualified_study_codes as string[]) ?? [],
+    interested_study_codes: (r.interested_study_codes as string[]) ?? [],
+    zone_preference: (r.zone_preference as string[]) ?? [],
+    available_slots: (r.available_slots as string[]) ?? [],
+    offers_home: r.offers_home === true,
+    available_as_substitute: r.available_as_substitute === true,
+    available_from: (r.available_from as string) ?? null,
+    available_to: (r.available_to as string) ?? null,
+    folleto_location: (r.folleto_location as string) ?? null,
+    availability_confirmed_at: (r.availability_confirmed_at as string) ?? null,
+  }
+}
+
 export async function updateDirigenteConfig(
   memberId: string,
-  patch: { qualified_study_codes?: string[]; zone_preference?: string[] },
+  patch: DirigenteConfigPatch,
 ): Promise<void> {
   const supabase = createAdminClient()
   const { data: existing } = await supabase
@@ -1891,12 +1966,15 @@ export async function updateDirigenteConfig(
     const { error } = await supabase.from('study_leaders').update(patch).eq('member_id', memberId)
     if (error) throw error
   } else {
+    // Nace INACTIVA a propósito: llenar la disponibilidad no es activarse como
+    // dirigente — eso lo decide la coordinación (o el recálculo de PAR-2).
     const { error } = await supabase.from('study_leaders').insert({
       member_id: memberId,
       is_active: false,
       availability_status: 'inactive',
       zone_preference: patch.zone_preference ?? [],
       qualified_study_codes: patch.qualified_study_codes ?? [],
+      ...patch,
     })
     if (error) throw error
   }

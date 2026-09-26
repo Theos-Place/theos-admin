@@ -3493,6 +3493,35 @@ Tests: dirigente edita solo disponibilidad (403 al tocar formación), confirmaci
 guarda fecha, no-dirigente no ve el tab. tsc/lint/vitest.
 ```
 
+**REFINADO 2026-09-25 (dictado de Floriana)** — la actualización viaja por un
+FORMULARIO sincronizado con el perfil, no solo por el tab:
+
+```
+DETALLE · Configuración del dirigente + formulario espejo
+
+1. SECCIÓN "Configuración del dirigente" en el perfil, con estos campos:
+   - Disponibilidad de estudios: lista de estudios que QUIERE dar (no confundir con
+     capacitado-para).
+   - Zonas donde está dispuesto a dar: OPTATIVO, multiselección (una, varias o todas).
+   - Días y franjas: lunes a domingo × mañana/tarde/noche.
+   - Disponibilidad en fechas: rango dentro del año ("disponible para dar estudios de
+     enero a marzo", "todo el año") — el selector arranca desde la FECHA ACTUAL.
+2. FORMULARIO ESPEJO (para las campañas de actualización):
+   - Se construye con el módulo de formularios PERO con campos VINCULADOS al perfil
+     (el patrón de edición-en-sitio/guardado directo por campo que ya existe en FRM):
+     al abrirlo, viene PRELLENADO con lo que la persona ya tiene guardado; si nunca ha
+     llenado nada, viene vacío. Todo editable; al guardar, escribe en el perfil.
+   - AUDIENCIA: SOLO dirigentes (restricción FRM-5) — nadie más puede abrirlo.
+   - Preguntas adicionales del formulario (también vinculadas):
+     · "¿Querés capacitarte para dar algún estudio?" → sí/no; con sí, multiselect del
+       catálogo de estudios (esto alimenta la lista de INTERESADOS en capacitaciones —
+       interesado ≠ disponible).
+     · "Escribí tu disponibilidad para dar estudios este año" → el rango de fechas del
+       punto 1, considerando la fecha actual.
+3. El correo de campaña (marzo/julio/noviembre) enlaza a ese formulario; el envío sigue
+   siendo manual/comunicación normal, no automatizado en este ítem.
+```
+
 ### [ ] FIN-9 · Saldos a favor: limitados a su rubro y con vencimiento — PENDIENTE DECISIÓN DE MELI
 
 Lo hablado: el saldo a favor (ya existe, "en pañales") se usa SOLO en el rubro

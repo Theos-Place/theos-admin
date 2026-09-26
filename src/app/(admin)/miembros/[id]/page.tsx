@@ -22,6 +22,7 @@ import { MemberAdminTab } from './_components/MemberAdminTab'
 import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
 import { MemberFamilyTab } from './_components/MemberFamilyTab'
+import { MemberLeaderTab } from './_components/MemberLeaderTab'
 import type { StudyRow, ServiceRow, EventoRow, DonacionRow, EventRegistrationRow } from './_components/MemberParticipationTab'
 import { ordenarServicios } from '@/lib/members/orden-de-servicios'
 import { apareceEnHistorial, etiquetaHistorial } from '@/lib/studies/enrollment-history'
@@ -81,6 +82,29 @@ export default function MiembroDetailPage() {
   const isServersOnboardingAdmin = hasRole('admin', 'encargado_staff', 'coordinador_servidores')
   const isDirigente = hasRole('dirigente')
   const isOwnProfile = !!viewer?.id && viewer.id === id
+
+  /**
+   * SRV-9 · ¿Esta persona tiene ficha de dirigente?
+   *
+   * Se pregunta con un HEAD barato al endpoint de la ficha, que ya existe con
+   * las dos puertas (la propia persona y el comité). Deducirlo del rol
+   * `dirigente` habría sido más fácil y estaría MAL: el rol se otorga y se
+   * revoca con la actividad (PAR-2), y quien está inactivo este cuatrimestre
+   * sigue teniendo ficha y sigue necesitando actualizar su disponibilidad —
+   * es justamente a quien hay que volver a enganchar.
+   */
+  const [fichaDeDirigente, setFichaDeDirigente] = useState<{ de: string; tiene: boolean } | null>(null)
+  useEffect(() => {
+    if (!id || !(isOwnProfile || isStudyAdmin)) return
+    let vivo = true
+    fetch(`/api/studies/dirigentes/${id}`)
+      .then(r => { if (vivo) setFichaDeDirigente({ de: id, tiene: r.ok }) })
+      .catch(() => { if (vivo) setFichaDeDirigente({ de: id, tiene: false }) })
+    return () => { vivo = false }
+  }, [id, isOwnProfile, isStudyAdmin])
+  // Se compara el id para que, al navegar a otro perfil, la respuesta vieja no
+  // deje el tab prendido un render de más.
+  const tieneFichaDeDirigente = fichaDeDirigente?.de === id && fichaDeDirigente.tiene
   const canDeactivate = hasRole('admin', 'comunicaciones')
 
   // Permite abrir un tab directo vía ?tab= (p. ej. la notificación de cobro
@@ -292,6 +316,10 @@ export default function MiembroDetailPage() {
   //  · Administrativo → SOLO roles administrativos (el miembro nunca lo ve).
   const visibleTabs: TabDef[] = [
     ...BASE_TABS,
+    // SRV-9 · «Dirigente» aparece solo si la persona TIENE ficha de dirigente,
+    // y solo para ella misma o para quien gestiona estudios. No es un tab más
+    // del perfil: es el lugar donde el dirigente mantiene sus propios datos.
+    ...(tieneFichaDeDirigente && (isOwnProfile || isStudyAdmin) ? [{ id: 'dirigente', label: 'Dirigente' }] : []),
     ...(isOwnProfile || isStudyAdmin ? [{ id: 'espiritual', label: 'Espiritual' }] : []),
     ...(isStudyAdmin || isServersOnboardingAdmin ? [{ id: 'administrativo', label: 'Administrativo' }] : []),
     PASE_TAB,
@@ -411,6 +439,13 @@ export default function MiembroDetailPage() {
       {/* TAB: Familia */}
       {activeTab === 'familia' && (
         <MemberFamilyTab member={member} onChanged={refetch} />
+      )}
+
+      {/* TAB: Dirigente (SRV-9). Editable SOLO por la propia persona: el
+          comité la ve completa pero la edita desde /estudios/dirigentes, que
+          es donde además maneja la formación y el estado. */}
+      {activeTab === 'dirigente' && tieneFichaDeDirigente && (isOwnProfile || isStudyAdmin) && (
+        <MemberLeaderTab memberId={member.id} editable={isOwnProfile} />
       )}
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}
