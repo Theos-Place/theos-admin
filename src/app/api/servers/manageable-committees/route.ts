@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { isGlobalServiceAdmin } from '@/lib/auth/committee-scope'
+import { puedeSolicitarParaCualquierComite } from '@/lib/auth/committee-scope'
 import { getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -11,7 +11,10 @@ export async function GET() {
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
-    const all = isGlobalServiceAdmin(auth.ctx.roles)
+    // SRV-11: `solicitudes_puestos` también ve todos los comités — llena la
+    // solicitud en lugar del líder. Ve todos, pero no por eso se salta la
+    // ventana: eso lo decide `isGlobalServiceAdmin` aparte.
+    const all = puedeSolicitarParaCualquierComite(auth.ctx.roles)
     const ids = all ? [] : (auth.ctx.memberId ? await getManageableCommitteeIds(auth.ctx.memberId) : [])
     return NextResponse.json({ all, ids })
   } catch (error) {

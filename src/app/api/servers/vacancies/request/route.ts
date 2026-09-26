@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { canManageCommittee, isGlobalServiceAdmin } from '@/lib/auth/committee-scope'
+import {
+  canManageCommittee, isGlobalServiceAdmin, puedeSolicitarParaCualquierComite,
+} from '@/lib/auth/committee-scope'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createVacancyRequests, getServiceCoordinators } from '@/lib/supabase/queries/servers'
-import { isVacancyRequestWindowOpen } from '@/lib/servers/request-window'
+import { isVacancyRequestWindowOpen, motivoDeVentanaCerrada } from '@/lib/servers/request-window'
 import { reportarError } from '@/lib/observabilidad'
 
+/**
+ * SRV-11 · El body es SOLO comité y cantidades.
+ *
+ * Los detalles de la vacante —horario, compromiso, ubicación, expiración,
+ * destacada, notas— dejaron de pedirse: ya están en la ficha del puesto, y
+ * pedirlos en cada solicitud producía tres versiones del mismo horario escritas
+ * de memoria en meses distintos. Se siguen ACEPTANDO y se ignoran, para que una
+ * pestaña vieja abierta no reviente con un 400 durante el despliegue.
+ */
 type Body = {
   committee_id?: string
   items?: Array<{ position_id?: string; quantity?: number }>
-  schedule?: string
-  commitment?: string
-  location?: string
-  notes?: string
-  expires_at?: string
-  is_featured?: boolean
 }
 
 // POST: el líder de comité (o coordinación/admin) envía el "carrito" de cupos.
@@ -31,30 +36,36 @@ export async function POST(req: NextRequest) {
     const items = (body.items ?? []).filter(i => i.position_id && Number(i.quantity) > 0) as Array<{ position_id: string; quantity: number }>
 
     if (!committeeId) return NextResponse.json({ error: 'Comité requerido.' }, { status: 400 })
-    if (items.length === 0) return NextResponse.json({ error: 'Agregá al menos una vacante al carrito.' }, { status: 400 })
+    if (items.length === 0) return NextResponse.json({ error: 'Agregá al menos un cupo antes de enviar.' }, { status: 400 })
 
-    // Permiso por comité (líder solo su comité; roles globales, cualquiera).
-    if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, committeeId))) {
-      return NextResponse.json({ error: 'No podés solicitar vacantes para este comité.' }, { status: 403 })
+    // Permiso por comité: el líder solo el suyo; los roles globales y
+    // `solicitudes_puestos` (SRV-11), cualquiera.
+    if (!puedeSolicitarParaCualquierComite(auth.ctx.roles)
+      && !(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, committeeId))) {
+      return NextResponse.json({ error: 'No podés solicitar puestos para este comité.' }, { status: 403 })
     }
 
-    // Ventana de tiempo (solo líderes de comité, NO roles globales). Server-side
-    // con la hora real del servidor en zona America/Costa_Rica.
+    // Ventana de tiempo. La excepción es SOLO para los roles administrativos
+    // globales: `solicitudes_puestos` llena la solicitud en lugar del líder, y
+    // una solicitud fuera de fecha sigue siendo fuera de fecha la mande quien
+    // la mande. Server-side con la hora real, en zona America/Costa_Rica.
     const globalAdmin = isGlobalServiceAdmin(auth.ctx.roles)
     if (!globalAdmin && !isVacancyRequestWindowOpen()) {
+      // El MISMO texto que ve en la pantalla: dos explicaciones distintas del
+      // mismo cierre se leen como un bug.
       return NextResponse.json(
-        { error: 'Las solicitudes de vacantes se reciben del 25 al último día de cada mes.' },
+        { error: motivoDeVentanaCerrada(), code: 'ventana_cerrada' },
         { status: 403 },
       )
     }
 
     const { rows, slots, status } = await createVacancyRequests(committeeId, items, {
-      schedule: body.schedule?.trim() || null,
-      commitment: body.commitment?.trim() || null,
-      location: body.location?.trim() || null,
-      notes: body.notes?.trim() || null,
-      expires_at: body.expires_at || null,
-      is_featured: !!body.is_featured,
+      schedule: null,
+      commitment: null,
+      location: null,
+      notes: null,
+      expires_at: null,
+      is_featured: false,
       autoApprove: globalAdmin,
     })
     if (rows === 0) {

@@ -283,3 +283,47 @@ describe('PAR-3 · anfitrión de sede da el rol de reportes', () => {
     expect(roles).toContain('reportes')
   })
 })
+
+/**
+ * SRV-11 · «Colaborador Solicitud Puestos» abre la pantalla de solicitar.
+ *
+ * EL NOMBRE ES EL PUNTO. El pedido lo llamaba «Colaborador de solicitud de
+ * puestos»; en el catálogo está como «Colaborador Solicitud Puestos». Una
+ * regla escrita contra el nombre del pedido no matchea a nadie, y ese fallo es
+ * silencioso: la persona no ve la pantalla y nadie sabe por qué.
+ */
+describe('SRV-11 · solicitudes_puestos', () => {
+  const ctx = (over: Record<string, unknown> = {}) => ({
+    title: 'Colaborador Solicitud Puestos',
+    areaName: 'Comité de Servidores',
+    parentAreaName: 'Area de Staff',
+    areaType: 'committee' as const,
+    ...over,
+  })
+
+  it('el título exacto del catálogo lo otorga', () => {
+    expect(rolesGrantedByPosition(ctx())).toContain('solicitudes_puestos')
+  })
+
+  it('tolera tildes y artículos, que es lo que cambia al re-sincronizar el Excel', () => {
+    expect(rolesGrantedByPosition(ctx({ title: 'Colaborador de Solicitud de Puestos' })))
+      .toContain('solicitudes_puestos')
+  })
+
+  it('NO se reparte a los otros puestos del mismo comité', () => {
+    // El comité tiene además Aplicaciones, Atracción, Seguimiento y Servidores
+    // Nuevos: son otros trabajos. Un permiso que se da por pertenecer al
+    // comité es el modo de fallo que este archivo ya sufrió.
+    for (const title of [
+      'Colaborador Aplicaciones', 'Colaborador Seguimiento',
+      'Colaborador Atracción', 'Colaborador Serv. nuevos', 'Colaborador',
+    ]) {
+      expect(rolesGrantedByPosition(ctx({ title })), title).not.toContain('solicitudes_puestos')
+    }
+  })
+
+  it('ni al mismo título en otro comité', () => {
+    expect(rolesGrantedByPosition(ctx({ areaName: 'Comité de Alabanza', parentAreaName: 'Área de Ministerios' })))
+      .not.toContain('solicitudes_puestos')
+  })
+})

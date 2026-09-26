@@ -3,13 +3,13 @@
 import Link from 'next/link'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, Upload, ShieldCheck, Download } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, ShieldCheck, Download } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { rolesGrantedByPosition } from '@/lib/servers/position-roles'
@@ -733,14 +733,9 @@ export default function ServidoresAdminPage() {
               <Download size={14} /> Exportar estructura
             </a>
           )}
-          {hasRole('admin', ...STAFF_IMPORT_ROLES) && (
-            <Link
-              href="/servidores/admin/importar-vacantes"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-            >
-              <Upload size={14} /> Importar vacantes
-            </Link>
-          )}
+          {/* SRV-11: «Importar vacantes» se eliminó entero —botón, pantalla,
+              Excel y plantilla—. Ya no se usa: los cupos los pide cada comité
+              desde «Solicitar puestos de servicio». */}
         </div>
       </div>
 

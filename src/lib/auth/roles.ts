@@ -104,6 +104,25 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
   'encargado_staff', 'coordinador_servidores', 'direccion', 'admin',
 ]
 
+/**
+ * SRV-11 · ¿Puede SOLICITAR cupos para cualquier comité?
+ *
+ * No es lo mismo que `SERVICE_ADMIN_ROLES`, y por eso son dos funciones. El
+ * rol `solicitudes_puestos` —el puesto «Colaborador Solicitud Puestos»— llena
+ * la solicitud EN LUGAR del líder: elige el comité arriba y manda. Pero sigue
+ * siendo una solicitud como la de cualquier líder, así que NO se salta la
+ * ventana del 25 al 30 ni se auto-aprueba. Si se hubiera metido en
+ * `SERVICE_ADMIN_ROLES` para ahorrarse esta función, se habría llevado las dos
+ * cosas de regalo.
+ *
+ * Tampoco habilita crear, editar ni borrar puestos: para eso sigue estando
+ * `canManageCommittee`.
+ */
+export function puedeSolicitarParaCualquierComite(roles: readonly RoleId[]): boolean {
+  return roles.some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+    || roles.includes('solicitudes_puestos')
+}
+
 /** "Coordinación de staff": roles que pueden IMPORTAR puestos/vacantes y solicitar
  *  puestos nuevos para cualquier comité. Subconjunto de SERVICE_ADMIN_ROLES que
  *  EXCLUYE 'direccion' a propósito (decisión 2026-06-25: la importación y la
@@ -318,6 +337,19 @@ export const ROLES: Role[] = [
        * deja bajarse lo que ya tiene en pantalla, que es el trabajo del rol.
        */
       { module: 'miembros', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
+    ],
+  },
+  {
+    id: 'solicitudes_puestos',
+    name: 'Solicitudes de puestos',
+    description: 'Recibir y armar las solicitudes mensuales de puestos de los comités',
+    color: '#8FB8A8',
+    // Ve la sección de servidores SOLO para llegar a la pantalla de solicitar.
+    // Lo que puede hacer ahí —solicitar a nombre de cualquier comité— lo
+    // decide el guard de la ruta, no este permiso: crear o editar puestos
+    // sigue siendo de la coordinación.
+    permissions: [
+      { module: 'servidores', actions: ['view'], scope: 'all' },
     ],
   },
   {

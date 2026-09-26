@@ -3754,7 +3754,42 @@ default. **admin** y **direccion** siempre, dirección como vista. Verificar
 los nombres exactos de los tres puestos en el catálogo antes de fijar los
 mapeos.
 
-### [ ] SRV-11 · Parte 1: "Solicitar puestos de servicio" (reemplaza solicitar vacantes)
+### [x] SRV-11 · Parte 1: "Solicitar puestos de servicio" (reemplaza solicitar vacantes)
+
+HECHO el 2026-09-25 (en staging). Qué quedó:
+
+- **«Importar vacantes» eliminado entero**: pantalla, los dos endpoints
+  (import y import-template), el generador de la plantilla, su test y los dos
+  botones que llevaban ahí. Hay un guard que verifica que no vuelvan.
+- **La página se llama «Solicitar puestos de servicio»** y perdió el bloque
+  «Detalles de la vacante» —horario, compromiso, ubicación, expiración,
+  destacada, notas—. Pedía en cada solicitud datos que YA están en la ficha del
+  puesto: el líder los reescribía de memoria cada mes y quedaban tres versiones
+  del mismo horario. Ahora la solicitud es solo la cantidad, y los detalles se
+  consultan con «Ver detalles», un modal de solo lectura.
+- **La ventana pasó a 25–30** (antes era «del 25 al último día», que en enero
+  daba 31 y en febrero 28 — el texto mentía la mitad de los meses). Febrero
+  cierra el 28 o el 29, calculado y no escrito. Las extensiones puntuales van
+  en `CIERRES_EXTENDIDOS`, no en el código: la de setiembre 2026 se estira al 5
+  de octubre y después vuelve sola sin que nadie saque la línea.
+- **El aviso de la ventana está arriba y siempre visible**, con la fecha
+  concreta. Antes era un tooltip junto al botón de enviar, al final de la
+  página.
+- **Rol nuevo `solicitudes_puestos`**, que otorga el puesto **«Colaborador
+  Solicitud Puestos»** del Comité de Servidores. OJO con el nombre: el pedido
+  lo llamaba «Colaborador de solicitud de puestos» y en el catálogo está sin
+  los «de». Una regla escrita contra el nombre del pedido no habría matcheado a
+  nadie, y ese fallo es silencioso.
+- **Ese rol ve todos los comités pero NO es un admin de servicio**: llena la
+  solicitud en lugar del líder, así que la ventana le aplica y su solicitud
+  queda pendiente de revisión, no auto-aprobada. Meterlo en
+  `SERVICE_ADMIN_ROLES` para ahorrarse una función le habría dado las dos cosas
+  de regalo.
+
+DECISIÓN QUE SE CONSERVÓ, y que el pedido no menciona: el cierre de la ventana
+NO bloquea a quien administra servidores (encargado_staff, coordinador,
+dirección, admin). Esa excepción ya existía; alguien tiene que poder arreglar
+una solicitud fuera de fecha. La pantalla se lo dice en vez de esconderlo.
 
 Reglas dictadas:
 - ELIMINAR la página/funcionalidad de "importar vacantes" completa: botón,

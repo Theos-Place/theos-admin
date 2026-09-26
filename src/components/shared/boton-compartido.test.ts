@@ -14,7 +14,10 @@ import { join } from 'node:path'
  * Si este número sube, la respuesta no es subir el techo: es usar
  * `components/shared/Button`.
  */
-const TECHO = 187
+// 187 → 186 con SRV-11: se eliminó «Importar vacantes» entero y con él uno de
+// los botones escritos a mano. El trinquete aprieta en los dos sentidos, que
+// es la gracia.
+const TECHO = 186
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {

@@ -4,21 +4,37 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Minus, Plus, ShoppingCart, Check, Info, Lock, Loader2, FilePlus2 } from 'lucide-react'
+import { ChevronLeft, Minus, Plus, ShoppingCart, Check, CalendarClock, Lock, Loader2, FilePlus2 } from 'lucide-react'
 import { AccessDenied } from '@/components/shared/AccessDenied'
+import { Modal } from '@/components/shared/Modal'
+import { useAuth } from '@/hooks/useAuth'
+import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
-  isVacancyRequestWindowOpen,
-  VACANCY_REQUEST_WINDOW_TOOLTIP,
+  isVacancyRequestWindowOpen, textoDeLaVentana,
 } from '@/lib/servers/request-window'
 
-const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
-const labelCls = 'text-[13px] tracking-widest uppercase text-navy-light/80 font-display'
-
+/**
+ * SRV-11 · «Solicitar puestos de servicio» (antes «Solicitar vacantes»).
+ *
+ * LO QUE SE FUE, y por qué: el bloque «Detalles de la vacante» —horario,
+ * compromiso, ubicación, expiración, destacada, notas— pedía en cada solicitud
+ * datos que YA ESTÁN en la ficha del puesto, en la página del comité. El líder
+ * los volvía a escribir de memoria cada mes y quedaban tres versiones del
+ * mismo horario. Ahora la solicitud es solo la CANTIDAD; los detalles se
+ * consultan con «ver detalles», que abre la ficha en solo lectura.
+ */
 type FlatPosition = {
   id: string
   title: string
   is_active: boolean | null
   area: { id: string; name: string } | null
+  /** Solo para el modal de consulta: no se editan desde acá. */
+  description?: string | null
+  functions?: string | null
+  profile?: string | null
+  skills?: string | null
+  study_requirement?: string | null
+  location?: string | null
 }
 
 type Committee = { id: string; name: string }
@@ -26,6 +42,7 @@ type Committee = { id: string; name: string }
 function SolicitarVacantesContent() {
   const params = useSearchParams()
   const preselectedCommittee = params.get('comite') ?? ''
+  const { hasRole } = useAuth()
 
   const [scope, setScope] = useState<{ all: boolean; ids: string[] } | null>(null)
   const [positions, setPositions] = useState<FlatPosition[]>([])
@@ -35,13 +52,8 @@ function SolicitarVacantesContent() {
   const [committeeElegido, setCommitteeId] = useState(preselectedCommittee)
   const [cart, setCart] = useState<Record<string, number>>({}) // position_id → cantidad
 
-  // Datos de la vacante (compartidos por todos los puestos del carrito).
-  const [schedule, setSchedule] = useState('')
-  const [commitment, setCommitment] = useState('')
-  const [location, setLocation] = useState('')
-  const [expiresAt, setExpiresAt] = useState('')
-  const [notes, setNotes] = useState('')
-  const [featured, setFeatured] = useState(false)
+  /** El puesto cuya ficha se está consultando (solo lectura). */
+  const [detalle, setDetalle] = useState<FlatPosition | null>(null)
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,15 +83,33 @@ function SolicitarVacantesContent() {
     return Array.from(m, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
   }, [positions, scope])
 
-  // Líder de comité = alcance NO global → aplica la ventana de tiempo.
-  const isLeader = !!scope && !scope.all
+  /**
+   * LA VENTANA (SRV-11): del 25 al 30 de cada mes. Se le muestra a TODO EL
+   * MUNDO, esté abierta o cerrada, con la fecha concreta — antes solo había un
+   * tooltip que decía la regla y la regla a veces mentía (febrero cierra el 28).
+   *
+   * El cierre solo BLOQUEA al líder de comité, no a quien administra
+   * servidores: esa excepción ya existía y se conserva a propósito. Alguien
+   * tiene que poder arreglar una solicitud fuera de fecha, y el servidor
+   * aplica exactamente la misma regla (no es que la pantalla lo esconda).
+   */
+  //
+  // La exención sale de los ROLES y no de `scope.all`, que es la trampa: desde
+  // SRV-11 `solicitudes_puestos` también ve todos los comités —llena la
+  // solicitud en lugar del líder— y con la regla vieja se habría saltado la
+  // ventana de regalo. El servidor usa exactamente el mismo criterio.
+  const isLeader = !hasRole(...SERVICE_ADMIN_ROLES)
   const windowOpen = isVacancyRequestWindowOpen()
+  const textoVentana = textoDeLaVentana()
   const canSend = !isLeader || windowOpen
 
   // Si el líder gestiona un solo comité, queda fijo y bloqueado.
   // DERIVADO en vez de forzado a estado con un efecto: si el líder gestiona un
   // solo comité, ese es el que vale y el estado local ni se consulta.
-  const lockedCommittee = isLeader && committees.length === 1 ? committees[0] : null
+  // El candado es por ALCANCE: quien gestiona un solo comité lo tiene fijo.
+  // No se usa `isLeader`, que ahora significa otra cosa (si está exento de la
+  // ventana), y usarlo le habría puesto el selector a quien tiene uno solo.
+  const lockedCommittee = !scope?.all && committees.length === 1 ? committees[0] : null
   const committeeId = lockedCommittee?.id ?? committeeElegido
 
   const committeePositions = useMemo(
@@ -117,19 +147,12 @@ function SolicitarVacantesContent() {
       const res = await fetch('/api/servers/vacancies/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          committee_id: committeeId,
-          items,
-          schedule: schedule.trim() || undefined,
-          commitment: commitment.trim() || undefined,
-          location: location.trim() || undefined,
-          notes: notes.trim() || undefined,
-          expires_at: expiresAt || undefined,
-          is_featured: featured,
-        }),
+        // Solo comité y cantidades: los detalles del puesto ya viven en su
+        // ficha y no se vuelven a escribir en cada solicitud.
+        body: JSON.stringify({ committee_id: committeeId, items }),
       })
       const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudieron enviar las vacantes.')
+      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar la solicitud.')
       setSaved({ rows: data.rows, slots: data.slots, status: data.status })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
@@ -199,10 +222,31 @@ function SolicitarVacantesContent() {
 
       {/* Header */}
       <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 shadow-[var(--shadow-md)]">
-        <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitar vacantes</h1>
+        <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">
+          Solicitar puestos de servicio
+        </h1>
         <p className="mt-1 text-sm text-white/80 font-body">
-          Elegí el comité y sumá la cantidad de cupos que necesitás por puesto.
+          Sumá cuántas personas necesitás en cada puesto de tu comité. Los detalles del
+          puesto ya están guardados: acá solo va la cantidad.
         </p>
+      </div>
+
+      {/* La ventana, arriba y SIEMPRE visible. Antes era un tooltip junto al
+          botón de enviar: había que llegar hasta abajo y pasar el mouse para
+          enterarse de que estaba cerrado. */}
+      <div className={cn(
+        'rounded-2xl p-4 flex items-start gap-2.5',
+        windowOpen ? 'bg-surface-card shadow-[var(--shadow-md)]' : 'bg-coral/5 border border-coral/20',
+      )}>
+        <CalendarClock size={16} className={cn('mt-0.5 shrink-0', windowOpen ? 'text-navy-light/80' : 'text-coral')} aria-hidden="true" />
+        <div>
+          <p className="text-sm text-navy font-body">{textoVentana}</p>
+          {!windowOpen && !isLeader && (
+            <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
+              La ventana está cerrada, pero como administrás servidores podés enviar igual.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Sección 1: Comité */}
@@ -254,7 +298,16 @@ function SolicitarVacantesContent() {
                       qty > 0 ? 'border-coral/40 bg-coral/5' : 'border-[var(--outline-variant)]',
                     )}
                   >
-                    <span className="text-sm font-medium text-navy font-body min-w-0 truncate">{p.title}</span>
+                    <div className="min-w-0">
+                      <span className="block text-sm font-medium text-navy font-body truncate">{p.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => setDetalle(p)}
+                        className="text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+                      >
+                        Ver detalles
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
@@ -285,66 +338,17 @@ function SolicitarVacantesContent() {
         </section>
       )}
 
-      {/* Sección 3: Datos de la vacante (comunes al carrito) */}
-      {committeeId && totalSlots > 0 && (
-        <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-3">
-          <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Detalles de la vacante</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label htmlFor="ubicacion-sede" className={labelCls}>Ubicación / sede</label>
-              <input id="ubicacion-sede" className={inputCls} placeholder="Sede / lugar (opcional)" value={location} onChange={e => setLocation(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="horario" className={labelCls}>Horario</label>
-              <input id="horario" className={inputCls} placeholder="Ej. Domingos 8am–12pm" value={schedule} onChange={e => setSchedule(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="compromiso-esperado" className={labelCls}>Compromiso esperado</label>
-              <input id="compromiso-esperado" className={inputCls} placeholder="Ej. 2 domingos al mes" value={commitment} onChange={e => setCommitment(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="expira" className={labelCls}>Expira</label>
-              <input id="expira" type="date" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
-            </div>
-            <label className="flex items-center gap-2 pb-1 self-end cursor-pointer">
-              <input type="checkbox" className="accent-coral" checked={featured} onChange={e => setFeatured(e.target.checked)} />
-              <span className="text-sm text-navy font-body">Destacada</span>
-            </label>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="justificacion-notas-internas-opcional" className={labelCls}>Justificación / notas internas (opcional)</label>
-            <textarea id="justificacion-notas-internas-opcional" className={cn(inputCls, 'resize-none')} rows={3} placeholder="¿Por qué se necesita?" value={notes} onChange={e => setNotes(e.target.value)} />
-          </div>
-        </section>
-      )}
-
       {/* Enviar */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-navy-light/80 font-body">
-            Total: <strong className="text-navy">{totalSlots}</strong> vacante{totalSlots !== 1 ? 's' : ''}
-          </span>
-          <span
-            tabIndex={0}
-            role="img"
-            aria-label={VACANCY_REQUEST_WINDOW_TOOLTIP}
-            className="group/info relative inline-flex opacity-70 outline-none"
-          >
-            <Info size={14} />
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute left-1/2 bottom-full z-[60] mb-1.5 hidden w-64 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[13px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
-            >
-              {VACANCY_REQUEST_WINDOW_TOOLTIP}
-            </span>
-          </span>
-        </div>
+        <span className="text-sm text-navy-light/80 font-body">
+          Total: <strong className="text-navy">{totalSlots}</strong> cupo{totalSlots !== 1 ? 's' : ''}
+        </span>
         <div className="flex flex-col items-stretch sm:items-end gap-1">
           <button
             type="button"
             onClick={submit}
             disabled={saving || totalSlots === 0 || !committeeId || !canSend}
-            title={!canSend ? VACANCY_REQUEST_WINDOW_TOOLTIP : undefined}
+            title={!canSend ? textoVentana : undefined}
             className={cn(
               'rounded-full px-5 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2',
               saving || totalSlots === 0 || !committeeId || !canSend
@@ -352,11 +356,11 @@ function SolicitarVacantesContent() {
                 : 'bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep',
             )}
           >
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar vacantes'}
+            {saving ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar solicitud'}
           </button>
           {!canSend && (
             <p className="text-[13px] text-coral font-body text-center sm:text-right max-w-xs">
-              {VACANCY_REQUEST_WINDOW_TOOLTIP}
+              {textoVentana}
             </p>
           )}
         </div>
@@ -368,6 +372,56 @@ function SolicitarVacantesContent() {
         <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
         <Link href="/servidores/puestos/solicitar" className="text-coral hover:underline">Solicitalo acá</Link>.
       </p>
+
+      {/* La ficha del puesto, SOLO LECTURA. Se consulta, no se edita: el
+          detalle vive en la página del comité y tener dos lugares donde
+          cambiarlo es tener dos versiones del mismo dato. */}
+      {detalle && (
+        <Modal onClose={() => setDetalle(null)} titleId="detalle-puesto-title">
+          <div className="p-6 space-y-4">
+            <div>
+              <h2 id="detalle-puesto-title" className="text-lg font-semibold text-navy font-display">
+                {detalle.title}
+              </h2>
+              <p className="text-sm text-navy-light/80 font-body mt-0.5">
+                {detalle.area?.name ?? 'Sin comité'}
+              </p>
+            </div>
+            <dl className="space-y-3">
+              {([
+                ['Descripción', detalle.description],
+                ['Funciones', detalle.functions],
+                ['Perfil', detalle.profile],
+                ['Habilidades', detalle.skills],
+                ['Estudio requerido', detalle.study_requirement],
+                ['Ubicación', detalle.location],
+              ] as Array<[string, string | null | undefined]>)
+                .filter(([, v]) => !!v?.trim())
+                .map(([k, v]) => (
+                  <div key={k}>
+                    <dt className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">{k}</dt>
+                    <dd className="text-sm text-navy font-body whitespace-pre-line">{v}</dd>
+                  </div>
+                ))}
+            </dl>
+            {![detalle.description, detalle.functions, detalle.profile, detalle.skills,
+               detalle.study_requirement, detalle.location].some(v => v?.trim()) && (
+              <p className="text-sm text-navy-light/80 font-body">
+                Este puesto todavía no tiene detalles escritos. Se completan en la página
+                del comité.
+              </p>
+            )}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setDetalle(null)}
+                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

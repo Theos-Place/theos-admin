@@ -1,5 +1,9 @@
 import 'server-only'
 import { SERVICE_ADMIN_ROLES, type RoleId } from '@/lib/auth/roles'
+// SRV-11 · El predicado vive en `roles.ts` y se reexporta acá: es una lectura
+// de roles y nada más, y este archivo es `server-only` —ponerlo aquí lo dejaba
+// fuera del alcance de un test, que fue exactamente lo que pasó.
+export { puedeSolicitarParaCualquierComite } from '@/lib/auth/roles'
 import { getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
 
 /** Roles que gestionan vacantes/puestos de CUALQUIER comité (sin límite por comité). */

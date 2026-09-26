@@ -188,6 +188,30 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
     matches: (ctx) => ctx.areaType === 'committee' && isStudyCommitteeArea(ctx.areaName),
   },
   {
+    role: 'solicitudes_puestos',
+    description:
+      'Colaborador Solicitud Puestos, del Comité de Servidores: es quien recibe y '
+      + 'arma las solicitudes mensuales de puestos de los comités.',
+    /**
+     * SRV-11 (2026-09-25). EL NOMBRE SE VERIFICÓ EN EL CATÁLOGO antes de
+     * escribir esto, y por eso importa: el pedido lo llamaba «Colaborador de
+     * solicitud de puestos» y en la base está como «Colaborador Solicitud
+     * Puestos». Una regla escrita contra el nombre del pedido no habría
+     * matcheado a nadie, y ese fallo es SILENCIOSO — la persona simplemente no
+     * ve la pantalla y nadie sabe por qué.
+     *
+     * Va acotada al TÍTULO y al comité, no a «cualquier puesto del comité de
+     * servidores» como sí hace la de estudios: ese comité tiene además
+     * Aplicaciones, Atracción, Seguimiento y Servidores Nuevos, que son otros
+     * trabajos. Un permiso que se reparte por pertenecer al comité es el modo
+     * de fallo que este archivo ya sufrió con «Coordinador de Información».
+     */
+    matches: (ctx) =>
+      ctx.areaType === 'committee'
+      && norm(ctx.areaName).includes('servidores')
+      && normSinArticulos(ctx.title) === 'colaborador solicitud puestos',
+  },
+  {
     role: 'lider_comite',
     description:
       'Quien encabeza un comité: cualquier título que empiece con "Encargado" en un comité '
