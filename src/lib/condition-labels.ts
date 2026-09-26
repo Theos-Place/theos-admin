@@ -1,6 +1,10 @@
 import type { FilterCondition } from '@/types/filters'
 import { studyLabel } from '@/data/study-catalog'
 import { ACCOUNT_STATE_FILTER_LABEL } from '@/lib/members/account-state'
+import {
+  ESTADO_DE_DIRIGENTE_LABEL, resumenDeSeleccion, type EstadoDeDirigente,
+} from '@/lib/members/filtros-de-dirigente'
+import { STUDY_GROUPS, type StudyGroupKey } from '@/lib/studies/study-grouping'
 
 /**
  * PAR-5b · El chip tiene que decir que la condición está NEGADA.
@@ -16,6 +20,15 @@ export function conditionLabel(c: FilterCondition): string {
   if (!c.negate) return base
   if (c.type === 'attendance' || c.type === 'registration') return base
   return `Excepto — ${base}`
+}
+
+/** El nombre de una opción del selector: 'GRP:niveles' → «Niveles», un código
+ *  → su nombre del catálogo. */
+function etiquetaDeEstudio(valor: string): string {
+  if (valor.startsWith('GRP:')) {
+    return STUDY_GROUPS[valor.slice(4) as StudyGroupKey]?.label ?? valor
+  }
+  return studyLabel(valor)
 }
 
 function etiquetaSinNegar(c: FilterCondition): string {
@@ -67,6 +80,13 @@ function etiquetaSinNegar(c: FilterCondition): string {
       return 'Edad'
     case 'status': return c.value === 'active' ? 'Perfil activo' : 'Perfil inactivo'
     case 'leader': return c.value === 'yes' ? 'Dirigente' : 'No dirigente'
+    case 'leader_state': {
+      const nombres = c.states.map(e => ESTADO_DE_DIRIGENTE_LABEL[e as EstadoDeDirigente] ?? e)
+      return nombres.length > 0 ? `Dirigente: ${nombres.join(' o ')}` : 'Estado del dirigente'
+    }
+    case 'leader_trained':  return `Capacitado para dar: ${resumenDeSeleccion(c.studies, etiquetaDeEstudio)}`
+    case 'leader_teaching': return `Dando ahora: ${resumenDeSeleccion(c.studies, etiquetaDeEstudio)}`
+    case 'leader_available': return `Disponible para dar: ${resumenDeSeleccion(c.studies, etiquetaDeEstudio)}`
     case 'server': return c.value === 'yes' ? 'Sirve actualmente' : 'No sirve actualmente'
     case 'marital': return `Estado civil: ${c.value}`
     case 'account':

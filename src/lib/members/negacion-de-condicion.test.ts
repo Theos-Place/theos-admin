@@ -79,7 +79,12 @@ describe('el supuesto en el que se apoya la negación', () => {
     // mirar si alguno quedó en la MISMA rama que otro. No prueba la propiedad,
     // pero obliga a leer este comentario antes de romperla.
     const pushes = [...resolver.matchAll(/res\.(include|exclude)\.push/g)].length
-    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(20)
+    // 20 → 24 con PAR-7 (2026-09-25). Se revisaron los cuatro nuevos y cada
+    // camino aporta UNO: `leader_state` y el par `leader_trained`/
+    // `leader_available` tienen un solo push cada uno, y `leader_teaching`
+    // tiene dos pero en ramas excluyentes (la de «cualquier estudio» hace
+    // `break` antes de llegar a la otra). El supuesto sigue en pie.
+    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(24)
   })
 
   it('el resolver usa el helper y no una copia a mano', () => {

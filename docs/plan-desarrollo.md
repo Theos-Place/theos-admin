@@ -3821,7 +3821,46 @@ Tests: borde de mes (donación 1-jun visto el 25-set cuenta; 31-may no), cónyug
 hijo no cuenta, montos no se duplican en stats. tsc/lint/vitest.
 ```
 
-### [ ] PAR-7 · Búsqueda de miembros: tab de filtros "Dirigentes" (pedido 2026-09-25)
+### [x] PAR-7 · Búsqueda de miembros: tab de filtros "Dirigentes" (pedido 2026-09-25)
+
+HECHO el 2026-09-25 (en staging). Qué quedó:
+
+- **Pestaña «Dirigentes»** en los filtros avanzados de `/miembros`, con las
+  cinco condiciones. «Es dirigente» SE MUDÓ ahí desde «Perfil» y no quedó en los
+  dos lados: dos controles que escriben la misma condición se pisan.
+- **Estado: multiselección de verdad.** Activo/inactivo salen de
+  `study_leaders.is_active` (el automático de PAR-2) y pausa/en revisión de
+  `availability_status` (DIR-6). Son ejes ORTOGONALES: el único «en revisión»
+  que hay en producción está además activo. Por eso «activos + en pausa» es una
+  pregunta legítima (207 hoy) y con radios habría sido imposible.
+- **Capacitado ≠ disponible, y los datos lo confirman.** Son dos columnas
+  distintas (`formation_study_codes` y `qualified_study_codes`). Medido hoy para
+  Niveles: 371 capacitados, 321 disponibles, y **73 capacitados que NO están
+  disponibles**. Apuntar las dos a la misma columna habría dado respuestas que
+  se ven razonables y están mal; hay un test que lo ataja.
+- **«Dando ahora» reutiliza `idsByLeadership`** —la misma función del filtro de
+  PAR-6— para que los dos lugares no puedan discrepar sobre si `en_matricula`
+  cuenta. Hoy cuenta: 71 dando Niveles.
+- **CONFIDENCIALIDAD, que no estaba en el pedido.** «En pausa» y «en revisión»
+  dicen que hay algo abierto con una persona, y DIR-6 ya los había cerrado a
+  `LEADER_ADMIN_ROLES`. El padrón lo ve más gente —`direccion` entre ella, que
+  está fuera de esos roles a propósito—, así que traerlos sin la misma puerta
+  habría abierto por la ventana lo que se cerró por la puerta. Se sanean en las
+  TRES rutas del padrón (listado, ids y export) con la sesión en la mano, no en
+  la pantalla.
+- **Listas guardadas:** sobreviven el ida y vuelta por JSON y significan lo
+  mismo. La condición guarda «Niveles» (`GRP:niveles`), no N1…N4 expandidos: si
+  mañana existe un N5, la lista lo incluye sola.
+- **Audiencia (GRU-2 / FRM-5):** las cuatro se agregaron a
+  `ALLOWED_RESTRICTION_TYPES`, así que ya se puede dirigir un formulario a «los
+  disponibles para dar Niveles». Esa lista es un permiso y no una consecuencia:
+  una condición nueva del padrón no entra sola, y el test que clava su tamaño
+  está para eso.
+
+SIN VERIFICAR EN PANTALLA: la lógica está probada contra los datos reales de
+producción con SQL y el cableado con guards que muerden, pero no se abrió la
+pestaña en un navegador — hacerlo pide una sesión real. Conviene una mirada en
+staging antes de subirlo.
 
 Decidido con Floriana: los filtros de dirigentes entran a la búsqueda de
 miembros (ahí ya existen listas guardadas, columnas y export — el objetivo

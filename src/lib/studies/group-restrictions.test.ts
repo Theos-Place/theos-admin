@@ -28,11 +28,20 @@ describe('qué condiciones se permiten', () => {
     }
   })
 
+  it('y los filtros de dirigente de PAR-7 también: un formulario dirigido a «disponibles para dar Niveles»', () => {
+    for (const t of ['leader_state', 'leader_trained', 'leader_teaching', 'leader_available']) {
+      expect(isAllowedRestrictionType(t), t).toBe(true)
+    }
+  })
+
   it('las caras y las que no describen a una persona, no', () => {
     for (const t of ['attendance', 'registration', 'form', 'account', 'created', 'status']) {
       expect(isAllowedRestrictionType(t)).toBe(false)
     }
-    expect(ALLOWED_RESTRICTION_TYPES).toHaveLength(6)
+    // 6 → 10 con PAR-7. El número está clavado a propósito: la lista es un
+    // PERMISO, no una consecuencia, y una condición nueva del padrón no debe
+    // entrar sola a las audiencias sin que alguien lo decida.
+    expect(ALLOWED_RESTRICTION_TYPES).toHaveLength(10)
   })
 })
 

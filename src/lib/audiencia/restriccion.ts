@@ -24,6 +24,20 @@ import { buildUnits, unitKey } from '@/lib/filter-units'
  *  de resolver. Si alguna hace falta, se agrega acá y aparece sola en la UI. */
 export const ALLOWED_RESTRICTION_TYPES = [
   'leader', 'service', 'study', 'age', 'marital', 'donor',
+  /**
+   * PAR-7 · Los filtros de dirigente también sirven de audiencia: el caso que
+   * lo pidió es un formulario dirigido a «los disponibles para dar Niveles».
+   *
+   * Esta lista es un PERMISO, no una consecuencia: una condición nueva del
+   * padrón NO entra sola. Se agregan estas cuatro a propósito porque un grupo o
+   * un formulario dirigido a dirigentes es una pregunta real.
+   *
+   * `leader_state` entra con una advertencia: una restricción que diga «en
+   * revisión» la puede escribir solo quien ve ese estado, pero después la
+   * evalúa el servidor para cualquiera que abra el formulario. No filtra menos
+   * ni de más — simplemente, quien la escribió es quien decidió.
+   */
+  'leader_state', 'leader_trained', 'leader_teaching', 'leader_available',
 ] as const
 
 export type RestrictionType = (typeof ALLOWED_RESTRICTION_TYPES)[number]

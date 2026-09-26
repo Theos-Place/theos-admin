@@ -7,6 +7,9 @@ import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map
 import { MATRICULAS_VIGENTES, estudiosEnMarcha } from '@/lib/studies/estudio-actual'
 import { ESTADOS_DIRIGIENDO } from '@/lib/studies/dirigente-activo'
 import { negarCondicion } from '@/lib/members/negacion-de-condicion'
+import {
+  estadosPermitidos, codigosDeSeleccion, AVAILABILITY_DE_ETIQUETA,
+} from '@/lib/members/filtros-de-dirigente'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { getActiveAttendanceMemberIds } from '@/lib/supabase/queries/members-attendance'
 import { ATTENDANCE_MIN_CHARLAS_INTERMEDIA } from '@/lib/attendance'
@@ -111,6 +114,16 @@ export type MemberFilters = {
   topLevelOps?: Record<string, 'AND' | 'OR'>
   /** Interno: no aplicar el filtro de is_active (los ids ya vienen filtrados). */
   any_active?: boolean
+  /**
+   * PAR-7 · ¿Quien pregunta puede filtrar por «en pausa» y «en revisión»?
+   *
+   * Lo pone la RUTA a partir de la sesión (`canSeeLeaderAdminStatus`), no la
+   * pantalla: un filtro de confidencialidad que dependa de lo que mande el
+   * cliente no es un filtro. Ausente = sí, porque este mismo motor evalúa las
+   * restricciones de audiencia que escribió alguien que sí podía (ver
+   * `resolveAdvancedConditions`).
+   */
+  verEstadosReservados?: boolean
   page?: number
   pageSize?: number
 }
@@ -424,6 +437,20 @@ export async function resolveAdvancedConditions(
    *  vez de barrer la tabla. Es lo que hace viable evaluar la restricción de un
    *  grupo en la pantalla de matrícula, sin una segunda implementación. */
   scopeIds?: string[],
+  /**
+   * PAR-7 · ¿Esta sesión puede filtrar por «en pausa» y «en revisión»?
+   *
+   * POR DEFECTO SÍ, y no es un descuido: este resolvedor también evalúa las
+   * restricciones de audiencia de GRU-2/FRM-5, que las escribió alguien que SÍ
+   * tenía el permiso y se guardaron con el grupo o el formulario. Poner el
+   * default en `false` haría que esas restricciones dejaran de filtrar en
+   * silencio y la audiencia se ensanchara sola, que es peor que el problema.
+   *
+   * La puerta está donde se lista el padrón (/api/members y sus hermanas), que
+   * es donde alguien podría preguntar «quién está en revisión» y leer la
+   * respuesta persona por persona. Ver `estadosPermitidos`.
+   */
+  verEstadosReservados = true,
 ): Promise<ConditionResolution> {
   const supabase = createAdminClient()
   const perCondition: ResolvedCondition[] = []
@@ -673,6 +700,75 @@ export async function resolveAdvancedConditions(
         else res.exclude.push(set)
         break
       }
+      /**
+       * PAR-7 · Estado del dirigente. Selección múltiple = UNIÓN.
+       *
+       * Los cuatro estados no son excluyentes: `is_active` es el automático de
+       * PAR-2 y `availability_status` la etiqueta administrativa de DIR-6, así
+       * que alguien puede estar activo Y en revisión. Por eso la condición
+       * produce UN solo set con la unión — que además es lo que necesita la
+       * negación (`NegableCondition`): con dos sets, negar cambiaría de
+       * significado.
+       */
+      case 'leader_state': {
+        const estados = estadosPermitidos(c.states, verEstadosReservados)
+        // Sin estados que pueda ver, la condición no dice nada. Un set vacío
+        // como include deja cero resultados, que es lo correcto: pidió filtrar
+        // por algo y ese algo no existe para esta sesión.
+        const set = new Set<string>()
+        for (const e of estados) {
+          const parcial = await pagedIds(
+            q => e === 'activo' ? q.eq('is_active', true)
+              : e === 'inactivo' ? q.eq('is_active', false)
+              : q.eq('availability_status', AVAILABILITY_DE_ETIQUETA[e]),
+            'study_leaders', 'member_id', 'member_id', scopeIds,
+          )
+          for (const id of parcial) set.add(id)
+        }
+        res.include.push(set)
+        break
+      }
+      /**
+       * Capacitado y disponible: dos columnas de array en la ficha del
+       * dirigente, y DOS PREGUNTAS DISTINTAS — `formation_study_codes` es «se
+       * formó» y `qualified_study_codes` es «está dispuesto ahora». Medido el
+       * 2026-09-25: 445 fichas tienen las dos y no coinciden (N4 aparece en 311
+       * formaciones y 269 disponibilidades).
+       *
+       * `overlaps` y no `contains`: elegir «Niveles» pregunta por quien puede
+       * dar ALGUNO de N1–N4, no por quien puede dar los cuatro. Es el mismo
+       * criterio de `matchesStudyFilter` en la pantalla de dirigentes.
+       */
+      case 'leader_trained':
+      case 'leader_available': {
+        const col = c.type === 'leader_trained' ? 'formation_study_codes' : 'qualified_study_codes'
+        const codigos = codigosDeSeleccion(c.studies)
+        res.include.push(await pagedIds(
+          q => codigos.length > 0 ? q.overlaps(col, codigos) : q.not(col, 'is', null),
+          'study_leaders', 'member_id', 'member_id', scopeIds,
+        ))
+        break
+      }
+      /**
+       * Dando ahora: NO sale de la ficha del dirigente sino de los grupos a su
+       * cargo (`study_groups.leader_id/co_leader_id`). Reutiliza `idsByLeadership`
+       * —la misma función del filtro «Dando» de PAR-6— para que los dos
+       * lugares no puedan discrepar sobre qué cuenta como «a cargo»: la
+       * respuesta está en `ESTADOS_DIRIGIENDO` y hoy incluye `en_matricula`.
+       */
+      case 'leader_teaching': {
+        const codigos = codigosDeSeleccion(c.studies)
+        if (codigos.length === 0) {
+          res.include.push(await idsByLeadership('', scopeIds))
+          break
+        }
+        const set = new Set<string>()
+        for (const code of codigos) {
+          for (const id of await idsByLeadership(code, scopeIds)) set.add(id)
+        }
+        res.include.push(set)
+        break
+      }
       case 'server': {
         // Servidor = al menos un voluntariado ACTIVO, sin importar el comité.
         // Mismo criterio que getServerMemberIds() y que el chip rápido; la
@@ -767,7 +863,7 @@ export async function getMembersByIds(allIds: string[], chunk = 100): Promise<Db
  *  select('id'). Sirve para guardar listas / acciones sobre "todos los resultados". */
 export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: string[]; total: number }> {
   const supabase = createAdminClient()
-  const { search, is_donor, is_server, active_attendance, conditions, groups, topLevelOps, province, gender, ids: explicitIds } = filters
+  const { search, is_donor, is_server, active_attendance, conditions, groups, topLevelOps, province, gender, ids: explicitIds, verEstadosReservados } = filters
   let { is_active = true } = filters
 
   // Filtros avanzados → sets por condición; la combinación AND/OR va al final
@@ -788,7 +884,7 @@ export async function getMemberIds(filters: MemberFilters = {}): Promise<{ ids: 
 
   let resolution: Awaited<ReturnType<typeof resolveAdvancedConditions>> | null = null
   if (conditions?.length) {
-    resolution = await resolveAdvancedConditions(conditions, orGroupedIds, scopeIds)
+    resolution = await resolveAdvancedConditions(conditions, orGroupedIds, scopeIds, verEstadosReservados ?? true)
     if (resolution.isActiveOverride !== undefined) is_active = resolution.isActiveOverride
   }
 

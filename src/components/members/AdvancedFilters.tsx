@@ -6,6 +6,11 @@ import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_STAGES } from '@/data/study-catalog'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
+import { useAuth } from '@/hooks/useAuth'
+import { studySelectOptions } from '@/lib/studies/study-grouping'
+import {
+  ESTADO_DE_DIRIGENTE_LABEL, estadosVisibles, type EstadoDeDirigente,
+} from '@/lib/members/filtros-de-dirigente'
 import { useSedes } from '@/lib/sedes'
 import { useOrg } from '@/lib/org'
 import { useForms } from '@/hooks/useForms'
@@ -36,13 +41,16 @@ type Props = {
   allowedTypes?: readonly FilterCondition['type'][]
 }
 
-type Tab = 'study' | 'attend' | 'service' | 'form' | 'profile'
+type Tab = 'study' | 'attend' | 'service' | 'form' | 'leader' | 'profile'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'study',   label: 'Estudios' },
   { key: 'attend',  label: 'Asistencia' },
   { key: 'service', label: 'Puestos de servicio' },
   { key: 'form',    label: 'Formularios' },
+  // PAR-7 · va antes de «Perfil» y no al final: es una sección de trabajo, y
+  // «Perfil» es el cajón de lo demás.
+  { key: 'leader',  label: 'Dirigentes' },
   { key: 'profile', label: 'Perfil' },
 ]
 
@@ -764,18 +772,178 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   )
 }
 
+/**
+ * PAR-7 · Los filtros de dirigente.
+ *
+ * Las cinco preguntas que hoy solo se podían hacer en la pantalla de
+ * dirigentes, donde se responden en memoria y ahí se acaban: acá heredan las
+ * listas guardadas, las columnas y el export del padrón sin trabajo extra.
+ *
+ * Los tres selectores de estudio son MULTISELECCIÓN de verdad (chips que se
+ * prenden y apagan) y no un `<select multiple>`: en un select múltiple hay que
+ * saber que se sostiene Ctrl, y en móvil no existe.
+ */
+function LeaderPanel({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
+  const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
+  const { user } = useAuth()
+  const { studyTypes } = useStudyPlans()
+  const opcionesDeEstudio = studySelectOptions(studyTypes)
+
+  const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
+  const leaderVal = leaderCond ? leaderCond.value : 'any'
+
+  const estadoCond = conditions.find(c => c.type === 'leader_state') as Extract<FilterCondition, { type: 'leader_state' }> | undefined
+  const estados = estadoCond?.states ?? []
+  const estadosOfrecidos = estadosVisibles(user?.roles)
+
+  function alternarEstado(e: EstadoDeDirigente) {
+    const siguiente = estados.includes(e) ? estados.filter(x => x !== e) : [...estados, e]
+    if (estadoCond) removeCondition(estadoCond.id)
+    if (siguiente.length > 0) addCondition({ group: 'leader', type: 'leader_state', states: siguiente })
+  }
+
+  return (
+    <div className="space-y-5">
+      {permite('leader') && <div>
+        <Label>Es dirigente</Label>
+        <Sel value={leaderVal} onChange={v => {
+          if (leaderCond) removeCondition(leaderCond.id)
+          if (v !== 'any') addCondition({ group: 'leader', type: 'leader', value: v as 'yes' | 'no' })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="yes">Sí</option>
+          <option value="no">No</option>
+        </Sel>
+        <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+          Pertenece al comité de Dirigentes. Los filtros de abajo miran su ficha
+          de dirigente y no hace falta combinarlos con este.
+        </p>
+      </div>}
+
+      {permite('leader_state') && <div>
+        <Label>Estado del dirigente</Label>
+        <div className="flex flex-wrap gap-2">
+          {estadosOfrecidos.map(e => (
+            <button
+              key={e}
+              onClick={() => alternarEstado(e)}
+              aria-pressed={estados.includes(e)}
+              className={cn(
+                'rounded-full px-3 py-1.5 text-[13px] font-body border transition-all',
+                estados.includes(e)
+                  ? 'bg-navy text-white border-navy'
+                  : 'bg-transparent text-navy/80 border-outline hover:text-navy',
+              )}
+            >
+              {ESTADO_DE_DIRIGENTE_LABEL[e]}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Se pueden marcar varios y no se excluyen: «Activo» y «En pausa» juntos
+          traen a los dos grupos. Activo/inactivo es el cálculo automático (dirige
+          ahora o dirigió en los últimos 12 meses).
+        </p>
+      </div>}
+
+      {permite('leader_trained') && (
+        <SelectorDeEstudios
+          etiqueta="Capacitado para dar"
+          ayuda="Su formación: los estudios para los que está capacitado, aunque hoy no esté dando ninguno."
+          tipo="leader_trained"
+          opciones={opcionesDeEstudio}
+          conditions={conditions}
+          addCondition={addCondition}
+          removeCondition={removeCondition}
+        />
+      )}
+
+      {permite('leader_available') && (
+        <SelectorDeEstudios
+          etiqueta="Disponible para dar"
+          ayuda="Lo que dijo que está dispuesto a dar ahora. No es lo mismo que estar capacitado."
+          tipo="leader_available"
+          opciones={opcionesDeEstudio}
+          conditions={conditions}
+          addCondition={addCondition}
+          removeCondition={removeCondition}
+        />
+      )}
+
+      {permite('leader_teaching') && (
+        <SelectorDeEstudios
+          etiqueta="Dando ahora"
+          ayuda="Tiene un grupo a cargo de ese estudio, en curso o en matrícula."
+          tipo="leader_teaching"
+          opciones={opcionesDeEstudio}
+          conditions={conditions}
+          addCondition={addCondition}
+          removeCondition={removeCondition}
+        />
+      )}
+    </div>
+  )
+}
+
+/** Los tres selectores de estudio son el mismo control con otra etiqueta y otro
+ *  tipo de condición: repetirlo tres veces era la forma de que dos quedaran
+ *  distintos sin que nadie lo notara. */
+function SelectorDeEstudios({
+  etiqueta, ayuda, tipo, opciones, conditions, addCondition, removeCondition,
+}: {
+  etiqueta: string
+  ayuda: string
+  tipo: 'leader_trained' | 'leader_teaching' | 'leader_available'
+  opciones: Array<{ value: string; label: string }>
+  conditions: FilterCondition[]
+  addCondition: (c: AddableCondition) => void
+  removeCondition: (id: number) => void
+}) {
+  const cond = conditions.find(c => c.type === tipo) as
+    Extract<FilterCondition, { type: 'leader_trained' | 'leader_teaching' | 'leader_available' }> | undefined
+  const elegidos = cond?.studies ?? []
+
+  function alternar(valor: string) {
+    const siguiente = elegidos.includes(valor) ? elegidos.filter(v => v !== valor) : [...elegidos, valor]
+    if (cond) removeCondition(cond.id)
+    if (siguiente.length > 0) addCondition({ group: 'leader', type: tipo, studies: siguiente } as AddableCondition)
+  }
+
+  return (
+    <div>
+      <Label>{etiqueta}</Label>
+      <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+        {opciones.map(o => (
+          <button
+            key={o.value}
+            onClick={() => alternar(o.value)}
+            aria-pressed={elegidos.includes(o.value)}
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[13px] font-body border transition-all',
+              elegidos.includes(o.value)
+                ? 'bg-navy text-white border-navy'
+                : 'bg-transparent text-navy/80 border-outline hover:text-navy',
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">{ayuda}</p>
+    </div>
+  )
+}
+
 function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes }: Props) {
   const permite = (t: FilterCondition['type']) => !allowedTypes || allowedTypes.includes(t)
   const donorCond  = conditions.find(c => c.type === 'donor')  as Extract<FilterCondition, { type: 'donor'  }> | undefined
   const statusCond = conditions.find(c => c.type === 'status') as Extract<FilterCondition, { type: 'status' }> | undefined
-  const leaderCond = conditions.find(c => c.type === 'leader') as Extract<FilterCondition, { type: 'leader' }> | undefined
   const ageCond    = conditions.find(c => c.type === 'age')    as Extract<FilterCondition, { type: 'age'    }> | undefined
   const maritalCond = conditions.find(c => c.type === 'marital') as Extract<FilterCondition, { type: 'marital' }> | undefined
   const accountCond = conditions.find(c => c.type === 'account') as Extract<FilterCondition, { type: 'account' }> | undefined
 
   const donorVal  = donorCond  ? donorCond.value  : 'any'
   const statusVal = statusCond ? statusCond.value : 'any'
-  const leaderVal = leaderCond ? leaderCond.value : 'any'
   const maritalVal = maritalCond ? maritalCond.value : 'any'
   const accountVal = accountCond ? accountCond.value : 'any'
 
@@ -855,18 +1023,6 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
         </Sel>
       </div>}
 
-      {permite('leader') && <div>
-        <Label>Dirigente</Label>
-        <Sel value={leaderVal} onChange={v => {
-          if (leaderCond) removeCondition(leaderCond.id)
-          if (v !== 'any') addCondition({ group: 'leader', type: 'leader', value: v as 'yes' | 'no' })
-        }}>
-          <option value="any">Cualquiera</option>
-          <option value="yes">Sí</option>
-          <option value="no">No</option>
-        </Sel>
-      </div>}
-
       {permite('account') && <div>
         <Label>Estado de cuenta</Label>
         <Sel value={accountVal} onChange={v => {
@@ -938,7 +1094,11 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
     attend:  (['attendance', 'registration'] as const).filter(permite),
     service: (['service', 'server'] as const).filter(permite),
     form:    (['form'] as const).filter(permite),
-    profile: (['donor', 'age', 'status', 'leader', 'marital', 'account', 'created'] as const).filter(permite),
+    // PAR-7 · «Es dirigente» SE MUDÓ acá desde «Perfil». No queda en los dos
+    // lados: dos controles que escriben la misma condición se pisan y el
+    // usuario no sabe cuál manda.
+    leader:  (['leader', 'leader_state', 'leader_trained', 'leader_teaching', 'leader_available'] as const).filter(permite),
+    profile: (['donor', 'age', 'status', 'marital', 'account', 'created'] as const).filter(permite),
   }
   // Una pestaña sin condiciones permitidas no se pinta.
   const tabs = TABS.filter(t => conditionTypes[t.key].length > 0)
@@ -1028,6 +1188,14 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
             />
           )}
           {activeTab === 'form'    && <FormPanel   addCondition={addCondition} />}
+          {activeTab === 'leader'  && (
+            <LeaderPanel
+              conditions={conditions}
+              addCondition={addCondition}
+              removeCondition={removeCondition}
+              allowedTypes={allowedTypes}
+            />
+          )}
           {activeTab === 'profile' && (
             <ProfilePanel
               conditions={conditions}

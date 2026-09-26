@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit'
 import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
 import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
+import { canSeeLeaderAdminStatus } from '@/lib/studies/leader-admin-status'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
@@ -67,6 +68,12 @@ export async function GET(req: NextRequest) {
     const { ids, total } = await getMemberIds({
       search,
       conditions,
+      // PAR-7 · «En pausa» y «en revisión» dicen que hay algo abierto con una
+      // persona. DIR-6 ya los cerró en la pantalla de dirigentes; el padrón lo
+      // ve más gente —`direccion` entre ella, que está fuera de esos roles a
+      // propósito—, así que el filtro se sanea acá, con la sesión en la mano,
+      // y no en la pantalla.
+      verEstadosReservados: canSeeLeaderAdminStatus(auth.ctx?.roles),
       groups: parseGroupsParam(searchParams.get('groups')),
       topLevelOps: parseOpsParam(searchParams.get('ops')),
       is_active: is_active !== null ? is_active === 'true' : true,

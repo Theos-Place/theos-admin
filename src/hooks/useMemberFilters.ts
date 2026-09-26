@@ -87,6 +87,16 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     }
     case 'status': return c.value === 'active' ? m.is_active : !m.is_active
     case 'leader': return c.value === 'yes' ? m.es_dirigente : !m.es_dirigente
+    case 'leader_state':
+    case 'leader_trained':
+    case 'leader_teaching':
+    case 'leader_available':
+      // PAR-7: el estado, la formación y la disponibilidad del dirigente viven
+      // en `study_leaders`, y los grupos a cargo en `study_groups` — nada de
+      // eso viaja en el Member del padrón. El filtro real es server-side
+      // (members.ts), igual que 'registration'. Re-filtrar acá con datos que no
+      // están escondería gente que sí cumple.
+      return true
     case 'server': {
       // En el listado, service_history trae SOLO el servicio activo (ver
       // adapter.ts), así que "tiene algo" ya significa que sirve hoy. Mismo

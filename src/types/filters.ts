@@ -52,6 +52,26 @@ export type FilterCondition = NegableCondition & (
   | { id: number; group: 'age'; type: 'age'; min: string; max: string }
   | { id: number; group: 'status'; type: 'status'; value: 'active' | 'inactive' }
   | { id: number; group: 'leader'; type: 'leader'; value: 'yes' | 'no' }
+  /**
+   * PAR-7 · Los tres filtros de dirigente, todos de selección MÚLTIPLE.
+   *
+   * `states` y `studies` son arrays porque las preguntas reales son uniones:
+   * «activos más los que están en pausa», «capacitado para Niveles o para
+   * Discípulos». Cada condición aporta UN set (la unión), que es lo que
+   * `NegableCondition` necesita para poder negarse sin cambiar de significado.
+   *
+   * `studies` guarda los VALORES del selector ('GRP:niveles' o un código), no
+   * los códigos expandidos: así una lista guardada sigue diciendo «Niveles»
+   * aunque mañana se agregue un N5. La expansión vive en
+   * `codigosDeSeleccion`.
+   */
+  | { id: number; group: 'leader'; type: 'leader_state'; states: string[] }
+  /** Capacitado para dar: `study_leaders.formation_study_codes`. */
+  | { id: number; group: 'leader'; type: 'leader_trained'; studies: string[] }
+  /** Dando ahora: tiene un grupo a cargo de ese estudio (la condición de PAR-6). */
+  | { id: number; group: 'leader'; type: 'leader_teaching'; studies: string[] }
+  /** Disponible para dar: `study_leaders.qualified_study_codes`. */
+  | { id: number; group: 'leader'; type: 'leader_available'; studies: string[] }
   // Sirve o no sirve, sin importar dónde. El chip rápido "Servidores" solo sabe
   // afirmar; esto además permite negarlo (quién NO está sirviendo hoy).
   | { id: number; group: 'server'; type: 'server'; value: 'yes' | 'no' }
