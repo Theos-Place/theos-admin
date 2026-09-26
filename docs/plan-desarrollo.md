@@ -3863,7 +3863,36 @@ HECHO el 2026-09-25 (en staging). Qué quedó:
      de ejecutar (borra la publicación vigente) y registro en audit_log de
      quién publicó y cuántos entraron/salieron.
 
-### [ ] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
+### [x] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
+
+HECHO el 2026-09-25 (en staging). Qué quedó:
+
+- **La página `/vacantes` ya existía** y era pública; lo que faltaba era todo
+  lo demás. Se extendió en vez de hacer una nueva.
+- **Embebible por iframe**: `/vacantes` entró a `EMBEDDABLE_PREFIXES`, así que
+  usa el mismo mecanismo del calendario —`frame-ancestors` con
+  `EMBED_ALLOWED_ORIGINS`—. Sin orígenes configurados no se abre nada, o sea
+  que esto por sí solo no expone nada.
+- **LO QUE SE CERRÓ, y no estaba en el pedido como un arreglo:** el API público
+  venía mandando `position_functions` y `position_profile`. Son la descripción
+  interna del puesto —lo que se le exige a quien sirve— en un endpoint sin
+  login. Se sacaron del PAYLOAD y no solo de la pantalla: un campo que llega al
+  navegador es público aunque no se pinte.
+- **Filtros**: búsqueda por puesto o comité, y selectores de comité y de
+  ubicación (antes había uno de área).
+- **Detalle** en modal con SOLO la descripción y el requisito de estudios, que
+  es lo que se pidió.
+- **Aplicar sin perder el puesto**: el botón vuelve a `/vacantes?puesto=<id>`
+  después del login y la página abre ese puesto sola. Volver a la lista
+  obligaba a buscarlo de nuevo entre treinta, que es donde se abandona.
+- **«¿No ves el puesto que necesitás?»** enlaza a la pantalla que ya existe de
+  pedir un puesto nuevo, diciendo explícitamente que es para los que todavía no
+  existen.
+
+PENDIENTE DE VERIFICAR EN VIVO: que el login DENTRO del iframe no se trabe por
+cookies de terceros. Si se traba, el camino es abrir en pestaña nueva y volver
+—no aflojar el CSP—. No se puede probar sin el sitio real embebiendo la
+página.
 
 Reglas dictadas (2026-09-25):
 - Página PÚBLICA, sin login — se va a incrustar por IFRAME en theosplace.org.

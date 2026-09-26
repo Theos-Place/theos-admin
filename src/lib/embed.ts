@@ -17,7 +17,21 @@
 
 /** Prefijos embebibles. Son páginas PÚBLICAS de solo lectura: no hay nada que
  *  alguien con sesión pueda hacer sin querer dentro de un iframe ajeno. */
-export const EMBEDDABLE_PREFIXES = ['/calendario']
+export const EMBEDDABLE_PREFIXES = [
+  '/calendario',
+  /**
+   * SRV-13 · La cartelera pública de puestos de servicio, para incrustarla en
+   * theosplace.org. Cumple la misma condición que el calendario: es pública,
+   * de solo lectura y no tiene acciones destructivas.
+   *
+   * El botón «Aplicar» sí escribe, pero exige sesión y confirma con un clic
+   * explícito sobre un puesto concreto — no es la clase de acción que se le
+   * roba a alguien con clickjacking, y el propio endpoint valida quién es.
+   * Aun así, si el login dentro del iframe da problemas de cookies, el camino
+   * es abrir en pestaña nueva y volver, no aflojar esto.
+   */
+  '/vacantes',
+]
 
 export function esEmbebible(pathname: string): boolean {
   return EMBEDDABLE_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))

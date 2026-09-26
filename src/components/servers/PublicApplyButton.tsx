@@ -10,7 +10,18 @@ import { loginUrlWithDest } from '@/lib/auth/redirect-target'
 /** Botón "Aplicar" de la vista PÚBLICA de vacantes (/vacantes). Ver la vacante
  *  no requiere sesión; aplicar sí. Sin sesión → manda a /login con redirect de
  *  vuelta a /vacantes. Con sesión → aplica vía /api/servers/vacancies/[id]/apply. */
-export function PublicApplyButton({ vacancyId, className }: { vacancyId: string; className?: string }) {
+export function PublicApplyButton({ vacancyId, className, volverA }: {
+  vacancyId: string
+  className?: string
+  /**
+   * SRV-13 · A dónde volver después del login. Por defecto `/vacantes`, pero
+   * el detalle manda `/vacantes?puesto=<id>` para que la persona reaparezca
+   * EN EL PUESTO que estaba mirando. Volver a la lista obliga a buscarlo de
+   * nuevo entre treinta, y ahí es donde se abandona.
+   */
+  volverA?: string
+}) {
+  const destino = volverA ?? '/vacantes'
   const router = useRouter()
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'already' | 'error' | 'auth'>('idle')
 
@@ -23,14 +34,14 @@ export function PublicApplyButton({ vacancyId, className }: { vacancyId: string;
       if (!session) {
         // Login-gate: volvés a /vacantes tras autenticarte.
         setState('auth')
-        router.push(loginUrlWithDest('/vacantes'))
+        router.push(loginUrlWithDest(destino))
         return
       }
       const res = await fetch(`/api/servers/vacancies/${vacancyId}/apply`, { method: 'POST' })
       if (res.status === 201) { setState('done'); return }
       const d = await res.json().catch(() => null) as { code?: string } | null
       if (res.status === 409 && d?.code === 'already_applied') { setState('already'); return }
-      if (res.status === 401) { setState('auth'); router.push(loginUrlWithDest('/vacantes')); return }
+      if (res.status === 401) { setState('auth'); router.push(loginUrlWithDest(destino)); return }
       setState('error')
     } catch {
       setState('error')
