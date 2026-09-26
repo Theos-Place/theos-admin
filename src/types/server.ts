@@ -35,6 +35,10 @@ export type CommitteePosition = {
   profile?: string | null
   skills?: string | null
   study_requirement?: string | null
+  /** Dónde se sirve el puesto: una sede, un lugar escrito a mano, o nada.
+   *  OPCIONAL de verdad — un puesto sin lugar fijo es un caso normal, no un
+   *  dato faltante. Ver `lib/servers/ubicacion-de-puesto`. */
+  location?: string | null
 }
 
 export type CommitteeData = {

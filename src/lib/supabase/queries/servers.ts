@@ -30,6 +30,7 @@ export type DbCommittee = {
     profile: string | null
     skills: string | null
     study_requirement: string | null
+    location: string | null
     volunteers: Array<{
       member_id: string
       status: 'active' | 'inactive' | 'on_leave' | 'pending'
@@ -130,7 +131,7 @@ export async function getCommittees(): Promise<DbCommittee[]> {
     .select(`
       id, name, ideal_capacity, parent_id,
       positions:service_positions!service_positions_area_id_fkey(
-        id, title, description, functions, profile, skills, study_requirement,
+        id, title, description, functions, profile, skills, study_requirement, location,
         volunteers(
           member_id, status, start_date,
           member:members(first_name, last_name, email, phone, birth_date)

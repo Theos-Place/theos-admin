@@ -3734,6 +3734,26 @@ algún camino (¿caché de 30s? ¿estado del selector?). Arreglarlo con test.
 tsc/lint/vitest.
 ```
 
+### [x] Ubicación de los puestos de servicio (pedido 2026-09-25)
+
+HECHO. La columna `service_positions.location` YA existía y casi nadie la
+usaba —3 puestos de 357— porque no había dónde escribirla ni dónde verla.
+
+- **En la edición**: un selector con las sedes activas, «Otro lugar…» para
+  escribir a mano, y «Sin ubicación». Opcional de verdad: un puesto sin lugar
+  fijo es un caso normal, no un dato faltante.
+- **En la información**: aparece en el detalle del puesto, primero, y CUENTA
+  como detalle — sin eso, un puesto que solo tuviera ubicación no mostraba el
+  chevron y el dato quedaba guardado sin forma de verlo.
+- **Se guarda el NOMBRE y no el id de la sede**, como ya hacía la columna
+  (`Todas las Sedes`, `Pedregal, Belén`) y como hace `folletos_sede`. El costo
+  queda escrito: si una sede se renombra, los puestos conservan el nombre
+  viejo. Con tres filas usándola hoy, arreglarlo a mano sale más barato que el
+  id, y además los lugares escritos a mano no tienen id.
+- **Lo guardado se conserva aunque ya no sea una sede activa**: sin eso, abrir
+  el puesto a cambiarle otra cosa le borraba la ubicación sin que nadie lo
+  pidiera.
+
 ## Fase 24 — Rediseño de vacantes → puestos de servicio (reunión de servidores, 2026-09-25)
 
 Reestructuración completa del flujo de vacantes, dictada por Floriana.

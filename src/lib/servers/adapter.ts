@@ -59,6 +59,7 @@ export function toDomainCommittee(db: DbCommittee, openVacancies = 0): Committee
       profile: p.profile,
       skills: p.skills,
       study_requirement: p.study_requirement,
+      location: p.location,
     })),
     open_vacancies: openVacancies,
   }

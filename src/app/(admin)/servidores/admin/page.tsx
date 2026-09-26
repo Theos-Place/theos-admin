@@ -3,13 +3,18 @@
 import Link from 'next/link'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, ShieldCheck, Download } from 'lucide-react'
+import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, ShieldCheck, Download, MapPin } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { useSedes } from '@/lib/sedes'
+import {
+  opcionesDeUbicacion, esSedeDelCatalogo, valorAGuardar, textoDeUbicacion,
+  OTRA_UBICACION, SIN_UBICACION,
+} from '@/lib/servers/ubicacion-de-puesto'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import type { CommitteePosition } from '@/types/server'
 import { rolesGrantedByPosition } from '@/lib/servers/position-roles'
@@ -208,11 +213,20 @@ function DeactivateConfirm({
 /** Edición enfocada de los campos descriptivos de un puesto (título, nivel de
  *  estudio, descripción, funciones, perfil). Solo envía estos campos (PUT parcial)
  *  para no tocar ubicación/cantidad/expiración/destacado. */
-type PosDescFields = { title: string; study_requirement: string; description: string; functions: string; profile: string; skills: string }
+type PosDescFields = {
+  title: string; study_requirement: string; description: string
+  functions: string; profile: string; skills: string
+  /** Dónde se sirve. Opcional: una sede, un lugar escrito a mano, o nada. */
+  location: string | null
+}
 function PositionEditModal({
   initial, onSave, onClose, modo = 'editar', rolesQueOtorgaria,
 }: {
-  initial: { title: string; study_requirement?: string | null; description?: string | null; functions?: string | null; profile?: string | null; skills?: string | null }
+  initial: {
+    title: string; study_requirement?: string | null; description?: string | null
+    functions?: string | null; profile?: string | null; skills?: string | null
+    location?: string | null
+  }
   onSave: (data: PosDescFields & { quantity?: number }) => void
   onClose: () => void
   modo?: 'crear' | 'editar'
@@ -230,8 +244,23 @@ function PositionEditModal({
     functions: initial.functions ?? '',
     profile: initial.profile ?? '',
     skills: initial.skills ?? '',
+    location: initial.location ?? null,
   })
   const [cupo, setCupo] = useState('1')
+
+  /**
+   * La ubicación: una sede del catálogo, un lugar escrito a mano, o nada.
+   *
+   * El selector arranca en «Otro lugar…» cuando lo guardado NO es una sede
+   * activa —una sede que se desactivó, o un texto libre de antes—, para que
+   * abrir el puesto a cambiarle otra cosa no le borre la ubicación.
+   */
+  const { activeSedes } = useSedes()
+  const guardada = initial.location ?? ''
+  const esSede = esSedeDelCatalogo(guardada, activeSedes)
+  const [ubicSel, setUbicSel] = useState(
+    guardada ? (esSede ? guardada : OTRA_UBICACION) : SIN_UBICACION)
+  const [ubicTexto, setUbicTexto] = useState(esSede ? '' : guardada)
   const set = <K extends keyof PosDescFields>(k: K, v: PosDescFields[K]) => setF(p => ({ ...p, [k]: v }))
   const valid = f.title.trim().length > 0
   const roles = rolesQueOtorgaria?.(f.title) ?? []
@@ -272,6 +301,33 @@ function PositionEditModal({
           <textarea id="perfil-una-por-linea-con" aria-label="Perfil" className={cn(inputCls, 'resize-y font-mono text-[13px]')} rows={8} value={f.profile} onChange={e => set('profile', e.target.value)} />
         </div>
         <div className="space-y-1.5">
+          <label htmlFor="ubicacion-del-puesto" className={labelCls}>Ubicación</label>
+          <select
+            id="ubicacion-del-puesto"
+            aria-label="Ubicación del puesto"
+            className={inputCls}
+            value={ubicSel}
+            onChange={e => setUbicSel(e.target.value)}
+          >
+            {opcionesDeUbicacion(activeSedes, guardada).map(o => (
+              <option key={o.value || 'vacio'} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          {ubicSel === OTRA_UBICACION && (
+            <input
+              aria-label="Escribí la ubicación"
+              className={inputCls}
+              maxLength={120}
+              placeholder="Ej. Pedregal, Belén"
+              value={ubicTexto}
+              onChange={e => setUbicTexto(e.target.value)}
+            />
+          )}
+          <p className="text-[13px] text-navy-light/80 font-body">
+            Es opcional. Si el puesto no tiene un lugar fijo, dejalo sin ubicación.
+          </p>
+        </div>
+        <div className="space-y-1.5">
           <label htmlFor="habilidades" className={labelCls}>Habilidades</label>
           <textarea id="habilidades" aria-label="Habilidades" className={cn(inputCls, 'resize-y')} rows={2} value={f.skills} onChange={e => set('skills', e.target.value)} />
         </div>
@@ -279,6 +335,7 @@ function PositionEditModal({
           <button disabled={!valid}
             onClick={() => onSave({
               ...f, title: f.title.trim(),
+              location: valorAGuardar(ubicSel, ubicTexto),
               ...(crear ? { quantity: Math.max(1, Number(cupo) || 1) } : {}),
             })}
             className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body">
@@ -375,6 +432,7 @@ export default function ServidoresAdminPage() {
           functions: data.functions || null,
           profile: data.profile || null,
           skills: data.skills || null,
+          location: data.location,
         }),
       })
       if (!res.ok) throw new Error()
@@ -401,6 +459,7 @@ export default function ServidoresAdminPage() {
           functions: data.functions || null,
           profile: data.profile || null,
           skills: data.skills || null,
+          location: data.location,
         }),
       })
       const body = await res.json().catch(() => null)
@@ -1049,7 +1108,11 @@ export default function ServidoresAdminPage() {
               <div className="flex-1 overflow-y-auto py-1.5">
                 {selectedCommPositions.map((p, i) => {
                   const open = expandedPos.has(p.id)
-                  const hasDetail = !!(p.description || p.functions || p.profile || p.skills || p.study_requirement)
+                  // La UBICACIÓN cuenta como detalle: sin esto, un puesto que
+                  // solo tiene ubicación no mostraba el chevron y el dato
+                  // quedaba guardado y sin forma de verlo.
+                  const hasDetail = !!(p.description || p.functions || p.profile || p.skills
+                    || p.study_requirement || p.location)
                   return (
                   <div key={p.id} className={cn(i < selectedCommPositions.length - 1 && 'border-b border-[var(--outline-variant)]')}>
                     <div className={cn('group flex items-center gap-2 px-5 py-2.5 transition-colors',
@@ -1101,6 +1164,15 @@ export default function ServidoresAdminPage() {
                           <div>
                             <p className={labelCls}>Descripción</p>
                             <p className="text-[13px] text-navy-light/80 font-body mt-0.5">{p.description}</p>
+                          </div>
+                        )}
+                        {p.location && (
+                          <div>
+                            <p className={labelCls}>Ubicación</p>
+                            <p className="text-[13px] text-navy-light/80 font-body mt-0.5 inline-flex items-center gap-1.5">
+                              <MapPin size={12} aria-hidden="true" />
+                              {textoDeUbicacion(p.location)}
+                            </p>
                           </div>
                         )}
                         {p.functions && (
