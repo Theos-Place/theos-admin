@@ -39,17 +39,28 @@ const ID = {
   cualesEstudios: randomUUID(),
   comentarios: randomUUID(),
 }
-const CAMPOS = camposDelFormulario(ID)
 
 async function main() {
   console.log(`Base: ${env.NEXT_PUBLIC_SUPABASE_URL}\n`)
+
+  // Las opciones de «¿cuáles te interesan?» salen del CATÁLOGO REAL, no de una
+  // lista escrita en el código: así el día que se agregue un estudio la
+  // pregunta lo ofrece sin que nadie se acuerde de venir a tocar esto.
+  const { data: planes, error: ePlanes } = await db
+    .from('study_plans').select('code, name').eq('is_active', true).order('code')
+  if (ePlanes) throw ePlanes
+  const CAMPOS = camposDelFormulario(ID, randomUUID, (planes ?? []) as Array<{ code: string; name: string }>)
+  if ((planes ?? []).length === 0) {
+    throw new Error('No hay planes de estudio activos: la pregunta de interés quedaría sin opciones.')
+  }
   const { data: existente } = await db.from('forms')
     .select('id').eq('title', TITULO_DEL_FORMULARIO).maybeSingle()
 
   console.log(existente ? `Formulario existente: ${existente.id}` : 'Formulario NUEVO')
   for (const c of CAMPOS) {
     const cond = (c.conditions?.length ?? 0) > 0 ? '  ← condicional' : ''
-    console.log(`  · [${c.field_type}] ${c.label}${cond}`)
+    const ops = c.options?.length ? `  (${c.options.length} opciones)` : ''
+    console.log(`  · [${c.field_type}] ${c.label}${cond}${ops}`)
   }
   console.log('\nAudiencia: solo dirigentes')
 

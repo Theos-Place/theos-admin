@@ -11,7 +11,11 @@ const IDS = {
   intro: 'i', disponibilidad: 'd', quiereCapacitarse: 'q',
   cualesEstudios: 'c', comentarios: 'x',
 }
-const CAMPOS = camposDelFormulario(IDS)
+const PLANES = [
+  { code: 'N1', name: 'Nivel 1' }, { code: 'N2', name: 'Nivel 2' },
+  { code: 'DIS1', name: 'Discípulos 1' }, { code: 'PREMAT', name: 'Prematrimonial' },
+]
+const CAMPOS = camposDelFormulario(IDS, () => 'x', PLANES)
 const por = (id: string) => CAMPOS.find(c => c.id === id)!
 
 describe('el formulario espejo', () => {
@@ -48,6 +52,33 @@ describe('el formulario espejo', () => {
     const textos = CAMPOS.map(c => `${c.label} ${c.description ?? ''}`).join(' ')
     expect(textos).toMatch(/no cambia los estudios para los que estás capacitado/i)
     expect(textos).toMatch(/no te asigna ningún grupo/i)
+  })
+})
+
+describe('«¿cuáles te interesan?» es una lista, no un campo abierto', () => {
+  it('es multiselección y trae opciones del catálogo', () => {
+    // Escrito a mano, cada persona lo nombra distinto —«niveles», «Nivel 3»,
+    // «los niveles»— y la lista de a quién convocar hay que armarla leyendo
+    // respuesta por respuesta, que es el trabajo que esto viene a quitar.
+    const c = por(IDS.cualesEstudios)
+    expect(c.field_type).toBe('multiselect')
+    expect(c.options?.length).toBeGreaterThan(0)
+  })
+
+  it('agrupa igual que la pantalla de dirigentes: «Niveles», no N1 y N2 sueltos', () => {
+    const opciones = por(IDS.cualesEstudios).options ?? []
+    expect(opciones).toContain('Niveles')
+    expect(opciones).toContain('Discípulos')
+    expect(opciones).not.toContain('N1 — Nivel 1')
+    expect(opciones).toContain('PREMAT — Prematrimonial')
+  })
+
+  it('las opciones salen del catálogo que se le pase, no de una lista fija', () => {
+    // Si estuvieran escritas en el código, el día que se agregue un estudio la
+    // pregunta seguiría ofreciendo los de antes y nadie lo notaría.
+    const conUno = camposDelFormulario(IDS, () => 'x', [{ code: 'HER', name: 'Herramientas' }])
+    expect(conUno.find(c => c.id === IDS.cualesEstudios)!.options)
+      .toEqual(['Niveles', 'Discípulos', 'HER — Herramientas'])
   })
 })
 

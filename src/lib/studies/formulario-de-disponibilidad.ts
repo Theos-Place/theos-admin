@@ -22,6 +22,8 @@
  * Módulo PURO: define el contenido. Quien escribe en la base es el seed.
  */
 
+import { studySelectOptions } from '@/lib/studies/study-grouping'
+
 export const TITULO_DEL_FORMULARIO = 'Actualizá tus datos de dirigente'
 
 export const DESCRIPCION_DEL_FORMULARIO =
@@ -59,11 +61,30 @@ export type IdsDelFormulario = {
  *  forma de que un día no coincidan. */
 export const SI_QUIERE_CAPACITARSE = 'Sí'
 
+/**
+ * Las opciones de «¿cuáles te interesan?».
+ *
+ * SALEN DEL CATÁLOGO REAL y no de una lista escrita a mano: si se escribieran
+ * acá, el día que se agregue un estudio la pregunta seguiría ofreciendo los de
+ * antes y nadie lo notaría hasta leer las respuestas. Se agrupan igual que en
+ * la pantalla de dirigentes —«Niveles» en vez de N1…N4— porque así es como se
+ * piensa, y porque la lista sin agrupar son más de treinta opciones.
+ */
+export function opcionesDeEstudio(
+  planes: ReadonlyArray<{ code: string; name: string }>,
+): string[] {
+  return studySelectOptions([...planes]).map(o => o.label)
+}
+
 export function camposDelFormulario(
   ids: IdsDelFormulario,
   /** Los ids de la regla y de sus condiciones. Entra como parámetro para que
    *  el test pueda fijarlos y comparar; el seed pasa `randomUUID`. */
   nuevoId: () => string = () => Math.random().toString(36).slice(2),
+  /** El catálogo de estudios activos, para las opciones de «¿cuáles te
+   *  interesan?». Vacío = la pregunta queda sin opciones, que es lo que
+   *  `camposValidos` ataja. */
+  planes: ReadonlyArray<{ code: string; name: string }> = [],
 ): CampoSembrado[] {
   return [
     {
@@ -92,12 +113,15 @@ export function camposDelFormulario(
     },
     {
       id: ids.cualesEstudios,
-      field_type: 'text',
+      // Multiselección del catálogo y NO texto libre: escrito a mano, cada
+      // persona lo nombra distinto —«niveles», «Nivel 3», «los niveles»— y la
+      // lista de a quién convocar hay que armarla leyendo respuesta por
+      // respuesta, que es justo el trabajo que esto viene a quitar.
+      field_type: 'multiselect',
       label: '¿Cuáles te interesan?',
-      description:
-        'También podés marcarlos arriba, en «¿Qué te gustaría aprender a dar?». Si te '
-        + 'interesa algo que no está en la lista, escribilo acá.',
+      description: 'Marcá todos los que quieras.',
       is_required: false,
+      options: opcionesDeEstudio(planes),
       conditions: [{
         id: nuevoId(),
         action: 'show',

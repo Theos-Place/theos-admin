@@ -1,13 +1,29 @@
 // Fuente única de verdad para la lista de DIRIGENTES, unificando:
 //  A) servidores activos del comité "Dirigentes" (estado ACTIVO)
 //  B) cualquier miembro que haya liderado ≥1 grupo de estudio (leader_id)
-// Un miembro que solo aparece por (B) queda INACTIVO.
+//  C) designados a mano en study_leaders
+//
+// QUIÉN QUEDA ACTIVO (corregido el 2026-09-25, reportado por Floriana viendo
+// staging): estar en el comité, O TENER UN GRUPO A CARGO AHORA.
+//
+// Antes salía solo de (A), y eso producía en pantalla algo que no puede
+// existir: «inactivo» al lado de un grupo en curso, en la misma fila. Pasa en
+// cuanto se le asigna un grupo a alguien que todavía no está en el comité —
+// que es un caso normal, no un dato malo—. Producción está consistente hoy
+// (114 dando, los 114 en el comité) porque nada lo rompió todavía, no porque
+// algo lo impida; en staging ya había uno.
+//
+// La regla no se inventa acá: es el inciso (a) de PAR-2, y se evalúa con la
+// MISMA función que usan el recálculo mensual y el filtro del padrón
+// (`dirigeAhora`). Si algún día `en_matricula` deja de contar, los tres se
+// mueven juntos.
 //
 // Esta es una función PURA: recibe la data ya cargada (grupos del dominio,
 // planes, y los ids de dirigentes activos del comité) y arma la lista enriquecida.
 
 import type { StudyGroup, StudyType } from '@/types/study'
 import type { LeaderStatus } from '@/lib/studies/leader-admin-status'
+import { dirigeAhora } from '@/lib/studies/dirigente-activo'
 
 export type DirigenteEstado = 'activo' | 'inactivo'
 
@@ -129,11 +145,18 @@ export function buildDirigentes(
     const name = activeMap.get(id) || acc?.name || designatedMap.get(id) || ''
     const completados = (acc?.completados ?? []).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
     const activos = (acc?.activos ?? []).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+    // Inciso (a) de PAR-2: un grupo a cargo ahora ya lo hace activo, esté o no
+    // en el comité. Ver el encabezado del archivo.
+    const dando = dirigeAhora(activos.map(g => g.status))
+    const estaActivo = activeMap.has(id) || dando
     out.push({
       member_id: id,
       member_name: name,
-      status: activeMap.has(id) ? 'activo' : 'inactivo',
-      availability_status: config.get(id)?.availability_status ?? (activeMap.has(id) ? 'available' : 'inactive'),
+      status: estaActivo ? 'activo' : 'inactivo',
+      // El matiz administrativo que puso una persona (`resting`,
+      // `en_revision`) MANDA y no se pisa: es una decisión sobre alguien, no
+      // un derivado. Solo se calcula cuando nadie dijo nada.
+      availability_status: config.get(id)?.availability_status ?? (estaActivo ? 'available' : 'inactive'),
       estudios_habilitados: [...(acc?.codes ?? [])],
       formacion: config.get(id)?.formacion ?? [],
       disponibilidad: config.get(id)?.disponibilidad ?? [],
