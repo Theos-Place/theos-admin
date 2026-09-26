@@ -25,7 +25,7 @@ type Body = {
 // POST: el líder de comité (o coordinación/admin) envía el "carrito" de cupos.
 // Crea una vacante por puesto con slots_total = cantidad. Los roles
 // administrativos globales (staff/coordinación) quedan aprobados y publicados
-// de una; los líderes de comité quedan 'creado' (pendiente de revisión).
+// de una. TODAS entran `lista_para_publicar`, la pida quien la pida (SRV-15).
 // Notifica al líder del comité (confirmación) y a los coordinadores (nueva solicitud).
 export async function POST(req: NextRequest) {
   const auth = await requireRoles() // autenticado; el permiso real es por comité (abajo)

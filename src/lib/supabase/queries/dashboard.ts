@@ -2,6 +2,7 @@ import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import { sumByCurrency, totalsFromJson, type MoneyTotals } from '@/lib/money'
 import { getEvents } from './events'
 import { eventsInRange } from '@/lib/events/event-views'
+import { ESTADO_PUBLICADO } from '@/lib/servers/publicacion-mensual'
 
 type SB = ReturnType<typeof createAdminClient>
 
@@ -93,7 +94,9 @@ export async function getDashboardStats(now: Date = new Date()): Promise<Dashboa
 
     count(supabase, 'volunteers', (q) => q.eq('status', 'active')),
     count(supabase, 'areas', (q) => q.eq('area_type', 'committee').eq('is_active', true)),
-    count(supabase, 'vacancies', (q) => q.eq('status', 'aprobado')),
+    // SRV-15 renombró el estado: con el literal viejo este contador venía
+    // dando 0 puestos abiertos desde el cambio.
+    count(supabase, 'vacancies', (q) => q.eq('status', ESTADO_PUBLICADO)),
     count(supabase, 'applications', (q) => q.eq('status', 'pending')),
 
     count(supabase, 'members', (q) => q.eq('is_donor', true)),

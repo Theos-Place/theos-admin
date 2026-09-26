@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createApplication } from '@/lib/supabase/queries/servers'
+import { ESTADO_PUBLICADO } from '@/lib/servers/publicacion-mensual'
 import { reportarError } from '@/lib/observabilidad'
 
 // POST: el usuario autenticado aplica a un puesto (como él mismo). Abierto a
@@ -21,7 +22,11 @@ export async function POST(
     const { data: vac } = await supabase.from('vacancies').select('status').eq('id', id).maybeSingle()
     const status = (vac as { status: string } | null)?.status
     if (!status) return NextResponse.json({ error: 'Puesto no encontrado' }, { status: 404 })
-    if (status !== 'aprobado') {
+    // La constante y no el literal: esta línea comparaba contra 'aprobado',
+    // que SRV-15 renombró, y desde entonces NADIE podía aplicar a nada — el
+    // botón contestaba «este puesto no está disponible» para todos los
+    // puestos publicados.
+    if (status !== ESTADO_PUBLICADO) {
       return NextResponse.json({ error: 'Este puesto no está disponible para aplicar.' }, { status: 409 })
     }
 

@@ -5,7 +5,7 @@ import { reportarError } from '@/lib/observabilidad'
 
 // GET público para la página /vacantes (las vacantes son públicas: cualquiera
 // puede verlas; aplicar sí requiere sesión). Decisión documentada: NO lleva
-// requireRoles. Expone SOLO puestos aprobados ('aprobado') y con una
+// requireRoles. Expone SOLO puestos `publicada` y con una
 // WHITELIST de campos de cartelera — nunca datos de aplicantes ni internos.
 // Rate limit por IP.
 export async function GET(req: Request) {
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Demasiadas solicitudes' }, { status: 429 })
     }
     const all = await getVacancies()
-    // Solo 'aprobado' es "visible y aplicable" — mismo criterio que el GET
+    // Solo `publicada` se ve y se puede aplicar — mismo criterio que el GET
     // admin ?published=1.
     const publicadas = all.filter(v => v.status === 'publicada')
     /**

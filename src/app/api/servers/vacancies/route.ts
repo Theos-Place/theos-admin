@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
       const auth = await requireRoles()
       if (auth.res) return auth.res
       const all = await getVacancies()
-      // Solo 'aprobado' es "visible y aplicable" (vocabulario unificado en la
-      // migración 20260725120000; el query param conserva el nombre histórico).
+      // Solo `publicada` se ve y se puede aplicar (SRV-15; el query param
+      // conserva el nombre histórico).
       return NextResponse.json(all.filter(v => v.status === 'publicada'))
     }
     const auth = await requireModuleView('servidores')

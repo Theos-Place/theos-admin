@@ -57,7 +57,10 @@ function SolicitarVacantesContent() {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState<{ rows: number; slots: number; status: 'creado' | 'aprobado' } | null>(null)
+  // Sin `status`: desde SRV-15 toda solicitud entra igual —lista para
+  // publicar—, la mande quien la mande. Acá había una rama de «ya quedaron
+  // publicados» para los roles administrativos, que es justo lo que se quitó.
+  const [saved, setSaved] = useState<{ rows: number; slots: number } | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -153,7 +156,7 @@ function SolicitarVacantesContent() {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo enviar la solicitud.')
-      setSaved({ rows: data.rows, slots: data.slots, status: data.status })
+      setSaved({ rows: data.rows, slots: data.slots })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error desconocido')
     } finally {
@@ -182,13 +185,11 @@ function SolicitarVacantesContent() {
           </div>
           <div>
             <p className="text-xl font-bold text-navy font-display">
-              {saved.status === 'aprobado' ? 'Puestos publicados' : 'Solicitud enviada'}
+              Solicitud enviada
             </p>
             <p className="mt-1 text-sm text-navy-light/80 font-body">
               {saved.slots} cupo{saved.slots !== 1 ? 's' : ''} en {saved.rows} puesto{saved.rows !== 1 ? 's' : ''}.
-              {saved.status === 'aprobado'
-                ? ' Ya quedaron visibles para que los miembros apliquen.'
-                : ' Quedaron pendientes de revisión.'}
+              {' '}Salen a la página pública en la publicación de principios de mes.
             </p>
           </div>
           <div className="flex items-center justify-center gap-2">

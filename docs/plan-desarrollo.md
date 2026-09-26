@@ -3973,6 +3973,41 @@ Verificado en staging contra la base de staging: denegar y devolver a la cola,
 el filtro, los tres nombres de archivo del Excel, y los 409 de las
 transiciones que no valen.
 
+### [x] SRV-15c · El renombre de SRV-15 estaba a medias (reportado 2026-09-26, hecho 2026-09-26)
+
+Reportado por Floriana: **«el botón de aplicar a puesto no sirve, me dice
+reintentar»**. Era literal: `/api/servers/vacancies/[id]/apply` comparaba
+`status !== 'aprobado'`, y SRV-15 renombró ese estado a `publicada`. O sea que
+desde el renombre **nadie pudo aplicar a ningún puesto** — el servidor
+contestaba 409 «este puesto no está disponible» para todos los publicados.
+Ninguna de las 4079 pruebas lo vio.
+
+Buscando el resto del renombre aparecieron cuatro más:
+
+- **`dashboard.ts` contaba `status = 'aprobado'`**: la tarjeta «Cupos
+  abiertos» venía marcando 0 desde el cambio. Ahora marca 4 en staging.
+- **`createVacancy`/`updateVacancy`** sellaban `published_at` al ver
+  `'aprobado'`, y `VacancyWriteInput` todavía declaraba los cinco nombres
+  viejos. `status` salió del tipo: el estado se mueve por
+  `cambiarEstadoDeSolicitud`, que valida la transición, y un puesto nuevo nace
+  con el DEFAULT de la columna.
+- **La pantalla de «solicitar»** tenía una rama «Puestos publicados · ya
+  quedaron visibles» para los roles administrativos: es justo lo que SRV-15
+  quitó, así que era una rama muerta que prometía algo que ya no pasa.
+- **`queries/vacancy-import.ts`** insertaba con `status: 'aprobado'`. Estaba
+  muerto desde SRV-11 (se borró su ruta y no el módulo). Eliminado.
+
+**El guard que faltaba**: `vocabulario-de-vacantes.test.ts` recorre las
+CARPETAS que hablan de puestos —no una lista de archivos, para que lo nuevo
+quede cubierto solo— y prohíbe los cuatro nombres viejos. Tres cebos muerden,
+incluido el bug exacto que se reportó. El primer intento de este guard tenía
+una comprobación floja («que la lista no esté vacía») que **no** mordió al
+achicarle las carpetas; se cambió por nombrar los archivos donde esto ya se
+rompió.
+
+Verificado en staging: aplicar a un puesto devuelve 201 y la pantalla dice
+«Aplicación enviada». La aplicación de prueba se borró.
+
 ### [x] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
 
 HECHO el 2026-09-25 (en staging). Qué quedó:

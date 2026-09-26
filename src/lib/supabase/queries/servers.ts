@@ -393,7 +393,10 @@ export type VacancyWriteInput = {
   schedule?: string | null
   commitment?: string | null
   slots_total?: number
-  status?: 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
+  // SRV-15b · `status` NO está acá: el estado de la solicitud se mueve por
+  // `cambiarEstadoDeSolicitud`, que valida la transición. Mientras estuvo,
+  // el tipo se quedó con los nombres viejos y las dos funciones de abajo
+  // sellaban `published_at` al ver 'aprobado' — un estado que ya no existe.
   expires_at?: string | null
   location?: string | null
   notes?: string | null
@@ -403,7 +406,9 @@ export type VacancyWriteInput = {
 // Vacantes
 export async function createVacancy(input: VacancyWriteInput): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const row = { ...input, published_at: input.status === 'aprobado' ? new Date().toISOString() : null }
+  // `published_at` nace en null y el estado lo pone el DEFAULT de la columna
+  // (`lista_para_publicar`): un puesto nuevo no sale publicado (SRV-15).
+  const row = { ...input, published_at: null }
   const { data, error } = await supabase.from('vacancies').insert(row).select('id').single()
   if (error) throw error
   return data as { id: string }
@@ -421,7 +426,7 @@ export type VacancyRequestExtra = {
 }
 
 /** Crea las vacantes de una solicitud (carrito del comité): una vacante por
- *  puesto con `slots_total = cantidad`. Estado 'creado' (pendiente de revisión)
+ *  puesto con `slots_total = cantidad`. Entra en `lista_para_publicar`
  *  SRV-15: entran todas en `lista_para_publicar` — nada se publica solo.
  *  Devuelve filas creadas y total de cupos. Ignora ítems con cantidad <= 0. */
 export async function createVacancyRequests(
@@ -477,9 +482,9 @@ export async function createVacancyRequests(
 
 export async function updateVacancy(id: string, patch: Partial<VacancyWriteInput>): Promise<void> {
   const supabase = createAdminClient()
+  // Edita el CONTENIDO del puesto (horario, cupos, ubicación…), nunca su
+  // estado ni su fecha de publicación: eso es la corrida del mes.
   const row: Record<string, unknown> = { ...patch }
-  // Al aprobar (publicar), sellamos published_at si no estaba puesto.
-  if (patch.status === 'aprobado') row.published_at = new Date().toISOString()
   const { error } = await supabase.from('vacancies').update(row as Updatable<'vacancies'>).eq('id', id)
   if (error) throw error
 }
