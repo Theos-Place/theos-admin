@@ -54,9 +54,14 @@ describe('ventana de donante activo', () => {
     expect(s.length).toBeLessThan(40)
   })
 
-  it('la explicación larga dice la regla completa', () => {
+  it('la explicación larga dice la regla completa, cónyuge incluido', () => {
+    // Sin la frase del cónyuge, quien cruce el filtro contra el detalle de
+    // donaciones va a ver gente sin una sola donación a su nombre y pensar que
+    // el número está mal.
     expect(explicacionDeDonantes(new Date('2026-09-16T12:00:00Z')))
-      .toBe('Donaron al menos una vez desde junio de 2026: los últimos 4 meses, contando el actual.')
+      .toBe('Donaron al menos una vez desde junio de 2026: los últimos 4 meses, '
+        + 'contando el actual. La donación de una persona cuenta también para su '
+        + 'cónyuge; el monto no se duplica, solo el estado.')
   })
 
   it('el criterio corto también sale de la constante', () => {

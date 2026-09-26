@@ -68,6 +68,45 @@ export function estudiosQueCursa(matriculas: readonly MatriculaParaColumna[]): s
   return [...new Set(nombres)].sort((a, b) => a.localeCompare(b, 'es'))
 }
 
+/** Sufijo de los que todavía no arrancaron. Va acá y no en la pantalla porque
+ *  también sale en el export, y las dos tienen que decir lo mismo. */
+export const SUFIJO_EN_MATRICULA = ' (en matrícula)'
+
+/**
+ * Lo que la persona está llevando AHORA, incluyendo lo que todavía no empieza.
+ *
+ * Es lo que muestra la columna «Nivel actual» desde el 2026-09-25. La versión
+ * anterior usaba `estudiosQueCursa`, que es estricta —solo grupos que ya
+ * arrancaron— y por eso la columna salía VACÍA para quien estaba inscrito en un
+ * grupo por empezar. Para una columna que se lee como «en qué anda esta
+ * persona», eso es información que falta.
+ *
+ * LOS DOS CASOS SE DISTINGUEN, no se mezclan: al que no arrancó se le agrega
+ * «(en matrícula)». Sin esa marca, la columna diría que alguien está llevando
+ * Nivel 2 cuando todavía no ha ido a una sesión, que es justo el error que PAR-5
+ * vino a arreglar.
+ *
+ * EL FILTRO NO CAMBIA. «Cursando ahora» sigue siendo estricto y «En matrícula»
+ * es su propia opción (PAR-5b). Una columna informa; un filtro tiene que poder
+ * responder una pregunta precisa, y son cosas distintas.
+ */
+export function estudiosEnMarcha(matriculas: readonly MatriculaParaColumna[]): string[] {
+  const cursando = estudiosQueCursa(matriculas)
+  const enMatricula = [...new Set(
+    matriculas
+      .filter(m => matriculaVigente(m.status)
+        && m.grupo?.status === 'en_matricula'
+        && m.grupo?.planNombre)
+      .map(m => m.grupo!.planNombre!),
+  )]
+    .filter(n => !cursando.includes(n))
+    .sort((a, b) => a.localeCompare(b, 'es'))
+    .map(n => `${n}${SUFIJO_EN_MATRICULA}`)
+
+  // Primero lo que ya está pasando: es lo que se busca al mirar la columna.
+  return [...cursando, ...enMatricula]
+}
+
 export type EstudioDeLaPersona = {
   /** Los que está llevando ahora, por nombre. */
   llevando: string[]

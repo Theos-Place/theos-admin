@@ -4,7 +4,7 @@ import type { FilterCondition, ConditionGroup } from '@/types/filters'
 import { evaluateUnits } from '@/lib/filter-units'
 import { getInitials } from '@/lib/format'
 import { getAreaNameMap, parentAreaName } from '@/lib/supabase/queries/_area-map'
-import { MATRICULAS_VIGENTES, estudiosQueCursa } from '@/lib/studies/estudio-actual'
+import { MATRICULAS_VIGENTES, estudiosEnMarcha } from '@/lib/studies/estudio-actual'
 import { ESTADOS_DIRIGIENDO } from '@/lib/studies/dirigente-activo'
 import { negarCondicion } from '@/lib/members/negacion-de-condicion'
 import { esComiteDirigentes } from '@/lib/dirigentes'
@@ -1105,10 +1105,13 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
      * son 'enrolled' como si no existieran, y no miraba el grupo — así que
      * incluía a 241 personas inscritas en grupos que todavía no empiezan.
      *
-     * Sale de la misma función que el filtro «En progreso», que es lo que
-     * impide que la columna y el conteo digan cosas distintas.
+     * 2026-09-25 · Y AHORA TAMBIÉN LO QUE ESTÁ EN MATRÍCULA, marcado como tal.
+     * Con la versión estricta la columna salía vacía para quien está inscrito
+     * en un grupo por empezar, y para una columna que se lee como «en qué anda
+     * esta persona» eso es información que falta. El FILTRO no cambia: sigue
+     * siendo estricto, y «en matrícula» tiene su propia opción (PAR-5b).
      */
-    const currentStudy = estudiosQueCursa(enrollments.map(e => ({
+    const currentStudy = estudiosEnMarcha(enrollments.map(e => ({
       status: e.status,
       grupo: e.study_groups
         ? { status: e.study_groups.status, planNombre: e.study_groups.plan?.name }

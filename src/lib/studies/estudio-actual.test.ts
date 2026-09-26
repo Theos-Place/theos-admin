@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   grupoEnMarcha, matriculaVigente, textoDeEstudio, estaEnEstudio, mesYAnio,
   estudiosQueCursa,
-  type EstudioDeLaPersona,
-} from './estudio-actual'
+  type EstudioDeLaPersona, estudiosEnMarcha, SUFIJO_EN_MATRICULA } from './estudio-actual'
 
 const e = (x: Partial<EstudioDeLaPersona> = {}): EstudioDeLaPersona => ({
   llevando: [], dando: [], ultimo: null, ...x,
@@ -132,5 +131,60 @@ describe('PAR-5 · estudios que cursa AHORA', () => {
     expect(estudiosQueCursa([
       m('enrolled', 'en_curso', 'Nivel 1'), m('enrolled', 'en_curso', 'Nivel 1'),
     ])).toEqual(['Nivel 1'])
+  })
+})
+
+/**
+ * La columna «Nivel actual» debe incluir lo que está en matrícula (pedido de
+ * Floriana, 2026-09-25): con la versión estricta salía VACÍA para quien está
+ * inscrito en un grupo que todavía no empieza.
+ */
+describe('estudiosEnMarcha · lo que lleva ahora, incluso si no arrancó', () => {
+  const m = (planNombre: string, estadoGrupo: string, estadoMatricula = 'enrolled') =>
+    ({ status: estadoMatricula, grupo: { status: estadoGrupo, planNombre } })
+
+  it('trae los que ya arrancaron, sin marca', () => {
+    expect(estudiosEnMarcha([m('Nivel 1', 'en_curso')])).toEqual(['Nivel 1'])
+  })
+
+  it('trae los que NO arrancaron, marcados', () => {
+    expect(estudiosEnMarcha([m('Nivel 2', 'en_matricula')])).toEqual([`Nivel 2${SUFIJO_EN_MATRICULA}`])
+  })
+
+  it('la marca importa: sin ella la columna diría que ya lo está llevando', () => {
+    // Es exactamente el error que PAR-5 vino a arreglar; volver a mezclarlos
+    // sin distinguir sería deshacerlo.
+    const [uno] = estudiosEnMarcha([m('Nivel 2', 'en_matricula')])
+    expect(uno).not.toBe('Nivel 2')
+    expect(uno).toContain('matrícula')
+  })
+
+  it('primero lo que ya está pasando', () => {
+    expect(estudiosEnMarcha([m('Nivel 3', 'en_matricula'), m('Nivel 1', 'en_curso')]))
+      .toEqual(['Nivel 1', `Nivel 3${SUFIJO_EN_MATRICULA}`])
+  })
+
+  it('un grupo finalizado no cuenta', () => {
+    expect(estudiosEnMarcha([m('Nivel 4', 'finalizado')])).toEqual([])
+  })
+
+  it('una matrícula que ya salió no cuenta, aunque el grupo esté abierto', () => {
+    for (const salida of ['dropped', 'cancelada', 'transferred']) {
+      expect(estudiosEnMarcha([m('Nivel 1', 'en_curso', salida)]), salida).toEqual([])
+    }
+  })
+
+  it('si el mismo estudio está en curso Y en matrícula, no se repite', () => {
+    // Pasa al reinscribirse en el siguiente ciclo del mismo plan; mostrarlo dos
+    // veces —una marcada y otra no— se lee como un error de datos.
+    expect(estudiosEnMarcha([m('Nivel 1', 'en_curso'), m('Nivel 1', 'en_matricula')]))
+      .toEqual(['Nivel 1'])
+  })
+
+  it('el FILTRO estricto no se movió', () => {
+    // `estudiosQueCursa` sigue siendo solo lo que arrancó: la columna informa,
+    // el filtro responde una pregunta precisa, y son cosas distintas.
+    expect(estudiosQueCursa([m('Nivel 2', 'en_matricula')])).toEqual([])
+    expect(estudiosQueCursa([m('Nivel 1', 'en_curso')])).toEqual(['Nivel 1'])
   })
 })

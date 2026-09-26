@@ -4,19 +4,7 @@ import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useUrlFilter, useUrlFlag } from '@/hooks/useUrlFilter'
-import {
-  MessageCircle,
-  UserPlus,
-  Search,
-  ArrowRight,
-  SlidersHorizontal,
-  X,
-  Bookmark,
-  Check,
-  Users,
-  Info,
-  AlertTriangle,
-} from 'lucide-react'
+import { MessageCircle, UserPlus, Search, ArrowRight, SlidersHorizontal, X, Bookmark, Check, Users, AlertTriangle } from 'lucide-react'
 import { ATTENDANCE_GENERAL_TOOLTIP, ATTENDANCE_ESTUDIOS_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useMemberFilters } from '@/hooks/useMemberFilters'
@@ -37,8 +25,19 @@ import {
   initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel, AccountBadge,
 } from './_members-columns'
 import { SaveListModal } from './_save-list-modal'
+import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
+import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 import { hayFiltroActivo, avisoDeExportacion, type FiltrosDelPadron } from '@/lib/members/filtros-activos'
 
+
+/** Qué explica cada chip. Vacío = no lleva globo. Los textos salen de donde
+ *  VIVE la regla, no escritos acá: el de donante lo genera la definición y
+ *  cambia solo cuando cambia la ventana. */
+const AYUDA_DEL_CHIP: Partial<Record<string, string>> = {
+  donantes: explicacionDeDonantes(new Date()),
+  activo: ATTENDANCE_GENERAL_TOOLTIP,
+  asistencia_estudios: ATTENDANCE_ESTUDIOS_TOOLTIP,
+}
 
 function MiembrosContent() {
   const router = useRouter()
@@ -358,20 +357,21 @@ function MiembrosContent() {
                 )}
               >
                 {labelWithCount}
-                {(key === 'activo' || key === 'asistencia_estudios') && (
-                  <span
-                    tabIndex={0}
-                    role="img"
-                    aria-label={key === 'activo' ? ATTENDANCE_GENERAL_TOOLTIP : ATTENDANCE_ESTUDIOS_TOOLTIP}
-                    className="group/info relative ml-1 inline-flex align-[-2px] opacity-70 outline-none"
-                  >
-                    <Info size={13} strokeWidth={2} />
-                    <span
-                      role="tooltip"
-                      className="pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 hidden w-60 -translate-x-1/2 rounded-lg bg-navy px-3 py-2 text-[13px] font-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body group-hover/info:block group-focus-within/info:block"
-                    >
-                      {key === 'activo' ? ATTENDANCE_GENERAL_TOOLTIP : ATTENDANCE_ESTUDIOS_TOOLTIP}
-                    </span>
+                {/* Los tres criterios que no se adivinan mirando el chip.
+                    «Donante» es el nuevo: además de la ventana de meses, desde
+                    FIN-10 el estado se hereda dentro de la pareja, así que en la
+                    lista hay gente sin una donación a su nombre — sin decirlo,
+                    el primero que cruce el filtro contra las donaciones va a
+                    pensar que el número está mal.
+
+                    Los otros dos tenían su propio tooltip escrito a mano con
+                    `absolute`, que es justo lo que `InfoDelEncabezado` vino a
+                    arreglar el 2026-09-24: `absolute` lo recorta cualquier
+                    ancestro con overflow y no se mueve cuando no cabe. Se
+                    unifican acá en vez de dejar dos formas de hacer lo mismo. */}
+                {AYUDA_DEL_CHIP[key] && (
+                  <span onClick={e => e.stopPropagation()} className="cursor-default">
+                    <InfoDelEncabezado texto={AYUDA_DEL_CHIP[key]!} />
                   </span>
                 )}
               </button>

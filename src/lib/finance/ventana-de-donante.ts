@@ -64,13 +64,24 @@ export function subtituloDeDonantes(ahora: Date): string {
   return `Donaron desde ${mesDeLaVentana(ahora)}`
 }
 
-/** La explicación completa, para el panel de detalle y los tooltips. */
+/**
+ * La explicación completa, para el panel de detalle y los tooltips.
+ *
+ * DICE LO DEL CÓNYUGE, y no es un adorno: desde FIN-10 el estado se hereda
+ * dentro de la pareja, así que en la lista aparece gente sin una sola donación
+ * a su nombre. Sin esta frase, el primero que cruce el filtro contra el detalle
+ * de donaciones va a pensar que el número está mal.
+ */
 export function explicacionDeDonantes(ahora: Date): string {
-  return `Donaron al menos una vez desde ${mesDeLaVentana(ahora)}: los últimos ${MESES_DE_VENTANA} meses, contando el actual.`
+  return `Donaron al menos una vez desde ${mesDeLaVentana(ahora)}: los últimos `
+    + `${MESES_DE_VENTANA} meses, contando el actual. La donación de una persona `
+    + `cuenta también para su cónyuge; el monto no se duplica, solo el estado.`
 }
 
 /** La frase corta para una tarjeta, sin el mes. Existe para que la pantalla de
- *  finanzas no la vuelva a escribir a mano — ahí estaba duplicada. */
+ *  finanzas no la vuelva a escribir a mano — ahí estaba duplicada. Acá NO entra
+ *  lo del cónyuge: es el texto de una tarjeta y tiene que caber. Quien necesite
+ *  el detalle tiene `explicacionDeDonantes`. */
 export function criterioDeDonantes(): string {
   return `Donaron en los últimos ${MESES_DE_VENTANA} meses, contando el actual`
 }
