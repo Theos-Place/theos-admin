@@ -3641,3 +3641,98 @@ Reglas dictadas (2026-09-25):
 NOTA de nombre del estado 2: recomendado "enviada al encargado" — dice qué
 pasó y a quién, sin amarrarse al medio (sirve igual si fue PDF descargado y
 mandado a mano o email automático).
+
+### [x] FIN-10 · Donante activo: ventana "mes actual + 3 meses" y la donación cuenta para el cónyuge — HECHO 2026-09-25
+
+**EFECTO MEDIDO contra producción, que es lo que dirección pidió ver:**
+
+| | donantes activos |
+| --- | --- |
+| Antes (ventana de 3 meses) | 547 |
+| Solo ampliando la ventana a 4 | **547** |
+| Ventana de 4 + cónyuge | **577** (+30) |
+
+**La ventana sola no movió a nadie, y el porqué merece atención aparte: MAYO Y
+JUNIO NO TIENEN NINGUNA DONACIÓN REGISTRADA.** Los meses con datos son abril
+(548), julio (453), agosto (115) y setiembre (6). El cambio de ventana es
+correcto igual y va a contar en cuanto haya datos de esos meses, pero ese hueco
+de dos meses parece un problema de carga, no de regla. Conviene mirarlo.
+
+Los 30 que entran son cónyuges de donantes, verificado uno por uno. **Cero
+hijos marcados** y las 15.288 donaciones quedaron intactas: se extiende el
+BOOLEANO, no la plata. Se comprobó además que ningún total de dinero se filtra
+por `is_donor` — el binario y los montos no se tocan en ninguna consulta.
+
+La regla vive donde se mantiene la bandera (`refresh_donor_flags`), así que el
+filtro de donadores, el compromiso de servidores, la elegibilidad de estudios y
+el dashboard se enteran solos. El modelo lo permite sin ambigüedad: 825
+unidades con exactamente dos Titular/Cónyuge, 760 con una, ninguna con tres, y
+nadie figurando en dos unidades.
+
+Dos ajustes a la definición central de donante (que PAR-1 dejó en un solo lugar):
+
+Prompt para Claude Code:
+
+```
+CAMBIO DE REGLA · Donante activo: ventana por meses calendario + cónyuge
+
+1. VENTANA: donante activo = tiene donación registrada en el MES ACTUAL o en los 3 MESES
+   CALENDARIO anteriores (no "90 días hacia atrás"). Ejemplo: hoy 25 de setiembre →
+   cuenta cualquier donación desde el 1 de junio. Cambiar en LA definición central que
+   dejó PAR-1 (si PAR-1 quedó como días corridos, este es el ajuste). Los tooltips que se
+   generan de la definición deben reflejarlo solos.
+
+2. CÓNYUGE: una donación registrada a nombre de una persona cuenta TAMBIÉN para su
+   cónyuge (la pareja de su unidad familiar — posición de esposo/esposa o cabezas de la
+   familia, según el modelo de FAM-2; NO hijos ni otros parientes). Es la MISMA donación
+   (mismo id): el dinero no se duplica en ningún total ni reporte financiero — solo el
+   ESTADO de "donante activo" se extiende al cónyuge.
+   IMPLEMENTACIÓN: no insertar filas espejo en donations. La regla vive en la función/
+   query central de donante activo: miembro es donante si él O su cónyuge tiene donación
+   en la ventana. Así los montos siguen intactos y el estado sale calculado.
+   OJO: donation_stats, FIN-1 (filtro de donadores activos), SRV-4/REP-7 (compromiso),
+   elegibilidad de estudios — todos deben pasar por la definición central; verificar que
+   ninguno duplique montos por el cónyuge (el binario se extiende, la plata no).
+
+MEDIR Y REPORTAR: cuántos donantes activos hay antes/después de cada ajuste (la ventana
+por mes calendario amplía un poco; el cónyuge amplía más) — dirección debe ver el efecto.
+Tests: borde de mes (donación 1-jun visto el 25-set cuenta; 31-may no), cónyuge cuenta,
+hijo no cuenta, montos no se duplican en stats. tsc/lint/vitest.
+```
+
+### [ ] PAR-7 · Búsqueda de miembros: tab de filtros "Dirigentes" (pedido 2026-09-25)
+
+Decidido con Floriana: los filtros de dirigentes entran a la búsqueda de
+miembros (ahí ya existen listas guardadas, columnas y export — el objetivo
+final es guardar estas listas). La página de dirigentes NO cambia.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Filtros del padrón: sección nueva "Dirigentes"
+
+En los filtros avanzados de /miembros (AdvancedFilters), agregar una sección/tab
+"Dirigentes" con condiciones nuevas — REUTILIZANDO el sistema de condiciones existente
+(el que alimenta GRU-2/FRM-5) y las MISMAS fuentes de datos que ya usan los filtros de
+la página de dirigentes, no lógica nueva:
+
+1. "Es dirigente" (sí/no) — MOVER aquí el filtro suelto que hoy existe en la sección de
+   estudios/perfil; que no quede duplicado.
+2. Estado del dirigente: activo / inactivo (el automático de PAR-2) y las etiquetas
+   manuales pausa / en revisión — MULTISELECCIÓN, no excluyentes (ej. activos + en pausa
+   a la vez).
+3. Capacitado para dar: multiselect del catálogo de estudios (la formación del dirigente).
+4. Dando ahora: multiselect por estudio (dirige un grupo en curso de X — la condición de
+   PAR-6).
+5. Disponible para dar: multiselect por estudio (la disponibilidad — la que SRV-9 hará
+   editable; usar el dato actual mientras tanto).
+
+Todas las condiciones se combinan con las demás del padrón y con las YA existentes
+funcionan las LISTAS GUARDADAS, columnas y export sin trabajo extra — verificar que una
+lista guardada con condiciones de dirigente se guarda, se reabre y da lo mismo.
+Al entrar al sistema de condiciones, GRU-2 y FRM-5 las heredan como audiencia — probar
+una (ej. formulario dirigido a "disponibles para dar niveles") y mencionarlo en el
+informe final.
+Tests: cada condición con fixtures, combinación no excluyente de estados, lista guardada
+round-trip. tsc/lint/vitest.
+```

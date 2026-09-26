@@ -1,17 +1,25 @@
 /**
  * Desde cuándo cuenta una donación para que la persona sea "donante activo".
  *
- * LA DEFINICIÓN (decisión del usuario, cambiada el 2026-09-23): donó al menos
- * una vez en los últimos **3 meses**, contando el mes actual. O sea, desde el
- * primer día del mes que está 2 meses atrás. Antes eran 6 meses (2026-09-16), y
- * antes de eso la pantalla decía "2 trimestres", que ya ni era cierto.
+ * LA DEFINICIÓN (FIN-10, 2026-09-25): donó al menos una vez en el MES ACTUAL o
+ * en los 3 MESES CALENDARIO anteriores. O sea, desde el primer día del mes que
+ * está 3 meses atrás: el 25 de setiembre cuenta desde el 1 de junio.
+ *
+ * Son MESES CALENDARIO y no «90 días hacia atrás». La diferencia importa el día
+ * 1: con días corridos, quien donó el 2 del mes pasado se cae de la lista a
+ * mitad de este; con meses calendario la ventana se mueve de golpe y el criterio
+ * se puede explicar en una frase.
+ *
+ * Fue 6 meses (2026-09-16), después 3 (PAR-1, 2026-09-23) y ahora 4. Antes de
+ * todo eso la pantalla decía "2 trimestres", que ya ni era cierto.
  *
  * Esto existe para PONERLE FECHA AL NÚMERO en pantalla. "Últimos 3 meses" es
  * ambiguo —¿rodante?, ¿por mes calendario?— y mostrar "desde julio de 2026" no
  * se presta a interpretación.
  *
  * EL NÚMERO VIVE ACÁ Y EN UN SOLO LUGAR MÁS, que no se puede evitar: la función
- * `refresh_donor_flags()` de Postgres, que es la que realmente marca la bandera.
+ * `refresh_donor_flags()` de Postgres, que es la que realmente marca la bandera
+ * —y que desde FIN-10 además extiende el estado al cónyuge—.
  * Un `.sql` no puede importar TypeScript. Lo que sí se puede es que no se
  * separen sin que nadie se entere, y de eso se encarga
  * `ventana-de-donante.test.ts`: lee la migración y falla si el `INTERVAL` no
@@ -29,7 +37,7 @@
  */
 
 /** Cuántos meses mira la ventana, contando el actual. El único número. */
-export const MESES_DE_VENTANA = 3
+export const MESES_DE_VENTANA = 4
 
 /** Cuántos meses hay que retroceder desde el actual. */
 const RETROCESO = MESES_DE_VENTANA - 1
