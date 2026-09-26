@@ -44,8 +44,13 @@ export async function scheduleLeaderFeedback(groupId: string): Promise<{ schedul
 
 /** El formulario de encuesta vigente. Se busca por título —es el que crea
  *  scripts/seed-study-survey-form.mjs— porque `forms` no tiene una clave de
- *  sistema como message_templates. */
-export const SURVEY_FORM_TITLE = 'Encuesta de satisfacción — Estudio bíblico'
+ *  sistema como message_templates.
+ *
+ *  La constante se mudó a `lib/studies/study-survey` (puro) y se reexporta acá
+ *  para no romper a quien ya la importaba: la regla de quién ve las respuestas
+ *  (RET-1) la necesita sin arrastrar el cliente de Supabase. */
+export { SURVEY_FORM_TITLE } from '@/lib/studies/study-survey'
+import { SURVEY_FORM_TITLE } from '@/lib/studies/study-survey'
 
 export async function currentSurveyFormId(sb: SupabaseClient): Promise<string | null> {
   const { data } = await sb.from('forms')

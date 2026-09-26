@@ -217,3 +217,14 @@ export function isSurveyDue(g: {
   const t = new Date(g.survey_send_at)
   return !Number.isNaN(t.getTime()) && t.getTime() <= now.getTime()
 }
+
+/**
+ * El título del formulario de la encuesta. Es la CLAVE con la que se lo
+ * encuentra: `forms` no tiene una columna de clave de sistema como
+ * `message_templates`, y el uuid lo genera el seed —distinto en cada ambiente—.
+ *
+ * Vive en este módulo PURO y no junto al envío de correo porque además de
+ * buscarlo hay que decidir QUIÉN VE SUS RESPUESTAS (RET-1), y esa regla no
+ * puede arrastrar el cliente de Supabase solo para leer un string.
+ */
+export const SURVEY_FORM_TITLE = 'Encuesta de satisfacción — Estudio bíblico'

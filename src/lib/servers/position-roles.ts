@@ -3,6 +3,7 @@
 // Extensible: agregar una regla nueva a POSITION_ROLE_RULES sin tocar el resto
 // del sistema (asignar/remover, migración de datos y sync ya son genéricos).
 import type { RoleId } from '@/types/auth'
+import { esComiteDirigentes } from '@/lib/dirigentes'
 import { isStudyCommitteeArea } from '@/lib/studies/request-assignment'
 
 export type PositionContext = {
@@ -141,6 +142,39 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
      * que nadie lo pidiera.
      */
     matches: (ctx) => esComiteDeSede(ctx) && normSinArticulos(ctx.title) === 'anfitrion',
+  },
+  {
+    role: 'evaluaciones',
+    description:
+      'Colaborador de evaluaciones y retroalimentación del comité de Dirigentes: es '
+      + 'quien revisa lo que los estudiantes escriben sobre su dirigente y decide '
+      + 'qué se comparte.',
+    /**
+     * RET-1 (2026-09-25). El rol `evaluaciones` ya existía y ya excluía a
+     * dirección y a coordinación de estudios a propósito (ver EVALUATION_ROLES);
+     * lo que faltaba era que ALGUIEN lo tuviera. Al cerrar el acceso quedaban
+     * solo los admin, y la persona que hace este trabajo se habría quedado
+     * afuera de su propia tarea.
+     *
+     * El catálogo se revisó antes de escribir esto: hay DOS puestos, con
+     * nombres distintos y en comités distintos —«Colaborador evaluaciones y
+     * retroalimentación» en Comité Dirigentes Administrativo, con una persona, y
+     * «Colaborador retroalimentación» en Comité Dirigentes, hoy vacío—. Por eso
+     * la condición mira que el título EMPIECE por colaborador y mencione
+     * retroalimentación, en vez de listar los dos títulos: una lista se
+     * desactualiza sola en cuanto renombren uno, y ya pasó con la
+     * sincronización del Excel Madre.
+     *
+     * Acotado al comité de DIRIGENTES —administrativo incluido— y no al título
+     * suelto: si mañana otro comité crea un «Colaborador retroalimentación»
+     * para lo suyo, no se lleva el acceso a lo que los estudiantes escriben.
+     */
+    matches: (ctx) => {
+      if (ctx.areaType !== 'committee') return false
+      if (!esComiteDirigentes(ctx.areaName)) return false
+      const t = normSinArticulos(ctx.title)
+      return t.startsWith('colaborador') && t.includes('retroalimentacion')
+    },
   },
   {
     role: 'solicitudes_estudio',

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { EVALUATION_ROLES } from '@/lib/auth/roles'
 import { isUuid } from '@/lib/validate'
 import { feedbackError, leaderView, SCORE_MIN, SCORE_MAX, COMMENT_MAX } from '@/lib/studies/leader-feedback'
 import { summarize } from '@/lib/studies/leader-feedback'
@@ -41,7 +41,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!grupo) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })
 
     const memberId = auth.ctx.memberId
-    const esStaff = auth.ctx.roles.some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r))
+    /**
+     * RET-1 · QUIÉN VE LAS RESPUESTAS: `EVALUATION_ROLES`, no todo el staff de
+     * estudios.
+     *
+     * Estaba en `STUDY_ADMIN_ROLES`, que son 19 personas —medido el
+     * 2026-09-25—, y ahí entraban coordinación de estudios y dirección. La
+     * retroalimentación de un estudiante sobre su dirigente no es material de
+     * gestión general: quien la lee se decide explícito.
+     *
+     * `EVALUATION_ROLES` ya existía y ya dejaba fuera a dirección y a
+     * coordinación de estudios a propósito —está escrito en su comentario—.
+     * O sea que el rol correcto estaba definido y el endpoint no lo usaba.
+     */
+    const esStaff = auth.ctx.roles.some(r => (EVALUATION_ROLES as readonly string[]).includes(r))
     const esDirigente = !!memberId && (memberId === grupo.leader_id || memberId === grupo.co_leader_id)
 
     // El staff ve el resumen completo; el dirigente, el resumen protegido (sin
@@ -169,9 +182,9 @@ const patchSchema = z.discriminatedUnion('action', [
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Revisar es de la coordinación de estudios: el dirigente no modera su
-    // propia retroalimentación.
-    const auth = await requireRoles(...STUDY_ADMIN_ROLES)
+    // Moderar y compartir es de quien revisa evaluaciones, no de todo el staff
+    // de estudios. El dirigente nunca modera la suya.
+    const auth = await requireRoles(...EVALUATION_ROLES)
     if (auth.res) return auth.res
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 })

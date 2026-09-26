@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import ExcelJS from 'exceljs'
 import { getAuthContext } from '@/lib/auth/guard'
 import { formViewerScope } from '@/lib/auth/forms-scope'
+import { bloqueoPorReserva } from '@/lib/forms/formularios-reservados'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   getFormResponses, getFormById, hasFormAccessGrant,
 } from '@/lib/supabase/queries/forms'
@@ -29,6 +31,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params
     const ctx = await getAuthContext()
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+    // RET-1 · La misma reserva que el CSV: cerrar la tabla y dejar el Excel
+    // abierto es no cerrar nada. Este endpoint tenía el gate idéntico y se
+    // encontró censando TODAS las rutas que devuelven respuestas, que es lo que
+    // el pedido exigía — de las cuatro, dos había que tocar.
+    const { data: formTitulo } = await createAdminClient()
+      .from('forms').select('title').eq('id', id).maybeSingle()
+    const bloqueo = bloqueoPorReserva((formTitulo as { title: string } | null)?.title, ctx.roles)
+    if (bloqueo) return NextResponse.json({ error: bloqueo }, { status: 403 })
+
     const scope = formViewerScope({
       roles: ctx.roles,
       memberId: ctx.memberId,

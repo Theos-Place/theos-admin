@@ -6,6 +6,8 @@ import {
   getFormResponses, submitResponse, hasMemberResponded, hasFormAccessGrant, estudiosAprobadosDe,
 } from '@/lib/supabase/queries/forms'
 import { formViewerScope, hasFormsModule } from '@/lib/auth/forms-scope'
+import { bloqueoPorReserva } from '@/lib/forms/formularios-reservados'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveOnBehalf, FORM_ON_BEHALF_ROLES } from '@/lib/auth/on-behalf'
 import type { RoleId } from '@/types/auth'
 import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
@@ -31,6 +33,25 @@ export async function GET(
     // puntual a ESTE formulario (form_access_grants). Regla pura: formViewerScope.
     const ctx = await getAuthContext()
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+    /**
+     * RET-1 · Hay formularios cuyas respuestas NO las abre este módulo.
+     *
+     * La encuesta de satisfacción del estudio es un formulario común, así que
+     * sus respuestas se leían acá como las de cualquier otro: alcanzaba con
+     * tener el módulo `formularios`. Cerrar solo el endpoint del grupo habría
+     * dejado abierta esta puerta, que es la que menos se mira porque no parece
+     * parte de estudios.
+     *
+     * Va ANTES de `formViewerScope` y no dentro: un formulario reservado
+     * tampoco se abre con un acceso puntual, y meterlo en esa regla obligaría a
+     * que conociera roles que no son suyos.
+     */
+    const { data: formTitulo } = await createAdminClient()
+      .from('forms').select('title').eq('id', id).maybeSingle()
+    const bloqueo = bloqueoPorReserva((formTitulo as { title: string } | null)?.title, ctx.roles)
+    if (bloqueo) return NextResponse.json({ error: bloqueo }, { status: 403 })
+
     const scope = formViewerScope({
       roles: ctx.roles,
       memberId: ctx.memberId,
