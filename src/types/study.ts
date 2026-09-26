@@ -27,6 +27,9 @@ export type StudyType = {
   /** Compromiso: haber asistido a la charla del Bus (ícono bus + tooltip). */
   req_bus?: boolean
   is_archived: boolean
+  /** EST-17 · ¿Al cerrar un grupo de este plan se pide la encuesta de
+   *  satisfacción del dirigente? Apagado en N1 y N3. */
+  sends_satisfaction_survey?: boolean
   /** FALSE = charla introductoria (ej. BUS); fuera de análisis/matrícula/plan. */
   is_curricular?: boolean
 }

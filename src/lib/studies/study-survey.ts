@@ -203,14 +203,48 @@ export function surveySendAt(closedAtIso: string, offsetHours = 24): string | nu
   return new Date(t.getTime() + offsetHours * 3_600_000).toISOString()
 }
 
+/**
+ * EST-17 · ¿Este estudio pide encuesta al cerrar?
+ *
+ * DOS INTERRUPTORES Y LOS DOS TIENEN QUE ESTAR PRENDIDOS, porque responden a
+ * preguntas distintas:
+ *   · el del PLAN (`study_plans.sends_satisfaction_survey`) es la regla — «en
+ *     Nivel 1 no se encuesta»;
+ *   · el del GRUPO (`study_groups.survey_enabled`) es la excepción de UNO —
+ *     hoy está en `true` en los 2.204, o sea que nadie lo usa todavía.
+ *
+ * Que haga falta que estén los dos es a propósito: si alcanzara con uno,
+ * apagar un plan se podría saltar grupo por grupo sin que nadie lo note.
+ *
+ * LA DECISIÓN de por qué N1 y N3 quedan apagados vive en la migración
+ * `20260925240000`, junto al dato. En resumen: con los niveles en dos bloques
+ * (EST-14), encuestar al cerrar N1 y otra vez al cerrar N2 son dos encuestas
+ * del mismo tramo, a la misma gente y sobre el mismo dirigente.
+ *
+ * `undefined` en el plan se trata como SÍ: es lo que devuelve una consulta que
+ * no trajo la columna, y quedarse sin encuestas por un select incompleto sería
+ * un fallo silencioso; de más, en cambio, se nota.
+ */
+export function planEnviaEncuesta(sendsSatisfactionSurvey: boolean | null | undefined): boolean {
+  return sendsSatisfactionSurvey !== false
+}
+
 /** ¿A este grupo le toca ya la encuesta? Condición exacta del cron. */
 export function isSurveyDue(g: {
   survey_enabled: boolean
+  /** EST-17 · el interruptor del PLAN. Opcional para no romper a quien ya
+   *  llamaba a esta función: ausente = sí, igual que `planEnviaEncuesta`. */
+  plan_sends_survey?: boolean | null
   survey_send_at: string | null
   feedback_requested_at: string | null
   status: string | null
 }, now: Date): boolean {
   if (!g.survey_enabled) return false
+  // Defensa en profundidad: la programación ya filtra por plan, pero un grupo
+  // programado ANTES del cambio seguiría con su fecha puesta y el cron se la
+  // mandaría igual. Hoy no hay ninguno (medido el 2026-09-25: cero programadas
+  // sin enviar), pero el día que se apague otro plan sí los habrá.
+  if (!planEnviaEncuesta(g.plan_sends_survey)) return false
   if (g.feedback_requested_at) return false          // dedupe
   if (g.status !== 'finalizado') return false
   if (!g.survey_send_at) return false

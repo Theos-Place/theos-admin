@@ -3394,7 +3394,29 @@ Tests: fecha elegida viaja al sucesor y a los correos; recordatorio a 1 semana.
 tsc/lint/vitest. EMAIL_SILENT_MODE se respeta como siempre.
 ```
 
-### [ ] EST-17 · Encuesta de satisfacción solo al cerrar Nivel 2 y Nivel 4
+### [x] EST-17 · Encuesta de satisfacción solo al cerrar Nivel 2 y Nivel 4
+
+HECHO el 2026-09-25 (en staging). Cómo quedó:
+
+- **Columna nueva `study_plans.sends_satisfaction_survey`**, default `true`, y
+  solo se apagan N1 y N3 (migración `20260925240000`). El default es `true` a
+  propósito: una lista de «quiénes sí» habría apagado en silencio los 29 planes
+  del catálogo, incluidos los que hoy SÍ encuestan — SCJ, DIS1, DIS3 y PREMAT
+  tienen encuestas pedidas.
+- **Ningún código de nivel escrito en la lógica**, que es lo que pedía el ítem.
+  Hay un test que barre los tres archivos de la cadena buscando `'N1'` y `'N3'`
+  y falla si aparecen.
+- **Dos interruptores y hacen falta los dos.** El del PLAN es la regla; el del
+  GRUPO (`survey_enabled`, que ya existía y está en `true` en los 2.204) es la
+  excepción de uno. Si alcanzara con cualquiera, apagar un plan se podría
+  saltar grupo por grupo sin que nadie lo note.
+- **Se corta al PROGRAMAR**, no al enviar: un grupo que no debe encuestar no
+  queda con una fecha puesta esperando a que otro filtro la atrape. El cron
+  igual lo revisa, como defensa en profundidad, para los grupos que se
+  programaron antes de apagar un plan (hoy no hay ninguno: cero programadas sin
+  enviar).
+- **Interruptor en la pantalla del plan**, crear y editar, para que la
+  coordinación lo cambie sin un deploy.
 
 Prompt para Claude Code:
 

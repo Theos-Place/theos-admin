@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('study_groups')
-      .select('id, name, status, survey_enabled, survey_send_at, feedback_requested_at')
+      // EST-17: el interruptor del PLAN viaja para que `isSurveyDue` lo mire.
+      // El cierre ya no programa los planes apagados, pero un grupo programado
+      // ANTES del cambio seguiría con su fecha puesta.
+      .select(`id, name, status, survey_enabled, survey_send_at, feedback_requested_at,
+               plan:study_plans!study_groups_plan_id_fkey(sends_satisfaction_survey)`)
       .eq('survey_enabled', true)
       .is('feedback_requested_at', null)
       .not('survey_send_at', 'is', null)
@@ -40,8 +44,17 @@ export async function POST(req: NextRequest) {
 
     // La consulta ya filtra, pero la condición canónica es la función pura: si
     // se agrega un caso, vale para los dos.
-    const pendientes = ((data ?? []) as Parameters<typeof isSurveyDue>[0][])
-      .filter(g => isSurveyDue(g, ahora))
+    //
+    // El plan viene embebido (PostgREST lo devuelve como objeto o como arreglo
+    // según la relación), así que se aplana ACÁ y no dentro de la regla: la
+    // regla es pura y no tiene por qué saber cómo serializa PostgREST.
+    const pendientes = ((data ?? []) as unknown as Array<Record<string, unknown>>)
+      .map(g => {
+        const p = g.plan as { sends_satisfaction_survey: boolean | null } | { sends_satisfaction_survey: boolean | null }[] | null
+        const plan = Array.isArray(p) ? p[0] : p
+        return { ...g, plan_sends_survey: plan?.sends_satisfaction_survey ?? null }
+      })
+      .filter(g => isSurveyDue(g as unknown as Parameters<typeof isSurveyDue>[0], ahora))
 
     // Techo diario compartido: un grupo grande no se come la cuota del resto.
     let presupuesto = DAILY_LIMIT

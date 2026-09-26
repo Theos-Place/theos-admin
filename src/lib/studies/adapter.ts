@@ -39,6 +39,10 @@ export function toDomainStudyType(db: DbStudyPlan): StudyType {
     req_attendee: db.requires_attendance,
     req_bus: db.requires_bus_talk ?? false,
     is_archived: !db.is_active,
+    // EST-17. `?? true` y no `?? false`: quedarse sin encuestas por una
+    // consulta que no trajo la columna sería un fallo silencioso; de más se
+    // nota. Misma decisión que `planEnviaEncuesta`.
+    sends_satisfaction_survey: (db as { sends_satisfaction_survey?: boolean | null }).sends_satisfaction_survey ?? true,
     is_curricular: db.is_curricular ?? true,
   }
 }

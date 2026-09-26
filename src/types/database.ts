@@ -4608,6 +4608,7 @@ export type Database = {
       }
       study_plans: {
         Row: {
+          sends_satisfaction_survey: boolean
           auto_promote: boolean | null
           code: string | null
           commitments: string | null
@@ -4637,6 +4638,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          sends_satisfaction_survey?: boolean
           auto_promote?: boolean | null
           code?: string | null
           commitments?: string | null
@@ -4666,6 +4668,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          sends_satisfaction_survey?: boolean
           auto_promote?: boolean | null
           code?: string | null
           commitments?: string | null

@@ -94,6 +94,10 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
     requires_grade:   studyType.requires_grade,
     requires_invitation: studyType.requires_invitation ?? false,
     auto_promote:     studyType.auto_promote,
+    // EST-17. `!== false` y no `?? true`: si el plan llegara sin la columna
+    // (una consulta vieja), el interruptor se ve PRENDIDO, que es el estado
+    // por defecto — no apagado, que sería apagar encuestas sin querer.
+    encuesta:         studyType.sends_satisfaction_survey !== false,
     is_archived:      studyType.is_archived,
   })
 
@@ -123,6 +127,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
           requires_grade: form.requires_grade,
           requires_invitation: form.requires_invitation,
           auto_promote: form.auto_promote,
+          sends_satisfaction_survey: form.encuesta,
           is_active: !form.is_archived,
         }),
       })
@@ -270,6 +275,12 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
             <Toggle checked={form.requires_grade} onChange={v => set('requires_grade', v)} label="Requiere calificación numérica" />
             <Toggle checked={form.requires_invitation} onChange={v => set('requires_invitation', v)} label="Requiere invitación" sublabel="Solo se puede ingresar por invitación (no abierto a inscripción libre)" />
             <Toggle checked={form.auto_promote}   onChange={v => set('auto_promote', v)}   label="Transición automática al siguiente nivel" sublabel="Al cerrar el grupo, pasar automáticamente al siguiente estudio" />
+            <Toggle
+              checked={form.encuesta}
+              onChange={v => set('encuesta', v)}
+              label="Pedir la encuesta de satisfacción al cerrar"
+              sublabel="Al día siguiente del cierre, a los estudiantes que llevaron el estudio. Apagado en Nivel 1 y Nivel 3: con los niveles en dos bloques serían dos encuestas del mismo tramo."
+            />
             <Toggle checked={form.is_archived}    onChange={v => set('is_archived', v)}    label="Desactivar estudio" sublabel="No estará disponible para nuevos grupos" />
           </div>
         </div>

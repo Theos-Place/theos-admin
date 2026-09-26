@@ -26,6 +26,8 @@ type FormState = {
   costo: string
   req_calificacion: boolean
   transicion_auto: boolean
+  /** EST-17 · ¿pide encuesta de satisfacción al cerrar? */
+  encuesta: boolean
   siguiente_estudio: string
 }
 
@@ -43,6 +45,9 @@ const INITIAL: FormState = {
   costo: '',
   req_calificacion: false,
   transicion_auto: false,
+  // Prendida por defecto: es lo que hace la mayoría de los estudios, y un plan
+  // nuevo que nace sin encuestar sería una omisión silenciosa.
+  encuesta: true,
   siguiente_estudio: '',
 }
 
@@ -120,6 +125,7 @@ export default function NuevoTipoPage() {
           cost: form.req_pago && form.costo ? Number(form.costo) : 0,
           requires_grade: form.req_calificacion,
           auto_promote: form.transicion_auto,
+          sends_satisfaction_survey: form.encuesta,
           prerequisite_code: form.prerequisitos[0] ?? null,
           next_study_code: form.transicion_auto ? (form.siguiente_estudio || null) : null,
           is_active: active,
@@ -284,6 +290,7 @@ export default function NuevoTipoPage() {
 
           <Toggle checked={form.req_calificacion} onChange={v => set('req_calificacion', v)} label="¿Requiere calificación numérica?" />
           <Toggle checked={form.transicion_auto}   onChange={v => set('transicion_auto', v)} label="¿Transición automática?" />
+          <Toggle checked={form.encuesta}          onChange={v => set('encuesta', v)}       label="¿Pedir la encuesta de satisfacción al cerrar?" />
 
           {form.transicion_auto && (
             <div className="ml-4 space-y-1">

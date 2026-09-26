@@ -14,7 +14,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { CAN_EVALUATE_STATUSES } from '@/lib/studies/leader-feedback'
-import { surveySendAt } from '@/lib/studies/study-survey'
+import { surveySendAt, planEnviaEncuesta } from '@/lib/studies/study-survey'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /** Programa la encuesta para más adelante (EST-12). La manda el cron
@@ -23,10 +23,20 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export async function scheduleLeaderFeedback(groupId: string): Promise<{ scheduled: string | null }> {
   const sb = createAdminClient() as unknown as SupabaseClient
   const { data } = await sb.from('study_groups')
-    .select('survey_enabled, survey_offset_hours, feedback_requested_at, survey_send_at, survey_form_id')
+    .select(`survey_enabled, survey_offset_hours, feedback_requested_at, survey_send_at, survey_form_id,
+             plan:study_plans!study_groups_plan_id_fkey(sends_satisfaction_survey)`)
     .eq('id', groupId).maybeSingle()
-  const g = data as { survey_enabled: boolean; survey_offset_hours: number | null; feedback_requested_at: string | null; survey_send_at: string | null; survey_form_id: string | null } | null
+  const g = data as {
+    survey_enabled: boolean; survey_offset_hours: number | null
+    feedback_requested_at: string | null; survey_send_at: string | null; survey_form_id: string | null
+    plan: { sends_satisfaction_survey: boolean | null } | { sends_satisfaction_survey: boolean | null }[] | null
+  } | null
   if (!g || !g.survey_enabled) return { scheduled: null }
+  // EST-17 · El plan decide si este estudio encuesta. Se corta ACÁ, al
+  // programar, y no al enviar: un grupo que no debe encuestar no tiene por qué
+  // quedar con una fecha puesta esperando a que otro filtro la atrape.
+  const plan = Array.isArray(g.plan) ? g.plan[0] : g.plan
+  if (!planEnviaEncuesta(plan?.sends_satisfaction_survey)) return { scheduled: null }
   // Ya enviada o ya programada: no se re-programa (re-cerrar no corre la fecha).
   if (g.feedback_requested_at || g.survey_send_at) return { scheduled: g.survey_send_at }
 

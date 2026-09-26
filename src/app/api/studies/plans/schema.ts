@@ -22,6 +22,10 @@ export const planWriteSchema = z
     requires_bus_talk: z.boolean().optional(),
     requires_invitation: z.boolean().optional(),
     auto_promote: z.boolean().optional(),
+    // EST-17: si al cerrar un grupo de este plan se les pide la encuesta de
+    // satisfacción a los estudiantes. Es del catálogo y no del código para que
+    // la coordinación lo cambie sin un deploy.
+    sends_satisfaction_survey: z.boolean().optional(),
     prerequisite_code: z.string().trim().nullish(),
     next_study_code: z.string().trim().nullish(),
     min_attendance_pct: z.number().min(0).max(100).optional(),
