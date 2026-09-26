@@ -1,283 +1,256 @@
 'use client'
 
+/**
+ * SRV-12 · «Solicitudes de puestos de servicio».
+ *
+ * QUÉ REEMPLAZA. Esta pantalla era una tabla de vacantes con cambio de estado
+ * masivo. Lo que hacía falta es otra cosa: la operación de los primeros de
+ * cada mes —mirar lo que pidió cada comité, bajárselo en Excel para repasarlo,
+ * y publicarlo de una.
+ *
+ * AGRUPADA POR COMITÉ y no una lista plana: el repaso se hace comité por
+ * comité, que es como está organizada la conversación con los encargados.
+ *
+ * «PUBLICAR» NO ES SOLO AGREGAR, y por eso pide confirmación diciendo los DOS
+ * números: sube lo nuevo y BAJA lo que está en la calle del mes pasado. Lo que
+ * baja no se borra —queda desactivado con sus aplicaciones—, y eso también lo
+ * dice la confirmación, porque es la pregunta que sigue.
+ */
+
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Loader2, Check, Download, ClipboardList } from 'lucide-react'
+import { ChevronLeft, Loader2, Download, Upload, Users, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { BulkActionBar } from '@/components/shared/BulkActionBar'
-import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
+import { AccessDenied } from '@/components/shared/AccessDenied'
 import { Modal } from '@/components/shared/Modal'
-import { useRowSelection } from '@/hooks/useRowSelection'
-import { generateCSV } from '@/lib/export'
-import type { DbVacancy } from '@/lib/supabase/queries/servers'
+import { Button } from '@/components/shared/Button'
+import { useToast } from '@/components/shared/Toast'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
+import { formatDate } from '@/lib/format'
+import { VACANCY_STATE_LABEL, VACANCY_STATE_BADGE, isVacancyState } from '@/lib/servers/vacancy-states'
 import {
-  VACANCY_STATES, VACANCY_STATE_LABEL, VACANCY_STATE_BADGE, isVacancyState, type VacancyState,
-} from '@/lib/servers/vacancy-states'
+  textoDeConfirmacion, hayAlgoQuePublicar, type PlanDePublicacion,
+} from '@/lib/servers/publicacion-mensual'
 
-type Row = {
+type Solicitud = {
   id: string
   committee_id: string
-  committee_name: string
-  title: string
-  slots_total: number
-  status: VacancyState
-  application_count: number
-  created_at: string
+  comite: string
+  encargados: string[]
+  puesto: string
+  cupos: number
+  estado: string
+  published_at: string | null
+  solicitada: string
 }
 
-type ApplicantRow = Record<string, string>
+export default function SolicitudesDePuestosPage() {
+  const { hasRole, loaded, user } = useAuth()
+  const toast = useToast()
+  useTituloDePantalla('Solicitudes de puestos de servicio', 'Servidores')
 
-const APPLICANT_COLUMNS: ColumnDef<ApplicantRow>[] = [
-  { key: 'nombre', label: 'Nombre', defaultVisible: true, alwaysVisible: true, exportValue: r => r.nombre ?? '' },
-  { key: 'cedula', label: 'Cédula', defaultVisible: true, exportValue: r => r.cedula ?? '' },
-  { key: 'email', label: 'Correo', defaultVisible: true, exportValue: r => r.email ?? '' },
-  { key: 'telefono', label: 'Teléfono', defaultVisible: true, exportValue: r => r.telefono ?? '' },
-  { key: 'provincia', label: 'Provincia', defaultVisible: false, exportValue: r => r.provincia ?? '' },
-  { key: 'historial_estudios', label: 'Historial de estudios', defaultVisible: true, exportValue: r => r.historial_estudios ?? '' },
-  { key: 'sede', label: 'Sede', defaultVisible: true, exportValue: r => r.sede ?? '' },
-  { key: 'miembro_activo', label: 'Miembro activo', defaultVisible: true, exportValue: r => r.miembro_activo ?? '' },
-  { key: 'servicios_activos', label: 'Servicios activos', defaultVisible: true, exportValue: r => r.servicios_activos ?? '' },
-  { key: 'puesto_aplicado', label: 'Puesto al que aplicó', defaultVisible: true, alwaysVisible: true, exportValue: r => r.puesto_aplicado ?? '' },
-]
+  const puedeVer = hasRole(...SERVICE_ADMIN_ROLES, 'solicitudes_puestos')
+  // Publicar baja lo que está en la calle: es de la coordinación, no de quien
+  // arma las solicitudes.
+  const puedePublicar = hasRole(...SERVICE_ADMIN_ROLES)
 
-const STATUS_FILTERS: { key: VacancyState | 'all'; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  ...VACANCY_STATES.map(s => ({ key: s, label: VACANCY_STATE_LABEL[s] })),
-]
+  const [items, setItems] = useState<Solicitud[] | null>(null)
+  const [plan, setPlan] = useState<PlanDePublicacion>({ aPublicar: [], aDesactivar: [] })
+  const [confirmando, setConfirmando] = useState(false)
+  const [publicando, setPublicando] = useState(false)
 
-export default function SolicitudesVacantesPage() {
-  const { hasRole } = useAuth()
-  const isAdmin = hasRole(...SERVICE_ADMIN_ROLES)
-
-  const [rows, setRows] = useState<Row[]>([])
-  const [loading, setLoading] = useState(true)
-  const [committeeFilter, setCommitteeFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState<VacancyState | 'all'>('all')
-
-  const refetch = useCallback(() => {
-    setLoading(true)
-    fetch('/api/servers/vacancies')
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: DbVacancy[]) => {
-        const mapped: Row[] = (Array.isArray(d) ? d : [])
-          .filter(v => isVacancyState(v.status))
-          .map(v => ({
-            id: v.id,
-            committee_id: v.committee_id,
-            committee_name: v.committee?.name ?? '',
-            title: v.title,
-            slots_total: v.slots_total,
-            status: v.status as VacancyState,
-            application_count: v.applications?.[0]?.count ?? 0,
-            created_at: v.created_at,
-          }))
-        setRows(mapped)
+  const cargar = useCallback(() => {
+    fetch('/api/servers/vacancies/requests')
+      .then(r => (r.ok ? r.json() : { items: [], plan: { aPublicar: [], aDesactivar: [] } }))
+      .then(d => {
+        setItems((d.items ?? []) as Solicitud[])
+        setPlan(d.plan ?? { aPublicar: [], aDesactivar: [] })
       })
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
+      .catch(() => setItems([]))
   }, [])
-  useEffect(() => { refetch() }, [refetch])
 
-  const committeeOptions = useMemo(() => {
-    const m = new Map<string, string>()
-    rows.forEach(r => m.set(r.committee_id, r.committee_name))
-    return Array.from(m, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
-  }, [rows])
+  useEffect(() => { if (puedeVer) cargar() }, [puedeVer, cargar])
 
-  const filtered = useMemo(() => rows.filter(r =>
-    (committeeFilter === 'all' || r.committee_id === committeeFilter) &&
-    (statusFilter === 'all' || r.status === statusFilter),
-  ), [rows, committeeFilter, statusFilter])
+  /** Agrupadas por comité, y dentro por puesto. */
+  const porComite = useMemo(() => {
+    const m = new Map<string, Solicitud[]>()
+    for (const s of items ?? []) {
+      const arr = m.get(s.comite) ?? []
+      arr.push(s)
+      m.set(s.comite, arr)
+    }
+    return [...m.entries()]
+      .map(([comite, filas]) => ({
+        comite,
+        encargados: filas[0]?.encargados ?? [],
+        filas: [...filas].sort((a, b) => a.puesto.localeCompare(b.puesto, 'es')),
+        cupos: filas.reduce((s, f) => s + f.cupos, 0),
+      }))
+      .sort((a, b) => a.comite.localeCompare(b.comite, 'es'))
+  }, [items])
 
-  const sel = useRowSelection(filtered.map(r => r.id))
+  const totalCupos = useMemo(() => (items ?? []).reduce((s, f) => s + f.cupos, 0), [items])
 
-  // Bulk de estado.
-  const [confirm, setConfirm] = useState<VacancyState | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-
-  async function runBulk(status: VacancyState) {
-    if (busy || sel.count === 0) return
-    setBusy(true); setMsg(null)
+  async function publicar() {
+    setPublicando(true)
     try {
-      const res = await fetch('/api/servers/vacancies/bulk', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, ids: sel.selectedIds }),
-      })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudo aplicar.')
-      setMsg(`${data.updated} vacante${data.updated !== 1 ? 's' : ''} → ${VACANCY_STATE_LABEL[status]}.`)
-      sel.clear(); setConfirm(null); refetch()
+      const res = await fetch('/api/servers/vacancies/publish', { method: 'POST' })
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo publicar.'))
+      const d = await res.json()
+      toast(
+        `Listo: ${d.publicadas} publicado${d.publicadas !== 1 ? 's' : ''}`
+        + (d.desactivadas > 0 ? `, ${d.desactivadas} bajado${d.desactivadas !== 1 ? 's' : ''}` : ''),
+        'success',
+      )
+      setConfirmando(false)
+      cargar()
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Error desconocido')
-    } finally { setBusy(false) }
+      toast(e instanceof Error ? e.message : 'No se pudo publicar.', 'error')
+    } finally {
+      setPublicando(false)
+    }
   }
 
-  // Export de aplicantes (selección, o todo lo filtrado si no hay selección).
-  const [visibleCols, setVisibleCols] = useState<ColumnDef<ApplicantRow>[]>(APPLICANT_COLUMNS.filter(c => c.defaultVisible))
-  const [exporting, setExporting] = useState(false)
-  async function exportApplicants() {
-    if (exporting) return
-    const ids = sel.count > 0 ? sel.selectedIds : filtered.map(r => r.id)
-    if (ids.length === 0) return
-    setExporting(true); setMsg(null)
-    try {
-      const res = await fetch('/api/servers/vacancies/export-applicants', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vacancy_ids: ids }),
-      })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudo exportar.')
-      const applicants: ApplicantRow[] = data.rows ?? []
-      if (applicants.length === 0) { setMsg('No hay aplicantes en las vacantes seleccionadas.'); return }
-      const cols = visibleCols.filter(c => c.exportable !== false)
-      const headers = cols.map(c => c.label)
-      const csvRows = applicants.map(a => cols.map(c => c.exportValue?.(a) ?? ''))
-      generateCSV(headers, csvRows, 'aplicantes-vacantes')
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Error desconocido')
-    } finally { setExporting(false) }
+  if (!loaded) {
+    return <div className="flex items-center justify-center min-h-[40vh]"><Loader2 size={20} className="animate-spin text-navy-light/80" /></div>
   }
+  if (user && !puedeVer) return <AccessDenied />
 
   return (
-    <div className="space-y-4">
-      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy-light transition-colors font-body">
-        <ChevronLeft size={15} /> Puestos de Servicio
+    <div className="space-y-5">
+      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
+        <ChevronLeft size={16} /> Puestos de Servicio
       </Link>
 
-      <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitudes de vacantes</h1>
-          <p className="mt-1 text-sm text-white/80 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
+          <h1 className="text-2xl font-bold text-navy font-display">Solicitudes de puestos de servicio</h1>
+          <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+            Lo que pidió cada comité en la última ventana. Se revisa y se publica los
+            primeros de cada mes.
+          </p>
         </div>
-        {isAdmin && (
-          <div className="flex items-center gap-2 shrink-0">
-            <ColumnSelector columns={APPLICANT_COLUMNS} storageKey="vacancy-applicants-columns" onChange={setVisibleCols} />
-            <button
-              onClick={exportApplicants}
-              disabled={exporting || filtered.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body"
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            href="/api/servers/vacancies/requests?formato=xlsx"
+            variante="secundario"
+            className="inline-flex items-center gap-1.5"
+          >
+            <Download size={14} aria-hidden="true" /> Descargar Excel
+          </Button>
+          {puedePublicar && (
+            <Button
+              onClick={() => setConfirmando(true)}
+              disabled={!hayAlgoQuePublicar(plan)}
+              title={!hayAlgoQuePublicar(plan) ? 'No hay nada que publicar ni que bajar' : undefined}
+              className="inline-flex items-center gap-1.5"
             >
-              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              {sel.count > 0 ? `Exportar aplicantes (${sel.count})` : `Exportar todo (${filtered.length})`}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {msg && (
-        <p className="rounded-xl bg-surface-low px-4 py-2 text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5">
-          <Check size={14} className="text-teal-deep" /> {msg}
-        </p>
-      )}
-
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <select
-          value={committeeFilter}
-          onChange={e => setCommitteeFilter(e.target.value)}
-          aria-label="Filtrar por comité"
-          className="w-full sm:w-auto rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
-        >
-          <option value="all">Todos los comités</option>
-          {committeeOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent',
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+              <Upload size={14} aria-hidden="true" /> Publicar puestos
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Bulk bar (solo admin/coordinación) */}
-      {isAdmin && (
-        <BulkActionBar count={sel.count} onClear={sel.clear} noun="vacantes">
-          <button onClick={() => setConfirm('enviado_lider')} className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] text-white hover:bg-white/10 transition-colors font-body">Enviar a líder</button>
-          <button onClick={() => setConfirm('aprobado')} className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body">Aprobar</button>
-          <button onClick={() => setConfirm('denegado')} className="rounded-full bg-coral px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body">Denegar</button>
-        </BulkActionBar>
+      {/* El resumen de lo que haría el botón, SIEMPRE a la vista y no solo al
+          confirmar: el número que importa es el de los que se bajan. */}
+      {puedePublicar && hayAlgoQuePublicar(plan) && (
+        <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] flex items-start gap-2.5">
+          <Upload size={16} className="mt-0.5 shrink-0 text-navy-light/80" aria-hidden="true" />
+          <p className="text-sm text-navy font-body">{textoDeConfirmacion(plan)}</p>
+        </div>
       )}
 
-      {/* Tabla */}
-      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-        {loading ? (
-          <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
-        ) : filtered.length === 0 ? (
-          <EmptyState icon={ClipboardList} title="No hay solicitudes con esos filtros" />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  {isAdmin && (
-                    <th className="px-4 py-3 w-10">
-                      <input
-                        type="checkbox" className="accent-coral" aria-label="Seleccionar todas"
-                        checked={sel.allSelected && filtered.length > 0}
-                        ref={el => { if (el) el.indeterminate = sel.someSelected }}
-                        onChange={sel.toggleAll}
-                      />
-                    </th>
-                  )}
-                  {['Puesto', 'Comité', 'Cupos', 'Aplicaciones', 'Estado'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r, idx) => (
-                  <tr key={r.id} className={cn('transition-colors', sel.isSelected(r.id) ? 'bg-coral/5' : idx % 2 === 1 ? 'bg-surface-low/40' : '')}>
-                    {isAdmin && (
-                      <td className="px-4 py-3">
-                        <input type="checkbox" className="accent-coral" aria-label={`Seleccionar ${r.title}`} checked={sel.isSelected(r.id)} onChange={() => sel.toggle(r.id)} />
-                      </td>
-                    )}
-                    <td className="px-4 py-3 text-sm font-medium text-navy font-body">{r.title}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.committee_name}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{r.slots_total}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                      {r.application_count > 0 ? (
-                        <Link href={`/servidores/vacantes/${r.id}`} className="text-navy underline underline-offset-2 hover:text-coral-deep">{r.application_count}</Link>
-                      ) : '0'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', VACANCY_STATE_BADGE[r.status])}>
-                        {VACANCY_STATE_LABEL[r.status]}
+      {items === null ? (
+        <div className="flex items-center justify-center py-16"><Loader2 size={18} className="animate-spin text-navy-light/80" /></div>
+      ) : porComite.length === 0 ? (
+        <div className="rounded-2xl bg-surface-card shadow-card">
+          <EmptyState
+            title="Todavía no hay solicitudes"
+            description="Los comités piden sus cupos del 25 al 30 de cada mes."
+          />
+        </div>
+      ) : (
+        <>
+          <p className="text-[13px] text-navy-light/80 font-body">
+            {porComite.length} comité{porComite.length !== 1 ? 's' : ''} · {items.length} puesto
+            {items.length !== 1 ? 's' : ''} · <strong className="text-navy">{totalCupos}</strong> cupo
+            {totalCupos !== 1 ? 's' : ''} en total
+          </p>
+
+          <div className="space-y-4">
+            {porComite.map(g => (
+              <section key={g.comite} className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+                <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3 border-b border-[var(--outline-variant)]">
+                  <div>
+                    <h2 className="text-sm font-semibold text-navy font-display">{g.comite}</h2>
+                    <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-1.5">
+                      <Users size={12} aria-hidden="true" />
+                      {g.encargados.length > 0 ? g.encargados.join(', ') : 'Sin encargado registrado'}
+                    </p>
+                  </div>
+                  <span className="text-[13px] text-navy-light/80 font-body">
+                    {g.cupos} cupo{g.cupos !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <ul>
+                  {g.filas.map(f => (
+                    <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 border-b border-[var(--outline-variant)] last:border-0">
+                      <span className="text-sm text-navy font-body min-w-0">{f.puesto}</span>
+                      <span className="flex items-center gap-3 shrink-0">
+                        <span className="text-[13px] text-navy-light/80 font-body">
+                          Pedido el {formatDate(f.solicitada)}
+                        </span>
+                        {isVacancyState(f.estado) && (
+                          <span className={cn('rounded-full px-2 py-0.5 text-[13px] font-body', VACANCY_STATE_BADGE[f.estado])}>
+                            {VACANCY_STATE_LABEL[f.estado]}
+                          </span>
+                        )}
+                        <span className="text-sm font-bold text-navy font-display tabular-nums w-8 text-right">
+                          {f.cupos}
+                        </span>
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* Confirmación bulk */}
-      {confirm && (
-        <Modal onClose={() => !busy && setConfirm(null)} titleId="confirm-vac-title" width={420}>
+      {confirmando && (
+        <Modal onClose={() => setConfirmando(false)} titleId="publicar-title">
           <div className="p-6 space-y-4">
-            <h3 id="confirm-vac-title" className="text-base font-bold text-navy font-display">Cambiar estado</h3>
-            <p className="text-sm text-navy-light/80 font-body">
-              <strong className="text-navy">{sel.count}</strong> vacante{sel.count !== 1 ? 's' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">{VACANCY_STATE_LABEL[confirm]}</strong>.
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle size={18} className="text-coral mt-0.5 shrink-0" aria-hidden="true" />
+              <div>
+                <h2 id="publicar-title" className="text-lg font-semibold text-navy font-display">
+                  Publicar los puestos del mes
+                </h2>
+                <p className="mt-1 text-sm text-navy-light/80 font-body">
+                  {textoDeConfirmacion(plan)}
+                </p>
+              </div>
+            </div>
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Esto cambia lo que se ve en la página pública de puestos. Queda registrado
+              quién lo hizo.
             </p>
-            <div className="flex gap-2 pt-1">
-              <button onClick={() => runBulk(confirm)} disabled={busy} className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2', confirm === 'denegado' ? 'bg-coral hover:bg-coral-deep' : 'bg-teal-deep hover:opacity-90', busy && 'opacity-60 cursor-not-allowed')}>
-                {busy ? <><Loader2 size={15} className="animate-spin" /> Aplicando…</> : 'Confirmar'}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmando(false)}
+                disabled={publicando}
+                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
               </button>
-              <button onClick={() => setConfirm(null)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
+              <Button onClick={() => void publicar()} disabled={publicando}>
+                {publicando ? 'Publicando…' : 'Sí, publicar'}
+              </Button>
             </div>
           </div>
         </Modal>

@@ -1198,3 +1198,148 @@ export async function getCommitteeIdsOfMember(memberId: string): Promise<string[
   }
   return [...ids]
 }
+
+/**
+ * SRV-12 · Las solicitudes de puestos con todo lo que hace falta para
+ * revisarlas y publicarlas: el comité, sus encargados, los cupos y las
+ * definiciones del puesto.
+ *
+ * TRES CONSULTAS Y NO UNA POR FILA. Los encargados salen de los puestos de
+ * cada comité, así que la forma obvia —`getEncargadosDeComite` por vacante—
+ * serían 40 idas a la base para pintar una pantalla. Acá se leen todos los
+ * puestos de una y se agrupan en memoria.
+ */
+export type SolicitudDePuesto = {
+  id: string
+  committee_id: string
+  comite: string
+  encargados: string[]
+  position_id: string | null
+  puesto: string
+  cupos: number
+  estado: string
+  published_at: string | null
+  solicitada: string
+  descripcion: string | null
+  funciones: string | null
+  perfil: string | null
+  habilidades: string | null
+  estudio_requerido: string | null
+  ubicacion: string | null
+}
+
+export async function getSolicitudesDePuestos(): Promise<SolicitudDePuesto[]> {
+  const supabase = createAdminClient()
+
+  const [{ data: vac, error: eVac }, { data: puestos, error: ePos }] = await Promise.all([
+    supabase
+      .from('vacancies')
+      .select(`id, committee_id, position_id, title, slots_total, status, published_at, created_at,
+               committee:areas!vacancies_committee_id_fkey(name)`)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('service_positions')
+      .select(`id, area_id, title, description, functions, profile, skills,
+               study_requirement, location, is_active,
+               volunteers(member_id, status)`),
+  ])
+  if (eVac) throw eVac
+  if (ePos) throw ePos
+
+  type FilaPuesto = {
+    id: string; area_id: string | null; title: string | null
+    description: string | null; functions: unknown; profile: string | null
+    skills: string | null; study_requirement: string | null; location: string | null
+    is_active: boolean | null
+    volunteers: Array<{ member_id: string; status: string }> | null
+  }
+  const filasPuesto = (puestos ?? []) as unknown as FilaPuesto[]
+  const porId = new Map(filasPuesto.map(p => [p.id, p]))
+
+  // Encargados por comité, en memoria. Mismo criterio canónico que
+  // `getEncargadosDeComite` (`esPuestoDeEncargado`): un `ilike '%encargad%'`
+  // se traga «Asistente de Encargado», que ya contó de más una vez.
+  const encargadosPorComite = new Map<string, Set<string>>()
+  for (const p of filasPuesto) {
+    if (!p.area_id || p.is_active === false || !esPuestoDeEncargado(p.title ?? '')) continue
+    for (const v of (p.volunteers ?? [])) {
+      if (v.status !== 'active') continue
+      if (!encargadosPorComite.has(p.area_id)) encargadosPorComite.set(p.area_id, new Set())
+      encargadosPorComite.get(p.area_id)!.add(v.member_id)
+    }
+  }
+
+  const idsEncargados = [...new Set([...encargadosPorComite.values()].flatMap(s => [...s]))]
+  const nombre = new Map<string, string>()
+  // Chunking a 200, la convención del repo: un `.in()` con cientos de uuids
+  // revienta la URL de PostgREST.
+  for (let i = 0; i < idsEncargados.length; i += 200) {
+    const { data } = await supabase
+      .from('members').select('id, first_name, last_name').in('id', idsEncargados.slice(i, i + 200))
+    for (const m of ((data ?? []) as Array<{ id: string; first_name: string; last_name: string }>)) {
+      nombre.set(m.id, `${m.first_name} ${m.last_name}`.trim())
+    }
+  }
+
+  return ((vac ?? []) as unknown as Array<Record<string, unknown>>).map(v => {
+    const com = v.committee as { name: string | null } | { name: string | null }[] | null
+    const comite = (Array.isArray(com) ? com[0] : com)?.name ?? 'Sin comité'
+    const p = v.position_id ? porId.get(String(v.position_id)) : undefined
+    const funciones = Array.isArray(p?.functions)
+      ? (p!.functions as string[]).join('\n')
+      : (p?.functions as string | null) ?? null
+    return {
+      id: String(v.id),
+      committee_id: String(v.committee_id),
+      comite,
+      encargados: [...(encargadosPorComite.get(String(v.committee_id)) ?? [])]
+        .map(id => nombre.get(id) ?? '')
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'es')),
+      position_id: (v.position_id as string) ?? null,
+      puesto: (p?.title ?? (v.title as string)) || 'Sin puesto',
+      cupos: Number(v.slots_total ?? 0),
+      estado: String(v.status ?? ''),
+      published_at: (v.published_at as string) ?? null,
+      solicitada: String(v.created_at ?? ''),
+      descripcion: p?.description ?? null,
+      funciones,
+      perfil: p?.profile ?? null,
+      habilidades: p?.skills ?? null,
+      estudio_requerido: p?.study_requirement ?? null,
+      ubicacion: p?.location ?? null,
+    }
+  })
+}
+
+/**
+ * SRV-12 · Ejecuta la publicación mensual: sube lo pedido y baja lo del ciclo
+ * anterior. El QUÉ lo decide `planDePublicacion` (puro, con tests); acá solo
+ * se escribe.
+ *
+ * Se baja PRIMERO y se sube después, en ese orden: si la segunda mitad
+ * fallara, la página pública queda vacía —visible y arreglable con un clic—
+ * en vez de mostrando los puestos del mes pasado mezclados con los nuevos,
+ * que nadie notaría.
+ */
+export async function ejecutarPublicacionMensual(
+  plan: { aPublicar: string[]; aDesactivar: string[] },
+  ahora: Date = new Date(),
+): Promise<{ publicadas: number; desactivadas: number }> {
+  const supabase = createAdminClient()
+  const iso = ahora.toISOString()
+
+  if (plan.aDesactivar.length > 0) {
+    const { error } = await supabase.from('vacancies')
+      .update({ status: 'cerrada', updated_at: iso })
+      .in('id', plan.aDesactivar)
+    if (error) throw error
+  }
+  if (plan.aPublicar.length > 0) {
+    const { error } = await supabase.from('vacancies')
+      .update({ status: 'aprobado', published_at: iso, updated_at: iso })
+      .in('id', plan.aPublicar)
+    if (error) throw error
+  }
+  return { publicadas: plan.aPublicar.length, desactivadas: plan.aDesactivar.length }
+}

@@ -3817,7 +3817,35 @@ Reglas dictadas:
   va configurable — constante o setting — para no redeployar por esto.)
   El cierre se valida server-side, no solo escondiendo el botón.
 
-### [ ] SRV-12 · Parte 2: página "Solicitudes de puestos de servicio" + publicación mensual
+### [x] SRV-12 · Parte 2: página "Solicitudes de puestos de servicio" + publicación mensual
+
+HECHO el 2026-09-25 (en staging). Qué quedó:
+
+- **Pantalla nueva** en `/servidores/vacantes/solicitudes` (reemplaza la tabla
+  de estados que había ahí), **agrupada por comité** con sus encargados, el
+  puesto, los cupos y cuándo se pidió. El repaso se hace comité por comité, que
+  es como está organizada la conversación con los encargados.
+- **Entrada propia en el menú** de servidores: la ven la coordinación y el rol
+  `solicitudes_puestos`.
+- **«Descargar Excel»** por el MISMO endpoint que pinta la tabla. Lleva las
+  definiciones del puesto —descripción, funciones, perfil, habilidades, estudio
+  requerido— porque quien publica las necesita para decidir si el puesto sale;
+  sin eso habría que abrir el catálogo puesto por puesto. Va ordenado por
+  comité y cierra con el total de cupos.
+- **«Publicar puestos»** baja primero lo del ciclo anterior y sube lo nuevo.
+  Se DESACTIVA (`cerrada`), no se borra: una vacante publicada tiene
+  aplicaciones colgando. Confirmación que dice los DOS números y aclara que lo
+  que baja conserva sus aplicaciones, y registro en `audit_log` de quién
+  publicó, cuántos entraron y cuántos salieron.
+- **Idempotente dentro del mes**: el ciclo es el mes calendario, así que
+  publicar dos veces el mismo día no baja lo que se acaba de subir. Sin eso, un
+  doble clic vaciaba la página pública.
+- **VER y PUBLICAR no son el mismo permiso.** `solicitudes_puestos` ve la
+  pantalla y baja el Excel; publicar es solo de la coordinación, porque baja lo
+  que está en la calle.
+- **El plan que se ejecuta se recalcula en el servidor**, no viene del cliente:
+  una pestaña abierta desde ayer podría bajar algo que se publicó hoy o
+  publicar una solicitud que mientras tanto se denegó.
 
 - Página nueva en el menú de servidores: "Solicitudes de puestos de
   servicio" (la página actual de solicitudes de servicio deja de funcionar

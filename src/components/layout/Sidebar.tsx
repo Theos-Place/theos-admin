@@ -247,6 +247,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       ? [{ href: '/servidores/mi-comite', label: canServiceAdmin ? 'Comités' : 'Mi comité', icon: UsersRound }]
       : []),
     ...SERVIDORES_SUB,
+    // SRV-12 · La cola mensual: lo que pidió cada comité, para revisarlo y
+    // publicarlo. La ve la coordinación y el rol `solicitudes_puestos`, que
+    // es justamente quien la trabaja.
+    ...(canServiceAdmin || userRoles.includes('solicitudes_puestos')
+      ? [{ href: '/servidores/vacantes/solicitudes', label: 'Solicitudes de puestos', icon: ClipboardList }]
+      : []),
     ...(canSeeServiceApplications(userRoles) ? [SERVIDORES_APPS_SUB] : []),
     ...(canServiceAdmin ? [{ href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }] : []),
   ]
