@@ -205,8 +205,20 @@ describe('la revisión es obligatoria antes de compartir', () => {
   it('el endpoint expone el estado y solo la coordinación lo cambia', async () => {
     const { readFileSync } = await import('node:fs')
     const route = readFileSync('src/app/api/studies/groups/[id]/leader-feedback/route.ts', 'utf8')
-    // PATCH gateado a los roles de estudios: el dirigente no modera lo suyo.
-    expect(route).toContain('requireRoles(...STUDY_ADMIN_ROLES)')
+    /**
+     * RET-1 (2026-09-25) · PASÓ DE `STUDY_ADMIN_ROLES` A `EVALUATION_ROLES`, y
+     * este aserto me atrapó el cambio — que es para lo que estaba.
+     *
+     * No es un ajuste cosmético: `STUDY_ADMIN_ROLES` son 19 personas e incluye
+     * coordinación de estudios y dirección. Moderar y compartir lo que un
+     * estudiante escribió sobre su dirigente es de quien revisa evaluaciones, y
+     * `EVALUATION_ROLES` ya dejaba fuera a esos dos a propósito.
+     *
+     * Lo que NO cambia y por eso el aserto sigue: el dirigente no modera lo
+     * suyo.
+     */
+    expect(route).toContain('requireRoles(...EVALUATION_ROLES)')
+    expect(route).not.toContain('requireRoles(...STUDY_ADMIN_ROLES)')
     expect(route).toContain("z.literal('compartir')")
     expect(route).toContain("z.literal('ocultar')")
     // Y al dirigente se le arma la vista con leaderView, no con el resumen crudo.
