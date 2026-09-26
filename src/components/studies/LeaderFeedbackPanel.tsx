@@ -12,10 +12,16 @@ import { MessageSquare, EyeOff, Eye, Send, Loader2, ShieldCheck } from 'lucide-r
 import { SCORE_LABELS, MIN_RESPUESTAS_PARA_MOSTRAR, type FeedbackSummary, type LeaderView } from '@/lib/studies/leader-feedback'
 import type { PreguntaResumen } from '@/lib/studies/study-survey'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/shared/Modal'
+import { Button } from '@/components/shared/Button'
 
 type Fila = { id?: string; score: number; comments?: string | null; hidden?: boolean }
+type Grupo = { id: string; name: string | null; plan_name: string | null; leader_name: string | null }
 type Payload = {
   role: 'staff' | 'leader'
+  /** El endpoint ya lo mandaba; el tipo no lo declaraba, así que la pantalla no
+   *  podía nombrar al grupo ni al dirigente. Hace falta para la confirmación. */
+  group?: Grupo
   released_at?: string | null
   summary?: FeedbackSummary
   rows?: Fila[]
@@ -27,6 +33,11 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
   const [data, setData] = useState<Payload | null>(null)
   const [cargando, setCargando] = useState(true)
   const [ocupado, setOcupado] = useState(false)
+  /** RET-1 · Compartir manda un correo al dirigente y no se puede deshacer, así
+   *  que pasa por una confirmación que DICE A QUIÉN. El botón enviaba de una, y
+   *  así se le mandó una retroalimentación a Fernando Gutiérrez por accidente en
+   *  una reunión (2026-09-25). */
+  const [confirmarEnvio, setConfirmarEnvio] = useState(false)
 
   const cargar = useCallback(() => {
     fetch(`/api/studies/groups/${groupId}/leader-feedback`)
@@ -137,7 +148,7 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
             <button
               type="button"
               disabled={ocupado}
-              onClick={() => accion({ action: 'compartir' })}
+              onClick={() => setConfirmarEnvio(true)}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {ocupado ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
@@ -150,6 +161,39 @@ export function LeaderFeedbackPanel({ groupId }: { groupId: string }) {
           </div>
         )}
       </div>
+
+      {confirmarEnvio && (
+        <Modal onClose={() => setConfirmarEnvio(false)} titleId="confirmar-compartir-title" width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id="confirmar-compartir-title" className="text-base font-bold text-navy font-display">
+              ¿Compartir con el dirigente?
+            </h3>
+            <p className="text-sm leading-relaxed text-navy-light font-body">
+              Se le va a mandar un correo a{' '}
+              <strong className="text-navy">{data.group?.leader_name ?? 'el dirigente'}</strong>
+              {data.group?.name && <> con la retroalimentación de <strong className="text-navy">{data.group.name}</strong></>}.
+              {' '}Va a poder leer los comentarios que no ocultaste.
+            </p>
+            {/* No es un «¿estás seguro?» decorativo: lo que hace irreversible
+                esto no es el registro, es que la persona ya lo leyó. */}
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Una vez enviado no se puede deshacer.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variante="secundario" ancho="flex" onClick={() => setConfirmarEnvio(false)}>
+                Cancelar
+              </Button>
+              <Button
+                ancho="flex"
+                disabled={ocupado}
+                onClick={() => { setConfirmarEnvio(false); void accion({ action: 'compartir' }) }}
+              >
+                {ocupado ? 'Enviando…' : 'Sí, compartir'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Caja>
   )
 }

@@ -12,6 +12,7 @@ import {
   groupPerQuestion,
 } from '@/lib/supabase/queries/leader-feedback'
 import { reportarError } from '@/lib/observabilidad'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Retroalimentación al dirigente de un grupo cerrado.
 //
@@ -209,6 +210,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       } catch (e) {
         console.warn('No se pudo enviar el resumen al dirigente:', e)
       }
+      /**
+       * RET-1 · QUEDA REGISTRADO QUIÉN COMPARTIÓ Y CUÁNDO.
+       *
+       * `releaseGroupFeedback` ya guarda `feedback_released_by`, pero eso es el
+       * ESTADO ACTUAL: si mañana alguien vuelve a compartir, se pisa. El envío
+       * es irreversible —la persona ya lo leyó— así que el rastro tiene que
+       * sobrevivir a la siguiente escritura, y para eso está el audit_log.
+       *
+       * Se anota el resultado del correo, no solo la intención: `sent` en cero
+       * con la retro marcada como compartida es justo el caso que después nadie
+       * puede explicar.
+       */
+      const { error: eAudit } = await createAdminClient().from('audit_log').insert({
+        action: 'UPDATE',
+        entity_type: 'study_groups',
+        entity_id: id,
+        new_data: {
+          op: 'compartir_retroalimentacion',
+          actor_member_id: auth.ctx.memberId,
+          correos_enviados: sent,
+        },
+      })
+      if (eAudit) console.warn('audit compartir retroalimentación:', eAudit.message)
+
       return NextResponse.json({ ok: true, sent })
     }
     await setFeedbackHidden({

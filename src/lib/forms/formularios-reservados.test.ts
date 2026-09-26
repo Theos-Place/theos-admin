@@ -91,3 +91,43 @@ describe('los CUATRO caminos a las respuestas quedaron censados', () => {
     expect(s).toContain('esComiteDirigentes(ctx.areaName)')
   })
 })
+
+/**
+ * RET-1 parte 3 · Compartir manda un correo al dirigente y no se deshace.
+ *
+ * El botón enviaba de una, y así se le mandó una retroalimentación a Fernando
+ * Gutiérrez por accidente en una reunión (2026-09-25).
+ */
+describe('compartir la retroalimentación pide confirmación y deja rastro', () => {
+  const panel = readFileSync('src/components/studies/LeaderFeedbackPanel.tsx', 'utf8')
+  const ruta = readFileSync('src/app/api/studies/groups/[id]/leader-feedback/route.ts', 'utf8')
+
+  it('el botón ya NO envía en el onClick', () => {
+    expect(panel).not.toContain("onClick={() => accion({ action: 'compartir' })}")
+    expect(panel).toContain('setConfirmarEnvio(true)')
+  })
+
+  it('la confirmación dice A QUIÉN se le manda', () => {
+    // «¿Estás seguro?» sin el nombre no evita el accidente: quien aprieta ya
+    // cree saber a quién le está enviando.
+    expect(panel).toContain('data.group?.leader_name')
+  })
+
+  it('y avisa que no se puede deshacer', () => {
+    expect(panel).toContain('no se puede deshacer')
+  })
+
+  it('el servidor registra quién compartió y cuándo', () => {
+    // `feedback_released_by` guarda el ESTADO ACTUAL y se pisa si alguien
+    // vuelve a compartir; el envío es irreversible, así que el rastro tiene que
+    // sobrevivir a la siguiente escritura.
+    expect(ruta).toContain("op: 'compartir_retroalimentacion'")
+    expect(ruta).toContain('actor_member_id: auth.ctx.memberId')
+  })
+
+  it('y anota si el correo salió o no', () => {
+    // `sent` en cero con la retro marcada como compartida es justo el caso que
+    // después nadie puede explicar.
+    expect(ruta).toContain('correos_enviados: sent')
+  })
+})
