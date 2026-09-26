@@ -285,7 +285,17 @@ function DirigentesContenido() {
             href="/estudios/dirigentes/disponibilidad"
             className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
           >
-            Disponibilidad
+            Respuestas del formulario
+          </Link>
+          {/* SRV-9: el dato EN FIRME, el que la persona mantiene en su perfil.
+              Se nombra distinto del de arriba a propósito: los dos decían
+              «Disponibilidad» y son cosas distintas — aquel son respuestas de
+              formulario, o sea insumo; este es lo que el sistema sabe. */}
+          <Link
+            href="/estudios/dirigentes/confirmaciones"
+            className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+          >
+            Confirmaciones
           </Link>
           {canExport && (
             <>

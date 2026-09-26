@@ -2310,3 +2310,77 @@ export async function getCierreDetalle(groupId: string): Promise<CierreDetalle |
     folleto_request_id: (fol as { id: string } | null)?.id ?? null,
   }
 }
+
+/**
+ * SRV-9 · Todas las disponibilidades, para el tablero y el Excel del comité.
+ *
+ * Trae las 505 fichas con el nombre y el contacto de cada persona en UNA
+ * consulta. La alternativa —una por dirigente— serían 505 idas a la base para
+ * abrir una pantalla, que es el tipo de cosa que se ve bien con datos de
+ * prueba y tarda medio minuto en producción.
+ */
+export type DisponibilidadDelComite = {
+  member_id: string
+  nombre: string
+  correo: string | null
+  telefono: string | null
+  is_active: boolean
+  availability_status: string
+  formacion: string[]
+  disponible: string[]
+  interesado: string[]
+  zonas: string[]
+  slots: string[]
+  presta_casa: boolean
+  suplente: boolean
+  desde: string | null
+  hasta: string | null
+  folletos: string | null
+  confirmado_at: string | null
+}
+
+export async function getDisponibilidadDeDirigentes(): Promise<DisponibilidadDelComite[]> {
+  const supabase = createAdminClient()
+  const out: DisponibilidadDelComite[] = []
+  // PostgREST corta en 1.000 filas y hoy son 505: pagina igual, porque el día
+  // que sean 1.200 el bug sería silencioso — la pantalla mostraría 1.000 y
+  // nadie contaría.
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('study_leaders')
+      .select(`member_id, is_active, availability_status, formation_study_codes,
+               qualified_study_codes, interested_study_codes, zone_preference,
+               available_slots, offers_home, available_as_substitute,
+               available_from, available_to, folleto_location, availability_confirmed_at,
+               member:members!study_leaders_member_id_fkey(first_name, last_name, email, phone)`)
+      .order('member_id')
+      .range(from, from + 999)
+    if (error) throw error
+    const filas = (data ?? []) as unknown as Array<Record<string, unknown>>
+    for (const r of filas) {
+      const m = (Array.isArray(r.member) ? r.member[0] : r.member) as
+        { first_name: string | null; last_name: string | null; email: string | null; phone: string | null } | null
+      out.push({
+        member_id: String(r.member_id),
+        nombre: `${m?.first_name ?? ''} ${m?.last_name ?? ''}`.trim() || 'Sin nombre',
+        correo: m?.email ?? null,
+        telefono: m?.phone ?? null,
+        is_active: r.is_active === true,
+        availability_status: String(r.availability_status ?? 'inactive'),
+        formacion: (r.formation_study_codes as string[]) ?? [],
+        disponible: (r.qualified_study_codes as string[]) ?? [],
+        interesado: (r.interested_study_codes as string[]) ?? [],
+        zonas: (r.zone_preference as string[]) ?? [],
+        slots: (r.available_slots as string[]) ?? [],
+        presta_casa: r.offers_home === true,
+        suplente: r.available_as_substitute === true,
+        desde: (r.available_from as string) ?? null,
+        hasta: (r.available_to as string) ?? null,
+        folletos: (r.folleto_location as string) ?? null,
+        confirmado_at: (r.availability_confirmed_at as string) ?? null,
+      })
+    }
+    if (filas.length < 1000) break
+  }
+  return out
+}

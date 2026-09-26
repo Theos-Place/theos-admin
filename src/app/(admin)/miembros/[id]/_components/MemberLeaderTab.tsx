@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Loader2, CheckCircle2, AlertTriangle, GraduationCap, Home, UserCheck } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
+import { Button } from '@/components/shared/Button'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useSedes } from '@/lib/sedes'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
@@ -365,13 +366,13 @@ export function MemberLeaderTab({ memberId, editable }: {
             </p>
           </div>
           {editable && (
-            <button
+            <Button
               onClick={() => void guardar({ action: 'confirmar_datos' })}
               disabled={guardando}
-              className="rounded-full bg-coral px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body shrink-0"
+              className="shrink-0"
             >
               {guardando ? 'Guardando…' : 'Confirmar mis datos'}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -531,15 +532,17 @@ function ReportarFormacion({ memberId, visible }: { memberId: string; visible: b
         >
           Cancelar
         </button>
-        <button
+        <Button
+          variante="navy"
+          tamano="sm"
           onClick={() => void enviar()}
           disabled={enviando || texto.trim().length < 10}
           title={texto.trim().length < 10 ? 'Contanos un poco más para que se entienda' : undefined}
-          className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-1.5 text-[13px] text-white hover:bg-navy-ink transition-colors disabled:opacity-40 font-body"
+          className="inline-flex items-center gap-1.5"
         >
           <CheckCircle2 size={13} aria-hidden="true" />
           {enviando ? 'Enviando…' : 'Avisar a la coordinación'}
-        </button>
+        </Button>
       </div>
     </div>
   )
