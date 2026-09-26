@@ -19,7 +19,10 @@ import type { StudyRequestStatus } from '@/types/study'
  *  diciendo una cosa y los datos otra. Para deshacer eso hay que tocar la
  *  matrícula, no el estado de la solicitud. */
 export const ESTADOS_MOVIBLES: readonly StudyRequestStatus[] = [
-  'open', 'in_review', 'rejected', 'vencida',
+  // REU-2: 'en_espera' está acá para poder DESPERTARLA a mano. El caso es
+  // obvio en cuanto se piensa: la persona dijo «espero tres meses» y a la
+  // semana apareció un grupo que le sirve. Sin esto habría que esperar al cron.
+  'open', 'in_review', 'rejected', 'vencida', 'en_espera',
 ]
 
 /** Hacia dónde. 'resolved' se ofrece SOLO en las de interés: ahí resolver es
@@ -27,6 +30,10 @@ export const ESTADOS_MOVIBLES: readonly StudyRequestStatus[] = [
  *  matricular a la persona en el grupo destino, y eso tiene que pasar por el
  *  flujo que lo hace de verdad — marcarla resuelta a mano sería mentir. */
 export function estadosDestino(requestType: string): StudyRequestStatus[] {
+  // 'en_espera' NO se ofrece acá: dormir una solicitud necesita además una
+  // fecha, y un selector de estados no la puede pedir. Eso va por su propio
+  // botón («Poner en espera»), que sí pregunta cuánto. Despertarla, en cambio,
+  // es solo volver a 'open' y por eso sí sale de esta lista.
   const base: StudyRequestStatus[] = ['open', 'in_review', 'rejected', 'vencida']
   return requestType === 'study_interest' ? [...base, 'resolved'] : base
 }

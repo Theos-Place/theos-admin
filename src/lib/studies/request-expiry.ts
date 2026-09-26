@@ -18,6 +18,15 @@
  *
  * Por eso el bloque de una solicitud es EL PRIMERO cuya matrícula todavía no
  * había cerrado cuando se creó — o sea, el próximo que puede atenderla.
+ *
+ * REU-2 (2026-09-25) · UNA SOLICITUD QUE DURMIÓ NO ES UNA SOLICITUD VIEJA.
+ * Con el estado `en_espera`, una reubicación puede pasar cuatro meses guardada
+ * a propósito y volver a la cola. Si el bloque se siguiera calculando desde
+ * `created_at`, esa solicitud despertaría y el cron la vencería en la siguiente
+ * corrida por vieja: justo la que alguien decidió conservar, y muerta por la
+ * decisión que la salvó. Por eso la fecha de referencia es `reactivated_at`
+ * cuando existe — desde que volvió, la solicitud está pidiendo para el bloque
+ * que viene, igual que una recién creada.
  */
 
 export type BloqueMatricula = {
@@ -32,6 +41,14 @@ export type SolicitudParaVencer = {
   status: string
   /** ISO. */
   created_at: string
+  /** ISO. REU-2: cuándo volvió de estar en espera. Manda sobre `created_at`. */
+  reactivated_at?: string | null
+}
+
+/** Desde cuándo cuenta esta solicitud. Ver REU-2 arriba. */
+export function fechaDeReferencia(s: Pick<SolicitudParaVencer, 'created_at' | 'reactivated_at'>): string {
+  const r = s.reactivated_at ?? ''
+  return r && !Number.isNaN(Date.parse(r)) ? r : s.created_at
 }
 
 /** Solo este estado vence solo. */
@@ -60,7 +77,7 @@ export function estaVencida(
   ahora: Date = new Date(),
 ): boolean {
   if (solicitud.status !== ESTADO_QUE_VENCE) return false
-  const bloque = bloqueQueLaAtiende(solicitud.created_at, bloques)
+  const bloque = bloqueQueLaAtiende(fechaDeReferencia(solicitud), bloques)
   if (!bloque?.fecha_cierre_matricula) return false
   return ahora.getTime() > Date.parse(bloque.fecha_cierre_matricula)
 }
@@ -75,7 +92,7 @@ export function solicitudesAVencer(
   const out: Array<{ id: string; bloque: string }> = []
   for (const s of solicitudes) {
     if (!estaVencida(s, bloques, ahora)) continue
-    out.push({ id: s.id, bloque: bloqueQueLaAtiende(s.created_at, bloques)!.nombre })
+    out.push({ id: s.id, bloque: bloqueQueLaAtiende(fechaDeReferencia(s), bloques)!.nombre })
   }
   return out
 }

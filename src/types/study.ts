@@ -169,7 +169,7 @@ export type RelocationRequest = {
 
 // 'study_interest' consolida los viejos 'new_group'/'join_group' (migración 050).
 export type StudyRequestType = 'relocation' | 'study_interest'
-export type StudyRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected' | 'vencida'
+export type StudyRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected' | 'vencida' | 'en_espera'
 
 export type StudyRequestHistoryEntry = {
   from_status: StudyRequestStatus | null
@@ -219,6 +219,11 @@ export type StudyRequest = {
   resolved_group_name: string | null
   resulting_enrollment_id: string | null
   resulting_folleto_request_id: string | null
+  /** REU-2 · Cuándo vuelve a la cola una solicitud en espera (YYYY-MM-DD), y
+   *  cuándo volvió la última vez. La segunda no es decoración: el vencimiento
+   *  por bloque cuenta desde ella (ver request-expiry). */
+  wait_until: string | null
+  reactivated_at: string | null
 }
 
 export type StudyRequestWriteInput = {

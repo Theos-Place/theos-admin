@@ -258,3 +258,25 @@ describe('CHK-2 · el aviso de cumpleaños se lee', () => {
     expect(contrastRatio(hexToRgb(TOKENS.coral), fondo)).toBeLessThan(AA_NORMAL)
   })
 })
+
+/**
+ * REU-2 · La insignia «En espera» de la cola de solicitudes.
+ *
+ * Medido y no estimado, y la primera versión NO pasaba: `text-teal-deep` sobre
+ * el tinte teal al 14% da 4.37:1, a una décima de la línea. Es la misma trampa
+ * que el tinte coral — el color de marca se ve bien sobre su propio tinte y
+ * justo por eso no contrasta. El texto quedó un paso más oscuro.
+ */
+describe('REU-2 · la insignia «En espera» se lee', () => {
+  const TINTE_TEAL = '#3B7579'
+  const TEXTO_EN_ESPERA = '#2F5C5F'
+  const fondo = composite(hexToRgb(TINTE_TEAL), hexToRgb(TOKENS.surfaceCard), 0.14)
+
+  it('el texto que quedó pasa AA', () => {
+    expect(contrastRatio(hexToRgb(TEXTO_EN_ESPERA), fondo)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('y el teal-deep de marca NO pasaría sobre su propio tinte', () => {
+    expect(contrastRatio(hexToRgb(TINTE_TEAL), fondo)).toBeLessThan(AA_NORMAL)
+  })
+})

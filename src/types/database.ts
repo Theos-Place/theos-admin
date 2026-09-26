@@ -4753,6 +4753,8 @@ export type Database = {
           reviewed_by: string | null
           status: string
           updated_at: string | null
+          reactivated_at: string | null
+          wait_until: string | null
           wants_folleto: boolean
           was_eligible: boolean | null
         }
@@ -4783,6 +4785,8 @@ export type Database = {
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
+          reactivated_at?: string | null
+          wait_until?: string | null
           wants_folleto?: boolean
           was_eligible?: boolean | null
         }
@@ -4813,6 +4817,8 @@ export type Database = {
           reviewed_by?: string | null
           status?: string
           updated_at?: string | null
+          reactivated_at?: string | null
+          wait_until?: string | null
           wants_folleto?: boolean
           was_eligible?: boolean | null
         }

@@ -12,7 +12,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
-  Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, ArrowUp, History, Search, UserPlus,
+  Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, ArrowUp, History, Search, UserPlus, Clock,
 } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
@@ -24,7 +24,10 @@ import { formatDate, formatDateNumeric, getInitials } from '@/lib/format'
 // 'escalated' lo usa hoy solo el tablero de evaluaciones (DIR-5) y aparece
 // únicamente si el consumidor pasa `allowEscalate`. Estudios y finanzas no lo
 // tienen en el CHECK de su tabla, así que para ellos no existe.
-export type RequestStatus = 'open' | 'in_review' | 'escalated' | 'resolved' | 'rejected' | 'vencida'
+// 'en_espera' lo usa hoy solo la cola de reubicaciones (REU-2) y aparece
+// únicamente si el consumidor pasa `espera`. Igual que 'escalated': el tipo lo
+// conoce el tablero, el CHECK de cada tabla decide si existe de verdad.
+export type RequestStatus = 'open' | 'in_review' | 'escalated' | 'resolved' | 'rejected' | 'vencida' | 'en_espera'
 
 export type BaseRequest = {
   id: string
@@ -56,6 +59,9 @@ export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: s
   // Se venció el bloque de matrícula para el que servía. No es un rechazo: la
   // persona puede volver a pedirla en el bloque siguiente.
   vencida:   { label: 'Vencida',     cls: 'bg-navy/5 text-navy-light/80' },
+  // REU-2: alguien decidió a propósito que esta espera. No es una pendiente
+  // olvidada, y por eso no se cuenta como activa ni sale en la lista de arriba.
+  en_espera: { label: 'En espera',   cls: 'bg-[rgba(59,117,121,0.14)] text-[#2F5C5F]' },
 }
 
 // Orden: estados activos primero, "Todas" al final. Default al entrar: Abiertas.
@@ -118,6 +124,22 @@ type Props<R extends BaseRequest> = {
   /** DIR-5: habilita el estado `escalated` — botón "Escalar" y su filtro. Solo
    *  para tableros cuya tabla lo acepta en el CHECK de status. */
   allowEscalate?: boolean
+  /**
+   * REU-2 · habilita el estado `en_espera`: botón «Poner en espera» con su
+   * selector de semanas, y una sección aparte y COLAPSADA con las dormidas.
+   *
+   * Van aparte y no como un filtro más porque el punto de la función es
+   * sacarlas de la vista: si siguieran mezcladas en la lista, poner una en
+   * espera no le limpiaría la cola a nadie y la función no serviría de nada.
+   */
+  espera?: {
+    /** ¿Esta fila se puede pausar? (tipo y estado). */
+    permitida: (r: R) => boolean
+    /** YYYY-MM-DD en que vuelve, para mostrarlo en la sección colapsada. */
+    fechaDeVuelta: (r: R) => string | null
+    /** Las semanas que ofrece el selector. */
+    semanas: readonly number[]
+  }
   /** Bloquea Resolver/Rechazar con una razón visible (DIR-5: no se puede cerrar
    *  un tiquete mientras la ventana de respuestas sigue abierta). Devolver null
    *  = se puede cerrar. */
@@ -126,7 +148,7 @@ type Props<R extends BaseRequest> = {
 
 export function RequestBoard<R extends BaseRequest>({
   requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl, cambiarEstado, readOnly,
-  allowEscalate, closeBlockedReason,
+  allowEscalate, closeBlockedReason, espera,
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
@@ -145,6 +167,11 @@ export function RequestBoard<R extends BaseRequest>({
   const [assignees, setAssignees] = useState<Array<{ member_id: string; member_name: string }>>([])
   const [assigneeSearch, setAssigneeSearch] = useState('')
   const [assignedFilter, setAssignedFilter] = useState<'all' | 'none' | string>('all')
+  // REU-2 · pausar: a quién y por cuántas semanas.
+  const [esperaTarget, setEsperaTarget] = useState<R | null>(null)
+  const [esperaSemanas, setEsperaSemanas] = useState<number>(0)
+  const [esperaNota, setEsperaNota] = useState('')
+  const [esperaAbierta, setEsperaAbierta] = useState(false)
 
   useEffect(() => {
     if (!assigneesUrl) return
@@ -190,6 +217,9 @@ export function RequestBoard<R extends BaseRequest>({
     const toTs = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : null
     return requests
       .filter(r => r.request_type === tab)
+      // REU-2: las dormidas van en su propia sección colapsada. Dejarlas acá
+      // sería no haberle limpiado la cola a nadie, que es el punto de pausar.
+      .filter(r => !espera || r.status !== 'en_espera')
       .filter(r => statusFilter === 'all' || r.status === statusFilter)
       .filter(r => {
         if (assignedFilter === 'all') return true
@@ -205,7 +235,16 @@ export function RequestBoard<R extends BaseRequest>({
       .sort((a, b) => sortDesc
         ? b.created_at.localeCompare(a.created_at)
         : a.created_at.localeCompare(b.created_at))
-  }, [requests, tab, statusFilter, assignedFilter, dateFrom, dateTo, sortDesc])
+  }, [requests, tab, statusFilter, assignedFilter, dateFrom, dateTo, sortDesc, espera])
+
+  /** REU-2 · Las que están durmiendo, de la más próxima a despertar a la más
+   *  lejana: la primera de la lista es la que hay que volver a mirar antes. */
+  const dormidas = useMemo(() => {
+    if (!espera) return []
+    return requests
+      .filter(r => r.request_type === tab && r.status === 'en_espera')
+      .sort((a, b) => (espera.fechaDeVuelta(a) ?? '9999').localeCompare(espera.fechaDeVuelta(b) ?? '9999'))
+  }, [requests, tab, espera])
 
   // Coordinadores que tienen solicitudes asignadas (para el filtro "Asignado a").
   const assignedOptions = useMemo(() => {
@@ -261,6 +300,31 @@ export function RequestBoard<R extends BaseRequest>({
       setAssigneeSearch('')
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo asignar la solicitud', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  /** REU-2 · Pausar. Va por el mismo PATCH que el resto: el servidor valida el
+   *  tipo, el estado y las semanas, y calcula la fecha — acá no se calcula nada
+   *  para que la pantalla y el cron no puedan discrepar en un día. */
+  async function doEspera(req: R, semanas: number, nota: string) {
+    setSubmitting(true)
+    try {
+      const res = await fetch(`${endpointBase}/${req.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'wait', weeks: semanas, review_notes: nota.trim() || undefined }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error ?? 'No se pudo poner en espera')
+      }
+      onUpdated(await res.json())
+      toast('Solicitud en espera — vuelve a la cola sola', 'success')
+      setEsperaTarget(null); setEsperaSemanas(0); setEsperaNota('')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo poner en espera', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -370,6 +434,44 @@ export function RequestBoard<R extends BaseRequest>({
           </button>
         </div>
       </div>
+
+      {/* REU-2 · Las que están en espera, aparte y colapsadas. Colapsadas es la
+          función, no un detalle de estilo: quien puso una en espera decidió no
+          mirarla hoy. Abierta se ve cuándo vuelve cada una. */}
+      {espera && dormidas.length > 0 && (
+        <div className="rounded-2xl bg-surface-card shadow-card overflow-hidden">
+          <button
+            onClick={() => setEsperaAbierta(v => !v)}
+            aria-expanded={esperaAbierta}
+            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-surface-low/40 transition-colors"
+          >
+            <span className="inline-flex items-center gap-2 text-sm text-navy font-body">
+              <Clock size={14} className="text-navy-light/80" aria-hidden="true" />
+              {dormidas.length === 1 ? '1 solicitud en espera' : `${dormidas.length} solicitudes en espera`}
+            </span>
+            <span className="text-[13px] text-navy-light/80 font-body">
+              {esperaAbierta ? 'Ocultar' : 'Ver'}
+            </span>
+          </button>
+          {esperaAbierta && (
+            <ul className="border-t border-[var(--outline-variant)]">
+              {dormidas.map(r => {
+                const vuelve = espera.fechaDeVuelta(r)
+                return (
+                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 border-b border-[var(--outline-variant)] last:border-0">
+                    <Link href={`/miembros/${r.member_id}`} className="text-sm text-navy font-body hover:text-coral transition-colors">
+                      {r.member_name}
+                    </Link>
+                    <span className="text-[13px] text-navy-light/80 font-body">
+                      {vuelve ? `Vuelve a la cola el ${formatDate(vuelve)}` : 'Sin fecha de vuelta'}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* Lista acordeón por año */}
       {loading ? (
@@ -521,6 +623,16 @@ export function RequestBoard<R extends BaseRequest>({
                                       Tomar
                                     </button>
                                   )}
+                                  {espera?.permitida(r) && (
+                                    <button
+                                      onClick={() => { setEsperaTarget(r); setEsperaSemanas(0); setEsperaNota('') }}
+                                      disabled={submitting}
+                                      className="inline-flex items-center gap-1.5 rounded-full border border-navy/20 px-4 py-1.5 text-[13px] text-navy font-body hover:bg-navy/5 transition-colors disabled:opacity-60"
+                                    >
+                                      <Clock size={13} aria-hidden="true" />
+                                      Poner en espera
+                                    </button>
+                                  )}
                                   {assigneesUrl && (
                                     <button
                                       onClick={() => { setAssignTarget(r); setAssigneeSearch('') }}
@@ -575,6 +687,86 @@ export function RequestBoard<R extends BaseRequest>({
             )
           })}
         </div>
+      )}
+
+      {/* REU-2 · Modal de poner en espera */}
+      {espera && esperaTarget && (
+        <Modal onClose={() => setEsperaTarget(null)} titleId="request-espera-title">
+          <div className="p-6 space-y-4">
+            <div>
+              <h2 id="request-espera-title" className="text-lg font-semibold text-navy font-display">
+                Poner en espera
+              </h2>
+              <p className="text-sm text-navy-light/80 font-body mt-0.5">
+                La solicitud de {esperaTarget.member_name} sale de la cola y vuelve sola
+                cuando llegue la fecha. Nadie tiene que acordarse de reabrirla.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[13px] font-medium text-navy-light/80 font-body">
+                ¿Cuánto tiempo?
+              </p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Semanas de espera">
+                {espera.semanas.map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setEsperaSemanas(n)}
+                    aria-pressed={esperaSemanas === n}
+                    className={cn(
+                      'rounded-full px-3.5 py-1.5 text-[13px] font-body border transition-all',
+                      esperaSemanas === n
+                        ? 'bg-navy text-white border-navy'
+                        : 'bg-transparent text-navy/80 border-outline hover:text-navy',
+                    )}
+                  >
+                    {n === 4 ? '1 mes' : n % 4 === 0 ? `${n / 4} meses` : `${n} semanas`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Es una estimación, no un compromiso: cuando vuelva se puede volver a pausar.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="espera-nota" className="block text-[13px] font-medium text-navy-light/80 font-body">
+                ¿Por qué espera? (opcional)
+              </label>
+              <textarea
+                id="espera-nota"
+                value={esperaNota}
+                onChange={e => setEsperaNota(e.target.value)}
+                rows={2}
+                maxLength={300}
+                placeholder="Ej.: quiere esperar a que el grupo de Karla llegue a Discípulos 2"
+                className="w-full rounded-xl border border-outline bg-surface-low px-3 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
+              />
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Queda en el historial. Sin esto, dentro de tres meses nadie se acuerda de
+                qué estaba esperando.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEsperaTarget(null)}
+                disabled={submitting}
+                className="rounded-xl border px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => doEspera(esperaTarget, esperaSemanas, esperaNota)}
+                disabled={submitting || esperaSemanas <= 0}
+                title={esperaSemanas <= 0 ? 'Elegí cuánto tiempo esperar' : undefined}
+                className="rounded-full bg-coral px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              >
+                {submitting ? 'Guardando…' : 'Poner en espera'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Modal asignar a coordinador */}

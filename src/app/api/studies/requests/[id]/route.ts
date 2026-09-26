@@ -5,6 +5,11 @@ import {
 } from '@/lib/supabase/queries/study-requests'
 import { requestQueueScope, canAssignRequests, canWorkRequest } from '@/lib/studies/request-assignment'
 import { motivoQueImpide, ESTADOS_MOVIBLES, esAccionDeGestion } from '@/lib/studies/request-status-change'
+import {
+  motivoQueImpideEsperar, fechaDeReactivacion, ESTADO_EN_ESPERA, ESTADOS_QUE_PUEDEN_ESPERAR,
+  parcheAlDespertar,
+} from '@/lib/studies/request-wait'
+import { ymdCR } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { StudyRequestStatus } from '@/types/study'
 import { reportarError } from '@/lib/observabilidad'
@@ -131,6 +136,47 @@ export async function PATCH(
       }
     }
 
+    /**
+     * REU-2 · Poner en espera: la solicitud sale de la cola y vuelve sola.
+     *
+     * LA FECHA LA CALCULA EL SERVIDOR a partir de las semanas, y no la manda la
+     * pantalla. Si viniera del cliente, el día en que vuelve dependería del
+     * reloj del navegador de quien la pausó, y el cron que la despierta corre
+     * con el de Costa Rica: bastaría un huso distinto para que una solicitud
+     * volviera un día antes o después del que se le dijo a la persona.
+     *
+     * QUIÉN: la misma coordinación que cambia estados a mano. Pausar es decidir
+     * que algo no se atiende por tres meses — el comité trabaja lo que le
+     * asignaron, no decide qué sale de la cola.
+     */
+    if (body?.action === 'wait') {
+      if (!canAssignRequests(auth.ctx.roles)) {
+        return NextResponse.json(
+          { error: 'Solo la coordinación puede poner una solicitud en espera.' }, { status: 403 },
+        )
+      }
+      const { data: actual } = await createAdminClient()
+        .from('study_requests').select('status, request_type').eq('id', id).maybeSingle()
+      const fila = actual as { status: string; request_type: string } | null
+      if (!fila) return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 })
+
+      const semanas = Number(body?.weeks)
+      const motivo = motivoQueImpideEsperar({
+        requestType: fila.request_type, status: fila.status, semanas,
+      })
+      if (motivo) return NextResponse.json({ error: motivo, code: 'espera_invalida' }, { status: 409 })
+
+      const updated = await updateStudyRequestStatus(
+        id, ESTADO_EN_ESPERA, auth.ctx.memberId,
+        typeof body?.review_notes === 'string' ? body.review_notes.trim() || null : null,
+        ESTADOS_QUE_PUEDEN_ESPERAR as StudyRequestStatus[],
+        // `reactivated_at` se limpia al dormirla: la que vale es la vuelta de
+        // ESTA siesta, no la de la anterior.
+        { wait_until: fechaDeReactivacion(ymdCR(), semanas), reactivated_at: null },
+      )
+      return NextResponse.json(updated)
+    }
+
     // Cambio de estado A MANO. Solo coordinación (decisión 2026-09-08): el
     // comité trabaja lo suyo con las acciones de arriba. Existe porque una
     // solicitud de interés nacía 'open' y no había cómo cerrarla ni reabrirla.
@@ -154,13 +200,18 @@ export async function PATCH(
         id, body.status as StudyRequestStatus, auth.ctx.memberId,
         typeof body?.review_notes === 'string' ? body.review_notes.trim() || null : null,
         ESTADOS_MOVIBLES,
+        // REU-2 · despertarla a mano limpia el despertador y sella la vuelta,
+        // igual que el cron. Si no, la solicitud queda con una fecha de espera
+        // que ya no significa nada y sin `reactivated_at` — y el cron de
+        // vencimiento la mataría semanas después por vieja.
+        fila.status === ESTADO_EN_ESPERA ? parcheAlDespertar(new Date().toISOString()) : undefined,
       )
       return NextResponse.json(updated)
     }
 
     const status = ACTIONS[body?.action as string]
     if (!status) {
-      return NextResponse.json({ error: 'action debe ser take, assign, resolve, reject o set_status' }, { status: 400 })
+      return NextResponse.json({ error: 'action debe ser take, assign, resolve, reject, wait o set_status' }, { status: 400 })
     }
 
     const updated = await updateStudyRequestStatus(

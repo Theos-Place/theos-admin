@@ -7,6 +7,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/shared/Toast'
 import { canAssignRequests } from '@/lib/studies/request-assignment'
 import { ESTADOS_MOVIBLES, estadosDestino } from '@/lib/studies/request-status-change'
+import {
+  SEMANAS_OFRECIDAS, motivoQueImpideEsperar,
+} from '@/lib/studies/request-wait'
 import { REQUEST_STATUS_BADGE } from '@/components/shared/RequestBoard'
 
 /** Etiqueta de cada estado — la misma del badge, para que el selector y la
@@ -208,6 +211,23 @@ export default function SolicitudesPage() {
         // comité trabaja lo asignado con las acciones de siempre. Se ofrece
         // también en el tablero de intereses, que es de solo lectura y era
         // justo donde las solicitudes se quedaban 'Abierta' para siempre.
+        /**
+         * REU-2 · Poner en espera. Solo la misma coordinación que mueve
+         * estados a mano: pausar es decidir que algo no se atiende por tres
+         * meses, y eso no lo decide quien recibe trabajo asignado.
+         *
+         * `permitida` es la MISMA regla del servidor (`motivoQueImpideEsperar`)
+         * y no una copia parecida: si la pantalla ofreciera el botón donde el
+         * API va a decir que no, el único que se entera es quien lo aprieta.
+         * Las semanas ofrecidas también salen de ahí.
+         */
+        espera={puedeCambiarEstados ? {
+          permitida: r => motivoQueImpideEsperar({
+            requestType: r.request_type, status: r.status, semanas: SEMANAS_OFRECIDAS[0],
+          }) === null,
+          fechaDeVuelta: r => r.wait_until,
+          semanas: SEMANAS_OFRECIDAS,
+        } : undefined}
         cambiarEstado={puedeCambiarEstados ? {
           opciones: r => (ESTADOS_MOVIBLES as readonly string[]).includes(r.status)
             ? estadosDestino(r.request_type)

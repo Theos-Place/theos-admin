@@ -41,11 +41,14 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient()
     const [{ data: bloques }, { data: abiertas }] = await Promise.all([
       supabase.from('capacitacion_bloques').select('id, nombre, fecha_cierre_matricula'),
-      supabase.from('study_requests').select('id, status, created_at').eq('status', ESTADO_QUE_VENCE),
+      supabase.from('study_requests').select('id, status, created_at, reactivated_at').eq('status', ESTADO_QUE_VENCE),
     ])
 
     const aVencer = solicitudesAVencer(
-      (abiertas ?? []) as Array<{ id: string; status: string; created_at: string }>,
+      // REU-2: `reactivated_at` viaja porque una solicitud que durmió a
+      // propósito no es una solicitud vieja — sin él, el cron mata justo la que
+      // alguien decidió conservar. La regla está en request-expiry.
+      (abiertas ?? []) as Array<{ id: string; status: string; created_at: string; reactivated_at: string | null }>,
       (bloques ?? []) as Array<{ id: string; nombre: string; fecha_cierre_matricula: string | null }>,
     )
     if (aVencer.length === 0) {

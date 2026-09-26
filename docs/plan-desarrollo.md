@@ -3406,7 +3406,42 @@ por plan (flag en el catálogo, no hardcode de nombres). Test: cierre de N1 no e
 sí. tsc/lint/vitest.
 ```
 
-### [ ] REU-2 · Reubicaciones: estado "en espera" con fecha de reactivación
+### [x] REU-2 · Reubicaciones: estado "en espera" con fecha de reactivación
+
+HECHO el 2026-09-25 (en staging). Cómo quedó:
+
+- **Estado `en_espera`** en `study_requests`, con `wait_until` (el DÍA en que
+  vuelve) y `reactivated_at`. Se pregunta en semanas porque así se piensa, pero
+  se guarda el día: guardar semanas obligaría a guardar también desde cuándo se
+  cuentan, y ese punto de partida se mueve cada vez que alguien toca la
+  solicitud. La nota del motivo va por `review_notes` y queda en el historial —
+  no hizo falta columna nueva.
+- **La trampa que apareció midiendo, y que no estaba en el pedido:** una
+  solicitud abierta VENCE cuando cierra el bloque de matrícula que le tocaba, y
+  ese bloque se calcula desde `created_at`. Una que durmió cuatro meses habría
+  despertado 'Abierta' y el cron de vencimiento la habría matado por vieja en su
+  siguiente corrida — justo la que alguien decidió conservar, y muerta por la
+  decisión que la salvó. Por eso existe `reactivated_at`: desde que vuelve, la
+  solicitud cuenta como nueva.
+- **Cron semanal propio** (`study-requests-wake`, lunes 13:30 UTC). NO se colgó
+  de `payment-reminders`, que ya corre los lunes: eso ataría una cola de
+  estudios al horario de finanzas, y el día que muevan el de pagos las
+  solicitudes dejan de despertar sin que nadie relacione una cosa con la otra.
+  Vuelve a `open` (no a `in_review`, aunque estuviera asignada: pasaron meses) y
+  avisa por campanita a coordinación, UN aviso por corrida.
+- **También se despierta a mano**, por el selector de estados de siempre — la
+  persona puede cambiar de opinión a la semana. Dormirla NO sale en ese selector
+  porque necesita además una fecha, y eso va por su propio botón.
+- **En la cola** las dormidas salen aparte, en una sección colapsada con la
+  fecha en que vuelve cada una, ordenadas por la más próxima.
+
+PENDIENTE DEL USUARIO: crear el check en Healthchecks.io para
+`HEALTHCHECK_URL_STUDY_REQUESTS_WAKE` (lunes 13:30 UTC, grace 360). Sin la
+variable el cron corre igual; el ping es no-op.
+
+DECISIÓN ABIERTA: hoy solo las REUBICACIONES se pueden poner en espera, que es
+lo que se pidió. Abrirlo también a los intereses de estudio es quitar una
+palabra de `TIPOS_QUE_ESPERAN` en `src/lib/studies/request-wait.ts`.
 
 Prompt para Claude Code:
 

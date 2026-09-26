@@ -4,6 +4,8 @@ export type InternalNotificationType =
   | 'study_relocation_request'
   | 'study_interest_request'
   | 'study_request_assigned'
+  // REU-2: una solicitud que estaba en espera volvió sola a la cola.
+  | 'study_request_woke'
   // Tipos legacy (filas previas a la consolidación de la migración 050):
   | 'study_join_request'
   | 'study_new_group_request'

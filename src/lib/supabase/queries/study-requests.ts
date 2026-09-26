@@ -40,6 +40,7 @@ const REQUEST_SELECT = `
   needed_study_code, last_class_attended, last_leader_name, wants_folleto,
   proposed_days, proposed_time, proposed_zones, was_eligible, eligibility_note,
   resolved_group_id, resulting_enrollment_id, resulting_folleto_request_id,
+  wait_until, reactivated_at,
   member:members!study_requests_member_id_fkey(first_name, last_name),
   reviewer:members!study_requests_reviewed_by_fkey(first_name, last_name),
   plan:study_plans(name),
@@ -77,6 +78,8 @@ type DbRequestRow = {
   resolved_group_id: string | null
   resulting_enrollment_id: string | null
   resulting_folleto_request_id: string | null
+  wait_until: string | null
+  reactivated_at: string | null
   member: { first_name: string | null; last_name: string | null } | null
   reviewer: { first_name: string | null; last_name: string | null } | null
   plan: { name: string | null } | null
@@ -132,6 +135,9 @@ function toDomain(r: DbRequestRow): StudyRequest {
     resolved_group_name: r.resolved_group?.name ?? null,
     resulting_enrollment_id: r.resulting_enrollment_id,
     resulting_folleto_request_id: r.resulting_folleto_request_id,
+    // REU-2 · cuándo vuelve a la cola una que está en espera.
+    wait_until: r.wait_until ?? null,
+    reactivated_at: r.reactivated_at ?? null,
     history: (r.history ?? [])
       .map(h => ({
         from_status: h.from_status as StudyRequestStatus | null,
@@ -230,6 +236,10 @@ export async function updateStudyRequestStatus(
    *  —una resuelta no se re-toma—; el cambio de estado a mano del coordinador
    *  pasa una lista más amplia (ver request-status-change.ts). */
   desde: readonly StudyRequestStatus[] = ['open', 'in_review'],
+  /** REU-2 · columnas extra que van en el MISMO update, para que el estado y su
+   *  dato no puedan quedar desparejos: `en_espera` sin `wait_until` sería una
+   *  solicitud dormida sin despertador. */
+  parche?: Record<string, unknown>,
 ): Promise<StudyRequest> {
   const supabase = createAdminClient()
 
@@ -248,6 +258,7 @@ export async function updateStudyRequestStatus(
     patch.reviewed_at = new Date().toISOString()
     patch.review_notes = reviewNotes ?? null
   }
+  Object.assign(patch, parche ?? {})
   // QA 2026-07-17: solo transiciona desde estados abiertos — una solicitud
   // resuelta/rechazada no se puede re-tomar ni re-rechazar (la resolución de
   // una reubicación ya matriculó gente). Condicional en el UPDATE (no solo en
