@@ -3914,7 +3914,43 @@ Reglas dictadas (2026-09-25):
   a la página EXISTENTE de solicitar puesto nuevo, dejando claro que es para
   puestos que NO existen en el catálogo.
 
-### [ ] SRV-14 · Parte 4: página "Aplicaciones" + PDF + estados + alta automática del servidor
+### [x] SRV-14 · Parte 4: página "Aplicaciones" + hoja descargable + estados + alta automática
+
+HECHO el 2026-09-25 (en staging, dos commits). Qué quedó:
+
+- **Los cinco estados**, agregando UNO solo (`sent_to_leader`). Los otros
+  cuatro ya estaban en la columna con otro nombre; renombrarlos habría
+  obligado a migrar datos y a tocar el RPC que activa servidores.
+- **Rol nuevo `aplicaciones_servicio`**, que otorgan «Colaborador Aplicaciones»
+  y «Colaborador Seguimiento» (nombres verificados en el catálogo: no llevan
+  los «de» del pedido).
+- **VER y GESTIONAR son dos listas distintas.** Dirección ve la bandeja pero no
+  cambia estados: aceptar da de alta a alguien y le sincroniza permisos.
+- **El PUT no validaba nada**: el `status` entraba crudo del cliente hasta la
+  base. Ahora hay zod, regla de transición pura —una aceptada NO se deshace
+  desde acá— y `audit_log` en todo cambio.
+- **Los avisos son internos**: al encargado del comité (a TODOS, no a uno), y a
+  RH + staff en «en revisión» y «aceptada», con el motivo. «Rechazada» no manda
+  nada. A la persona que aplicó NO se le escribe.
+- **El alta automática ya existía** (RPC `approve_applications` + sincronización
+  de roles); lo que se agregó es el aviso.
+
+**LA HOJA ES .docx Y NO PDF** (decisión con Floriana, 2026-09-25). El proyecto
+no tenía ninguna librería de PDF y las opciones eran tres:
+
+| | dependencia nueva | ¿se copia el teléfono? | editable |
+|---|---|---|---|
+| .docx | ninguna (`jszip` ya venía con ExcelJS) | sí | sí |
+| PDF | `pdfkit`, ~2 MB | sí | no |
+| imagen | ninguna (`sharp` ya está) | **no** | no |
+
+Decide el propósito: la hoja existe para que el encargado LLAME al dirigente, y
+en una imagen ese número hay que teclearlo mirando la pantalla. El .docx sale
+sin agregar nada —es un ZIP con tres XML— y además se puede anotar. Si alguien
+quiere PDF, Word lo exporta.
+
+Bajarse la hoja QUEDA EN `audit_log`: es una exportación de datos personales,
+mismo criterio que el export del padrón.
 
 Reglas dictadas (2026-09-25):
 - Página nueva "Aplicaciones" como submenú de servidores. La ven quienes

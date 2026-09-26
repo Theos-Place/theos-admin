@@ -11,14 +11,17 @@ import { Modal } from '@/components/shared/Modal'
 import type { DbApplication } from '@/lib/supabase/queries/servers'
 import { toDomainApplication } from '@/lib/servers/adapter'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight, ClipboardList, Check, Loader2 } from 'lucide-react'
+import { Search, ChevronRight, ClipboardList, Check, Loader2, Download } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/hooks/useAuth'
-import { canSeeServiceApplications } from '@/lib/auth/service-applications'
+import { canSeeServiceApplications, GESTIONAN_APLICACIONES } from '@/lib/auth/service-applications'
+import { useToast } from '@/components/shared/Toast'
+import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { formatDate } from '@/lib/format'
 import {
   APPLICATION_STATE_BADGE, APPLICATION_STATE_LABEL, APPLICATION_STATES,
+  APPLICATION_STATE_HELP, estadosDestino, admiteMotivo,
 } from '@/lib/servers/application-states'
 
 // SRV-14 · Las etiquetas y los colores salen del módulo compartido. Estaban
@@ -41,6 +44,10 @@ type BulkAction = 'approve' | 'reject'
 export default function AplicacionesPage() {
   const { user, loaded } = useAuth()
   const canSee = canSeeServiceApplications(user?.roles ?? [])
+  // VER no es GESTIONAR: dirección entra a la bandeja pero no cambia estados.
+  const puedeGestionar = (user?.roles ?? []).some(r => (GESTIONAN_APLICACIONES as string[]).includes(r))
+  const toast = useToast()
+  const [cambiando, setCambiando] = useState<Application | null>(null)
 
   const [search, setSearch]             = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -269,12 +276,33 @@ export default function AplicacionesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/servidores/vacantes/${a.vacancy_id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                    >
-                      Ver puesto <ChevronRight size={11} />
-                    </Link>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* SRV-14 · La hoja de la persona, en Word. Es .docx y no
+                          PDF porque el encargado la abre para LLAMAR al
+                          dirigente: el teléfono se tiene que poder copiar, y
+                          además puede anotar ahí lo que le digan. */}
+                      <a
+                        href={`/api/servers/applications/${a.id}/hoja`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                      >
+                        <Download size={11} /> Hoja
+                      </a>
+                      {puedeGestionar && (
+                        <button
+                          type="button"
+                          onClick={() => setCambiando(a)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                        >
+                          Cambiar estado
+                        </button>
+                      )}
+                      <Link
+                        href={`/servidores/vacantes/${a.vacancy_id}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                      >
+                        Ver puesto <ChevronRight size={11} />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -356,6 +384,142 @@ export default function AplicacionesPage() {
           </div>
         </Modal>
       )}
+
+      {/* SRV-14 · Cambiar el estado, con el motivo cuando corresponde. */}
+      {cambiando && (
+        <CambiarEstado
+          app={cambiando}
+          onClose={() => setCambiando(null)}
+          onDone={(estado) => {
+            setCambiando(null)
+            toast(`Quedó como «${APPLICATION_STATE_LABEL[estado]}»`, 'success')
+            reload(); reloadCounts()
+          }}
+          onError={(m) => toast(m, 'error')}
+        />
+      )}
     </div>
+  )
+}
+
+/**
+ * El cambio de estado.
+ *
+ * DICE QUÉ VA A PASAR antes de que pase, y no solo el nombre del estado: dos
+ * de los cinco hacen algo más que cambiar una etiqueta —aceptar da de alta a
+ * la persona en el puesto, y en revisión le escribe a RH— y eso no se puede
+ * descubrir apretando.
+ */
+function CambiarEstado({ app, onClose, onDone, onError }: {
+  app: Application
+  onClose: () => void
+  onDone: (estado: ApplicationStatus) => void
+  onError: (mensaje: string) => void
+}) {
+  const [estado, setEstado] = useState<ApplicationStatus | ''>('')
+  const [motivo, setMotivo] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const opciones = estadosDestino(app.status)
+
+  async function guardar() {
+    if (!estado) return
+    setGuardando(true)
+    try {
+      const res = await fetch(`/api/servers/applications/${app.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: estado,
+          ...(admiteMotivo(estado) && motivo.trim() ? { motivo: motivo.trim() } : {}),
+        }),
+      })
+      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo cambiar el estado.'))
+      onDone(estado)
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'No se pudo cambiar el estado.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <Modal onClose={onClose} titleId="cambiar-estado-title">
+      <div className="p-6 space-y-4">
+        <div>
+          <h2 id="cambiar-estado-title" className="text-lg font-semibold text-navy font-display">
+            Cambiar el estado
+          </h2>
+          <p className="mt-0.5 text-sm text-navy-light/80 font-body">
+            {app.applicant_name} — {app.vacancy_title}
+          </p>
+        </div>
+
+        {opciones.length === 0 ? (
+          <p className="text-sm text-navy-light/80 font-body">
+            Esta aplicación ya fue aceptada y la persona quedó asignada al puesto. Para
+            revertirlo hay que quitarla del puesto desde el comité.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              {opciones.map(o => (
+                <label key={o} className="flex items-start gap-2 cursor-pointer rounded-lg p-1.5 hover:bg-surface-low">
+                  <input
+                    type="radio"
+                    name="estado"
+                    checked={estado === o}
+                    onChange={() => setEstado(o)}
+                    className="accent-coral mt-1 shrink-0"
+                  />
+                  <span>
+                    <span className="block text-sm text-navy font-body">{APPLICATION_STATE_LABEL[o]}</span>
+                    <span className="block text-[13px] text-navy-light/80 font-body">
+                      {APPLICATION_STATE_HELP[o]}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {estado && admiteMotivo(estado) && (
+              <div className="space-y-1">
+                <label htmlFor="motivo-revision" className="block text-[13px] font-medium text-navy-light/80 font-body">
+                  ¿Por qué queda en revisión? (opcional)
+                </label>
+                <textarea
+                  id="motivo-revision"
+                  value={motivo}
+                  onChange={e => setMotivo(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  placeholder="Ej.: encaja mejor en Bienvenida; hay que hablar con ese comité."
+                  className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                />
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Va en el correo a RH y al staff, y queda en el registro.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={onClose}
+                disabled={guardando}
+                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void guardar()}
+                disabled={guardando || !estado}
+                className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
+              >
+                {guardando ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   )
 }

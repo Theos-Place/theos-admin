@@ -123,6 +123,20 @@ describe('SRV-14 · el detalle de la persona', () => {
       .toBe('Logística - Montaje - Ana Rojas.pdf')
   })
 
+  it('bajarse la hoja QUEDA REGISTRADO: es una exportación de datos personales', () => {
+    // Teléfono, correo y con quién llevó su último estudio. Sin registro,
+    // «¿quién se bajó la hoja de fulano?» no se contesta. Mismo criterio que
+    // el export del padrón.
+    const src = sinComentarios('src/app/api/servers/applications/[id]/hoja/route.ts')
+    expect(src).toContain('logAudit')
+    expect(src).toMatch(/action: 'EXPORT'/)
+  })
+
+  it('y no la baja cualquiera con sesión', () => {
+    const src = sinComentarios('src/app/api/servers/applications/[id]/hoja/route.ts')
+    expect(src).toMatch(/requireRoles\(\.\.\.SERVICE_APPLICATIONS_ROLES\)/)
+  })
+
   it('el HTML del correo escapa lo que escribió una persona', () => {
     expect(detalleEnHtml({ ...d, nombre: '<script>x</script>' }))
       .not.toContain('<script>')
