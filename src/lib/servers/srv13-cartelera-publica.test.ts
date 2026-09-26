@@ -92,3 +92,49 @@ describe('SRV-13 · aplicar sin perder el puesto', () => {
     expect(pag).toMatch(/todavía no existen/)
   })
 })
+
+/**
+ * La pantalla INTERNA de «Puestos de Servicio» (/servidores/vacantes) la ve
+ * cualquier miembro: lista los puestos publicados para que la gente aplique.
+ * Por eso lo que no es aplicar está acotado.
+ */
+describe('Puestos de Servicio · lo que no es aplicar, acotado', () => {
+  const PAGINA = 'src/app/(admin)/servidores/vacantes/page.tsx'
+  const src = sinComentarios(PAGINA)
+
+  it('solicitar y gestionar usan LA MISMA lista, y es corta', () => {
+    // Antes eran dos listas distintas y más anchas: `canRequest` incluía
+    // `encargado_staff` y `solicitudes_puestos`, y las acciones de gestión
+    // salían para todo SERVICE_ADMIN_ROLES —o sea también para `direccion`,
+    // cuyo acceso es de lectura—.
+    expect(src).toMatch(/PUEDE_GESTIONAR = \['lider_comite', 'coordinador_servidores', 'admin'\]/)
+    expect(src).toContain('const isAdmin = hasRole(...PUEDE_GESTIONAR)')
+    expect(src).toContain('const canRequest = hasRole(...PUEDE_GESTIONAR)')
+  })
+
+  it('y ya no se cuelan por las listas anchas de antes', () => {
+    expect(src).not.toContain('SERVICE_ADMIN_ROLES')
+    expect(src).not.toContain('STAFF_IMPORT_ROLES')
+  })
+
+  it('«Ver aplicaciones», «Editar» y cerrar siguen detrás de ese gate', () => {
+    const bloque = src.slice(src.indexOf('{isAdmin && ('), src.indexOf('</div>', src.indexOf('{isAdmin && (')))
+    expect(bloque).toContain('Ver aplicaciones')
+    expect(bloque).toContain('Editar')
+    expect(bloque).toContain('CloseVacancyButton')
+  })
+
+  it('el botón se llama «Solicitar puestos de servicio»', () => {
+    expect(src).toContain('Solicitar puestos de servicio')
+    expect(src).not.toMatch(/>\s*Solicitar vacantes\s*</)
+  })
+
+  it('la descripción y el nivel de estudio caen al PUESTO', () => {
+    // SRV-11 dejó de pedirlos en cada solicitud porque ya viven en la ficha
+    // del puesto; la tarjeta seguía leyendo solo los de la vacante y desde
+    // entonces salía vacía.
+    expect(src).toContain('v.description || v.position_description')
+    expect(src).toContain('v.position_study_requirement')
+    expect(src).toContain('v.position_functions')
+  })
+})

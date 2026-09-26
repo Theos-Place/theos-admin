@@ -6,9 +6,8 @@ import { type Vacancy } from '@/types/server'
 import type { DbVacancy } from '@/lib/supabase/queries/servers'
 import { toDomainVacancy } from '@/lib/servers/adapter'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES, STAFF_IMPORT_ROLES } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
-import { Plus, Users, ChevronDown, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye, FilePlus2 } from 'lucide-react'
+import { Plus, Users, ChevronDown, Search, MapPin, Clock, Calendar, Pencil, XCircle, Eye, FilePlus2 , GraduationCap } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
@@ -17,13 +16,21 @@ import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
 
 export default function VacantesPage() {
   const { hasRole } = useAuth()
-  const isAdmin = hasRole(...SERVICE_ADMIN_ROLES) // ve acciones administrativas
-  // Importar puestos/vacantes: solo admin + coordinación de staff (puntos 4 y 6).
-  // Solicitar: admin + coordinación de staff + coordinadores/líderes de comité
-  // (el backend valida el comité y excluye dirección sin comité).
-  // SRV-11: el nuevo rol `solicitudes_puestos` (puesto «Colaborador Solicitud
-  // Puestos») también entra a solicitar, eligiendo el comité arriba.
-  const canRequest = hasRole('admin', ...STAFF_IMPORT_ROLES, 'lider_comite', 'solicitudes_puestos')
+  /**
+   * ESTA PANTALLA LA VE CUALQUIER MIEMBRO: lista los puestos publicados para
+   * que la gente aplique. Por eso lo que NO es aplicar está acotado, y con la
+   * misma lista para las dos cosas (decisión de Floriana, 2026-09-25):
+   * líderes de comité, coordinación de servidores y admin.
+   *
+   * Antes eran dos listas distintas y las dos más anchas: `canRequest`
+   * incluía `encargado_staff` y `solicitudes_puestos`, y las acciones de
+   * gestión salían para todo `SERVICE_ADMIN_ROLES` —o sea también para
+   * `direccion`, cuyo acceso es de lectura—. En una pantalla abierta, cada
+   * botón de más es alguien apretando algo que no le toca.
+   */
+  const PUEDE_GESTIONAR = ['lider_comite', 'coordinador_servidores', 'admin'] as const
+  const isAdmin = hasRole(...PUEDE_GESTIONAR) // ve acciones administrativas
+  const canRequest = hasRole(...PUEDE_GESTIONAR)
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +104,7 @@ export default function VacantesPage() {
                   <FilePlus2 size={14} /> Solicitar puesto nuevo
                 </Link>
                 <Link href="/servidores/vacantes/solicitar" className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
-                  <Plus size={14} /> Solicitar vacantes
+                  <Plus size={14} /> Solicitar puestos de servicio
                 </Link>
               </>
             )}
@@ -182,7 +189,31 @@ export default function VacantesPage() {
                           </span>
                         </div>
 
-                        {v.description && <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">{v.description}</p>}
+                        {/* SRV-11 dejó de pedir estos datos en cada solicitud
+                            porque ya viven en la ficha del PUESTO. La tarjeta
+                            seguía leyendo solo los de la vacante, así que
+                            desde entonces salía vacía: ahora cae al puesto. */}
+                        {(v.description || v.position_description) && (
+                          <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
+                            {v.description || v.position_description}
+                          </p>
+                        )}
+
+                        {v.position_study_requirement && (
+                          <p className="inline-flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
+                            <GraduationCap size={12} className="mt-0.5 shrink-0" aria-hidden />
+                            Nivel de estudio: {v.position_study_requirement}
+                          </p>
+                        )}
+
+                        {v.functions.length === 0 && v.position_functions && (
+                          <div>
+                            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display mb-1">¿Qué harás?</p>
+                            <p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">
+                              {v.position_functions}
+                            </p>
+                          </div>
+                        )}
 
                         {v.functions.length > 0 && (
                           <div>
