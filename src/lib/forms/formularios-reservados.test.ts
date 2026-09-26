@@ -131,3 +131,58 @@ describe('compartir la retroalimentación pide confirmación y deja rastro', () 
     expect(ruta).toContain('correos_enviados: sent')
   })
 })
+
+describe('RET-1 partes 4 y 5', () => {
+  const lee = (p: string) => readFileSync(p, 'utf8')
+
+  it('escalar avisa al comité, que antes no avisaba a nadie', () => {
+    // El estado `escalated` y el botón ya existían; lo que faltaba era que
+    // alguien se enterara. Sin aviso, la retro quedaba marcada hasta que
+    // alguien entrara a mirar la cola por su cuenta.
+    const ruta = lee('src/app/api/evaluations/tickets/[id]/route.ts')
+    expect(ruta).toContain('notificarEscalacion')
+    expect(ruta).toContain("action === 'escalate'")
+  })
+
+  it('el aviso NO lleva el contenido de la respuesta', () => {
+    // Una notificación se reenvía y se lee por encima del hombro, y esto es
+    // justo lo que se acaba de cerrar con llave.
+    const notif = lee('src/lib/email/evaluation-escalation-notify.ts')
+    expect(notif).toContain("link: '/estudios/evaluaciones'")
+    expect(notif).not.toMatch(/comments|score|respuesta_texto/)
+  })
+
+  it('no se avisa a sí mismo quien escaló', () => {
+    expect(lee('src/lib/email/evaluation-escalation-notify.ts'))
+      .toContain('.filter(id => id !== input.actorMemberId)')
+  })
+
+  it('el SEGUNDO botón de envío también confirma', () => {
+    // La cola de evaluaciones es la otra puerta, y la más probable para el
+    // accidente: es donde se trabaja la revisión. Cerrar una y dejar la otra
+    // habría sido dar el problema por resuelto sin estarlo.
+    const cola = lee('src/app/(admin)/estudios/evaluaciones/page.tsx')
+    expect(cola).toContain('setConfirmarEnvio(true)')
+    expect(cola).not.toContain('onClick={enviar}')
+  })
+
+  it('cada respuesta dice de qué grupo y de qué dirigente es', () => {
+    const q = lee('src/lib/supabase/queries/forms.ts')
+    expect(q).toContain('conGrupoYDirigente')
+    // El vínculo ya existía en `leader_evaluations`; no se guarda nada nuevo.
+    expect(q).toContain("from('leader_evaluations')")
+  })
+
+  it('y se resuelve en UNA consulta, no una por fila', () => {
+    const q = lee('src/lib/supabase/queries/forms.ts')
+    const fn = q.slice(q.indexOf('async function conGrupoYDirigente'))
+    expect(fn).toContain('.in(\'response_id\', ids)')
+  })
+
+  it('las columnas nuevas solo salen cuando el formulario las tiene', () => {
+    // Dos columnas vacías en el export de todos los formularios se leen como
+    // un error.
+    expect(lee('src/app/(admin)/formularios/[id]/respuestas/page.tsx'))
+      .toContain('const conGrupo = responses.some(r => r.grupo || r.dirigente)')
+  })
+})

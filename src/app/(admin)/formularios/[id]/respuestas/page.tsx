@@ -31,9 +31,22 @@ function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
   // columna quedaría sin nombre.
   // "Teléfono (perfil)" sale de la ficha, no de una pregunta: los encargados
   // necesitan llamar a la gente y no todos los formularios lo piden.
-  const headers = ['Miembro', 'Teléfono (perfil)', 'Registrada por', 'Fecha', ...dataFields.map(f => encabezadoDeCampo(f.type, f.label))]
+  /**
+   * RET-1 · Las columnas de grupo y dirigente SOLO cuando el formulario las
+   * tiene. Agregarlas siempre metería dos columnas vacías en el export de todos
+   * los formularios, y un archivo con columnas que nunca traen nada se lee como
+   * un error.
+   */
+  const conGrupo = responses.some(r => r.grupo || r.dirigente)
+  const headers = [
+    'Miembro',
+    ...(conGrupo ? ['Grupo', 'Dirigente'] : []),
+    'Teléfono (perfil)', 'Registrada por', 'Fecha',
+    ...dataFields.map(f => encabezadoDeCampo(f.type, f.label)),
+  ]
   const rows = responses.map(r => [
     r.member_name,
+    ...(conGrupo ? [r.grupo, r.dirigente] : []),
     r.member_phone,
     r.recorded_by_name,
     new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
@@ -296,6 +309,15 @@ export default function RespuestasPage() {
                             </span>
                           </div>
                           <p className="text-sm text-navy font-body">{resp.member_name}</p>
+                          {/* RET-1 · Sobre QUIÉN es la respuesta. Sin esto, las
+                              de la encuesta salían sueltas y había que abrir una
+                              por una para saber de qué grupo venían. Vacío en
+                              los formularios que no están atados a un grupo. */}
+                          {(resp.grupo || resp.dirigente) && (
+                            <p className="text-[13px] text-navy-light/80 font-body">
+                              {[resp.grupo, resp.dirigente].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
                           {resp.recorded_by_name && (
                             <p className="text-[13px] text-navy-light/80 font-body">{recordedByLabel(resp.recorded_by_name)}</p>
                           )}

@@ -63,6 +63,11 @@ export type DbFormResponse = {
   recorded_by: string | null
   recorder: { first_name: string; last_name: string } | null
   values: Array<{ field_id: string; value_text: string | null; value_json: unknown }>
+  /** RET-1 · Sobre QUIÉN es la respuesta, cuando el formulario está atado a un
+   *  grupo (hoy: la encuesta de satisfacción). Sale de `leader_evaluations`, que
+   *  ya guardaba el vínculo. `undefined` en los formularios que no lo tienen. */
+  grupo?: string | null
+  dirigente?: string | null
 }
 
 const FORM_SELECT = `
@@ -113,12 +118,66 @@ export async function getFormResponses(formId: string): Promise<DbFormResponse[]
   if (error) throw error
   // `recorder` llega como array porque los tipos generados todavía no declaran
   // esa relación; se normaliza acá para que el resto vea un objeto o null.
-  return ((data ?? []) as unknown as Array<Omit<DbFormResponse, 'recorder'> & {
+  const respuestas = ((data ?? []) as unknown as Array<Omit<DbFormResponse, 'recorder'> & {
     recorder: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
   }>).map(r => ({
     ...r,
     recorder: Array.isArray(r.recorder) ? (r.recorder[0] ?? null) : r.recorder,
   }))
+
+  return await conGrupoYDirigente(respuestas)
+}
+
+/**
+ * RET-1 parte 5 · De qué GRUPO y de qué DIRIGENTE es cada respuesta.
+ *
+ * Las respuestas de la encuesta de satisfacción salían sueltas: la tabla
+ * muestra quién contestó y qué contestó, pero no sobre quién — y como todas
+ * viven en el mismo formulario, había que abrir persona por persona para saber
+ * de qué grupo venía cada una.
+ *
+ * El vínculo YA EXISTÍA en `leader_evaluations` (`response_id` → `group_id`),
+ * solo que nadie lo leía desde acá. No hace falta guardar nada nuevo.
+ *
+ * Se resuelve en UNA consulta para todas las respuestas, no una por fila: con
+ * las 13 de hoy daba igual, con las de un año no.
+ *
+ * Silencioso para el resto de los formularios: sin evaluaciones asociadas, las
+ * filas salen exactamente como antes.
+ */
+async function conGrupoYDirigente(respuestas: DbFormResponse[]): Promise<DbFormResponse[]> {
+  const ids = respuestas.map(r => r.id)
+  if (ids.length === 0) return respuestas
+  const supabase = createAdminClient()
+
+  const { data } = await supabase
+    .from('leader_evaluations')
+    .select('response_id, grupo:study_groups(name, plan:study_plans(name), leader:members!study_groups_leader_id_fkey(first_name, last_name))')
+    .in('response_id', ids)
+
+  type Fila = {
+    response_id: string | null
+    grupo: {
+      name: string | null
+      plan: { name: string | null } | { name: string | null }[] | null
+      leader: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+    } | null
+  }
+  const uno = <T,>(v: T | T[] | null | undefined): T | null =>
+    (Array.isArray(v) ? v[0] ?? null : v ?? null)
+
+  const porRespuesta = new Map<string, { grupo: string | null; dirigente: string | null }>()
+  for (const f of ((data ?? []) as unknown as Fila[])) {
+    if (!f.response_id || !f.grupo) continue
+    const lider = uno(f.grupo.leader)
+    porRespuesta.set(f.response_id, {
+      grupo: f.grupo.name ?? uno(f.grupo.plan)?.name ?? null,
+      dirigente: lider ? `${lider.first_name} ${lider.last_name}`.trim() : null,
+    })
+  }
+  if (porRespuesta.size === 0) return respuestas
+
+  return respuestas.map(r => ({ ...r, ...(porRespuesta.get(r.id) ?? {}) }))
 }
 
 // ── Mutaciones ─────────────────────────────────────────────

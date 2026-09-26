@@ -3095,7 +3095,47 @@ completa en `docs/minutas/estudios-2026-09-24.md`. Orden sugerido: RET-1 y
 SRV-10 son urgentes (privacidad); EST-14 es el grande y se prueba en staging
 antes de producción (dicho en la reunión).
 
-### [ ] RET-1 · Retroalimentaciones de estudiantes: permisos, confirmación y flujo de revisión — URGENTE
+### [~] RET-1 · Retroalimentaciones de estudiantes — PARTES 1 A 5 HECHAS 2026-09-25
+
+**1 · Quién ve las respuestas: de 25 personas a 10.** El censo dio DOS caminos
+—el endpoint del grupo abierto a todo `STUDY_ADMIN_ROLES`, y el módulo de
+formularios, porque la encuesta es un formulario común—. De cuatro rutas que
+devuelven respuestas había que tocar dos: la del EXPORT tenía el gate idéntico
+al de la tabla y no aparece buscando «feedback».
+
+**El rol ya existía y eso cambió el pedido.** Se llama `evaluaciones`, su
+descripción es «Revisar el compilado de las evaluaciones y compartirlo con el
+dirigente», y `EVALUATION_ROLES` ya dejaba fuera a dirección y coordinación de
+estudios a propósito. No hacía falta crear `retroalimentaciones`.
+
+**2 · El puesto otorga el rol**, como PAR-3. Aplicado: Eimy Ramirez Murillo,
+origen automático.
+
+**3 · Confirmación al compartir**, en los DOS botones. El de la ficha del grupo
+y el de la cola de evaluaciones — éste último se encontró después y es el más
+probable para el accidente, porque es donde se trabaja la revisión. Nombra al
+dirigente y al grupo; un «¿estás seguro?» pelado no evita este error. Queda
+rastro en `audit_log`, con el resultado del correo y no solo la intención.
+
+**4 · Escalar avisa al comité.** El estado `escalated` y el botón ya existían,
+pero NO AVISABAN A NADIE. El aviso va a `coordinador_dirigentes`, no lleva el
+contenido de la respuesta —una notificación se reenvía— y no se lo manda a sí
+mismo quien escaló.
+
+**5 · Cada respuesta dice de qué grupo y de qué dirigente es**, en la lista y en
+el export. El vínculo ya existía en `leader_evaluations`; nadie lo leía.
+
+**6 · EL DIGEST NO EXISTE.** No hay ningún aviso periódico a quien revisa: los
+`internal_notifications` tienen tipos para ausencias, cierres vencidos,
+solicitudes y pagos, ninguno para evaluaciones pendientes. Lo que hay es la cola
+`/estudios/evaluaciones`, que hay que ir a mirar.
+
+**Y se nota:** al 2026-09-25 hay 8 tiquetes, TODOS en `open`, el más viejo de
+hace 34 días. El primero de la lista es justamente el de Fernando Gutiérrez.
+Con el aviso de escalación recién hecho, la pieza que falta es un cron que
+resuma lo pendiente cada dos semanas — decisión pendiente, no trabajo pendiente.
+
+Prompt original:
 
 Hoy CUALQUIERA con acceso a grupos ve las respuestas de la encuesta de
 satisfacción (se comprobó en vivo: Ariana las veía), y el botón de compartir

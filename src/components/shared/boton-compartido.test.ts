@@ -14,7 +14,7 @@ import { join } from 'node:path'
  * Si este número sube, la respuesta no es subir el techo: es usar
  * `components/shared/Button`.
  */
-const TECHO = 188
+const TECHO = 187
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {

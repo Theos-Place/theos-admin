@@ -11,6 +11,7 @@ import { sendLeaderFeedbackReport } from '@/lib/email/leader-feedback-report-sen
 import { ticketClosable } from '@/lib/studies/evaluation-window'
 import type { EvaluationTicketStatus } from '@/types/evaluations'
 import { reportarError } from '@/lib/observabilidad'
+import { notificarEscalacion } from '@/lib/email/evaluation-escalation-notify'
 
 const ACTIONS: Record<string, EvaluationTicketStatus> = {
   take: 'in_review',
@@ -79,8 +80,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }, { status: 409 })
     }
 
-    return NextResponse.json(await updateEvaluationTicketStatus(
-      id, ACTIONS[action], auth.ctx.memberId, review_notes?.trim() || null))
+    const resultado = await updateEvaluationTicketStatus(
+      id, ACTIONS[action], auth.ctx.memberId, review_notes?.trim() || null)
+
+    // RET-1 · Escalar es pedirle una decisión al comité, así que el comité se
+    // entera. El estado ya existía y el botón también, pero no avisaba a nadie:
+    // la retro quedaba marcada hasta que alguien entrara a mirar la cola por su
+    // cuenta, que para una respuesta delicada es lo mismo que no tener botón.
+    if (action === 'escalate') {
+      await notificarEscalacion({
+        groupId: ticket.group_id,
+        groupName: ticket.group_name,
+        leaderName: ticket.member_name,
+        actorMemberId: auth.ctx.memberId,
+        notas: review_notes?.trim() || null,
+      })
+    }
+
+    return NextResponse.json(resultado)
   } catch (error) {
     reportarError('PATCH /api/evaluations/tickets/[id]:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

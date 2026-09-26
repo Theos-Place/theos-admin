@@ -96,6 +96,8 @@ export function toDomainFormResponse(db: DbFormResponse): FormResponse {
     member_name: memberName,
     member_phone: formatPhoneCR(db.member?.phone),
     submitted_at: db.submitted_at,
+    grupo: db.grupo ?? '',
+    dirigente: db.dirigente ?? '',
     answers,
     recorded_by_name: db.recorder
       ? `${db.recorder.first_name} ${db.recorder.last_name}`.trim()

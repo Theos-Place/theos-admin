@@ -123,6 +123,12 @@ export interface FormResponse {
    *  No sale de una pregunta del formulario. */
   member_phone: string
   submitted_at: string
+  /** RET-1 · Sobre QUIÉN es esta respuesta. Solo lo traen los formularios
+   *  atados a un grupo —hoy la encuesta de satisfacción—; en el resto va vacío.
+   *  Las respuestas salían sueltas y había que abrir una por una para saber de
+   *  qué grupo venían. */
+  grupo: string
+  dirigente: string
   answers: Record<string, string | string[] | number>
   /** FRM-4: nombre de quien la DIGITÓ, si no fue la propia persona. Vacío en el
    *  caso normal — así "tiene valor" significa "la registró el staff", sin

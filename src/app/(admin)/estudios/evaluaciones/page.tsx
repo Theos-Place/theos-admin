@@ -11,6 +11,8 @@
  * dice quiénes contestaron; el compilado dice qué se contestó. Nunca lo mismo.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { Modal } from '@/components/shared/Modal'
+import { Button } from '@/components/shared/Button'
 import Link from 'next/link'
 import {
   Lock, Loader2, ExternalLink, Send, Users, Link2, Check, Clock,
@@ -51,7 +53,19 @@ function TicketDetail({
     return () => { alive = false }
   }, [showParticipants, participants, t.id])
 
+  /**
+   * RET-1 · El SEGUNDO botón que enviaba sin preguntar.
+   *
+   * La confirmación se puso primero en el panel de la ficha del grupo, pero
+   * esta cola es la otra puerta —y la más probable para el accidente de la
+   * reunión, porque es donde se trabaja la revisión—. Cerrar una y dejar la
+   * otra habría sido dar el problema por resuelto sin estarlo. Misma lección
+   * que con las cuatro rutas de las respuestas: hay que censar, no suponer.
+   */
+  const [confirmarEnvio, setConfirmarEnvio] = useState(false)
+
   async function enviar() {
+    setConfirmarEnvio(false)
     setSending(true)
     try {
       const res = await fetch(`/api/evaluations/tickets/${t.id}`, {
@@ -145,7 +159,7 @@ function TicketDetail({
 
         <button
           type="button"
-          onClick={enviar}
+          onClick={() => setConfirmarEnvio(true)}
           disabled={sending || t.responses === 0}
           className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-1.5 text-[13px] text-white font-body hover:bg-navy-ink transition-colors disabled:opacity-60"
         >
@@ -158,6 +172,40 @@ function TicketDetail({
         <p className="text-[13px] text-navy-light/80 font-body">
           Enviado el {formatDate(t.sent_at)}{t.sent_by_name ? ` por ${t.sent_by_name}` : ''}.
         </p>
+      )}
+
+      {confirmarEnvio && (
+        <Modal onClose={() => setConfirmarEnvio(false)} titleId={`confirmar-envio-${t.id}`} width={420}>
+          <div className="p-6 space-y-4">
+            <h3 id={`confirmar-envio-${t.id}`} className="text-base font-bold text-navy font-display">
+              {t.sent_at ? '¿Reenviar al dirigente?' : '¿Enviar al dirigente?'}
+            </h3>
+            <p className="text-sm leading-relaxed text-navy-light font-body">
+              Se le va a mandar un correo a <strong className="text-navy">{t.member_name}</strong>
+              {t.group_name && <> con la retroalimentación de <strong className="text-navy">{t.group_name}</strong></>}
+              , con {t.responses} respuesta{t.responses === 1 ? '' : 's'}.
+            </p>
+            {pocas && (
+              // El mismo umbral que protege al estudiante: con pocas respuestas
+              // un comentario lo identifica. Vale avisarlo justo antes de enviar.
+              <p className="rounded-xl bg-surface-low px-3 py-2.5 text-[13px] text-navy-light font-body">
+                Son menos de {MIN_RESPUESTAS_PARA_MOSTRAR}: el dirigente no va a ver el
+                detalle, para que nadie quede identificado.
+              </p>
+            )}
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Una vez enviado no se puede deshacer.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variante="secundario" ancho="flex" onClick={() => setConfirmarEnvio(false)}>
+                Cancelar
+              </Button>
+              <Button ancho="flex" disabled={sending} onClick={() => void enviar()}>
+                {sending ? 'Enviando…' : (t.sent_at ? 'Sí, reenviar' : 'Sí, enviar')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Participación: nombres SIN respuestas. Nunca se cruzan. */}
