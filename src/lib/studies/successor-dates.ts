@@ -41,6 +41,16 @@
  *
  * Si el grupo anterior todavía no había terminado, el sucesor no se le monta
  * encima: se corre al primer día de clase después de ese fin.
+ *
+ * LA FECHA CALCULADA ES UN DEFAULT, NO UNA SENTENCIA (EST-16, 2026-09-25).
+ * Medido en producción: de los 49 cierres hechos en el sistema desde agosto, 45
+ * se hicieron DESPUÉS del fin calculado del grupo — el atraso típico es de dos a
+ * cinco semanas. Con esos números, una fecha deducida de feriados que nadie
+ * registró y de atrasos que el sistema no ve «siempre está mal», y el dirigente
+ * no tenía dónde corregirla. Ahora la elige él en el cierre: si manda
+ * `inicioElegido`, esa fecha gana tal cual — sin correrla al próximo día de
+ * clase y sin el piso de los 8 días. Quien cierra sabe qué día acordó la
+ * cohorte, incluso si ya pasó.
  */
 
 /** La pausa entre un estudio y el siguiente, en semanas. */
@@ -89,6 +99,30 @@ export function sumarDias(ymd: string, dias: number): string {
   return new Date(t + dias * MS_DIA).toISOString().slice(0, 10)
 }
 
+/**
+ * ¿Sirve esta fecha elegida a mano? Devuelve el motivo del rechazo, o `null`.
+ *
+ * Se permite el PASADO a propósito: los cierres van tarde y la cohorte muchas
+ * veces ya arrancó. Lo que se ataja es el dedo resbalado —«2206», «2026-13-01»—
+ * porque una fecha así viaja al grupo, a los correos y al recordatorio de
+ * cierre, y nadie la vuelve a mirar. Un año para cada lado deja pasar cualquier
+ * caso real y para cualquier tecleo.
+ */
+export const MESES_DE_HOLGURA = 12
+
+export function motivoParaRechazarInicio(ymd: string, hoy: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return 'La fecha de inicio no tiene el formato esperado.'
+  const t = Date.parse(`${ymd}T00:00:00Z`)
+  if (!Number.isFinite(t)) return 'Esa fecha de inicio no existe.'
+  // Date.parse acepta 2026-02-31 y lo corre a marzo: si el ida y vuelta no
+  // devuelve el mismo texto, el día no existía.
+  if (new Date(t).toISOString().slice(0, 10) !== ymd) return 'Esa fecha de inicio no existe.'
+  const dias = MESES_DE_HOLGURA * 31
+  if (ymd < sumarDias(hoy, -dias)) return 'Esa fecha de inicio está demasiado en el pasado.'
+  if (ymd > sumarDias(hoy, dias)) return 'Esa fecha de inicio está demasiado en el futuro.'
+  return null
+}
+
 export function fechasDelSucesor(input: {
   /** `ends_at` del grupo que se está cerrando (YYYY-MM-DD). */
   finDelAnterior: string | null | undefined
@@ -99,7 +133,16 @@ export function fechasDelSucesor(input: {
   /** `schedule_days` del grupo (L/M/X/J/V/S/D). El arranque cae en uno de
    *  estos días. */
   diasDeClase?: readonly string[] | null
+  /** EST-16 · La fecha que eligió quien cerró el grupo. Gana sobre el cálculo. */
+  inicioElegido?: string | null
 }): { starts_at: string; ends_at: string | null } {
+  // Una fecha elegida INVÁLIDA cae al cálculo de siempre en vez de reventar:
+  // la ruta ya la valida y devuelve 400, así que acá no llega nunca. Es la red
+  // de abajo — perder el cierre entero por una fecha mal tecleada sería peor.
+  const elegido = (input.inicioElegido ?? '').slice(0, 10)
+  if (elegido && !motivoParaRechazarInicio(elegido, input.hoy)) {
+    return { starts_at: elegido, ...finDesde(elegido, input.semanas) }
+  }
   // Piso: 8 días desde el cierre, y nunca encima del grupo anterior.
   // Comparación de strings YYYY-MM-DD: ordenan igual que las fechas y no
   // arrastran husos horarios.
@@ -107,10 +150,14 @@ export function fechasDelSucesor(input: {
   const finAnterior = (input.finDelAnterior ?? '').slice(0, 10)
   const piso = finAnterior && finAnterior > porFolletos ? finAnterior : porFolletos
   const inicio = proximoDiaDeClase(piso, input.diasDeClase)
-  const semanas = Number(input.semanas)
-  // Sin duración conocida no se inventa un fin: la fecha de inicio ya alcanza
-  // para saber cuándo empezó, y un fin falso dispararía el recordatorio de
-  // cierre en una fecha que nadie acordó.
-  if (!Number.isFinite(semanas) || semanas <= 0) return { starts_at: inicio, ends_at: null }
-  return { starts_at: inicio, ends_at: sumarDias(inicio, (Math.round(semanas) + SEMANAS_DE_VACACIONES) * 7) }
+  return { starts_at: inicio, ...finDesde(inicio, input.semanas) }
+}
+
+/** El fin del período a partir del inicio. Sin duración conocida no se inventa
+ *  un fin: la fecha de inicio ya alcanza para saber cuándo empezó, y un fin
+ *  falso dispararía el recordatorio de cierre en una fecha que nadie acordó. */
+function finDesde(inicio: string, semanasRaw: number | null | undefined): { ends_at: string | null } {
+  const semanas = Number(semanasRaw)
+  if (!Number.isFinite(semanas) || semanas <= 0) return { ends_at: null }
+  return { ends_at: sumarDias(inicio, (Math.round(semanas) + SEMANAS_DE_VACACIONES) * 7) }
 }

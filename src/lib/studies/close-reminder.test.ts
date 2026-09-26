@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   daysBetween, addDays, resolveEndDate, closeReminderDue,
+  CLOSE_REMINDER_DAYS_BEFORE,
 } from './close-reminder'
 
 describe('daysBetween / addDays', () => {
@@ -97,5 +99,49 @@ describe('closeReminderDue', () => {
   // Si el grupo ya está vencido, el aviso "próximo" perdió sentido: va el segundo.
   it('un grupo vencido sin primer aviso salta directo al segundo', () => {
     expect(closeReminderDue({ ...base, endDate: '2026-09-01', todayYmd: '2026-09-20' })).toBe('vencido')
+  })
+})
+
+describe('EST-16 · la cadena de recordatorios dice la verdad', () => {
+  it('el primer aviso sale a UNA semana, no a dos', () => {
+    // El plan pedía bajarlo de 2 semanas a 1; ya estaba en 1 (verificado en
+    // producción el 2026-09-25: los 60 grupos avisados lo recibieron a 7 días
+    // exactos del fin). Este test es para que no vuelva a subir sin querer.
+    expect(CLOSE_REMINDER_DAYS_BEFORE).toBe(7)
+    expect(closeReminderDue({
+      endDate: '2026-09-16', todayYmd: '2026-09-08', status: 'en_curso',
+      proximoSent: false, vencidoSent: false,
+    })).toBeNull()
+    expect(closeReminderDue({
+      endDate: '2026-09-16', todayYmd: '2026-09-09', status: 'en_curso',
+      proximoSent: false, vencidoSent: false,
+    })).toBe('proximo')
+  })
+
+  it('después del vencido ya no sale nada: el correo puede decir que es el último', () => {
+    // El texto del correo afirma «este es el último correo automático que te
+    // mandamos por este grupo». Si algún día la regla siguiera insistiendo,
+    // el correo estaría mintiendo — y eso es peor que no avisar.
+    for (let dia = 0; dia <= 400; dia += 7) {
+      expect(closeReminderDue({
+        endDate: '2026-09-16', todayYmd: addDays('2026-09-23', dia), status: 'en_curso',
+        proximoSent: true, vencidoSent: true,
+      })).toBeNull()
+    }
+  })
+
+  it('el correo del vencido no amenaza con que te busquen', () => {
+    // El cierre viejo estresó a una dirigente que iba bien, y no era un caso
+    // raro: 48 de los 60 grupos avisados llegaron al segundo correo, porque ir
+    // atrasado es lo normal. La copia vive en una migración (la BD es la fuente
+    // en caliente), así que el guard lee el SQL.
+    const sql = readFileSync('supabase/migrations/20260925200000_est16_copy_recordatorios_de_cierre.sql', 'utf8')
+    // Solo el cuerpo de los correos: el encabezado del archivo CITA la frase
+    // vieja para explicar qué se quitó, y un guard que se tropieza con su
+    // propio comentario no guarda nada (ya pasó dos veces en este repo).
+    const cuerpos = sql.split('UPDATE public.message_templates').slice(1).join('\n')
+    expect(cuerpos).not.toContain('te busca la coordinación')
+    expect(cuerpos).not.toContain('último recordatorio automático')
+    expect(cuerpos).toContain('último correo automático')
   })
 })

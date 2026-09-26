@@ -7,7 +7,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { useSedes } from '@/lib/sedes'
-import { OTRO_LUGAR, isFolletoEligible } from '@/lib/studies/folletos'
+import { OTRO_LUGAR, isFolletoEligible, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
+import { fechasDelSucesor, sumarDias, MESES_DE_HOLGURA, motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
+import { ymdCR, formatDateLong } from '@/lib/format'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -197,8 +199,35 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
    *  generaba tiquete de folletos sin preguntar nunca dónde entregarlos — y
    *  ahora, además, el servidor lo rechazaría. Los dos lados usan la misma
    *  regla a propósito. */
-  const pideFolletos = isFolletoEligible(group.study_type_id) && aprobados > 0
+  const haySucesor = isFolletoEligible(group.study_type_id) && aprobados > 0
+  const pideFolletos = haySucesor
   const faltaLugarEntrega = pideFolletos && !lugarEntrega
+
+  /**
+   * EST-16 · Cuándo arranca el grupo del nivel siguiente.
+   *
+   * Hasta hoy la calculaba el servidor y nadie la podía tocar: días de clase,
+   * ocho días de folletos y una semana de vacaciones. Esa cuenta no sabe de
+   * feriados ni de cuánto se atrasó el grupo, y en producción 45 de los 49
+   * cierres hechos en el sistema llegaron después del fin calculado. Quien
+   * cierra sí sabe qué día acordó la cohorte, así que la cuenta pasa a ser el
+   * valor por defecto y él tiene la última palabra.
+   *
+   * SE PERMITE EL PASADO a propósito: muchos grupos ya arrancaron cuando por
+   * fin se cierra el anterior. Los topes de ±12 meses son los mismos que valida
+   * el servidor (`motivoParaRechazarInicio`).
+   */
+  const hoyCR = ymdCR()
+  const inicioCalculado = fechasDelSucesor({
+    finDelAnterior: group.end_date,
+    semanas: null,
+    hoy: hoyCR,
+    diasDeClase: group.schedule_days,
+  }).starts_at
+  const [inicioSucesor, setInicioSucesor] = useState(inicioCalculado)
+  const nivelSiguiente = levelLabel(nextLevelCode(group.study_type_id))
+  const errorInicio = inicioSucesor ? motivoParaRechazarInicio(inicioSucesor, hoyCR) : 'Decinos cuándo arranca el grupo siguiente.'
+  const faltaInicioSucesor = haySucesor && !!errorInicio
 
   async function handleClose() {
     if (submitting) return
@@ -213,6 +242,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         body: JSON.stringify({
           results: payload,
           folletos_sede: lugarEntrega || undefined,
+          ...(haySucesor && inicioSucesor ? { successor_starts_at: inicioSucesor } : {}),
           ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
@@ -548,6 +578,38 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           </div>
 
 
+          {/* EST-16 · Cuándo arranca el grupo del nivel siguiente. */}
+          {haySucesor && (
+            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
+              <label htmlFor="inicio-sucesor" className="block text-sm font-semibold text-navy font-body">
+                ¿Cuándo arranca {nivelSiguiente || 'el nivel siguiente'}? <span className="text-coral-deep">*</span>
+              </label>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Los {aprobados} que aprobaron pasan juntos al nivel siguiente. Esta es la
+                fecha que va a tener ese grupo y la que van a ver en el correo, así que
+                ponela como quedaron de verdad — si ya arrancaron, poné el día que
+                arrancaron.
+              </p>
+              <input
+                id="inicio-sucesor"
+                type="date"
+                value={inicioSucesor}
+                min={sumarDias(hoyCR, -MESES_DE_HOLGURA * 31)}
+                max={sumarDias(hoyCR, MESES_DE_HOLGURA * 31)}
+                onChange={e => setInicioSucesor(e.target.value)}
+                className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+              {!errorInicio && inicioSucesor !== inicioCalculado && (
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  La fecha sugerida era el {formatDateLong(inicioCalculado)}.
+                </p>
+              )}
+              {faltaInicioSucesor && (
+                <p className="text-[13px] text-coral-deep font-body">{errorInicio}</p>
+              )}
+            </div>
+          )}
+
           {/* Folletos del grupo sucesor: dónde entregarlos. Solo tiene sentido
               si hay aprobados que van a pasar al nivel siguiente. */}
           {pideFolletos && (
@@ -621,8 +683,10 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </button>
             <button
               onClick={() => setConfirmOpen(true)}
-              disabled={submitting || faltaLugarEntrega}
-              title={faltaLugarEntrega ? 'Falta decir dónde se entregan los folletos' : undefined}
+              disabled={submitting || faltaLugarEntrega || faltaInicioSucesor}
+              title={faltaLugarEntrega
+                ? 'Falta decir dónde se entregan los folletos'
+                : faltaInicioSucesor ? (errorInicio ?? undefined) : undefined}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {submitting ? 'Cerrando...' : 'Cerrar grupo'}

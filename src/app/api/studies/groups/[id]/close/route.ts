@@ -9,6 +9,8 @@ import { PREMAT_PLAN_CODE, getRequestsForGroup, savePrematEvaluations } from '@/
 import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { reportarError } from '@/lib/observabilidad'
+import { motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
+import { ymdCR } from '@/lib/format'
 
 // POST: cierra el grupo. Body: { results: CloseResult[] }. (FOL-1: el campo
 // folleto del body viejo se ignora — el cierre ya no genera folletos.)
@@ -41,8 +43,24 @@ export async function POST(
     evaluations?: PrematEvaluationInput[]
     /** Lugar de entrega de los folletos del grupo sucesor, dicho por quien cierra. */
     folletos_sede?: string
+    /** EST-16 · Cuándo arranca el grupo sucesor (YYYY-MM-DD), elegido por quien
+     *  cierra. Sin esto se usa la fecha calculada de siempre. */
+    successor_starts_at?: string
   }
   const results = body.results ?? []
+  /**
+   * EST-16 · La fecha del sucesor se valida ACÁ, antes de cerrar nada.
+   *
+   * El cierre es irreversible: si se validara adentro de la auto-matrícula, el
+   * grupo ya estaría finalizado cuando se descubre la fecha mala, y no habría
+   * forma de pedirla de nuevo. Se permite el pasado (los cierres van tarde);
+   * lo que se ataja es el tecleo imposible. La regla vive en successor-dates.
+   */
+  const inicioElegido = (body.successor_starts_at ?? '').trim() || null
+  if (inicioElegido) {
+    const motivo = motivoParaRechazarInicio(inicioElegido, ymdCR())
+    if (motivo) return NextResponse.json({ error: motivo, code: 'fecha_invalida' }, { status: 400 })
+  }
   try {
     const supabase = createAdminClient()
     const { data: g } = await supabase
@@ -129,7 +147,7 @@ export async function POST(
     let successorGroupId: string | null = null
     try {
       const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
-      const { enrolled, next_group_id } = await autoEnrollApprovedToNextLevel(id, approvedIds)
+      const { enrolled, next_group_id } = await autoEnrollApprovedToNextLevel(id, approvedIds, inicioElegido)
       autoEnrolled = enrolled
       successorGroupId = next_group_id
     } catch (e) {
@@ -156,7 +174,6 @@ export async function POST(
     if (successorGroupId) {
       try {
         const { createAutoFolletoIfNeeded, linkPaymentsToFolletoRequest } = await import('@/lib/supabase/queries/folletos')
-        const { ymdCR } = await import('@/lib/format')
         // `id` es el grupo que se acaba de cerrar: queda enlazado al tiquete para
         // que el detalle y el correo puedan decir cuántos aprobaron, reprobaron
         // y se retiraron. Sin ese enlace el tiquete solo sabe del sucesor.
@@ -210,7 +227,7 @@ export async function POST(
       try {
         const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
         if (approvedIds.length > 0) {
-          const { enrolled } = await autoEnrollApprovedToNextLevel(id, approvedIds)
+          const { enrolled } = await autoEnrollApprovedToNextLevel(id, approvedIds, inicioElegido)
           reconciled = enrolled
         }
       } catch (e) {

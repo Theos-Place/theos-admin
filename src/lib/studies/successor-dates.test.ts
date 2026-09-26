@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fechasDelSucesor, sumarDias, proximoDiaDeClase } from './successor-dates'
+import { fechasDelSucesor, sumarDias, proximoDiaDeClase, motivoParaRechazarInicio } from './successor-dates'
 
 describe('fechasDelSucesor', () => {
   it('el caso real: cierre el miércoles 2, grupo de miércoles → arranca el 16', () => {
@@ -119,5 +119,72 @@ describe('proximoDiaDeClase', () => {
   it('cruza el fin de mes sin perderse', () => {
     // 2026-09-30 es miércoles; el próximo jueves es el 1 de octubre.
     expect(proximoDiaDeClase('2026-09-30', ['J'])).toBe('2026-10-01')
+  })
+})
+
+describe('EST-16 · la fecha que elige quien cierra', () => {
+  const base = { finDelAnterior: '2026-08-10', semanas: 11, hoy: '2026-09-02', diasDeClase: ['X'] } as const
+
+  it('la fecha elegida gana sobre la calculada', () => {
+    // Sin elegir nada, el cálculo da el 16 de setiembre.
+    expect(fechasDelSucesor(base).starts_at).toBe('2026-09-16')
+    expect(fechasDelSucesor({ ...base, inicioElegido: '2026-10-07' }).starts_at).toBe('2026-10-07')
+  })
+
+  it('el fin del período se recalcula desde la fecha elegida, no desde la calculada', () => {
+    // 11 semanas + 1 de vacaciones = 84 días.
+    const r = fechasDelSucesor({ ...base, inicioElegido: '2026-10-07' })
+    expect(r.ends_at).toBe('2026-12-30')
+    expect(r.ends_at).not.toBe(fechasDelSucesor(base).ends_at)
+  })
+
+  it('NO se corre al próximo día de clase: si eligió un jueves, es ese jueves', () => {
+    // 2026-10-08 es jueves y el grupo es de miércoles. La regla automática lo
+    // movería al 14; la elegida no se toca — quien cierra sabe qué acordaron.
+    expect(fechasDelSucesor({ ...base, inicioElegido: '2026-10-08' }).starts_at).toBe('2026-10-08')
+  })
+
+  it('acepta el pasado: los cierres llegan tarde y la cohorte ya arrancó', () => {
+    expect(fechasDelSucesor({ ...base, inicioElegido: '2026-08-19' }).starts_at).toBe('2026-08-19')
+    expect(motivoParaRechazarInicio('2026-08-19', '2026-09-02')).toBeNull()
+  })
+
+  it('sin duración de plan, la elegida igual manda y el fin queda en null', () => {
+    const r = fechasDelSucesor({ ...base, semanas: null, inicioElegido: '2026-10-07' })
+    expect(r).toEqual({ starts_at: '2026-10-07', ends_at: null })
+  })
+
+  it('vacía o ausente → se usa el cálculo de siempre', () => {
+    expect(fechasDelSucesor({ ...base, inicioElegido: '' }).starts_at).toBe('2026-09-16')
+    expect(fechasDelSucesor({ ...base, inicioElegido: null }).starts_at).toBe('2026-09-16')
+  })
+})
+
+describe('motivoParaRechazarInicio', () => {
+  const hoy = '2026-09-02'
+
+  it('atrapa el dedo resbalado', () => {
+    expect(motivoParaRechazarInicio('2206-09-02', hoy)).toBeTruthy()
+    expect(motivoParaRechazarInicio('2026-13-01', hoy)).toBeTruthy()
+    expect(motivoParaRechazarInicio('02/09/2026', hoy)).toBeTruthy()
+    expect(motivoParaRechazarInicio('', hoy)).toBeTruthy()
+  })
+
+  it('un 31 de febrero no existe aunque Date lo acepte', () => {
+    expect(motivoParaRechazarInicio('2026-02-31', hoy)).toBeTruthy()
+  })
+
+  it('un año para cada lado pasa; más allá, no', () => {
+    expect(motivoParaRechazarInicio(sumarDias(hoy, -300), hoy)).toBeNull()
+    expect(motivoParaRechazarInicio(sumarDias(hoy, 300), hoy)).toBeNull()
+    expect(motivoParaRechazarInicio(sumarDias(hoy, -500), hoy)).toBeTruthy()
+    expect(motivoParaRechazarInicio(sumarDias(hoy, 500), hoy)).toBeTruthy()
+  })
+
+  it('una fecha inválida NO tumba el cálculo: cae al automático', () => {
+    // La ruta ya devolvió 400 antes de llegar acá; esto es la red de abajo.
+    expect(fechasDelSucesor({
+      finDelAnterior: '2026-08-10', semanas: 11, hoy, diasDeClase: ['X'], inicioElegido: '2206-09-02',
+    }).starts_at).toBe('2026-09-16')
   })
 })

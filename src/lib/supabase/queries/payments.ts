@@ -133,6 +133,8 @@ async function findOrCreateSuccessorGroup(
   nextCode: string,
   /** Duración del plan del sucesor, para calcularle su propia fecha de fin. */
   nextDurationWeeks: number | null,
+  /** EST-16 · La fecha de arranque que eligió quien cerró el grupo, si eligió. */
+  inicioElegido?: string | null,
 ): Promise<string | null> {
   const findSuccessor = async (): Promise<string | null> => {
     let query = supabase
@@ -150,6 +152,11 @@ async function findOrCreateSuccessorGroup(
   }
 
   const existing = await findSuccessor()
+  // Si el sucesor YA existe no se le tocan las fechas, ni con `inicioElegido`.
+  // Llegar acá significa que otro cierre de la misma cohorte ya lo creó (o que
+  // este mismo cierre se está reintentando): ese grupo puede estar corriendo, y
+  // moverle el arranque por un segundo cierre le cambiaría el recordatorio de
+  // cierre a gente que ya empezó.
   if (existing) return existing
 
   // Nombre: el del grupo origen con el nivel cambiado. La regla vive en
@@ -182,12 +189,18 @@ async function findOrCreateSuccessorGroup(
        * 8 días es lo que tardan los folletos en llegar, y tiene que ser un día
        * en que el estudio se imparte. La regla y sus casos de borde están en
        * successor-dates.ts.
+       *
+       * EST-16 (2026-09-25): eso es el DEFAULT. Si quien cerró eligió la fecha
+       * de arranque, esa gana — el cálculo no ve feriados ni atrasos, y de los
+       * 49 cierres hechos en el sistema desde agosto, 45 llegaron después del
+       * fin calculado.
        */
       ...fechasDelSucesor({
         finDelAnterior: src.ends_at,
         semanas: nextDurationWeeks,
         hoy: ymdCR(),
         diasDeClase: src.schedule_days,
+        inicioElegido,
       }),
       /**
        * 'en_curso', NO 'en_matricula' (decisión 2026-08-27).
@@ -238,6 +251,9 @@ async function findOrCreateSuccessorGroup(
 export async function autoEnrollApprovedToNextLevel(
   sourceGroupId: string,
   approvedMemberIds: string[],
+  /** EST-16 · Fecha de arranque del sucesor elegida en el cierre (YYYY-MM-DD).
+   *  Ya viene validada por la ruta. */
+  inicioElegido?: string | null,
 ): Promise<{ enrolled: number; next_level: string | null; amount: number; next_group_id: string | null }> {
   // next_group_id: lo necesita el cierre para pedir los folletos DEL GRUPO
   // SUCESOR, que es quien los va a usar.
@@ -271,7 +287,7 @@ export async function autoEnrollApprovedToNextLevel(
   const currency = np.currency ?? 'CRC'
 
   // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
-  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next, np.duration_weeks)
+  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next, np.duration_weeks, inicioElegido)
 
   // Dedup: quién ya tiene inscripción a ese nivel — por plan_id directo O por
   // grupo cuyo plan es el siguiente (A12: las matrículas por grupo tienen
