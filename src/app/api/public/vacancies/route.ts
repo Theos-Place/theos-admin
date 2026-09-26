@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     const all = await getVacancies()
     // Solo 'aprobado' es "visible y aplicable" — mismo criterio que el GET
     // admin ?published=1.
-    const publicadas = all.filter(v => v.status === 'aprobado')
+    const publicadas = all.filter(v => v.status === 'publicada')
     /**
      * Whitelist explícita, y SRV-13 la recortó.
      *

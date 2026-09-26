@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { type Vacancy, type VacancyStatus } from '@/types/server'
+import { type Vacancy } from '@/types/server'
 import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
 import { cn } from '@/lib/utils'
 
@@ -12,8 +12,8 @@ type Props = {
   vacancies: Vacancy[]
 }
 
-const STATUS_COLORS: Record<VacancyStatus, string> = VACANCY_STATE_BADGE
-const STATUS_LABELS: Record<VacancyStatus, string> = VACANCY_STATE_LABEL
+const STATUS_COLORS = VACANCY_STATE_BADGE
+const STATUS_LABELS = VACANCY_STATE_LABEL
 
 export function VacanciesTab({ committeeId, vacancies }: Props) {
   return (

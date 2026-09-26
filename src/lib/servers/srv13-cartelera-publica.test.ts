@@ -39,7 +39,7 @@ describe('SRV-13 · qué NO sale en público', () => {
   })
 
   it('solo se listan las PUBLICADAS', () => {
-    expect(src).toMatch(/status === 'aprobado'/)
+    expect(src).toMatch(/status === 'publicada'/)
   })
 
   it('sigue con rate limit: es un endpoint abierto', () => {

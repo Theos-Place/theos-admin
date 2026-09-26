@@ -151,7 +151,7 @@ export default function VacanteDetailPage() {
           </div>
           <div className="ph-actions">
             <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
-            {!vacancyClosed && vacancy.status !== 'cerrada' && (
+            {!vacancyClosed && vacancy.status !== 'despublicada' && (
               <button className="btn btn-ghost btn-sm text-coral border-[rgba(214,62,61,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
                 Cerrar puesto
               </button>

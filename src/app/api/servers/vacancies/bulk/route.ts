@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 import { setVacanciesStatus } from '@/lib/supabase/queries/servers'
-import { isVacancyState } from '@/lib/servers/vacancy-states'
+import { isVacancyState, ESTADO_INICIAL } from '@/lib/servers/vacancy-states'
 import { reportarError } from '@/lib/observabilidad'
 
 // POST: cambio de estado masivo de solicitudes de cupos (vacancies). Body:
@@ -15,7 +15,11 @@ export async function POST(req: NextRequest) {
     const { status, ids } = (await req.json()) as { status?: string; ids?: string[] }
     const list = Array.isArray(ids) ? ids.filter(Boolean) : []
     if (list.length === 0) return NextResponse.json({ error: 'No hay puestos seleccionados.' }, { status: 400 })
-    if (!status || !isVacancyState(status) || status === 'creado') {
+    // SRV-15: no se puede devolver algo a «lista para publicar» desde acá.
+    // Ese es el estado con el que ENTRA una solicitud; volver a ponerlo a mano
+    // haría que una publicada se republicara en la próxima corrida sin que
+    // nadie lo pidiera.
+    if (!status || !isVacancyState(status) || status === ESTADO_INICIAL) {
       return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
     }
     const { updated } = await setVacanciesStatus(list, status)

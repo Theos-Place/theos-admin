@@ -3867,21 +3867,64 @@ HECHO el 2026-09-25 (en staging). Qué quedó:
   una pestaña abierta desde ayer podría bajar algo que se publicó hoy o
   publicar una solicitud que mientras tanto se denegó.
 
-- Página nueva en el menú de servidores: "Solicitudes de puestos de
-  servicio" (la página actual de solicitudes de servicio deja de funcionar
-  como está y se transforma en esto).
-- Lista TODOS los puestos solicitados, detallados por comité y asociados al
-  encargado que los pidió, con cantidad de cupos.
-- Quién la usa: el rol "colaborador de puestos de servicio" (+ admin/RH).
-  Operación prevista: los primeros de cada mes. Dos botones:
-  1. "Descargar Excel": todos los puestos solicitados por comité, con líder
-     asociado, cantidad de cupos y las definiciones/descripciones que ya
-     están en el sistema.
-  2. "Publicar puestos": al publicar, PRIMERO desactiva todo lo publicado
-     del mes anterior (estado desactivado — no DELETE) y luego publica los
-     puestos nuevos en la página de puestos de servicio. Confirmación antes
-     de ejecutar (borra la publicación vigente) y registro en audit_log de
-     quién publicó y cuántos entraron/salieron.
+### [x] SRV-15 · Estados de las solicitudes de puestos: nada se aprueba solo (pedido 2026-09-26, hecho 2026-09-26)
+
+Corrección sobre SRV-12: hoy las solicitudes quedan aprobadas automáticamente
+al entrar. La regla correcta: nada queda aprobado hasta que un humano lo
+apruebe o le dé "Publicar puestos".
+
+Prompt para Claude Code:
+
+```
+CAMBIO · Solicitudes de puestos de servicio: ciclo de estados explícito
+
+SOBRE LO YA HECHO en /servidores/vacantes/solicitudes (SRV-12). Hoy la solicitud entra
+aprobada automáticamente — eso se elimina. Estados nuevos del ciclo:
+
+1. "lista_para_publicar" — estado inicial de TODA solicitud que entra (del flujo de
+   SRV-11). Nada de aprobación automática.
+2. "publicada" — al darle "Publicar puestos", SOLO las solicitudes en
+   lista_para_publicar pasan a publicada y aparecen en la página pública.
+3. "despublicada" — cuando la publicación siguiente la baja de la página pública (o se
+   baja a mano). Reemplaza/renombra el estado 'cerrada' actual si es la misma cosa —
+   revisar y unificar, no dejar dos nombres para lo mismo. Conserva sus aplicaciones
+   colgando, como ya quedó.
+
+BOTÓN "Publicar puestos": queda HABILITADO solo cuando hay al menos una solicitud en
+lista_para_publicar; deshabilitado con tooltip ("No hay solicitudes nuevas por publicar")
+si no hay. La confirmación dice cuántas van a publicarse y cuántas publicadas actuales
+van a bajar.
+
+Mantener lo que ya está bien: recálculo del plan en el server, idempotencia dentro del
+mes, VER≠PUBLICAR, audit_log con los números.
+Tests: solicitud nueva entra en lista_para_publicar (no aprobada), publicar solo mueve
+esas, botón deshabilitado sin pendientes, publicadas anteriores → despublicada.
+tsc/lint/vitest.
+```
+
+**HECHO** (migración `20260926090000`, aplicada a staging).
+
+- **El vocabulario quedó en cuatro y no en seis.** `creado` y `enviado_lider` →
+  `lista_para_publicar` (el paso intermedio nunca se usó: cero filas en las dos
+  bases), `aprobado` → `publicada`, `cerrada` → `despublicada`. `cerrada` y
+  «despublicada» eran el mismo hecho con dos nombres, y tener los dos obligaba a
+  preguntarse cuál usar. `denegado` se queda: negar no es bajar, porque una
+  negada nunca estuvo publicada.
+- **`autoApprove` se eliminó del código**, no se puso en `false`: era el
+  parámetro por el que una solicitud de un rol administrativo entraba ya
+  publicada. `createVacancyRequests` escribe siempre `ESTADO_INICIAL` y
+  `published_at = null`.
+- **El botón ahora exige algo NUEVO que publicar.** Antes bastaba con que
+  hubiera algo que bajar, y eso permitía una corrida que solo vaciaba la página
+  pública — el mes en que ningún comité pida cupos, lo correcto es dejar lo
+  publicado donde está. `motivoParaNoPublicar()` da el texto del tooltip y el
+  del banner, que está siempre a la vista: un botón apagado sin explicación se
+  lee como que la pantalla está rota.
+- **Costo del renombre: dos UPDATEs.** Medido antes de migrar — producción tenía
+  1 fila (`creado`) y staging 4 (`aprobado`).
+- Tests: `srv15-nada-se-publica-solo.test.ts` (12), `vacancy-states.test.ts`
+  reescrito. Los tres cebos —volver la auto-aprobación, encender el botón solo
+  por bajar, aceptar el estado viejo al publicar— hacen fallar un test cada uno.
 
 ### [x] SRV-13 · Parte 3: página PÚBLICA de puestos de servicio (con iframe al website)
 

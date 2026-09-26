@@ -56,7 +56,9 @@ export type CommitteeData = {
 }
 
 export type VacancyStatus =
-  | 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
+  // SRV-15 · El vocabulario vive en `lib/servers/vacancy-states`, que además
+  // tiene las etiquetas y la explicación de cada uno. Acá solo el tipo.
+  | 'lista_para_publicar' | 'publicada' | 'despublicada' | 'denegado'
 
 export type Vacancy = {
   id: string

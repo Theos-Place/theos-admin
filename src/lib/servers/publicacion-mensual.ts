@@ -20,13 +20,18 @@
  * Módulo PURO: decide QUÉ hacer. Quien escribe es la ruta.
  */
 
-/** Los estados desde los que una solicitud puede publicarse: la pidió un
- *  comité y todavía no está en la calle. */
-export const ESTADOS_PUBLICABLES = ['creado', 'enviado_lider'] as const
+/**
+ * El único estado desde el que una solicitud se publica (SRV-15).
+ *
+ * Es UNO y no una lista: antes eran dos —'creado' y 'enviado_lider'— porque
+ * había un paso intermedio que nunca se usó (cero filas en las dos bases). El
+ * ciclo quedó en tres estados y esto es la puerta de entrada.
+ */
+export const ESTADO_PUBLICABLE = 'lista_para_publicar'
 
 /** El estado de lo que está publicado y el de lo que se baja. */
-export const ESTADO_PUBLICADO = 'aprobado'
-export const ESTADO_DESACTIVADO = 'cerrada'
+export const ESTADO_PUBLICADO = 'publicada'
+export const ESTADO_DESACTIVADO = 'despublicada'
 
 export type VacanteParaPublicar = {
   id: string
@@ -64,7 +69,7 @@ export function planDePublicacion(
   const aPublicar: string[] = []
   const aDesactivar: string[] = []
   for (const v of vacantes) {
-    if ((ESTADOS_PUBLICABLES as readonly string[]).includes(v.status)) {
+    if (v.status === ESTADO_PUBLICABLE) {
       aPublicar.push(v.id)
       continue
     }
@@ -95,7 +100,25 @@ export function textoDeConfirmacion(plan: PlanDePublicacion): string {
   return partes.join(' ')
 }
 
-/** ¿Tiene sentido apretar el botón? Sin nada que subir ni bajar, no. */
+/**
+ * ¿Tiene sentido apretar el botón?
+ *
+ * SOLO si hay algo NUEVO que publicar (SRV-15). Antes bastaba con que hubiera
+ * algo que bajar, y eso permitía una corrida que solo vaciaba la página
+ * pública: se bajaban los puestos del mes pasado y no entraba ninguno. Es una
+ * operación que se ve desde afuera y que nadie quiso pedir — el mes en que
+ * ningún comité pidió cupos, lo correcto es dejar lo publicado donde está.
+ */
 export function hayAlgoQuePublicar(plan: PlanDePublicacion): boolean {
-  return plan.aPublicar.length > 0 || plan.aDesactivar.length > 0
+  return plan.aPublicar.length > 0
+}
+
+/** Por qué el botón está apagado, con el texto que se lee en el tooltip.
+ *  `null` = está encendido. */
+export function motivoParaNoPublicar(plan: PlanDePublicacion): string | null {
+  if (hayAlgoQuePublicar(plan)) return null
+  return plan.aDesactivar.length > 0
+    ? 'No hay solicitudes nuevas por publicar. Publicar ahora solo bajaría las '
+      + `${plan.aDesactivar.length} que están en la página.`
+    : 'No hay solicitudes nuevas por publicar.'
 }

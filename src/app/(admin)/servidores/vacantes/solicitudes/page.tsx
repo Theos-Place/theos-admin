@@ -33,7 +33,7 @@ import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { formatDate } from '@/lib/format'
 import { VACANCY_STATE_LABEL, VACANCY_STATE_BADGE, isVacancyState } from '@/lib/servers/vacancy-states'
 import {
-  textoDeConfirmacion, hayAlgoQuePublicar, type PlanDePublicacion,
+  textoDeConfirmacion, hayAlgoQuePublicar, motivoParaNoPublicar, type PlanDePublicacion,
 } from '@/lib/servers/publicacion-mensual'
 
 type Solicitud = {
@@ -146,7 +146,7 @@ export default function SolicitudesDePuestosPage() {
             <Button
               onClick={() => setConfirmando(true)}
               disabled={!hayAlgoQuePublicar(plan)}
-              title={!hayAlgoQuePublicar(plan) ? 'No hay nada que publicar ni que bajar' : undefined}
+              title={motivoParaNoPublicar(plan) ?? undefined}
               className="inline-flex items-center gap-1.5"
             >
               <Upload size={14} aria-hidden="true" /> Publicar puestos
@@ -157,10 +157,19 @@ export default function SolicitudesDePuestosPage() {
 
       {/* El resumen de lo que haría el botón, SIEMPRE a la vista y no solo al
           confirmar: el número que importa es el de los que se bajan. */}
-      {puedePublicar && hayAlgoQuePublicar(plan) && (
-        <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)] flex items-start gap-2.5">
+      {/* Por qué el botón está como está, SIEMPRE a la vista: apagado sin
+          explicación se lee como que la pantalla está rota. */}
+      {puedePublicar && (
+        <div className={cn(
+          'rounded-2xl p-4 flex items-start gap-2.5',
+          hayAlgoQuePublicar(plan)
+            ? 'bg-surface-card shadow-[var(--shadow-md)]'
+            : 'bg-surface-low',
+        )}>
           <Upload size={16} className="mt-0.5 shrink-0 text-navy-light/80" aria-hidden="true" />
-          <p className="text-sm text-navy font-body">{textoDeConfirmacion(plan)}</p>
+          <p className="text-sm text-navy font-body">
+            {motivoParaNoPublicar(plan) ?? textoDeConfirmacion(plan)}
+          </p>
         </div>
       )}
 

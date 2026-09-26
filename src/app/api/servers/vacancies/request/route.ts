@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
       notes: null,
       expires_at: null,
       is_featured: false,
-      autoApprove: globalAdmin,
     })
     if (rows === 0) {
       return NextResponse.json({ error: 'Ningún puesto válido para este comité.' }, { status: 400 })

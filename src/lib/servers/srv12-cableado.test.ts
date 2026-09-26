@@ -50,13 +50,13 @@ describe('SRV-12 · la publicación no se la dicta el cliente', () => {
     // `aPublicar` antes y el guard daría verde al revés.
     const src = sinComentarios(QUERIES)
     const fn = src.slice(src.indexOf('export async function ejecutarPublicacionMensual'))
-    expect(fn.indexOf("status: 'cerrada'")).toBeLessThan(fn.indexOf("status: 'aprobado'"))
+    expect(fn.indexOf('ESTADO_DESACTIVADO')).toBeLessThan(fn.indexOf('ESTADO_PUBLICADO'))
   })
 
   it('NO borra: desactiva', () => {
     const fn = sinComentarios(QUERIES).slice(
       sinComentarios(QUERIES).indexOf('export async function ejecutarPublicacionMensual'))
-    expect(fn).toContain("status: 'cerrada'")
+    expect(fn).toContain('ESTADO_DESACTIVADO')
     expect(fn).not.toContain('.delete()')
   })
 

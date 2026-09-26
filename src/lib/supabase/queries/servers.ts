@@ -1,4 +1,6 @@
 import type { ApplicationState } from '@/lib/servers/application-states'
+import { ESTADO_INICIAL, type VacancyState } from '@/lib/servers/vacancy-states'
+import { ESTADO_PUBLICADO, ESTADO_DESACTIVADO } from '@/lib/servers/publicacion-mensual'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
@@ -56,7 +58,7 @@ export type DbVacancy = {
   commitment: string | null
   slots_total: number
   slots_filled: number
-  status: 'creado' | 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada'
+  status: VacancyState
   published_at: string | null
   created_at: string
   expires_at: string | null
@@ -415,21 +417,20 @@ export type VacancyRequestExtra = {
   is_featured?: boolean
   /** Roles administrativos globales (staff/coordinación): la solicitud queda
    *  aprobada y publicada de una, sin pasar por la bandeja de revisión. */
-  autoApprove?: boolean
 }
 
 /** Crea las vacantes de una solicitud (carrito del comité): una vacante por
  *  puesto con `slots_total = cantidad`. Estado 'creado' (pendiente de revisión)
- *  salvo `autoApprove` (roles globales), que queda 'aprobado' y publicada de una.
+ *  SRV-15: entran todas en `lista_para_publicar` — nada se publica solo.
  *  Devuelve filas creadas y total de cupos. Ignora ítems con cantidad <= 0. */
 export async function createVacancyRequests(
   committeeId: string,
   items: Array<{ position_id: string; quantity: number }>,
   extra: VacancyRequestExtra = {},
-): Promise<{ rows: number; slots: number; status: 'creado' | 'aprobado' }> {
+): Promise<{ rows: number; slots: number; status: VacancyState }> {
   const supabase = createAdminClient()
   const valid = items.filter(i => i.position_id && Number(i.quantity) > 0)
-  if (valid.length === 0) return { rows: 0, slots: 0, status: 'creado' }
+  if (valid.length === 0) return { rows: 0, slots: 0, status: ESTADO_INICIAL }
 
   const { data: positions, error: pErr } = await supabase
     .from('service_positions').select('id, title, area_id').in('id', valid.map(i => i.position_id))
@@ -437,8 +438,18 @@ export async function createVacancyRequests(
   const posById = new Map(
     ((positions ?? []) as Array<{ id: string; title: string; area_id: string }>).map(p => [p.id, p]),
   )
-  const status: 'creado' | 'aprobado' = extra.autoApprove ? 'aprobado' : 'creado'
-  const publishedAt = extra.autoApprove ? new Date().toISOString() : null
+  /**
+   * SRV-15 · TODA solicitud entra en `lista_para_publicar`, la pida quien la
+   * pida.
+   *
+   * Antes, si quien la mandaba tenía un rol administrativo, entraba ya
+   * aprobada y publicada —`autoApprove`— sin que nadie apretara nada. Eso
+   * hacía que la página pública cambiara por el solo hecho de que la
+   * solicitud la escribiera un coordinador, que no es una decisión de
+   * publicación: es quién tuvo tiempo de llenarla.
+   */
+  const status: VacancyState = ESTADO_INICIAL
+  const publishedAt = null
   // Defensa: el puesto debe pertenecer al comité indicado.
   const rows = valid
     .filter(i => posById.get(i.position_id)?.area_id === committeeId)
@@ -570,15 +581,15 @@ export async function approveApplications(ids: string[], actorUserId?: string): 
  *  No toca aplicaciones ni servidores — es el flujo de la solicitud de cupos. */
 export async function setVacanciesStatus(
   ids: string[],
-  status: 'enviado_lider' | 'aprobado' | 'denegado' | 'cerrada',
+  status: VacancyState,
 ): Promise<{ updated: number }> {
   if (ids.length === 0) return { updated: 0 }
   const supabase = createAdminClient()
-  // Al aprobar, la vacante queda publicada de una (mismo criterio que el
-  // auto-aprobado de staff): sin este sello, 'aprobado' nunca sería visible
-  // ni aplicable para los miembros.
+  // SRV-15: publicar sella la fecha. Sin ella, la corrida del mes siguiente
+  // no sabría de qué ciclo es y la bajaría de inmediato (ver
+  // `planDePublicacion`, que trata como vieja a la publicada sin fecha).
   const row: Record<string, unknown> = { status }
-  if (status === 'aprobado') row.published_at = new Date().toISOString()
+  if (status === 'publicada') row.published_at = new Date().toISOString()
   const { error, count } = await supabase
     .from('vacancies')
     .update(row as Updatable<'vacancies'>, { count: 'exact' })
@@ -1376,13 +1387,13 @@ export async function ejecutarPublicacionMensual(
 
   if (plan.aDesactivar.length > 0) {
     const { error } = await supabase.from('vacancies')
-      .update({ status: 'cerrada', updated_at: iso })
+      .update({ status: ESTADO_DESACTIVADO, updated_at: iso })
       .in('id', plan.aDesactivar)
     if (error) throw error
   }
   if (plan.aPublicar.length > 0) {
     const { error } = await supabase.from('vacancies')
-      .update({ status: 'aprobado', published_at: iso, updated_at: iso })
+      .update({ status: ESTADO_PUBLICADO, published_at: iso, updated_at: iso })
       .in('id', plan.aPublicar)
     if (error) throw error
   }

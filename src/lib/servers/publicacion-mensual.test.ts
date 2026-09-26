@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   planDePublicacion, cicloDe, textoDeConfirmacion, hayAlgoQuePublicar,
-  ESTADO_PUBLICADO, ESTADO_DESACTIVADO,
+  ESTADO_PUBLICABLE, ESTADO_PUBLICADO, ESTADO_DESACTIVADO,
 } from './publicacion-mensual'
 
 const AHORA = new Date('2026-10-02T12:00:00Z')
@@ -9,9 +9,18 @@ const v = (id: string, status: string, published_at: string | null = null) => ({
 
 describe('qué sube y qué baja', () => {
   it('sube lo que pidieron los comités', () => {
-    const plan = planDePublicacion([v('a', 'creado'), v('b', 'enviado_lider')], AHORA)
+    const plan = planDePublicacion([v('a', ESTADO_PUBLICABLE), v('b', ESTADO_PUBLICABLE)], AHORA)
     expect(plan.aPublicar).toEqual(['a', 'b'])
     expect(plan.aDesactivar).toEqual([])
+  })
+
+  it('el vocabulario viejo YA NO publica nada', () => {
+    // SRV-15 renombró los estados. Si quedara una fila con el nombre viejo
+    // —por un script o un rollback a medias—, lo correcto es NO publicarla:
+    // publicar de más se ve desde afuera y no tiene deshacer inmediato.
+    for (const viejo of ['creado', 'enviado_lider', 'aprobado']) {
+      expect(planDePublicacion([v('x', viejo)], AHORA).aPublicar, viejo).toEqual([])
+    }
   })
 
   it('baja lo publicado del mes PASADO', () => {
@@ -33,7 +42,7 @@ describe('qué sube y qué baja', () => {
       .toEqual(['huerfana'])
   })
 
-  it('no toca lo denegado ni lo ya cerrado', () => {
+  it('no toca lo denegado ni lo ya despublicado', () => {
     const plan = planDePublicacion([
       v('no', 'denegado'), v('fin', ESTADO_DESACTIVADO, '2026-08-01T00:00:00Z'),
     ], AHORA)
@@ -48,7 +57,7 @@ describe('qué sube y qué baja', () => {
 
   it('una tanda mezclada se reparte bien', () => {
     const plan = planDePublicacion([
-      v('a', 'creado'),
+      v('a', ESTADO_PUBLICABLE),
       v('b', ESTADO_PUBLICADO, '2026-09-02T00:00:00Z'),
       v('c', ESTADO_PUBLICADO, '2026-10-01T00:00:00Z'),
       v('d', 'denegado'),
