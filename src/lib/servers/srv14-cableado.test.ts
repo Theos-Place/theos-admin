@@ -206,8 +206,23 @@ describe('SRV-14 · el panel de revisión no está duplicado', () => {
     }
   })
 
-  it('la bandeja tiene el mismo botón «Revisar» que el tab de la vacante', () => {
-    expect(sinComentarios(BANDEJA)).toMatch(/>\s*Revisar\s*</)
+  it('el botón dice «Ver aplicación», haciendo par con «Ver puesto»', () => {
+    // Están uno al lado del otro en la misma fila: son las dos caras de la
+    // aplicación —la persona y el puesto—, y con nombres distintos («Revisar»
+    // / «Ver puesto») no se leían como un par.
+    const src = sinComentarios(BANDEJA)
+    expect(src).toContain('Ver aplicación')
+    expect(src).toContain('Ver puesto')
+    expect(src).not.toMatch(/>\s*Revisar\s*</)
+  })
+
+  it('dentro del Modal el panel NO dibuja su propia X ni su propia tarjeta', () => {
+    // El Modal ya pone las dos. Dos equis en la misma esquina se leen como un
+    // error, y dos tarjetas anidadas dan dos bordes y dos sombras.
+    expect(sinComentarios(BANDEJA)).toContain('dentroDeModal')
+    const panel = sinComentarios('src/components/servers/PanelDeAplicacion.tsx')
+    expect(panel).toContain('{!dentroDeModal && (')
+    expect(panel).toMatch(/dentroDeModal\s*\?\s*'w-full'/)
   })
 
   it('la nota SOLO aparece en «en revisión»', () => {

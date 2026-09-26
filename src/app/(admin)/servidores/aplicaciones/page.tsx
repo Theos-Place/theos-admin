@@ -325,14 +325,16 @@ export default function AplicacionesPage() {
                       >
                         <Printer size={11} /> Hoja
                       </Link>
-                      {/* El MISMO botón del tab de aplicaciones de la vacante,
-                          y abre el MISMO panel. */}
+                      {/* Abre el MISMO panel que el tab de la vacante. Se
+                          llama «Ver aplicación» y no «Revisar» para que haga
+                          par con «Ver puesto», que está al lado: son las dos
+                          caras de la misma fila. */}
                       <button
                         type="button"
                         onClick={() => setRevisando(a)}
                         className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                       >
-                        Revisar
+                        Ver aplicación <ChevronRight size={11} />
                       </button>
                       <Link
                         href={`/servidores/vacantes/${a.vacancy_id}`}
@@ -436,6 +438,8 @@ export default function AplicacionesPage() {
             <PanelDeAplicacion
               app={revisando}
               puedeGestionar={puedeGestionar}
+              // El Modal ya pone la X y ya es la tarjeta.
+              dentroDeModal
               onClose={() => setRevisando(null)}
               onSaved={(estado) => {
                 setRevisando(null)

@@ -33,11 +33,26 @@ import {
 } from '@/lib/servers/application-states'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 
-export function PanelDeAplicacion({ app, puedeGestionar, onClose, onSaved, onError }: {
+export function PanelDeAplicacion({
+  app, puedeGestionar, onClose, onSaved, onError, dentroDeModal = false,
+}: {
   app: Application
   /** VER no es GESTIONAR: dirección abre el panel pero no cambia estados. */
   puedeGestionar: boolean
   onClose: () => void
+  /**
+   * Cambia dos cosas, y las dos por el mismo motivo: adentro de un Modal, el
+   * Modal ya pone la X y ya es la tarjeta.
+   *
+   *  · NO dibuja su propia X — dos equis pegadas en la misma esquina se leen
+   *    como un error de la pantalla.
+   *  · NO dibuja su fondo, su sombra ni su ancho fijo — serían una tarjeta
+   *    dentro de otra, con dos bordes y dos sombras.
+   *
+   * Como panel LATERAL (el tab de la vacante) necesita las dos: ahí no hay
+   * Modal que las ponga.
+   */
+  dentroDeModal?: boolean
   onSaved: (estado: ApplicationStatus) => void
   onError: (mensaje: string) => void
 }) {
@@ -68,7 +83,12 @@ export function PanelDeAplicacion({ app, puedeGestionar, onClose, onSaved, onErr
   }
 
   return (
-    <div className="w-full lg:w-80 shrink-0 rounded-2xl p-4 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
+    <div className={cn(
+      'space-y-4',
+      dentroDeModal
+        ? 'w-full'
+        : 'w-full lg:w-80 shrink-0 rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]',
+    )}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center shrink-0">
@@ -81,9 +101,11 @@ export function PanelDeAplicacion({ app, puedeGestionar, onClose, onSaved, onErr
             </Link>
           </div>
         </div>
-        <button onClick={onClose} aria-label="Cerrar" className="text-navy-light/80 hover:text-navy transition-colors shrink-0">
-          <X size={15} />
-        </button>
+        {!dentroDeModal && (
+          <button onClick={onClose} aria-label="Cerrar" className="text-navy-light/80 hover:text-navy transition-colors shrink-0">
+            <X size={15} />
+          </button>
+        )}
       </div>
 
       <div className="space-y-1">
