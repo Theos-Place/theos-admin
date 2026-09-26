@@ -3338,7 +3338,41 @@ Detalles que conviene saber:
 Sembrar / re-sembrar: `npx tsx scripts/est15/sembrar-cuestionario-nivel-1.ts
 --aplicar` (sin `--aplicar` es dry-run).
 
-### [ ] EST-16 · Cierre: el dirigente elige la fecha de inicio del siguiente nivel + recordatorio más suave
+### [x] EST-16 · Cierre: el dirigente elige la fecha de inicio del siguiente nivel + recordatorio más suave
+
+HECHO el 2026-09-25 (commit `1a96714d`, en staging). Lo que quedó y lo que se
+encontró midiendo:
+
+- **Parte 1 · la fecha la elige quien cierra.** El cálculo pasó a ser el valor
+  por defecto del date picker; la fecha elegida gana tal cual, sin correrse al
+  próximo día de clase ni respetar el piso de 8 días, y el fin del período se
+  recalcula desde ella. Viaja sola al correo del cierre porque ese correo lee
+  `starts_at` del grupo sucesor. Se valida ANTES de cerrar (el cierre es
+  irreversible) y se permite el pasado, con un tope de ±12 meses para el dedo
+  resbalado.
+- **Discípulos lo necesita IGUAL, y quedó incluido.** El pedido decía «solo
+  niveles; verificar si discípulos lo necesita». Es el mismo código —
+  `FOLLETO_NEXT_LEVEL` encadena N1→N4 y DIS1→DIS3 por la misma función— y los
+  datos dicen lo mismo: de los 6 cierres de discípulos hechos en el sistema
+  desde agosto, 5 llegaron tarde (12, 12, 18, 35 y 100 días). Dejarlos afuera
+  habría significado darle al dirigente de DIS una fecha mala sin dónde
+  corregirla.
+- **La premisa de la parte 2 estaba equivocada.** El primer aviso NO salía a 2
+  semanas: `CLOSE_REMINDER_DAYS_BEFORE` ya era 7, y los 60 grupos avisados en
+  producción lo recibieron a 7 días exactos del fin. No se cambió nada; un test
+  deja el 7 clavado para que no suba sin querer.
+- **Lo que sí estaba mal era el SEGUNDO aviso.** Sale 7 días después del fin, y
+  como los grupos se cierran con dos a cinco semanas de atraso, lo recibieron 48
+  de los 60 grupos avisados: el correo de «ya terminó y no cerraste» es la norma,
+  no la excepción. Se reescribió el copy (migración `20260925200000`): ahora
+  pregunta si ya terminaron, dice que atrasarse está bien, y la frase final
+  promete que dejás de recibir correos en vez de anunciar que te buscan.
+- **«El último» es cierto.** `closeReminderDue` produce dos avisos y nada más,
+  cada uno deduplicado. Fijado por el test «después del vencido ya no sale nada».
+
+PENDIENTE DE DECISIÓN (no se tocó, es producto): el segundo aviso a +7 días le
+llega al 80% de los grupos. Si la idea es que solo lo reciba quien de verdad se
+quedó, `CLOSE_OVERDUE_DAYS_AFTER` tendría que subir — tres o cuatro semanas.
 
 Prompt para Claude Code:
 
