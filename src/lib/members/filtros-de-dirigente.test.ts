@@ -168,6 +168,20 @@ describe('PAR-7 · el cable', () => {
     expect(enLeader).toContain("'leader'")
   })
 
+  it('los tres selectores de estudio son casillas, no una manta de chips', () => {
+    // El catálogo tiene 29 opciones y en esta pestaña hay TRES preguntas: en
+    // chips eran cinco filas cada una y no se distinguía dónde terminaba una y
+    // empezaba la otra. Cerrado ocupa una línea; abierto, casillas que se
+    // recorren con Tab.
+    const src = sinComentarios(PANEL)
+    const selector = src.slice(src.indexOf('function SelectorDeEstudios'))
+    expect(selector).toContain('type="checkbox"')
+    expect(selector).toContain('aria-expanded')
+    // Y el selector es UNO SOLO para las tres: repetirlo tres veces era la
+    // forma de que dos quedaran distintos sin que nadie lo notara.
+    expect((src.match(/<SelectorDeEstudios/g) ?? []).length).toBe(3)
+  })
+
   it('las rutas del padrón saneen los estados reservados con la SESIÓN', () => {
     for (const ruta of [
       'src/app/api/members/route.ts',

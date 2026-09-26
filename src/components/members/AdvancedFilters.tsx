@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { X } from 'lucide-react'
+import { X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conditionLabel } from '@/lib/condition-labels'
 import { STUDY_STAGES } from '@/data/study-catalog'
@@ -909,26 +909,67 @@ function SelectorDeEstudios({
     if (siguiente.length > 0) addCondition({ group: 'leader', type: tipo, studies: siguiente } as AddableCondition)
   }
 
+  /**
+   * Un desplegable con CASILLAS y no una manta de chips.
+   *
+   * El catálogo tiene 29 opciones: en chips son cinco o seis filas por
+   * pregunta, y como acá hay TRES preguntas, el panel se convertía en una
+   * pared donde no se distinguía una de otra. Cerrado ocupa una línea y dice
+   * qué hay elegido; abierto es una lista de casillas, que además se recorre
+   * con Tab y se marca con la barra espaciadora sin que haya que enseñar nada.
+   */
+  const [abierto, setAbierto] = useState(false)
+  const resumen = elegidos.length === 0
+    ? 'Cualquiera'
+    : elegidos.length <= 2
+      ? elegidos.map(v => opciones.find(o => o.value === v)?.label ?? v).join(', ')
+      : `${elegidos.length} seleccionados`
+
   return (
     <div>
       <Label>{etiqueta}</Label>
-      <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
-        {opciones.map(o => (
-          <button
-            key={o.value}
-            onClick={() => alternar(o.value)}
-            aria-pressed={elegidos.includes(o.value)}
-            className={cn(
-              'rounded-full px-2.5 py-1 text-[13px] font-body border transition-all',
-              elegidos.includes(o.value)
-                ? 'bg-navy text-white border-navy'
-                : 'bg-transparent text-navy/80 border-outline hover:text-navy',
-            )}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
+      <button
+        type="button"
+        onClick={() => setAbierto(v => !v)}
+        aria-expanded={abierto}
+        className="w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+      >
+        <span className="truncate">{resumen}</span>
+        <ChevronDown size={14} className={cn('shrink-0 transition-transform text-navy-light/80', abierto && 'rotate-180')} aria-hidden="true" />
+      </button>
+
+      {abierto && (
+        <div
+          role="group"
+          aria-label={etiqueta}
+          className="mt-1 max-h-52 overflow-y-auto rounded-xl border border-[var(--outline-variant)] bg-surface-card p-2 space-y-0.5"
+        >
+          {elegidos.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { if (cond) removeCondition(cond.id) }}
+              className="w-full text-left px-1.5 py-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+            >
+              Limpiar la selección
+            </button>
+          )}
+          {opciones.map(o => (
+            <label
+              key={o.value}
+              className="flex items-center gap-2 cursor-pointer rounded-lg px-1.5 py-1 hover:bg-surface-low"
+            >
+              <input
+                type="checkbox"
+                checked={elegidos.includes(o.value)}
+                onChange={() => alternar(o.value)}
+                className="accent-coral h-3.5 w-3.5 shrink-0"
+              />
+              <span className="text-[13px] text-navy font-body">{o.label}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
       <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">{ayuda}</p>
     </div>
   )
