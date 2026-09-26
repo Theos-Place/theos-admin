@@ -333,6 +333,34 @@ async function main() {
     sirve: 'Probar que el co-dirigente ve el grupo igual que el dirigente',
   })
 
+  /**
+   * LOS DOS necesitan ficha en `study_leaders`, y el co-dirigente la necesita
+   * por lo mismo que el dirigente.
+   *
+   * Antes solo la tenía Dora, y más abajo, puesta al pasar para que las
+   * evaluaciones tuvieran a dónde apuntar. Coco quedaba co-dirigiendo ocho
+   * grupos SIN ficha, y eso se ve en pantalla: aparecía en la lista de
+   * dirigentes como «inactivo» al lado de sus grupos en matrícula (reportado
+   * el 2026-09-25 mirando staging), y sin ficha tampoco le sale el tab donde
+   * el dirigente mantiene su disponibilidad (SRV-9).
+   *
+   * En la app esto no pasa: `createGroup` llama a `activateLeaders` con los
+   * DOS. El seed inserta los grupos directo en la tabla y se saltaba ese paso.
+   *
+   * Activa y disponible porque dirigen grupos en matrícula, que es el inciso
+   * (a) de PAR-2.
+   */
+  for (const quien of [dirigente, coDirigente]) {
+    const { data: ya } = await laxo.from('study_leaders')
+      .select('id').eq('member_id', quien.id).maybeSingle()
+    if (ya) continue
+    const { error } = await laxo.from('study_leaders').insert({
+      member_id: quien.id, is_active: true, availability_status: 'available',
+      zone_preference: [], qualified_study_codes: [],
+    })
+    if (error) throw new Error(`ficha de ${quien.nombre}: ${error.message}`)
+  }
+
   // ── A) Un grupo por categoría, en matrícula ────────────────────────────────
   console.log('· A · grupos en matrícula, uno por categoría')
   const gruposMatricula: Record<string, string> = {}
@@ -683,14 +711,11 @@ async function main() {
     fin: new Date(HOY.getTime() - 10 * 86400000),
     sirve: 'Retroalimentación al dirigente: ver el panel, ocultar un comentario y compartirlo',
   })
-  // El dirigente necesita ficha en study_leaders: leader_evaluations apunta ahí.
-  let { data: fichaDir } = await laxo.from('study_leaders').select('id').eq('member_id', dirigente.id).maybeSingle()
-  if (!fichaDir) {
-    const { data, error } = await laxo.from('study_leaders')
-      .insert({ member_id: dirigente.id, is_active: true }).select('id').single()
-    if (error) throw new Error(`ficha de dirigente: ${error.message}`)
-    fichaDir = data as { id: string }
-  }
+  // La ficha de `study_leaders` ya se creó arriba, junto con la persona:
+  // `leader_evaluations` apunta ahí y acá solo se lee.
+  const { data: fichaDir } = await laxo.from('study_leaders')
+    .select('id').eq('member_id', dirigente.id).maybeSingle()
+  if (!fichaDir) throw new Error('ficha de dirigente: no existe (¿cambió el bloque de arriba?)')
   const RESPUESTAS = [
     { score: 5, comments: 'Explicaba con mucha claridad y siempre llegaba puntual.' },
     { score: 4, comments: 'Muy bueno. A veces nos quedábamos cortos de tiempo al final.' },
