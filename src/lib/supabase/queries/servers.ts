@@ -1,3 +1,4 @@
+import type { ApplicationState } from '@/lib/servers/application-states'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
@@ -71,7 +72,7 @@ export type DbApplication = {
   vacancy: { title: string; position: string | null; committee: { id: string; name: string; parent: { name: string } | null } | null } | null
   applicant_id: string
   applicant: { first_name: string; last_name: string } | null
-  status: 'pending' | 'reviewing' | 'approved' | 'rejected'
+  status: ApplicationState
   notes: string | null
   applied_at: string
 }
@@ -245,7 +246,7 @@ export async function getApplications(): Promise<DbApplication[]> {
 
 export type ApplicationFilters = {
   search?: string
-  status?: 'pending' | 'reviewing' | 'approved' | 'rejected'
+  status?: ApplicationState
   committeeId?: string
   page?: number
   pageSize?: number
@@ -486,7 +487,10 @@ async function syncRolesForApprovedApplications(ids: string[], actorUserId?: str
  *  approve_applications (5b): reactiva sin duplicar y NO dispara correos. */
 export async function setApplicationStatus(
   id: string,
-  status: 'pending' | 'reviewing' | 'approved' | 'rejected',
+  // SRV-14: el vocabulario vive en `lib/servers/application-states`. Se
+  // importa el tipo y no se repite la unión acá: repetida, el estado nuevo
+  // compila en un lado y revienta en el otro.
+  status: ApplicationState,
   actorUserId?: string,
 ): Promise<void> {
   const supabase = createAdminClient()
@@ -1342,4 +1346,88 @@ export async function ejecutarPublicacionMensual(
     if (error) throw error
   }
   return { publicadas: plan.aPublicar.length, desactivadas: plan.aDesactivar.length }
+}
+
+/**
+ * SRV-14 · El detalle de quien aplicó: sus datos y su último estudio con el
+ * dirigente que se lo dio.
+ *
+ * EL ÚLTIMO ESTUDIO se resuelve por la fecha del grupo y no por `created_at`
+ * de la inscripción: el histórico de CCB se importó todo el mismo día, así
+ * que ordenar por cuándo se creó la fila daría el orden del import y no el de
+ * la vida de la persona.
+ */
+export async function getDetalleDeAplicante(applicationId: string): Promise<{
+  nombre: string
+  telefono: string | null
+  correo: string | null
+  puesto: string
+  comite: string
+  committee_id: string | null
+  ultimoEstudio: string | null
+  dirigente: string | null
+  telefonoDirigente: string | null
+} | null> {
+  const supabase = createAdminClient()
+
+  const { data: app } = await supabase
+    .from('applications')
+    .select(`id, applicant_id,
+             vacancy:vacancies!applications_vacancy_id_fkey(
+               title, committee_id,
+               committee:areas!vacancies_committee_id_fkey(name),
+               pos:service_positions!vacancies_position_id_fkey(title))`)
+    .eq('id', applicationId).maybeSingle()
+  if (!app) return null
+  const a = app as unknown as Record<string, unknown>
+  const vac = (Array.isArray(a.vacancy) ? a.vacancy[0] : a.vacancy) as Record<string, unknown> | null
+  const com = vac ? (Array.isArray(vac.committee) ? vac.committee[0] : vac.committee) as { name: string | null } | null : null
+  const pos = vac ? (Array.isArray(vac.pos) ? vac.pos[0] : vac.pos) as { title: string | null } | null : null
+
+  const { data: m } = await supabase
+    .from('members').select('first_name, last_name, phone, email')
+    .eq('id', a.applicant_id as string).maybeSingle()
+  const per = m as { first_name: string; last_name: string; phone: string | null; email: string | null } | null
+
+  // El último estudio COMPLETADO, con el dirigente de su grupo.
+  const { data: enr } = await supabase
+    .from('study_enrollments')
+    .select(`status, completed_at, enrolled_at,
+             group:study_groups!study_enrollments_group_id_fkey(
+               name, starts_at, ends_at, leader_id,
+               plan:study_plans!study_groups_plan_id_fkey(name),
+               leader:members!study_groups_leader_id_fkey(first_name, last_name, phone))`)
+    .eq('member_id', a.applicant_id as string)
+    .eq('status', 'completed')
+  type Fila = {
+    completed_at: string | null; enrolled_at: string | null
+    group: Record<string, unknown> | Record<string, unknown>[] | null
+  }
+  const filas = ((enr ?? []) as unknown as Fila[]).map(f => {
+    const g = (Array.isArray(f.group) ? f.group[0] : f.group) as Record<string, unknown> | null
+    const plan = g ? (Array.isArray(g.plan) ? g.plan[0] : g.plan) as { name: string | null } | null : null
+    const lid = g ? (Array.isArray(g.leader) ? g.leader[0] : g.leader) as
+      { first_name: string; last_name: string; phone: string | null } | null : null
+    return {
+      // Se ordena por la fecha del ESTUDIO, no por la de la fila.
+      fecha: String((g?.ends_at ?? g?.starts_at ?? f.completed_at ?? f.enrolled_at) ?? ''),
+      nombre: plan?.name ?? (g?.name as string) ?? null,
+      dirigente: lid ? `${lid.first_name} ${lid.last_name}`.trim() : null,
+      telefonoDirigente: lid?.phone ?? null,
+    }
+  }).filter(f => !!f.nombre)
+  filas.sort((x, y) => y.fecha.localeCompare(x.fecha))
+  const ultimo = filas[0] ?? null
+
+  return {
+    nombre: per ? `${per.first_name} ${per.last_name}`.trim() : 'Sin nombre',
+    telefono: per?.phone ?? null,
+    correo: per?.email ?? null,
+    puesto: pos?.title ?? (vac?.title as string) ?? 'Puesto',
+    comite: com?.name ?? 'Sin comité',
+    committee_id: (vac?.committee_id as string) ?? null,
+    ultimoEstudio: ultimo?.nombre ?? null,
+    dirigente: ultimo?.dirigente ?? null,
+    telefonoDirigente: ultimo?.telefonoDirigente ?? null,
+  }
 }

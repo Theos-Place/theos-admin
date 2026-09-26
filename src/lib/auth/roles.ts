@@ -340,6 +340,15 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'aplicaciones_servicio',
+    name: 'Aplicaciones de servicio',
+    description: 'Revisar las aplicaciones a puestos, mandarlas al encargado y darles seguimiento',
+    color: '#C9A227',
+    permissions: [
+      { module: 'servidores', actions: ['view'], scope: 'all' },
+    ],
+  },
+  {
     id: 'solicitudes_puestos',
     name: 'Solicitudes de puestos',
     description: 'Recibir y armar las solicitudes mensuales de puestos de los comités',

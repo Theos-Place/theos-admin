@@ -212,6 +212,26 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
       && normSinArticulos(ctx.title) === 'colaborador solicitud puestos',
   },
   {
+    role: 'aplicaciones_servicio',
+    description:
+      'Colaborador Aplicaciones y Colaborador Seguimiento, del Comité de Servidores: '
+      + 'son quienes revisan las aplicaciones, se las mandan al encargado y las siguen.',
+    /**
+     * SRV-14 (2026-09-25). Los DOS títulos se verificaron en el catálogo antes
+     * de escribir esto — misma trampa que en SRV-11: los nombres reales no
+     * llevan los «de» que traía el pedido.
+     *
+     * Son dos puestos y no «cualquier puesto del comité» por la misma razón de
+     * siempre: ese comité tiene además Atracción, Servidores Nuevos y
+     * Solicitud Puestos, que son otros trabajos.
+     */
+    matches: (ctx) =>
+      ctx.areaType === 'committee'
+      && norm(ctx.areaName).includes('servidores')
+      && ['colaborador aplicaciones', 'colaborador seguimiento']
+        .includes(normSinArticulos(ctx.title)),
+  },
+  {
     role: 'lider_comite',
     description:
       'Quien encabeza un comité: cualquier título que empiece con "Encargado" en un comité '

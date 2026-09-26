@@ -17,27 +17,23 @@ import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/hooks/useAuth'
 import { canSeeServiceApplications } from '@/lib/auth/service-applications'
 import { formatDate } from '@/lib/format'
+import {
+  APPLICATION_STATE_BADGE, APPLICATION_STATE_LABEL, APPLICATION_STATES,
+} from '@/lib/servers/application-states'
 
-const APP_STATUS_COLORS: Record<ApplicationStatus, string> = {
-  pending:   'bg-amber-500/10 text-amber-600',
-  reviewing: 'bg-navy/10 text-navy',
-  approved:  'bg-teal-deep/10 text-teal-deep',
-  rejected:  'bg-coral/10 text-coral',
-}
+// SRV-14 · Las etiquetas y los colores salen del módulo compartido. Estaban
+// escritos a mano en DOS pantallas, así que el mismo estado se llamaba
+// «Aprobada» en una y «Aceptada» en la otra — y el estado nuevo habría hecho
+// falta agregarlo en los dos lados.
+const APP_STATUS_COLORS = APPLICATION_STATE_BADGE
+const APP_STATUS_LABELS = APPLICATION_STATE_LABEL
 
-const APP_STATUS_LABELS: Record<ApplicationStatus, string> = {
-  pending:   'Pendiente',
-  reviewing: 'En revisión',
-  approved:  'Aprobada',
-  rejected:  'No seleccionada',
-}
-
+// SRV-14 · Los filtros se DERIVAN de los estados: escritos a mano, el estado
+// nuevo existía en la base y no se podía filtrar, que es la peor combinación
+// —las aplicaciones estaban ahí y la pantalla no las encontraba—.
 const STATUS_FILTERS: { key: ApplicationStatus | 'all'; label: string }[] = [
-  { key: 'all',       label: 'Todas' },
-  { key: 'pending',   label: 'Pendientes' },
-  { key: 'reviewing', label: 'En revisión' },
-  { key: 'approved',  label: 'Aprobadas' },
-  { key: 'rejected',  label: 'No seleccionadas' },
+  { key: 'all', label: 'Todas' },
+  ...APPLICATION_STATES.map(s => ({ key: s, label: APPLICATION_STATE_LABEL[s] })),
 ]
 
 type BulkAction = 'approve' | 'reject'

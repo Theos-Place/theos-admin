@@ -86,7 +86,10 @@ export type Vacancy = {
   is_featured?: boolean
 }
 
-export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected'
+/** SRV-14 · Los cinco estados. El vocabulario visible y las reglas de
+ *  transición viven en `lib/servers/application-states`; acá solo el tipo. */
+export type ApplicationStatus =
+  'pending' | 'sent_to_leader' | 'reviewing' | 'approved' | 'rejected'
 
 export type Application = {
   id: string
