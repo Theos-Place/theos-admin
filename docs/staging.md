@@ -97,6 +97,31 @@ Van marcadas `[prueba]` y con correo en **`.invalid`**, un TLD reservado que no
 existe: ni por error puede salir un envío hacia una dirección real. Corrido el
 2026-09-25: 356 fichas, y los 357 puestos quedaron con alguien.
 
+## Aplicar una migración a staging
+
+```
+node scripts/staging/aplicar-sql.mjs supabase/migrations/2026…_algo.sql
+```
+
+Staging NO tiene `SUPABASE_DB_URL` —la contraseña de la base nunca se pudo
+resetear por el API—, y con solo la llave de servicio no se puede hacer
+`create function`: PostgREST expone tablas y RPC, no DDL. Este script va por el
+API de gestión, con el `SUPABASE_ACCESS_TOKEN` de `.env.local` y el proyecto de
+`.env.staging.local`. Son dos archivos distintos y además comprueba el ref, así
+que no hay forma de apuntarle a producción por accidente.
+
+Hace falta porque **el deploy NO aplica migraciones en Preview**: el runner
+corre en seco ahí y solo escribe con `VERCEL_ENV=production`. Empujar a la rama
+`staging` deja el código nuevo contra el esquema VIEJO, y la prueba no prueba
+nada. Acordarse de esto es la mitad de la regla de «staging primero».
+
+Después conviene registrar la versión para que el registro no quede atrasado:
+
+```sql
+insert into supabase_migrations.schema_migrations(version, name)
+values ('2026…', 'nombre') on conflict (version) do nothing;
+```
+
 ## Con un comando
 
 ```bash
