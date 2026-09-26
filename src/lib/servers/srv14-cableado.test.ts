@@ -123,22 +123,65 @@ describe('SRV-14 · el detalle de la persona', () => {
       .toBe('Logística - Montaje - Ana Rojas.pdf')
   })
 
-  it('bajarse la hoja QUEDA REGISTRADO: es una exportación de datos personales', () => {
+  it('abrir la hoja QUEDA REGISTRADO: es sacar datos personales', () => {
     // Teléfono, correo y con quién llevó su último estudio. Sin registro,
-    // «¿quién se bajó la hoja de fulano?» no se contesta. Mismo criterio que
+    // «¿quién se llevó la hoja de fulano?» no se contesta. Mismo criterio que
     // el export del padrón.
-    const src = sinComentarios('src/app/api/servers/applications/[id]/hoja/route.ts')
+    const src = sinComentarios('src/app/api/servers/applications/[id]/detalle/route.ts')
     expect(src).toContain('logAudit')
     expect(src).toMatch(/action: 'EXPORT'/)
   })
 
-  it('y no la baja cualquiera con sesión', () => {
-    const src = sinComentarios('src/app/api/servers/applications/[id]/hoja/route.ts')
+  it('y no la ve cualquiera con sesión', () => {
+    const src = sinComentarios('src/app/api/servers/applications/[id]/detalle/route.ts')
     expect(src).toMatch(/requireRoles\(\.\.\.SERVICE_APPLICATIONS_ROLES\)/)
+  })
+
+  it('la hoja usa el CSS de marca y el nombre sale del título del documento', () => {
+    // El título ES lo que el navegador propone al guardar como PDF, así que
+    // «[puesto] - [persona]» se cumple sin poder forzarlo por cabecera.
+    const src = sinComentarios('src/app/(admin)/servidores/aplicaciones/[id]/hoja/page.tsx')
+    expect(src).toMatch(/document\.title = `\$\{detalle\.puesto\} - \$\{detalle\.nombre\}`/)
+    expect(src).toContain('bg-navy')
+    // Los botones NO se imprimen.
+    expect(src).toContain('print:hidden')
+  })
+
+  it('y el CSS de impresión existe: sin él el PDF sale con el menú', () => {
+    expect(readFileSync('src/app/globals.css', 'utf8')).toContain('@media print')
   })
 
   it('el HTML del correo escapa lo que escribió una persona', () => {
     expect(detalleEnHtml({ ...d, nombre: '<script>x</script>' }))
       .not.toContain('<script>')
+  })
+})
+
+/**
+ * El menú de servidores tiene DOS entradas que suenan parecido y son cosas
+ * distintas, y con SRV-12 quedaron una al lado de la otra:
+ *   · «Solicitudes de puestos» — el COMITÉ pide cupos (SRV-11/12).
+ *   · «Aplicaciones de Servicio» — una PERSONA aplica a un puesto publicado.
+ * La segunda se llamaba «Solicitudes» a secas. Lo corrigió Floriana.
+ */
+describe('las dos entradas del menú no se confunden', () => {
+  const sidebar = sinComentarios('src/components/layout/Sidebar.tsx')
+
+  it('la de aplicaciones dice «Aplicaciones de Servicio»', () => {
+    expect(sidebar).toMatch(/href: '\/servidores\/aplicaciones', label: 'Aplicaciones de Servicio'/)
+  })
+
+  it('y ya no se llama «Solicitudes» a secas', () => {
+    expect(sidebar).not.toMatch(/href: '\/servidores\/aplicaciones', label: 'Solicitudes'/)
+  })
+
+  it('la del comité sigue siendo «Solicitudes de puestos»', () => {
+    expect(sidebar).toContain("label: 'Solicitudes de puestos'")
+  })
+
+  it('la pantalla y su pestaña dicen lo mismo que el menú', () => {
+    const pag = sinComentarios('src/app/(admin)/servidores/aplicaciones/page.tsx')
+    expect(pag).toContain('>Aplicaciones de Servicio<')
+    expect(pag).toContain("useTituloDePantalla('Aplicaciones de Servicio'")
   })
 })

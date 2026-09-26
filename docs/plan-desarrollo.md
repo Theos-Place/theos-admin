@@ -3935,22 +3935,27 @@ HECHO el 2026-09-25 (en staging, dos commits). Qué quedó:
 - **El alta automática ya existía** (RPC `approve_applications` + sincronización
   de roles); lo que se agregó es el aviso.
 
-**LA HOJA ES .docx Y NO PDF** (decisión con Floriana, 2026-09-25). El proyecto
-no tenía ninguna librería de PDF y las opciones eran tres:
+**LA HOJA ES UNA PÁGINA IMPRIMIBLE, no un archivo generado** (decidido con
+Floriana el 2026-09-25, después de descartar el .docx por feo).
 
-| | dependencia nueva | ¿se copia el teléfono? | editable |
-|---|---|---|---|
-| .docx | ninguna (`jszip` ya venía con ExcelJS) | sí | sí |
-| PDF | `pdfkit`, ~2 MB | sí | no |
-| imagen | ninguna (`sharp` ya está) | **no** | no |
+El proyecto no tiene librería de PDF, y para que la hoja tenga el aspecto de
+Theos había dos caminos: dibujarla a mano con una librería —posicionando cada
+caja en coordenadas, sin CSS— o escribirla en HTML con el CSS que ya existe y
+que el navegador la convierta. Ganó el segundo en todo lo que importa:
 
-Decide el propósito: la hoja existe para que el encargado LLAME al dirigente, y
-en una imagen ese número hay que teclearlo mirando la pantalla. El .docx sale
-sin agregar nada —es un ZIP con tres XML— y además se puede anotar. Si alguien
-quiere PDF, Word lo exporta.
+- usa LOS MISMOS tokens de marca (si cambia el coral, la hoja cambia sola);
+- no agrega un byte al proyecto;
+- el PDF que sale tiene el texto SELECCIONABLE, que era el requisito de
+  siempre — el encargado tiene que poder copiar el teléfono del dirigente.
 
-Bajarse la hoja QUEDA EN `audit_log`: es una exportación de datos personales,
-mismo criterio que el export del padrón.
+Lo único que se pierde: son dos toques (Imprimir → Guardar como PDF) en vez de
+uno. El nombre del archivo sale del `document.title`, que es lo que los
+navegadores proponen, así que «[puesto] - [persona]» se cumple igual.
+
+El .docx se eliminó entero, y con él `jszip` de las dependencias.
+
+Abrir la hoja QUEDA EN `audit_log`: es sacar datos personales, mismo criterio
+que el export del padrón.
 
 Reglas dictadas (2026-09-25):
 - Página nueva "Aplicaciones" como submenú de servidores. La ven quienes

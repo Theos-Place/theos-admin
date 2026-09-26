@@ -11,10 +11,11 @@ import { Modal } from '@/components/shared/Modal'
 import type { DbApplication } from '@/lib/supabase/queries/servers'
 import { toDomainApplication } from '@/lib/servers/adapter'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight, ClipboardList, Check, Loader2, Download } from 'lucide-react'
+import { Search, ChevronRight, ClipboardList, Check, Loader2, Printer } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/hooks/useAuth'
+import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { canSeeServiceApplications, GESTIONAN_APLICACIONES } from '@/lib/auth/service-applications'
 import { useToast } from '@/components/shared/Toast'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
@@ -43,6 +44,9 @@ type BulkAction = 'approve' | 'reject'
 
 export default function AplicacionesPage() {
   const { user, loaded } = useAuth()
+  // Sin esto la pestaña del navegador dice solo el nombre del módulo, y en el
+  // historial todas las pantallas de servidores se ven iguales (QA-1/N4).
+  useTituloDePantalla('Aplicaciones de Servicio', 'Servidores')
   const canSee = canSeeServiceApplications(user?.roles ?? [])
   // VER no es GESTIONAR: dirección entra a la bandeja pero no cambia estados.
   const puedeGestionar = (user?.roles ?? []).some(r => (GESTIONAN_APLICACIONES as string[]).includes(r))
@@ -140,7 +144,7 @@ export default function AplicacionesPage() {
       {/* Header */}
       <div className="rounded-2xl bg-navy px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div>
-          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Solicitudes de servicio</h1>
+          <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Aplicaciones de Servicio</h1>
           <p className="mt-1 text-sm text-white/80 font-body">
             {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
           </p>
@@ -277,16 +281,18 @@ export default function AplicacionesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* SRV-14 · La hoja de la persona, en Word. Es .docx y no
-                          PDF porque el encargado la abre para LLAMAR al
-                          dirigente: el teléfono se tiene que poder copiar, y
-                          además puede anotar ahí lo que le digan. */}
-                      <a
-                        href={`/api/servers/applications/${a.id}/hoja`}
+                      {/* SRV-14 · La hoja con el tema de Theos, lista para
+                          guardar como PDF desde el navegador. Es una página y
+                          no un archivo generado para que use el MISMO CSS de
+                          marca del resto del sistema, y para que el PDF que
+                          sale tenga el texto seleccionable — el encargado
+                          necesita COPIAR el teléfono del dirigente. */}
+                      <Link
+                        href={`/servidores/aplicaciones/${a.id}/hoja`}
                         className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                       >
-                        <Download size={11} /> Hoja
-                      </a>
+                        <Printer size={11} /> Hoja
+                      </Link>
                       {puedeGestionar && (
                         <button
                           type="button"

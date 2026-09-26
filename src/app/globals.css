@@ -572,3 +572,34 @@ body {
   outline-offset: 2px;
   border-radius: 0.5rem;
 }
+
+/* ── Impresión (SRV-14) ──────────────────────────────────────────────────────
+   La hoja del aplicante se guarda como PDF desde el navegador, así que lo que
+   define cómo se ve el PDF es esto y no una librería.
+
+   `.hoja-impresa` es la única que sobrevive: al imprimir se oculta TODO lo
+   demás —el menú, el encabezado del sistema, los botones— y la hoja pasa a ser
+   la página. Sin esto, el PDF saldría con la barra lateral y tres botones que
+   nadie puede apretar en papel. */
+@media print {
+  @page { size: letter; margin: 12mm; }
+
+  /* Ni sombras ni fondos grises: en papel se ven como manchas y se comen la
+     tinta. Los colores de MARCA sí se conservan (print-color-adjust), porque
+     el encabezado navy es lo que hace que la hoja se vea de Theos. */
+  body { background: #fff; }
+  .hoja-impresa {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .hoja-impresa header,
+  .hoja-impresa .bg-navy {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Un dato no se parte entre dos páginas. */
+  .hoja-impresa dl > div { break-inside: avoid; }
+}

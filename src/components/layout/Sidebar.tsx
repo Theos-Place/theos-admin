@@ -79,8 +79,17 @@ const COMUNICACIONES_SUB: SubItem[] = [
 const SERVIDORES_SUB: SubItem[] = [
   { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
 ]
-/** Solicitudes de servicio: solo coordinador de servidores y admin (2026-07-30). */
-const SERVIDORES_APPS_SUB: SubItem = { href: '/servidores/aplicaciones', label: 'Solicitudes', icon: ClipboardList }
+/**
+ * Aplicaciones de servicio: quien APLICÓ a un puesto publicado.
+ *
+ * Se llamaba «Solicitudes» y con SRV-12 quedaron dos entradas seguidas en el
+ * mismo menú que decían casi lo mismo y son cosas distintas: una es el comité
+ * PIDIENDO cupos y la otra es una persona APLICANDO a un puesto. El nombre lo
+ * corrigió Floriana.
+ */
+const SERVIDORES_APPS_SUB: SubItem = {
+  href: '/servidores/aplicaciones', label: 'Aplicaciones de Servicio', icon: ClipboardList,
+}
 
 // Roles que ven la página de mantenimiento (áreas/comités/puestos).
 const SERVICE_ADMIN = ['encargado_staff', 'coordinador_servidores', 'direccion', 'admin']
