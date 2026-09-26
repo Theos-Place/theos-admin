@@ -400,7 +400,7 @@ export default function VacanteDetailPage() {
           <div className="p-6 space-y-4">
             <p id="close-vacancy-title" className="text-base font-bold text-navy font-display">Cerrar puesto</p>
             <p className="text-sm text-navy-light/80 font-body">
-              La vacante <strong>{vacancy.title}</strong> será marcada como cerrada y dejará de recibir aplicaciones.
+              El puesto <strong>{vacancy.title}</strong> será marcado como cerrado y dejará de recibir aplicaciones.
             </p>
             <div className="space-y-1">
               <label htmlFor="motivo-de-cierre-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Motivo de cierre (opcional)</label>

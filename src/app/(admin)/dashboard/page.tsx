@@ -500,7 +500,7 @@ export default function DashboardPage() {
             icon={Hammer} title="Servidores"
             subtitle={`${DASHBOARD_STATS.servers.active} activos en ${DASHBOARD_STATS.servers.committees} comités`}
             rows={[
-              { label: 'Vacantes abiertas',       value: DASHBOARD_STATS.servers.open_vacancies },
+              { label: 'Cupos abiertos',          value: DASHBOARD_STATS.servers.open_vacancies },
               { label: 'Aplicaciones pend.',      value: DASHBOARD_STATS.servers.pending_applications, badge: 'coral' },
             ]}
             href="/servidores" hrefLabel="Ver servidores →"
@@ -676,7 +676,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           {[
             { label: 'Servidores activos', value: '12' },
             { label: 'Próximo evento',     value: 'Dom 18 may' },
-            { label: 'Vacantes abiertas',  value: '2' },
+            { label: 'Cupos abiertos',     value: '2' },
             { label: 'Aplicaciones pend.', value: '3' },
           ].map((s, i) => (
             <div key={i}>

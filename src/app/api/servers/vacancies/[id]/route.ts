@@ -16,7 +16,7 @@ export async function PUT(
     const { id } = await params
     const committeeId = await getVacancyCommitteeId(id)
     if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, committeeId))) {
-      return NextResponse.json({ error: 'No podés editar vacantes de este comité.' }, { status: 403 })
+      return NextResponse.json({ error: 'No podés editar los puestos de este comité.' }, { status: 403 })
     }
     const parsed = vacancyWriteSchema.partial().safeParse(await req.json())
     if (!parsed.success) {
@@ -43,7 +43,7 @@ export async function DELETE(
     const { id } = await params
     const committeeId = await getVacancyCommitteeId(id)
     if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, committeeId))) {
-      return NextResponse.json({ error: 'No podés eliminar vacantes de este comité.' }, { status: 403 })
+      return NextResponse.json({ error: 'No podés eliminar los puestos de este comité.' }, { status: 403 })
     }
     await deleteVacancy(id)
     return NextResponse.json({ ok: true })

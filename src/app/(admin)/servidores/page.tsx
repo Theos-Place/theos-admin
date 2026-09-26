@@ -33,7 +33,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
           <span
             className="shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display"
           >
-            {committee.open_vacancies} vacante{committee.open_vacancies !== 1 ? 's' : ''}
+            {committee.open_vacancies} cupo{committee.open_vacancies !== 1 ? 's' : ''}
           </span>
         )}
       </div>
@@ -159,7 +159,7 @@ export default function ServidoresPage() {
           className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
         >
           <Plus size={14} />
-          Nuevo puesto de servicio
+          Solicitar puestos de servicio
         </Link>
       </div>
 
@@ -169,7 +169,7 @@ export default function ServidoresPage() {
           { label: 'Puestos ocupados',   value: puestosOcupados,   icon: Users,         color: 'text-navy' },
           { label: 'Personas únicas',    value: personasUnicas,    icon: Users,         color: 'text-teal-deep' },
           { label: 'Comités activos',    value: totalCommittees,   icon: Briefcase,     color: 'text-navy' },
-          { label: 'Vacantes abiertas',  value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Cupos abiertos',     value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral' : 'text-navy' },
           { label: 'Apps pendientes',    value: pendingApps,       icon: ClipboardList, color: 'text-navy' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div

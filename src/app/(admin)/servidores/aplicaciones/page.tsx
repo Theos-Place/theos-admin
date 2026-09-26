@@ -396,7 +396,7 @@ export default function AplicacionesPage() {
             </h3>
             <p className="text-sm text-navy-light/80 font-body">
               {confirm === 'approve' ? (
-                <><strong className="text-navy">{sel.count}</strong> aplicación{sel.count !== 1 ? 'es' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">Aprobada</strong>. Cada aplicante quedará activo como servidor del puesto y comité de su vacante.</>
+                <><strong className="text-navy">{sel.count}</strong> aplicación{sel.count !== 1 ? 'es' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">Aprobada</strong>. Cada aplicante quedará activo como servidor del puesto y comité al que aplicó.</>
               ) : (
                 <><strong className="text-navy">{sel.count}</strong> aplicación{sel.count !== 1 ? 'es' : ''} pasará{sel.count !== 1 ? 'n' : ''} a <strong className="text-navy">No seleccionada</strong>.</>
               )}

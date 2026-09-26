@@ -118,7 +118,7 @@ function SolicitarPuestoContent() {
         <div className="text-center space-y-3 max-w-sm">
           <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto"><Clock size={24} className="text-amber-700" /></div>
           <p className="text-xl font-bold text-navy font-display">Solicitud enviada</p>
-          <p className="text-sm text-navy-light/80 font-body">Staff revisará tu solicitud. Cuando la aprueben, el puesto quedará disponible para solicitarle vacantes.</p>
+          <p className="text-sm text-navy-light/80 font-body">Staff revisará tu solicitud. Cuando la aprueben, el puesto queda en el catálogo y se le pueden pedir cupos.</p>
         </div>
       </div>
     )
@@ -136,7 +136,7 @@ function SolicitarPuestoContent() {
 
       <div className="rounded-2xl px-4 py-3 bg-amber-50 border border-amber-200">
         <p className="text-[13px] text-amber-800 font-body">
-          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/vacantes/solicitar" className="underline">solicitá una vacante</Link>.
+          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/vacantes/solicitar" className="underline">pedile cupos ahí</Link>.
         </p>
       </div>
 

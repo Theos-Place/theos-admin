@@ -182,10 +182,10 @@ function SolicitarVacantesContent() {
           </div>
           <div>
             <p className="text-xl font-bold text-navy font-display">
-              {saved.status === 'aprobado' ? 'Vacantes publicadas' : 'Vacantes enviadas'}
+              {saved.status === 'aprobado' ? 'Puestos publicados' : 'Solicitud enviada'}
             </p>
             <p className="mt-1 text-sm text-navy-light/80 font-body">
-              {saved.slots} vacante{saved.slots !== 1 ? 's' : ''} en {saved.rows} puesto{saved.rows !== 1 ? 's' : ''}.
+              {saved.slots} cupo{saved.slots !== 1 ? 's' : ''} en {saved.rows} puesto{saved.rows !== 1 ? 's' : ''}.
               {saved.status === 'aprobado'
                 ? ' Ya quedaron visibles para que los miembros apliquen.'
                 : ' Quedaron pendientes de revisión.'}
@@ -278,7 +278,7 @@ function SolicitarVacantesContent() {
               Puestos del comité
             </p>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-3 py-1 text-[13px] text-navy-light/80 font-body">
-              <ShoppingCart size={13} /> {totalSlots} vacante{totalSlots !== 1 ? 's' : ''}
+              <ShoppingCart size={13} /> {totalSlots} cupo{totalSlots !== 1 ? 's' : ''}
             </span>
           </div>
 
@@ -313,7 +313,7 @@ function SolicitarVacantesContent() {
                         type="button"
                         onClick={() => setQty(p.id, -1)}
                         disabled={qty === 0}
-                        aria-label={`Restar vacante de ${p.title}`}
+                        aria-label={`Restar un cupo de ${p.title}`}
                         className="h-10 w-10 rounded-full border border-[var(--outline-variant)] flex items-center justify-center text-navy-light hover:bg-surface-low active:scale-95 transition disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Minus size={18} />
@@ -324,7 +324,7 @@ function SolicitarVacantesContent() {
                       <button
                         type="button"
                         onClick={() => setQty(p.id, 1)}
-                        aria-label={`Sumar vacante de ${p.title}`}
+                        aria-label={`Sumar un cupo a ${p.title}`}
                         className="h-10 w-10 rounded-full bg-coral/15 text-coral-deep flex items-center justify-center hover:bg-coral/25 active:scale-95 transition"
                       >
                         <Plus size={18} />

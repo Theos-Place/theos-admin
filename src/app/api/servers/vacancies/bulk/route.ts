@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     const { status, ids } = (await req.json()) as { status?: string; ids?: string[] }
     const list = Array.isArray(ids) ? ids.filter(Boolean) : []
-    if (list.length === 0) return NextResponse.json({ error: 'No hay vacantes seleccionadas.' }, { status: 400 })
+    if (list.length === 0) return NextResponse.json({ error: 'No hay puestos seleccionados.' }, { status: 400 })
     if (!status || !isVacancyState(status) || status === 'creado') {
       return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
     }

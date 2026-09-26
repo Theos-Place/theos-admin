@@ -468,7 +468,7 @@ export const ROLES: Role[] = [
   {
     id: 'encargado_staff',
     name: 'Encargado de Staff',
-    description: 'Servidores, vacantes y empleados',
+    description: 'Servidores, puestos de servicio y empleados',
     color: '#70BDC2',
     permissions: [
       { module: 'servidores', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },

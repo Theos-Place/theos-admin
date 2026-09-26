@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
         notifs.push({
           recipient_member_id: encargadoId,
           type: 'vacancy_request_sent',
-          title: 'Solicitud de vacantes enviada',
-          body: `${slots} vacante${slots !== 1 ? 's' : ''} solicitada${slots !== 1 ? 's' : ''} para ${committeeName}.`,
+          title: 'Solicitud de puestos enviada',
+          body: `${slots} cupo${slots !== 1 ? 's' : ''} solicitado${slots !== 1 ? 's' : ''} para ${committeeName}.`,
           link,
         })
       }
@@ -105,8 +105,8 @@ export async function POST(req: NextRequest) {
         notifs.push({
           recipient_member_id: c.member_id,
           type: 'vacancy_request_new',
-          title: 'Nueva solicitud de vacantes',
-          body: `${committeeName}: ${slots} vacante${slots !== 1 ? 's' : ''} en ${rows} puesto${rows !== 1 ? 's' : ''}.`,
+          title: 'Nueva solicitud de puestos',
+          body: `${committeeName}: ${slots} cupo${slots !== 1 ? 's' : ''} en ${rows} puesto${rows !== 1 ? 's' : ''}.`,
           link,
         })
       }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       })
       if (deduped.length) await supabase.from('internal_notifications').insert(deduped)
     } catch (e) {
-      console.warn('No se pudieron enviar las notificaciones de la solicitud de vacantes:', e)
+      console.warn('No se pudieron enviar las notificaciones de la solicitud de puestos:', e)
     }
 
     return NextResponse.json({ ok: true, rows, slots, status }, { status: 201 })

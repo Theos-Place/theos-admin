@@ -70,10 +70,10 @@ export default function EditarVacantePage() {
   }
 
   if (loading && !vacancy) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/80 font-body">Cargando vacante...</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/80 font-body">Cargando el puesto...</p></div>
   }
   if (!vacancy) {
-    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/80 font-body">Vacante no encontrada.</p></div>
+    return <div className="flex items-center justify-center min-h-60"><p className="text-sm text-navy-light/80 font-body">Puesto no encontrado.</p></div>
   }
   if (saved) {
     return (
@@ -81,7 +81,7 @@ export default function EditarVacantePage() {
         <div className="text-center space-y-4">
           <div className="h-14 w-14 rounded-full bg-teal-soft/30 flex items-center justify-center mx-auto"><Check size={24} className="text-teal-deep" /></div>
           <p className="text-xl font-bold text-navy font-display">Cambios guardados</p>
-          <button onClick={() => router.push(`/servidores/vacantes/${id}`)} className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Ver vacante</button>
+          <button onClick={() => router.push(`/servidores/vacantes/${id}`)} className="inline-block rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body">Ver el puesto</button>
         </div>
       </div>
     )
@@ -97,10 +97,10 @@ export default function EditarVacantePage() {
   return (
     <div className="page">
       <div className="ph">
-        <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.push(`/servidores/vacantes/${id}`)}>← Volver a la vacante</button>
+        <button className="btn btn-ghost btn-sm mb-[10px]" onClick={() => router.push(`/servidores/vacantes/${id}`)}>← Volver al puesto</button>
         <div className="ph-row">
           <div>
-            <h1 className="ptitle">Editar vacante</h1>
+            <h1 className="ptitle">Editar la publicación del puesto</h1>
             <div className="psub">{vacancy.title} · {vacancy.committee_name}</div>
           </div>
           <div className="ph-actions">
@@ -126,7 +126,7 @@ export default function EditarVacantePage() {
         </div>
       )}
 
-      {/* Logística de la vacante (editable) */}
+      {/* Logística de la publicación (editable) */}
       <div className="card py-5 px-[22px]">
         <div className="flex flex-col gap-4">
           <div className="form-row">

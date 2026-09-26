@@ -59,7 +59,7 @@ function VacantesPublicasContent() {
   useEffect(() => {
     setLoading(true); setError(null)
     fetch('/api/public/vacancies')
-      .then(r => { if (!r.ok) throw new Error('No se pudieron cargar las vacantes'); return r.json() })
+      .then(r => { if (!r.ok) throw new Error('No se pudieron cargar los puestos'); return r.json() })
       .then((d: { items: PublicVacancy[] }) => setVacancies(d.items ?? []))
       .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
       .finally(() => setLoading(false))
@@ -101,7 +101,7 @@ function VacantesPublicasContent() {
           <p className="text-[13px] font-medium text-white/80 font-body">Theos Place</p>
           <h1 className="mt-1 text-2xl font-bold font-display sm:text-3xl">Oportunidades de servicio</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/80 font-body">
-            Estos son los puestos disponibles para servir. Explorá las vacantes y aplicá a la que te interese
+            Estos son los puestos disponibles para servir. Mirá la lista y aplicá al que te interese
             — para aplicar te pediremos iniciar sesión.
           </p>
         </PageContainer>
@@ -117,7 +117,7 @@ function VacantesPublicasContent() {
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Buscar por puesto o comité…"
-              aria-label="Buscar vacantes"
+              aria-label="Buscar puestos"
               className="flex-1 bg-transparent text-sm text-navy outline-none placeholder-navy-light/50 font-body"
             />
           </div>
@@ -145,14 +145,14 @@ function VacantesPublicasContent() {
           )}
         </div>
 
-        {loading && <p className="py-16 text-center text-sm text-navy-light/80 font-body">Cargando vacantes…</p>}
+        {loading && <p className="py-16 text-center text-sm text-navy-light/80 font-body">Cargando puestos…</p>}
         {error && <p className="py-16 text-center text-sm text-coral-deep font-body">{error}</p>}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-16 text-center">
             <Briefcase size={28} className="text-navy-light/40" aria-hidden />
             <p className="text-sm text-navy-light/80 font-body">
-              {vacancies.length === 0 ? 'No hay vacantes disponibles por ahora.' : 'No hay vacantes que coincidan con tu búsqueda.'}
+              {vacancies.length === 0 ? 'No hay puestos disponibles por ahora.' : 'No hay puestos que coincidan con tu búsqueda.'}
             </p>
           </div>
         )}

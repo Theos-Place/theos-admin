@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     // El coordinador/líder solo puede solicitar para comités que gestiona; los
     // roles administrativos globales, para cualquiera.
     if (!(await canManageCommittee(auth.ctx.roles, auth.ctx.memberId, input.committee_id))) {
-      return NextResponse.json({ error: 'No podés crear vacantes para este comité.' }, { status: 403 })
+      return NextResponse.json({ error: 'No podés crear publicaciones de puestos para este comité.' }, { status: 403 })
     }
     const vacancy = await createVacancy(input)
     return NextResponse.json(vacancy, { status: 201 })

@@ -3,7 +3,7 @@
 // acá. Mismo patrón que los layouts de módulo de B13.
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Vacantes de servicio' }
+export const metadata: Metadata = { title: 'Puestos de servicio' }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children
