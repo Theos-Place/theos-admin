@@ -249,6 +249,9 @@ export type ApplicationFilters = {
   search?: string
   status?: ApplicationState
   committeeId?: string
+  /** SRV-14 · La UBICACIÓN del puesto al que se aplicó. Se filtra por el
+   *  nombre porque así se guarda (ver `lib/servers/ubicacion-de-puesto`). */
+  location?: string
   page?: number
   pageSize?: number
 }
@@ -266,6 +269,28 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
   if (filters.committeeId) {
     const { data } = await supabase.from('vacancies').select('id').eq('committee_id', filters.committeeId)
     committeeVacancyIds = ((data ?? []) as Array<{ id: string }>).map(v => v.id)
+    if (committeeVacancyIds.length === 0) return { rows: [], total: 0 }
+  }
+
+  /**
+   * SRV-14 · Ubicación → ids de vacantes cuyo PUESTO está ahí.
+   *
+   * La ubicación vive en el puesto y no en la vacante, así que hay que pasar
+   * por `service_positions`. Se intersecta con el filtro de comité en vez de
+   * pisarlo: con los dos puestos, la pregunta es «de este comité Y en este
+   * lugar», no el último que se haya elegido.
+   */
+  if (filters.location) {
+    const { data } = await supabase
+      .from('service_positions').select('id').eq('location', filters.location)
+    const posIds = ((data ?? []) as Array<{ id: string }>).map(p => p.id)
+    if (posIds.length === 0) return { rows: [], total: 0 }
+    const { data: vacs } = await supabase
+      .from('vacancies').select('id').in('position_id', posIds)
+    const ids = ((vacs ?? []) as Array<{ id: string }>).map(v => v.id)
+    committeeVacancyIds = committeeVacancyIds === null
+      ? ids
+      : committeeVacancyIds.filter(x => ids.includes(x))
     if (committeeVacancyIds.length === 0) return { rows: [], total: 0 }
   }
 
@@ -493,8 +518,23 @@ export async function setApplicationStatus(
   // compila en un lado y revienta en el otro.
   status: ApplicationState,
   actorUserId?: string,
+  /**
+   * SRV-14 · La nota interna. Se GUARDA en `applications.notes`.
+   *
+   * Hasta hoy el cuadro de «notas internas» del tab de vacantes era
+   * decorativo: se escribía en un estado local que nadie mandaba a ningún
+   * lado, así que la nota se perdía al cerrar el panel. Nadie lo notó porque
+   * al volver a abrir mostraba `selectedApp.notes`, que siempre estaba vacío.
+   */
+  notas?: string | null,
 ): Promise<void> {
   const supabase = createAdminClient()
+  // La nota se escribe SIEMPRE que venga, también al aprobar: el RPC de
+  // aprobación no la toca, así que hacerlo antes evita perderla.
+  if (notas !== undefined && notas !== null) {
+    const { error } = await supabase.from('applications').update({ notes: notas }).eq('id', id)
+    if (error) throw error
+  }
   if (status === 'approved') {
     // RPC fuera de los tipos generados (migración 103) → cast localizado.
     const { error } = await supabase.rpc('approve_applications' as never, { app_ids: [id] } as never)

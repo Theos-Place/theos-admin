@@ -66,7 +66,12 @@ export async function PUT(
     // está notificando.
     const detalle = await getDetalleDeAplicante(id)
 
-    await setApplicationStatus(id, status, auth.ctx.userId)
+    // La nota solo se guarda donde tiene sentido: en los demás estados no hay
+    // dónde leerla y sobrescribiría la que quedó de la revisión anterior.
+    await setApplicationStatus(
+      id, status, auth.ctx.userId,
+      admiteMotivo(status) ? (motivo?.trim() || null) : undefined,
+    )
 
     await logAudit({
       actorUserId: auth.ctx.userId,

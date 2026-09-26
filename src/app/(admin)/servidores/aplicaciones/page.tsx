@@ -14,15 +14,14 @@ import { cn } from '@/lib/utils'
 import { Search, ChevronRight, ClipboardList, Check, Loader2, Printer } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
+import { PanelDeAplicacion } from '@/components/servers/PanelDeAplicacion'
 import { useAuth } from '@/hooks/useAuth'
 import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { canSeeServiceApplications, GESTIONAN_APLICACIONES } from '@/lib/auth/service-applications'
 import { useToast } from '@/components/shared/Toast'
-import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { formatDate } from '@/lib/format'
 import {
   APPLICATION_STATE_BADGE, APPLICATION_STATE_LABEL, APPLICATION_STATES,
-  APPLICATION_STATE_HELP, estadosDestino, admiteMotivo,
 } from '@/lib/servers/application-states'
 
 // SRV-14 · Las etiquetas y los colores salen del módulo compartido. Estaban
@@ -51,7 +50,25 @@ export default function AplicacionesPage() {
   // VER no es GESTIONAR: dirección entra a la bandeja pero no cambia estados.
   const puedeGestionar = (user?.roles ?? []).some(r => (GESTIONAN_APLICACIONES as string[]).includes(r))
   const toast = useToast()
-  const [cambiando, setCambiando] = useState<Application | null>(null)
+  const [revisando, setRevisando] = useState<Application | null>(null)
+  // Filtros de la bandeja: además del estado, por comité y por ubicación
+  // (SRV-14). Con 40 aplicaciones repartidas en comités distintos, filtrar
+  // solo por estado deja la pantalla igual de larga.
+  const [ubicacionFiltro, setUbicacionFiltro] = useState('all')
+  /** Las ubicaciones que existen HOY en el catálogo de puestos: no se escriben
+   *  a mano ni se derivan de lo cargado, que con la lista paginada ofrecería
+   *  solo las de la primera página. */
+  const [ubicaciones, setUbicaciones] = useState<string[]>([])
+  useEffect(() => {
+    fetch('/api/servers/positions')
+      .then(r => (r.ok ? r.json() : []))
+      .then((d: Array<{ location?: string | null }>) => {
+        if (!Array.isArray(d)) return
+        setUbicaciones([...new Set(d.map(p => (p.location ?? '').trim()).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, 'es')))
+      })
+      .catch(() => {})
+  }, [])
 
   const [search, setSearch]             = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -92,6 +109,7 @@ export default function AplicacionesPage() {
     if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (committeeFilter !== 'all') u.set('committee', committeeFilter)
+    if (ubicacionFiltro !== 'all') u.set('location', ubicacionFiltro)
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/servers/applications?${u.toString()}`
@@ -180,6 +198,20 @@ export default function AplicacionesPage() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        {/* SRV-14 · Por ubicación del puesto. Se filtra en el SERVIDOR, igual
+            que el comité: la lista está paginada, y filtrar en pantalla solo
+            recortaría la página cargada — el total diría otra cosa. */}
+        {ubicaciones.length > 0 && (
+          <select
+            className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+            value={ubicacionFiltro}
+            onChange={e => setUbicacionFiltro(e.target.value)}
+            aria-label="Filtrar por ubicación"
+          >
+            <option value="all">Todas las ubicaciones</option>
+            {ubicaciones.map(u => <option key={u} value={u}>{u}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Status chips */}
@@ -293,15 +325,15 @@ export default function AplicacionesPage() {
                       >
                         <Printer size={11} /> Hoja
                       </Link>
-                      {puedeGestionar && (
-                        <button
-                          type="button"
-                          onClick={() => setCambiando(a)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
-                        >
-                          Cambiar estado
-                        </button>
-                      )}
+                      {/* El MISMO botón del tab de aplicaciones de la vacante,
+                          y abre el MISMO panel. */}
+                      <button
+                        type="button"
+                        onClick={() => setRevisando(a)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
+                      >
+                        Revisar
+                      </button>
                       <Link
                         href={`/servidores/vacantes/${a.vacancy_id}`}
                         className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
@@ -392,140 +424,29 @@ export default function AplicacionesPage() {
       )}
 
       {/* SRV-14 · Cambiar el estado, con el motivo cuando corresponde. */}
-      {cambiando && (
-        <CambiarEstado
-          app={cambiando}
-          onClose={() => setCambiando(null)}
-          onDone={(estado) => {
-            setCambiando(null)
-            toast(`Quedó como «${APPLICATION_STATE_LABEL[estado]}»`, 'success')
-            reload(); reloadCounts()
-          }}
-          onError={(m) => toast(m, 'error')}
-        />
+      {/* El panel de revisión, el MISMO del tab de aplicaciones de la
+          vacante: se extrajo a un componente porque eran dos paneles con la
+          misma intención y ya se había visto a dónde lleva eso. */}
+      {revisando && (
+        <Modal onClose={() => setRevisando(null)} titleId="revisar-aplicacion-title">
+          <div className="p-4">
+            <h2 id="revisar-aplicacion-title" className="sr-only">
+              Revisar la aplicación de {revisando.applicant_name}
+            </h2>
+            <PanelDeAplicacion
+              app={revisando}
+              puedeGestionar={puedeGestionar}
+              onClose={() => setRevisando(null)}
+              onSaved={(estado) => {
+                setRevisando(null)
+                toast(`Quedó como «${APPLICATION_STATE_LABEL[estado]}»`, 'success')
+                reload(); reloadCounts()
+              }}
+              onError={(m) => toast(m, 'error')}
+            />
+          </div>
+        </Modal>
       )}
     </div>
-  )
-}
-
-/**
- * El cambio de estado.
- *
- * DICE QUÉ VA A PASAR antes de que pase, y no solo el nombre del estado: dos
- * de los cinco hacen algo más que cambiar una etiqueta —aceptar da de alta a
- * la persona en el puesto, y en revisión le escribe a RH— y eso no se puede
- * descubrir apretando.
- */
-function CambiarEstado({ app, onClose, onDone, onError }: {
-  app: Application
-  onClose: () => void
-  onDone: (estado: ApplicationStatus) => void
-  onError: (mensaje: string) => void
-}) {
-  const [estado, setEstado] = useState<ApplicationStatus | ''>('')
-  const [motivo, setMotivo] = useState('')
-  const [guardando, setGuardando] = useState(false)
-  const opciones = estadosDestino(app.status)
-
-  async function guardar() {
-    if (!estado) return
-    setGuardando(true)
-    try {
-      const res = await fetch(`/api/servers/applications/${app.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: estado,
-          ...(admiteMotivo(estado) && motivo.trim() ? { motivo: motivo.trim() } : {}),
-        }),
-      })
-      if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo cambiar el estado.'))
-      onDone(estado)
-    } catch (e) {
-      onError(e instanceof Error ? e.message : 'No se pudo cambiar el estado.')
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <Modal onClose={onClose} titleId="cambiar-estado-title">
-      <div className="p-6 space-y-4">
-        <div>
-          <h2 id="cambiar-estado-title" className="text-lg font-semibold text-navy font-display">
-            Cambiar el estado
-          </h2>
-          <p className="mt-0.5 text-sm text-navy-light/80 font-body">
-            {app.applicant_name} — {app.vacancy_title}
-          </p>
-        </div>
-
-        {opciones.length === 0 ? (
-          <p className="text-sm text-navy-light/80 font-body">
-            Esta aplicación ya fue aceptada y la persona quedó asignada al puesto. Para
-            revertirlo hay que quitarla del puesto desde el comité.
-          </p>
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              {opciones.map(o => (
-                <label key={o} className="flex items-start gap-2 cursor-pointer rounded-lg p-1.5 hover:bg-surface-low">
-                  <input
-                    type="radio"
-                    name="estado"
-                    checked={estado === o}
-                    onChange={() => setEstado(o)}
-                    className="accent-coral mt-1 shrink-0"
-                  />
-                  <span>
-                    <span className="block text-sm text-navy font-body">{APPLICATION_STATE_LABEL[o]}</span>
-                    <span className="block text-[13px] text-navy-light/80 font-body">
-                      {APPLICATION_STATE_HELP[o]}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            {estado && admiteMotivo(estado) && (
-              <div className="space-y-1">
-                <label htmlFor="motivo-revision" className="block text-[13px] font-medium text-navy-light/80 font-body">
-                  ¿Por qué queda en revisión? (opcional)
-                </label>
-                <textarea
-                  id="motivo-revision"
-                  value={motivo}
-                  onChange={e => setMotivo(e.target.value)}
-                  rows={3}
-                  maxLength={500}
-                  placeholder="Ej.: encaja mejor en Bienvenida; hay que hablar con ese comité."
-                  className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                />
-                <p className="text-[13px] text-navy-light/80 font-body">
-                  Va en el correo a RH y al staff, y queda en el registro.
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={onClose}
-                disabled={guardando}
-                className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => void guardar()}
-                disabled={guardando || !estado}
-                className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
-              >
-                {guardando ? 'Guardando…' : 'Guardar'}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </Modal>
   )
 }

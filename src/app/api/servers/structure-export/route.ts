@@ -30,7 +30,9 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="estructura-de-servicio-${hoy}.xlsx"`,
+        // El archivo se llama como el botón: quien lo baja lo busca después
+        // por el nombre que apretó, no por cómo se llama la ruta.
+        'Content-Disposition': `attachment; filename="maestro-de-servicio-${hoy}.xlsx"`,
       },
     })
   } catch (error) {

@@ -185,3 +185,74 @@ describe('las dos entradas del menú no se confunden', () => {
     expect(pag).toContain("useTituloDePantalla('Aplicaciones de Servicio'")
   })
 })
+
+/**
+ * El panel de revisión es UNO SOLO.
+ *
+ * Eran dos con la misma intención —el de la bandeja y el del tab de la
+ * vacante— y ya se había visto a dónde lleva: las etiquetas de estado estaban
+ * escritas a mano en los dos lados y el mismo estado se llamaba «Aprobada» en
+ * uno y «Aceptada» en el otro.
+ */
+describe('SRV-14 · el panel de revisión no está duplicado', () => {
+  const PANEL = 'src/components/servers/PanelDeAplicacion.tsx'
+  const BANDEJA = 'src/app/(admin)/servidores/aplicaciones/page.tsx'
+  const VACANTE = 'src/app/(admin)/servidores/vacantes/[id]/page.tsx'
+
+  it('las dos pantallas usan el MISMO componente', () => {
+    for (const r of [BANDEJA, VACANTE]) {
+      expect(sinComentarios(r), r).toContain("from '@/components/servers/PanelDeAplicacion'")
+      expect(sinComentarios(r), r).toContain('<PanelDeAplicacion')
+    }
+  })
+
+  it('la bandeja tiene el mismo botón «Revisar» que el tab de la vacante', () => {
+    expect(sinComentarios(BANDEJA)).toMatch(/>\s*Revisar\s*</)
+  })
+
+  it('la nota SOLO aparece en «en revisión»', () => {
+    // Antes había un cuadro de notas siempre visible… que no guardaba nada:
+    // escribía en un estado local que nadie mandaba al servidor.
+    const src = sinComentarios(PANEL)
+    expect(src).toMatch(/estado && admiteMotivo\(estado\) && \(/)
+    expect(sinComentarios(VACANTE)).not.toContain('panelNotes')
+  })
+
+  it('y ahora se GUARDA', () => {
+    const q = sinComentarios('src/lib/supabase/queries/servers.ts')
+    const fn = q.slice(q.indexOf('export async function setApplicationStatus'))
+    expect(fn.slice(0, 1200)).toContain('notes: notas')
+  })
+
+  it('el panel ofrece TODOS los estados válidos, no solo aprobar y rechazar', () => {
+    expect(sinComentarios(PANEL)).toContain('estadosDestino(app.status)')
+  })
+
+  it('y respeta que VER no es GESTIONAR', () => {
+    expect(sinComentarios(PANEL)).toContain('puedeGestionar')
+  })
+})
+
+describe('SRV-14 · los filtros de la bandeja', () => {
+  it('por comité y por ubicación, los dos en el SERVIDOR', () => {
+    // La lista está paginada: filtrar en pantalla recortaría solo la página
+    // cargada y el total diría otra cosa.
+    const src = sinComentarios('src/app/(admin)/servidores/aplicaciones/page.tsx')
+    expect(src).toContain("u.set('committee', committeeFilter)")
+    expect(src).toContain("u.set('location', ubicacionFiltro)")
+  })
+
+  it('el API los acepta y la consulta los cruza', () => {
+    expect(sinComentarios('src/app/api/servers/applications/route.ts')).toContain("searchParams.get('location')")
+    const q = sinComentarios('src/lib/supabase/queries/servers.ts')
+    expect(q).toContain("eq('location', filters.location)")
+  })
+
+  it('el filtro de estado usa la lista compartida, no una escrita a mano', () => {
+    // Estaba escrita a mano y NO incluía `sent_to_leader`: filtrar por ese
+    // estado devolvía TODAS las aplicaciones en silencio.
+    const src = sinComentarios('src/app/api/servers/applications/route.ts')
+    expect(src).toContain('isApplicationState(statusParam)')
+    expect(src).not.toMatch(/\['pending', 'reviewing', 'approved', 'rejected'\]/)
+  })
+})

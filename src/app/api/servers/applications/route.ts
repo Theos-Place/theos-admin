@@ -5,6 +5,7 @@ import {
   getApplications, getApplicationsPage, getApplicationStats, createApplication,
   type ApplicationFilters,
 } from '@/lib/supabase/queries/servers'
+import { isApplicationState } from '@/lib/servers/application-states'
 import { reportarError } from '@/lib/observabilidad'
 
 export async function GET(req: NextRequest) {
@@ -25,8 +26,17 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') ?? undefined
     const statusParam = searchParams.get('status')
     const committeeId = searchParams.get('committee') ?? undefined
-    const status = (['pending', 'reviewing', 'approved', 'rejected'] as const).find(s => s === statusParam)
-    const hasFilter = !!(search || status || committeeId)
+    const location = searchParams.get('location') ?? undefined
+    /**
+     * SRV-14 · La lista de estados válidos sale del módulo compartido.
+     *
+     * Estaba escrita a mano acá y NO incluía `sent_to_leader`: filtrar por ese
+     * estado devolvía TODAS las aplicaciones en silencio, porque `status`
+     * quedaba en `undefined`. Es el peor modo de fallo — la pantalla no dice
+     * que no pudo filtrar, simplemente muestra otra cosa.
+     */
+    const status = statusParam && isApplicationState(statusParam) ? statusParam : undefined
+    const hasFilter = !!(search || status || committeeId || location)
 
     // Sin paginación ni filtros: array completo (back-compat para useServers).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -34,7 +44,7 @@ export async function GET(req: NextRequest) {
     }
 
     const filters: ApplicationFilters = {
-      search, status, committeeId,
+      search, status, committeeId, location,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     }

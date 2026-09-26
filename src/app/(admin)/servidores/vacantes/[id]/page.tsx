@@ -2,16 +2,16 @@
 
 import { useState, useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import type { Application, ApplicationStatus } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
 import { cn } from '@/lib/utils'
 import { TOAST_LONG_MS } from '@/lib/constants'
-import { X, Check, Users } from 'lucide-react'
+import { Check, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { VACANCY_STATE_BADGE, VACANCY_STATE_LABEL } from '@/lib/servers/vacancy-states'
 import { formatDate } from '@/lib/format'
+import { PanelDeAplicacion } from '@/components/servers/PanelDeAplicacion'
 import {
   APPLICATION_STATE_BADGE, APPLICATION_STATE_LABEL,
 } from '@/lib/servers/application-states'
@@ -46,11 +46,10 @@ export default function VacanteDetailPage() {
   const [appsDelServer, setAppsDelServer] = useState(initialApps)
   if (appsDelServer !== initialApps) { setAppsDelServer(initialApps); setApps(initialApps) }
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
-  const [panelNotes, setPanelNotes] = useState<Record<string, string>>({})
-  const [assignModal, setAssignModal] = useState<Application | null>(null)
-  const [assignDate, setAssignDate] = useState(new Date().toISOString().split('T')[0])
-  const [rejectModal, setRejectModal] = useState<Application | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
+  // Los modales de «Asignar al puesto» y «No seleccionar» se fueron con el
+  // panel viejo: hacían `approved` y `rejected` a secas, que es lo que hace el
+  // panel compartido con tres estados más. La «fecha de inicio» de aquel modal
+  // tampoco se perdió — nunca se mandaba al servidor.
   const [toast, setToast] = useState<string | null>(null)
   const [closeVacancyOpen, setCloseVacancyOpen] = useState(false)
   const [closeReason, setCloseReason] = useState('')
@@ -81,22 +80,6 @@ export default function VacanteDetailPage() {
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Error al actualizar')
     }
-  }
-
-  async function handleAssign() {
-    if (!assignModal) return
-    const name = assignModal.applicant_name
-    setAssignModal(null)
-    await changeStatus(assignModal.id, 'approved')
-    showToast(`Servidor asignado · Notificación de bienvenida enviada a ${name}`)
-  }
-
-  async function handleReject() {
-    if (!rejectModal) return
-    const appId = rejectModal.id
-    setRejectModal(null)
-    setRejectReason('')
-    await changeStatus(appId, 'rejected')
   }
 
   function showToast(msg: string) {
@@ -385,139 +368,29 @@ export default function VacanteDetailPage() {
               )}
             </div>
 
-            {/* Detail panel */}
+            {/* SRV-14 · El MISMO panel que la bandeja de Aplicaciones de
+                Servicio. Antes era otro, con dos botones —«Asignar al puesto»
+                y «No seleccionar»— y dos campos DECORATIVOS: la fecha de
+                inicio y las notas internas no se mandaban a ningún lado. Se
+                escribían y se perdían al cerrar, y nadie lo notaba porque al
+                reabrir mostraban lo de la base, que siempre estaba vacío.
+
+                El panel compartido cubre los dos botones que sí hacían algo
+                (eran `approved` y `rejected` a secas), agrega los otros tres
+                estados, y la nota ahora se guarda de verdad. */}
             {selectedApp && (
-              <div
-                className="w-full lg:w-72 shrink-0 rounded-2xl p-4 space-y-4 bg-surface-card shadow-[var(--shadow-md)]"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-full bg-navy flex items-center justify-center">
-                      <span className="text-[13px] font-bold text-white font-display">
-                        {selectedApp.applicant_initials}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-navy font-display">
-                        {selectedApp.applicant_name}
-                      </p>
-                      <Link
-                        href={`/miembros/${selectedApp.applicant_id}`}
-                        className="text-[13px] text-coral hover:underline font-body"
-                      >
-                        Ver perfil
-                      </Link>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedApp(null)}
-                    className="text-navy-light/80 hover:text-navy transition-colors"
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
-
-                <span
-                  className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[selectedApp.status])}
-                >
-                  {APP_STATUS_LABELS[selectedApp.status]}
-                </span>
-
-                {/* Service history */}
-                {selectedApp.service_history.length > 0 && (
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                      Historial de servicio
-                    </p>
-                    {selectedApp.service_history.map((h, i) => (
-                      <div key={i} className="rounded-lg px-2.5 py-2 space-y-0.5 bg-surface-low">
-                        <p className="text-[13px] font-medium text-navy font-body">
-                          {h.position}
-                        </p>
-                        <p className="text-[13px] text-navy-light/80 font-body">
-                          {h.committee} · {h.period}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Internal notes */}
-                <div className="space-y-1.5">
-                  <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                    Notas internas
-                  </p>
-                  <textarea
-                    className="w-full rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy outline-none focus:ring-1 focus:ring-coral/30 resize-none font-body"
-                    rows={3}
-                    placeholder="Agrega notas sobre esta aplicación..."
-                    value={panelNotes[selectedApp.id] ?? selectedApp.notes}
-                    onChange={e => setPanelNotes(prev => ({ ...prev, [selectedApp.id]: e.target.value }))}
-                  />
-                </div>
-
-                {/* Actions */}
-                {selectedApp.status !== 'approved' && selectedApp.status !== 'rejected' && (
-                  <div className="space-y-2 pt-1">
-                    <button
-                      onClick={() => setAssignModal(selectedApp)}
-                      className="w-full rounded-xl bg-teal-deep py-2 text-sm text-white hover:bg-teal-deep/90 transition-colors font-body"
-                    >
-                      Asignar al puesto
-                    </button>
-                    <button
-                      onClick={() => setRejectModal(selectedApp)}
-                      className="w-full rounded-xl border py-2 text-sm text-coral hover:bg-coral/5 transition-colors border-[var(--outline-variant)] font-body"
-                    >
-                      No seleccionar
-                    </button>
-                  </div>
-                )}
-              </div>
+              <PanelDeAplicacion
+                app={selectedApp}
+                puedeGestionar
+                onClose={() => setSelectedApp(null)}
+                onSaved={() => { setSelectedApp(null); void refetch() }}
+                onError={showToast}
+              />
             )}
           </div>
         </div>
       )}
 
-      {/* Assign modal */}
-      {assignModal && (
-        <Modal onClose={() => setAssignModal(null)} titleId="assign-modal-title" width={384}>
-          <div className="p-6 space-y-4">
-            <p id="assign-modal-title" className="text-base font-bold text-navy font-display">
-              Confirmar asignación
-            </p>
-            <p className="text-sm text-navy-light/80 font-body">
-              Asignar a <strong>{assignModal.applicant_name}</strong> al puesto de{' '}
-              <strong>{vacancy.position}</strong> en {vacancy.committee_name}.
-            </p>
-            <div className="space-y-1">
-              <label htmlFor="fecha-de-inicio" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
-                Fecha de inicio
-              </label>
-              <input id="fecha-de-inicio"
-                type="date"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none font-body"
-                value={assignDate}
-                onChange={e => setAssignDate(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setAssignModal(null)}
-                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAssign}
-                className="flex-1 rounded-xl bg-teal-deep py-2.5 text-sm text-white hover:bg-teal-deep/90 transition-colors font-body"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       </div>{/* end .card */}
 
@@ -547,45 +420,6 @@ export default function VacanteDetailPage() {
         </Modal>
       )}
 
-      {/* Reject modal */}
-      {rejectModal && (
-        <Modal onClose={() => setRejectModal(null)} titleId="reject-modal-title" width={384}>
-          <div className="p-6 space-y-4">
-            <p id="reject-modal-title" className="text-base font-bold text-navy font-display">
-              No seleccionar aplicante
-            </p>
-            <p className="text-sm text-navy-light/80 font-body">
-              {rejectModal.applicant_name} será marcado como no seleccionado para este puesto.
-            </p>
-            <div className="space-y-1">
-              <label htmlFor="motivo-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
-                Motivo (opcional)
-              </label>
-              <textarea id="motivo-opcional"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none resize-none font-body"
-                rows={2}
-                placeholder="¿Por qué no fue seleccionado?"
-                value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setRejectModal(null)}
-                className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleReject}
-                className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   )
 }

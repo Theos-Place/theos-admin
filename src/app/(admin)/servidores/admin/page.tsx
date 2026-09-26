@@ -789,7 +789,7 @@ export default function ServidoresAdminPage() {
               href="/api/servers/structure-export"
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
-              <Download size={14} /> Exportar estructura
+              <Download size={14} /> Exportar Maestro
             </a>
           )}
           {/* SRV-11: «Importar vacantes» se eliminó entero —botón, pantalla,
