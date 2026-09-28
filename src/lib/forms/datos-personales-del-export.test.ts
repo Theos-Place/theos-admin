@@ -25,7 +25,6 @@ describe('FRM-6 · las celdas de datos personales', () => {
   it('una casada con cónyuge en su familia lo trae', () => {
     const c = celdasPersonales(ficha(), 'Victor Valverde')
     expect(c[COL['Cónyuge']]).toBe('Victor Valverde')
-    expect(c[COL['Nombre completo (ficha)']]).toBe('Ana Solís')
     expect(c[COL['Alergias']]).toBe('Maní')
     expect(c[COL['Restricción alimenticia']]).toBe('Celiaquía')
   })
@@ -55,7 +54,7 @@ describe('FRM-6 · las celdas de datos personales', () => {
     }))
     for (const v of c) expect(v === null || v instanceof Date || typeof v === 'string').toBe(true)
     expect(c.filter(v => v === '—' || v === 'N/A')).toEqual([])
-    expect(c[COL['Teléfono (ficha)']]).toBeNull()
+    expect(c[COL['Correo (ficha)']]).toBeNull()
     expect(c[COL['Alergias']]).toBeNull()
   })
 
@@ -179,12 +178,14 @@ describe('FRM-6 · cableado', () => {
     expect(PANTALLA).toContain('personales=1')
   })
 
-  it('las columnas no se escriben a mano en la ruta', () => {
+  it('las columnas no se escriben a mano en ningún lado', () => {
     // Si la ruta tuviera su propia lista, el orden de los encabezados y el de
-    // las celdas se separarían en silencio y la hoja saldría corrida.
-    expect(RUTA).toContain('COLUMNAS_PERSONALES')
-    expect(RUTA).toContain('celdasPersonales(')
-    expect(RUTA).not.toContain("'Fecha de nacimiento'")
+    // las celdas se separarían en silencio y la hoja saldría corrida. Desde
+    // FRM-6b las arma `filas-del-export`, que sirve al CSV y al XLSX.
+    const COMPARTIDO = sinComentarios('src/lib/forms/filas-del-export.ts')
+    expect(COMPARTIDO).toContain('COLUMNAS_PERSONALES')
+    expect(COMPARTIDO).toContain('celdasPersonales(')
+    for (const src of [RUTA, PANTALLA]) expect(src).not.toContain("'Fecha de nacimiento'")
   })
 
   it('sirve para CUALQUIER formulario: nada de «campamento» hardcodeado', () => {

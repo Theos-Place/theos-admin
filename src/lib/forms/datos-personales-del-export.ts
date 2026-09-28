@@ -39,12 +39,19 @@ export type FichaParaExport = {
  *  necesita, con quién viene. `date` para que la fecha se pueda ordenar y
  *  filtrar por rango; el resto TEXTO, que es lo que salva a una cédula de que
  *  Excel le coma el cero de adelante (ver xlsx-export.ts). */
+/**
+ * NO REPITEN LO QUE YA ESTÁ. El export ya trae «Quién respondió» y «Teléfono
+ * (perfil)» en las columnas de contexto, y las dos salen de la MISMA ficha:
+ * agregar acá «Nombre completo» y «Teléfono» daba dos columnas idénticas al
+ * lado de otras dos (reportado por Floriana el 2026-09-28). Se quitaron de
+ * este bloque y no del contexto porque el contexto va pegado al nombre, que es
+ * donde se buscan, y porque están SIEMPRE — también sin el checkbox, y también
+ * para un invitado sin ficha, que en estas columnas saldría vacío.
+ */
 export const COLUMNAS_PERSONALES = [
-  { header: 'Nombre completo (ficha)', width: 28, kind: 'text' },
   { header: 'Documento',               width: 16, kind: 'text' },
   { header: 'Fecha de nacimiento',     width: 16, kind: 'date' },
   { header: 'Género',                  width: 12, kind: 'text' },
-  { header: 'Teléfono (ficha)',        width: 16, kind: 'text' },
   { header: 'Correo (ficha)',          width: 28, kind: 'text' },
   { header: 'Alergias',                width: 34, kind: 'text' },
   { header: 'Restricción alimenticia', width: 26, kind: 'text' },
@@ -137,7 +144,6 @@ export function celdasPersonales(
 ): Array<string | Date | null> {
   if (!ficha) return COLUMNAS_PERSONALES.map(() => null)
 
-  const nombre = `${ficha.first_name ?? ''} ${ficha.last_name ?? ''}`.trim()
   const doc = (ficha.cedula ?? '').trim()
   // `textoDeRestricciones` devuelve '—' cuando no hay nada, porque en pantalla
   // un guion se lee mejor que un hueco. Acá NO: esta hoja se filtra y se
@@ -149,11 +155,9 @@ export function celdasPersonales(
   const civil = (ficha.marital_status ?? '').trim()
 
   return [
-    nombre || null,
     doc || null,
     fechaDeNacimiento(ficha.birth_date),
     textoDeGenero(ficha.gender) || null,
-    (ficha.phone ?? '').trim() || null,
     (ficha.email ?? '').trim() || null,
     (ficha.allergies ?? '').trim() || null,
     restric || null,

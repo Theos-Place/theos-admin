@@ -4399,3 +4399,41 @@ gate al de formularios. Verificado en staging bajando el .xlsx por la ruta y
 ABRIÉNDOLO: 19 columnas, cédula con su cero de adelante, nacimiento como fecha
 real, y el caso completo (casado con cónyuge / el mismo puesto como soltero con
 la misma familia → columna vacía). La ficha que se usó quedó como estaba.
+
+### [x] FRM-6b · El CSV y el Excel tenían que decir lo mismo (reportado 2026-09-28, hecho 2026-09-28)
+
+Reportado por Floriana, dos cosas: **«el csv no se baja con los datos
+personales, solamente el excel»** y **«el teléfono del perfil está repetido»**.
+
+**Lo primero no era un olvido de FRM-6, era estructural**: el CSV se armaba en
+la PANTALLA y el XLSX en la ruta, sin compartir una línea. Ya se habían
+separado tres veces, y cada una la encontró alguien usándolas:
+
+1. El CSV descartaba solo `section`, así que traía columnas siempre vacías de
+   `info`, `page_break` y del bloque de datos personales.
+2. El CSV escribía el PATH del adjunto en vez del link que lo abre.
+3. FRM-6 le sumó al XLSX las columnas de la ficha y el CSV no las recibió.
+
+Y al revés, el CSV tenía «Grupo» y «Dirigente» que el XLSX nunca tuvo: ninguno
+de los dos era el bueno. El comentario «mismas columnas que el otro» no impidió
+ninguna de las tres.
+
+**Arreglo**: `lib/forms/filas-del-export.ts` arma los encabezados y las filas
+UNA vez, y los dos botones piden el archivo a la misma ruta (`?formato=csv`).
+Lo único que cambia entre formatos es cómo se escribe la celda. Se borró
+`exportToCSV` de la pantalla.
+
+**Lo segundo era real y de mi parte**: «Teléfono (perfil)» y «Teléfono (ficha)»
+salían de la MISMA ficha, y lo mismo pasaba con el nombre. El bloque personal
+bajó de 10 columnas a 8 — se quitaron las dos que ya estaban en el contexto, y
+no al revés, porque las de contexto van pegadas al nombre y están SIEMPRE,
+también sin el checkbox y también para un invitado sin ficha.
+
+Detalle que se coló: el BOM del CSV había quedado como carácter invisible en el
+código. Ahora es `'\uFEFF'` explícito — sin él, Excel abre el CSV en Latin-1 y
+las tildes salen rotas.
+
+Verificado en staging bajando los tres archivos y comparándolos: **17 columnas
+en los dos, iguales una a una, cero encabezados repetidos y una sola columna de
+teléfono**. Tres cebos muerden.
+

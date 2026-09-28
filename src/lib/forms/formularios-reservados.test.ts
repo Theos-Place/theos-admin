@@ -181,8 +181,12 @@ describe('RET-1 partes 4 y 5', () => {
 
   it('las columnas nuevas solo salen cuando el formulario las tiene', () => {
     // Dos columnas vacías en el export de todos los formularios se leen como
-    // un error.
-    expect(lee('src/app/(admin)/formularios/[id]/respuestas/page.tsx'))
-      .toContain('const conGrupo = responses.some(r => r.grupo || r.dirigente)')
+    // un error. La regla se mudó a `lib/forms/filas-del-export` (FRM-6b), donde
+    // ahora la comparten el CSV y el XLSX; antes vivía en la pantalla y solo
+    // la tenía el CSV.
+    const m = lee('src/lib/forms/filas-del-export.ts')
+    expect(m).toContain('export function hayGrupo(')
+    expect(m).toContain("r.grupo ?? ''")
+    expect(m).toContain("opts.conGrupo ? [t('Grupo', 26), t('Dirigente', 24)] : []")
   })
 })

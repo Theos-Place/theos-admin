@@ -11,58 +11,23 @@ import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { cn } from '@/lib/utils'
 import { isDataField } from '@/lib/forms/xlsx-export'
 import { esPathDeAdjunto, urlDeAdjunto } from '@/lib/forms/attachment'
-import { encabezadoDeCampo } from '@/lib/forms/computed-fields'
 import { recordedByLabel } from '@/lib/auth/on-behalf'
 import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
-import { generateCSV } from '@/lib/export'
 import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { useAuth } from '@/hooks/useAuth'
 import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
 import { usePermissions } from '@/hooks/usePermissions'
 import { formatDateLong } from '@/lib/format'
 
-function exportToCSV(form: FormTemplate | null, responses: FormResponse[]) {
-  if (!form) return
-  // Mismas columnas que el XLSX (isDataField): antes el CSV solo descartaba
-  // 'section', así que traía columnas siempre vacías de info/page_break y del
-  // bloque de datos personales.
-  const dataFields = form.fields.filter(f => isDataField(f.type))
-  // encabezadoDeCampo y no f.label: los campos ocultos no exigen título y su
-  // columna quedaría sin nombre.
-  // "Teléfono (perfil)" sale de la ficha, no de una pregunta: los encargados
-  // necesitan llamar a la gente y no todos los formularios lo piden.
-  /**
-   * RET-1 · Las columnas de grupo y dirigente SOLO cuando el formulario las
-   * tiene. Agregarlas siempre metería dos columnas vacías en el export de todos
-   * los formularios, y un archivo con columnas que nunca traen nada se lee como
-   * un error.
-   */
-  const conGrupo = responses.some(r => r.grupo || r.dirigente)
-  const headers = [
-    'Miembro',
-    ...(conGrupo ? ['Grupo', 'Dirigente'] : []),
-    'Teléfono (perfil)', 'Registrada por', 'Fecha',
-    ...dataFields.map(f => encabezadoDeCampo(f.type, f.label)),
-  ]
-  const rows = responses.map(r => [
-    r.member_name,
-    ...(conGrupo ? [r.grupo, r.dirigente] : []),
-    r.member_phone,
-    r.recorded_by_name,
-    new Date(r.submitted_at).toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }),
-    ...dataFields.map(f => {
-      const ans = r.answers[f.id]
-      if (Array.isArray(ans)) return ans.join(', ')
-      const txt = String(ans ?? '')
-      // Un adjunto se guarda como PATH del bucket privado. Solo, no sirve de
-      // nada: en el archivo va el link que lo abre. El XLSX ya lo hacía; el CSV
-      // se arma acá aparte y se había quedado sin esto.
-      return esPathDeAdjunto(txt) ? urlDeAdjunto(txt, window.location.origin) : txt
-    }),
-  ])
-  generateCSV(headers, rows, `${form.name.replace(/\s+/g, '-')}-respuestas`)
-}
+/**
+ * FRM-6b · Acá vivía `exportToCSV`, que armaba el CSV en el navegador mientras
+ * el XLSX salía de la ruta. Los dos tenían que decir lo mismo y se separaron
+ * tres veces —columnas de más, el path del adjunto en vez del link, y las
+ * columnas de la ficha de FRM-6 que el CSV nunca recibió—. Ahora los dos
+ * botones piden el archivo a la MISMA ruta, que arma las dos salidas con las
+ * mismas columnas.
+ */
 
 export default function RespuestasPage() {
   const { id } = useParams<{ id: string }>()
@@ -223,15 +188,17 @@ export default function RespuestasPage() {
           {/* FRM-3 · Dos botones y no un selector: son dos clics distintos, no
               una configuración. El CSV se arma en el cliente (ya tiene los datos);
               el XLSX sale de la ruta, porque ExcelJS no cabe en el bundle. */}
-          <button
-            type="button"
-            onClick={() => exportToCSV(form, responses)}
-            disabled={responses.length === 0}
-            className="flex items-center gap-1.5 rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors disabled:opacity-40 font-body"
+          <a
+            href={`/api/forms/${id}/responses/export?formato=csv${conPersonales ? '&personales=1' : ''}`}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full border border-navy/20 px-3.5 py-1.5 text-[13px] text-navy hover:bg-navy/5 transition-colors font-body',
+              responses.length === 0 && 'pointer-events-none opacity-40',
+            )}
+            aria-disabled={responses.length === 0 || undefined}
           >
             <Download size={13} />
             CSV
-          </button>
+          </a>
           {/* Apagado por default: lo normal es bajar las respuestas, no el
               padrón. Quien lo necesita para un campamento lo marca. */}
           {puedePersonales && (
