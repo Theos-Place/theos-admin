@@ -302,7 +302,7 @@ grupo. Quedan 0 con grupo y sin plan.
 del plan de su grupo. No se tocaron — pueden ser transferencias legítimas — pero
 nadie las ha revisado.
 
-### [ ] INF-2 · RLS sobre `members` recursiva (encontrado en INF-1, 2026-09-22)
+### [x] INF-2 · RLS sobre `members` recursiva — HECHO 2026-09-28
 
 Toda consulta a `members` como `authenticated` muere con *infinite recursion
 detected in policy*. Igual en local y en producción. La política consulta
@@ -317,6 +317,57 @@ la acote, se topa con esto.
 El arreglo habitual: una función SECURITY DEFINER que devuelva los roles de
 quien llama sin releer `members`, y reescribir las políticas contra ella. Hay
 que revisar las de las demás tablas con el mismo patrón.
+
+**HECHO** · migración `20260928120000`, aplicada a staging.
+
+**El alcance era mayor de lo que decía el ítem.** No fallaba solo `members`:
+120 de las 213 políticas leían `members` dentro de su propia expresión, y eso
+disparaba la política de `members`, que se disparaba a sí misma. Medido contra
+producción: fallaban `members`, `areas`, `study_groups`, `payments`,
+`event_managers`. Son **39 tablas**.
+
+**Bloque 1 — romper la recursión sin cambiar ningún permiso.** Las 120
+políticas se reescribieron contra los helpers de `private` (SECURITY DEFINER,
+que no vuelven a disparar RLS). La traducción es mecánica, y se generó
+programáticamente desde `pg_policies` en vez de a mano para que ninguna se
+escapara ni se aflojara por un tipeo.
+
+**La equivalencia está PROBADA, no argumentada**: 29 conjuntos de roles
+distintos × 23 usuarios reales = **667 comparaciones entre la expresión vieja y
+la nueva, cero diferencias**.
+
+**Bloque 2 — y además, acotar (decisión de Floriana, 2026-09-28).** Arreglar la
+recursión ENCIENDE políticas que hoy fallan todas, y 23 de ellas decían «pasa
+cualquiera que esté autenticado». Con 8.970 cuentas con login y 24.034 fichas,
+`members_select` habilitaba a cualquier cuenta a leer el padrón entero: RLS
+quedaba técnicamente funcionando y sin defender nada. Se acotaron `members`,
+`volunteers`, `study_groups`, `study_sessions`, `study_attendance`,
+`event_registrations`, `event_checkins` y `event_volunteers` a «el rol que ve
+ese módulo en la app, o tu propio dato». Los CATÁLOGOS —áreas, sedes, tipos de
+evento, planes, formularios— se dejaron abiertos: ahí es correcto, y hace falta
+para responder un formulario o inscribirse a un evento. **Nada de esto pudo
+romper algo que funcionara: esas políticas fallaban todas con error.**
+
+**Verificado de punta a punta**, no solo compilado:
+
+- Dry-run de la migración COMPLETA contra producción dentro de una transacción
+  con rollback: antes recursión, después admin ve todo y un miembro sin roles
+  ve solo lo suyo. Producción quedó con sus 213 políticas intactas.
+- En staging, golpeando PostgREST con la **llave pública** —lo que haría el
+  navegador—: con una cuenta recién creada sin roles, `members` devuelve **1 de
+  410 fichas** (la suya), y `study_groups`, `volunteers`, `audit_log`,
+  `payments` e `inscripciones` devuelven cero. Intentar editar o borrar la
+  ficha de otra persona afecta **cero filas** y la ficha queda intacta;
+  intentar darse el rol `admin` devuelve **403**. La cuenta de prueba se borró.
+
+`private.ve_padron()`, `ve_servidores()`, `ve_estudios()` y `ve_eventos()`
+copian en SQL una lista que `roles.ts` ya tiene, así que **un test compara las
+dos listas**: si alguien agrega un rol en la app y no en la política, falla.
+Cuatro cebos muerden.
+
+**Ojo con el orden al subir a producción**: la app usa la llave de servicio, así
+que esto no cambia su comportamiento — pero el día que una consulta se mueva al
+cliente, ahora RLS sí la acota.
 
 ### [x] FIN-4 · Planes de pago para matrículas e inscripciones — YA EXISTE (verificado 2026-09-18)
 
