@@ -4437,3 +4437,58 @@ Verificado en staging bajando los tres archivos y comparándolos: **17 columnas
 en los dos, iguales una a una, cero encabezados repetidos y una sola columna de
 teléfono**. Tres cebos muerden.
 
+### [x] EML-1 · El aviso de inicio le llegaba a gente que ya no estaba en el grupo (reportado 2026-09-28, hecho 2026-09-28)
+
+Lo reportó Alexandra Forero: le llegó «¡Tu capacitación está por comenzar!» de
+Lecturas con Propósito, de donde estaba fuera.
+
+**La causa es de las que dan bronca por lo simple.** El envío filtraba con
+`status !== 'withdrawn'`, y **`withdrawn` no existe en esta base**: el retiro se
+llama `dropped`. Un filtro que excluye un valor imposible no excluye nada, así
+que el correo salía para TODO el que tuviera correo en el grupo. TypeScript no
+lo atrapó porque ahí el campo estaba tipado como `string` — y
+`src/types/study.ts` todavía declara un `'withdrawn'` que la base no conoce.
+
+**El daño, medido**: entre el 25 y el 28 de setiembre, 18 correos a 16 personas
+que ya no estaban en su grupo — 7 con matrícula cancelada, 6 retiradas, 5
+pasadas a otro grupo. Lista entregada en xlsx.
+
+**El arreglo es una lista BLANCA**, no una negra. Con una negra esto se repite:
+un estado nuevo entra sin que nadie lo decida, porque «no está entre los
+excluidos» es el default. Reglas de Floriana: reciben `enrolled` y
+`pendiente_de_pago`; no `dropped` ni `cancelada`; `transferred` no por ESE
+grupo y no hace falta nada más —la transferencia crea una inscripción
+`enrolled` en el destino, verificado con los cinco casos de setiembre, que
+recibieron dos correos: el del grupo nuevo, que correspondía, y el del viejo,
+que sobraba—.
+
+`src/lib/studies/estados-de-inscripcion.ts` deja escritos los OCHO estados que
+existen de verdad (medidos contra producción, 36.056 filas) y el test compara
+la lista blanca contra ellos: es lo que faltaba para que `withdrawn` no pasara
+meses sin que nadie lo notara. Cuatro cebos muerden.
+
+**Lo que NO era un problema**: a Floriana sí se le envió y el proveedor lo
+entregó (`delivered`, 28-set 13:30 UTC). De los 53 de ese día, 51 entregados y
+2 rebotados por hard bounce.
+
+**Deuda que quedó a la vista** y no se tocó acá: `enrollment_capacity.ts`
+declara `'withdrawn'` y `'expirada'`, y `queries/studies.ts` declara
+`'waitlist'` y `'expirada'` — cuatro estados fantasma más. Son inofensivos hoy
+(sobran, no faltan), pero son el mismo tipo de mentira que causó esto.
+
+### [x] EST-18 · Faltaba el sábado al pedir un estudio (reportado 2026-09-28, hecho 2026-09-28)
+
+El formulario «Me interesa un estudio» ofrecía de lunes a viernes. **Hay grupos
+los sábados**: 2 en el histórico, 1 activo. O sea que el formulario le escondía
+a la gente un día real, y la demanda de sábado nunca llegaba a medirse.
+
+**Domingo NO se agregó, y es a propósito**: cero grupos en 2.100 del histórico.
+Ofrecerlo sería prometer algo que no existe.
+
+Había DOS listas —la pantalla y la validación del servidor— y el servidor
+**descarta en silencio** lo que no reconoce (`.filter(d => DAYS.has(d))`):
+agregar sábado solo en el formulario habría guardado la solicitud sin días, sin
+error y sin aviso. Ahora las dos leen `DIAS_DE_ESTUDIO` de
+`lib/studies/request-prefs`. Verificado en staging mandando una solicitud con
+sábado: se guardó `["Sábado","Lunes"]`. Dos cebos muerden.
+

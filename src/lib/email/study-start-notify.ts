@@ -10,6 +10,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { ymdCR } from '@/lib/format'
 import { fechaCR } from '@/lib/fecha-cr'
+import { RECIBEN_EL_AVISO } from '@/lib/studies/estados-de-inscripcion'
 
 const DAY_LABEL: Record<string, string> = { L: 'Lunes', M: 'Martes', X: 'Miércoles', J: 'Jueves', V: 'Viernes', S: 'Sábado', D: 'Domingo' }
 
@@ -72,7 +73,7 @@ export async function notifyUpcomingStudyStarts(now: Date = new Date(), daysAhea
     const dirigentes = [g.leader, g.co_leader].map(l => fullName(l)).filter(Boolean).join(', ') || 'tu dirigente'
 
     const recipients = (g.enrollments ?? [])
-      .filter(e => e.status !== 'withdrawn' && e.member?.email)
+      .filter(e => RECIBEN_EL_AVISO.has(e.status) && e.member?.email)
 
     for (const e of recipients) {
       const nombre = fullName(e.member)

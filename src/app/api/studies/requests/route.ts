@@ -7,6 +7,7 @@ import {
 } from '@/lib/supabase/queries/study-requests'
 import { requestQueueScope } from '@/lib/studies/request-assignment'
 import { isRelocationCode, textoFalta } from '@/lib/studies/relocation'
+import { DIAS_DE_ESTUDIO } from '@/lib/studies/request-prefs'
 import type { StudyRequestStatus, StudyRequestType } from '@/types/study'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -98,7 +99,10 @@ export async function POST(req: NextRequest) {
     // Interés de estudio v2: máximo 1 solicitud abierta por miembro + campos
     // estructurados (día(s) hasta 2, horario) y elegibilidad capturada. La razón
     // ya no se pide para este tipo.
-    const DAYS = new Set(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'])
+    // La MISMA lista que pinta el formulario: acá se descarta en silencio lo
+    // que no se reconozca, así que dos listas distintas guardarían una
+    // solicitud sin el día que la persona eligió, sin error y sin aviso.
+    const DAYS = new Set<string>(DIAS_DE_ESTUDIO)
     const TIMES = new Set(['mañana', 'tarde', 'noche'])
     let proposedDays: string[] = []
     let proposedTime: string | null = null

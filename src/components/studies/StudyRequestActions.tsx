@@ -7,13 +7,12 @@ import { useToast } from '@/components/shared/Toast'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
-import { ANY_ZONE } from '@/lib/studies/request-prefs'
+import { ANY_ZONE, DIAS_DE_ESTUDIO } from '@/lib/studies/request-prefs'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
 import { textoFalta } from '@/lib/studies/relocation'
 
 const CLASS_OPTIONS = [...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'] as const
-const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] as const
 const TIME_SLOTS = ['mañana', 'tarde', 'noche'] as const
 
 type EligiblePlan = { id: string; code: string; name: string; stage: string }
@@ -123,7 +122,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
 
   function toggleDay(d: string) {
     // El tope de 2 días aplica solo al interés; la reubicación es libre (REU-1).
-    const cap = openModal === 'study_interest' ? 2 : WEEK_DAYS.length
+    const cap = openModal === 'study_interest' ? 2 : DIAS_DE_ESTUDIO.length
     setDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : (prev.length >= cap ? prev : [...prev, d]))
   }
   function toggleZone(z: string) {
@@ -291,7 +290,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <span className={LABEL_CLS}>Día(s) que te sirven</span>
                       <div className="flex flex-wrap gap-2">
-                        {WEEK_DAYS.map(d => {
+                        {DIAS_DE_ESTUDIO.map(d => {
                           const on = days.includes(d)
                           return (
                             <button key={d} type="button" onClick={() => toggleDay(d)}
@@ -363,7 +362,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <span className={LABEL_CLS}>Día(s) que podés — hasta 2</span>
                       <div className="flex flex-wrap gap-2">
-                        {WEEK_DAYS.map(d => {
+                        {DIAS_DE_ESTUDIO.map(d => {
                           const on = days.includes(d)
                           return (
                             <button key={d} type="button" onClick={() => toggleDay(d)} disabled={!on && days.length >= 2}

@@ -22,6 +22,33 @@ const DAY_TO_LETTER: Record<string, string> = {
 }
 
 /**
+ * Los días que se le ofrecen a alguien al pedir un estudio.
+ *
+ * INCLUYE SÁBADO desde el 2026-09-28. Faltaba, y no era una omisión inofensiva:
+ * hay grupos los sábados de verdad —2 en el histórico, 1 activo hoy—, así que
+ * el formulario le estaba escondiendo a la gente un día en el que sí se puede
+ * estudiar, y la demanda de sábado no llegaba a medirse.
+ *
+ * NO INCLUYE DOMINGO, y eso sí es a propósito: nunca ha habido un grupo un
+ * domingo (cero en 2.100 grupos del histórico). Ofrecerlo sería prometer algo
+ * que no existe.
+ *
+ * ESTÁ ACÁ Y NO EN LA PANTALLA porque el servidor valida contra la MISMA lista
+ * y descarta en silencio lo que no reconoce (`.filter(d => DAYS.has(d))`). Con
+ * dos listas, agregar un día en el formulario y olvidarse del servidor hace que
+ * la persona crea que pidió sábado y la solicitud se guarde sin días — sin
+ * error, sin aviso, sin forma de notarlo.
+ */
+export const DIAS_DE_ESTUDIO = [
+  'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado',
+] as const
+export type DiaDeEstudio = (typeof DIAS_DE_ESTUDIO)[number]
+
+export function esDiaDeEstudio(v: unknown): v is DiaDeEstudio {
+  return typeof v === 'string' && (DIAS_DE_ESTUDIO as readonly string[]).includes(v)
+}
+
+/**
  * Puntaje de coincidencia de un grupo candidato con las preferencias de la
  * persona (para ORDENAR el picker de resolución, no para filtrar): la zona
  * pedida pesa más que el día. Sin preferencias → 0 (orden estable original).
