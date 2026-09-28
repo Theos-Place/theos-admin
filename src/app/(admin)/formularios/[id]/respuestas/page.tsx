@@ -18,6 +18,7 @@ import { Modal } from '@/components/shared/Modal'
 import { generateCSV } from '@/lib/export'
 import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { useAuth } from '@/hooks/useAuth'
+import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
 import { usePermissions } from '@/hooks/usePermissions'
 import { formatDateLong } from '@/lib/format'
 
@@ -69,7 +70,14 @@ export default function RespuestasPage() {
   const [responses, setResponses] = useState<FormResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [detailResponse, setDetailResponse] = useState<FormResponse | null>(null)
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
+  /**
+   * FRM-6 · El checkbox solo existe para quien ya puede exportar el padrón.
+   * Esconderlo NO es el permiso —eso lo valida el endpoint—: es no ofrecerle a
+   * alguien algo que le va a contestar 403.
+   */
+  const puedePersonales = puedeExportarDatosPersonales(user?.roles ?? [])
+  const [conPersonales, setConPersonales] = useState(false)
   // Acceso puntual (form_access_grants): lee y exporta, pero no edita la
   // estructura del formulario — el botón de editar solo con el módulo.
   const { can } = usePermissions()
@@ -224,8 +232,21 @@ export default function RespuestasPage() {
             <Download size={13} />
             CSV
           </button>
+          {/* Apagado por default: lo normal es bajar las respuestas, no el
+              padrón. Quien lo necesita para un campamento lo marca. */}
+          {puedePersonales && (
+            <label className="flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body cursor-pointer">
+              <input
+                type="checkbox"
+                checked={conPersonales}
+                onChange={e => setConPersonales(e.target.checked)}
+                className="accent-coral"
+              />
+              Incluir datos personales
+            </label>
+          )}
           <a
-            href={`/api/forms/${id}/responses/export`}
+            href={`/api/forms/${id}/responses/export${conPersonales ? '?personales=1' : ''}`}
             className={cn(
               'flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body',
               responses.length === 0 && 'pointer-events-none opacity-40',

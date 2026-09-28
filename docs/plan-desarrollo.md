@@ -4274,3 +4274,77 @@ informe final.
 Tests: cada condición con fixtures, combinación no excluyente de estados, lista guardada
 round-trip. tsc/lint/vitest.
 ```
+
+### [x] FRM-6 · Export de respuestas de formularios con datos personales del perfil (pedido 2026-09-28, hecho 2026-09-28)
+
+Para eventos tipo campamento: al descargar las respuestas del formulario de
+inscripción, que bajen también los datos personales de la ficha de cada
+persona.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Export de respuestas de formulario: columnas de datos personales
+
+En el export XLSX de respuestas de formularios (ya existe), agregar la opción "Incluir
+datos personales" que suma, POR CADA persona que respondió (resuelta por su member_id —
+las respuestas ya vienen asociadas al miembro), estas columnas desde la FICHA (no desde
+el formulario):
+
+  Nombre completo · Cédula/documento · Fecha de nacimiento · Género · Teléfono · Correo ·
+  Alergias · Restricción alimenticia · Estado civil · Nombre del cónyuge
+
+- CÓNYUGE: solo si el estado civil es casado/a — el nombre sale de la pareja de su unidad
+  familiar (mismo criterio de FIN-10/FAM-2: esposo/a o cabezas de familia). Sin familia
+  registrada o sin cónyuge en ella → columna vacía (no adivinar).
+- Los datos salen de la ficha AL MOMENTO del export (no se congelan al responder) — es lo
+  que sirve para la logística del campa (alergias/restricciones actualizadas).
+- Campos vacíos → celda vacía, no "—" ni "N/A" (el Excel se usa para filtrar).
+- Respuestas anónimas o sin member_id resoluble → solo sus respuestas, columnas
+  personales vacías.
+- DISPONIBLE en todos los formularios (no hardcodear "campamento"), como checkbox al
+  exportar, apagado por default.
+- PERMISOS: el export con datos personales expone cédulas y salud (alergias) — gate: solo
+  roles que ya ven datos de miembros (criterio de REP-5/PAR-4: verificar que quien
+  exporta respuestas tenga alcance de miembros; si el rol solo ve formularios, el
+  checkbox no aparece y el endpoint lo rechaza server-side).
+Tests: casado con cónyuge, casado sin familia, soltero, anónimo, gate de permisos
+(403/checkbox oculto). tsc/lint/vitest.
+```
+
+**HECHO**, sin migración: los datos ya estaban en la ficha.
+
+- **Checkbox «Incluir datos personales»**, apagado por default, junto al botón
+  Excel. Suma 10 columnas AL FINAL —nombre, documento, nacimiento, género,
+  teléfono, correo, alergias, restricción alimenticia, estado civil y
+  cónyuge—; al final y no junto al nombre porque diez columnas de padrón en el
+  medio empujan la primera pregunta fuera de la pantalla.
+- **El gate es el del padrón**, no el de ver respuestas: alcance `all` sobre
+  miembros MÁS la acción `export`, escrito una sola vez en
+  `puedeExportarDatosPersonales` y compartido con `/api/members/export`. Hace
+  falta porque `formViewerScope` incluye el acceso puntual por
+  `form_access_grants` y al encargado del evento — gente que lee las respuestas
+  de SU formulario sin tener nada que ver con el padrón. Y se valida en el
+  SERVIDOR: la lección de PAR-4 es que esconder el botón no es el permiso.
+- **Se rechaza con 403 en vez de devolver el Excel sin las columnas**: un
+  archivo sin los datos se parece al archivo con los datos y se manda a
+  imprimir creyendo que está completo.
+- **Cónyuge**: exactamente uno o nada. Medido en producción el 2026-09-28 — de
+  1.995 casados activos, 1.115 tienen familia registrada y **994 resuelven un
+  cónyuge único, cero ambiguos**. Los valores reales de `relation` son
+  'Titular'/'Cónyuge' (no 'esposo'/'cabeza', que fue el primer supuesto).
+- **`esCasado` compara por prefijo sin tildes**: producción tiene 'Casado/a'
+  1.994 veces pero también 'Casado' y 'Casada' sueltos, y un `===` contra la
+  etiqueta canónica dejaba a tres personas sin cónyuge.
+- **Lo encontró un test**: `textoDeRestricciones` devuelve `'—'` cuando no hay
+  nada —correcto en pantalla— y eso violaba la regla de «celda vacía, no
+  guion». Se convierte acá y no se toca el helper, que lo comparte el export de
+  asistentes a eventos.
+
+Tests: `datos-personales-del-export.test.ts` (23). Seis cebos muerden: elegir
+el primero de dos cónyuges, escribirle cónyuge a un soltero, devolver el guion,
+comparar «casado» con `===`, devolver el Excel mocho sin permiso, y aflojar el
+gate al de formularios. Verificado en staging bajando el .xlsx por la ruta y
+ABRIÉNDOLO: 19 columnas, cédula con su cero de adelante, nacimiento como fecha
+real, y el caso completo (casado con cónyuge / el mismo puesto como soltero con
+la misma familia → columna vacía). La ficha que se usó quedó como estaba.

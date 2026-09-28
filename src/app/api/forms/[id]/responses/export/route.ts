@@ -5,8 +5,10 @@ import { formViewerScope } from '@/lib/auth/forms-scope'
 import { bloqueoPorReserva } from '@/lib/forms/formularios-reservados'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  getFormResponses, getFormById, hasFormAccessGrant,
+  getFormResponses, getFormById, hasFormAccessGrant, getFichasPersonalesParaExport,
 } from '@/lib/supabase/queries/forms'
+import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
+import { COLUMNAS_PERSONALES, celdasPersonales } from '@/lib/forms/datos-personales-del-export'
 import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
 import { encabezadoDeCampo } from '@/lib/forms/computed-fields'
 import { formatPhoneCR } from '@/lib/phone'
@@ -53,6 +55,34 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const [form, responses] = await Promise.all([getFormById(id), getFormResponses(id)])
     if (!form) return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
 
+    /**
+     * FRM-6 · ?personales=1 suma las columnas de la FICHA de cada persona.
+     *
+     * El gate es aparte del de ver respuestas y es el del padrón: acá salen
+     * cédulas, fechas de nacimiento y alergias —datos de salud— de todo el que
+     * haya respondido. Quien tiene el formulario compartido por
+     * `form_access_grants`, o es encargado del evento, puede leer las
+     * respuestas sin tener nada que ver con el padrón.
+     *
+     * Se RECHAZA con 403 en vez de devolver el Excel sin las columnas: si
+     * alguien pidió los datos personales, el archivo sin ellos parece el
+     * archivo con ellos y se manda a imprimir creyendo que está completo.
+     */
+    const pidePersonales = new URL(req.url).searchParams.get('personales') === '1'
+    if (pidePersonales && !puedeExportarDatosPersonales(ctx.roles)) {
+      return NextResponse.json(
+        { error: 'No tenés permiso para exportar datos personales del padrón.' },
+        { status: 403 },
+      )
+    }
+    const fichas = pidePersonales
+      ? await getFichasPersonalesParaExport(
+          // `member_id` de la respuesta y no `member.id`: el join solo trae
+          // nombre y teléfono, y agregarle el id ahí lo pagaría cada GET de
+          // respuestas para algo que solo usa este export.
+          responses.map(r => r.member_id).filter((x): x is string => !!x))
+      : null
+
     const campos = (form.fields ?? []).filter(f => isDataField(f.field_type))
 
     const wb = new ExcelJS.Workbook()
@@ -80,6 +110,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const h = encabezadoDeCampo(f.field_type, f.label)
         return { header: h, width: columnWidthFor(h) }
       }),
+      // Al FINAL y no junto al nombre: las preguntas del formulario son lo que
+      // alguien vino a leer, y meterle diez columnas de padrón en el medio
+      // empuja la primera pregunta fuera de la pantalla.
+      ...(fichas ? COLUMNAS_PERSONALES.map(c => ({ header: c.header, width: c.width })) : []),
     ]
 
     // Encabezado: negrita sobre el navy de la marca, congelado y con autofiltro.
@@ -101,6 +135,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     ws.getColumn(2).numFmt = '@'          // el teléfono, texto (si no, Excel se lo come)
     ws.getColumn(3).numFmt = '@'          // quién la registró, texto
     ws.getColumn(4).numFmt = 'dd/mm/yyyy' // la fecha, fecha real
+    if (fichas) {
+      // Mismo cuidado que con las respuestas: la cédula va como TEXTO o Excel
+      // le come el cero de adelante, y el nacimiento como fecha real para que
+      // se pueda ordenar y filtrar por rango.
+      const base = CONTEXTO.length + campos.length
+      COLUMNAS_PERSONALES.forEach((c, i) => {
+        ws.getColumn(base + 1 + i).numFmt = c.kind === 'date' ? 'dd/mm/yyyy' : '@'
+      })
+    }
 
     for (const r of responses) {
       // Las respuestas vienen como lista de valores, no como objeto por campo.
@@ -122,6 +165,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         r.submitted_at ? new Date(r.submitted_at) : null,
         ...campos.map(f => answerToCell(porCampo.get(f.id), excelCellKind(f.field_type), origin)),
       ]
+      if (fichas) {
+        // Sin ficha —anónima, o sin miembro resoluble— las celdas van vacías y
+        // la fila NO se omite: sus respuestas siguen valiendo.
+        const ficha = r.member_id ? fichas.get(r.member_id) : null
+        fila.push(...celdasPersonales(ficha, ficha?.conyuge ?? ''))
+      }
       ws.addRow(fila)
     }
 

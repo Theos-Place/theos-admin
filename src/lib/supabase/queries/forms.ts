@@ -4,6 +4,10 @@ import { sendSystemEmail } from '@/lib/email/system-templates'
 import { normalizeRestriction, hasRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
 import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
 import { memberPassesRestriction } from '@/lib/supabase/queries/audiencia'
+import {
+  conyugeEnLaFamilia,
+  type FichaParaExport, type IntegranteDeFamilia,
+} from '@/lib/forms/datos-personales-del-export'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -709,4 +713,94 @@ export async function revokeFormAccess(formId: string, memberId: string): Promis
   const { error } = await supabase
     .from('form_access_grants').delete().eq('form_id', formId).eq('member_id', memberId)
   if (error) throw error
+}
+
+/**
+ * FRM-6 · Las fichas de quienes respondieron, más el nombre de su cónyuge.
+ *
+ * SE LEE ACÁ Y NO EN EL SELECT DE LAS RESPUESTAS, por lo mismo que el export de
+ * asistentes a un evento: alergias y restricción alimenticia son datos de
+ * salud, y no tienen por qué viajar en cada GET de respuestas solo para estar
+ * disponibles el día que alguien marque el checkbox.
+ *
+ * DOS CONSULTAS Y NO UN JOIN de tres tablas: las unidades familiares se
+ * resuelven en memoria porque hace falta ver TODOS los integrantes de cada
+ * unidad para decidir si la pareja es única (`conyugeEnLaFamilia`), y eso un
+ * join que filtra por los que respondieron no lo puede contestar — se traería
+ * media unidad y diría «no hay cónyuge» cuando sí hay.
+ *
+ * Chunking a 200 en los `.in()`, la convención del repo: un `.in()` con
+ * cientos de uuids revienta la URL de PostgREST.
+ */
+export async function getFichasPersonalesParaExport(
+  memberIds: readonly string[],
+): Promise<Map<string, FichaParaExport & { conyuge: string }>> {
+  const out = new Map<string, FichaParaExport & { conyuge: string }>()
+  const ids = [...new Set(memberIds.filter(Boolean))]
+  if (ids.length === 0) return out
+
+  const supabase = createAdminClient()
+  const fichas: FichaParaExport[] = []
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data, error } = await supabase
+      .from('members')
+      .select(`id, first_name, last_name, cedula, document_type, birth_date, gender,
+               phone, email, allergies, dietary_restrictions, marital_status`)
+      .in('id', ids.slice(i, i + 200))
+    if (error) throw error
+    fichas.push(...((data ?? []) as unknown as FichaParaExport[]))
+  }
+
+  // Las unidades familiares de esa gente…
+  const unidadDe = new Map<string, string>()
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data, error } = await supabase
+      .from('family_members').select('member_id, family_unit_id')
+      .in('member_id', ids.slice(i, i + 200))
+    if (error) throw error
+    for (const f of ((data ?? []) as Array<{ member_id: string; family_unit_id: string }>)) {
+      unidadDe.set(f.member_id, f.family_unit_id)
+    }
+  }
+
+  // …y TODOS los integrantes de esas unidades, que es lo que permite exigir
+  // que la pareja sea única.
+  const unidades = [...new Set([...unidadDe.values()])]
+  const integrantesDe = new Map<string, IntegranteDeFamilia[]>()
+  const porResolver: Array<{ unidad: string; member_id: string; relation: string | null }> = []
+  for (let i = 0; i < unidades.length; i += 200) {
+    const { data, error } = await supabase
+      .from('family_members').select('family_unit_id, member_id, relation')
+      .in('family_unit_id', unidades.slice(i, i + 200))
+    if (error) throw error
+    for (const f of ((data ?? []) as Array<{ family_unit_id: string; member_id: string; relation: string | null }>)) {
+      porResolver.push({ unidad: f.family_unit_id, member_id: f.member_id, relation: f.relation })
+    }
+  }
+
+  // El nombre del cónyuge puede ser de alguien que NO respondió el formulario,
+  // así que sus fichas se piden aparte y no se reusan las de arriba.
+  const nombresFaltantes = [...new Set(porResolver.map(p => p.member_id))]
+  const nombreDe = new Map<string, string>()
+  for (const f of fichas) nombreDe.set(f.id, `${f.first_name ?? ''} ${f.last_name ?? ''}`.trim())
+  const pendientes = nombresFaltantes.filter(id => !nombreDe.has(id))
+  for (let i = 0; i < pendientes.length; i += 200) {
+    const { data } = await supabase
+      .from('members').select('id, first_name, last_name').in('id', pendientes.slice(i, i + 200))
+    for (const m of ((data ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>)) {
+      nombreDe.set(m.id, `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim())
+    }
+  }
+  for (const p of porResolver) {
+    const arr = integrantesDe.get(p.unidad) ?? []
+    arr.push({ member_id: p.member_id, relation: p.relation, nombre: nombreDe.get(p.member_id) ?? '' })
+    integrantesDe.set(p.unidad, arr)
+  }
+
+  for (const f of fichas) {
+    const unidad = unidadDe.get(f.id)
+    const conyuge = unidad ? conyugeEnLaFamilia(integrantesDe.get(unidad) ?? [], f.id) : ''
+    out.set(f.id, { ...f, conyuge })
+  }
+  return out
 }
