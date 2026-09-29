@@ -174,8 +174,32 @@ export function cuerpo(persona: string, filas: readonly Fila[]): string {
 
 async function main() {
   const enviar = process.argv.includes('--enviar')
+  const iP = process.argv.indexOf('--prueba')
+  const prueba = iP >= 0 ? process.argv[iP + 1] : null
+  if (iP >= 0 && !prueba) { console.error('✗ --prueba necesita un correo'); process.exit(1) }
   const M = await modulos()
   const afectados = await traerAfectados(M)
+
+  if (prueba) {
+    if (M.isEmailSilentMode()) {
+      console.error('✗ EMAIL_SILENT_MODE está encendido: no saldría nada. Abortado.')
+      process.exit(1)
+    }
+    // Una de cada variante, con datos REALES: así se revisa lo que de verdad
+    // va a salir y no una maqueta.
+    const comun = [...afectados.values()].find(a => !a.filas.some(f => f.estado === 'transferred'))
+    const trans = [...afectados.values()].find(a => a.filas.some(f => f.estado === 'transferred'))
+    for (const [etiqueta, a] of [['común', comun], ['transferida', trans]] as const) {
+      if (!a) { console.log(`· no hay caso ${etiqueta}`); continue }
+      const r = await M.sendEmail({
+        to: { email: prueba, name: 'Prueba' }, subject: ASUNTO,
+        html: M.renderEmail(cuerpo(a.persona, a.filas)), kind: 'transactional',
+      })
+      console.log(`${r.enviado ? '✓' : '·'} variante ${etiqueta} (datos de ${a.persona}) → ${prueba} ${r.motivo ?? ''}`)
+    }
+    console.log('\nNADIE más recibió nada. Para el envío real: --enviar')
+    return
+  }
   console.log(`\n${afectados.size} personas · ${[...afectados.values()].reduce((n, a) => n + a.filas.length, 0)} avisos erróneos\n`)
   if (enviar && M.isEmailSilentMode()) {
     console.error('✗ EMAIL_SILENT_MODE está encendido: no saldría nada. Abortado.')

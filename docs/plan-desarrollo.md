@@ -4492,7 +4492,10 @@ error y sin aviso. Ahora las dos leen `DIAS_DE_ESTUDIO` de
 `lib/studies/request-prefs`. Verificado en staging mandando una solicitud con
 sábado: se guardó `["Sábado","Lunes"]`. Dos cebos muerden.
 
-### [x] OPS-1 · Los pings de Healthchecks no llegaban (diagnosticado y resuelto 2026-09-28)
+### [x] OPS-2 · Los pings de Healthchecks no llegaban (diagnosticado y resuelto 2026-09-28)
+
+Secuela de OPS-1, que dejó los checks creados y configurados el 2026-09-22 —
+y que los pings no llegaran no se notó hasta ahora.
 
 Los 16 crons diarios figuraban en «Never» desde el 2026-09-22; solo
 `scheduled_broadcasts` pingueaba.
@@ -4527,3 +4530,77 @@ Pendiente de nadie: el **redeploy** para que Vercel cargue las variables.
 
 Cinco pruebas nuevas en `src/lib/health.test.ts`; dos cebos muerden.
 
+
+### [ ] DIR-7 · Página "Los que no volvieron" para dirigentes (pedido 2026-09-28)
+
+Seguimiento de exalumnos que dejaron de venir: cada dirigente ve, de los
+grupos que ÉL dio (histórico), quiénes no han vuelto a Theos — y los contacta
+por WhatsApp con un mensaje preparado.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Página de seguimiento para dirigentes: mis estudiantes que no volvieron
+
+QUIÉN LA VE: el dirigente (SOLO sus propios exalumnos — de grupos que dirigió o
+co-dirigió, actuales e históricos), admin y direccion. Server-side: el endpoint recorta
+por el dirigente autenticado (patrón studies-scope); admin/dirección pueden elegir
+dirigente.
+
+DEFINICIÓN "no volvió" (función pura testeable, ej. lib/reports/no-volvieron.ts):
+persona SIN ningún check-in a charla NI matrícula/participación en estudio en los
+últimos 6 MESES. Reutilizar las piezas de REP-5/REP-6 (check-ins a charlas, actividad)
+— no reinventar. Excluir: fallecidos/inactivos marcados, datos [prueba], y quienes son
+servidores activos (sirven aunque no lleven estudio — no están "perdidos").
+
+LISTA (una fila por exalumno perdido):
+- Nombre.
+- Grupo en el que fue su estudiante y AÑO (si estuvo en varios grupos del mismo
+  dirigente, el más reciente).
+- Resultado: aprobó / no aprobó / sin resultado (el dato del cierre).
+- Teléfono como ENLACE de WhatsApp: https://wa.me/506XXXXXXXX (normalizar el número:
+  quitar guiones/espacios; si ya trae código de país no duplicar el 506; sin teléfono →
+  "—" sin enlace).
+- El enlace de WhatsApp abre con MENSAJE PRE-LLENADO (parámetro ?text= URL-encoded)
+  usando la plantilla definida abajo con el nombre de la persona y del dirigente.
+- Orden: por año descendente. Conteo arriba ("Tenés N personas por reconectar").
+
+PLANTILLA DEL MENSAJE (una sola, central y editable en el código con comentario; los
+placeholders {{nombre}} y {{dirigente}} se rellenan al armar el enlace):
+"Hola {{nombre}}! Soy {{dirigente}}, de Theos — compartimos el estudio hace un tiempo y
+me acordé de vos. Hace rato no te vemos por acá y quería saludarte: ¿cómo has estado?
+Si en algún momento querés retomar un estudio o ir a una charla, las puertas están
+abiertas y me encantaría verte. Un abrazo."
+
+PRIVACIDAD: el dirigente solo ve nombre/grupo/año/resultado/teléfono — sin correo, sin
+perfil (consistente con GRU-3: nunca enlace al perfil). Sin export en esta versión (la
+lista es para contactar uno a uno, no para sacar bases de datos).
+RENDIMIENTO: SQL agregado sobre el histórico (168k+ check-ins) — nada de N+1.
+Entrada de menú visible a dirigentes con histórico, admin y direccion.
+SEGUIMIENTO POR PERSONA (agregado 2026-09-28) — marcar el resultado del contacto,
+fácil y sin escribir mucho:
+- Cada fila tiene una acción "Registrar contacto" con opciones de UN toque (radio/chips,
+  no texto libre obligatorio):
+  · "Ya le escribí — sin respuesta aún"
+  · "Quiere volver" → sub-opción opcional: ¿a qué? (charla / retomar estudio / evento)
+  · "Se cambió de iglesia" → campo de texto OPCIONAL "¿a cuál?"
+  · "No quiere volver"
+  · "Número equivocado / no es la persona"
+  Más un campo de nota opcional (una línea).
+- Se guarda por persona: estado, quién lo marcó (el dirigente), cuándo, y el historial de
+  contactos si se marca más de una vez (no sobreescribir — es seguimiento).
+- La fila cambia de aspecto según el estado (pendiente / contactado / resuelto) y hay
+  filtro rápido por estado ("solo pendientes de contactar").
+- "Quiere volver" es accionable: esas personas salen destacadas y en una vista/conteo
+  para dirección y coordinación (son a quienes hay que abrirles la puerta: avisar cuando
+  abra matrícula de lo que pidieron — la automatización de ese aviso queda para después,
+  por ahora solo la lista).
+- Los datos alimentan decisiones: en la vista de admin/dirección, resumen agregado por
+  resultado (N sin respuesta, N quieren volver, N cambiaron de iglesia — con la lista de
+  cuáles iglesias—, N no quieren). Sin correos automáticos a nadie.
+
+Tests: definición (actividad hace 5 meses no aparece, 7 meses sí; servidor activo
+excluido), recorte por dirigente (403 a otro), enlace wa.me bien formado con y sin
+teléfono, registrar contacto guarda historial (dos marcas = dos entradas) y el filtro
+por estado. tsc/lint/vitest.
+```
