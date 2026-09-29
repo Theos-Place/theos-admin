@@ -4492,3 +4492,38 @@ error y sin aviso. Ahora las dos leen `DIAS_DE_ESTUDIO` de
 `lib/studies/request-prefs`. Verificado en staging mandando una solicitud con
 sábado: se guardó `["Sábado","Lunes"]`. Dos cebos muerden.
 
+### [x] OPS-1 · Los pings de Healthchecks no llegaban (diagnosticado y resuelto 2026-09-28)
+
+Los 16 crons diarios figuraban en «Never» desde el 2026-09-22; solo
+`scheduled_broadcasts` pingueaba.
+
+**No era el código: era el NOMBRE de las variables.** En Vercel estaban
+cargadas en minúscula (`HEALTHCHECK_URL_close_reminders`) y `process.env`
+distingue mayúsculas, así que `process.env['HEALTHCHECK_URL_CLOSE_REMINDERS']`
+venía `undefined`. `scheduled_broadcasts` funcionaba por ser una de las dos que
+quedaron en MAYÚSCULA. Cuatro tenían además el nombre armado distinto, con el
+path del cron (`..._studies_start_reminders` en vez de `..._START_REMINDERS`),
+y dos nunca se crearon.
+
+`.env.example` estaba **bien**: sus 19 nombres coinciden exactamente con los
+del código. El desfase existía solo en Vercel.
+
+**Lo que hizo invisible el problema una semana** era `if (!url) return`:
+silencio absoluto cuando falta la variable. El cron corría, el ping no salía y
+en los logs no quedaba nada. Ahora escribe `healthcheck: <VARIABLE> no
+configurada`, nombrando cuál. Y un monitor que responde **404** —check borrado
+o UUID mal pegado— tampoco pasa por éxito: antes no fallaba en la red, así que
+se veía igual que un ping entregado. Sigue siendo best-effort: el cron no falla
+por culpa de su vigilante.
+
+**Un intento que NO se pudo hacer, y vale anotarlo**: renombrar conservando el
+valor es imposible. Las variables están marcadas *Sensitive* en Vercel y su
+valor no se recupera ni por CLI ni por la interfaz (`vercel env pull` las baja
+vacías, mientras que `CRON_SECRET` sí baja con valor). Hubo que volver a
+copiar las URLs desde Healthchecks.io. Lo hizo Floriana; quedaron **19 de 19**,
+sin sobrantes.
+
+Pendiente de nadie: el **redeploy** para que Vercel cargue las variables.
+
+Cinco pruebas nuevas en `src/lib/health.test.ts`; dos cebos muerden.
+

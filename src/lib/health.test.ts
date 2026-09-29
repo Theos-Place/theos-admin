@@ -1,47 +1,52 @@
-// Guard de configuración: cada cron de vercel.json debe tener su health check,
-// y cada health check del código debe estar listado en .env.example.
-//
-// Modo de fallo que esto evita: "el cron falla y nadie se entera". Un cron nuevo
-// sin ping no avisa nunca, y una variable que no está en .env.example no se
-// configura porque nadie sabe que existe.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 
-const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as { crons: Array<{ path: string }> }
+const sinComentarios = (r: string) =>
+  readFileSync(r, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-/** Crons que NO los dispara Vercel. Vacío desde que la cuenta es Pro.
- *
- *  OJO al agregar un cron que corra más de una vez al día: en el plan Hobby
- *  Vercel RECHAZA el deployment entero, no solo ese cron ("Hobby accounts are
- *  limited to daily cron jobs" — pasó el 2026-08-07 y dejó seis commits sin
- *  desplegar). Si la cuenta volviera a Hobby, los frecuentes van acá y se
- *  disparan desde afuera. */
-const CRONS_EXTERNOS: string[] = []
-const envExample = readFileSync('.env.example', 'utf8')
-const health = readFileSync('src/lib/health.ts', 'utf8')
+/**
+ * El 2026-09-22 dejaron de llegar los pings de 17 de los 19 monitores y nadie
+ * pudo saber cuáles: el cron corría bien, el ping no salía, y en los logs no
+ * quedaba NADA. La causa fue que las variables estaban cargadas en Vercel en
+ * minúscula —`HEALTHCHECK_URL_close_reminders`— y `process.env` distingue
+ * mayúsculas; una línea de log lo habría delatado el primer día.
+ */
+describe('pingHealthcheck · no se puede callar', () => {
+  const SRC = sinComentarios('src/lib/health.ts')
 
-/** Nombres de variable que el helper acepta (la unión de tipos). */
-const declaradas = [...health.matchAll(/'(HEALTHCHECK_URL_[A-Z_]+)'/g)].map(m => m[1])
-
-describe('health checks de los crons', () => {
-  it('cada cron de vercel.json pingea un health check', () => {
-    const sinPing: string[] = []
-    for (const path of [...vercel.crons.map(c => c.path), ...CRONS_EXTERNOS]) {
-      const archivo = `src/app${path}/route.ts`
-      const src = readFileSync(archivo, 'utf8')
-      if (!src.includes('pingHealthcheck(')) sinPing.push(path)
-    }
-    expect(sinPing, `crons sin health check: ${sinPing.join(', ')}`).toEqual([])
+  it('avisa cuando la variable no está configurada', () => {
+    // El `if (!url) return` mudo es lo que hizo invisible una semana de crons
+    // sin monitoreo.
+    expect(SRC).not.toMatch(/if \(!url\) return/)
+    const i = SRC.indexOf('if (!url)')
+    expect(i, 'tiene que seguir chequeando que la variable exista').toBeGreaterThan(-1)
+    expect(SRC.slice(i, i + 300)).toContain('console.warn')
+    expect(SRC.slice(i, i + 300)).toContain('no configurada')
   })
 
-  it('todas las variables que el código acepta están en .env.example', () => {
-    expect(declaradas.length).toBeGreaterThan(5)
-    const faltantes = declaradas.filter(v => !envExample.includes(v))
-    expect(faltantes, `faltan en .env.example: ${faltantes.join(', ')}`).toEqual([])
+  it('nombra la variable en el aviso, no dice «falta una»', () => {
+    // Con 19 monitores, «falta una variable» no sirve para nada.
+    const i = SRC.indexOf('if (!url)')
+    expect(SRC.slice(i, i + 300)).toContain('${envKey}')
   })
 
-  it('hay tantos health checks como crons', () => {
-    // Si no coinciden, o sobra una variable muerta o falta un cron por cubrir.
-    expect(declaradas.length).toBe(vercel.crons.length + CRONS_EXTERNOS.length)
+  it('un monitor que responde mal tampoco pasa por éxito', () => {
+    // Un 404 —check borrado, UUID mal pegado— no falla en la red: sin mirar
+    // el status se veía igual que un ping entregado.
+    expect(SRC).toContain('if (!res.ok)')
+  })
+
+  it('el ping va a la URL TAL CUAL, sin sufijos', () => {
+    // Healthchecks.io usa /start, /fail y /log como rutas aparte; acá solo se
+    // reporta el final feliz.
+    expect(SRC).toContain('await fetch(url, {')
+    expect(SRC).not.toMatch(/url \+ '\//)
+  })
+
+  it('sigue siendo best-effort: el cron no falla por el monitoreo', () => {
+    // Un `throw` acá tumbaría el cron por culpa de su vigilante.
+    const cuerpo = SRC.slice(SRC.indexOf('const url = process.env[envKey]'))
+    expect(cuerpo).not.toContain('throw')
+    expect(cuerpo).toContain('catch')
   })
 })
