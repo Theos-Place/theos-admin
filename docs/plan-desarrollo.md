@@ -4719,3 +4719,78 @@ Quedan 2 en «en revisión» de 2026, y ya se pueden resolver desde la pantalla.
 
 Tres cebos muerden.
 
+### [ ] DAT-14 · Histórico completo de process queues de CCB (pedido 2026-09-28)
+
+**LA REGLA, dicha por Floriana**: *solo deberían existir cierres o aprobaciones
+de personas que tienen process queue en CCB. Si estuvieron en un grupo y
+después las sacaron, eso no es una reprobación — fue un error de haberlas
+unido al grupo.*
+
+Es la fuente de verdad que falta. Hoy se está inferiendo lo mismo por un
+camino más débil —«sin asistencia y sin pago, nunca estuvo»— y acierta, pero
+no prueba nada.
+
+**POR QUÉ HACE FALTA, medido el 2026-09-28**
+
+- **453 personas en 140 grupos** quedaron en `en_revision` con el grupo ya
+  cerrado: ni aprobadas ni reprobadas. Las 453 tienen **cero asistencia y cero
+  pagos**, sin una sola excepción, y **445 se crearon el 18-jul-2026 a las
+  18:53** — la huella exacta de la carga masiva de CCB. No son descuidos de
+  dirigentes: son datos que llegaron incompletos. Van de 2019 a 2025.
+- Los 8 casos de 2026 se resolvieron uno por uno ese día y **7 de 8 resultaron
+  ser matrículas que nunca debieron existir**. El patrón se repite.
+- El archivo que tenemos, `ccb-graduaciones-2026-08.csv`, **solo cubre
+  mayo–agosto de 2026** (760 filas: 690 aprobados, 70 reprobados). No alcanza
+  para validar nada anterior.
+- Y ya muestra desajustes en el período que sí cubre: de **27 reprobados** del
+  sistema entre mayo y agosto, **22 tienen process queue en CCB y 5 no**. Esos
+  5 son candidatos a ser errores de unión, no reprobaciones.
+
+**QUÉ HAY QUE EXPORTAR DE CCB** (lo hace Floriana; acá no hay acceso):
+
+Todos los process queues **desde el inicio**, no un rango. Mismas columnas que
+el export de agosto, que ya sirven:
+
+| Columna | Para qué |
+| --- | --- |
+| `external_id` | **La llave del cruce.** Sin esto el archivo no sirve. |
+| `individual_name` | Solo para leerlo con ojos humanos, NUNCA para cruzar. |
+| `queue_name` | Qué estudio (incluye los «Reprueba …»). |
+| `resultado` | aprobado / reprobado. |
+| `status` | Done / Not Started. |
+| `fecha_due` | Para ubicar en el tiempo y cruzar con el grupo. |
+
+**EL CRUCE SE HACE POR `external_id` Y CON `member_por_external_id()`**, nunca
+contra `members.external_id` a secas ni por nombre — es la regla de AGENTS.md,
+y existe porque la fusión de duplicados deja el external_id en la ficha muerta:
+buscar directo devuelve la persona inactiva. En esta misma sesión aparecieron
+dos casos que lo confirman (un duplicado `merged` de Ravel Rodriguez, y dos
+Jorge Badilla que son personas distintas).
+
+Prompt para Claude Code, cuando el archivo esté:
+
+```
+DATOS · Conciliar el histórico de estudios contra los process queues de CCB
+
+Entrada: data-import/ccb-process-queues-historico.csv (external_id, individual_name,
+queue_name, resultado, status, fecha_due).
+
+1. Cruzar por external_id con member_por_external_id(). Reportar cuántos no resuelven
+   y no adivinar por nombre: con cero o con dos coincidencias, se reporta y no se toca.
+2. Tabla de conciliación, sin escribir nada todavía:
+   · en el sistema y en CCB, mismo resultado  → ok
+   · en el sistema y en CCB, resultado DISTINTO → revisar a mano, listar
+   · en el sistema y NO en CCB                → candidato a «error de unión al grupo»
+   · en CCB y NO en el sistema                → cierre que nunca se registró
+3. Las `en_revision` sin process queue: proponer 'cancelada' (matrícula que no debió
+   existir), NO 'dropped' — ver lib/studies/baja-matricula.ts, la diferencia importa
+   porque el historial es el expediente de una persona.
+4. Los `reprobado` sin process queue: mismo criterio, pero listarlos aparte para que
+   Floriana los confirme uno por uno — quitarle una reprobación a alguien que sí la
+   tuvo es peor que dejarla.
+5. Dry-run con rollback y respaldo de las filas antes de aplicar. Medir primero.
+Tests: el cruce con duplicado fusionado devuelve la ficha VIVA; cero y dos coincidencias
+se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
+```
+
+Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
