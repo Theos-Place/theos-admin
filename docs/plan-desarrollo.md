@@ -4794,3 +4794,108 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 ```
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
+
+### [ ] FIN-11 · Viáticos y kilometraje: flujo digital del reglamento de viajes (pedido 2026-09-29)
+
+Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos
+operativos, versión 1.0 del 05/05/2026 — reglamento EN PROCESO FINAL de
+aprobación por Junta Directiva: **no correr hasta que esté aprobado**, y
+parametrizar tarifas/montos porque pueden cambiar en la aprobación).
+
+DISEÑO: un solo flujo "Viaje" con etapas, no 5 formularios sueltos. Cada viaje
+es un expediente que avanza:
+
+  solicitud → presupuesto → aprobación → (anticipo) → viaje →
+  liquidación → reintegro/reembolso → informe → cerrado
+
+Mapa de los anexos al sistema:
+1. **Solicitud de viaje (ANX-01)** — formulario digital: los datos personales
+   (nombre, cédula, puesto, comité, correo, teléfono) SE AUTOLLENAN de la
+   ficha, no se piden. Tipo (trabajo/capacitación, nacional/internacional),
+   destino, fechas/horas, acompañantes, justificación (objetivo, agenda,
+   beneficio, resultado esperado), fuente de financiamiento, anticipo sí/no y
+   monto, centro de costo. Adjuntos (agenda/invitación).
+2. **Presupuesto (ANX-02)** — tabla de rubros dentro del mismo expediente
+   (pasajes, transporte local, hospedaje, alimentación, inscripción, seguro,
+   peajes, combustible/km, otros) con cantidad × tarifa = subtotal, POR
+   MONEDA (CRC/USD — regla INT-3: jamás sumar entre monedas; total por cada
+   moneda). Campos de validación financiera (monto máximo según política,
+   anticipo recomendado, disponibilidad verificada) los llena finanzas.
+3. **Aprobaciones** — las 3 firmas del papel se vuelven estados con actor y
+   fecha (solicitante envía → revisión administrativa/financiera → aprobación
+   de autoridad competente). Patrón RequestBoard/tiquetes existente —
+   REUTILIZAR. Todo al audit_log.
+4. **Liquidación (ANX-03)** — al volver del viaje: anticipo recibido, detalle
+   de gastos ejecutados (fecha, rubro, proveedor, nº comprobante, monto) con
+   COMPROBANTES adjuntos (mecanismo de comprobantes existente), y el cálculo
+   automático de la diferencia: a reintegrar a la Asociación o a reembolsar a
+   la persona. Declaración jurada como checkbox con texto del reglamento.
+   Plazo de presentación según reglamento (recordatorio in-app, no correo).
+5. **Informe de viaje (ANX-04)** — formulario del módulo de formularios
+   vinculado al expediente (actividades, resultados, lecciones,
+   recomendaciones, evidencia adjunta). No bloquea la liquidación salvo que
+   el reglamento diga lo contrario (verificar al aprobar).
+6. **Bitácora de kilometraje (ANX-05)** — sección repetible dentro del
+   expediente (una fila por desplazamiento: origen, destino, horas, km
+   inicial/final con km recorridos calculados) + gastos asociados
+   (combustible/peajes/parqueos con comprobante) + tarifa por km AUTORIZADA
+   COMO PARÁMETRO del sistema (constante configurable) y monto a reconocer
+   calculado.
+
+FASEO SUGERIDO (cada fase corrible por separado):
+  A. Expediente + solicitud + presupuesto + estados de aprobación.
+  B. Liquidación + comprobantes + cálculo de diferencias.
+  C. Bitácora de kilometraje.
+  D. Informe (formulario vinculado).
+PERMISOS: solicitante ve/edita SU expediente (anti-suplantación
+resolveTargetMemberId); finanzas y dirección ven todos; aprobar según el rol
+que defina el reglamento. PDF de cada anexo descargable desde el expediente
+(para archivo físico/Junta) — con el patrón de PDF de SRV-14.
+Los prompts por fase se arman cuando el reglamento esté aprobado y Floriana
+confirme tarifas, plazos y quién es "autoridad competente".
+
+### [x] OPS-3 · Analytics y Speed Insights: instalados, con las URLs redactadas (2026-09-29)
+
+**Estaban pagados y sin usar.** Speed Insights figuraba habilitado desde el
+17-jul-2026 y Web Analytics desde el 04-jun, pero la API del proyecto devolvía
+`hasData: false`: sin el script en la app no reportan nada. Se estaba pagando
+**Speed Insights Plus** por datos que nunca llegaron. Floriana bajó al plan
+base —incluido, sin costo extra— y se instaló el paquete para que por fin
+sirvan.
+
+**LO QUE NO HACE LA INSTALACIÓN AUTOMÁTICA, y es el motivo de escribirlo a
+mano.** El agente de Vercel pone `<Analytics />` a secas. Las rutas de este
+sistema son `/miembros/<uuid>`, `/estudios/grupos/<uuid>/cierre`,
+`/servidores/aplicaciones/<uuid>`: el panel agrupa y muestra `/miembros/[id]`,
+pero el EVENTO lleva la url real. Mandar eso es mandar quién entró a ver la
+ficha de quién, de un padrón de 24.034 personas con menores incluidos. Y la
+búsqueda es peor: `?search=Floriana%20Fonseca` identifica tanto como el uuid.
+
+`beforeSend` redacta la url **antes de que salga del navegador**: los uuid y
+los ids numéricos largos pasan a `:id`, y la query string se descarta entera.
+Se pierde distinguir a una persona de otra —justo lo que no queremos saber— y
+queda lo único útil: qué PANTALLAS se usan.
+
+Detalles que el instalador tampoco decide bien: se usa
+`@vercel/analytics/next` y no el genérico de React (es lo que agrupa las rutas
+dinámicas), y va en el layout RAÍZ, así cubre las pantallas públicas y las de
+acceso, que quedan fuera del AppShell. Vive en un componente cliente porque
+`beforeSend` es una función y las props que cruzan de Server a Client
+Component tienen que ser serializables (guía `use-client` de Next 16).
+
+**Verificado en el navegador**, no solo compilado. Con la CSP de nonce +
+`strict-dynamic` de este proyecto: **cero violaciones**, los dos scripts
+cargan. Y el log del SDK muestra la redacción ocurriendo:
+
+```
+path: /miembros/81a735ef-8b0e-4ea8-8482-d3396ded954c   ← lo que había
+[view] /miembros/:id                                    ← lo que sale
+/miembros?search=Floriana%20Fonseca&page=2  →  /miembros
+```
+
+Tres cebos muerden, incluido el que simula exactamente lo que pondría el
+instalador automático (`<Analytics />` sin `beforeSend`).
+
+**Si algún día se corre el agente de Vercel encima**, va a proponer la versión
+genérica y `telemetria.test.ts` falla en CI. Es a propósito: ese test es el
+que impide que la redacción se pierda en silencio.

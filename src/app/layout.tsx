@@ -20,6 +20,7 @@ const geistMono = Geist_Mono({
 // de nonce-CSP en Next; aceptable en un admin interno de tráfico modesto.
 export const dynamic = 'force-dynamic'
 import { AvisoDeAmbiente } from '@/components/layout/AvisoDeAmbiente'
+import { Telemetria } from '@/components/layout/Telemetria'
 
 export const metadata: Metadata = {
   title: {
@@ -46,6 +47,9 @@ export default function RootLayout({
             renderiza nada. */}
         <AvisoDeAmbiente />
         {children}
+        {/* Analytics y Speed Insights, con las URLs redactadas antes de salir:
+            las rutas de este sistema llevan el uuid de una persona. */}
+        <Telemetria />
       </body>
     </html>
   );
