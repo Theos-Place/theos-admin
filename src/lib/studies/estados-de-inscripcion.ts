@@ -31,6 +31,20 @@ export const ESTADOS_DE_INSCRIPCION = [
   'transferred',
   /** El grupo cerró sin registrar su resultado. */
   'en_revision',
+  /**
+   * Lista de espera. CERO filas en producción al 2026-09-28 y **ningún lugar
+   * del código lo escribe** — se lee en ocho (capacidad del grupo, el adaptador,
+   * la deduplicación de la auto-matrícula) pero nada lo produce.
+   *
+   * Va en la lista igual, y no es contradictorio: esta lista es «los valores
+   * que el sistema reconoce», y varios filtros ya cuentan con él. Dejarlo
+   * fuera haría fallar el test que exige que cada estado nombrado en un filtro
+   * exista — y ese test es justamente el que encontró esto.
+   *
+   * Si algún día se decide que la lista de espera no existe, hay que sacarlo
+   * de los ocho lugares a la vez, no de acá solo.
+   */
+  'waitlist',
 ] as const
 
 export type EstadoDeInscripcion = (typeof ESTADOS_DE_INSCRIPCION)[number]

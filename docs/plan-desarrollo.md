@@ -4682,3 +4682,40 @@ Tests: botón genera tiquete+correo una sola vez, doble clic no duplica, el auto
 no duplica sobre el manual, folletos extra crea tiquete adicional, rol sin permiso 403.
 tsc/lint/vitest.
 ```
+
+### [x] EST-19 · Quien queda «en revisión» ya no queda atrapado (2026-09-28)
+
+**Se descubrió resolviendo casos a mano.** Cuatro veces seguidas hubo que
+sacar por SQL a alguien que el cierre había dejado en `en_revision` —ni
+aprobado ni reprobado—, y recién a la cuarta apareció el motivo:
+`withdrawMember` aceptaba solo `enrolled`, `pendiente_de_pago` y `waitlist`,
+así que «Quitar del grupo» devolvía `NO_RETIRABLE`. Desde la interfaz **no se
+podía hacer nada** con esa persona: ni ponerle resultado (el grupo ya estaba
+cerrado) ni sacarla. Las de mayo llevaban cuatro meses así.
+
+Ahora `en_revision` entra en esa lista. Los que YA tienen desenlace —
+`completed`, `reprobado`, `dropped`, `cancelada`, `transferred`— siguen fuera:
+sacar del grupo a quien ya aprobó le reescribiría el historial, y eso se
+corrige en el cierre.
+
+**Un test nuevo encontró otro estado fantasma**: `waitlist` se lee en ocho
+lugares (capacidad del grupo, el adaptador, la deduplicación de la
+auto-matrícula) y **ningún lugar lo escribe**; cero filas en producción. No se
+borró —sacarlo toca ocho archivos y es un refactor aparte— pero quedó
+declarado en `ESTADOS_DE_INSCRIPCION` con la advertencia, para que la lista
+diga la verdad completa. Es de la misma familia que el `withdrawn` que mandó
+correos a gente retirada.
+
+Casos resueltos en producción ese día (todos a `cancelada`, que es «la
+matrícula no debió existir» y NO aparece en el historial — no `dropped`, que
+sería escribirle a alguien una historia que no vivió): Katherine (Paige)
+Shilling en N1 y N2, Ravel Rodriguez Carmona en N3, Jorge Badilla Mena en N1,
+Isabel Ovares Ramírez en N3. Todos con cero asistencia y cero pagos, medido
+antes de tocar. El Prematrimonial de Carlos Campos y Adriana Sánchez, que
+NUNCA se cerró (2 personas, 0 resueltas, 0 sesiones), volvió a `en_curso`:
+el cron de recordatorio lo toma solo y le pide el cierre al dirigente.
+
+Quedan 2 en «en revisión» de 2026, y ya se pueden resolver desde la pantalla.
+
+Tres cebos muerden.
+

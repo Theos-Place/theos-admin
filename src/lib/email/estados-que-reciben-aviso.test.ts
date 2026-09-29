@@ -31,7 +31,8 @@ describe('avisos de inicio · el filtro no puede nombrar estados que no existen'
   })
 
   it('NO reciben los que ya no están en el grupo', () => {
-    for (const e of ['dropped', 'cancelada', 'transferred', 'completed', 'reprobado', 'en_revision']) {
+    for (const e of ['dropped', 'cancelada', 'transferred', 'completed', 'reprobado',
+                     'en_revision', 'waitlist']) {
       expect(RECIBEN_EL_AVISO.has(e), e).toBe(false)
     }
   })
@@ -51,6 +52,8 @@ describe('avisos de inicio · el filtro no puede nombrar estados que no existen'
     expect([...ESTADOS_DE_INSCRIPCION].sort()).toEqual([
       'cancelada', 'completed', 'dropped', 'en_revision',
       'enrolled', 'pendiente_de_pago', 'reprobado', 'transferred',
+      // Cero filas y nadie lo escribe, pero ocho filtros lo nombran.
+      'waitlist',
     ])
   })
 

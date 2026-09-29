@@ -1830,7 +1830,18 @@ export async function withdrawMember(
     .update({ status: estadoDeBaja(tipo), dropped_at: new Date().toISOString(), drop_reason: reason ?? null })
     .eq('group_id', groupId)
     .eq('member_id', memberId)
-    .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist'])
+    /**
+     * `en_revision` entra acá desde el 2026-09-28, y no es un detalle.
+     *
+     * Ese estado lo deja el cierre de un grupo cuando el dirigente no marcó a
+     * alguien: la persona queda ni aprobada ni reprobada. Como no estaba en
+     * esta lista, la interfaz tampoco podía sacarla —«Quitar del grupo»
+     * devolvía NO_RETIRABLE—, así que quedaba atrapada: ni se le podía poner
+     * resultado ni se le podía quitar la matrícula. Las de mayo llevaban
+     * cuatro meses ahí, y hubo que resolver cuatro casos por SQL antes de
+     * darse cuenta de que el agujero era este.
+     */
+    .in('status', ['enrolled', 'pendiente_de_pago', 'waitlist', 'en_revision'])
     .select('id, status')
   if (error) throw error
   if ((updated ?? []).length === 0) throw new Error('NO_RETIRABLE')
