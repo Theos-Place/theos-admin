@@ -88,7 +88,23 @@ describe('missingReasons', () => {
 
   it('el aprobado nunca pide motivo', () => {
     expect(missingReasons([row({ status_result: 'aprobado' })])).toEqual([])
-    expect(missingReasons([row({ status_result: '' })])).toEqual([])
+  })
+
+  it('SIN resultado bloquea el cierre (2026-09-28)', () => {
+    // Antes se podía cerrar dejando a alguien sin marcar, y esa persona
+    // quedaba en `en_revision` dentro de un grupo cerrado: ni aprobada ni
+    // reprobada, y sin que nadie se enterara. Al 2026-09-28 hay 10 así.
+    expect(missingReasons([row({ status_result: '' })]))
+      .toEqual([{ member_id: 'm1', status: 'sin_resultado' }])
+  })
+
+  it('pero la NOTA no bloquea: es una decisión, no un olvido', () => {
+    // CCB nunca guardó notas numéricas —el formulario de fin de nivel pedía
+    // la lista de quién aprobó y quién reprobó—, así que exigirla volvería
+    // imposible cerrar un grupo cuyo dirigente no tiene de dónde sacarla.
+    expect(missingReasons([row({ status_result: 'aprobado', grade: '' })])).toEqual([])
+    expect(missingReasons([row({ status_result: 'reprobado', fail_reason: 'no asistió', grade: '' })]))
+      .toEqual([])
   })
 })
 
@@ -104,12 +120,18 @@ describe('missingReasonsMessage', () => {
       .toBe('Antes de cerrar: Ana Ruiz (falta el motivo del retiro).')
   })
 
+  it('dice que falta el resultado con esas palabras, no «falta un motivo»', () => {
+    // No es un motivo lo que falta: es decir si aprobó, reprobó o se retiró.
+    expect(missingReasonsMessage([{ member_id: 'a', status: 'sin_resultado' }], nameOf))
+      .toBe('Antes de cerrar: Ana Ruiz (falta marcar si aprobó, reprobó o se retiró).')
+  })
+
   it('varios: los lista a todos', () => {
     const msg = missingReasonsMessage([
       { member_id: 'a', status: 'retirado' },
       { member_id: 'b', status: 'reprobado' },
     ], nameOf)
-    expect(msg).toContain('faltan 2 motivos')
+    expect(msg).toContain('faltan 2 datos')
     expect(msg).toContain('Ana Ruiz (falta el motivo del retiro)')
     expect(msg).toContain('Beto Mora (falta la justificación de la reprobación)')
   })

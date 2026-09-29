@@ -84,8 +84,11 @@ export function withdrawReasonError(reason: string | null | undefined): string |
   return null
 }
 
-/** Qué motivo exige cada resultado. 'aprobado' no pide ninguno. */
-export type MissingReason = { member_id: string; status: 'reprobado' | 'retirado' }
+/** Qué le falta a una fila para poder cerrar. 'aprobado' no pide motivo. */
+export type MissingReason = {
+  member_id: string
+  status: 'reprobado' | 'retirado' | 'sin_resultado'
+}
 
 /**
  * Filas a las que les falta el motivo OBLIGATORIO. Bloquean el cierre.
@@ -95,10 +98,26 @@ export type MissingReason = { member_id: string; status: 'reprobado' | 'retirado
  * 2026-08-04: el motivo del retiro pasó de opcional a OBLIGATORIO. Un retiro sin
  * motivo deja al estudiante fuera del grupo sin rastro de por qué, y es el dato
  * que se necesita después para reubicarlo o darle seguimiento.
+ *
+ * 2026-09-28: y el RESULTADO también. Se podía cerrar dejando a alguien sin
+ * marcar, y esa persona quedaba en `en_revision` —ni aprobada ni reprobada—
+ * dentro de un grupo ya cerrado, sin que nadie se enterara. Al 2026-09-28 hay
+ * 10 personas así en 8 grupos, y solo el dirigente que las tuvo puede decir
+ * qué pasó; meses después, ya no se acuerda.
+ *
+ * LA NOTA NO BLOQUEA, y es una decisión, no un olvido (Floriana, 2026-09-28):
+ * CCB nunca guardó notas numéricas —el formulario de fin de nivel pedía la
+ * LISTA de quién aprobó y quién reprobó, nada más—, así que exigirla ahora
+ * volvería imposible cerrar un grupo cuyo dirigente no tiene de dónde sacarla.
+ * Lo que no puede faltar es el desenlace.
  */
 export function missingReasons(rows: readonly CloseRow[]): MissingReason[] {
   const falta: MissingReason[] = []
   for (const r of rows) {
+    if (!r.status_result) {
+      falta.push({ member_id: r.member_id, status: 'sin_resultado' })
+      continue
+    }
     if (r.status_result === 'reprobado' && !r.fail_reason.trim()) {
       falta.push({ member_id: r.member_id, status: 'reprobado' })
     }
@@ -116,10 +135,14 @@ export function missingReasonsMessage(
   nameOf: (memberId: string) => string,
 ): string {
   if (falta.length === 0) return ''
-  const partes = falta.map(f => `${nameOf(f.member_id)} (${
-    f.status === 'reprobado' ? 'falta la justificación de la reprobación' : 'falta el motivo del retiro'
-  })`)
+  const QUE_FALTA: Record<MissingReason['status'], string> = {
+    reprobado: 'falta la justificación de la reprobación',
+    retirado: 'falta el motivo del retiro',
+    sin_resultado: 'falta marcar si aprobó, reprobó o se retiró',
+  }
+  const partes = falta.map(f => `${nameOf(f.member_id)} (${QUE_FALTA[f.status]})`)
   return partes.length === 1
     ? `Antes de cerrar: ${partes[0]}.`
-    : `Antes de cerrar faltan ${partes.length} motivos: ${partes.join('; ')}.`
+    // «motivos» ya no alcanza: puede faltar el resultado, que no es un motivo.
+    : `Antes de cerrar faltan ${partes.length} datos: ${partes.join('; ')}.`
 }

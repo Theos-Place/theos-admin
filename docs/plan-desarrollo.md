@@ -199,7 +199,41 @@ Comunicación decidió dejar los dos como están. No se borra ninguno.
 
 ## Fase 13 — Cola nueva (pedida 2026-09-10)
 
-### [ ] DAT-5 · Grupos finalizados con gente sin resultado
+### [~] DAT-5 · Grupos finalizados con gente sin resultado — REENCUADRADO 2026-09-28
+
+**LA PREMISA DEL ÍTEM ESTABA CORRIDA, y medirla de nuevo lo mostró.** Decía
+que 11.420 personas quedaron «sin nota numérica Y sin la etiqueta
+aprobado/reprobado». La etiqueta no falta: en este modelo `completed` YA
+significa aprobado y la reprobación se guarda aparte. Lo único que faltaba era
+el número.
+
+**Y el número NO SE PUEDE RECUPERAR.** Los planes que exigen nota son solo N1
+a N4 (2.920 sin nota en N4, 217 en N2, 134 en N3, 113 en N1). Se revisaron
+todos los archivos de import: el formulario de fin de nivel de CCB pedía
+«Lista de estudiantes que aprobaron» y «Lista de estudiantes que reprobaron»,
+nombres a mano en texto libre — **ninguna columna de nota, calificación ni
+puntaje**. La única «Nota Panorama» que aparece (179 registros) es de un plan
+que no exige nota, y viene sucia: mezcla `100`, `98`, `reprobo` y `no hay
+info, dirigente`.
+
+**DECISIÓN (Floriana, 2026-09-28): la nota NO es obligatoria; el RESULTADO
+sí.** Exigir la nota volvería imposible cerrar un grupo cuyo dirigente no
+tiene de dónde sacarla. Lo que no puede faltar es el desenlace.
+
+**HECHO**: `missingReasons` bloquea el cierre cuando alguien quedó sin marcar
+(`sin_resultado`), con el mensaje «falta marcar si aprobó, reprobó o se
+retiró». La nota sigue siendo opcional, fijado por su propio test. Dos cebos
+muerden.
+
+**PENDIENTE — las 10 personas ya colgadas.** Quedaron en `en_revision` dentro
+de un grupo cerrado: ni aprobadas ni reprobadas. Son de 8 grupos, entre
+diciembre 2025 y julio 2026, y solo el dirigente que las tuvo puede decir qué
+pasó. Lista entregada en xlsx con el dirigente, su correo, y la asistencia de
+cada persona al grupo para ayudar a reconstruirlo. Ocho de las diez son del
+cierre del 10 de julio.
+
+**Lo que el ítem tenía bien**: cero personas quedaron en `enrolled` dentro de
+un grupo cerrado.
 
 **Medido el 2026-09-10.** Buena noticia primero: **nadie quedó `enrolled` en un
 grupo cerrado** — el cierre siempre resuelve el estado de la inscripción. Lo que
