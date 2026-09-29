@@ -4604,3 +4604,47 @@ excluido), recorte por dirigente (403 a otro), enlace wa.me bien formado con y s
 teléfono, registrar contacto guarda historial (dos marcas = dos entradas) y el filtro
 por estado. tsc/lint/vitest.
 ```
+
+### [ ] EST-18 · Botón "Mandar a imprimir folletos" en grupos de Nivel 1 (anexo a EST-14, pedido 2026-09-28)
+
+Gap detectado: con el esquema de bloques, los grupos de Nivel 1 necesitan sus
+folletos (par 1+2) impresos ANTES de arrancar — y el disparador no puede
+esperar al inicio del grupo: hay que mandar a imprimir ~15 días antes,
+mientras el grupo sigue en matrícula.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Grupos de Nivel 1: disparo manual del tiquete de folletos durante la matrícula
+
+CONTEXTO: EST-14 (bloques N1+N2 / N3+N4) — los folletos se entregan en pares al inicio
+de cada bloque. La impresión tarda, así que el tiquete debe poder generarse ANTES de que
+el grupo empiece, con el grupo aún en matrícula, a criterio del equipo de estudios
+(regla operativa: ~15 días antes del inicio).
+
+QUÉ:
+1. En la información del grupo (grupos de Nivel 1 —y de Nivel 3 con el esquema nuevo:
+   confirmar si aplica igual—, estado "en matrícula"): botón ADMINISTRATIVO "Mandar a
+   imprimir folletos", visible SOLO para los roles de gestión de estudios
+   (coordinador_estudios y equivalentes — verificar requireRoles del módulo; NO el
+   dirigente).
+2. Al tocarlo (con confirmación mostrando el conteo actual de matriculados):
+   - Se genera el TIQUETE de folletos del bloque (par 1+2 para N1; 3+4 para N3) con el
+     mecanismo EXISTENTE de tiquetes de folletos — REUTILIZAR: mismos detalles, mismo
+     formato, misma página de folletos donde viven los demás; solo cambia el disparador.
+   - Se envía el correo a la gente de folletos con el resumen, usando la plantilla/
+     baseLayout de los correos de folletos existentes (correo interno de operación;
+     criterio EMAIL_SILENT_MODE de avisos internos).
+   - El tiquete queda vinculado al grupo y el botón cambia a estado informativo
+     ("Folletos solicitados el [fecha] — ver tiquete") para no duplicar; si el cupo
+     creció después, permitir un tiquete ADICIONAL explícito ("Pedir folletos extra")
+     en vez de regenerar.
+3. CONVIVENCIA con los disparadores automáticos existentes (cupo lleno / fin de
+   matrícula): si el tiquete manual ya se generó, el automático NO debe crear otro
+   duplicado del mismo grupo — revisar folleto-blocks y la lógica de generación para
+   que reconozcan el tiquete existente.
+4. Audit_log: quién lo disparó y cuándo.
+Tests: botón genera tiquete+correo una sola vez, doble clic no duplica, el automático
+no duplica sobre el manual, folletos extra crea tiquete adicional, rol sin permiso 403.
+tsc/lint/vitest.
+```
