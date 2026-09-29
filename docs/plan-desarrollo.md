@@ -4899,3 +4899,236 @@ instalador automático (`<Analytics />` sin `beforeSend`).
 **Si algún día se corre el agente de Vercel encima**, va a proponer la versión
 genérica y `telemetria.test.ts` falla en CI. Es a propósito: ese test es el
 que impide que la redacción se pierda en silencio.
+
+## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
+
+Minuta en `docs/minutas/finanzas-2026-09-29.md`. Además de los ítems nuevos,
+esta reunión ACTUALIZA FIN-9 y FIN-11 (ver abajo) y confirma la meta de
+FIN-5/Tilopay: listo en octubre para la fiesta de Navidad (venta ~8 nov).
+
+### [ ] BEC-5 · Solicitud de becas: razones cerradas, monto, estudio puntual y cupo
+
+Prompt para Claude Code:
+
+```
+MEJORAS · Formulario de solicitud de beca (decididas con Meli 2026-09-29)
+
+1. RAZÓN como dropdown de 3 opciones ÚNICAS (leyenda: "Solo se aprueban becas por estas
+   razones"): Desempleo · Situación de salud · Situación socioeconómica (esta de último).
+   Debajo, texto libre OBLIGATORIO para ampliar la situación, cualquiera sea la razón.
+2. NOTA de monto: "Las becas de Theos son del 50%. Si necesitás un monto menor, indicalo
+   aquí" + campo opcional de monto (wording que invite a pedir MENOS, no más).
+3. ESTUDIO PUNTUAL: al solicitar beca de estudio, se elige el GRUPO específico (día/zona/
+   dirigente) de la lista de grupos disponibles — no el tipo de estudio. (Eventos ya son
+   puntuales.)
+4. CUPO — disclaimer al enviar y en el correo de confirmación: "Las becas se analizan la
+   última semana de matrícula y dependen del cupo disponible — no des por asegurado el
+   campo". (Regla operativa de Meli: aprueba la última semana para priorizar cupo pagado.)
+5. SI EL GRUPO SE LLENA mientras la beca está pendiente: el tiquete NO se rechaza — pasa
+   a estado "por modificar" y se le notifica al solicitante (campanita + el canal que ya
+   use el flujo de becas): "El grupo que elegiste se llenó — entrá y elegí otro para
+   mantener tu solicitud". El solicitante puede cambiar el grupo sin crear solicitud nueva.
+6. CONVERTIR EN ARREGLO DE PAGO: en el tiquete de beca, acción de finanzas "Ofrecer
+   arreglo de pago en su lugar" — transforma la solicitud (no es rechazo): crea el
+   arreglo sobre el cobro correspondiente (FIN-8/FIN-13) y notifica a la persona.
+Tests: razones obligatorias + texto, grupo lleno → por modificar + notificación,
+conversión a arreglo. tsc/lint/vitest. EMAIL_SILENT_MODE se respeta.
+```
+
+### [ ] FIN-13 · Arreglos de pago: habilitación individual y límites nuevos
+
+Decidido: NO se abre un botón público de "solicitar arreglo" (miedo justificado
+al portillo — la gente curiosa ya encontró el de becas sin promoción). En su
+lugar, finanzas habilita el arreglo persona por persona.
+
+Prompt para Claude Code:
+
+```
+CAMBIO · Arreglos de pago: habilitación por persona + límites (decidido 2026-09-29)
+
+1. HABILITACIÓN INDIVIDUAL: en el pago pendiente de una persona (vista finanzas), acción
+   "Habilitar arreglo de pago" — a partir de ahí LA PERSONA ve en Mis pagos la opción de
+   acogerse al arreglo sobre ESE cobro (no un botón global para todo el mundo). Quien
+   habilita: finanzas/direccion. Registrar quién habilitó (audit_log).
+2. LÍMITES NUEVOS para arreglos de eventos/actividades: SOLO frecuencia QUINCENAL y
+   MÁXIMO 2 TRACTOS, y el último vencimiento debe caer ANTES de la fecha de inicio de la
+   actividad (validación al crear — la naturaleza de los anuncios es ~1 mes antes).
+3. ESTUDIOS: el arreglo debe cerrarse dentro del período de matrícula/inscripción (~1
+   mes), no "mientras dure el estudio" — cambiar la regla actual si difiere.
+4. Con Tilopay (FIN-5): el arreglo se solicita/aprueba ANTES — nadie paga fraccionado por
+   iniciativa propia; los cobros del arreglo se pagan en línea cada uno. Dejar la puerta
+   preparada (flag) para, más adelante, habilitar el botón de solicitud junto al de becas
+   en actividades elegidas, de forma controlada — NO activarlo ahora.
+Tests: límites (3 tractos rechazado en evento, vencimiento posterior al inicio rechazado),
+habilitación individual visible solo al habilitado. tsc/lint/vitest.
+```
+
+### [ ] PAG-5 · Pago en línea: pagar varios cobros pendientes de una vez
+
+Cuando llegue Tilopay (FIN-5): en la ventana de pago, si la persona tiene más
+de un cobro pendiente, mostrar "Tenés N pagos pendientes" con checkboxes para
+seleccionar cuáles paga en una sola transacción (suma por moneda, jamás
+mezclando monedas — INT-3). Útil para arreglos de pago con tracto acumulado.
+Se implementa JUNTO con FIN-5, no antes — dejarlo en la spec de Tilopay.
+
+### [ ] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés)
+
+Prompt para Claude Code:
+
+```
+MEJORA · /finanzas/pagos: conciliación contra estados de cuenta
+
+1. En la vista de pagos PAGADOS (renombrar el estado visible a "Cancelado" si el término
+   actual difiere — decisión de la reunión: "cancelado" es el término contable), agregar
+   FILTRO DE RANGO de fechas (desde/hasta, por fecha de pago) — caso de uso: Andrés
+   registra lunes+martes contra una línea del estado de cuenta y necesita ver exactamente
+   esos pagos.
+2. Columnas mínimas del caso: nombre, actividad/concepto, monto (con el toggle de
+   ocultar/mostrar montos existente), fecha de pago.
+3. Botón de descarga XLSX del resultado filtrado (mismo gate de montos).
+Tests: rango filtra por fecha de pago, export respeta filtros. tsc/lint/vitest.
+```
+
+### [ ] DON-3 · Donaciones con montos: reimportación del año + reporte con montos por sede
+
+Prompt para Claude Code:
+
+```
+FEATURE · Donaciones: montos de enero-septiembre + reporte financiero
+
+PARTE A — ACTUALIZAR LAS DONACIONES EXISTENTES CON MONTO (instrucción específica, NO el
+import normal): Andrés va a preparar el consolidado enero-septiembre 2026 con montos y
+moneda (CRC/USD/EUR). Script/modo de importación que CAE ENCIMA de las donaciones ya
+registradas (match por persona+fecha+nota como en DON-1) y les escribe el monto/moneda —
+NO crea filas nuevas para las que matchean; las que no existan sí se insertan (solo
+INSERT para nuevas). DRY-RUN con reporte de cuántas actualiza/inserta/quedan ambiguas,
+aprobación antes de aplicar. Idempotente.
+
+PARTE B — REPORTE DE DONANTES CON MONTOS, DENTRO DE FINANZAS (no en /reportes — los
+montos son confidenciales; acceso solo finanzas y direccion):
+- Por mes y por año: donantes únicos (una persona = 1 aunque done 30 veces), total por
+  MONEDA separada (jamás sumar entre monedas; comparativo tipo "₡X + $Y" y, opcional,
+  total aproximado con tipo de cambio indicado como referencia).
+- Desglose por SEDE del donante (la sede calculada del sistema); los donantes SIN sede
+  (sin asistencias) en categoría propia visible — a Meli le interesa identificarlos.
+- Export XLSX.
+NOTA pendiente de dirección: la ventana de cálculo de sede (hoy: asistencia del último
+año) se va a revisar con don Luis — no cambiarla en este ítem.
+Tests: parte A (match actualiza sin duplicar, dry-run), parte B (unicidad de donante,
+monedas separadas, sede sin datos). tsc/lint/vitest.
+```
+
+### [ ] DEV-2 · Botón "Solicitar devolución" para la coordinación de estudios (Ari)
+
+Prompt para Claude Code:
+
+```
+FEATURE · Solicitud de devolución desde el perfil (parte administrativa de estudios)
+
+En la sección administrativa del perfil del miembro (donde vive "crear excepción de
+matrícula"), acción "Solicitar devolución" para coordinador_estudios: elige la matrícula/
+inscripción asociada (Ari verifica que la persona esté inscrita — NO se le da acceso a
+pagos), escribe la justificación, y se crea la solicitud en la pantalla de devoluciones
+de finanzas con el vínculo a la matrícula (así María José encuentra el pago y verifica
+ella el ingreso — doble chequeo acordado). Estados y flujo de la pantalla de devoluciones
+existente; audit_log. Volumen esperado bajo (excepciones).
+Tests: rol estudios crea la solicitud sin ver pagos (403 a /finanzas/pagos), la solicitud
+llega vinculada. tsc/lint/vitest.
+```
+
+### [~] FIN-9 · ACTUALIZADO 2026-09-29 — validado con Meli: va por CUPONES, no saldos
+
+Decisiones de la reunión (reemplazan el diseño anterior de "saldos a favor"):
+- "Congelar matrícula" = quitar la matrícula y emitir un CUPÓN PERSONAL por el
+  monto pagado (mecanismo de cupones existente), usable en su próximo pago.
+- Alcance del cupón: estudios y campamentos/actividades grandes — NO abierto a
+  cualquier rubro. MUY MANUAL: solo finanzas lo emite, caso por caso, tras
+  hablar con la persona; no se promociona ni hay botón de autoservicio.
+- Vigencia: un bloque para re-matricularse en estudios; si el estudio no se
+  vuelve a abrir → devolución.
+- Escalera de opciones al no poder seguir (en este orden): 1) cupón para el
+  siguiente bloque, 2) donarlo como beca para otra persona, 3) usarlo en otra
+  actividad, 4) devolución — esta última solo cuando Theos cerró el grupo
+  (deserciones no generan devolución).
+- CONTABILIDAD: cada cupón emitido desde un pago es una RECLASIFICACIÓN. El
+  sistema debe poder generar el reporte de reclasificaciones (persona, pago
+  origen, rubro origen, cupón, dónde/cuándo se usó, rubro destino) por mes/año
+  para finanzas — Meli revisa en paralelo el manejo en QuickBooks con Luis.
+Prompt: armarlo cuando Meli confirme lo de QuickBooks; el diseño de arriba es
+la spec.
+
+### [ ] FIN-12 · Adelantos de comida por sede (reemplaza los Excels mensuales)
+
+Prompt para Claude Code:
+
+```
+FEATURE · Control de adelantos de comida por sede
+
+QUIÉN: personas con el puesto "Colaborador de Finanzas" de cada sede (rol automático por
+puesto — position-role-sync, como los demás), más finanzas/direccion que ven todo.
+
+QUÉ: cada sede recibe un ADELANTO mensual con presupuesto predefinido (monto por sede,
+configurable por finanzas). El colaborador registra los gastos del mes: fecha, detalle/
+proveedor, número de factura, monto, y FOTO de la factura adjunta (mecanismo de
+comprobantes existente). El sistema RESTA del presupuesto y muestra el saldo restante en
+vivo ("te quedan ₡X de ₡Y").
+
+PARA FINANZAS (Andrés): vista por sede y mes con todas las facturas (para asociarlas a
+la sede al registrar en contabilidad), totales, saldo final del mes (lo que determina
+cuánto se repone el mes siguiente), y export XLSX. Si se pasan del presupuesto, se marca
+visible (no se bloquea — hay que identificar por qué y decidir el reintegro).
+REFERENCIA REAL: data-import no — el Excel de Liberia lo pasó Floriana
+("09. SETIEMBRE 2026 Comidas-Donaciones Place LIBERIA.xlsx"). Su estructura manda:
+- La operación es SEMANAL, por fecha de charla, con el ENCARGADO de esa semana anotado.
+- COMIDAS: por semana, facturas con proveedor, monto, # de FACTURA ELECTRÓNICA, fecha y
+  observaciones (comida/desechables…), total semanal, y una lista aparte de FACTURAS
+  PENDIENTES (proveedor, monto, fecha, estatus) — incluir ese estado pendiente/liquidada.
+- OJO: el Excel trae una SEGUNDA hoja, DONACIONES — el cierre semanal de la sede:
+  cajitas ₡ y $, efectivo (nombre, monto, detalle, # recibo), datáfono (# voucher), y
+  depósitos con # de referencia y # de cuenta. Decidir con Meli si entra en este ítem o
+  en uno aparte (recomendado: MISMO módulo "cierre semanal de sede" con dos secciones,
+  porque lo llena la misma persona la misma noche) — confirmar antes de implementar la
+  parte de donaciones; la de comidas va segura.
+Cierre de mes: al cerrar, el saldo queda registrado y arranca el mes nuevo con el
+presupuesto completo (la reposición la maneja finanzas por fuera).
+Tests: resta en vivo, sobregiro marcado, colaborador ve solo su sede (403 a otra),
+export. tsc/lint/vitest.
+```
+
+### [ ] EST-20 · Resumen de estudios: discrepancias en los números + bloques nuevos (pedido 2026-09-30)
+
+Reportado: la página de resumen dice 380 en niveles activos pero el Excel
+descargado trae 385; capacitaciones también da un número erróneo.
+
+Prompt para Claude Code:
+
+```
+FIX + MEJORA · Página de resumen de estudios: números que cuadren y bloques completos
+
+ETAPA 1 — DIAGNÓSTICO DE LAS DISCREPANCIAS (medir antes de tocar):
+1. Documentar QUÉ cuenta hoy exactamente cada número del resumen: ¿qué significa
+   "activos"? (¿grupos en curso? ¿incluye por iniciar? ¿matrículas activas o personas?)
+   ¿qué cuenta el Excel de participantes que se descarga?
+2. Reproducir el caso reportado: niveles activos = 380 en la página vs 385 en el Excel.
+   Encontrar los 5 de diferencia CON NOMBRES — la causa suele estar ahí (¿estados que uno
+   cuenta y el otro no? ¿el bug de las 1.000 filas de PostgREST otra vez? ¿duplicados por
+   persona? ¿datos [prueba]? ¿caché de snapshot viejo — report_snapshots?).
+3. Lo mismo con capacitaciones. Reportar las causas antes de arreglar.
+
+ETAPA 2 — UNA SOLA FUENTE DE VERDAD:
+- La página de resumen y los exports deben salir de la MISMA consulta/definición
+  (compartir la función; si el export vive aparte, unificarlo). Regla: si la página dice
+  N, el Excel trae N filas — cualquier diferencia futura es bug por construcción.
+- Tomar en cuenta TODOS los estudios del catálogo (que ninguno quede fuera del resumen
+  por tipo/plan nuevo — verificar contra el catálogo completo, no lista hardcodeada).
+
+ETAPA 3 — BLOQUES Y MÉTRICAS NUEVAS en el resumen:
+1. Junto a "activos" (en curso), agregar "POR INICIAR" — y el TOTAL de personas en
+   estudio (activos + por iniciar).
+2. Agregar un bloque de grupos EN MATRÍCULA (con sus números).
+3. Por cada bloque/estado, mostrar TRES números claramente etiquetados: grupos ·
+   inscripciones (matrículas) · personas únicas (des-duplicadas — una persona en dos
+   estudios cuenta una vez acá; tooltip explicando la diferencia, como REP-7).
+Tests: la página y el export comparten definición (test que compara ambos contra los
+mismos fixtures), des-duplicación, por iniciar + en curso = total. tsc/lint/vitest.
+```
