@@ -21,6 +21,7 @@ import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
 import { estudiantesDelGrupo } from '@/lib/studies/conteo-de-participantes'
+import { nivelesACobrar, montoDelBloque, bloqueDe } from '@/lib/studies/corte-de-bloque'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -1664,10 +1665,38 @@ export async function enrollMember(
     }
   }
 
-  // Costo real: sale siempre del plan (study_groups no tiene columnas propias
-  // de costo). Cualquier matrícula con costo queda pendiente de comprobante,
-  // sin importar si la hace el propio miembro o el staff.
-  const amount = Number(plan?.cost ?? 0)
+  /**
+   * Costo real. Sale del plan (study_groups no tiene columnas propias de
+   * costo), salvo en los NIVELES, donde sale del BLOQUE.
+   *
+   * EST-14 · Los niveles se cobran por par y por adelantado: entrar a N1
+   * cobra N1+N2 y entrar a N3 cobra N3+N4; pasar a N2 o a N4 no cobra nada,
+   * porque ya se pagó. El monto se SUMA del catálogo en vez de escribirse:
+   * si mañana sube Nivel 4, el cobro del bloque sube solo.
+   *
+   * Todo lo que no es un nivel —capacitaciones, prematrimonial, discípulos—
+   * sigue igual: `nivelesACobrar` devuelve el propio código y la suma da su
+   * costo de siempre.
+   */
+  let amount = Number(plan?.cost ?? 0)
+  const delBloque = nivelesACobrar(plan?.code)
+  const esBloqueDeNiveles = !!bloqueDe(plan?.code)
+  if (esBloqueDeNiveles) {
+    if (delBloque.length === 0) {
+      amount = 0 // segunda mitad del bloque: ya se cobró al entrar
+    } else {
+      const { data: costRows } = await supabase
+        .from('study_plans').select('code, cost').in('code', delBloque as string[])
+      const costos = Object.fromEntries(
+        ((costRows ?? []) as Array<{ code: string; cost: number | null }>)
+          .map(r => [r.code, Number(r.cost ?? 0)]))
+      // Si faltara un nivel del par, se avisa: cobrar de menos y que alguien
+      // lo note es mejor que cobrar un número inventado.
+      const faltan = delBloque.filter(c => !(c in costos))
+      if (faltan.length) console.warn('EST-14: faltan costos del bloque:', faltan.join(', '))
+      amount = montoDelBloque(plan?.code, costos)
+    }
+  }
   // INT-3: el cobro va en la moneda DEL PLAN, no en colones por defecto.
   const planCurrency = toCurrency(plan?.currency)
   const requiresPayment = !!plan?.requires_payment && amount > 0

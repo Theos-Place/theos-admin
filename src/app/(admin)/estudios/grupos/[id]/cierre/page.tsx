@@ -17,6 +17,7 @@ import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { allowsCdebRecommendation } from '@/lib/studies/cdeb-recommendation'
 import { CdebRecommendationModal } from '@/components/studies/CdebRecommendationModal'
 import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
+import { hayCorteAlCerrar, motivoQueImpideCerrar } from '@/lib/studies/corte-de-bloque'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { toClosePayload, missingReasons, missingReasonsMessage } from '@/lib/studies/close-payload'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
@@ -199,7 +200,21 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
    *  generaba tiquete de folletos sin preguntar nunca dónde entregarlos — y
    *  ahora, además, el servidor lo rechazaría. Los dos lados usan la misma
    *  regla a propósito. */
+  /**
+   * EST-14 · El CORTE entre bloques. Al cerrar N2 el dirigente tiene que
+   * decir si la cohorte sigue a Nivel 3; sin respuesta no se cierra.
+   *
+   * Arranca en `null` a propósito, no en `true`: un default reproduce el
+   * problema que esto viene a resolver —hoy el sucesor se crea siempre y
+   * aparecen grupos de N3 que nadie pidió, con gente matriculada y cobrada—.
+   */
+  const hayCorte = hayCorteAlCerrar(group.study_type_id)
+  const [continuaElGrupo, setContinuaElGrupo] = useState<boolean | null>(null)
+  const faltaRespuestaDeCorte = motivoQueImpideCerrar(group.study_type_id, continuaElGrupo)
+
+  // Con corte, el sucesor (y sus folletos) dependen de la respuesta.
   const haySucesor = isFolletoEligible(group.study_type_id) && aprobados > 0
+    && (!hayCorte || continuaElGrupo === true)
   const pideFolletos = haySucesor
   const faltaLugarEntrega = pideFolletos && !lugarEntrega
 
@@ -243,6 +258,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           results: payload,
           folletos_sede: lugarEntrega || undefined,
           ...(haySucesor && inicioSucesor ? { successor_starts_at: inicioSucesor } : {}),
+          ...(hayCorte ? { continua_el_grupo: continuaElGrupo } : {}),
           ...(isPremat ? { evaluations: evals } : {}),
         }),
       })
@@ -578,6 +594,60 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
           </div>
 
 
+          {/* EST-14 · EL CORTE ENTRE BLOQUES. Va ANTES de la fecha del sucesor
+              porque la condiciona: sin un «sí» no hay grupo siguiente al cual
+              ponerle fecha. */}
+          {hayCorte && (
+            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-navy font-body">
+                  ¿El grupo continúa a Nivel 3? <span className="text-coral-deep">*</span>
+                </p>
+                <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
+                  Nivel 2 cierra un bloque, así que el paso a Nivel 3 no es automático.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="radio" name="continua" className="mt-1 accent-coral"
+                    checked={continuaElGrupo === true}
+                    onChange={() => setContinuaElGrupo(true)}
+                  />
+                  <span>
+                    <span className="block text-[13px] text-navy font-body">Sí, seguimos juntos</span>
+                    <span className="block text-[13px] text-navy-light/80 font-body">
+                      Se crea el grupo de Nivel 3 con el mismo horario y zona, y los{' '}
+                      {aprobados} aprobados quedan matriculados con su cobro.
+                    </span>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="radio" name="continua" className="mt-1 accent-coral"
+                    checked={continuaElGrupo === false}
+                    onChange={() => setContinuaElGrupo(false)}
+                  />
+                  <span>
+                    <span className="block text-[13px] text-navy font-body">No, este grupo termina acá</span>
+                    <span className="block text-[13px] text-navy-light/80 font-body">
+                      No se crea nada. Le avisamos a coordinación de estudios y de
+                      dirigentes para que armen el grupo de esta zona.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              {/* El aviso solo aparece cuando ya intentó cerrar o tocó algo: no
+                  se regaña de entrada. */}
+              {faltaRespuestaDeCorte && continuaElGrupo !== null && (
+                <p className="text-[13px] text-coral-deep font-body">{faltaRespuestaDeCorte}</p>
+              )}
+            </div>
+          )}
+
           {/* EST-16 · Cuándo arranca el grupo del nivel siguiente. */}
           {haySucesor && (
             <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] space-y-2">
@@ -683,10 +753,12 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             </button>
             <button
               onClick={() => setConfirmOpen(true)}
-              disabled={submitting || faltaLugarEntrega || faltaInicioSucesor}
-              title={faltaLugarEntrega
-                ? 'Falta decir dónde se entregan los folletos'
-                : faltaInicioSucesor ? (errorInicio ?? undefined) : undefined}
+              disabled={submitting || faltaLugarEntrega || faltaInicioSucesor || !!faltaRespuestaDeCorte}
+              title={faltaRespuestaDeCorte
+                ? faltaRespuestaDeCorte
+                : faltaLugarEntrega
+                  ? 'Falta decir dónde se entregan los folletos'
+                  : faltaInicioSucesor ? (errorInicio ?? undefined) : undefined}
               className="rounded-full bg-coral px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body"
             >
               {submitting ? 'Cerrando...' : 'Cerrar grupo'}

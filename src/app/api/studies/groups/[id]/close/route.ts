@@ -10,6 +10,9 @@ import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { reportarError } from '@/lib/observabilidad'
 import { motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
+import {
+  hayCorteAlCerrar, motivoQueImpideCerrar, creaSucesor,
+} from '@/lib/studies/corte-de-bloque'
 import { ymdCR } from '@/lib/format'
 
 // POST: cierra el grupo. Body: { results: CloseResult[] }. (FOL-1: el campo
@@ -46,6 +49,9 @@ export async function POST(
     /** EST-16 · Cuándo arranca el grupo sucesor (YYYY-MM-DD), elegido por quien
      *  cierra. Sin esto se usa la fecha calculada de siempre. */
     successor_starts_at?: string
+    /** EST-14 · ¿La cohorte continúa al bloque siguiente? Obligatorio al
+     *  cerrar un nivel que TERMINA bloque (hoy N2); se ignora en el resto. */
+    continua_el_grupo?: boolean
   }
   const results = body.results ?? []
   /**
@@ -124,7 +130,27 @@ export async function POST(
      * hasta que llega a imprenta.
      */
     const aprobados = (results ?? []).filter(r => r.status_result === 'aprobado').length
-    const pideFolletos = isFolletoEligible(sourceCode) && aprobados > 0
+    /**
+     * EST-14 · EL CORTE ENTRE BLOQUES.
+     *
+     * Al cerrar N2 nadie pasa a N3 por inercia: el dirigente tiene que decir
+     * si su cohorte sigue. La respuesta es obligatoria y no tiene default —
+     * un default reproduce justo el problema que esto viene a resolver, que
+     * es que hoy el sucesor se crea SIEMPRE y aparecen grupos de N3 que nadie
+     * pidió, con gente matriculada y cobrada.
+     *
+     * Se valida ANTES de `closeGroup` porque el cierre es irreversible.
+     */
+    const faltaRespuesta = motivoQueImpideCerrar(sourceCode, body.continua_el_grupo)
+    if (faltaRespuesta) {
+      return NextResponse.json(
+        { error: faltaRespuesta, code: 'falta_respuesta_de_corte' }, { status: 400 })
+    }
+    const habraSucesor = creaSucesor(sourceCode, body.continua_el_grupo)
+
+    // Sin sucesor no hay a quién entregarle folletos: no se piden ni se
+    // exige el lugar de entrega.
+    const pideFolletos = isFolletoEligible(sourceCode) && aprobados > 0 && habraSucesor
     const lugarEntrega = (body.folletos_sede ?? '').trim()
     if (pideFolletos && (!lugarEntrega || lugarEntrega === OTRO_LUGAR)) {
       return NextResponse.json(
@@ -145,13 +171,50 @@ export async function POST(
     // 'pendiente_de_pago' + pago pendiente (concepto matricula). Best-effort.
     let autoEnrolled = 0
     let successorGroupId: string | null = null
-    try {
-      const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
-      const { enrolled, next_group_id } = await autoEnrollApprovedToNextLevel(id, approvedIds, inicioElegido)
-      autoEnrolled = enrolled
-      successorGroupId = next_group_id
-    } catch (e) {
-      console.warn('No se pudo matricular automáticamente al siguiente nivel:', e)
+    if (habraSucesor) {
+      try {
+        const approvedIds = (results ?? []).filter(r => r.status_result === 'aprobado').map(r => r.member_id)
+        const { enrolled, next_group_id } = await autoEnrollApprovedToNextLevel(id, approvedIds, inicioElegido)
+        autoEnrolled = enrolled
+        successorGroupId = next_group_id
+      } catch (e) {
+        console.warn('No se pudo matricular automáticamente al siguiente nivel:', e)
+      }
+    }
+
+    /**
+     * EST-14 · El «no» deja gente aprobada sin grupo al cual pasar, y hasta
+     * hoy nadie se enteraba —con el esquema viejo no podía pasar, porque el
+     * sucesor se creaba solo—. Se le avisa al comité, con los datos para
+     * decidir.
+     *
+     * Best-effort dentro de su propio try: EL GRUPO YA QUEDÓ CERRADO y perder
+     * el cierre por un correo sería mucho peor que perder el correo.
+     */
+    let avisoDeCorte = 0
+    if (hayCorteAlCerrar(sourceCode) && !habraSucesor) {
+      try {
+        const { notificarCorteSinSucesor } = await import('@/lib/email/corte-de-bloque-notify')
+        const { data: info } = await supabase
+          .from('study_groups')
+          .select('name, zone, schedule_time, leader:members!study_groups_leader_id_fkey(first_name, last_name)')
+          .eq('id', id).maybeSingle()
+        const fila = info as {
+          name: string | null; zone: string | null; schedule_time: string | null
+          leader: { first_name: string | null; last_name: string | null }
+            | Array<{ first_name: string | null; last_name: string | null }> | null
+        } | null
+        const lider = Array.isArray(fila?.leader) ? fila?.leader[0] : fila?.leader
+        avisoDeCorte = await notificarCorteSinSucesor({
+          grupo: fila?.name ?? 'un grupo',
+          dirigente: lider ? `${lider.first_name ?? ''} ${lider.last_name ?? ''}`.trim() : null,
+          zona: fila?.zone ?? null,
+          horario: fila?.schedule_time ?? null,
+          estudiantes: aprobados,
+        })
+      } catch (e) {
+        console.warn('No se pudo avisar del corte sin sucesor:', e)
+      }
     }
 
     /**
@@ -215,7 +278,7 @@ export async function POST(
       console.warn('No se pudo mandar el resumen del cierre:', e)
     }
 
-    return NextResponse.json({ ok: true, autoEnrolled, surveyAt, folletoCreado, successorGroupId })
+    return NextResponse.json({ ok: true, autoEnrolled, surveyAt, folletoCreado, successorGroupId, avisoDeCorte })
   } catch (error) {
     if (error instanceof Error && error.message === 'YA_CERRADO') {
       // A9 (reconciliación): si el cierre original murió DESPUÉS de finalizar

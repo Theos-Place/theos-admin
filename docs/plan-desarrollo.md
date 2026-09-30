@@ -5924,3 +5924,43 @@ Las cuatro del rol nuevo lo tienen con su grant por puesto, así que al dejar
 el «Colaborador actualización y datos» lo pierden solas.
 
 Cuatro cebos muerden.
+
+### [ ] SOP-1 · Tiquetes de soporte desde el check-in + rol de soporte técnico (pedido 2026-09-30)
+
+Prompt para Claude Code:
+
+```
+FEATURE · Soporte: tiquetes desde la puerta + rol que los resuelve
+
+PARTE 1 — CREAR TIQUETES (en la página de check-in):
+- Botón "Crear tiquete de soporte" visible SOLO para los operadores de bienvenida/mesa
+  de info (los mismos roles/alcance que ya operan el check-in — verificar cuáles son; no
+  ampliar a nadie más).
+- El tiquete es SIMPLE, tres cosas: quién lo emite (automático, el operador logueado =
+  dueño del tiquete), fecha de creación (automática) y un CAMPO DE TEXTO libre con los
+  detalles. Nada más — sin categorías ni adjuntos (decidido: solo texto).
+- Opcionalmente puede quedar vinculado al miembro que se estaba atendiendo si el flujo
+  lo tiene a mano (si complica, se omite: el texto lo dice).
+- Casos típicos que van a llegar: cambiar/corregir perfiles, actualizar datos, cambiar
+  email, unificar o separar familias, temas del sistema.
+
+PARTE 2 — PÁGINA DE SOPORTE (lista de tiquetes):
+- Página nueva (ej. /soporte) que lista los tiquetes: emisor, fecha, texto, estado
+  (abierto / resuelto — simple; patrón RequestBoard/tiquetes existente, REUTILIZAR).
+- Quién la ve: el ROL NUEVO "soporte_tecnico" + admin. El rol se asigna AUTOMÁTICAMENTE
+  por el puesto nuevo del comité de TI (verificar el nombre exacto del puesto en el
+  catálogo; mecanismo position-role-sync + source de siempre).
+
+PARTE 3 — ALCANCE DEL ROL soporte_tecnico (lo que necesita para resolver los tiquetes):
+- Edición de MIEMBROS (perfiles/datos personales).
+- Edición de FAMILIAS (vincular/separar — los flujos de FAM-2).
+- Crear/actualizar el EMAIL de una persona para la creación de su cuenta (el flujo de
+  cuentas/acceso existente; respeta las validaciones de correo duplicado de DAT-10 y las
+  reglas de menores de FAM-2).
+- NO incluye: finanzas, reportes, estudios ni nada más — el censo de requireRoles del rol
+  debe quedar exactamente en esos tres módulos.
+Todo cambio que soporte haga queda en audit_log como cualquier edición.
+Tests: solo bienvenida crea tiquetes (403 al resto), solo soporte_tecnico/admin ve la
+página, el rol abre exactamente los tres módulos (403 a finanzas/reportes), puesto de TI
+da y quita el rol. tsc/lint/vitest.
+```

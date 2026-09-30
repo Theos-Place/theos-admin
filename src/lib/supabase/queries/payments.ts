@@ -10,6 +10,7 @@ import { nombreDelSucesor } from '@/lib/studies/successor-name'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 import { revisarReferencia, tieneReferenciaComparable } from '@/lib/finance/referencia-repetida'
+import { nivelesACobrar, montoDelBloque } from '@/lib/studies/corte-de-bloque'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -282,7 +283,23 @@ export async function autoEnrollApprovedToNextLevel(
   const { data: nextPlan } = await supabase.from('study_plans').select('id, name, cost, currency, duration_weeks').eq('code', next).maybeSingle()
   const np = nextPlan as { id: string; name: string | null; cost: number | null; currency: string | null; duration_weeks: number | null } | null
   if (!np) return { enrolled: 0, next_level: next, amount: 0, next_group_id: null }
-  const amount = Number(np.cost ?? 0)
+  /**
+   * EST-14 · El monto sale del BLOQUE, no del nivel suelto.
+   *
+   * Sin esto el paso automático N1→N2 cobraba ₡5.000 POR SEGUNDA VEZ: el
+   * bloque ya se había pagado al entrar a N1. Lo mismo N3→N4. Es el error
+   * más caro de este cambio —cobrarle dos veces a la gente— y no se veía
+   * leyendo el cierre, porque el cobro se genera acá y no allá.
+   *
+   * Para todo lo que no es un nivel (DIS1→DIS2, etc.) `montoDelBloque`
+   * devuelve el costo del propio plan y esto se comporta como siempre.
+   */
+  const { data: costRows } = await supabase
+    .from('study_plans').select('code, cost').in('code', nivelesACobrar(next) as string[])
+  const costosDelBloque = Object.fromEntries(
+    ((costRows ?? []) as Array<{ code: string; cost: number | null }>)
+      .map(r => [r.code, Number(r.cost ?? 0)]))
+  const amount = montoDelBloque(next, costosDelBloque)
   // INT-2: el pago hereda la moneda del costo del plan.
   const currency = np.currency ?? 'CRC'
 
