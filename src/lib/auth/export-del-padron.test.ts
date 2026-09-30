@@ -22,8 +22,19 @@ import type { RoleId } from '@/types/auth'
  * explícita y no un efecto colateral del alcance.
  */
 
-/** Los que exportan el padrón, a propósito. `admin` va aparte: tiene todo. */
-const PUEDEN_EXPORTAR: RoleId[] = ['direccion', 'editor_perfiles']
+/**
+ * Los que exportan el padrón, a propósito. `admin` va aparte: tiene todo.
+ *
+ * `coordinador_dirigentes` se SUMA el 2026-09-30 por pedido de Floriana: la
+ * encargada de dirigentes necesita bajar listas para trabajar.
+ *
+ * Y sí, PAR-4 se lo había quitado UNA SEMANA ANTES — era uno de los siete que
+ * pasaban por el agujero del endpoint. La diferencia no es cosmética: allá
+ * pasaba sin que nadie lo hubiera decidido, por un guard que miraba el
+ * alcance en vez de la acción; acá está en la lista, con nombre y fecha. El
+ * agujero sigue cerrado, y los otros seis siguen afuera.
+ */
+const PUEDEN_EXPORTAR: RoleId[] = ['coordinador_dirigentes', 'direccion', 'editor_perfiles']
 
 describe('exportar el padrón', () => {
   it('editor_perfiles puede, que es lo que PAR-4 pedía', () => {
@@ -71,8 +82,12 @@ describe('exportar el padrón', () => {
     expect(src).toContain("hasModulePermission(auth.ctx.roles, 'miembros', 'export')")
   })
 
-  it('los siete que pasaban de más ya no pasan', () => {
-    for (const rol of ['comunicaciones', 'coordinador_dirigentes', 'coordinador_estudios',
+  it('los SEIS que pasaban de más siguen sin pasar', () => {
+    // Eran siete. `coordinador_dirigentes` salió de esta lista el 2026-09-30
+    // porque se le dio el permiso a propósito — ver PUEDEN_EXPORTAR arriba.
+    // Los demás siguen viendo el padrón sin poder bajarlo, que es la
+    // distinción que PAR-4 vino a establecer.
+    for (const rol of ['comunicaciones', 'coordinador_estudios',
       'coordinador_servidores', 'encargado_staff', 'finanzas', 'solo_lectura'] as RoleId[]) {
       expect(hasModulePermission([rol], 'miembros', 'export'), rol).toBe(false)
     }

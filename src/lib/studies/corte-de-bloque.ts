@@ -180,3 +180,33 @@ export function montoDelBloque(
   return nivelesACobrar(planCode)
     .reduce((total, code) => total + (Number(costos[code]) || 0), 0)
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * FOLLETOS
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Qué FOLLETOS pide un grupo de este plan.
+ *
+ * Los folletos de un bloque se entregan JUNTOS al empezarlo: un grupo de N1
+ * pide los de N1 y N2, y un grupo de N2 no pide nada porque su gente ya los
+ * tiene desde que entró. Igual con N3+N4.
+ *
+ * ESTO HACE QUE EL CIERRE NO TENGA QUE CAMBIAR, que es la parte linda: el
+ * cierre ya pide los folletos del grupo SUCESOR, y como el sucesor de N1 es
+ * un N2 —que no pide nada— el pedido por cierre desaparece solo para 1→2 y
+ * 3→4. Y cuando el dirigente dice que su cohorte sigue, el sucesor es un N3,
+ * que pide el par 3+4. Las dos reglas del ítem salen de esta función.
+ *
+ * Es una función APARTE de `nivelesACobrar` aunque hoy devuelvan lo mismo:
+ * cobrar y repartir folletos son dos decisiones distintas, y el día que una
+ * cambie no tiene por qué arrastrar a la otra.
+ */
+export function folletosQuePide(planCode: string | null | undefined): readonly string[] {
+  if (!planCode) return []
+  const b = bloqueDe(planCode)
+  // Lo que no está en un bloque pide SU propio folleto, como siempre: DIS1
+  // pide DIS1. Si devolviera [], los discípulos se quedarían sin folletos.
+  if (!b) return [planCode]
+  return b[0] === planCode ? b : []
+}
