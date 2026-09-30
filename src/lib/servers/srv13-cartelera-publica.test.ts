@@ -86,10 +86,24 @@ describe('SRV-13 · aplicar sin perder el puesto', () => {
     expect(sinComentarios(PAGINA)).toContain("params.get('puesto')")
   })
 
-  it('el enlace para pedir un puesto nuevo dice que es para los que NO existen', () => {
+  it('la pública NO enlaza a pantallas de administración', () => {
+    /**
+     * Antes este test exigía lo contrario: que la página tuviera un «¿No ves
+     * el puesto que necesitás? Sugerinos uno nuevo» apuntando a
+     * `/servidores/puestos/nuevo`.
+     *
+     * Se quitó el 2026-09-30 a pedido de Floriana, y la razón vale más que el
+     * enlace: esa pantalla es de ADMINISTRACIÓN —pide sesión y rol—, así que
+     * a quien llega de afuera, que es todo el público de esta página, el
+     * enlace lo mandaba al login sin ninguna explicación. Pedir un puesto
+     * nuevo es un trámite interno del comité.
+     *
+     * El test se invierte en vez de borrarse: lo que hay que cuidar ahora es
+     * que no vuelva a colarse un enlace a `/servidores/*` en una página
+     * pública.
+     */
     const pag = sinComentarios(PAGINA)
-    expect(pag).toContain('/servidores/puestos/nuevo')
-    expect(pag).toMatch(/todavía no existen/)
+    expect(pag).not.toContain('/servidores/')
   })
 })
 
