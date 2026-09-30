@@ -157,6 +157,22 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
       ? <>{children}</>
       : <AccessDenied />
   }
+  /**
+   * SRV-16 · "Mi comité" la abre el PUESTO, no el módulo `servidores`.
+   *
+   * Sin esto el endpoint contestaba 200 con la gente de la sede y la pantalla
+   * igual decía "Acceso restringido": el corte estaba acá arriba, tres capas
+   * antes del fetch. Lo encontró la prueba en el navegador, no los tests.
+   *
+   * Vale para el anfitrión —que no tiene el módulo ni lo va a tener— y también
+   * para el encargado sin el rol `lider_comite`, que era el caso de George
+   * Vivas (2026-09-22): se arregló en el API y quedó roto acá.
+   *
+   * `abre_mi_comite` lo calcula el SERVIDOR mirando los puestos
+   * (`getComitesQueAbrenMiComite`, vía /api/auth/me), y el endpoint lo vuelve
+   * a comprobar: esto solo decide si se pinta la pantalla.
+   */
+  if (pathname === '/servidores/mi-comite' && user.abre_mi_comite) return <>{children}</>
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El rol acotado de grupos (editor_grupos_estudio) tiene el módulo estudios
   // con alcance 'all' pero SOLO para grupos: nada de resumen, plan, bloques,

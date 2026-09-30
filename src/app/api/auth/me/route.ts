@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt,
+      documentPromptDismissedAt, abreMiComite,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -141,6 +141,21 @@ export async function GET() {
           return null
         }
       })(),
+
+      // SRV-16: ¿algún puesto suyo le abre "Mi comité"? El menú lo preguntaba
+      // por el ROL `lider_comite` y eso deja fuera al encargado que no lo tiene
+      // y a todos los anfitriones. La verdad está en los puestos.
+      (async (): Promise<boolean> => {
+        try {
+          const { getComitesQueAbrenMiComite } = await import('@/lib/supabase/queries/servers')
+          return (await getComitesQueAbrenMiComite(member.id)).length > 0
+        } catch (e) {
+          // Best-effort: si falla, la persona no ve el enlace — el endpoint
+          // sigue decidiendo el acceso de verdad.
+          console.warn('auth/me: puestos que abren Mi comité:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
     ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
@@ -168,6 +183,7 @@ export async function GET() {
         in_study_committee: inStudyCommittee,
         granted_form_ids: grantedFormIds,
         managed_event_ids: managedEventIds,
+        abre_mi_comite: abreMiComite,
       },
     })
   } catch (error) {

@@ -99,7 +99,7 @@ function VacantesPublicasContent() {
         <PageContainer width="work" className="px-5 py-10">
           <p className="text-[13px] font-medium text-white/80 font-body">Theos Place</p>
           <h1 className="mt-1 text-2xl font-bold font-display sm:text-3xl">Oportunidades de servicio</h1>
-          {/* SRV-16 · Dos párrafos y no uno: el primero es la invitación —por
+          {/* SRV-17 · Dos párrafos y no uno: el primero es la invitación —por
               qué alguien querría servir— y el segundo dice qué hacer. Juntos
               se leían como un bloque de instrucciones y la invitación se
               perdía. */}
@@ -203,7 +203,7 @@ function VacantesPublicasContent() {
             )
           })}
         </div>
-        {/* SRV-16 · Acá había un «¿No ves el puesto que necesitás? Sugerinos
+        {/* SRV-17 · Acá había un «¿No ves el puesto que necesitás? Sugerinos
             uno nuevo», que enlazaba a /servidores/puestos/nuevo. Se quitó a
             pedido de Floriana: esta es una página PÚBLICA y esa pantalla es de
             administración —pide sesión y rol—, así que a quien viene de afuera

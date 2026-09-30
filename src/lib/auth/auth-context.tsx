@@ -30,6 +30,18 @@ export interface AuthUser {
   /** Eventos que tiene a cargo (event_managers). Le abren /eventos y el detalle
    *  de ESOS eventos aunque no tenga el módulo. */
   managed_event_ids?: string[]
+  /**
+   * SRV-16 · ¿Algún puesto suyo le abre "Mi comité"? Lo decide el SERVIDOR
+   * mirando los puestos (`getComitesQueAbrenMiComite`), que es donde vive la
+   * verdad; el navegador no los tiene.
+   *
+   * Existe porque el menú preguntaba por el ROL `lider_comite`, y eso ya
+   * dejaba fuera a gente con acceso: el encargado sin ese rol —el caso de
+   * George Vivas, 2026-09-22— entraba escribiendo la URL pero no veía el
+   * enlace. Con el anfitrión el hueco se volvía la norma, porque ninguno tiene
+   * el rol.
+   */
+  abre_mi_comite?: boolean
 }
 
 interface AuthState {

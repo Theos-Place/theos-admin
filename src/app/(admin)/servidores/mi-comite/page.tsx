@@ -22,10 +22,14 @@ import {
   textoDeEstudio, INFO_ULTIMO_ESTUDIO_ESTUDIANTE, type EstudioDeLaPersona,
 } from '@/lib/studies/estudio-actual'
 import { SinAcceso, esFaltaDeAcceso } from '@/components/shared/SinAcceso'
+import { ResumenDeCompromisos } from '@/components/servers/ResumenDeCompromisos'
 
 type Fila = Compromisos & {
   member_id: string
   nombre: string
+  /** Comités donde tiene puesto activo. Ya viajaba; lo pide el resumen de
+   *  arriba, que des-duplica a quien sirve en más de uno (SRV-16). */
+  comites: string[]
   puestos: string[]
   encargado: boolean
   telefono: string | null
@@ -37,8 +41,7 @@ type Comite = { id: string; nombre: string; filas: Fila[] }
 
 /** Columnas del export. La pantalla los pinta con íconos; el archivo va en
  *  palabras — un ✓ en una celda de Excel no se puede filtrar ni contar. */
-const columnasDelExport = (verDonante: boolean): ColumnDef<Fila>[] => {
-  const todas: ColumnDef<Fila>[] = [
+const COLUMNAS_DEL_EXPORT: ColumnDef<Fila>[] = [
   { key: 'nombre',    label: 'Nombre',        defaultVisible: true },
   { key: 'puestos',   label: 'Puesto(s)',     defaultVisible: true, exportValue: f => f.puestos.join(' · ') },
   { key: 'encargado', label: 'Encargado',     defaultVisible: true, exportValue: f => (f.encargado ? 'Sí' : '') },
@@ -55,8 +58,6 @@ const columnasDelExport = (verDonante: boolean): ColumnDef<Fila>[] => {
   { key: 'ultimoEstudio', label: 'Último estudio (como estudiante)', defaultVisible: true,
     exportValue: f => (f.estudio.llevando.length || f.estudio.dando.length || !f.estudio.ultimo)
       ? '' : `${f.estudio.ultimo.nombre}${f.estudio.ultimo.fecha ? ` (${f.estudio.ultimo.fecha})` : ''}` },
-  // SRV-10 · La columna de donante SOLO para roles amplios. Se filtra abajo con
-  // `verDonante`; acá queda declarada para no perder el formato del archivo.
   { key: 'donante',   label: 'Donante activo',defaultVisible: true, exportValue: f => (f.donante ? 'Sí' : 'No') },
   { key: 'ultimo',    label: 'Último check-in', defaultVisible: true, exportValue: f => f.ultimoCheckin ?? '' },
   { key: 'falta',     label: 'Le falta',      defaultVisible: true, exportValue: f => faltantes(f).join(', ') },
@@ -70,21 +71,17 @@ const columnasDelExport = (verDonante: boolean): ColumnDef<Fila>[] => {
     key: 'birth_date', label: 'Fecha de cumpleaños', defaultVisible: true,
     exportValue: f => formatBirthday(f.cumpleanos),
   },
-  ]
-  // SRV-10 · Si no le toca verlo, la columna no existe: ni en la tabla, ni en
-  // el selector de columnas, ni en el archivo.
-  return todas.filter(c => verDonante || c.key !== 'donante')
-}
+]
 
 /** Los criterios se leen de donde VIVEN, no se escriben a mano: el de
  *  asistencia se arma con las constantes de `lib/attendance` y el de donante
  *  con la ventana real de `refresh_donor_flags()`, que además pone el mes. */
-const columnasDeLaTabla = (verDonante: boolean): Array<{ label: string; info?: string }> => [
+const CABECERAS: Array<{ label: string; info?: string }> = [
   { label: 'Persona' },
   { label: 'Puesto' },
   { label: 'Asistencia', info: ATTENDANCE_GENERAL_TOOLTIP },
   { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos. ' + INFO_ULTIMO_ESTUDIO_ESTUDIANTE },
-  ...(verDonante ? [{ label: 'Donante', info: explicacionDeDonantes(new Date()) }] : []),
+  { label: 'Donante', info: explicacionDeDonantes(new Date()) },
   { label: 'Último check-in' },
 ]
 
@@ -114,7 +111,7 @@ function MiComiteContenido() {
   // pantalla (2026-09-22). Quién encarga un comité se sabe mirando los PUESTOS,
   // y eso el navegador no lo tiene: solo el servidor puede contestarlo.
   const clave = loaded ? `mi-comite:${comiteElegido}` : ''
-  const { datos, cargando, error } = useCargaRemota<{ comites: Comite[]; verDonante?: boolean }>(
+  const { datos, cargando, error } = useCargaRemota<{ comites: Comite[] }>(
     clave,
     async () => {
       if (!clave) return { comites: [] }
@@ -128,20 +125,28 @@ function MiComiteContenido() {
     { generico: 'No se pudo cargar el comité.' },
   )
   const comites = useMemo(() => datos?.comites ?? [], [datos])
-  /**
-   * SRV-10 · Manda el SERVIDOR, no el rol que el navegador cree tener.
-   *
-   * Por defecto NO se ve: si la respuesta viniera vieja o incompleta, la
-   * pantalla se equivoca hacia esconder, que es el lado seguro.
-   */
-  const verDonante = datos?.verDonante === true
-  const COLUMNAS = useMemo(() => columnasDelExport(verDonante), [verDonante])
-  const CABECERAS = useMemo(() => columnasDeLaTabla(verDonante), [verDonante])
 
   const visibles = useMemo(
     () => comites.map(c => ({ ...c, filas: soloPendientes ? c.filas.filter(leFaltaAlgo) : c.filas })),
     [comites, soloPendientes],
   )
+
+  /**
+   * SRV-16 · Las filas del resumen salen de `comites`, NO de `visibles`.
+   *
+   * Es la diferencia entre un resumen y un recuento del filtro: con
+   * "solo los que tienen algo pendiente" activado, `visibles` deja únicamente
+   * a los que NO cumplen, y los cinco porcentajes se irían a 0% justo cuando
+   * la persona está mirando a quién ayudar.
+   *
+   * Cuando hay varios comités se juntan en un solo resumen a propósito:
+   * `cumplimiento()` des-duplica por persona, así que quien sirve en dos
+   * cuenta una vez. Es la misma regla que el reporte global de REP-7.
+   */
+  const paraElResumen = useMemo(() => comites.flatMap(c => c.filas), [comites])
+  const nombreDelAlcance = comites.length === 1
+    ? comites[0].nombre
+    : `${comites.length} comités`
 
   // Hasta que carguen los roles no se sabe si tiene permiso: pintar "Acceso
   // restringido" antes deja un parpadeo rojo en cada carga (ver usePermissions).
@@ -177,6 +182,10 @@ function MiComiteContenido() {
       )}
 
       {comites.length > 0 && (
+        <ResumenDeCompromisos servidores={paraElResumen} nombreDelAlcance={nombreDelAlcance} />
+      )}
+
+      {comites.length > 0 && (
         <label className="flex items-center gap-2 text-[13px] text-navy-light font-body">
           <input
             type="checkbox"
@@ -200,8 +209,8 @@ function MiComiteContenido() {
             </div>
             <ExportButton<Fila>
               data={c.filas}
-              columns={COLUMNAS}
-              allColumns={COLUMNAS}
+              columns={COLUMNAS_DEL_EXPORT}
+              allColumns={COLUMNAS_DEL_EXPORT}
               filename={`mi-comite-${c.nombre.toLowerCase().replace(/\s+/g, '-')}`}
             />
           </div>
@@ -250,9 +259,7 @@ function MiComiteContenido() {
                             <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />
                           )}
                         </td>
-                        {verDonante && (
-                          <td className="px-4 py-3"><Marca ok={f.donante === true} titulo="Donante activo" /></td>
-                        )}
+                        <td className="px-4 py-3"><Marca ok={f.donante} titulo="Donante activo" /></td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
                           {f.ultimoCheckin ? formatDate(f.ultimoCheckin) : '—'}
                         </td>

@@ -25,15 +25,13 @@ export type Compromisos = {
   /**
    * Donante activo (criterio por trimestres).
    *
-   * OPCIONAL A PROPÓSITO (SRV-10, dirección, 2026-09-24): al líder de comité no
-   * se le muestra, y el recorte se hace en el ENDPOINT — el campo no viaja—,
-   * no escondiendo la columna. `undefined` significa «no me toca verlo», y por
-   * eso las reglas de abajo lo SALTAN en vez de tratarlo como incumplido.
-   *
-   * Que sea opcional y no `boolean` es lo que hace que el compilador encuentre
-   * a quien lo lea sin preguntarse si está.
+   * VUELVE A SER OBLIGATORIO (SRV-16, 2026-09-30). SRV-10 lo había puesto
+   * opcional porque al líder de comité se le recortaba el campo en el
+   * endpoint mientras dirección definía cómo se usaba el dato. Ya se definió:
+   * el líder lo ve, como antes, así que el dato viaja siempre y no hay un
+   * `undefined` que cada lector tenga que interpretar.
    */
-  donante?: boolean
+  donante: boolean
   /** Fecha del último check-in a un evento, o null si nunca. */
   ultimoCheckin: string | null
 }
@@ -49,15 +47,13 @@ export type Compromisos = {
  * una fecha a partir de la cual "no cumple", y la asistencia ya se mide con su
  * propia regla.
  *
- * SRV-10 · SI NO VIENE EL DATO DE DONANTE, NO CUENTA COMO FALTA. Esto no es un
- * detalle de implementación: es la mitad del recorte. Esconder la columna y
- * dejar que «Le falta: donación» siga apareciendo delata exactamente lo mismo
- * que se quiso ocultar, y encima con una lista lista para filtrar. Por eso la
- * regla mira si el campo VINO, no si es falso.
+ * La donación VUELVE a contar para todo el mundo (SRV-16). Bajo SRV-10 la
+ * regla miraba si el campo había VIAJADO, porque al líder se le recortaba y
+ * dejar «Le falta: donación» habría delatado justo lo que se ocultaba. Ya no
+ * se recorta, así que la condición vuelve a ser la simple.
  */
 export function leFaltaAlgo(c: Compromisos): boolean {
-  const faltaDonar = c.donante === false
-  return !c.asistencia || !(c.llevandoEstudio || c.dandoEstudio) || faltaDonar
+  return !c.asistencia || !(c.llevandoEstudio || c.dandoEstudio) || !c.donante
 }
 
 /** Lo que le falta, en palabras, para el tooltip y el export. */
@@ -65,8 +61,7 @@ export function faltantes(c: Compromisos): string[] {
   const f: string[] = []
   if (!c.asistencia) f.push('asistencia')
   if (!c.llevandoEstudio && !c.dandoEstudio) f.push('estudio')
-  // Solo cuando el dato vino: ver `leFaltaAlgo`.
-  if (c.donante === false) f.push('donación')
+  if (!c.donante) f.push('donación')
   return f
 }
 

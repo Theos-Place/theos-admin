@@ -250,12 +250,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // SRV-6 · Y los roles amplios (staff, coordinación, dirección, admin) eligen
   // cualquiera con el selector — para ellos la entrada se llama "Comités",
   // porque ninguno es "suyo".
-  const veMiComite = userRoles.includes('lider_comite') || canServiceAdmin
+  //
+  // SRV-16 · MANDA `abre_mi_comite`, QUE LO CALCULA EL SERVIDOR mirando los
+  // puestos. El rol `lider_comite` se queda como segunda vía y no como la
+  // única: se sincroniza desde los puestos, así que puede ir atrasado, y el
+  // anfitrión —que desde SRV-16 entra— no lo tiene nunca.
+  const veMiComite = user?.abre_mi_comite === true || userRoles.includes('lider_comite') || canServiceAdmin
   const servidoresSub: SubItem[] = [
     ...(veMiComite
       ? [{ href: '/servidores/mi-comite', label: canServiceAdmin ? 'Comités' : 'Mi comité', icon: UsersRound }]
       : []),
-    ...SERVIDORES_SUB,
+    // SRV-16 · Quien llega SOLO por su puesto (el anfitrión de una sede, o el
+    // encargado sin el rol `lider_comite`) no tiene el módulo `servidores`:
+    // el resto de las entradas le darían 403 al abrirlas. Se le muestra
+    // únicamente lo que sí puede abrir.
+    ...(can('servidores', 'view') ? SERVIDORES_SUB : []),
     // SRV-12 · La cola mensual: lo que pidió cada comité, para revisarlo y
     // publicarlo. La ve la coordinación y el rol `solicitudes_puestos`, que
     // es justamente quien la trabaja.
@@ -335,6 +344,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // Estudios" (y su resumen queda oculto por hideSummary).
     if (m.href === '/estudios') return true
     if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
+    /**
+     * SRV-16 · Servidores también aparece para quien entra por su PUESTO.
+     *
+     * Sin esto el grupo entero se filtraba acá y el enlace a "Mi comité" no
+     * existía, aunque la pantalla sí se le abriera: la persona tenía que saber
+     * la URL de memoria. `hideSummary` ya le tapa el resumen de /servidores,
+     * que sigue exigiendo alcance total.
+     */
+    if (m.href === '/servidores') return can('servidores', 'view') || user?.abre_mi_comite === true
     // SEC-1: el padrón es solo para alcance 'all' (lider_comite ve a su gente
     // en /servidores, no en el listado completo).
     if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') === 'all'

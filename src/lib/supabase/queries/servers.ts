@@ -8,6 +8,7 @@ import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-
 import { todayCR } from '@/lib/format'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
+import { abreMiComite } from '@/lib/servers/puestos-que-abren-mi-comite'
 import { reportarFalla } from '@/lib/observabilidad'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
@@ -186,6 +187,48 @@ export async function getManageableCommitteeIds(memberId: string): Promise<strin
     const area = one<{ id: string; area_type: string; is_active: boolean | null }>(pos.area)
     if (!area || area.area_type !== 'committee' || area.is_active === false) continue
     ids.add(area.id)
+  }
+  return [...ids]
+}
+
+/**
+ * SRV-16 · Comités cuya pantalla "Mi comité" puede MIRAR esta persona.
+ *
+ * Es un superconjunto de `getManageableCommitteeIds`: los que encarga, más las
+ * sedes donde es anfitrión. La diferencia entre las dos funciones NO es
+ * cosmética y está explicada en `puestos-que-abren-mi-comite.ts` — mirar la
+ * lista de compromisos de la sede no da poder para pedir puestos, abrir
+ * fichas, ni el rol `lider_comite`. Usar la otra acá habría repartido esas
+ * tres cosas de regalo.
+ *
+ * El nombre del área padre se resuelve con el mapa de áreas y no con un embed
+ * anidado: el self-FK `parent:areas` es poco fiable en PostgREST (ver
+ * `_area-map.ts`), y sin el padre `esComiteDeSede` no reconoce las sedes.
+ */
+export async function getComitesQueAbrenMiComite(memberId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const [{ data, error }, areaMap] = await Promise.all([
+    supabase
+      .from('volunteers')
+      .select('position:service_positions!inner(title, is_active, area:areas!service_positions_area_id_fkey(id, name, area_type, is_active, parent_id))')
+      .eq('member_id', memberId)
+      .eq('status', 'active'),
+    getAreaNameMap(supabase),
+  ])
+  if (error) throw error
+  const ids = new Set<string>()
+  for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
+    const pos = one<{ title: string; is_active: boolean | null; area: unknown }>(fila.position)
+    if (!pos || pos.is_active === false) continue
+    const area = one<{ id: string; name: string; area_type: string; is_active: boolean | null; parent_id: string | null }>(pos.area)
+    if (!area || area.area_type !== 'committee' || area.is_active === false) continue
+    const abre = abreMiComite({
+      title: pos.title,
+      areaName: area.name,
+      areaType: 'committee',
+      parentAreaName: area.parent_id ? areaMap.get(area.parent_id)?.name ?? null : null,
+    })
+    if (abre) ids.add(area.id)
   }
   return [...ids]
 }

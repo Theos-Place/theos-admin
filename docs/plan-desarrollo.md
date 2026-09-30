@@ -5180,7 +5180,7 @@ mismos fixtures), des-duplicación, por iniciar + en curso = total. tsc/lint/vit
 
 ## Fase 26 — Reunión 2026-09-30: Mi comité y accesos a reportes
 
-### [ ] SRV-16 · Mi comité: acceso para logística/anfitrión 1 + resumen de compromisos arriba
+### [x] SRV-16 · Mi comité: acceso para logística/anfitrión 1 + resumen de compromisos arriba — HECHO 2026-09-30
 
 Prompt para Claude Code:
 
@@ -5208,6 +5208,64 @@ CAMBIOS · /servidores/mi-comite (decididos 2026-09-30)
 Tests: los dos puestos abren su comité (y 403 a otro), resumen = números de REP-7 para
 el mismo comité. tsc/lint/vitest.
 ```
+
+
+**Lo medido antes de escribir código, que cambió el ítem:**
+
+- **«Anfitrión 1» NO EXISTE en el catálogo.** Lo que hay es «Anfitrión»: 10
+  puestos, uno por sede, 21 personas activas. Floriana confirmó que entran los
+  21 de hoy, y la regla acepta los dos títulos para que el día que lo creen o
+  lo renombren no haya que volver al código.
+- **«Encargado Logística» YA abría la pantalla**, sin regla nueva: el título
+  empieza por «Encargado» y eso lo vuelve cabeza de comité desde SRV-5 (16
+  personas en 14 sedes). El punto 1, para logística, estaba hecho. Se fijó con
+  un test para que un recorte futuro de `esPuestoDeEncargado` no se lo quite
+  callado — ya pasó una vez, cuando ese título estuvo en `NO_SON_CABEZA`.
+- **Dry-run del acceso:** 41 personas abrían Mi comité, ahora 61. Las 20
+  nuevas son todas anfitriones de sede; una más (Gustavo Zamora) suma su sede
+  a un comité que ya tenía.
+
+**MIRAR NO ES MANDAR, y por eso hay dos funciones y no una.**
+`getComitesQueAbrenMiComite` es nueva y solo la usa esta pantalla;
+`getManageableCommitteeIds` se queda igual y sigue alimentando otras tres
+cosas — solicitar puestos, abrir la ficha de cualquiera del comité y el rol
+`lider_comite` que se sincroniza solo. Fusionarlas «para no duplicar» le
+habría dado al anfitrión esos tres permisos de regalo. Hay un test que se cae
+si alguien lo intenta.
+
+**EL BUG QUE SOLO APARECIÓ EN EL NAVEGADOR.** Con el endpoint ya contestando
+200 y las 18 personas de la sede, la pantalla seguía diciendo «Acceso
+restringido»: el corte estaba tres capas antes del fetch, en el layout de
+`(admin)`, que gatea por MÓDULO — y el anfitrión no tiene el módulo
+`servidores` ni lo va a tener. Y una capa más: el menú filtraba el grupo
+entero por lo mismo, así que aun arreglando el layout la persona habría tenido
+que saberse la URL de memoria. Las tres capas están cubiertas por tests, y los
+siete cebos (romper a propósito lo que cada guard protege) muerden.
+
+De paso se cierra el hueco viejo de George Vivas (2026-09-22): el encargado
+sin el rol `lider_comite` tenía acceso en el API desde entonces, pero el menú
+y el layout se lo seguían negando. Ahora las tres capas preguntan lo mismo,
+`abre_mi_comite`, que sale de los PUESTOS vía `/api/auth/me`.
+
+**El resumen es el MISMO componente que REP-7**, no una copia: se sacó
+`ResumenDeCompromisos` de la pantalla del reporte y ahora lo usan las dos. Dos
+copias de esos cinco números duran hasta que alguien toque una sola — ya pasó
+con el truncado de PostgREST a 1.000 filas (2026-09-21), que se descubrió
+justamente porque los dos lados daban distinto. Verificado en el navegador:
+para Sede Pedregal Domingos los dos endpoints dan 17/0/0/0/0 idénticos.
+
+Se arma con las filas SIN FILTRAR: si saliera de `visibles`, activar «solo los
+que tienen algo pendiente» pondría los cinco porcentajes en 0% justo cuando
+más se necesitan.
+
+**SRV-10 revertido entero** (Floriana, 2026-09-30: el donante ya no se
+oculta). Se borró el módulo `visibilidad-de-donante` y la bandera
+`verDonante`, y `Compromisos.donante` vuelve a ser obligatorio — dejar una
+función que siempre devuelve `true` es peor que no tenerla. El test viejo se
+reemplazó por `donante-vuelve-al-lider.test.ts`, que ahora afirma lo
+contrario: que el campo SÍ viaja, que la columna está en la tabla y en el
+Excel, y que «Le falta: donación» vuelve a aparecer.
+
 
 ### [ ] REP-11 · Accesos por reporte + eliminar el rol de reportes automático de anfitriones
 
@@ -5280,7 +5338,7 @@ intactos. Con sesión, el salto es directo.
 10 pruebas, incluida una que verifica que la ruta NO esté en las públicas del
 proxy — si lo estuviera, `getAuthContext()` daría null para todo el mundo.
 
-### [x] SRV-16 · «vacantes» sale de las URLs y la pública se ordena — HECHO 2026-09-30
+### [x] SRV-17 · «vacantes» sale de las URLs y la pública se ordena — HECHO 2026-09-30
 
 La palabra ya no se le mostraba a nadie desde el 2026-09-26, pero seguía en la
 barra de direcciones — y la pública se comparte y se dicta por teléfono.
