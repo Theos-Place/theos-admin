@@ -4,6 +4,7 @@
 // del sistema (asignar/remover, migración de datos y sync ya son genéricos).
 import type { RoleId } from '@/types/auth'
 import { esComiteDirigentes } from '@/lib/dirigentes'
+import { esPuestoDeEncargado } from './encargados'
 import { isStudyCommitteeArea } from '@/lib/studies/request-assignment'
 
 export type PositionContext = {
@@ -137,6 +138,42 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
    * La lección, que ya es la tercera en este archivo: un permiso ancho puesto
    * para resolver un caso angosto reparte todo lo demás sin que nadie lo pida.
    */
+  {
+    role: 'reportes',
+    description:
+      'Quien encabeza el Comité de Planificación: planifica con los números de '
+      + 'toda la organización, así que ve todos los reportes.',
+    /**
+     * REP-12 (2026-09-30). **EL NOMBRE DEL PEDIDO NO EXISTE EN EL CATÁLOGO, y
+     * por eso esta regla no mira el título de «Planificación».** El pedido
+     * hablaba de un puesto «Encargado de Planificación»; lo que hay es
+     * `Encargado Comité` en el área «Comité Planificación» —el título es
+     * genérico y quien dice Planificación es el ÁREA—. Verificado antes de
+     * escribirla: es la cuarta vez que este archivo tropieza con lo mismo.
+     *
+     * Y ojo con lo contrario, que es peor: `Encargado Comité` existe en **23
+     * comités con 26 personas** (medido el 2026-09-30). Una regla por título
+     * suelto le habría dado todos los reportes de la organización a 26
+     * personas en vez de a una.
+     *
+     * Se usa `esPuestoDeEncargado` y no el título exacto porque la
+     * sincronización del Excel Madre ya renombró los «Encargado» a «Encargado
+     * <Comité>» una vez (2026-09-11) y dejó 26 comités sin otorgar su rol. Si
+     * mañana este pasa a llamarse «Encargado Planificación», la regla sigue.
+     *
+     * `Colaborador Planificación` queda afuera: el pedido dice encargado, y en
+     * este archivo los permisos no se reparten por pertenecer al comité.
+     *
+     * Esto NO contradice a REP-11, que le quitó este mismo rol al anfitrión:
+     * ahí el rol ancho estaba de más —el anfitrión necesitaba dos reportes de
+     * su sede— y acá es lo pedido, porque quien planifica mira todo.
+     */
+    matches: (ctx) => {
+      if (ctx.areaType !== 'committee') return false
+      if (!/planificaci/i.test(ctx.areaName.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) return false
+      return esPuestoDeEncargado(ctx.title)
+    },
+  },
   {
     role: 'evaluaciones',
     description:

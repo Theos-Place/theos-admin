@@ -135,9 +135,24 @@ describe('REP-11 · qué puesto abre los reportes', () => {
  * mientras su endpoint se conformaba con el módulo.
  */
 describe('REP-11 · una sola tabla, y todos preguntan', () => {
-  it('el mapeo automático puesto → rol `reportes` se quitó', () => {
+  it('el mapeo automático ANFITRIÓN → rol `reportes` se quitó', () => {
+    /**
+     * Antes este test exigía que `position-roles.ts` no dijera
+     * `role: 'reportes'` en ninguna parte. Se afinó con REP-12, que le da ese
+     * rol al encargado del Comité de Planificación — y ahí SÍ es lo pedido,
+     * porque quien planifica mira todos los reportes.
+     *
+     * Lo que hay que cuidar no era la palabra: es que el rol no vuelva a
+     * repartirse por un puesto de SEDE. Eso lo fija
+     * `position-roles.test.ts` («ningún puesto de sede otorga reportes») y se
+     * comprueba acá por el otro lado, con la regla puesta al lado de su
+     * comité.
+     */
     const s = sinComentarios('src/lib/servers/position-roles.ts')
-    expect(s).not.toContain("role: 'reportes'")
+    const reglas = s.split("role: '").filter(b => b.startsWith('reportes'))
+    expect(reglas, 'solo puede haber UNA regla que otorgue reportes').toHaveLength(1)
+    expect(reglas[0]).toContain('planificaci')
+    expect(reglas[0]).not.toContain('anfitrion')
   })
 
   it('pero el mecanismo de sync se queda', () => {
