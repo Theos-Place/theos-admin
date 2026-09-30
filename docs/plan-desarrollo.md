@@ -5683,3 +5683,71 @@ prohibía la palabra `role: 'reportes'` en todo el archivo, después contaba que
 hubiera UNA sola regla, y las dos formas envejecieron mal. Ahora afirma con
 DATOS lo único que importaba: que ningún puesto de sede —ni ningún encargado
 de comité cualquiera— reciba ese rol.
+
+
+### [x] EST-22 · Teléfono del dirigente en el export de grupos — HECHO 2026-09-30
+
+Pedido de Floriana. El dato ya existía en la ficha del grupo; lo que no
+existía era mandarlo en la LISTA, y ahí estuvo el cuidado.
+
+**QUIÉN LO RECIBE SE MIDIÓ, y hubo que medirlo DOS VECES porque las dos
+primeras deducciones estaban mal.** Primero di por hecho que `comunicaciones`
+y `finanzas` no tenían nada que ver con el padrón: los dos declaran `miembros`
+con alcance total. Después di por hecho que `solo_lectura` quedaba afuera:
+tiene `{ module: 'all', scope: 'all' }`, un comodín que un grep de
+`module: 'miembros'` no encuentra — el grep fue el que mintió, no los datos.
+
+Corriendo la función sobre los nueve roles que listan grupos, los que NO
+reciben el teléfono son exactamente **dos**: `editor_grupos_estudio` y
+`dirigente` (que además solo ve SUS grupos, donde el dirigente es él mismo).
+Para los otros siete esto no abre nada: ya ven el directorio completo.
+
+O sea que **hoy el recorte casi no recorta**, y se deja igual a propósito: es
+la red para el día que alguien sume un rol a `GROUPS_LIST_ROLES` sin padrón,
+que es como el rol `reportes` estuvo a punto de llevarse los contactos por la
+puerta de un reporte en REP-5. El criterio es el que YA existe en REP-5 y
+REP-6 —módulo `miembros` con alcance total— en vez de inventar un tercero.
+
+**El test encontró un hueco que yo había dejado.** El endpoint tiene CUATRO
+salidas que devuelven grupos (`include=enrollments`, `all=1`, la histórica sin
+params y la paginada) y yo había recortado tres: la rama histórica se me pasó.
+Recortar tres de cuatro es no recortar — basta con pedir por la que falta. El
+test cuenta las cuatro.
+
+**Dos detalles que costaron:**
+
+- El recorte opera sobre la forma de la BASE (`leader.phone` anidado). El
+  aplanado a `leader_phone` lo hace el adaptador en el CLIENTE, o sea después;
+  recortar el nombre plano no habría quitado nada.
+- Se borra la propiedad en vez de ponerla en `null`: un `null` viaja igual y
+  se lee como «no tiene teléfono», que es otra afirmación y es falsa.
+
+Van tres columnas, todas apagadas por defecto porque son datos de contacto y
+el archivo se comparte: teléfono del dirigente, co-dirigente y su teléfono.
+La columna existe en el selector aunque la persona no pueda ver el dato —sale
+vacía— para que dos personas no bajen archivos con distinta cantidad de
+columnas y no se puedan comparar.
+
+Tres cebos muerden.
+
+### [x] OPS-3 · Áreas de staging sincronizadas con producción — HECHO 2026-09-30
+
+Las ocho áreas eran las mismas y los comités cuadraban; lo que difería eran
+los nombres. Se copiaron EXACTO desde producción, **incluido el doble espacio
+de «Area  Comunidad» y «Area  Enseñanza»** — el punto de sincronizar es que
+una prueba en staging se comporte igual que en producción, y una regla que
+mire el nombre daría distinto si acá lo «arregláramos».
+
+| producción | staging (antes) |
+|---|---|
+| `Area  Comunidad` | `Area de Comunidad` |
+| `Area  Enseñanza` | `Area de Enseñanza` |
+| `Area Finanzas` | `Area de Finanzas` |
+| `Area Staff` | `Area de Staff` |
+| `Area Dirección` | `Dirección` |
+| `Area Sedes` | `Sedes` |
+
+**PENDIENTE APARTE, para producción:** el doble espacio de Comunidad y
+Enseñanza es un defecto de datos real. No se tocó porque limpiarlo en
+producción es un cambio aparte y hay que revisar antes qué lo mira —el
+nombre del área aparece en exports y en reglas de puesto.

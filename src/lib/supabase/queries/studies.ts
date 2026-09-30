@@ -530,8 +530,8 @@ const LIST_GROUP_SELECT = `
   is_leader_training, training_modality, is_virtual, enrollment_restrictions,
   age_min, age_max,
   plan:study_plans(code),
-  leader:members!study_groups_leader_id_fkey(first_name, last_name),
-  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name),
+  leader:members!study_groups_leader_id_fkey(first_name, last_name, phone),
+  co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name, phone),
   enrollments:study_enrollments!study_enrollments_group_id_fkey(member_id, status)
 `
 

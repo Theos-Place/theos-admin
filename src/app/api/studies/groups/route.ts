@@ -4,6 +4,9 @@ import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
 import { studiesViewScope } from '@/lib/auth/studies-scope'
 import {
+  puedeVerTelefonoDelDirigente, recortarTelefonos,
+} from '@/lib/studies/telefono-del-dirigente'
+import {
   getStudyGroups, getStudyGroupsWithEnrollments, createGroup, getPlanIdByCode, getStudyGroupZones, getStudyGroupBloques,
 } from '@/lib/supabase/queries/studies'
 import { groupCreateSchema } from './schema'
@@ -39,6 +42,13 @@ export async function GET(req: NextRequest) {
     const auth = await requireRoles(...GROUPS_LIST_ROLES)
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
+    /**
+     * El teléfono del dirigente viaja SOLO a quien ya puede ver el directorio
+     * (ver `telefono-del-dirigente`). Se recorta en el SERVIDOR y no
+     * escondiendo la columna: un campo que llega al navegador es público
+     * aunque no se pinte, a un clic de la pestaña de red.
+     */
+    const verTelefono = puedeVerTelefonoDelDirigente(auth.ctx.roles)
 
     // SEC-1: dirigente sin permisos más amplios → solo sus grupos. finanzas/
     // comunicaciones no tienen módulo estudios pero SÍ necesitan el listado
@@ -50,7 +60,8 @@ export async function GET(req: NextRequest) {
         : null
 
     if (searchParams.get('include') === 'enrollments') {
-      return NextResponse.json(await getStudyGroupsWithEnrollments({ leaderMemberId }))
+      return NextResponse.json(
+        recortarTelefonos(await getStudyGroupsWithEnrollments({ leaderMemberId }), verTelefono))
     }
 
     // ?facet=zones → solo las zonas presentes en los grupos, para armar el filtro
@@ -99,7 +110,7 @@ export async function GET(req: NextRequest) {
     // ?all=1 → set COMPLETO filtrado (para el export, sin paginar).
     if (searchParams.get('all') === '1') {
       const { data } = await getStudyGroups({ filters })
-      return NextResponse.json(data)
+      return NextResponse.json(recortarTelefonos(data, verTelefono))
     }
 
     const rawPage = searchParams.get('page')
@@ -108,7 +119,7 @@ export async function GET(req: NextRequest) {
       // Sin params ni filtros: comportamiento histórico (array plano con todos)
       // — filters igual viaja: lleva el scope del dirigente (SEC-1).
       const { data } = await getStudyGroups({ filters })
-      return NextResponse.json(data)
+      return NextResponse.json(recortarTelefonos(data, verTelefono))
     }
 
     const pageNum = Number(rawPage ?? 1)
@@ -117,7 +128,7 @@ export async function GET(req: NextRequest) {
     const pageSize = Number.isFinite(pageSizeNum) ? Math.min(200, Math.max(1, Math.trunc(pageSizeNum))) : 50
 
     const { data, total } = await getStudyGroups({ page, pageSize, filters })
-    return NextResponse.json({ groups: data, total, page, pageSize })
+    return NextResponse.json({ groups: recortarTelefonos(data, verTelefono), total, page, pageSize })
   } catch (error) {
     reportarError('GET /api/studies/groups:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

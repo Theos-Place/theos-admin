@@ -60,6 +60,30 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
     exportValue: g => g.leader_name ?? 'Sin asignar',
   },
   {
+    /**
+     * Pedido del 2026-09-30: el número del dirigente, para poder llamarlo
+     * desde la lista que se baja.
+     *
+     * `defaultVisible: false` — es un dato de contacto y el archivo se
+     * comparte; que aparezca hay que pedirlo. Y sale VACÍO para quien no
+     * puede ver el directorio: el endpoint no le manda el campo (ver
+     * `lib/studies/telefono-del-dirigente`), así que la columna existe en el
+     * selector pero no tiene qué mostrar. Es a propósito: esconder la columna
+     * según el rol haría que dos personas bajen archivos con distinta
+     * cantidad de columnas y no se puedan comparar.
+     */
+    key: 'leader_phone', label: 'Teléfono del dirigente', defaultVisible: false,
+    exportValue: g => g.leader_phone ?? '',
+  },
+  {
+    key: 'co_leader_name', label: 'Co-dirigente', defaultVisible: false,
+    exportValue: g => g.co_leader_name ?? '',
+  },
+  {
+    key: 'co_leader_phone', label: 'Teléfono del co-dirigente', defaultVisible: false,
+    exportValue: g => g.co_leader_phone ?? '',
+  },
+  {
     key: 'zone', label: 'Zona / Sede', defaultVisible: true,
     exportValue: g => sedeLabel(g.zone),
   },
