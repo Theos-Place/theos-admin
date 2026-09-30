@@ -101,6 +101,12 @@ export type StudyGroup = {
   closed_by_name?: string | null
   current_week: number
   participants: GroupParticipant[]
+  /** EST-20 · Cuántos están ESTUDIANDO, con la definición única de
+   *  `lib/studies/conteo-de-participantes` y calculado en el SERVIDOR, que es
+   *  donde está el estado crudo. En el listado, `participants` son stubs y su
+   *  estado ya viene mapeado: ahí `completed` y `enrolled` se confunden, y esa
+   *  confusión es la que hacía que el Excel dijera 385 y la página 380. */
+  estudiando?: number
   whatsapp_group_url: string | null
   is_leader_training?: boolean
   training_modality?: string | null

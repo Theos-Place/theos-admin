@@ -20,6 +20,7 @@ import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-r
 import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
 import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
+import { estudiantesDelGrupo } from '@/lib/studies/conteo-de-participantes'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -136,6 +137,10 @@ export async function getStudyPlans(): Promise<DbStudyPlan[]> {
 export type StudyCount = { grupos: number; inscripciones: number; unicos: number }
 export type StudyDashboardStats = {
   activos:   { niveles: StudyCount; capacitaciones: StudyCount }
+  /** EST-20 · Grupos `en_matricula`: existen, tienen gente matriculada y hasta
+   *  el 2026-09-30 no salían en ninguna parte del resumen. Eran 11 grupos de
+   *  niveles con 54 personas invisibles. */
+  porIniciar: { niveles: StudyCount; capacitaciones: StudyCount }
   historico: { niveles: StudyCount; capacitaciones: StudyCount }
   campanas: StudyCount
 }
@@ -153,12 +158,17 @@ export async function getStudyDashboardStats(): Promise<StudyDashboardStats> {
   const c = (campRows?.[0] ?? {}) as Partial<StudyCount>
   const empty: StudyCount = { grupos: 0, inscripciones: 0, unicos: 0 }
   const stats: StudyDashboardStats = {
-    activos:   { niveles: { ...empty }, capacitaciones: { ...empty } },
-    historico: { niveles: { ...empty }, capacitaciones: { ...empty } },
+    activos:    { niveles: { ...empty }, capacitaciones: { ...empty } },
+    porIniciar: { niveles: { ...empty }, capacitaciones: { ...empty } },
+    historico:  { niveles: { ...empty }, capacitaciones: { ...empty } },
     campanas: { grupos: Number(c.grupos ?? 0), inscripciones: Number(c.inscripciones ?? 0), unicos: Number(c.unicos ?? 0) },
   }
   for (const r of (data ?? []) as Array<{ estado: string; categoria: string; grupos: number; inscripciones: number; unicos: number }>) {
-    const bucket = r.estado === 'en_curso' ? stats.activos : r.estado === 'finalizado' ? stats.historico : null
+    const bucket =
+      r.estado === 'en_curso'     ? stats.activos
+    : r.estado === 'en_matricula' ? stats.porIniciar
+    : r.estado === 'finalizado'   ? stats.historico
+    : null
     if (!bucket) continue
     const val: StudyCount = { grupos: Number(r.grupos), inscripciones: Number(r.inscripciones), unicos: Number(r.unicos) }
     if (r.categoria === 'niveles') bucket.niveles = val
@@ -190,7 +200,14 @@ export type DbLeaderEnriched = {
  *  varios MB y los consumidores solo cuentan). Los enrollments completos se
  *  cargan en el detalle (getGroupById) o vía getStudyGroupsWithEnrollments. */
 export type DbGroupListItem = Omit<DbGroupEnriched, 'enrollments'> & {
-  enrollment_counts: { enrolled: number; pending: number; withdrawn: number }
+  enrollment_counts: {
+    enrolled: number; pending: number; withdrawn: number
+    /** EST-20 · Los que están ESTUDIANDO, con la definición única de
+     *  `lib/studies/conteo-de-participantes`. Va aparte de `enrolled` porque
+     *  ese junta a quien ya terminó (`completed`) con quien sigue cursando, y
+     *  esa mezcla es la que hacía que el Excel dijera 385 y la página 380. */
+    estudiando: number
+  }
 }
 
 type RawListGroup = Omit<DbGroupEnriched, 'enrollments'> & {
@@ -199,7 +216,14 @@ type RawListGroup = Omit<DbGroupEnriched, 'enrollments'> & {
 
 // Misma agrupación que mapParticipantStatus del adapter de dominio.
 function toListItem(g: RawListGroup): DbGroupListItem {
-  const counts = { enrolled: 0, pending: 0, withdrawn: 0 }
+  const counts = {
+    enrolled: 0, pending: 0, withdrawn: 0,
+    // EST-20 · El único conteo con definición propia y compartida: la misma
+    // que usa el RPC del resumen. Los otros tres se quedan porque los usa el
+    // stub de participantes del listado, pero el número que se MUESTRA sale
+    // de acá.
+    estudiando: estudiantesDelGrupo(g.enrollments, g).length,
+  }
   for (const e of g.enrollments) {
     // La capacidad es de ESTUDIANTES: el dirigente/co-dirigente no cuenta aunque
     // tenga inscripción en su propio grupo.

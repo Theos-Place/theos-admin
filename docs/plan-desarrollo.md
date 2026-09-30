@@ -5095,7 +5095,52 @@ Tests: resta en vivo, sobregiro marcado, colaborador ve solo su sede (403 a otra
 export. tsc/lint/vitest.
 ```
 
-### [ ] EST-20 · Resumen de estudios: discrepancias en los números + bloques nuevos (pedido 2026-09-30)
+### [x] EST-20 · Resumen de estudios: discrepancias en los números + bloques nuevos — HECHO 2026-09-30
+
+**ETAPA 1 · LOS 6 DE DIFERENCIA, CON NOMBRE.** La página decía 380 y el Excel
+385. Ninguno estaba roto: contaban cosas distintas y la definición no estaba
+escrita en ningún lado. Había **tres** criterios conviviendo —el RPC, el
+`toListItem` del listado y el `exportValue` de la columna— y ninguno igual a
+otro.
+
+| Persona | Grupo | Por qué difería |
+| --- | --- | --- |
+| Carla Obando Campos | Nivel 4 · Georgina Umaña | `completed` en un grupo en curso |
+| Mariana Castro Ramírez | Nivel 4 · Georgina Umaña | idem |
+| Mariela Hernandez Cordero | Nivel 3 · Ma Fernanda Valverde | idem |
+| Sergio Ortega Mendoza | Nivel 3 · Emerson Ulloa | idem |
+| Sergio Rojas Mora | Nivel 3 · Ma Fernanda Madrigal | idem |
+| Sofia Solis Loaiciga | Nivel 3 · Sofía Solís | es la dirigente de su propio grupo |
+
+El Excel contaba por NEGACIÓN —`p.status !== 'withdrawn'`— sobre el estado ya
+mapeado al dominio, donde `completed` y `reprobado` caen en «enrolled». Es la
+misma forma de contar que le mandó el aviso de inicio a 16 personas retiradas:
+«quién no está excluido» deja entrar todo lo que nadie nombró.
+
+Descartado con datos: cero registros `[prueba]`, `report_snapshots` vacío (no
+era caché) y no era el tope de 1.000 filas de PostgREST.
+
+**ETAPA 2 · UNA SOLA DEFINICIÓN.** `lib/studies/conteo-de-participantes.ts`:
+estudiando = `enrolled` + `pendiente_de_pago`, sin dirigentes. `completed` y
+`reprobado` NO cuentan como estudiando aunque estén en un grupo abierto —ya
+terminaron— pero SÍ ocupan cupo, que es otra pregunta y tiene su propia
+función. Lo usan el listado (servidor, donde está el estado crudo), la columna
+de la pantalla y su Excel. Confirmado por Floriana: **Exploring cuenta como
+niveles**.
+
+**ETAPA 3 · LOS BLOQUES QUE FALTABAN.** El RPC ahora devuelve también
+`en_matricula`: en producción son **11 grupos de niveles con 54 personas** y 6
+capacitaciones con 46, que existían y no salían en ninguna parte. La página
+tiene el bloque «Por iniciar» y el total «en curso + por iniciar», con tooltip
+explicando por qué la suma de únicos no coincide entre bloques.
+
+**Verificado en el navegador**: la suma de la columna «Participantes» de la
+tabla da 20 y el resumen da 8+4+6+2 = 20. Y el dry-run contra producción
+muestra que los números viejos NO se mueven (380 sigue 380) — solo aparecen
+los bloques nuevos.
+
+Migración `20260929120000`, aplicada a staging. Tres cebos muerden, incluido
+el que separa la lista del SQL de la de TypeScript.
 
 Reportado: la página de resumen dice 380 en niveles activos pero el Excel
 descargado trae 385; capacitaciones también da un número erróneo.

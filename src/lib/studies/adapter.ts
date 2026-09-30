@@ -10,6 +10,7 @@ import type {
 import { LEVEL_TO_STAGE } from '@/lib/studies/eligibility'
 import { hasRestriction, normalizeRestriction } from '@/lib/studies/group-restrictions'
 import { edadEnAnios } from '@/lib/members/alta-persona'
+import { estudiantesDelGrupo } from './conteo-de-participantes'
 
 export function toDomainStudyType(db: DbStudyPlan): StudyType {
   // El frontend usa `id` como clave de catálogo (== code en el mock).
@@ -65,7 +66,7 @@ function mapParticipantStatus(
  *  listado (solo enrollment_counts — C5 auditoría 2026-06-11). */
 export type DbGroupForDomain = Omit<DbGroupEnriched, 'enrollments'> & {
   enrollments?: DbGroupEnriched['enrollments']
-  enrollment_counts?: { enrolled: number; pending: number; withdrawn: number }
+  enrollment_counts?: { enrolled: number; pending: number; withdrawn: number; estudiando?: number }
 }
 
 // Participantes "fantasma" para el listado: las vistas de lista solo CUENTAN
@@ -122,6 +123,10 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
   return {
     viewer_scope: db.viewer_scope,
     id: db.id,
+    // EST-20 · Del servidor, no recalculado acá: en el listado los
+    // participantes son stubs y su estado ya perdió el matiz que importa.
+    estudiando: db.enrollment_counts?.estudiando
+      ?? estudiantesDelGrupo(db.enrollments ?? [], db).length,
     name: db.name ?? '',
     study_type_id: db.plan?.code ?? '',
     leader_id: db.leader_id,

@@ -16,9 +16,30 @@ import { ventanaDeDias } from '@/lib/fecha/ventana-de-dias'
 
 const EMPTY_COUNT = { grupos: 0, inscripciones: 0, unicos: 0 }
 const EMPTY_STATS: StudyDashboardStats = {
-  activos:   { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
-  historico: { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
-  campanas:  { ...EMPTY_COUNT },
+  activos:    { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
+  porIniciar: { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
+  historico:  { niveles: { ...EMPTY_COUNT }, capacitaciones: { ...EMPTY_COUNT } },
+  campanas:   { ...EMPTY_COUNT },
+}
+
+/**
+ * EST-20 · El TOTAL de gente en estudio: en curso + por iniciar.
+ *
+ * Se suman las personas ÚNICAS y no las inscripciones, porque quien está en
+ * dos estudios a la vez es una sola persona. Por eso el total puede ser menor
+ * que la suma de los cuatro bloques de arriba, y el tooltip lo dice: sin esa
+ * aclaración el número se lee como un error de cuentas.
+ */
+function totalEnEstudio(s: StudyDashboardStats): { inscripciones: number; unicos: number } {
+  const b = [s.activos.niveles, s.activos.capacitaciones,
+             s.porIniciar.niveles, s.porIniciar.capacitaciones]
+  return {
+    inscripciones: b.reduce((n, x) => n + x.inscripciones, 0),
+    // NO se pueden des-duplicar personas desde acá: cada bloque ya trae sus
+    // únicos y no sabemos cuáles se repiten entre bloques. Se suma y se avisa,
+    // que es preferible a inventar una precisión que no tenemos.
+    unicos: b.reduce((n, x) => n + x.unicos, 0),
+  }
 }
 
 const QUICK_ACCESS = [
@@ -182,6 +203,48 @@ export default function EstudiosPage() {
                 inscripciones={stats.activos.capacitaciones.inscripciones}
                 unicos={stats.activos.capacitaciones.unicos}
               />
+            </div>
+          </section>
+
+          {/* EST-20 · Por iniciar: grupos en matrícula. Existían y no salían
+              en ninguna parte del resumen — eran 11 grupos de niveles con 54
+              personas que nadie veía. */}
+          <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
+              <Clock size={16} className="text-teal-deep" />
+              <h2 className="text-sm font-semibold text-navy font-display">Por iniciar</h2>
+              <span className="text-[13px] text-navy-light/80 font-body">grupos en matrícula</span>
+            </div>
+            <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
+              <StatRow
+                icon={GraduationCap}
+                label="Niveles por iniciar"
+                hint="N1–N4"
+                grupos={stats.porIniciar.niveles.grupos}
+                inscripciones={stats.porIniciar.niveles.inscripciones}
+                unicos={stats.porIniciar.niveles.unicos}
+              />
+              <StatRow
+                icon={BookOpen}
+                label="Capacitaciones por iniciar"
+                hint="Etapa Inicial + Intermedia"
+                grupos={stats.porIniciar.capacitaciones.grupos}
+                inscripciones={stats.porIniciar.capacitaciones.inscripciones}
+                unicos={stats.porIniciar.capacitaciones.unicos}
+              />
+            </div>
+            {/* El total va acá y no arriba: responde «cuánta gente tenemos en
+                estudio», que es en curso MÁS por iniciar. */}
+            <div className="px-5 py-3 border-t border-[var(--outline-variant)] bg-surface-low">
+              <p className="text-[13px] text-navy-light/80 font-body">
+                Total en estudio (en curso + por iniciar):{' '}
+                <strong className="text-navy">{totalEnEstudio(stats).inscripciones}</strong>
+                {' '}matrículas
+                <span
+                  title="Suma las matrículas de los cuatro bloques. Una persona en dos estudios cuenta dos veces acá: los «estudiantes únicos» de cada bloque están des-duplicados dentro del bloque, pero no entre bloques."
+                  className="ml-1 cursor-help underline decoration-dotted"
+                >¿por qué no coincide?</span>
+              </p>
             </div>
           </section>
 

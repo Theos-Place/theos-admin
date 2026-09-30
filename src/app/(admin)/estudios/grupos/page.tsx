@@ -69,7 +69,12 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
   },
   {
     key: 'participants_count', label: 'Participantes', defaultVisible: true,
-    exportValue: g => `${g.participants.filter(p => p.status !== 'withdrawn').length}/${g.max_capacity}`,
+    // EST-20 · `g.estudiando` viene del servidor con la MISMA definición que
+    // el resumen. Antes acá se contaba por negación —`status !== 'withdrawn'`
+    // sobre el estado ya mapeado al dominio, donde `completed` cae en
+    // «enrolled»— y por eso el Excel decía 385 donde la página decía 380: los
+    // 5 de diferencia eran gente que ya terminó dentro de un grupo en curso.
+    exportValue: g => `${g.estudiando ?? 0}/${g.max_capacity}`,
   },
   {
     key: 'max_capacity', label: 'Capacidad máxima', defaultVisible: false,
@@ -563,7 +568,7 @@ export default function GruposPage() {
             <tbody>
               {sortedGroups.map(group => {
                 const studyType = STUDY_TYPES.find(s => s.id === group.study_type_id)
-                const enrolled = group.participants.filter(p => p.status !== 'withdrawn').length
+                const enrolled = group.estudiando ?? 0
                 return (
                   <tr
                     key={group.id}
@@ -643,7 +648,7 @@ export default function GruposPage() {
         <ul className="md:hidden">
           {sortedGroups.map((group, i) => {
             const studyType = STUDY_TYPES.find(s => s.id === group.study_type_id)
-            const enrolled = group.participants.filter(p => p.status !== 'withdrawn').length
+            const enrolled = group.estudiando ?? 0
             return (
               <li key={group.id} style={i < sortedGroups.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}>
                 <Link
