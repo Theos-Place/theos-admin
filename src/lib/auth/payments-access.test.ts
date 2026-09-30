@@ -15,8 +15,20 @@ describe('acceso a la página unificada de pagos (REV-3)', () => {
   it('los roles de revisión ven todos los pagos sin el módulo finanzas', () => {
     expect(canView('revision_pagos')).toBe(true)
     expect(canView('folletos')).toBe(true)
-    expect(canView('coordinador_dirigentes')).toBe(true)
-    expect(canView('coordinador_estudios')).toBe(true)
+  })
+
+  it('pero la coordinación de estudios y de dirigentes YA NO (FIN-14)', () => {
+    /**
+     * Este test afirmaba lo contrario y se invierte, no se borra: los dos
+     * roles declaraban `revision_pagos` y eso les abría la cola de pagos.
+     * Se les quitó el 2026-09-30 por decisión de Floriana — es plata, y no es
+     * lo suyo.
+     *
+     * Registrar un pago de matrícula no se perdió: eso pasa por el módulo
+     * `estudios` (ver `pagos-fuera-de-estudios.test.ts`).
+     */
+    expect(canView('coordinador_dirigentes')).toBe(false)
+    expect(canView('coordinador_estudios')).toBe(false)
   })
 
   it('finanzas, direccion y admin ven la página', () => {

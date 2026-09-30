@@ -450,7 +450,8 @@ export const ROLES: Role[] = [
       { module: 'estudios', actions: ['view', 'edit'], scope: 'all' },
       { module: 'miembros', actions: ['view'],         scope: 'all' },
       { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
-      { module: 'revision_pagos', actions: ['view', 'edit'], scope: 'all' },
+      // FIN-14 · Acá estaba `revision_pagos`, y se quitó el 2026-09-30 por
+      // decisión de Floriana. Ver el comentario en `coordinador_estudios`.
     ],
   },
   {
@@ -462,7 +463,27 @@ export const ROLES: Role[] = [
       { module: 'estudios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
       { module: 'miembros', actions: ['view'],                             scope: 'all' },
       { module: 'reportes', actions: ['view', 'export'],                   scope: 'all' },
-      { module: 'revision_pagos', actions: ['view', 'edit'],               scope: 'all' },
+      /**
+       * FIN-14 · `revision_pagos` SE QUITÓ el 2026-09-30 (decisión de
+       * Floriana). Le abría `/finanzas/pagos` —la cola de revisión— a la
+       * coordinación de estudios y de dirigentes, que es plata y no es lo
+       * suyo. Se descubrió haciendo DEV-2: ese ítem se pidió con la premisa
+       * «no se le da acceso a pagos» y resultó que ya lo tenían.
+       *
+       * REGISTRAR un pago de matrícula NO se pierde, y por eso el cambio es
+       * seguro: `/api/payments` se gatea con el módulo `estudios`, no con
+       * este. Medido antes de aplicar — de las 13 personas con estos dos
+       * roles, la única que había tocado un pago es la cuenta
+       * `estudios@theosplace.org` (82 altas y 77 ediciones, todas de
+       * matrícula y folletos) y ese flujo sigue igual.
+       *
+       * Lo que sí dejan de poder: la cola de revisión, aprobar o rechazar un
+       * comprobante, los recordatorios de pago y el listado de
+       * `/finanzas/pagos`.
+       *
+       * OJO, el rol `folletos` TAMBIÉN declara `revision_pagos` y no se tocó
+       * porque no se pidió. Son 4 personas, 2 de ellas solo por ese rol.
+       */
     ],
   },
   {

@@ -21,8 +21,10 @@ describe('quién ve los pagos de otra persona', () => {
     }
   })
 
-  it('coordinador_estudios también — tiene revision_pagos', () => {
-    expect(ve(['coordinador_estudios', 'miembro'])).toBe(true)
+  it('coordinador_estudios YA NO: se le quitó revision_pagos (FIN-14)', () => {
+    // Invertido el 2026-09-30. Ver `pagos-fuera-de-estudios.test.ts`.
+    expect(ve(['coordinador_estudios', 'miembro'])).toBe(false)
+    expect(ve(['coordinador_dirigentes', 'miembro'])).toBe(false)
   })
 
   it('el dirigente no: ve a su grupo, no la plata de su gente', () => {

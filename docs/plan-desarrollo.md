@@ -5111,7 +5111,7 @@ porque la premisa ya es falsa** — ver FIN-14, abierto por esto.
 
 Cuatro cebos muerden.
 
-### [ ] FIN-14 · `coordinador_estudios` ya ve los pagos (descubierto 2026-09-30, haciendo DEV-2)
+### [x] FIN-14 · Quitado el acceso a pagos de coordinación de estudios y dirigentes — HECHO 2026-09-30
 
 DEV-2 se pidió con la premisa «NO se le da acceso a pagos» y con un test que
 afirmara `403 a /finanzas/pagos` para el rol de estudios. **Ese test habría
@@ -5137,6 +5137,40 @@ colateral de agregar un botón. Lo que hay que decidir:
 2. Si es lo primero: dry-run de qué deja de ver cada una de las 19, porque
    `revision_pagos` es lo que les permite revisar comprobantes, y sacarlo
    puede trabar un flujo que hoy funciona.
+
+
+
+**RESUELTO el mismo día** (decisión de Floriana): `revision_pagos` se quitó de
+`coordinador_estudios` y de `coordinador_dirigentes`.
+
+**El número que reporté primero estaba mal y se corrigió**: dije 19 personas y
+son **15** —19 eran FILAS de rol, no gente; cuatro tienen dos de esos roles—.
+Y de esas 15, tres son cuentas institucionales, así que son 12 personas
+reales.
+
+**Lo que hizo seguro el cambio, medido antes de aplicarlo:** de las 13
+personas con esos dos roles, **la única que había tocado un pago es la cuenta
+`estudios@theosplace.org`** —82 altas y 77 ediciones, todas de matrícula y
+folletos, la última el mismo día—. Las otras 12: cero acciones.
+
+Y ese flujo NO se pierde: `/api/payments`, que es por donde se registra un
+pago de matrícula, se gatea con el módulo **`estudios`**, no con
+`revision_pagos`. Hay un test que lo fija, porque si alguien cambiara ese
+guard le rompería ese trabajo sin darse cuenta.
+
+**Lo que sí dejan de poder:** la cola de revisión (`/payments/queue`), aprobar
+o rechazar un comprobante, los recordatorios de pago y el listado de
+`/finanzas/pagos`.
+
+**`folletos` NO se tocó**, porque no se pidió. Ese rol también declara
+`revision_pagos`: son 4 personas y **dos entran solo por ahí** (Gisselle Lopez
+y Guiselle López), así que si algún día se decide quitarlo, esas dos pierden
+la pantalla y hay que avisarles. Queda dicho en un test para que no parezca un
+olvido.
+
+Dos tests que afirmaban lo contrario se invirtieron en vez de borrarse
+(`payments-access` y `payments-visibility`), que es lo que corresponde a una
+reversión de permisos. Un cebo muerde.
 
 
 ### [~] FIN-9 · ACTUALIZADO 2026-09-29 — validado con Meli: va por CUPONES, no saldos
@@ -5766,3 +5800,33 @@ Se aplicó en una transacción con cuatro guardas que hacían `rollback` si algo
 no cuadraba —que tocara exactamente 2 filas, que no quedara ninguna sucia,
 que siguieran habiendo 8 áreas activas y que no apareciera un nombre
 duplicado—.
+
+### [ ] ROL-1 · Revisión del acceso coordinador_dirigentes: solo la encargada del comité (pedido 2026-09-30)
+
+El acceso `coordinador_dirigentes` suena a rol genérico pero en realidad debe
+corresponder al PUESTO de encargada del comité de dirigentes — hoy únicamente
+Fabiola Montero. Hay que quitárselo a quien lo tenga sin ser la encargada.
+
+Prompt para Claude Code:
+
+```
+PERMISOS · Depurar el acceso coordinador_dirigentes
+
+ETAPA 1 — DIAGNÓSTICO (reportar antes de tocar):
+1. Lista COMPLETA de quiénes tienen hoy el rol/acceso coordinador_dirigentes, con cómo
+   lo obtuvieron (manual vs automático/source) y qué páginas/acciones les abre (censo de
+   requireRoles con ese rol: evaluaciones de dirigentes, reportes, listas, etc.).
+2. Proponer el mapeo correcto: el acceso queda asociado al PUESTO de Encargado/a del
+   comité de dirigentes (verificar nombre exacto y quién lo ocupa — debe ser solo
+   Fabiola Montero) vía position-role-sync + source, como los demás mapeos.
+
+ETAPA 2 — DEPURACIÓN (tras aprobación de la lista):
+- Quitar el acceso a todos los que no sean la encargada del comité.
+- Para los que lo pierden y SÍ necesitan algo: proponer en el reporte qué rol menor les
+  calza según lo que de verdad usan (ej. el rol de retroalimentaciones de RET-1, acceso
+  a dirigentes de solo lectura, o el granular de reportes de REP-11) — NO asignar nada
+  nuevo sin aprobación de Floriana, solo la propuesta persona por persona.
+- Regla de la casa: ningún cambio de rol masivo sin dry-run aprobado; todo al audit_log.
+Tests: el puesto da/quita el acceso, la sync no lo reasigna a quien se le quitó.
+tsc/lint/vitest.
+```
