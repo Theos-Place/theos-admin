@@ -3268,7 +3268,7 @@ Tests: rol ve / sin rol 403 (incluidos dirigente del propio grupo y estudiante),
 compartir exige confirmación y audita, puesto da y quita el rol. tsc/lint/vitest.
 ```
 
-### [x] SRV-10 · Ocultar la columna "Donante" en Mi comité — HECHO 2026-09-24
+### [x] SRV-10 · Ocultar la columna "Donante" en Mi comité — HECHO 2026-09-24 · **REVERTIDO 2026-09-30 (decisión de Floriana/dirección: ya no se oculta donante — la reversión va dentro de SRV-16)**
 
 El recorte va en el ENDPOINT: `/api/servers/mi-comite` no manda el campo al
 líder, y la respuesta trae `verDonante` para que la pantalla sepa si dibujar la
@@ -5177,3 +5177,105 @@ ETAPA 3 — BLOQUES Y MÉTRICAS NUEVAS en el resumen:
 Tests: la página y el export comparten definición (test que compara ambos contra los
 mismos fixtures), des-duplicación, por iniciar + en curso = total. tsc/lint/vitest.
 ```
+
+## Fase 26 — Reunión 2026-09-30: Mi comité y accesos a reportes
+
+### [ ] SRV-16 · Mi comité: acceso para logística/anfitrión 1 + resumen de compromisos arriba
+
+Prompt para Claude Code:
+
+```
+CAMBIOS · /servidores/mi-comite (decididos 2026-09-30)
+
+1. ACCESO AUTOMÁTICO AMPLIADO: además del lider_comite/encargado actual, la página la
+   abren automáticamente quienes tengan el puesto "Encargado de Logística" y el puesto
+   "Anfitrión 1" (este puesto está POR CREARSE — implementar el mapeo para que funcione
+   apenas exista en el catálogo; verificar nombre exacto al momento). Mismo mecanismo
+   position-role-sync + alcance por SU comité (ven el comité donde tienen ese puesto,
+   igual que el líder — el candado de SRV-4/SRV-6 no se afloja para nadie más).
+2. RESUMEN ARRIBA: agregar en la parte superior el resumen que ya tiene el reporte de
+   servidores y compromisos (REP-7) pero del comité propio: total de servidores y los
+   porcentajes de asistencia, en estudio, donantes y "cumplen todo". REUTILIZAR el
+   cálculo/endpoint de REP-7 — no duplicar definiciones. Abajo queda la tabla por
+   persona como está.
+3. REVERTIR SRV-10 (confirmado por Floriana 2026-09-30: donante ya NO se oculta):
+   el endpoint /api/servers/mi-comite vuelve a mandar el campo donante al líder
+   (verDonante=true para todos los que acceden), la columna "Donante" vuelve a la tabla
+   y a "Le falta" vuelve `donación` (SRV-10 lo había quitado de Compromisos.donante para
+   el líder — deshacer ese recorte completo). El resumen nuevo incluye el % de donantes
+   para todos los que ven la página. Actualizar los tests de SRV-10 a la regla nueva
+   (que ahora afirmen que el campo SÍ viaja).
+Tests: los dos puestos abren su comité (y 403 a otro), resumen = números de REP-7 para
+el mismo comité. tsc/lint/vitest.
+```
+
+### [ ] REP-11 · Accesos por reporte + eliminar el rol de reportes automático de anfitriones
+
+REVIERTE PARTE DE PAR-3: el acceso tipo "reportes" ya NO se asocia
+automáticamente a ningún puesto de servidor. En su lugar, accesos específicos
+por reporte.
+
+Prompt para Claude Code:
+
+```
+PERMISOS · Reportes: acceso granular por reporte (decidido 2026-09-30)
+
+1. ELIMINAR el mapeo automático puesto anfitrión → rol reportes que montó PAR-3
+   (el mecanismo de sync se queda; solo se quita ese mapeo). DRY-RUN: lista de quiénes
+   pierden el rol reportes con el cambio, para revisión antes de aplicar (regla de la
+   casa). Los roles de reportes asignados A MANO no se tocan (source manual).
+2. ACCESO POR REPORTE (gate por página dentro de /reportes, server-side en sus
+   endpoints, no solo el índice):
+   - Reporte de ESTUDIOS (REP-9) y reporte de DIRIGENTES → coordinador_dirigentes y
+     coordinador_estudios.
+   - Reportes de CRECIMIENTO/ASISTENCIA y PERSONAS NUEVAS (REP-6) → puestos "Encargado
+     de Logística" y anfitriones (vía mapeo automático por puesto, como SRV-16).
+   - Los roles amplios de siempre (direccion, admin, y el módulo reportes asignado a
+     mano) siguen viendo todo.
+3. El índice de /reportes muestra a cada quien SOLO las tarjetas a las que tiene acceso
+   (el patrón ya existe desde REP-7).
+4. Dejar la tabla reporte → roles en un solo lugar del código (constante comentada) para
+   que agregar el próximo acceso sea una línea.
+Tests: cada rol ve/consulta solo lo suyo (403 al resto), dry-run del paso 1.
+tsc/lint/vitest.
+```
+
+### [x] UX-8 · `/mi-perfil`: un enlace estable al perfil propio — HECHO 2026-09-30
+
+El perfil vive en `/miembros/<uuid>`, así que no se podía enlazar «tu perfil»
+desde un correo, un botón o una guía sin saber de antemano quién iba a hacer
+clic. Ahora `/mi-perfil?tab=participacion` le sirve a cualquiera.
+
+**SE RESUELVE EN EL SERVIDOR.** El dashboard hace lo mismo con
+`router.replace`, y eso obliga a cargar, hidratar y recién ahí saltar — en el
+medio destella la página equivocada. Acá la respuesta ya ES la redirección.
+
+**Los query params viajan TODOS**, no una lista blanca: `?tab=` lo usa la
+notificación de cobro y `?open=` abre un acordeón, y con una lista blanca el
+parámetro que alguien agregue mañana se perdería en silencio. Los repetidos
+(`?open=a&open=b`) también se conservan.
+
+**Detalles medidos, no supuestos:**
+
+- El perfil usa **uuid, no slug** — el pedido decía «su slug» y no existe tal
+  cosa en esta ruta.
+- `redirect()` de Next sirve **307**, no el 302 del pedido. Forzar un 302
+  exigiría armar la respuesta a mano y no compra nada: 307 preserva método y
+  cuerpo, y para una navegación normal el navegador se comporta igual.
+- En Next 16 `searchParams` es una **Promise** y hay que esperarla.
+
+**Un error que se corrigió antes de que llegara a nadie**: el primer intento
+mandaba las sesiones sin ficha a `/?aviso=sin-ficha`, y **nadie lee ese
+parámetro** — la persona habría aterrizado en la portada sin ninguna
+explicación. Ahora el mensaje se muestra ahí mismo, y es el mismo
+`SIN_FICHA_ASOCIADA` que ya usan matrícula y mis-pagos: quien escriba a TI va
+a citar una frase que el equipo reconoce.
+
+**Round-trip verificado en el navegador**, que es lo que el ítem pedía: sin
+sesión `/mi-perfil?tab=participacion&open=pagos` devuelve 307 al login con el
+destino completo guardado; tras entrar, aterriza en
+`/miembros/<uuid>?tab=participacion&open=pagos` con los dos parámetros
+intactos. Con sesión, el salto es directo.
+
+10 pruebas, incluida una que verifica que la ruta NO esté en las públicas del
+proxy — si lo estuviera, `getAuthContext()` daría null para todo el mundo.
