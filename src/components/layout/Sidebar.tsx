@@ -77,7 +77,7 @@ const COMUNICACIONES_SUB: SubItem[] = [
 ]
 
 const SERVIDORES_SUB: SubItem[] = [
-  { href: '/servidores/vacantes',     label: 'Puestos de Servicio', icon: Bookmark      },
+  { href: '/servidores/puestos',     label: 'Puestos de Servicio', icon: Bookmark      },
 ]
 /**
  * Aplicaciones de servicio: quien APLICÓ a un puesto publicado.
@@ -260,7 +260,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // publicarlo. La ve la coordinación y el rol `solicitudes_puestos`, que
     // es justamente quien la trabaja.
     ...(canServiceAdmin || userRoles.includes('solicitudes_puestos')
-      ? [{ href: '/servidores/vacantes/solicitudes', label: 'Solicitudes de puestos', icon: ClipboardList }]
+      ? [{ href: '/servidores/puestos/solicitudes', label: 'Solicitudes de puestos', icon: ClipboardList }]
       : []),
     ...(canSeeServiceApplications(userRoles) ? [SERVIDORES_APPS_SUB] : []),
     ...(canServiceAdmin ? [{ href: '/servidores/admin', label: 'Áreas y comités', icon: Wrench }] : []),

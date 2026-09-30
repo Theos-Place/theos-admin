@@ -94,7 +94,7 @@ function SolicitarPuestoContent() {
       })
       if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error || 'No se pudo enviar la solicitud') }
       setDone(true); toast('Solicitud enviada', 'success')
-      setTimeout(() => router.push('/servidores/vacantes'), 1400)
+      setTimeout(() => router.push('/servidores/puestos'), 1400)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
       setError(msg); toast(msg, 'error'); setSaving(false)
@@ -127,7 +127,7 @@ function SolicitarPuestoContent() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Link href="/servidores/vacantes" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
+        <Link href="/servidores/puestos" className="flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
           <ChevronLeft size={16} /> Puestos de Servicio
         </Link>
         <span className="text-navy-light/80">|</span>
@@ -136,7 +136,7 @@ function SolicitarPuestoContent() {
 
       <div className="rounded-2xl px-4 py-3 bg-amber-50 border border-amber-200">
         <p className="text-[13px] text-amber-800 font-body">
-          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/vacantes/solicitar" className="underline">pedile cupos ahí</Link>.
+          Esto crea una solicitud que <strong>Staff debe aprobar</strong>. Al aprobarla, el puesto se agrega al catálogo. Si el puesto ya existe, mejor <Link href="/servidores/puestos/pedir-cupos" className="underline">pedile cupos ahí</Link>.
         </p>
       </div>
 

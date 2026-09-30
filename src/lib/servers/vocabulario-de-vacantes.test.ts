@@ -31,7 +31,7 @@ const CARPETAS = [
   'src/app/api/servers/vacancies',
   'src/app/api/public/vacancies',
   'src/app/(admin)/servidores',
-  'src/app/(public)/vacantes',
+  'src/app/(public)/puestos',
   'src/lib/servers',
   'src/components/servers',
 ]
@@ -74,7 +74,7 @@ describe('SRV-15c · el vocabulario de puestos, en todo el código que los toca'
       'src/app/api/servers/vacancies/publish/route.ts',
       'src/app/api/servers/vacancies/requests/route.ts',
       'src/app/api/public/vacancies/route.ts',
-      'src/app/(admin)/servidores/vacantes/[id]/page.tsx',
+      'src/app/(admin)/servidores/puestos/[id]/page.tsx',
       'src/lib/supabase/queries/servers.ts',
       'src/lib/supabase/queries/dashboard.ts',
     ]) {

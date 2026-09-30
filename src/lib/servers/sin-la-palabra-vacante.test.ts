@@ -11,7 +11,7 @@ import { join } from 'node:path'
  * cuántas personas caben en ella.
  *
  * LO QUE SÍ SE QUEDA, y por eso este guard mira solo el TEXTO: las rutas
- * (`/servidores/vacantes`, `/vacantes`), los nombres de función y la tabla
+ * (`/servidores/puestos`, `/puestos`), los nombres de función y la tabla
  * `vacancies`. Renombrar la ruta pública rompería el iframe que ya se le pasó
  * al sitio, y renombrar la tabla es una migración con riesgo a cambio de nada
  * que un usuario vea.
@@ -32,7 +32,7 @@ const ARCHIVOS = (dir: string): string[] =>
  */
 const PERMITIDO = new RegExp([
   // rutas
-  '/servidores/vacantes', '/vacantes',
+  '/servidores/puestos', '/puestos',
   // identificadores en inglés (tabla, tipos, endpoints)
   'vacancies', 'vacancy', 'Vacancy', 'Vacancies',
   // nombres de componente, tipo y función que quedaron en español

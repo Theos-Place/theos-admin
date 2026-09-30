@@ -73,7 +73,7 @@ describe('SRV-15 · el botón', () => {
 
   it('la pantalla dice POR QUÉ está apagado, no lo deja mudo', () => {
     // Un botón apagado sin explicación se lee como que la pantalla está rota.
-    const src = sinComentarios('src/app/(admin)/servidores/vacantes/solicitudes/page.tsx')
+    const src = sinComentarios('src/app/(admin)/servidores/puestos/solicitudes/page.tsx')
     expect(src).toContain('motivoParaNoPublicar(plan)')
     expect(src).toMatch(/title=\{motivoParaNoPublicar\(plan\) \?\? undefined\}/)
   })

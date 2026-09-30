@@ -114,7 +114,7 @@ describe('SRV-15b · el filtro de la pantalla', () => {
 })
 
 describe('SRV-15b · cableado', () => {
-  const PANTALLA = sinComentarios('src/app/(admin)/servidores/vacantes/solicitudes/page.tsx')
+  const PANTALLA = sinComentarios('src/app/(admin)/servidores/puestos/solicitudes/page.tsx')
   const LISTA = sinComentarios('src/app/api/servers/vacancies/requests/route.ts')
   const PATCH = sinComentarios('src/app/api/servers/vacancies/requests/[id]/route.ts')
   const QUERIES = sinComentarios('src/lib/supabase/queries/servers.ts')
@@ -160,8 +160,8 @@ describe('SRV-15b · cableado', () => {
     // genérico después del renombre de SRV-15: el enum del schema lo aceptaba
     // y la fila quedaba invisible para todos los filtros.
     for (const r of [
-      'src/app/(admin)/servidores/vacantes/page.tsx',
-      'src/app/(admin)/servidores/vacantes/[id]/page.tsx',
+      'src/app/(admin)/servidores/puestos/page.tsx',
+      'src/app/(admin)/servidores/puestos/[id]/page.tsx',
       'src/app/api/servers/vacancies/schema.ts',
     ]) {
       expect(sinComentarios(r), r).not.toContain("'cerrada'")

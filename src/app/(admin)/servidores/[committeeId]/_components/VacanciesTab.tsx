@@ -20,7 +20,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
     <div className="py-4 px-[22px] flex flex-col gap-2.5">
       <div className="flex justify-end">
         <Link
-          href={`/servidores/vacantes/solicitar?comite=${committeeId}`}
+          href={`/servidores/puestos/pedir-cupos?comite=${committeeId}`}
           className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
         >
           <Plus size={13} />
@@ -37,7 +37,7 @@ export function VacanciesTab({ committeeId, vacancies }: Props) {
       {vacancies.map(v => (
         <Link
           key={v.id}
-          href={`/servidores/vacantes/${v.id}`}
+          href={`/servidores/puestos/${v.id}`}
           className="block rounded-2xl px-5 py-4 hover:shadow-lg transition-all duration-150 bg-surface-card shadow-[var(--shadow-md)]"
         >
           <div className="flex items-start justify-between gap-3">

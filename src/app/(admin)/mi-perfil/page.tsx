@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getAuthContext } from '@/lib/auth/guard'
 import { loginUrlWithDest } from '@/lib/auth/redirect-target'
@@ -27,6 +28,10 @@ import { SIN_FICHA_ASOCIADA } from '@/lib/auth/estado-de-la-sesion'
  * con una lista blanca, el día que alguien agregue un parámetro nuevo este
  * redirect se lo come en silencio.
  */
+/** Casi siempre se redirige antes de pintar nada, pero la pestaña necesita un
+ *  título para el único caso que sí renderiza: la sesión sin ficha. */
+export const metadata: Metadata = { title: 'Mi perfil' }
+
 export default async function MiPerfilPage({
   searchParams,
 }: {
@@ -62,7 +67,8 @@ export default async function MiPerfilPage({
    */
   if (!ctx.memberId) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-4">
+      <div className="flex flex-col items-center justify-center gap-2 min-h-[60vh] px-4">
+        <h1 className="text-lg font-semibold text-navy font-display">Mi perfil</h1>
         <p className="max-w-md text-center text-sm text-navy-light/80 font-body">
           {SIN_FICHA_ASOCIADA}
         </p>

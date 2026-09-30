@@ -5279,3 +5279,52 @@ intactos. Con sesión, el salto es directo.
 
 10 pruebas, incluida una que verifica que la ruta NO esté en las públicas del
 proxy — si lo estuviera, `getAuthContext()` daría null para todo el mundo.
+
+### [x] SRV-16 · «vacantes» sale de las URLs y la pública se ordena — HECHO 2026-09-30
+
+La palabra ya no se le mostraba a nadie desde el 2026-09-26, pero seguía en la
+barra de direcciones — y la pública se comparte y se dicta por teléfono.
+
+**UN SOLO ÁRBOL, que antes eran dos.** Al renombrar apareció que
+`/servidores/puestos` YA existía, ocupado por «Solicitar puesto nuevo»: la
+familia de pantallas colgaba de dos raíces distintas. Quedó así:
+
+| Antes | Ahora |
+| --- | --- |
+| `/vacantes` (pública) | `/puestos` |
+| `/servidores/vacantes` | `/servidores/puestos` |
+| `/servidores/vacantes/[id]` y `/editar` | `/servidores/puestos/[id]` y `/editar` |
+| `/servidores/vacantes/solicitudes` | `/servidores/puestos/solicitudes` |
+| `/servidores/vacantes/solicitar` (pedir cupos) | `/servidores/puestos/pedir-cupos` |
+| `/servidores/puestos/solicitar` (puesto nuevo) | `/servidores/puestos/nuevo` |
+
+Movido con `git mv` para no perder el historial de cada archivo.
+
+**LOS REDIRECTS NO SON OPCIONALES.** `/vacantes` está EMBEBIDA en
+theosplace.org con un iframe: sin ellos, el sitio mostraría un 404 dentro del
+marco hasta que alguien lo actualizara, y nadie de acá se enteraría. Las seis
+rutas viejas responden **308** y conservan la query —probado con
+`/vacantes?puesto=abc`, que es justo lo que usa el iframe—. El sitio se puede
+actualizar cuando se pueda.
+
+Verificado que ninguna plantilla de correo enlazaba a las viejas: no hay
+correos ya enviados que se rompan.
+
+**EN LA PÚBLICA**, a pedido de Floriana:
+
+- Fuera el «¿No ves el puesto que necesitás? Sugerinos uno nuevo». Enlazaba a
+  una pantalla de ADMINISTRACIÓN —pide sesión y rol—, así que a quien viene de
+  afuera lo mandaba al login sin explicación. Pedir un puesto nuevo es un
+  trámite interno del comité.
+- Copy nuevo bajo el título: «Encontrá el lugar donde tus dones pueden
+  brillar…». Va como párrafo aparte del «Mirá la lista y aplicá…»: juntos se
+  leían como un bloque de instrucciones y la invitación se perdía.
+
+**Los dos combos de comité y ubicación YA EXISTÍAN** y no hubo que agregarlos.
+No se veían porque solo se dibujan si hay opciones que listar, y hoy producción
+tiene **cero puestos publicados** — la página está vacía. Aparecen solos en
+cuanto se publique la primera tanda.
+
+De paso, dos guards existentes atraparon a `/mi-perfil` (UX-8) por no declarar
+título de pestaña ni `h1`. Se le agregaron en vez de excepcionarla: el caso
+«sesión sin ficha» sí renderiza, y merece los dos.

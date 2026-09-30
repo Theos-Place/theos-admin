@@ -30,7 +30,7 @@ export const EMBEDDABLE_PREFIXES = [
    * Aun así, si el login dentro del iframe da problemas de cookies, el camino
    * es abrir en pestaña nueva y volver, no aflojar esto.
    */
-  '/vacantes',
+  '/puestos',
 ]
 
 export function esEmbebible(pathname: string): boolean {

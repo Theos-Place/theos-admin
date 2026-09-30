@@ -200,7 +200,7 @@ function SolicitarVacantesContent() {
               Solicitar más
             </button>
             <Link
-              href="/servidores/vacantes/solicitudes"
+              href="/servidores/puestos/solicitudes"
               className="rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
             >
               Ver solicitudes
@@ -215,7 +215,7 @@ function SolicitarVacantesContent() {
     <div className="space-y-4">
       {/* Volver */}
       <Link
-        href="/servidores/vacantes"
+        href="/servidores/puestos"
         className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-navy-light transition-colors font-body"
       >
         <ChevronLeft size={15} /> Puestos de Servicio
@@ -371,7 +371,7 @@ function SolicitarVacantesContent() {
 
       <p className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
         <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
-        <Link href="/servidores/puestos/solicitar" className="text-coral hover:underline">Solicitalo acá</Link>.
+        <Link href="/servidores/puestos/nuevo" className="text-coral hover:underline">Solicitalo acá</Link>.
       </p>
 
       {/* La ficha del puesto, SOLO LECTURA. Se consulta, no se edita: el

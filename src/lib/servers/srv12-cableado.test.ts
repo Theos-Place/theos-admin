@@ -7,7 +7,7 @@ const sinComentarios = (ruta: string): string =>
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-const PAGINA = 'src/app/(admin)/servidores/vacantes/solicitudes/page.tsx'
+const PAGINA = 'src/app/(admin)/servidores/puestos/solicitudes/page.tsx'
 const PUBLICAR = 'src/app/api/servers/vacancies/publish/route.ts'
 const LISTA = 'src/app/api/servers/vacancies/requests/route.ts'
 const QUERIES = 'src/lib/supabase/queries/servers.ts'

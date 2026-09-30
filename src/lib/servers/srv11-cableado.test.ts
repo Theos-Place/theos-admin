@@ -8,7 +8,7 @@ const sinComentarios = (ruta: string): string =>
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-const PAGINA = 'src/app/(admin)/servidores/vacantes/solicitar/page.tsx'
+const PAGINA = 'src/app/(admin)/servidores/puestos/pedir-cupos/page.tsx'
 const RUTA = 'src/app/api/servers/vacancies/request/route.ts'
 
 describe('SRV-11 · «Importar vacantes» se eliminó entero', () => {
@@ -26,7 +26,7 @@ describe('SRV-11 · «Importar vacantes» se eliminó entero', () => {
   it('ni un enlace colgando que lleve a un 404', () => {
     for (const ruta of [
       'src/app/(admin)/servidores/admin/page.tsx',
-      'src/app/(admin)/servidores/vacantes/page.tsx',
+      'src/app/(admin)/servidores/puestos/page.tsx',
     ]) {
       expect(sinComentarios(ruta), ruta).not.toContain('importar-vacantes')
     }

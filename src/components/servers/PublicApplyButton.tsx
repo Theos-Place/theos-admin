@@ -14,14 +14,14 @@ export function PublicApplyButton({ vacancyId, className, volverA }: {
   vacancyId: string
   className?: string
   /**
-   * SRV-13 · A dónde volver después del login. Por defecto `/vacantes`, pero
-   * el detalle manda `/vacantes?puesto=<id>` para que la persona reaparezca
+   * SRV-13 · A dónde volver después del login. Por defecto `/puestos`, pero
+   * el detalle manda `/puestos?puesto=<id>` para que la persona reaparezca
    * EN EL PUESTO que estaba mirando. Volver a la lista obliga a buscarlo de
    * nuevo entre treinta, y ahí es donde se abandona.
    */
   volverA?: string
 }) {
-  const destino = volverA ?? '/vacantes'
+  const destino = volverA ?? '/puestos'
   const router = useRouter()
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'already' | 'error' | 'auth'>('idle')
 

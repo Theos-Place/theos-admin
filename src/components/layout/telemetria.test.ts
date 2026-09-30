@@ -35,7 +35,7 @@ describe('las URLs se redactan antes de salir', () => {
   })
 
   it('deja intactas las rutas que no identifican a nadie', () => {
-    for (const r of ['/dashboard', '/estudios/grupos', '/servidores/vacantes', '/login']) {
+    for (const r of ['/dashboard', '/estudios/grupos', '/servidores/puestos', '/login']) {
       expect(rutaSinIdentificadores(r), r).toBe(r)
     }
   })

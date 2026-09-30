@@ -8,7 +8,7 @@ const sinComentarios = (ruta: string): string =>
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
 const API = 'src/app/api/public/vacancies/route.ts'
-const PAGINA = 'src/app/(public)/vacantes/page.tsx'
+const PAGINA = 'src/app/(public)/puestos/page.tsx'
 const PROXY = 'src/proxy.ts'
 
 /**
@@ -49,28 +49,28 @@ describe('SRV-13 · qué NO sale en público', () => {
 
 describe('SRV-13 · embebible, y solo desde los orígenes configurados', () => {
   it('/vacantes se puede meter en un iframe', () => {
-    expect(EMBEDDABLE_PREFIXES).toContain('/vacantes')
-    expect(esEmbebible('/vacantes')).toBe(true)
+    expect(EMBEDDABLE_PREFIXES).toContain('/puestos')
+    expect(esEmbebible('/puestos')).toBe(true)
   })
 
   it('con orígenes configurados, frame-ancestors los incluye', () => {
-    expect(frameAncestors('/vacantes', ['https://theosplace.org']))
+    expect(frameAncestors('/puestos', ['https://theosplace.org']))
       .toBe("frame-ancestors 'self' https://theosplace.org")
   })
 
   it('sin orígenes configurados NO se abre nada: activar esto no abre por sí solo', () => {
-    expect(frameAncestors('/vacantes', [])).toBe("frame-ancestors 'self'")
+    expect(frameAncestors('/puestos', [])).toBe("frame-ancestors 'self'")
   })
 
   it('el resto del sistema sigue cerrado', () => {
-    for (const ruta of ['/miembros', '/finanzas', '/servidores/vacantes/solicitudes']) {
+    for (const ruta of ['/miembros', '/finanzas', '/servidores/puestos/solicitudes']) {
       expect(frameAncestors(ruta, ['https://theosplace.org']), ruta)
         .toBe("frame-ancestors 'self'")
     }
   })
 
   it('y la ruta es pública en el proxy: sin eso el iframe mostraría el login', () => {
-    expect(sinComentarios(PROXY)).toContain("'/vacantes'")
+    expect(sinComentarios(PROXY)).toContain("'/puestos'")
   })
 })
 
@@ -79,7 +79,7 @@ describe('SRV-13 · aplicar sin perder el puesto', () => {
     // Volver a la lista obliga a buscarlo de nuevo entre treinta, y ahí es
     // donde se abandona.
     const pag = sinComentarios(PAGINA)
-    expect(pag).toMatch(/volverA=\{`\/vacantes\?puesto=\$\{[^}]+\.id\}`\}/)
+    expect(pag).toMatch(/volverA=\{`\/puestos\?puesto=\$\{[^}]+\.id\}`\}/)
   })
 
   it('y la página abre el puesto que venga en la URL', () => {
@@ -88,18 +88,18 @@ describe('SRV-13 · aplicar sin perder el puesto', () => {
 
   it('el enlace para pedir un puesto nuevo dice que es para los que NO existen', () => {
     const pag = sinComentarios(PAGINA)
-    expect(pag).toContain('/servidores/puestos/solicitar')
+    expect(pag).toContain('/servidores/puestos/nuevo')
     expect(pag).toMatch(/todavía no existen/)
   })
 })
 
 /**
- * La pantalla INTERNA de «Puestos de Servicio» (/servidores/vacantes) la ve
+ * La pantalla INTERNA de «Puestos de Servicio» (/servidores/puestos) la ve
  * cualquier miembro: lista los puestos publicados para que la gente aplique.
  * Por eso lo que no es aplicar está acotado.
  */
 describe('Puestos de Servicio · lo que no es aplicar, acotado', () => {
-  const PAGINA = 'src/app/(admin)/servidores/vacantes/page.tsx'
+  const PAGINA = 'src/app/(admin)/servidores/puestos/page.tsx'
   const src = sinComentarios(PAGINA)
 
   it('solicitar y gestionar usan LA MISMA lista, y es corta', () => {

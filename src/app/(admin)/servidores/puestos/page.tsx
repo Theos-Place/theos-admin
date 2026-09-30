@@ -101,10 +101,10 @@ export default function VacantesPage() {
           <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
             {canRequest && (
               <>
-                <Link href="/servidores/puestos/solicitar" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
+                <Link href="/servidores/puestos/nuevo" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-all duration-150 font-body">
                   <FilePlus2 size={14} /> Solicitar puesto nuevo
                 </Link>
-                <Link href="/servidores/vacantes/solicitar" className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
+                <Link href="/servidores/puestos/pedir-cupos" className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 font-body">
                   <Plus size={14} /> Solicitar puestos de servicio
                 </Link>
               </>
@@ -240,10 +240,10 @@ export default function VacantesPage() {
                           <ApplyToVacancyButton vacancyId={v.id} />
                           {isAdmin && (
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Link href={`/servidores/vacantes/${v.id}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">
+                              <Link href={`/servidores/puestos/${v.id}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">
                                 <Eye size={12} aria-hidden /> Ver aplicaciones{v.application_count ? ` (${v.application_count})` : ''}
                               </Link>
-                              <Link href={`/servidores/vacantes/${v.id}/editar`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">
+                              <Link href={`/servidores/puestos/${v.id}/editar`} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body">
                                 <Pencil size={12} aria-hidden /> Editar
                               </Link>
                               <CloseVacancyButton vacancyId={v.id} onClosed={refetch} />

@@ -154,7 +154,7 @@ export default function VacanteDetailPage() {
             <div className="psub">{vacancy.position} · {slotsLeft} cupo{slotsLeft !== 1 ? 's' : ''} disponible{slotsLeft !== 1 ? 's' : ''}</div>
           </div>
           <div className="ph-actions">
-            <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/vacantes/${id}/editar`}>Editar publicación</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/puestos/${id}/editar`}>Editar publicación</button>
             {!vacancyClosed && vacancy.status !== 'despublicada' && (
               <button className="btn btn-ghost btn-sm text-coral border-[rgba(214,62,61,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
                 Bajar de la página

@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       // ya no estaba a cargo (SRV-5, 2026-09-18).
       const { getEncargadosDeComite } = await import('@/lib/supabase/queries/servers')
       const encargados = await getEncargadosDeComite(committeeId)
-      const link = '/servidores/vacantes/solicitudes'
+      const link = '/servidores/puestos/solicitudes'
 
       const notifs: Array<{ recipient_member_id: string; type: string; title: string; body: string; link: string }> = []
 

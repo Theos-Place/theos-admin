@@ -48,10 +48,34 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    // Lista de espera y reubicaciones se unificaron en solicitudes (migración 042).
     return [
+      // Lista de espera y reubicaciones se unificaron en solicitudes (migración 042).
       { source: '/estudios/lista-de-espera', destination: '/estudios/solicitudes', permanent: true },
       { source: '/estudios/reubicaciones', destination: '/estudios/solicitudes', permanent: true },
+
+      /**
+       * SRV-16 · «vacantes» salió de las URLs.
+       *
+       * La palabra ya no se le mostraba a nadie desde el 2026-09-26, pero
+       * seguía en la barra de direcciones — y la pública se comparte y se
+       * dicta. Ahora son `/puestos` y `/servidores/puestos/*`.
+       *
+       * ESTOS REDIRECTS NO SON OPCIONALES. `/vacantes` está EMBEBIDA en
+       * theosplace.org con un iframe (ver `lib/embed.ts`): sin esto, el sitio
+       * mostraría un 404 dentro del marco hasta que alguien lo actualice, y
+       * nadie de acá se enteraría. Con el redirect, el iframe viejo sigue
+       * funcionando y el sitio se puede actualizar cuando se pueda.
+       *
+       * `permanent: true` (308) y no temporal: las viejas no vuelven.
+       *
+       * El orden importa — lo más específico primero, porque Next evalúa en
+       * orden y `/servidores/vacantes/:path*` se tragaría a las dos de arriba.
+       */
+      { source: '/servidores/vacantes/solicitar', destination: '/servidores/puestos/pedir-cupos', permanent: true },
+      { source: '/servidores/puestos/solicitar',  destination: '/servidores/puestos/nuevo',       permanent: true },
+      { source: '/servidores/vacantes/:path*',    destination: '/servidores/puestos/:path*',      permanent: true },
+      { source: '/vacantes/:path*',               destination: '/puestos/:path*',                 permanent: true },
+      { source: '/vacantes',                      destination: '/puestos',                        permanent: true },
     ]
   },
   async headers() {

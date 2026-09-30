@@ -197,7 +197,7 @@ describe('las dos entradas del menú no se confunden', () => {
 describe('SRV-14 · el panel de revisión no está duplicado', () => {
   const PANEL = 'src/components/servers/PanelDeAplicacion.tsx'
   const BANDEJA = 'src/app/(admin)/servidores/aplicaciones/page.tsx'
-  const VACANTE = 'src/app/(admin)/servidores/vacantes/[id]/page.tsx'
+  const VACANTE = 'src/app/(admin)/servidores/puestos/[id]/page.tsx'
 
   it('las dos pantallas usan el MISMO componente', () => {
     for (const r of [BANDEJA, VACANTE]) {

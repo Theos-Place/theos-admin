@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { MapPin, Clock, Users, Search, Briefcase, GraduationCap, FilePlus2 } from 'lucide-react'
+import { MapPin, Clock, Users, Search, Briefcase, GraduationCap } from 'lucide-react'
 import { PublicApplyButton } from '@/components/servers/PublicApplyButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Modal } from '@/components/shared/Modal'
@@ -100,9 +99,16 @@ function VacantesPublicasContent() {
         <PageContainer width="work" className="px-5 py-10">
           <p className="text-[13px] font-medium text-white/80 font-body">Theos Place</p>
           <h1 className="mt-1 text-2xl font-bold font-display sm:text-3xl">Oportunidades de servicio</h1>
+          {/* SRV-16 · Dos párrafos y no uno: el primero es la invitación —por
+              qué alguien querría servir— y el segundo dice qué hacer. Juntos
+              se leían como un bloque de instrucciones y la invitación se
+              perdía. */}
+          <p className="mt-2 max-w-2xl text-sm text-white font-body">
+            Encontrá el lugar donde tus dones pueden brillar. Cada puesto es una oportunidad
+            para crecer mientras servís.
+          </p>
           <p className="mt-2 max-w-2xl text-sm text-white/80 font-body">
-            Estos son los puestos disponibles para servir. Mirá la lista y aplicá al que te interese
-            — para aplicar te pediremos iniciar sesión.
+            Mirá la lista y aplicá al que te interese — para aplicar te pediremos iniciar sesión.
           </p>
         </PageContainer>
       </header>
@@ -184,7 +190,7 @@ function VacantesPublicasContent() {
                 </div>
 
                 <div className="mt-4 pt-1 flex flex-wrap items-center gap-2">
-                  <PublicApplyButton vacancyId={v.id} volverA={`/vacantes?puesto=${v.id}`} />
+                  <PublicApplyButton vacancyId={v.id} volverA={`/puestos?puesto=${v.id}`} />
                   <button
                     type="button"
                     onClick={() => setAbierto(v)}
@@ -197,17 +203,12 @@ function VacantesPublicasContent() {
             )
           })}
         </div>
-        {/* SRV-13 · Para lo que NO está en la lista. Enlaza a la pantalla que
-            ya existe de pedir un puesto nuevo, y lo dice explícito para que
-            nadie la use para «quiero este puesto que sí está». */}
-        <p className="mt-8 text-center text-[13px] text-navy-light/80 font-body">
-          <FilePlus2 size={13} className="inline mr-1" aria-hidden />
-          ¿No ves el puesto que necesitás?{' '}
-          <Link href="/servidores/puestos/solicitar" className="text-coral-deep underline">
-            Sugerinos uno nuevo
-          </Link>
-          {' '}— es para puestos que todavía no existen.
-        </p>
+        {/* SRV-16 · Acá había un «¿No ves el puesto que necesitás? Sugerinos
+            uno nuevo», que enlazaba a /servidores/puestos/nuevo. Se quitó a
+            pedido de Floriana: esta es una página PÚBLICA y esa pantalla es de
+            administración —pide sesión y rol—, así que a quien viene de afuera
+            el enlace lo mandaba al login sin explicación. Pedir un puesto
+            nuevo es un trámite interno del comité, no del visitante. */}
       </PageContainer></main>
 
       {/* El detalle. SOLO descripción y requisito de estudios: las funciones y
@@ -250,7 +251,7 @@ function VacantesPublicasContent() {
               >
                 Cerrar
               </button>
-              <PublicApplyButton vacancyId={abierto.id} volverA={`/vacantes?puesto=${abierto.id}`} />
+              <PublicApplyButton vacancyId={abierto.id} volverA={`/puestos?puesto=${abierto.id}`} />
             </div>
           </div>
         </Modal>

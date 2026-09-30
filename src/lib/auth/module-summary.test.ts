@@ -23,7 +23,7 @@ describe('canSeeSummaryRoute (SEC-1 2026-07-29)', () => {
   it('las subrutas de un módulo de resumen tampoco son el resumen', () => {
     expect(canSeeSummaryRoute('/estudios/grupos', 'own')).toBe(true)
     expect(canSeeSummaryRoute('/estudios/plan', 'own')).toBe(true)
-    expect(canSeeSummaryRoute('/servidores/vacantes', 'committee')).toBe(true)
+    expect(canSeeSummaryRoute('/servidores/puestos', 'committee')).toBe(true)
   })
 
   it('las rutas de otros módulos no se ven afectadas', () => {

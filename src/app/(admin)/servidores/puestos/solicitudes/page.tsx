@@ -166,7 +166,7 @@ export default function SolicitudesDePuestosPage() {
 
   return (
     <div className="space-y-5">
-      <Link href="/servidores/vacantes" className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
+      <Link href="/servidores/puestos" className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
         <ChevronLeft size={16} /> Puestos de Servicio
       </Link>
 

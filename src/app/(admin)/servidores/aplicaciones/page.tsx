@@ -337,7 +337,7 @@ export default function AplicacionesPage() {
                         Ver aplicación <ChevronRight size={11} />
                       </button>
                       <Link
-                        href={`/servidores/vacantes/${a.vacancy_id}`}
+                        href={`/servidores/puestos/${a.vacancy_id}`}
                         className="inline-flex items-center gap-1 rounded-lg border border-[var(--outline-variant)] px-2.5 py-1 text-[13px] text-navy-light hover:bg-surface-low transition-colors font-body"
                       >
                         Ver puesto <ChevronRight size={11} />
@@ -362,7 +362,7 @@ export default function AplicacionesPage() {
                   checked={sel.isSelected(a.id)}
                   onChange={() => sel.toggle(a.id)}
                 />
-                <Link href={`/servidores/vacantes/${a.vacancy_id}`} className="flex items-center gap-3 min-w-0 flex-1 active:opacity-70">
+                <Link href={`/servidores/puestos/${a.vacancy_id}`} className="flex items-center gap-3 min-w-0 flex-1 active:opacity-70">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
                     <p className="truncate text-[13px] text-navy-light/80 font-body">{a.vacancy_title} · {a.committee_name}</p>
