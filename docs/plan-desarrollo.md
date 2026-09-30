@@ -5801,7 +5801,7 @@ no cuadraba —que tocara exactamente 2 filas, que no quedara ninguna sucia,
 que siguieran habiendo 8 áreas activas y que no apareciera un nombre
 duplicado—.
 
-### [~] ROL-1 · Revisión del acceso coordinador_dirigentes — ETAPA 1 Y ROL NUEVO HECHOS 2026-09-30 · FALTA APROBAR EL REVOKE
+### [x] ROL-1 · Revisión del acceso coordinador_dirigentes — HECHO 2026-09-30
 
 El acceso `coordinador_dirigentes` suena a rol genérico pero en realidad debe
 corresponder al PUESTO de encargada del comité de dirigentes — hoy únicamente
@@ -5887,8 +5887,10 @@ coincidían (cuatro incluían `admin`, dos se lo olvidaban). Ahora es
    migración fija y no habría visto una redefinición posterior. Ahora barre
    todas y toma la vigente.
 
-**ETAPA 2 · LA DEPURACIÓN — PENDIENTE DE APROBACIÓN.** No se aplicó nada que
-quite accesos. El dry-run está en `scripts/rol1/dry-run.cjs` y dice:
+**ETAPA 2 · LA DEPURACIÓN — APLICADA EN PRODUCCIÓN.** Seis accesos retirados;
+queda solo la cuenta de la encargada. El script está en
+`scripts/rol1/aplicar-revoke.cjs` (dry-run por defecto, `--aplicar` para
+ejecutar).
 
 - **Conserva**: la cuenta `dirigentes@theosplace.org`.
 - **Pierden y no les falta nada**: Karina y Luis Guillermo (tienen
@@ -5899,7 +5901,26 @@ quite accesos. El dry-run está en `scripts/rol1/dry-run.cjs` y dice:
   la migración — correr el dry-run otra vez después del deploy para verlo
   reflejado.
 
-Falta decidir si Karina y Luis Guillermo deben conservar la cola de
-evaluaciones (sería darles el rol `evaluaciones`) o si ahí también sobra.
+**Karina y Luis Guillermo pierden también la cola de evaluaciones**
+(confirmado por Floriana): se evaluó darles el rol `evaluaciones` y se decidió
+que ahí también sobra.
+
+**EL ORDEN IMPORTÓ, y casi se hace al revés.** El revoke no se podía correr
+antes del deploy: `editor_dirigentes` no existía en el código de producción,
+así que Andrey, Diego y Wilbert habrían quedado con un rol que la app no sabía
+leer — sin ningún acceso. El script lo comprueba solo y se niega a correr si
+el reemplazo no está, así que el error no se puede repetir.
+
+**Estado final verificado en producción:**
+
+| rol | quién |
+|---|---|
+| `coordinador_dirigentes` | solo `dirigentes@theosplace.org` (1) |
+| `editor_dirigentes` | Andrey, Diego, Wilbert y Marianela — los 4 por PUESTO (`origen=automatico`) |
+
+Control corrido después de aplicar: **nadie quedó sin ningún acceso**.
+
+Las cuatro del rol nuevo lo tienen con su grant por puesto, así que al dejar
+el «Colaborador actualización y datos» lo pierden solas.
 
 Cuatro cebos muerden.
