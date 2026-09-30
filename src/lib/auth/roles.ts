@@ -472,7 +472,21 @@ export const ROLES: Role[] = [
     color: '#B5DDE0',
     permissions: [
       { module: 'estudios', actions: ['view', 'edit'], scope: 'all' },
-      { module: 'miembros', actions: ['view'],         scope: 'all' },
+      /**
+       * `export` se suma el 2026-09-30 (pedido de Floriana): la encargada de
+       * dirigentes no podía bajar listas de miembros y las necesita para
+       * trabajar. Ya VEÍA el padrón completo (`scope: 'all'`), así que esto
+       * no le abre gente nueva — le deja bajar lo que ya tenía en pantalla.
+       *
+       * OJO CON EL EFECTO QUE NO SE VE: `lib/auth/datos-personales-en-export`
+       * exige `miembros` con alcance total Y `export`, así que con esto
+       * también puede sumar las columnas de datos personales al export de
+       * respuestas de formularios (FRM-6) — cédulas, fechas de nacimiento y
+       * alergias. Es coherente con ver el padrón entero, pero queda dicho.
+       *
+       * `editor_perfiles` ya tenía `export` desde antes; no hizo falta tocarlo.
+       */
+      { module: 'miembros', actions: ['view', 'export'], scope: 'all' },
       { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
       // FIN-14 · Acá estaba `revision_pagos`, y se quitó el 2026-09-30 por
       // decisión de Floriana. Ver el comentario en `coordinador_estudios`.
