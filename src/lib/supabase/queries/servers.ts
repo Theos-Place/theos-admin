@@ -10,6 +10,7 @@ import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
 import { abreMiComite } from '@/lib/servers/puestos-que-abren-mi-comite'
 import { abreReportesDeSede } from '@/lib/reports/puestos-que-abren-reportes'
+import { esPuestoDeDirectorDeArea } from '@/lib/servers/director-de-area'
 import { reportarFalla } from '@/lib/observabilidad'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
@@ -195,8 +196,9 @@ export async function getManageableCommitteeIds(memberId: string): Promise<strin
 /**
  * SRV-16 · Comités cuya pantalla "Mi comité" puede MIRAR esta persona.
  *
- * Es un superconjunto de `getManageableCommitteeIds`: los que encarga, más las
- * sedes donde es anfitrión. La diferencia entre las dos funciones NO es
+ * Es un superconjunto de `getManageableCommitteeIds`: los que encarga, las
+ * sedes donde es anfitrión, y —desde el 2026-09-30— TODOS los comités del
+ * área que dirige, si es Director de Área. La diferencia entre las dos funciones NO es
  * cosmética y está explicada en `puestos-que-abren-mi-comite.ts` — mirar la
  * lista de compromisos de la sede no da poder para pedir puestos, abrir
  * fichas, ni el rol `lider_comite`. Usar la otra acá habría repartido esas
@@ -218,11 +220,30 @@ export async function getComitesQueAbrenMiComite(memberId: string): Promise<stri
   ])
   if (error) throw error
   const ids = new Set<string>()
+  /** Áreas que dirige. Sus comités se resuelven de una sola vez más abajo. */
+  const areasQueDirige = new Set<string>()
+
   for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
     const pos = one<{ title: string; is_active: boolean | null; area: unknown }>(fila.position)
     if (!pos || pos.is_active === false) continue
     const area = one<{ id: string; name: string; area_type: string; is_active: boolean | null; parent_id: string | null }>(pos.area)
-    if (!area || area.area_type !== 'committee' || area.is_active === false) continue
+    if (!area || area.is_active === false) continue
+
+    /**
+     * EL DIRECTOR DE ÁREA ENTRA POR ACÁ, y por eso el filtro de
+     * `area_type === 'committee'` ya no va arriba del todo: su puesto cuelga
+     * de un ÁREA, no de un comité, así que el bucle lo descartaba antes de
+     * mirarlo. Fue el primer intento y no habría dado acceso a nadie.
+     */
+    if (area.area_type === 'area') {
+      if (esPuestoDeDirectorDeArea({
+        title: pos.title, areaName: area.name, areaType: 'area',
+        parentAreaName: area.parent_id ? areaMap.get(area.parent_id)?.name ?? null : null,
+      })) areasQueDirige.add(area.id)
+      continue
+    }
+
+    if (area.area_type !== 'committee') continue
     const abre = abreMiComite({
       title: pos.title,
       areaName: area.name,
@@ -231,6 +252,17 @@ export async function getComitesQueAbrenMiComite(memberId: string): Promise<stri
     })
     if (abre) ids.add(area.id)
   }
+
+  // Los comités de las áreas que dirige: UNA consulta, no una por área.
+  if (areasQueDirige.size) {
+    const { data: hijos, error: eHijos } = await supabase
+      .from('areas').select('id')
+      .in('parent_id', [...areasQueDirige])
+      .eq('area_type', 'committee').eq('is_active', true)
+    if (eHijos) throw eHijos
+    for (const h of (hijos ?? []) as Array<{ id: string }>) ids.add(h.id)
+  }
+
   return [...ids]
 }
 

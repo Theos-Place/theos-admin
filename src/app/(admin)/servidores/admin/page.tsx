@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, Trash2, ShieldCheck, Download, MapPin } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
+import { nombresDeDirectores } from '@/lib/servers/director-de-area'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import { useAuth } from '@/hooks/useAuth'
@@ -916,6 +917,22 @@ export default function ServidoresAdminPage() {
                 </span>
                 <p className="text-base font-bold text-navy mt-0.5 font-display">
                   {selectedArea.name}
+                </p>
+                {/* Quién dirige el ÁREA — el nivel de arriba, no un comité.
+                    Sale del puesto «Director de Área» (ver
+                    lib/servers/director-de-area), no de un campo de `areas`.
+                    El puesto vacío se dice con todas las letras en vez de
+                    dejar la línea en blanco: así se ve que falta asignarlo,
+                    que es el caso de Dirección y Sedes. */}
+                <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
+                  {selectedArea.directores.length > 0 ? (
+                    <>
+                      {selectedArea.directores.length === 1 ? 'Director de Área: ' : 'Directores de Área: '}
+                      <span className="text-navy">{nombresDeDirectores(selectedArea.directores)}</span>
+                    </>
+                  ) : (
+                    <span className="italic">Director de Área sin asignar</span>
+                  )}
                 </p>
               </div>
               <button

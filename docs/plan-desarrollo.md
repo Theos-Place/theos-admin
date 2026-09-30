@@ -5611,3 +5611,75 @@ haya UNA sola regla que lo otorgue y que sea la de Planificación.
 Cuatro cebos muerden — y uno no mordió al primer intento porque el cebo no se
 había aplicado bien, así que ahora el script verifica que el cambio entró antes
 de correr las pruebas.
+
+
+### [x] SRV-18 · Director de Área: el puesto que está por encima de los comités — HECHO 2026-09-30
+
+Pedido de Floriana: «para cada área dentro de servidores, un campo que esté
+por encima de los comités, el director de área».
+
+**NO SE CREÓ UN CAMPO, y ella lo confirmó**: «sí debe estar ligado al puesto,
+es un puesto más, solo que está por encima de los comités». El motivo es
+concreto y ya lo pagamos una vez: `areas.leader_id` existía para los comités,
+lo llenaban 12 de 44, y en DOS apuntaba a una persona distinta de la del
+puesto. SRV-5 lo declaró muerto. Repetirlo un nivel más arriba habría
+reintroducido el mismo problema justo donde nadie mira a diario.
+
+**LA MITAD YA EXISTÍA Y NADIE LA VEÍA.** Seis de las ocho áreas ya tenían un
+puesto «Director» con gente asignada —Comunidad, Enseñanza, Espiritual,
+Finanzas, Operaciones y Staff—. El modelo siempre lo permitió:
+`service_positions` apunta a `areas` sin exigir que sea un comité. Lo que
+faltaba era nombrarlo, completarlo, mostrarlo y darle acceso.
+
+**El título es exacto, no un prefijo.** «Director Ejecutivo» y «Director
+General» existen, con 3 personas, pero en el COMITÉ «Directores»: son otro
+cargo. Un `startsWith('director')` se los habría llevado por delante con sus
+permisos. La regla exige `area_type = 'area'` y compara contra títulos
+exactos.
+
+**Varios directores está bien** (Área Enseñanza tiene dos, confirmado). Nada
+del diseño asume uno solo — que es exactamente lo que `leader_id` hacía mal
+por ser una columna única.
+
+**Qué gana:** el rol `reportes` y «Mi comité» de TODOS los comités de su área.
+Con la tabla de REP-11 eso son los cuatro reportes generales; Estudios,
+Dirigentes y Servidores siguen acotados, y está bien así.
+
+**El bug que solo apareció probándolo.** El primer intento no le habría dado
+«Mi comité» a nadie: el bucle de `getComitesQueAbrenMiComite` descartaba
+`area_type !== 'committee'` ANTES de mirar el puesto, y el del director cuelga
+de un ÁREA. Y el segundo: los reportes seguían en 403 porque el sync de roles
+corre cuando alguien TOCA una asignación, y los 7 directores ya tenían el
+puesto — hizo falta el backfill en la migración. Las dos cosas salieron
+corriéndolo en staging, no leyendo el código.
+
+**Dry-run de producción:**
+
+| paso | qué pasa |
+|---|---|
+| renombrar | 6 puestos «Director» → «Director de Área» |
+| crear | Area Dirección y Area Sedes, **vacíos** |
+| rol `reportes` | lo ganan 3: Maria Adelia Piza, Melissa Acon Chaves y Santiago Alvarez Ovares |
+| control | «Director Ejecutivo» y «Director General» del comité Directores, intactos |
+
+Los otros 4 directores ya veían reportes: 2 por `direccion`, 1 por `reportes`
+y 1 por `coordinador_servidores`.
+
+El puesto se crea VACÍO en las dos áreas que faltaban: quién dirige Dirección
+y Sedes no es algo que pueda decidir una migración, y la pantalla lo dice con
+todas las letras —«Director de Área sin asignar»— en vez de dejar la línea en
+blanco, que se leería como «no aplica» en lugar de «falta hacerlo».
+
+Verificado en staging punta a punta: el director ve los 7 comités de su área,
+gana los cuatro reportes generales, y al quitarle el puesto pierde las dos
+cosas (`abre_mi_comite: false`, Mi comité 403, reportes 403).
+
+Cuatro cebos muerden, y esta vez el script **verifica que cada cebo se haya
+aplicado** antes de correr las pruebas — porque en REP-12 uno no mordió y
+resultó que el cebo nunca había entrado.
+
+El guard de REP-11 se reescribió por tercera vez y ahora sí queda bien: antes
+prohibía la palabra `role: 'reportes'` en todo el archivo, después contaba que
+hubiera UNA sola regla, y las dos formas envejecieron mal. Ahora afirma con
+DATOS lo único que importaba: que ningún puesto de sede —ni ningún encargado
+de comité cualquiera— reciba ese rol.

@@ -4,7 +4,7 @@ import {
   ACCESO_POR_REPORTE, puedeVerReporte, reportesVisibles, type SlugDeReporte,
 } from './acceso-por-reporte'
 import { abreReportesDeSede, PUESTOS_QUE_ABREN_REPORTES } from './puestos-que-abren-reportes'
-import type { PositionContext } from '@/lib/servers/position-roles'
+import { rolesGrantedByPosition, type PositionContext } from '@/lib/servers/position-roles'
 
 const sinComentarios = (ruta: string): string =>
   readFileSync(ruta, 'utf8')
@@ -135,24 +135,41 @@ describe('REP-11 · qué puesto abre los reportes', () => {
  * mientras su endpoint se conformaba con el módulo.
  */
 describe('REP-11 · una sola tabla, y todos preguntan', () => {
-  it('el mapeo automático ANFITRIÓN → rol `reportes` se quitó', () => {
+  it('NINGÚN puesto de SEDE otorga ya el rol `reportes`', () => {
     /**
-     * Antes este test exigía que `position-roles.ts` no dijera
-     * `role: 'reportes'` en ninguna parte. Se afinó con REP-12, que le da ese
-     * rol al encargado del Comité de Planificación — y ahí SÍ es lo pedido,
-     * porque quien planifica mira todos los reportes.
+     * Antes este test prohibía la palabra `role: 'reportes'` en todo
+     * `position-roles.ts`, y después contaba que hubiera UNA sola regla. Las
+     * dos formas envejecieron mal: hoy son DOS reglas legítimas —el encargado
+     * del Comité de Planificación (REP-12) y el Director de Área— y mañana
+     * puede haber otra.
      *
-     * Lo que hay que cuidar no era la palabra: es que el rol no vuelva a
-     * repartirse por un puesto de SEDE. Eso lo fija
-     * `position-roles.test.ts` («ningún puesto de sede otorga reportes») y se
-     * comprueba acá por el otro lado, con la regla puesta al lado de su
-     * comité.
+     * Contar reglas nunca fue lo que importaba. Lo que REP-11 cerró es que el
+     * rol se repartiera por un puesto de SEDE, y eso se afirma con DATOS y no
+     * leyendo el archivo: se le pasan los títulos reales del catálogo de
+     * sedes y se comprueba que ninguno lo recibe.
      */
-    const s = sinComentarios('src/lib/servers/position-roles.ts')
-    const reglas = s.split("role: '").filter(b => b.startsWith('reportes'))
-    expect(reglas, 'solo puede haber UNA regla que otorgue reportes').toHaveLength(1)
-    expect(reglas[0]).toContain('planificaci')
-    expect(reglas[0]).not.toContain('anfitrion')
+    const deSede = [
+      'Anfitrión', 'Anfitrión 1', 'Encargado Logística', 'Encargado Logistica',
+      'Asistente Logística', 'Colaborador Logística', 'Encargado Sede',
+      'Colaborador Bienvenida', 'Coordinador Información', 'Logística',
+    ]
+    for (const title of deSede) {
+      expect(rolesGrantedByPosition({
+        title, areaName: 'Sede Pedregal Domingos',
+        areaType: 'committee', parentAreaName: 'Sedes',
+      }), title).not.toContain('reportes')
+    }
+  })
+
+  it('y tampoco lo otorga el encargado de un comité cualquiera', () => {
+    // El rol solo sale de Planificación y de dirigir un área. `Encargado
+    // Comité` está en 23 comités: si alguno lo recibiera, la regla estaría
+    // mirando el título.
+    for (const areaName of ['Comité Youth', 'Comité Worship', 'Comité Contabilidad']) {
+      expect(rolesGrantedByPosition({
+        title: 'Encargado Comité', areaName, areaType: 'committee', parentAreaName: 'Area Staff',
+      }), areaName).not.toContain('reportes')
+    }
   })
 
   it('pero el mecanismo de sync se queda', () => {

@@ -5,6 +5,7 @@
 import type { RoleId } from '@/types/auth'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { esPuestoDeEncargado } from './encargados'
+import { esPuestoDeDirectorDeArea } from './director-de-area'
 import { isStudyCommitteeArea } from '@/lib/studies/request-assignment'
 
 export type PositionContext = {
@@ -138,6 +139,27 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
    * La lección, que ya es la tercera en este archivo: un permiso ancho puesto
    * para resolver un caso angosto reparte todo lo demás sin que nadie lo pida.
    */
+  {
+    role: 'reportes',
+    description:
+      'Director de Área: responde por todos los comités de su área, así que ve '
+      + 'los reportes de la organización.',
+    /**
+     * Decisión de Floriana, 2026-09-30, junto con el puesto mismo.
+     *
+     * La regla vive en `director-de-area.ts` y no acá porque la usan también
+     * el alcance de «Mi comité» y la pantalla de Áreas: tres lugares, una
+     * definición. Lo que importa de esa función es que exige
+     * `areaType === 'area'` — el comité «Directores» tiene «Director
+     * Ejecutivo» y «Director General», que son otro cargo y no entran.
+     *
+     * De los 7 directores de hoy, 2 ya veían todo por `direccion`, 1 tenía
+     * `reportes` y 1 el módulo por `coordinador_servidores`. Los 3 que ganan
+     * acceso son Maria Adelia Piza, Melissa Acon Chaves y Santiago Alvarez
+     * Ovares (medido antes de aplicar).
+     */
+    matches: esPuestoDeDirectorDeArea,
+  },
   {
     role: 'reportes',
     description:

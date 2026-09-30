@@ -7,7 +7,12 @@ import { createContext, useContext, useEffect, useState, useMemo, useCallback } 
 import type { OrgArea, OrgCommittee } from '@/lib/supabase/queries/org'
 
 // Tipos compatibles con los del mock-committees.
-export type Area = { id: string; code: string; name: string; is_active: boolean }
+export type Area = {
+  id: string; code: string; name: string; is_active: boolean
+  /** Quién dirige el área (puesto «Director de Área»). Puede haber varios o
+   *  ninguno — el puesto existe aunque esté sin asignar. */
+  directores: Array<{ id: string; name: string }>
+}
 export type Committee = { id: string; area_code: string; name: string; is_active: boolean }
 /** Forma compatible con el mock AREAS (code = id del área). */
 export type AreaCatalog = { code: string; name: string; committees: string[] }
@@ -59,7 +64,7 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
     areas: areas.map((a) => ({ code: a.id, name: a.name, committees: a.committees })),
     allCommittees: committees.map((c) => c.name),
     positions,
-    adminAreas: areas.map((a) => ({ id: a.id, code: a.id, name: a.name, is_active: true })),
+    adminAreas: areas.map((a) => ({ id: a.id, code: a.id, name: a.name, is_active: true, directores: a.directores ?? [] })),
     adminCommittees: committees.map((c) => ({ id: c.id, area_code: c.area_id ?? '', name: c.name, is_active: true })),
     loading,
     refetch: load,
