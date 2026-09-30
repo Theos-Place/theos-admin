@@ -3310,7 +3310,7 @@ CAMBIO · /servidores/mi-comite y /reportes/servidores: OCULTAR todo lo de donan
 Tests: payload del líder sin campo donante; rol amplio lo conserva. tsc/lint/vitest.
 ```
 
-### [ ] EST-14 · Niveles en dos bloques: N1+N2 y N3+N4 — EL GRANDE (probar en staging primero)
+### [~] EST-14 · Niveles en dos bloques — FASES 1-3 HECHAS 2026-09-30 · FALTA APROBAR LA TRANSICIÓN
 
 Reglas decididas:
 - Matricularse a Nivel 1 cubre N1+N2 (₡5.000): el paso 1→2 sigue automático y
@@ -3359,6 +3359,62 @@ Prompt para Claude Code: (armarlo conmigo cuando se vaya a correr — es
 grande y toca planes, precios, folletos, cierres y matrícula; el diseño de
 arriba es la spec. DRY-RUN de los cambios de catálogo de planes y staging
 antes de producción.)
+
+
+**Lo medido antes de empezar, que cambió el alcance:**
+
+- El total no cambia: hoy son ₡5.000 al entrar a N2, N3 y N4 = ₡15.000, y con
+  bloques son ₡5.000 + ₡10.000 = lo mismo. Cambia CUÁNDO se paga, no cuánto.
+- **«Quienes pagaron paquete completo (₡13-15k)» NO era de niveles**: esos
+  ₡15.000 son de DIS1 (38 pagos). En niveles nunca hubo un pago así.
+  Confirmado por Floriana — esa parte de la transición salió del alcance.
+- Son **10** grupos de N2 vivos, no ~11, con 81 estudiantes. De esos 81,
+  **ninguno** había pagado en N1 y solo 2 de 25 cobros de N2 estaban pagados.
+
+**FASE 1-2 · El corte y el cobro por par.** El catálogo NO se toca (decisión
+de Floriana): lo que se mueve es cuándo se cobra. El monto se SUMA del
+catálogo en vez de escribirse, así que si mañana sube un nivel el bloque sube
+solo — un ₡10.000 a mano se quedaría viejo sin que nadie lo note.
+
+Cerrar N2 exige responder si la cohorte continúa, sin default ni siquiera
+«sí»: un default reproduce el problema que esto resuelve, que hoy el sucesor
+se crea SIEMPRE y aparecen grupos de N3 que nadie pidió con gente matriculada
+y cobrada. Si dice que no, le llega un correo a coordinación de estudios y de
+dirigentes con los datos para armar el grupo.
+
+**EL ERROR MÁS CARO ESTABA ESCONDIDO:** el cobro del paso automático se genera
+en `payments.ts`, no en el cierre. Con `np.cost` a secas, pasar de N1 a N2
+cobraba ₡5.000 POR SEGUNDA VEZ. No se veía leyendo el endpoint.
+
+**FASE 3 · Folletos en pares.** Un tiquete POR FOLLETO: un grupo de N1 pide
+N1 y N2, uno de N3 pide N3 y N4, y N2/N4 no piden nada. **El cierre no hizo
+falta tocarlo** — ya pedía los folletos del grupo SUCESOR, y como el sucesor
+de N1 es un N2 que no pide nada, el pedido por cierre desaparece solo para
+1→2 y 3→4; y cuando el dirigente dice que sigue, el sucesor es un N3 que pide
+el par. Las dos reglas del ítem salieron de una función.
+
+El índice único pasó de `(source_group_id)` a
+`(source_group_id, target_level_code)`. Sin eso el segundo tiquete del par
+chocaba con 23505 y el código lo trataba como «ya existe»: el grupo se
+quedaba con el folleto de N1 y sin el de N2, EN SILENCIO. Probado en staging:
+acepta el par y sigue rechazando el duplicado.
+
+**FASE 4 · UN BUG DE TRANSICIÓN QUE EL ÍTEM NO PREVEÍA.** Los grupos que
+arrancaron con el esquema viejo pidieron UN folleto. Con bloques, el del
+nivel siguiente ya no se pide al cerrar —se asume entregado al empezar—, y
+para un grupo que empezó antes esa suposición es falsa.
+
+**7 grupos de Nivel 3 en curso, 42 estudiantes, se quedarían sin el folleto
+de Nivel 4.** Antes lo habrían recibido por el cierre.
+
+El dry-run está en `scripts/est14/folletos-de-transicion.cjs`. **No se
+aplicó**: crea tiquetes de verdad que alguien tiene que imprimir, así que va
+con aprobación. Los grupos de N1 vivos no tienen el problema — ninguno tiene
+tiquete todavía, así que cuando se disparen ya piden el par completo.
+
+Trece cebos muerden entre las tres fases, incluidos los dos modos de fallo
+caros: que se cobre dos veces y que las capacitaciones se vuelvan gratis.
+
 
 ### [x] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva — HECHO 2026-09-24
 

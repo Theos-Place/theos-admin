@@ -4,7 +4,7 @@ import {
   NIVELES_QUE_CIERRAN_BLOQUE, hayCorteAlCerrar, motivoQueImpideCerrar, creaSucesor,
   asuntoDelCorte, lineasDelCorte,
   BLOQUES_DE_NIVELES, bloqueDe, esInicioDeBloque, esContinuacionDeBloque,
-  nivelesACobrar, montoDelBloque,
+  nivelesACobrar, montoDelBloque, folletosQuePide,
 } from './corte-de-bloque'
 import { FOLLETO_NEXT_LEVEL } from './folletos'
 
@@ -302,5 +302,92 @@ describe('EST-14 · el paso automático tampoco cobra dos veces', () => {
   it('y para lo que no es nivel sigue dando el costo del plan', () => {
     // DIS1→DIS2 y compañía: `montoDelBloque` devuelve el costo propio.
     expect(montoDelBloque('DIS2', { DIS2: 15000 })).toBe(15000)
+  })
+})
+
+/**
+ * EST-14 fase 3 · FOLLETOS EN PARES.
+ *
+ * Los folletos de un bloque se entregan juntos al empezarlo. Lo lindo del
+ * diseño es que el CIERRE no cambió: ya pedía los folletos del grupo
+ * SUCESOR, y como el sucesor de N1 es un N2 —que no pide nada— el pedido por
+ * cierre desaparece solo para 1→2 y 3→4.
+ */
+describe('EST-14 · qué folletos pide cada grupo', () => {
+  it('un grupo de N1 pide el par 1+2', () => {
+    expect(folletosQuePide('N1')).toEqual(['N1', 'N2'])
+  })
+
+  it('un grupo de N3 pide el par 3+4', () => {
+    expect(folletosQuePide('N3')).toEqual(['N3', 'N4'])
+  })
+
+  it('N2 y N4 NO piden: su gente ya los tiene del bloque', () => {
+    /**
+     * Esto es lo que hace desaparecer el pedido por cierre de 1→2 y 3→4 sin
+     * tocar el endpoint: el sucesor es un N2 o un N4, y no pide nada.
+     */
+    expect(folletosQuePide('N2')).toEqual([])
+    expect(folletosQuePide('N4')).toEqual([])
+  })
+
+  it('lo que no es nivel pide SU folleto, como siempre', () => {
+    // Si devolviera [], los discípulos se quedarían sin folletos.
+    for (const c of ['DIS1', 'DIS2', 'DIS3', 'PREMAT']) {
+      expect(folletosQuePide(c), c).toEqual([c])
+    }
+  })
+
+  it('el cierre 2→3 sí pide, porque el sucesor es un N3', () => {
+    // Cuando el dirigente dice que la cohorte sigue, el grupo que se crea es
+    // de N3 y pide el par 3+4 — la otra regla del ítem, también sola.
+    expect(folletosQuePide('N3').length).toBe(2)
+  })
+})
+
+describe('EST-14 · el generador crea un tiquete por folleto', () => {
+  const q = sinComentarios('src/lib/supabase/queries/folletos.ts')
+
+  it('recorre el par en vez de insertar uno solo', () => {
+    expect(q).toContain('const aPedir = folletosQuePide(code)')
+    expect(q).toContain('for (const nivel of aPedir)')
+    expect(q).toContain('target_level_code: nivel')
+  })
+
+  it('un grupo que ya los tiene no pide nada', () => {
+    expect(q).toContain("return { created: false, reason: 'ya_los_tiene_del_bloque' }")
+  })
+
+  it('el choque de duplicado mira el FOLLETO, no solo el grupo', () => {
+    // El índice único pasó a (source_group_id, target_level_code): si el
+    // rescate siguiera buscando solo por grupo, el segundo folleto del par se
+    // habría tratado como «ya existe» y el grupo se quedaba sin él.
+    expect(q).toContain(".eq('target_level_code', nivel)")
+  })
+
+  it('manda UN aviso que nombra a los dos', () => {
+    // Dos correos iguales del mismo grupo entrenan a ignorarlos.
+    expect(q).toContain('const etiquetaDelPar = aPedir.map(n => levelLabel(n))')
+    expect(q).toContain('Son ${aPedir.length} folletos por persona')
+  })
+})
+
+describe('EST-14 · la migración del índice', () => {
+  const sql = readFileSync('supabase/migrations/20260930190000_est14_folletos_por_par.sql', 'utf8')
+
+  it('el único pasa a incluir el nivel', () => {
+    /**
+     * Sin esto el segundo tiquete del par chocaba con 23505 y el código lo
+     * trataba como «ya existe»: el grupo se quedaba con el folleto de N1 y
+     * sin el de N2, EN SILENCIO.
+     */
+    expect(sql).toContain('(source_group_id, target_level_code)')
+  })
+
+  it('y la idempotencia se conserva donde importa', () => {
+    // Un grupo sigue sin poder pedir DOS VECES el mismo folleto por la vía
+    // automática, que es lo que el índice cuidaba.
+    expect(sql).toContain('create unique index')
+    expect(sql).toContain("where tipo in ('cupo_lleno', 'fin_matricula', 'cierre')")
   })
 })

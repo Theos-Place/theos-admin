@@ -250,19 +250,36 @@ export async function createAutoFolletoIfNeeded(
   // Ahora, si el cuerpo falla, igual sale el aviso con un texto mínimo: es
   // preferible un correo pobre a ninguno. Quien imprime se entera igual y el
   // detalle está a un clic.
-  const label = levelLabel(code)
-  let asunto = `Folletos de ${label} — ${sede ?? 'sede sin definir'}`
+  /**
+   * EST-14 · El aviso habla del PAR, no del primer folleto.
+   *
+   * Un grupo de N1 genera dos tiquetes, y mandar dos correos iguales del
+   * mismo grupo entrena a ignorarlos. Va UNO que los nombra a los dos; el
+   * enlace apunta al primero y desde la cola se ven los dos juntos porque
+   * comparten grupo.
+   */
+  const etiquetaDelPar = aPedir.map(n => levelLabel(n)).join(' + ')
+  let asunto = `Folletos de ${etiquetaDelPar} — ${sede ?? 'sede sin definir'}`
   let cuerpo = `<p>Se generó una solicitud de folletos. Abrila para ver el detalle:</p>
     <p><a href="https://admin.theosplace.org/estudios/folletos/${folletoId}">Ver la solicitud</a></p>`
-  let resumen = `${enrolled} folleto(s) de ${label} · ${sede ?? 'sede sin definir'}`
+  let resumen = `${enrolled} juego(s) de ${etiquetaDelPar} · ${sede ?? 'sede sin definir'}`
   try {
     const detalle = await getFolletoDetalle(folletoId)
     if (detalle) {
       const { asuntoFolleto, cuerpoFolleto, etiquetaTipo } = await import('@/lib/email/folleto-request-notify')
       const { renderEmail } = await import('@/lib/email/baseLayout')
-      asunto = asuntoFolleto(detalle)
-      cuerpo = renderEmail(cuerpoFolleto(detalle))
-      resumen = `${detalle.desglose.total} folletos de ${detalle.nivel ?? 'estudio'} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`
+      // Con un par, el detalle del primer tiquete describe UN folleto: se le
+      // agrega la mención del otro para que el correo no mienta por omisión.
+      asunto = aPedir.length > 1
+        ? `Folletos de ${etiquetaDelPar} — ${sede ?? 'sede sin definir'}`
+        : asuntoFolleto(detalle)
+      const extra = aPedir.length > 1
+        ? `<p><strong>Son ${aPedir.length} folletos por persona</strong> (${etiquetaDelPar}): `
+          + 'se entregan juntos al empezar el bloque. En la cola aparecen como dos '
+          + 'solicitudes del mismo grupo.</p>'
+        : ''
+      cuerpo = renderEmail(cuerpoFolleto(detalle) + extra)
+      resumen = `${detalle.desglose.total} × ${etiquetaDelPar} · ${sede ?? 'sede sin definir'} (${etiquetaTipo(tipo)})`
     }
   } catch (e) {
     reportarError('folletos: el detalle del aviso falló, va la versión mínima:', e)
