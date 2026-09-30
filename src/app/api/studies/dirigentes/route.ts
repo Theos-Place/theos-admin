@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getActiveDirigentes, addDirigente } from '@/lib/supabase/queries/studies'
 import { requireRoles } from '@/lib/auth/guard'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 export async function GET() {
   try {
@@ -18,7 +19,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes')
+    const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
     if (auth.res) return auth.res
     const body = (await req.json()) as { member_id?: string; active?: boolean }
     if (!body.member_id) return NextResponse.json({ error: 'Falta member_id' }, { status: 400 })

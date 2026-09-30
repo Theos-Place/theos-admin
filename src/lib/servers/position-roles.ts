@@ -230,6 +230,35 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
     },
   },
   {
+    role: 'editor_dirigentes',
+    description:
+      'Colaborador de actualización y datos del comité de Dirigentes: mantiene al '
+      + 'día la ficha de los dirigentes.',
+    /**
+     * ROL-1 (2026-09-30). A estas tres personas —Andrey Rojas, Diego Quesada y
+     * Wilbert Céspedes— les habían dado `coordinador_dirigentes` para que
+     * pudieran actualizar datos, y ese rol abre 58 endpoints: planes de
+     * estudio, evaluaciones de dirigentes y, hasta el mismo día, la cola de
+     * pagos. Ninguno de los tres tiene una sola acción registrada en el
+     * sistema, así que el permiso ancho nunca se usó para lo ancho.
+     *
+     * EL TÍTULO SE VERIFICÓ EN EL CATÁLOGO: es «Colaborador actualización y
+     * datos», sin «de» entre las dos palabras. Va acotado al comité de
+     * Dirigentes —administrativo incluido— y no al título suelto, por la
+     * misma razón de siempre en este archivo.
+     *
+     * Mismo molde que la regla de `evaluaciones` de RET-1, que nació igual:
+     * un puesto del mismo comité que necesitaba UNA cosa y tenía el rol
+     * entero.
+     */
+    matches: (ctx) => {
+      if (ctx.areaType !== 'committee') return false
+      if (!esComiteDirigentes(ctx.areaName)) return false
+      const t = normSinArticulos(ctx.title)
+      return t.startsWith('colaborador') && t.includes('actualizacion') && t.includes('datos')
+    },
+  },
+  {
     role: 'solicitudes_estudio',
     description:
       'Cualquier puesto activo en el Comité de Estudios Bíblicos: es el equipo que '

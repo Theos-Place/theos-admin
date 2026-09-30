@@ -109,7 +109,7 @@ interface SidebarProps {
 
 // Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
 // solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
-import { ROLES, isStudyGroupsOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
+import { ROLES, isStudyGroupsOnly, isDirigentesOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
 import { formsNavPlacement } from '@/lib/auth/forms-scope'
 import type { RoleId } from '@/types/auth'
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
@@ -186,13 +186,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // grupos: sin resumen ni el resto del submenú (espejo del ModuleGuard y de
   // los guards de API).
   const groupsOnly = isStudyGroupsOnly(userRoles as RoleId[])
+  // ROL-1 · Espejo del recorte del layout: al rol acotado de dirigentes solo
+  // se le ofrece su sección. Sin esto vería el submenú entero de coordinación
+  // y cada enlace lo llevaría a un "Acceso restringido".
+  const dirigentesOnly = isDirigentesOnly(userRoles as RoleId[])
   // El currículo: mismo ítem para todos los casos de abajo.
   const CURRICULO: SubItem = { href: '/estudios/plan', label: 'Plan de Estudios', icon: BookText }
   // Las solicitudes asignadas: se agregan en CUALQUIER rama, no solo en dos.
   const SOLICITUDES_ASIGNADAS: SubItem[] = tieneColaSolicitudes
     ? [{ href: '/estudios/solicitudes', label: 'Solicitudes', icon: Inbox, badge: openRequests }]
     : []
-  const estudiosSub: SubItem[] = groupsOnly
+  const estudiosSub: SubItem[] = dirigentesOnly
+    ? [{ href: '/estudios/dirigentes', label: 'Dirigentes', icon: UserCheck }, CURRICULO, ...SOLICITUDES_ASIGNADAS]
+    : groupsOnly
     // El CURRÍCULO va en TODAS las ramas: es información para quien se va a
     // matricular, no gestión, y la página está abierta a cualquier sesión.
     // El rol acotado de grupos era el único que se quedaba sin el enlace

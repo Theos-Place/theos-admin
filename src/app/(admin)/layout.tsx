@@ -6,8 +6,8 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { AppShell } from '@/components/layout/AppShell'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
-import { isStudyGroupsOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
-import { studyGroupsOnlyAllows } from '@/lib/auth/studies-scope'
+import { isStudyGroupsOnly, isDirigentesOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
+import { studyGroupsOnlyAllows, dirigentesOnlyAllows } from '@/lib/auth/studies-scope'
 import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 
 const pageTitles: Record<string, string> = {
@@ -195,6 +195,16 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // dirigentes, análisis, solicitudes ni folletos. Espejo de los guards de API.
   if (prefix === '/estudios' && isStudyGroupsOnly(user.roles ?? [])
       && !studyGroupsOnlyAllows(pathname)) {
+    return <AccessDenied />
+  }
+  /**
+   * ROL-1 · El rol acotado de DIRIGENTES, con el mismo molde que el de grupos:
+   * lleva el módulo `estudios` para poder entrar a su sección, así que sin
+   * este recorte por ruta se llevaría el módulo entero —plan, grupos,
+   * bloques, evaluaciones—, que es justo lo que se está quitando.
+   */
+  if (prefix === '/estudios' && isDirigentesOnly(user.roles ?? [])
+      && !dirigentesOnlyAllows(pathname)) {
     return <AccessDenied />
   }
   // SEC-1: la RAÍZ de estudios/servidores es un resumen de toda la organización

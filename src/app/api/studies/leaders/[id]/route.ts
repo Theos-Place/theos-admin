@@ -4,12 +4,13 @@ import { requireRoles } from '@/lib/auth/guard'
 import { updateLeader } from '@/lib/supabase/queries/studies'
 import { leaderUpdateSchema } from '../schema'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const { id } = await params

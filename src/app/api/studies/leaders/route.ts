@@ -5,6 +5,7 @@ import { getStudyLeaders, createLeader } from '@/lib/supabase/queries/studies'
 import { leaderWriteSchema } from './schema'
 import { canSeeLeaderAdminStatus, visibleLeaderStatus } from '@/lib/studies/leader-admin-status'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 export async function GET() {
   try {
@@ -42,7 +43,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+    const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
     if (auth.res) return auth.res
   try {
     const parsed = leaderWriteSchema.safeParse(await req.json())

@@ -5801,7 +5801,7 @@ no cuadraba —que tocara exactamente 2 filas, que no quedara ninguna sucia,
 que siguieran habiendo 8 áreas activas y que no apareciera un nombre
 duplicado—.
 
-### [ ] ROL-1 · Revisión del acceso coordinador_dirigentes: solo la encargada del comité (pedido 2026-09-30)
+### [~] ROL-1 · Revisión del acceso coordinador_dirigentes — ETAPA 1 Y ROL NUEVO HECHOS 2026-09-30 · FALTA APROBAR EL REVOKE
 
 El acceso `coordinador_dirigentes` suena a rol genérico pero en realidad debe
 corresponder al PUESTO de encargada del comité de dirigentes — hoy únicamente
@@ -5830,3 +5830,76 @@ ETAPA 2 — DEPURACIÓN (tras aprobación de la lista):
 Tests: el puesto da/quita el acceso, la sync no lo reasigna a quien se le quitó.
 tsc/lint/vitest.
 ```
+
+
+**ETAPA 1 · DIAGNÓSTICO — hecho.**
+
+`coordinador_dirigentes` abre **58 endpoints y 16 pantallas**: dirigentes,
+grupos, planes de estudio, evaluaciones, fichas del padrón y —hasta ese mismo
+día, ver FIN-14— la cola de pagos. Suena a rol de un comité y es de
+coordinación entera.
+
+Lo tienen **7 personas, todas manuales**, ninguna por puesto:
+
+| persona | otros roles | acciones | puesto en el comité |
+|---|---|---|---|
+| **Coordinador de Dirigentes** *(la cuenta de Fabiola)* | comunicaciones | 10 | — |
+| Karina Cavero | +6, incl. coordinador_estudios | 35 | Dirigente CR |
+| Luis Guillermo Alonso | coord. estudios, dirigente, reportes | 1 | Dirigente CR |
+| Eimy Ramirez | evaluaciones | 0 | Colaborador evaluaciones |
+| Andrey Rojas | ninguno | 0 | Colaborador actualización y datos |
+| Diego Quesada | ninguno | 0 | Colaborador actualización y datos |
+| Wilbert Céspedes | ninguno | 0 | Colaborador actualización y datos |
+
+**Dato que aclaró Floriana y cambia la lectura:** la encargada no aparece por
+su ficha personal porque **trabaja con la cuenta `dirigentes@theosplace.org`**.
+Así que el rol sí está donde debe; sobran los otros seis.
+
+**ROL NUEVO `editor_dirigentes` — hecho.** Los tres «Colaborador actualización
+y datos» necesitan editar dirigentes y nada más (decisión de Floriana). Mismo
+molde que `editor_grupos_estudio`: solo `estudios:view` a nivel módulo, el
+poder de editar por rol explícito en los endpoints, y las rutas acotadas con
+`dirigentesOnlyAllows` — sin ese recorte se llevaría el módulo entero, que es
+justo lo que se está quitando.
+
+Llega **por el puesto**, no a mano, así que al dejar el cargo se pierde solo.
+El título se verificó: «Colaborador actualización y datos», sin «de».
+
+**Una cuarta persona lo gana: Marianela Hernandez Sanchez**, que tiene el
+puesto y hoy no tiene ningún rol. Es coherente —es su trabajo— pero conviene
+saberlo.
+
+**De paso se unificaron los guards:** la lista de roles que autoriza editar
+dirigentes estaba escrita a mano en SEIS endpoints, con dos variantes que no
+coincidían (cuatro incluían `admin`, dos se lo olvidaban). Ahora es
+`DIRIGENTES_ADMIN_ROLES`, y sumar el rol nuevo fue tocar un lugar.
+
+**DOS COSAS QUE ENCONTRARON LOS TESTS, no la lectura del código:**
+
+1. **El CHECK de `member_roles.role` no conocía el rol nuevo** y la migración
+   habría fallado con 23514. La lista de roles vive DOS veces —`types/auth.ts`
+   y esa restricción—. La migración la amplía leyendo la definición vigente en
+   vez de reescribirla, que sería la tercera copia.
+2. **El helper de RLS `private.ve_estudios()` habría quedado desalineado**: la
+   base le negaría el paso a quien la app sí deja pasar, y no se notaría
+   porque la app lee con la llave de servicio. Lo atrapó `rls-helpers.test`,
+   que existe para eso — y de paso se descubrió que ese test leía UNA
+   migración fija y no habría visto una redefinición posterior. Ahora barre
+   todas y toma la vigente.
+
+**ETAPA 2 · LA DEPURACIÓN — PENDIENTE DE APROBACIÓN.** No se aplicó nada que
+quite accesos. El dry-run está en `scripts/rol1/dry-run.cjs` y dice:
+
+- **Conserva**: la cuenta `dirigentes@theosplace.org`.
+- **Pierden y no les falta nada**: Karina y Luis Guillermo (tienen
+  `coordinador_estudios`), salvo la cola de EVALUACIONES, que
+  `coordinador_dirigentes` daba y `coordinador_estudios` no.
+- **Eimy**: le queda `evaluaciones`, que es justo su puesto.
+- **Andrey, Diego y Wilbert**: quedan con `editor_dirigentes` una vez aplicada
+  la migración — correr el dry-run otra vez después del deploy para verlo
+  reflejado.
+
+Falta decidir si Karina y Luis Guillermo deben conservar la cola de
+evaluaciones (sería darles el rol `evaluaciones`) o si ahí también sobra.
+
+Cuatro cebos muerden.

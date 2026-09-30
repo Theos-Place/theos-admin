@@ -93,6 +93,30 @@ export function assignableRoleIds(actorRoles: RoleId[]): 'all' | Set<RoleId> {
  *  dirigentes lo necesitan para planear cuántos grupos abrir; dirección y admin
  *  ven todo. Un rol de reportes "a secas" no entra: el reporte nombra planes y
  *  cuenta dirigentes, que es información del módulo de estudios. */
+/**
+ * ROL-1 · Quién puede ver y EDITAR la ficha de los dirigentes.
+ *
+ * Existía escrita a mano y repetida en seis endpoints, con dos variantes que
+ * no coincidían —cuatro decían `('admin','direccion','coordinador_dirigentes',
+ * 'coordinador_estudios')` y dos se olvidaban de `admin`—. Ahora es una sola
+ * lista, y agregar el rol acotado `editor_dirigentes` fue cambiarla en un
+ * lugar en vez de en seis.
+ */
+export const DIRIGENTES_ADMIN_ROLES: RoleId[] = [
+  'coordinador_dirigentes', 'coordinador_estudios', 'editor_dirigentes', 'direccion', 'admin',
+]
+
+/**
+ * El rol acotado de dirigentes, SIN ningún rol de estudios completo. Espejo
+ * de `isStudyGroupsOnly`: lo usan el sidebar, el layout y los guards para no
+ * mostrarle secciones de coordinación que no le tocan.
+ */
+export function isDirigentesOnly(roles: readonly RoleId[] | null | undefined): boolean {
+  const list = roles ?? []
+  if (!list.includes('editor_dirigentes')) return false
+  return !list.some(r => STUDY_ADMIN_ROLES.includes(r) || r === 'solo_lectura')
+}
+
 export const ESTUDIOS_REPORTE_ROLES: RoleId[] = [
   'coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin',
 ]
@@ -452,6 +476,29 @@ export const ROLES: Role[] = [
       { module: 'reportes', actions: ['view', 'export'], scope: 'all' },
       // FIN-14 · Acá estaba `revision_pagos`, y se quitó el 2026-09-30 por
       // decisión de Floriana. Ver el comentario en `coordinador_estudios`.
+    ],
+  },
+  {
+    id: 'editor_dirigentes',
+    name: 'Editor de Dirigentes',
+    description: 'Actualizar la ficha y los datos de los dirigentes',
+    color: '#B5DDE0',
+    /**
+     * ROL-1 (2026-09-30). Nace para reemplazar a `coordinador_dirigentes` en
+     * las tres personas que tienen el puesto «Colaborador actualización y
+     * datos» del Comité Dirigentes Administrativo: su trabajo es mantener los
+     * datos al día, y para eso les habían dado el rol de COORDINACIÓN entero
+     * —que abre 58 endpoints, incluidos planes de estudio, evaluaciones de
+     * dirigentes y (hasta hoy) la cola de pagos—.
+     *
+     * Mismo molde que `editor_grupos_estudio`: solo `view` a nivel módulo,
+     * para poder entrar a la sección. El poder de EDITAR se autoriza por rol
+     * explícito en los endpoints de dirigentes (`DIRIGENTES_ADMIN_ROLES`), y
+     * las rutas se acotan en el layout con `isDirigentesOnly`. Así el permiso
+     * no se derrama al plan, a los grupos ni a las evaluaciones.
+     */
+    permissions: [
+      { module: 'estudios', actions: ['view'], scope: 'all' },
     ],
   },
   {

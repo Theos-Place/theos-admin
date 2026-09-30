@@ -20,6 +20,7 @@ export type RoleId =
   | 'revision_pagos'
   | 'becas'
   | 'editor_grupos_estudio'
+  | 'editor_dirigentes'
   | 'forms'
   | 'evaluaciones'
   | 'gestor_accesos'

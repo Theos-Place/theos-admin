@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDirigentesContact } from '@/lib/supabase/queries/studies'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 // POST /api/studies/dirigentes/contact → contacto + sede para enriquecer la
 // exportación de dirigentes. PII: gated a roles que gestionan dirigentes (no a
 // cualquier sesión). Body: { member_ids: string[] } → { contact: { id: {...} } }.
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
+  const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
   if (auth.res) return auth.res
   try {
     const body = await req.json() as { member_ids?: string[] }

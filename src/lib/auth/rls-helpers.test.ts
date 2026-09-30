@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { ROLES } from './roles'
 import type { RoleId } from '@/types/auth'
 
@@ -21,13 +21,25 @@ import type { RoleId } from '@/types/auth'
  * la otra mitad de la política (`= private.mi_member_id()`).
  */
 
-const SQL = readFileSync(
-  'supabase/migrations/20260928120000_inf2_rls_sin_recursion.sql', 'utf8')
+/**
+ * TODAS las migraciones, en orden, concatenadas.
+ *
+ * Antes esto leía SOLO `20260928120000`, la que creó los helpers, y esa
+ * suposición se rompió en cuanto ROL-1 redefinió `ve_estudios()` con un
+ * `create or replace` en una migración posterior: el test seguía mirando la
+ * versión vieja y habría dado verde sobre una función que ya no existía así.
+ * Ahora se lee la definición VIGENTE, que es la última.
+ */
+const SQL = readdirSync('supabase/migrations')
+  .filter(f => f.endsWith('.sql'))
+  .sort()
+  .map(f => readFileSync(`supabase/migrations/${f}`, 'utf8'))
+  .join('\n')
 
-/** Los roles que el SQL le pasa a un helper. */
+/** Los roles que el SQL le pasa a un helper, en su definición VIGENTE. */
 function rolesDelHelper(nombre: string): string[] {
-  const i = SQL.indexOf(`create or replace function private.${nombre}()`)
-  if (i === -1) throw new Error(`no existe private.${nombre}() en la migración`)
+  const i = SQL.lastIndexOf(`create or replace function private.${nombre}()`)
+  if (i === -1) throw new Error(`no existe private.${nombre}() en las migraciones`)
   const cuerpo = SQL.slice(i, SQL.indexOf('$$;', i))
   const m = /ARRAY\[([\s\S]*?)\]/.exec(cuerpo)
   if (!m) throw new Error(`private.${nombre}() no lleva ARRAY[...]`)
@@ -91,7 +103,15 @@ describe('INF-2 · la migración no deja volver la recursión', () => {
     // SECURITY DEFINER es lo que les deja leer members sin disparar su RLS;
     // sin `search_path` fijo resolverían los nombres contra el path de quien
     // llama, que es la regla que AGENTS.md fija para todo el esquema.
+    /**
+     * Acotado a los helpers de `private.`, que es de lo que habla este test.
+     * Cuando `SQL` pasó a concatenar TODAS las migraciones —para poder leer
+     * la definición vigente y no la primera— este recorrido empezó a barrer
+     * también las funciones viejas del baseline, que tienen sus propias
+     * reglas y no son el tema. El alcance se le había ampliado sin querer.
+     */
     const defs = SQL.split(/^create or replace function /m).slice(1)
+      .filter(d => d.startsWith('private.'))
     expect(defs.length).toBeGreaterThanOrEqual(6)
     for (const d of defs) {
       const nombre = d.split('(')[0]

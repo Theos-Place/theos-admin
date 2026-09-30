@@ -57,10 +57,18 @@ describe('los badges se piden solo si pueden verse', () => {
       SIDEBAR.indexOf('const SOLICITUDES_ASIGNADAS') + 300,
     )
     expect(decl).toContain('tieneColaSolicitudes')
-    // Y se reparte a las tres ramas que NO son la del módulo completo (esa ya
-    // trae el ítem desde ESTUDIOS_SUB): solo-grupos, dirigente y sin rol.
-    // La de solo-grupos es la que faltaba y dejaba a Luis sin el enlace.
+    /**
+     * Y se reparte a TODAS las ramas que no son la del módulo completo (esa
+     * ya trae el ítem desde ESTUDIOS_SUB). Hoy son cuatro: solo-dirigentes,
+     * solo-grupos, dirigente y sin rol.
+     *
+     * Pasó de 3 a 4 con ROL-1, que agregó la rama del rol acotado
+     * `editor_dirigentes`. Es un trinquete: si alguien suma una rama y se
+     * olvida del ítem, el número no cuadra y esto lo señala — que es
+     * exactamente lo que evitó que la rama nueva naciera sin el enlace, como
+     * le pasó a la de solo-grupos en su momento.
+     */
     const ramas = [...SIDEBAR.matchAll(/\.\.\.SOLICITUDES_ASIGNADAS/g)].length
-    expect(ramas, 'alguna rama del submenú se quedó sin el ítem').toBe(3)
+    expect(ramas, 'alguna rama del submenú se quedó sin el ítem').toBe(4)
   })
 })

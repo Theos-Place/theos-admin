@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { bulkUpdateLeaderStudies } from '@/lib/supabase/queries/studies'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 // POST /api/studies/dirigentes/bulk-studies → agrega/quita un estudio a la
 // formación o disponibilidad de varios dirigentes.
 // Body: { member_ids: string[], field: 'formation'|'availability', codes: string[], action: 'add'|'remove' }
 // `codes` puede traer varios (un grupo "Niveles"/"Discípulos" expande a sus códigos).
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
+  const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
   if (auth.res) return auth.res
   try {
     const body = await req.json() as { member_ids?: string[]; field?: string; codes?: string[]; action?: string }

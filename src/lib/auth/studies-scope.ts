@@ -29,6 +29,21 @@ export function studyGroupsOnlyAllows(pathname: string): boolean {
   return pathname === '/estudios/grupos' || pathname.startsWith('/estudios/grupos/')
 }
 
+/**
+ * ROL-1 · Rutas de /estudios que abre el rol acotado `editor_dirigentes`: la
+ * sección de dirigentes y lo que cuelga de ella (el detalle, confirmaciones y
+ * disponibilidad). El resumen y el resto de la coordinación —plan, bloques,
+ * grupos, análisis, solicitudes, folletos, importar, evaluaciones— quedan
+ * fuera.
+ *
+ * Espejo exacto de `studyGroupsOnlyAllows`, y por la misma razón: el rol lleva
+ * el módulo `estudios` para poder ENTRAR a la sección, así que sin este
+ * recorte por ruta se llevaría el módulo entero.
+ */
+export function dirigentesOnlyAllows(pathname: string): boolean {
+  return pathname === '/estudios/dirigentes' || pathname.startsWith('/estudios/dirigentes/')
+}
+
 /** Nivel de acceso a UN grupo concreto. El caller resuelve la pertenencia
  *  (leader/co-leader del grupo, inscripción del miembro) y esta función decide.
  *  'none' = sesión sin relación con el grupo: recibe el grupo SIN roster

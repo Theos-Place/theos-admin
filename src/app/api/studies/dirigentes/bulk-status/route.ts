@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { bulkSetDirigenteActive, membersWithActiveGroups } from '@/lib/supabase/queries/studies'
 import { reportarError } from '@/lib/observabilidad'
+import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
 // POST /api/studies/dirigentes/bulk-status → cambio de estado masivo.
 // Body: { member_ids: string[], active: boolean }
 // Al DESACTIVAR, omite a los que tienen grupo en curso/abierto y los devuelve en
 // `skipped` (no se permite dejar inactivo a quien está dando un grupo).
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
+  const auth = await requireRoles(...DIRIGENTES_ADMIN_ROLES)
   if (auth.res) return auth.res
   try {
     const body = await req.json() as { member_ids?: string[]; active?: boolean }
