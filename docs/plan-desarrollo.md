@@ -3310,7 +3310,7 @@ CAMBIO · /servidores/mi-comite y /reportes/servidores: OCULTAR todo lo de donan
 Tests: payload del líder sin campo donante; rol amplio lo conserva. tsc/lint/vitest.
 ```
 
-### [~] EST-14 · Niveles en dos bloques — FASES 1-3 HECHAS 2026-09-30 · FALTA APROBAR LA TRANSICIÓN
+### [~] EST-14 · Niveles en dos bloques — FASES 1-3 HECHAS 2026-09-30 · LA TRANSICIÓN LA REVISA FLORIANA CON DENISE
 
 Reglas decididas:
 - Matricularse a Nivel 1 cubre N1+N2 (₡5.000): el paso 1→2 sigue automático y
@@ -3408,8 +3408,13 @@ para un grupo que empezó antes esa suposición es falsa.
 de Nivel 4.** Antes lo habrían recibido por el cierre.
 
 El dry-run está en `scripts/est14/folletos-de-transicion.cjs`. **No se
-aplicó**: crea tiquetes de verdad que alguien tiene que imprimir, así que va
-con aprobación. Los grupos de N1 vivos no tienen el problema — ninguno tiene
+aplicó**: crea tiquetes de verdad que alguien tiene que imprimir. Floriana lo
+revisa con Denise antes (2026-09-30).
+
+Un detalle para esa conversación: el grupo de **Tatiana Quirós** (3
+estudiantes) tiene escrito «Ya ella tiene los folletos!!» en el campo de sede
+de entrega, así que probablemente no necesita nada y quedan **6 grupos, 39
+estudiantes**. Los grupos de N1 vivos no tienen el problema — ninguno tiene
 tiquete todavía, así que cuando se disparen ya piden el par completo.
 
 Trece cebos muerden entre las tres fases, incluidos los dos modos de fallo
