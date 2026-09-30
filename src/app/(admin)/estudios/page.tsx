@@ -25,10 +25,11 @@ const EMPTY_STATS: StudyDashboardStats = {
 /**
  * EST-20 · El TOTAL de gente en estudio: en curso + por iniciar.
  *
- * Se suman las personas ÚNICAS y no las inscripciones, porque quien está en
- * dos estudios a la vez es una sola persona. Por eso el total puede ser menor
- * que la suma de los cuatro bloques de arriba, y el tooltip lo dice: sin esa
- * aclaración el número se lee como un error de cuentas.
+ * Se muestran las MATRÍCULAS y no las personas únicas, y por eso el número es
+ * la suma limpia de los cuatro bloques: cualquiera puede verificarlo sumando
+ * lo que ve. Des-duplicar personas entre bloques no se puede desde acá —cada
+ * bloque trae sus únicos y no sabemos cuáles se repiten—, así que se dice
+ * «matrículas» y no se insinúa una precisión que no tenemos.
  */
 function totalEnEstudio(s: StudyDashboardStats): { inscripciones: number; unicos: number } {
   const b = [s.activos.niveles, s.activos.capacitaciones,
@@ -144,7 +145,14 @@ export default function EstudiosPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Grupos en inscripción', value: openGroups.length,     icon: Users,        color: 'text-teal-deep' },
+          // «Por iniciar» y no «en inscripción»: esta tarjeta cuenta
+          // `status === 'en_matricula'`, y ese estado dura desde que el grupo
+          // se crea hasta que arranca — adentro caen los que todavía reciben
+          // gente Y los que ya cerraron la matrícula y esperan la fecha.
+          // Llamarlo «en inscripción» decía que todos aceptan matrículas, que
+          // es falso para buena parte. Es la misma etiqueta que ya usa la
+          // pantalla de grupos (ETIQUETA_VISIBLE.por_iniciar).
+          { label: 'Grupos por iniciar',    value: openGroups.length,     icon: Users,        color: 'text-teal-deep' },
           { label: 'Grupos en curso',       value: inProgressGroups.length, icon: TrendingUp, color: 'text-navy' },
           { label: 'Solicitudes abiertas',  value: openRequests,          icon: Inbox,        color: 'text-amber-600' },
           { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral', href: '/estudios/grupos?filter=closing_soon' },
@@ -213,7 +221,16 @@ export default function EstudiosPage() {
             <div className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
               <Clock size={16} className="text-teal-deep" />
               <h2 className="text-sm font-semibold text-navy font-display">Por iniciar</h2>
-              <span className="text-[13px] text-navy-light/80 font-body">grupos en matrícula</span>
+              {/* El subtítulo decía «grupos en matrícula», que era justo lo
+                  contrario de lo que el bloque contiene: en la base
+                  `en_matricula` dura desde que el grupo se crea hasta que
+                  arranca, así que acá caen LOS DOS —los que todavía reciben
+                  gente y los que ya cerraron y esperan la fecha—. La pantalla
+                  de grupos ya los separa en «En matrícula» y «Por iniciar»
+                  (ver `lib/studies/estado-visible`); este bloque los suma. */}
+              <span className="text-[13px] text-navy-light/80 font-body">
+                todavía en matrícula y también los que ya cerraron y esperan la fecha de inicio
+              </span>
             </div>
             <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
               <StatRow
@@ -240,10 +257,6 @@ export default function EstudiosPage() {
                 Total en estudio (en curso + por iniciar):{' '}
                 <strong className="text-navy">{totalEnEstudio(stats).inscripciones}</strong>
                 {' '}matrículas
-                <span
-                  title="Suma las matrículas de los cuatro bloques. Una persona en dos estudios cuenta dos veces acá: los «estudiantes únicos» de cada bloque están des-duplicados dentro del bloque, pero no entre bloques."
-                  className="ml-1 cursor-help underline decoration-dotted"
-                >¿por qué no coincide?</span>
               </p>
             </div>
           </section>
