@@ -9,6 +9,7 @@ import { accesoDesincronizado, errorDeCorreoDeAcceso, puedeCambiarCorreoDeAcceso
 import { formatDate, formatDateTime } from '@/lib/format'
 import { InviteToStudyButton } from '@/components/studies/InviteToStudyButton'
 import { StudyExceptionButton } from '@/components/studies/StudyExceptionButton'
+import { RequestRefundButton } from '@/components/studies/RequestRefundButton'
 import { AddExternalStudyButton } from '@/components/studies/AddExternalStudyButton'
 import { MemberRecommendations, PersonaLink } from './MemberRecommendations'
 import { ACTION_PLAN_OPTIONS, COMMITMENT_OPTIONS, needsFollowUp } from '@/lib/studies/premat-evaluation'
@@ -619,6 +620,10 @@ export function MemberAdminTab({ memberId, onChanged }: {
             {/* Registrar a mano un estudio llevado por fuera. Se gatea solo
                 (admin + coordinador de estudios): si no corresponde, no pinta. */}
             <AddExternalStudyButton memberId={memberId} onAdded={onChanged} />
+            {/* DEV-2 · Pide la devolución sin ver pagos: elige la matrícula y
+                escribe por qué. Se gatea solo (coordinación de estudios y de
+                dirigentes, y admin); si no corresponde, no pinta. */}
+            <RequestRefundButton memberId={memberId} />
           </div>
         </div>
 

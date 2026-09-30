@@ -4639,7 +4639,7 @@ teléfono, registrar contacto guarda historial (dos marcas = dos entradas) y el 
 por estado. tsc/lint/vitest.
 ```
 
-### [ ] EST-18 · Botón "Mandar a imprimir folletos" en grupos de Nivel 1 (anexo a EST-14, pedido 2026-09-28)
+### [ ] EST-21 · Botón "Mandar a imprimir folletos" en grupos de Nivel 1 — TRABADO POR EST-14 (revisado 2026-09-30)
 
 Gap detectado: con el esquema de bloques, los grupos de Nivel 1 necesitan sus
 folletos (par 1+2) impresos ANTES de arrancar — y el disparador no puede
@@ -4682,6 +4682,48 @@ Tests: botón genera tiquete+correo una sola vez, doble clic no duplica, el auto
 no duplica sobre el manual, folletos extra crea tiquete adicional, rol sin permiso 403.
 tsc/lint/vitest.
 ```
+
+
+**REVISADO EL 2026-09-30 Y NO SE HIZO: depende de EST-14 de verdad, no de
+nombre.** Floriana decide esperar. Lo que se averiguó, para no volver a
+investigarlo:
+
+- **El esquema de pares 1+2 / 3+4 NO EXISTE en el código.** Lo único que hay
+  es el mapa 1:1 `FOLLETO_NEXT_LEVEL` (N1→N2, N2→N3, N3→N4, DIS1→DIS2,
+  DIS2→DIS3) en `src/lib/studies/folletos.ts`. El par vive solo en documentos
+  de planificación.
+- **Los grupos de niveles ni siquiera tienen bloque.** El trigger
+  `assign_group_bloque()` (migración `20260817150000`) excluye a propósito
+  `N1,N2,N3,N4,DIS2,DIS3`, así que su `bloque_id` es NULL. «El tiquete del
+  bloque» no se puede generar porque no hay bloque del cual colgarlo.
+- **Hoy el único disparador automático vivo de la cadena de niveles es el
+  CIERRE.** `cupo_lleno` y `fin_matricula` quedaron muertos el 2026-09-02 (78
+  de 93 grupos no tenían ni cupo ni ventana); `cupo_lleno` solo sobrevive en
+  prematrimonial. O sea que el punto 3 del prompt —«que el automático no
+  duplique al manual»— hoy casi no tiene con qué chocar.
+
+**Buena parte de lo pedido YA EXISTE, en otro lugar:** hay un botón de
+solicitud manual de folletos en `/estudios/folletos`
+(`ManualFolletoRequestButton` → `POST /api/studies/folletos/manual`, tipo
+`manual`, estado `creada`) y su gate YA incluye a `coordinador_estudios` y
+`coordinador_dirigentes`. Entra a la misma cola y manda el mismo correo.
+
+**Lo que falta de verdad, cuando se retome:**
+
+1. El botón en la pantalla del GRUPO (`/estudios/grupos/[id]`), no en la de
+   folletos, y solo en grupos de **N1 y N3** en matrícula (decisión de
+   Floriana 2026-09-30, que cierra el «confirmar si aplica igual» del prompt).
+2. **Atar el tiquete manual al grupo.** Hoy el manual no guarda
+   `source_group_id`: es suelto (nivel + cantidad + sede + dirigente). Sin ese
+   vínculo no hay forma de mostrar «Folletos solicitados el [fecha]» ni de
+   evitar el duplicado.
+3. **La idempotencia no lo cubre.** El índice único parcial
+   `folleto_requests_auto_por_grupo` es sobre `source_group_id` where tipo in
+   (`cupo_lleno`, `fin_matricula`, `cierre`) — **`manual` queda afuera**. Hay
+   que ampliarlo o crear uno propio, o el doble clic duplica.
+4. Qué folleto se pide: con EST-14, el par; sin EST-14, el del propio nivel.
+   Esa es la pieza que obliga a esperar.
+
 
 ### [x] EST-19 · Quien queda «en revisión» ya no queda atrapado (2026-09-28)
 
@@ -5018,7 +5060,7 @@ Tests: parte A (match actualiza sin duplicar, dry-run), parte B (unicidad de don
 monedas separadas, sede sin datos). tsc/lint/vitest.
 ```
 
-### [ ] DEV-2 · Botón "Solicitar devolución" para la coordinación de estudios (Ari)
+### [x] DEV-2 · Botón "Solicitar devolución" para la coordinación de estudios (Ari) — HECHO 2026-09-30
 
 Prompt para Claude Code:
 
@@ -5035,6 +5077,67 @@ existente; audit_log. Volumen esperado bajo (excepciones).
 Tests: rol estudios crea la solicitud sin ver pagos (403 a /finanzas/pagos), la solicitud
 llega vinculada. tsc/lint/vitest.
 ```
+
+
+**LA MEDICIÓN RESOLVIÓ EL DISEÑO SOLA.** El problema era que quien pide elige
+la matrícula y `refunds.payment_id` es NOT NULL: parecía que había que tocar
+el esquema para guardar una solicitud sin pago. No hizo falta —**ninguna
+matrícula tiene más de un pago devolvible**: 234 tienen exactamente uno y las
+demás ninguno (producción, 2026-09-30)—. El servidor resuelve el pago sin
+ambigüedad, sin migración y sin estado intermedio nuevo.
+
+**Escribe por el camino de finanzas, no por uno nuevo**: usa `createRefund` →
+RPC `create_refund`, que ya trae el lock del pago, el tope contra lo ya
+devuelto y el estampado del tipo. Un insert propio habría duplicado esas tres
+reglas. La solicitud nace en `pending`, que ES el doble chequeo acordado:
+finanzas la ve en su cola y resuelve (`canResolve` sigue siendo solo de ellos,
+por `refunds-scope`). Verificado punta a punta en staging: crear → 201,
+justificación corta → 400, repetir → 409, y la devolución aparece en la cola
+como `pending` / `kind: estudio` con la razón «Solicitada por … · Estudio:
+Nivel 1 · …».
+
+**Ningún dato de pago viaja a quien pide** —ni monto, ni método, ni id—, y hay
+tests que se caen si alguien lo agrega «porque ya lo tenía a mano». Los
+motivos de por qué no se puede pedir tampoco nombran cifras: decir «el pago de
+₡45.000 ya fue devuelto» sería dar el dato por la puerta de atrás.
+
+Las matrículas que NO se pueden pedir se muestran igual, deshabilitadas y con
+el motivo. Esconderlas deja a quien pide sin saber si se equivocó de persona o
+si el sistema no tiene el pago: las dos se ven igual y la segunda termina en
+un mensaje a TI.
+
+**EL TEST DEL «403 A /finanzas/pagos» QUE PEDÍA EL PROMPT NO SE ESCRIBIÓ,
+porque la premisa ya es falsa** — ver FIN-14, abierto por esto.
+
+Cuatro cebos muerden.
+
+### [ ] FIN-14 · `coordinador_estudios` ya ve los pagos (descubierto 2026-09-30, haciendo DEV-2)
+
+DEV-2 se pidió con la premisa «NO se le da acceso a pagos» y con un test que
+afirmara `403 a /finanzas/pagos` para el rol de estudios. **Ese test habría
+estado rojo desde el primer día y no por DEV-2**: `coordinador_estudios`
+declara el módulo `revision_pagos`, que es justamente el que abre
+`/finanzas/pagos` (la excepción documentada en el Sidebar y en el layout desde
+REV-3). Verificado en el navegador el 2026-09-30: responde 200.
+
+No es solo estudios. Los tres roles que declaran `revision_pagos`:
+
+| rol | personas |
+|---|---|
+| `coordinador_estudios` | 8 |
+| `coordinador_dirigentes` | 7 |
+| `folletos` | 4 |
+
+**No se tocó nada**, porque quitar un permiso a 19 personas no es un efecto
+colateral de agregar un botón. Lo que hay que decidir:
+
+1. ¿La premisa de DEV-2 es el estado DESEADO —o sea, hay que quitarle
+   `revision_pagos` a coordinación de estudios— o solo quería decir «esta
+   pantalla no le muestra pagos», que es lo que se construyó?
+2. Si es lo primero: dry-run de qué deja de ver cada una de las 19, porque
+   `revision_pagos` es lo que les permite revisar comprobantes, y sacarlo
+   puede trabar un flujo que hoy funciona.
+
 
 ### [~] FIN-9 · ACTUALIZADO 2026-09-29 — validado con Meli: va por CUPONES, no saldos
 
@@ -5438,3 +5541,17 @@ cuanto se publique la primera tanda.
 De paso, dos guards existentes atraparon a `/mi-perfil` (UX-8) por no declarar
 título de pestaña ni `h1`. Se le agregaron en vez de excepcionarla: el caso
 «sesión sin ficha» sí renderiza, y merece los dos.
+
+### [ ] REP-12 · Encargado de Planificación: acceso automático a reportes (pedido 2026-09-30)
+
+Prompt para Claude Code:
+
+```
+PERMISOS · El puesto "Encargado de Planificación" recibe acceso automático a TODOS los
+reportes de /reportes (el módulo completo, no reportes sueltos), vía el mecanismo de
+rol automático por puesto (position-role-sync + source, como los mapeos de REP-11 —
+agregar la línea en la tabla central reporte→roles / mapeo de puestos que REP-11 dejó).
+Verificar el nombre exacto del puesto en el catálogo. Al perder el puesto, pierde el
+acceso (salvo asignación manual). DRY-RUN: quiénes lo reciben hoy. Tests: puesto da y
+quita el acceso. tsc/lint/vitest.
+```
