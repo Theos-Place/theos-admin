@@ -10,7 +10,7 @@ import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
 import { abreMiComite } from '@/lib/servers/puestos-que-abren-mi-comite'
 import { abreReportesDeSede } from '@/lib/reports/puestos-que-abren-reportes'
-import { esPuestoDeDirectorDeArea } from '@/lib/servers/director-de-area'
+import { esPuestoDeDirectorDeArea, tituloEsDeDirectorDeArea, TITULO_DIRECTOR_DE_AREA } from '@/lib/servers/director-de-area'
 import { reportarFalla } from '@/lib/observabilidad'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
@@ -829,6 +829,59 @@ export async function updateArea(
   const supabase = createAdminClient()
   const { error } = await supabase.from('areas').update(patch).eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Quiénes dirigen un ÁREA. Reemplaza la lista completa.
+ *
+ * El director es un PUESTO, no un campo (ver `lib/servers/director-de-area`),
+ * así que esto se traduce en asignar y dar de baja voluntarios del puesto
+ * «Director de Área» de esa área.
+ *
+ * PASA POR `assignVolunteer`/`removeVolunteer` A PROPÓSITO, en vez de tocar
+ * `volunteers` directo: esas dos disparan la sincronización de roles, que es
+ * lo que le da y le quita el rol `reportes`. Un upsert a mano habría cambiado
+ * el puesto y dejado el permiso pegado — el mismo modo de fallo que obligó a
+ * poner un backfill en la migración.
+ *
+ * Si el área no tiene el puesto —un área recién creada— se crea al vuelo. La
+ * migración lo puso en las ocho que existían, pero la pantalla deja crear
+ * áreas nuevas y esas nacerían sin él.
+ */
+export async function setDirectoresDeArea(
+  areaId: string,
+  memberIds: readonly string[],
+  actorUserId?: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { data: area } = await supabase
+    .from('areas').select('id, area_type').eq('id', areaId).maybeSingle()
+  if (!area || (area as { area_type: string }).area_type !== 'area') {
+    throw new Error('NO_ES_AREA')
+  }
+
+  const { data: puestos } = await supabase
+    .from('service_positions').select('id, title').eq('area_id', areaId).eq('is_active', true)
+  let positionId = ((puestos ?? []) as Array<{ id: string; title: string }>)
+    .find(p => tituloEsDeDirectorDeArea(p.title))?.id ?? null
+
+  if (!positionId) {
+    const { data: creado, error } = await supabase
+      .from('service_positions')
+      .insert({ area_id: areaId, title: TITULO_DIRECTOR_DE_AREA, quantity: 1, is_active: true })
+      .select('id').single()
+    if (error) throw error
+    positionId = (creado as { id: string }).id
+  }
+
+  const { data: actuales } = await supabase
+    .from('volunteers').select('member_id').eq('position_id', positionId).eq('status', 'active')
+  const antes = new Set(((actuales ?? []) as Array<{ member_id: string }>).map(v => v.member_id))
+  const despues = new Set(memberIds)
+
+  for (const id of despues) if (!antes.has(id)) await assignVolunteer(positionId, id, actorUserId)
+  for (const id of antes) if (!despues.has(id)) await removeVolunteer(positionId, id, actorUserId)
 }
 
 /** Elimina un área o comité (fila de `areas`). El caller debe verificar antes que

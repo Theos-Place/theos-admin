@@ -179,3 +179,71 @@ describe('se ve en la pantalla de Áreas y comités', () => {
     expect(org).not.toContain('leader_id')
   })
 })
+
+describe('se edita desde «Editar área»', () => {
+  const pag = sinComentarios('src/app/(admin)/servidores/admin/page.tsx')
+  const api = sinComentarios('src/app/api/servers/areas/[id]/director/route.ts')
+  const q = sinComentarios('src/lib/supabase/queries/servers.ts')
+
+  it('el modal tiene el campo, con buscador de persona', () => {
+    expect(pag).toContain('<MemberCombobox')
+    expect(pag).toContain('setDirectores')
+  })
+
+  it('los cambios se acumulan y se aplican al GUARDAR', () => {
+    /**
+     * Es un modal con Guardar y Cancelar. Si el nombre esperara y el director
+     * se aplicara al instante, «Cancelar» revertiría la mitad de lo que la
+     * persona hizo — y acá la otra mitad es un permiso, no una etiqueta.
+     */
+    expect(pag).toContain('onSave: (name: string, directores:')
+    expect(pag).toContain('onSave(name.trim(), directores)')
+  })
+
+  it('y solo se manda si algo cambió', () => {
+    // Un PUT con la misma lista no rompe nada, pero deja un registro de
+    // auditoría que no corresponde a ningún cambio.
+    expect(pag).toContain('if (areaId && antes !== ahora)')
+  })
+
+  it('si falla el director, se dice que el ÁREA sí se guardó', () => {
+    // Un «no se pudo guardar» a secas haría pensar que se perdió todo.
+    expect(pag).toContain('El área se guardó, pero no se pudo cambiar el director.')
+  })
+
+  it('el endpoint reemplaza la lista completa, no agrega de a uno', () => {
+    // El área puede tener varios directores; una pantalla que manda el estado
+    // final no puede desincronizarse con el servidor.
+    expect(api).toContain('member_ids: z.array(')
+    expect(api).toContain('setDirectoresDeArea(id, memberIds, auth.ctx.userId)')
+  })
+
+  it('y un COMITÉ lo rechaza con su motivo', () => {
+    expect(api).toContain("message === 'NO_ES_AREA'")
+    expect(api).toContain('{ status: 409 }')
+  })
+
+  it('pasa por assignVolunteer/removeVolunteer, que sincronizan los roles', () => {
+    /**
+     * LA PIEZA QUE HACE QUE ESTO FUNCIONE SIN MIGRACIÓN. Un upsert a mano en
+     * `volunteers` habría cambiado el puesto y dejado el rol `reportes`
+     * pegado — el mismo modo de fallo que obligó a poner un backfill en la
+     * migración. Verificado en staging: asignar desde la pantalla otorga el
+     * rol y quitar lo revoca, con su fila de `member_role_position_grants`.
+     */
+    const fn = q.slice(q.indexOf('export async function setDirectoresDeArea'))
+    const fin = fn.indexOf('\n}')
+    const cuerpo = fn.slice(0, fin)
+    expect(cuerpo).toContain('assignVolunteer(positionId, id, actorUserId)')
+    expect(cuerpo).toContain('removeVolunteer(positionId, id, actorUserId)')
+    expect(cuerpo).not.toMatch(/from\('volunteers'\)\s*\.upsert/)
+  })
+
+  it('crea el puesto si el área no lo tiene', () => {
+    // La migración lo puso en las ocho que existían, pero la pantalla deja
+    // crear áreas nuevas y esas nacerían sin él.
+    const fn = q.slice(q.indexOf('export async function setDirectoresDeArea'))
+    expect(fn).toContain('TITULO_DIRECTOR_DE_AREA')
+    expect(fn).toContain('if (!positionId)')
+  })
+})

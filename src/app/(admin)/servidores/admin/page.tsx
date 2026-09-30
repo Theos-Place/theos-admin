@@ -7,6 +7,8 @@ import { Plus, Edit2, X, AlertTriangle, ChevronRight, ChevronDown, LayoutGrid, T
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { nombresDeDirectores } from '@/lib/servers/director-de-area'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { Button } from '@/components/shared/Button'
 import { useOrg, type Area, type Committee } from '@/lib/org'
 import { useServers } from '@/hooks/useServers'
 import { useAuth } from '@/hooks/useAuth'
@@ -44,14 +46,29 @@ function AreaModal({
   onClose,
 }: {
   initial?: Area
-  onSave: (name: string) => void
+  /** El nombre y la lista FINAL de directores. Los dos se guardan juntos al
+   *  apretar Guardar — ver el comentario de `directores` abajo. */
+  onSave: (name: string, directores: Array<{ id: string; name: string }>) => void
   onClose: () => void
 }) {
   const [name, setName] = useState(initial?.name ?? '')
+  /**
+   * LOS CAMBIOS DE DIRECTOR SE ACUMULAN Y SE APLICAN AL GUARDAR.
+   *
+   * Aplicarlos al instante habría sido menos código, pero este es un modal
+   * con Guardar y Cancelar: que el nombre espere y el director no, deja un
+   * «Cancelar» que revierte la mitad de lo que la persona hizo. Y acá no es
+   * un detalle cosmético — asignar el puesto le da a alguien el rol
+   * `reportes` y «Mi comité» de toda el área.
+   */
+  const [directores, setDirectores] = useState<Array<{ id: string; name: string }>>(
+    initial?.directores ?? [],
+  )
   const valid = name.trim().length > 0
+  const guardar = () => onSave(name.trim(), directores)
 
   return (
-    <Modal onClose={onClose} titleId="area-modal-title" width={384}>
+    <Modal onClose={onClose} titleId="area-modal-title" width={440}>
       <div className="p-6 space-y-4">
         <h2 id="area-modal-title" className="text-base font-bold text-navy font-display">
           {initial ? 'Editar área' : 'Nueva área'}
@@ -66,24 +83,57 @@ function AreaModal({
             placeholder="Ej. Área Espiritual"
             value={name}
             onChange={e => setName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && valid) onSave(name.trim()) }}
+            onKeyDown={e => { if (e.key === 'Enter' && valid) guardar() }}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <span className={labelCls}>Director de Área</span>
+          {/* Se dice qué implica ANTES de asignarlo, no después: es un permiso,
+              no una etiqueta. */}
+          <p className="text-[13px] text-navy-light/80 font-body">
+            Quien dirige el área ve los reportes y «Mi comité» de todos sus comités.
+            Puede haber más de uno.
+          </p>
+
+          {directores.length > 0 && (
+            <ul className="space-y-1">
+              {directores.map(d => (
+                <li key={d.id} className="flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-1.5">
+                  <span className="text-[13px] text-navy font-body min-w-0 truncate">{d.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Quitar a ${d.name} como director de área`}
+                    onClick={() => setDirectores(l => l.filter(x => x.id !== d.id))}
+                    className="shrink-0 text-navy-light hover:text-coral-deep transition-colors bg-transparent border-0 cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <MemberCombobox
+            dropdown
+            placeholder={directores.length ? 'Agregar otro director…' : 'Buscar a quien dirige el área…'}
+            excludeIds={directores.map(d => d.id)}
+            onSelect={m => setDirectores(l => (
+              l.some(x => x.id === m.id)
+                ? l
+                : [...l, { id: m.id, name: `${m.first_name} ${m.last_name}`.trim() }]
+            ))}
           />
         </div>
 
         <div className="flex gap-2 pt-1">
-          <button
-            disabled={!valid}
-            onClick={() => onSave(name.trim())}
-            className="flex-1 rounded-full bg-coral px-4 py-2.5 text-sm text-white hover:bg-coral-deep transition-all disabled:opacity-40 font-body"
-          >
+          {/* El botón compartido: el trinquete de QA-1/N3 cuenta los que
+              escriben las clases a mano, y este modal se reescribió entero
+              para el director — no tenía sentido dejar los dos viejos. */}
+          <Button variante="primario" ancho="flex" disabled={!valid} onClick={guardar}>
             {initial ? 'Guardar cambios' : 'Crear área'}
-          </button>
-          <button
-            onClick={onClose}
-            className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-          >
-            Cancelar
-          </button>
+          </Button>
+          <Button variante="secundario" onClick={onClose}>Cancelar</Button>
         </div>
       </div>
     </Modal>
@@ -612,10 +662,11 @@ export default function ServidoresAdminPage() {
 
   // ── Area handlers ──────────────────────────────────────────────────────────
 
-  async function saveArea(name: string) {
+  async function saveArea(name: string, directores: Array<{ id: string; name: string }>) {
     const { editing } = areaModal
     setAreaModal({ open: false, editing: null })
     try {
+      let areaId = editing?.id
       if (editing) {
         const res = await fetch(`/api/servers/areas/${editing.id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
@@ -627,7 +678,34 @@ export default function ServidoresAdminPage() {
         })
         if (!res.ok) throw new Error()
         const { id } = await res.json()
+        areaId = id
         if (id) setSelectedAreaId(id)
+      }
+
+      /**
+       * Los directores van en su PROPIO endpoint y DESPUÉS del nombre.
+       *
+       * Detrás no hay una columna sino asignaciones de un puesto, con la
+       * sincronización de roles que eso arrastra. Se manda solo si algo
+       * cambió: un PUT con la misma lista no rompe nada —el servidor compara
+       * antes de escribir— pero deja un registro de auditoría que no
+       * corresponde a ningún cambio.
+       */
+      const antes = (editing?.directores ?? []).map(d => d.id).sort().join(',')
+      const ahora = directores.map(d => d.id).sort().join(',')
+      if (areaId && antes !== ahora) {
+        const res = await fetch(`/api/servers/areas/${areaId}/director`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_ids: directores.map(d => d.id) }),
+        })
+        if (!res.ok) {
+          const d = await res.json().catch(() => null) as { error?: string } | null
+          // El área SÍ se guardó: se dice qué falló y qué no, en vez de un
+          // "no se pudo guardar" que haría pensar que se perdió todo.
+          toast(d?.error ?? 'El área se guardó, pero no se pudo cambiar el director.', 'error')
+          refetchOrg()
+          return
+        }
       }
       refetchOrg()
     } catch {
