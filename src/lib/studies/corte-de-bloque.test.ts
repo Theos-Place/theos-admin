@@ -5,6 +5,7 @@ import {
   asuntoDelCorte, lineasDelCorte,
   BLOQUES_DE_NIVELES, bloqueDe, esInicioDeBloque, esContinuacionDeBloque,
   nivelesACobrar, montoDelBloque, folletosQuePide,
+  ventanaDelCorte, DIAS_DE_VENTANA_DEL_CORTE,
 } from './corte-de-bloque'
 import { FOLLETO_NEXT_LEVEL } from './folletos'
 
@@ -389,5 +390,90 @@ describe('EST-14 · la migración del índice', () => {
     // automática, que es lo que el índice cuidaba.
     expect(sql).toContain('create unique index')
     expect(sql).toContain("where tipo in ('cupo_lleno', 'fin_matricula', 'cierre')")
+  })
+})
+
+/**
+ * EST-14 · La ventana de dos semanas del corte.
+ *
+ * SOLO en 2→3. El 2026-08-27 se decidió que el sucesor naciera `en_curso`
+ * porque `en_matricula` lo dejaba «esperando una ventana que nunca se
+ * define»; EST-14 la define, así que acá sí corresponde — y solo acá.
+ */
+describe('EST-14 · la matrícula abierta del corte', () => {
+  const base = { hoy: '2026-10-01', inicio: null }
+
+  it('el corte 2→3 abre catorce días', () => {
+    expect(ventanaDelCorte({ ...base, planOrigen: 'N2', planDestino: 'N3' }))
+      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-15' })
+    expect(DIAS_DE_VENTANA_DEL_CORTE).toBe(14)
+  })
+
+  it('1→2 y 3→4 NO abren: la cohorte avanza junta', () => {
+    /**
+     * Esta es la mitad que importa de la decisión. Abrirlo en los cuatro
+     * habría reintroducido el problema de agosto en tres de ellos: grupos
+     * apareciendo con cupo disponible en las pantallas de matrícula.
+     */
+    expect(ventanaDelCorte({ ...base, planOrigen: 'N1', planDestino: 'N2' })).toBeNull()
+    expect(ventanaDelCorte({ ...base, planOrigen: 'N3', planDestino: 'N4' })).toBeNull()
+  })
+
+  it('exige que el ORIGEN cierre bloque, no solo que el destino lo abra', () => {
+    /**
+     * Las dos condiciones no son la misma, aunque hoy la segunda tape a la
+     * primera para 1→2 y 3→4. Este caso —salir de N1 hacia N3— no ocurre en
+     * la realidad, pero es el único que las distingue: sin la guarda del
+     * origen, un salto raro abriría matrícula sin que haya habido corte.
+     *
+     * Se agregó porque el cebo de quitar esa guarda NO mordía, y un guard que
+     * no se puede romper es un guard que no se está probando.
+     */
+    expect(ventanaDelCorte({ ...base, planOrigen: 'N1', planDestino: 'N3' })).toBeNull()
+  })
+
+  it('ni las capacitaciones', () => {
+    expect(ventanaDelCorte({ ...base, planOrigen: 'DIS1', planDestino: 'DIS2' })).toBeNull()
+    expect(ventanaDelCorte({ ...base, planOrigen: 'PREMAT', planDestino: 'X' })).toBeNull()
+  })
+
+  it('la ventana NO se pasa del arranque del grupo', () => {
+    // Matricular a alguien en un grupo que ya empezó es meterlo tarde, y el
+    // dirigente puede haber elegido arrancar antes de los catorce días.
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-10-08' }))
+      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-08' })
+  })
+
+  it('si el arranque cae después, valen los catorce días', () => {
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-11-01' })?.enrollment_end_date)
+      .toBe('2026-10-15')
+  })
+
+  it('cruza el fin de mes sin romperse', () => {
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-25', inicio: null })?.enrollment_end_date)
+      .toBe('2026-11-08')
+  })
+})
+
+describe('EST-14 · y el grupo nace abierto de verdad', () => {
+  const q = sinComentarios('src/lib/supabase/queries/payments.ts')
+
+  it('el status sale del MISMO lugar que la ventana', () => {
+    /**
+     * BUG QUE SE INTRODUJO Y SE CORRIGIÓ EN EL ACTO: el `status: 'en_curso'`
+     * estaba suelto y el objeto lo ponía DESPUÉS del spread, así que pisaba
+     * al `en_matricula` del corte y la ventana no hacía nada — sin que
+     * fallara ningún tipo ni ningún test de los que había.
+     *
+     * Ahora el status se decide en el mismo return que la ventana, así que
+     * no hay dos lugares que puedan contradecirse.
+     */
+    expect(q).toContain("{ ...fechas, ...ventana, status: 'en_matricula' as const }")
+    expect(q).toContain("{ ...fechas, status: 'en_curso' as const }")
+  })
+
+  it('y no quedó ningún `status` suelto que lo pise', () => {
+    const insert = q.slice(q.indexOf("from('study_groups')\n    .insert("))
+    expect(insert.slice(0, 2000)).not.toMatch(/^\s{6}status: 'en_curso',$/m)
   })
 })

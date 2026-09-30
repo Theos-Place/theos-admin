@@ -10,7 +10,7 @@ import { nombreDelSucesor } from '@/lib/studies/successor-name'
 import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 import { revisarReferencia, tieneReferenciaComparable } from '@/lib/finance/referencia-repetida'
-import { nivelesACobrar, montoDelBloque } from '@/lib/studies/corte-de-bloque'
+import { nivelesACobrar, montoDelBloque, ventanaDelCorte } from '@/lib/studies/corte-de-bloque'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -196,13 +196,40 @@ async function findOrCreateSuccessorGroup(
        * 49 cierres hechos en el sistema desde agosto, 45 llegaron después del
        * fin calculado.
        */
-      ...fechasDelSucesor({
-        finDelAnterior: src.ends_at,
-        semanas: nextDurationWeeks,
-        hoy: ymdCR(),
-        diasDeClase: src.schedule_days,
-        inicioElegido,
-      }),
+      ...(() => {
+        const fechas = fechasDelSucesor({
+          finDelAnterior: src.ends_at,
+          semanas: nextDurationWeeks,
+          hoy: ymdCR(),
+          diasDeClase: src.schedule_days,
+          inicioElegido,
+        })
+        /**
+         * EST-14 · EL GRUPO QUE NACE DEL CORTE ABRE MATRÍCULA DOS SEMANAS.
+         *
+         * Solo en el corte 2→3. El 2026-08-27 se decidió que el sucesor
+         * naciera `en_curso` justamente porque `en_matricula` lo dejaba
+         * «esperando una ventana de matrícula que nunca se define»; EST-14 la
+         * define, así que acá sí corresponde. En 1→2 y 3→4 la cohorte avanza
+         * junta y no hay break: esos siguen cerrados.
+         *
+         * La regla y sus bordes viven en `corte-de-bloque`, con tests.
+         */
+        const ventana = ventanaDelCorte({
+          planOrigen: sourceCode, planDestino: nextCode,
+          hoy: ymdCR(),
+          inicio: (fechas as { starts_at?: string | null }).starts_at ?? inicioElegido,
+        })
+        /**
+         * El `status` sale de ACÁ y no de un campo suelto más abajo. Primero
+         * quedó suelto y el objeto lo ponía DESPUÉS del spread, así que
+         * `en_curso` pisaba al `en_matricula` del corte y la ventana no hacía
+         * nada — sin que fallara ningún tipo ni ningún test de los que había.
+         */
+        return ventana
+          ? { ...fechas, ...ventana, status: 'en_matricula' as const }
+          : { ...fechas, status: 'en_curso' as const }
+      })(),
       /**
        * 'en_curso', NO 'en_matricula' (decisión 2026-08-27).
        *
@@ -213,7 +240,6 @@ async function findOrCreateSuccessorGroup(
        * define — que es justo por lo que las reglas de folletos de FOL-1 no se
        * disparaban nunca para estos grupos.
        */
-      status: 'en_curso',
       current_week: 0,
       // GRU-2 · A PROPÓSITO no se copia enrollment_restrictions: la cohorte que
       // avanza no arrastra la restricción de audiencia del grupo anterior. Si

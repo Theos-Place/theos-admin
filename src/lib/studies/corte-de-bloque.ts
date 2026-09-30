@@ -210,3 +210,53 @@ export function folletosQuePide(planCode: string | null | undefined): readonly s
   if (!b) return [planCode]
   return b[0] === planCode ? b : []
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * LA VENTANA DE MATRÍCULA DEL CORTE
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** Las dos semanas del break entre bloques, en días. */
+export const DIAS_DE_VENTANA_DEL_CORTE = 14
+
+const sumarDias = (iso: string, dias: number): string => {
+  const d = new Date(`${iso}T12:00:00Z`)   // mediodía: sin sorpresas de zona
+  d.setUTCDate(d.getUTCDate() + dias)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Cuándo puede entrar gente nueva al grupo que nace del corte.
+ *
+ * **SOLO EN EL CORTE, y eso es la mitad de la decisión.** El 2026-08-27 se
+ * definió a propósito que el grupo sucesor naciera `en_curso` y no
+ * `en_matricula`, con esta razón escrita en el código: aparecía con cupo
+ * disponible en las pantallas de matrícula «y quedaba esperando una ventana
+ * de matrícula que nunca se define».
+ *
+ * EST-14 define esa ventana —dos semanas, el break entre bloques— así que la
+ * objeción queda resuelta, pero solo acá: los pasos 1→2 y 3→4 siguen siendo
+ * cohorte cerrada, porque ahí la gente avanza junta y no hay break. Abrirlo
+ * en los cuatro habría reintroducido el problema de agosto en tres de ellos.
+ *
+ * La ventana NO se pasa del arranque: matricular a alguien en un grupo que ya
+ * empezó es meterlo tarde, y el dirigente puede haber elegido arrancar antes
+ * de los catorce días. Si el inicio cae antes, la ventana cierra ahí.
+ */
+export function ventanaDelCorte(input: {
+  planDestino: string | null | undefined
+  planOrigen: string | null | undefined
+  /** El día del cierre (YYYY-MM-DD). */
+  hoy: string
+  /** Cuándo arranca el grupo nuevo (YYYY-MM-DD), si ya se sabe. */
+  inicio?: string | null
+}): { enrollment_start_date: string; enrollment_end_date: string } | null {
+  // Solo cuando se SALE de un nivel que cierra bloque hacia el siguiente.
+  if (!hayCorteAlCerrar(input.planOrigen)) return null
+  if (!esInicioDeBloque(input.planDestino)) return null
+
+  const tope = sumarDias(input.hoy, DIAS_DE_VENTANA_DEL_CORTE)
+  const inicio = (input.inicio ?? '').slice(0, 10)
+  // El arranque manda si cae antes; si no hay fecha, valen los 14 días.
+  const cierre = inicio && inicio < tope ? inicio : tope
+  return { enrollment_start_date: input.hoy, enrollment_end_date: cierre }
+}
