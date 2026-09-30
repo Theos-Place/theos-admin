@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { getDirigentesReport } from '@/lib/supabase/queries/reports'
 import { canSeeLeaderAdminStatus } from '@/lib/studies/leader-admin-status'
 import { reportarError } from '@/lib/observabilidad'
@@ -11,7 +11,7 @@ import { reportarError } from '@/lib/observabilidad'
 // dos se suman a inactivos ANTES de serializar — el número no sale del servidor.
 export async function GET() {
   try {
-    const auth = await requireModuleView('reportes')
+    const auth = await requireAccesoAReporte('dirigentes')
     if (auth.res) return auth.res
     const verMatiz = canSeeLeaderAdminStatus(auth.ctx.roles)
     return NextResponse.json({ ...(await getDirigentesReport(verMatiz)), ver_matiz: verMatiz })

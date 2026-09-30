@@ -353,6 +353,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
      * que sigue exigiendo alcance total.
      */
     if (m.href === '/servidores') return can('servidores', 'view') || user?.abre_mi_comite === true
+    // REP-11 · Reportes también aparece para quien entra por su PUESTO. No
+    // tiene sub-ítems, así que el índice ya le muestra solo sus dos tarjetas.
+    if (m.href === '/reportes') return can('reportes', 'view') || user?.abre_reportes_por_puesto === true
     // SEC-1: el padrón es solo para alcance 'all' (lider_comite ve a su gente
     // en /servidores, no en el listado completo).
     if (m.href === '/miembros') return can('miembros', 'view') && getScope('miembros') === 'all'

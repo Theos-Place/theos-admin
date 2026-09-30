@@ -2,21 +2,32 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES, ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+import { usePermissions } from '@/hooks/usePermissions'
+import { puedeVerReporte, type SlugDeReporte } from '@/lib/reports/acceso-por-reporte'
 import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, HeartHandshake, BookOpen, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
 type ReportTile = {
+  slug: SlugDeReporte
   href: string; title: string; description: string; icon: LucideIcon; ready: boolean
-  /** Si está, solo estos roles ven la tarjeta. Sin esto, la tarjeta llevaba a
-   *  una pantalla que respondía "Acceso restringido" — el módulo `reportes` no
-   *  implica poder ver todos los reportes. */
-  roles?: readonly string[]
 }
+
+/**
+ * REP-11 · QUIÉN VE CADA TARJETA YA NO SE DECIDE ACÁ.
+ *
+ * Esto tenía su propia lista de roles por tarjeta, y era la tercera copia de
+ * la regla —la pantalla del reporte tenía la suya y el endpoint la suya—. Las
+ * tres se podían contradecir, y de hecho lo hacían: el de Dirigentes no
+ * filtraba nada acá y el endpoint se conformaba con el módulo.
+ *
+ * Ahora la única fuente es `ACCESO_POR_REPORTE`, y esta pantalla solo
+ * pregunta. El `slug` es lo que la ata a esa tabla.
+ */
 
 const REPORTS: ReportTile[] = [
   {
+    slug: 'asistencia',
     href: '/reportes/asistencia',
     title: 'Crecimiento y Asistencia',
     description: 'Personas nuevas por sede y mes, y asistencia a charlas por sede/semana con comparativos por año.',
@@ -24,6 +35,7 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    slug: 'personas-nuevas',
     href: '/reportes/personas-nuevas',
     title: 'Personas nuevas',
     description: 'Quién llegó y por dónde entró (charla, estudio o evento), con edad, y si volvió o se matriculó después.',
@@ -31,6 +43,7 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    slug: 'discipulos',
     href: '/reportes/discipulos',
     title: 'Discípulos Multiplicadores',
     description: 'Personas que asisten comprometidas, sirven y donan. Traslape de criterios, tiempo a hitos y foto por cohorte.',
@@ -38,6 +51,7 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    slug: 'retencion',
     href: '/reportes/retencion',
     title: 'Retención y Transición',
     description: 'Asistentes por grupo etario, retención año a año, flujo al cambiar de grupo (transición/dropout) y proyección a 2030.',
@@ -45,22 +59,23 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    slug: 'estudios',
     href: '/reportes/estudios',
     title: 'Estudios',
     description: 'Grupos, estudiantes y dirigentes por tipo de estudio y por año, con cuántos finalizaron, edad y género.',
     icon: BookOpen,
     ready: true,
-    roles: ESTUDIOS_REPORTE_ROLES,
   },
   {
+    slug: 'servidores',
     href: '/reportes/servidores',
     title: 'Servidores y compromisos',
     description: 'Cuántos servidores asisten, están en estudios y donan — global, por área o por comité, con el detalle de quién.',
     icon: HeartHandshake,
     ready: true,
-    roles: SERVICE_ADMIN_ROLES,
   },
   {
+    slug: 'dirigentes',
     href: '/reportes/dirigentes',
     title: 'Dirigentes',
     description: 'Cuántos dirigentes hay y cuántos están dando estudio, capacidad por tipo de estudio y por zona, con evolución a 3 y 6 meses.',
@@ -71,7 +86,12 @@ const REPORTS: ReportTile[] = [
 
 export default function ReportesIndexPage() {
   const { user } = useAuth()
-  const roles = user?.roles ?? []
+  const { can } = usePermissions()
+  const quien = {
+    roles: user?.roles ?? [],
+    tieneModulo: can('reportes', 'view'),
+    porPuesto: user?.abre_reportes_por_puesto === true,
+  }
   return (
     <div className="space-y-6">
       <div>
@@ -82,7 +102,7 @@ export default function ReportesIndexPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {REPORTS.filter(r => r.ready && (!r.roles || r.roles.some(rol => (roles as string[]).includes(rol)))).map(r => {
+        {REPORTS.filter(r => r.ready && puedeVerReporte(r.slug, quien)).map(r => {
           const Icon = r.icon
           return (
             <Link

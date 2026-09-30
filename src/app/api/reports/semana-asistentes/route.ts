@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { hasModulePermission, moduleScope } from '@/lib/auth/roles'
 import { getAsistentesDeLaSemana } from '@/lib/supabase/queries/reports'
 import { leerClaveDeSemana } from '@/lib/reports/semana-detalle'
@@ -21,7 +21,7 @@ import { reportarError } from '@/lib/observabilidad'
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('reportes')
+    const auth = await requireAccesoAReporte('asistencia')
     if (auth.res) return auth.res
 
     const semana = leerClaveDeSemana(req.nextUrl.searchParams.get('semana'))

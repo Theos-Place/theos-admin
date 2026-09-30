@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { getDiscipulosReport } from '@/lib/supabase/queries/reports'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -7,7 +7,7 @@ import { reportarError } from '@/lib/observabilidad'
 // cohorte lo resuelve el cliente sobre el payload — no hay parámetros.
 export async function GET() {
   try {
-    const auth = await requireModuleView('reportes')
+    const auth = await requireAccesoAReporte('discipulos')
     if (auth.res) return auth.res
     return NextResponse.json(await getDiscipulosReport())
   } catch (error) {

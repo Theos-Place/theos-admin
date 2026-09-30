@@ -18,6 +18,9 @@ import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
 import type { DirigentesReport, LeaderHistoryPoint } from '@/lib/reports/dirigentes'
 import { VolverAReportes } from '@/components/reportes/VolverAReportes'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { Users } from 'lucide-react'
+import { useAccesoAReporte } from '@/hooks/useAccesoAReporte'
 import {
   NAVY, TEAL, EJE_TICK, ESTILO_TOOLTIP, ETIQUETA_VALOR,
   ETIQUETA_CATEGORIA, anchoDeEjeCategoria,
@@ -75,16 +78,39 @@ function Delta({ label, actual, punto }: { label: string; actual: number; punto:
 }
 
 export default function ReporteDirigentesPage() {
+  /**
+   * REP-11 · Esta pantalla NO TENÍA GATE: cargaba siempre y, si el endpoint
+   * decía que no, mostraba "Error cargando el reporte" — que se lee como una
+   * falla del sistema, no como una puerta cerrada. Ahora que el reporte está
+   * acotado a coordinación de estudios y de dirigentes (decisión 2026-09-30),
+   * eso le habría pasado a cinco personas que hoy lo abren.
+   */
+  const { loaded, puedeVer } = useAccesoAReporte('dirigentes')
   const [report, setReport] = useState<Payload | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const fetchReport = useCallback(() => {
+    if (!puedeVer) return
     fetch('/api/reports/leaders')
       .then(r => { if (!r.ok) throw new Error('Error cargando el reporte'); return r.json() as Promise<Payload> })
       .then(setReport)
       .catch(e => setError(e instanceof Error ? e.message : 'Error'))
-  }, [])
+  }, [puedeVer])
   useEffect(() => { fetchReport() }, [fetchReport])
+
+  if (!loaded) return null
+  if (!puedeVer) {
+    return (
+      <div className="space-y-4">
+        <VolverAReportes />
+        <EmptyState
+          icon={Users}
+          title="Acceso restringido"
+          description="Este reporte es para la coordinación de estudios y de dirigentes."
+        />
+      </div>
+    )
+  }
 
   if (!report) {
     return (

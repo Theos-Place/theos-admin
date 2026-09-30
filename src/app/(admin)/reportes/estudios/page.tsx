@@ -13,8 +13,7 @@ import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { usePermissions } from '@/hooks/usePermissions'
-import { useAuth } from '@/hooks/useAuth'
-import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+import { useAccesoAReporte } from '@/hooks/useAccesoAReporte'
 import { cn } from '@/lib/utils'
 import {
   resumirEstudios, porPlan, serieDeEstudios, aniosConEstudios,
@@ -79,8 +78,8 @@ const ANIO_ACTUAL = new Date().getUTCFullYear()
 
 export default function ReporteEstudiosPage() {
   const { loaded } = usePermissions()
-  const { user } = useAuth()
-  const puedeVer = (user?.roles ?? []).some(r => (ESTUDIOS_REPORTE_ROLES as string[]).includes(r))
+  // REP-11 · La regla sale de ACCESO_POR_REPORTE, igual que el endpoint.
+  const { puedeVer } = useAccesoAReporte('estudios')
 
   const [anio, setAnio] = useState(ANIO_ACTUAL)
   const [plan, setPlan] = useState('')

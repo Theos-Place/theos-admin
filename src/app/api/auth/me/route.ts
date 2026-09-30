@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt, abreMiComite,
+      documentPromptDismissedAt, abreMiComite, abreReportes,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -156,6 +156,21 @@ export async function GET() {
           return false
         }
       })(),
+
+      // REP-11: ¿algún puesto suyo abre los reportes de sede? Reemplaza al rol
+      // `reportes` que PAR-3 le otorgaba al anfitrión: ese abría los siete,
+      // esto habilita dos.
+      (async (): Promise<boolean> => {
+        try {
+          const { abreReportesPorPuesto } = await import('@/lib/supabase/queries/servers')
+          return await abreReportesPorPuesto(member.id)
+        } catch (e) {
+          // Best-effort: si falla, no ve las tarjetas — el endpoint sigue
+          // decidiendo el acceso de verdad.
+          console.warn('auth/me: puestos que abren reportes:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
     ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
@@ -184,6 +199,7 @@ export async function GET() {
         granted_form_ids: grantedFormIds,
         managed_event_ids: managedEventIds,
         abre_mi_comite: abreMiComite,
+        abre_reportes_por_puesto: abreReportes,
       },
     })
   } catch (error) {

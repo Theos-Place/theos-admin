@@ -42,6 +42,13 @@ export interface AuthUser {
    * el rol.
    */
   abre_mi_comite?: boolean
+  /**
+   * REP-11 · ¿Algún puesto suyo abre los reportes de sede (Crecimiento y
+   * Personas Nuevas)? Antes esto era un ROL —`reportes`, que PAR-3 le pegaba
+   * al anfitrión y le abría los siete—; ahora es un dato de la sesión que solo
+   * habilita esos dos. Lo calcula el servidor mirando los puestos.
+   */
+  abre_reportes_por_puesto?: boolean
 }
 
 interface AuthState {

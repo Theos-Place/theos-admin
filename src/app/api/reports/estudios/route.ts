@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
-import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { getEstudiosDelAnio, getSerieDeEstudios, getPersonasNuevas } from '@/lib/supabase/queries/reports'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -13,7 +12,7 @@ import { reportarError } from '@/lib/observabilidad'
  * reporte.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireRoles(...ESTUDIOS_REPORTE_ROLES)
+  const auth = await requireAccesoAReporte('estudios')
   if (auth.res) return auth.res
   try {
     const raw = req.nextUrl.searchParams.get('anio')

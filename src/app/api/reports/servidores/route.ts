@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoles } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCompromisosDeComites } from '@/lib/supabase/queries/mi-comite'
 import { reportarError } from '@/lib/observabilidad'
@@ -20,7 +19,7 @@ import { reportarError } from '@/lib/observabilidad'
  * bug — y por eso no hay una segunda definición de los compromisos acá.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireRoles(...SERVICE_ADMIN_ROLES)
+  const auth = await requireAccesoAReporte('servidores')
   if (auth.res) return auth.res
   try {
     const supabase = createAdminClient()

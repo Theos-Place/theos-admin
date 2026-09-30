@@ -9,6 +9,7 @@ import { todayCR } from '@/lib/format'
 import { COMITE_DIRIGENTES, esPuestoDeDirigente } from '@/lib/studies/comite-de-dirigentes'
 import { esPuestoDeEncargado, planDeEncargado } from '@/lib/servers/encargados'
 import { abreMiComite } from '@/lib/servers/puestos-que-abren-mi-comite'
+import { abreReportesDeSede } from '@/lib/reports/puestos-que-abren-reportes'
 import { reportarFalla } from '@/lib/observabilidad'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
@@ -231,6 +232,41 @@ export async function getComitesQueAbrenMiComite(memberId: string): Promise<stri
     if (abre) ids.add(area.id)
   }
   return [...ids]
+}
+
+/**
+ * REP-11 · ¿Algún puesto suyo le abre los reportes de sede?
+ *
+ * Se resuelve con UNA consulta y se corta apenas encuentra el primero: la
+ * respuesta es sí/no, no la lista de sedes. Los reportes de crecimiento y
+ * personas nuevas son de toda la organización, no por sede — acotarlos a «su»
+ * sede sería otro ítem, y ninguno de los dos endpoints sabe filtrar así hoy.
+ */
+export async function abreReportesPorPuesto(memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const [{ data, error }, areaMap] = await Promise.all([
+    supabase
+      .from('volunteers')
+      .select('position:service_positions!inner(title, is_active, area:areas!service_positions_area_id_fkey(name, area_type, is_active, parent_id))')
+      .eq('member_id', memberId)
+      .eq('status', 'active'),
+    getAreaNameMap(supabase),
+  ])
+  if (error) throw error
+  for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
+    const pos = one<{ title: string; is_active: boolean | null; area: unknown }>(fila.position)
+    if (!pos || pos.is_active === false) continue
+    const area = one<{ name: string; area_type: string; is_active: boolean | null; parent_id: string | null }>(pos.area)
+    if (!area || area.area_type !== 'committee' || area.is_active === false) continue
+    const abre = abreReportesDeSede({
+      title: pos.title,
+      areaName: area.name,
+      areaType: 'committee',
+      parentAreaName: area.parent_id ? areaMap.get(area.parent_id)?.name ?? null : null,
+    })
+    if (abre) return true
+  }
+  return false
 }
 
 /** Comité (area_id) de una vacante — para verificar permiso de gestión. */

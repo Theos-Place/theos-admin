@@ -5267,7 +5267,7 @@ contrario: que el campo SÍ viaja, que la columna está en la tabla y en el
 Excel, y que «Le falta: donación» vuelve a aparecer.
 
 
-### [ ] REP-11 · Accesos por reporte + eliminar el rol de reportes automático de anfitriones
+### [x] REP-11 · Accesos por reporte + eliminar el rol de reportes automático de anfitriones — HECHO 2026-09-30
 
 REVIERTE PARTE DE PAR-3: el acceso tipo "reportes" ya NO se asocia
 automáticamente a ningún puesto de servidor. En su lugar, accesos específicos
@@ -5297,6 +5297,58 @@ PERMISOS · Reportes: acceso granular por reporte (decidido 2026-09-30)
 Tests: cada rol ve/consulta solo lo suyo (403 al resto), dry-run del paso 1.
 tsc/lint/vitest.
 ```
+
+
+**Lo que estaba mal de fondo:** un rol ancho puesto para resolver un caso
+angosto. PAR-3 le daba al anfitrión el rol `reportes` para que viera la
+asistencia de su sede, y ese rol abre los SIETE reportes — así que de paso les
+abrió Discípulos Multiplicadores, Retención y Dirigentes, que nadie les había
+dado. Es la tercera vez que `position-roles.ts` sufre lo mismo.
+
+**Medido antes de tocar nada:** 29 personas con el rol activo. 21 por el mapeo
+automático (todas anfitrionas, `origen='automatico'`) y 8 a mano. El corte es
+limpio: ninguna cae en las dos. El dry-run vive en
+`scripts/rep11/dry-run.cjs` y sale con código 1 si alguna de las 21 no
+recupera el acceso por su puesto.
+
+**Nadie pierde lo suyo, y 15 personas ganan:** las 21 anfitrionas conservan
+Crecimiento/Asistencia y Personas Nuevas, ahora por PUESTO y sin rol de por
+medio. Y se suman 15 encargados de logística que hoy no ven ningún reporte.
+
+**Dirigentes queda acotado** a coordinación de estudios y de dirigentes, igual
+que Estudios (decisión de Floriana, 2026-09-30). No es gratis y se midió
+antes: además de las 21, lo pierden cinco —Comunicación Theos Place, Encargada
+de RH, Finanzas Theos Place, Lucía Porras y Roberto Acosta—. Esa pantalla
+además NO TENÍA GATE: cargaba siempre y ante un 403 mostraba «Error cargando el
+reporte», que se lee como una falla del sistema y no como una puerta cerrada.
+Ahora dice a quién es.
+
+**Una tabla y todos preguntan** (`lib/reports/acceso-por-reporte`). Antes la
+regla estaba en TRES lugares que se contradecían —el índice filtraba tarjetas
+con su propia lista de roles, cada pantalla repetía su `puedeVer`, y ocho de
+los diez endpoints se conformaban con el módulo—. El de Dirigentes no filtraba
+nada en el índice mientras su endpoint pedía solo el módulo. Agregar el próximo
+acceso es una línea.
+
+El test que recorre la CARPETA `api/reports` y exige `requireAccesoAReporte` en
+cada ruta es el que sostiene esto: una lista escrita a mano no habría atrapado
+al endpoint nuevo que alguien agregue mañana.
+
+**Y por segunda vez en el día, el bug lo encontró el navegador.** Con los
+endpoints ya en 200, el índice decía «Acceso restringido»: el layout de
+`(admin)` gatea por módulo. Y el menú escondía la entrada entera por lo mismo.
+La excepción del layout lista las TRES rutas exactas y no un prefijo —
+`/reportes/estudios` empieza con `/reportes`—, y hay un test que ata esa lista
+a los reportes marcados `porPuesto` en la tabla.
+
+**La migración va con el deploy, no antes.** `20260930140000` borra los grants
+y desactiva solo las 21 filas con `origen='automatico'`. Aplicada sola, esas 21
+personas se quedarían sin nada hasta que suba el código.
+
+Los tests de PAR-3 se invirtieron en vez de borrarse: ahora afirman que NINGÚN
+puesto otorga el rol `reportes`, y que el anfitrión conserva su
+`encargado_eventos` —que era el otro permiso, y ese se queda—.
+
 
 ### [x] UX-8 · `/mi-perfil`: un enlace estable al perfil propio — HECHO 2026-09-30
 

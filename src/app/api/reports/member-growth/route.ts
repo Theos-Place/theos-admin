@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { getMemberGrowthReport } from '@/lib/supabase/queries/reports'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -7,7 +7,7 @@ import { reportarError } from '@/lib/observabilidad'
 // módulo 'reportes' que asistencia. Las queries usan service role y saltan RLS.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('reportes')
+    const auth = await requireAccesoAReporte('asistencia')
     if (auth.res) return auth.res
     const yearParam = req.nextUrl.searchParams.get('year')
     const sede = req.nextUrl.searchParams.get('sede') ?? undefined

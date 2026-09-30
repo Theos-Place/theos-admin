@@ -7,6 +7,7 @@ import { withBaseRole } from '@/lib/auth/roles'
 import { cuentaHabilitada } from '@/lib/auth/account-active'
 import { abrirContextoDeActor, recordarActor } from '@/lib/auth/actor-actual'
 import { mandaEnAlgunComite, puedeVerFichaPorComite } from '@/lib/auth/mando-de-comite'
+import type { SlugDeReporte } from '@/lib/reports/acceso-por-reporte'
 
 export type AuthContext = { userId: string; memberId: string | null; roles: RoleId[] }
 
@@ -128,6 +129,35 @@ export async function requireModuleView(
   const allowed = hasModulePermission(ctx.roles, module, opts.action ?? 'view', { beyondOwn: opts.beyondOwn })
   if (!allowed) return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
   return { ctx }
+}
+
+/**
+ * REP-11 · El guard de un reporte. Una llamada por endpoint, y la regla vive
+ * en `lib/reports/acceso-por-reporte` — no acá.
+ *
+ * Reemplaza al `requireModuleView('reportes')` que tenían ocho de los diez
+ * endpoints: el módulo abría los siete reportes por igual, así que el rol
+ * `reportes` que PAR-3 le repartía a 21 anfitriones les daba también
+ * Discípulos, Retención y Dirigentes.
+ *
+ * LA CONSULTA DE PUESTOS SOLO SE HACE SI HACE FALTA. Va al final, después de
+ * los roles y del módulo, y solo para los dos reportes que un puesto puede
+ * abrir: para dirección o para quien tiene el módulo, esto no toca la base.
+ */
+export async function requireAccesoAReporte(
+  slug: SlugDeReporte,
+): Promise<{ ctx: AuthContext; res?: undefined } | { ctx?: undefined; res: NextResponse }> {
+  const ctx = await getAuthContext()
+  if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+  const { hasModulePermission } = await import('@/lib/auth/roles')
+  const { puedeVerReporte, ACCESO_POR_REPORTE } = await import('@/lib/reports/acceso-por-reporte')
+  const base = { roles: ctx.roles, tieneModulo: hasModulePermission(ctx.roles, 'reportes', 'view') }
+  if (puedeVerReporte(slug, base)) return { ctx }
+  if (ACCESO_POR_REPORTE[slug]?.porPuesto && ctx.memberId) {
+    const { abreReportesPorPuesto } = await import('@/lib/supabase/queries/servers')
+    if (await abreReportesPorPuesto(ctx.memberId)) return { ctx }
+  }
+  return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
 }
 
 /**

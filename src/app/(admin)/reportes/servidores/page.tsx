@@ -7,8 +7,7 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { usePermissions } from '@/hooks/usePermissions'
-import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { useAccesoAReporte } from '@/hooks/useAccesoAReporte'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { leFaltaAlgo, faltantes } from '@/lib/servers/compromisos'
@@ -56,8 +55,8 @@ function Barra({ pct }: { pct: number | null }) {
 
 export default function ReporteServidoresPage() {
   const { loaded } = usePermissions()
-  const { user } = useAuth()
-  const puedeVer = (user?.roles ?? []).some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+  // REP-11 · La regla sale de ACCESO_POR_REPORTE, igual que el endpoint.
+  const { puedeVer } = useAccesoAReporte('servidores')
 
   const [area, setArea] = useState('')
   const [comite, setComite] = useState('')

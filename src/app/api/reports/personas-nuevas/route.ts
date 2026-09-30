@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireModuleView } from '@/lib/auth/guard'
+import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { hasModulePermission, moduleScope } from '@/lib/auth/roles'
 import { getSeriePersonasNuevas, getPersonasNuevas } from '@/lib/supabase/queries/reports'
 import { reportarError } from '@/lib/observabilidad'
@@ -19,7 +19,7 @@ const MES = /^(\d{4})-(\d{2})$/
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('reportes')
+    const auth = await requireAccesoAReporte('personas-nuevas')
     if (auth.res) return auth.res
 
     const mes = req.nextUrl.searchParams.get('mes')

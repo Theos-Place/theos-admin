@@ -118,31 +118,25 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
       && esComiteYouth(ctx.areaName)
       && ['colaborador', 'colaborador youth', 'bienvenida'].includes(normSinArticulos(ctx.title)),
   },
-  {
-    role: 'reportes',
-    description:
-      'Anfitrión de un comité de sede: es quien recibe y cuenta a la gente en la '
-      + 'charla, así que necesita ver los reportes de asistencia de su sede.',
-    /**
-     * PAR-3 (2026-09-23). El catálogo real se revisó antes de escribir esto: los
-     * DIEZ puestos que matchean se llaman exactamente "Anfitrión", uno por sede,
-     * sin variantes tipo "Co-anfitrión" ni "Anfitrión de eventos". O sea que el
-     * título alcanza y no hay que adivinar nada.
-     *
-     * Va acotada al COMITÉ DE SEDE, no al título suelto (decisión de Floriana).
-     * Hoy da exactamente lo mismo —los 10 puestos están todos en sedes— pero si
-     * mañana alguien crea un "Anfitrión" para un evento puntual o un comité
-     * administrativo, el rol no se reparte solo. Un permiso que se expande por
-     * parecido de nombre es el modo de fallo que este archivo ya sufrió con
-     * "Coordinador de Información".
-     *
-     * `anfitrion` ya estaba en SEDE_EVENTOS_TITLES para 'encargado_eventos'; acá
-     * NO se reusa esa lista a propósito: son dos permisos distintos y juntarlos
-     * haría que agregar un puesto a la lista de check-in repartiera reportes sin
-     * que nadie lo pidiera.
-     */
-    matches: (ctx) => esComiteDeSede(ctx) && normSinArticulos(ctx.title) === 'anfitrion',
-  },
+  /**
+   * ACÁ ESTABA LA REGLA `reportes` DEL ANFITRIÓN, Y SE QUITÓ (REP-11,
+   * 2026-09-30). No se borra en silencio porque el hueco es la explicación.
+   *
+   * PAR-3 (2026-09-23) le daba al anfitrión de sede el rol `reportes` entero
+   * para que viera la asistencia de su sede. El rol abre los SIETE reportes,
+   * así que de paso les abrió Discípulos Multiplicadores, Retención y
+   * Dirigentes — que nadie les había dado. Medido el 2026-09-30: 21 de las 29
+   * personas con ese rol lo tenían por este mapeo.
+   *
+   * El acceso no desaparece, cambia de forma: el puesto sigue abriendo
+   * Crecimiento/Asistencia y Personas Nuevas, pero por reporte y sin rol de
+   * por medio (`lib/reports/puestos-que-abren-reportes`). La diferencia es que
+   * un rol se queda pegado a la persona y lo ve cualquier pantalla que lo
+   * pregunte.
+   *
+   * La lección, que ya es la tercera en este archivo: un permiso ancho puesto
+   * para resolver un caso angosto reparte todo lo demás sin que nadie lo pida.
+   */
   {
     role: 'evaluaciones',
     description:

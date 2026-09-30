@@ -173,6 +173,22 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
    * a comprobar: esto solo decide si se pinta la pantalla.
    */
   if (pathname === '/servidores/mi-comite' && user.abre_mi_comite) return <>{children}</>
+  /**
+   * REP-11 · Los reportes que abre un PUESTO, no el módulo.
+   *
+   * Mismo corte que el de arriba, y encontrado igual —en el navegador—: los
+   * endpoints ya contestaban 200 para Crecimiento y Personas Nuevas, y el
+   * índice igual decía "Acceso restringido" porque el layout gatea por módulo
+   * y el anfitrión no lo tiene ni lo va a tener.
+   *
+   * Solo estas tres rutas: el índice, que le muestra sus dos tarjetas, y los
+   * dos reportes. El resto de /reportes sigue exigiendo el módulo, y cada
+   * endpoint lo vuelve a comprobar con su propia regla.
+   */
+  if (user.abre_reportes_por_puesto
+      && ['/reportes', '/reportes/asistencia', '/reportes/personas-nuevas'].includes(pathname)) {
+    return <>{children}</>
+  }
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El rol acotado de grupos (editor_grupos_estudio) tiene el módulo estudios
   // con alcance 'all' pero SOLO para grupos: nada de resumen, plan, bloques,
