@@ -5542,7 +5542,7 @@ De paso, dos guards existentes atraparon a `/mi-perfil` (UX-8) por no declarar
 título de pestaña ni `h1`. Se le agregaron en vez de excepcionarla: el caso
 «sesión sin ficha» sí renderiza, y merece los dos.
 
-### [ ] REP-12 · Encargado de Planificación: acceso automático a reportes (pedido 2026-09-30)
+### [x] REP-12 · Encargado de Planificación: acceso automático a reportes — HECHO 2026-09-30
 
 Prompt para Claude Code:
 
@@ -5555,3 +5555,59 @@ Verificar el nombre exacto del puesto en el catálogo. Al perder el puesto, pier
 acceso (salvo asignación manual). DRY-RUN: quiénes lo reciben hoy. Tests: puesto da y
 quita el acceso. tsc/lint/vitest.
 ```
+
+
+**EL NOMBRE DEL PEDIDO NO EXISTE EN EL CATÁLOGO, y averiguarlo cambió la regla
+entera.** No hay ningún puesto «Encargado de Planificación»: lo que hay es
+`Encargado Comité` en el área «Comité Planificación» — el título es genérico y
+quien dice Planificación es el ÁREA. Es la cuarta vez que este archivo
+tropieza con lo mismo (pasó con «Coordinador de Información», con «Colaborador
+Solicitud Puestos» y con «Anfitrión 1»), y el fallo siempre es SILENCIOSO: la
+regla no matchea a nadie y nadie se entera.
+
+**Y el error contrario habría sido peor.** `Encargado Comité` existe en **23
+comités con 26 personas**. Una regla escrita contra ese título le habría dado
+TODOS los reportes de la organización a 26 personas en vez de a una. Por eso
+la condición es comité + encargado, y hay un test con cuatro comités reales
+que se cae si alguien la afloja.
+
+Se usa `esPuestoDeEncargado` y no el título exacto: la sincronización del Excel
+Madre ya renombró los «Encargado» a «Encargado <Comité>» una vez (2026-09-11) y
+dejó 26 comités sin otorgar su rol. Si mañana este pasa a llamarse «Encargado
+Planificación», la regla sigue funcionando.
+
+**Dry-run** (`scripts/rep12/dry-run.cjs`): **1 persona** — Roberto Acosta
+Acosta. El control del script cuenta las 24 con el mismo título en otros
+comités y verifica que ninguna la recibe.
+
+**Detalle que vale anotar:** a Roberto se le había quitado el rol `reportes` a
+mano ese mismo día a las 13:16 (audit_log, actor `ti@theosplace.org`), 12
+minutos después del deploy de REP-11. Floriana confirmó que está bien: que no
+lo tenga directo y que le llegue **solo por el puesto**, que es más limpio
+porque al dejar el comité lo pierde solo.
+
+**La migración llama al RPC, no inserta a mano.** `grant_position_role` ya es
+idempotente, ya respeta un rol puesto a mano —no le pisa el `origen`— y ya crea
+la fila de `member_role_position_grants`, que es JUSTO lo que hace que
+`revoke_position_role` se lo quite al perder el puesto. Un INSERT directo habría
+dado el acceso y lo habría dejado pegado para siempre.
+
+Existe porque el sync corre cuando alguien TOCA una asignación: quien ya tenía
+el puesto no dispara nada, así que sin backfill la regla no le llegaba a nadie.
+
+**Verificado en staging punta a punta**, donde el caso venía servido: la
+encargada del comité recibe el rol, la `Colaborador Planificación` NO, ningún
+otro comité se ve afectado, y al simular la pérdida del puesto con
+`revoke_position_role` el rol queda en `is_active=false`. De paso confirmó que
+el nombre aguanta variantes: en staging el comité se llama «Comité de
+Planificación» y en producción «Comité Planificación».
+
+No contradice a REP-11, que le quitó este mismo rol al anfitrión: allá el rol
+ancho estaba de más —necesitaba dos reportes de su sede— y acá es lo pedido,
+porque quien planifica mira todo. El test de REP-11 se afinó para decir eso:
+antes prohibía la palabra `role: 'reportes'` en todo el archivo; ahora exige que
+haya UNA sola regla que lo otorgue y que sea la de Planificación.
+
+Cuatro cebos muerden — y uno no mordió al primer intento porque el cebo no se
+había aplicado bien, así que ahora el script verifica que el cambio entró antes
+de correr las pruebas.
