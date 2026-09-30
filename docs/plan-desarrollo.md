@@ -5747,7 +5747,22 @@ mire el nombre daría distinto si acá lo «arregláramos».
 | `Area Dirección` | `Dirección` |
 | `Area Sedes` | `Sedes` |
 
-**PENDIENTE APARTE, para producción:** el doble espacio de Comunidad y
-Enseñanza es un defecto de datos real. No se tocó porque limpiarlo en
-producción es un cambio aparte y hay que revisar antes qué lo mira —el
-nombre del área aparece en exports y en reglas de puesto.
+**RESUELTO el mismo día** (pedido de Floriana): se quitó el doble espacio en
+producción y en staging. «Area  Comunidad» y «Area  Enseñanza» pasaron a
+«Area Comunidad» y «Area Enseñanza».
+
+Lo que se midió antes, porque un nombre de área puede estar mirado desde
+cualquier lado:
+
+- **Ningún código compara nombres de área exactos.** Las reglas que los miran
+  —`esComiteDeSede`, la de Planificación, `abreReportesDeSede`— normalizan
+  acentos y espacios, así que el cambio les da igual.
+- **Ninguna tabla lo guarda denormalizado.** Se revisaron las **335 columnas
+  de texto** del esquema `public` buscando `Area  ` con doble espacio: la
+  única que lo tenía era `areas.name`, con 2 filas.
+- Y no había otras anomalías: ningún comité tenía espacios de más.
+
+Se aplicó en una transacción con cuatro guardas que hacían `rollback` si algo
+no cuadraba —que tocara exactamente 2 filas, que no quedara ninguna sucia,
+que siguieran habiendo 8 áreas activas y que no apareciera un nombre
+duplicado—.
