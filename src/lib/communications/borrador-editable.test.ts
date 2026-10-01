@@ -34,13 +34,28 @@ describe('el enlace del borrador', () => {
 })
 
 describe('la precarga', () => {
-  it('ocurre en un efecto que espera a que lleguen los mensajes', () => {
-    expect(NUEVA).toMatch(/useEffect\(\(\) => \{\s*if \(borradorCargado \|\| !precargarDe \|\| messages\.length === 0\) return/)
+  it('espera a que lleguen los mensajes en vez de leerlos en el valor inicial', () => {
+    // El bug original: `useState(reenviarMsg?.subject ?? '')` con una lista
+    // que llega después. Ahora se busca en cada render y se sincroniza cuando
+    // aparece.
+    expect(NUEVA).toContain('const paraPrecargar = precargarDe ? messages.find(m => m.id === precargarDe) : null')
+    expect(NUEVA).toContain('if (paraPrecargar && cargadoDe !== paraPrecargar.id)')
   })
 
-  it('se aplica UNA vez, para no pisar lo que la persona escribió', () => {
-    expect(NUEVA).toContain('setBorradorCargado(true)')
-    expect(NUEVA).toContain('borradorCargado ||')
+  it('sincroniza durante el render, NO dentro de un efecto', () => {
+    /**
+     * Un efecto pintaría primero el formulario vacío y lo corregiría después
+     * —parpadeo y render en cascada—. Además el CI tiene una verja de
+     * `react-hooks/set-state-in-effect` que no deja agregar casos nuevos, y
+     * la primera versión de este arreglo la rompió: 56 warnings contra un
+     * tope de 55.
+     */
+    const bloque = NUEVA.slice(NUEVA.indexOf('const precargarDe ='), NUEVA.indexOf('async function saveDraft'))
+    expect(bloque).not.toContain('useEffect')
+  })
+
+  it('se aplica UNA vez por id, para no pisar lo que la persona escribió', () => {
+    expect(NUEVA).toContain('setCargadoDe(paraPrecargar.id)')
   })
 
   it('cubre también el camino de reenviar, que fallaba igual', () => {
