@@ -549,12 +549,28 @@ export const ROLES: Role[] = [
   },
   {
     id: 'encargado_staff',
-    name: 'Encargado de Staff',
-    description: 'Servidores, puestos de servicio y empleados',
+    /**
+     * Se llama «Empleados» desde el 2026-10-01, por pedido de Floriana. El id
+     * NO cambia: renombrarlo obligaría a migrar las filas de `member_roles`,
+     * el CHECK que repite la lista y los helpers de RLS que la repiten otra
+     * vez — tres copias que hay que mover a la vez para ganar un nombre que
+     * nadie ve. Lo que se ve es `name`.
+     */
+    name: 'Empleados',
+    description: 'Empleados: fichas, puestos, vacaciones, documentos y salarios',
     color: '#70BDC2',
     permissions: [
       { module: 'servidores', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
-      { module: 'empleados',  actions: ['view', 'create', 'edit'],           scope: 'all' },
+      /**
+       * Todo lo que vive en las páginas de empleados. En la práctica YA podía
+       * todo: cada endpoint bajo `/api/employees` guarda con
+       * `requireRoles('direccion','encargado_staff')`, no por módulo. Era la
+       * declaración la que se quedaba corta, y eso importa igual — es el
+       * contrato que lee `can()`, y el día que alguien ponga un botón de
+       * exportar detrás de `can('empleados','export')` se le habría escondido
+       * justo a quien lleva el módulo.
+       */
+      { module: 'empleados',  actions: ['view', 'create', 'edit', 'delete', 'export'], scope: 'all' },
       { module: 'miembros',   actions: ['view'],                             scope: 'all' },
       // 2026-08-04: mismo desalineamiento que comunicaciones (ver arriba).
       { module: 'formularios', actions: ['view', 'create', 'edit', 'export'], scope: 'all' },
@@ -573,7 +589,9 @@ export const ROLES: Role[] = [
   },
   {
     id: 'encargado_eventos',
-    name: 'Encargado de Eventos',
+    // «Eventos» a secas desde el 2026-10-01. El id se queda, por lo mismo que
+    // `encargado_staff`: el nombre que se ve es `name`.
+    name: 'Eventos',
     description: 'Gestión completa de eventos: crear, editar, inscripciones, check-in y reportes',
     color: '#E0823D',
     permissions: [
