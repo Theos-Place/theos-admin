@@ -8,7 +8,7 @@
  *   npx tsx scripts/create-member-accounts.ts            → DRY-RUN (solo reporte)
  *   npx tsx scripts/create-member-accounts.ts --apply    → corrida real
  *
- * Reglas (docs/plan-desarrollo.md AUTH-1):
+ * Reglas (docs/plan-desarrollo-cerrado.md AUTH-1 — el plan se partió el 2026-10-01):
  *  · Excluidos: ya con cuenta, sin correo/correo inválido, inactivos,
  *    is_system, email_bounced, email_complained, y MENORES DE 12 años
  *    (decisión TI 2026-07-28; sin fecha de nacimiento se incluye).

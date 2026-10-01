@@ -396,4 +396,7 @@ Permisos fuera del catálogo de roles: `event_managers` (gestionar UN evento) y 
 - La selección de comité (EST-10) excluye a `direccion` a propósito (respuestas con testimonio personal).
 - `/comunicaciones/configuracion` solo admin (COM-1).
 
-**Plan de ejecución:** la cola completa priorizada está en [`docs/plan-desarrollo.md`](plan-desarrollo.md).
+**Plan de ejecución:** lo que falta está en
+[`docs/plan-desarrollo.md`](plan-desarrollo.md); lo ya entregado, con el
+porqué y las trampas medidas de cada área, en
+[`docs/plan-desarrollo-cerrado.md`](plan-desarrollo-cerrado.md).
