@@ -54,6 +54,8 @@ function NuevaComunicacionContent() {
     []
   )
   const reenviarId = searchParams.get('reenviar') ?? ''
+  /** Borrador que se está editando. Si está, se guarda SOBRE él. */
+  const borradorId = searchParams.get('borrador') ?? ''
   /** Lista guardada de la que vinieron los destinatarios. Viaja en la URL desde
    *  /miembros/listas y hasta ahora se ignoraba: al programar se guardaba solo
    *  la foto de la gente, y el envío salía a esa foto por vieja que fuera. */
@@ -184,6 +186,36 @@ function NuevaComunicacionContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tplApplied, templates])
 
+  /**
+   * "Continuar editando" llega como ?borrador=ID: carga ese borrador.
+   *
+   * Va en un EFECTO y no en el valor inicial de `useState`, que es donde
+   * estaba el precargado de `?reenviar=`. `messages` lo trae un hook de forma
+   * asíncrona: en el primer render la lista está vacía, el valor inicial sale
+   * '' y un `useState` no se vuelve a aplicar cuando el dato llega. O sea que
+   * ese camino solo funcionaba si los mensajes ya estaban en caché — pura
+   * suerte, y por eso "se abre en blanco".
+   *
+   * Se aplica UNA sola vez (`borradorCargado`): si se repitiera al refrescarse
+   * la lista, le borraría a la persona lo que acaba de escribir.
+   */
+  const [borradorCargado, setBorradorCargado] = useState(false)
+  // Cubre los DOS caminos: editar un borrador y reenviar uno ya salido. El de
+  // reenviar arrastraba la misma carrera y fallaba igual de callado.
+  const precargarDe = borradorId || reenviarId
+  useEffect(() => {
+    if (borradorCargado || !precargarDe || messages.length === 0) return
+    const b = messages.find(m => m.id === precargarDe)
+    if (!b) return
+    setChannel(b.channel)
+    setSubject(b.subject ?? '')
+    if (b.channel === 'email') setEmailBody(b.body ?? '')
+    else setWaBody(b.body ?? '')
+    if (b.channel === 'email') setPreviewChannel('email')
+    setBorradorCargado(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [borradorCargado, precargarDe, messages])
+
   // Guarda como borrador (sin enviar): crea el broadcast en estado 'draft'.
   async function saveDraft() {
     if (savingDraft) return
@@ -193,8 +225,12 @@ function NuevaComunicacionContent() {
     }
     setSavingDraft(true)
     try {
-      const res = await fetch('/api/communications/messages', {
-        method: 'POST',
+      // Editando un borrador se guarda SOBRE él (PATCH). Con POST cada
+      // "guardar" creaba uno nuevo: editar tres veces dejaba tres borradores
+      // y había que adivinar cuál era el bueno.
+      const res = await fetch(
+        borradorId ? `/api/communications/messages/${borradorId}` : '/api/communications/messages', {
+        method: borradorId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channel,
@@ -208,11 +244,16 @@ function NuevaComunicacionContent() {
           whatsapp_config_id: null,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const d = await res.json().catch(() => null)
+        throw new Error(d?.error ?? '')
+      }
       toast('Borrador guardado', 'success')
       router.push('/comunicaciones')
-    } catch {
-      toast('No se pudo guardar el borrador', 'error')
+    } catch (e) {
+      // El mensaje del servidor cuando lo hay: «ya no es un borrador» le dice
+      // qué hacer, y «no se pudo guardar» no.
+      toast(e instanceof Error && e.message ? e.message : 'No se pudo guardar el borrador', 'error')
     } finally {
       setSavingDraft(false)
     }
