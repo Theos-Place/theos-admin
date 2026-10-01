@@ -108,7 +108,11 @@ function body(kind: PasswordLinkKind, link: string, nombre: string | null): stri
   <p style="font-size:14px; color:#555; line-height:1.75; margin:0;">
     El enlace sirve <strong>una sola vez</strong> y vence, así que usalo apenas te llegue.
     Podés abrirlo desde cualquier dispositivo: la compu, el celular, el que tengas a mano.
-    Si ya no sirve, pedí uno nuevo desde la pantalla de ingreso.
+  </p>
+  <p style="font-size:14px; color:#555; line-height:1.75; margin:12px 0 0;">
+    <strong>Si pediste el enlace más de una vez, abrí el correo más reciente.</strong>
+    Cada enlace nuevo deja sin efecto a los anteriores, así que los de antes van a
+    decirte que están vencidos aunque acaben de llegar.
   </p>
 </div>
 
