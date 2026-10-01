@@ -63,3 +63,38 @@ describe('merge_members', () => {
     }
   })
 })
+
+describe('merge_members · la familia', () => {
+  const def = ultimaDefinicion()
+
+  it('ya no exige que las dos fichas compartan familia', () => {
+    /**
+     * El índice único es sobre `member_id` SOLO. La versión vieja limpiaba el
+     * choque con `k.family_unit_id = a.family_unit_id`, o sea solo dentro de
+     * la misma familia, y en familias distintas la fusión moría con un 23505
+     * en bruto. Dos fichas de Liam Salazar Calderon (2026-09-30).
+     */
+    expect(def).not.toMatch(/DELETE FROM family_members a WHERE[\s\S]{0,200}k\.family_unit_id = a\.family_unit_id/)
+  })
+
+  it('se queda con el vínculo más reciente, mire para donde mire', () => {
+    // Las DOS direcciones: quien fusiona elige cuál ficha conserva, y el
+    // vínculo nuevo puede estar en cualquiera de las dos.
+    expect(def).toMatch(/DELETE FROM family_members a USING family_members k[\s\S]*?a\.created_at <= k\.created_at/)
+    expect(def).toMatch(/DELETE FROM family_members k USING family_members a[\s\S]*?a\.created_at > k\.created_at/)
+  })
+
+  it('y se mide por la fecha del VÍNCULO, no la de la ficha', () => {
+    // `members.created_at` diría cuándo nació el registro de la persona, que
+    // no es cuándo se supo de esa familia. En Liam las dos fechas coincidían
+    // en la respuesta; no tenían por qué.
+    // Se corta hacia ADELANTE desde su encabezado: el bloque de la familia
+    // vive DENTRO de la sección de choques, así que cortar hasta ese título
+    // daba un trozo vacío y el test pasaba sin mirar nada.
+    const i = def.indexOf('LA FAMILIA: gana el vínculo')
+    expect(i).toBeGreaterThan(-1)
+    const bloque = def.slice(i, def.indexOf('DELETE FROM applications a', i))
+    expect(bloque).toContain('family_members.created_at')
+    expect(bloque).not.toMatch(/\bm\.created_at\b/)
+  })
+})
