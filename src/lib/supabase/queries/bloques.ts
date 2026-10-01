@@ -22,6 +22,11 @@ export type DbBloque = {
   created_at: string
 }
 
+import {
+  expandirAFolletos, folletosPorSede, totalDeFolletos, codigosDeFolleto,
+  type FolletosPorGrupo,
+} from '@/lib/studies/folletos-del-bloque'
+
 export type SedeCount = { sede: string; cantidad: number }
 
 export type GroupFolletoDetail = {
@@ -103,6 +108,17 @@ export async function countBlockBySede(aperturaIso: string): Promise<SedeCount[]
 /** Desglose por grupo (grupo, nivel, dirigente, sede) de los folletos del bloque.
  *  Misma asociación por rango de fechas que countBlockBySede; alimenta el
  *  correo/notificación de hitos. Lanza si el RPC falla (mismo motivo). */
+/** Nombre de cada nivel por su código. El folleto del PAR —el N2 de un grupo
+ *  de N1— no viene en la fila del reporte, hay que buscarlo. */
+async function nombresDeNiveles(codigos: readonly string[]): Promise<Map<string, string>> {
+  const m = new Map<string, string>()
+  if (codigos.length === 0) return m
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('study_plans').select('code, name').in('code', [...codigos])
+  for (const r of (data ?? []) as Array<{ code: string; name: string }>) m.set(r.code, r.name)
+  return m
+}
+
 export async function countBlockDetail(aperturaIso: string): Promise<GroupFolletoDetail[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.rpc('block_folletos_detail', { p_apertura: aperturaIso })
@@ -124,7 +140,8 @@ export type MilestoneResult = {
   fecha_apertura: string
   fecha_cierre_matricula: string
   by_sede: SedeCount[]
-  detail: GroupFolletoDetail[]
+  /** Una línea POR FOLLETO (no por matrícula): un grupo de N1 sale dos veces. */
+  detail: FolletosPorGrupo[]
   total: number
 }
 
@@ -176,13 +193,15 @@ export async function processBloqueMilestones(todayIso: string): Promise<Milesto
       try {
         // Una sola consulta: el desglose por grupo; el conteo por sede se
         // deriva de ahí (misma asociación por fechas que countBlockBySede).
-        const detail = await countBlockDetail(b.fecha_apertura)
-        const sedeMap = new Map<string, number>()
-        for (const d of detail) sedeMap.set(d.sede, (sedeMap.get(d.sede) ?? 0) + d.cantidad)
-        const bySede: SedeCount[] = [...sedeMap.entries()]
-          .map(([sede, cantidad]) => ({ sede, cantidad }))
-          .sort((a, z) => z.cantidad - a.cantidad)
-        const total = bySede.reduce((s, r) => s + r.cantidad, 0)
+        // El desglose POR FOLLETO, no por matrícula. Un grupo de N1 sale dos
+        // veces —folleto de Nivel 1 y folleto de Nivel 2—, que es lo que de
+        // verdad hay que imprimir; uno de N2 no sale, porque esos folletos ya
+        // se entregaron al matricular N1.
+        const porGrupo = await countBlockDetail(b.fecha_apertura)
+        const nombres = await nombresDeNiveles(codigosDeFolleto(porGrupo))
+        const detail = expandirAFolletos(porGrupo, c => nombres.get(c))
+        const bySede = folletosPorSede(detail)
+        const total = totalDeFolletos(detail)
         const tipo = MILESTONE_TO_TIPO[m]
 
         // FOL-1: el hito YA NO crea folleto_requests — la cola se alimenta

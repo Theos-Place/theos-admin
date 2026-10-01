@@ -38,15 +38,18 @@ export async function POST(req: NextRequest) {
       // matrícula sigue abierta); solo el final es el conteo para imprimir.
       const intro = esFinal
         ? `La matrícula del bloque ya cerró: este es el <strong>conteo definitivo para imprimir</strong>.`
-        : `<strong>Este número todavía puede cambiar:</strong> es la cantidad de personas matriculadas hasta hoy, y la matrícula del bloque sigue abierta hasta el <strong>${cierreLabel}</strong>. El conteo definitivo llega ese día con el reporte final.`
+        : `<strong>Este número todavía puede cambiar:</strong> es lo que piden las matrículas de hoy, y el bloque sigue abierto hasta el <strong>${cierreLabel}</strong>. El conteo definitivo llega ese día con el reporte final.`
 
-      // Desglose por sede, y dentro de cada sede el detalle por grupo
-      // (grupo · nivel · dirigente · cantidad).
+      // Desglose por sede, y dentro de cada sede UNA LÍNEA POR FOLLETO
+      // (grupo · folleto · dirigente · cantidad). Un grupo de Nivel 1 aparece
+      // DOS veces —folleto de Nivel 1 y folleto de Nivel 2—, porque los dos
+      // se entregan juntos y los dos hay que imprimirlos. Pedido de Floriana
+      // el 2026-10-01: listados por aparte.
       const sedeBlocks = r.by_sede.filter(s => s.cantidad > 0).map(s => {
         const rows = r.detail.filter(d => d.sede === s.sede).map(d => `
           <tr>
             <td style="padding:4px 12px 4px 0;">${d.grupo}</td>
-            <td style="padding:4px 12px 4px 0;">${d.nivel}</td>
+            <td style="padding:4px 12px 4px 0;">${d.folleto}</td>
             <td style="padding:4px 12px 4px 0;">${d.dirigente}</td>
             <td style="padding:4px 0; text-align:right;"><strong>${d.cantidad}</strong></td>
           </tr>`).join('')
@@ -55,9 +58,9 @@ export async function POST(req: NextRequest) {
           <table style="border-collapse:collapse; margin:0 0 12px 12px; font-size:14px;">
             <tr>
               <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Grupo</th>
-              <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Nivel</th>
+              <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Folleto</th>
               <th align="left" style="padding:4px 12px 4px 0; font-weight:normal; color:#666;">Dirigente</th>
-              <th align="right" style="padding:4px 0; font-weight:normal; color:#666;">Matriculados</th>
+              <th align="right" style="padding:4px 0; font-weight:normal; color:#666;">Folletos</th>
             </tr>
             ${rows}
           </table>`
@@ -67,7 +70,7 @@ export async function POST(req: NextRequest) {
         title: `Folletos ${hito} · ${r.bloque_nombre}`,
         body: esFinal
           ? `Conteo definitivo: ${r.total} folleto${plural ? 's' : ''}. Apertura: ${aperturaLabel}.`
-          : `Por ahora ${r.total} matriculado${plural ? 's' : ''}; la matrícula cierra el ${cierreLabel}.`,
+          : `Por ahora ${r.total} folleto${plural ? 's' : ''}; la matrícula cierra el ${cierreLabel}.`,
         subject: `Folletos ${hito} — ${r.bloque_nombre}`,
         // El hito no crea tiquetes en la cola de folletos, así que la campana
         // lleva a los bloques, donde sí se ve este conteo.
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
         html: `
           <p>Reporte <strong>${hito.toLowerCase()}</strong> de folletos del bloque <strong>${r.bloque_nombre}</strong> (apertura: ${aperturaLabel}).</p>
           <p>${intro}</p>
-          <p>Total al día de hoy: <strong>${r.total}</strong> persona${plural ? 's' : ''} matriculada${plural ? 's' : ''}.</p>
+          <p>Total al día de hoy: <strong>${r.total}</strong> folleto${plural ? 's' : ''} a imprimir.</p>
           ${sedeBlocks || '<p>Sin matrículas aún.</p>'}
           <p>Podés ver los bloques y sus fechas en el sistema, en Estudios &rsaquo; Bloques.</p>
         `,

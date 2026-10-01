@@ -3420,6 +3420,25 @@ tiquete todavía, así que cuando se disparen ya piden el par completo.
 Trece cebos muerden entre las tres fases, incluidos los dos modos de fallo
 caros: que se cobre dos veces y que las capacitaciones se vuelvan gratis.
 
+**FASE 5 · EL CONTEO PARA IMPRIMIR ESTABA DESFASADO (2026-10-01).** El reporte
+de hitos decía «Conteo definitivo: X folletos», pero X salía de `count(*)`
+sobre MATRÍCULAS. Con un folleto por estudiante coincidía; con pares, no, y
+fallaba en las DOS direcciones a la vez: un grupo de N1 con 10 estudiantes
+reportaba 10 cuando necesita 20 —se imprimía la mitad—, y uno de N2 seguía
+contando aunque esos folletos ya se habían entregado al matricular N1 —se
+imprimía de más—. Ni siquiera se compensaban de forma predecible.
+
+Ahora el desglose es UNA LÍNEA POR FOLLETO, como lo pidió Floriana: un grupo
+de Nivel 1 aparece dos veces, con el folleto de 1 y el de 2 por aparte, y los
+de N2/N4 no aparecen. La regla de qué pide cada nivel NO se reescribió: se
+reusa `folletosQuePide`, la misma que crea los tiquetes, porque dos copias se
+separarían el día que cambien los bloques y entonces la cola y el conteo de
+impresión dirían cosas distintas sin que nadie lo note.
+
+El correo cambió de vocabulario: la columna dice «Folleto» y no «Nivel», y el
+total dice «folletos a imprimir» y no «personas matriculadas» — era esa frase
+la que hacía confiar en un número que significaba otra cosa.
+
 
 ### [x] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva — HECHO 2026-09-24
 
@@ -6024,4 +6043,39 @@ Todo cambio que soporte haga queda en audit_log como cualquier edición.
 Tests: solo bienvenida crea tiquetes (403 al resto), solo soporte_tecnico/admin ve la
 página, el rol abre exactamente los tres módulos (403 a finanzas/reportes), puesto de TI
 da y quita el rol. tsc/lint/vitest.
+```
+
+### [ ] EST-20 · Página pública de matrícula de Nivel 1 (pedido 2026-10-01)
+
+Prompt para Claude Code:
+
+```
+FEATURE · Página PÚBLICA con los grupos de Nivel 1 en matrícula
+
+QUÉ: página pública (sin login) que lista ÚNICAMENTE los grupos de Nivel 1 con estado
+"en matrícula" — para compartir el enlace en redes, WhatsApp y el website. Mismo patrón
+que el calendario público y la página de puestos (SRV-13): PUBLIC_PREFIXES + evaluar si
+también se incrusta por iframe en theosplace.org (extender EMBED_ALLOWED_ORIGINS a esta
+ruta como en SRV-13 — preguntar a Floriana si el iframe se quiere de una vez; la página
+pública va segura).
+
+CONTENIDO por grupo (REUTILIZAR la tarjeta de grupo de la matrícula, GroupRow/MAT-2, que
+ya quedó responsive — misma info pública): zona + ubicación, horario, dirigente, cupos
+disponibles con barra, fecha de inicio, precio/gratuito. Filtro simple por zona y
+búsqueda. Solo grupos de Nivel 1 en matrícula con cupo — nada de otros planes ni estados
+(el catálogo filtrado server-side; sin datos de miembros en el payload público).
+
+MATRICULARSE: botón "Matricular" en cada grupo → pide login y, al volver, aterriza en la
+matrícula normal CON ese grupo preseleccionado (el ?redirect= de src/proxy.ts + el flujo
+de primera vez de AUT-3; la gente nueva que viene de redes casi nunca tendrá cuenta —
+este es el caso donde el camino "Creá tu contraseña" más importa, y donde el cuestionario
+de Nivel 1 de EST-15 aplica igual que en la matrícula normal: verificar que el flujo
+completo público → login/cuenta nueva → cuestionario → matrícula funcione de corrido).
+
+Los datos salen de la MISMA fuente que la matrícula interna (misma consulta de grupos
+elegibles de Nivel 1) — si la pública muestra un grupo lleno o uno que la interna no
+ofrece, es bug. Cache corto (1-5 min) está bien para la carga pública.
+Tests: solo N1 en matrícula aparece, sin login se lista pero matricular exige sesión,
+redirect aterriza con el grupo preseleccionado, payload sin datos sensibles.
+tsc/lint/vitest.
 ```
