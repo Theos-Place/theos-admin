@@ -58,11 +58,11 @@ function MemberMini({ m }: { m: DupMember }) {
         </Link>
       </div>
       <dl className="space-y-0.5 text-[13px] font-body">
-        <div className="flex gap-1"><dt className="text-navy-light/80 w-16 shrink-0">Cédula</dt><dd className="text-navy-light/80 truncate">{m.cedula ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/80 w-16 shrink-0">Email</dt><dd className="text-navy-light/80 truncate">{m.email ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/80 w-16 shrink-0">Teléfono</dt><dd className="text-navy-light/80 truncate">{m.phone ?? '—'}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/80 w-16 shrink-0">Nacimiento</dt><dd className="text-navy-light/80 truncate">{birthLabel(m)}</dd></div>
-        <div className="flex gap-1"><dt className="text-navy-light/80 w-16 shrink-0">Creado</dt><dd className="text-navy-light/80 truncate">{formatDateNumeric(m.created_at)}</dd></div>
+        <div className="flex gap-2"><dt className="text-navy-light/80 w-24 shrink-0">Cédula</dt><dd className="text-navy-light/80 truncate">{m.cedula ?? '—'}</dd></div>
+        <div className="flex gap-2"><dt className="text-navy-light/80 w-24 shrink-0">Email</dt><dd className="text-navy-light/80 truncate">{m.email ?? '—'}</dd></div>
+        <div className="flex gap-2"><dt className="text-navy-light/80 w-24 shrink-0">Teléfono</dt><dd className="text-navy-light/80 truncate">{m.phone ?? '—'}</dd></div>
+        <div className="flex gap-2"><dt className="text-navy-light/80 w-24 shrink-0">Nacimiento</dt><dd className="text-navy-light/80 truncate">{birthLabel(m)}</dd></div>
+        <div className="flex gap-2"><dt className="text-navy-light/80 w-24 shrink-0">Creado</dt><dd className="text-navy-light/80 truncate">{formatDateNumeric(m.created_at)}</dd></div>
       </dl>
     </div>
   )
