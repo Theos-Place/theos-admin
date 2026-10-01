@@ -12,6 +12,7 @@ import { sedeLabel } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
+import { BotonFolletosAnticipados } from '@/components/studies/BotonFolletosAnticipados'
 import { cn } from '@/lib/utils'
 import { permisosDelRoster, cumpleCorto } from '@/lib/studies/roster-por-alcance'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock } from 'lucide-react'
@@ -749,6 +750,18 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                 >
                   Cierre de estudio
                 </Link>
+              )}
+              {/* EST-21 · Pedir los folletos antes de arrancar. El propio
+                  componente decide si corresponde (N1/N3 en matrícula) y no
+                  se pinta si no: un botón deshabilitado con tooltip no lo lee
+                  nadie. Va dentro de `canManageGroups` — mandar a imprimir es
+                  una decisión de operación con costo, no del dirigente. */}
+              {canManageGroups && (
+                <BotonFolletosAnticipados
+                  groupId={group.id}
+                  planCode={group.study_type_id}
+                  status={group.status}
+                />
               )}
               {canManageGroups && (<>
               <Link

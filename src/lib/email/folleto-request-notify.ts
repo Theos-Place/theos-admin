@@ -32,6 +32,7 @@ export function etiquetaTipo(tipo: string): string {
     case 'fin_matricula': return 'cerró la matrícula del grupo'
     case 'cierre': return 'se cerró el grupo anterior y la gente pasó de nivel'
     case 'manual': return 'solicitud manual (caso especial)'
+    case 'anticipado': return 'el equipo de estudios los pidió por adelantado, antes de que el grupo arranque'
     case 'reubicacion': return 'reubicación'
     default: return tipo.replace(/_/g, ' ')
   }

@@ -36,7 +36,11 @@ export const MILESTONE_TO_TIPO: Record<BloqueMilestone, string> = {
 // ── Etiquetas de tipo de folleto ─────────────────────────────────────────────
 // FOL-1: cupo_lleno/fin_matricula son las reglas vigentes; cierre y
 // preapertura_* quedan solo por los datos históricos (ya no se generan).
-export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual' | 'cupo_lleno' | 'fin_matricula'
+// `anticipado` (EST-21): lo pide el equipo de estudios desde la pantalla del
+// grupo, antes de que arranque. No es `manual` —ese es suelto, sin grupo— y
+// la diferencia importa: éste sí queda atado al grupo y entra en la
+// idempotencia con los automáticos.
+export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual' | 'cupo_lleno' | 'fin_matricula' | 'anticipado'
 
 export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   cierre: 'Cierre',
@@ -46,6 +50,7 @@ export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   manual: 'Manual (caso especial)',
   cupo_lleno: 'Cupo lleno',
   fin_matricula: 'Fin de matrícula',
+  anticipado: 'Pedido por adelantado',
 }
 
 export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
@@ -56,6 +61,7 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   manual: 'bg-coral/15 text-coral-deep',
   cupo_lleno: 'bg-teal-soft/30 text-teal-deep',
   fin_matricula: 'bg-navy/10 text-navy',
+  anticipado: 'bg-teal/15 text-navy',
 }
 
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────

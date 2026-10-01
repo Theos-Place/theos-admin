@@ -9290,3 +9290,121 @@ elegir esos números y los pasos para agregar un cron nuevo sin repetir esto.
 `NEXT_PUBLIC_` significa que **viajan en el bundle del navegador**. Hoy no
 abren nada —el auth es real desde hace meses— pero son cadenas públicas que se
 llaman "password" y no tienen por qué seguir ahí. Borrarlas es un minuto.
+
+---
+
+### [x] EST-21 · Botón «Mandar a imprimir folletos» en grupos de Nivel 1 y 3 — HECHO 2026-10-01
+
+Gap detectado: con el esquema de bloques, los grupos de Nivel 1 necesitan sus
+folletos (par 1+2) impresos ANTES de arrancar — y el disparador no puede
+esperar al inicio del grupo: hay que mandar a imprimir ~15 días antes,
+mientras el grupo sigue en matrícula.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Grupos de Nivel 1: disparo manual del tiquete de folletos durante la matrícula
+
+CONTEXTO: EST-14 (bloques N1+N2 / N3+N4) — los folletos se entregan en pares al inicio
+de cada bloque. La impresión tarda, así que el tiquete debe poder generarse ANTES de que
+el grupo empiece, con el grupo aún en matrícula, a criterio del equipo de estudios
+(regla operativa: ~15 días antes del inicio).
+
+QUÉ:
+1. En la información del grupo (grupos de Nivel 1 —y de Nivel 3 con el esquema nuevo:
+   confirmar si aplica igual—, estado "en matrícula"): botón ADMINISTRATIVO "Mandar a
+   imprimir folletos", visible SOLO para los roles de gestión de estudios
+   (coordinador_estudios y equivalentes — verificar requireRoles del módulo; NO el
+   dirigente).
+2. Al tocarlo (con confirmación mostrando el conteo actual de matriculados):
+   - Se genera el TIQUETE de folletos del bloque (par 1+2 para N1; 3+4 para N3) con el
+     mecanismo EXISTENTE de tiquetes de folletos — REUTILIZAR: mismos detalles, mismo
+     formato, misma página de folletos donde viven los demás; solo cambia el disparador.
+   - Se envía el correo a la gente de folletos con el resumen, usando la plantilla/
+     baseLayout de los correos de folletos existentes (correo interno de operación;
+     criterio EMAIL_SILENT_MODE de avisos internos).
+   - El tiquete queda vinculado al grupo y el botón cambia a estado informativo
+     ("Folletos solicitados el [fecha] — ver tiquete") para no duplicar; si el cupo
+     creció después, permitir un tiquete ADICIONAL explícito ("Pedir folletos extra")
+     en vez de regenerar.
+3. CONVIVENCIA con los disparadores automáticos existentes (cupo lleno / fin de
+   matrícula): si el tiquete manual ya se generó, el automático NO debe crear otro
+   duplicado del mismo grupo — revisar folleto-blocks y la lógica de generación para
+   que reconozcan el tiquete existente.
+4. Audit_log: quién lo disparó y cuándo.
+Tests: botón genera tiquete+correo una sola vez, doble clic no duplica, el automático
+no duplica sobre el manual, folletos extra crea tiquete adicional, rol sin permiso 403.
+tsc/lint/vitest.
+```
+
+
+**REVISADO EL 2026-09-30 Y NO SE HIZO: depende de EST-14 de verdad, no de
+nombre.** Floriana decide esperar. Lo que se averiguó, para no volver a
+investigarlo:
+
+- **El esquema de pares 1+2 / 3+4 NO EXISTE en el código.** Lo único que hay
+  es el mapa 1:1 `FOLLETO_NEXT_LEVEL` (N1→N2, N2→N3, N3→N4, DIS1→DIS2,
+  DIS2→DIS3) en `src/lib/studies/folletos.ts`. El par vive solo en documentos
+  de planificación.
+- **Los grupos de niveles ni siquiera tienen bloque.** El trigger
+  `assign_group_bloque()` (migración `20260817150000`) excluye a propósito
+  `N1,N2,N3,N4,DIS2,DIS3`, así que su `bloque_id` es NULL. «El tiquete del
+  bloque» no se puede generar porque no hay bloque del cual colgarlo.
+- **Hoy el único disparador automático vivo de la cadena de niveles es el
+  CIERRE.** `cupo_lleno` y `fin_matricula` quedaron muertos el 2026-09-02 (78
+  de 93 grupos no tenían ni cupo ni ventana); `cupo_lleno` solo sobrevive en
+  prematrimonial. O sea que el punto 3 del prompt —«que el automático no
+  duplique al manual»— hoy casi no tiene con qué chocar.
+
+**Buena parte de lo pedido YA EXISTE, en otro lugar:** hay un botón de
+solicitud manual de folletos en `/estudios/folletos`
+(`ManualFolletoRequestButton` → `POST /api/studies/folletos/manual`, tipo
+`manual`, estado `creada`) y su gate YA incluye a `coordinador_estudios` y
+`coordinador_dirigentes`. Entra a la misma cola y manda el mismo correo.
+
+**Lo que falta de verdad, cuando se retome:**
+
+1. El botón en la pantalla del GRUPO (`/estudios/grupos/[id]`), no en la de
+   folletos, y solo en grupos de **N1 y N3** en matrícula (decisión de
+   Floriana 2026-09-30, que cierra el «confirmar si aplica igual» del prompt).
+2. **Atar el tiquete manual al grupo.** Hoy el manual no guarda
+   `source_group_id`: es suelto (nivel + cantidad + sede + dirigente). Sin ese
+   vínculo no hay forma de mostrar «Folletos solicitados el [fecha]» ni de
+   evitar el duplicado.
+3. **La idempotencia no lo cubre.** El índice único parcial
+   `folleto_requests_auto_por_grupo` es sobre `source_group_id` where tipo in
+   (`cupo_lleno`, `fin_matricula`, `cierre`) — **`manual` queda afuera**. Hay
+   que ampliarlo o crear uno propio, o el doble clic duplica.
+4. Qué folleto se pide: con EST-14, el par; sin EST-14, el del propio nivel.
+   Esa es la pieza que obliga a esperar.
+
+
+
+**HECHO EL 2026-10-01**, apenas EST-14 resolvió el punto 4 (qué folleto se
+pide). Lo que se construyó, contra los cuatro puntos de «lo que falta»:
+
+1. **El botón vive en la pantalla del GRUPO**, solo en N1 y N3 en matrícula.
+   No se pinta cuando no aplica, en vez de salir deshabilitado con un tooltip
+   que nadie lee; para los casos raros sigue el pedido manual suelto.
+2. **El tiquete queda atado al grupo**: tipo nuevo `anticipado`, con
+   `source_group_id`. NO se reusó `manual`, que es suelto a propósito —
+   mezclarlos habría hecho que uno de los dos significados perdiera.
+3. **La idempotencia la da la BASE.** El índice único parcial sobre
+   `source_group_id` ahora incluye `anticipado`, así que el doble clic no
+   duplica y el disparador de `cierre` tampoco crea una orden encima de la
+   pedida a mano — el punto 3 del prompt original. Probado contra staging:
+   la segunda inserción y la del cierre las rechaza el índice.
+4. **Qué folleto se pide**: el par, derivado de `folletosQuePide`. Es la
+   cuarta pantalla que consulta esa misma función —cobro, orden, conteo de
+   impresión y ahora esto— y ninguna reescribe la regla.
+
+El endpoint reusa `createAutoFolletoIfNeeded` entero: ahí ya viven la sede,
+el conteo de dirigentes, el par y el correo. Lo propio del endpoint es solo
+quién puede y cuándo. Queda rastro en `audit_log` — sin eso, una orden pedida
+a mano es indistinguible de una automática.
+
+El CHECK de `tipo` se amplió LEYENDO el que hay y no reescribiendo la lista,
+que es como se rompió el de `member_roles` en setiembre; la migración se
+puede correr dos veces.
+
+**Está en staging, falta probarlo con el mouse.**

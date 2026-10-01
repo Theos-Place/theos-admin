@@ -523,10 +523,16 @@ Prompt para Claude Code:
 ```
 FEATURE · Página de seguimiento para dirigentes: mis estudiantes que no volvieron
 
-QUIÉN LA VE: el dirigente (SOLO sus propios exalumnos — de grupos que dirigió o
-co-dirigió, actuales e históricos), admin y direccion. Server-side: el endpoint recorta
-por el dirigente autenticado (patrón studies-scope); admin/dirección pueden elegir
-dirigente.
+DÓNDE Y QUIÉN (actualizado 2026-10-01): vive DENTRO de /reportes — es un reporte.
+- El DIRIGENTE accede y ve SOLO sus propios exalumnos (de grupos que dirigió o
+  co-dirigió, actuales e históricos). Server-side: el endpoint recorta por el dirigente
+  autenticado (patrón studies-scope); 403 si pide otro dirigente.
+- Quien tiene el rol/módulo de REPORTES (más admin/direccion) puede ELEGIR un dirigente
+  con un selector y ver su reporte específico — el mismo patrón de "Mi comité"+SRV-6
+  (selector solo para roles amplios, sin aflojar el candado del dirigente; sin dirigente
+  elegido no se carga nada, como SRV-6).
+- La tarjeta en el índice de /reportes se muestra a dirigentes con histórico y a los
+  roles amplios (patrón de índice filtrado por rol existente).
 
 DEFINICIÓN "no volvió" (función pura testeable, ej. lib/reports/no-volvieron.ts):
 persona SIN ningún check-in a charla NI matrícula/participación en estudio en los
@@ -585,92 +591,6 @@ excluido), recorte por dirigente (403 a otro), enlace wa.me bien formado con y s
 teléfono, registrar contacto guarda historial (dos marcas = dos entradas) y el filtro
 por estado. tsc/lint/vitest.
 ```
-
-### [ ] EST-21 · Botón "Mandar a imprimir folletos" en grupos de Nivel 1 — TRABADO POR EST-14 (revisado 2026-09-30)
-
-Gap detectado: con el esquema de bloques, los grupos de Nivel 1 necesitan sus
-folletos (par 1+2) impresos ANTES de arrancar — y el disparador no puede
-esperar al inicio del grupo: hay que mandar a imprimir ~15 días antes,
-mientras el grupo sigue en matrícula.
-
-Prompt para Claude Code:
-
-```
-FEATURE · Grupos de Nivel 1: disparo manual del tiquete de folletos durante la matrícula
-
-CONTEXTO: EST-14 (bloques N1+N2 / N3+N4) — los folletos se entregan en pares al inicio
-de cada bloque. La impresión tarda, así que el tiquete debe poder generarse ANTES de que
-el grupo empiece, con el grupo aún en matrícula, a criterio del equipo de estudios
-(regla operativa: ~15 días antes del inicio).
-
-QUÉ:
-1. En la información del grupo (grupos de Nivel 1 —y de Nivel 3 con el esquema nuevo:
-   confirmar si aplica igual—, estado "en matrícula"): botón ADMINISTRATIVO "Mandar a
-   imprimir folletos", visible SOLO para los roles de gestión de estudios
-   (coordinador_estudios y equivalentes — verificar requireRoles del módulo; NO el
-   dirigente).
-2. Al tocarlo (con confirmación mostrando el conteo actual de matriculados):
-   - Se genera el TIQUETE de folletos del bloque (par 1+2 para N1; 3+4 para N3) con el
-     mecanismo EXISTENTE de tiquetes de folletos — REUTILIZAR: mismos detalles, mismo
-     formato, misma página de folletos donde viven los demás; solo cambia el disparador.
-   - Se envía el correo a la gente de folletos con el resumen, usando la plantilla/
-     baseLayout de los correos de folletos existentes (correo interno de operación;
-     criterio EMAIL_SILENT_MODE de avisos internos).
-   - El tiquete queda vinculado al grupo y el botón cambia a estado informativo
-     ("Folletos solicitados el [fecha] — ver tiquete") para no duplicar; si el cupo
-     creció después, permitir un tiquete ADICIONAL explícito ("Pedir folletos extra")
-     en vez de regenerar.
-3. CONVIVENCIA con los disparadores automáticos existentes (cupo lleno / fin de
-   matrícula): si el tiquete manual ya se generó, el automático NO debe crear otro
-   duplicado del mismo grupo — revisar folleto-blocks y la lógica de generación para
-   que reconozcan el tiquete existente.
-4. Audit_log: quién lo disparó y cuándo.
-Tests: botón genera tiquete+correo una sola vez, doble clic no duplica, el automático
-no duplica sobre el manual, folletos extra crea tiquete adicional, rol sin permiso 403.
-tsc/lint/vitest.
-```
-
-
-**REVISADO EL 2026-09-30 Y NO SE HIZO: depende de EST-14 de verdad, no de
-nombre.** Floriana decide esperar. Lo que se averiguó, para no volver a
-investigarlo:
-
-- **El esquema de pares 1+2 / 3+4 NO EXISTE en el código.** Lo único que hay
-  es el mapa 1:1 `FOLLETO_NEXT_LEVEL` (N1→N2, N2→N3, N3→N4, DIS1→DIS2,
-  DIS2→DIS3) en `src/lib/studies/folletos.ts`. El par vive solo en documentos
-  de planificación.
-- **Los grupos de niveles ni siquiera tienen bloque.** El trigger
-  `assign_group_bloque()` (migración `20260817150000`) excluye a propósito
-  `N1,N2,N3,N4,DIS2,DIS3`, así que su `bloque_id` es NULL. «El tiquete del
-  bloque» no se puede generar porque no hay bloque del cual colgarlo.
-- **Hoy el único disparador automático vivo de la cadena de niveles es el
-  CIERRE.** `cupo_lleno` y `fin_matricula` quedaron muertos el 2026-09-02 (78
-  de 93 grupos no tenían ni cupo ni ventana); `cupo_lleno` solo sobrevive en
-  prematrimonial. O sea que el punto 3 del prompt —«que el automático no
-  duplique al manual»— hoy casi no tiene con qué chocar.
-
-**Buena parte de lo pedido YA EXISTE, en otro lugar:** hay un botón de
-solicitud manual de folletos en `/estudios/folletos`
-(`ManualFolletoRequestButton` → `POST /api/studies/folletos/manual`, tipo
-`manual`, estado `creada`) y su gate YA incluye a `coordinador_estudios` y
-`coordinador_dirigentes`. Entra a la misma cola y manda el mismo correo.
-
-**Lo que falta de verdad, cuando se retome:**
-
-1. El botón en la pantalla del GRUPO (`/estudios/grupos/[id]`), no en la de
-   folletos, y solo en grupos de **N1 y N3** en matrícula (decisión de
-   Floriana 2026-09-30, que cierra el «confirmar si aplica igual» del prompt).
-2. **Atar el tiquete manual al grupo.** Hoy el manual no guarda
-   `source_group_id`: es suelto (nivel + cantidad + sede + dirigente). Sin ese
-   vínculo no hay forma de mostrar «Folletos solicitados el [fecha]» ni de
-   evitar el duplicado.
-3. **La idempotencia no lo cubre.** El índice único parcial
-   `folleto_requests_auto_por_grupo` es sobre `source_group_id` where tipo in
-   (`cupo_lleno`, `fin_matricula`, `cierre`) — **`manual` queda afuera**. Hay
-   que ampliarlo o crear uno propio, o el doble clic duplica.
-4. Qué folleto se pide: con EST-14, el par; sin EST-14, el del propio nivel.
-   Esa es la pieza que obliga a esperar.
-
 
 ### [ ] DAT-14 · Histórico completo de process queues de CCB (pedido 2026-09-28)
 

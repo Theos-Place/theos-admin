@@ -24,7 +24,12 @@ export const FIN_MATRICULA_MIN_ENROLLED = 5
  *  reglas de FOL-1 no lo cubrían — el grupo sucesor nace sin cupo y sin ventana
  *  de matrícula, así que ni 'cupo_lleno' ni 'fin_matricula' pueden dispararse
  *  nunca para él. */
-export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula' | 'cierre'
+/** 'anticipado' (EST-21, 2026-10-01): lo pide A MANO el equipo de estudios
+ *  desde la pantalla del grupo, con el grupo todavía en matrícula. La
+ *  imprenta tarda y los folletos del par tienen que estar el primer día, así
+ *  que esperar a un disparador automático llega tarde — y de los automáticos
+ *  solo queda vivo el del CIERRE del grupo anterior. */
+export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula' | 'cierre' | 'anticipado'
 
 /** Planes con folleto propio: las cadenas de niveles y discípulos, y
  *  prematrimonial (la pareja recibe su folleto al crearse el grupo). */
@@ -40,6 +45,11 @@ export function shouldCreateAutoFolleto(
   // 20. El mínimo de 5 existe para no pedir folletos de un grupo que quizá no
   // arranca; acá el grupo ya arrancó y la gente ya pasó.
   if (tipo === 'cierre') return g.enrolled > 0
+  // 'anticipado': tampoco lleva umbral. Lo pide una persona que ya miró el
+  // grupo, y el mínimo de 5 existe para no imprimirle a un grupo que quizá no
+  // arranca — un juicio que acá ya lo hizo alguien. Lo único que se exige es
+  // que haya a quién entregarle.
+  if (tipo === 'anticipado') return g.enrolled > 0
   if (tipo === 'cupo_lleno') return g.max_students != null && g.max_students > 0 && g.enrolled >= g.max_students
   return g.enrolled >= FIN_MATRICULA_MIN_ENROLLED
 }
