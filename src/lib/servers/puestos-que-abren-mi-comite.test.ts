@@ -17,21 +17,32 @@ const enComite = (title: string, areaName = 'Comité Servidores'): PositionConte
   ({ title, areaName, areaType: 'committee', parentAreaName: 'Área Espiritual' })
 
 describe('SRV-16 · el anfitrión abre la pantalla de su sede', () => {
-  it('«Anfitrión», que es el título que EXISTE hoy', () => {
-    // Medido el 2026-09-30: 10 puestos, uno por sede, 21 personas activas.
+  it('«Anfitrión»: 10 puestos, 17 personas activas', () => {
     expect(abreMiComite(enSede('Anfitrión'))).toBe(true)
   })
 
-  it('y «Anfitrión 1», que todavía no existe', () => {
-    // El pedido lo llamaba así. La regla se escribe para los dos porque el
-    // comité puede crearlo o renombrar el actual, y entonces nadie tendría que
-    // acordarse de volver acá.
-    expect(abreMiComite(enSede('Anfitrión 1'))).toBe(true)
-    expect(abreMiComite(enSede('Anfitrion 1'))).toBe(true)
+  it('«Anfitrión Encargado», que es el que el pedido llamaba «Anfitrión 1»', () => {
+    // Existe de verdad —9 puestos, 4 personas activas— y hasta el 2026-09-30
+    // no abría NADA: la regla se había escrito contra un nombre inventado.
+    expect(abreMiComite(enSede('Anfitrión Encargado'))).toBe(true)
+    expect(abreMiComite(enSede('anfitrion encargado'))).toBe(true)
+  })
+
+  it('y NO entra por `esPuestoDeEncargado`, que compara por prefijo', () => {
+    // El cebo: si alguien «simplifica» borrándolo del set creyendo que la
+    // primera línea de `abreMiComite` ya lo cubre, estas 4 personas vuelven a
+    // quedar afuera en silencio. No lo cubre — el título EMPIEZA por
+    // «Anfitrión».
+    expect(esPuestoDeEncargado('Anfitrión Encargado')).toBe(false)
   })
 
   it('los dos títulos están declarados y son solo esos', () => {
-    expect([...ANFITRIONES_QUE_ABREN_MI_COMITE].sort()).toEqual(['anfitrion', 'anfitrion 1'])
+    expect([...ANFITRIONES_QUE_ABREN_MI_COMITE].sort())
+      .toEqual(['anfitrion', 'anfitrion encargado'])
+  })
+
+  it('«Anfitrión 1» no existe y no abre nada', () => {
+    expect(abreMiComite(enSede('Anfitrión 1'))).toBe(false)
   })
 
   it('un anfitrión FUERA de un comité de sede no abre nada', () => {
