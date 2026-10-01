@@ -24,20 +24,31 @@ import { esComiteDeSede, normSinArticulos, type PositionContext } from './positi
  * Los títulos de anfitrión que abren la pantalla.
  *
  * MEDIDO EN EL CATÁLOGO el 2026-09-30, y el número importa: «Anfitrión 1» —el
- * nombre que traía el pedido— NO EXISTE todavía. Lo que hay es «Anfitrión»:
- * 10 puestos, uno por sede, 21 personas activas. Escribir la regla solo contra
- * el nombre del pedido la habría dejado sin matchear a nadie, y ese fallo es
- * silencioso: la persona entra, ve "acceso restringido" y nadie sabe por qué.
+ * nombre que traía el pedido— NO EXISTÍA. Se escribió igual «por si acaso», y
+ * esa precaución no sirvió de nada: el puesto que el pedido quería decir se
+ * llama «Anfitrión Encargado» (Floriana, ese mismo día). Un nombre inventado
+ * no matchea nada, y el fallo es SILENCIOSO — la persona entra, ve "acceso
+ * restringido" y nadie sabe por qué. La lección no es escribir más nombres
+ * posibles: es preguntar cuál es, que es lo que faltó.
  *
- * Van los DOS títulos, confirmado por Floriana: los 21 de hoy entran ya, y el
- * día que el comité de servidores cree «Anfitrión 1» —o renombre el actual—
- * la regla sigue funcionando sin que haya que tocar código.
+ * Los dos títulos de hoy, medidos en producción:
+ *   · «Anfitrión»           10 puestos · 17 personas activas
+ *   · «Anfitrión Encargado»  9 puestos ·  4 personas activas
+ *
+ * Y OJO con el segundo: termina en «Encargado» pero NO lo agarra
+ * `esPuestoDeEncargado`, que compara por PREFIJO (`encargado …`). Por eso
+ * necesita estar acá explícitamente. Que siga fuera de esa función es lo
+ * correcto y no un descuido: encabezar el comité trae la estrella y el poder
+ * de pedir vacantes, y eso no es lo que se pidió.
  *
  * Se comparan con `normSinArticulos`, así que el acento y los artículos dan
  * igual. Lo que NO da igual es el resto: «Asistente Anfitrión» o
  * «Co-anfitrión» no entran, y eso es a propósito.
  */
-export const ANFITRIONES_QUE_ABREN_MI_COMITE = new Set(['anfitrion', 'anfitrion 1'])
+export const ANFITRIONES_QUE_ABREN_MI_COMITE = new Set([
+  'anfitrion',
+  'anfitrion encargado',
+])
 
 /**
  * ¿Este puesto le abre "Mi comité" a quien lo ocupa?

@@ -270,7 +270,7 @@ describe('REP-11 · el puesto de anfitrión ya NO da el rol de reportes', () => 
   it('NINGÚN puesto otorga ya el rol `reportes`', () => {
     // El cebo de verdad: no alcanza con quitárselo al anfitrión si mañana
     // alguien se lo cuelga a otro título.
-    for (const t of ['Anfitrión', 'Anfitrión 1', 'Encargado Logística', 'Logística',
+    for (const t of ['Anfitrión', 'Anfitrión Encargado', 'Encargado Logística', 'Logística',
                      'Colaborador Bienvenida', 'Coordinador Información', 'Encargado']) {
       expect(rolesGrantedByPosition(enSede(t)), t).not.toContain('reportes')
       expect(rolesGrantedByPosition({

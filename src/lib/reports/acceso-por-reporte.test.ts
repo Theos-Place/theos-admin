@@ -99,7 +99,7 @@ describe('REP-11 · qué puesto abre los reportes', () => {
     ({ title, areaName: 'Sede Cartago', areaType: 'committee', parentAreaName: 'Sedes' })
 
   it('anfitrión y encargado de logística', () => {
-    for (const t of ['Anfitrión', 'Anfitrión 1', 'Encargado Logística', 'Encargado Logistica']) {
+    for (const t of ['Anfitrión', 'Anfitrión Encargado', 'Encargado Logística', 'Encargado Logistica']) {
       expect(abreReportesDeSede(enSede(t)), t).toBe(true)
     }
   })
@@ -121,7 +121,7 @@ describe('REP-11 · qué puesto abre los reportes', () => {
     // Dos listas con los mismos títulos se separan en cuanto alguien agregue
     // una variante a una sola.
     expect(PUESTOS_QUE_ABREN_REPORTES.has('anfitrion')).toBe(true)
-    expect(PUESTOS_QUE_ABREN_REPORTES.has('anfitrion 1')).toBe(true)
+    expect(PUESTOS_QUE_ABREN_REPORTES.has('anfitrion encargado')).toBe(true)
     expect(sinComentarios('src/lib/reports/puestos-que-abren-reportes.ts'))
       .toContain('ANFITRIONES_QUE_ABREN_MI_COMITE')
   })
@@ -149,7 +149,7 @@ describe('REP-11 · una sola tabla, y todos preguntan', () => {
      * sedes y se comprueba que ninguno lo recibe.
      */
     const deSede = [
-      'Anfitrión', 'Anfitrión 1', 'Encargado Logística', 'Encargado Logistica',
+      'Anfitrión', 'Anfitrión Encargado', 'Encargado Logística', 'Encargado Logistica',
       'Asistente Logística', 'Colaborador Logística', 'Encargado Sede',
       'Colaborador Bienvenida', 'Coordinador Información', 'Logística',
     ]
