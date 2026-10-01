@@ -21,6 +21,8 @@ export function nextLevelCode(planCode: string | null | undefined): string | nul
 }
 
 /** Etiqueta legible del código de nivel (N2 → "Nivel 2", DIS2 → "Discípulos 2"). */
+import { folletosQuePide } from './corte-de-bloque'
+
 export function levelLabel(code: string | null | undefined): string {
   if (!code) return ''
   if (/^N\d+$/.test(code)) return `Nivel ${code.slice(1)}`
@@ -71,4 +73,22 @@ export function isFolletoState(v: string): v is FolletoState {
 export function nextFolletoState(s: FolletoState): FolletoState | null {
   const i = FOLLETO_STATES.indexOf(s)
   return i >= 0 && i < FOLLETO_STATES.length - 1 ? FOLLETO_STATES[i + 1] : null
+}
+
+/**
+ * Qué folletos cubre UNA orden, en texto: «Nivel 1 y Nivel 2».
+ *
+ * Los del par van en la MISMA orden —decisión de Floriana del 2026-10-01,
+ * después de probarlo—: quien imprime recibe un pedido por grupo, no dos que
+ * tiene que juntar mentalmente.
+ *
+ * El par no se guarda en la fila: se DERIVA del plan del grupo con
+ * `folletosQuePide`, la misma función que decide qué se cobra y qué se
+ * imprime. Guardarlo sería una tercera copia de la regla, y la fila vieja
+ * quedaría mintiendo el día que el par cambie.
+ */
+export function etiquetaDeFolletos(planCode: string | null | undefined): string {
+  const codes = folletosQuePide(planCode)
+  if (codes.length === 0) return ''
+  return codes.map(levelLabel).join(' y ')
 }

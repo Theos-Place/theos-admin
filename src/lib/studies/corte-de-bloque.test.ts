@@ -346,24 +346,33 @@ describe('EST-14 · qué folletos pide cada grupo', () => {
   })
 })
 
-describe('EST-14 · el generador crea un tiquete por folleto', () => {
+describe('EST-14 · el generador crea UNA orden que cubre el par', () => {
   const q = sinComentarios('src/lib/supabase/queries/folletos.ts')
 
-  it('recorre el par en vez de insertar uno solo', () => {
+  /**
+   * SE HIZO AL REVÉS PRIMERO y se corrigió al probarlo (2026-10-01): un
+   * tiquete por folleto hacía que quien imprime recibiera DOS pedidos del
+   * mismo grupo, el mismo día y a la misma sede, y tuviera que juntarlos.
+   * Floriana pidió una sola orden por grupo.
+   *
+   * Lo que el par cubre NO se guarda: se deriva del plan. Guardarlo sería una
+   * tercera copia de la regla y las filas viejas mentirían si el par cambia.
+   */
+  it('inserta UNA sola vez, no recorre el par', () => {
     expect(q).toContain('const aPedir = folletosQuePide(code)')
-    expect(q).toContain('for (const nivel of aPedir)')
-    expect(q).toContain('target_level_code: nivel')
+    expect(q).not.toContain('for (const nivel of aPedir)')
+    expect(q).toContain('target_level_code: aPedir[0]')
   })
 
   it('un grupo que ya los tiene no pide nada', () => {
     expect(q).toContain("return { created: false, reason: 'ya_los_tiene_del_bloque' }")
   })
 
-  it('el choque de duplicado mira el FOLLETO, no solo el grupo', () => {
-    // El índice único pasó a (source_group_id, target_level_code): si el
-    // rescate siguiera buscando solo por grupo, el segundo folleto del par se
-    // habría tratado como «ya existe» y el grupo se quedaba sin él.
-    expect(q).toContain(".eq('target_level_code', nivel)")
+  it('el choque de duplicado vuelve a mirar el GRUPO', () => {
+    // El índice único volvió a (source_group_id): una orden por grupo, y la
+    // base lo garantiza en vez de confiar en el código.
+    expect(q).not.toContain(".eq('target_level_code', nivel)")
+    expect(q).toContain(".eq('source_group_id', groupId)")
   })
 
   it('manda UN aviso que nombra a los dos', () => {

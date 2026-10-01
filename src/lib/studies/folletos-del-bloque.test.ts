@@ -100,3 +100,33 @@ describe('los nombres', () => {
     expect(filas.map(f => f.folleto)).toEqual(['Nivel 1', 'N2'])
   })
 })
+
+describe('la etiqueta de la orden', () => {
+  it('nombra los dos folletos del par', async () => {
+    const { etiquetaDeFolletos } = await import('./folletos')
+    expect(etiquetaDeFolletos('N1')).toBe('Nivel 1 y Nivel 2')
+    expect(etiquetaDeFolletos('N3')).toBe('Nivel 3 y Nivel 4')
+  })
+
+  it('un nivel que ya los tiene no nombra ninguno', async () => {
+    const { etiquetaDeFolletos } = await import('./folletos')
+    expect(etiquetaDeFolletos('N2')).toBe('')
+    expect(etiquetaDeFolletos('N4')).toBe('')
+  })
+
+  it('lo que no es par se nombra solo', async () => {
+    const { etiquetaDeFolletos } = await import('./folletos')
+    expect(etiquetaDeFolletos('DIS1')).toBe('Discípulos 1')
+    expect(etiquetaDeFolletos('PREMAT')).toBe('Prematrimonial')
+  })
+
+  it('se deriva, no se escribe a mano', async () => {
+    // Si alguien la escribe como un literal, deja de seguir a
+    // `folletosQuePide` y el día que cambie el par dirá otra cosa que el
+    // cobro y que el conteo de impresión.
+    const { readFileSync } = await import('node:fs')
+    const src = readFileSync('src/lib/studies/folletos.ts', 'utf8')
+    expect(src).toContain('folletosQuePide(planCode)')
+    expect(src).not.toContain("'Nivel 1 y Nivel 2'")
+  })
+})

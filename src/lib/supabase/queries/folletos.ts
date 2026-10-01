@@ -187,56 +187,48 @@ export async function createAutoFolletoIfNeeded(
   const folletosDeDirigentes = (row.leader_id ? 1 : 0) + (row.co_leader_id ? 1 : 0)
 
   /**
-   * EST-14 · UN TIQUETE POR FOLLETO DEL BLOQUE.
+   * EST-14 · UNA ORDEN POR GRUPO, que cubre el par.
    *
-   * Los folletos de un bloque se entregan juntos, así que un grupo de N1
-   * necesita los de N1 y los de N2: son dos ítems imprimibles con su cantidad
-   * cada uno. Un solo tiquete con «N1+N2» habría obligado a inventar un
-   * formato que la pantalla, el correo y el detalle no saben leer.
+   * Primero se hizo al revés —un tiquete por folleto— y al probarlo se vio
+   * que no sirve: quien imprime recibía DOS pedidos del mismo grupo, el
+   * mismo día y a la misma sede, y tenía que juntarlos mentalmente. Una
+   * orden por grupo es lo que se pidió (Floriana, 2026-10-01).
    *
-   * Un grupo de N2 o N4 devuelve lista VACÍA: su gente ya tiene los folletos
-   * desde que entró al bloque. Eso es lo que hace desaparecer solo el pedido
-   * por cierre de 1→2 y 3→4, sin tocar el endpoint de cierre.
+   * Qué folletos cubre NO se guarda: se deriva del plan con
+   * `folletosQuePide`, que es la misma regla que decide el cobro y el conteo
+   * de impresión. `target_level_code` guarda el PRIMERO del par, que es el
+   * nivel con el que la orden se identifica.
    *
-   * Todo lo que no es un nivel pide su propio folleto, como siempre.
+   * Un grupo de N2 o N4 no pide nada: su gente ya tiene los folletos desde
+   * que entró al bloque. Eso es lo que hace desaparecer solo el pedido por
+   * cierre de 1→2 y 3→4, sin tocar el endpoint de cierre.
    */
   const aPedir = folletosQuePide(code)
   if (aPedir.length === 0) return { created: false, reason: 'ya_los_tiene_del_bloque' }
 
-  const creados: string[] = []
-  for (const nivel of aPedir) {
-    const { data: creado, error } = await supabase.from('folleto_requests').insert({
-      tipo,
-      source_group_id: groupId,
-      origin_group_id: originGroupId ?? null,
-      source_plan_code: code,
-      target_level_code: nivel,
-      quantity: enrolled,
-      quantity_leaders: folletosDeDirigentes,
-      sede,
-      close_date: todayIso,
-      available_at: estimatedAvailableDate(todayIso),
-    }).select('id').single()
-    if (error) {
-      if ((error as { code?: string }).code === '23505') {
-        // El índice único es (source_group_id, target_level_code) desde
-        // EST-14: choca solo si ESE folleto ya se pidió para ESE grupo.
-        const { data: previo } = await supabase.from('folleto_requests')
-          .select('id').eq('source_group_id', groupId).eq('target_level_code', nivel)
-          .in('tipo', ['cupo_lleno', 'fin_matricula', 'cierre']).maybeSingle()
-        const id = (previo as { id: string } | null)?.id
-        if (id) creados.push(id)
-        continue
-      }
-      throw error
-    }
-    creados.push((creado as { id: string }).id)
+  const { data: creado, error } = await supabase.from('folleto_requests').insert({
+    tipo,
+    source_group_id: groupId,
+    origin_group_id: originGroupId ?? null,
+    source_plan_code: code,
+    target_level_code: aPedir[0],
+    quantity: enrolled,
+    quantity_leaders: folletosDeDirigentes,
+    sede,
+    close_date: todayIso,
+    available_at: estimatedAvailableDate(todayIso),
+  }).select('id').single()
+  if (error) {
+    if ((error as { code?: string }).code !== '23505') throw error
+    const { data: previo } = await supabase.from('folleto_requests')
+      .select('id').eq('source_group_id', groupId)
+      .in('tipo', ['cupo_lleno', 'fin_matricula', 'cierre']).maybeSingle()
+    const id = (previo as { id: string } | null)?.id
+    if (!id) return { created: false, reason: 'ya_existe' }
+    return { created: false, id, reason: 'ya_existe' }
   }
-  if (creados.length === 0) return { created: false, reason: 'ya_existe' }
-  // El aviso se arma sobre el PRIMERO del par; el correo los lista a los dos
-  // (ver abajo). Mandar un correo por folleto duplicaría el aviso del mismo
-  // grupo, y dos correos iguales entrenan a ignorarlos.
-  const folletoId = creados[0]
+  const folletoId = (creado as { id: string }).id
+
 
   // AVISO. El correo se arma desde el MISMO detalle que muestra la pantalla,
   // para que los dos digan lo mismo.
