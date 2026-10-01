@@ -433,6 +433,29 @@ export async function createBroadcast(input: BroadcastWriteInput): Promise<{ id:
   return data as { id: string }
 }
 
+/**
+ * Actualiza un comunicado que todavía es BORRADOR.
+ *
+ * El `.eq('status','draft')` no es decorativo: sin él, "continuar editando"
+ * podría reescribir el cuerpo de algo YA ENVIADO, y entonces el historial
+ * dejaría de decir qué fue lo que la gente recibió. Un programado tampoco se
+ * toca — se cancela primero, que es la misma regla del borrado.
+ *
+ * Devuelve false si no tocó nada, para que el endpoint responda 404/409 en vez
+ * de decir que guardó.
+ */
+export async function updateDraftBroadcast(id: string, input: BroadcastWriteInput): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('message_broadcasts')
+    .update({ ...input, updated_at: new Date().toISOString() } as Insertable<'message_broadcasts'>)
+    .eq('id', id)
+    .eq('status', 'draft')
+    .select('id')
+  if (error) throw error
+  return (data ?? []).length > 0
+}
+
 export type Recipient = { member_id?: string | null; channel: 'whatsapp' | 'email' | 'interna'; recipient: string }
 
 /** Prefijo del error de "nadie quedó elegible": el endpoint lo traduce a 409

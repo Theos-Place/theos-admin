@@ -542,8 +542,13 @@ export default function ComunicacionesPage() {
                     </p>
                   </div>
                   <div className="shrink-0 inline-flex items-center gap-2">
+                    {/* El id VIAJA. Hasta el 2026-10-01 este href era
+                        `/comunicaciones/nueva` a secas —un template literal sin
+                        nada que interpolar— así que "Continuar editando" abría
+                        un mensaje en blanco y el borrador quedaba ahí, intacto
+                        e inalcanzable. */}
                     <Link
-                      href={`/comunicaciones/nueva`}
+                      href={`/comunicaciones/nueva?borrador=${msg.id}`}
                       className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-1.5 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
                     >
                       <FileEdit size={12} />
