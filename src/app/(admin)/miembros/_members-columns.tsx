@@ -5,7 +5,7 @@ import { Star, UserCheck, UserX, Clock } from 'lucide-react'
 import { type Member } from '@/types/member'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import type { FilterCondition } from '@/types/filters'
-import { initialsFromParts, calcAge } from '@/lib/format'
+import { initialsFromParts, calcAge, formatDateNumeric } from '@/lib/format'
 import { sedeLabel } from '@/lib/sedes'
 import { formatSedeRecency } from '@/lib/sede-attendance'
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
@@ -86,6 +86,20 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   {
     key: 'age', label: 'Edad', defaultVisible: true,
     exportValue: m => m.birth_date ? String(calcAge(m.birth_date)) : '',
+  },
+  /**
+   * La FECHA, aparte de la edad. No es lo mismo ni se deduce una de la otra:
+   * «Edad» sirve para filtrar rangos y la fecha sirve para saludar el día que
+   * toca, que es para lo que la pidieron (2026-09-30).
+   *
+   * Sin `render`: la tabla usa `exportValue` también para mostrar, así que la
+   * celda sale dd/mm/aaaa en vez del ISO crudo con hora. Por eso el '' y no
+   * un '—' acá — el guión lo pone la tabla cuando el valor sale vacío, y en
+   * un CSV una celda vacía es mejor que un guión.
+   */
+  {
+    key: 'birth_date', label: 'Cumpleaños', defaultVisible: false,
+    exportValue: m => m.birth_date ? formatDateNumeric(m.birth_date) : '',
   },
   {
     key: 'email', label: 'Correo', defaultVisible: false,
