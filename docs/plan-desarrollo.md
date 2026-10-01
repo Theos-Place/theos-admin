@@ -3451,9 +3451,17 @@ Para los niveles, el camino que SÍ opera hoy es la cola de folletos
 (`folleto_requests`, 16 tiquetes vivos y todos de niveles), que la fase 3 ya
 dejó con un tiquete por folleto.
 
-**Queda una pregunta de producto, no de código:** ¿los grupos de Nivel
-deberían pertenecer a un bloque? Hoy no lo hacen, así que no salen en el
-conteo por sede que se le manda a quien imprime — solo en la cola.
+**LOS GRUPOS DE NIVEL NO PERTENECEN A NINGÚN BLOQUE, Y ES A PROPÓSITO**
+(confirmado por Floriana el 2026-10-01). No salen en el conteo por sede que
+se le manda a quien imprime; su camino es la cola de folletos.
+
+Y no depende de la suerte de las fechas: el trigger `assign_group_bloque` los
+excluye por código —N1, N2, N3, N4, DIS2 y DIS3— y les fuerza `bloque_id`
+NULL. Queda fijado con un test, porque esa lista se lee como una omisión
+—«¿por qué estos seis no entran?»— y el arreglo aparente sería borrarla. Si
+alguien lo hace, los folletos de los niveles se contarían DOS veces: una por
+la cola y otra por el reporte de hitos, y quien imprime recibiría el doble
+sin que nada falle.
 
 
 ### [x] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva — HECHO 2026-09-24
@@ -6070,10 +6078,13 @@ FEATURE · Página PÚBLICA con los grupos de Nivel 1 en matrícula
 
 QUÉ: página pública (sin login) que lista ÚNICAMENTE los grupos de Nivel 1 con estado
 "en matrícula" — para compartir el enlace en redes, WhatsApp y el website. Mismo patrón
-que el calendario público y la página de puestos (SRV-13): PUBLIC_PREFIXES + evaluar si
-también se incrusta por iframe en theosplace.org (extender EMBED_ALLOWED_ORIGINS a esta
-ruta como en SRV-13 — preguntar a Floriana si el iframe se quiere de una vez; la página
-pública va segura).
+que el calendario público y la página de puestos (SRV-13): PUBLIC_PREFIXES. SIN iframe
+por ahora (decidido 2026-10-01): no tocar EMBED_ALLOWED_ORIGINS.
+
+ENLACE PARA COMPARTIR: en la página de matrícula INTERNA, un botón "Copiar enlace
+público" (copia la URL de esta página al portapapeles, con confirmación visual) visible
+ÚNICAMENTE para admin y coordinador_estudios — es la herramienta para pegarlo en redes/
+WhatsApp; los demás usuarios no lo ven.
 
 CONTENIDO por grupo (REUTILIZAR la tarjeta de grupo de la matrícula, GroupRow/MAT-2, que
 ya quedó responsive — misma info pública): zona + ubicación, horario, dirigente, cupos
@@ -6094,4 +6105,48 @@ ofrece, es bug. Cache corto (1-5 min) está bien para la carga pública.
 Tests: solo N1 en matrícula aparece, sin login se lista pero matricular exige sesión,
 redirect aterriza con el grupo preseleccionado, payload sin datos sensibles.
 tsc/lint/vitest.
+```
+
+### [ ] AYU-4 · Centro de ayuda: cierres y bloques actualizados a EST-14 + sección de dirigentes (pedido 2026-10-01)
+
+**Correr DESPUÉS de EST-14** — documenta el comportamiento nuevo; hacerlo antes
+dejaría el centro de ayuda mintiendo.
+
+Prompt para Claude Code:
+
+```
+DOCS · Centro de ayuda: actualizar cierres al esquema de bloques + sección de dirigentes
+
+PRERREQUISITO: EST-14 (bloques N1+N2/N3+N4) ya en producción. Leer el código real antes
+de escribir, como siempre.
+
+1. SECCIÓN "PARA DIRIGENTES" en /ayuda: agrupar (vía el frontmatter de sección/orden
+   existente) los artículos exclusivos de dirigentes — al menos "Cómo cierro mi grupo de
+   estudio" y "Qué pasa al cerrar un grupo" (/ayuda/que-pasa-al-cerrar-un-grupo).
+   Visibilidad: dirigente y coordinación (verificar frontmatter actual).
+
+2. ACTUALIZAR "Qué pasa al cerrar un grupo" (y el de cómo cerrar) al esquema EST-14:
+   - N1→N2 y N3→N4: paso automático, sin folletos nuevos (van en pares al matricular).
+   - Cierre de N2: la pregunta "¿continuás con el grupo?" — con SÍ se crea el N3-N4
+     automático con los estudiantes matriculados, sus cobros generados y los folletos del
+     par 3+4; con NO el grupo cierra y el comité abre los grupos para esos estudiantes.
+   - El dirigente elige la fecha de inicio del siguiente nivel al cerrar (EST-16).
+   - La encuesta al estudiante sale solo al cerrar N2 y N4 (EST-17).
+
+3. INFOGRAFÍA NUEVA de los niveles 1-4 en bloques: SVG vertical con los colores de Theos
+   (patrón de docs/plan-infografias.md, se agrega al catálogo): el camino N1→N2 (un solo
+   pago y folletos 1+2) → cierre de N2 con la bifurcación (continúa → N3-N4 automático
+   con cobro y folletos / no continúa → elegir grupo de la oferta) → N3→N4 → cierre
+   final. Checklist de calidad de las infografías (celular sin zoom, términos de Theos,
+   qué hacer si algo falla).
+
+4. ARTÍCULO NUEVO "Los cobros van directo al estudiante": explicar que al matricularse,
+   el cobro aparece en el perfil de cada persona (Mis pagos) y que los dirigentes YA NO
+   recaudan ni pagan por su grupo — cada estudiante sube su comprobante o paga en línea
+   cuando exista (FIN-5). Visibilidad: pública (le sirve a estudiantes Y dirigentes;
+   es el cambio de costumbre más grande respecto a como se hacía antes).
+
+Verificar render, visibilidades y que ningún otro artículo de /ayuda quede contando el
+flujo viejo (grep de "folleto"/"cierre"/"cobro" en content/ayuda y revisar los que
+toquen el tema).
 ```
