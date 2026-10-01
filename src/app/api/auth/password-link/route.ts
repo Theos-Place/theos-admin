@@ -114,6 +114,38 @@ export async function POST(req: NextRequest) {
     // Decir que está limitado NO filtra nada: la respuesta depende de cuántas
     // veces se escribió ESE identificador, no de si existe la cuenta. Un
     // atacante ya sabe cuántas veces lo escribió.
+    /**
+     * SEPARACIÓN entre un enlace y el siguiente. Es otra cosa que el límite de
+     * abajo: ese evita el abuso (3 en 15 minutos), éste evita que la persona
+     * se rompa el enlace a sí misma.
+     *
+     * CADA ENLACE NUEVO ANULA AL ANTERIOR. Lo comprobé el 2026-10-01 contra
+     * Supabase: de tres tokens generados seguidos, los dos primeros responden
+     * «Email link is invalid or has expired» y solo sirve el último. Entonces
+     * quien no ve llegar el correo y aprieta otra vez queda peor que antes —
+     * el correo que sí tenía en la bandeja ya no sirve, y nada se lo dice.
+     *
+     * Dos casos reales con el mismo patrón: Nestor Gamboa (tres envíos en dos
+     * minutos) y Carolina Bon Barret (tres en 93 segundos). Los dos cabían
+     * dentro del límite de 3/15min, que por eso no los protegió.
+     *
+     * Se usa la clave del identificador ESCRITO, no el estado de la cuenta: la
+     * respuesta depende de cuántas veces escribió eso la persona y no de si la
+     * cuenta existe, así que no filtra nada nuevo.
+     *
+     * 90 segundos, no más: el error del 2026-08-31 fue dejar a alguien
+     * bloqueado una tarde entera viendo «ya te lo mandamos» sin que saliera un
+     * solo correo. Acá se espera minuto y medio y se puede volver a pedir.
+     */
+    if (!rateLimit(`pwlink:espaciado:${identifier}`, 1, 90_000)) {
+      return NextResponse.json({
+        error: 'Ya te mandamos un enlace hace menos de dos minutos. Abrí el correo MÁS RECIENTE: '
+          + 'cada enlace nuevo deja sin efecto a los anteriores, así que los de antes van a decirte '
+          + 'que están vencidos. Si no te llegó ninguno, esperá un momento y volvé a pedirlo.',
+        code: 'enlace_recien_enviado',
+      }, { status: 429 })
+    }
+
     if (!rateLimit(`pwlink:id:${identifier}`, 3, 15 * 60_000)) {
       return NextResponse.json({
         error: 'Ya pediste el enlace hace un momento. Esperá unos minutos antes de volver a intentarlo — '
