@@ -199,22 +199,35 @@ function NuevaComunicacionContent() {
    * Se aplica UNA sola vez (`borradorCargado`): si se repitiera al refrescarse
    * la lista, le borraría a la persona lo que acaba de escribir.
    */
-  const [borradorCargado, setBorradorCargado] = useState(false)
   // Cubre los DOS caminos: editar un borrador y reenviar uno ya salido. El de
   // reenviar arrastraba la misma carrera y fallaba igual de callado.
   const precargarDe = borradorId || reenviarId
-  useEffect(() => {
-    if (borradorCargado || !precargarDe || messages.length === 0) return
-    const b = messages.find(m => m.id === precargarDe)
-    if (!b) return
-    setChannel(b.channel)
-    setSubject(b.subject ?? '')
-    if (b.channel === 'email') setEmailBody(b.body ?? '')
-    else setWaBody(b.body ?? '')
-    if (b.channel === 'email') setPreviewChannel('email')
-    setBorradorCargado(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [borradorCargado, precargarDe, messages])
+  const [cargadoDe, setCargadoDe] = useState<string | null>(null)
+  const paraPrecargar = precargarDe ? messages.find(m => m.id === precargarDe) : null
+  /**
+   * Se sincroniza DURANTE EL RENDER, no en un efecto.
+   *
+   * React lo contempla —«ajustar el estado cuando cambia una prop»—: al
+   * llamar a setState mientras renderiza, descarta este render y vuelve a
+   * empezar sin pintar nada en el medio. Un efecto haría lo mismo pero
+   * pintando primero el formulario vacío y corrigiéndolo después, que es un
+   * parpadeo y además un render en cascada; el lint lo marca por eso y el CI
+   * tiene una verja que no deja agregar casos nuevos.
+   *
+   * `cargadoDe` hace que corra UNA vez por id: si se repitiera cada vez que
+   * la lista se refresca, le borraría a la persona lo que acaba de escribir.
+   */
+  if (paraPrecargar && cargadoDe !== paraPrecargar.id) {
+    setCargadoDe(paraPrecargar.id)
+    setChannel(paraPrecargar.channel)
+    setSubject(paraPrecargar.subject ?? '')
+    if (paraPrecargar.channel === 'email') {
+      setEmailBody(paraPrecargar.body ?? '')
+      setPreviewChannel('email')
+    } else {
+      setWaBody(paraPrecargar.body ?? '')
+    }
+  }
 
   // Guarda como borrador (sin enviar): crea el broadcast en estado 'draft'.
   async function saveDraft() {

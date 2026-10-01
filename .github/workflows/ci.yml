@@ -22,10 +22,15 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Lint (ratchet)
-        # errores = 0 SIEMPRE. Warnings: 70 es la deuda actual (2026-09-11, 2ª
-        # tanda: migrados los 18 set-state-in-effect que eran estado derivado o
-        # reset por cambio de prop; quedan 67 set-state-in-effect + 3 purity) —
-        # bajar este número conforme se migren casos; NUNCA subirlo.
-        run: npx eslint src --max-warnings=55
+        # errores = 0 SIEMPRE. Warnings: 54 es la deuda actual — bajar este
+        # número conforme se migren casos; NUNCA subirlo.
+        #
+        # 2026-09-11 (2ª tanda): migrados los 18 set-state-in-effect que eran
+        # estado derivado o reset por cambio de prop; quedaron 67 + 3 purity.
+        # 2026-10-01: 55 → 54. La verja hizo su trabajo: la precarga del
+        # borrador se escribió primero con un efecto, el CI la rechazó por
+        # pasarse a 56, y reescribirla como sincronización durante el render
+        # —que además evita el parpadeo del formulario vacío— quitó dos.
+        run: npx eslint src --max-warnings=54
       - name: Tests
         run: npm test --if-present
