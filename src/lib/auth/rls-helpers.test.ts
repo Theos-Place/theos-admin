@@ -91,7 +91,13 @@ describe('INF-2 · la migración no deja volver la recursión', () => {
   it('ninguna política nueva lee `members` dentro de su expresión', () => {
     // Es la falla original: una política que consulta members para saber el
     // rol de quien llama vuelve a disparar la política de members.
+    // Cada trozo se corta en el `;` que cierra la política. Sin eso el ÚLTIMO
+    // se traga todo el SQL que venga después —funciones, updates, lo que sea—
+    // y el test acusa a esa política de leer `members` por algo que escribió
+    // otra migración. Pasó el 2026-09-30 al agregar la fusión, que sí lee
+    // `members`: el test se puso rojo sin que ninguna política cambiara.
     const politicas = SQL.split(/^create policy /m).slice(1)
+      .map(p => p.slice(0, p.indexOf(';') + 1 || undefined))
     expect(politicas.length).toBeGreaterThan(100)
     const culpables = politicas
       .filter(p => /\b(from|join)\s+(public\.)?members\b/i.test(p))
