@@ -492,15 +492,6 @@ la cola y otra por el reporte de hitos, y quien imprime recibiría el doble
 sin que nada falle.
 
 
-### [ ] FIN-9 · Saldos a favor: limitados a su rubro y con vencimiento — PENDIENTE DECISIÓN DE MELI
-
-Lo hablado: el saldo a favor (ya existe, "en pañales") se usa SOLO en el rubro
-donde se pagó (matrícula→estudios, evento→eventos) para no enredar la
-contabilidad, y con límite de tiempo (~1 año o 1-2 bloques). Responde al
-pedido frecuente de "congelar matrícula". NO CORRER hasta que Floriana lo
-valide con Melissa (finanzas) — quedó explícito en la reunión que no se
-decide por ellos.
-
 ## Fase 24 — Rediseño de vacantes → puestos de servicio (reunión de servidores, 2026-09-25)
 
 Reestructuración completa del flujo de vacantes, dictada por Floriana.
@@ -934,7 +925,7 @@ Tests: parte A (match actualiza sin duplicar, dry-run), parte B (unicidad de don
 monedas separadas, sede sin datos). tsc/lint/vitest.
 ```
 
-### [~] FIN-9 · ACTUALIZADO 2026-09-29 — validado con Meli: va por CUPONES, no saldos
+### [ ] FIN-9 · «Congelar matrícula» por CUPONES — DECIDIDO con Meli 2026-09-29, listo para construir
 
 Decisiones de la reunión (reemplazan el diseño anterior de "saldos a favor"):
 - "Congelar matrícula" = quitar la matrícula y emitir un CUPÓN PERSONAL por el
@@ -955,6 +946,16 @@ Decisiones de la reunión (reemplazan el diseño anterior de "saldos a favor"):
 Prompt: armarlo cuando Meli confirme lo de QuickBooks; el diseño de arriba es
 la spec.
 
+
+
+**Diseño anterior, REEMPLAZADO por lo de arriba.** Estaba como un ítem aparte que decía «pendiente decisión de Meli», y esa decisión ya se tomó el 2026-09-29: va por cupones, no por saldos. Los dos FIN-9 convivían con premisas contradictorias —uno esperando a Meli y el otro con la respuesta—, y se unificaron el 2026-10-01. Se conserva el texto porque explica qué se descartó y por qué:
+
+> Lo hablado: el saldo a favor (ya existe, "en pañales") se usa SOLO en el rubro
+> donde se pagó (matrícula→estudios, evento→eventos) para no enredar la
+> contabilidad, y con límite de tiempo (~1 año o 1-2 bloques). Responde al
+> pedido frecuente de "congelar matrícula". NO CORRER hasta que Floriana lo
+> valide con Melissa (finanzas) — quedó explícito en la reunión que no se
+> decide por ellos.
 ### [ ] FIN-12 · Adelantos de comida por sede (reemplaza los Excels mensuales)
 
 Prompt para Claude Code:
