@@ -45,6 +45,27 @@ const eslintConfig = defineConfig([
       "react-hooks/purity": "warn",              // 3 casos: Date.now() en render
     },
   },
+  {
+    /**
+     * Los scripts sueltos son CommonJS de verdad, no TypeScript moderno.
+     *
+     * `no-require-imports` les marcaba 378 «errores» por usar `require()` en
+     * archivos `.cjs`, que es la ÚNICA forma de importar ahí. Eso no es deuda:
+     * es la regla equivocada aplicada al archivo equivocado.
+     *
+     * Y no era inofensivo. `npm run lint` reportaba 545 problemas y 465
+     * errores, de los cuales 378 eran esto — con ese ruido el comando no
+     * sirve como señal y deja de mirarse, que es justo lo que había pasado.
+     * Lo que SÍ se despliega (`src/`) tiene 0 errores y lo vigila el CI.
+     *
+     * No se ignora la carpeta entera a propósito: `no-explicit-any` y
+     * `no-unused-vars` siguen aplicando y ahí sí dicen algo.
+     */
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
