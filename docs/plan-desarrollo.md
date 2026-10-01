@@ -3439,6 +3439,22 @@ El correo cambió de vocabulario: la columna dice «Folleto» y no «Nivel», y 
 total dice «folletos a imprimir» y no «personas matriculadas» — era esa frase
 la que hacía confiar en un número que significaba otra cosa.
 
+**Y UNA CORRECCIÓN AL PÁRRAFO DE ARRIBA, medida después de escribirlo:** hoy
+esto NO estaba imprimiendo de menos, porque los 63 grupos de Nivel vivos
+tienen `bloque_id` NULO y por lo tanto nunca aparecieron en ese reporte. El de
+hitos cubre solo capacitaciones (SCJ, Discípulos, Hermenéutica…): en los dos
+bloques abiertos el total da 218 antes y 218 después. El desfase era real en
+el código y habría mordido apenas un grupo de Nivel entrara a un bloque, pero
+no hubo daño.
+
+Para los niveles, el camino que SÍ opera hoy es la cola de folletos
+(`folleto_requests`, 16 tiquetes vivos y todos de niveles), que la fase 3 ya
+dejó con un tiquete por folleto.
+
+**Queda una pregunta de producto, no de código:** ¿los grupos de Nivel
+deberían pertenecer a un bloque? Hoy no lo hacen, así que no salen en el
+conteo por sede que se le manda a quien imprime — solo en la cola.
+
 
 ### [x] EST-15 · Matrícula a Nivel 1: cuestionario para gente nueva — HECHO 2026-09-24
 
