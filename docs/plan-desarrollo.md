@@ -1,12 +1,12 @@
 # Plan de desarrollo — pendientes
 
 > **Solo lo que falta.** Lo ya entregado está en
-> [`plan-desarrollo-cerrado.md`](plan-desarrollo-cerrado.md) — 201 ítems con
+> [`plan-desarrollo-cerrado.md`](plan-desarrollo-cerrado.md) — 203 ítems con
 > sus notas de implementación y sus decisiones. No es relleno: ahí está el
 > porqué y la trampa medida de cada área, y conviene buscar ahí ANTES de
 > tocar algo que ya se tocó o de reabrir una discusión ya resuelta.
 >
-> Se limpió dos veces: el 2026-09-10 (96 ítems) y el 2026-10-01 (105 más),
+> Se limpió dos veces: el 2026-09-10 (96 ítems) y el 2026-10-01 (107 más),
 > cuando este archivo tenía 6.152 líneas y el 80% era historia.
 
 ## Fase 13 — Cola nueva (pedida 2026-09-10)
@@ -283,112 +283,6 @@ llamaría ese import de todos modos.
 Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
 sembradas ahí, y desde staging el QA autenticado completo (QA-2).
 
-### [~] QA-1 · Auditoría automatizada — PARTE PÚBLICA HECHA, CRÍTICOS Y MEDIOS CERRADOS 2026-09-22
-
-Informe en **`docs/qa-2026-09/informe-automatizado.md`**, con capturas y datos
-crudos. Reproducible: `npx tsx scripts/qa/auditar-publicas.ts`.
-
-**Se corrió SIN volver a sembrar cuentas de prueba** (decisión del usuario): el
-set se borró ese mismo día y recrearlo mete datos nuevos en producción. Eso deja
-completa la parte estática y la de páginas públicas, y pendiente la de pantallas
-con sesión — que se retoma con INF-1.
-
-**Dos hallazgos críticos:**
-
-1. **Todas las donaciones se reportan en el trimestre anterior.** El reporte usa
-   `new Date(donation_date).getMonth()`, y `donation_date` es columna `date`:
-   medianoche UTC es el día anterior en Costa Rica. No es un borde — las 15.147
-   están registradas por trimestre y todas caen el día 1, así que **todas** se
-   corren, y las 4.136 del 1.º de enero se van al año anterior y desaparecen del
-   filtro de año.
-2. **`/calendario` se desborda 405 px en celular.** Es pública, es la que se
-   comparte por WhatsApp, y el encabezado no acompaña el desplazamiento.
-
-Más 12 conversiones de fecha sin protección de zona horaria (el mismo mecanismo
-en otras pantallas, incluida una que ordena mal por edad), contraste de 3,80 en
-`/terminos` —medido con `lib/contrast.ts`; el culpable es la opacidad, no el
-color— y un enlace distinguible solo por color en `/registro`.
-
-Pasan limpio: cero imágenes sin `alt`, cero enlaces rotos en los 39 artículos de
-ayuda, y ocho de las nueve páginas públicas sin desborde.
-
-**Los dos críticos ya se arreglaron** (2026-09-22, primera tanda):
-
-- C1 → `src/lib/fecha/partes-de-fecha.ts`, módulo puro con tests. El año y el
-  mes se LEEN del string en vez de construir un `Date`, que es lo que metía la
-  zona horaria en una pregunta que no la tiene. Verificado contra producción:
-  las 39 fechas distintas se corrían —o sea las 15.147 donaciones— y 2026 pasa
-  de 981 a 1.557. Lo que se reportaba como "2016" era enero de 2017.
-- C2 → la rejilla pública usa `minmax(0,1fr)` en vez de `1fr`, y en celular van
-  puntos de color en lugar de chips con nombre (el patrón que ya usa el
-  `CalendarGrid` del admin). Medido en el navegador: de 795 px de ancho en una
-  pantalla de 360, a cero desborde en las cuatro vistas.
-
-**Los tres medios también** (segunda tanda, el mismo día):
-
-- M1 → una sola forma de leer una columna `date`: `lib/format` para mostrar,
-  `lib/fecha/partes-de-fecha` para comparar o agrupar. Fueron **18** sitios, no
-  12 — aparecieron seis que *sí* estaban protegidos con `T00:00:00`, que era
-  justo la segunda forma que M1 señalaba, y `calcularAntiguedad`, que contaba
-  meses sobre un `new Date` y daba un mes de más a quien entró un día 1. Queda
-  un test que falla si alguien vuelve a escribirlo, probado con un cebo.
-- M2 → **el diagnóstico original estaba incompleto**. Quitar el `/90` hacía
-  falta (3,87 → 4,69), pero los seis nodos que axe marcaba eran los enlaces
-  `mailto:` en coral: el coral como texto da 4,550 sobre blanco —pasa por un
-  1%— y **4,346 sobre el papel `#F8FAFB`**, que es el fondo real de la página.
-  Ahora van en `coral-deep` (5,109). Al prohibir la clase en el test salieron
-  dos `/80` más en pantallas con sesión, que la auditoría no podía ver.
-- M3 → cinco enlaces, no uno: axe marcó el de `/registro` pero los de `/login`
-  tienen la misma forma. Subrayado permanente en los que van dentro de una
-  frase; los que están solos en su bloque se quedan (la posición los distingue).
-
-Verificado volviendo a correr la auditoría: **0 violaciones, 0 desbordes** en
-las 18 combinaciones. De paso se arregló un defecto del propio script, que con
-el dev server caído imprimía "violaciones: 0" en vez de fallar.
-
-**N3 hecho en parte** (tercera tanda, el mismo día): `lib/ui/clases-de-boton`
-(puro, con tests) + `components/shared/Button`, que renderiza `<button>` o
-`<Link>` según haya `href` —sin eso la mitad de los sitios seguiría a mano—.
-Migradas y comprobadas en el navegador las 9 pantallas de acceso y públicas.
-Quedan 188 en pantallas con sesión, con un TRINQUETE que impide que crezcan.
-
-Contado bien: de 1.321 clicables, 204 con fondo de marca, y los 182 primarios
-escritos de **86 formas distintas**.
-
-**N3-bis, hallado al hacerlo:** la guardia UI-2 vigilaba el coral retirado solo
-como hex, y el mismo color como `rgba(239, 85, 84, …)` estaba en 60 lugares de
-31 archivos, incluido `--shadow-pulse`. Barridos; la guardia ahora ve las dos
-notaciones. Dos de esos 60 eran TEXTO y fallaban AA: la lista de requisitos de
-contraseña, con 2,92 y 1,96 contra el 4,5 de la norma.
-
-**Las dos decisiones: aprobadas y aplicadas el 2026-09-22.** Pill en los 170
-primarios, y halo en todos — pero con DOS tokens, porque 142 de los 170 miden
-~34 px de alto y el halo grande (`0 12px 32px`) es más ancho que el botón:
-comprobado en el navegador, con tres botones juntos se funde en una mancha.
-`--shadow-pulse` para el CTA grande, `--shadow-pulse-sm` para el resto, los dos
-derivados de las cuatro variantes que el código ya tenía escritas a pulso.
-
-**N4, N2 y N1 hechos** el mismo día.
-
-- **N4** · Eran 15 de 132 archivos con `metadata`, y los que había eran de
-  MÓDULO: las 23 pantallas de estudios se llamaban todas «Estudios». No se
-  arregla página por página —`metadata` solo va en componentes de servidor y 112
-  de las 132 páginas son cliente—. Catorce layouts de sección (ya no queda
-  ninguna con el título genérico, con test) + `useTituloDePantalla` para el
-  detalle, aplicado a evento público, miembro, grupo, empleado y comité.
-- **N2** · De los 22 `max-w` en la raíz de una página, 21 están exentos por la
-  propia regla. El único real (`miembros/listas/[id]`) estrechaba una tabla a
-  1024 px teniendo 1600. Quitado, con test y las dos exentas justificadas.
-- **N1** · **La cuenta del informe estaba mezclada**: de las 208, **119 son
-  números** (separador de miles), no fechas. De las 64 fechas, **22 eran copias
-  exactas** de helpers que ya existían —tres escondidas en envoltorios locales—
-  y las 16 horas existían porque **`lib/format` no tenía formateador de hora**:
-  cuando el helper falta, cada pantalla se lo inventa. Agregados `formatTime` y
-  `formatNumber`, migradas las 21 copias: de 80 a 59, con trinquete.
-
-**Los cuatro menores cerrados.** Lo único que queda de QA-1 es lo autenticado,
-que espera a INF-1.
-
 ### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
 
 Con las cuentas de staging: axe + mobile + teclado sobre las pantallas de cada módulo,
@@ -436,80 +330,6 @@ propuesto de una línea. Los fixes salen después en tandas.
 MEDIR ANTES DE AFIRMAR (regla de la casa): cada hallazgo de rendimiento con evidencia
 (conteo de filas, número de consultas por request, tamaño de bundle), no impresiones.
 ```
-
-## Fase 19 — Pedido el 2026-09-21
-
-**Cierre 2026-09-21.** Tres artículos, escritos LEYENDO las pantallas, no de
-memoria: los nombres de los campos, los mensajes de error y las reglas salen del
-código, así que dicen lo que la pantalla dice hoy.
-
-`registrar-donaciones.md` (finanzas, dirección) · las dos formas, y lo que más
-se pregunta: **el monto vacío no es cero**. En la importación, el paso 2 es el
-que importa y el artículo lo dice — "hay varias posibles" es donde hay que
-decidir, porque el sistema no adivina.
-
-`areas-comites-y-puestos.md` (staff, coordinación de servidores, dirección) · el
-orden área → comité → puesto, y que **la gente se asigna al PUESTO**, nunca al
-comité. Incluye la estrella de encargado (SRV-5) y la advertencia que no es
-obvia: **el nombre del puesto otorga permisos** — "Encargado…" da líder de
-comité, los de sede dan check-in—, así que conviene copiar el nombre de otro
-comité antes de inventar uno.
-
-`asignar-y-quitar-roles.md` (admin, gestor de accesos, coordinación de estudios)
-· lo que más confunde, con su sección propia: **un rol que vino de un puesto
-vuelve si lo quitás a mano**, porque el puesto sigue diciendo que esa persona
-tiene esa función. Y la tabla de quién puede repartir qué, con el porqué de que
-al gestor de accesos se le niegue `admin`.
-
-Los tres pasan el guard de contenido de `visibility.test.ts`.
-
-### [~] OPS-1 · Healthchecks: 30-40 correos al día — CAUSA ENCONTRADA Y CONFIGURADO 2026-09-22
-
-**La causa no era el período de los checks: era que solo UNO de los 16 crons
-tenía su variable configurada en Vercel.**
-
-Cuando se diagnosticó, `vercel env ls production` devolvía exactamente una,
-`HEALTHCHECK_URL_SCHEDULED_BROADCASTS`. Las otras quince no existían, y
-`pingHealthcheck` es no-op sin variable — o sea que **quince crons no pingeaban
-nada** y sus checks nunca recibían un ping.
-
-**Ya están las 16** (verificado el mismo día). Queda mirar unos días si el
-volumen de correos bajó de verdad: eso solo se sabe con el tiempo pasando.
-
-Y el único que sí pingea es **el que corre cada hora**. Ahí está el volumen: 24
-pings al día, y si el período/grace de ese check es ajustado, el atraso normal de
-Vercel lo hace caerse y levantarse en cada vuelta — hasta 24 caídas + 24
-recuperaciones = 48 correos. Los 30-40 reportados caen justo ahí.
-
-**Lo que SÍ está bien, verificado en el código:** los 16 handlers pingean AL
-FINAL, después del éxito. No hay ninguno que reporte sano algo que reventó a la
-mitad. (El punto 4 del prompt original queda cerrado.)
-
-**Lo que falta y necesita acceso que no tengo:** leer los checks en
-healthchecks.io —período, grace y el log de caídas— para confirmar cuál de los
-dos efectos pesa más. Hace falta la API key, o el detalle de cómo está
-configurado el check de `scheduled-broadcasts`.
-
-**Qué hacer, en orden:**
-
-1. **Alivio inmediato**, en healthchecks.io: apagar los correos de recuperación
-   ("is UP"). Corta la mitad del volumen sin perder ninguna alerta real.
-2. **Arreglar el que flapea**: el check de `scheduled-broadcasts` va con período
-   de 1 hora y grace de 30 minutos. Con grace corto se cae por el jitter normal.
-3. **Configurar las otras quince variables** en Vercel. Es el pendiente de
-   Fase 0 y es lo que hace que hoy el monitoreo no sirva: quince crons pueden
-   fallar sin que nadie se entere.
-
-La tabla completa —cron, horario real en UTC y en hora de Costa Rica, variable,
-período y grace— quedó en **`docs/healthchecks.md`**, con el criterio para
-elegir esos números y los pasos para agregar un cron nuevo sin repetir esto.
-
-**De paso, un hallazgo aparte:** producción tiene cinco variables
-`NEXT_PUBLIC_MOCK_*_PASSWORD` de la época del auth simulado. El prefijo
-`NEXT_PUBLIC_` significa que **viajan en el bundle del navegador**. Hoy no
-abren nada —el auth es real desde hace meses— pero son cadenas públicas que se
-llaman "password" y no tienen por qué seguir ahí. Borrarlas es un minuto.
-
 
 ## Fase 23 — Reuniones de estudios y dirigentes (2026-09-24, dos llamadas grabadas)
 
