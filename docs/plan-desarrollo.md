@@ -994,7 +994,7 @@ redirect aterriza con el grupo preseleccionado, payload sin datos sensibles.
 tsc/lint/vitest.
 ```
 
-### [ ] SRV-19 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01)
+### [x] SRV-19 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01) — HECHO 2026-10-02
 
 > Entró como «SRV-17» y se renumeró: ese código ya es «Mi comité», que está
 > en producción desde el 2026-09-30. El siguiente libre era el 19.
@@ -1011,3 +1011,18 @@ existente), el detalle de la aplicación, el PDF que se genera y el email al enc
 Sin consulta extra por fila (join en la query existente). Tests: columna presente,
 persona sin sede. tsc/lint/vitest.
 ```
+
+**Hecho** (commit `d903373b`): columna en la tabla, línea propia en la tarjeta
+de celular, filtro nuevo al lado del de ubicación (server-side), el panel de
+revisión, la hoja que se imprime y el correo al encargado.
+
+**Queda fuera, a propósito: ordenar por sede.** Hoy NINGUNA columna de esa
+tabla ordena, y la lista pagina en el servidor: PostgREST no ordena las filas
+padre por una columna embebida, así que habría que hacer una vista o un RPC
+solo para esto. El filtro contesta la misma pregunta («los de mi sede») sin
+inventar un mecanismo nuevo para una columna. Si igual se quiere ordenar,
+es un ítem aparte con su vista.
+
+**Dato medido el 2026-10-02:** 12.012 de 23.892 miembros activos tienen sede,
+así que la mitad de las filas va a decir «—». No es un error del join: la
+sede sale de los check-ins y mucha gente no tiene ninguno.
