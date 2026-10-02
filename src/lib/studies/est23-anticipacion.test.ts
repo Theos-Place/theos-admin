@@ -89,7 +89,7 @@ describe('la ventana y el estado «Por iniciar»', () => {
      * grupo en matrícula con la ventana cerrada. Agregar un estado a la base
      * habría tocado el CHECK y las 54 pantallas que miran el estado.
      */
-    const g = { status: 'en_matricula', enrollment_end_date: '2026-10-29' }
+    const g = { status: 'en_matricula' as const, enrollment_end_date: '2026-10-29' }
     expect(estadoVisible(g, '2026-10-28')).toBe('en_matricula')
     expect(estadoVisible(g, '2026-10-30')).toBe('por_iniciar')
   })
