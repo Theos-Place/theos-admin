@@ -47,6 +47,9 @@ el cierre no se guarda. El motivo lo lee el equipo de estudios, no el estudiante
 
 Confirmado el cierre, y solo para los aprobados, pasan varias cosas encadenadas.
 
+> El esquema completo, en una imagen: **[Los niveles van en dos
+> bloques](/ayuda/niveles-en-dos-bloques)**.
+
 **Matrícula automática al siguiente nivel… y un alto en el camino.** Los niveles van en
 **pares**: 1 con 2, y 3 con 4.
 

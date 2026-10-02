@@ -141,3 +141,36 @@ parte en dos piezas (una pública, una interna) en vez de hacer una sola que mue
 - [ ] ¿Dice qué hacer cuando algo sale mal?
 - [ ] ¿Refleja las reglas reales del sistema? (verificar contra `docs/sistema-overview.md`)
 - [ ] ¿Cero datos reales de personas?
+
+---
+
+## Agregada después · Los niveles van en dos bloques (2026-10-02)
+
+`public/ayuda/infografias/niveles-en-bloques.svg` — artículo
+`content/ayuda/niveles-en-dos-bloques.md`.
+
+Nace con EST-14, y es la que más falta hacía: el cambio de «cuatro niveles,
+cuatro pagos» a «dos bloques» no se entiende leyéndolo, y el artículo del
+cierre ya lo contaba con palabras sin que terminara de quedar claro.
+
+Muestra los dos bloques, el corte al cerrar Nivel 2 con sus dos ramas y el
+final de la cadena. Los montos no se escribieron a mano: salen de
+`montoDelBloque` con los costos reales del catálogo (N1 cuesta ₡0 y los
+otros tres ₡5.000, así que el bloque 1 da ₡5.000 y el 2 da ₡10.000).
+
+**Los colores se midieron con `src/lib/contrast.ts`, y tres no pasaban:**
+
+| | Era | Daba | Quedó | Da |
+|---|---|---|---|---|
+| El «SÍ» | `#3DB97A` | 2.26 | `#216B45` | 5.85 |
+| El «NO» | `#D63E3D` | 4.13 | `#C43635` (`coralDeep`) | 4.85 |
+| Las notas | `#519DA2` | 3.14 | `#3B7579` (`tealDeep`) | 5.24 |
+
+Ojo con el verde: `--success` (#3DB97A) es el color de la casa pero está
+pensado para fondos tenues (`bg-success/12 text-success`), no para texto
+chico sobre papel. Usarlo tal cual en una infografía da 2.26:1.
+
+Y un detalle de XML que cuesta encontrar: **un comentario SVG no puede
+contener `--`**, así que escribir `--success` adentro rompe el archivo
+entero con un «not well-formed» que apunta a la línea del comentario y no
+dice por qué.

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1320" role="img" aria-labelledby="t-bloques d-bloques">
+  <title id="t-bloques">Los niveles van en dos bloques</title>
+  <!--
+    COLORES: medidos con src/lib/contrast.ts, no elegidos a ojo.
+      · SÍ  #216B45 → 5.85:1 sobre el papel. El verde de la casa (#3DB97A,
+        la variable success) da 2.26 y NO pasa AA: está pensado para fondos tenues
+        (`bg-success/12 text-success`), no para texto chico sobre papel.
+      · NO  #C43635 → 4.85:1. Es `coralDeep`; el coral normal (#D63E3D) da
+        4.13 y se queda corto para 13px en negrita, que no cuenta como
+        «texto grande».
+      · Notas #3B7579 → 5.24:1. Es `tealDeep`; el teal claro daba 3.14.
+      · El subrayado del título SÍ usa el coral normal: es decorativo.
+  -->
+  <desc id="d-bloques">Nivel 1 y 2 forman el primer bloque con un solo pago de cinco mil colones y los folletos juntos. Al cerrar Nivel 2 hay un corte donde el dirigente responde si el grupo continúa: con sí se crea el grupo de Nivel 3 y 4 con su cobro de diez mil colones, los folletos del par y dos semanas de matrícula abierta; con no, el grupo cierra y los comités arman los grupos. Nivel 3 y 4 forman el segundo bloque y al cerrar Nivel 4 termina la cadena.</desc>
+
+  <rect width="720" height="1320" fill="#f4f4f0"/>
+
+  <text x="40" y="54" font-family="Arial, sans-serif" font-size="25" font-weight="bold" fill="#161440">Los niveles van en dos bloques</text>
+  <rect x="40" y="68" width="56" height="4" rx="2" fill="#D63E3D"/>
+  <text x="40" y="96" font-family="Arial, sans-serif" font-size="14" fill="#555">Un pago y un juego de folletos por bloque, no por nivel.</text>
+
+  <g font-family="Arial, sans-serif">
+
+    <!-- ───────── BLOQUE 1 ───────── -->
+    <rect x="40" y="124" width="640" height="236" rx="16" fill="#ffffff" stroke="#dcdcd4"/>
+    <rect x="40" y="124" width="640" height="38" rx="16" fill="#161440"/>
+    <rect x="40" y="148" width="640" height="14" fill="#161440"/>
+    <text x="60" y="150" font-size="14" font-weight="bold" fill="#ffffff">BLOQUE 1</text>
+    <text x="660" y="150" font-size="13" fill="#70BDC2" text-anchor="end">se paga una vez</text>
+
+    <rect x="64" y="186" width="250" height="68" rx="12" fill="#f4f4f0" stroke="#dcdcd4"/>
+    <text x="84" y="214" font-size="16" font-weight="bold" fill="#161440">Nivel 1</text>
+    <text x="84" y="236" font-size="13" fill="#555">Acá se matricula</text>
+
+    <path d="M330 220 H392" stroke="#70BDC2" stroke-width="3"/>
+    <path d="M386 213 L398 220 L386 227 Z" fill="#70BDC2"/>
+    <text x="364" y="206" font-size="11" fill="#3B7579" text-anchor="middle">automático</text>
+
+    <rect x="406" y="186" width="250" height="68" rx="12" fill="#f4f4f0" stroke="#dcdcd4"/>
+    <text x="426" y="214" font-size="16" font-weight="bold" fill="#161440">Nivel 2</text>
+    <text x="426" y="236" font-size="13" fill="#555">Sin pagar de nuevo</text>
+
+    <rect x="64" y="272" width="592" height="68" rx="12" fill="#ffffff" stroke="#70BDC2"/>
+    <text x="84" y="298" font-size="14" font-weight="bold" fill="#161440">₡5.000 al matricular Nivel 1</text>
+    <text x="84" y="322" font-size="13" fill="#555">Los folletos de Nivel 1 y Nivel 2 se entregan juntos, al inicio.</text>
+
+    <path d="M360 360 V398" stroke="#161440" stroke-width="3"/>
+    <path d="M353 392 L360 404 L367 392 Z" fill="#161440"/>
+
+    <!-- ───────── EL CORTE ───────── -->
+    <rect x="40" y="412" width="640" height="96" rx="16" fill="#161440"/>
+    <text x="360" y="448" font-size="13" fill="#70BDC2" text-anchor="middle">AL CERRAR NIVEL 2 — EL CORTE</text>
+    <text x="360" y="478" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="middle">«¿El grupo continúa a nivel 3-4?»</text>
+    <text x="360" y="498" font-size="12" fill="#aeb9d4" text-anchor="middle">Es el único cierre que lo pregunta. Lo responde el dirigente.</text>
+
+    <path d="M250 508 V542 H196 V566" stroke="#216B45" stroke-width="3" fill="none"/>
+    <path d="M189 560 L196 572 L203 560 Z" fill="#216B45"/>
+    <text x="236" y="534" font-size="13" font-weight="bold" fill="#216B45" text-anchor="end">SÍ</text>
+
+    <path d="M470 508 V542 H524 V566" stroke="#C43635" stroke-width="3" fill="none"/>
+    <path d="M517 560 L524 572 L531 560 Z" fill="#C43635"/>
+    <text x="486" y="534" font-size="13" font-weight="bold" fill="#C43635">NO</text>
+
+    <!-- Rama SÍ -->
+    <rect x="40" y="578" width="306" height="188" rx="14" fill="#ffffff" stroke="#216B45"/>
+    <text x="64" y="608" font-size="15" font-weight="bold" fill="#161440">Se crea el grupo 3-4</text>
+    <text x="64" y="634" font-size="12.5" fill="#555">Mismo dirigente, horario y zona:</text>
+    <text x="64" y="652" font-size="12.5" fill="#555">la cohorte sigue junta.</text>
+    <text x="64" y="678" font-size="12.5" fill="#555">Los aprobados quedan</text>
+    <text x="64" y="696" font-size="12.5" fill="#555">matriculados, con su cobro.</text>
+    <text x="64" y="722" font-size="12.5" fill="#555">Los cupos libres se abren</text>
+    <text x="64" y="740" font-size="12.5" font-weight="bold" fill="#161440">dos semanas</text>
+    <text x="149" y="740" font-size="12.5" fill="#555">para gente nueva.</text>
+
+    <!-- Rama NO -->
+    <rect x="374" y="578" width="306" height="188" rx="14" fill="#ffffff" stroke="#C43635"/>
+    <text x="398" y="608" font-size="15" font-weight="bold" fill="#161440">El grupo cierra ahí</text>
+    <text x="398" y="634" font-size="12.5" fill="#555">No se crea ningún grupo</text>
+    <text x="398" y="652" font-size="12.5" fill="#555">siguiente.</text>
+    <text x="398" y="678" font-size="12.5" fill="#555">Les llega un aviso al comité</text>
+    <text x="398" y="696" font-size="12.5" fill="#555">de estudios y al de dirigentes</text>
+    <text x="398" y="714" font-size="12.5" fill="#555">para que armen los grupos</text>
+    <text x="398" y="732" font-size="12.5" fill="#555">de esos estudiantes.</text>
+    <text x="398" y="756" font-size="12" fill="#3B7579">Nadie queda colgando.</text>
+
+    <path d="M196 766 V806 H360 V836" stroke="#216B45" stroke-width="3" fill="none"/>
+    <path d="M353 830 L360 842 L367 830 Z" fill="#216B45"/>
+
+    <!-- ───────── BLOQUE 2 ───────── -->
+    <rect x="40" y="850" width="640" height="236" rx="16" fill="#ffffff" stroke="#dcdcd4"/>
+    <rect x="40" y="850" width="640" height="38" rx="16" fill="#161440"/>
+    <rect x="40" y="874" width="640" height="14" fill="#161440"/>
+    <text x="60" y="876" font-size="14" font-weight="bold" fill="#ffffff">BLOQUE 2</text>
+    <text x="660" y="876" font-size="13" fill="#70BDC2" text-anchor="end">igual que el primero</text>
+
+    <rect x="64" y="912" width="250" height="68" rx="12" fill="#f4f4f0" stroke="#dcdcd4"/>
+    <text x="84" y="940" font-size="16" font-weight="bold" fill="#161440">Nivel 3</text>
+    <text x="84" y="962" font-size="13" fill="#555">Acá se matricula</text>
+
+    <path d="M330 946 H392" stroke="#70BDC2" stroke-width="3"/>
+    <path d="M386 939 L398 946 L386 953 Z" fill="#70BDC2"/>
+    <text x="364" y="932" font-size="11" fill="#3B7579" text-anchor="middle">automático</text>
+
+    <rect x="406" y="912" width="250" height="68" rx="12" fill="#f4f4f0" stroke="#dcdcd4"/>
+    <text x="426" y="940" font-size="16" font-weight="bold" fill="#161440">Nivel 4</text>
+    <text x="426" y="962" font-size="13" fill="#555">Sin pagar de nuevo</text>
+
+    <rect x="64" y="998" width="592" height="68" rx="12" fill="#ffffff" stroke="#70BDC2"/>
+    <text x="84" y="1024" font-size="14" font-weight="bold" fill="#161440">₡10.000 al pasar a Nivel 3</text>
+    <text x="84" y="1048" font-size="13" fill="#555">Los folletos de Nivel 3 y Nivel 4 también van juntos.</text>
+
+    <path d="M360 1086 V1122" stroke="#161440" stroke-width="3"/>
+    <path d="M353 1116 L360 1128 L367 1116 Z" fill="#161440"/>
+
+    <rect x="40" y="1136" width="640" height="56" rx="14" fill="#161440"/>
+    <text x="360" y="1170" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">Al cerrar Nivel 4 termina la cadena: no pregunta nada ni crea grupo.</text>
+
+    <!-- ───────── Si algo falla ───────── -->
+    <rect x="40" y="1210" width="640" height="78" rx="14" fill="#ffffff" stroke="#dcdcd4"/>
+    <text x="64" y="1238" font-size="13" font-weight="bold" fill="#161440">Si algo no cuadra</text>
+    <text x="64" y="1260" font-size="12.5" fill="#555">¿El cobro llegó doble, o no llegó? ¿Faltan folletos de un nivel? Escribí a</text>
+    <text x="64" y="1278" font-size="12.5" fill="#555">soporte@theosplace.org antes de cerrar: después del cierre no se deshace.</text>
+  </g>
+</svg>
