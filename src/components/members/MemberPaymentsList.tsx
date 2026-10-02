@@ -5,11 +5,15 @@
 // para reutilizarla en /mis-pagos. `highlightId` (deep link ?pago=<id> de las
 // notificaciones) resalta y hace scroll al pago indicado.
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Check, CreditCard, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/shared/Button'
 import { formatDate, formatMoney, ymdCR } from '@/lib/format'
-import { isOverdue } from '@/lib/finance/installments'
+import {
+  isOverdue, planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
+} from '@/lib/finance/installments'
+import { opcionesPermitidas } from '@/lib/finance/limites-de-arreglo'
 import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 import { Modal } from '@/components/shared/Modal'
 
@@ -38,14 +42,13 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
 
   // Si memberId puede cambiar (pestañas de familia en /mis-pagos), remontar
   // con key={memberId} — acá no se resetea estado en el effect.
-  useEffect(() => {
-    let alive = true
+  const cargar = useCallback(() => {
     fetch(`/api/members/${memberId}/payments`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: MemberPaymentRow[]) => { if (alive) setRows(d) })
-      .catch(() => { if (alive) setError(true) })
-    return () => { alive = false }
+      .then((d: MemberPaymentRow[]) => setRows(d))
+      .catch(() => setError(true))
   }, [memberId])
+  useEffect(() => { cargar() }, [cargar])
 
   useEffect(() => {
     if (rows && highlightId) highlightRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -96,6 +99,14 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display', badge.cls)}>{badge.label}</span>
+              {/* FIN-13 · La opción de arreglo aparece SOLO si finanzas se
+                  la habilitó a esta persona sobre este cobro. No hay botón
+                  público: el de becas nunca se promocionó y la gente curiosa
+                  lo encontró igual, así que uno abierto volvería la excepción
+                  la vía normal de pago. */}
+              {canPay && p.payment_plan_enabled && !p.payment_plan_id && (
+                <BotonAcogerseAlArreglo pago={p} onHecho={cargar} />
+              )}
               {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} />}
               {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} />}
             </div>
@@ -278,5 +289,129 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
         </Modal>
       )}
     </>
+  )
+}
+
+/**
+ * FIN-13 · «Pagar en tractos», del lado de la persona.
+ *
+ * Solo se monta si finanzas habilitó ESTE cobro para ELLA. Lo que elige es
+ * nada más la cantidad de tractos: la frecuencia y la fecha tope las decide
+ * el tipo de objeto —una actividad va quincenal y tiene que quedar cobrada
+ * antes de arrancar— y pedírselas a la persona sería ofrecerle combinaciones
+ * que el servidor va a rechazar.
+ *
+ * Los vencimientos se muestran ANTES de confirmar, calculados con la misma
+ * función del servidor. Comprometerse a tractos sin ver las fechas es
+ * firmar en blanco, y deshacerlo no es gratis: el primer tracto REUSA el
+ * pago original.
+ */
+function BotonAcogerseAlArreglo({ pago, onHecho }: {
+  pago: MemberPaymentRow
+  onHecho: () => void
+}) {
+  const [abierto, setAbierto] = useState(false)
+  const [tractos, setTractos] = useState(2)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Una matrícula es de estudio; lo demás, de actividad. La frecuencia la
+  // impone esa diferencia (FIN-13), no una preferencia.
+  const esEvento = !pago.enrollment_id
+  const frequency: PlanFrequency = esEvento ? 'quincenal' : 'mensual'
+  const maxTractos = opcionesPermitidas(esEvento ? 'evento' : 'estudio', MAX_INSTALLMENTS).maxTractos
+  const hoy = ymdCR()
+  const cuotas = planInstallments({
+    total: pago.amount, count: tractos, firstDue: hoy,
+    currency: pago.currency, frequency,
+  })
+
+  async function confirmar() {
+    if (enviando) return
+    setEnviando(true); setError(null)
+    try {
+      const res = await fetch(`/api/payments/${pago.id}/payment-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ installments: tractos, first_due: hoy, frequency }),
+      })
+      const data = await res.json().catch(() => null)
+      // El mensaje del servidor dice QUÉ regla no se cumplió (la fecha, los
+      // tractos). Reemplazarlo por uno genérico dejaría a la persona sin
+      // saber qué cambiar.
+      if (!res.ok) throw new Error(data?.error || 'No se pudo crear el arreglo.')
+      setAbierto(false)
+      onHecho()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo crear el arreglo.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  if (!abierto) {
+    return (
+      <Button variante="secundario" tamano="sm" onClick={() => setAbierto(true)}>
+        Pagar en tractos
+      </Button>
+    )
+  }
+
+  return (
+    <div className="w-full rounded-xl border border-navy/15 p-3 space-y-2 sm:w-80">
+      <p className="text-[13px] font-semibold text-navy font-display">Pagar en tractos</p>
+      <p className="text-[13px] text-navy-light/80 font-body">
+        {formatMoney(pago.amount, pago.currency)} se parte en partes que suman lo mismo.
+        No es un descuento: es el mismo monto, repartido.
+      </p>
+      <div className="flex items-end gap-2">
+        <div className="space-y-1">
+          <label htmlFor={`tractos-${pago.id}`} className="block text-[13px] text-navy-light/80 font-display">
+            Tractos
+          </label>
+          <input
+            id={`tractos-${pago.id}`}
+            type="number"
+            min={MIN_INSTALLMENTS}
+            max={maxTractos}
+            value={tractos}
+            onChange={e => setTractos(Number(e.target.value))}
+            className="w-20 rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          />
+        </div>
+        <p className="pb-2 text-[13px] text-navy-light/80 font-body">de {MIN_INSTALLMENTS} a {maxTractos}</p>
+      </div>
+      {cuotas.length > 0 && (
+        <div className="rounded-xl bg-surface-low/60 px-3 py-2">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1">
+            Cuándo vence cada uno
+          </p>
+          <ul className="space-y-0.5">
+            {cuotas.map(c => (
+              <li key={c.number} className="text-[13px] text-navy font-body">
+                {formatDate(c.due_date)} · {formatMoney(c.amount, pago.currency)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
+      <div className="flex gap-2">
+        <Button
+          variante="navy" tamano="sm"
+          onClick={confirmar}
+          disabled={enviando || cuotas.length === 0}
+        >
+          {enviando ? '…' : 'Confirmar'}
+        </Button>
+        <Button
+          variante="secundario" tamano="sm"
+          onClick={() => { setAbierto(false); setError(null) }}
+          disabled={enviando}
+        >
+          Cancelar
+        </Button>
+      </div>
+    </div>
   )
 }

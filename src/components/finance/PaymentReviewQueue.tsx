@@ -14,6 +14,7 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/shared/Button'
 import { formatMoney, formatDate } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 import {
@@ -37,6 +38,8 @@ export type QueueRow = {
   reviewed_at: string | null
   queue_status: QueueStatus
   duplicate_reference: boolean
+  /** FIN-13 · Esta persona ya puede acogerse al arreglo sobre este cobro. */
+  payment_plan_enabled: boolean
 }
 
 const CONCEPT_LABEL: Record<string, string> = { matricula: 'Matrícula', folletos: 'Folletos', evento: 'Evento' }
@@ -305,6 +308,37 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
 
   // FIN-4: parte el pago pendiente en tractos. El primero puede vencer hoy o
   // más adelante; los siguientes van según la frecuencia (FIN-8).
+  /**
+   * FIN-13 · Abre (o cierra) la opción de arreglo para ESTA persona sobre
+   * ESTE cobro. Recarga al terminar porque el texto de al lado describe el
+   * estado nuevo: dejarlo diciendo lo viejo haría dudar de si el clic sirvió.
+   */
+  const [habilitando, setHabilitando] = useState<string | null>(null)
+  async function toggleArreglo(row: QueueRow) {
+    if (habilitando) return
+    setHabilitando(row.id)
+    try {
+      const res = await fetch(`/api/payments/${row.id}/payment-plan/enable`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habilitado: !row.payment_plan_enabled }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo cambiar la habilitación.')
+      toast(
+        row.payment_plan_enabled
+          ? `${row.member_name} ya no ve la opción de arreglo en este cobro.`
+          : `${row.member_name} ya puede acogerse al arreglo desde Mis pagos.`,
+        'success',
+      )
+      mutated()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo cambiar la habilitación.', 'error')
+    } finally {
+      setHabilitando(null)
+    }
+  }
+
   async function createPlan(row: QueueRow, panel: PlanPanel) {
     setPlanPanel(p => p ? { ...p, busy: true } : p)
     try {
@@ -692,6 +726,34 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                 (partir algo ya cobrado o en revisión no tiene sentido). */}
             {canPlan && detail.queue_status === 'pendiente' && (
               <div className="rounded-xl border border-navy/15 p-3 space-y-2">
+                {/* FIN-13 · Habilitar a la persona, decidido el 2026-09-29.
+                    NO hay botón público de «solicitar arreglo»: el de becas
+                    nunca se promocionó y la gente curiosa lo encontró igual,
+                    así que uno abierto volvería la excepción la vía normal de
+                    pago. Finanzas habilita caso por caso y recién entonces la
+                    persona ve la opción en Mis pagos.
+
+                    Convive con «Convertir en arreglo» —que lo arma finanzas
+                    en el momento— porque son dos caminos distintos: uno para
+                    cuando se acuerda por teléfono y otro para cuando se le
+                    deja a la persona hacerlo sola. */}
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[13px] font-body text-navy-light/80">
+                    {detail.payment_plan_enabled
+                      ? 'Esta persona puede acogerse al arreglo desde Mis pagos.'
+                      : 'Esta persona todavía no ve la opción de arreglo.'}
+                  </p>
+                  <Button
+                    variante="secundario" tamano="sm" className="shrink-0"
+                    onClick={() => toggleArreglo(detail)}
+                    disabled={habilitando === detail.id}
+                  >
+                    {habilitando === detail.id
+                      ? '…'
+                      : detail.payment_plan_enabled ? 'Quitar habilitación' : 'Habilitar arreglo de pago'}
+                  </Button>
+                </div>
+
                 {!planPanel ? (
                   <button
                     onClick={() => setPlanPanel({

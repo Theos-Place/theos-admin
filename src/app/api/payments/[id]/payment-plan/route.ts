@@ -3,8 +3,11 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/validate'
-import { createPaymentPlan, getPlanForPayment, getPlanInstallments } from '@/lib/supabase/queries/payment-plans'
+import {
+  createPaymentPlan, getPlanForPayment, getPlanInstallments, puedeAcogerseAlArreglo,
+} from '@/lib/supabase/queries/payment-plans'
 import { MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCIES } from '@/lib/finance/installments'
+import { MAX_TRACTOS_EVENTO } from '@/lib/finance/limites-de-arreglo'
 import { reportarError } from '@/lib/observabilidad'
 
 // Arreglo de pago en tractos sobre un pago PENDIENTE (FIN-4). Uso interno: solo
@@ -27,6 +30,28 @@ const ERRORES: Record<string, { error: string; status: number }> = {
   PAGO_SIN_OBJETO:    { error: 'El pago no está ligado a una matrícula ni a una inscripción, así que no se puede partir.', status: 409 },
   TRACTOS_INVALIDOS:  { error: `La cantidad de tractos debe estar entre ${MIN_INSTALLMENTS} y ${MAX_INSTALLMENTS}.`, status: 400 },
   MONTO_INSUFICIENTE: { error: 'El monto es muy chico para repartirlo en esa cantidad de tractos.', status: 400 },
+  // FIN-13 · Los límites decididos con finanzas el 2026-09-29. Van con 409 y
+  // no 400: el cuerpo está bien formado, lo que no se puede es ESTE arreglo
+  // sobre ESTE objeto — es un conflicto con el estado, no un dato inválido.
+  FRECUENCIA_NO_PERMITIDA: {
+    error: 'Los arreglos de actividades son solo quincenales: no hay tiempo para cuotas '
+      + 'mensuales antes de que arranque.',
+    status: 409,
+  },
+  DEMASIADOS_TRACTOS: {
+    error: `Un arreglo de actividad admite como máximo ${MAX_TRACTOS_EVENTO} tractos.`,
+    status: 409,
+  },
+  VENCE_DESPUES_DE_LA_ACTIVIDAD: {
+    error: 'El último tracto vence después de que arranca la actividad. Todo el arreglo '
+      + 'tiene que quedar cobrado antes.',
+    status: 409,
+  },
+  VENCE_DESPUES_DE_LA_MATRICULA: {
+    error: 'El último tracto vence después de que cierra la matrícula. El arreglo tiene '
+      + 'que cerrarse dentro del período de matrícula.',
+    status: 409,
+  },
 }
 
 // GET: el arreglo de este pago (si es un tracto) con todos sus tractos.
@@ -45,13 +70,34 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-// POST: parte el pago en tractos.
+/**
+ * POST: parte el pago en tractos.
+ *
+ * QUIÉN PUEDE. Finanzas y dirección, como siempre. Y desde FIN-13 también LA
+ * PROPIA PERSONA, pero solo sobre un cobro que finanzas le HABILITÓ a mano.
+ *
+ * Es el mismo endpoint a propósito. Un segundo camino para crear arreglos
+ * significaría dos lugares donde aplicar los límites de FIN-13, y el día que
+ * cambie una regla uno de los dos se va a quedar atrás — que es exactamente
+ * como se coló el bug de los estados en SRV-14.
+ *
+ * La habilitación la verifica el servidor leyendo la columna, no un campo del
+ * cuerpo: si viniera en el request, cualquiera se la pondría.
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireRoles(...PLAN_ROLES)
+  const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
+
+    const esStaff = auth.ctx.roles.some(r => (PLAN_ROLES as readonly string[]).includes(r))
+    if (!esStaff) {
+      const permiso = await puedeAcogerseAlArreglo(id, auth.ctx.memberId)
+      if (!permiso.ok) {
+        return NextResponse.json({ error: permiso.error }, { status: permiso.status })
+      }
+    }
 
     const parsed = bodySchema.safeParse(await req.json().catch(() => ({})))
     if (!parsed.success) {

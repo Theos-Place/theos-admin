@@ -3066,6 +3066,8 @@ export type Database = {
           payment_date: string
           payment_method: string | null
           payment_plan_id: string | null
+          payment_plan_enabled_at: string | null
+          payment_plan_enabled_by: string | null
           receipt_path: string | null
           recorded_by: string | null
           reference_code: string | null
@@ -3103,6 +3105,8 @@ export type Database = {
           payment_date?: string
           payment_method?: string | null
           payment_plan_id?: string | null
+          payment_plan_enabled_at?: string | null
+          payment_plan_enabled_by?: string | null
           receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null
@@ -3140,6 +3144,8 @@ export type Database = {
           payment_date?: string
           payment_method?: string | null
           payment_plan_id?: string | null
+          payment_plan_enabled_at?: string | null
+          payment_plan_enabled_by?: string | null
           receipt_path?: string | null
           recorded_by?: string | null
           reference_code?: string | null

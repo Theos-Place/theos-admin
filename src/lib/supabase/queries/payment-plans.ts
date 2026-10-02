@@ -16,6 +16,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
 } from '@/lib/finance/installments'
+import {
+  motivoParaRechazarArreglo, limiteDeEstudio, type ContextoDelArreglo,
+} from '@/lib/finance/limites-de-arreglo'
 
 export type PaymentPlan = {
   id: string
@@ -39,6 +42,56 @@ export type PaymentPlanInstallment = {
   due_date: string | null
   status: string
   review_status: string | null
+}
+
+/**
+ * FIN-13 · De qué es este pago y hasta cuándo puede estirarse su arreglo.
+ *
+ * El tipo sale del VÍNCULO del pago (matrícula o inscripción) y no de
+ * `entity_type`, que es un texto que puede venir vacío en lo histórico: el
+ * vínculo es el que la tabla obliga con un CHECK, así que no miente.
+ */
+async function contextoDelArreglo(
+  supabase: ReturnType<typeof createAdminClient>,
+  p: { enrollment_id: string | null; study_group_id: string | null; event_id: string | null },
+): Promise<ContextoDelArreglo> {
+  if (p.enrollment_id) {
+    // El grupo puede venir por el pago o por la matrícula; se prueba el del
+    // pago primero porque evita una consulta.
+    let groupId = p.study_group_id
+    if (!groupId) {
+      const { data } = await supabase
+        .from('study_enrollments').select('group_id').eq('id', p.enrollment_id).maybeSingle()
+      groupId = (data as { group_id: string | null } | null)?.group_id ?? null
+    }
+    if (!groupId) return { tipo: 'estudio', limite: null, origenDelLimite: null }
+    const { data: g } = await supabase
+      .from('study_groups').select('enrollment_end_date, starts_at').eq('id', groupId).maybeSingle()
+    const { limite, origenDelLimite } = limiteDeEstudio(
+      (g as { enrollment_end_date: string | null; starts_at: string | null } | null) ?? {},
+    )
+    return { tipo: 'estudio', limite, origenDelLimite }
+  }
+
+  if (!p.event_id) return { tipo: 'evento', limite: null, origenDelLimite: null }
+  const { data: e } = await supabase
+    .from('events').select('starts_at').eq('id', p.event_id).maybeSingle()
+  const starts = (e as { starts_at: string | null } | null)?.starts_at ?? null
+  return {
+    tipo: 'evento',
+    // `events.starts_at` es timestamptz: el día que importa es el de Costa
+    // Rica, no el de UTC. Un evento de las 6 p.m. del viernes es sábado en
+    // UTC, y con eso el arreglo ganaría un día que no tiene.
+    limite: starts ? diaCR(starts) : null,
+    origenDelLimite: 'inicio_actividad',
+  }
+}
+
+/** `YYYY-MM-DD` en día de Costa Rica. */
+function diaCR(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(d)
 }
 
 /**
@@ -97,6 +150,21 @@ export async function createPaymentPlan(
   })
   // Con montos muy chicos no se puede repartir (ej. ₡2 en 3 tractos).
   if (tractos.length !== opts.installments) throw new Error('MONTO_INSUFICIENTE')
+
+  /**
+   * FIN-13 · Los límites se validan ACÁ y no solo en la pantalla.
+   *
+   * La pantalla ya no ofrece lo que no se puede, pero el endpoint es
+   * alcanzable con un POST a mano y esto decide cuánta plata se cobra y
+   * cuándo. Una regla de negocio que solo vive en el formulario no es una
+   * regla: es una sugerencia.
+   */
+  const ctx = await contextoDelArreglo(supabase, p)
+  const rechazo = motivoParaRechazarArreglo(
+    { installments: opts.installments, frequency, vencimientos: tractos.map(t => t.due_date) },
+    ctx,
+  )
+  if (rechazo) throw new Error(rechazo.code)
 
   const { data: planRow, error: planErr } = await supabase
     .from('payment_plans')
@@ -352,4 +420,97 @@ export async function notifyFinanceOverdueInstallments(
     notified++
   }
   return { overdue: items.length, members: resumen.members, notified, skipped_dup }
+}
+
+/**
+ * FIN-13 · Habilita (o quita) el arreglo de pago sobre un cobro.
+ *
+ * Las dos guardas importan y son distintas:
+ *
+ * · PAGO_NO_PENDIENTE — habilitar un arreglo sobre algo ya pagado le pondría
+ *   a la persona un botón que al tocarlo falla. Peor que no tenerlo.
+ * · PAGO_YA_EN_ARREGLO — ya es un tracto de otro arreglo; partirlo otra vez
+ *   no es lo que nadie quiso.
+ *
+ * QUITAR la habilitación NO deshace un arreglo ya creado: para eso está
+ * cancelar el plan. Esto solo cierra la puerta hacia adelante.
+ */
+export async function setPaymentPlanEnabled(
+  paymentId: string,
+  habilitado: boolean,
+  porMemberId: string | null,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { data } = await supabase
+    .from('payments')
+    .select('id, status, payment_plan_id')
+    .eq('id', paymentId)
+    .maybeSingle()
+  if (!data) throw new Error('PAGO_NO_ENCONTRADO')
+  const p = data as { status: string; payment_plan_id: string | null }
+  if (p.payment_plan_id) throw new Error('PAGO_YA_EN_ARREGLO')
+  if (p.status !== 'pending') throw new Error('PAGO_NO_PENDIENTE')
+
+  const { error } = await supabase
+    .from('payments')
+    .update(habilitado
+      ? { payment_plan_enabled_at: new Date().toISOString(), payment_plan_enabled_by: porMemberId }
+      // Al quitar se borran las DOS: dejar el «quién» sin el «cuándo» haría
+      // creer que sigue habilitado por esa persona.
+      : { payment_plan_enabled_at: null, payment_plan_enabled_by: null })
+    .eq('id', paymentId)
+  if (error) throw error
+}
+
+/**
+ * FIN-13 · ¿Puede ESTA persona armar el arreglo de ESTE cobro?
+ *
+ * Solo si se cumplen las tres cosas: el cobro es suyo, finanzas se lo
+ * habilitó, y sigue pendiente.
+ *
+ * NO alcanza con ser familiar. En Mis pagos uno puede PAGAR por un familiar
+ * —eso se decidió en PAG-1— pero comprometerse a un arreglo de pago a nombre
+ * de otra persona es otra cosa: es una deuda que queda en su ficha y que la
+ * bloquea para matricularse si se atrasa. Esa la asume cada quien.
+ */
+export async function puedeAcogerseAlArreglo(
+  paymentId: string,
+  memberId: string | null,
+): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  if (!memberId) {
+    return { ok: false, error: 'Tu usuario no tiene una ficha asociada.', status: 403 }
+  }
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('payments')
+    .select('member_id, status, payment_plan_id, payment_plan_enabled_at')
+    .eq('id', paymentId)
+    .maybeSingle()
+  if (!data) return { ok: false, error: 'No se encontró el pago.', status: 404 }
+  const p = data as {
+    member_id: string | null; status: string
+    payment_plan_id: string | null; payment_plan_enabled_at: string | null
+  }
+
+  // 404 y no 403 cuando el cobro es de otra persona: un 403 confirmaría que
+  // ese pago existe, y el id va en la URL.
+  if (p.member_id !== memberId) {
+    return { ok: false, error: 'No se encontró el pago.', status: 404 }
+  }
+  if (!p.payment_plan_enabled_at) {
+    return {
+      ok: false,
+      error: 'Este cobro no tiene habilitado el arreglo de pago. Escribí a finanzas para '
+        + 'conversarlo.',
+      status: 403,
+    }
+  }
+  if (p.payment_plan_id) {
+    return { ok: false, error: 'Este cobro ya es parte de un arreglo de pago.', status: 409 }
+  }
+  if (p.status !== 'pending') {
+    return { ok: false, error: 'Este cobro ya no está pendiente.', status: 409 }
+  }
+  return { ok: true }
 }

@@ -39,6 +39,9 @@ export type PaymentQueueRow = {
   reviewed_at: string | null
   queue_status: PaymentQueueStatus
   duplicate_reference: boolean
+  /** FIN-13 · Finanzas ya habilitó a esta persona a acogerse a un arreglo
+   *  sobre este cobro. No hay botón público: se habilita caso por caso. */
+  payment_plan_enabled: boolean
 }
 
 /** Crea un pago por comprobante en estado de revisión. status='pending' (finanzas)
@@ -713,6 +716,9 @@ export type MemberPaymentRow = {
   due_date: string | null
   installment_number: number | null
   payment_plan_id: string | null
+  /** FIN-13 · Finanzas le habilitó a ESTA persona acogerse a un arreglo sobre
+   *  ESTE cobro. No hay botón público: se habilita caso por caso. */
+  payment_plan_enabled: boolean
 }
 
 /** Pagos/cobros de UN miembro (para la sección "Pagos y cobros" del perfil).
@@ -822,6 +828,7 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
     .select(`
       id, amount, currency, concept, receipt_path, created_at, status, review_status, reviewed_at,
       enrollment_id, event_registration_id, due_date, installment_number, payment_plan_id,
+      payment_plan_enabled_at,
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
       enrollment:study_enrollments!payments_enrollment_id_fkey(
         group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
@@ -865,6 +872,9 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
       due_date: (r.due_date as string | null) ?? null,
       installment_number: (r.installment_number as number | null) ?? null,
       payment_plan_id: (r.payment_plan_id as string | null) ?? null,
+      // FIN-13 · Se manda un BOOLEANO y no la fecha: a la persona no le
+      // aporta cuándo se lo habilitaron, y quién lo hizo es dato interno.
+      payment_plan_enabled: !!r.payment_plan_enabled_at,
     }
   })
 }
@@ -894,7 +904,7 @@ export async function getPendingPaymentsQueue(filters: {
     .from('payments')
     .select(`
       id, member_id, amount, currency, concept, reference_code, receipt_path, created_at,
-      status, review_status, reviewed_at,
+      status, review_status, reviewed_at, payment_plan_enabled_at,
       member:members!payments_member_id_fkey(first_name, last_name),
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
       ${enrollmentSel}
@@ -976,6 +986,7 @@ export async function getPendingPaymentsQueue(filters: {
       reviewed_at: (r.reviewed_at as string | null) ?? null,
       queue_status: computeQueueStatus(r.status as string, r.review_status as string | null),
       duplicate_reference: !!ref && dupSet.has(ref),
+      payment_plan_enabled: !!r.payment_plan_enabled_at,
     }
   })
 }
