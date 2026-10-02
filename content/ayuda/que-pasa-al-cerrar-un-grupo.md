@@ -5,7 +5,7 @@ tipo: tutorial
 visibilidad: roles
 roles: [dirigente, coordinador_estudios, coordinador_dirigentes, direccion, folletos]
 orden: 6
-resumen: Qué escribe el cierre, qué desencadena después (matrícula al siguiente nivel, folletos, cobros, encuesta) y qué no se puede deshacer.
+resumen: Qué escribe el cierre, el corte al terminar Nivel 2, qué se dispara después (matrícula, folletos en pares, cobros, encuestas) y qué no se puede deshacer.
 ---
 
 # Qué pasa cuando se cierra un grupo
@@ -47,26 +47,53 @@ el cierre no se guarda. El motivo lo lee el equipo de estudios, no el estudiante
 
 Confirmado el cierre, y solo para los aprobados, pasan varias cosas encadenadas.
 
-**Matrícula automática al siguiente nivel.** Aplica a Nivel 1, 2 y 3, y a Discípulos 1 y 2 —
-son los estudios que tienen un "siguiente" en la cadena. Cerrar un Nivel 4, un Panorama o una
-Hermenéutica no matricula a nadie en nada.
+**Matrícula automática al siguiente nivel… y un alto en el camino.** Los niveles van en
+**pares**: 1 con 2, y 3 con 4.
 
-El sistema busca el grupo del nivel siguiente y, si no existe, lo crea heredando dirigente,
-horario y zona: la cohorte sigue junta. La matrícula queda **activa de inmediato**.
+- **De Nivel 1 a Nivel 2, y de Nivel 3 a Nivel 4**, el paso es automático y sin cobro nuevo:
+  la matrícula de Nivel 1 ya cubrió los dos, igual que la de Nivel 3. Los aprobados quedan
+  matriculados de una.
+- **Al cerrar Nivel 2 hay un corte**, y por eso el cierre te hace una pregunta: *¿el grupo
+  continúa a nivel 3-4?* Es el único cierre que la hace.
+- **Al cerrar Nivel 4 se termina la cadena.** No pregunta nada ni matricula a nadie, igual
+  que un Panorama o una Hermenéutica.
 
-**El cobro va por un carril aparte.** Si el nivel siguiente tiene costo, se crea el cobro
-pendiente y le llega el aviso a la persona — pero la matrícula ya es efectiva, no espera al
-pago. El dirigente y el co-dirigente del grupo no pagan su matrícula. Y si el nivel siguiente
-es gratis, no se crea ningún cobro: pasa con Discípulos 2 y 3, donde el folleto se pagó al
-matricularse en Discípulos 1.
+Discípulos 1 y 2 siguen pasando automático al siguiente, como siempre.
 
-**El tiquete de folletos.** Se pide para el grupo **nuevo**, no para el que cerraste: los
-folletos son del estudio que van a llevar, no del que terminaron. Por eso el cierre te
-pregunta dónde entregarlos, y es obligatorio contestarlo — un tiquete sin destino llega a
-imprenta y nadie sabe a dónde mandarlo.
+**Si contestás que SÍ continúa**, el sistema crea el grupo de Nivel 3-4 heredando dirigente,
+horario y zona —la cohorte sigue junta—, matricula a los aprobados y genera el cobro de los
+dos niveles. Los cupos que queden libres se abren a matrícula durante **dos semanas**, que es
+el descanso entre bloques: así puede entrar gente nueva antes de arrancar.
+
+**Si contestás que NO**, el grupo cierra y no se crea nada. Le llega un aviso al comité de
+estudios y al de dirigentes para que armen los grupos de esos estudiantes. Nadie queda
+colgando sin que alguien se entere.
+
+**Vos elegís cuándo arranca el grupo siguiente.** El cierre te propone una fecha y la podés
+cambiar; sin fecha no deja confirmar.
+
+**El cobro va por un carril aparte.** Cuando hay cobro —al matricular Nivel 1 y al pasar a
+Nivel 3— se crea pendiente y le llega el aviso a la persona, pero la matrícula ya es
+efectiva: no espera al pago. El dirigente y el co-dirigente no pagan su matrícula. Y ojo con
+esto, que es el cambio de costumbre más grande: **el cobro le llega a cada estudiante, no a
+vos**. Ya no se recauda por grupo.
+
+**Los folletos van en pares, al empezar el bloque.** Quien se matricula en Nivel 1 recibe los
+folletos de 1 y 2 juntos; quien pasa a Nivel 3, los de 3 y 4. Por eso **cerrar un Nivel 1 o
+un Nivel 3 no pide folletos nuevos**: esa gente ya los tiene. El pedido se hace una sola vez
+por bloque, y es una sola orden que cubre los dos folletos.
+
+Si el grupo de Nivel 1 todavía está en matrícula y los folletos tienen que estar para el
+primer día, el equipo de estudios puede pedirlos por adelantado desde la página del grupo.
 
 **La encuesta al dirigente.** Se programa al cerrar y sale al día siguiente. No se manda en
 el momento.
+
+**La encuesta al estudiante no sale en todos los cierres.** Depende del estudio: en la cadena
+de niveles solo se manda al cerrar **Nivel 2 y Nivel 4** —el final de cada bloque—, mientras
+que SCJ, Discípulos y Prematrimonial sí la mandan al terminar. No es una regla de niveles
+sino una marca de cada estudio, así que si tenés dudas de si tu grupo encuesta, preguntale al
+comité de estudios.
 
 ## Los dos casos con paso extra
 

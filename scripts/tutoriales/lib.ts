@@ -124,6 +124,15 @@ export type TutorialFlow = {
   /** .md de content/ayuda a actualizar. */
   mdFile: string
   gifAlt: string
+  /**
+   * En qué anchos se graba. Por defecto los dos.
+   *
+   * Existe porque hay pantallas que NO tienen el flujo en celular: la
+   * revisión de aplicaciones vive en una tabla `hidden md:block`, y en
+   * móvil la fila lleva al puesto en vez de abrir el panel. Grabar ahí un
+   * video de algo que no se puede hacer es peor que no grabarlo.
+   */
+  viewports?: Viewport[]
   /** Limpieza previa (deshacer datos de la corrida anterior). */
   setup?: (admin: SupabaseClient) => Promise<void>
   /** Restauración final (p. ej. devolver la contraseña del seed). */
@@ -140,6 +149,19 @@ const VIEWPORTS: Record<Viewport, { width: number; height: number }> = {
 // ── Ejecución ────────────────────────────────────────────────────────────────
 
 type Piece = { kind: 'video'; path: string } | { kind: 'image'; path: string; seconds: number }
+
+/**
+ * De qué ancho salen el GIF y el mp4 que van al centro de ayuda.
+ *
+ * Era «mobile» fijo, y eso se rompió el 2026-10-02 al grabar el primer flujo
+ * que NO existe en celular: la carpeta móvil no se creaba, `publish` no
+ * encontraba nada que copiar y el artículo quedó referenciando un GIF y un
+ * video que no existían. El fallo fue silencioso —exit 0 y «publicado»— que
+ * es la peor forma de romperse.
+ */
+function viewportFuente(flow: TutorialFlow): Viewport {
+  return (flow.viewports ?? ['mobile', 'desktop'])[0]
+}
 
 async function runViewport(flow: TutorialFlow, viewport: Viewport): Promise<void> {
   const vpDir = join(OUT, flow.slug, viewport)
@@ -225,7 +247,7 @@ async function runViewport(flow: TutorialFlow, viewport: Viewport): Promise<void
     await browser.close()
   }
 
-  postprocess(flow.slug, viewport, pieces, size)
+  postprocess(flow.slug, viewport, pieces, size, viewport === viewportFuente(flow))
 }
 
 // ── ffmpeg: mp4 + GIF ─────────────────────────────────────────────────────────
@@ -234,7 +256,7 @@ function ff(args: string[]) {
   execFileSync(ffmpeg, ['-y', '-loglevel', 'error', ...args], { stdio: 'inherit' })
 }
 
-function postprocess(slug: string, viewport: Viewport, pieces: Piece[], size: { width: number; height: number }) {
+function postprocess(slug: string, viewport: Viewport, pieces: Piece[], size: { width: number; height: number }, esElQuePublica: boolean) {
   const vpDir = join(OUT, slug, viewport)
   const norm: string[] = []
   const vf = `scale=${size.width}:${size.height}:force_original_aspect_ratio=decrease,pad=${size.width}:${size.height}:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p`
@@ -254,7 +276,7 @@ function postprocess(slug: string, viewport: Viewport, pieces: Piece[], size: { 
   // mientras descarga, en vez de esperar el archivo completo.
   ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', mp4])
 
-  if (viewport === 'mobile') {
+  if (esElQuePublica) {
     // GIF apto WhatsApp: 15fps, ancho máx 800 (el móvil ya es 390), <5MB.
     const gif = join(vpDir, `${slug}.gif`)
     const makeGif = (fps: number, width: number) =>
@@ -270,7 +292,8 @@ function postprocess(slug: string, viewport: Viewport, pieces: Piece[], size: { 
 // ── Publicación en /ayuda ────────────────────────────────────────────────────
 
 function publish(flow: TutorialFlow) {
-  const mobileDir = join(OUT, flow.slug, 'mobile')
+  const fuente = viewportFuente(flow)
+  const mobileDir = join(OUT, flow.slug, fuente)
   const pubDir = join(ROOT, 'public/ayuda/tutoriales', flow.slug)
   mkdirSync(pubDir, { recursive: true })
 
@@ -285,8 +308,12 @@ function publish(flow: TutorialFlow) {
   }
   // El mp4 móvil también va al centro de ayuda (el render lo pinta como video
   // plegado); el desktop queda en out/ para las sesiones en vivo.
-  const mp4Src = join(mobileDir, `${flow.slug}-mobile.mp4`)
+  const mp4Src = join(mobileDir, `${flow.slug}-${fuente}.mp4`)
   if (existsSync(mp4Src)) copyFileSync(mp4Src, join(pubDir, `${flow.slug}.mp4`))
+  else console.warn(`  ⚠ no hay mp4 en ${fuente}: el artículo va a referenciar un video que no existe`)
+  if (!existsSync(join(pubDir, `${flow.slug}.gif`))) {
+    console.warn(`  ⚠ no hay GIF en ${fuente}: el artículo va a referenciar una imagen rota`)
+  }
 
   // .md: el GIF completo arriba (tras el H1) y cada captura DENTRO de su paso
   // numerado (línea indentada = continuación del ítem para el renderer).
@@ -345,10 +372,11 @@ export async function runTutorial(flow: TutorialFlow) {
   const admin = adminClient()
   try {
     if (flow.setup) { console.log('  · setup (limpieza previa)…'); await flow.setup(admin) }
-    for (const vp of ['mobile', 'desktop'] as Viewport[]) {
+    for (const vp of (flow.viewports ?? ['mobile', 'desktop'])) {
       console.log(`  · grabando ${vp}…`)
       await runViewport(flow, vp)
-      if (flow.setup && vp === 'mobile') { console.log('  · re-setup para el segundo viewport…'); await flow.setup(admin) }
+      const quedanMas = (flow.viewports ?? ['mobile', 'desktop']).at(-1) !== vp
+      if (flow.setup && quedanMas) { console.log('  · re-setup para el segundo viewport…'); await flow.setup(admin) }
     }
     publish(flow)
     console.log(`  ✓ publicado en public/ayuda/tutoriales/${flow.slug}/ y ${flow.mdFile}`)
