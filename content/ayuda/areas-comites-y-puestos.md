@@ -5,7 +5,7 @@ tipo: tutorial
 visibilidad: roles
 roles: [encargado_staff, coordinador_servidores, direccion]
 orden: 20
-resumen: Cómo está armada la estructura de servicio —área, comité, puesto—, cómo crear cada nivel, cómo meter gente a un puesto y cómo marcar a los encargados.
+resumen: Cómo está armada la estructura de servicio —área, comité, puesto—, dónde entra el Director de Área, cómo crear cada nivel y cómo marcar a los encargados.
 ---
 
 # Crear áreas, comités y puestos de servicio
@@ -23,6 +23,19 @@ Son tres niveles y van en orden. **No se puede saltar ninguno.**
 Las personas se asignan al **puesto**, nunca al comité directamente. Por eso, si
 alguien "tiene que estar en tal comité" pero no hay un puesto que describa lo
 que hace, primero se crea el puesto.
+
+### El Director de Área va por encima de los comités
+
+Hay un cuarto lugar que no cuelga de un comité sino del **área entera**: el
+**Director de Área**. Es quien responde por todos los comités de esa área.
+
+Sigue siendo **un puesto**, no una marca aparte: se crea igual que cualquier
+otro, con el título *Director de Área*, pero colgando del **área** en vez de un
+comité. Eso es lo que lo pone por encima.
+
+- Se ve en la pantalla de **Áreas y comités**, arriba de los comités del área.
+- **Puede haber más de uno.** Área Enseñanza tiene dos, a propósito.
+- Se edita desde la misma área, igual que su nombre.
 
 ## Crear un área
 
@@ -84,6 +97,9 @@ significa que esa persona está a cargo.
   pantalla **Mi comité**.
 - **Solo staff y dirección pueden tocarla.** El encargado de un comité no se
   nombra a sí mismo ni nombra a otros.
+
+**El Director de Área no se marca con la estrella.** La estrella es de los
+comités; el director se asigna a su puesto del área y de ahí sale su acceso.
 
 Si alguien tiene *Encargado* como su **único** puesto, la estrella no se le puede
 quitar: hacerlo lo sacaría del comité sin decirlo. Primero dale otro puesto, o

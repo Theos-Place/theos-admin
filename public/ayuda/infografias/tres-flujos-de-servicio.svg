@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1200" role="img" aria-labelledby="t-flujos d-flujos" font-family="Arial, Helvetica, sans-serif">
   <title id="t-flujos">Los tres flujos de servicio</title>
-  <desc id="d-flujos">Diferencia entre solicitud de puesto nuevo, solicitud de vacante y aplicación: qué es lo que no existe todavía en cada caso, quién lo hace y en qué orden van.</desc>
+  <desc id="d-flujos">Diferencia entre solicitud de puesto nuevo, solicitud de cupos y aplicación: qué es lo que no existe todavía en cada caso, quién lo hace y en qué orden van.</desc>
 
   <rect width="720" height="1200" fill="#F6F5F2"/>
 
@@ -36,7 +36,7 @@
     <rect x="48" y="458" width="6" height="204" rx="3" fill="#D63E3D"/>
     <circle cx="90" cy="494" r="18" fill="#D63E3D"/>
     <text x="90" y="501" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
-    <text x="122" y="501" font-size="19" font-weight="bold" fill="#161440">Solicitud de vacante</text>
+    <text x="122" y="501" font-size="19" font-weight="bold" fill="#161440">Solicitud de cupos</text>
     <text x="76" y="536" font-size="14" fill="#8B8AA0">No existe: LA PLAZA ABIERTA. El puesto sí existe.</text>
     <text x="76" y="566" font-size="14" fill="#5B5975">Pasa por autorización:</text>
     <g font-size="13" text-anchor="middle">
@@ -49,7 +49,7 @@
       <path d="M182 595 h10"/><path d="M348 595 h10"/><path d="M484 595 h10"/>
     </g>
     <rect x="76" y="622" width="560" height="24" rx="12" fill="#FFF8F0"/>
-    <text x="90" y="639" font-size="13" fill="#C4383A">La ventana para pedir vacantes abre el día 25 de cada mes.</text>
+    <text x="90" y="639" font-size="13" fill="#C4383A">La ventana para pedir cupos va del 25 al 30 de cada mes.</text>
   </g>
   <path d="M360 662 v22" stroke="#D63E3D" stroke-width="2" marker-end="url(#f)"/>
 
@@ -60,8 +60,8 @@
     <circle cx="90" cy="728" r="18" fill="#70BDC2"/>
     <text x="90" y="735" font-size="15" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
     <text x="122" y="735" font-size="19" font-weight="bold" fill="#161440">Aplicación</text>
-    <text x="76" y="770" font-size="14" fill="#8B8AA0">No existe: LA PERSONA. La vacante ya está abierta y publicada.</text>
-    <text x="76" y="800" font-size="14" fill="#5B5975">La hace quien quiere servir, desde la página de vacantes.</text>
+    <text x="76" y="770" font-size="14" fill="#8B8AA0">No existe: LA PERSONA. El cupo ya está abierto y publicado.</text>
+    <text x="76" y="800" font-size="14" fill="#5B5975">La hace quien quiere servir, desde la cartelera de puestos.</text>
     <text x="76" y="820" font-size="14" fill="#5B5975">El comité revisa las aplicaciones y elige.</text>
     <rect x="76" y="826" width="560" height="24" rx="12" fill="#F0EFE9"/>
     <text x="90" y="843" font-size="13" fill="#5B5975">Aplicar no es un compromiso firmado: es decir "me interesa".</text>
@@ -71,8 +71,8 @@
   <text x="48" y="908" font-size="12" font-weight="bold" fill="#8B8AA0" letter-spacing="2">LA SECUENCIA COMPLETA</text>
   <g>
     <rect x="48" y="924" width="624" height="86" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
-    <text x="76" y="958" font-size="15" fill="#5B5975">puesto nuevo → vacante de ese puesto → aplicaciones → entra al comité</text>
-    <text x="76" y="988" font-size="13" fill="#8B8AA0">Si el puesto ya existe, arrancás en el 2. Si la vacante ya está abierta, en el 3.</text>
+    <text x="76" y="958" font-size="15" fill="#5B5975">puesto nuevo → cupos de ese puesto → aplicaciones → entra al comité</text>
+    <text x="76" y="988" font-size="13" fill="#8B8AA0">Si el puesto ya existe, arrancás en el 2. Si el cupo ya está abierto, en el 3.</text>
   </g>
 
   <!-- Efecto lateral -->

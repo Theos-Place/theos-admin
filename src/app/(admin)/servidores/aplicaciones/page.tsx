@@ -362,7 +362,20 @@ export default function AplicacionesPage() {
                   checked={sel.isSelected(a.id)}
                   onChange={() => sel.toggle(a.id)}
                 />
-                <Link href={`/servidores/puestos/${a.vacancy_id}`} className="flex items-center gap-3 min-w-0 flex-1 active:opacity-70">
+                {/* En celular la fila ABRE LA APLICACIÓN, no el puesto.
+                    Hasta el 2026-10-02 llevaba a `/servidores/puestos/...`, y
+                    el panel de revisión solo existía en la tabla de
+                    escritorio: desde el teléfono se podía mirar la cola y
+                    aprobar en lote, pero NO abrir una, leer el detalle y
+                    elegir el estado con su explicación al lado. Quien lleva
+                    las aplicaciones trabaja desde el teléfono.
+                    El puesto sigue a un toque, en su propio enlace abajo. */}
+                <button
+                  type="button"
+                  onClick={() => setRevisando(a)}
+                  className="flex items-center gap-3 min-w-0 flex-1 text-left active:opacity-70"
+                  aria-label={`Revisar la aplicación de ${a.applicant_name}`}
+                >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
                     <p className="truncate text-[13px] text-navy-light/80 font-body">{a.vacancy_title} · {a.committee_name}</p>
@@ -370,6 +383,14 @@ export default function AplicacionesPage() {
                   <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
                     {APP_STATUS_LABELS[a.status]}
                   </span>
+                </button>
+                {/* FUERA del botón: un enlace adentro de un botón es HTML
+                    inválido y el navegador decide solo cuál gana. */}
+                <Link
+                  href={`/servidores/puestos/${a.vacancy_id}`}
+                  className="shrink-0 text-[13px] text-navy-light underline underline-offset-2 font-body"
+                >
+                  Ver puesto
                 </Link>
               </div>
             </li>

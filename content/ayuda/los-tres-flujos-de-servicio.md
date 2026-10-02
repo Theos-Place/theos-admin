@@ -4,12 +4,16 @@ seccion: Servidores
 tipo: infografia
 roles: [lider_comite, coordinador_servidores, encargado_staff, direccion]
 orden: 10
-resumen: Puesto nuevo, vacante y aplicación son tres cosas distintas con nombres parecidos. Cuál usar en cada caso.
+resumen: Puesto nuevo, solicitud de cupos y aplicación son tres cosas distintas con nombres parecidos. Cuál usar en cada caso.
 ---
 
 # Los tres flujos de servicio que se confunden
 
-![Los tres flujos comparados: puesto nuevo, vacante y aplicación, con la secuencia completa](/ayuda/infografias/tres-flujos-de-servicio.svg)
+> Antes el paso 2 se llamaba **«solicitar vacantes»**. Es lo mismo: desde SRV-11 el sistema
+> dice **puestos de servicio**, y lo que se pide son los **cupos** de un puesto que ya
+> existe.
+
+![Los tres flujos comparados: puesto nuevo, solicitud de cupos y aplicación, con la secuencia completa](/ayuda/infografias/tres-flujos-de-servicio.svg)
 
 Son tres trámites distintos y se parecen tanto en el nombre que se piden al revés todo el
 tiempo. La diferencia está en **qué es lo que no existe todavía**.
@@ -25,14 +29,14 @@ Se pide desde **Servidores → Puestos → Solicitar**, describiendo qué haría
 se crea es la **definición** del puesto: funciones, perfil, requisitos. No estás pidiendo
 gente todavía.
 
-## 2. Solicitud de vacante
+## 2. Solicitud de cupos para un puesto
 
 **Cuándo:** el puesto ya existe, pero no hay plaza abierta para que alguien entre.
 
 Por ejemplo: "Colaborador de Estudios Bíblicos" existe y hay cuatro personas; querés abrir una
 quinta plaza.
 
-Va por **Servidores → Vacantes → Solicitudes** y pasa por autorización:
+Va por **Servidores → Puestos de Servicio → Solicitudes** y pasa por autorización:
 `creado → enviado al líder → aprobado o denegado`. La aprobada se puede publicar; al llenarse
 se cierra.
 
@@ -41,15 +45,15 @@ que se ordenan las aperturas. Fuera de esa ventana, la solicitud espera.
 
 ## 3. Aplicación
 
-**Cuándo:** la vacante ya está abierta y publicada, y alguien quiere entrar.
+**Cuándo:** el cupo ya está abierto y publicado, y alguien quiere entrar.
 
-Lo hace la persona interesada desde la página de vacantes, y las aplicaciones se revisan en
+Lo hace la persona interesada desde la cartelera pública de puestos, y las aplicaciones se revisan en
 **Servidores → Aplicaciones**. De ahí sale quién ocupa el puesto.
 
 ## La secuencia completa
 
-Puesto nuevo → vacante de ese puesto → aplicaciones a esa vacante → la persona entra al
-comité. Si el puesto ya existe, se arranca en el paso dos; si la vacante ya está abierta, en el
+Puesto nuevo → cupos de ese puesto → aplicaciones a ese puesto → la persona entra al
+comité. Si el puesto ya existe, se arranca en el paso dos; si el cupo ya está abierto, en el
 tres.
 
 ## Lo que pasa cuando alguien entra o sale
