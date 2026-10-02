@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
-import { CreditCard, Eye, EyeOff, Search } from 'lucide-react'
+import { CreditCard, Download, Eye, EyeOff, Search } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -95,8 +95,16 @@ function PagosContent() {
   const [currencyFilter, setCurrencyFilter] = useState<'all' | Currency>('all')
   // FIN-4: ver solo los tractos de arreglos de pago.
   const [planFilter, setPlanFilter] = useState<'all' | 'in_plan'>('all')
-  // Listado paginado server-side (filtros + búsqueda viajan al servidor).
-  const buildUrl = (page: number) => {
+  /** PAG-6 · Rango por FECHA DE PAGO, para conciliar contra el estado de
+   *  cuenta. Son días de Costa Rica: la conversión a UTC la hace el servidor
+   *  (`lib/finance/rango-de-pagos`), porque un pago de las 7 p.m. se guarda
+   *  con la fecha del día siguiente. */
+  const [desde, setDesde] = useUrlFilter('desde', '')
+  const [hasta, setHasta] = useUrlFilter('hasta', '')
+  /** Los filtros, sin la paginación. Los comparten la lista y el export de
+   *  PAG-6: así la hoja que se baja es exactamente el resultado que se está
+   *  viendo, y un filtro nuevo no puede quedar en uno y no en el otro. */
+  const filtrosActuales = () => {
     const u = new URLSearchParams()
     if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
     if (entityFilter !== 'all') u.set('entity_type', entityFilter)
@@ -104,10 +112,18 @@ function PagosContent() {
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (currencyFilter !== 'all') u.set('currency', currencyFilter)
     if (planFilter === 'in_plan') u.set('in_plan', '1')
+    if (desde) u.set('paid_from', desde)
+    if (hasta) u.set('paid_to', hasta)
+    return u
+  }
+  // Listado paginado server-side (filtros + búsqueda viajan al servidor).
+  const buildUrl = (page: number) => {
+    const u = filtrosActuales()
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/finance/payments?${u.toString()}`
   }
+  const urlDelExport = () => `/api/finance/payments/export?${filtrosActuales().toString()}`
   const {
     items: payments, total, loading, error, hasMore, loadMore, reload,
   } = usePaginatedList<DbPayment, Payment>(buildUrl, { pageSize: 25, itemsKey: 'payments', mapItem: toDomainPayment })
@@ -230,6 +246,20 @@ function PagosContent() {
               </p>
             </div>
           </div>
+          {/* PAG-6 · La hoja del resultado FILTRADO, para pegarla contra la
+              línea del estado de cuenta. Es un enlace y no un fetch: el
+              navegador baja el archivo con el nombre que manda el servidor,
+              sin tener que armar un blob en la pantalla. Lleva los mismos
+              parámetros que la lista, así que lo que se baja es lo que se
+              está viendo — un export de «todos los pagos» rotulado como los
+              de setiembre sería peor que no tenerlo. */}
+          <a
+            href={urlDelExport()}
+            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] hover:bg-[rgba(255,255,255,0.18)] transition-colors font-body"
+          >
+            <Download size={13} aria-hidden="true" />
+            Descargar XLSX
+          </a>
           <button
             onClick={() => setRevealAll(r => !r)}
             className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
@@ -371,7 +401,55 @@ function PagosContent() {
                 { value: 'in_plan', label: 'Solo en arreglo' },
               ]}
             />
+          
+          {/* PAG-6 · Conciliación contra el estado de cuenta. El rango es por
+              FECHA DE PAGO —no por cuándo se creó el cobro—, que es lo que
+              aparece en la línea del banco. El caso que lo pidió: registrar
+              el depósito del lunes y el martes contra los pagos de esos días.
+
+              Son días de Costa Rica. La conversión la hace el servidor, y no
+              es un detalle: `paid_at` es timestamptz y un pago de las 7 p.m.
+              se guarda con la fecha del día siguiente en UTC. Filtrado crudo,
+              los pagos de la noche se le corren a Andrés un día y la cuenta
+              no le cuadra, sin que nada avise. */}
+          <div className="flex items-end gap-2">
+            <div>
+              <label htmlFor="pago-desde" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
+                Pagado desde
+              </label>
+              <input
+                id="pago-desde"
+                type="date"
+                value={desde}
+                max={hasta || undefined}
+                onChange={e => setDesde(e.target.value)}
+                className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+            <div>
+              <label htmlFor="pago-hasta" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
+                Hasta
+              </label>
+              <input
+                id="pago-hasta"
+                type="date"
+                value={hasta}
+                min={desde || undefined}
+                onChange={e => setHasta(e.target.value)}
+                className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+              />
+            </div>
+            {(desde || hasta) && (
+              <button
+                type="button"
+                onClick={() => { setDesde(''); setHasta('') }}
+                className="rounded-xl px-2.5 py-2 text-[13px] text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors font-body"
+              >
+                Limpiar
+              </button>
+            )}
           </div>
+</div>
         </div>
 
         {/* Table */}
@@ -380,7 +458,7 @@ function PagosContent() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
-                  {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha', 'Acciones'].map(h => (
+                  {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha de pago', 'Acciones'].map(h => (
                     <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
                       {h}
                     </th>
@@ -422,9 +500,26 @@ function PagosContent() {
                     <td className="px-5 py-4"><PaymentMethodBadge method={p.method} /></td>
                     <td className="px-5 py-4"><PaymentStatusBadge status={p.status} /></td>
                     <td className="px-5 py-4">
-                      <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
-                        {formatDate(p.created_at)}
-                      </p>
+                      {/* PAG-6 · La columna decía «Fecha» y mostraba
+                          `created_at`: cuándo se CREÓ el cobro, no cuándo
+                          entró la plata. Con el filtro por fecha de pago al
+                          lado eso era una trampa — filtrar el 28 y ver filas
+                          del 20 hace dudar del filtro, no de la columna.
+                          Un cobro sin pagar no tiene fecha de pago, así que
+                          ahí se dice qué es la fecha que se está viendo en
+                          vez de dejar la celda vacía. */}
+                      {p.paid_at ? (
+                        <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
+                          {formatDate(p.paid_at)}
+                        </p>
+                      ) : (
+                        <p className="text-[13px] whitespace-nowrap font-body text-navy-light/80">
+                          Sin pagar
+                          <span className="block text-[11px] text-navy-light/80">
+                            creado {formatDate(p.created_at)}
+                          </span>
+                        </p>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -483,7 +578,9 @@ function PagosContent() {
                     <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">
                       {p.description_label ?? paymentDescription(toLabel(p))}
                     </p>
-                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
+                    <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
+                      {p.paid_at ? formatDate(p.paid_at) : `Sin pagar · creado ${formatDate(p.created_at)}`}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">

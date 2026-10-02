@@ -2,6 +2,7 @@ import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals } from '@/lib/money'
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
+import { rangoDePago } from '@/lib/finance/rango-de-pagos'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -122,6 +123,14 @@ export type PaymentFilters = {
   currency?: string
   /** FIN-4: solo los pagos que son TRACTOS de un arreglo de pago. */
   inPaymentPlan?: boolean
+  /** PAG-6 · Rango por FECHA DE PAGO (`YYYY-MM-DD`, días de Costa Rica).
+   *  Es para conciliar contra el estado de cuenta, así que filtra `paid_at`
+   *  y no `created_at`: lo que le importa a finanzas es cuándo entró la plata,
+   *  no cuándo se creó el cobro. */
+  paidFrom?: string
+  paidTo?: string
+  /** Sin paginar, para el export del resultado filtrado. */
+  all?: boolean
   page?: number
   pageSize?: number
 }
@@ -138,13 +147,19 @@ export async function getPaymentsPage(filters: PaymentFilters = {}): Promise<{ r
     .from('payments')
     .select(search ? PAYMENT_SELECT_SEARCH : PAYMENT_SELECT, { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+  if (!filters.all) q = q.range((page - 1) * pageSize, page * pageSize - 1)
 
   if (filters.entity_type) q = q.eq('entity_type', filters.entity_type)
   // FIN-4: "en arreglo de pago" = el pago es un tracto (tiene plan).
   if (filters.inPaymentPlan) q = q.not('payment_plan_id', 'is', null)
   if (filters.method) q = q.eq('payment_method', filters.method)
   if (filters.status) q = q.eq('status', filters.status)
+  // PAG-6 · El rango se convierte a hora de Costa Rica antes de comparar: ver
+  // `rango-de-pagos.ts` para por qué un `lte` sobre la fecha pelada corre los
+  // pagos de la noche al día siguiente.
+  const { desdeIso, hastaIso } = rangoDePago(filters.paidFrom, filters.paidTo)
+  if (desdeIso) q = q.gte('paid_at', desdeIso)
+  if (hastaIso) q = q.lte('paid_at', hastaIso)
   // Los pagos viejos pueden tener currency NULL: 'CRC' también los trae.
   if (filters.currency) {
     q = filters.currency === 'CRC'
