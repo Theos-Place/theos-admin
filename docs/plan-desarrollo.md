@@ -1038,7 +1038,10 @@ flujo viejo (grep de "folleto"/"cierre"/"cobro" en content/ayuda y revisar los q
 toquen el tema).
 ```
 
-### [ ] SRV-17 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01)
+### [ ] SRV-19 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01)
+
+> Entró como «SRV-17» y se renumeró: ese código ya es «Mi comité», que está
+> en producción desde el 2026-09-30. El siguiente libre era el 19.
 
 Prompt para Claude Code:
 
@@ -1051,4 +1054,40 @@ si no tiene). Va en: la tabla (columna, sorteable/filtrable junto al filtro de u
 existente), el detalle de la aplicación, el PDF que se genera y el email al encargado.
 Sin consulta extra por fila (join en la query existente). Tests: columna presente,
 persona sin sede. tsc/lint/vitest.
+```
+
+### [ ] EST-23 · Cierre de N2 que continúa: mínimo 2 semanas y ventana de matrícula del N3 (pedido 2026-10-02)
+
+> Entró como «EST-21» y se renumeró: ese código ya es el botón «Mandar a
+> imprimir folletos», cerrado el 2026-10-01. El siguiente libre era el 23.
+
+Afina el comportamiento de EST-14/EST-16 en el cierre de Nivel 2 cuando el
+grupo continúa.
+
+Prompt para Claude Code:
+
+```
+CAMBIO · Cierre de N2 con continuación: fecha mínima y estado del grupo sucesor
+
+1. FECHA DE INICIO DEL N3 (la que elige el dirigente al cerrar, EST-16): mínimo 2
+   SEMANAS después del día en que hace el cierre.
+   - El date picker BLOQUEA las fechas anteriores a hoy+14 días (no solo validar al
+     enviar: que no se puedan escoger).
+   - Disclaimer junto al campo: "Necesitamos mínimo 2 semanas antes del inicio para
+     imprimir los folletos y abrir la matrícula a más personas".
+   - Validación server-side igual (el picker no es el candado).
+   - OJO: esto aplica al cierre de N2 con continuación; verificar si el mismo mínimo
+     conviene en los demás cierres que piden fecha (EST-16) y reportar — no asumirlo.
+2. ESTADO DEL GRUPO N3 AUTOMÁTICO: se crea EN MATRÍCULA (los que continúan ya quedan
+   matriculados con su cobro; los cupos libres quedan abiertos al público) y permanece
+   en matrícula hasta UNA SEMANA antes de la fecha de inicio — ahí pasa solo a "por
+   iniciar" (el mecanismo de ventanas de matrícula existente, group-enrollment-windows:
+   REUTILIZAR, configurando el cierre de ventana = inicio − 7 días; no un cron nuevo).
+   Esto reemplaza la regla anterior de "~2 semanas de cupos libres" de EST-14: la
+   ventana ahora es variable — desde el cierre hasta inicio−7d.
+3. El tiquete de folletos del par 3+4 (EST-14/EST-18) se dispara con la creación del
+   grupo — confirmar que el flujo quede: cierre → grupo N3 en matrícula + folletos
+   pedidos → (inicio−7d) por iniciar → inicio.
+Tests: picker/server rechazan fecha < hoy+14, grupo nace en matrícula, transición a
+por-iniciar en inicio−7d, matrícula pública abierta mientras tanto. tsc/lint/vitest.
 ```
