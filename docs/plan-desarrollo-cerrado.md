@@ -9476,3 +9476,78 @@ para imprimir.
 
 El cebo de quitar el mínimo del servidor NO mordía al principio: la
 aserción encontraba el nombre en la línea del `import`. Ahora afirma el uso.
+
+---
+
+### [x] AYU-4 · Centro de ayuda actualizado a EST-14 + sección de dirigentes — HECHO 2026-10-02
+
+**Correr DESPUÉS de EST-14** — documenta el comportamiento nuevo; hacerlo antes
+dejaría el centro de ayuda mintiendo.
+
+Prompt para Claude Code:
+
+```
+DOCS · Centro de ayuda: actualizar cierres al esquema de bloques + sección de dirigentes
+
+PRERREQUISITO: EST-14 (bloques N1+N2/N3+N4) ya en producción. Leer el código real antes
+de escribir, como siempre.
+
+1. SECCIÓN "PARA DIRIGENTES" en /ayuda: agrupar (vía el frontmatter de sección/orden
+   existente) los artículos exclusivos de dirigentes — al menos "Cómo cierro mi grupo de
+   estudio" y "Qué pasa al cerrar un grupo" (/ayuda/que-pasa-al-cerrar-un-grupo).
+   Visibilidad: dirigente y coordinación (verificar frontmatter actual).
+
+2. ACTUALIZAR "Qué pasa al cerrar un grupo" (y el de cómo cerrar) al esquema EST-14:
+   - N1→N2 y N3→N4: paso automático, sin folletos nuevos (van en pares al matricular).
+   - Cierre de N2: la pregunta "¿continuás con el grupo?" — con SÍ se crea el N3-N4
+     automático con los estudiantes matriculados, sus cobros generados y los folletos del
+     par 3+4; con NO el grupo cierra y el comité abre los grupos para esos estudiantes.
+   - El dirigente elige la fecha de inicio del siguiente nivel al cerrar (EST-16).
+   - La encuesta al estudiante sale solo al cerrar N2 y N4 (EST-17).
+
+3. INFOGRAFÍA NUEVA de los niveles 1-4 en bloques: SVG vertical con los colores de Theos
+   (patrón de docs/plan-infografias.md, se agrega al catálogo): el camino N1→N2 (un solo
+   pago y folletos 1+2) → cierre de N2 con la bifurcación (continúa → N3-N4 automático
+   con cobro y folletos / no continúa → elegir grupo de la oferta) → N3→N4 → cierre
+   final. Checklist de calidad de las infografías (celular sin zoom, términos de Theos,
+   qué hacer si algo falla).
+
+4. ARTÍCULO NUEVO "Los cobros van directo al estudiante": explicar que al matricularse,
+   el cobro aparece en el perfil de cada persona (Mis pagos) y que los dirigentes YA NO
+   recaudan ni pagan por su grupo — cada estudiante sube su comprobante o paga en línea
+   cuando exista (FIN-5). Visibilidad: pública (le sirve a estudiantes Y dirigentes;
+   es el cambio de costumbre más grande respecto a como se hacía antes).
+
+Verificar render, visibilidades y que ningún otro artículo de /ayuda quede contando el
+flujo viejo (grep de "folleto"/"cierre"/"cobro" en content/ayuda y revisar los que
+toquen el tema).
+```
+
+
+**HECHO.** Los cuatro puntos, y dos hallazgos de paso:
+
+1. **Sección «Para dirigentes»**, pegada a Estudios y no al final: es la única
+   que agrupa por QUIÉN y no por módulo, y conviene que esté donde el
+   dirigente ya mira. Van solo los dos artículos de su trabajo; lo que puede
+   ver pero no es suyo —el camino a ser dirigente, el ciclo de vida de un
+   grupo— se queda en Estudios, porque moverlo todo habría vaciado la sección
+   que usa el resto.
+2. **Los dos artículos de cierre actualizados.** El de «qué pasa» decía algo
+   FALSO («la matrícula automática aplica a Nivel 1, 2 y 3») y el de «cómo
+   cierro» no mencionaba ni la pregunta del corte, ni la fecha de inicio, ni
+   el lugar de entrega — tres pasos que hoy el cierre pide.
+3. **Infografía de los niveles en bloques**, con su artículo propio.
+4. **«Los cobros van directo al estudiante»**, público. Dice lo que todavía
+   NO se puede —pagar en línea, que es FIN-5— en vez de prometerlo.
+
+**HALLAZGO 1 · el centro de ayuda afirmaba lo contrario de la realidad.**
+«Generación de folletos» decía que cerrar un grupo ya NO genera folletos y
+presentaba «cupo lleno» y «fin de matrícula» como los dos automáticos. Medido
+en producción: de los 18 pedidos que existen, **17 salieron del cierre** y 1
+de una reubicación; de los otros dos, CERO. El disparador de cierre había
+vuelto en agosto y nadie actualizó el artículo.
+
+**HALLAZGO 2 · la encuesta no es «solo N2 y N4».** El prompt lo pedía así,
+pero en el código es una marca por estudio (`sends_satisfaction_survey`) y
+SCJ, Discípulos y Prematrimonial sí encuestan. Escribirlo como pedía el ítem
+habría sido falso fuera de la cadena de niveles.

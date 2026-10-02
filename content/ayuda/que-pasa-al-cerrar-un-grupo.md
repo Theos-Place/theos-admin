@@ -1,10 +1,10 @@
 ---
 titulo: Qué pasa cuando se cierra un grupo
-seccion: Estudios
+seccion: Para dirigentes
 tipo: tutorial
 visibilidad: roles
 roles: [dirigente, coordinador_estudios, coordinador_dirigentes, direccion, folletos]
-orden: 6
+orden: 2
 resumen: Qué escribe el cierre, el corte al terminar Nivel 2, qué se dispara después (matrícula, folletos en pares, cobros, encuestas) y qué no se puede deshacer.
 ---
 

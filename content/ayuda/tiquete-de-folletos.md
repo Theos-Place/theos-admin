@@ -17,9 +17,19 @@ de folletos de un nivel, para una sede, que hay que imprimir y entregar.
 
 ## De dónde salen los tiquetes
 
-**Solos, casi siempre.** Al cerrar un grupo de nivel (N1-N3, DIS1-DIS2) el sistema crea el
-tiquete del nivel siguiente; la preapertura de bloque genera los suyos (preliminar,
-confirmación y final). No hay que pedirlos.
+**Solos, casi siempre.** Al cerrar un grupo el sistema crea el tiquete del grupo que sigue.
+Con los niveles en bloques eso quiere decir: cerrar un **Nivel 2** que continúa pide los
+folletos de **3 y 4** juntos, en una sola orden. Cerrar un **Nivel 1 o 3 no pide nada** —
+esa gente ya recibió su par al entrar al bloque.
+
+Discípulos 1 y 2 siguen pidiendo el del nivel siguiente, uno por persona.
+
+**Por adelantado, cuando el grupo todavía está en matrícula.** Desde la página de un grupo
+de Nivel 1 o Nivel 3 hay un botón para pedirlos antes de arrancar: la imprenta tarda y los
+folletos tienen que estar el primer día.
+
+La **preapertura de bloque** no crea tiquetes: manda el reporte por sede (preliminar,
+confirmación y final) para planificar la impresión.
 
 **Manual, para el caso especial.** El botón **Solicitud de folletos manual** crea un tiquete
 fuera del flujo automático — folletos dañados, un grupo que creció, una reposición. Se

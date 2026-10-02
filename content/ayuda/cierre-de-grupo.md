@@ -1,11 +1,11 @@
 ---
 titulo: Cómo cierro mi grupo de estudio
-seccion: Estudios
+seccion: Para dirigentes
 tipo: infografia
 visibilidad: roles
 roles: [dirigente, coordinador_estudios, coordinador_dirigentes, direccion]
-orden: 3
-resumen: El paso a paso del dirigente para cerrar su grupo, evaluar a cada estudiante y llenar las recomendaciones a CDEB.
+orden: 1
+resumen: El paso a paso del dirigente para cerrar su grupo: evaluar a cada estudiante, responder si el grupo continúa y elegir cuándo arranca el siguiente.
 ---
 
 # Cómo cierro mi grupo de estudio
@@ -25,8 +25,20 @@ estudio — sin cierre, tus estudiantes no avanzan en su camino.
 4. Si tu grupo es **Discípulos 3 o Panorama**, el cierre te pide además la **recomendación a
    CDEB** de cada estudiante: convicciones, testimonio, pasión por enseñar y tu recomendación
    final. Podés guardarla como borrador y terminarla con calma, pero el cierre exige enviarla.
-5. Confirmá el cierre. El grupo queda **finalizado** y los aprobados quedan con el estudio
+5. Si estás cerrando un **Nivel 2**, el sistema te pregunta **si el grupo continúa a nivel
+   3-4**. Es el único cierre que lo pregunta, y de tu respuesta depende todo lo que sigue:
+   con **sí** se crea el grupo nuevo con tu gente adentro; con **no**, el grupo termina ahí
+   y los comités arman los grupos de esos estudiantes.
+6. Si va a haber grupo siguiente, te pide **cuándo arranca** y **dónde entregar los
+   folletos**. Las dos son obligatorias. Cuando el grupo que sigue es el de nivel 3-4, la
+   fecha tiene que ser de **al menos dos semanas** en adelante: hace falta ese tiempo para
+   imprimir los folletos y para que alcance a matricularse alguien más.
+7. Confirmá el cierre. El grupo queda **finalizado** y los aprobados quedan con el estudio
    **completado** en su perfil.
+
+> El esquema completo de los bloques está en **[Los niveles van en dos
+> bloques](/ayuda/niveles-en-dos-bloques)**, y lo que se dispara después del cierre en
+> **[Qué pasa cuando se cierra un grupo](/ayuda/que-pasa-al-cerrar-un-grupo)**.
 
 ## Sobre la recomendación a CDEB
 

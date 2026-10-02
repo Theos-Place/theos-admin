@@ -4,7 +4,7 @@ seccion: Estudios
 tipo: infografia
 roles: [folletos, coordinador_estudios]
 orden: 30
-resumen: Los cuatro motivos por los que nace un pedido de folletos, sus cuatro estados y por qué no se puede volver atrás.
+resumen: Los cinco motivos por los que nace un pedido de folletos, por qué van en pares, sus cuatro estados y por qué no se puede volver atrás.
 ---
 
 # Cuándo se generan los folletos
@@ -16,23 +16,40 @@ en estudios.
 
 ## Por qué nace un pedido
 
-Los dos automáticos salen de la **matrícula del propio grupo** — el folleto es del nivel que
-esa gente va a cursar, no del siguiente:
+**En la práctica, casi todos nacen de un cierre.** De los pedidos que existen hoy en el
+sistema, 17 salieron del cierre de un grupo y 1 de una reubicación. Ninguno de «cupo lleno»
+ni de «fin de matrícula», aunque esos disparadores existen: casi ningún grupo tiene cupo
+tope ni ventana de matrícula definida, así que nunca llegan a dispararse.
 
-- **El grupo llenó su cupo.** Al confirmarse la matrícula que completa el cupo, se pide el
-  folleto de ese grupo. No hay que esperar a nada más: ya se sabe cuánta gente es.
-- **Se cerró la matrícula.** Cuando vence la ventana de matrícula del grupo, si juntó al menos
-  5 personas, se pide el folleto con lo que haya.
+## Los cinco motivos
 
-Y dos que dispara una persona:
+- **Se cerró el grupo anterior.** Es el que de verdad mueve la cola. Al cerrar, los que
+  aprobaron pasan al nivel siguiente y **ese** grupo necesita folletos.
+- **Lo pidió el equipo de estudios por adelantado.** Desde la página de un grupo de Nivel 1
+  o Nivel 3 que todavía está en matrícula. Existe porque la imprenta tarda y los folletos
+  tienen que estar el primer día.
+- **El grupo llenó su cupo**, si tiene cupo tope definido.
+- **Se cerró la matrícula** del grupo, si tiene ventana y juntó al menos 5 personas.
+- **Reubicación o pedido manual**, que los hace una persona para los casos sueltos.
 
-- **Reubicación.** Cuando alguien se mueve a otro grupo y marcó que necesita el folleto ahí.
-- **Manual.** Para lo que no encaja en los anteriores.
+## Los folletos van en PARES
 
-> **Cerrar un grupo ya NO genera folletos.** Antes sí: al cerrar se pedía el folleto del
-> siguiente nivel. Se cambió porque el folleto llegaba tarde — la gente ya estaba matriculada
-> en el nivel siguiente sin material. Los hitos de un bloque tampoco generan pedidos: mandan
-> el **reporte** de folletos por sede, para planificar la impresión.
+Desde que los niveles se agruparon en bloques, el folleto no es de un nivel sino de un
+**par**:
+
+- Un grupo de **Nivel 1** pide los folletos de **1 y 2** juntos. Un grupo de **Nivel 3**,
+  los de **3 y 4**.
+- Un grupo de **Nivel 2 o 4 no pide nada**: esa gente ya los recibió al entrar al bloque.
+  Por eso cerrar un Nivel 1 o un Nivel 3 no genera ningún pedido.
+- Es **una sola orden** por grupo, no una por folleto: quien imprime recibe un pedido con
+  los dos, no dos pedidos del mismo grupo el mismo día.
+
+Las capacitaciones —Discípulos, Prematrimonial— siguen pidiendo su propio folleto, uno por
+persona.
+
+> Los **hitos de un bloque** no generan pedidos: mandan el **reporte** de folletos por sede
+> para planificar la impresión. Ese reporte sí cuenta por folleto, no por persona — un grupo
+> de Nivel 1 con 10 estudiantes son 20 folletos.
 
 ## Ver el año completo
 

@@ -13,7 +13,22 @@ import { hasManagementRole, type RoleId } from '@/lib/auth/roles'
 import { parseFrontmatter, type FrontmatterValue } from './frontmatter'
 
 export const HELP_SECTIONS = [
-  'Primeros pasos', 'Estudios', 'Eventos', 'Pagos', 'Servidores', 'Comunicaciones',
+  'Primeros pasos', 'Estudios',
+  /**
+   * AYU-4 · «Para dirigentes» va pegada a Estudios, no al final.
+   *
+   * Es la única sección que agrupa por QUIÉN y no por módulo, y por eso
+   * conviene que esté donde el dirigente ya está mirando: lo suyo pasa
+   * dentro de estudios. Al final de la lista se perdería debajo de secciones
+   * que ni siquiera puede ver.
+   *
+   * Acá van solo los artículos de SU TRABAJO —cerrar su grupo y qué pasa
+   * después—. Lo que puede ver pero no es suyo (el camino a ser dirigente,
+   * el ciclo de vida de un grupo) se queda en Estudios: moverlo todo habría
+   * vaciado la sección que usa el resto de la gente.
+   */
+  'Para dirigentes',
+  'Eventos', 'Pagos', 'Servidores', 'Comunicaciones',
   // Formularios va después de Comunicaciones porque ahí vive en el menú.
   'Formularios', 'Finanzas',
 ] as const

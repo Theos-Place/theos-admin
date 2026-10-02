@@ -994,50 +994,6 @@ redirect aterriza con el grupo preseleccionado, payload sin datos sensibles.
 tsc/lint/vitest.
 ```
 
-### [ ] AYU-4 · Centro de ayuda: cierres y bloques actualizados a EST-14 + sección de dirigentes (pedido 2026-10-01)
-
-**Correr DESPUÉS de EST-14** — documenta el comportamiento nuevo; hacerlo antes
-dejaría el centro de ayuda mintiendo.
-
-Prompt para Claude Code:
-
-```
-DOCS · Centro de ayuda: actualizar cierres al esquema de bloques + sección de dirigentes
-
-PRERREQUISITO: EST-14 (bloques N1+N2/N3+N4) ya en producción. Leer el código real antes
-de escribir, como siempre.
-
-1. SECCIÓN "PARA DIRIGENTES" en /ayuda: agrupar (vía el frontmatter de sección/orden
-   existente) los artículos exclusivos de dirigentes — al menos "Cómo cierro mi grupo de
-   estudio" y "Qué pasa al cerrar un grupo" (/ayuda/que-pasa-al-cerrar-un-grupo).
-   Visibilidad: dirigente y coordinación (verificar frontmatter actual).
-
-2. ACTUALIZAR "Qué pasa al cerrar un grupo" (y el de cómo cerrar) al esquema EST-14:
-   - N1→N2 y N3→N4: paso automático, sin folletos nuevos (van en pares al matricular).
-   - Cierre de N2: la pregunta "¿continuás con el grupo?" — con SÍ se crea el N3-N4
-     automático con los estudiantes matriculados, sus cobros generados y los folletos del
-     par 3+4; con NO el grupo cierra y el comité abre los grupos para esos estudiantes.
-   - El dirigente elige la fecha de inicio del siguiente nivel al cerrar (EST-16).
-   - La encuesta al estudiante sale solo al cerrar N2 y N4 (EST-17).
-
-3. INFOGRAFÍA NUEVA de los niveles 1-4 en bloques: SVG vertical con los colores de Theos
-   (patrón de docs/plan-infografias.md, se agrega al catálogo): el camino N1→N2 (un solo
-   pago y folletos 1+2) → cierre de N2 con la bifurcación (continúa → N3-N4 automático
-   con cobro y folletos / no continúa → elegir grupo de la oferta) → N3→N4 → cierre
-   final. Checklist de calidad de las infografías (celular sin zoom, términos de Theos,
-   qué hacer si algo falla).
-
-4. ARTÍCULO NUEVO "Los cobros van directo al estudiante": explicar que al matricularse,
-   el cobro aparece en el perfil de cada persona (Mis pagos) y que los dirigentes YA NO
-   recaudan ni pagan por su grupo — cada estudiante sube su comprobante o paga en línea
-   cuando exista (FIN-5). Visibilidad: pública (le sirve a estudiantes Y dirigentes;
-   es el cambio de costumbre más grande respecto a como se hacía antes).
-
-Verificar render, visibilidades y que ningún otro artículo de /ayuda quede contando el
-flujo viejo (grep de "folleto"/"cierre"/"cobro" en content/ayuda y revisar los que
-toquen el tema).
-```
-
 ### [ ] SRV-19 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01)
 
 > Entró como «SRV-17» y se renumeró: ese código ya es «Mi comité», que está
