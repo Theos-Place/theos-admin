@@ -108,6 +108,7 @@ export function toDomainApplication(db: DbApplication): Application {
     applicant_id: db.applicant_id,
     applicant_name: applicantName,
     applicant_initials: getInitials(applicantName),
+    applicant_sede: db.applicant?.sede?.name ?? '',
     applied_at: db.applied_at,
     status: db.status,
     notes: db.notes ?? '',

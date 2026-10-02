@@ -96,6 +96,11 @@ export function PanelDeAplicacion({
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-navy font-display truncate">{app.applicant_name}</p>
+            {/* SRV-19 · La sede del aplicante, acá arriba: es lo primero que
+                pregunta el encargado cuando decide a quién le toca. */}
+            {app.applicant_sede && (
+              <p className="text-[13px] text-navy-light/80 font-body truncate">{app.applicant_sede}</p>
+            )}
             <Link href={`/miembros/${app.applicant_id}`} className="text-[13px] text-coral hover:underline font-body">
               Ver perfil
             </Link>

@@ -18,6 +18,8 @@ export type DetalleDelAplicante = {
   nombre: string
   telefono: string | null
   correo: string | null
+  /** SRV-19 · La sede de la persona (no la del puesto). */
+  sede: string | null
   puesto: string
   comite: string
   /** El último estudio que llevó, ya resuelto. */
@@ -47,6 +49,9 @@ export function lineasDelDetalle(d: DetalleDelAplicante): Array<[string, string]
     ['Nombre', v(d.nombre)],
     ['Teléfono', v(d.telefono)],
     ['Correo', v(d.correo)],
+    // SRV-19 · Va junto a los datos de la persona, antes del puesto: es de
+    // ella, no del puesto al que aplicó (que puede ser de otra sede).
+    ['Sede', v(d.sede)],
     ['Puesto al que aplicó', v(d.puesto)],
     ['Comité', v(d.comite)],
     ['Último estudio', v(d.ultimoEstudio)],

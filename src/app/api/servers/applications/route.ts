@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
     const statusParam = searchParams.get('status')
     const committeeId = searchParams.get('committee') ?? undefined
     const location = searchParams.get('location') ?? undefined
+    // SRV-19 · sede del aplicante; distinta de `location` (la del puesto).
+    const sedeId = searchParams.get('sede') ?? undefined
     /**
      * SRV-14 · La lista de estados válidos sale del módulo compartido.
      *
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
      * que no pudo filtrar, simplemente muestra otra cosa.
      */
     const status = statusParam && isApplicationState(statusParam) ? statusParam : undefined
-    const hasFilter = !!(search || status || committeeId || location)
+    const hasFilter = !!(search || status || committeeId || location || sedeId)
 
     // Sin paginación ni filtros: array completo (back-compat para useServers).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -44,7 +46,7 @@ export async function GET(req: NextRequest) {
     }
 
     const filters: ApplicationFilters = {
-      search, status, committeeId, location,
+      search, status, committeeId, location, sedeId,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     }

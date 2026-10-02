@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { PanelDeAplicacion } from '@/components/servers/PanelDeAplicacion'
 import { useAuth } from '@/hooks/useAuth'
+import { useSedes } from '@/lib/sedes'
 import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { canSeeServiceApplications, GESTIONAN_APLICACIONES } from '@/lib/auth/service-applications'
 import { useToast } from '@/components/shared/Toast'
@@ -59,6 +60,12 @@ export default function AplicacionesPage() {
    *  a mano ni se derivan de lo cargado, que con la lista paginada ofrecería
    *  solo las de la primera página. */
   const [ubicaciones, setUbicaciones] = useState<string[]>([])
+  /** SRV-19 · Sede del APLICANTE. Es otra pregunta que la ubicación: alguien de
+   *  Lindora puede aplicar a un puesto de Escazú, y el encargado de una sede
+   *  quiere ver a su gente. El valor es el uuid (`sede_id`), que es lo que
+   *  guarda `members.sede_id`; el `id` del dominio es el CODE y no sirve acá. */
+  const [sedeFiltro, setSedeFiltro] = useState('all')
+  const { activeSedes } = useSedes()
   useEffect(() => {
     fetch('/api/servers/positions')
       .then(r => (r.ok ? r.json() : []))
@@ -110,6 +117,7 @@ export default function AplicacionesPage() {
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (committeeFilter !== 'all') u.set('committee', committeeFilter)
     if (ubicacionFiltro !== 'all') u.set('location', ubicacionFiltro)
+    if (sedeFiltro !== 'all') u.set('sede', sedeFiltro)
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/servers/applications?${u.toString()}`
@@ -212,6 +220,18 @@ export default function AplicacionesPage() {
             {ubicaciones.map(u => <option key={u} value={u}>{u}</option>)}
           </select>
         )}
+        {/* SRV-19 · Por sede del aplicante. También server-side. */}
+        <select
+          className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+          value={sedeFiltro}
+          onChange={e => setSedeFiltro(e.target.value)}
+          aria-label="Filtrar por sede del aplicante"
+        >
+          <option value="all">Todas las sedes</option>
+          {activeSedes.filter(s => s.sede_id).map(s => (
+            <option key={s.sede_id} value={s.sede_id!}>{s.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Status chips */}
@@ -269,7 +289,7 @@ export default function AplicacionesPage() {
                     onChange={sel.toggleAll}
                   />
                 </th>
-                {['Aplicante', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
+                {['Aplicante', 'Sede', 'Puesto / Comité', 'Área', 'Fecha', 'Estado', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
                     {h}
                   </th>
@@ -295,6 +315,11 @@ export default function AplicacionesPage() {
                       </div>
                       <span className="text-sm font-medium text-navy font-body">{a.applicant_name}</span>
                     </div>
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
+                    {/* Sin sede se escribe el guion: una celda vacía se lee como
+                        error de carga, y acá el dato simplemente no está. */}
+                    {a.applicant_sede || '—'}
                   </td>
                   <td className="px-4 py-3">
                     <p className="text-[13px] font-medium text-navy font-body">{a.vacancy_title}</p>
@@ -379,6 +404,11 @@ export default function AplicacionesPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{a.applicant_name}</p>
                     <p className="truncate text-[13px] text-navy-light/80 font-body">{a.vacancy_title} · {a.committee_name}</p>
+                    {/* SRV-19 · En celular la sede va en su propia línea: en
+                        la de arriba, con dos puntos medios, no se lee. */}
+                    {a.applicant_sede && (
+                      <p className="truncate text-[13px] text-navy-light/80 font-body">{a.applicant_sede}</p>
+                    )}
                   </div>
                   <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', APP_STATUS_COLORS[a.status])}>
                     {APP_STATUS_LABELS[a.status]}

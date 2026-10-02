@@ -108,6 +108,10 @@ export type Application = {
   applicant_id: string
   applicant_name: string
   applicant_initials: string
+  /** SRV-19 · La sede CALCULADA de quien aplica (la de siempre,
+   *  `refresh_member_sede`). Cadena vacía si no tiene: la pantalla pinta el
+   *  guion, para que el dato crudo no traiga decoración. */
+  applicant_sede: string
   applied_at: string
   status: ApplicationStatus
   notes: string

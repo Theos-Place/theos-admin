@@ -78,7 +78,9 @@ export type DbApplication = {
   vacancy_id: string
   vacancy: { title: string; position: string | null; committee: { id: string; name: string; parent: { name: string } | null } | null } | null
   applicant_id: string
-  applicant: { first_name: string; last_name: string } | null
+  /** SRV-19 · La sede sale del EMBED, no de una consulta por fila: la lista
+   *  pagina de 50 en 50 y una consulta por aplicante sería 50 viajes más. */
+  applicant: { first_name: string; last_name: string; sede: { name: string } | null } | null
   status: ApplicationState
   notes: string | null
   applied_at: string
@@ -330,10 +332,24 @@ export async function getVacancies(): Promise<DbVacancy[]> {
   }) as DbVacancy[]
 }
 
+/**
+ * SRV-19 · Mismo select, pero con el aplicante en INNER JOIN.
+ *
+ * Solo se usa cuando se filtra por sede: con `!inner` una aplicación cuyo
+ * aplicante no tenga sede desaparecería de la lista, y eso sería un filtro
+ * escondido. Filtrando por sede sí corresponde — se está pidiendo
+ * justamente a los de esa sede.
+ */
+const APPLICATION_SELECT_POR_SEDE = `
+  id, vacancy_id, applicant_id, status, notes, applied_at,
+  vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name)),
+  applicant:members!applications_applicant_id_fkey!inner(first_name, last_name, sede:sedes(name))
+`
+
 const APPLICATION_SELECT = `
   id, vacancy_id, applicant_id, status, notes, applied_at,
   vacancy:vacancies(title, position, committee:areas!vacancies_committee_id_fkey(id, name)),
-  applicant:members!applications_applicant_id_fkey(first_name, last_name)
+  applicant:members!applications_applicant_id_fkey(first_name, last_name, sede:sedes(name))
 `
 
 /** Resuelve el nombre del área padre del comité de cada aplicación (el embed
@@ -366,6 +382,9 @@ export type ApplicationFilters = {
   /** SRV-14 · La UBICACIÓN del puesto al que se aplicó. Se filtra por el
    *  nombre porque así se guarda (ver `lib/servers/ubicacion-de-puesto`). */
   location?: string
+  /** SRV-19 · La SEDE del APLICANTE (id). No es lo mismo que `location`, que
+   *  es dónde se sirve el puesto: alguien de Lindora puede aplicar a Escazú. */
+  sedeId?: string
   page?: number
   pageSize?: number
 }
@@ -427,12 +446,13 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
 
   let q = supabase
     .from('applications')
-    .select(APPLICATION_SELECT, { count: 'exact' })
+    .select(filters.sedeId ? APPLICATION_SELECT_POR_SEDE : APPLICATION_SELECT, { count: 'exact' })
     .order('applied_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
   if (filters.status) q = q.eq('status', filters.status)
   if (committeeVacancyIds) q = q.in('vacancy_id', committeeVacancyIds)
   if (searchOr) q = q.or(searchOr)
+  if (filters.sedeId) q = q.eq('applicant.sede_id', filters.sedeId)
 
   const { data, error, count } = await q
   if (error) throw error
@@ -1616,6 +1636,7 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
   nombre: string
   telefono: string | null
   correo: string | null
+  sede: string | null
   puesto: string
   comite: string
   committee_id: string | null
@@ -1640,9 +1661,15 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
   const pos = vac ? (Array.isArray(vac.pos) ? vac.pos[0] : vac.pos) as { title: string | null } | null : null
 
   const { data: m } = await supabase
-    .from('members').select('first_name, last_name, phone, email')
+    .from('members').select('first_name, last_name, phone, email, sede:sedes(name)')
     .eq('id', a.applicant_id as string).maybeSingle()
-  const per = m as { first_name: string; last_name: string; phone: string | null; email: string | null } | null
+  const per = m as {
+    first_name: string; last_name: string; phone: string | null; email: string | null
+    sede: { name: string } | { name: string }[] | null
+  } | null
+  // El embed llega como objeto o como arreglo de uno según la relación que
+  // infiera PostgREST; las dos formas se normalizan acá.
+  const sedeEmbed = Array.isArray(per?.sede) ? per?.sede[0] : per?.sede
 
   // El último estudio COMPLETADO, con el dirigente de su grupo.
   const { data: enr } = await supabase
@@ -1678,6 +1705,7 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
     nombre: per ? `${per.first_name} ${per.last_name}`.trim() : 'Sin nombre',
     telefono: per?.phone ?? null,
     correo: per?.email ?? null,
+    sede: sedeEmbed?.name ?? null,
     puesto: pos?.title ?? (vac?.title as string) ?? 'Puesto',
     comite: com?.name ?? 'Sin comité',
     committee_id: (vac?.committee_id as string) ?? null,

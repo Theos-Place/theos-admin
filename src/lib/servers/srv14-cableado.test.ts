@@ -97,7 +97,7 @@ describe('SRV-14 · a la persona que aplicó NO se le escribe', () => {
 describe('SRV-14 · el detalle de la persona', () => {
   const d = {
     nombre: 'Ana Rojas', telefono: '8888-8888', correo: 'ana@x.cr',
-    puesto: 'Logística', comite: 'Sede Escazú',
+    sede: 'Lindora', puesto: 'Logística', comite: 'Sede Escazú',
     ultimoEstudio: 'Nivel 4', dirigente: 'Beto Mora', telefonoDirigente: '7777-7777',
   }
 
