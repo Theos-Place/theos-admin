@@ -762,7 +762,7 @@ Tests: razones obligatorias + texto, grupo lleno → por modificar + notificaci�
 conversión a arreglo. tsc/lint/vitest. EMAIL_SILENT_MODE se respeta.
 ```
 
-### [ ] FIN-13 · Arreglos de pago: habilitación individual y límites nuevos
+### [x] FIN-13 · Arreglos de pago: habilitación individual y límites nuevos — HECHO 2026-10-02
 
 Decidido: NO se abre un botón público de "solicitar arreglo" (miedo justificado
 al portillo — la gente curiosa ya encontró el de becas sin promoción). En su
@@ -790,6 +790,18 @@ Tests: límites (3 tractos rechazado en evento, vencimiento posterior al inicio 
 habilitación individual visible solo al habilitado. tsc/lint/vitest.
 ```
 
+**Hecho** (commit `8961257c`, migración `20261002140000`). Los cuatro puntos,
+con una nota sobre el 4: la «puerta preparada» para el botón público NO se
+construyó como flag. La habilitación por persona YA es esa puerta —cuando se
+quiera abrir de forma controlada, lo que cambia es quién la activa, no el
+mecanismo— y un flag apagado sin nada detrás es código muerto que el día de
+mañana nadie sabe si funciona.
+
+**Medido el 2026-10-02 para la regla de estudios:** de 2 209 grupos solo 40
+tienen `enrollment_end_date`, pero los 12 abiertos la tienen todos. El
+respaldo para el resto es `starts_at`; 60 grupos no tienen ninguna de las dos
+y ahí la regla no acota.
+
 ### [ ] PAG-5 · Pago en línea: pagar varios cobros pendientes de una vez
 
 Cuando llegue Tilopay (FIN-5): en la ventana de pago, si la persona tiene más
@@ -798,7 +810,7 @@ seleccionar cuáles paga en una sola transacción (suma por moneda, jamás
 mezclando monedas — INT-3). Útil para arreglos de pago con tracto acumulado.
 Se implementa JUNTO con FIN-5, no antes — dejarlo en la spec de Tilopay.
 
-### [ ] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés)
+### [~] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés) — rango y export HECHOS 2026-10-02; falta decidir el nombre del estado
 
 Prompt para Claude Code:
 
@@ -815,6 +827,23 @@ MEJORA · /finanzas/pagos: conciliación contra estados de cuenta
 3. Botón de descarga XLSX del resultado filtrado (mismo gate de montos).
 Tests: rango filtra por fecha de pago, export respeta filtros. tsc/lint/vitest.
 ```
+
+**Hecho** (commit `7ffaf0d5`): rango por fecha de pago server-side, export
+XLSX del resultado filtrado con totales por moneda, y la columna que decía
+«Fecha» mostrando `created_at` ahora dice «Fecha de pago» y muestra `paid_at`.
+
+**PENDIENTE DE DECISIÓN — el punto 1.** El estado `cancelado` YA EXISTE y
+significa ANULADO: 30 pagos en producción contra 239 en `paid`. Renombrar
+«Pagado» a «Cancelado» dejaría dos «Cancelado» indistinguibles en la pantalla
+de conciliación. Hay que elegir: o `paid` pasa a verse «Cancelado» y el actual
+`cancelado` pasa a «Anulado» (solo etiquetas, la base no cambia), o se queda
+«Pagado». No se tocó nada hasta que Floriana decida.
+
+**Lo que se encontró midiendo, y es el motivo real del ítem:** `paid_at` es
+timestamptz y hay pagos registrados a las 00:57 UTC, o sea las 6:57 p.m. del
+día anterior en Costa Rica. Para el 31 de agosto hay 41 pagos en día CR y un
+filtro ingenuo habría devuelto CERO. La conversión vive en
+`src/lib/finance/rango-de-pagos.ts` con tests.
 
 ### [ ] DON-3 · Donaciones con montos: reimportación del año + reporte con montos por sede
 
