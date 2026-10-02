@@ -5,7 +5,7 @@ import {
   asuntoDelCorte, lineasDelCorte,
   BLOQUES_DE_NIVELES, bloqueDe, esInicioDeBloque, esContinuacionDeBloque,
   nivelesACobrar, montoDelBloque, folletosQuePide,
-  ventanaDelCorte, DIAS_DE_VENTANA_DEL_CORTE,
+  ventanaDelCorte, DIAS_DE_CIERRE_ANTES_DEL_INICIO, DIAS_MINIMOS_HASTA_EL_INICIO,
 } from './corte-de-bloque'
 import { FOLLETO_NEXT_LEVEL } from './folletos'
 
@@ -403,7 +403,7 @@ describe('EST-14 · la migración del índice', () => {
 })
 
 /**
- * EST-14 · La ventana de dos semanas del corte.
+ * EST-14/EST-23 · La ventana de matrícula del corte.
  *
  * SOLO en 2→3. El 2026-08-27 se decidió que el sucesor naciera `en_curso`
  * porque `en_matricula` lo dejaba «esperando una ventana que nunca se
@@ -412,10 +412,18 @@ describe('EST-14 · la migración del índice', () => {
 describe('EST-14 · la matrícula abierta del corte', () => {
   const base = { hoy: '2026-10-01', inicio: null }
 
-  it('el corte 2→3 abre catorce días', () => {
-    expect(ventanaDelCorte({ ...base, planOrigen: 'N2', planDestino: 'N3' }))
-      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-15' })
-    expect(DIAS_DE_VENTANA_DEL_CORTE).toBe(14)
+  it('la ventana cierra UNA SEMANA antes del arranque (EST-23)', () => {
+    /**
+     * Antes eran 14 días fijos desde el cierre. Cambió el 2026-10-02 porque
+     * la fecha de arranque la elige el dirigente: con los días fijos, un
+     * grupo que arrancaba en dos meses cerraba matrícula a las dos semanas y
+     * perdía mes y medio de gente, y uno que arrancaba en 20 días la dejaba
+     * abierta hasta seis días antes, sin margen para imprimir.
+     */
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-11-01' }))
+      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-25' })
+    expect(DIAS_DE_CIERRE_ANTES_DEL_INICIO).toBe(7)
+    expect(DIAS_MINIMOS_HASTA_EL_INICIO).toBe(14)
   })
 
   it('1→2 y 3→4 NO abren: la cohorte avanza junta', () => {
@@ -446,21 +454,25 @@ describe('EST-14 · la matrícula abierta del corte', () => {
     expect(ventanaDelCorte({ ...base, planOrigen: 'PREMAT', planDestino: 'X' })).toBeNull()
   })
 
-  it('la ventana NO se pasa del arranque del grupo', () => {
-    // Matricular a alguien en un grupo que ya empezó es meterlo tarde, y el
-    // dirigente puede haber elegido arrancar antes de los catorce días.
-    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-10-08' }))
-      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-08' })
+  it('la ventana NUNCA cierra en el pasado', () => {
+    // Si alguien fuerza un arranque a tres días (por API, saltándose el
+    // mínimo), inicio−7 cae ANTES de hoy. Una ventana que nace cerrada es
+    // rara pero coherente; una que cierra en el pasado haría que el grupo
+    // apareciera «Por iniciar» desde el minuto cero sin explicación.
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-10-03' }))
+      .toEqual({ enrollment_start_date: '2026-10-01', enrollment_end_date: '2026-10-01' })
   })
 
-  it('si el arranque cae después, valen los catorce días', () => {
-    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-01', inicio: '2026-11-01' })?.enrollment_end_date)
-      .toBe('2026-10-15')
+  it('sin fecha de arranque deja abierta la semana que el mínimo garantiza', () => {
+    // La ruta exige 14 días antes de llegar acá, así que inicio−7 es al menos
+    // hoy+7. Sin fecha, ese es el supuesto seguro.
+    expect(ventanaDelCorte({ ...base, planOrigen: 'N2', planDestino: 'N3' })?.enrollment_end_date)
+      .toBe('2026-10-08')
   })
 
   it('cruza el fin de mes sin romperse', () => {
-    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-25', inicio: null })?.enrollment_end_date)
-      .toBe('2026-11-08')
+    expect(ventanaDelCorte({ planOrigen: 'N2', planDestino: 'N3', hoy: '2026-10-25', inicio: '2026-12-01' })?.enrollment_end_date)
+      .toBe('2026-11-24')
   })
 })
 

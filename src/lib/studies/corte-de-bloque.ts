@@ -215,8 +215,24 @@ export function folletosQuePide(planCode: string | null | undefined): readonly s
  * LA VENTANA DE MATRÍCULA DEL CORTE
  * ──────────────────────────────────────────────────────────────────────────── */
 
-/** Las dos semanas del break entre bloques, en días. */
-export const DIAS_DE_VENTANA_DEL_CORTE = 14
+/**
+ * Cuánto antes del arranque se cierra la matrícula del grupo nuevo (EST-23).
+ *
+ * Esa semana no es para descansar: es para imprimir los folletos del par y
+ * cerrar la lista. Si la matrícula siguiera abierta hasta el día de inicio,
+ * la cantidad a imprimir cambiaría después de haberla mandado.
+ */
+export const DIAS_DE_CIERRE_ANTES_DEL_INICIO = 7
+
+/**
+ * Lo mínimo que puede faltar para el arranque cuando se cierra con
+ * continuación (EST-23).
+ *
+ * Dos semanas, y sale de la misma cuenta: una para imprimir y una para que
+ * alguien nuevo alcance a matricularse. Con menos, el grupo arranca sin
+ * folletos o sin nadie más que los que venían.
+ */
+export const DIAS_MINIMOS_HASTA_EL_INICIO = 14
 
 const sumarDias = (iso: string, dias: number): string => {
   const d = new Date(`${iso}T12:00:00Z`)   // mediodía: sin sorpresas de zona
@@ -254,9 +270,33 @@ export function ventanaDelCorte(input: {
   if (!hayCorteAlCerrar(input.planOrigen)) return null
   if (!esInicioDeBloque(input.planDestino)) return null
 
-  const tope = sumarDias(input.hoy, DIAS_DE_VENTANA_DEL_CORTE)
+  /**
+   * EST-23 · La ventana ya NO son 14 días fijos desde el cierre: va desde el
+   * cierre hasta UNA SEMANA ANTES del arranque.
+   *
+   * El cambio importa porque la fecha de inicio la elige el dirigente. Con
+   * los 14 días fijos, un grupo que arrancaba en dos meses cerraba su
+   * matrícula a las dos semanas y se perdía mes y medio de gente; y uno que
+   * arrancaba en 20 días dejaba la matrícula abierta hasta seis días antes,
+   * sin margen para imprimir.
+   *
+   * No hace falta ningún estado nuevo: `estadoVisible` ya muestra «Por
+   * iniciar» cuando un grupo sigue en matrícula y su ventana cerró, y el
+   * cron de siempre lo pasa a en_curso el día del arranque.
+   */
   const inicio = (input.inicio ?? '').slice(0, 10)
-  // El arranque manda si cae antes; si no hay fecha, valen los 14 días.
-  const cierre = inicio && inicio < tope ? inicio : tope
-  return { enrollment_start_date: input.hoy, enrollment_end_date: cierre }
+  if (!inicio) {
+    // Sin fecha no hay de dónde restar. Se deja abierto el mínimo que la
+    // regla garantiza, que es lo que la ruta ya exige antes de llegar acá.
+    return {
+      enrollment_start_date: input.hoy,
+      enrollment_end_date: sumarDias(input.hoy, DIAS_MINIMOS_HASTA_EL_INICIO - DIAS_DE_CIERRE_ANTES_DEL_INICIO),
+    }
+  }
+  const cierre = sumarDias(inicio, -DIAS_DE_CIERRE_ANTES_DEL_INICIO)
+  // Nunca antes de hoy: una ventana que cierra en el pasado nace cerrada.
+  return {
+    enrollment_start_date: input.hoy,
+    enrollment_end_date: cierre < input.hoy ? input.hoy : cierre,
+  }
 }

@@ -11,7 +11,7 @@ import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/stud
 import { reportarError } from '@/lib/observabilidad'
 import { motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
 import {
-  hayCorteAlCerrar, motivoQueImpideCerrar, creaSucesor,
+  hayCorteAlCerrar, motivoQueImpideCerrar, creaSucesor, DIAS_MINIMOS_HASTA_EL_INICIO,
 } from '@/lib/studies/corte-de-bloque'
 import { ymdCR } from '@/lib/format'
 
@@ -63,10 +63,6 @@ export async function POST(
    * lo que se ataja es el tecleo imposible. La regla vive en successor-dates.
    */
   const inicioElegido = (body.successor_starts_at ?? '').trim() || null
-  if (inicioElegido) {
-    const motivo = motivoParaRechazarInicio(inicioElegido, ymdCR())
-    if (motivo) return NextResponse.json({ error: motivo, code: 'fecha_invalida' }, { status: 400 })
-  }
   try {
     const supabase = createAdminClient()
     const { data: g } = await supabase
@@ -147,6 +143,26 @@ export async function POST(
         { error: faltaRespuesta, code: 'falta_respuesta_de_corte' }, { status: 400 })
     }
     const habraSucesor = creaSucesor(sourceCode, body.continua_el_grupo)
+
+    /**
+     * EST-23 · El mínimo de dos semanas, solo en el corte con continuación.
+     *
+     * La validación de la fecha vivía ARRIBA, antes de leer el grupo, y por
+     * eso no podía distinguir un cierre de otro. Se bajó hasta acá —donde ya
+     * se conoce el plan— y sigue estando ANTES de `closeGroup`, que es lo que
+     * importa: el cierre es irreversible y validar después sería pedir un
+     * dato que ya no se puede volver a pedir.
+     *
+     * En los demás cierres el mínimo es 0 y el pasado se acepta, porque ahí
+     * se registra algo que pudo haber pasado ya.
+     */
+    if (inicioElegido) {
+      const minimoDias = hayCorteAlCerrar(sourceCode) && body.continua_el_grupo === true
+        ? DIAS_MINIMOS_HASTA_EL_INICIO
+        : 0
+      const motivo = motivoParaRechazarInicio(inicioElegido, ymdCR(), minimoDias)
+      if (motivo) return NextResponse.json({ error: motivo, code: 'fecha_invalida' }, { status: 400 })
+    }
 
     // Sin sucesor no hay a quién entregarle folletos: no se piden ni se
     // exige el lugar de entrega.

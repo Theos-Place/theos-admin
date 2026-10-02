@@ -9408,3 +9408,71 @@ que es como se rompió el de `member_roles` en setiembre; la migración se
 puede correr dos veces.
 
 **Está en staging, falta probarlo con el mouse.**
+
+---
+
+### [x] EST-23 · Cierre de N2 que continúa: mínimo 2 semanas y ventana hasta inicio−7 — HECHO 2026-10-02
+
+> Entró como «EST-21» y se renumeró: ese código ya es el botón «Mandar a
+> imprimir folletos», cerrado el 2026-10-01. El siguiente libre era el 23.
+
+Afina el comportamiento de EST-14/EST-16 en el cierre de Nivel 2 cuando el
+grupo continúa.
+
+Prompt para Claude Code:
+
+```
+CAMBIO · Cierre de N2 con continuación: fecha mínima y estado del grupo sucesor
+
+1. FECHA DE INICIO DEL N3 (la que elige el dirigente al cerrar, EST-16): mínimo 2
+   SEMANAS después del día en que hace el cierre.
+   - El date picker BLOQUEA las fechas anteriores a hoy+14 días (no solo validar al
+     enviar: que no se puedan escoger).
+   - Disclaimer junto al campo: "Necesitamos mínimo 2 semanas antes del inicio para
+     imprimir los folletos y abrir la matrícula a más personas".
+   - Validación server-side igual (el picker no es el candado).
+   - OJO: esto aplica al cierre de N2 con continuación; verificar si el mismo mínimo
+     conviene en los demás cierres que piden fecha (EST-16) y reportar — no asumirlo.
+2. ESTADO DEL GRUPO N3 AUTOMÁTICO: se crea EN MATRÍCULA (los que continúan ya quedan
+   matriculados con su cobro; los cupos libres quedan abiertos al público) y permanece
+   en matrícula hasta UNA SEMANA antes de la fecha de inicio — ahí pasa solo a "por
+   iniciar" (el mecanismo de ventanas de matrícula existente, group-enrollment-windows:
+   REUTILIZAR, configurando el cierre de ventana = inicio − 7 días; no un cron nuevo).
+   Esto reemplaza la regla anterior de "~2 semanas de cupos libres" de EST-14: la
+   ventana ahora es variable — desde el cierre hasta inicio−7d.
+3. El tiquete de folletos del par 3+4 (EST-14/EST-18) se dispara con la creación del
+   grupo — confirmar que el flujo quede: cierre → grupo N3 en matrícula + folletos
+   pedidos → (inicio−7d) por iniciar → inicio.
+Tests: picker/server rechazan fecha < hoy+14, grupo nace en matrícula, transición a
+por-iniciar en inicio−7d, matrícula pública abierta mientras tanto. tsc/lint/vitest.
+```
+
+
+**HECHO**, y con dos hallazgos que cambiaron el alcance:
+
+**El punto 2 no necesitó NADA de lo previsto.** El pedido hablaba de que el
+grupo «pase a por iniciar» reutilizando el cron de ventanas. Resulta que
+`por_iniciar` YA EXISTE, pero como estado VISIBLE derivado
+(`estadoVisible`): un grupo en matrícula con la ventana cerrada se muestra
+así solo. No hizo falta ni columna, ni CHECK, ni cron, ni tocar las 54
+pantallas que miran el estado. Alcanzó con poner el cierre de ventana en
+inicio−7.
+
+**El mínimo NO se aplicó a los demás cierres**, como el ítem pedía verificar.
+En los otros el campo dice «si ya arrancaron, poné el día que arrancaron» —
+se registra algo que pudo haber pasado ya— y exigirles dos semanas trabaría
+un cierre sin que nadie gane. El mínimo corre solo cuando hay corte Y se
+contestó que continúa.
+
+La validación del servidor vivía ANTES de leer el grupo, así que no podía
+distinguir un cierre de otro; se bajó a donde ya se conoce el plan, siempre
+antes de `closeGroup` —el cierre es irreversible—.
+
+La ventana pasó de 14 días fijos a inicio−7, que es lo que arregla el
+problema de fondo: con días fijos, un grupo que arrancaba en dos meses
+cerraba matrícula a las dos semanas y perdía mes y medio de gente, y uno que
+arrancaba en 20 días la dejaba abierta hasta seis días antes, sin margen
+para imprimir.
+
+El cebo de quitar el mínimo del servidor NO mordía al principio: la
+aserción encontraba el nombre en la línea del `import`. Ahora afirma el uso.

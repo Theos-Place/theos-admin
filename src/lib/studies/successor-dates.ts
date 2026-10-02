@@ -110,7 +110,28 @@ export function sumarDias(ymd: string, dias: number): string {
  */
 export const MESES_DE_HOLGURA = 12
 
-export function motivoParaRechazarInicio(ymd: string, hoy: string): string | null {
+/**
+ * EST-23 · Texto del aviso junto al campo. Vive acá y no en la pantalla
+ * para que el número y la explicación no se separen: si mañana son tres
+ * semanas, el texto cambia solo.
+ */
+export function avisoDeAnticipacion(minimoDias: number): string {
+  const semanas = Math.round(minimoDias / 7)
+  return `Necesitamos mínimo ${semanas} semana${semanas === 1 ? '' : 's'} antes del inicio `
+    + 'para imprimir los folletos y abrir la matrícula a más personas.'
+}
+
+/**
+ * @param minimoDias EST-23: cuántos días como mínimo tiene que faltar para el
+ *   arranque. Solo lo usa el cierre de Nivel 2 CON CONTINUACIÓN, que es donde
+ *   el grupo nuevo necesita margen para imprimir y para que entre gente.
+ *
+ *   NO se le puso a los demás cierres, y no es olvido: en los otros el grupo
+ *   siguiente hereda al mismo cohorte y no abre matrícula pública, así que
+ *   exigirles dos semanas sería trabar un cierre sin que nadie gane nada.
+ *   Queda reportado para que se decida aparte si alguna vez conviene.
+ */
+export function motivoParaRechazarInicio(ymd: string, hoy: string, minimoDias = 0): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return 'La fecha de inicio no tiene el formato esperado.'
   const t = Date.parse(`${ymd}T00:00:00Z`)
   if (!Number.isFinite(t)) return 'Esa fecha de inicio no existe.'
@@ -120,6 +141,12 @@ export function motivoParaRechazarInicio(ymd: string, hoy: string): string | nul
   const dias = MESES_DE_HOLGURA * 31
   if (ymd < sumarDias(hoy, -dias)) return 'Esa fecha de inicio está demasiado en el pasado.'
   if (ymd > sumarDias(hoy, dias)) return 'Esa fecha de inicio está demasiado en el futuro.'
+  if (minimoDias > 0 && ymd < sumarDias(hoy, minimoDias)) {
+    const semanas = Math.round(minimoDias / 7)
+    return `El grupo nuevo tiene que arrancar al menos ${semanas} semana`
+      + `${semanas === 1 ? '' : 's'} después de hoy: hace falta ese tiempo para imprimir `
+      + 'los folletos y para que alcance a matricularse alguien más.'
+  }
   return null
 }
 

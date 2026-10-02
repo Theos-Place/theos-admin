@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { useSedes } from '@/lib/sedes'
 import { OTRO_LUGAR, isFolletoEligible, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
-import { fechasDelSucesor, sumarDias, MESES_DE_HOLGURA, motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
+import { avisoDeAnticipacion, fechasDelSucesor, sumarDias, MESES_DE_HOLGURA, motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
 import { ymdCR, formatDateLong } from '@/lib/format'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,7 @@ import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { allowsCdebRecommendation } from '@/lib/studies/cdeb-recommendation'
 import { CdebRecommendationModal } from '@/components/studies/CdebRecommendationModal'
 import { PrematCoupleEvaluation } from '@/components/studies/PrematCoupleEvaluation'
-import { hayCorteAlCerrar, motivoQueImpideCerrar } from '@/lib/studies/corte-de-bloque'
+import { DIAS_MINIMOS_HASTA_EL_INICIO, hayCorteAlCerrar, motivoQueImpideCerrar } from '@/lib/studies/corte-de-bloque'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { toClosePayload, missingReasons, missingReasonsMessage } from '@/lib/studies/close-payload'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
@@ -241,7 +241,20 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   }).starts_at
   const [inicioSucesor, setInicioSucesor] = useState(inicioCalculado)
   const nivelSiguiente = levelLabel(nextLevelCode(group.study_type_id))
-  const errorInicio = inicioSucesor ? motivoParaRechazarInicio(inicioSucesor, hoyCR) : 'Decinos cuándo arranca el grupo siguiente.'
+  /**
+   * EST-23 · El mínimo de dos semanas aplica SOLO al corte con continuación.
+   *
+   * En los demás cierres el pasado se acepta a propósito —el texto del campo
+   * dice «si ya arrancaron, poné el día que arrancaron»—, porque ahí se
+   * registra algo que puede haber ocurrido. Acá no: el grupo del par 3-4
+   * nace con matrícula abierta al público y con folletos por imprimir, y las
+   * dos cosas necesitan tiempo por delante.
+   */
+  const exigeAnticipacion = hayCorte && continuaElGrupo === true
+  const minimoDias = exigeAnticipacion ? DIAS_MINIMOS_HASTA_EL_INICIO : 0
+  const errorInicio = inicioSucesor
+    ? motivoParaRechazarInicio(inicioSucesor, hoyCR, minimoDias)
+    : 'Decinos cuándo arranca el grupo siguiente.'
   const faltaInicioSucesor = haySucesor && !!errorInicio
 
   async function handleClose() {
@@ -657,14 +670,20 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
               <p className="text-[13px] text-navy-light/80 font-body">
                 Los {aprobados} que aprobaron pasan juntos al nivel siguiente. Esta es la
                 fecha que va a tener ese grupo y la que van a ver en el correo, así que
-                ponela como quedaron de verdad — si ya arrancaron, poné el día que
-                arrancaron.
+                ponela como quedaron de verdad{exigeAnticipacion ? '.' : ' — si ya arrancaron, poné el día que arrancaron.'}
               </p>
+              {exigeAnticipacion && (
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  {avisoDeAnticipacion(minimoDias)}
+                </p>
+              )}
               <input
                 id="inicio-sucesor"
                 type="date"
                 value={inicioSucesor}
-                min={sumarDias(hoyCR, -MESES_DE_HOLGURA * 31)}
+                min={minimoDias
+                  ? sumarDias(hoyCR, minimoDias)
+                  : sumarDias(hoyCR, -MESES_DE_HOLGURA * 31)}
                 max={sumarDias(hoyCR, MESES_DE_HOLGURA * 31)}
                 onChange={e => setInicioSucesor(e.target.value)}
                 className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
