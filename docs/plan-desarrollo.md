@@ -1037,3 +1037,18 @@ Verificar render, visibilidades y que ningún otro artículo de /ayuda quede con
 flujo viejo (grep de "folleto"/"cierre"/"cobro" en content/ayuda y revisar los que
 toquen el tema).
 ```
+
+### [ ] SRV-17 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01)
+
+Prompt para Claude Code:
+
+```
+MEJORA · Página de Aplicaciones (SRV-14): columna "Sede" del aplicante
+
+En la lista de aplicaciones a puestos de servicio, agregar la SEDE de la persona que
+aplica (la sede calculada del sistema — la misma de siempre, refresh_member_sede; "—"
+si no tiene). Va en: la tabla (columna, sorteable/filtrable junto al filtro de ubicación
+existente), el detalle de la aplicación, el PDF que se genera y el email al encargado.
+Sin consulta extra por fila (join en la query existente). Tests: columna presente,
+persona sin sede. tsc/lint/vitest.
+```
