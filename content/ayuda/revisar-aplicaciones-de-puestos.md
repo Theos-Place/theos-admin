@@ -1,7 +1,7 @@
 ---
 titulo: Revisar y aceptar aplicaciones a puestos
 seccion: Servidores
-tipo: tutorial
+tipo: infografia
 visibilidad: roles
 roles: [aplicaciones_servicio, coordinador_servidores, encargado_staff, direccion]
 orden: 17
@@ -10,7 +10,7 @@ resumen: Los cinco estados de una aplicación, qué avisa cada uno, cuál no se 
 
 # Revisar y aceptar aplicaciones a puestos
 
-![Buscar una aplicación en la cola, mandarla al encargado y aceptarla](/ayuda/tutoriales/revisar-aplicaciones/revisar-aplicaciones.gif)
+![Los cinco estados, a quién avisa cada uno, la regla de «Aceptada» y los filtros de la cola](/ayuda/infografias/revisar-aplicaciones-de-puestos.svg) ![Buscar una aplicación en la cola, mandarla al encargado y aceptarla](/ayuda/tutoriales/revisar-aplicaciones/revisar-aplicaciones.gif)
 
 Cuando alguien aplica a un puesto, su aplicación entra a **Servidores → Aplicaciones**. Desde
 ahí se revisa y se le va cambiando el estado hasta que queda aceptada o cerrada.
@@ -64,7 +64,11 @@ nota suelta no la lee nadie.
 La lista tiene casillas de selección. Si llegaron diez aplicaciones del mismo puesto y todas
 van al encargado, se marcan y se mueven juntas en vez de una por una.
 
-Los filtros de arriba —comité, ubicación, estado y la búsqueda por nombre o puesto— sirven
-justamente para armar ese grupo antes de seleccionar.
+Los filtros de arriba —comité, ubicación, sede, estado y la búsqueda por nombre o puesto—
+sirven justamente para armar ese grupo antes de seleccionar.
+
+Ojo con dos que se parecen y no son lo mismo: **ubicación** es dónde se sirve el *puesto*, y
+**sede** es la de la *persona* que aplicó. Alguien de Lindora puede aplicar a un puesto de
+Escazú, así que filtrar por una no es filtrar por la otra.
 
 ![Ver el video del flujo completo](/ayuda/tutoriales/revisar-aplicaciones/revisar-aplicaciones.mp4)

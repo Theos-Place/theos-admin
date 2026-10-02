@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1180" role="img" aria-labelledby="t-pedir d-pedir">
+  <title id="t-pedir">Solicitar puestos de servicio para mi comité</title>
+  <!--
+    COLORES: medidos con src/lib/contrast.ts sobre el papel #f4f4f0, no
+    elegidos a ojo (AGENTS.md / accessibility.md).
+      · navy      #161440 → 15.76:1
+      · gris      #555    →  6.76:1
+      · tealDeep  #3B7579 →  4.75:1
+      · verde     #216B45 →  5.85:1
+      · coralDeep #C43635 →  4.85:1  (el coral normal da 4.13 y no alcanza
+        para 13px en negrita, que no cuenta como «texto grande»)
+    Sobre el navy: blanco 17.38:1 y el teal claro #70BDC2 8.07:1.
+    El subrayado del título usa el coral normal porque es decorativo.
+  -->
+  <desc id="d-pedir">El comité abre los cupos y la persona aplica: son dos cosas distintas. Los cuatro pasos para pedir son entrar a Servidores, Puestos, Solicitar puestos; elegir el comité; sumar los cupos puesto por puesto; y enviar. La solicitud pide solo la cantidad, porque el horario, el compromiso y la ubicación viven en la ficha del puesto. Las solicitudes se reciben en una ventana que abre cada mes y quien administra servidores puede enviar con la ventana cerrada. Después de enviar, la solicitud entra a la cola de Solicitudes y los cupos aprobados se publican todos juntos a principios de mes.</desc>
+
+  <rect width="720" height="1180" fill="#f4f4f0"/>
+
+  <text x="40" y="54" font-family="Arial, sans-serif" font-size="25" font-weight="bold" fill="#161440">Pedir puestos para mi comité</text>
+  <rect x="40" y="68" width="56" height="4" rx="2" fill="#D63E3D"/>
+  <text x="40" y="96" font-family="Arial, sans-serif" font-size="14" fill="#555">El comité abre los cupos. Aplicar es la otra punta.</text>
+
+  <g font-family="Arial, sans-serif">
+
+    <!-- Las dos puntas, que es lo que más se confunde -->
+    <rect x="40" y="124" width="312" height="104" rx="14" fill="#ffffff" stroke="#3B7579"/>
+    <text x="64" y="152" font-size="11" letter-spacing="1.5" fill="#3B7579">ESTA PÁGINA</text>
+    <text x="64" y="178" font-size="16" font-weight="bold" fill="#161440">Pedir puestos</text>
+    <text x="64" y="202" font-size="12.5" fill="#555">Lo hace el COMITÉ.</text>
+    <text x="64" y="218" font-size="12.5" fill="#555">Abre los cupos.</text>
+
+    <rect x="368" y="124" width="312" height="104" rx="14" fill="#ffffff" stroke="#dcdcd4"/>
+    <text x="392" y="152" font-size="11" letter-spacing="1.5" fill="#555">LA OTRA PUNTA</text>
+    <text x="392" y="178" font-size="16" font-weight="bold" fill="#161440">Aplicar</text>
+    <text x="392" y="202" font-size="12.5" fill="#555">Lo hace QUIEN QUIERE SERVIR.</text>
+    <text x="392" y="218" font-size="12.5" fill="#555">Se postula a un cupo abierto.</text>
+
+    <rect x="40" y="244" width="640" height="38" rx="10" fill="#161440"/>
+    <text x="360" y="268" font-size="13" fill="#ffffff" text-anchor="middle">Sin cupos abiertos no hay a qué aplicar, así que esto va primero.</text>
+
+    <!-- Los cuatro pasos -->
+    <text x="40" y="326" font-size="13" letter-spacing="1.5" fill="#3B7579">LOS CUATRO PASOS</text>
+
+    <circle cx="62" cy="366" r="15" fill="#161440"/>
+    <text x="62" y="371" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+    <text x="92" y="362" font-size="14" font-weight="bold" fill="#161440">Servidores › Puestos › Solicitar puestos</text>
+    <text x="92" y="382" font-size="12.5" fill="#555">Es el punto de entrada.</text>
+
+    <circle cx="62" cy="428" r="15" fill="#161440"/>
+    <text x="62" y="433" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+    <text x="92" y="424" font-size="14" font-weight="bold" fill="#161440">Elegí tu comité</text>
+    <text x="92" y="444" font-size="12.5" fill="#555">Hasta que no elegís uno no aparece ningún puesto.</text>
+
+    <circle cx="62" cy="490" r="15" fill="#161440"/>
+    <text x="62" y="495" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+    <text x="92" y="486" font-size="14" font-weight="bold" fill="#161440">Sumá los cupos, puesto por puesto</text>
+    <text x="92" y="506" font-size="12.5" fill="#555">Cada cupo abierto es alguien esperando respuesta.</text>
+
+    <circle cx="62" cy="552" r="15" fill="#216B45"/>
+    <text x="62" y="557" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+    <text x="92" y="548" font-size="14" font-weight="bold" fill="#161440">Enviá la solicitud</text>
+    <text x="92" y="568" font-size="12.5" fill="#555">Entra a la cola del equipo de servidores.</text>
+
+    <!-- Lo que NO se escribe -->
+    <rect x="40" y="606" width="640" height="150" rx="14" fill="#ffffff" stroke="#dcdcd4"/>
+    <text x="64" y="636" font-size="15" font-weight="bold" fill="#161440">La solicitud pide SOLO la cantidad</text>
+    <text x="64" y="660" font-size="12.5" fill="#555">Ni horario, ni compromiso, ni ubicación.</text>
+    <text x="64" y="688" font-size="12.5" fill="#555">Antes se pedían cada vez y pasaba lo previsible: el líder los</text>
+    <text x="64" y="706" font-size="12.5" fill="#555">reescribía de memoria y quedaban tres versiones del mismo horario.</text>
+    <text x="64" y="734" font-size="12.5" fill="#3B7579">Esos datos viven en la ficha del puesto — «ver detalles» la abre.</text>
+
+    <!-- La ventana mensual -->
+    <rect x="40" y="780" width="312" height="150" rx="14" fill="#ffffff" stroke="#3B7579"/>
+    <text x="64" y="810" font-size="15" font-weight="bold" fill="#161440">La ventana mensual</text>
+    <text x="64" y="836" font-size="12.5" fill="#555">Las solicitudes se reciben en</text>
+    <text x="64" y="854" font-size="12.5" fill="#555">una ventana que abre cada mes.</text>
+    <text x="64" y="880" font-size="12.5" fill="#555">Cerrada, la pantalla te dice</text>
+    <text x="64" y="898" font-size="12.5" fill="#555">cuándo vuelve a abrir.</text>
+    <text x="64" y="920" font-size="12" fill="#3B7579">Servidores puede enviar igual.</text>
+
+    <!-- Cuándo se publican -->
+    <rect x="368" y="780" width="312" height="150" rx="14" fill="#ffffff" stroke="#C43635"/>
+    <text x="392" y="810" font-size="15" font-weight="bold" fill="#161440">No salen el mismo día</text>
+    <text x="392" y="836" font-size="12.5" fill="#555">Los cupos aprobados se publican</text>
+    <text x="392" y="854" font-size="12.5" fill="#555">todos juntos a principios de mes.</text>
+    <text x="392" y="880" font-size="12.5" fill="#555">Recién ahí la gente los ve y</text>
+    <text x="392" y="898" font-size="12.5" fill="#555">puede aplicar.</text>
+    <text x="392" y="920" font-size="12" font-weight="bold" fill="#C43635">Pedir el 20 no abre nada este mes.</text>
+
+    <!-- Línea de tiempo -->
+    <text x="40" y="984" font-size="13" letter-spacing="1.5" fill="#3B7579">CÓMO SE VE EN EL CALENDARIO</text>
+
+    <path d="M64 1040 H656" stroke="#dcdcd4" stroke-width="3"/>
+
+    <circle cx="140" cy="1040" r="9" fill="#161440"/>
+    <text x="140" y="1022" font-size="12.5" font-weight="bold" fill="#161440" text-anchor="middle">Pedís</text>
+    <text x="140" y="1070" font-size="12" fill="#555" text-anchor="middle">dentro de la</text>
+    <text x="140" y="1086" font-size="12" fill="#555" text-anchor="middle">ventana del mes</text>
+
+    <circle cx="360" cy="1040" r="9" fill="#161440"/>
+    <text x="360" y="1022" font-size="12.5" font-weight="bold" fill="#161440" text-anchor="middle">Servidores revisa</text>
+    <text x="360" y="1070" font-size="12" fill="#555" text-anchor="middle">en la cola de</text>
+    <text x="360" y="1086" font-size="12" fill="#555" text-anchor="middle">Solicitudes</text>
+
+    <circle cx="590" cy="1040" r="9" fill="#216B45"/>
+    <text x="590" y="1022" font-size="12.5" font-weight="bold" fill="#216B45" text-anchor="middle">Se publican</text>
+    <text x="590" y="1070" font-size="12" fill="#555" text-anchor="middle">a principios</text>
+    <text x="590" y="1086" font-size="12" fill="#555" text-anchor="middle">del mes siguiente</text>
+
+    <rect x="40" y="1114" width="640" height="46" rx="12" fill="#161440"/>
+    <text x="360" y="1143" font-size="13" fill="#ffffff" text-anchor="middle">Por eso conviene pedir con tiempo.</text>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 ---
 titulo: Solicitar puestos de servicio para mi comité
 seccion: Servidores
-tipo: tutorial
+tipo: infografia
 visibilidad: roles
 roles: [lider_comite, coordinador_servidores, encargado_staff, solicitudes_puestos, direccion]
 orden: 15
@@ -10,7 +10,7 @@ resumen: Cómo un comité pide cupos nuevos para sus puestos, cuándo se puede p
 
 # Solicitar puestos de servicio para mi comité
 
-![Elegir el comité, sumar cupos a los puestos y enviar la solicitud](/ayuda/tutoriales/pedir-puestos/pedir-puestos.gif)
+![Las dos puntas del proceso, los cuatro pasos, la ventana mensual y cuándo se publican los cupos](/ayuda/infografias/solicitar-puestos-de-servicio.svg) ![Elegir el comité, sumar cupos a los puestos y enviar la solicitud](/ayuda/tutoriales/pedir-puestos/pedir-puestos.gif)
 
 **Esto no es aplicar a una vacante.** Son las dos puntas del mismo proceso y se confunden
 seguido:
