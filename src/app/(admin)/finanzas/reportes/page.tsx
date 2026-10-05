@@ -16,7 +16,9 @@ const METHOD_LABEL: Record<string, string> = {
   card: 'Tarjeta', sinpe: 'SINPE', cash: 'Efectivo', scholarship: 'Beca', comprobante: 'Comprobante',
 }
 const STATUS_LABEL: Record<string, string> = {
-  paid: 'Pagado', pending: 'Pendiente', cancelado: 'Cancelado', failed: 'Fallido', refunded: 'Devuelto', partial_refund: 'Devolución parcial',
+  // PAG-6 · Es un reporte de FINANZAS: «Cancelado» = cobrado, «Anulado» = el
+  // cobro que se cerró sin cobrarse. Ver lib/finance/payment-outcome.
+  paid: 'Cancelado', pending: 'Pendiente', cancelado: 'Anulado', failed: 'Fallido', refunded: 'Devuelto', partial_refund: 'Devolución parcial',
 }
 
 const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre']

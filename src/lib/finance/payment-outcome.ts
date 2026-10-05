@@ -21,13 +21,55 @@ export const PAYMENT_STATUSES = [
 ] as const
 export type PaymentStatusV2 = (typeof PAYMENT_STATUSES)[number]
 
+/**
+ * PAG-6 · LA MISMA PALABRA SIGNIFICA DOS COSAS OPUESTAS, así que hay dos
+ * juegos de etiquetas. Decidido con Floriana el 2026-10-05.
+ *
+ * En contabilidad costarricense «cancelar» es PAGAR: Andrés concilia contra
+ * el estado de cuenta y a un cobro pagado le dice cancelado. Para cualquier
+ * otra persona, «cancelado» es ANULADO — lo contrario.
+ *
+ * Mandar una sola etiqueta obligaba a elegir a quién confundir. Con dos:
+ *
+ *  · FINANZAS ve `paid` como «Cancelado» (el término de Andrés) y el estado
+ *    `cancelado` como «Anulado», que libera la palabra. Sin ese segundo
+ *    cambio quedarían DOS «Cancelado» en la pantalla de conciliación y no se
+ *    distinguirían los 239 cobrados de los 30 anulados (medido en producción
+ *    el 2026-10-02).
+ *  · LA PERSONA sigue viendo «Pagado» en Mis pagos. Decirle «Cancelado»
+ *    sobre un pago suyo le haría creer que se lo anularon.
+ *
+ * LOS VALORES DE LA BASE NO CAMBIAN. Esto es solo cómo se escriben, y por eso
+ * el renombre se deshace en una línea si hace falta.
+ */
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatusV2, string> = {
   paid: 'Pagado',
   pending: 'Pendiente',
   refunded: 'Devuelto',
   partial_refund: 'Devolución parcial',
-  cancelado: 'Cancelado',
+  cancelado: 'Anulado',
   failed: 'Fallido',
+}
+
+/** Las etiquetas para las pantallas de FINANZAS. Ver el comentario de arriba. */
+export const PAYMENT_STATUS_LABEL_FINANZAS: Record<PaymentStatusV2, string> = {
+  ...PAYMENT_STATUS_LABEL,
+  paid: 'Cancelado',
+}
+
+/**
+ * La etiqueta según quién mira.
+ *
+ * `audiencia` es obligatoria a propósito: sin un valor por defecto, una
+ * pantalla nueva tiene que decidir para quién escribe en vez de heredar en
+ * silencio la de finanzas y decirle «Cancelado» a un miembro.
+ */
+export function etiquetaDeEstado(
+  status: string,
+  audiencia: 'finanzas' | 'persona',
+): string {
+  const mapa = audiencia === 'finanzas' ? PAYMENT_STATUS_LABEL_FINANZAS : PAYMENT_STATUS_LABEL
+  return mapa[status as PaymentStatusV2] ?? status
 }
 
 /** ¿Este desenlace merece que alguien lo mire? Solo el error del sistema: una

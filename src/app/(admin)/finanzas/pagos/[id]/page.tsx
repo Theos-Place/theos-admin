@@ -147,7 +147,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               { label: 'Entidad', value: payment.entity_name },
               { label: 'Tipo', value: payment.entity_type === 'event' ? 'Evento' : 'Grupo de estudio' },
               { label: 'Creado', value: formatDateTime(payment.created_at) },
-              { label: 'Pagado', value: formatDateTime(payment.paid_at) },
+              { label: 'Fecha de pago', value: formatDateTime(payment.paid_at) },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between text-sm gap-4">
                 <span className="font-body text-[rgba(22,20,64,0.60)]">{label}</span>

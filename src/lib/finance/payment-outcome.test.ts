@@ -43,8 +43,16 @@ describe('etiquetas', () => {
     }
   })
 
-  it('cancelado y fallido se leen distinto', () => {
-    expect(PAYMENT_STATUS_LABEL.cancelado).toBe('Cancelado')
+  it('el cobro cerrado y el fallido se leen distinto', () => {
+    // Lo que fija este test es que NO se confundan: uno es un desenlace
+    // normal y el otro una avería que alguien tiene que mirar.
+    //
+    // La palabra cambió en PAG-6 (2026-10-05): el estado `cancelado` pasó a
+    // escribirse «Anulado» porque «Cancelado» se necesitaba para el cobro
+    // PAGADO, que es como le dice contabilidad. Los valores de la base no se
+    // tocaron.
+    expect(PAYMENT_STATUS_LABEL.cancelado).toBe('Anulado')
     expect(PAYMENT_STATUS_LABEL.failed).toBe('Fallido')
+    expect(PAYMENT_STATUS_LABEL.cancelado).not.toBe(PAYMENT_STATUS_LABEL.failed)
   })
 })

@@ -21,6 +21,16 @@ import { Modal } from '@/components/shared/Modal'
 export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string } {
   if (p.queue_status === 'en_revision') return { label: 'En revisión', cls: 'bg-amber-50 text-amber-700' }
   if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral' }
+  /**
+   * PAG-6 · Acá dice «Pagado» A PROPÓSITO, aunque en las pantallas de
+   * finanzas el mismo estado se escriba «Cancelado».
+   *
+   * No es una inconsistencia olvidada: en contabilidad «cancelar» es pagar,
+   * pero para la persona que mira su propio cobro «Cancelado» significa que
+   * se lo anularon — lo contrario. Decidido con Floriana el 2026-10-05.
+   * Si esto se "arregla" para que coincida, se le va a estar diciendo a la
+   * gente que su pago no existe.
+   */
   if (p.status === 'paid') return { label: 'Pagado', cls: 'bg-teal-soft/30 text-teal-deep' }
   if (p.status === 'refunded' || p.status === 'partial_refund') return { label: 'Devuelto', cls: 'bg-navy/5 text-navy-light/80' }
   return { label: 'Cancelado', cls: 'bg-surface-low text-navy-light/80' }

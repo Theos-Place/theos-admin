@@ -372,9 +372,13 @@ function PagosContent() {
               onChange={v => setStatusFilter(v as 'all' | PaymentStatus)}
               options={[
                 { value: 'all', label: 'Todos' },
-                { value: 'paid', label: 'Pagado' },
+                // PAG-6 · «Cancelado» es el término contable para lo COBRADO
+                // (es el que usa Andrés al conciliar). El estado que antes se
+                // llamaba así —el cobro anulado— pasó a «Anulado» para que la
+                // palabra quedara libre.
+                { value: 'paid', label: 'Cancelado' },
                 { value: 'pending', label: 'Pendiente' },
-                { value: 'cancelado', label: 'Cancelado' },
+                { value: 'cancelado', label: 'Anulado' },
                 { value: 'failed', label: 'Fallido' },
                 { value: 'refunded', label: 'Devuelto' },
               ]}
@@ -646,7 +650,9 @@ function PagosContent() {
           ['Tipo', p.entity_type === 'event' ? 'Evento' : 'Grupo de estudio'],
           ['Monto', <AmountDisplay key="m" amount={p.amount} currency={p.currency} revealed={revealAll} />],
           ['Creado', formatDateTime(p.created_at)],
-          ['Pagado', p.paid_at ? formatDateTime(p.paid_at) : '—'],
+          // Esta fila es la FECHA, no el estado: se dice así para que no se
+          // confunda con la etiqueta «Cancelado» del badge de al lado.
+          ['Fecha de pago', p.paid_at ? formatDateTime(p.paid_at) : '—'],
         ]
         return (
         <Modal onClose={() => setPlainDetail(null)} titleId="plain-detail-title" width={480}>
