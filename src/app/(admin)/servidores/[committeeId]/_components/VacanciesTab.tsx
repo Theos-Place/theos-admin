@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePuedePedirPuestos } from '@/hooks/usePuedePedirPuestos'
 import { Plus, Users } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { type Vacancy } from '@/types/server'
@@ -16,17 +17,24 @@ const STATUS_COLORS = VACANCY_STATE_BADGE
 const STATUS_LABELS = VACANCY_STATE_LABEL
 
 export function VacanciesTab({ committeeId, vacancies }: Props) {
+  const { puede: puedePedir } = usePuedePedirPuestos()
   return (
     <div className="py-4 px-[22px] flex flex-col gap-2.5">
-      <div className="flex justify-end">
-        <Link
-          href={`/servidores/puestos/pedir-cupos?comite=${committeeId}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
-        >
-          <Plus size={13} />
-          Solicitar nuevo puesto
-        </Link>
-      </div>
+      {/* SRV-20 · Tampoco tenía gate. El permiso lo responde el servidor, que
+          es la misma fuente que llena el selector de comités de la pantalla a
+          la que lleva: si no puede pedir para ninguno, el botón solo lleva a
+          un callejón. */}
+      {puedePedir && (
+        <div className="flex justify-end">
+          <Link
+            href={`/servidores/puestos/pedir-cupos?comite=${committeeId}`}
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors font-body"
+          >
+            <Plus size={13} />
+            Solicitar nuevo puesto
+          </Link>
+        </div>
+      )}
 
       {vacancies.length === 0 && (
         <div className="rounded-xl bg-surface-low">

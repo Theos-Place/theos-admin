@@ -31,6 +31,16 @@ export default function VacantesPage() {
    */
   const PUEDE_GESTIONAR = ['lider_comite', 'coordinador_servidores', 'admin'] as const
   const isAdmin = hasRole(...PUEDE_GESTIONAR) // ve acciones administrativas
+  /**
+   * SRV-20 · Acá la lista se queda CORTA a propósito, aunque el servidor deje
+   * pedir a más gente.
+   *
+   * Es la decisión de Floriana del 2026-09-25 y sigue en pie: esta pantalla
+   * la ve cualquier miembro —lista los puestos publicados para aplicar— y en
+   * una pantalla abierta cada botón de más es alguien apretando algo que no
+   * le toca. `solicitudes_puestos` SÍ puede pedir, y lo hace desde el índice
+   * de Servidores o desde la pestaña de su comité, que no son abiertas.
+   */
   const canRequest = hasRole(...PUEDE_GESTIONAR)
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([])

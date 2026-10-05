@@ -56,6 +56,9 @@ import {
   estadosDestinoAMano, ACCION_HACIA, CONSECUENCIA_HACIA,
 } from '@/lib/servers/cambio-de-estado-de-solicitud'
 import { FilterChips } from '@/components/shared/FilterChips'
+import {
+  nombreDelMes, cuposEnJuego, type ResumenDelMes,
+} from '@/lib/servers/resumen-del-mes'
 
 type Solicitud = {
   id: string
@@ -74,7 +77,16 @@ export default function SolicitudesDePuestosPage() {
   const toast = useToast()
   useTituloDePantalla('Solicitudes de puestos de servicio', 'Servidores')
 
-  const puedeVer = hasRole(...SERVICE_ADMIN_ROLES, 'solicitudes_puestos')
+  /**
+   * SRV-20 · Ya no se decide por rol en el cliente.
+   *
+   * Desde hoy también entra quien COORDINA UN COMITÉ, para ver lo suyo — y
+   * eso no se sabe por rol, porque un comité se coordina por PUESTO. El
+   * endpoint responde 403 si no le toca; `sinAcceso` guarda esa respuesta.
+   * Los roles amplios siguen viendo todo.
+   */
+  const [sinAcceso, setSinAcceso] = useState(false)
+  const [soloMisComites, setSoloMisComites] = useState(false)
   // Publicar baja lo que está en la calle: es de la coordinación, no de quien
   // arma las solicitudes.
   const puedePublicar = hasRole(...SERVICE_ADMIN_ROLES)
@@ -86,22 +98,36 @@ export default function SolicitudesDePuestosPage() {
   const [confirmando, setConfirmando] = useState(false)
   const [publicando, setPublicando] = useState(false)
   const [moviendo, setMoviendo] = useState<Solicitud | null>(null)
+  /** SRV-20 · «¿Qué pedimos este mes y en qué quedó?». Lo arma el servidor
+   *  sobre lo que esta persona puede ver, no sobre el filtro de estado. */
+  const [resumen, setResumen] = useState<ResumenDelMes | null>(null)
+  const [meses, setMeses] = useState<string[]>([])
+  const [mes, setMes] = useState('')
 
   // El filtro va en el servidor y no en memoria: lo mismo que se ve tiene que
   // salir en el Excel, y el Excel lo arma la misma ruta con el mismo
   // parámetro. Filtrar acá dejaría los dos caminos libres de separarse.
-  const cargar = useCallback((f: FiltroDeSolicitudes) => {
-    fetch(`/api/servers/vacancies/requests?estado=${encodeURIComponent(f)}`)
-      .then(r => (r.ok ? r.json() : { items: [], plan: { aPublicar: [], aDesactivar: [] } }))
+  const cargar = useCallback((f: FiltroDeSolicitudes, m: string) => {
+    const u = new URLSearchParams({ estado: f })
+    if (m) u.set('mes', m)
+    fetch(`/api/servers/vacancies/requests?${u.toString()}`)
+      .then(async r => {
+        if (r.status === 403) { setSinAcceso(true); return null }
+        return r.ok ? r.json() : { items: [], plan: { aPublicar: [], aDesactivar: [] } }
+      })
       .then(d => {
+        if (!d) return
         setItems((d.items ?? []) as Solicitud[])
         setPlan(d.plan ?? { aPublicar: [], aDesactivar: [] })
         if (d.conteos) setConteos(d.conteos)
+        setResumen(d.resumen ?? null)
+        setMeses(d.meses ?? [])
+        setSoloMisComites(!!d.soloMisComites)
       })
       .catch(() => setItems([]))
   }, [])
 
-  useEffect(() => { if (puedeVer) cargar(filtro) }, [puedeVer, cargar, filtro])
+  useEffect(() => { cargar(filtro, mes) }, [cargar, filtro, mes])
 
   /** Agrupadas por comité, y dentro por puesto. */
   const porComite = useMemo(() => {
@@ -135,7 +161,7 @@ export default function SolicitudesDePuestosPage() {
         'success',
       )
       setConfirmando(false)
-      cargar(filtro)
+      cargar(filtro, mes)
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo publicar.', 'error')
     } finally {
@@ -153,7 +179,7 @@ export default function SolicitudesDePuestosPage() {
       if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo cambiar el estado.'))
       toast(`«${solicitud.puesto}» quedó ${VACANCY_STATE_LABEL[hacia].toLowerCase()}.`, 'success')
       setMoviendo(null)
-      cargar(filtro)
+      cargar(filtro, mes)
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo cambiar el estado.', 'error')
     }
@@ -162,7 +188,7 @@ export default function SolicitudesDePuestosPage() {
   if (!loaded) {
     return <div className="flex items-center justify-center min-h-[40vh]"><Loader2 size={20} className="animate-spin text-navy-light/80" /></div>
   }
-  if (user && !puedeVer) return <AccessDenied />
+  if (user && sinAcceso) return <AccessDenied />
 
   return (
     <div className="space-y-5">
@@ -174,8 +200,12 @@ export default function SolicitudesDePuestosPage() {
         <div>
           <h1 className="text-2xl font-bold text-navy font-display">Solicitudes de puestos de servicio</h1>
           <p className="mt-1 text-[13px] text-navy-light/80 font-body">
-            Lo que pidió cada comité en la última ventana. Se revisa y se publica los
-            primeros de cada mes.
+            {/* SRV-20 · Quien ve solo lo suyo tiene que SABERLO. Sin esta
+                línea, un líder vería tres cupos y creería que eso fue todo
+                lo que pidió la organización este mes. */}
+            {soloMisComites
+              ? 'Lo que pidieron tus comités, y en qué quedó cada cosa.'
+              : 'Lo que pidió cada comité en la última ventana. Se revisa y se publica los primeros de cada mes.'}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -214,6 +244,99 @@ export default function SolicitudesDePuestosPage() {
           <p className="text-sm text-navy font-body">
             {motivoParaNoPublicar(plan) ?? textoDeConfirmacion(plan)}
           </p>
+        </div>
+      )}
+
+      {/* SRV-20 · El resumen del mes. Va ARRIBA de los filtros y no se mueve
+          con ellos: contesta «qué pedí este mes y en qué quedó», y filtrado
+          por «listas para publicar» la respuesta sería siempre que todo está
+          listo para publicar. */}
+      {resumen && (
+        <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-navy font-display">
+              Lo pedido en {nombreDelMes(resumen.mes)}
+            </h2>
+            {meses.length > 1 && (
+              <>
+                <label htmlFor="mes-del-resumen" className="sr-only">Mes del resumen</label>
+                <select
+                  id="mes-del-resumen"
+                  value={resumen.mes}
+                  onChange={e => setMes(e.target.value)}
+                  className="rounded-xl bg-surface-low px-3 py-1.5 text-[13px] text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                >
+                  {meses.map(m => <option key={m} value={m}>{nombreDelMes(m)}</option>)}
+                </select>
+              </>
+            )}
+          </div>
+
+          {resumen.solicitudes === 0 ? (
+            <p className="text-[13px] text-navy-light/80 font-body">
+              No se pidió nada en {nombreDelMes(resumen.mes)}.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-navy font-body">
+                {/* Cupos y solicitudes son números distintos y los dos
+                    importan: «3 solicitudes» esconde que son veinte personas,
+                    y «20 cupos» esconde que vinieron de un solo comité. */}
+                <strong>{resumen.cupos} cupos</strong> en {resumen.solicitudes}
+                {resumen.solicitudes === 1 ? ' solicitud' : ' solicitudes'}
+                {cuposEnJuego(resumen) !== resumen.cupos && (
+                  <> · <strong>{cuposEnJuego(resumen)}</strong> siguen en pie</>
+                )}
+              </p>
+
+              <div>
+                <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1.5">
+                  En qué quedaron
+                </p>
+                <ul className="flex flex-wrap gap-1.5">
+                  {resumen.porEstado.map(e => (
+                    <li
+                      key={e.estado}
+                      className={cn(
+                        'rounded-full px-2.5 py-1 text-[13px] font-medium font-display',
+                        isVacancyState(e.estado)
+                          ? VACANCY_STATE_BADGE[e.estado]
+                          : 'bg-navy/10 text-navy-light/80',
+                      )}
+                    >
+                      {isVacancyState(e.estado) ? VACANCY_STATE_LABEL[e.estado] : e.estado}
+                      {': '}{e.cupos}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* El desglose por comité solo tiene sentido con más de uno: a
+                  un líder con un solo comité le repetiría el número de
+                  arriba. */}
+              {resumen.porComite.length > 1 && (
+                <div>
+                  <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mb-1.5">
+                    Por comité
+                  </p>
+                  <ul className="space-y-1">
+                    {resumen.porComite.map(c => (
+                      <li key={c.committee_id} className="flex items-center gap-3">
+                        <span className="w-44 shrink-0 truncate text-[13px] text-navy font-body">{c.comite}</span>
+                        <span
+                          className="h-3 rounded bg-coral/70"
+                          style={{ width: `${Math.max(2, (c.cupos / resumen.porComite[0].cupos) * 100)}%` }}
+                        />
+                        <span className="shrink-0 text-[13px] text-navy-light/80 font-body tabular-nums">
+                          {c.cupos}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 

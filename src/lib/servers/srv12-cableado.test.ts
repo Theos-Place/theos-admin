@@ -26,10 +26,38 @@ describe('SRV-12 · quién ve y quién publica NO son lo mismo', () => {
     expect(SERVICE_ADMIN_ROLES).not.toContain('solicitudes_puestos')
   })
 
-  it('y la pantalla usa los mismos dos criterios, no uno solo', () => {
+  it('y la pantalla sigue separando VER de PUBLICAR', () => {
     const src = sinComentarios(PAGINA)
-    expect(src).toMatch(/puedeVer = hasRole\(\.\.\.SERVICE_ADMIN_ROLES, 'solicitudes_puestos'\)/)
+    /**
+     * SRV-20 (2026-10-05): VER ya no se decide por rol en el cliente, porque
+     * ahora también entra quien COORDINA UN COMITÉ —a lo suyo nada más— y
+     * eso no se sabe por rol: un comité se coordina por PUESTO. Lo contesta
+     * el endpoint con un 403, que la pantalla guarda en `sinAcceso`.
+     *
+     * Lo que NO cambió, y es lo que este test cuida: publicar sigue siendo
+     * de la coordinación y nada más. Publicar BAJA lo que está en la calle.
+     */
+    expect(src).toContain('setSinAcceso(true)')
+    expect(src).toMatch(/if \(user && sinAcceso\) return <AccessDenied \/>/)
     expect(src).toMatch(/puedePublicar = hasRole\(\.\.\.SERVICE_ADMIN_ROLES\)/)
+    // Y el botón de publicar sigue colgando de ese criterio, no del acceso.
+    expect(src).toMatch(/\{puedePublicar && \(/)
+  })
+
+  it('el recorte por comité lo hace el SERVIDOR, no la pantalla', () => {
+    // Si lo hiciera la pantalla, la lista completa igual habría viajado al
+    // navegador de alguien que no debe verla.
+    const src = sinComentarios(LISTA)
+    expect(src).toContain('getManageableCommitteeIds(auth.ctx.memberId)')
+    expect(src).toMatch(/misComites\s*\n?\s*\? todasSinRecortar\.filter/)
+  })
+
+  it('sin comités propios responde 403, no una lista vacía', () => {
+    // Una pantalla vacía se lee como «no hay solicitudes», que es una
+    // respuesta falsa cuando la verdad es «esto no es para vos».
+    const src = sinComentarios(LISTA)
+    expect(src).toMatch(/if \(!esAmplio && \(!misComites \|\| misComites\.length === 0\)\)/)
+    expect(src).toMatch(/status: 403/)
   })
 })
 

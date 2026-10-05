@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { type CommitteeData } from '@/types/server'
 import { useServers } from '@/hooks/useServers'
+import { usePuedePedirPuestos } from '@/hooks/usePuedePedirPuestos'
 import { useOrg } from '@/lib/org'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
@@ -87,6 +88,7 @@ export default function ServidoresPage() {
   const router = useRouter()
   const { committees, vacancies, applications } = useServers('committees', 'vacancies', 'applications')
   const { areas: AREAS } = useOrg()
+  const { puede: puedePedir } = usePuedePedirPuestos()
   const AREA_FILTERS = useMemo(
     () => [{ key: 'all', label: 'Todos' }, ...AREAS.map(a => ({ key: a.code, label: a.name }))],
     [AREAS],
@@ -154,13 +156,20 @@ export default function ServidoresPage() {
             {personasUnicas} personas en {puestosOcupados} puestos · {totalCommittees} comités
           </p>
         </div>
-        <Link
-          href="/servidores/puestos/pedir-cupos"
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
-        >
-          <Plus size={14} />
-          Solicitar puestos de servicio
-        </Link>
+        {/* SRV-20 · Este botón NO tenía gate: lo veía cualquiera con acceso
+            al módulo, y al tocarlo la pantalla de pedir cupos no le ofrecía
+            ningún comité. El permiso se pregunta al servidor —la misma
+            fuente que llena el selector de esa pantalla— en vez de adivinar
+            por rol. */}
+        {puedePedir && (
+          <Link
+            href="/servidores/puestos/pedir-cupos"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all duration-150 shrink-0 font-body"
+          >
+            <Plus size={14} />
+            Solicitar puestos de servicio
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
