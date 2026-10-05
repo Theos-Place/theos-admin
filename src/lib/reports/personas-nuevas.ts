@@ -18,6 +18,7 @@
  */
 import { calcAge } from '@/lib/format'
 import { SEMANAS_DE_CORTE } from '@/lib/reports/abandonos'
+import { sedeFromTitle } from '@/lib/reports/charla-attendance'
 
 /**
  * Cuántas semanas se le dan a alguien para volver.
@@ -148,6 +149,35 @@ export function filtrarNuevos(
     }
     return true
   })
+}
+
+/**
+ * REP-13 · El origen de una charla, unificado como en el reporte de asistencia.
+ *
+ * EL PROBLEMA QUE ARREGLA. Las series de charlas se renombraron en bloque
+ * entre el 9 y el 13 de setiembre de 2026 (les pusieron el día de la semana).
+ * «Charla United» pasó a «Charla Pedregal Domingo», «Charla Heredia» a
+ * «Charla Pedregal Miércoles», y así nueve pares. En la base siguen siendo
+ * dos eventos distintos, y eso está bien: son dos series reales.
+ *
+ * Pero para un REPORTE son la misma charla, y el de asistencia ya lo resolvía
+ * con `sedeFromTitle`. El de personas nuevas no: mostraba las dos entradas
+ * por separado, así que «¿cuánta gente nueva llegó a Pedregal Domingo?» se
+ * contestaba con 33 cuando la respuesta es 1 325. Medido en producción el
+ * 2026-10-05: 33 orígenes que son 24 charlas.
+ *
+ * SOLO SE TOCA EL CANAL CHARLA. En `estudio` el origen es el nombre del plan
+ * («Nivel 1», «Discípulos 2») y en `evento` el del evento: pasarlos por un
+ * diccionario de sedes no los cambiaría hoy, pero ataría el nombre de un
+ * estudio a una tabla de charlas, y el día que alguien agregue un alias que
+ * colisione el error sería silencioso y rarísimo de encontrar.
+ *
+ * Se REUTILIZA `sedeFromTitle` en vez de copiar el mapa: dos mapas es
+ * divergencia garantizada, y el de asistencia ya está probado.
+ */
+export function origenUnificado(canal: string, origen: string | null): string | null {
+  if (canal !== 'charla' || !origen) return origen
+  return sedeFromTitle(origen)
 }
 
 export type FilaDeSerie = { anio: number; mes: number; canal: string; origen: string | null; n: number }

@@ -1055,3 +1055,63 @@ es un ítem aparte con su vista.
 **Dato medido el 2026-10-02:** 12.012 de 23.892 miembros activos tienen sede,
 así que la mitad de las filas va a decir «—». No es un error del join: la
 sede sale de los check-ins y mucha gente no tiene ninguno.
+
+### [x] REP-13 · Personas nuevas: unificar los nombres de charlas como en asistencia (pedido 2026-10-05) — HECHO 2026-10-05
+
+Caso reportado: "Pedregal United" y "Charla Pedregal Domingos" aparecen como
+dos charlas distintas en el reporte de personas nuevas, y son la misma. Hay
+varias en la misma situación. Esta unificación YA se hizo para el reporte de
+asistencia (las series históricas unificadas / equivalencias).
+
+Prompt para Claude Code:
+
+```
+FIX · Reporte de personas nuevas (REP-6): usar la MISMA unificación de series de charlas
+que el reporte de asistencia
+
+1. Encontrar cómo resuelve el reporte de ASISTENCIA las series equivalentes (la
+   unificación de charlas históricas: series_key/mapa de equivalencias que se implementó
+   para que Pedregal United y Charla Pedregal Domingos cuenten como una) — y centralizar
+   esa resolución en lib/ si aún vive solo dentro del reporte de asistencia, para que
+   TODO consumidor de "nombre de charla/serie" use la misma (REUTILIZAR, NO duplicar el
+   mapa: dos mapas = divergencia garantizada).
+2. Aplicarla en el reporte de personas nuevas: el filtro de sede/charla, los gráficos y
+   la tabla agrupan por la serie unificada (una sola entrada por charla real).
+3. Censar los DEMÁS consumidores que listan charlas (selector del reporte de abandonos
+   REP-5, demografía REP-8.6, el detalle de semana…) y aplicar la misma resolución donde
+   muestre duplicados — listar cuáles se tocaron.
+4. Verificar el caso concreto: Pedregal United + Charla Pedregal Domingos = una sola
+   entrada con los números sumados, en personas nuevas Y en cualquier otro lugar
+   detectado.
+Tests: resolución centralizada (equivalencia conocida se unifica, charla sin
+equivalencia pasa igual), números sumados correctos. tsc/lint/vitest.
+```
+
+**Hecho.** La resolución YA estaba centralizada: `sedeFromTitle`
+(`lib/reports/charla-attendance`) sobre el diccionario `lib/sedes-canonical`.
+No hizo falta crear nada — hizo falta USARLA.
+
+**Censo del punto 3.** Ya la usaban asistencia, crecimiento (member-growth),
+demografía (REP-8), el detalle de semana y abandonos (REP-5, vía
+`getAsistentesDeLaSemana`). **El único que no era personas nuevas**: su
+`origen` salía crudo del SQL. Se aplica ahora en el borde de la consulta —la
+serie y el detalle— y no en cada pantalla, para que el filtro, el selector,
+los dos gráficos y la tabla vean el mismo nombre sin acordarse de aplicarlo.
+
+Solo se toca el canal `charla`. En `estudio` el origen es el nombre del plan
+y en `evento` el del evento: pasarlos por un diccionario de sedes no los
+cambia hoy, pero ataría el nombre de un estudio a una tabla de charlas.
+
+**Verificado contra producción el 2026-10-05:**
+- El selector pasa de **33 a 22** charlas.
+- El caso reportado: «Charla United» (1 292) + «Charla Pedregal Domingo» (33)
+  = **1 325** en una sola entrada.
+- **El total general NO se mueve: 14 832 antes y después.** Es la invariante
+  que importa — no se perdió ni se inventó nadie.
+- Los 27 orígenes de estudio quedan intactos.
+
+**Queda una cosa para Floriana:** en el selector siguen apareciendo «United
+Este» y «Youth United Este», la sede del Este que operó de 2022 a 2024. NO
+son alias del renombre: fueron una sede propia que cerró. Si se quieren
+fundir con otra, es una línea en `SEDE_CANONICAL`, pero eso cambia el
+histórico y no se asume.

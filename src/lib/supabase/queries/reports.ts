@@ -12,6 +12,7 @@ import {
   type DirigentesReport,
 } from '@/lib/reports/dirigentes'
 import type { AsistenteDeLaSemana } from '@/lib/reports/abandonos'
+import { origenUnificado } from '@/lib/reports/personas-nuevas'
 import type { PersonaNueva, Canal, FilaDeSerie } from '@/lib/reports/personas-nuevas'
 import type { FilaCruda as FilaCrudaDemografia } from '@/lib/reports/demografia'
 import type { FilaDeEstudios } from '@/lib/reports/estudios'
@@ -294,7 +295,10 @@ export async function getSeriePersonasNuevas(): Promise<FilaDeSerie[]> {
   const filas = await todasLasFilas<{ anio: number; mes: number; canal: string; origen: string | null; n: number }>(
     (d, h) => supabase.rpc('report_personas_nuevas_series').order('anio').range(d, h),
   )
-  return filas.map(f => ({ ...f, n: Number(f.n) }))
+  // REP-13 · El origen se unifica ACÁ, en el borde de la consulta, y no en
+  // cada pantalla: así el filtro, el selector de charla, los dos gráficos y
+  // la tabla ven todos el mismo nombre sin tener que acordarse de aplicarlo.
+  return filas.map(f => ({ ...f, origen: origenUnificado(f.canal, f.origen), n: Number(f.n) }))
 }
 
 /** REP-6 · El detalle de las personas nuevas de un período. */
@@ -317,7 +321,13 @@ export async function getPersonasNuevas(desde: string, hasta: string): Promise<P
     phone: r.phone,
     fecha: r.fecha,
     canal: (r.canal === 'estudio' || r.canal === 'evento' ? r.canal : 'charla') as Canal,
-    origen: r.origen ?? '',
+    // REP-13 · Mismo nombre que en la serie: si la tabla dijera «Charla
+    // United» y el gráfico «Pedregal Domingo», filtrar por uno vaciaría el
+    // otro y la pantalla se contradiría sola.
+    origen: origenUnificado(
+      r.canal === 'estudio' || r.canal === 'evento' ? r.canal : 'charla',
+      r.origen,
+    ) ?? '',
     volvio: r.volvio,
     seMatriculo: r.se_matriculo,
     esServidor: r.es_servidor,
