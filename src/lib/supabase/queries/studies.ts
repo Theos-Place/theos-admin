@@ -1652,6 +1652,10 @@ export async function enrollMember(
   // grupos llenos; con la matrícula efectiva de inmediato eso alcanza para
   // pasarse del tope (dos personas a la vez, o el staff matriculando de una).
   // No cuenta a quien ya está en el grupo: re-matricularse no consume un cupo.
+  // BEC-5 punto 5: ¿esta matrícula deja el grupo LLENO? Se calcula acá, que
+  // es donde se cuentan los ocupados, y se usa al final para avisarle a quien
+  // tenga una beca pendiente para este grupo.
+  let llenoTrasEsta = false
   if (!occupiesSpot(existingStatus)) {
     const { data: ocupados } = await supabase
       .from('study_enrollments')
@@ -1663,6 +1667,7 @@ export async function enrollMember(
     if (isGroupFull({ activeCount, maxCapacity: group?.max_students })) {
       throw new Error(`CUPO_LLENO:${group?.max_students ?? 0}`)
     }
+    llenoTrasEsta = isGroupFull({ activeCount: activeCount + 1, maxCapacity: group?.max_students })
   }
 
   /**
@@ -1851,6 +1856,23 @@ export async function enrollMember(
     // Excepción de matrícula: marcarla usada (no-op si no hay activa).
     const { markExceptionUsed } = await import('./study-exceptions')
     await markExceptionUsed(memberId, plan.id)
+  }
+
+  /**
+   * BEC-5 punto 5 · Si esta matrícula llenó el grupo, las solicitudes de beca
+   * que apuntaban a él pasan a «por modificar» y se avisa.
+   *
+   * BEST-EFFORT A PROPÓSITO: el cupo ya se tomó y la matrícula es válida.
+   * Hacerla fallar por un aviso dejaría a la persona que SÍ pagó sin su campo
+   * para arreglarle el trámite a otra.
+   */
+  if (llenoTrasEsta) {
+    try {
+      const { marcarSolicitudesPorGrupoLleno } = await import('./finance-requests')
+      await marcarSolicitudesPorGrupoLleno(groupId, { exceptoMemberId: memberId })
+    } catch (e) {
+      console.error('[enrollMember] aviso de grupo lleno a becas pendientes:', e)
+    }
   }
 
   // La moneda viaja con el monto: el modal de comprobante la necesita para no

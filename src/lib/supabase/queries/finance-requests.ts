@@ -1,4 +1,10 @@
 import type { RazonDeBeca } from '@/lib/finance/solicitud-de-beca'
+import {
+  AVISO_GRUPO_LLENO, NOTA_DE_CONVERSION, sigueAbierta,
+  TIPO_GRUPO_LLENO, TITULO_GRUPO_LLENO, cuerpoDeGrupoLleno,
+  TIPO_ARREGLO_OFRECIDO, TITULO_ARREGLO_OFRECIDO, cuerpoDeArregloOfrecido,
+} from '@/lib/finance/solicitud-de-beca'
+import type { PlanFrequency } from '@/lib/finance/installments'
 /**
  * Solicitudes financieras (becas y devoluciones) — mismo patrón que
  * study-requests. SQL en supabase/migrations/048_finance_requests.sql:
@@ -368,4 +374,261 @@ export async function getMemberPaidPayments(memberId: string): Promise<Array<{
   if (error) throw error
   return ((data ?? []) as Array<{ id: string; amount: number | null; paid_at: string | null; description: string | null; entity_type: string | null }>)
     .map(p => ({ id: p.id, label: paymentLabel(p) ?? p.id }))
+}
+
+/**
+ * BEC-5 punto 5 · El grupo se llenó: las solicitudes de beca que apuntan a
+ * él pasan a «por modificar» y se les avisa.
+ *
+ * NO SE RECHAZAN. Rechazarlas obligaría a la persona a empezar de cero y a
+ * finanzas a leer el caso otra vez. Una de las 10 solicitudes reales de
+ * producción decía «la había solicitado para Romanos pero ya está lleno»:
+ * esa conversación es la que esto evita.
+ *
+ * Se llama al matricular a alguien, cuando ese alguien ocupó el último cupo.
+ * Best-effort del lado de quien llama: si falla, la matrícula que la disparó
+ * NO se revierte — el cupo ya se tomó y dejar a medias una matrícula buena
+ * sería peor.
+ */
+export async function marcarSolicitudesPorGrupoLleno(
+  groupId: string,
+  opciones: {
+    /**
+     * A quién NO avisarle: quien acaba de tomar el último cupo. Si esa misma
+     * persona tenía una solicitud viva para este grupo, mandarle «el grupo se
+     * llenó, elegí otro» sería mentirle — está adentro.
+     */
+    exceptoMemberId?: string
+  } = {},
+): Promise<{ movidas: number }> {
+  const supabase = createAdminClient()
+
+  // Solo las que SIGUEN VIVAS Y ESPERANDO A FINANZAS. Una ya resuelta o
+  // rechazada no se reabre, y una que ya está en `por_modificar` no se vuelve
+  // a avisar: la persona ya tiene el aviso sin leer.
+  const { data, error } = await supabase
+    .from('finance_requests')
+    .select('id, member_id')
+    .eq('request_type', 'scholarship')
+    .eq('study_group_id', groupId)
+    .in('status', ['open', 'in_review'])
+  if (error) throw error
+  const vivas = ((data ?? []) as Array<{ id: string; member_id: string }>)
+    .filter(r => r.member_id !== opciones.exceptoMemberId)
+  if (vivas.length === 0) return { movidas: 0 }
+
+  const ahora = new Date().toISOString()
+  const { error: updErr } = await supabase
+    .from('finance_requests')
+    .update({ status: 'por_modificar', updated_at: ahora } as Updatable<'finance_requests'>)
+    .in('id', vivas.map(r => r.id))
+  if (updErr) throw updErr
+
+  // El nombre del grupo y del estudio, para que el aviso diga CUÁL se llenó.
+  const { data: g } = await supabase
+    .from('study_groups')
+    .select('name, plan:study_plans(name)')
+    .eq('id', groupId).maybeSingle()
+  const grupo = (g as { name: string | null } | null)?.name ?? 'el que elegiste'
+  const planEmbed = (g as { plan: { name: string } | { name: string }[] | null } | null)?.plan
+  const estudio = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.name ?? null
+
+  // El historial: sin esto, la solicitud aparece en «por modificar» y nadie
+  // puede decir desde cuándo ni por qué. `changed_by` va NULL a propósito —
+  // no lo movió una persona, lo movió el cupo.
+  const { error: hErr } = await supabase.from('finance_request_status_history').insert(
+    vivas.map(r => ({
+      request_id: r.id,
+      from_status: null,
+      to_status: 'por_modificar',
+      changed_by: null,
+      notes: AVISO_GRUPO_LLENO,
+    })),
+  )
+  if (hErr) console.warn('marcarSolicitudesPorGrupoLleno: historial falló:', hErr.message)
+
+  const { error: nErr } = await supabase.from('internal_notifications').insert(
+    vivas.map(r => ({
+      recipient_member_id: r.member_id,
+      type: TIPO_GRUPO_LLENO,
+      title: TITULO_GRUPO_LLENO,
+      body: cuerpoDeGrupoLleno({ grupo, estudio }),
+      link: '/mis-pagos',
+    })),
+  )
+  if (nErr) console.warn('marcarSolicitudesPorGrupoLleno: notificación falló:', nErr.message)
+
+  return { movidas: vivas.length }
+}
+
+/**
+ * BEC-5 punto 5, lado de la persona · Cambiar el grupo de una solicitud que
+ * quedó «por modificar», SIN crear una solicitud nueva.
+ *
+ * Es el punto entero: la solicitud conserva su razón, su monto, su historial
+ * y su lugar en la fila. Lo único que cambia es a qué grupo apunta.
+ *
+ * Solo desde `por_modificar`. Dejar cambiar el grupo de una solicitud abierta
+ * sería moverle el piso a finanzas mientras la está leyendo.
+ *
+ * Errores: SOLICITUD_NO_ENCONTRADA, NO_ES_SUYA, NO_SE_PUEDE_CAMBIAR,
+ * GRUPO_NO_ENCONTRADO, GRUPO_DE_OTRO_ESTUDIO, GRUPO_LLENO.
+ */
+export async function cambiarGrupoDeSolicitud(
+  id: string,
+  nuevoGrupoId: string,
+  quienMemberId: string,
+): Promise<FinanceRequest> {
+  const supabase = createAdminClient()
+
+  const { data: fr } = await supabase
+    .from('finance_requests')
+    .select('id, member_id, request_type, status, plan_id, study_group_id')
+    .eq('id', id).maybeSingle()
+  const sol = fr as {
+    member_id: string; request_type: string; status: string
+    plan_id: string | null; study_group_id: string | null
+  } | null
+  if (!sol || sol.request_type !== 'scholarship') throw new Error('SOLICITUD_NO_ENCONTRADA')
+  if (sol.member_id !== quienMemberId) throw new Error('NO_ES_SUYA')
+  if (sol.status !== 'por_modificar') throw new Error('NO_SE_PUEDE_CAMBIAR')
+
+  const { data: g } = await supabase
+    .from('study_groups')
+    .select('id, plan_id, status, max_students')
+    .eq('id', nuevoGrupoId).maybeSingle()
+  const grupo = g as { plan_id: string | null; status: string; max_students: number | null } | null
+  if (!grupo) throw new Error('GRUPO_NO_ENCONTRADO')
+
+  // El grupo nuevo tiene que ser del MISMO estudio. Si no, esto dejaría de
+  // ser «elegí otro horario» y pasaría a ser una solicitud distinta — con el
+  // monto y la razón de la vieja, que es justo lo que no se quiere.
+  if (sol.plan_id && grupo.plan_id && grupo.plan_id !== sol.plan_id) {
+    throw new Error('GRUPO_DE_OTRO_ESTUDIO')
+  }
+
+  // Y tiene que tener campo: mandarla a otro grupo lleno la devolvería acá
+  // mismo en el siguiente matriculado.
+  const { isGroupFull, OCCUPYING_STATUSES } = await import('@/lib/studies/enrollment-capacity')
+  const { data: ocupados } = await supabase
+    .from('study_enrollments')
+    .select('member_id')
+    .eq('group_id', nuevoGrupoId)
+    .in('status', OCCUPYING_STATUSES as unknown as string[])
+  if (isGroupFull({ activeCount: (ocupados ?? []).length, maxCapacity: grupo.max_students })) {
+    throw new Error('GRUPO_LLENO')
+  }
+
+  const { data, error } = await supabase
+    .from('finance_requests')
+    .update({
+      study_group_id: nuevoGrupoId,
+      // Vuelve a la fila de finanzas: ya no espera a la persona.
+      status: 'open',
+      updated_at: new Date().toISOString(),
+    } as Updatable<'finance_requests'>)
+    .eq('id', id)
+    .select(REQUEST_SELECT)
+    .single()
+  if (error) throw error
+
+  await supabase.from('finance_request_status_history').insert({
+    request_id: id,
+    from_status: 'por_modificar',
+    to_status: 'open',
+    changed_by: quienMemberId,
+    notes: 'La persona eligió otro grupo.',
+  })
+
+  const actualizada = toDomain(data as DbRow)
+  // Finanzas se entera de que la solicitud volvió a su fila con otro grupo.
+  await notifyFinanceRolesOfRequest(actualizada).catch(() => {})
+  return actualizada
+}
+
+/**
+ * BEC-5 punto 6 · «Ofrecer arreglo de pago en su lugar».
+ *
+ * NO ES UN RECHAZO, y la diferencia es el punto entero: «no te damos la beca»
+ * y «no hay beca pero podés pagarlo en partes» son dos mensajes muy distintos,
+ * y el segundo deja a la persona adentro. La solicitud queda `resolved` con la
+ * nota de la conversión.
+ *
+ * El arreglo se arma con createPaymentPlan, el MISMO camino de FIN-8/FIN-13.
+ * No hay una segunda forma de crear arreglos: los límites de
+ * `limites-de-arreglo.ts` se aplican en un solo lugar y así siguen.
+ *
+ * Errores: SOLICITUD_NO_ENCONTRADA, SOLICITUD_CERRADA, SIN_COBRO, más los de
+ * createPaymentPlan (TRACTOS_INVALIDOS, MONTO_INSUFICIENTE, …).
+ */
+export async function ofrecerArregloEnLugarDeBeca(
+  id: string,
+  opts: { installments: number; firstDue: string; frequency?: PlanFrequency; notes?: string | null },
+  revisorMemberId: string,
+): Promise<{ solicitud: FinanceRequest; payment_id: string; plan_id: string }> {
+  const supabase = createAdminClient()
+
+  const { data: fr } = await supabase
+    .from('finance_requests')
+    .select('id, member_id, request_type, status, payment_id, study_group_id, plan_id')
+    .eq('id', id).maybeSingle()
+  const sol = fr as {
+    member_id: string; request_type: string; status: string
+    payment_id: string | null; study_group_id: string | null; plan_id: string | null
+  } | null
+  if (!sol || sol.request_type !== 'scholarship') throw new Error('SOLICITUD_NO_ENCONTRADA')
+  if (!sigueAbierta(sol.status)) throw new Error('SOLICITUD_CERRADA')
+
+  const cobroId = sol.payment_id ?? await cobroDeLaBeca(sol)
+  if (!cobroId) throw new Error('SIN_COBRO')
+
+  const { createPaymentPlan } = await import('./payment-plans')
+  const { plan } = await createPaymentPlan(cobroId, {
+    installments: opts.installments,
+    firstDue: opts.firstDue,
+    frequency: opts.frequency,
+    notes: opts.notes ?? NOTA_DE_CONVERSION,
+  }, revisorMemberId)
+
+  const solicitud = await updateFinanceRequestStatus(
+    id, 'resolved', revisorMemberId,
+    opts.notes?.trim() || NOTA_DE_CONVERSION,
+  )
+
+  const { error: nErr } = await supabase.from('internal_notifications').insert({
+    recipient_member_id: sol.member_id,
+    type: TIPO_ARREGLO_OFRECIDO,
+    title: TITULO_ARREGLO_OFRECIDO,
+    body: cuerpoDeArregloOfrecido(plan.installments),
+    link: '/mis-pagos',
+  })
+  if (nErr) console.warn('ofrecerArregloEnLugarDeBeca: notificación falló:', nErr.message)
+
+  return { solicitud, payment_id: cobroId, plan_id: plan.id }
+}
+
+/**
+ * El cobro sobre el cual se arma el arreglo.
+ *
+ * Una solicitud de beca apunta al GRUPO o al PLAN, no al cobro — `payment_id`
+ * es de las devoluciones. Así que se busca el cobro PENDIENTE de matrícula de
+ * esa persona para ese destino. Si hay más de uno (un tracto viejo, un intento
+ * anterior), gana el más reciente: es el de la matrícula en curso.
+ */
+async function cobroDeLaBeca(sol: {
+  member_id: string; study_group_id: string | null; plan_id: string | null
+}): Promise<string | null> {
+  const supabase = createAdminClient()
+  let q = supabase
+    .from('payments')
+    .select('id, created_at, study_group_id')
+    .eq('member_id', sol.member_id)
+    .eq('concept', 'matricula')
+    .eq('status', 'pending')
+    .is('payment_plan_id', null)   // ya partido no se vuelve a partir
+    .order('created_at', { ascending: false })
+  if (sol.study_group_id) q = q.eq('study_group_id', sol.study_group_id)
+  const { data } = await q
+  const filas = (data ?? []) as Array<{ id: string }>
+  return filas[0]?.id ?? null
 }

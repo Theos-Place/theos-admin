@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
-import { updateFinanceRequestStatus, assignFinanceRequest } from '@/lib/supabase/queries/finance-requests'
+import {
+  updateFinanceRequestStatus, assignFinanceRequest, ofrecerArregloEnLugarDeBeca,
+} from '@/lib/supabase/queries/finance-requests'
+import { MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCIES } from '@/lib/finance/installments'
+import { logAudit } from '@/lib/audit'
 import { necesitaAprobacionPropia, validarAprobacion } from '@/lib/finance/aprobacion-de-beca'
 import { approveScholarshipRequest } from '@/lib/supabase/queries/scholarships'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -10,6 +15,35 @@ const ACTIONS: Record<string, 'in_review' | 'resolved' | 'rejected'> = {
   take: 'in_review',
   resolve: 'resolved',
   reject: 'rejected',
+}
+
+/**
+ * BEC-5 punto 6 · «Ofrecer arreglo de pago en su lugar».
+ *
+ * Mismos campos que el arreglo de FIN-8, porque es el mismo arreglo: lo arma
+ * createPaymentPlan y los límites se aplican donde siempre.
+ */
+const arregloSchema = z.object({
+  action: z.literal('offer_plan'),
+  installments: z.number().int().min(MIN_INSTALLMENTS).max(MAX_INSTALLMENTS),
+  frequency: z.enum(FREQUENCIES).optional(),
+  first_due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD'),
+  review_notes: z.string().trim().max(500).optional(),
+}).strict()
+
+const ERRORES_ARREGLO: Record<string, { error: string; status: number }> = {
+  SOLICITUD_NO_ENCONTRADA: { error: 'No se encontró la solicitud de beca.', status: 404 },
+  SOLICITUD_CERRADA: { error: 'Esta solicitud ya está cerrada.', status: 409 },
+  SIN_COBRO: {
+    error: 'No hay un cobro pendiente al cual aplicarle el arreglo. Registrá primero la '
+      + 'matrícula.',
+    status: 409,
+  },
+  PAGO_NO_PENDIENTE: { error: 'Solo un cobro pendiente se puede partir en tractos.', status: 409 },
+  PAGO_YA_EN_ARREGLO: { error: 'Ese cobro ya es parte de un arreglo de pago.', status: 409 },
+  PAGO_SIN_OBJETO: { error: 'El cobro no está ligado a una matrícula ni a una inscripción.', status: 409 },
+  TRACTOS_INVALIDOS: { error: `La cantidad de tractos debe estar entre ${MIN_INSTALLMENTS} y ${MAX_INSTALLMENTS}.`, status: 400 },
+  MONTO_INSUFICIENTE: { error: 'El monto es muy chico para repartirlo en esa cantidad de tractos.', status: 400 },
 }
 
 // PATCH: { action: 'take' | 'resolve' | 'reject', review_notes? } — finanzas/admin.
@@ -35,9 +69,55 @@ export async function PATCH(
       return NextResponse.json(updated)
     }
 
+    /**
+     * offer_plan: la beca se resuelve con un ARREGLO, no con un rechazo.
+     *
+     * Va antes del mapa de ACTIONS porque no es un cambio de estado a secas:
+     * crea el arreglo y recién entonces resuelve la solicitud. Si el arreglo
+     * falla, la solicitud NO se toca — prometerle tractos a alguien y dejarle
+     * la beca cerrada sería lo peor de los dos mundos.
+     */
+    if (body?.action === 'offer_plan') {
+      const parsed = arregloSchema.safeParse(body)
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Datos inválidos', detalles: z.treeifyError(parsed.error) },
+          { status: 400 },
+        )
+      }
+      try {
+        const r = await ofrecerArregloEnLugarDeBeca(id, {
+          installments: parsed.data.installments,
+          firstDue: parsed.data.first_due,
+          frequency: parsed.data.frequency,
+          notes: parsed.data.review_notes ?? null,
+        }, auth.ctx.memberId)
+        await logAudit({
+          actorUserId: auth.ctx.userId,
+          action: 'INSERT',
+          entityType: 'payment_plans',
+          entityId: r.plan_id,
+          newData: { finance_request_id: id, payment_id: r.payment_id, installments: parsed.data.installments },
+        })
+        return NextResponse.json(r, { status: 201 })
+      } catch (e) {
+        const known = e instanceof Error ? ERRORES_ARREGLO[e.message] : undefined
+        if (known) {
+          return NextResponse.json(
+            { error: known.error, code: (e as Error).message.toLowerCase() },
+            { status: known.status },
+          )
+        }
+        throw e
+      }
+    }
+
     const status = ACTIONS[body?.action as string]
     if (!status) {
-      return NextResponse.json({ error: 'action debe ser take, assign, resolve o reject' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'action debe ser take, assign, resolve, reject u offer_plan' },
+        { status: 400 },
+      )
     }
 
     /**

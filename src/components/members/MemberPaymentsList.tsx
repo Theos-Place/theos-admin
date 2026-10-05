@@ -117,8 +117,8 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
               {canPay && p.payment_plan_enabled && !p.payment_plan_id && (
                 <BotonAcogerseAlArreglo pago={p} onHecho={cargar} />
               )}
-              {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} />}
-              {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} />}
+              {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} cobro={p} />}
+              {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} cobro={p} />}
             </div>
           </div>
         )
@@ -127,9 +127,97 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   )
 }
 
+/**
+ * El cobro que se va a pagar: el que ya traía quien llama, o el que se busca
+ * al abrir la ventana.
+ *
+ * Devuelve `null` mientras no haya nada que mostrar, y la ventana sale sin la
+ * tabla. NO se bloquea el formulario esperando: el comprobante se puede subir
+ * igual, y trabar el pago por un detalle informativo sería cambiar un
+ * problema chico por uno grande.
+ */
+function useCobro({ open, cobro, memberId, buscar }: {
+  open: boolean
+  cobro?: MemberPaymentRow
+  memberId?: string
+  buscar: (r: MemberPaymentRow) => boolean
+}): MemberPaymentRow | null {
+  const [traido, setTraido] = useState<MemberPaymentRow | null>(null)
+  const yaLoTengo = !!cobro
+  useEffect(() => {
+    if (!open || yaLoTengo || !memberId) return
+    let vivo = true
+    fetch(`/api/members/${memberId}/payments`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: MemberPaymentRow[]) => { if (vivo) setTraido(d.find(buscar) ?? null) })
+      .catch(() => {})
+    return () => { vivo = false }
+    // `buscar` se recrea en cada render; la dependencia real es a quién y
+    // cuándo, no la identidad de la función.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, yaLoTengo, memberId])
+  return cobro ?? traido
+}
+
+/**
+ * El detalle del cobro, igual al que ve finanzas en su tiquete.
+ *
+ * POR QUÉ SE REPITE ACÁ (2026-10-05). La ventana de pago de la ficha pedía
+ * el comprobante sin decir de qué: ni monto, ni origen, ni desde cuándo está
+ * abierto el cobro. Quien la abría tenía que cerrarla para ir a leer el monto
+ * en la lista de atrás y volver. Finanzas ya mostraba las siete líneas; la
+ * persona merecía las mismas.
+ *
+ * LO QUE NO SE COPIA, a propósito: el arreglo de pago. Acá el único camino es
+ * pagar. El arreglo no es una opción que la persona elige desde esta ventana
+ * —finanzas lo habilita caso por caso (FIN-13)— y ponerlo al lado del botón
+ * de pagar lo volvería la vía normal.
+ */
+export function DetalleDelCobro({ p: cobro }: { p: MemberPaymentRow }) {
+  const fecha = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
+  const filas: [string, string][] = [
+    ['Persona', cobro.member_name],
+    ['Origen', CONCEPTO_LABEL[cobro.concept ?? ''] ?? 'Pago'],
+    ['Descripción', cobro.description],
+    ['Monto esperado', formatMoney(cobro.amount, cobro.currency)],
+    ['Referencia', cobro.reference_code ?? '—'],
+    ['Creado', fecha(cobro.created_at)],
+    ['Última gestión', fecha(cobro.reviewed_at)],
+  ]
+  return (
+    <div className="rounded-xl border border-outline overflow-hidden">
+      {filas.map(([label, valor], i) => (
+        <div key={label} className={cn('flex gap-3 px-4 py-2.5', i > 0 && 'border-t border-outline')}>
+          <span className="w-32 shrink-0 text-[13px] uppercase tracking-wider text-navy-light/80 font-display">{label}</span>
+          <span className="text-[13px] text-navy font-body">{valor}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** El mismo texto que usa la cola de finanzas para el origen del cobro. */
+const CONCEPTO_LABEL: Record<string, string> = {
+  matricula: 'Matrícula',
+  evento: 'Evento',
+  folletos: 'Folleto',
+  prematrimonial: 'Prematrimonial',
+  donacion: 'Donación',
+}
+
 // ── Botón de pago de matrícula por comprobante ───────────────────────────────
-export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: string; retry: boolean }) {
+export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
+  enrollmentId: string
+  retry: boolean
+  /** La fila del cobro, cuando quien llama ya la tiene (la lista de pagos). */
+  cobro?: MemberPaymentRow
+  /** Si no la tiene (la fila de estudios de la ficha), de acá se busca al
+   *  abrir. Una sola consulta, y solo cuando la ventana se abre. */
+  memberId?: string
+}) {
   const [open, setOpen] = useState(false)
+  const detalle = useCobro({ open, cobro, memberId, buscar: r => r.enrollment_id === enrollmentId })
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
@@ -177,6 +265,7 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
             <p className="text-[13px] text-navy-light/80 font-body">
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
+            {detalle && <DetalleDelCobro p={detalle} />}
             <div className="space-y-1">
               <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input id="comprobante-imagen"
@@ -216,8 +305,14 @@ export function PayMatriculaButton({ enrollmentId, retry }: { enrollmentId: stri
 }
 
 // ── Botón de pago de inscripción a evento por comprobante (clon de PayMatriculaButton) ──
-export function PayEventRegistrationButton({ registrationId, retry }: { registrationId: string; retry: boolean }) {
+export function PayEventRegistrationButton({ registrationId, retry, cobro, memberId }: {
+  registrationId: string
+  retry: boolean
+  cobro?: MemberPaymentRow
+  memberId?: string
+}) {
   const [open, setOpen] = useState(false)
+  const detalle = useCobro({ open, cobro, memberId, buscar: r => r.event_registration_id === registrationId })
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
@@ -264,6 +359,7 @@ export function PayEventRegistrationButton({ registrationId, retry }: { registra
             <p className="text-[13px] text-navy-light/80 font-body">
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
+            {detalle && <DetalleDelCobro p={detalle} />}
             <div className="space-y-1">
               <label htmlFor="comprobante-imagen-2" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
               <input id="comprobante-imagen-2"

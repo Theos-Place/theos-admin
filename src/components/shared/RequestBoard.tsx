@@ -80,18 +80,28 @@ const STATUS_FILTERS: { key: RequestStatus | 'all'; label: string }[] = [
 
 /** Los filtros del tablero. "Escaladas" solo aparece donde el estado existe:
  *  va después de "En revisión" porque es la continuación de ese camino. */
-function statusFiltersFor(allowEscalate?: boolean): { key: RequestStatus | 'all'; label: string }[] {
-  if (!allowEscalate) return STATUS_FILTERS
-  const i = STATUS_FILTERS.findIndex(f => f.key === 'in_review') + 1
-  return [
-    ...STATUS_FILTERS.slice(0, i),
-    { key: 'escalated' as const, label: 'Escaladas' },
-    ...STATUS_FILTERS.slice(i),
+function statusFiltersFor(
+  allowEscalate?: boolean,
+  allowPorModificar?: boolean,
+): { key: RequestStatus | 'all'; label: string }[] {
+  const extra: { key: RequestStatus; label: string }[] = [
+    ...(allowEscalate ? [{ key: 'escalated' as const, label: 'Escaladas' }] : []),
+    ...(allowPorModificar ? [{ key: 'por_modificar' as const, label: 'Por modificar' }] : []),
   ]
+  if (extra.length === 0) return STATUS_FILTERS
+  const i = STATUS_FILTERS.findIndex(f => f.key === 'in_review') + 1
+  return [...STATUS_FILTERS.slice(0, i), ...extra, ...STATUS_FILTERS.slice(i)]
 }
 
-/** Estados en los que la solicitud sigue pidiendo trabajo. */
-const ACTIVE_STATUSES: RequestStatus[] = ['open', 'in_review', 'escalated']
+/**
+ * Estados en los que la solicitud sigue pidiendo trabajo.
+ *
+ * `por_modificar` entra (BEC-5): espera a la PERSONA, no a finanzas, pero
+ * sigue viva — sacarla de acá la escondería del conteo y de las acciones, y
+ * finanzas no podría ni rechazarla ni convertirla en arreglo mientras la
+ * persona no se mueva.
+ */
+const ACTIVE_STATUSES: RequestStatus[] = ['open', 'in_review', 'escalated', 'por_modificar']
 
 function statusLabel(s: string | null): string {
   return s ? (REQUEST_STATUS_BADGE[s as RequestStatus]?.label ?? s) : '—'
@@ -149,11 +159,27 @@ type Props<R extends BaseRequest> = {
    *  un tiquete mientras la ventana de respuestas sigue abierta). Devolver null
    *  = se puede cerrar. */
   closeBlockedReason?: (r: R) => string | null
+  /**
+   * BEC-5 · habilita el estado `por_modificar`: su filtro propio.
+   *
+   * Va por prop y no siempre porque el tablero es compartido con estudios,
+   * donde ese estado no existe: un filtro que nunca trae nada es ruido en la
+   * barra de todos los días.
+   */
+  allowPorModificar?: boolean
+  /**
+   * Acciones propias del tablero, al lado de Resolver/Rechazar.
+   *
+   * BEC-5 punto 6 la usa para «Ofrecer arreglo de pago en su lugar», que no
+   * es ninguna de las dos: ni resuelve con una beca ni rechaza. La acción
+   * llama a `onDone` con la fila ya actualizada que le devolvió el endpoint.
+   */
+  renderExtraActions?: (r: R, onDone: (actualizada: R) => void) => React.ReactNode
 }
 
 export function RequestBoard<R extends BaseRequest>({
   requests, loading, tabs, typeLabel, endpointBase, onUpdated, renderDetails, renderResolveHint, renderResolveExtra, assigneesUrl, cambiarEstado, readOnly,
-  allowEscalate, closeBlockedReason, espera,
+  allowEscalate, closeBlockedReason, espera, allowPorModificar, renderExtraActions,
 }: Props<R>) {
   const toast = useToast()
   const [tab, setTab] = useState(tabs[0]?.key ?? '')
@@ -373,7 +399,7 @@ export function RequestBoard<R extends BaseRequest>({
       {/* Filtros: estado + rango de fechas + orden */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex gap-1.5 flex-wrap">
-          {statusFiltersFor(allowEscalate).map(f => (
+          {statusFiltersFor(allowEscalate, allowPorModificar).map(f => (
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
@@ -672,6 +698,7 @@ export function RequestBoard<R extends BaseRequest>({
                                   >
                                     Rechazar
                                   </button>
+                                  {renderExtraActions?.(r, onUpdated)}
                                   {/* Por qué no se puede cerrar todavía: un botón
                                       deshabilitado sin explicación es una pared. */}
                                   {closeBlockedReason?.(r) && (

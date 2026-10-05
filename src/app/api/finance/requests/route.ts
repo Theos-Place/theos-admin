@@ -11,7 +11,7 @@ import {
 import { reportarError } from '@/lib/observabilidad'
 
 const TYPES = new Set(['scholarship', 'refund'])
-const STATUSES = new Set(['open', 'in_review', 'resolved', 'rejected'])
+const STATUSES = new Set(['open', 'in_review', 'por_modificar', 'resolved', 'rejected'])
 
 // GET: el propio perfil se consulta sin permiso extra (?member_id=propio, p.ej.
 // "Mis becas"); cualquier otra consulta exige módulo finanzas o becas (según

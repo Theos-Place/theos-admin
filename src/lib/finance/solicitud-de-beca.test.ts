@@ -4,6 +4,8 @@ import {
   NOTA_DE_MONTO, PORCENTAJE_DE_BECA, montoPedido,
   AVISO_DE_CUPO, ESTADOS_DE_SOLICITUD, sigueAbierta, esperaAlSolicitante,
   AVISO_GRUPO_LLENO, puedeOfrecerArreglo,
+  cuerpoDeGrupoLleno, cuerpoDeArregloOfrecido, TITULO_ARREGLO_OFRECIDO,
+  TIPO_GRUPO_LLENO, TIPO_ARREGLO_OFRECIDO, NOTA_DE_CONVERSION,
 } from '@/lib/finance/solicitud-de-beca'
 
 describe('BEC-5 · las tres razones', () => {
@@ -103,5 +105,53 @@ describe('BEC-5 · ofrecer un arreglo de pago', () => {
     for (const s of ['resolved', 'rejected']) {
       expect(puedeOfrecerArreglo({ status: s, payment_id: 'p1' }).ok, s).toBe(false)
     }
+  })
+})
+
+describe('BEC-5 · los avisos que recibe la persona', () => {
+  it('el del grupo lleno dice que la solicitud SIGUE VIVA', () => {
+    // Es lo único que importa del mensaje. «Se llenó» a secas deja a la
+    // persona creyendo que perdió la beca y que tiene que pedirla de nuevo,
+    // que es exactamente lo que el estado `por_modificar` existe para evitar.
+    const cuerpo = cuerpoDeGrupoLleno({ grupo: 'Lunes 7pm', estudio: 'Romanos' })
+    expect(cuerpo).toMatch(/sigue en pie/i)
+    expect(cuerpo).toMatch(/no tenés que pedirla de nuevo/i)
+    expect(cuerpo).toMatch(/elegí otro grupo/i)
+  })
+
+  it('nombra el grupo y el estudio, para que se sepa CUÁL se llenó', () => {
+    const cuerpo = cuerpoDeGrupoLleno({ grupo: 'Lunes 7pm', estudio: 'Romanos' })
+    expect(cuerpo).toContain('Lunes 7pm')
+    expect(cuerpo).toContain('Romanos')
+  })
+
+  it('sin el nombre del estudio sale igual, sin un «de» colgando', () => {
+    const cuerpo = cuerpoDeGrupoLleno({ grupo: 'Lunes 7pm', estudio: null })
+    expect(cuerpo).toContain('Lunes 7pm')
+    expect(cuerpo).not.toMatch(/\bde\s+que\b/)
+    expect(cuerpo).not.toMatch(/\s{2,}/)
+  })
+
+  it('el del arreglo dice CUÁNTOS tractos', () => {
+    // Sin la cifra, quien espera respuesta a una beca tiene que entrar a ver
+    // de qué se trata para saber si le sirve.
+    expect(cuerpoDeArregloOfrecido(3)).toContain('3 tractos')
+  })
+
+  it('el del arreglo NO suena a rechazo', () => {
+    const cuerpo = cuerpoDeArregloOfrecido(2)
+    expect(cuerpo).not.toMatch(/rechaz/i)
+    expect(cuerpo).not.toMatch(/no (te )?(se )?(la )?aprob/i)
+    expect(TITULO_ARREGLO_OFRECIDO).not.toMatch(/rechaz/i)
+  })
+
+  it('los tipos de notificación son distintos entre sí', () => {
+    // Van al mismo buzón: si coincidieran, filtrar uno traería el otro.
+    expect(TIPO_GRUPO_LLENO).not.toBe(TIPO_ARREGLO_OFRECIDO)
+  })
+
+  it('la nota de la conversión deja claro que se OFRECIÓ, no que se negó', () => {
+    expect(NOTA_DE_CONVERSION).toMatch(/arreglo de pago/i)
+    expect(NOTA_DE_CONVERSION).not.toMatch(/rechaz/i)
   })
 })

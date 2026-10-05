@@ -719,6 +719,17 @@ export type MemberPaymentRow = {
   /** FIN-13 · Finanzas le habilitó a ESTA persona acogerse a un arreglo sobre
    *  ESTE cobro. No hay botón público: se habilita caso por caso. */
   payment_plan_enabled: boolean
+  /**
+   * Los dos datos que el tiquete de finanzas muestra y este lado no tenía
+   * (2026-10-05). La ventana de pago de la ficha enseñaba solo «subí el
+   * comprobante»: ni cuánto, ni de qué, ni desde cuándo. Quien la abría
+   * tenía que salirse a buscar el monto en la lista de atrás.
+   *
+   * `reference_code` es la referencia YA registrada del cobro, no la que la
+   * persona está por escribir.
+   */
+  reference_code: string | null
+  member_name: string
 }
 
 /** Pagos/cobros de UN miembro (para la sección "Pagos y cobros" del perfil).
@@ -827,8 +838,10 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
     .from('payments')
     .select(`
       id, amount, currency, concept, receipt_path, created_at, status, review_status, reviewed_at,
+      reference_code,
       enrollment_id, event_registration_id, due_date, installment_number, payment_plan_id,
       payment_plan_enabled_at,
+      member:members!payments_member_id_fkey(first_name, last_name),
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
       enrollment:study_enrollments!payments_enrollment_id_fkey(
         group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
@@ -875,8 +888,16 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
       // FIN-13 · Se manda un BOOLEANO y no la fecha: a la persona no le
       // aporta cuándo se lo habilitaron, y quién lo hizo es dato interno.
       payment_plan_enabled: !!r.payment_plan_enabled_at,
+      reference_code: (r.reference_code as string | null) ?? null,
+      member_name: nombreDelEmbed(r.member),
     }
   })
+}
+
+/** El nombre de la persona del embed to-one (objeto o arreglo de uno). */
+function nombreDelEmbed(x: unknown): string {
+  const m = (Array.isArray(x) ? x[0] : x) as { first_name?: string | null; last_name?: string | null } | null
+  return [m?.first_name, m?.last_name].filter(Boolean).join(' ').trim() || '—'
 }
 
 export async function getPendingPaymentsQueue(filters: {

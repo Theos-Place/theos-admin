@@ -146,3 +146,42 @@ export function puedeOfrecerArreglo(solicitud: {
   }
   return { ok: true }
 }
+
+/**
+ * El aviso que recibe quien pidió la beca cuando su grupo se llena.
+ *
+ * Dice QUÉ HACER y no solo qué pasó: «se llenó» a secas deja a la persona
+ * sin saber si perdió la beca o tiene que volver a pedirla. Lo que necesita
+ * oír es que la solicitud sigue viva.
+ */
+export const TITULO_GRUPO_LLENO = 'El grupo que elegiste se llenó'
+
+export function cuerpoDeGrupoLleno(input: {
+  grupo: string
+  estudio: string | null
+}): string {
+  // El «de <estudio>» se arma con el espacio adentro, no alrededor: con la
+  // plantilla al revés, un estudio nulo dejaba dos espacios seguidos.
+  const que = input.estudio ? ` de ${input.estudio}` : ''
+  return `El grupo${que} que elegiste (${input.grupo}) ya no tiene campo. `
+    + 'Tu solicitud de beca SIGUE EN PIE: entrá y elegí otro grupo para mantenerla. '
+    + 'No tenés que pedirla de nuevo.'
+}
+
+/** Tipo de notificación interna, para poder filtrarlas después. */
+export const TIPO_GRUPO_LLENO = 'beca_grupo_lleno'
+
+/**
+ * El aviso de que se le ofreció un arreglo en vez de la beca.
+ *
+ * Dice el NÚMERO de tractos. «Se te ofreció un arreglo» sin cifra obliga a
+ * entrar a ver de qué se trata, y quien está esperando respuesta a una beca
+ * merece saber en el aviso si el ofrecimiento le sirve.
+ */
+export const TIPO_ARREGLO_OFRECIDO = 'beca_convertida_en_arreglo'
+export const TITULO_ARREGLO_OFRECIDO = 'Te ofrecimos un arreglo de pago'
+
+export function cuerpoDeArregloOfrecido(tractos: number): string {
+  return `Tu solicitud de beca se resolvió con un arreglo de pago: el cobro quedó partido `
+    + `en ${tractos} tractos. Entrá a Mis pagos para ver las fechas y los montos.`
+}

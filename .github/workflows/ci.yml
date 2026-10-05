@@ -31,6 +31,9 @@ jobs:
         # borrador se escribió primero con un efecto, el CI la rechazó por
         # pasarse a 56, y reescribirla como sincronización durante el render
         # —que además evita el parpadeo del formulario vacío— quitó dos.
-        run: npx eslint src --max-warnings=54
+        # 2026-10-05: 54 → 53. La lista de becas de la ficha pasó a recargarse
+        # con un useCallback (BEC-5), y el efecto que ponía `loading` en true
+        # al entrar dejó de existir.
+        run: npx eslint src --max-warnings=53
       - name: Tests
         run: npm test --if-present

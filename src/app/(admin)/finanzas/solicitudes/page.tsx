@@ -6,6 +6,7 @@ import { Lock, Loader2, GraduationCap, CreditCard, ExternalLink } from 'lucide-r
 import { useAuth } from '@/hooks/useAuth'
 import { RequestBoard } from '@/components/shared/RequestBoard'
 import { AprobarBecaForm } from '@/components/finance/AprobarBecaForm'
+import { OfrecerArregloButton } from '@/components/finance/OfrecerArregloButton'
 import type { FinanceRequest } from '@/types/finance'
 
 const TABS = [
@@ -80,6 +81,10 @@ export default function FinanzasSolicitudesPage() {
         typeLabel={TYPE_LABEL}
         endpointBase="/api/finance/requests"
         assigneesUrl="/api/finance/requests/assignees"
+        // BEC-5: el estado existe solo en este tablero (las becas), así que
+        // su filtro también.
+        allowPorModificar
+        renderExtraActions={(r, onDone) => <OfrecerArregloButton req={r} onDone={onDone} />}
         onUpdated={updated => setRequests(prev => prev.map(r => (r.id === updated.id ? updated : r)))}
         renderDetails={r => (
           <>
