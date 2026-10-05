@@ -157,6 +157,13 @@ export async function requireAccesoAReporte(
     const { abreReportesPorPuesto } = await import('@/lib/supabase/queries/servers')
     if (await abreReportesPorPuesto(ctx.memberId)) return { ctx }
   }
+  // DIR-7 · La cuarta puerta: ser dirigente abre «Los que no volvieron»,
+  // acotado a los propios exalumnos. El recorte lo hace el endpoint con el id
+  // de la sesión; esto solo decide si pasa del 403.
+  if (ACCESO_POR_REPORTE[slug]?.porSerDirigente && ctx.memberId) {
+    const { esDirigenteConHistorico } = await import('@/lib/supabase/queries/no-volvieron')
+    if (await esDirigenteConHistorico(ctx.memberId)) return { ctx }
+  }
   return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
 }
 

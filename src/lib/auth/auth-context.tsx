@@ -49,6 +49,8 @@ export interface AuthUser {
    * habilita esos dos. Lo calcula el servidor mirando los puestos.
    */
   abre_reportes_por_puesto?: boolean
+  /** DIR-7 · Dirige o dirigió un grupo: abre «Los que no volvieron». */
+  es_dirigente?: boolean
 }
 
 interface AuthState {

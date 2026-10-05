@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt, abreMiComite, abreReportes,
+      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -171,6 +171,20 @@ export async function GET() {
           return false
         }
       })(),
+
+      // DIR-7: ¿dirige o dirigió algún grupo? Abre «Los que no volvieron»,
+      // acotado a sus propios exalumnos. El recorte de verdad lo hace el
+      // endpoint con el id de la sesión; esto solo decide si se pinta la
+      // tarjeta y la entrada del menú.
+      (async (): Promise<boolean> => {
+        try {
+          const { esDirigenteConHistorico } = await import('@/lib/supabase/queries/no-volvieron')
+          return await esDirigenteConHistorico(member.id)
+        } catch (e) {
+          console.warn('auth/me: histórico de dirigente:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
     ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
@@ -200,6 +214,7 @@ export async function GET() {
         managed_event_ids: managedEventIds,
         abre_mi_comite: abreMiComite,
         abre_reportes_por_puesto: abreReportes,
+        es_dirigente: esDirigente,
       },
     })
   } catch (error) {

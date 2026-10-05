@@ -26,6 +26,7 @@ import { ESTUDIOS_REPORTE_ROLES, SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
 export type SlugDeReporte =
   | 'asistencia' | 'personas-nuevas' | 'discipulos' | 'retencion'
   | 'estudios' | 'dirigentes' | 'servidores'
+  | 'exalumnos-perdidos' | 'recurrentes-perdidos'
 
 export type ReglaDeAcceso = {
   /** Roles que lo abren por sí solos. */
@@ -34,6 +35,15 @@ export type ReglaDeAcceso = {
   moduloAlcanza: boolean
   /** ¿Lo abre un puesto de sede (anfitrión / encargado de logística)? */
   porPuesto: boolean
+  /**
+   * DIR-7 · ¿Lo abre SER DIRIGENTE, acotado a lo propio?
+   *
+   * Es una llave aparte de `roles` porque no es lo mismo: un rol abre el
+   * reporte ENTERO, y esto abre solo la parte de quien pregunta. Mezclarlas
+   * habría hecho que un dirigente viera la lista de todos los dirigentes,
+   * que es exactamente lo que el recorte evita.
+   */
+  porSerDirigente?: boolean
 }
 
 export const ACCESO_POR_REPORTE: Record<SlugDeReporte, ReglaDeAcceso> = {
@@ -79,6 +89,33 @@ export const ACCESO_POR_REPORTE: Record<SlugDeReporte, ReglaDeAcceso> = {
   /** Servidores y compromisos: la vista de dirección sobre la organización
    *  (REP-7). Acotado desde que se creó. */
   servidores: { roles: SERVICE_ADMIN_ROLES, moduloAlcanza: false, porPuesto: false },
+
+  /**
+   * DIR-7 · «Los que no volvieron», de cada dirigente.
+   *
+   * DOS PUERTAS, y la diferencia importa. El DIRIGENTE entra por ser
+   * dirigente y ve SOLO a sus exalumnos — el recorte lo hace el servidor con
+   * su propio id, no un parámetro del request. Los roles de estudios entran
+   * por rol y pueden ELEGIR un dirigente con el selector, igual que SRV-6.
+   *
+   * El módulo `reportes` a secas NO alcanza: la lista trae teléfonos de
+   * gente que dejó de venir, para escribirles. Eso no es una métrica.
+   */
+  'exalumnos-perdidos': {
+    roles: ESTUDIOS_REPORTE_ROLES, moduloAlcanza: false, porPuesto: false,
+    porSerDirigente: true,
+  },
+
+  /**
+   * REP-14 · Los recurrentes que ya no van.
+   *
+   * Acotado como Estudios: son 644 personas con teléfono y correo (medido en
+   * producción el 2026-10-05). No lleva `porSerDirigente` — no es de nadie en
+   * particular, es la foto de la organización.
+   */
+  'recurrentes-perdidos': {
+    roles: ESTUDIOS_REPORTE_ROLES, moduloAlcanza: false, porPuesto: false,
+  },
 }
 
 export type QuienPregunta = {
@@ -91,6 +128,11 @@ export type QuienPregunta = {
    * es el lado seguro.
    */
   porPuesto?: boolean
+  /**
+   * DIR-7 · ¿Dirige o dirigió algún grupo? Lo resuelve el servidor. `false`
+   * por omisión, que es el lado seguro.
+   */
+  esDirigente?: boolean
 }
 
 export function puedeVerReporte(slug: SlugDeReporte, quien: QuienPregunta): boolean {
@@ -99,6 +141,7 @@ export function puedeVerReporte(slug: SlugDeReporte, quien: QuienPregunta): bool
   const roles = quien.roles ?? []
   if (regla.roles.some(r => (roles as readonly string[]).includes(r))) return true
   if (regla.moduloAlcanza && quien.tieneModulo) return true
+  if (regla.porSerDirigente && quien.esDirigente === true) return true
   return regla.porPuesto && quien.porPuesto === true
 }
 

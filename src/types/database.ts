@@ -186,6 +186,54 @@ export type Database = {
           },
         ]
       }
+      contact_followups: {
+        Row: {
+          id: string
+          member_id: string
+          marked_by: string | null
+          estado: string
+          a_que_vuelve: string | null
+          iglesia: string | null
+          nota: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          marked_by?: string | null
+          estado: string
+          a_que_vuelve?: string | null
+          iglesia?: string | null
+          nota?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          marked_by?: string | null
+          estado?: string
+          a_que_vuelve?: string | null
+          iglesia?: string | null
+          nota?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_followups_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_followups_marked_by_fkey"
+            columns: ["marked_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capacitacion_bloques: {
         Row: {
           anio: number
@@ -5233,6 +5281,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      report_exalumnos_perdidos: {
+        Args: { p_leader_id: string; p_meses?: number }
+        Returns: {
+          member_id: string
+          nombre: string
+          telefono: string | null
+          grupo: string
+          anio_del_grupo: number | null
+          resultado: string | null
+          ultima_senal: string | null
+          ultimo_estado: string | null
+          ultimo_contacto: string | null
+        }[]
+      }
+      report_recurrentes_perdidos: {
+        Args: { p_min_checkins?: number; p_meses?: number }
+        Returns: {
+          member_id: string
+          nombre: string
+          telefono: string | null
+          email: string | null
+          sede_titulo: string | null
+          total_asistencias: number
+          ultimo_checkin: string
+          anios: number[]
+          llevo_estudio: boolean
+          ultimo_estudio: string | null
+          dirigente: string | null
+        }[]
+      }
       active_attendance_member_ids: {
         Args: { p_min_count: number; p_oldest: string; p_recency_since: string }
         Returns: {

@@ -512,7 +512,7 @@ default. **admin** y **direccion** siempre, dirección como vista. Verificar
 los nombres exactos de los tres puestos en el catálogo antes de fijar los
 mapeos.
 
-### [ ] DIR-7 · Página "Los que no volvieron" para dirigentes (pedido 2026-09-28)
+### [x] DIR-7 · Página "Los que no volvieron" para dirigentes (pedido 2026-09-28) — HECHO 2026-10-05
 
 Seguimiento de exalumnos que dejaron de venir: cada dirigente ve, de los
 grupos que ÉL dio (histórico), quiénes no han vuelto a Theos — y los contacta
@@ -1116,7 +1116,7 @@ son alias del renombre: fueron una sede propia que cerró. Si se quieren
 fundir con otra, es una línea en `SEDE_CANONICAL`, pero eso cambia el
 histórico y no se asume.
 
-### [ ] REP-14 · Reporte de recurrentes que ya no van (pedido 2026-10-05)
+### [x] REP-14 · Reporte de recurrentes que ya no van (pedido 2026-10-05) — HECHO 2026-10-05
 
 Personas que asistieron al menos 20 veces a Theos pero llevan más de 6 meses
 sin venir a ninguna charla — la gente valiosa que se perdió.

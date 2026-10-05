@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { puedeVerReporte, type SlugDeReporte } from '@/lib/reports/acceso-por-reporte'
-import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, HeartHandshake, BookOpen, type LucideIcon } from 'lucide-react'
+import { BarChart2, ChevronRight, Users, TrendingUp, UserCheck, UserPlus, UserMinus, HeartHandshake, BookOpen, type LucideIcon } from 'lucide-react'
 
 // Catálogo de reportes disponibles. Para agregar uno nuevo: sumar una entrada acá
 // y crear su página en /reportes/<slug>. El índice no necesita rediseño.
@@ -75,6 +75,22 @@ const REPORTS: ReportTile[] = [
     ready: true,
   },
   {
+    slug: 'exalumnos-perdidos',
+    href: '/reportes/exalumnos-perdidos',
+    title: 'Los que no volvieron',
+    description: 'Tus exalumnos que dejaron de venir, con su teléfono listo para escribirles por WhatsApp y dónde anotar cómo te fue.',
+    icon: HeartHandshake,
+    ready: true,
+  },
+  {
+    slug: 'recurrentes-perdidos',
+    href: '/reportes/recurrentes-perdidos',
+    title: 'Recurrentes que se fueron',
+    description: 'Gente que venía seguido —20 charlas o más— y lleva seis meses sin aparecer, agrupada por el año en que dejó de ir.',
+    icon: UserMinus,
+    ready: true,
+  },
+  {
     slug: 'dirigentes',
     href: '/reportes/dirigentes',
     title: 'Dirigentes',
@@ -91,6 +107,9 @@ export default function ReportesIndexPage() {
     roles: user?.roles ?? [],
     tieneModulo: can('reportes', 'view'),
     porPuesto: user?.abre_reportes_por_puesto === true,
+    // DIR-7 · Un dirigente ve la tarjeta de «Los que no volvieron» aunque no
+    // tenga ningún rol de reportes: entra a lo suyo.
+    esDirigente: user?.es_dirigente === true,
   }
   return (
     <div className="space-y-6">
