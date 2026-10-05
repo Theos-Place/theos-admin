@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff, Plus } from 'lucide-react'
+import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff, Plus, BarChart2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Modal } from '@/components/shared/Modal'
@@ -125,6 +125,16 @@ export default function DonacionesPage() {
               <Plus size={15} />
               Agregar donación
             </button>
+            {/* DON-3B · El reporte de donantes. Va acá y no en /reportes: los
+                montos de donación son confidenciales y /reportes lo abren
+                roles de métricas. */}
+            <Link
+              href="/finanzas/donaciones/reporte"
+              className="inline-flex items-center gap-2 rounded-full border border-navy/20 px-4 py-2.5 text-sm text-navy hover:bg-navy/5 transition-colors shrink-0 font-body"
+            >
+              <BarChart2 size={15} />
+              Donantes y montos
+            </Link>
             <Link
               href="/finanzas/donaciones/importar"
               className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"

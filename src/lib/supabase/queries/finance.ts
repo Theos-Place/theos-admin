@@ -803,3 +803,60 @@ export async function importarDonacionesConfirmadas(
   if (error) throw error
   return { batchId: (data as { id: string }).id, insertadas: filas.length }
 }
+
+/**
+ * DON-3B · Las donaciones con la SEDE del donante, para el reporte.
+ *
+ * La sede se trae con un embed en el MISMO select y no con una consulta por
+ * donante: son 15 276 donaciones de 1 882 personas, y un N+1 acá serían mil
+ * ochocientas consultas para pintar una pantalla.
+ *
+ * Se pagina a mano porque PostgREST corta en mil: sin el bucle, el reporte
+ * diría «1 000 donaciones» con total aplomo.
+ */
+export async function getDonacionesParaReporte(filtros: {
+  desde?: string | null
+  hasta?: string | null
+} = {}): Promise<Array<{
+  member_id: string | null
+  donation_date: string
+  amount: number | null
+  currency: string | null
+  sede: string | null
+}>> {
+  const supabase = createAdminClient()
+  const SELECT = 'member_id, donation_date, amount, currency, member:members(sede:sedes(name))'
+  const out: Array<{
+    member_id: string | null; donation_date: string
+    amount: number | null; currency: string | null; sede: string | null
+  }> = []
+
+  for (let desde = 0; ; desde += 1000) {
+    let q = supabase
+      .from('donations')
+      .select(SELECT)
+      .order('donation_date', { ascending: false })
+      .range(desde, desde + 999)
+    if (filtros.desde) q = q.gte('donation_date', filtros.desde)
+    if (filtros.hasta) q = q.lte('donation_date', filtros.hasta)
+    const { data, error } = await q
+    if (error) throw error
+    const lote = (data ?? []) as Array<Record<string, unknown>>
+    for (const r of lote) {
+      const m = (Array.isArray(r.member) ? r.member[0] : r.member) as
+        { sede: { name: string } | { name: string }[] | null } | null
+      const sede = m ? (Array.isArray(m.sede) ? m.sede[0] : m.sede) : null
+      out.push({
+        member_id: (r.member_id as string) ?? null,
+        donation_date: String(r.donation_date ?? '').slice(0, 10),
+        // El monto puede venir como string desde `numeric`: se normaliza acá
+        // para que el módulo puro no tenga que saber de la base.
+        amount: r.amount === null || r.amount === undefined ? null : Number(r.amount),
+        currency: (r.currency as string) ?? null,
+        sede: sede?.name ?? null,
+      })
+    }
+    if (lote.length < 1000) break
+  }
+  return out
+}
