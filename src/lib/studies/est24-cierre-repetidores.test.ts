@@ -53,7 +53,34 @@ describe('EST-24 · el cierre cuenta a quien repite el nivel', () => {
   it('queda cerrada a la llave pública (SEC-3)', () => {
     expect(sql).toMatch(/revoke execute on function public\.close_group\(uuid, jsonb, uuid\) from public, anon, authenticated/)
     expect(sql).toMatch(/grant\s+execute on function public\.close_group\(uuid, jsonb, uuid\) to service_role/)
-    expect(sql).toMatch(/set search_path to 'public'/)
+    expect(sql).toMatch(/set search_path to 'public'/i)
+  })
+
+  it('NO se come el bloque de recomendaciones a CDEB', () => {
+    /**
+     * EL CASI-DESASTRE (2026-10-05). La primera versión de esta migración se
+     * escribió a mano a partir de una lectura TRUNCADA de la función: se
+     * imprimió una ventana de 900 caracteres alrededor del primer UPDATE y el
+     * bloque de recomendaciones quedaba fuera. El `create or replace` lo
+     * habría BORRADO de producción — es el que guarda lo que el dirigente
+     * escribe al cerrar Discípulos 3 y Panorama.
+     *
+     * Lo agarró un diff contra producción antes de subirlo, no un test. Este
+     * test es para que la próxima lo agarre antes.
+     */
+    expect(sql).toContain('INSERT INTO member_recommendations')
+    expect(sql).toMatch(/LATERAL \(VALUES \('oracion'\), \('servicio'\), \('dirigente'\)\)/)
+    // Y su manejo de error, que evita que una recomendación mala tumbe el cierre.
+    expect(sql).toMatch(/EXCEPTION WHEN OTHERS THEN/)
+  })
+
+  it('conserva todo lo demás del original: grade, notas y el claim del grupo', () => {
+    // Un `create or replace` reemplaza la función ENTERA. Lo que no esté en
+    // el archivo, se pierde.
+    expect(sql).toContain("SET status = 'finalizado', closed_at = v_now, closed_by = p_closed_by")
+    expect(sql).toMatch(/grade = NULLIF\(r->>'grade', ''\)::numeric/)
+    expect(sql).toContain("'Retirado en cierre: '")
+    expect(sql).toMatch(/'reprobado: ' \|\| trim\(r->>'fail_reason'\)/)
   })
 })
 
