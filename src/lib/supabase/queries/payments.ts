@@ -886,6 +886,9 @@ export async function getPendingPaymentsQueue(filters: {
    *  sentido para concepto matrícula (fuerzan concept='matricula'). */
   planId?: string
   leaderId?: string
+  /** UN pago concreto, sin importar los filtros. Lo usa el detalle cuando se
+   *  abre un pago que no está en la página cargada de la cola. */
+  paymentId?: string
 } = {}): Promise<PaymentQueueRow[]> {
   const supabase = createAdminClient()
   // Con filtro de plan/dirigente el embed pasa a !inner para que el filtro
@@ -911,21 +914,37 @@ export async function getPendingPaymentsQueue(filters: {
     `)
     .not('concept', 'is', null)
 
-  if (byGroup) {
-    q = q.eq('concept', 'matricula')
-    if (filters.planId) q = q.eq('enrollment.group.plan_id', filters.planId)
-    if (filters.leaderId) q = q.eq('enrollment.group.leader_id', filters.leaderId)
-  } else if (filters.concept) q = q.eq('concept', filters.concept)
-
-  if (filters.status === 'en_revision') q = q.eq('status', 'pending').eq('review_status', 'en_revision')
-  else if (filters.status === 'pendiente') q = q.eq('status', 'pending').or('review_status.is.null,review_status.eq.rechazado')
-  else if (filters.status === 'cerrado') q = q.neq('status', 'pending')
-  else q = q.eq('status', 'pending') // sin filtro: todo lo accionable (pendiente + en_revision)
-
-  if (filters.status === 'cerrado') {
-    q = q.order('reviewed_at', { ascending: false }).limit(300)
+  /**
+   * UN pago concreto GANA sobre todos los filtros, incluido el de estado.
+   *
+   * Es para «abrí este pago»: con los filtros de la cola puestos, un pago que
+   * existe y está pendiente puede no aparecer —porque la cola está filtrada
+   * por concepto, por plan o por dirigente— y entonces la pantalla cae al
+   * detalle PLANO, que es de solo lectura. Eso era lo que escondía el botón
+   * de aplicar beca (reportado el 2026-10-06).
+   *
+   * Sigue el mismo camino de armado que el resto: así la fila que se abre es
+   * idéntica a la de la lista, con su marca de referencia duplicada incluida.
+   */
+  if (filters.paymentId) {
+    q = q.eq('id', filters.paymentId)
   } else {
-    q = q.order('created_at', { ascending: true }) // FIFO para lo accionable
+    if (byGroup) {
+      q = q.eq('concept', 'matricula')
+      if (filters.planId) q = q.eq('enrollment.group.plan_id', filters.planId)
+      if (filters.leaderId) q = q.eq('enrollment.group.leader_id', filters.leaderId)
+    } else if (filters.concept) q = q.eq('concept', filters.concept)
+
+    if (filters.status === 'en_revision') q = q.eq('status', 'pending').eq('review_status', 'en_revision')
+    else if (filters.status === 'pendiente') q = q.eq('status', 'pending').or('review_status.is.null,review_status.eq.rechazado')
+    else if (filters.status === 'cerrado') q = q.neq('status', 'pending')
+    else q = q.eq('status', 'pending') // sin filtro: todo lo accionable (pendiente + en_revision)
+
+    if (filters.status === 'cerrado') {
+      q = q.order('reviewed_at', { ascending: false }).limit(300)
+    } else {
+      q = q.order('created_at', { ascending: true }) // FIFO para lo accionable
+    }
   }
 
   const { data, error } = await q

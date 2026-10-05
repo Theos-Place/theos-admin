@@ -31,10 +31,36 @@ export function usoDeLaBeca(b: BecaConUso): Uso {
   return 'sin_usar'
 }
 
+/**
+ * «APLICADA» y no «usada» (pedido de Floriana, 2026-10-06). Una beca no se
+ * gasta: se aplica a un cobro, y ese es el acto que la pantalla reporta.
+ *
+ * «Sin aplicar» cambia junto con ella aunque no se haya pedido: «Sin usar»
+ * al lado de «Aplicada» son dos formas de nombrar lo mismo y se leen como
+ * dos cosas distintas.
+ */
 export const ETIQUETA_USO: Record<Uso, string> = {
-  sin_usar: 'Sin usar',
-  usada: 'Usada',
-  revocada: 'Cancelada',
+  sin_usar: 'Sin aplicar',
+  usada: 'Aplicada',
+  revocada: 'Anulada',
+}
+
+/**
+ * La misma idea, pero por el STATUS crudo de la fila — que es lo que tienen a
+ * mano la pantalla de becas, Mis pagos y el historial.
+ *
+ * Vive acá porque esas tres lo tenían escrito a mano cada una, y al renombrar
+ * «Cancelada» → «Anulada» (pedido de Floriana, 2026-10-06) había que acordarse
+ * de los tres lugares. Con una sola tabla, el próximo cambio es una línea.
+ *
+ * ANULADA Y NO CANCELADA, por lo mismo que en PAG-6: en contabilidad
+ * «cancelar» es PAGAR, así que «beca cancelada» se podía leer como «beca ya
+ * aplicada», que es lo contrario de lo que pasó.
+ */
+export const ETIQUETA_ESTADO_BECA: Record<'active' | 'used' | 'revoked', string> = {
+  active: 'Activa',
+  used: 'Aplicada',
+  revoked: 'Anulada',
 }
 
 /** Verde = plata ya aplicada; ámbar = compromiso vivo pendiente; coral = anulada. */
@@ -44,11 +70,11 @@ export const BADGE_USO: Record<Uso, string> = {
   revocada: 'bg-coral-soft/20 text-coral',
 }
 
-/** El orden importa: "Sin usar" primero porque es la única que pide acción. */
+/** El orden importa: "Sin aplicar" primero porque es la única que pide acción. */
 export const FILTROS_USO: Array<{ id: FiltroUso; label: string }> = [
-  { id: 'sin_usar', label: 'Sin usar' },
-  { id: 'usada', label: 'Usadas' },
-  { id: 'revocada', label: 'Canceladas' },
+  { id: 'sin_usar', label: 'Sin aplicar' },
+  { id: 'usada', label: 'Aplicadas' },
+  { id: 'revocada', label: 'Anuladas' },
   { id: 'todas', label: 'Todas' },
 ]
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { GraduationCap, Plus, Loader2, AlertTriangle } from 'lucide-react'
+import { ETIQUETA_ESTADO_BECA } from '@/lib/finance/uso-de-beca'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
@@ -47,7 +48,9 @@ type Scholarship = {
   email_sent_to: string | null
 }
 
-const STATUS_LABEL: Record<string, string> = { active: 'Activa', used: 'Usada', revoked: 'Cancelada' }
+// La tabla vive en lib/finance/uso-de-beca: estaba escrita a mano en tres
+// pantallas y renombrar una etiqueta pedía acordarse de las tres.
+const STATUS_LABEL: Record<string, string> = ETIQUETA_ESTADO_BECA
 const STATUS_BADGE: Record<string, string> = {
   active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral-soft/20 text-coral',
 }

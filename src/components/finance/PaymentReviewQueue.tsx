@@ -68,7 +68,10 @@ function money(amount: number, currency: string) {
  *  pago en el modal de la cola. Devuelve false si el pago no está entre las
  *  filas cargadas (el padre muestra entonces su detalle plano). */
 export type PaymentReviewQueueHandle = {
-  openPayment: (paymentId: string) => boolean
+  /** Abre el detalle de un pago. Si no está en la página cargada de la cola,
+   *  lo BUSCA: con los filtros puestos, un pago pendiente podía no estar y la
+   *  pantalla caía al detalle plano, de solo lectura. */
+  openPayment: (paymentId: string) => Promise<boolean>
 }
 
 type PaymentReviewQueueProps = {
@@ -160,10 +163,22 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   // el pago está entre las filas cargadas se abre el modal de la cola; si no,
   // devuelve false y el padre muestra el detalle plano.
   useImperativeHandle(ref, () => ({
-    openPayment(paymentId: string) {
-      const row = rows.find(r => r.id === paymentId)
-      if (row) { setScholPanel(null); setDetail(row) }
-      return !!row
+    async openPayment(paymentId: string) {
+      const yaCargado = rows.find(r => r.id === paymentId)
+      if (yaCargado) { setScholPanel(null); setDetail(yaCargado); return true }
+      // No está en la página cargada: se pide ESE pago, sin los filtros de la
+      // cola. Es el caso que escondía el botón de aplicar beca.
+      try {
+        const res = await fetch(`/api/payments/queue?paymentId=${encodeURIComponent(paymentId)}`)
+        if (!res.ok) return false
+        const d = (await res.json()) as QueueRow[]
+        const row = Array.isArray(d) ? d[0] : null
+        if (!row) return false
+        setScholPanel(null); setDetail(row)
+        return true
+      } catch {
+        return false
+      }
     },
   }), [rows])
 

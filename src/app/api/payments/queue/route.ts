@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
     const planId = searchParams.get('planId')
     const leaderId = searchParams.get('leaderId')
     return NextResponse.json(await getPendingPaymentsQueue({
+      // Un pago concreto: el detalle lo pide así cuando no está en la página
+      // cargada de la cola. Gana sobre los demás filtros.
+      paymentId: searchParams.get('paymentId') ?? undefined,
       status: status && STATUSES.has(status) ? (status as PaymentQueueStatus) : undefined,
       concept: concept && CONCEPTS.has(concept) ? (concept as PaymentConcept) : undefined,
       planId: planId && UUID_RE.test(planId) ? planId : undefined,

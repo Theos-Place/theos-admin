@@ -131,7 +131,7 @@ const ESTADOS: Record<string, string> = {
   transferred: 'Transferido', pendiente_de_pago: 'Pendiente de pago',
   en_revision: 'En revisión', aprobado: 'Aprobado', rechazado: 'Rechazado',
   pending: 'Pendiente', paid: 'Pagado', cancelled: 'Cancelado', refunded: 'Devuelto',
-  active: 'Activa', used: 'Usada', revoked: 'Cancelada', expired: 'Vencida',
+  active: 'Activa', used: 'Aplicada', revoked: 'Anulada', expired: 'Vencida',
 }
 const CAMPOS_DE_ESTADO = new Set(['status', 'review_status', 'payment_status'])
 

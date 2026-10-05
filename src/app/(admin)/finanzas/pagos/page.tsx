@@ -162,9 +162,12 @@ function PagosContent() {
 
   // Abrir un pago desde la pestaña "Todos": los pendientes se intentan abrir
   // en el modal de la cola (con acciones de revisión); el resto, detalle plano.
-  function openPayment(p: Payment) {
+  async function openPayment(p: Payment) {
+    // El detalle de la cola trae las acciones —revisar, arreglo de pago,
+    // aplicar beca—; el plano es de solo lectura. Se intenta la cola primero
+    // y solo se cae al plano cuando el pago de verdad no es accionable.
     const openedInQueue = canQueue && p.status === 'pending'
-      && (queueRef.current?.openPayment(p.id) ?? false)
+      && (await queueRef.current?.openPayment(p.id) ?? false)
     if (!openedInQueue) setPlainDetail(p)
   }
 
