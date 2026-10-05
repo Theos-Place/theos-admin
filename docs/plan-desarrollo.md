@@ -845,7 +845,7 @@ día anterior en Costa Rica. Para el 31 de agosto hay 41 pagos en día CR y un
 filtro ingenuo habría devuelto CERO. La conversión vive en
 `src/lib/finance/rango-de-pagos.ts` con tests.
 
-### [ ] DON-3 · Donaciones con montos: reimportación del año + reporte con montos por sede
+### [~] DON-3 · Donaciones con montos: reimportación del año + reporte con montos por sede — PARTE B HECHA 2026-10-05 · PARTE A ESPERA EL CONSOLIDADO DE ANDRÉS
 
 Prompt para Claude Code:
 
@@ -873,6 +873,25 @@ año) se va a revisar con don Luis — no cambiarla en este ítem.
 Tests: parte A (match actualiza sin duplicar, dry-run), parte B (unicidad de donante,
 monedas separadas, sede sin datos). tsc/lint/vitest.
 ```
+
+**Parte B HECHA** (commit `366d958c`): `/finanzas/donaciones/reporte`, por año,
+por mes y por sede, con export XLSX de las tres vistas. Gate de finanzas /
+dirección / admin, y el export en `audit_log`.
+
+**EL DATO QUE CAMBIA LA PARTE A.** Medido el 2026-10-05: las **15 276
+donaciones tienen `amount = 0.00`**, no nulo. Ni una positiva. O sea que el
+consolidado de Andrés no es «completar lo que falta»: es cargar TODOS los
+importes, de 2014 a hoy. La parte A sigue pendiente y es más grande de lo que
+el ítem suponía.
+
+Por eso el reporte NO escribe «₡0» cuando no hay importes: en una pantalla de
+finanzas eso se lee como «no entró plata». Un monto de cero cuenta como dato
+sin cargar — una donación de ₡0 no es una donación.
+
+**Lo que ya sirve hoy, con los conteos de personas que sí son reales:**
+1 882 donantes únicos, 792 en 2026. Por sede: Meridiano Martes 439, Pedregal
+Domingos 392, Antares 227, y **250 sin sede** —los que no aparecen por ninguna
+charla, que son los que a Meli le interesan—.
 
 ### [ ] FIN-9 · «Congelar matrícula» por CUPONES — DECIDIDO con Meli 2026-09-29, listo para construir
 
