@@ -96,10 +96,15 @@ export type ImportBatch = {
   status: 'completed' | 'partial' | 'failed'
 }
 
+import type { RazonDeBeca } from '@/lib/finance/solicitud-de-beca'
+
 // ── Solicitudes financieras (tabla finance_requests, migración 048) ─────────
 
 export type FinanceRequestType = 'scholarship' | 'refund'
-export type FinanceRequestStatus = 'open' | 'in_review' | 'resolved' | 'rejected'
+/** BEC-5 · `por_modificar`: el grupo elegido se llenó y la persona tiene que
+ *  elegir otro. No es un rechazo — la solicitud sigue viva. */
+export type FinanceRequestStatus =
+  'open' | 'in_review' | 'por_modificar' | 'resolved' | 'rejected'
 
 export type FinanceRequestHistoryEntry = {
   from_status: FinanceRequestStatus | null
@@ -122,6 +127,8 @@ export type FinanceRequest = {
   payment_label: string | null
   amount: number | null
   reason: string
+  /** BEC-5 · Por cuál de las tres razones. `null` en las 10 anteriores al cambio. */
+  reason_category: RazonDeBeca | null
   status: FinanceRequestStatus
   reviewed_by: string | null
   reviewed_by_name: string | null
@@ -149,6 +156,8 @@ export type FinanceRequestWriteInput = {
   payment_id?: string | null
   amount?: number | null
   reason: string
+  /** BEC-5 · Por cuál de las tres razones se pide. El detalle va en `reason`. */
+  reason_category?: RazonDeBeca | null
   entity_type?: FinanceRequestEntityType | null
   plan_id?: string | null
   event_id?: string | null

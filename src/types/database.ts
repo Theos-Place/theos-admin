@@ -1399,6 +1399,7 @@ export type Database = {
           payment_id: string | null
           plan_id: string | null
           reason: string
+          reason_category: string | null
           recorded_by: string | null
           request_type: string
           review_notes: string | null
@@ -1418,6 +1419,7 @@ export type Database = {
           payment_id?: string | null
           plan_id?: string | null
           reason: string
+          reason_category?: string | null
           recorded_by?: string | null
           request_type: string
           review_notes?: string | null
@@ -1437,6 +1439,7 @@ export type Database = {
           payment_id?: string | null
           plan_id?: string | null
           reason?: string
+          reason_category?: string | null
           recorded_by?: string | null
           request_type?: string
           review_notes?: string | null

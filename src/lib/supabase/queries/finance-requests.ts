@@ -1,3 +1,4 @@
+import type { RazonDeBeca } from '@/lib/finance/solicitud-de-beca'
 /**
  * Solicitudes financieras (becas y devoluciones) — mismo patrón que
  * study-requests. SQL en supabase/migrations/048_finance_requests.sql:
@@ -27,7 +28,7 @@ import type {
 } from '@/types/finance'
 
 const REQUEST_SELECT = `
-  id, member_id, request_type, study_group_id, payment_id, amount, reason, status,
+  id, member_id, request_type, study_group_id, payment_id, amount, reason, reason_category, status,
   reviewed_by, reviewed_at, review_notes, created_at, updated_at,
   entity_type, plan_id, event_id,
   member:members!finance_requests_member_id_fkey(first_name, last_name),
@@ -47,6 +48,7 @@ type DbRow = {
   payment_id: string | null
   amount: number | null
   reason: string
+  reason_category: RazonDeBeca | null
   status: FinanceRequestStatus
   reviewed_by: string | null
   reviewed_at: string | null
@@ -107,6 +109,7 @@ function toDomain(r: DbRow): FinanceRequest {
     payment_label: paymentLabel(r.payment),
     amount: r.amount,
     reason: r.reason,
+    reason_category: r.reason_category,
     status: r.status,
     reviewed_by: r.reviewed_by,
     reviewed_by_name: r.reviewer ? fullName(r.reviewer) : null,
@@ -170,6 +173,7 @@ export async function createFinanceRequest(input: FinanceRequestWriteInput): Pro
       recorded_by: input.recorded_by ?? null,
       request_type: input.request_type,
       study_group_id: input.study_group_id ?? null,
+      reason_category: input.reason_category ?? null,
       payment_id: input.payment_id ?? null,
       amount: input.amount ?? null,
       reason: input.reason,

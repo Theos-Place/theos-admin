@@ -27,7 +27,9 @@ import { formatDate, formatDateNumeric, getInitials } from '@/lib/format'
 // 'en_espera' lo usa hoy solo la cola de reubicaciones (REU-2) y aparece
 // únicamente si el consumidor pasa `espera`. Igual que 'escalated': el tipo lo
 // conoce el tablero, el CHECK de cada tabla decide si existe de verdad.
-export type RequestStatus = 'open' | 'in_review' | 'escalated' | 'resolved' | 'rejected' | 'vencida' | 'en_espera'
+/** `por_modificar` (BEC-5): la solicitud sigue viva pero falta que el
+ *  solicitante cambie algo — hoy, elegir otro grupo porque el suyo se llenó. */
+export type RequestStatus = 'open' | 'in_review' | 'escalated' | 'resolved' | 'rejected' | 'vencida' | 'en_espera' | 'por_modificar'
 
 export type BaseRequest = {
   id: string
@@ -62,6 +64,9 @@ export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: s
   // REU-2: alguien decidió a propósito que esta espera. No es una pendiente
   // olvidada, y por eso no se cuenta como activa ni sale en la lista de arriba.
   en_espera: { label: 'En espera',   cls: 'bg-[rgba(59,117,121,0.14)] text-[#2F5C5F]' },
+  // BEC-5 · Ámbar como `in_review`: sigue viva y espera a alguien. No es un
+  // rechazo, y pintarla de rojo lo haría parecer.
+  por_modificar: { label: 'Por modificar', cls: 'bg-amber-50 text-amber-700' },
 }
 
 // Orden: estados activos primero, "Todas" al final. Default al entrar: Abiertas.

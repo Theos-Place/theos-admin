@@ -5,6 +5,9 @@ import {
   getFinanceRequests, countOpenFinanceRequests, createFinanceRequest, notifyFinanceRolesOfRequest,
 } from '@/lib/supabase/queries/finance-requests'
 import type { FinanceRequestStatus, FinanceRequestType } from '@/types/finance'
+import {
+  esRazonDeBeca, montoPedido, MINIMO_DEL_DETALLE,
+} from '@/lib/finance/solicitud-de-beca'
 import { reportarError } from '@/lib/observabilidad'
 
 const TYPES = new Set(['scholarship', 'refund'])
@@ -70,8 +73,9 @@ export async function POST(req: NextRequest) {
     if (!memberId || !TYPES.has(body?.request_type)) {
       return NextResponse.json({ error: 'Se requiere member_id y request_type válido' }, { status: 400 })
     }
-    if (reason.length < 20) {
-      return NextResponse.json({ error: 'La razón debe tener al menos 20 caracteres' }, { status: 400 })
+    if (reason.length < MINIMO_DEL_DETALLE) {
+      return NextResponse.json(
+        { error: `La razón debe tener al menos ${MINIMO_DEL_DETALLE} caracteres` }, { status: 400 })
     }
     if (body.request_type === 'refund' && !body.payment_id) {
       return NextResponse.json({ error: 'Se requiere el pago a devolver' }, { status: 400 })
@@ -81,11 +85,37 @@ export async function POST(req: NextRequest) {
       if (entityType !== 'study_plan' && entityType !== 'event') {
         return NextResponse.json({ error: 'Se requiere indicar si es para un estudio o un evento' }, { status: 400 })
       }
+      /**
+       * BEC-5 punto 3 · Para un estudio se pide el GRUPO, no el tipo.
+       *
+       * Antes bastaba `plan_id` —«quiero beca para Nivel 1»— y el cupo se
+       * conversaba aparte. Una de las 10 solicitudes reales dice «la había
+       * solicitado para Romanos pero ya está lleno»: sin grupo, nadie puede
+       * avisarle cuando eso pasa. Con el grupo, el punto 5 es posible.
+       *
+       * `plan_id` se sigue pidiendo además del grupo: es lo que mira la
+       * pantalla de revisión y lo que usan las becas ya resueltas.
+       */
       if (entityType === 'study_plan' && !body.plan_id) {
         return NextResponse.json({ error: 'Se requiere el estudio' }, { status: 400 })
       }
+      if (entityType === 'study_plan' && !body.study_group_id) {
+        return NextResponse.json(
+          { error: 'Elegí el grupo específico (día, zona y dirigente).', code: 'falta_grupo' },
+          { status: 400 },
+        )
+      }
       if (entityType === 'event' && !body.event_id) {
         return NextResponse.json({ error: 'Se requiere el evento' }, { status: 400 })
+      }
+      // BEC-5 punto 1 · La razón es una de tres. Se valida acá y no solo en
+      // el formulario: el endpoint se alcanza con un POST a mano, y una
+      // categoría inventada rompería el conteo que motivó el cambio.
+      if (!esRazonDeBeca(body.reason_category)) {
+        return NextResponse.json(
+          { error: 'Elegí por cuál razón pedís la beca.', code: 'falta_razon' },
+          { status: 400 },
+        )
       }
     }
 
@@ -95,9 +125,11 @@ export async function POST(req: NextRequest) {
       request_type: body.request_type,
       study_group_id: body.study_group_id ?? null,
       payment_id: body.payment_id ?? null,
-      amount: typeof body.amount === 'number' && body.amount > 0 ? body.amount : null,
+      // BEC-5 punto 2 · El monto es opcional; cero o negativo no es un monto.
+      amount: montoPedido(body.amount),
       reason,
       entity_type: body.request_type === 'scholarship' ? body.entity_type : null,
+      reason_category: body.request_type === 'scholarship' ? body.reason_category : null,
       plan_id: body.plan_id ?? null,
       event_id: body.event_id ?? null,
     })
