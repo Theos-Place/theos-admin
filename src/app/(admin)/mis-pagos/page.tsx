@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { MemberPaymentsList } from '@/components/members/MemberPaymentsList'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { MisSolicitudesDeBeca } from '@/components/finance/MisSolicitudesDeBeca'
 import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
 import { formatDate } from '@/lib/format'
 import { estadoDeLaSesion, SIN_FICHA_ASOCIADA } from '@/lib/auth/estado-de-la-sesion'
@@ -212,6 +213,19 @@ function MisPagosContent() {
               explica en genérico y el armado va en el modal de cada uno. */}
           <PaymentInstructions nombre={memberId === selfId ? user?.name : familyNames[memberId ?? '']} />
           {memberId && <MemberScholarships key={memberId} memberId={memberId} />}
+          {/* BEC-5 · Las SOLICITUDES, aparte de las becas ya asignadas.
+              El aviso de «tu grupo se llenó» enlaza acá, y hasta ahora esta
+              pantalla mostraba solo las becas otorgadas: la persona llegaba a
+              un lugar donde no podía hacer lo que el aviso le pedía. */}
+          {memberId && (
+            <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--outline-variant)]">
+                <GraduationCap size={15} className="text-teal-deep" />
+                <h2 className="text-[13px] font-bold text-navy font-display">Mis solicitudes de beca</h2>
+              </div>
+              <MisSolicitudesDeBeca key={memberId} memberId={memberId} />
+            </div>
+          )}
         </div>
       </div>
     </div>
