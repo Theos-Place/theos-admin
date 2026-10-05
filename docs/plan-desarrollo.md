@@ -1115,3 +1115,46 @@ Este» y «Youth United Este», la sede del Este que operó de 2022 a 2024. NO
 son alias del renombre: fueron una sede propia que cerró. Si se quieren
 fundir con otra, es una línea en `SEDE_CANONICAL`, pero eso cambia el
 histórico y no se asume.
+
+### [ ] REP-14 · Reporte de recurrentes que ya no van (pedido 2026-10-05)
+
+Personas que asistieron al menos 20 veces a Theos pero llevan más de 6 meses
+sin venir a ninguna charla — la gente valiosa que se perdió.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Reporte en /reportes: "Recurrentes que dejaron de venir"
+
+DEFINICIÓN (función pura testeable):
+- Persona con ≥20 check-ins a charlas en TODO su histórico (los 168k+ migrados cuentan),
+- y SIN ningún check-in a charla en los últimos 6 meses.
+- Excluir: datos [prueba], fallecidos/inactivos marcados, y servidores activos (sirven
+  aunque no asistan a charla — mismo criterio de DIR-7). Reutilizar las piezas de
+  DIR-7/REP-5 (no-volvieron/abandonos), no reinventar.
+
+AGRUPACIÓN POR AÑO:
+- Vista agrupada por AÑO (los años en que la persona asistió): en cada año aparecen los
+  recurrentes-perdidos que asistieron ese año; quien asistió varios años aparece en cada
+  uno, con un indicador de "se repite" (en cuántos años / cuáles).
+- Por persona, mostrar el AÑO EN QUE DEJÓ DE IR (= año de su último check-in a charla)
+  bien visible.
+- Resumen arriba: total de personas únicas y conteo por año de abandono (¿en qué año
+  perdimos a más recurrentes?).
+
+COLUMNAS por persona: nombre · teléfono · email · sede a la que asistió (la calculada;
+si no tiene, la más frecuente de su histórico — indicar cuál criterio quedó) · total de
+asistencias · fecha del último check-in · año en que dejó de ir · llevó estudio sí/no ·
+último estudio que llevó · dirigente de ese estudio.
+Export XLSX con todo.
+
+PERMISOS: trae teléfonos y correos — mismo criterio de REP-5/REP-6: roles amplios de
+reportes con alcance de miembros (verificar el gate del export); tarjeta del índice
+filtrada por rol.
+RENDIMIENTO: SQL agregado (≥20 sobre el histórico completo es una agregación grande —
+nada de traer check-ins al cliente; valorar apoyarse en report_snapshots si la consulta
+en vivo pesa).
+Tests: definición (19 check-ins no entra, 20 sí; actividad hace 5 meses no entra;
+servidor activo excluido), año de abandono, repetición multi-año, export.
+tsc/lint/vitest.
+```
