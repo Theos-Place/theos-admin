@@ -7,6 +7,7 @@ import { AlertCircle, Check, Loader2 } from 'lucide-react'
 import { fieldA11y } from '@/lib/forms/field-a11y'
 import { DOCUMENT_TYPE_LABEL, DOCUMENT_TYPES } from '@/lib/cedula'
 import { erroresDeRegistro } from '@/lib/auth/registro-publico'
+import { correoSugerido, avisoDeDominio } from '@/lib/email/dominio-sospechoso'
 
 const INPUT = 'w-full rounded-xl border border-outline bg-surface-card px-3.5 py-2.5 text-sm text-navy font-body outline-none focus:ring-1 focus:ring-coral/30'
 const LABEL = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
@@ -145,6 +146,26 @@ export default function RegistroPage() {
           <input type="email" value={d.email} onChange={set('email')} autoComplete="email"
             className={INPUT} {...a11y.email.input} />
           {errores.email && <p {...a11y.email.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.email}</p>}
+          {/* Un dominio mal escrito NO bloquea: se ofrece el arreglo y
+              decide la persona. El bloqueo dejaría afuera a quien tenga un
+              correo de empresa poco común, y eso es peor que el dedazo.
+
+              Por qué existe: medido el 2026-10-05, 53 fichas activas tienen
+              el dominio mal escrito y esas personas no reciben NADA del
+              sistema. Falla en silencio —el correo rebota y de este lado
+              todo se ve bien— hasta que alguien reclama. */}
+          {!errores.email && correoSugerido(d.email) && (
+            <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+              {avisoDeDominio(d.email)}{' '}
+              <button
+                type="button"
+                onClick={() => setD(v => ({ ...v, email: correoSugerido(v.email) ?? v.email }))}
+                className="underline text-teal-deep hover:text-navy transition-colors"
+              >
+                Usar ese
+              </button>
+            </p>
+          )}
           <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">Ahí te llega el enlace para crear tu contraseña.</p>
         </div>
 
