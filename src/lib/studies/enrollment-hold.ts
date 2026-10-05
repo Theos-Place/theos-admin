@@ -11,6 +11,11 @@
  * suelta. La matrícula pasa a 'dropped', su cobro se cancela y el cupo queda
  * libre. La persona puede volver a matricularse cuando quiera.
  *
+ * LO QUE TAMPOCO SE TOCA (2026-10-06): quien tiene una BECA APROBADA, o una
+ * SOLICITUD de beca esperando respuesta. Con una beca total no hay
+ * comprobante que subir, así que el barrido leía como abandono a quien
+ * justamente había hecho todo bien. Ver `conBecaAprobada` abajo.
+ *
  * LO QUE NO SE TOCA, y es la razón de que la condición sea por ESTADO y no por
  * "tiene un pago pendiente": las matrículas AUTOMÁTICAS del cierre (N2, N3, N4
  * y la cadena de Discípulos) nacen 'enrolled' con un cobro aparte. Esas sí
@@ -59,11 +64,44 @@ export function reservaExpirada(input: {
    * pagar.
    */
   conPlanDePagos?: boolean
+  /**
+   * ¿Tiene una BECA APROBADA para este estudio? Entonces NO se le suelta el
+   * cupo. (Reportado el 2026-10-06.)
+   *
+   * EL CASO QUE LO OBLIGA. Lulu Quesada pidió beca para HER, se la aprobaron
+   * al 100% —`final_amount` 0— y el cron la sacó del grupo DOS VECES, el 26
+   * de setiembre y el 4 de octubre, diciendo «sin comprobante por más de 72
+   * horas». Con una beca total no hay nada que subir: la persona no abandonó
+   * el flujo, el flujo le pidió un comprobante que no existe.
+   *
+   * Vale para la TOTAL y para la PARCIAL, y da igual si ya se aplicó al
+   * cobro. Mientras la beca esté viva, el reloj se pausa: aplicarla es un
+   * paso administrativo y nadie debería perder el cupo porque ese paso esté
+   * pendiente. Fue justo lo que pasó — las tres becas afectadas tenían
+   * `is_used = false`.
+   *
+   * Una beca REVOCADA no pausa nada: ahí el reloj corre como siempre.
+   */
+  conBecaAprobada?: boolean
+  /**
+   * ¿Tiene una solicitud de beca ESPERANDO respuesta? Tampoco se le suelta.
+   *
+   * Meli aprueba las becas la última semana de matrícula a propósito, para
+   * priorizar el cupo que se paga (BEC-5). Un barrido de 72 horas no puede
+   * pelear con esa regla operativa: desmatricularía a todo el que pida beca
+   * con más de tres días de anticipación, que es casi todo el mundo.
+   *
+   * Al resolverse la solicitud el reloj arranca de nuevo, porque la
+   * condición deja de cumplirse sola.
+   */
+  conSolicitudDeBecaPendiente?: boolean
   ahora: Date
 }): boolean {
   if (input.status !== 'pendiente_de_pago') return false
   if (input.reviewStatus) return false
   if (input.conPlanDePagos) return false
+  if (input.conBecaAprobada) return false
+  if (input.conSolicitudDeBecaPendiente) return false
   const creada = Date.parse(input.creadaEn)
   if (!Number.isFinite(creada)) return false
   return input.ahora.getTime() - creada >= HORAS_DE_GRACIA * 3600_000

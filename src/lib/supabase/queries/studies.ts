@@ -2124,14 +2124,53 @@ export async function expirePendingStudyEnrollments(
 
   const { data, error } = await supabase
     .from('study_enrollments')
-    .select('id, member_id, group_id, status, created_at, payments!payments_enrollment_id_fkey(concept, status, review_status, created_at, payment_plan_id)')
+    .select('id, member_id, group_id, plan_id, status, created_at, group:study_groups!study_enrollments_group_id_fkey(plan_id), payments!payments_enrollment_id_fkey(concept, status, review_status, created_at, payment_plan_id)')
     .eq('status', 'pendiente_de_pago')
   if (error) throw error
 
-  const candidatas = ((data ?? []) as unknown as Array<{
-    id: string; member_id: string; group_id: string | null; status: string; created_at: string
+  const pendientes = ((data ?? []) as unknown as Array<{
+    id: string; member_id: string; group_id: string | null; plan_id: string | null
+    status: string; created_at: string
+    group: { plan_id: string | null } | { plan_id: string | null }[] | null
     payments: Array<{ concept: string | null; status: string | null; review_status: string | null; created_at: string; payment_plan_id?: string | null }> | null
-  }>).filter(e => {
+  }>)
+
+  /**
+   * El plan del estudio: el de la matrícula o, si no, el del grupo. Es la
+   * llave con la que se busca la beca — una beca se da para un PLAN.
+   */
+  const planDe = (e: (typeof pendientes)[number]): string | null => {
+    if (e.plan_id) return e.plan_id
+    const g = Array.isArray(e.group) ? e.group[0] : e.group
+    return g?.plan_id ?? null
+  }
+
+  /**
+   * Becas y solicitudes de los candidatos, en DOS consultas y no una por
+   * persona: el barrido corre sobre todas las matrículas pendientes del
+   * sistema y un N+1 acá lo volvería lento justo cuando crece.
+   */
+  const miembros = [...new Set(pendientes.map(e => e.member_id))]
+  const becados = new Set<string>()
+  const esperandoBeca = new Set<string>()
+  if (miembros.length > 0) {
+    const [{ data: becas }, { data: solicitudes }] = await Promise.all([
+      // 'active' y 'used' pausan; 'revoked' NO — ahí el reloj corre de nuevo.
+      supabase.from('scholarships').select('member_id, plan_id')
+        .in('member_id', miembros).in('status', ['active', 'used']),
+      supabase.from('finance_requests').select('member_id, plan_id')
+        .in('member_id', miembros).eq('request_type', 'scholarship')
+        .in('status', ['open', 'in_review', 'por_modificar']),
+    ])
+    for (const b of (becas ?? []) as Array<{ member_id: string; plan_id: string | null }>) {
+      if (b.plan_id) becados.add(`${b.member_id}|${b.plan_id}`)
+    }
+    for (const r of (solicitudes ?? []) as Array<{ member_id: string; plan_id: string | null }>) {
+      if (r.plan_id) esperandoBeca.add(`${r.member_id}|${r.plan_id}`)
+    }
+  }
+
+  const candidatas = pendientes.filter(e => {
     // El review_status que importa es el del pago de MATRÍCULA; puede haber
     // otros conceptos colgando de la misma persona.
     const matricula = (e.payments ?? []).filter(p => p.concept === 'matricula')
@@ -2145,6 +2184,11 @@ export async function expirePendingStudyEnrollments(
       // Con plan de pagos la matrícula NO se suelta: los tractos tienen su
       // propia fecha de vencimiento y la persona está al día con lo acordado.
       conPlanDePagos: matricula.some(p => !!p.payment_plan_id),
+      // Con beca aprobada o con solicitud en revisión, el reloj se pausa.
+      // Ver `enrollment-hold`: con una beca total no hay comprobante que
+      // subir, y el barrido leía como abandono a quien hizo todo bien.
+      conBecaAprobada: !!planDe(e) && becados.has(`${e.member_id}|${planDe(e)}`),
+      conSolicitudDeBecaPendiente: !!planDe(e) && esperandoBeca.has(`${e.member_id}|${planDe(e)}`),
       ahora,
     })
   })
