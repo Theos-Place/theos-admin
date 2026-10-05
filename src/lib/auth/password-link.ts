@@ -4,7 +4,7 @@ import { sendEmail } from '@/lib/email/provider'
 import { renderEmail } from '@/lib/email/baseLayout'
 import { linkAttemptOrder, shouldTryOtherKind, type PasswordLinkKind } from '@/lib/auth/password-link-plan'
 import { planDeEnlace, type FichaConCorreo } from '@/lib/auth/enlace-de-cuenta'
-import { patronDeCorreo, esMismoCorreo } from '@/lib/email/correo-exacto'
+import { patronDeCorreo } from '@/lib/email/correo-exacto'
 import { reportarError, reportarFalla } from '@/lib/observabilidad'
 import { ATERRIZAJE, nextConDestino } from './destino-tras-la-contrasena'
 
@@ -134,9 +134,30 @@ function body(kind: PasswordLinkKind, link: string, nombre: string | null): stri
 async function enlazarFichaConLaCuenta(email: string): Promise<void> {
   try {
     const supabase = createAdminClient()
-    const { data: usuarios } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    // generateLink no devuelve el id del usuario: se busca por correo.
-    const authUserId = usuarios?.users.find(u => esMismoCorreo(u.email, email))?.id
+    /**
+     * La cuenta se busca con `buscar_cuenta_por_correo` y NO con
+     * `auth.admin.listUsers`.
+     *
+     * EL BUG QUE ESTO ARREGLA (encontrado el 2026-10-05 con Ricardo Martínez
+     * Herrera, y antes de él otros cuatro). `listUsers({page:1,perPage:1000})`
+     * devuelve las MIL cuentas MÁS VIEJAS, y en producción hay 9 025. Una
+     * cuenta recién creada es siempre de las últimas, así que nunca aparecía
+     * en esa página: `authUserId` quedaba `undefined`, la función volvía sin
+     * hacer nada y la ficha se quedaba sin enlazar.
+     *
+     * El modo de falla era el peor posible: la persona recibía su correo,
+     * definía su contraseña y ENTRABA —todo parecía funcionar— pero
+     * `getAuthContext` resuelve la ficha por `auth_user_id` y no la
+     * encontraba. Veía el sistema sin perfil, no podía matricularse, y al
+     * pedirle a staff que le creara el usuario, el correo "ya existía".
+     *
+     * Viene fallando desde que el sistema pasó las mil cuentas. El mismo
+     * error ya se había corregido en `members/[id]/access-email`; acá quedó.
+     */
+    const { data: cuenta } = await supabase.rpc(
+      'buscar_cuenta_por_correo' as never, { p_email: email } as never,
+    )
+    const authUserId = (cuenta as Array<{ id: string }> | null)?.[0]?.id
     if (!authUserId) return
     const { data: fichas } = await supabase
       .from('members').select('id, auth_user_id').ilike('email', patronDeCorreo(email))
