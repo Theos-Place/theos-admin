@@ -53,7 +53,7 @@ export type GroupParticipant = {
   /** Resultado del cierre (solo en grupos finalizados): derivado de notes. */
   result?: 'aprobado' | 'reprobado' | null
   /**
-   * EST-22 · Ofreció su casa para el estudio, y dónde.
+   * EST-26 · Ofreció su casa para el estudio, y dónde.
    *
    * SOLO llega para gestión: ni el dirigente ni el estudiante lo reciben
    * (recortarRoster). `undefined` = no viajó; `null` = viajó y no ofreció.

@@ -58,7 +58,7 @@ export async function GET(
     // pantalla no esconde el dato: viaja igual en el JSON.
     const roster = (group as unknown as { enrollments?: FilaDeRoster[] }).enrollments ?? []
     /**
-     * EST-22 · Quién ofreció su casa. Se consulta SOLO para 'admin': es el
+     * EST-26 · Quién ofreció su casa. Se consulta SOLO para 'admin': es el
      * único alcance que puede verlo, y traerlo para el dirigente sería pagar
      * una consulta por un dato que `recortarRoster` va a tirar.
      */
@@ -69,7 +69,7 @@ export async function GET(
         for (const f of roster) f.ofrece_casa = casas.get(f.member_id) ?? null
       } catch (e) {
         // Best-effort: una columna vacía es mejor que un grupo que no abre.
-        reportarError('EST-22 ofrecimientos de casa:', e)
+        reportarError('EST-26 ofrecimientos de casa:', e)
       }
     }
     if (scope === 'admin' || scope === 'leader') {

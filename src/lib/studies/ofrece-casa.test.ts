@@ -11,7 +11,7 @@ const sinComentarios = (ruta: string): string =>
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-describe('EST-22 · reconocer la pregunta', () => {
+describe('EST-26 · reconocer la pregunta', () => {
   it('encuentra la pregunta real de producción', () => {
     expect(esLaPreguntaDeLaCasa('¿Podrías ofrecer tu casa u oficina para el estudio?')).toBe(true)
   })
@@ -37,7 +37,7 @@ describe('EST-22 · reconocer la pregunta', () => {
   })
 })
 
-describe('EST-22 · leer la respuesta', () => {
+describe('EST-26 · leer la respuesta', () => {
   it('«Sí» con y sin tilde', () => {
     expect(ofreceCasa('Sí')).toBe(true)
     expect(ofreceCasa('si')).toBe(true)
@@ -73,7 +73,7 @@ describe('EST-22 · leer la respuesta', () => {
   })
 })
 
-describe('EST-22 · quién puede verlo', () => {
+describe('EST-26 · quién puede verlo', () => {
   it('SOLO gestión: ni el dirigente ni el estudiante', () => {
     // Decisión de Floriana (2026-10-06). La sede del grupo la define el
     // equipo de estudios, y la dirección de la casa de alguien no tiene por

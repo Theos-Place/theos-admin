@@ -870,7 +870,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     permisos.verEdad ? 'Edad' : '',
                     'Estado',
                     'Asistencia',
-                    // EST-22 · Solo gestión. El dirigente no la ve y el
+                    // EST-26 · Solo gestión. El dirigente no la ve y el
                     // servidor tampoco le manda el dato.
                     permisos.verOfrecimientoDeCasa ? 'Ofrece casa' : '',
                     // La nota tampoco: el servidor ya la recorta para el
@@ -955,7 +955,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     <td className="px-4 py-3">
                       <AttendanceBar pct={p.attendance_pct} />
                     </td>
-                    {/* EST-22 · La celda queda VACÍA para quien no ofreció.
+                    {/* EST-26 · La celda queda VACÍA para quien no ofreció.
                         Una columna con «No» repetido 25 veces es ruido, y lo
                         que se busca son los pocos que sí. */}
                     {permisos.verOfrecimientoDeCasa && (

@@ -7,7 +7,7 @@ const sinComentarios = (ruta: string): string =>
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
-describe('EST-23 · una excepción de NIVEL no vence', () => {
+describe('EST-27 · una excepción de NIVEL no vence', () => {
   const AYER = { cierreMatricula: '2026-09-13', hoy: '2026-10-06', status: 'active' }
 
   it('el caso real: el bloque cerró hace un mes y la excepción SIGUE viva', () => {
@@ -64,7 +64,7 @@ describe('EST-23 · una excepción de NIVEL no vence', () => {
   })
 })
 
-describe('EST-23 · el cableado', () => {
+describe('EST-27 · el cableado', () => {
   const Q = sinComentarios('src/lib/supabase/queries/study-exceptions.ts')
 
   it('una excepción de nivel NO se cuelga de un bloque al crearse', () => {

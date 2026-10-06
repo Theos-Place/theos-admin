@@ -150,7 +150,7 @@ export async function createException(input: {
    * abiertos ahora y muere cuando cierra su matrícula. Si no hay bloque activo
    * queda sin vencimiento — mejor eso que inventarle una fecha.
    *
-   * EST-23 · LOS NIVELES NO. Los tres bloques anuales son de capacitaciones;
+   * EST-27 · LOS NIVELES NO. Los tres bloques anuales son de capacitaciones;
    * un grupo de Nivel 1 abre cuando hay gente y dirigente. Colgarle el cierre
    * de un bloque le pone una fecha que no significa nada, y ya mató tres
    * excepciones reales sin que nadie se enterara.

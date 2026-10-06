@@ -27,7 +27,7 @@ describe('permisosDelRoster', () => {
     expect(permisosDelRoster('admin')).toEqual({
       verLista: true, verTelefono: true, verCumple: true, verEdad: true,
       verDatosDeGestion: true, verPerfil: true, verAsistencia: true,
-      // EST-22 · Quién ofreció su casa: gestión sí, nadie más.
+      // EST-26 · Quién ofreció su casa: gestión sí, nadie más.
       verOfrecimientoDeCasa: true,
     })
   })

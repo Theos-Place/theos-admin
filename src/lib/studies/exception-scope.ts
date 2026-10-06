@@ -38,7 +38,7 @@ export function perdona(waived: readonly string[] | null | undefined, req: Waiva
 }
 
 /**
- * EST-23 · Los NIVELES no siguen el calendario de bloques.
+ * EST-27 · Los NIVELES no siguen el calendario de bloques.
  *
  * Los tres bloques anuales son de CAPACITACIONES. Un grupo de Nivel 1 abre
  * cuando hay gente y dirigente, no cuando empieza un cuatrimestre, así que
@@ -63,7 +63,7 @@ export function esNivel(planCode: string | null | undefined): boolean {
  * El día del cierre TODAVÍA vale — la matrícula está abierta hasta ese día
  * inclusive, así que la excepción tiene que durar lo mismo.
  *
- * EN NIVELES NO CADUCA NUNCA (EST-23). Vive hasta que se USA —un solo uso, al
+ * EN NIVELES NO CADUCA NUNCA (EST-27). Vive hasta que se USA —un solo uso, al
  * matricularse queda `used`— o hasta que alguien la quita. `planCode` es
  * obligatorio justamente para que nadie se olvide de la distinción: un
  * default convertiría de nuevo a los niveles en capacitaciones.

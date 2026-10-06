@@ -38,7 +38,7 @@ export type PermisosDelRoster = {
   /** Tab de asistencia y acciones sobre el grupo. */
   verAsistencia: boolean
   /**
-   * EST-22 · Quién ofreció su casa, y dónde.
+   * EST-26 · Quién ofreció su casa, y dónde.
    *
    * SOLO GESTIÓN, ni siquiera el dirigente (Floriana, 2026-10-06). No es
    * por desconfianza: es que la sede del grupo la define el equipo de
@@ -84,7 +84,7 @@ export type FilaDeRoster = {
   status: string | null
   grade?: number | null
   notes?: string | null
-  /** EST-22 · Solo viaja para quien puede verlo. */
+  /** EST-26 · Solo viaja para quien puede verlo. */
   ofrece_casa?: { ubicacion: string | null } | null
   member: {
     first_name: string

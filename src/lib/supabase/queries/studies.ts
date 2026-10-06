@@ -2536,7 +2536,7 @@ export async function getDisponibilidadDeDirigentes(): Promise<DisponibilidadDel
 }
 
 /**
- * EST-22 · Quiénes de estos miembros ofrecieron su casa, y dónde.
+ * EST-26 · Quiénes de estos miembros ofrecieron su casa, y dónde.
  *
  * Una sola consulta para todo el roster: el dato vive en las respuestas del
  * formulario de matrícula y pedirlo por persona serían N consultas para

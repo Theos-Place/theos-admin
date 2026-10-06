@@ -27,9 +27,9 @@ describe('perdona', () => {
 })
 
 /**
- * EST-23 · Estos casos describen CAPACITACIONES, donde el bloque SÍ manda.
+ * EST-27 · Estos casos describen CAPACITACIONES, donde el bloque SÍ manda.
  * En niveles la excepción no vence nunca; eso vive en
- * est23-niveles-sin-vencimiento.test.ts.
+ * est27-niveles-sin-vencimiento.test.ts.
  */
 describe('excepcionVigente', () => {
   const hoy = '2026-09-01'

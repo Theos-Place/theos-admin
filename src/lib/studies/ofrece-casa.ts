@@ -1,5 +1,5 @@
 /**
- * EST-22 · Quién ofreció su casa para el estudio.
+ * EST-26 · Quién ofreció su casa para el estudio.
  *
  * EL PROBLEMA. La matrícula a Nivel 1 pregunta «¿Podrías ofrecer tu casa u
  * oficina para el estudio?» y pide la ubicación. El dato se guarda —medido

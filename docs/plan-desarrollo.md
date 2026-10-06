@@ -1327,7 +1327,10 @@ dice la sede y la hora, que es lo que deja decidir en la puerta.
 Solo entre charlas; el «Youth» de la misma sede no dispara el aviso; el día
 se mide en hora de Costa Rica.
 
-### [~] EST-22 · Ver quién ofreció su casa — COLUMNA HECHA 2026-10-06 · FALTAN EXPORT Y FILTRO DE PADRÓN
+### [~] EST-26 · Ver quién ofreció su casa — COLUMNA HECHA 2026-10-06 · FALTAN EXPORT Y FILTRO DE PADRÓN
+
+(Se pidió como «EST-22» el 2026-10-06; se renumeró porque ese código ya lo
+usaba el teléfono del dirigente en el export, cerrado el 2026-09-30.)
 
 Prompt para Claude Code:
 
@@ -1354,7 +1357,10 @@ ETAPA 2 — EXPONERLO donde se trabaja:
 Tests: columna visible para gestión, no para estudiante; dato correcto. tsc/lint/vitest.
 ```
 
-### [x] EST-23 · Excepciones de niveles sin fecha de vencimiento — HECHO 2026-10-06
+### [x] EST-27 · Excepciones de niveles sin fecha de vencimiento — HECHO 2026-10-06
+
+(Se pidió como «EST-23»; se renumeró porque ese código ya lo usaba el cierre
+de N2 con sus dos semanas, cerrado el 2026-10-02.)
 
 Las excepciones de matrícula de niveles (ej. repetir Nivel 1) se están creando
 amarradas al calendario de bloques — incorrecto: los niveles NO siguen los 3
@@ -1386,7 +1392,7 @@ el cron no las toca, migración idempotente. tsc/lint/vitest.
 ```
 
 
-**EST-22 · lo medido y lo que quedó (2026-10-06)**
+**EST-26 · lo medido y lo que quedó (2026-10-06)**
 
 El dato SÍ se guarda: la pregunta «¿Podrías ofrecer tu casa u oficina para el
 estudio?» vive en el formulario «Matrícula a Nivel 1 — preguntas iniciales»,
@@ -1409,7 +1415,7 @@ NO HECHO, y por qué:
 - **Las demás respuestas al abrir la matrícula**: ya se ven todas en
   `/formularios/[id]/respuestas`. Se dejó así en vez de duplicar la pantalla.
 
-**EST-23 · lo que estaba roto (2026-10-06)**
+**EST-27 · lo que estaba roto (2026-10-06)**
 
 No hay cron: la vigencia se evalúa al leer, con `excepcionVigente`, y la daba
 el `bloque_id`. TRES excepciones de Nivel 1 estaban MUERTAS sin que nadie lo

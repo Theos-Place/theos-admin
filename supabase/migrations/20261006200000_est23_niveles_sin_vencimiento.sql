@@ -1,4 +1,4 @@
--- EST-23 · Las excepciones de NIVELES no vencen.
+-- EST-27 · Las excepciones de NIVELES no vencen.
 --
 -- LA REGLA (Floriana, 2026-10-06): los tres bloques anuales son de
 -- CAPACITACIONES. Un grupo de Nivel 1 abre cuando hay gente y dirigente, no
@@ -33,4 +33,4 @@ update public.study_requirement_exceptions e
 -- Idempotente por construcción: una segunda corrida no encuentra filas.
 
 comment on column public.study_requirement_exceptions.bloque_id is
-  'Bloque en que se otorgó, para la vigencia. SIEMPRE NULL en niveles (EST-23): los niveles no siguen el calendario de bloques y su excepción no vence.';
+  'Bloque en que se otorgó, para la vigencia. SIEMPRE NULL en niveles (EST-27): los niveles no siguen el calendario de bloques y su excepción no vence.';
