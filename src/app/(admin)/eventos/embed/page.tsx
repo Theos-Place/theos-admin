@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { PARAM_EMBEBIDO } from '@/lib/vista-embebida'
 import Link from 'next/link'
 import { ChevronLeft, Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -57,9 +58,14 @@ export default function EmbedPage() {
 
   const previewUrl = `/calendario?view=${cfg.view}&types=${cfg.types.join(',')}&primary=${encodeURIComponent(cfg.primary)}&accent=${encodeURIComponent(cfg.accent)}&bg=${encodeURIComponent(cfg.bg)}&showDesc=${cfg.showDesc}&showLoc=${cfg.showLoc}&showBtn=${cfg.showBtn}`
 
+  /**
+   * El código lleva `embed=1`: sin él la página pinta su propia banda
+   * «Theos Place — Eventos» y, dentro del sitio que ya tiene header, se ven
+   * dos encabezados pegados (2026-10-06).
+   */
   const iframeCode = `<!-- Calendario Theos Place -->
 <iframe
-  src="https://admin.theosplace.org/calendario?view=${cfg.view}&types=${cfg.types.join(',')}&primary=%23${cfg.primary.slice(1)}&accent=%23${cfg.accent.slice(1)}&lang=${cfg.lang}"
+  src="https://admin.theosplace.org/calendario?${PARAM_EMBEBIDO}=1&view=${cfg.view}&types=${cfg.types.join(',')}&primary=%23${cfg.primary.slice(1)}&accent=%23${cfg.accent.slice(1)}&lang=${cfg.lang}"
   width="100%"
   height="${cfg.height}px"
   frameborder="0"

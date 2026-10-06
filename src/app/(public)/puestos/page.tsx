@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { esVistaEmbebida, PARAM_EMBEBIDO } from '@/lib/vista-embebida'
 import { MapPin, Clock, Users, Search, Briefcase, GraduationCap } from 'lucide-react'
 import { PublicApplyButton } from '@/components/servers/PublicApplyButton'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -39,6 +40,8 @@ type PublicVacancy = {
 
 function VacantesPublicasContent() {
   const params = useSearchParams()
+  /** Dentro del sitio de Theos el header lo pone el sitio, no esta página. */
+  const embebida = esVistaEmbebida(params.get(PARAM_EMBEBIDO))
   const [vacancies, setVacancies] = useState<PublicVacancy[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -94,7 +97,9 @@ function VacantesPublicasContent() {
 
   return (
     <div className="min-h-screen bg-surface-low">
-      {/* Encabezado público */}
+      {/* Encabezado público. Se esconde con `?embed=1`: dentro del sitio de
+          Theos, que ya tiene su propio header, se veían dos pegados. */}
+      {!embebida && (
       <header className="bg-navy text-white">
         <PageContainer width="work" className="px-5 py-10">
           <p className="text-[13px] font-medium text-white/80 font-body">Theos Place</p>
@@ -112,6 +117,7 @@ function VacantesPublicasContent() {
           </p>
         </PageContainer>
       </header>
+      )}
 
       <main><PageContainer width="work" className="px-5 py-8">
         {/* Filtros */}

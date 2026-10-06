@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { esVistaEmbebida, PARAM_EMBEBIDO } from '@/lib/vista-embebida'
 import { createClient } from '@/lib/supabase/client'
 import { registerDestination, loginRedirectTo } from '@/lib/events/public-register-link'
 import { estaEmbebido, comoNavegar } from '@/lib/events/embedded-nav'
@@ -25,6 +26,8 @@ function CalendarioWidget() {
   const accent = searchParams.get('accent') || '#D63E3D'
   const bg = searchParams.get('bg') || '#FFFFFF'
   const showDesc = searchParams.get('showDesc') !== 'false'
+  /** Dentro del sitio de Theos el encabezado lo pone el sitio (2026-10-06). */
+  const embebida = esVistaEmbebida(searchParams.get(PARAM_EMBEBIDO))
   const showLoc = searchParams.get('showLoc') !== 'false'
   const showBtn = searchParams.get('showBtn') !== 'false'
 
@@ -112,10 +115,12 @@ function CalendarioWidget() {
   return (
     <div className="min-h-screen font-[system-ui,sans-serif]" style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg } as React.CSSProperties}>
       {/* Header */}
+      {!embebida && (
       <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
         <span className="text-[rgba(255,255,255,0.6)] text-xs">{contador}</span>
       </div>
+      )}
 
       {/* List view */}
       {view === 'list' && (
