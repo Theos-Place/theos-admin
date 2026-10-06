@@ -11,6 +11,7 @@ import { filterByNotifPref } from '@/lib/notifications/dispatch'
 import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 import { revisarReferencia, tieneReferenciaComparable } from '@/lib/finance/referencia-repetida'
 import { nivelesACobrar, montoDelBloque, ventanaDelCorte } from '@/lib/studies/corte-de-bloque'
+import { modalidadDe, type Modalidad } from '@/lib/studies/modalidad-de-bloques'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -139,6 +140,14 @@ async function findOrCreateSuccessorGroup(
   nextDurationWeeks: number | null,
   /** EST-16 · La fecha de arranque que eligió quien cerró el grupo, si eligió. */
   inicioElegido?: string | null,
+  /**
+   * La modalidad que HEREDA el sucesor.
+   *
+   * Se pasa explícita y no se deduce de la fecha: los 5 grupos de N4 que
+   * nacieron el 2026-10-05 son sucesores de N3 legacy, y por fecha habrían
+   * quedado como «bloques» — justo al revés de lo que son.
+   */
+  modalidad: Modalidad = 'legacy',
 ): Promise<string | null> {
   const findSuccessor = async (): Promise<string | null> => {
     let query = supabase
@@ -174,6 +183,7 @@ async function findOrCreateSuccessorGroup(
     .insert({
       plan_id: nextPlanId,
       name,
+      modalidad,
       leader_id: src.leader_id,
       co_leader_id: src.co_leader_id,
       zone: src.zone,
@@ -293,13 +303,14 @@ export async function autoEnrollApprovedToNextLevel(
   // Grupo origen completo (para heredar dirigente/horario/zona) + nivel siguiente.
   const { data: g } = await supabase
     .from('study_groups')
-    .select('id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location, sede, max_students, age_min, age_max, ends_at, plan:study_plans(code)')
+    .select('id, name, leader_id, co_leader_id, zone, schedule_days, schedule_time, location, sede, max_students, age_min, age_max, ends_at, modalidad, plan:study_plans(code)')
     .eq('id', sourceGroupId).maybeSingle()
   const src = g as {
     id: string; name: string | null; leader_id: string | null; co_leader_id: string | null
     zone: string | null; schedule_days: string[] | null; schedule_time: string | null
     location: string | null; sede: string | null; max_students: number | null
     age_min: number | null; age_max: number | null
+    modalidad: string | null
     plan: { code: string | null } | { code: string | null }[] | null
   } | null
   const planEmbed = src?.plan
@@ -323,17 +334,26 @@ export async function autoEnrollApprovedToNextLevel(
    * Para todo lo que no es un nivel (DIS1→DIS2, etc.) `montoDelBloque`
    * devuelve el costo del propio plan y esto se comporta como siempre.
    */
+  /**
+   * LA MODALIDAD DEL GRUPO ORIGEN manda, y se hereda al sucesor.
+   *
+   * Un N3 legacy cobra N4 al cerrar, porque su gente pagó nivel por nivel.
+   * Un N3 de bloques no cobra nada, porque el par ya se pagó al entrar. Sin
+   * esto, el 2026-10-05 cinco cierres de N3 legacy dejaron a 32 estudiantes
+   * sin cobro y sin folleto.
+   */
+  const modalidad = modalidadDe(src.modalidad)
   const { data: costRows } = await supabase
-    .from('study_plans').select('code, cost').in('code', nivelesACobrar(next) as string[])
+    .from('study_plans').select('code, cost').in('code', nivelesACobrar(next, modalidad) as string[])
   const costosDelBloque = Object.fromEntries(
     ((costRows ?? []) as Array<{ code: string; cost: number | null }>)
       .map(r => [r.code, Number(r.cost ?? 0)]))
-  const amount = montoDelBloque(next, costosDelBloque)
+  const amount = montoDelBloque(next, costosDelBloque, modalidad)
   // INT-2: el pago hereda la moneda del costo del plan.
   const currency = np.currency ?? 'CRC'
 
   // Grupo sucesor (best-effort: si falla, la matrícula queda solo a nivel de plan).
-  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next, np.duration_weeks, inicioElegido)
+  const successorGroupId = await findOrCreateSuccessorGroup(supabase, src, np.id, sourceCode!, next, np.duration_weeks, inicioElegido, modalidad)
 
   // Dedup: quién ya tiene inscripción a ese nivel — por plan_id directo O por
   // grupo cuyo plan es el siguiente (A12: las matrículas por grupo tienen
@@ -375,12 +395,36 @@ export async function autoEnrollApprovedToNextLevel(
   // aparte). Si el nivel tiene costo se crea además el pago pendiente, que
   // finanzas revisa por su cuenta sin tocar la matrícula.
   const free = amount <= 0
+
+  /**
+   * QUIÉN YA PAGÓ EL PAR, dentro de este mismo grupo.
+   *
+   * No alcanza con la modalidad del grupo: hay GRUPOS MIXTOS. El N3 de
+   * Michelle Guier es de julio —legacy— pero tiene una persona que se
+   * matriculó el 5 de octubre y pagó ₡10.000, el bloque N3+N4 entero.
+   * Cobrarle N4 al cerrar sería cobrarle dos veces lo mismo.
+   *
+   * Se lee de la matrícula del grupo ORIGEN, que es donde pagó.
+   */
+  const { data: cubren } = await supabase
+    .from('study_enrollments')
+    .select('member_id')
+    .eq('group_id', sourceGroupId)
+    .in('member_id', approvedMemberIds)
+    .eq('cubre_bloque', true)
+  const yaPagaronElPar = new Set(
+    ((cubren ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
+  if (yaPagaronElPar.size > 0) {
+    console.info(`auto-enroll: ${yaPagaronElPar.size} ya pagaron el par, no se les cobra ${next}`)
+  }
+
   const now = new Date().toISOString()
   let enrolled = 0
   for (const { memberId, nota } of matricular) {
     // El dirigente del grupo sucesor (heredado del origen) no paga su matrícula;
     // el resto (alumnos, aunque dirijan otros grupos) sí.
     const memberFree = free || memberId === src.leader_id || memberId === src.co_leader_id
+      || yaPagaronElPar.has(memberId)
     const { data: enr, error: enrErr } = await supabase
       .from('study_enrollments')
       .insert({
@@ -389,6 +433,9 @@ export async function autoEnrollApprovedToNextLevel(
         group_id: successorGroupId,
         status: 'enrolled',
         enrolled_at: now,
+        // Se arrastra: quien pagó el par al entrar al bloque sigue cubierto
+        // en la segunda mitad, y su propio cierre tampoco debe cobrarle.
+        cubre_bloque: yaPagaronElPar.has(memberId),
         // Quien repite lleva la razón escrita: sin eso, la inscripción de
         // alguien que ya tenía el nivel aprobado se lee como un error.
         ...(nota ? { notes: nota } : {}),

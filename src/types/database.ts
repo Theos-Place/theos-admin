@@ -3097,6 +3097,7 @@ export type Database = {
       }
       payments: {
         Row: {
+          reminder_exempt_until: string | null
           amount: number
           category_id: string | null
           concept: string | null
@@ -3136,6 +3137,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          reminder_exempt_until?: string | null
           amount: number
           category_id?: string | null
           concept?: string | null
@@ -3175,6 +3177,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          reminder_exempt_until?: string | null
           amount?: number
           category_id?: string | null
           concept?: string | null
@@ -4267,6 +4270,7 @@ export type Database = {
       }
       study_enrollments: {
         Row: {
+          cubre_bloque: boolean
           completed_at: string | null
           created_at: string | null
           drop_reason: string | null
@@ -4286,6 +4290,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          cubre_bloque?: boolean
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4305,6 +4310,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          cubre_bloque?: boolean
           completed_at?: string | null
           created_at?: string | null
           drop_reason?: string | null
@@ -4363,6 +4369,7 @@ export type Database = {
       }
       study_groups: {
         Row: {
+          modalidad: string
           age_max: number | null
           age_min: number | null
           bloque_id: string | null
@@ -4405,6 +4412,7 @@ export type Database = {
           zone: string | null
         }
         Insert: {
+          modalidad?: string
           age_max?: number | null
           age_min?: number | null
           bloque_id?: string | null
@@ -4447,6 +4455,7 @@ export type Database = {
           zone?: string | null
         }
         Update: {
+          modalidad?: string
           age_max?: number | null
           age_min?: number | null
           bloque_id?: string | null

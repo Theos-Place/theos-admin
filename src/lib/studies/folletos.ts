@@ -22,6 +22,7 @@ export function nextLevelCode(planCode: string | null | undefined): string | nul
 
 /** Etiqueta legible del código de nivel (N2 → "Nivel 2", DIS2 → "Discípulos 2"). */
 import { folletosQuePide } from './corte-de-bloque'
+import type { Modalidad } from './modalidad-de-bloques'
 
 export function levelLabel(code: string | null | undefined): string {
   if (!code) return ''
@@ -87,8 +88,11 @@ export function nextFolletoState(s: FolletoState): FolletoState | null {
  * imprime. Guardarlo sería una tercera copia de la regla, y la fila vieja
  * quedaría mintiendo el día que el par cambie.
  */
-export function etiquetaDeFolletos(planCode: string | null | undefined): string {
-  const codes = folletosQuePide(planCode)
+export function etiquetaDeFolletos(
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+): string {
+  const codes = folletosQuePide(planCode, modalidad)
   if (codes.length === 0) return ''
   return codes.map(levelLabel).join(' y ')
 }

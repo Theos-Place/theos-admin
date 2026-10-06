@@ -22,6 +22,7 @@ import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
 import { estudiantesDelGrupo } from '@/lib/studies/conteo-de-participantes'
 import { nivelesACobrar, montoDelBloque, bloqueDe } from '@/lib/studies/corte-de-bloque'
+import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -1535,12 +1536,12 @@ export async function enrollMember(
   // se validaba el cupo, ni el grupo virtual, ni la ventana de matrícula.
   const { data: g, error: gErr } = await supabase
     .from('study_groups')
-    .select('is_virtual, leader_id, co_leader_id, status, max_students, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, currency, requires_payment)')
+    .select('is_virtual, leader_id, co_leader_id, status, max_students, modalidad, enrollment_start_date, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(id, code, requires_invitation, cost, currency, requires_payment)')
     .eq('id', groupId).maybeSingle()
   // Si la consulta falla, NO se sigue: matricular sin saber el plan es
   // matricular sin cobrar.
   if (gErr) throw gErr
-  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_students: number | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; currency: string | null; requires_payment: boolean | null } | null } | null
+  const group = g as { is_virtual: boolean | null; leader_id: string | null; co_leader_id: string | null; status: string; max_students: number | null; modalidad: string | null; enrollment_start_date: string | null; enrollment_end_date: string | null; plan: { id: string; code: string | null; requires_invitation: boolean | null; cost: number | null; currency: string | null; requires_payment: boolean | null } | null } | null
   // Un grupo que no existe tampoco se matricula.
   if (!group) throw new Error('GRUPO_NO_ENCONTRADO')
   const plan = group?.plan
@@ -1683,9 +1684,14 @@ export async function enrollMember(
    * sigue igual: `nivelesACobrar` devuelve el propio código y la suma da su
    * costo de siempre.
    */
+  /**
+   * La MODALIDAD del grupo manda (2026-10-05). En un grupo legacy cada nivel
+   * cobra el suyo, como siempre: su gente no pagó el par por adelantado.
+   */
+  const modalidad = modalidadDe(group?.modalidad)
   let amount = Number(plan?.cost ?? 0)
-  const delBloque = nivelesACobrar(plan?.code)
-  const esBloqueDeNiveles = !!bloqueDe(plan?.code)
+  const delBloque = nivelesACobrar(plan?.code, modalidad)
+  const esBloqueDeNiveles = modalidad === 'bloques' && !!bloqueDe(plan?.code)
   if (esBloqueDeNiveles) {
     if (delBloque.length === 0) {
       amount = 0 // segunda mitad del bloque: ya se cobró al entrar
@@ -1699,7 +1705,7 @@ export async function enrollMember(
       // lo note es mejor que cobrar un número inventado.
       const faltan = delBloque.filter(c => !(c in costos))
       if (faltan.length) console.warn('EST-14: faltan costos del bloque:', faltan.join(', '))
-      amount = montoDelBloque(plan?.code, costos)
+      amount = montoDelBloque(plan?.code, costos, modalidad)
     }
   }
   // INT-3: el cobro va en la moneda DEL PLAN, no en colones por defecto.
@@ -1790,6 +1796,16 @@ export async function enrollMember(
       // 'enrolled' con su dropped_at y su motivo puestos, o sea alguien
       // cursando con fecha de retiro: la ficha decía las dos cosas a la vez.
       dropped_at: null, drop_reason: null,
+      /**
+       * ¿Esta matrícula paga el PAR de niveles?
+       *
+       * Se guarda en la fila y no se deduce después del monto, porque el
+       * monto es ambiguo: ₡5.000 es el par N1+N2 bajo bloques y es el nivel
+       * suelto N2 bajo legacy. Sin esta marca, el cierre del grupo no puede
+       * saber a quién ya le cobró el siguiente nivel — y en un grupo mixto
+       * le cobraría dos veces a quien pagó el par.
+       */
+      cubre_bloque: delBloque.length > 1,
     }, { onConflict: 'group_id,member_id' })
     .select('id').single()
   if (error) throw error

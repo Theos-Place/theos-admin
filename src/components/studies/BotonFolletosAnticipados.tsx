@@ -5,6 +5,7 @@ import { Printer, Loader2, Check } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/shared/Button'
 import { useToast } from '@/components/shared/Toast'
+import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import { puedePedirFolletosAnticipados, folletosQueVaAPedir } from '@/lib/studies/folletos-anticipados'
 import { levelLabel } from '@/lib/studies/folletos'
 
@@ -22,11 +23,13 @@ import { levelLabel } from '@/lib/studies/folletos'
  * casos raros.
  */
 export function BotonFolletosAnticipados({
-  groupId, planCode, status, yaPedido,
+  groupId, planCode, status, modalidad, yaPedido,
 }: {
   groupId: string
   planCode: string | null | undefined
   status: string | null | undefined
+  /** La modalidad del grupo: bajo `legacy` pide su propio folleto, no el par. */
+  modalidad?: string | null
   /** Tiquete que este grupo ya tiene, si lo tiene. */
   yaPedido?: { id: string; fecha: string | null } | null
 }) {
@@ -35,7 +38,8 @@ export function BotonFolletosAnticipados({
   const [enviando, setEnviando] = useState(false)
   const [listo, setListo] = useState<string | null>(yaPedido?.id ?? null)
 
-  const veredicto = puedePedirFolletosAnticipados({ planCode, status })
+  const modo = modalidadDe(modalidad)
+  const veredicto = puedePedirFolletosAnticipados({ planCode, status, modalidad: modo })
   if (!veredicto.puede) return null
 
   // Ya pedido: estado informativo, no un botón que invita a duplicar.
@@ -48,7 +52,7 @@ export function BotonFolletosAnticipados({
     )
   }
 
-  const folletos = folletosQueVaAPedir(planCode).map(levelLabel)
+  const folletos = folletosQueVaAPedir(planCode, modo).map(levelLabel)
 
   async function pedir() {
     if (enviando) return

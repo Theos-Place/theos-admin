@@ -8,6 +8,7 @@ import { desgloseFolletos, type DesgloseFolletos } from '@/lib/studies/folleto-d
 import { contarResultadosCierre, type ConteoCierre } from '@/lib/studies/close-result-read'
 import { reportarError } from '@/lib/observabilidad'
 import { folletosQuePide } from '@/lib/studies/corte-de-bloque'
+import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 
 
 export type DbFolletoRequest = {
@@ -28,7 +29,7 @@ export type DbFolletoRequest = {
   note: string | null
   target_leader_id: string | null
   target_leader_name: string | null
-  source_group: { name: string | null } | null
+  source_group: { name: string | null; modalidad?: string | null } | null
   bloque: { nombre: string } | null
   target_leader: { first_name: string | null; last_name: string | null } | null
   /** Pagos individuales enlazados a este tiquete. Ausente = nivel sin cobro. */
@@ -156,9 +157,9 @@ export async function createAutoFolletoIfNeeded(
   // la creación.
 ): Promise<{ created: boolean; id?: string; reason?: string }> {
   const supabase = createAdminClient()
-  const [{ data: g }, { count }] = await Promise.all([
+  const [{ data: g }, { count }, { count: conPar }] = await Promise.all([
     supabase.from('study_groups')
-      .select('id, max_students, folletos_sede, leader_id, co_leader_id, plan:study_plans(code)')
+      .select('id, max_students, folletos_sede, leader_id, co_leader_id, modalidad, plan:study_plans(code)')
       .eq('id', groupId).maybeSingle(),
     // 'pendiente_de_pago' cuenta: los que avanzan por cierre entran así (la
     // matrícula es efectiva de inmediato y el cobro va aparte), y si no se
@@ -166,8 +167,17 @@ export async function createAutoFolletoIfNeeded(
     supabase.from('study_enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId).in('status', ['enrolled', 'pendiente_de_pago']),
+    /**
+     * En un grupo LEGACY, quien ya pagó el par tampoco necesita el folleto:
+     * lo recibió al entrar al bloque. Se descuenta del conteo o se imprime
+     * de más — el error que EST-14 vino a arreglar, reintroducido al revés.
+     */
+    supabase.from('study_enrollments')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_id', groupId).eq('cubre_bloque', true)
+      .in('status', ['enrolled', 'pendiente_de_pago']),
   ])
-  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; leader_id: string | null; co_leader_id: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
+  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; leader_id: string | null; co_leader_id: string | null; modalidad: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
   if (!row) return { created: false, reason: 'grupo_no_encontrado' }
   const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan
   const code = plan?.code ?? null
@@ -203,8 +213,19 @@ export async function createAutoFolletoIfNeeded(
    * que entró al bloque. Eso es lo que hace desaparecer solo el pedido por
    * cierre de 1→2 y 3→4, sin tocar el endpoint de cierre.
    */
-  const aPedir = folletosQuePide(code)
+  /**
+   * LEGACY vs BLOQUES (2026-10-05). Un grupo legacy pide SU propio folleto:
+   * su gente recibió el del nivel anterior cuando entró a ese nivel, no el
+   * par. Sin esta distinción los cierres 3→4 de los grupos viejos no pedían
+   * nada y 32 estudiantes se quedaron sin material.
+   */
+  const aPedir = folletosQuePide(code, modalidadDe(row.modalidad))
   if (aPedir.length === 0) return { created: false, reason: 'ya_los_tiene_del_bloque' }
+
+  // Cuántos juegos se imprimen de verdad: los matriculados MENOS los que ya
+  // recibieron el par. Nunca negativo.
+  const aImprimir = Math.max(0, enrolled - (conPar ?? 0))
+  if (aImprimir === 0) return { created: false, reason: 'ya_los_tiene_del_bloque' }
 
   const { data: creado, error } = await supabase.from('folleto_requests').insert({
     tipo,
@@ -212,7 +233,7 @@ export async function createAutoFolletoIfNeeded(
     origin_group_id: originGroupId ?? null,
     source_plan_code: code,
     target_level_code: aPedir[0],
-    quantity: enrolled,
+    quantity: aImprimir,
     quantity_leaders: folletosDeDirigentes,
     sede,
     close_date: todayIso,
@@ -254,7 +275,7 @@ export async function createAutoFolletoIfNeeded(
   let asunto = `Folletos de ${etiquetaDelPar} — ${sede ?? 'sede sin definir'}`
   let cuerpo = `<p>Se generó una solicitud de folletos. Abrila para ver el detalle:</p>
     <p><a href="https://admin.theosplace.org/estudios/folletos/${folletoId}">Ver la solicitud</a></p>`
-  let resumen = `${enrolled} juego(s) de ${etiquetaDelPar} · ${sede ?? 'sede sin definir'}`
+  let resumen = `${aImprimir} juego(s) de ${etiquetaDelPar} · ${sede ?? 'sede sin definir'}`
   try {
     const detalle = await getFolletoDetalle(folletoId)
     if (detalle) {
@@ -369,7 +390,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name, leader_id, co_leader_id), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name, modalidad, leader_id, co_leader_id), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)

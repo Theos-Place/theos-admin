@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useRowSelection } from '@/hooks/useRowSelection'
@@ -205,12 +206,12 @@ export default function FolletosPage() {
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                         {r.tipo === 'cierre' ? (
-                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/80"> · → {etiquetaDeFolletos(r.source_plan_code) || levelLabel(r.target_level_code)}</span>}</>
+                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/80"> · → {etiquetaDeFolletos(r.source_plan_code, modalidadDe(r.source_group?.modalidad)) || levelLabel(r.target_level_code)}</span>}</>
                         ) : r.tipo === 'manual' ? (
                           <>
                             {(() => {
                               const leader = r.target_leader_name || (r.target_leader ? [r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ') : '')
-                              return <span>{etiquetaDeFolletos(r.source_plan_code) || (r.target_level_code ? levelLabel(r.target_level_code) : '—')}{leader ? ` · ${leader}` : ''}</span>
+                              return <span>{etiquetaDeFolletos(r.source_plan_code, modalidadDe(r.source_group?.modalidad)) || (r.target_level_code ? levelLabel(r.target_level_code) : '—')}{leader ? ` · ${leader}` : ''}</span>
                             })()}
                             {r.note && <span className="block text-navy-light/80 text-[13px] italic">“{r.note}”</span>}
                           </>

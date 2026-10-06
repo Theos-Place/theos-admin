@@ -22,10 +22,10 @@ export async function POST(
     const supabase = createAdminClient()
     const { data: pay } = await supabase
       .from('payments')
-      .select('id, member_id, status, review_status, reviewed_at')
+      .select('id, member_id, status, review_status, reviewed_at, reminder_exempt_until')
       .eq('id', id)
       .maybeSingle()
-    const p = pay as { id: string; member_id: string | null; status: string; review_status: string | null; reviewed_at: string | null } | null
+    const p = pay as { id: string; member_id: string | null; status: string; review_status: string | null; reviewed_at: string | null; reminder_exempt_until: string | null } | null
     if (!p) return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
     if (!p.member_id) return NextResponse.json({ error: 'El pago no tiene un miembro asociado.' }, { status: 409 })
     if (!isRemindablePayment(p, new Date().toISOString())) {

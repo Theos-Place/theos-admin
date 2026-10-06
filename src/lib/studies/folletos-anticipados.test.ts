@@ -13,7 +13,8 @@ import { shouldCreateAutoFolleto } from './folleto-auto-rules'
  * ni cupo ni ventana— y el de `cierre` depende de que el grupo ANTERIOR se
  * cierre, que es justo lo que no pasa con el primero de una cadena.
  */
-const enMatricula = (planCode: string) => ({ planCode, status: 'en_matricula' })
+const enMatricula = (planCode: string) =>
+  ({ planCode, status: 'en_matricula', modalidad: 'bloques' as const })
 
 describe('quién puede pedirlos', () => {
   it('N1 y N3 en matrícula, que son los que abren un bloque', () => {
@@ -35,18 +36,18 @@ describe('quién puede pedirlos', () => {
      */
     const src = readFileSync('src/lib/studies/folletos-anticipados.ts', 'utf8')
     expect(src).toContain("import { folletosQuePide } from './corte-de-bloque'")
-    expect(src).toContain('folletosQuePide(g.planCode).length === 0')
+    expect(src).toContain('folletosQuePide(g.planCode, g.modalidad).length === 0')
   })
 
   it('un grupo que ya arrancó, no: llegó tarde', () => {
-    const v = puedePedirFolletosAnticipados({ planCode: 'N1', status: 'en_curso' })
+    const v = puedePedirFolletosAnticipados({ planCode: 'N1', status: 'en_curso', modalidad: 'bloques' })
     expect(v.puede).toBe(false)
     expect(v.puede === false && v.motivo).toContain('ya arrancó')
   })
 
   it('tampoco uno finalizado ni uno sin plan', () => {
-    expect(puedePedirFolletosAnticipados({ planCode: 'N1', status: 'finalizado' }).puede).toBe(false)
-    expect(puedePedirFolletosAnticipados({ planCode: null, status: 'en_matricula' }).puede).toBe(false)
+    expect(puedePedirFolletosAnticipados({ planCode: 'N1', status: 'finalizado', modalidad: 'bloques' }).puede).toBe(false)
+    expect(puedePedirFolletosAnticipados({ planCode: null, status: 'en_matricula', modalidad: 'bloques' }).puede).toBe(false)
   })
 
   it('una capacitación tampoco: esto es de la cadena de niveles', () => {
@@ -58,8 +59,8 @@ describe('quién puede pedirlos', () => {
 
 describe('qué trae la orden', () => {
   it('el par completo, para mostrarlo antes de confirmar', () => {
-    expect(folletosQueVaAPedir('N1')).toEqual(['N1', 'N2'])
-    expect(folletosQueVaAPedir('N3')).toEqual(['N3', 'N4'])
+    expect(folletosQueVaAPedir('N1', 'bloques')).toEqual(['N1', 'N2'])
+    expect(folletosQueVaAPedir('N3', 'bloques')).toEqual(['N3', 'N4'])
   })
 })
 

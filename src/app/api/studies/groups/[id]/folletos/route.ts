@@ -4,6 +4,7 @@ import { isUuid } from '@/lib/validate'
 import { logAudit } from '@/lib/audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createAutoFolletoIfNeeded } from '@/lib/supabase/queries/folletos'
+import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import { puedePedirFolletosAnticipados } from '@/lib/studies/folletos-anticipados'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -37,13 +38,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('study_groups')
-      .select('id, status, plan:study_plans(code)')
+      .select('id, status, modalidad, plan:study_plans(code)')
       .eq('id', id).maybeSingle()
-    const grupo = data as { id: string; status: string; plan: { code: string | null } | { code: string | null }[] | null } | null
+    const grupo = data as { id: string; status: string; modalidad: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
     if (!grupo) return NextResponse.json({ error: 'El grupo no existe' }, { status: 404 })
     const plan = Array.isArray(grupo.plan) ? grupo.plan[0] : grupo.plan
 
-    const veredicto = puedePedirFolletosAnticipados({ planCode: plan?.code ?? null, status: grupo.status })
+    const veredicto = puedePedirFolletosAnticipados({
+      planCode: plan?.code ?? null, status: grupo.status, modalidad: modalidadDe(grupo.modalidad),
+    })
     if (!veredicto.puede) {
       return NextResponse.json({ error: veredicto.motivo, code: veredicto.code }, { status: 409 })
     }

@@ -5,6 +5,7 @@
  * probar sin base.
  */
 import { folletosQuePide } from './corte-de-bloque'
+import type { Modalidad } from './modalidad-de-bloques'
 
 /** Los niveles que abren un bloque: son los que piden el par completo. */
 export const NIVELES_QUE_PIDEN_POR_ADELANTADO = ['N1', 'N3'] as const
@@ -30,13 +31,19 @@ export type Veredicto =
  *   manual suelto de la pantalla de folletos, que existe para los casos raros.
  */
 export function puedePedirFolletosAnticipados(
-  g: { planCode: string | null | undefined; status: string | null | undefined },
+  g: {
+    planCode: string | null | undefined
+    status: string | null | undefined
+    /** Bajo `legacy` cada nivel pide SU folleto, no el par (ver
+     *  `modalidad-de-bloques`). */
+    modalidad: Modalidad
+  },
 ): Veredicto {
   if (!g.planCode) {
     return { puede: false, code: 'sin_plan', motivo: 'El grupo no tiene un plan de estudio asignado.' }
   }
   if (!(NIVELES_QUE_PIDEN_POR_ADELANTADO as readonly string[]).includes(g.planCode)) {
-    const yaLosTiene = folletosQuePide(g.planCode).length === 0
+    const yaLosTiene = folletosQuePide(g.planCode, g.modalidad).length === 0
     return {
       puede: false,
       code: yaLosTiene ? 'ya_los_tiene_del_bloque' : 'nivel_no_aplica',
@@ -57,6 +64,9 @@ export function puedePedirFolletosAnticipados(
 }
 
 /** Qué folletos va a traer la orden, para mostrarlo en la confirmación. */
-export function folletosQueVaAPedir(planCode: string | null | undefined): readonly string[] {
-  return folletosQuePide(planCode)
+export function folletosQueVaAPedir(
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+): readonly string[] {
+  return folletosQuePide(planCode, modalidad)
 }

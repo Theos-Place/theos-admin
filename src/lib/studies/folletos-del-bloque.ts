@@ -20,6 +20,7 @@
  * conteo de impresión dirían cosas distintas sin que nadie lo note.
  */
 import { folletosQuePide } from './corte-de-bloque'
+import { modalidadDe } from './modalidad-de-bloques'
 
 /** Una fila por GRUPO, como la devuelve la base: cuántos matriculados tiene. */
 export type MatriculadosPorGrupo = {
@@ -29,6 +30,9 @@ export type MatriculadosPorGrupo = {
   nivel: string
   dirigente: string
   cantidad: number
+  /** La modalidad del grupo. Sin ella, un N4 legacy no saldría en la lista
+   *  de impresión y su gente se quedaría sin folleto. */
+  modalidad?: string | null
 }
 
 /** Una fila por FOLLETO: lo que de verdad se imprime. */
@@ -58,7 +62,7 @@ export function expandirAFolletos(
 ): FolletosPorGrupo[] {
   const salida: FolletosPorGrupo[] = []
   for (const f of filas) {
-    for (const code of folletosQuePide(f.nivel_code)) {
+    for (const code of folletosQuePide(f.nivel_code, modalidadDe(f.modalidad))) {
       salida.push({
         ...f,
         folleto_code: code,
@@ -88,6 +92,6 @@ export function folletosPorSede(filas: readonly FolletosPorGrupo[]): Array<{ sed
 /** Los códigos que hay que buscarle el nombre, sin repetir. */
 export function codigosDeFolleto(filas: readonly MatriculadosPorGrupo[]): string[] {
   const s = new Set<string>()
-  for (const f of filas) for (const c of folletosQuePide(f.nivel_code)) s.add(c)
+  for (const f of filas) for (const c of folletosQuePide(f.nivel_code, modalidadDe(f.modalidad))) s.add(c)
   return [...s]
 }

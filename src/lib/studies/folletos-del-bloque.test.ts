@@ -10,7 +10,7 @@ const NOMBRES: Record<string, string> = {
 const nombre = (c: string) => NOMBRES[c]
 const grupo = (over: Partial<MatriculadosPorGrupo>): MatriculadosPorGrupo => ({
   sede: 'Sede Cartago', grupo: 'Lunes 7pm', nivel_code: 'N1', nivel: 'Nivel 1',
-  dirigente: 'Ana', cantidad: 10, ...over,
+  dirigente: 'Ana', cantidad: 10, modalidad: 'bloques', ...over,
 })
 
 describe('un grupo de N1 pide los DOS folletos, en líneas separadas', () => {
@@ -104,20 +104,20 @@ describe('los nombres', () => {
 describe('la etiqueta de la orden', () => {
   it('nombra los dos folletos del par', async () => {
     const { etiquetaDeFolletos } = await import('./folletos')
-    expect(etiquetaDeFolletos('N1')).toBe('Nivel 1 y Nivel 2')
-    expect(etiquetaDeFolletos('N3')).toBe('Nivel 3 y Nivel 4')
+    expect(etiquetaDeFolletos('N1', 'bloques')).toBe('Nivel 1 y Nivel 2')
+    expect(etiquetaDeFolletos('N3', 'bloques')).toBe('Nivel 3 y Nivel 4')
   })
 
   it('un nivel que ya los tiene no nombra ninguno', async () => {
     const { etiquetaDeFolletos } = await import('./folletos')
-    expect(etiquetaDeFolletos('N2')).toBe('')
-    expect(etiquetaDeFolletos('N4')).toBe('')
+    expect(etiquetaDeFolletos('N2', 'bloques')).toBe('')
+    expect(etiquetaDeFolletos('N4', 'bloques')).toBe('')
   })
 
   it('lo que no es par se nombra solo', async () => {
     const { etiquetaDeFolletos } = await import('./folletos')
-    expect(etiquetaDeFolletos('DIS1')).toBe('Discípulos 1')
-    expect(etiquetaDeFolletos('PREMAT')).toBe('Prematrimonial')
+    expect(etiquetaDeFolletos('DIS1', 'bloques')).toBe('Discípulos 1')
+    expect(etiquetaDeFolletos('PREMAT', 'bloques')).toBe('Prematrimonial')
   })
 
   it('se deriva, no se escribe a mano', async () => {
@@ -126,7 +126,7 @@ describe('la etiqueta de la orden', () => {
     // cobro y que el conteo de impresión.
     const { readFileSync } = await import('node:fs')
     const src = readFileSync('src/lib/studies/folletos.ts', 'utf8')
-    expect(src).toContain('folletosQuePide(planCode)')
+    expect(src).toContain('folletosQuePide(planCode, modalidad)')
     expect(src).not.toContain("'Nivel 1 y Nivel 2'")
   })
 })

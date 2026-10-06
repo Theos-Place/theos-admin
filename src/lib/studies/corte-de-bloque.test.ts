@@ -205,36 +205,36 @@ describe('EST-14 · el cobro es por bloque', () => {
   })
 
   it('entrar a N1 cobra ₡5.000 — el par entero', () => {
-    expect(montoDelBloque('N1', CATALOGO)).toBe(5000)
+    expect(montoDelBloque('N1', CATALOGO, 'bloques')).toBe(5000)
   })
 
   it('entrar a N3 cobra ₡10.000', () => {
-    expect(montoDelBloque('N3', CATALOGO)).toBe(10000)
+    expect(montoDelBloque('N3', CATALOGO, 'bloques')).toBe(10000)
   })
 
   it('pasar a N2 o a N4 NO cobra: ya se pagó al entrar', () => {
-    expect(montoDelBloque('N2', CATALOGO)).toBe(0)
-    expect(montoDelBloque('N4', CATALOGO)).toBe(0)
-    expect(nivelesACobrar('N2')).toEqual([])
-    expect(nivelesACobrar('N4')).toEqual([])
+    expect(montoDelBloque('N2', CATALOGO, 'bloques')).toBe(0)
+    expect(montoDelBloque('N4', CATALOGO, 'bloques')).toBe(0)
+    expect(nivelesACobrar('N2', 'bloques')).toEqual([])
+    expect(nivelesACobrar('N4', 'bloques')).toEqual([])
   })
 
   it('el total de la cadena no cambia: ₡15.000', () => {
     // Lo que se mueve es CUÁNDO se paga, no cuánto. Si esto se cae, alguien
     // cambió lo que la gente paga sin querer.
     const total = ['N1', 'N2', 'N3', 'N4']
-      .reduce((t, c) => t + montoDelBloque(c, CATALOGO), 0)
+      .reduce((t, c) => t + montoDelBloque(c, CATALOGO, 'bloques'), 0)
     expect(total).toBe(5000 + 5000 + 5000)
   })
 
   it('el monto se SUMA del catálogo, no está escrito', () => {
     // Si mañana suben Nivel 4, el bloque sube solo. Un ₡10.000 a mano se
     // quedaría viejo sin que nadie lo note.
-    expect(montoDelBloque('N3', { N3: 5000, N4: 8000 })).toBe(13000)
+    expect(montoDelBloque('N3', { N3: 5000, N4: 8000 }, 'bloques')).toBe(13000)
   })
 
   it('un nivel que falte en el catálogo cuenta 0, no rompe', () => {
-    expect(montoDelBloque('N3', { N3: 5000 })).toBe(5000)
+    expect(montoDelBloque('N3', { N3: 5000 }, 'bloques')).toBe(5000)
   })
 
   it('LO QUE NO ES UN NIVEL SIGUE COBRÁNDOSE IGUAL', () => {
@@ -245,8 +245,8 @@ describe('EST-14 · el cobro es por bloque', () => {
      * otro — y nadie lo notaría hasta que finanzas cuadre el mes.
      */
     for (const c of ['DIS1', 'DIS2', 'DIS3', 'PREMAT', 'CDEB', 'HER', 'SCJ']) {
-      expect(nivelesACobrar(c), c).toEqual([c])
-      expect(montoDelBloque(c, { [c]: 20000 }), c).toBe(20000)
+      expect(nivelesACobrar(c, 'bloques'), c).toEqual([c])
+      expect(montoDelBloque(c, { [c]: 20000 }, 'bloques'), c).toBe(20000)
     }
   })
 
@@ -275,14 +275,14 @@ describe('EST-14 · el cobro es por bloque', () => {
 describe('EST-14 · la matrícula usa el monto del bloque', () => {
   it('el cobro sale de `montoDelBloque`, no de `plan.cost`', () => {
     const q = sinComentarios('src/lib/supabase/queries/studies.ts')
-    expect(q).toContain('montoDelBloque(plan?.code, costos)')
-    expect(q).toContain('const delBloque = nivelesACobrar(plan?.code)')
+    expect(q).toContain('montoDelBloque(plan?.code, costos, modalidad)')
+    expect(q).toContain('const delBloque = nivelesACobrar(plan?.code, modalidad)')
   })
 
   it('y solo se desvía del catálogo cuando ES un nivel', () => {
     // El resto de los planes no puede pasar por ese camino.
     const q = sinComentarios('src/lib/supabase/queries/studies.ts')
-    expect(q).toContain('const esBloqueDeNiveles = !!bloqueDe(plan?.code)')
+    expect(q).toContain("const esBloqueDeNiveles = modalidad === 'bloques' && !!bloqueDe(plan?.code)")
     expect(q).toContain('if (esBloqueDeNiveles) {')
   })
 })
@@ -296,13 +296,13 @@ describe('EST-14 · el paso automático tampoco cobra dos veces', () => {
      * SEGUNDA VEZ — el bloque ya se había pagado al entrar a N1.
      */
     const q = sinComentarios('src/lib/supabase/queries/payments.ts')
-    expect(q).toContain('const amount = montoDelBloque(next, costosDelBloque)')
+    expect(q).toContain('const amount = montoDelBloque(next, costosDelBloque, modalidad)')
     expect(q).not.toContain('const amount = Number(np.cost ?? 0)')
   })
 
   it('y para lo que no es nivel sigue dando el costo del plan', () => {
     // DIS1→DIS2 y compañía: `montoDelBloque` devuelve el costo propio.
-    expect(montoDelBloque('DIS2', { DIS2: 15000 })).toBe(15000)
+    expect(montoDelBloque('DIS2', { DIS2: 15000 }, 'bloques')).toBe(15000)
   })
 })
 
@@ -316,11 +316,11 @@ describe('EST-14 · el paso automático tampoco cobra dos veces', () => {
  */
 describe('EST-14 · qué folletos pide cada grupo', () => {
   it('un grupo de N1 pide el par 1+2', () => {
-    expect(folletosQuePide('N1')).toEqual(['N1', 'N2'])
+    expect(folletosQuePide('N1', 'bloques')).toEqual(['N1', 'N2'])
   })
 
   it('un grupo de N3 pide el par 3+4', () => {
-    expect(folletosQuePide('N3')).toEqual(['N3', 'N4'])
+    expect(folletosQuePide('N3', 'bloques')).toEqual(['N3', 'N4'])
   })
 
   it('N2 y N4 NO piden: su gente ya los tiene del bloque', () => {
@@ -328,21 +328,21 @@ describe('EST-14 · qué folletos pide cada grupo', () => {
      * Esto es lo que hace desaparecer el pedido por cierre de 1→2 y 3→4 sin
      * tocar el endpoint: el sucesor es un N2 o un N4, y no pide nada.
      */
-    expect(folletosQuePide('N2')).toEqual([])
-    expect(folletosQuePide('N4')).toEqual([])
+    expect(folletosQuePide('N2', 'bloques')).toEqual([])
+    expect(folletosQuePide('N4', 'bloques')).toEqual([])
   })
 
   it('lo que no es nivel pide SU folleto, como siempre', () => {
     // Si devolviera [], los discípulos se quedarían sin folletos.
     for (const c of ['DIS1', 'DIS2', 'DIS3', 'PREMAT']) {
-      expect(folletosQuePide(c), c).toEqual([c])
+      expect(folletosQuePide(c, 'bloques'), c).toEqual([c])
     }
   })
 
   it('el cierre 2→3 sí pide, porque el sucesor es un N3', () => {
     // Cuando el dirigente dice que la cohorte sigue, el grupo que se crea es
     // de N3 y pide el par 3+4 — la otra regla del ítem, también sola.
-    expect(folletosQuePide('N3').length).toBe(2)
+    expect(folletosQuePide('N3', 'bloques').length).toBe(2)
   })
 })
 
@@ -359,7 +359,7 @@ describe('EST-14 · el generador crea UNA orden que cubre el par', () => {
    * tercera copia de la regla y las filas viejas mentirían si el par cambia.
    */
   it('inserta UNA sola vez, no recorre el par', () => {
-    expect(q).toContain('const aPedir = folletosQuePide(code)')
+    expect(q).toContain('const aPedir = folletosQuePide(code, modalidadDe(row.modalidad))')
     expect(q).not.toContain('for (const nivel of aPedir)')
     expect(q).toContain('target_level_code: aPedir[0]')
   })

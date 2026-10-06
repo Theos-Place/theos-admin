@@ -31,13 +31,13 @@ export async function POST(req: NextRequest) {
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabase
         .from('payments')
-        .select('member_id, status, review_status, reviewed_at')
+        .select('member_id, status, review_status, reviewed_at, reminder_exempt_until')
         .eq('status', 'pending')
         .not('member_id', 'is', null)
         .order('id')
         .range(from, from + 999)
       if (error) throw error
-      const rows = (data ?? []) as Array<{ member_id: string; status: string; review_status: string | null; reviewed_at: string | null }>
+      const rows = (data ?? []) as Array<{ member_id: string; status: string; review_status: string | null; reviewed_at: string | null; reminder_exempt_until: string | null }>
       for (const p of rows) {
         if (isRemindablePayment(p, now)) counts.set(p.member_id, (counts.get(p.member_id) ?? 0) + 1)
       }

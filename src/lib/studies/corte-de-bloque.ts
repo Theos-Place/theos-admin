@@ -26,8 +26,18 @@
  * obvio: si mañana suben Nivel 4 en el catálogo, el cobro del bloque sube
  * solo. Un ₡10.000 escrito a mano se quedaría viejo sin que nadie lo note.
  *
+ * LA MODALIDAD (2026-10-05). `nivelesACobrar` y `folletosQuePide` reciben la
+ * modalidad del grupo. Bajo `legacy` se comportan como ANTES de EST-14 —cada
+ * nivel cobra lo suyo y pide su folleto— porque esa gente pagó y recibió por
+ * nivel. El porqué entero está en `modalidad-de-bloques.ts`.
+ *
+ * El parámetro NO tiene valor por omisión en las dos funciones que deciden
+ * plata y material: un default silencioso es justo como este bug llegó a
+ * producción. Quien las llame tiene que decir bajo qué esquema está.
+ *
  * Módulo PURO.
  */
+import type { Modalidad } from './modalidad-de-bloques'
 
 /**
  * Los niveles donde termina un bloque. Cerrar uno de estos obliga a responder
@@ -159,8 +169,14 @@ export function esContinuacionDeBloque(planCode: string | null | undefined): boo
  * entran en bloques y tienen que seguir cobrándose como siempre. Si esta
  * función devolviera `[]` para ellos, se volverían gratis de un día para otro.
  */
-export function nivelesACobrar(planCode: string | null | undefined): readonly string[] {
+export function nivelesACobrar(
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+): readonly string[] {
   if (!planCode) return []
+  // LEGACY: cada nivel cobra el suyo, como antes de EST-14. Esta gente pagó
+  // N1, después N2, después N3… y su paso al siguiente tiene que cobrar.
+  if (modalidad === 'legacy') return [planCode]
   const b = bloqueDe(planCode)
   if (!b) return [planCode]
   return b[0] === planCode ? b : []
@@ -176,8 +192,9 @@ export function nivelesACobrar(planCode: string | null | undefined): readonly st
 export function montoDelBloque(
   planCode: string | null | undefined,
   costos: Readonly<Record<string, number>>,
+  modalidad: Modalidad,
 ): number {
-  return nivelesACobrar(planCode)
+  return nivelesACobrar(planCode, modalidad)
     .reduce((total, code) => total + (Number(costos[code]) || 0), 0)
 }
 
@@ -202,8 +219,14 @@ export function montoDelBloque(
  * cobrar y repartir folletos son dos decisiones distintas, y el día que una
  * cambie no tiene por qué arrastrar a la otra.
  */
-export function folletosQuePide(planCode: string | null | undefined): readonly string[] {
+export function folletosQuePide(
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+): readonly string[] {
   if (!planCode) return []
+  // LEGACY: su propio folleto y nada más. Un grupo de N4 legacy SÍ pide el
+  // folleto de N4 — su gente recibió el de N3 cuando entró a N3, no el par.
+  if (modalidad === 'legacy') return [planCode]
   const b = bloqueDe(planCode)
   // Lo que no está en un bloque pide SU propio folleto, como siempre: DIS1
   // pide DIS1. Si devolviera [], los discípulos se quedarían sin folletos.
