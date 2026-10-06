@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect, useCallback } from 'react'
+import { CambiarEstadoFolleto } from '@/components/studies/CambiarEstadoFolleto'
 import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -161,6 +162,11 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
               )}
             </div>
 
+            {/* FOL-2 · El cambio libre, al lado del avance normal: el botón
+                de avanzar no permite devolver, y los errores de dedo existen. */}
+            {puedeEditar && (
+              <CambiarEstadoFolleto folletoId={d.id} estado={d.status} onCambiado={cargar} />
+            )}
             {puedeEditar && next && (
               <button
                 onClick={avanzar}

@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/format'
 import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
 import { puedeEditarColumna } from '@/lib/members/autoedicion'
 import { OPCIONES_GENERO } from '@/lib/members/campo-editable'
+import { OPCIONES_PROVINCIA } from '@/lib/members/provincias'
 import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
 import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
 import { AutorizacionDeImagen } from '@/components/members/AutorizacionDeImagen'
@@ -124,6 +125,17 @@ export function MemberPersonalTab({ member, onActualizado }: Props) {
             value={member.email ?? '—'} columna="email" puedeEditar={edita('email')} />
           <Fila {...comun} icon={<MapPin size={15} strokeWidth={1.75} />} label="Dirección"
             value={member.address ?? '—'} columna="address" tipo="parrafo" puedeEditar={edita('address')} />
+          {/* UX-7 · Provincia, cantón y distrito SOLO vivían en el formulario
+              completo. Al dejar ese formulario para staff, la persona se
+              quedaba sin forma de poner su propia dirección — y los tres
+              están en CAMPOS_AUTOEDITABLES, o sea que siempre pudo. */}
+          <Fila {...comun} icon={<MapPin size={15} strokeWidth={1.75} />} label="Provincia"
+            value={member.province ?? '—'} columna="province" tipo="seleccion"
+            opciones={OPCIONES_PROVINCIA} puedeEditar={edita('province')} />
+          <Fila {...comun} icon={<MapPin size={15} strokeWidth={1.75} />} label="Cantón"
+            value={member.canton ?? '—'} columna="canton" puedeEditar={edita('canton')} />
+          <Fila {...comun} icon={<MapPin size={15} strokeWidth={1.75} />} label="Distrito"
+            value={member.district ?? '—'} columna="district" puedeEditar={edita('district')} />
           <Fila {...comun} icon={<Phone size={15} strokeWidth={1.75} />} label="Contacto de emergencia"
             value={member.emergency_contact_name ?? '—'} columna="emergency_contact_name"
             puedeEditar={edita('emergency_contact_name')} />

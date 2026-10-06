@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { resumenDelLote, type ResultadoPorTiquete } from '@/lib/studies/cambio-de-estado-folleto'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -47,6 +48,8 @@ export default function FolletosPage() {
   const [tipoFilter, setTipoFilter] = useState<FolletoTipo | 'all'>('all')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  /** FOL-2 · Los que NO se movieron, con el motivo de cada uno. */
+  const [noMovidos, setNoMovidos] = useState<ResultadoPorTiquete[]>([])
   const [confirm, setConfirm] = useState<FolletoState | null>(null)
 
   const refetch = useCallback(() => {
@@ -73,7 +76,7 @@ export default function FolletosPage() {
 
   const applyStatus = useCallback(async (ids: string[], status: FolletoState) => {
     if (busy || ids.length === 0) return
-    setBusy(true); setMsg(null)
+    setBusy(true); setMsg(null); setNoMovidos([])
     try {
       const res = await fetch('/api/studies/folletos/bulk', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -81,10 +84,15 @@ export default function FolletosPage() {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo actualizar.')
-      setMsg(`${data.updated} folleto${data.updated !== 1 ? 's' : ''} → ${FOLLETO_STATE_LABEL[status]}.`)
+      // FOL-2 · El resumen dice CUÁNTOS de cuántos y, si alguno no se movió,
+      // por qué. El texto viejo («0 folletos → En impresión») se leía como
+      // que había funcionado.
+      setMsg(resumenDelLote(data.resultados ?? [], FOLLETO_STATE_LABEL[status]))
+      setNoMovidos((data.resultados ?? []).filter((r: { movido: boolean }) => !r.movido))
       sel.clear(); setConfirm(null); refetch()
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Error desconocido')
+      setNoMovidos([])
     } finally { setBusy(false) }
   }, [busy, sel, refetch])
 
@@ -108,9 +116,28 @@ export default function FolletosPage() {
       </div>
 
       {msg && (
-        <p className="rounded-xl bg-surface-low px-4 py-2 text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5">
-          <Check size={14} className="text-teal-deep" /> {msg}
-        </p>
+        <div className="rounded-xl bg-surface-low px-4 py-2.5 space-y-1.5">
+          <p className="text-sm text-navy-light/80 font-body inline-flex items-center gap-1.5">
+            {noMovidos.length === 0 && <Check size={14} className="text-teal-deep" />}
+            {msg}
+          </p>
+          {/* FOL-2 · Por qué no se movieron. Sin esto el lote se veía como un
+              éxito a medias sin explicación, que es el bug reportado. */}
+          {noMovidos.length > 0 && (
+            <ul className="space-y-0.5">
+              {/* Los motivos se AGRUPAN: cinco tiquetes con la misma razón
+                  son una línea con «(5)», no cinco líneas iguales. */}
+              {[...noMovidos.reduce((m, r) => {
+                const motivo = r.movido === false ? r.motivo : ''
+                return m.set(motivo, (m.get(motivo) ?? 0) + 1)
+              }, new Map<string, number>())].map(([motivo, n]) => (
+                <li key={motivo} className="text-[13px] text-coral-deep font-body">
+                  · {motivo}{n > 1 ? ` (${n})` : ''}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {/* Filtros */}

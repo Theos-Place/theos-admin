@@ -54,8 +54,11 @@ async function handleUpdate(
     const { id } = await params
     if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })
 
-    const STAFF_ROLES = ['editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios']
-    const isStaff = auth.ctx.roles.some(r => STAFF_ROLES.includes(r))
+    // UX-7 · La MISMA lista que decide si la pantalla muestra el botón
+    // «Editar». Mientras vivió solo acá, la pantalla no tenía con qué
+    // ponerse de acuerdo y ofrecía un formulario que el guardado rechazaba.
+    const { ROLES_QUE_EDITAN_FICHA } = await import('@/lib/members/quien-edita-la-ficha')
+    const isStaff = auth.ctx.roles.some(r => (ROLES_QUE_EDITAN_FICHA as readonly string[]).includes(r))
     const isAdmin = auth.ctx.roles.includes('admin')
     const isSelf = !!auth.ctx.memberId && auth.ctx.memberId === id
     if (!isStaff && !isAdmin && !isSelf) {

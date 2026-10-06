@@ -10,6 +10,7 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useTituloDePantalla } from '@/hooks/useTituloDePantalla'
 import { useAuth } from '@/hooks/useAuth'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
+import { ROLES_QUE_EDITAN_FICHA } from '@/lib/members/quien-edita-la-ficha'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { MemberHeader } from './_components/MemberHeader'
@@ -106,6 +107,15 @@ export default function MiembroDetailPage() {
   // deje el tab prendido un render de más.
   const tieneFichaDeDirigente = fichaDeDirigente?.de === id && fichaDeDirigente.tiene
   const canDeactivate = hasRole('admin', 'comunicaciones')
+  /**
+   * UX-7 · Quién ve el botón «Editar» (formulario completo).
+   *
+   * Se pregunta por los MISMOS roles que autoriza el endpoint. No incluye
+   * «ser el dueño de la ficha»: la propia persona se edita en sitio, campo
+   * por campo, porque el formulario manda campos que la autoedición rechaza
+   * y el guardado se cae entero.
+   */
+  const puedeEditarFicha = hasRole('admin', ...ROLES_QUE_EDITAN_FICHA)
 
   // Permite abrir un tab directo vía ?tab= (p. ej. la notificación de cobro
   // apunta a ?tab=participacion). Fallback a 'resumen'.
@@ -330,7 +340,10 @@ export default function MiembroDetailPage() {
       {/* ── Header Card ── */}
       <MemberHeader
         member={member}
-        onEdit={() => router.push(`/miembros/${id}/editar`)}
+        /* UX-7 · El formulario completo SOLO para quien puede guardarlo. El
+           miembro conserva la edición en sitio, campo por campo, que sí
+           respeta lo que la autoedición permite. */
+        onEdit={puedeEditarFicha ? () => router.push(`/miembros/${id}/editar`) : undefined}
         menuOpen={menuOpen}
         onMenuToggle={() => setMenuOpen(o => !o)}
         onMenuClose={() => setMenuOpen(false)}

@@ -13,8 +13,11 @@ export async function POST(req: NextRequest) {
     const list = Array.isArray(ids) ? ids.filter(Boolean) : []
     if (list.length === 0) return NextResponse.json({ error: 'No hay folletos seleccionados.' }, { status: 400 })
     if (!status || !isFolletoState(status)) return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
-    const { updated } = await setFolletoRequestsStatus(list, status)
-    return NextResponse.json({ ok: true, updated })
+    const { updated, resultados } = await setFolletoRequestsStatus(list, status)
+    // FOL-2 · Se devuelve el detalle POR TIQUETE. Antes solo iba el número y
+    // la pantalla decía «0 folletos → En impresión», que se lee como éxito:
+    // nadie podía saber cuáles no se movieron ni por qué.
+    return NextResponse.json({ ok: true, updated, resultados })
   } catch (error) {
     reportarError('POST /api/studies/folletos/bulk:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, use, useEffect } from 'react'
+import { PROVINCIAS_CR } from '@/lib/members/provincias'
 import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
@@ -404,13 +405,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                   onChange={e => setProvince(e.target.value)}
                 >
                   <option value="">Seleccionar...</option>
-                  <option>San José</option>
-                  <option>Alajuela</option>
-                  <option>Cartago</option>
-                  <option>Heredia</option>
-                  <option>Guanacaste</option>
-                  <option>Puntarenas</option>
-                  <option>Limón</option>
+                  {PROVINCIAS_CR.map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
               <div className="form-group">

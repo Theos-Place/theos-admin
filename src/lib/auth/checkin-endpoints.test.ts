@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { ROLES_QUE_EDITAN_FICHA } from '@/lib/members/quien-edita-la-ficha'
 import { readFileSync, readdirSync } from 'fs'
 import { EVENT_CHECKIN_ROLES } from '@/lib/auth/roles'
 import {
@@ -80,9 +81,15 @@ describe('el padrón general NO se abrió', () => {
   })
 
   it('el PATCH del perfil completo sigue sin encargado_eventos', () => {
-    const linea = PERFIL.split('\n').find(l => l.includes('const STAFF_ROLES'))
-    expect(linea).toBeTruthy()
-    expect(linea).not.toContain('encargado_eventos')
+    /**
+     * La lista se mudó a `quien-edita-la-ficha` en UX-7, para que la pantalla
+     * y el endpoint pregunten por la MISMA. El test apuntaba a la línea
+     * `const STAFF_ROLES` del endpoint y dejó de encontrarla; se reapunta al
+     * módulo, que es donde vive ahora. Lo que se comprueba no cambia: quien
+     * hace check-in de eventos no edita fichas.
+     */
+    expect(ROLES_QUE_EDITAN_FICHA).not.toContain('encargado_eventos')
+    expect(PERFIL).toContain('ROLES_QUE_EDITAN_FICHA')
   })
 
   it('los roles de check-in son los tres esperados y nada más', () => {

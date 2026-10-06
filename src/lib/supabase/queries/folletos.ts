@@ -8,6 +8,7 @@ import { desgloseFolletos, type DesgloseFolletos } from '@/lib/studies/folleto-d
 import { contarResultadosCierre, type ConteoCierre } from '@/lib/studies/close-result-read'
 import { reportarError } from '@/lib/observabilidad'
 import { folletosQuePide } from '@/lib/studies/corte-de-bloque'
+import type { ResultadoPorTiquete } from '@/lib/studies/cambio-de-estado-folleto'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 
 
@@ -450,27 +451,87 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
  *  "avanzar al siguiente" — el update se condiciona al estado PREDECESOR, así
  *  un request repetido/adulterado no salta pasos ni retrocede. Las filas que
  *  no estaban en el estado esperado se omiten (se refleja en `updated`). */
-export async function setFolletoRequestsStatus(ids: string[], status: FolletoState): Promise<{ updated: number }> {
-  if (ids.length === 0) return { updated: 0 }
-  const { FOLLETO_STATES } = await import('@/lib/studies/folletos')
+/**
+ * Mueve tiquetes de estado y dice QUÉ PASÓ CON CADA UNO.
+ *
+ * ANTES devolvía solo un número, y la pantalla mostraba «0 folletos → En
+ * impresión» cuando no se movía ninguno — que se lee como un éxito. El
+ * `.eq('status', prev)` dejaba quietos a los que no estaban exactamente un
+ * paso atrás, y nadie podía saber cuáles ni por qué (FOL-2, 2026-10-05).
+ *
+ * `libre` permite cualquier salto, incluido hacia atrás; sin él se mantiene
+ * la regla vieja de avanzar un paso, que es la del botón del lote.
+ */
+export async function setFolletoRequestsStatus(
+  ids: string[],
+  status: FolletoState,
+  opciones: { libre?: boolean } = {},
+): Promise<{ updated: number; resultados: ResultadoPorTiquete[] }> {
+  if (ids.length === 0) return { updated: 0, resultados: [] }
+  const { FOLLETO_STATES, FOLLETO_STATE_LABEL } = await import('@/lib/studies/folletos')
+  const { posicionDe } = await import('@/lib/studies/cambio-de-estado-folleto')
   const idx = FOLLETO_STATES.indexOf(status)
-  if (idx <= 0) return { updated: 0 } // 'creada' es inicial: no se llega por transición
-  const prev = FOLLETO_STATES[idx - 1]
+  if (idx < 0) return { updated: 0, resultados: [] }
   const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('folleto_requests')
-    .update({ status, updated_at: new Date().toISOString() })
-    .in('id', ids)
-    .eq('status', prev)
-    .select('id')
-  if (error) throw error
-  const movidos = ((data ?? []) as Array<{ id: string }>).map(r => r.id)
+
+  // Se LEE el estado de cada uno antes de tocar nada: sin esto no hay forma
+  // de decir por qué uno no se movió.
+  const { data: antes, error: errAntes } = await supabase
+    .from('folleto_requests').select('id, status').in('id', ids)
+  if (errAntes) throw errAntes
+  const estadoDe = new Map(
+    ((antes ?? []) as Array<{ id: string; status: string }>).map(r => [r.id, r.status]))
+
+  const prev = idx > 0 ? FOLLETO_STATES[idx - 1] : null
+  const resultados: ResultadoPorTiquete[] = []
+  const aMover: string[] = []
+  for (const id of ids) {
+    const desde = estadoDe.get(id)
+    if (!desde) { resultados.push({ id, movido: false, desde: '—', motivo: 'No se encontró el tiquete.' }); continue }
+    if (desde === status) {
+      resultados.push({ id, movido: false, desde, motivo: `Ya estaba en ${FOLLETO_STATE_LABEL[status]}.` })
+      continue
+    }
+    if (!opciones.libre) {
+      if (prev === null) {
+        resultados.push({ id, movido: false, desde, motivo: 'A «Creada» no se llega por transición.' })
+        continue
+      }
+      if (desde !== prev) {
+        resultados.push({
+          id, movido: false, desde,
+          motivo: posicionDe(desde) > idx
+            ? `Está en ${FOLLETO_STATE_LABEL[desde as FolletoState] ?? desde}, más adelante: usá el cambio libre del detalle.`
+            : `Está en ${FOLLETO_STATE_LABEL[desde as FolletoState] ?? desde} y falta pasar por ${FOLLETO_STATE_LABEL[prev]}.`,
+        })
+        continue
+      }
+    }
+    aMover.push(id)
+  }
+
+  let movidos: string[] = []
+  if (aMover.length > 0) {
+    const { data, error } = await supabase
+      .from('folleto_requests')
+      .update({ status, updated_at: new Date().toISOString() })
+      .in('id', aMover)
+      .select('id')
+    if (error) throw error
+    movidos = ((data ?? []) as Array<{ id: string }>).map(r => r.id)
+    for (const id of aMover) {
+      const desde = estadoDe.get(id)!
+      resultados.push(movidos.includes(id)
+        ? { id, movido: true, desde }
+        : { id, movido: false, desde, motivo: 'La base no lo actualizó.' })
+    }
+  }
 
   // Al pasar a "enviado / entregado" se le avisa al dirigente que ya puede ir
-  // por sus folletos. Solo a los que DE VERDAD cambiaron: la condición
-  // `eq('status', prev)` deja fuera los que ya estaban en otro estado, y
-  // avisarle a esos sería un correo repetido.
-  if (status === 'enviado_entregado' && movidos.length > 0) {
+  // por sus folletos. Solo a los que DE VERDAD cambiaron, y NUNCA en un
+  // cambio libre: ése es una corrección a mano y reenviar el aviso sería
+  // escribirle otra vez a alguien a quien ya se le escribió (FOL-2).
+  if (status === 'enviado_entregado' && movidos.length > 0 && !opciones.libre) {
     const { notificarFolletosListos } = await import('@/lib/email/folleto-ready-send')
     for (const id of movidos) {
       try { await notificarFolletosListos(id) } catch (e) {
@@ -478,7 +539,7 @@ export async function setFolletoRequestsStatus(ids: string[], status: FolletoSta
       }
     }
   }
-  return { updated: movidos.length }
+  return { updated: movidos.length, resultados }
 }
 
 /** Notifica (campana + correo) a quienes tienen el permiso de folletos.

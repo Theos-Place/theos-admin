@@ -109,7 +109,14 @@ function initials(firstName: string, lastName: string) {
 
 type Props = {
   member: Member
-  onEdit: () => void
+  /**
+   * UX-7 · `undefined` = NO se pinta el botón «Editar».
+   *
+   * Opcional a propósito: el formulario completo manda todos los campos y el
+   * endpoint rechaza el guardado entero si la persona no puede tocar alguno.
+   * Un botón que lleva a perder el trabajo es peor que no tenerlo.
+   */
+  onEdit?: () => void
   menuOpen: boolean
   onMenuToggle: () => void
   onMenuClose: () => void
@@ -223,12 +230,14 @@ export function MemberHeader({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          <button
-            onClick={onEdit}
-            className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-          >
-            Editar
-          </button>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+            >
+              Editar
+            </button>
+          )}
           <div className="relative">
             <button
               onClick={onMenuToggle}
