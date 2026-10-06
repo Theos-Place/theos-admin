@@ -1178,7 +1178,7 @@ servidor activo excluido), año de abandono, repetición multi-año, export.
 tsc/lint/vitest.
 ```
 
-### [ ] UX-7 · Perfil propio: el botón "Editar" falla al guardar (pedido 2026-10-05)
+### [x] UX-7 · Perfil propio: el botón "Editar" falla al guardar — HECHO 2026-10-05
 
 El miembro puede editar en sitio sus campos (nombre, teléfono, cédula…), pero
 el botón "Editar" le abre el formulario completo y al guardar falla por
@@ -1216,7 +1216,7 @@ Tests: botón oculto sin rol, visible con rol; edición en sitio intacta; endpoi
 claro. tsc/lint/vitest.
 ```
 
-### [ ] FOL-2 · Folletos: fix del cambio de estado múltiple + cambio libre de estado (pedido 2026-10-05)
+### [x] FOL-2 · Folletos: fix del cambio de estado múltiple + cambio libre de estado — HECHO 2026-10-05
 
 Prompt para Claude Code:
 
@@ -1291,3 +1291,19 @@ días (plazo elegido por Claude, no por Floriana).
 
 **Queda pendiente:** avisarles a los 5 dirigentes que sus estudiantes tienen
 cobros nuevos. La exención del recordatorio vence el 2026-10-19.
+
+
+### [x] CHK-1 · El check-in avisa si la persona ya está en otra sede hoy — HECHO 2026-10-05
+
+Salió del análisis de Meridiano Miércoles: el 9 de setiembre tres personas
+quedaron registradas en Pedregal Miércoles y, cuatro minutos después, en
+Meridiano Miércoles. Quien registraba tenía la charla equivocada
+seleccionada; nadie se enteró hasta que alguien barrió los datos un mes
+después.
+
+AVISA, no bloquea: hay casos legítimos (servir en una sede y asistir en
+otra) y bloquear obligaría a pedir permiso con la fila esperando. El aviso
+dice la sede y la hora, que es lo que deja decidir en la puerta.
+
+Solo entre charlas; el «Youth» de la misma sede no dispara el aviso; el día
+se mide en hora de Costa Rica.
