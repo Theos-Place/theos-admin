@@ -97,6 +97,17 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
         // GRU-3: llegan solo si el servidor los mandó (dirigente o gestión).
         phone: e.member?.phone ?? null,
         birth_date: e.member?.birth_date ?? null,
+        /**
+         * EST-26 · Quién ofreció su casa.
+         *
+         * SE PERDÍA ACÁ. El servidor lo mandaba y la pantalla lo pintaba,
+         * pero este adaptador arma `participants` campo por campo y no lo
+         * copiaba: la columna salía vacía aunque el dato viajara completo en
+         * el JSON. Un `...e` suelto lo habría evitado y también habría
+         * filtrado al navegador lo que `recortarRoster` esconde, así que la
+         * lista explícita se queda — lo que hacía falta era esta línea.
+         */
+        ofrece_casa: e.ofrece_casa ?? null,
         status: mapParticipantStatus(e.status),
         // Resultado del cierre. Dos convenciones conviven en los datos y las dos
         // valen: el cierre de la app escribe status 'completed' + notes

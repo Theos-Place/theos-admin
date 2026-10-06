@@ -120,3 +120,46 @@ describe('EST-26 · quién puede verlo', () => {
     expect(r).toContain("if (scope === 'admin' && roster.length > 0)")
   })
 })
+
+describe('EST-26 · el dato llega hasta la pantalla', () => {
+  /**
+   * EL BUG (reportado el 2026-10-06, el mismo día): la columna salía VACÍA
+   * aunque todo lo demás funcionara. La consulta devolvía a Miguel Torres, el
+   * servidor se lo mandaba al navegador y la pantalla lo pintaba — pero
+   * `toDomainStudyGroup` arma `participants` campo por campo y no copiaba
+   * `ofrece_casa`. Se perdía en el último paso.
+   *
+   * Los otros tests miraban las puntas —la consulta y los permisos— y ninguno
+   * recorría el camino entero. Éste sí.
+   */
+  it('toDomainStudyGroup NO se come el campo', async () => {
+    const { toDomainStudyGroup } = await import('./adapter')
+    const grupo = toDomainStudyGroup({
+      id: 'g1', name: 'N1 — Belén', status: 'en_matricula',
+      plan: { code: 'N1' }, leader: null, co_leader: null, closer: null,
+      enrollments: [
+        {
+          id: 'e1', member_id: 'm1', status: 'enrolled', grade: null, notes: null,
+          ofrece_casa: { ubicacion: 'Boulevard Park, apt 15' },
+          member: { first_name: 'Miguel', last_name: 'Torres' },
+        },
+        {
+          id: 'e2', member_id: 'm2', status: 'enrolled', grade: null, notes: null,
+          member: { first_name: 'Ana', last_name: 'Pérez' },
+        },
+      ],
+    } as unknown as Parameters<typeof toDomainStudyGroup>[0])
+
+    const miguel = grupo.participants?.find(p => p.member_id === 'm1')
+    expect(miguel?.ofrece_casa, 'el adaptador perdió ofrece_casa').toEqual({
+      ubicacion: 'Boulevard Park, apt 15',
+    })
+    // Y quien no ofreció queda en null, no en undefined: la celda lo lee.
+    expect(grupo.participants?.find(p => p.member_id === 'm2')?.ofrece_casa).toBeNull()
+  })
+
+  it('el tipo del servidor declara el campo, o el adaptador no lo vería', () => {
+    const q = sinComentarios('src/lib/supabase/queries/studies.ts')
+    expect(q).toContain('ofrece_casa?: { ubicacion: string | null } | null')
+  })
+})

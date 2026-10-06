@@ -107,6 +107,8 @@ export type DbGroupEnriched = {
     grade: number | null
     /** Resultado del cierre: 'aprobado' o 'reprobado: <motivo>'. */
     notes: string | null
+    /** EST-26 · Solo llega para gestión (recortarRoster lo quita al resto). */
+    ofrece_casa?: { ubicacion: string | null } | null
     member: { first_name: string; last_name: string; phone?: string | null; birth_date?: string | null } | null
   }>
   /** Porcentaje de asistencia por member_id. Lo calcula getGroupById aparte:
