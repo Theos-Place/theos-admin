@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { nombreDelSucesor, etiquetaNivel } from './successor-name'
+import { nombreDelSucesor, etiquetaNivel, conElMesDelInicio } from './successor-name'
 
 describe('nombreDelSucesor', () => {
   it('el caso real: reemplaza la etiqueta escrita, no antepone el código', () => {
@@ -74,5 +74,64 @@ describe('etiquetaNivel', () => {
   it('un código desconocido se devuelve tal cual', () => {
     expect(etiquetaNivel('HER')).toBe('HER')
     expect(etiquetaNivel(null)).toBe('')
+  })
+})
+
+describe('el mes del nombre sigue al arranque REAL', () => {
+  it('el caso reportado: un N4 que empieza en octubre no dice Julio', () => {
+    /**
+     * El sucesor heredaba el nombre del origen cambiándole solo el nivel, así
+     * que «Nivel 3. Michelle Guier. Julio 2026» daba un grupo de Nivel 4 que
+     * arranca el 11 de octubre y se sigue llamando Julio. El correo de
+     * folletos lo repetía tal cual y quien imprime leía «Julio» en octubre.
+     */
+    expect(nombreDelSucesor({
+      nombreOrigen: 'Nivel 3. Michelle Guier. Julio 2026',
+      codigoOrigen: 'N3', codigoDestino: 'N4', inicioDestino: '2026-10-11',
+    })).toBe('Nivel 4. Michelle Guier. Octubre 2026')
+  })
+
+  it('cambia también el AÑO cuando el grupo cruza diciembre', () => {
+    expect(conElMesDelInicio('Nivel 2. Ana. Diciembre 2026', '2027-01-12'))
+      .toBe('Nivel 2. Ana. Enero 2027')
+  })
+
+  it('respeta lo que viene después del mes', () => {
+    expect(conElMesDelInicio('Nivel 4. Madrigal. Julio 2026 (Virtual)', '2026-10-18'))
+      .toBe('Nivel 4. Madrigal. Octubre 2026 (Virtual)')
+  })
+
+  it('lee «septiembre» y escribe «setiembre», que es como se dice acá', () => {
+    expect(conElMesDelInicio('Nivel 1. Ana. Septiembre 2026', '2026-09-30'))
+      .toBe('Nivel 1. Ana. Setiembre 2026')
+    expect(conElMesDelInicio('Nivel 1. Ana. Marzo 2026', '2026-09-30'))
+      .toBe('Nivel 1. Ana. Setiembre 2026')
+  })
+
+  it('el mes con tilde también se encuentra', () => {
+    // «Setiembre» no lleva, pero el reemplazo busca sobre el texto sin tildes
+    // y corta por posición sobre el original: si eso se rompe, el nombre sale
+    // mutilado en vez de corregido.
+    expect(conElMesDelInicio('CDEB. Andrey Mora. Junio 2026', '2026-05-31'))
+      .toBe('CDEB. Andrey Mora. Mayo 2026')
+  })
+
+  it('a un nombre SIN mes no se le inventa uno', () => {
+    // «N1 — Heredia» no trae fecha porque nadie se la puso. Agregarla sería
+    // escribir un dato que el dirigente no eligió.
+    expect(conElMesDelInicio('N1 — Heredia', '2026-10-18')).toBe('N1 — Heredia')
+    expect(nombreDelSucesor({
+      nombreOrigen: 'N1 — Heredia', codigoOrigen: 'N1', codigoDestino: 'N2',
+      inicioDestino: '2026-10-18',
+    // Y el nivel sí se cambia, por el código suelto: «N1 — Heredia» es uno
+    // de los pocos grupos que lo usan en el nombre.
+    })).toBe('N2 — Heredia')
+  })
+
+  it('sin fecha de arranque, el nombre no se toca', () => {
+    for (const f of [null, undefined, '', 'mañana']) {
+      expect(conElMesDelInicio('Nivel 3. Ana. Julio 2026', f), String(f))
+        .toBe('Nivel 3. Ana. Julio 2026')
+    }
   })
 })

@@ -175,8 +175,24 @@ async function findOrCreateSuccessorGroup(
   // Nombre: el del grupo origen con el nivel cambiado. La regla vive en
   // successor-name con tests — antes buscaba el CÓDIGO ("N3") en un nombre que
   // dice "Nivel 3", nunca lo encontraba y producía "N4 · Nivel 3. Fulano…".
+  /**
+   * Las fechas se calculan ACÁ ARRIBA y no dentro del insert, porque el
+   * NOMBRE las necesita: un sucesor que arranca en octubre no se puede
+   * llamar «Julio 2026», que es lo que pasaba y lo que leía quien imprime
+   * los folletos (reportado el 2026-10-05).
+   */
+  const fechas = fechasDelSucesor({
+    finDelAnterior: src.ends_at,
+    semanas: nextDurationWeeks,
+    hoy: ymdCR(),
+    diasDeClase: src.schedule_days,
+    inicioElegido,
+  })
+  const inicioDestino = (fechas as { starts_at?: string | null }).starts_at ?? inicioElegido ?? null
+
   const name = nombreDelSucesor({
     nombreOrigen: src.name, codigoOrigen: sourceCode, codigoDestino: nextCode,
+    inicioDestino,
   })
   const { data: created, error: createErr } = await supabase
     .from('study_groups')
@@ -210,13 +226,6 @@ async function findOrCreateSuccessorGroup(
        * fin calculado.
        */
       ...(() => {
-        const fechas = fechasDelSucesor({
-          finDelAnterior: src.ends_at,
-          semanas: nextDurationWeeks,
-          hoy: ymdCR(),
-          diasDeClase: src.schedule_days,
-          inicioElegido,
-        })
         /**
          * EST-14 · EL GRUPO QUE NACE DEL CORTE ABRE MATRÍCULA DOS SEMANAS.
          *
@@ -231,7 +240,7 @@ async function findOrCreateSuccessorGroup(
         const ventana = ventanaDelCorte({
           planOrigen: sourceCode, planDestino: nextCode,
           hoy: ymdCR(),
-          inicio: (fechas as { starts_at?: string | null }).starts_at ?? inicioElegido,
+          inicio: inicioDestino,
         })
         /**
          * El `status` sale de ACÁ y no de un campo suelto más abajo. Primero
