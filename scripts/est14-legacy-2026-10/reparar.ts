@@ -1,8 +1,12 @@
 /**
  * EST-14 · Reparar los cierres LEGACY que quedaron sin folletos ni cobros.
  *
- *   dry-run:  npx tsx scripts/est14-legacy-2026-10/reparar.ts
- *   aplicar:  npx tsx scripts/est14-legacy-2026-10/reparar.ts --aplicar
+ *   dry-run:  NODE_OPTIONS="--conditions=react-server" npx tsx scripts/est14-legacy-2026-10/reparar.ts
+ *   aplicar:  ... --aplicar
+ *
+ * El NODE_OPTIONS hace falta porque esto importa `queries/folletos`, que
+ * arrastra `server-only`. Sin el flag el script muere a mitad del primer
+ * grupo — y murió, la primera vez que se corrió.
  *
  * QUÉ PASÓ. EST-14 hizo que los cierres 1→2 y 3→4 dejaran de generar folletos
  * y cobros. Correcto bajo bloques —el par ya se pagó al entrar— y destructivo
@@ -22,6 +26,10 @@
  * dirigente y al co-dirigente. El primero es el caso de los grupos mixtos —el
  * N3 de Michelle Guier tiene una persona que pagó ₡10.000 el 5 de octubre— y
  * sin esa exclusión se le cobraría N4 dos veces.
+ *
+ * `entity_type` va en 'study_group' porque es lo que acepta el CHECK de la
+ * tabla. La primera versión decía 'study', que me pareció razonable y la base
+ * rechazó: el valor se leyó del constraint, no se dedujo.
  *
  * SIN NINGÚN AVISO (decisión de Floriana, 2026-10-05). Ni correo ni campanita:
  * la comunicación va por cada dirigente. Por eso NO se usa el camino normal de
@@ -116,7 +124,7 @@ async function main() {
         insert into payments (member_id, amount, currency, payment_method, concept,
                               enrollment_id, study_group_id, entity_type, description, status,
                               reminder_exempt_until)
-        values ($1, $2, $3, 'comprobante', 'matricula', $4, $5, 'study', $6, 'pending',
+        values ($1, $2, $3, 'comprobante', 'matricula', $4, $5, 'study_group', $6, 'pending',
                 now() + ($7 || ' days')::interval)`,
       [p.member_id, g.cost, g.currency ?? 'CRC', p.enrollment_id, g.id,
         `Matrícula · ${g.nivel === 'N4' ? 'Nivel 4' : 'Nivel 2'}`, DIAS_SIN_RECORDATORIO])

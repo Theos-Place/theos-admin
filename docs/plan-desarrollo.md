@@ -1245,3 +1245,34 @@ FIX + FEATURE · Tiquetes de folletos: estados
 Tests: batch persiste y reporta por fila, retroceso exige nota, audit_log, efectos
 secundarios no duplicados. tsc/lint/vitest.
 ```
+
+### [x] EST-25 · Cierres LEGACY sin folletos ni cobros (urgente 2026-10-05) — HECHO 2026-10-05
+
+EST-14 hizo que los cierres 1→2 y 3→4 dejaran de generar folletos y cobros.
+Correcto bajo bloques —el par ya se pagó al entrar— y destructivo para los
+grupos viejos, que pagaron y recibieron nivel por nivel. Cinco cierres de
+Nivel 3 del 5 de octubre dejaron a 32 estudiantes sin cobro de N4 y sin
+folleto de N4.
+
+**Lo que cambió respecto al encargo, y por qué:**
+
+- El criterio de fecha propuesto («creado antes del 2026-10-05 = legacy»)
+  marcaba como «bloques» justo a los 5 grupos de N4 que había que reparar:
+  nacieron el 5 de octubre como sucesores de grupos legacy. El sucesor HEREDA
+  la modalidad del origen.
+- Hay **grupos mixtos**, que es lo que rompe una sola marca por grupo: el N3
+  de Michelle Guier (julio) tiene 9 estudiantes viejos y 1 que se matriculó el
+  5 de octubre pagando el bloque N3+N4 completo. De ahí la segunda marca,
+  `study_enrollments.cubre_bloque`, que evita cobrarle dos veces y evita
+  imprimirle un folleto que ya tiene. Son 9 personas en total.
+
+Migración `20261006120000`: `study_groups.modalidad`,
+`study_enrollments.cubre_bloque` y `payments.reminder_exempt_until`.
+Reparación aplicada el 2026-10-05: 5 tiquetes de folletos y 32 cobros, sin
+ningún aviso a los estudiantes y exentos del recordatorio automático por 14
+días (plazo elegido por Claude, no por Floriana).
+
+**Queda abierto:** Mariela Saravia Valverde pagó ₡10.000 (bloque N3+N4) el 5
+de octubre a las 10:35 y el grupo de Michelle Guier se cerró después, con ella
+en `pendiente_de_pago`, así que no pasó a Nivel 4. Hay que decidir a mano si
+entra al grupo de N4.
