@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   sirveParaElRubro, montoDelCredito, motivoQueImpideCongelar, vencimientoDelCredito,
   SALIDAS_DEL_CREDITO, puedeDevolverse, motivoQueImpideDevolver, cuerpoDelCredito,
-  MESES_SIN_BLOQUE,
+  MESES_SIN_BLOQUE, puedeCongelar, ROLES_QUE_CONGELAN,
 } from './credito-por-congelar'
 
 const sinComentarios = (ruta: string): string =>
@@ -171,11 +171,70 @@ describe('FIN-9 · el cableado', () => {
     expect(iBaja).toBeGreaterThan(iCredito)
   })
 
-  it('solo finanzas y dirección lo emiten, y el motivo es obligatorio', () => {
+  it('solo los roles autorizados lo emiten, y el motivo es obligatorio', () => {
     // Muy manual a propósito: si «congelar» se vuelve un clic para
     // cualquiera, deja de ser la excepción que es.
     const r = sinComentarios('src/app/api/finance/creditos/route.ts')
-    expect(r).toContain("const ROLES = ['finanzas', 'direccion']")
+    expect(r).toContain('const ROLES = ROLES_QUE_CONGELAN')
     expect(r).toContain('motivo: z.string().trim().min(10')
+  })
+})
+
+describe('FIN-9 · quién puede congelar', () => {
+  it('finanzas y quien lleva los estudios', () => {
+    // Pedido explícito de Floriana el 2026-10-06.
+    expect(puedeCongelar(['finanzas'])).toBe(true)
+    expect(puedeCongelar(['coordinador_estudios'])).toBe(true)
+    expect(puedeCongelar(['admin'])).toBe(true)
+  })
+
+  it('DIRECCIÓN no: la primera versión la incluía y se sacó a propósito', () => {
+    expect(ROLES_QUE_CONGELAN).not.toContain('direccion')
+    expect(puedeCongelar(['direccion'])).toBe(false)
+  })
+
+  it('nadie más, y menos la propia persona', () => {
+    // No hay autoservicio: si «congelar» se vuelve un clic para cualquiera,
+    // deja de ser la excepción que es y se come la matrícula normal.
+    for (const r of ['miembro', 'dirigente', 'comunicaciones', 'encargado_eventos']) {
+      expect(puedeCongelar([r]), r).toBe(false)
+    }
+    expect(puedeCongelar([])).toBe(false)
+  })
+
+  it('la pantalla y el endpoint preguntan por la MISMA lista', () => {
+    /**
+     * Escrita en los dos lados se separa, y entonces aparece un botón que al
+     * tocarlo da 403 — que es exactamente el bug de UX-7.
+     */
+    const ep = sinComentarios('src/app/api/finance/creditos/route.ts')
+    const ui = sinComentarios('src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx')
+    expect(ep).toContain('const ROLES = ROLES_QUE_CONGELAN')
+    expect(ui).toContain('puedeCongelar(roles ?? [])')
+    // Y nadie se quedó con la lista vieja escrita a mano.
+    expect(ep).not.toContain("['finanzas', 'direccion']")
+  })
+
+  it('el botón vive en la FILA del estudio, no en la persona', () => {
+    // Congelar es por MATRÍCULA: alguien con dos estudios puede congelar uno
+    // y seguir en el otro.
+    const ui = sinComentarios('src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx')
+    expect(ui).toContain('enrollmentId={row.enrollmentId}')
+    expect(ui).toContain('<CongelarMatriculaButton')
+  })
+
+  it('no se ofrece sobre una matrícula terminada o dada de baja', () => {
+    // El endpoint también lo frena, pero un botón que siempre falla no
+    // debería estar.
+    const ui = sinComentarios('src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx')
+    expect(ui).toContain("!['completed', 'dropped', 'cancelada'].includes(row.rawStatus)")
+  })
+
+  it('el monto se MUESTRA antes de confirmar', () => {
+    // Es por lo PAGADO y casi nunca coincide con lo cobrado: un botón que
+    // congela a ciegas sería adivinar con la plata de otro.
+    const b = sinComentarios('src/components/finance/CongelarMatriculaButton.tsx')
+    expect(b).toContain('/api/finance/creditos?enrollment_id=')
+    expect(b).toContain('formatMoney(ctx.montoPagado, ctx.currency)')
   })
 })

@@ -6,6 +6,9 @@ import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
 import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { FinanceRequestActions } from '@/components/finance/FinanceRequestActions'
 import { MisSolicitudesDeBeca } from '@/components/finance/MisSolicitudesDeBeca'
+import { CongelarMatriculaButton } from '@/components/finance/CongelarMatriculaButton'
+import { puedeCongelar } from '@/lib/finance/credito-por-congelar'
+import { useAuth } from '@/hooks/useAuth'
 import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } from '@/components/members/MemberPaymentsList'
 import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import { cn } from '@/lib/utils'
@@ -178,6 +181,14 @@ export function MemberParticipationTab({
   // AUD-2 · Qué matrícula tiene el historial abierto (una a la vez).
   const [historialDe, setHistorialDe] = useState<string | null>(null)
   const { studyTypes } = useStudyPlans()
+  /**
+   * FIN-9 · Quién ve «Congelar»: finanzas y quien lleva los estudios
+   * (Floriana, 2026-10-06). Se pregunta por la MISMA lista que autoriza el
+   * endpoint — escrita en los dos lados se separa y aparece un botón que al
+   * tocarlo da 403.
+   */
+  const { roles } = useAuth()
+  const puedeCongelarMatricula = puedeCongelar(roles ?? [])
   return (
     <div className="space-y-3">
       {/* Solicitudes de estudios y finanzas — disponibles para cualquier rol.
@@ -340,6 +351,21 @@ export function MemberParticipationTab({
                               />
                             </span>
                           )
+                        )}
+                        {/* FIN-9 · Congelar ESTA matrícula. Va por fila y no
+                            por persona: alguien con dos estudios puede
+                            congelar uno y seguir en el otro. Solo finanzas y
+                            quien lleva los estudios. */}
+                        {puedeCongelarMatricula
+                          && row.enrollmentId
+                          // Una matrícula terminada o ya dada de baja no se
+                          // congela; el endpoint también lo frena, pero un
+                          // botón que siempre falla no debería estar.
+                          && !['completed', 'dropped', 'cancelada'].includes(row.rawStatus) && (
+                          <CongelarMatriculaButton
+                            enrollmentId={row.enrollmentId}
+                            onCongelada={() => onResuelto?.()}
+                          />
                         )}
                         {row.groupId ? (
                           <Link

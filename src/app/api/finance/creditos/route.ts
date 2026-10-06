@@ -3,17 +3,21 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { contextoParaCongelar, congelarMatricula, NoSePuedeCongelar } from '@/lib/supabase/queries/creditos'
+import { ROLES_QUE_CONGELAN } from '@/lib/finance/credito-por-congelar'
 import { reportarError } from '@/lib/observabilidad'
 
 /**
  * FIN-9 · Congelar una matrícula y emitir el crédito.
  *
- * SOLO FINANZAS, y eso es parte del diseño: Meli lo emite caso por caso
- * después de hablar con la persona. No hay autoservicio ni se promociona —
- * si «congelar» se vuelve un clic para cualquiera, deja de ser la excepción
- * que es y se come la matrícula normal.
+ * FINANZAS Y QUIEN LLEVA LOS ESTUDIOS, y eso es parte del diseño: se emite
+ * caso por caso y después de hablar con la persona. No hay autoservicio ni
+ * se promociona — si «congelar» se vuelve un clic para cualquiera, deja de
+ * ser la excepción que es y se come la matrícula normal.
+ *
+ * La MISMA lista que usa el botón de la ficha: escrita en los dos lados se
+ * separa, y entonces aparece un botón que al tocarlo da 403 (UX-7).
  */
-const ROLES = ['finanzas', 'direccion'] as const
+const ROLES = ROLES_QUE_CONGELAN
 
 const bodySchema = z.object({
   enrollment_id: z.string().uuid(),

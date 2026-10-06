@@ -183,3 +183,25 @@ export function cuerpoDelCredito(input: {
     + `Los podés usar cuando te vuelvas a matricular, hasta el ${input.vence}. `
     + 'No tenés que hacer nada ahora.'
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * 6 · QUIÉN PUEDE CONGELAR
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Finanzas y quien lleva los estudios (Floriana, 2026-10-06).
+ *
+ * `direccion` quedó FUERA a propósito: la primera versión la incluía y el
+ * pedido fue explícito —«finanzas o encargados de estudios»—. `admin` entra
+ * igual, como en todo el sistema.
+ *
+ * La lista vive acá y la usan la pantalla Y el endpoint. Escrita en los dos
+ * lados se separa, y entonces aparece un botón que al tocarlo da 403 — que
+ * es exactamente el bug de UX-7.
+ */
+export const ROLES_QUE_CONGELAN = ['finanzas', 'coordinador_estudios'] as const
+
+export function puedeCongelar(roles: readonly string[]): boolean {
+  return roles.includes('admin')
+    || ROLES_QUE_CONGELAN.some(r => roles.includes(r))
+}
