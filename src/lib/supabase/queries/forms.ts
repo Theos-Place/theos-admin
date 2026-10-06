@@ -605,9 +605,28 @@ export async function submitResponse(
   return { id: responseId }
 }
 
-/** Enlaza la respuesta con la inscripción del miembro al evento cuyo formulario
- *  de inscripción es `formId`. No pisa un enlace ya existente: la primera
- *  respuesta es la que queda. */
+/**
+ * Enlaza la respuesta con la inscripción del miembro al evento cuyo
+ * formulario de inscripción es `formId`, Y LA CREA SI NO EXISTE.
+ *
+ * EL BUG QUE ESTO ARREGLA (producción, 2026-10-06). Antes solo ENLAZABA: si
+ * la persona no tenía inscripción, la respuesta quedaba suelta y el tab de
+ * inscripciones del evento se veía vacío. Pasó con «Actividad Servidores»:
+ * 70 personas llenaron el formulario del evento —con su comprobante de pago
+ * adjunto— y el evento mostraba CERO inscritas, porque todas llegaron por el
+ * link del formulario y no por el botón del evento.
+ *
+ * La suposición rota era que el formulario se llena DESPUÉS de inscribirse.
+ * En la práctica el formulario ES el link que se comparte, así que llenarlo
+ * es inscribirse — y el sistema era el único que no lo sabía.
+ *
+ * NACE `pending`, NUNCA pagada. El cobro, el comprobante y la revisión
+ * siguen su propio carril: esto solo registra que la persona se apuntó. Un
+ * `paid` acá le regalaría la entrada a cualquiera que llene un formulario.
+ *
+ * Best-effort del lado de quien llama: si falla, la respuesta ya quedó
+ * guardada y la inscripción se puede reconciliar después.
+ */
 async function linkResponseToRegistration(
   supabase: ReturnType<typeof createAdminClient>,
   formId: string,
@@ -618,12 +637,39 @@ async function linkResponseToRegistration(
     .from('events').select('id').eq('registration_form_id', formId)
   const ids = ((eventos ?? []) as Array<{ id: string }>).map(e => e.id)
   if (ids.length === 0) return
+
+  // 1 · Enlazar las que YA existen. No se pisa un enlace puesto: la primera
+  //     respuesta es la que queda.
   await supabase
     .from('event_registrations')
     .update({ form_response_id: responseId })
     .in('event_id', ids)
     .eq('member_id', memberId)
     .is('form_response_id', null)
+
+  // 2 · Crear la que falte. Se relee qué eventos quedaron sin inscripción en
+  //     vez de confiar en lo que devolvió el update: entre las dos consultas
+  //     puede haberse inscrito por otro lado, y el insert chocaría.
+  const { data: yaTiene } = await supabase
+    .from('event_registrations')
+    .select('event_id')
+    .in('event_id', ids)
+    .eq('member_id', memberId)
+  const conInscripcion = new Set(((yaTiene ?? []) as Array<{ event_id: string }>).map(r => r.event_id))
+  const faltan = ids.filter(id => !conInscripcion.has(id))
+  if (faltan.length === 0) return
+
+  const { error } = await supabase.from('event_registrations').insert(
+    faltan.map(event_id => ({
+      event_id,
+      member_id: memberId,
+      payment_status: 'pending',
+      form_response_id: responseId,
+    })),
+  )
+  // 23505 = alguien se inscribió entre las dos consultas. No es un error:
+  // la inscripción existe, que es lo que se quería.
+  if (error && (error as { code?: string }).code !== '23505') throw error
 }
 
 // ── Accesos puntuales por formulario (2026-08-04) ───────────────────────────

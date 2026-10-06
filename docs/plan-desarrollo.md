@@ -1326,3 +1326,61 @@ dice la sede y la hora, que es lo que deja decidir en la puerta.
 
 Solo entre charlas; el «Youth» de la misma sede no dispara el aviso; el día
 se mide en hora de Costa Rica.
+
+### [ ] EST-22 · Ver quién ofreció su casa (respuestas de inscripción) (pedido 2026-10-06)
+
+Prompt para Claude Code:
+
+```
+FEATURE · Estudios: exponer las respuestas de la inscripción al equipo de estudios
+
+PREGUNTA OPERATIVA: cuando alguien se inscribe a un estudio y responde si OFRECE SU CASA
+(u otras preguntas de la inscripción), ¿dónde lo ve el encargado de grupos/estudios?
+
+ETAPA 1 — DIAGNÓSTICO: ¿dónde se guarda hoy esa respuesta? (¿pregunta del flujo de
+matrícula? ¿formulario vinculado? ¿campo de la matrícula?) ¿Se está guardando del todo?
+Reportar el dato real antes de construir.
+
+ETAPA 2 — EXPONERLO donde se trabaja:
+1. En el DETALLE DEL GRUPO (vista de gestión): columna/indicador "Ofrece casa" en la
+   lista de matriculados (🏠 o sí/—), visible para coordinador_estudios y los roles de
+   gestión — NO para el estudiante ni en la lista del dirigente salvo que Floriana diga
+   lo contrario (el dirigente podría necesitarlo para elegir sede del grupo: preguntar).
+2. Las DEMÁS respuestas de la inscripción (si hay más preguntas): visibles al abrir el
+   detalle de la matrícula de la persona en ese grupo.
+3. En el padrón/filtros: condición "ofreció casa" si el dato lo permite (reutilizar el
+   sistema de condiciones — serviría para planificar zonas).
+4. Export de la lista del grupo incluye la columna.
+Tests: columna visible para gestión, no para estudiante; dato correcto. tsc/lint/vitest.
+```
+
+### [ ] EST-23 · Excepciones de niveles sin fecha de vencimiento (pedido 2026-10-06)
+
+Las excepciones de matrícula de niveles (ej. repetir Nivel 1) se están creando
+amarradas al calendario de bloques — incorrecto: los niveles NO siguen los 3
+bloques anuales (eso es de capacitaciones).
+
+Prompt para Claude Code:
+
+```
+CAMBIO DE REGLA · Excepciones de matrícula de NIVELES: sin vencimiento
+
+REGLA NUEVA: una excepción de inscripción para estudios tipo NIVELES no tiene fecha
+límite. Vive desde que se crea hasta que (a) SE USA — un solo uso: al matricularse con
+ella queda consumida — o (b) alguien la quita manualmente.
+Las excepciones de CAPACITACIONES u otros estudios por bloque quedan como están
+(amarradas a su bloque) — la regla nueva es solo para niveles; bifurcar por tipo de plan,
+no parejo.
+
+1. Cambiar la creación: para niveles no se pide/asigna fecha de vencimiento (ni se
+   calcula del bloque).
+2. El cron/validación que expira excepciones debe IGNORAR las de niveles.
+3. MIGRAR las excepciones de niveles existentes: quitarles el vencimiento que les puso
+   el calendario de bloques (dry-run con la lista — cuántas estaban por vencer o YA
+   vencieron sin usarse: esas últimas probablemente hay que revivirlas, confirmar con
+   Floriana la lista).
+4. Consumo: verificar que al usarse quede marcada como consumida (un uso) — si hoy no es
+   así, implementarlo para niveles.
+Tests: nivel sin vencimiento, capacitación con vencimiento intacto, consumo de un uso,
+el cron no las toca, migración idempotente. tsc/lint/vitest.
+```
