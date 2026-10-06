@@ -733,7 +733,7 @@ Minuta en `docs/minutas/finanzas-2026-09-29.md`. Además de los ítems nuevos,
 esta reunión ACTUALIZA FIN-9 y FIN-11 (ver abajo) y confirma la meta de
 FIN-5/Tilopay: listo en octubre para la fiesta de Navidad (venta ~8 nov).
 
-### [ ] BEC-5 · Solicitud de becas: razones cerradas, monto, estudio puntual y cupo
+### [x] BEC-5 · Solicitud de becas: razones cerradas, monto, estudio puntual y cupo — HECHO 2026-10-05 (los 6 puntos)
 
 Prompt para Claude Code:
 
@@ -810,7 +810,7 @@ seleccionar cuáles paga en una sola transacción (suma por moneda, jamás
 mezclando monedas — INT-3). Útil para arreglos de pago con tracto acumulado.
 Se implementa JUNTO con FIN-5, no antes — dejarlo en la spec de Tilopay.
 
-### [~] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés) — rango y export HECHOS 2026-10-02; falta decidir el nombre del estado
+### [x] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés) — HECHO 2026-10-05. El nombre quedó decidido: «Cancelado» en finanzas, «Pagado» en Mis pagos (son dos audiencias y el mismo término significa lo contrario para cada una)
 
 Prompt para Claude Code:
 
@@ -1176,4 +1176,72 @@ en vivo pesa).
 Tests: definición (19 check-ins no entra, 20 sí; actividad hace 5 meses no entra;
 servidor activo excluido), año de abandono, repetición multi-año, export.
 tsc/lint/vitest.
+```
+
+### [ ] UX-7 · Perfil propio: el botón "Editar" falla al guardar (pedido 2026-10-05)
+
+El miembro puede editar en sitio sus campos (nombre, teléfono, cédula…), pero
+el botón "Editar" le abre el formulario completo y al guardar falla por
+permisos — llena todo y pierde el trabajo. Decisión: el botón se queda solo
+para roles con edición de miembros.
+
+Prompt para Claude Code:
+
+```
+FIX UX · Perfil: el botón "Editar" solo para quien puede usarlo
+
+PROBLEMA: en el perfil propio, el botón "Editar" abre el formulario completo pero el
+guardado falla (sin permisos) — el usuario llena todo y pierde los cambios en silencio
+o con error al final.
+
+DECISIÓN (2026-10-05): NO se amplían permisos. El botón "Editar" (formulario completo)
+se muestra ÚNICAMENTE a roles con edición de miembros (el gate que ya usa el guardado —
+alinear la visibilidad del botón con el permiso real del endpoint, que es la regla:
+ningún botón visible cuyo guardado vaya a fallar por permisos).
+El miembro sin ese rol conserva la EDICIÓN EN SITIO campo por campo (que ya funciona y
+ya aplica las reglas de campo-editable + resolveTargetMemberId).
+
+ADEMÁS:
+1. Verificar que la edición en sitio cubra todos los campos que el miembro SÍ debe poder
+   editarse (los que el formulario le mostraba y eran legítimos — ej. teléfono, correo
+   según reglas, restricción alimenticia, autorización de imagen FAM-3): si alguno
+   legítimo solo era editable por el formulario, agregarlo a la edición en sitio.
+2. Revisar el mismo patrón en el perfil de FAMILIARES (papás editando menores): la
+   edición permitida ahí también debe ser en sitio con sus reglas (FAM-2), sin botón de
+   formulario completo si el guardado no lo respalda.
+3. El error actual: si por cualquier camino alguien sin permiso llega al formulario, el
+   guardado debe responder claro ("No tenés permisos para editar estos campos") — nunca
+   fallo silencioso.
+Tests: botón oculto sin rol, visible con rol; edición en sitio intacta; endpoint 403
+claro. tsc/lint/vitest.
+```
+
+### [ ] FOL-2 · Folletos: fix del cambio de estado múltiple + cambio libre de estado (pedido 2026-10-05)
+
+Prompt para Claude Code:
+
+```
+FIX + FEATURE · Tiquetes de folletos: estados
+
+1. BUG — CAMBIO DE ESTADO MÚLTIPLE NO PERSISTE: al seleccionar varios tiquetes y
+   cambiarles el estado, el sistema confirma éxito pero el cambio no se guarda (o no se
+   refleja). Uno a uno SÍ funciona. Diagnosticar: ¿el endpoint batch realmente escribe
+   (revisar si es el bug clásico de reportar éxito sin await/sin verificar el resultado
+   por fila, o el límite de 1.000 de PostgREST, o un filtro que no matchea los ids)? ¿o
+   escribe y es la pantalla que no refresca (caché/estado local)? Arreglar la causa real:
+   el batch debe reportar éxito POR TIQUETE (si 3 de 5 fallaron, decirlo) y la lista
+   refrescar del servidor tras la operación.
+
+2. FEATURE — CAMBIO LIBRE DE ESTADO en el detalle del tiquete: botón "Cambiar estado"
+   con selector de TODOS los estados del flujo (adelante o atrás — los errores de dedo
+   existen y hay que poder devolver). Guardas:
+   - Confirmación mostrando el salto ("¿Cambiar de ENVIADO a EN IMPRESIÓN?").
+   - Al RETROCEDER, nota breve obligatoria (el porqué — queda con el tiquete).
+   - Todo cambio al audit_log (quién, de qué a qué, cuándo, nota).
+   - Mismo rol que ya gestiona folletos; sin cambios de permisos.
+   - Si algún estado dispara efectos secundarios (correos, generación de algo), el
+     cambio manual NO los re-dispara por defecto — censar qué efectos tiene cada
+     transición y reportar cuáles son seguros de repetir.
+Tests: batch persiste y reporta por fila, retroceso exige nota, audit_log, efectos
+secundarios no duplicados. tsc/lint/vitest.
 ```
