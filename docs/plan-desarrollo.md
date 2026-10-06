@@ -1272,7 +1272,22 @@ Reparación aplicada el 2026-10-05: 5 tiquetes de folletos y 32 cobros, sin
 ningún aviso a los estudiantes y exentos del recordatorio automático por 14
 días (plazo elegido por Claude, no por Floriana).
 
-**Queda abierto:** Mariela Saravia Valverde pagó ₡10.000 (bloque N3+N4) el 5
-de octubre a las 10:35 y el grupo de Michelle Guier se cerró después, con ella
-en `pendiente_de_pago`, así que no pasó a Nivel 4. Hay que decidir a mano si
-entra al grupo de N4.
+**Cerrado también el mismo día:**
+
+- Mariela Saravia Valverde: su matrícula se registró dos minutos antes del
+  cierre, así que entró `pendiente_de_pago` y el cierre la saltó. Floriana
+  confirmó que sí cursó. Quedó `completed` en N3 y matriculada en N4, con su
+  cobro partido en dos líneas de ₡5.000 (como sus compañeros) y las dos
+  exentas del recordatorio. NO pagó — el cobro sigue pendiente.
+- El NOMBRE del grupo sucesor heredaba el mes del origen: los correos de
+  folletos decían «Julio» en octubre. `conElMesDelInicio` lo corrige y se
+  aplicó a los 30 grupos activos desalineados. Los finalizados no se tocan.
+  Nombres viejos en `out/rollback-nombres-grupos-2026-10-05.sql`.
+- La modalidad se puede **corregir a mano** desde la pantalla del grupo (solo
+  N1-N4, solo quien administra grupos, con audit_log). La marca salió de un
+  backfill y no hay backfill que acierte siempre.
+- Prueba sembrada en staging con `scripts/est14-legacy-2026-10/sembrar-prueba-staging.ts`
+  (N1 y N3, legacy y bloques, con dirigente) y su `--verificar`.
+
+**Queda pendiente:** avisarles a los 5 dirigentes que sus estudiantes tienen
+cobros nuevos. La exención del recordatorio vence el 2026-10-19.
