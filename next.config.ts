@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { EMBEDDABLE_PREFIXES } from "./src/lib/embed";
 
 const securityHeaders = [
   {
@@ -86,19 +87,28 @@ const nextConfig: NextConfig = {
       },
       {
         /**
-         * X-Frame-Options a TODO menos el calendario.
+         * X-Frame-Options a TODO menos lo embebible.
          *
-         * El calendario se embebe en el sitio de Theos (/eventos/embed genera
-         * ese iframe) y SAMEORIGIN lo bloqueaba: la función existía y no podía
-         * funcionar. Ahí manda `frame-ancestors` de la CSP, que sí sabe listar
-         * orígenes — y si no hay ninguno configurado, sigue siendo 'self', o
-         * sea que quitar el header de esta ruta no abre nada por sí solo.
+         * Lo embebible se embebe en el sitio de Theos y SAMEORIGIN lo
+         * bloqueaba: la función existía y no podía funcionar. Ahí manda
+         * `frame-ancestors` de la CSP, que sí sabe listar orígenes — y si no
+         * hay ninguno configurado, sigue siendo 'self', o sea que quitar el
+         * header de esas rutas no abre nada por sí solo.
          *
-         * El negative lookahead deja fuera /calendario y todo lo que cuelgue
-         * de él; el resto del sistema sigue bloqueado, que es lo que evita
+         * LA EXCEPCIÓN SE DERIVA DE `EMBEDDABLE_PREFIXES`, no se escribe a
+         * mano. Estuvo escrita a mano —decía solo `calendario`— y cuando
+         * SRV-13 agregó `/puestos` a la lista, la cartelera siguió mandando
+         * SAMEORIGIN: la CSP la autorizaba y el header la bloqueaba. Una
+         * lista en dos lugares se separa, y acá se separó.
+         *
+         * El `(?:$|/)` del final es la frontera: sin él, `/puestos` exime
+         * también a `/puestos-cualquier-cosa`, y una ruta futura que empiece
+         * igual nacería embebible sin que nadie lo decidiera.
+         *
+         * El resto del sistema sigue bloqueado, que es lo que evita
          * clickjacking sobre acciones de alguien con sesión.
          */
-        source: '/((?!calendario).*)',
+        source: `/((?!(?:${EMBEDDABLE_PREFIXES.map(p => p.replace(/^\//, '')).join('|')})(?:$|/)).*)`,
         headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }],
       },
     ]
