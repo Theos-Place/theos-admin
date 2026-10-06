@@ -1516,3 +1516,56 @@ export async function datosDeAlcanceDeEventos(memberId: string | null): Promise<
     comitesDeSusPuestos: [...new Set(comites)],
   }
 }
+
+/**
+ * ¿Esta persona ya tiene check-in HOY en otra sede?
+ *
+ * Solo entre CHARLAS: en los eventos no hay «sede» y alguien puede ir a dos
+ * cosas el mismo día sin que eso signifique nada. El caso real es el de las
+ * charlas, que son simultáneas y donde registrar en la equivocada es el
+ * error que se busca atajar (2026-10-05).
+ *
+ * La sede se deriva con `canonicalCharlaTitle`, la misma del reporte: sin
+ * eso, «Charla Cartago» y «Cartago Youth» se leerían como sedes distintas y
+ * el aviso saltaría cada vez que alguien hace check-in en el youth de su
+ * propia sede.
+ *
+ * Devuelve el PRIMERO que encuentra. No hace falta la lista: con uno ya hay
+ * que preguntar, y la pregunta no mejora con dos.
+ */
+export async function checkinEnOtraSedeHoy(
+  eventId: string,
+  memberId: string,
+): Promise<{ sede: string; checked_at: string } | null> {
+  const supabase = createAdminClient()
+  const { canonicalCharlaTitle } = await import('@/lib/sedes-canonical')
+  const sedeDe = (t: string): string => {
+    const base = t.replace(/\s+Youth$/i, '')
+    return (canonicalCharlaTitle(base) ?? base).replace(/^Charla\s+/i, '').trim() || base
+  }
+
+  const { data: ev } = await supabase
+    .from('events').select('title, event_type').eq('id', eventId).maybeSingle()
+  const evento = ev as { title: string; event_type: string | null } | null
+  if (!evento || evento.event_type !== 'charla') return null
+  const sedeDestino = sedeDe(evento.title)
+
+  // El día en hora de COSTA RICA, no UTC: una charla de las 7 p.m. cae en el
+  // día siguiente si se compara en UTC, y el aviso no saltaría nunca.
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date())
+  const { data } = await supabase
+    .from('event_checkins')
+    .select('checked_in_at, event:events!inner(title, event_type)')
+    .eq('member_id', memberId)
+    .eq('event.event_type', 'charla')
+    .gte('checked_in_at', `${hoy}T00:00:00.000-06:00`)
+    .lte('checked_in_at', `${hoy}T23:59:59.999-06:00`)
+
+  for (const r of (data ?? []) as Array<{ checked_in_at: string; event: { title: string } | { title: string }[] }>) {
+    const e = Array.isArray(r.event) ? r.event[0] : r.event
+    if (!e?.title) continue
+    const sede = sedeDe(e.title)
+    if (sede && sede !== sedeDestino) return { sede, checked_at: r.checked_in_at }
+  }
+  return null
+}

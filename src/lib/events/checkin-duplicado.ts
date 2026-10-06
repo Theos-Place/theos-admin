@@ -73,3 +73,57 @@ export const YA_REGISTRADO = 'duplicate'
 export function esYaRegistrado(status: number, body: { code?: string } | null): boolean {
   return status === 409 && body?.code === YA_REGISTRADO
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * YA TIENE CHECK-IN HOY EN OTRA SEDE
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * El aviso cuando la persona ya se registró HOY en otra sede.
+ *
+ * EL CASO QUE LO PIDE (2026-10-05). El 9 de setiembre —el primer miércoles
+ * con los nombres nuevos— tres personas quedaron registradas en Pedregal
+ * Miércoles entre las 19:11 y las 19:12, y en Meridiano Miércoles entre las
+ * 19:15 y las 19:17. Cuatro minutos entre dos sedes distintas no es
+ * asistencia doble: quien registraba tenía la charla equivocada
+ * seleccionada, se dio cuenta y las volvió a meter en la correcta. Las tres
+ * primeras quedaron colgando y nadie se enteró hasta que alguien barrió los
+ * datos un mes después.
+ *
+ * AVISA, NO BLOQUEA, y eso es deliberado: hay casos legítimos —alguien que
+ * sirve en una sede y asiste en otra, un evento especial— y bloquearlos
+ * obligaría a pedirle permiso a alguien en la puerta, con la fila esperando.
+ * Lo que faltaba no era un candado: era que el error no fuera silencioso.
+ */
+export type CheckinEnOtraSede = {
+  /** La sede donde ya está registrada (nombre canónico, sin "Charla "). */
+  sede: string
+  /** ISO del check-in que ya existe. */
+  checked_at: string
+}
+
+/** Código del 409. La UI lo usa para pedir confirmación, no para fallar. */
+export const EN_OTRA_SEDE = 'otra_sede'
+
+/**
+ * Lo que se le pregunta al operador.
+ *
+ * Dice DÓNDE y A QUÉ HORA. «Ya tiene un check-in hoy» a secas no deja
+ * decidir: con la sede y la hora, quien está en la puerta sabe al instante
+ * si es la persona que viene llegando de otra sede o si se equivocó de
+ * charla hace cuatro minutos.
+ */
+export function textoDeOtraSede(nombre: string, c: CheckinEnOtraSede): string {
+  return `${nombre} ya tiene check-in de hoy en ${c.sede}, a las ${horaDelCheckin(c.checked_at)}. `
+    + '¿Registrarla igual acá?'
+}
+
+/**
+ * ¿La respuesta dice «ya está en otra sede hoy»?
+ *
+ * Se mira el CÓDIGO, no el 409: ese status lo devuelven también el duplicado
+ * y el evento pago sin inscripción, y cada uno lleva otra pantalla.
+ */
+export function esDeOtraSede(status: number, body: { code?: string } | null): boolean {
+  return status === 409 && body?.code === EN_OTRA_SEDE
+}

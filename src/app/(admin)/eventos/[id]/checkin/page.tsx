@@ -11,7 +11,7 @@ import { cumpleEstaSemana, textoDelCumple } from '@/lib/members/cumple-esta-sema
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { ChevronLeft, UserPlus, X, Camera, Trash2, UserCheck } from 'lucide-react'
+import { ChevronLeft, UserPlus, X, Camera, Trash2, UserCheck, AlertTriangle } from 'lucide-react'
 import { FamilyMemberModal, type FamilyDraft } from '@/components/members/FamilyMemberModal'
 import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { ContactCapture } from '@/components/members/ContactCapture'
@@ -29,7 +29,8 @@ import {
 } from '@/lib/events/contacto-en-la-puerta'
 import {
   marcaEnLaBusqueda, textoYaRegistrado, textoDeshacer, textoQrRepetido,
-  esYaRegistrado, type CheckinExistente,
+  esYaRegistrado, esDeOtraSede, textoDeOtraSede, type CheckinExistente,
+  type CheckinEnOtraSede,
 } from '@/lib/events/checkin-duplicado'
 
 // El escáner QR (zxing, ~100KB+) se carga solo cuando el usuario abre la cámara:
@@ -108,6 +109,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
    * el caso normal es que el operador dude ("¿ya la registré?"). El panel se
    * lo dice y le ofrece deshacer, que es el caso raro.
    */
+  /**
+   * FOL del check-in · La persona ya se registró hoy en OTRA sede.
+   *
+   * Se guarda lo necesario para reintentar con la confirmación: quién, cómo
+   * y dónde estaba. Sin eso, decir «sí» obligaría a buscarla de nuevo.
+   */
+  const [otraSede, setOtraSede] = useState<
+    { m: { id: string; name: string }; type: AttendanceType; donde: CheckinEnOtraSede } | null
+  >(null)
   const [yaRegistrado, setYaRegistrado] = useState<
     { nombre: string; checkin: CheckinExistente } | null>(null)
   const [deshaciendo, setDeshaciendo] = useState(false)
@@ -284,7 +294,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // métodos (QR, nombre/cédula, familia, persona nueva) — acá vive el gate de
   // "evento pago requiere inscripción" para que TODOS se comporten igual
   // (Fase 1). 'not_registered' = evento pago y la persona no está inscrita.
-  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub): Promise<'ok' | 'dup' | 'error' | 'not_registered'> {
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub, confirmarOtraSede = false): Promise<'ok' | 'dup' | 'error' | 'not_registered' | 'otra_sede'> {
     // Gate cliente (feedback inmediato sin round-trip); el server lo re-valida.
     if (event!.requires_payment && !registeredIds.has(m.id)) return 'not_registered'
     const subEventId = subEvent // null = evento padre; o el subevento elegido para esta persona
@@ -310,12 +320,15 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         // attendance_type viajaba SOLO en el estado optimista: el POST no lo
         // mandaba y la elección de "Servidor" se perdía al refrescar (bug
         // 2026-09-10, 168.743 check-ins sin la distinción).
-        body: JSON.stringify({ member_id: m.id, sub_event_id: subEventId, method, attendance_type: type }),
+        body: JSON.stringify({
+          member_id: m.id, sub_event_id: subEventId, method, attendance_type: type,
+          ...(confirmarOtraSede ? { confirmar_otra_sede: true } : {}),
+        }),
       })
       if (res.status === 409) {
         rollback()
         const data = await res.json().catch(() => null) as
-          { code?: string; checkin?: CheckinExistente | null } | null
+          { code?: string; checkin?: CheckinExistente | null; otra_sede?: CheckinEnOtraSede } | null
         /**
          * El servidor dice que ya estaba registrada y manda los datos del
          * check-in que existe. Se pinta el panel con ESO y no con el estado
@@ -325,6 +338,14 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         if (esYaRegistrado(res.status, data)) {
           if (data?.checkin) setYaRegistrado({ nombre: m.name, checkin: data.checkin })
           return 'dup'
+        }
+        /**
+         * Ya está en otra sede hoy. NO es un error: se le pregunta al
+         * operador y, si dice que sí, se reintenta con la confirmación.
+         */
+        if (esDeOtraSede(res.status, data) && data?.otra_sede) {
+          setOtraSede({ m: { id: m.id, name: m.name }, type, donde: data.otra_sede })
+          return 'otra_sede'
         }
         return data?.code === 'not_registered' ? 'not_registered' : 'dup'
       }
@@ -897,6 +918,38 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             </div>
           ) : null}
 
+          {/* Ya está en OTRA SEDE hoy: se pregunta, no se bloquea.
+              Va antes que «ya registrado» porque es la respuesta a lo que el
+              operador acaba de intentar y necesita decidir ahora. */}
+          {otraSede && (
+            <div className="rounded-2xl bg-amber-50 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle size={18} className="text-amber-700 shrink-0 mt-0.5" aria-hidden />
+                <p className="text-[13px] text-amber-900 font-body">
+                  {textoDeOtraSede(otraSede.m.name, otraSede.donde)}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const o = otraSede
+                    setOtraSede(null)
+                    await persistCheckin(o.m, o.type, 'manual', targetSub, true)
+                  }}
+                  className="flex-1 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-ink transition-colors font-body min-h-[44px]"
+                >
+                  Sí, registrarla acá
+                </button>
+                <button
+                  onClick={() => { setOtraSede(null); setQuery('') }}
+                  className="rounded-xl border border-navy/20 px-4 py-2.5 text-sm text-navy hover:bg-navy/5 transition-colors font-body min-h-[44px]"
+                >
+                  No, me equivoqué
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Ya registrado: estado y salida, no un error. Va sobre la lista
               porque es la respuesta a lo que el operador acaba de tocar. */}
           {yaRegistrado && (
@@ -1301,7 +1354,7 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
   onClose: () => void
   onCreated: (member: { id: string; name: string }) => void
   onCheckedIn: () => void
-  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<'ok' | 'dup' | 'error' | 'not_registered'>
+  persistCheckin: (m: { id: string; name: string }, type: AttendanceType) => Promise<'ok' | 'dup' | 'error' | 'not_registered' | 'otra_sede'>
 }) {
   const parts = initialName.split(' ')
   const [firstName, setFirstName] = useState(parts[0] ?? '')

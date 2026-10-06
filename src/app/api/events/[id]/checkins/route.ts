@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireEventAccess } from '@/lib/auth/event-guard'
 import {
-  createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente, NotRegisteredError,
+  createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente,
+  checkinEnOtraSedeHoy, NotRegisteredError,
 } from '@/lib/supabase/queries/events'
-import { YA_REGISTRADO } from '@/lib/events/checkin-duplicado'
+import { YA_REGISTRADO, EN_OTRA_SEDE } from '@/lib/events/checkin-duplicado'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: asistentes (member_ids con check-in) de un evento. Para elegir audiencia
@@ -54,6 +55,35 @@ export async function POST(
         { status: 400 },
       )
     }
+    /**
+     * ¿Ya tiene check-in HOY en otra sede? Se PREGUNTA, no se bloquea.
+     *
+     * El 9 de setiembre tres personas quedaron registradas en Pedregal
+     * Miércoles y, cuatro minutos después, en Meridiano Miércoles: quien
+     * registraba tenía la charla equivocada seleccionada. Nadie se enteró
+     * hasta que alguien barrió los datos un mes después.
+     *
+     * Hay casos legítimos —servir en una sede y asistir en otra— así que
+     * bloquear obligaría a pedir permiso con la fila esperando. Con
+     * `confirmar_otra_sede` el operador sigue adelante.
+     *
+     * Best-effort: si la consulta falla, el check-in se hace igual. Perder
+     * una asistencia real por un aviso sería peor que el problema.
+     */
+    if (memberId && !body?.confirmar_otra_sede) {
+      try {
+        const otra = await checkinEnOtraSedeHoy(id, memberId)
+        if (otra) {
+          return NextResponse.json(
+            { error: `Ya tiene check-in de hoy en ${otra.sede}.`, code: EN_OTRA_SEDE, otra_sede: otra },
+            { status: 409 },
+          )
+        }
+      } catch (e) {
+        reportarError('checkin: no se pudo revisar otras sedes', e, { eventId: id })
+      }
+    }
+
     const res = await createCheckin(id, {
       ...body,
       guest_name: memberId ? body.guest_name ?? null : guestName,
