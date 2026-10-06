@@ -16,7 +16,7 @@ import { BotonFolletosAnticipados } from '@/components/studies/BotonFolletosAnti
 import { ModalidadDelGrupo } from '@/components/studies/ModalidadDelGrupo'
 import { cn } from '@/lib/utils'
 import { permisosDelRoster, cumpleCorto } from '@/lib/studies/roster-por-alcance'
-import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock } from 'lucide-react'
+import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock, Home } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
@@ -870,6 +870,9 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     permisos.verEdad ? 'Edad' : '',
                     'Estado',
                     'Asistencia',
+                    // EST-22 · Solo gestión. El dirigente no la ve y el
+                    // servidor tampoco le manda el dato.
+                    permisos.verOfrecimientoDeCasa ? 'Ofrece casa' : '',
                     // La nota tampoco: el servidor ya la recorta para el
                     // estudiante (recortarRoster), así que la columna le salía
                     // llena de guiones. Mismo defecto que el de abajo.
@@ -952,6 +955,21 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                     <td className="px-4 py-3">
                       <AttendanceBar pct={p.attendance_pct} />
                     </td>
+                    {/* EST-22 · La celda queda VACÍA para quien no ofreció.
+                        Una columna con «No» repetido 25 veces es ruido, y lo
+                        que se busca son los pocos que sí. */}
+                    {permisos.verOfrecimientoDeCasa && (
+                      <td className="px-4 py-3 text-[13px] font-body">
+                        {p.ofrece_casa ? (
+                          <span className="inline-flex items-start gap-1.5 text-navy">
+                            <Home size={14} className="shrink-0 mt-0.5 text-teal-deep" aria-hidden />
+                            <span className="max-w-[22rem]">
+                              {p.ofrece_casa.ubicacion ?? 'Sí (sin ubicación)'}
+                            </span>
+                          </span>
+                        ) : null}
+                      </td>
+                    )}
                     {studyType?.requires_grade && permisos.verDatosDeGestion && (
                       <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
                         {p.grade ?? '—'}

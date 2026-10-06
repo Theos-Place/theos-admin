@@ -2534,3 +2534,77 @@ export async function getDisponibilidadDeDirigentes(): Promise<DisponibilidadDel
   }
   return out
 }
+
+/**
+ * EST-22 · Quiénes de estos miembros ofrecieron su casa, y dónde.
+ *
+ * Una sola consulta para todo el roster: el dato vive en las respuestas del
+ * formulario de matrícula y pedirlo por persona serían N consultas para
+ * pintar una columna.
+ *
+ * Devuelve SOLO a los que dijeron que sí. Los demás no aparecen en el mapa,
+ * que es lo que la pantalla necesita: una columna con «No» repetido 25 veces
+ * es ruido, y lo que se busca son los pocos que sí.
+ */
+export async function ofrecimientosDeCasa(
+  memberIds: readonly string[],
+): Promise<Map<string, { ubicacion: string | null }>> {
+  if (memberIds.length === 0) return new Map()
+  const supabase = createAdminClient()
+  const {
+    esLaPreguntaDeLaCasa, esElCampoDeUbicacion, ofreceCasa, ultimaPorPersona,
+  } = await import('@/lib/studies/ofrece-casa')
+
+  // Los campos que importan, buscados por su TEXTO: form_fields no tiene
+  // llave estable (ver el comentario de `ofrece-casa`).
+  const { data: campos } = await supabase
+    .from('form_fields').select('id, label, form_id')
+  const todos = (campos ?? []) as Array<{ id: string; label: string | null; form_id: string }>
+  const idsPregunta = todos.filter(f => esLaPreguntaDeLaCasa(f.label)).map(f => f.id)
+  if (idsPregunta.length === 0) return new Map()
+  // La ubicación se busca SOLO en los formularios que traen la pregunta: hay
+  // otros formularios con un campo «Ubicación» que no tiene nada que ver.
+  const formsConPregunta = new Set(todos.filter(f => idsPregunta.includes(f.id)).map(f => f.form_id))
+  const idsUbicacion = todos
+    .filter(f => formsConPregunta.has(f.form_id) && esElCampoDeUbicacion(f.label))
+    .map(f => f.id)
+
+  const { data: valores } = await supabase
+    .from('form_response_values')
+    .select(`
+      field_id, value_text, value_json,
+      respuesta:form_responses!inner(id, member_id, submitted_at)
+    `)
+    .in('field_id', [...idsPregunta, ...idsUbicacion])
+    .in('respuesta.member_id', memberIds as string[])
+
+  type Fila = {
+    field_id: string; value_text: string | null; value_json: unknown
+    respuesta: { id: string; member_id: string | null; submitted_at: string }
+      | Array<{ id: string; member_id: string | null; submitted_at: string }>
+  }
+  const texto = (v: Fila): string | null =>
+    v.value_text ?? (typeof v.value_json === 'string' ? v.value_json : null)
+
+  // Primero la ubicación por RESPUESTA, para poder pegarla a la que
+  // corresponde: una persona con dos respuestas tiene dos direcciones.
+  const ubicacionPorRespuesta = new Map<string, string>()
+  const dichos: Array<{ member_id: string; respuesta_id: string; respondido: string }> = []
+  for (const v of (valores ?? []) as Fila[]) {
+    const r = Array.isArray(v.respuesta) ? v.respuesta[0] : v.respuesta
+    if (!r?.member_id) continue
+    if (idsUbicacion.includes(v.field_id)) {
+      const t = texto(v)
+      if (t?.trim()) ubicacionPorRespuesta.set(r.id, t.trim())
+    } else if (ofreceCasa(texto(v))) {
+      dichos.push({ member_id: r.member_id, respuesta_id: r.id, respondido: r.submitted_at })
+    }
+  }
+
+  const ultima = ultimaPorPersona(dichos.map(d => ({
+    member_id: d.member_id,
+    ubicacion: ubicacionPorRespuesta.get(d.respuesta_id) ?? null,
+    respondido: d.respondido,
+  })))
+  return new Map([...ultima].map(([id, v]) => [id, { ubicacion: v.ubicacion }]))
+}

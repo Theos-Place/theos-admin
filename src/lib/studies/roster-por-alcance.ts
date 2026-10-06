@@ -37,12 +37,24 @@ export type PermisosDelRoster = {
   verPerfil: boolean
   /** Tab de asistencia y acciones sobre el grupo. */
   verAsistencia: boolean
+  /**
+   * EST-22 · Quién ofreció su casa, y dónde.
+   *
+   * SOLO GESTIÓN, ni siquiera el dirigente (Floriana, 2026-10-06). No es
+   * por desconfianza: es que la sede del grupo la define el equipo de
+   * estudios, y la dirección de la casa de alguien no tiene por qué viajar
+   * a más pantallas que las que la usan.
+   *
+   * Va aparte de `verDatosDeGestion` —que el dirigente SÍ tiene— justo por
+   * eso: meterlo ahí se lo habría dado sin que nadie lo decidiera.
+   */
+  verOfrecimientoDeCasa: boolean
 }
 
 export function permisosDelRoster(scope: AlcanceDeVista): PermisosDelRoster {
   switch (scope) {
     case 'admin':
-      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: true, verAsistencia: true }
+      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: true, verAsistencia: true, verOfrecimientoDeCasa: true }
     case 'leader':
       // El dirigente necesita contactar y felicitar, no auditar a la persona.
       //
@@ -55,12 +67,12 @@ export function permisosDelRoster(scope: AlcanceDeVista): PermisosDelRoster {
       // justamente para no repartir la edad. La diferencia: el cumpleaños se
       // muestra para felicitar y ahí el año sobra; la edad se muestra porque la
       // regla del grupo depende de ella.
-      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: false, verAsistencia: true }
+      return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: false, verAsistencia: true, verOfrecimientoDeCasa: false }
     case 'member':
       // El estudiante ve la lista y nada personal de sus compañeros.
-      return { verLista: true, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
+      return { verLista: true, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false, verOfrecimientoDeCasa: false }
     default:
-      return { verLista: false, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false }
+      return { verLista: false, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false, verOfrecimientoDeCasa: false }
   }
 }
 
@@ -72,6 +84,8 @@ export type FilaDeRoster = {
   status: string | null
   grade?: number | null
   notes?: string | null
+  /** EST-22 · Solo viaja para quien puede verlo. */
+  ofrece_casa?: { ubicacion: string | null } | null
   member: {
     first_name: string
     last_name: string
@@ -98,6 +112,9 @@ export function recortarRoster(
     member_id: f.member_id,
     status: f.status,
     ...(p.verDatosDeGestion ? { grade: f.grade ?? null, notes: f.notes ?? null } : {}),
+    // NO viaja al dirigente ni al estudiante: un campo que llega al
+    // navegador es visible aunque no se pinte.
+    ...(p.verOfrecimientoDeCasa ? { ofrece_casa: f.ofrece_casa ?? null } : {}),
     member: f.member
       ? {
           first_name: f.member.first_name,

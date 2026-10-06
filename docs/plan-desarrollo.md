@@ -1327,7 +1327,7 @@ dice la sede y la hora, que es lo que deja decidir en la puerta.
 Solo entre charlas; el «Youth» de la misma sede no dispara el aviso; el día
 se mide en hora de Costa Rica.
 
-### [ ] EST-22 · Ver quién ofreció su casa (respuestas de inscripción) (pedido 2026-10-06)
+### [~] EST-22 · Ver quién ofreció su casa — COLUMNA HECHA 2026-10-06 · FALTAN EXPORT Y FILTRO DE PADRÓN
 
 Prompt para Claude Code:
 
@@ -1354,7 +1354,7 @@ ETAPA 2 — EXPONERLO donde se trabaja:
 Tests: columna visible para gestión, no para estudiante; dato correcto. tsc/lint/vitest.
 ```
 
-### [ ] EST-23 · Excepciones de niveles sin fecha de vencimiento (pedido 2026-10-06)
+### [x] EST-23 · Excepciones de niveles sin fecha de vencimiento — HECHO 2026-10-06
 
 Las excepciones de matrícula de niveles (ej. repetir Nivel 1) se están creando
 amarradas al calendario de bloques — incorrecto: los niveles NO siguen los 3
@@ -1384,3 +1384,41 @@ no parejo.
 Tests: nivel sin vencimiento, capacitación con vencimiento intacto, consumo de un uso,
 el cron no las toca, migración idempotente. tsc/lint/vitest.
 ```
+
+
+**EST-22 · lo medido y lo que quedó (2026-10-06)**
+
+El dato SÍ se guarda: la pregunta «¿Podrías ofrecer tu casa u oficina para el
+estudio?» vive en el formulario «Matrícula a Nivel 1 — preguntas iniciales»,
+con un campo «Ubicación» al lado. 30 respuestas, 5 que sí (4 personas:
+Catalina Pagés contestó dos veces). Nadie lo veía en ninguna pantalla.
+
+Es de la PERSONA, no de la matrícula: `form_responses` guarda `member_id` y
+nada más. Se pregunta una vez al entrar, así que el cruce es por persona.
+
+HECHO: columna «Ofrece casa» con la ubicación en el detalle del grupo, solo
+para gestión — ni el dirigente ni el estudiante, y el dato NO VIAJA en el
+JSON para ellos (decisión de Floriana).
+
+NO HECHO, y por qué:
+- **Export de la lista del grupo**: no existe tal export hoy. La spec lo daba
+  por hecho. Construirlo es otro ítem.
+- **Filtro en el padrón**: el dato vive en respuestas de formulario, no en una
+  columna de `members`; el sistema de condiciones no lee formularios. Es
+  posible pero es trabajo aparte.
+- **Las demás respuestas al abrir la matrícula**: ya se ven todas en
+  `/formularios/[id]/respuestas`. Se dejó así en vez de duplicar la pantalla.
+
+**EST-23 · lo que estaba roto (2026-10-06)**
+
+No hay cron: la vigencia se evalúa al leer, con `excepcionVigente`, y la daba
+el `bloque_id`. TRES excepciones de Nivel 1 estaban MUERTAS sin que nadie lo
+supiera, porque el «Bloque 3 2026» cerró matrícula el 13 de setiembre:
+
+- Jose Fabio Quesada Matamoros — «tiene 29 años, puede matricular los de 30»
+- Kenneth Campos Araya — repetir, decisión del dirigente
+- Kristal Monge Segura — repetir, no había grupo al cual reubicarla
+
+Las tres decían `active` y la elegibilidad las descartaba en silencio. La
+migración les quita el bloque y las revive. Las de capacitaciones no se
+tocan: ahí el bloque sí es la unidad real.

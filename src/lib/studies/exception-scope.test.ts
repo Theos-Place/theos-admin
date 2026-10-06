@@ -26,33 +26,38 @@ describe('perdona', () => {
   })
 })
 
+/**
+ * EST-23 · Estos casos describen CAPACITACIONES, donde el bloque SÍ manda.
+ * En niveles la excepción no vence nunca; eso vive en
+ * est23-niveles-sin-vencimiento.test.ts.
+ */
 describe('excepcionVigente', () => {
   const hoy = '2026-09-01'
 
   it('revocada o usada nunca está vigente', () => {
     for (const status of ['revoked', 'used']) {
-      expect(excepcionVigente({ status, cierreMatricula: '2026-12-31', hoy }), status).toBe(false)
+      expect(excepcionVigente({ status, cierreMatricula: '2026-12-31', hoy, planCode: 'SCJ' }), status).toBe(false)
     }
   })
 
   it('activa dentro del bloque, vigente', () => {
-    expect(excepcionVigente({ status: 'active', cierreMatricula: '2026-09-13', hoy })).toBe(true)
+    expect(excepcionVigente({ status: 'active', cierreMatricula: '2026-09-13', hoy, planCode: 'SCJ' })).toBe(true)
   })
 
   it('el día del cierre TODAVÍA vale', () => {
     // La matrícula está abierta hasta ese día inclusive; la excepción dura lo
     // mismo. Cortarla un día antes deja a alguien afuera en el último día.
-    expect(excepcionVigente({ status: 'active', cierreMatricula: hoy, hoy })).toBe(true)
+    expect(excepcionVigente({ status: 'active', cierreMatricula: hoy, hoy, planCode: 'SCJ' })).toBe(true)
   })
 
   it('pasado el cierre, ya no', () => {
-    expect(excepcionVigente({ status: 'active', cierreMatricula: '2026-08-31', hoy })).toBe(false)
+    expect(excepcionVigente({ status: 'active', cierreMatricula: '2026-08-31', hoy, planCode: 'SCJ' })).toBe(false)
   })
 
   it('sin bloque no caduca (las de antes del cambio)', () => {
     // No se les cambia el trato por retroactividad: se otorgaron bajo la regla
     // vieja, en la que no vencían.
-    expect(excepcionVigente({ status: 'active', cierreMatricula: null, hoy })).toBe(true)
+    expect(excepcionVigente({ status: 'active', cierreMatricula: null, hoy, planCode: 'SCJ' })).toBe(true)
   })
 })
 

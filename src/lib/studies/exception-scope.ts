@@ -38,19 +38,44 @@ export function perdona(waived: readonly string[] | null | undefined, req: Waiva
 }
 
 /**
+ * EST-23 · Los NIVELES no siguen el calendario de bloques.
+ *
+ * Los tres bloques anuales son de CAPACITACIONES. Un grupo de Nivel 1 abre
+ * cuando hay gente y dirigente, no cuando empieza un cuatrimestre, así que
+ * colgarle a su excepción el cierre de matrícula de un bloque le pone una
+ * fecha que no significa nada.
+ *
+ * NO ES TEÓRICO (medido el 2026-10-06): tres excepciones de Nivel 1 estaban
+ * MUERTAS sin que nadie lo supiera —Jose Fabio Quesada por edad, Kenneth
+ * Campos y Kristal Monge para repetir— porque el «Bloque 3 2026» cerró su
+ * matrícula el 13 de setiembre. Siguen diciendo `active` en la base y la
+ * elegibilidad las descartaba en silencio.
+ */
+export function esNivel(planCode: string | null | undefined): boolean {
+  return !!planCode && /^N[1-4]$/.test(planCode)
+}
+
+/**
  * ¿Sigue viva? Se exige status 'active' Y que no haya cerrado la matrícula del
  * bloque en que se otorgó.
  *
  * `cierreMatricula` null = excepción vieja, sin bloque: no caduca.
  * El día del cierre TODAVÍA vale — la matrícula está abierta hasta ese día
  * inclusive, así que la excepción tiene que durar lo mismo.
+ *
+ * EN NIVELES NO CADUCA NUNCA (EST-23). Vive hasta que se USA —un solo uso, al
+ * matricularse queda `used`— o hasta que alguien la quita. `planCode` es
+ * obligatorio justamente para que nadie se olvide de la distinción: un
+ * default convertiría de nuevo a los niveles en capacitaciones.
  */
 export function excepcionVigente(input: {
   status: string
   cierreMatricula: string | null | undefined
   hoy: string
+  planCode: string | null | undefined
 }): boolean {
   if (input.status !== 'active') return false
+  if (esNivel(input.planCode)) return true
   const cierre = (input.cierreMatricula ?? '').slice(0, 10)
   if (!cierre) return true
   return input.hoy <= cierre

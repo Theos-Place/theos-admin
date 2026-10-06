@@ -52,6 +52,13 @@ export type GroupParticipant = {
   status: 'enrolled' | 'pending' | 'withdrawn' | 'en_revision'
   /** Resultado del cierre (solo en grupos finalizados): derivado de notes. */
   result?: 'aprobado' | 'reprobado' | null
+  /**
+   * EST-22 · Ofreció su casa para el estudio, y dónde.
+   *
+   * SOLO llega para gestión: ni el dirigente ni el estudiante lo reciben
+   * (recortarRoster). `undefined` = no viajó; `null` = viajó y no ofreció.
+   */
+  ofrece_casa?: { ubicacion: string | null } | null
   /** GRU-3 · Contacto y cumpleaños del participante, para la lista del
    *  dirigente y de gestión. Vienen en `undefined` para un estudiante: el
    *  servidor no se los manda (recortarRoster). */

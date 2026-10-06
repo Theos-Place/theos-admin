@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ymdCR } from '@/lib/format'
-import { excepcionVigente } from '@/lib/studies/exception-scope'
+import { esNivel, excepcionVigente } from '@/lib/studies/exception-scope'
 
 // Excepciones de requisitos de matrícula (mismo patrón que study-invitations).
 // Tabla study_requirement_exceptions (migración 072).
@@ -77,6 +77,7 @@ function toDomain(r: Embedded): StudyException {
       status: r.status,
       cierreMatricula: r.bloque?.fecha_cierre_matricula ?? null,
       hoy: ymdCR(),
+      planCode: r.plan?.code ?? null,
     }),
   }
 }
@@ -107,7 +108,9 @@ export async function activeExceptionsByCodeForMember(memberId: string): Promise
     const code = r.plan?.code
     // VENCIDA = no cuenta. El status sigue diciendo 'active' hasta que alguien
     // la use o la revoque; la vigencia la da el bloque.
-    if (!excepcionVigente({ status: 'active', cierreMatricula: r.bloque?.fecha_cierre_matricula, hoy })) continue
+    if (!excepcionVigente({
+      status: 'active', cierreMatricula: r.bloque?.fecha_cierre_matricula, hoy, planCode: code,
+    })) continue
     if (code) out[code] = r.waived_requirements ?? []
   }
   return out
@@ -119,13 +122,16 @@ export async function activeExceptionsByPlanForMember(memberId: string): Promise
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('study_requirement_exceptions')
     .select(`plan_id, waived_requirements,
+      plan:study_plans!study_requirement_exceptions_plan_id_fkey(code),
       bloque:capacitacion_bloques!study_requirement_exceptions_bloque_id_fkey(fecha_cierre_matricula)`)
     .eq('member_id', memberId).eq('status', 'active')
   if (error) throw error
   const hoy = ymdCR()
   const m = new Map<string, string[]>()
-  for (const r of (data ?? []) as unknown as Array<{ plan_id: string; waived_requirements: string[] | null; bloque: { fecha_cierre_matricula: string | null } | null }>) {
-    if (!excepcionVigente({ status: 'active', cierreMatricula: r.bloque?.fecha_cierre_matricula, hoy })) continue
+  for (const r of (data ?? []) as unknown as Array<{ plan_id: string; waived_requirements: string[] | null; plan: { code: string | null } | null; bloque: { fecha_cierre_matricula: string | null } | null }>) {
+    if (!excepcionVigente({
+      status: 'active', cierreMatricula: r.bloque?.fecha_cierre_matricula, hoy, planCode: r.plan?.code ?? null,
+    })) continue
     m.set(r.plan_id, r.waived_requirements ?? [])
   }
   return m
@@ -139,11 +145,23 @@ export async function createException(input: {
   granted_by?: string | null
 }): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  // Se cuelga del bloque ACTIVO: la excepción sirve para los grupos que están
-  // abiertos ahora y muere cuando cierra su matrícula. Si no hay bloque activo
-  // queda sin vencimiento — mejor eso que inventarle una fecha.
-  const { data: bloque } = await supabase.from('capacitacion_bloques')
-    .select('id').eq('estado', 'activo').limit(1).maybeSingle()
+  /**
+   * Se cuelga del bloque ACTIVO: la excepción sirve para los grupos que están
+   * abiertos ahora y muere cuando cierra su matrícula. Si no hay bloque activo
+   * queda sin vencimiento — mejor eso que inventarle una fecha.
+   *
+   * EST-23 · LOS NIVELES NO. Los tres bloques anuales son de capacitaciones;
+   * un grupo de Nivel 1 abre cuando hay gente y dirigente. Colgarle el cierre
+   * de un bloque le pone una fecha que no significa nada, y ya mató tres
+   * excepciones reales sin que nadie se enterara.
+   */
+  const { data: planDeLaExcepcion } = await supabase
+    .from('study_plans').select('code').eq('id', input.plan_id).maybeSingle()
+  const esDeNivel = esNivel((planDeLaExcepcion as { code: string | null } | null)?.code)
+  const { data: bloque } = esDeNivel
+    ? { data: null }
+    : await supabase.from('capacitacion_bloques')
+      .select('id').eq('estado', 'activo').limit(1).maybeSingle()
   // Cliente laxo para el insert: `bloque_id` es una columna nueva (migración
   // 20260901200000) y los tipos generados todavía no la traen.
   const laxo = supabase as unknown as {

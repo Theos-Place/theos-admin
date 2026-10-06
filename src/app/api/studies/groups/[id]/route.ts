@@ -57,6 +57,21 @@ export async function GET(
     // GRU-3: la lista se recorta ACÁ, no en la UI. Esconder una columna en
     // pantalla no esconde el dato: viaja igual en el JSON.
     const roster = (group as unknown as { enrollments?: FilaDeRoster[] }).enrollments ?? []
+    /**
+     * EST-22 · Quién ofreció su casa. Se consulta SOLO para 'admin': es el
+     * único alcance que puede verlo, y traerlo para el dirigente sería pagar
+     * una consulta por un dato que `recortarRoster` va a tirar.
+     */
+    if (scope === 'admin' && roster.length > 0) {
+      try {
+        const { ofrecimientosDeCasa } = await import('@/lib/supabase/queries/studies')
+        const casas = await ofrecimientosDeCasa(roster.map(r => r.member_id))
+        for (const f of roster) f.ofrece_casa = casas.get(f.member_id) ?? null
+      } catch (e) {
+        // Best-effort: una columna vacía es mejor que un grupo que no abre.
+        reportarError('EST-22 ofrecimientos de casa:', e)
+      }
+    }
     if (scope === 'admin' || scope === 'leader') {
       return NextResponse.json({ ...group, enrollments: recortarRoster(roster, scope), viewer_scope: scope })
     }
