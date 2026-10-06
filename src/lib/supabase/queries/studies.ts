@@ -22,7 +22,7 @@ import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
 import { estudiantesDelGrupo } from '@/lib/studies/conteo-de-participantes'
 import { nivelesACobrar, montoDelBloque, bloqueDe } from '@/lib/studies/corte-de-bloque'
-import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
+import { modalidadDe, type Modalidad } from '@/lib/studies/modalidad-de-bloques'
 
 // NOTA: usamos createAdminClient (service role) porque la app corre con mock auth.
 // Migrar a createClient de server.ts cuando haya Supabase Auth real.
@@ -82,6 +82,8 @@ export type DbGroupEnriched = {
   enrollment_start_date: string | null
   enrollment_end_date: string | null
   status: 'en_matricula' | 'en_curso' | 'finalizado'
+  /** EST-14 · 'legacy' cobra y entrega por nivel; 'bloques' por par. */
+  modalidad?: string | null
   /** EVE-10: cuándo se cerró. NULL en los grupos históricos de CCB, que no
    *  dejaron huella — antes esto se aproximaba con updated_at, que cambia con
    *  cualquier edición (estaba mal en los 1.856 grupos que sí tenían huella). */
@@ -505,7 +507,7 @@ const GROUP_SELECT = `
   max_students, starts_at, ends_at, enrollment_start_date, enrollment_end_date,
   status, current_week, whatsapp_group_url,
   is_leader_training, training_modality, is_virtual, enrollment_restrictions,
-  age_min, age_max, closed_at,
+  age_min, age_max, closed_at, modalidad,
   plan:study_plans(code),
   closer:members!study_groups_closed_by_fkey(first_name, last_name),
   leader:members!study_groups_leader_id_fkey(first_name, last_name, phone, email),
@@ -1032,6 +1034,8 @@ export type GroupWriteInput = {
   /** GRU-2: restricción de audiencia ya normalizada (null = grupo abierto).
    *  Se serializa a jsonb al escribir; `undefined` = no tocar la columna. */
   enrollment_restrictions?: GroupRestriction | null
+  /** EST-14 · 'legacy' cobra y entrega por nivel; 'bloques' por par. */
+  modalidad?: Modalidad
 }
 
 /** Prepara el patch/insert para Supabase: la restricción viaja como jsonb.

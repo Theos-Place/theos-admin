@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MODALIDADES } from '@/lib/studies/modalidad-de-bloques'
 
 // Validación runtime del body de grupos (POST de creación y PUT de edición).
 // `.strict()` rechaza campos extra (mass assignment, B11 auditoría): el patch
@@ -35,6 +36,15 @@ export const groupWriteSchema = z
     // normalizeRestriction (descarta tipos no permitidos y referencias muertas);
     // acá solo se acepta el campo. null = quitar la restricción.
     enrollment_restrictions: z.unknown().nullish(),
+    /**
+     * EST-14 · Bajo qué esquema cobra y entrega folletos este grupo.
+     *
+     * Se puede corregir a mano porque la marca inicial salió de un backfill:
+     * todo lo que existía al 2026-10-05 quedó `legacy` y lo nuevo nace
+     * `bloques`. Un grupo mal marcado cobra de más o deja a su gente sin
+     * folleto, y hasta ahora no había forma de arreglarlo.
+     */
+    modalidad: z.enum(MODALIDADES).optional(),
   })
   .strict()
 

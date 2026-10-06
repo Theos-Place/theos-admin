@@ -10,6 +10,7 @@ import { groupWriteSchema } from '../schema'
 import { validateEnrollmentDates } from '@/lib/studies/enrollment-window'
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import type { GroupWriteInput } from '@/lib/supabase/queries/studies'
+import { logAudit } from '@/lib/audit'
 import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -107,6 +108,29 @@ export async function PUT(
       const dateError = validateEnrollmentDates(merged)
       if (dateError) return NextResponse.json({ error: dateError, code: 'fechas_matricula' }, { status: 400 })
     }
+    /**
+     * LA MODALIDAD SE AUDITA, el resto de los campos no.
+     *
+     * Cambiarla decide si el cierre cobra y pide folletos: pasar un grupo a
+     * `bloques` por error deja a su gente sin material y sin cobrar, y a
+     * `legacy` le cobra un nivel que ya pagó. Cuando alguien pregunte «¿por
+     * qué a este grupo le cobraron de nuevo?», la respuesta tiene que estar
+     * escrita.
+     */
+    if (parsed.data.modalidad !== undefined) {
+      const antes = await getGroupById(id)
+      if (antes?.modalidad !== parsed.data.modalidad) {
+        await logAudit({
+          actorUserId: auth.ctx.userId,
+          action: 'UPDATE',
+          entityType: 'study_groups',
+          entityId: id,
+          oldData: { modalidad: antes?.modalidad ?? null },
+          newData: { modalidad: parsed.data.modalidad },
+        })
+      }
+    }
+
     await updateGroup(id, patch)
     return NextResponse.json({ ok: true })
   } catch (error) {

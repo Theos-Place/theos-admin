@@ -13,6 +13,7 @@ import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge } from '@/components/studies/GroupStatusBadge'
 import { WeekProgressBar } from '@/components/studies/WeekProgressBar'
 import { BotonFolletosAnticipados } from '@/components/studies/BotonFolletosAnticipados'
+import { ModalidadDelGrupo } from '@/components/studies/ModalidadDelGrupo'
 import { cn } from '@/lib/utils'
 import { permisosDelRoster, cumpleCorto } from '@/lib/studies/roster-por-alcance'
 import { ChevronLeft, Plus, MessageCircle, Send, Edit2, Trash2, Users, Lock } from 'lucide-react'
@@ -761,6 +762,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   groupId={group.id}
                   planCode={group.study_type_id}
                   status={group.status}
+                  modalidad={group.modalidad}
                 />
               )}
               {canManageGroups && (<>
@@ -783,6 +785,18 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
       </div>
+
+      {/* EST-14 · Bajo qué esquema cobra y entrega folletos.
+          SOLO en los NIVELES: fuera de N1-N4 las dos modalidades hacen
+          exactamente lo mismo, así que el control sería ruido en todas las
+          demás pantallas de grupo. */}
+      {canManageGroups && /^N[1-4]$/.test(group.study_type_id ?? '') && (
+        <ModalidadDelGrupo
+          groupId={group.id}
+          modalidad={group.modalidad}
+          onCambiada={() => refetch()}
+        />
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--outline-variant)] overflow-x-auto">

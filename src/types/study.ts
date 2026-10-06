@@ -69,6 +69,8 @@ export type StudyGroup = {
   viewer_scope?: 'admin' | 'leader' | 'member' | 'none'
   id: string
   name?: string
+  /** EST-14 · 'legacy' cobra y entrega folletos por nivel; 'bloques' por par. */
+  modalidad?: string | null
   study_type_id: string
   leader_id: string | null
   co_leader_id?: string | null

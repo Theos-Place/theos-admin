@@ -117,3 +117,34 @@ describe('el cableado: nadie decide esto solo', () => {
     expect(m).toContain('cubre_bloque')
   })
 })
+
+describe('se puede corregir a mano', () => {
+  it('el endpoint del grupo acepta la modalidad, validada contra la lista', () => {
+    // Sin esto, un grupo mal marcado por el backfill no se puede arreglar:
+    // cobra de más o deja a su gente sin folleto, para siempre.
+    const e = sinComentarios('src/app/api/studies/groups/schema.ts')
+    expect(e).toContain('modalidad: z.enum(MODALIDADES).optional()')
+    expect(e).toContain("from '@/lib/studies/modalidad-de-bloques'")
+  })
+
+  it('y el cambio se AUDITA, porque decide plata', () => {
+    const r = sinComentarios('src/app/api/studies/groups/[id]/route.ts')
+    expect(r).toContain('parsed.data.modalidad !== undefined')
+    expect(r).toMatch(/logAudit\(\{[\s\S]{0,400}modalidad/)
+  })
+
+  it('solo lo ve quien administra grupos, y solo en los niveles', () => {
+    // En DIS1 o PREMAT las dos modalidades hacen lo mismo: el control ahí
+    // sería un interruptor que no cambia nada.
+    const p = sinComentarios('src/app/(admin)/estudios/grupos/[id]/page.tsx')
+    expect(p).toMatch(/canManageGroups && \/\^N\[1-4\]\$\/\.test/)
+  })
+
+  it('el control dice qué pasa con cada opción, no solo el nombre', () => {
+    // «legacy» no le dice nada a nadie, y la consecuencia es un cobro.
+    const c = sinComentarios('src/components/studies/ModalidadDelGrupo.tsx')
+    expect(c).toContain('Esquema viejo (por nivel)')
+    expect(c).toContain('Por bloques (N1+N2 / N3+N4)')
+    expect(c).toMatch(/NIVEL POR NIVEL/)
+  })
+})
