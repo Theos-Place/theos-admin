@@ -543,7 +543,7 @@ export async function createRegistration(
 
   // Beca/cupón (opcional): recalcula el precio ANTES de reservar/insertar. Se
   // consume incluso si el resultado queda en ₡0 (mismo criterio que matrícula).
-  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' } | null = null
+  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' | 'credito' | 'credito' } | null = null
   let finalAmount = pricing.price
   if (!forced && pricing.requiresPayment && !pricing.exempt && hasScholarshipInput) {
     const { resolveScholarshipForApplication, computeDiscountedAmount } = await import('./scholarships')

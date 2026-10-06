@@ -3941,6 +3941,8 @@ export type Database = {
       }
       scholarships: {
         Row: {
+          origin_payment_id: string | null
+          freeze_reason: string | null
           amount: number | null
           approval_type: string | null
           approved_at: string | null
@@ -3974,6 +3976,8 @@ export type Database = {
           used_at: string | null
         }
         Insert: {
+          origin_payment_id?: string | null
+          freeze_reason?: string | null
           amount?: number | null
           approval_type?: string | null
           approved_at?: string | null
@@ -4007,6 +4011,8 @@ export type Database = {
           used_at?: string | null
         }
         Update: {
+          origin_payment_id?: string | null
+          freeze_reason?: string | null
           amount?: number | null
           approval_type?: string | null
           approved_at?: string | null

@@ -1727,7 +1727,7 @@ export async function enrollMember(
   // resuelve incluso si el resultado queda en 0 — la matrícula gratis por beca
   // igual consume el uso (registrar que se usó, sin importar el residual).
   let finalAmount = amount
-  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' } | null = null
+  let appliedScholarship: { id: string; kind: 'asignada' | 'generica' | 'credito' } | null = null
   if (requiresPayment && scholarshipInput && (scholarshipInput.scholarship_id || scholarshipInput.coupon_code) && plan?.id) {
     const { resolveScholarshipForApplication, computeDiscountedAmount } = await import('./scholarships')
     const resolved = await resolveScholarshipForApplication(memberId, 'study_plan', plan.id, scholarshipInput)

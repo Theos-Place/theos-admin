@@ -61,7 +61,7 @@ export function currencyMismatch(
 
 /** ¿Se puede mandar el correo de cupón/beca? (botón "Enviar por correo"). */
 export function checkCouponEmailSendable(
-  s: { kind: 'asignada' | 'generica'; status: string; expires_at: string | null; member_id: string | null },
+  s: { kind: 'asignada' | 'generica' | 'credito'; status: string; expires_at: string | null; member_id: string | null },
   requestedMemberId: string | null,
   now: Date,
 ): { ok: true; memberId: string } | { ok: false; error: 'no_activa' | 'vencida' | 'miembro_requerido' } {

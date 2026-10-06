@@ -16,7 +16,7 @@
  */
 
 export type BecaParaCancelar = {
-  kind: 'asignada' | 'generica'
+  kind: 'asignada' | 'generica' | 'credito' | 'credito'
   status: 'active' | 'used' | 'revoked'
   /** Redenciones registradas (cupones); una asignada usada ya viene en status. */
   used_count: number

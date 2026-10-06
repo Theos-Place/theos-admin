@@ -893,7 +893,26 @@ sin cargar — una donación de ₡0 no es una donación.
 Domingos 392, Antares 227, y **250 sin sede** —los que no aparecen por ninguna
 charla, que son los que a Meli le interesan—.
 
-### [ ] FIN-9 · «Congelar matrícula» por CUPONES — DECIDIDO con Meli 2026-09-29, listo para construir
+### [~] FIN-9 · «Congelar matrícula» por CRÉDITOS — CONSTRUIDO 2026-10-05 · FALTA LO DE QUICKBOOKS
+
+**Lo construido:** congelar una matrícula quita a la persona del grupo y le
+emite un CRÉDITO por lo que ya pagó, usable en estudios y actividades
+grandes, vigente hasta que cierre la matrícula del bloque siguiente. Solo
+finanzas y dirección lo emiten, con motivo obligatorio y al audit_log. Y el
+reporte de reclasificaciones por mes/año, con XLSX.
+
+**Lo que cambió respecto a la spec:** decía «mecanismo de cupones
+existente», y no alcanzaba. Se midió: los cupones de hoy son
+`kind='generica'`, SIN dueño y CON código, atados a un plan concreto. El
+crédito es al revés en las tres cosas, así que entró como `kind='credito'`
+relajando los CHECK (no borrándolos: cada forma sigue teniendo la suya).
+
+**Lo que FALTA, y es de Meli:** la escalera de 4 opciones está definida y
+testeada como reglas, pero solo la primera —guardarlo para el bloque
+siguiente— tiene acción en el sistema. Donar como beca, usar en otra
+actividad y devolución se resuelven a mano por ahora. Y sigue pendiente lo
+que la spec condicionaba: que Meli confirme el manejo en QuickBooks con
+Luis. El reporte ya le da los datos para esa conversación.
 
 Decisiones de la reunión (reemplazan el diseño anterior de "saldos a favor"):
 - "Congelar matrícula" = quitar la matrícula y emitir un CUPÓN PERSONAL por el

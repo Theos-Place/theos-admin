@@ -54,7 +54,13 @@ export function scholarshipErrorResponse(error: unknown): NextResponse | null {
 // matricularse), nunca al aprobar el comprobante.
 
 export type ScholarshipEntityType = 'study_plan' | 'event'
-export type ScholarshipKind = 'asignada' | 'generica'
+/**
+ * FIN-9 · `credito` es el tercero: plata que la persona YA pagó y se le
+ * guardó al congelarle la matrícula. No es un descuento de Theos como los
+ * otros dos — por eso lleva su pago de origen y por eso no apunta a ningún
+ * plan ni evento.
+ */
+export type ScholarshipKind = 'asignada' | 'generica' | 'credito' | 'credito' 
 export type ScholarshipStatus = 'active' | 'used' | 'revoked'
 export type DiscountType = 'percentage' | 'fixed'
 export type ApprovalType = 'total' | 'parcial'
@@ -326,6 +332,32 @@ export async function getMemberScholarships(memberId: string): Promise<Scholarsh
 
 /** Beca asignada activa de un miembro para un destino específico (para
  *  precargar el selector en el paso de pago). */
+/**
+ * FIN-9 · El CRÉDITO vivo de una persona, si tiene.
+ *
+ * No está atado a un plan ni a un evento —esa es su gracia: es plata suya
+ * esperando a que vuelva— así que se busca solo por dueño. El rubro se
+ * valida aparte, porque el crédito vale para estudios y actividades grandes
+ * y no para cualquier cosa.
+ *
+ * Si tiene varios, gana el que VENCE ANTES: de otro modo se le quedaría
+ * venciendo uno mientras gasta el de más plazo.
+ */
+export async function findCreditoVivo(
+  memberId: string, entityType: ScholarshipEntityType,
+): Promise<Scholarship | null> {
+  const { sirveParaElRubro } = await import('@/lib/finance/credito-por-congelar')
+  if (!sirveParaElRubro(entityType)) return null
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('scholarships').select(SELECT)
+    .eq('kind', 'credito').eq('member_id', memberId).eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
+    .order('expires_at', { ascending: true, nullsFirst: false })
+    .limit(1).maybeSingle()
+  if (error) throw error
+  return data ? toDomain(data as DbRow) : null
+}
+
 export async function findApplicableScholarship(
   memberId: string, entityType: ScholarshipEntityType, entityId: string,
 ): Promise<Scholarship | null> {
@@ -374,7 +406,13 @@ export async function consumeScholarship(
   refs: { enrollmentId?: string | null; eventRegistrationId?: string | null } = {},
 ): Promise<void> {
   const supabase = createAdminClient()
-  if (scholarship.kind === 'asignada') {
+  /**
+   * El CRÉDITO se consume como una beca asignada, no como un cupón: tiene
+   * dueño y es de un solo uso. Por eso la condición es «no es genérica» y
+   * no «es asignada» — con lo segundo, un crédito habría caído en el INSERT
+   * de redenciones y habría quedado reutilizable.
+   */
+  if (scholarship.kind !== 'generica') {
     const { data, error } = await supabase.from('scholarships')
       .update({ status: 'used', used_at: new Date().toISOString() })
       .eq('id', scholarship.id).eq('status', 'active').eq('member_id', memberId)
@@ -405,8 +443,24 @@ export async function resolveScholarshipForApplication(
 ): Promise<{ id: string; kind: ScholarshipKind; discount_type: DiscountType; discount_value: number }> {
   if (input.scholarship_id) {
     const found = await findApplicableScholarship(memberId, entityType, entityId)
-    if (!found || found.id !== input.scholarship_id) throw new Error('SCHOLARSHIP_NOT_FOUND')
-    return { id: found.id, kind: 'asignada', discount_type: found.discount_type, discount_value: found.discount_value }
+    if (found && found.id === input.scholarship_id) {
+      return { id: found.id, kind: 'asignada', discount_type: found.discount_type, discount_value: found.discount_value }
+    }
+    /**
+     * FIN-9 · Si no es una beca del destino, puede ser su CRÉDITO.
+     *
+     * Va DESPUÉS de la beca y no antes: el crédito es plata de la persona y
+     * la beca es un descuento de Theos, así que gastar el crédito teniendo
+     * beca sería quemarle lo suyo pudiendo usar lo regalado.
+     *
+     * Se vuelve a buscar en vez de confiar en el id que llega: así el guard
+     * de vigencia y de rubro corre igual que en la búsqueda automática.
+     */
+    const credito = await findCreditoVivo(memberId, entityType)
+    if (credito && credito.id === input.scholarship_id) {
+      return { id: credito.id, kind: 'credito', discount_type: credito.discount_type, discount_value: credito.discount_value }
+    }
+    throw new Error('SCHOLARSHIP_NOT_FOUND')
   }
   if (input.coupon_code) {
     const result = await validateGenericCode(input.coupon_code, entityType, entityId, memberId)
@@ -712,7 +766,12 @@ async function resolvePaymentScholarshipTarget(paymentId: string): Promise<{
 export async function findApplicableScholarshipForPayment(paymentId: string): Promise<Scholarship | null> {
   try {
     const { payment, entityType, entityId } = await resolvePaymentScholarshipTarget(paymentId)
+    // La beca del destino manda; el crédito es el respaldo. Una beca es un
+    // descuento para ESE estudio y el crédito sirve para cualquiera de los
+    // dos rubros: gastar el crédito teniendo beca sería quemarle a la
+    // persona plata suya pudiendo usar el descuento.
     return await findApplicableScholarship(payment.member_id!, entityType, entityId)
+      ?? await findCreditoVivo(payment.member_id!, entityType)
   } catch (e) {
     if (e instanceof Error && PAYMENT_APPLY_ERROR[e.message]) return null
     throw e

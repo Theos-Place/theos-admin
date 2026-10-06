@@ -30,7 +30,7 @@ type Scholarship = {
   /** INT-3: moneda del descuento fijo. */
   currency?: string | null
   id: string
-  kind: 'asignada' | 'generica'
+  kind: 'asignada' | 'generica' | 'credito'
   member_id: string | null
   member_name: string | null
   entity_type: 'study_plan' | 'event'

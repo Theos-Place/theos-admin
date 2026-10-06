@@ -23,7 +23,7 @@ export type EntityType = 'study_plan' | 'event'
 export type ApprovalType = 'total' | 'parcial'
 
 export type BecaParaMover = {
-  kind: 'asignada' | 'generica'
+  kind: 'asignada' | 'generica' | 'credito'
   status: 'active' | 'used' | 'revoked'
   entity_type: EntityType
   plan_id: string | null
