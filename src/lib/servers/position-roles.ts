@@ -270,47 +270,37 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
     matches: (ctx) => ctx.areaType === 'committee' && isStudyCommitteeArea(ctx.areaName),
   },
   {
-    role: 'solicitudes_puestos',
-    description:
-      'Colaborador Solicitud Puestos, del Comité de Servidores: es quien recibe y '
-      + 'arma las solicitudes mensuales de puestos de los comités.',
     /**
-     * SRV-11 (2026-09-25). EL NOMBRE SE VERIFICÓ EN EL CATÁLOGO antes de
-     * escribir esto, y por eso importa: el pedido lo llamaba «Colaborador de
-     * solicitud de puestos» y en la base está como «Colaborador Solicitud
-     * Puestos». Una regla escrita contra el nombre del pedido no habría
-     * matcheado a nadie, y ese fallo es SILENCIOSO — la persona simplemente no
-     * ve la pantalla y nadie sabe por qué.
+     * SRV · Los TRES puestos del comité de servidores que trabajan los
+     * puestos y las aplicaciones, con UN SOLO rol (Floriana, 2026-10-07).
      *
-     * Va acotada al TÍTULO y al comité, no a «cualquier puesto del comité de
-     * servidores» como sí hace la de estudios: ese comité tiene además
-     * Aplicaciones, Atracción, Seguimiento y Servidores Nuevos, que son otros
-     * trabajos. Un permiso que se reparte por pertenecer al comité es el modo
-     * de fallo que este archivo ya sufrió con «Coordinador de Información».
+     * Antes eran dos reglas y dos roles —`solicitudes_puestos` para
+     * «Colaborador Solicitud Puestos» y `aplicaciones_servicio` para
+     * «Colaborador Aplicaciones» y «Colaborador Seguimiento»— con permisos
+     * idénticos. De la separación salió el bug: Jazmín Sánchez abría la
+     * pantalla de solicitudes y no veía el botón de publicar.
+     *
+     * LOS NOMBRES ESTÁN VERIFICADOS CONTRA EL CATÁLOGO, y eso importa: los
+     * pedidos los llamaban «Colaborador de solicitud de puestos» y en la base
+     * están sin los «de». Una regla escrita contra el nombre del pedido no
+     * matchea a nadie, y ese fallo es SILENCIOSO — la persona no ve la
+     * pantalla y nadie sabe por qué.
+     *
+     * Va acotada a los TÍTULOS y al comité, no a «cualquier puesto del comité
+     * de servidores»: ese comité tiene además Atracción y Servidores Nuevos,
+     * que son otros trabajos. Un permiso que se reparte por pertenecer al
+     * comité es el modo de fallo que este archivo ya sufrió con «Coordinador
+     * de Información».
      */
+    role: 'puestos_servicio',
+    description:
+      'Colaborador Solicitud Puestos, Colaborador Aplicaciones y Colaborador Seguimiento, '
+      + 'del Comité de Servidores: arman y publican las solicitudes mensuales de puestos '
+      + 'y revisan las aplicaciones.',
     matches: (ctx) =>
       ctx.areaType === 'committee'
       && norm(ctx.areaName).includes('servidores')
-      && normSinArticulos(ctx.title) === 'colaborador solicitud puestos',
-  },
-  {
-    role: 'aplicaciones_servicio',
-    description:
-      'Colaborador Aplicaciones y Colaborador Seguimiento, del Comité de Servidores: '
-      + 'son quienes revisan las aplicaciones, se las mandan al encargado y las siguen.',
-    /**
-     * SRV-14 (2026-09-25). Los DOS títulos se verificaron en el catálogo antes
-     * de escribir esto — misma trampa que en SRV-11: los nombres reales no
-     * llevan los «de» que traía el pedido.
-     *
-     * Son dos puestos y no «cualquier puesto del comité» por la misma razón de
-     * siempre: ese comité tiene además Atracción, Servidores Nuevos y
-     * Solicitud Puestos, que son otros trabajos.
-     */
-    matches: (ctx) =>
-      ctx.areaType === 'committee'
-      && norm(ctx.areaName).includes('servidores')
-      && ['colaborador aplicaciones', 'colaborador seguimiento']
+      && ['colaborador solicitud puestos', 'colaborador aplicaciones', 'colaborador seguimiento']
         .includes(normSinArticulos(ctx.title)),
   },
   {

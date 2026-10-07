@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { PUBLICAN_PUESTOS } from '@/lib/auth/roles'
 import { getManageableCommitteeIds } from '@/lib/supabase/queries/servers'
 import { getSolicitudesDePuestos } from '@/lib/supabase/queries/servers'
 import { construirExcelDeSolicitudes } from '@/lib/servers/export-de-solicitudes'
@@ -19,11 +19,12 @@ import { reportarError } from '@/lib/observabilidad'
  * Un solo endpoint y no dos porque la consulta es la MISMA: con dos, el día
  * que se agregue una columna una de las dos se queda atrás.
  *
- * QUIÉN: el rol `solicitudes_puestos` —el puesto «Colaborador Solicitud
- * Puestos»— y la coordinación de servidores. Es la misma gente que va a
- * apretar «Publicar».
+ * QUIÉN: el rol unificado del comité (`puestos_servicio`) y la coordinación
+ * de servidores. Es la misma gente que va a apretar «Publicar» — y desde el
+ * 2026-10-07 eso ES verdad: antes esta frase estaba escrita acá mientras el
+ * endpoint de publicar los excluía.
  */
-const VIEW_ROLES = [...SERVICE_ADMIN_ROLES, 'solicitudes_puestos'] as const
+const VIEW_ROLES = [...PUBLICAN_PUESTOS, 'solicitudes_puestos'] as const
 
 /** `?mes=YYYY-MM`, o el mes actual. Lo que no tiene forma de mes se ignora en
  *  vez de devolver un resumen vacío que parecería «no se pidió nada». */

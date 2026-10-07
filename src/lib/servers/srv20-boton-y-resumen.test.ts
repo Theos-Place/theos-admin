@@ -45,9 +45,12 @@ describe('SRV-20 · el botón de solicitar no se le muestra a quien no puede', (
   it('la cartelera pública MANTIENE su lista corta, que fue una decisión', () => {
     // Floriana la acortó el 2026-09-25: esa pantalla la ve cualquier
     // miembro, y ahí cada botón de más es alguien apretando lo que no le
-    // toca. `solicitudes_puestos` pide desde el índice o desde su comité.
+    // toca. El rol del comité pide desde el índice o desde su comité.
+    //
+    // La lista pasó a llamarse PUEDE_SOLICITAR el 2026-10-07, cuando las
+    // ACCIONES sobre el puesto se separaron en otra. Su contenido no cambió.
     const src = sinComentarios(PUESTOS)
-    expect(src).toContain('const canRequest = hasRole(...PUEDE_GESTIONAR)')
+    expect(src).toContain('const canRequest = hasRole(...PUEDE_SOLICITAR)')
     expect(src).not.toContain('usePuedePedirPuestos')
   })
 })

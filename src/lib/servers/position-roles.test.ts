@@ -296,7 +296,13 @@ describe('REP-11 · el puesto de anfitrión ya NO da el rol de reportes', () => 
  * regla escrita contra el nombre del pedido no matchea a nadie, y ese fallo es
  * silencioso: la persona no ve la pantalla y nadie sabe por qué.
  */
-describe('SRV-11 · solicitudes_puestos', () => {
+/**
+ * SRV-11 · El rol se unificó el 2026-10-07: «Colaborador Solicitud Puestos»
+ * ya no da `solicitudes_puestos` sino `puestos_servicio`, el mismo que
+ * «Colaborador Aplicaciones» y «Colaborador Seguimiento». Lo que este bloque
+ * comprueba no cambió: qué título lo otorga, y que no se reparta por comité.
+ */
+describe('SRV-11 · puestos_servicio', () => {
   const ctx = (over: Record<string, unknown> = {}) => ({
     title: 'Colaborador Solicitud Puestos',
     areaName: 'Comité de Servidores',
@@ -306,28 +312,31 @@ describe('SRV-11 · solicitudes_puestos', () => {
   })
 
   it('el título exacto del catálogo lo otorga', () => {
-    expect(rolesGrantedByPosition(ctx())).toContain('solicitudes_puestos')
+    expect(rolesGrantedByPosition(ctx())).toContain('puestos_servicio')
   })
 
   it('tolera tildes y artículos, que es lo que cambia al re-sincronizar el Excel', () => {
     expect(rolesGrantedByPosition(ctx({ title: 'Colaborador de Solicitud de Puestos' })))
-      .toContain('solicitudes_puestos')
+      .toContain('puestos_servicio')
   })
 
   it('NO se reparte a los otros puestos del mismo comité', () => {
-    // El comité tiene además Aplicaciones, Atracción, Seguimiento y Servidores
-    // Nuevos: son otros trabajos. Un permiso que se da por pertenecer al
-    // comité es el modo de fallo que este archivo ya sufrió.
+    /**
+     * Aplicaciones y Seguimiento SALIERON de esta lista el 2026-10-07: con
+     * la unificación dan el mismo rol, que es el punto del cambio. Atracción
+     * y Servidores Nuevos siguen afuera — el permiso NO se reparte por
+     * pertenecer al comité, que es el modo de fallo que este archivo ya
+     * sufrió con «Coordinador de Información».
+     */
     for (const title of [
-      'Colaborador Aplicaciones', 'Colaborador Seguimiento',
       'Colaborador Atracción', 'Colaborador Serv. nuevos', 'Colaborador',
     ]) {
-      expect(rolesGrantedByPosition(ctx({ title })), title).not.toContain('solicitudes_puestos')
+      expect(rolesGrantedByPosition(ctx({ title })), title).not.toContain('puestos_servicio')
     }
   })
 
   it('ni al mismo título en otro comité', () => {
     expect(rolesGrantedByPosition(ctx({ areaName: 'Comité de Alabanza', parentAreaName: 'Área de Ministerios' })))
-      .not.toContain('solicitudes_puestos')
+      .not.toContain('puestos_servicio')
   })
 })

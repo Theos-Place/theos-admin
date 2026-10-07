@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { ACCIONES_DE_PUESTO } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { type Vacancy } from '@/types/server'
 import type { DbVacancy } from '@/lib/supabase/queries/servers'
@@ -29,8 +30,20 @@ export default function VacantesPage() {
    * `direccion`, cuyo acceso es de lectura—. En una pantalla abierta, cada
    * botón de más es alguien apretando algo que no le toca.
    */
-  const PUEDE_GESTIONAR = ['lider_comite', 'coordinador_servidores', 'admin'] as const
-  const isAdmin = hasRole(...PUEDE_GESTIONAR) // ve acciones administrativas
+  /**
+   * Las ACCIONES SOBRE UN PUESTO —«Ver aplicaciones», «Editar», «Bajar»—
+   * cambiaron de dueño el 2026-10-07 por decisión de Floriana: salen
+   * `lider_comite` y `coordinador_servidores`, entran `encargado_staff`,
+   * `direccion` y el rol del comité de servidores.
+   *
+   * Queda anotado porque es una REDUCCIÓN para gente que las tenía: el líder
+   * de comité ya no ve desde acá las aplicaciones a los puestos de su propio
+   * comité. Se confirmó explícitamente antes de hacerlo.
+   *
+   * La lista vive en `roles.ts` y la comparte el servidor: escrita acá sola,
+   * se separa del guard y aparece un botón que al tocarlo da 403 (UX-7).
+   */
+  const isAdmin = hasRole(...ACCIONES_DE_PUESTO) // ve acciones sobre el puesto
   /**
    * SRV-20 · Acá la lista se queda CORTA a propósito, aunque el servidor deje
    * pedir a más gente.
@@ -41,7 +54,14 @@ export default function VacantesPage() {
    * le toca. `solicitudes_puestos` SÍ puede pedir, y lo hace desde el índice
    * de Servidores o desde la pestaña de su comité, que no son abiertas.
    */
-  const canRequest = hasRole(...PUEDE_GESTIONAR)
+  /**
+   * SOLICITAR cupos NO cambió: sigue siendo de los líderes de comité y la
+   * coordinación. Era la misma lista que las acciones del puesto y se separó
+   * al moverlas — juntarlas de nuevo le quitaría a un líder de comité el
+   * poder pedir puestos para su gente, que nadie pidió.
+   */
+  const PUEDE_SOLICITAR = ['lider_comite', 'coordinador_servidores', 'admin'] as const
+  const canRequest = hasRole(...PUEDE_SOLICITAR)
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [error, setError] = useState<string | null>(null)

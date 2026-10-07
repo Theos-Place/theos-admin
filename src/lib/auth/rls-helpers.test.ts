@@ -36,11 +36,27 @@ const SQL = readdirSync('supabase/migrations')
   .map(f => readFileSync(`supabase/migrations/${f}`, 'utf8'))
   .join('\n')
 
-/** Los roles que el SQL le pasa a un helper, en su definición VIGENTE. */
+/**
+ * Los roles que el SQL le pasa a un helper, en su definición VIGENTE.
+ *
+ * SIN IMPORTAR MAYÚSCULAS NI EL DELIMITADOR, y eso no es cosmético: AGENTS
+ * manda derivar una función de `pg_get_functiondef`, que emite
+ * `CREATE OR REPLACE FUNCTION` en mayúscula y cierra con `$function$`. La
+ * primera versión buscaba `create or replace` en minúscula y cortaba en
+ * `$$;`, así que una redefinición hecha como manda el manual NO se
+ * encontraba y el test seguía leyendo la versión vieja — dando verde sobre
+ * una función que ya no existía así, que es exactamente el fallo contra el
+ * que este archivo advierte arriba.
+ */
 function rolesDelHelper(nombre: string): string[] {
-  const i = SQL.lastIndexOf(`create or replace function private.${nombre}()`)
+  const re = new RegExp(`create\\s+or\\s+replace\\s+function\\s+private\\.${nombre}\\s*\\(`, 'gi')
+  let i = -1
+  for (let m = re.exec(SQL); m; m = re.exec(SQL)) i = m.index
   if (i === -1) throw new Error(`no existe private.${nombre}() en las migraciones`)
-  const cuerpo = SQL.slice(i, SQL.indexOf('$$;', i))
+  // El cuerpo termina en el delimitador que abrió: `$$` o `$function$`.
+  const delim = /\$(function)?\$/.exec(SQL.slice(i))?.[0] ?? '$$'
+  const desdeCuerpo = SQL.indexOf(delim, i) + delim.length
+  const cuerpo = SQL.slice(desdeCuerpo, SQL.indexOf(delim, desdeCuerpo))
   const m = /ARRAY\[([\s\S]*?)\]/.exec(cuerpo)
   if (!m) throw new Error(`private.${nombre}() no lleva ARRAY[...]`)
   return m[1].split(',').map(s => s.trim().replace(/^'|'$/g, '')).filter(Boolean).sort()

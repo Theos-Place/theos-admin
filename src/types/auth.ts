@@ -27,6 +27,13 @@ export type RoleId =
   | 'solicitudes_estudio'
   | 'solicitudes_puestos'
   | 'aplicaciones_servicio'
+  /**
+   * SRV · El rol UNIFICADO del comité de servidores (2026-10-07). Reemplaza a
+   * `solicitudes_puestos` y `aplicaciones_servicio`, que tenían permisos
+   * idénticos y solo se diferenciaban en los guards de las rutas. Los dos
+   * quedan en el tipo porque sus filas viejas siguen en la base, apagadas.
+   */
+  | 'puestos_servicio'
 
 export type Permission = {
   module: string

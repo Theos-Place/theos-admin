@@ -12,6 +12,12 @@ const sinComentarios = (ruta: string): string =>
 const RUTA = 'src/app/api/servers/applications/[id]/route.ts'
 const NOTIFY = 'src/lib/email/application-notify.ts'
 
+/**
+ * SRV-14 · El rol se unificó el 2026-10-07: «Colaborador Aplicaciones» y
+ * «Colaborador Seguimiento» ya no dan `aplicaciones_servicio` sino
+ * `puestos_servicio`, el mismo que «Colaborador Solicitud Puestos». Lo que
+ * este archivo comprueba no cambió — qué puestos lo dan y cuáles no.
+ */
 describe('SRV-14 · quién entra', () => {
   const ctx = (title: string) => ({
     title, areaName: 'Comité de Servidores', parentAreaName: 'Area de Staff',
@@ -20,14 +26,22 @@ describe('SRV-14 · quién entra', () => {
 
   it('los dos puestos del catálogo dan el rol', () => {
     // Los nombres se verificaron en la base: no llevan los «de» del pedido.
-    expect(rolesGrantedByPosition(ctx('Colaborador Aplicaciones'))).toContain('aplicaciones_servicio')
-    expect(rolesGrantedByPosition(ctx('Colaborador Seguimiento'))).toContain('aplicaciones_servicio')
+    expect(rolesGrantedByPosition(ctx('Colaborador Aplicaciones'))).toContain('puestos_servicio')
+    expect(rolesGrantedByPosition(ctx('Colaborador Seguimiento'))).toContain('puestos_servicio')
   })
 
   it('y los otros puestos del mismo comité, no', () => {
-    for (const t of ['Colaborador Atracción', 'Colaborador Solicitud Puestos', 'Colaborador Serv. nuevos']) {
-      expect(rolesGrantedByPosition(ctx(t)), t).not.toContain('aplicaciones_servicio')
+    /**
+     * «Colaborador Solicitud Puestos» SALIÓ de esta lista el 2026-10-07: con
+     * la unificación da el mismo rol que los otros dos, que es exactamente el
+     * punto del cambio. Atracción y Servidores Nuevos siguen afuera — el rol
+     * NO se reparte por pertenecer al comité.
+     */
+    for (const t of ['Colaborador Atracción', 'Colaborador Serv. nuevos']) {
+      expect(rolesGrantedByPosition(ctx(t)), t).not.toContain('puestos_servicio')
     }
+    expect(rolesGrantedByPosition(ctx('Colaborador Solicitud Puestos')))
+      .toContain('puestos_servicio')
   })
 
   it('VER la bandeja y GESTIONARLA no son la misma lista', () => {
@@ -36,8 +50,8 @@ describe('SRV-14 · quién entra', () => {
     expect(SERVICE_APPLICATIONS_ROLES).toContain('direccion')
     expect(GESTIONAN_APLICACIONES).not.toContain('direccion')
     // Y el rol nuevo hace las dos cosas: es quien hace el trabajo.
-    expect(SERVICE_APPLICATIONS_ROLES).toContain('aplicaciones_servicio')
-    expect(GESTIONAN_APLICACIONES).toContain('aplicaciones_servicio')
+    expect(SERVICE_APPLICATIONS_ROLES).toContain('puestos_servicio')
+    expect(GESTIONAN_APLICACIONES).toContain('puestos_servicio')
   })
 })
 

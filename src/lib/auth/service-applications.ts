@@ -13,7 +13,14 @@
 import type { RoleId } from '@/types/auth'
 
 export const SERVICE_APPLICATIONS_ROLES: RoleId[] = [
-  'coordinador_servidores', 'admin', 'aplicaciones_servicio', 'direccion',
+  'coordinador_servidores', 'admin', 'direccion',
+  /**
+   * SRV (2026-10-07) · El rol UNIFICADO del comité. Reemplaza a
+   * `aplicaciones_servicio`, que se deja aceptado por si sobrevive alguna
+   * fila: sus filas quedaron apagadas en la migración, pero cerrarle la
+   * puerta a alguien por una fila vieja sería el peor modo de fallo.
+   */
+  'puestos_servicio', 'aplicaciones_servicio',
 ]
 
 export function canSeeServiceApplications(roles: RoleId[]): boolean {
@@ -32,5 +39,7 @@ export function canSeeServiceApplications(roles: RoleId[]): boolean {
  */
 export const GESTIONAN_APLICACIONES: RoleId[] = [
   'encargado_staff', 'coordinador_servidores', 'lider_comite', 'admin',
-  'aplicaciones_servicio',
+  // SRV (2026-10-07) · El unificado hace el mismo trabajo que hacía
+  // `aplicaciones_servicio`, que se queda aceptado por sus filas viejas.
+  'puestos_servicio', 'aplicaciones_servicio',
 ]

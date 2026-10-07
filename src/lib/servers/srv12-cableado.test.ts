@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { SERVICE_ADMIN_ROLES, PUBLICAN_PUESTOS } from '@/lib/auth/roles'
 
 const sinComentarios = (ruta: string): string =>
   readFileSync(ruta, 'utf8')
@@ -12,18 +12,31 @@ const PUBLICAR = 'src/app/api/servers/vacancies/publish/route.ts'
 const LISTA = 'src/app/api/servers/vacancies/requests/route.ts'
 const QUERIES = 'src/lib/supabase/queries/servers.ts'
 
-describe('SRV-12 · quién ve y quién publica NO son lo mismo', () => {
-  it('la lista y el Excel los abre también solicitudes_puestos', () => {
-    expect(sinComentarios(LISTA)).toMatch(/SERVICE_ADMIN_ROLES,\s*'solicitudes_puestos'/)
+/**
+ * SRV-12 · VER y PUBLICAR eran dos listas distintas, y DEJARON DE SERLO el
+ * 2026-10-07 por decisión de Floriana.
+ *
+ * El título viejo de este bloque decía «quién ve y quién publica NO son lo
+ * mismo». Era verdad y era el bug: Jazmín Sánchez armó las solicitudes, abrió
+ * la pantalla y no vio el botón de publicar — mientras el comentario del
+ * endpoint de la lista decía, textualmente, «es la misma gente que va a
+ * apretar Publicar».
+ *
+ * Lo que SIGUE valiendo y se conserva abajo: la pantalla separa ver de
+ * publicar, y el plan se recalcula en el servidor.
+ */
+describe('SRV-12 · ver y publicar son la MISMA gente', () => {
+  it('la lista y el Excel los abre el rol del comité', () => {
+    expect(sinComentarios(LISTA)).toContain('PUBLICAN_PUESTOS')
   })
 
-  it('pero PUBLICAR es solo de la coordinación', () => {
-    // Publicar BAJA lo que está en la calle. Quien arma las solicitudes no
-    // decide eso.
+  it('y PUBLICAR también: es la misma lista', () => {
+    // Si se vuelven a separar, vuelve el bug de Jazmín.
     const src = sinComentarios(PUBLICAR)
-    expect(src).toMatch(/requireRoles\(\.\.\.SERVICE_ADMIN_ROLES\)/)
-    expect(src).not.toContain('solicitudes_puestos')
-    expect(SERVICE_ADMIN_ROLES).not.toContain('solicitudes_puestos')
+    expect(src).toMatch(/requireRoles\(\.\.\.PUBLICAN_PUESTOS\)/)
+    expect(PUBLICAN_PUESTOS).toContain('puestos_servicio')
+    // La coordinación no perdió nada.
+    for (const r of SERVICE_ADMIN_ROLES) expect(PUBLICAN_PUESTOS, r).toContain(r)
   })
 
   it('y la pantalla sigue separando VER de PUBLICAR', () => {

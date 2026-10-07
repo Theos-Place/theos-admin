@@ -17,7 +17,10 @@ import {
 describe('quién VE la bandeja de aplicaciones', () => {
   it('los cuatro de la lista', () => {
     expect(SERVICE_APPLICATIONS_ROLES)
-      .toEqual(['coordinador_servidores', 'admin', 'aplicaciones_servicio', 'direccion'])
+      // SRV (2026-10-07): entra el rol UNIFICADO del comité. El viejo se
+      // queda aceptado porque sus filas siguen en la base, apagadas.
+      .toEqual(['coordinador_servidores', 'admin', 'direccion',
+        'puestos_servicio', 'aplicaciones_servicio'])
     for (const r of SERVICE_APPLICATIONS_ROLES) {
       expect(canSeeServiceApplications([r]), r).toBe(true)
     }
@@ -52,7 +55,7 @@ describe('VER y GESTIONAR no son la misma lista', () => {
   })
 
   it('el rol nuevo hace las dos cosas: es quien hace el trabajo', () => {
-    expect(SERVICE_APPLICATIONS_ROLES).toContain('aplicaciones_servicio')
-    expect(GESTIONAN_APLICACIONES).toContain('aplicaciones_servicio')
+    expect(SERVICE_APPLICATIONS_ROLES).toContain('puestos_servicio')
+    expect(GESTIONAN_APLICACIONES).toContain('puestos_servicio')
   })
 })

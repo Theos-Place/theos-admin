@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { PUBLICAN_PUESTOS } from '@/lib/auth/roles'
 import {
   getSolicitudesDePuestos, ejecutarPublicacionMensual,
 } from '@/lib/supabase/queries/servers'
@@ -17,13 +17,17 @@ import { reportarError } from '@/lib/observabilidad'
  * cliente, una pestaña abierta desde ayer podría bajar algo que se publicó hoy
  * o publicar una solicitud que mientras tanto se denegó.
  *
- * QUIÉN: la coordinación de servidores, admin y dirección. `solicitudes_puestos`
- * VE la pantalla y baja el Excel, pero NO publica — publicar baja lo que está
- * en la calle, y esa es una decisión de la coordinación.
+ * QUIÉN: la coordinación de servidores, admin, dirección Y el rol unificado
+ * del comité (`puestos_servicio`).
+ *
+ * ESE ÚLTIMO SE AGREGÓ EL 2026-10-07 y arregla una contradicción que estaba
+ * escrita: el endpoint de solicitudes decía «es la misma gente que va a
+ * apretar Publicar» y éste los excluía. Jazmín Sánchez armó las solicitudes,
+ * abrió la pantalla y no vio el botón.
  */
 export async function POST() {
   try {
-    const auth = await requireRoles(...SERVICE_ADMIN_ROLES)
+    const auth = await requireRoles(...PUBLICAN_PUESTOS)
     if (auth.res) return auth.res
 
     const items = await getSolicitudesDePuestos()

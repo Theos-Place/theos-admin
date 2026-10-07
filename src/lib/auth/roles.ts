@@ -129,6 +129,31 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
 ]
 
 /**
+ * SRV · Quién PUBLICA los puestos del mes.
+ *
+ * El rol del comité (`puestos_servicio`) entra desde el 2026-10-07: es quien
+ * arma las solicitudes y es quien aprieta «Publicar». Separarlo de la
+ * coordinación fue lo que dejó a Jazmín Sánchez mirando una pantalla sin el
+ * botón.
+ */
+export const PUBLICAN_PUESTOS: RoleId[] = [...SERVICE_ADMIN_ROLES, 'puestos_servicio']
+
+/**
+ * SRV · Quién ve y usa las acciones de un puesto publicado: «Ver
+ * aplicaciones», «Editar» y «Bajar».
+ *
+ * DECIDIDO POR FLORIANA EL 2026-10-07, y cambia lo que ella misma había
+ * acotado el 25 de setiembre: `lider_comite` y `coordinador_servidores`
+ * SALEN, y entran `encargado_staff`, `direccion` y el rol del comité. Queda
+ * escrito porque es una reducción de acceso para gente que lo tenía: el
+ * líder de comité ya no ve las aplicaciones a los puestos de su propio
+ * comité desde esta pantalla.
+ */
+export const ACCIONES_DE_PUESTO: RoleId[] = [
+  'puestos_servicio', 'encargado_staff', 'direccion', 'admin',
+]
+
+/**
  * SRV-11 · ¿Puede SOLICITAR cupos para cualquier comité?
  *
  * No es lo mismo que `SERVICE_ADMIN_ROLES`, y por eso son dos funciones. El
@@ -144,6 +169,9 @@ export const SERVICE_ADMIN_ROLES: RoleId[] = [
  */
 export function puedeSolicitarParaCualquierComite(roles: readonly RoleId[]): boolean {
   return roles.some(r => (SERVICE_ADMIN_ROLES as string[]).includes(r))
+    || roles.includes('puestos_servicio')
+    // El viejo sigue aceptado: sus filas quedaron apagadas, pero si alguna
+    // sobrevive no se le cierra la puerta en la cara a nadie.
     || roles.includes('solicitudes_puestos')
 }
 
@@ -364,6 +392,29 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    /**
+     * SRV · El rol UNIFICADO (Floriana, 2026-10-07).
+     *
+     * Antes eran dos —«Solicitudes de puestos» y «Aplicaciones de servicio»—
+     * con permisos IDÉNTICOS y separados solo por los guards de las rutas. De
+     * esa separación salió el bug que lo motivó: Jazmín Sánchez no veía el
+     * botón de publicar, mientras el comentario del endpoint de solicitudes
+     * decía «es la misma gente que va a apretar Publicar».
+     *
+     * Dos nombres para una misma cosa es la receta para que mañana alguien le
+     * agregue algo a uno y no al otro.
+     */
+    id: 'puestos_servicio',
+    name: 'Puestos y aplicaciones de servicio',
+    description: 'Armar y publicar las solicitudes mensuales de puestos, y revisar las aplicaciones',
+    color: '#8FB8A8',
+    permissions: [
+      { module: 'servidores', actions: ['view'], scope: 'all' },
+    ],
+  },
+  {
+    /** @deprecated SRV 2026-10-07 · Lo reemplaza `puestos_servicio`. Se deja
+     *  en el catálogo porque las filas viejas (apagadas) lo referencian. */
     id: 'aplicaciones_servicio',
     name: 'Aplicaciones de servicio',
     description: 'Revisar las aplicaciones a puestos, mandarlas al encargado y darles seguimiento',
@@ -373,6 +424,7 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    /** @deprecated SRV 2026-10-07 · Lo reemplaza `puestos_servicio`. */
     id: 'solicitudes_puestos',
     name: 'Solicitudes de puestos',
     description: 'Recibir y armar las solicitudes mensuales de puestos de los comités',

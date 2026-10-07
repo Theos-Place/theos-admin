@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { ACCIONES_DE_PUESTO } from '@/lib/auth/roles'
 import { readFileSync } from 'node:fs'
 import { esEmbebible, frameAncestors, EMBEDDABLE_PREFIXES } from '@/lib/embed'
 
@@ -116,14 +117,27 @@ describe('Puestos de Servicio · lo que no es aplicar, acotado', () => {
   const PAGINA = 'src/app/(admin)/servidores/puestos/page.tsx'
   const src = sinComentarios(PAGINA)
 
-  it('solicitar y gestionar usan LA MISMA lista, y es corta', () => {
-    // Antes eran dos listas distintas y más anchas: `canRequest` incluía
-    // `encargado_staff` y `solicitudes_puestos`, y las acciones de gestión
-    // salían para todo SERVICE_ADMIN_ROLES —o sea también para `direccion`,
-    // cuyo acceso es de lectura—.
-    expect(src).toMatch(/PUEDE_GESTIONAR = \['lider_comite', 'coordinador_servidores', 'admin'\]/)
-    expect(src).toContain('const isAdmin = hasRole(...PUEDE_GESTIONAR)')
-    expect(src).toContain('const canRequest = hasRole(...PUEDE_GESTIONAR)')
+  it('solicitar y actuar sobre el puesto son DOS listas distintas', () => {
+    /**
+     * Eran la misma y se separaron el 2026-10-07 por decisión de Floriana:
+     * «Ver aplicaciones», «Editar» y «Bajar» pasaron al rol del comité, a
+     * encargado de staff, dirección y admin — y SALIERON `lider_comite` y
+     * `coordinador_servidores`, que las tenían desde el 25 de setiembre.
+     *
+     * SOLICITAR no se tocó: juntarlas de nuevo le quitaría a un líder de
+     * comité el poder pedir puestos para su gente, que nadie pidió.
+     */
+    expect(src).toContain('const isAdmin = hasRole(...ACCIONES_DE_PUESTO)')
+    expect(src).toMatch(/PUEDE_SOLICITAR = \['lider_comite', 'coordinador_servidores', 'admin'\]/)
+    expect(src).toContain('const canRequest = hasRole(...PUEDE_SOLICITAR)')
+  })
+
+  it('las acciones del puesto siguen SIN direccion-como-lectura por accidente', () => {
+    // `direccion` entra ahora, pero PEDIDO explícitamente, no heredado de
+    // SERVICE_ADMIN_ROLES como pasaba antes del 25 de setiembre.
+    expect(ACCIONES_DE_PUESTO).toContain('direccion')
+    expect(ACCIONES_DE_PUESTO).not.toContain('lider_comite')
+    expect(ACCIONES_DE_PUESTO).not.toContain('coordinador_servidores')
   })
 
   it('y ya no se cuelan por las listas anchas de antes', () => {
