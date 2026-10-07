@@ -169,6 +169,23 @@ describe('Puestos de Servicio · lo que no es aplicar, acotado', () => {
     // entonces salía vacía.
     expect(src).toContain('v.description || v.position_description')
     expect(src).toContain('v.position_study_requirement')
-    expect(src).toContain('v.position_functions')
+  })
+
+  it('la tarjeta YA NO muestra «¿Qué harás?»', () => {
+    /**
+     * Se quitó el 2026-10-07 (pedido de Floriana). Eran las funciones del
+     * puesto —su descripción interna, lo que se le exige a quien sirve— y
+     * alargaban cada tarjeta hasta volver la cartelera ilegible.
+     *
+     * NO desaparecieron: siguen en el detalle del puesto bajo «Funciones
+     * principales», que es donde las lee quien las necesita. Por eso el
+     * campo sigue viajando en el payload y no se recorta: el detalle usa la
+     * misma forma de dato.
+     */
+    expect(src).not.toContain('¿Qué harás?')
+    expect(src).not.toContain('v.position_functions')
+    const detalle = readFileSync('src/app/(admin)/servidores/puestos/[id]/page.tsx', 'utf8')
+    expect(detalle).toContain('Funciones principales')
+    expect(detalle).toContain('vacancy.position_functions')
   })
 })

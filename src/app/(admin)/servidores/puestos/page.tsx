@@ -237,27 +237,13 @@ export default function VacantesPage() {
                           </p>
                         )}
 
-                        {v.functions.length === 0 && v.position_functions && (
-                          <div>
-                            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display mb-1">¿Qué harás?</p>
-                            <p className="text-[13px] text-navy-light/80 font-body whitespace-pre-line leading-relaxed">
-                              {v.position_functions}
-                            </p>
-                          </div>
-                        )}
-
-                        {v.functions.length > 0 && (
-                          <div>
-                            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display mb-1">¿Qué harás?</p>
-                            <ul className="space-y-0.5">
-                              {v.functions.map((f, i) => (
-                                <li key={i} className="flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
-                                  <span className="text-coral mt-0.5" aria-hidden>•</span>{f}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {/* «¿Qué harás?» SE QUITÓ el 2026-10-07 (pedido de
+                            Floriana). Eran las funciones del puesto, que son
+                            su descripción interna —lo que se le exige a quien
+                            sirve— y alargaban cada tarjeta de la cartelera
+                            hasta volverla ilegible. Siguen en el detalle del
+                            puesto, bajo «Funciones principales», que es donde
+                            las lee quien de verdad las necesita. */}
 
                         {(v.schedule || v.commitment) && (
                           <div className="flex items-center gap-4 flex-wrap text-[13px] text-navy-light/80 font-body">
