@@ -31,7 +31,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { SERVICE_ADMIN_ROLES } from '@/lib/auth/roles'
+import { PUBLICAN_PUESTOS } from '@/lib/auth/roles'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, Loader2, Download, Upload, Users, AlertTriangle, MoveRight } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -87,9 +87,20 @@ export default function SolicitudesDePuestosPage() {
    */
   const [sinAcceso, setSinAcceso] = useState(false)
   const [soloMisComites, setSoloMisComites] = useState(false)
+  /**
+   * POR QUÉ JAZMÍN NO VEÍA EL BOTÓN (2026-10-07).
+   *
+   * Eran DOS listas: el endpoint pedía `SERVICE_ADMIN_ROLES` y esta pantalla
+   * también — pero por su cuenta. Abrir el endpoint al rol del comité no
+   * habría alcanzado: el botón se seguía escondiendo acá, y la persona
+   * habría tenido el permiso sin manera de usarlo.
+   *
+   * Ahora las dos preguntan por `PUBLICAN_PUESTOS`. Es la misma lección de
+   * UX-7: una lista escrita en dos lados se separa.
+   */
   // Publicar baja lo que está en la calle: es de la coordinación, no de quien
   // arma las solicitudes.
-  const puedePublicar = hasRole(...SERVICE_ADMIN_ROLES)
+  const puedePublicar = hasRole(...PUBLICAN_PUESTOS)
 
   const [items, setItems] = useState<Solicitud[] | null>(null)
   const [plan, setPlan] = useState<PlanDePublicacion>({ aPublicar: [], aDesactivar: [] })

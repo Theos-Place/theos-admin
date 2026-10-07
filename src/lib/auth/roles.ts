@@ -142,15 +142,18 @@ export const PUBLICAN_PUESTOS: RoleId[] = [...SERVICE_ADMIN_ROLES, 'puestos_serv
  * SRV · Quién ve y usa las acciones de un puesto publicado: «Ver
  * aplicaciones», «Editar» y «Bajar».
  *
- * DECIDIDO POR FLORIANA EL 2026-10-07, y cambia lo que ella misma había
- * acotado el 25 de setiembre: `lider_comite` y `coordinador_servidores`
- * SALEN, y entran `encargado_staff`, `direccion` y el rol del comité. Queda
- * escrito porque es una reducción de acceso para gente que lo tenía: el
- * líder de comité ya no ve las aplicaciones a los puestos de su propio
- * comité desde esta pantalla.
+ * DECIDIDO POR FLORIANA EL 2026-10-07, en dos pasos: primero dijo «el rol
+ * del comité, encargada de staff, admin y dirección», y al revisar la lista
+ * resultante pidió devolverle `coordinador_servidores`.
+ *
+ * EL ÚNICO QUE QUEDA FUERA es `lider_comite`, que los tenía desde el 25 de
+ * setiembre: ya no ve desde esta pantalla las aplicaciones a los puestos de
+ * su propio comité. Queda escrito porque es una reducción de acceso para
+ * gente que lo tenía, y porque es la clase de cosa que alguien nota un mes
+ * después sin saber qué pasó.
  */
 export const ACCIONES_DE_PUESTO: RoleId[] = [
-  'puestos_servicio', 'encargado_staff', 'direccion', 'admin',
+  'puestos_servicio', 'encargado_staff', 'coordinador_servidores', 'direccion', 'admin',
 ]
 
 /**

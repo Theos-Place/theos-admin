@@ -72,6 +72,18 @@ describe('SRV · el bug de Jazmín: publicar', () => {
     expect(ep).toContain('requireRoles(...PUBLICAN_PUESTOS)')
   })
 
+  it('Y LA PANTALLA TAMBIÉN: era la razón de fondo', () => {
+    /**
+     * El botón se escondía por su CUENTA. Eran dos listas: el endpoint pedía
+     * `SERVICE_ADMIN_ROLES` y la pantalla también, por separado. Abrir solo
+     * el endpoint habría dado el permiso sin manera de usarlo — Jazmín
+     * habría podido publicar por API y seguido sin ver el botón.
+     */
+    const pg = sinComentarios('src/app/(admin)/servidores/puestos/solicitudes/page.tsx')
+    expect(pg).toContain('hasRole(...PUBLICAN_PUESTOS)')
+    expect(pg).not.toContain('hasRole(...SERVICE_ADMIN_ROLES)')
+  })
+
   it('ver las solicitudes y publicarlas es la MISMA gente', () => {
     // Si se vuelven a separar, vuelve el bug.
     const req = sinComentarios('src/app/api/servers/vacancies/requests/route.ts')
@@ -99,14 +111,18 @@ describe('SRV · ver las aplicaciones', () => {
 })
 
 describe('SRV · los tres botones del puesto', () => {
-  it('son los cuatro roles que pidió Floriana, y nadie más', () => {
+  it('son los cinco roles que pidió Floriana, y nadie más', () => {
     /**
-     * «Ver aplicaciones», «Editar» y «Bajar». Decidido el 2026-10-07: SALEN
-     * `lider_comite` y `coordinador_servidores`, que los tenían desde el
-     * 25 de setiembre. Es una REDUCCIÓN y se confirmó antes de hacerla.
+     * «Ver aplicaciones», «Editar» y «Bajar». Decidido el 2026-10-07 en dos
+     * pasos: primero el rol del comité, encargada de staff, admin y
+     * dirección; después se devolvió `coordinador_servidores`.
+     *
+     * El único que SALE es `lider_comite`, que los tenía desde el 25 de
+     * setiembre. Es una reducción y se confirmó antes de hacerla.
      */
     expect([...ACCIONES_DE_PUESTO].sort())
-      .toEqual(['admin', 'direccion', 'encargado_staff', 'puestos_servicio'])
+      .toEqual(['admin', 'coordinador_servidores', 'direccion', 'encargado_staff', 'puestos_servicio'])
+    expect(ACCIONES_DE_PUESTO).not.toContain('lider_comite')
   })
 
   it('la pantalla usa esa lista y no una copia', () => {

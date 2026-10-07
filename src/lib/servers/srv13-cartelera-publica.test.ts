@@ -132,12 +132,18 @@ describe('Puestos de Servicio · lo que no es aplicar, acotado', () => {
     expect(src).toContain('const canRequest = hasRole(...PUEDE_SOLICITAR)')
   })
 
-  it('las acciones del puesto siguen SIN direccion-como-lectura por accidente', () => {
-    // `direccion` entra ahora, pero PEDIDO explícitamente, no heredado de
-    // SERVICE_ADMIN_ROLES como pasaba antes del 25 de setiembre.
+  it('cada rol de las acciones del puesto está ahí porque se pidió', () => {
+    /**
+     * `direccion` entra PEDIDA explícitamente, no heredada de
+     * SERVICE_ADMIN_ROLES como pasaba antes del 25 de setiembre, que fue lo
+     * que Floriana acotó entonces.
+     *
+     * El único que sale es `lider_comite`: ya no ve desde esta pantalla las
+     * aplicaciones a los puestos de su propio comité.
+     */
     expect(ACCIONES_DE_PUESTO).toContain('direccion')
+    expect(ACCIONES_DE_PUESTO).toContain('coordinador_servidores')
     expect(ACCIONES_DE_PUESTO).not.toContain('lider_comite')
-    expect(ACCIONES_DE_PUESTO).not.toContain('coordinador_servidores')
   })
 
   it('y ya no se cuelan por las listas anchas de antes', () => {

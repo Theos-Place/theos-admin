@@ -47,12 +47,17 @@ describe('SRV-12 · ver y publicar son la MISMA gente', () => {
      * eso no se sabe por rol: un comité se coordina por PUESTO. Lo contesta
      * el endpoint con un 403, que la pantalla guarda en `sinAcceso`.
      *
-     * Lo que NO cambió, y es lo que este test cuida: publicar sigue siendo
-     * de la coordinación y nada más. Publicar BAJA lo que está en la calle.
+     * Lo que NO cambió, y es lo que este test cuida: el botón de publicar
+     * cuelga de un criterio de ROL, aparte del acceso a la pantalla.
+     *
+     * Lo que SÍ cambió el 2026-10-07: ese criterio pasó de
+     * `SERVICE_ADMIN_ROLES` a `PUBLICAN_PUESTOS`, la MISMA lista del
+     * endpoint. Eran dos y por eso Jazmín Sánchez tenía la pantalla abierta
+     * sin el botón.
      */
     expect(src).toContain('setSinAcceso(true)')
     expect(src).toMatch(/if \(user && sinAcceso\) return <AccessDenied \/>/)
-    expect(src).toMatch(/puedePublicar = hasRole\(\.\.\.SERVICE_ADMIN_ROLES\)/)
+    expect(src).toMatch(/puedePublicar = hasRole\(\.\.\.PUBLICAN_PUESTOS\)/)
     // Y el botón de publicar sigue colgando de ese criterio, no del acceso.
     expect(src).toMatch(/\{puedePublicar && \(/)
   })
