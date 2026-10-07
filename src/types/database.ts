@@ -4078,6 +4078,7 @@ export type Database = {
       }
       sedes: {
         Row: {
+          canton: string | null
           age_group: string | null
           code: string
           created_at: string | null
@@ -4094,6 +4095,7 @@ export type Database = {
           waze_url: string | null
         }
         Insert: {
+          canton?: string | null
           age_group?: string | null
           code: string
           created_at?: string | null
@@ -4110,6 +4112,7 @@ export type Database = {
           waze_url?: string | null
         }
         Update: {
+          canton?: string | null
           age_group?: string | null
           code?: string
           created_at?: string | null

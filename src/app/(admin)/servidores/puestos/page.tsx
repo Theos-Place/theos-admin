@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { opcionesDeUbicacion } from '@/lib/servers/ubicacion-del-puesto'
 import { ACCIONES_DE_PUESTO } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { type Vacancy } from '@/types/server'
@@ -79,7 +80,17 @@ export default function VacantesPage() {
 
   const [qPuesto, setQPuesto] = useState('')
   const [committeeFilter, setCommitteeFilter] = useState('all')
-  const [areaFilter, setAreaFilter] = useState('all') // "ubicación" (área del comité)
+  /**
+   * SRV (2026-10-07) · Esto filtraba por el ÁREA del comité («Área de
+   * Ministerios») con el rótulo «Todas las ubicaciones». No era un bug de
+   * datos: el filtro nunca filtró por ubicación, solo estaba mal rotulado.
+   *
+   * Ahora filtra por la UBICACIÓN de verdad, que sale del cantón de la sede
+   * del comité. Los comités que no son sede no tienen, y por eso el filtro
+   * desaparece cuando no hay ninguna cargada — que es lo que pasa hasta que
+   * alguien llene los cantones.
+   */
+  const [ubicacionFilter, setUbicacionFilter] = useState('all')
   const [open, setOpen] = useState<Set<string>>(new Set())
 
   // Opciones de comité y ubicación: solo los que tienen al menos un puesto.
@@ -88,19 +99,16 @@ export default function VacantesPage() {
     vacancies.forEach(v => m.set(v.committee_id, v.committee_name))
     return Array.from(m, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
   }, [vacancies])
-  const areaOptions = useMemo(
-    () => Array.from(new Set(vacancies.map(v => v.area).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-    [vacancies],
-  )
+  const ubicacionOptions = useMemo(() => opcionesDeUbicacion(vacancies), [vacancies])
 
   const filtered = useMemo(() => {
     const q = qPuesto.trim().toLowerCase()
     return vacancies.filter(v =>
       (q === '' || v.title.toLowerCase().includes(q)) &&
       (committeeFilter === 'all' || v.committee_id === committeeFilter) &&
-      (areaFilter === 'all' || v.area === areaFilter),
+      (ubicacionFilter === 'all' || v.location === ubicacionFilter),
     )
-  }, [vacancies, qPuesto, committeeFilter, areaFilter])
+  }, [vacancies, qPuesto, committeeFilter, ubicacionFilter])
 
   // Agrupar por comité para los acordeones.
   const groups = useMemo(() => {
@@ -164,15 +172,19 @@ export default function VacantesPage() {
           <option value="all">Todos los comités</option>
           {committeeOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select
-          value={areaFilter}
-          onChange={e => setAreaFilter(e.target.value)}
-          aria-label="Filtrar por ubicación"
-          className="rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
-        >
-          <option value="all">Todas las ubicaciones</option>
-          {areaOptions.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
+        {/* El filtro solo se dibuja si hay ubicaciones que filtrar: un
+            desplegable con una sola opción es ruido. */}
+        {ubicacionOptions.length > 0 && (
+          <select
+            value={ubicacionFilter}
+            onChange={e => setUbicacionFilter(e.target.value)}
+            aria-label="Filtrar por ubicación"
+            className="rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
+          >
+            <option value="all">Todas las ubicaciones</option>
+            {ubicacionOptions.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Acordeones por comité */}

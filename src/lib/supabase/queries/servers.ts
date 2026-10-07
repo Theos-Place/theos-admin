@@ -324,11 +324,39 @@ export async function getVacancies(): Promise<DbVacancy[]> {
     .order('created_at', { ascending: false })
   if (error) throw error
   const areaMap = await getAreaNameMap(supabase)
+
+  /**
+   * SRV · La UBICACIÓN sale de la sede del comité, no de la vacante.
+   *
+   * `vacancies.location` existe y está en null en las 32 publicadas: nadie
+   * la llena, porque llenarla sería repetir el mismo cantón en cada puesto
+   * de la misma sede. El cantón vive en `sedes.canton` y se hereda.
+   *
+   * Los comités de sede calzan con `sedes` por NOMBRE EXACTO — se verificó
+   * con los 6 que tienen vacantes publicadas. Si alguno dejara de calzar, su
+   * ubicación queda vacía: el filtro muestra menos, no muestra mal.
+   */
+  const { data: sedesRows } = await supabase.from('sedes').select('name, canton')
+  const cantonPorSede = new Map(
+    ((sedesRows ?? []) as Array<{ name: string; canton: string | null }>)
+      .map(r => [r.name, r.canton]))
+
+  const { ubicacionDelPuesto } = await import('@/lib/servers/ubicacion-del-puesto')
   return (data ?? []).map((row: Record<string, unknown>) => {
     const entry = row.committee_id ? areaMap.get(row.committee_id as string) : undefined
     const parentName = entry?.parent_id ? areaMap.get(entry.parent_id)?.name ?? '' : ''
     const committee = row.committee as { name: string } | null
-    return { ...row, committee: committee ? { name: committee.name, parent: { name: parentName } } : null }
+    return {
+      ...row,
+      // La de la vacante solo se respeta si alguien la escribió a mano; si
+      // no, manda la de la sede.
+      location: (row.location as string | null)
+        ?? ubicacionDelPuesto({
+          nombreDelComite: committee?.name,
+          cantonDeLaSede: committee ? cantonPorSede.get(committee.name) : null,
+        }),
+      committee: committee ? { name: committee.name, parent: { name: parentName } } : null,
+    }
   }) as DbVacancy[]
 }
 
