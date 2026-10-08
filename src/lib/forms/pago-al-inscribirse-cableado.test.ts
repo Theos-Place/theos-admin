@@ -94,3 +94,26 @@ describe('pago al inscribirse · la fila de payments', () => {
     expect(QUERIES).toContain('pagoDeInscripcion({ campos: listaCampos, respuestas, evento })')
   })
 })
+
+describe('la FECHA de la inscripción', () => {
+  it('se escribe desde la respuesta, no se deja en el now() de la base', () => {
+    /**
+     * EL BUG (Floriana, 2026-10-08): el tab del evento mostraba «06 de
+     * octubre» en casi todas. El script de reconciliación del 6 de octubre
+     * creó 70 inscripciones dejando `registered_at` en el default, y las 63
+     * que venían de respuestas viejas quedaron fechadas ESE día — tres
+     * semanas de inscripciones (14-sep a 5-oct) aplastadas en una fecha.
+     *
+     * Llenar el formulario ES inscribirse, así que la fecha de la
+     * inscripción es la de la respuesta. Escribirla deja de depender de
+     * cuándo corrió el código.
+     */
+    expect(QUERIES).toContain('registered_at: fechaDeRespuesta')
+    expect(QUERIES).toContain(".select('submitted_at').eq('id', responseId)")
+  })
+
+  it('y si no hay fecha, no se escribe basura: cae al default', () => {
+    // Un `registered_at: null` dispararía el not-null de la columna.
+    expect(QUERIES).toContain('...(fechaDeRespuesta ? { registered_at: fechaDeRespuesta } : {})')
+  })
+})

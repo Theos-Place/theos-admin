@@ -630,9 +630,15 @@ export async function submitResponse(
         idComprobante.has(r.field_id) && typeof r.value_text === 'string' && r.value_text.trim() !== '')
         ?.value_text ?? null
 
+      // La fecha real de ESTA respuesta, para que la inscripción no quede
+      // fechada el día que corrió el código.
+      const { data: resp } = await supabase.from('form_responses')
+        .select('submitted_at').eq('id', responseId).maybeSingle()
+
       await linkResponseToRegistration(
         supabase, formId, input.member_id, responseId, estado, pago, comprobante,
-        evento.title ?? 'Inscripción')
+        evento.title ?? 'Inscripción',
+        (resp as { submitted_at: string } | null)?.submitted_at ?? null)
     } catch (e) {
       console.warn('submitResponse enlace con inscripción:', e)
     }
@@ -681,6 +687,7 @@ async function linkResponseToRegistration(
   pago: PagoDeInscripcion | null,
   comprobante: string | null,
   tituloDelForm: string,
+  fechaDeRespuesta: string | null,
 ): Promise<void> {
   const { data: eventos } = await supabase
     .from('events').select('id').eq('registration_form_id', formId)
@@ -708,12 +715,27 @@ async function linkResponseToRegistration(
   const faltan = ids.filter(id => !conInscripcion.has(id))
   if (faltan.length === 0) return
 
+  /**
+   * `registered_at` SE ESCRIBE, no se deja en el `now()` de la base.
+   *
+   * En el camino normal da lo mismo —la respuesta y la inscripción nacen con
+   * milisegundos de diferencia—, pero en cualquier reproceso NO: el script de
+   * reconciliación del 2026-10-06 creó 70 inscripciones y las 63 que venían de
+   * respuestas viejas quedaron fechadas ese día, aplastando tres semanas de
+   * inscripciones (14-sep a 5-oct) en una sola fecha. Lo notó Floriana el
+   * 2026-10-08 viendo el tab del evento.
+   *
+   * La fecha de la inscripción ES la de la respuesta, porque llenar el
+   * formulario es inscribirse. Escribirla deja de depender de CUÁNDO corrió
+   * el código.
+   */
   const { error } = await supabase.from('event_registrations').insert(
     faltan.map(event_id => ({
       event_id,
       member_id: memberId,
       payment_status: estadoDePago,
       form_response_id: responseId,
+      ...(fechaDeRespuesta ? { registered_at: fechaDeRespuesta } : {}),
     })),
   )
   // 23505 = alguien se inscribió entre las dos consultas. No es un error:
