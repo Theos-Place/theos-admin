@@ -1174,7 +1174,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {['Sesión', 'Fecha', 'Asistencia'].map(h => (
+                    {['Sesión', 'Fecha', 'Asistencia', ''].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display"
@@ -1205,6 +1205,18 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                       </td>
                       <td className="px-4 py-3 text-sm text-navy font-body">
                         {s.present}/{s.total} presentes
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {/* Corregir se hace en la pantalla de pasar lista, con
+                            los mismos botones y la gente ya marcada. Borrar
+                            también vive allá: para llegar hay que haber abierto
+                            la sesión. */}
+                        <Link
+                          href={`/estudios/grupos/${id}/asistencia?sesion=${s.id}`}
+                          className="text-[13px] text-teal-deep hover:underline font-body whitespace-nowrap"
+                        >
+                          Corregir
+                        </Link>
                       </td>
                     </tr>
                   ))}

@@ -18,6 +18,7 @@ import type { Json } from '@/types/database'
 import type { GrupoParaExport, PersonaMin } from '@/lib/studies/participantes-export'
 import type { ConteoCierre, ResultadoCierre } from '@/lib/studies/close-result-read'
 import { estadoDeBaja, type TipoDeBaja } from '@/lib/studies/baja-matricula'
+import type { CambioDeSesion, SesionRegistrada } from '@/lib/studies/correccion-de-asistencia'
 import type { DesgloseDeEstados } from '@/lib/studies/estado-visible'
 import { porcentajesPorMiembro } from '@/lib/studies/asistencia-del-grupo'
 import { estudiantesDelGrupo } from '@/lib/studies/conteo-de-participantes'
@@ -661,6 +662,71 @@ export async function getGroupSessions(groupId: string): Promise<GroupSessions> 
       session_id: r.id, member_id: a.member_id, present: a.present,
     }))),
   }
+}
+
+/** Una sesión con sus marcas, para corregirla o para saber qué se va a borrar.
+ *  Devuelve null si la sesión no existe o no es de ese grupo — el `group_id`
+ *  va EN LA CONSULTA y no se comprueba después: así una sesión de otro grupo
+ *  no se puede tocar pasando su id a mano. */
+export async function getSessionForEdit(
+  groupId: string, sessionId: string,
+): Promise<SesionRegistrada | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_sessions')
+    .select('id, session_date, topic, study_attendance(member_id, present)')
+    .eq('id', sessionId)
+    .eq('group_id', groupId)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  const r = data as { id: string; session_date: string; topic: string | null; study_attendance: Array<{ member_id: string; present: boolean }> }
+  return { id: r.id, session_date: r.session_date, topic: r.topic, marcas: r.study_attendance }
+}
+
+/**
+ * Corrige una sesión ya registrada: fecha, tema y/o la lista de marcas.
+ *
+ * LAS MARCAS SE REEMPLAZAN ENTERAS cuando vienen. Borrar e insertar, no
+ * actualizar una por una: con un update por persona, alguien a quien se le
+ * QUITA la marca se quedaría con la vieja, y la lista corregida tendría a
+ * medias el estado anterior. El borrón va acotado a esta sesión.
+ */
+export async function updateGroupSession(
+  groupId: string, sessionId: string, cambio: CambioDeSesion,
+): Promise<void> {
+  const supabase = createAdminClient()
+
+  const campos: { session_date?: string; topic?: string | null } = {}
+  if (cambio.session_date !== undefined) campos.session_date = cambio.session_date
+  if (cambio.topic !== undefined) campos.topic = cambio.topic
+  if (Object.keys(campos).length > 0) {
+    const { error } = await supabase.from('study_sessions')
+      .update(campos).eq('id', sessionId).eq('group_id', groupId)
+    if (error) throw error
+  }
+
+  if (cambio.marcas !== undefined) {
+    const { error: dErr } = await supabase.from('study_attendance')
+      .delete().eq('session_id', sessionId)
+    if (dErr) throw dErr
+    if (cambio.marcas.length > 0) {
+      const { error: iErr } = await supabase.from('study_attendance').insert(
+        cambio.marcas.map(m => ({ session_id: sessionId, member_id: m.member_id, present: m.present })))
+      if (iErr) throw iErr
+    }
+  }
+}
+
+/** Borra una sesión y sus marcas. El `group_id` va en el filtro por la misma
+ *  razón que en `getSessionForEdit`. */
+export async function deleteGroupSession(groupId: string, sessionId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error: aErr } = await supabase.from('study_attendance').delete().eq('session_id', sessionId)
+  if (aErr) throw aErr
+  const { error } = await supabase.from('study_sessions')
+    .delete().eq('id', sessionId).eq('group_id', groupId)
+  if (error) throw error
 }
 
 /** Registra la asistencia de una sesión: crea la sesión y las filas de presencia. */
