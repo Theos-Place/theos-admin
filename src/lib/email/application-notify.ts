@@ -10,10 +10,19 @@ import {
 /**
  * SRV-14 · Los avisos de una aplicación a un puesto de servicio.
  *
- * SON CORREOS INTERNOS DE OPERACIÓN: van a quien tiene que hacer algo, no a
- * quien aplicó. A la persona no se le escribe desde acá ni cuando la aceptan
- * ni cuando la rechazan — esa conversación la tiene alguien, y un correo
- * automático la reemplazaría mal.
+ * CASI TODOS SON CORREOS INTERNOS DE OPERACIÓN: van a quien tiene que hacer
+ * algo. Cuando la aceptan o la rechazan a la persona NO se le escribe desde
+ * acá — esa conversación la tiene alguien, y un correo automático la
+ * reemplazaría mal.
+ *
+ * LA EXCEPCIÓN, y es una sola (Floriana, 2026-10-08): el acuse de recibo.
+ * Karen Angamarca aplicó y no recibió nada: ni ella supo que su aplicación
+ * entró, ni el comité supo que había llegado. Aplicar no disparaba ningún
+ * correo — el primero salía recién cuando alguien movía el estado a mano.
+ *
+ * Ese acuse NO reemplaza ninguna conversación: dice «llegó» y «te
+ * contactamos en unas dos semanas», que es justo lo que uno se pregunta
+ * después de apretar el botón.
  *
  * EMAIL_SILENT_MODE se respeta solo: el guard vive dentro de `sendEmail`, por
  * donde pasa todo.
@@ -59,6 +68,14 @@ async function correosDeRoles(roles: readonly string[]): Promise<Array<{ email: 
 export async function notificarAlEncargado(input: {
   committeeId: string | null
   detalle: DetalleDelAplicante
+  /**
+   * En qué momento se avisa. Son dos cosas distintas y por eso el correo lo
+   * dice: «acaba de entrar» no es lo mismo que «ya pasó el filtro, revisala».
+   * Si fueran dos funciones, el día que se agregue un campo al detalle una de
+   * las dos se queda sin él — que es la razón por la que `notificarSeguimiento`
+   * también resuelve sus dos casos en una.
+   */
+  momento?: 'recibida' | 'enviada_para_revision'
 }): Promise<{ enviados: number }> {
   if (!input.committeeId) return { enviados: 0 }
   const supabase = createAdminClient()
@@ -70,21 +87,40 @@ export async function notificarAlEncargado(input: {
   const gente = ((data ?? []) as Array<{ first_name: string; last_name: string; email: string | null; email_bounced: boolean | null }>)
     .filter(m => !!m.email && !m.email_bounced)
 
+  const recienLlegada = input.momento === 'recibida'
+  const encabezado = recienLlegada
+    ? `<p><strong>${input.detalle.nombre}</strong> acaba de aplicar al puesto de
+       <strong>${input.detalle.puesto}</strong> en ${input.detalle.comite}.
+       Ya está en la lista de aplicaciones del comité.</p>`
+    : `<p>Alguien aplicó al puesto de <strong>${input.detalle.puesto}</strong> en
+       ${input.detalle.comite}. Estos son sus datos:</p>`
+
+  // A la persona se le dijo que la contactan en unas dos semanas: el comité
+  // tiene que saber con qué plazo se comprometió el sistema en su nombre.
+  const plazo = recienLlegada
+    ? `<p>A ${input.detalle.nombre.split(' ')[0]} le dijimos que el comité la
+       revisa y la contacta en <strong>aproximadamente dos semanas</strong>.</p>`
+    : ''
+
   const cuerpo = `
     <p>Hola,</p>
-    <p>Alguien aplicó al puesto de <strong>${input.detalle.puesto}</strong> en
-    ${input.detalle.comite}. Estos son sus datos:</p>
+    ${encabezado}
     ${detalleEnHtml(input.detalle)}
     <p>El teléfono del dirigente está ahí para que puedas preguntar por la persona
     antes de recibirla.</p>
+    ${plazo}
     <p>Con cariño,<br>Equipo Theos Place</p>`
+
+  const asunto = recienLlegada
+    ? `Nueva aplicación a ${input.detalle.puesto}: ${input.detalle.nombre}`
+    : `Aplicación a ${input.detalle.puesto}: ${input.detalle.nombre}`
 
   let enviados = 0
   for (const m of gente) {
     try {
       await sendEmail({
         to: { email: m.email as string, name: `${m.first_name} ${m.last_name}`.trim() },
-        subject: `Aplicación a ${input.detalle.puesto}: ${input.detalle.nombre}`,
+        subject: asunto,
         html: renderEmail(cuerpo),
         kind: 'transactional',
       })
@@ -151,4 +187,58 @@ export async function notificarSeguimiento(input: {
     }
   }
   return { enviados }
+}
+
+/**
+ * El acuse de recibo A QUIEN APLICÓ (Floriana, 2026-10-08).
+ *
+ * Es el único correo de este archivo que le llega a la persona. Dice dos
+ * cosas y nada más: que su aplicación entró, y que el comité la revisa y la
+ * contacta en **aproximadamente dos semanas**.
+ *
+ * EL PLAZO VA PORQUE ELLA LO PIDIÓ, y es lo que vuelve útil el correo:
+ * «recibimos tu aplicación» a secas deja a la persona preguntándose cuándo
+ * le responden, que es exactamente la duda que el correo debería cerrar.
+ * Va como «aproximadamente» a propósito: es una expectativa, no una promesa
+ * que alguien tenga que cumplir en una fecha.
+ *
+ * NO dice si la van a aceptar, ni insinúa que sí. Esa conversación la tiene
+ * el comité.
+ *
+ * Best-effort, como todo acá: si el correo falla, la aplicación ya quedó
+ * guardada. Perderla por un problema de correo sería mucho peor.
+ */
+export async function notificarAcuseAlAplicante(input: {
+  correo: string | null
+  nombre: string
+  puesto: string
+  comite: string
+}): Promise<{ enviado: boolean }> {
+  if (!input.correo) return { enviado: false }
+  const primerNombre = input.nombre.split(' ')[0] || input.nombre
+
+  const cuerpo = `
+    <p>Hola, ${primerNombre}:</p>
+    <p>Recibimos tu aplicación al puesto de <strong>${input.puesto}</strong>
+    en ${input.comite}. ¡Gracias por dar el paso!</p>
+    <p>El comité encargado la va a revisar y se va a contactar con vos en
+    <strong>aproximadamente dos semanas</strong>.</p>
+    <p>Mientras tanto no tenés que hacer nada.</p>
+    <p>Con cariño,<br>Equipo Theos Place</p>`
+
+  try {
+    await sendEmail({
+      to: { email: input.correo, name: input.nombre },
+      subject: `Recibimos tu aplicación a ${input.puesto}`,
+      html: renderEmail(cuerpo),
+      // Transaccional: es la respuesta a algo que la persona acaba de hacer,
+      // no una campaña. No lleva pie de baja ni respeta el opt-out de
+      // newsletter — quien aplica espera esta confirmación.
+      kind: 'transactional',
+    })
+    return { enviado: true }
+  } catch (e) {
+    console.warn('acuse de aplicación al aplicante:', e)
+    return { enviado: false }
+  }
 }

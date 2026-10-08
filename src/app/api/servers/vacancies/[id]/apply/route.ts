@@ -40,7 +40,41 @@ export async function POST(
     }
 
     const body = await req.json().catch(() => ({}))
-    await createApplication({ vacancy_id: id, applicant_id: memberId, notes: typeof body?.notes === 'string' ? body.notes : null })
+    const { id: applicationId } = await createApplication({
+      vacancy_id: id, applicant_id: memberId,
+      notes: typeof body?.notes === 'string' ? body.notes : null,
+    })
+
+    /**
+     * LOS DOS ACUSES (Floriana, 2026-10-08). Aplicar no mandaba NADA: ni la
+     * persona sabía que su aplicación entró, ni el comité que había llegado
+     * — el primer correo salía recién cuando alguien movía el estado a mano.
+     *
+     * BEST-EFFORT A PROPÓSITO, y envuelto entero: la aplicación ya está
+     * guardada y es lo que vale. Si el correo falla, se pierde el correo, no
+     * la aplicación — que es justo el orden contrario al que tendría si esto
+     * pudiera tirar el request.
+     */
+    try {
+      const { getDetalleDeAplicante } = await import('@/lib/supabase/queries/servers')
+      const detalle = await getDetalleDeAplicante(applicationId)
+      if (detalle) {
+        const { notificarAlEncargado, notificarAcuseAlAplicante } =
+          await import('@/lib/email/application-notify')
+        await Promise.allSettled([
+          notificarAcuseAlAplicante({
+            correo: detalle.correo, nombre: detalle.nombre,
+            puesto: detalle.puesto, comite: detalle.comite,
+          }),
+          notificarAlEncargado({
+            committeeId: detalle.committee_id, detalle, momento: 'recibida',
+          }),
+        ])
+      }
+    } catch (e) {
+      console.warn('acuses de aplicación recibida:', e)
+    }
+
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (error) {
     reportarError('POST /api/servers/vacancies/[id]/apply:', error)

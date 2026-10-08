@@ -656,14 +656,17 @@ export async function deleteVacancy(id: string): Promise<void> {
 }
 
 // Aplicaciones
+/** Devuelve el id de la aplicación creada: los avisos de «recibida» lo
+ *  necesitan para armar la ficha con `getDetalleDeAplicante`. */
 export async function createApplication(input: {
   vacancy_id: string
   applicant_id: string
   notes?: string | null
-}): Promise<void> {
+}): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('applications').insert(input)
+  const { data, error } = await supabase.from('applications').insert(input).select('id').single()
   if (error) throw error
+  return { id: (data as { id: string }).id }
 }
 
 /** Sincroniza roles automáticos por puesto (encargado_eventos, lider_comite)
