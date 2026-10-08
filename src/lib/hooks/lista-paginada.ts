@@ -52,27 +52,48 @@ export type EstadoDeLista<T, E = undefined> = {
 /**
  * @param sello     la petición base que se quiere tener (clave + intento).
  * @param guardado  lo último acumulado, o null si todavía no llegó nada.
+ * @param conservarMientrasCarga  mostrar lo viejo mientras llega lo nuevo.
  *
- * Igual que en `estadoDeCarga`, mientras el sello guardado no sea el pedido se
- * siguen mostrando los items viejos: parpadear a vacío en cada cambio de filtro
- * es peor que enseñar por un instante lo de antes.
+ * MIENTRAS CARGA NO SE MUESTRA LO VIEJO, y ese default cambió el 2026-10-08.
+ *
+ * Antes sí: «parpadear a vacío en cada cambio de filtro es peor que enseñar
+ * por un instante lo de antes». Suena razonable y es verdad para un buscador
+ * que escribe letra a letra — pero NO para un filtro de estado, donde las
+ * filas viejas CONTRADICEN lo que el botón dice.
+ *
+ * Floriana lo reportó así: «si escojo fallidos, aun así me lista entregados».
+ * El endpoint filtraba perfecto —medido, devolvía 2 fallidos y nada más—; lo
+ * que ella veía eran las 200 filas entregadas de antes, todavía en pantalla
+ * bajo un botón que decía «Fallidos». No es un parpadeo: es la pantalla
+ * afirmando algo falso, y se lee como que el filtro no sirve.
+ *
+ * Paginar es el caso donde sí hay que conservar, y ese no pasa por acá:
+ * `loadMore` suma sobre el MISMO sello, así que la lista nunca se vacía al
+ * traer la página siguiente.
+ *
+ * Quien tenga un buscador de los que escriben letra a letra pasa
+ * `conservarMientrasCarga` en true y recupera el comportamiento viejo.
  */
 export function estadoDeLista<T, E = undefined>(
   sello: string,
   guardado: ListaGuardada<T, E> | null,
+  conservarMientrasCarga = false,
 ): EstadoDeLista<T, E> {
-  const items = guardado?.items ?? []
-  const total = guardado?.total ?? 0
+  const alDia = guardado?.sello === sello
+  const items = alDia || conservarMientrasCarga ? guardado?.items ?? [] : []
+  const total = alDia || conservarMientrasCarga ? guardado?.total ?? 0 : 0
   return {
     items,
     total,
     pagina: guardado?.pagina ?? 1,
-    extra: guardado?.extra ?? null,
-    cargando: guardado?.sello !== sello,
+    // `extra` es del filtro (una suma, un conteo): con el sello viejo se
+    // esconde por la misma razón que las filas — sería el número de otro filtro.
+    extra: alDia || conservarMientrasCarga ? guardado?.extra ?? null : null,
+    cargando: !alDia,
     error: guardado?.error ?? null,
     // Con el sello viejo NO se ofrece "cargar más": se estaría paginando sobre
     // un resultado que ya no corresponde a los filtros actuales.
-    hayMas: guardado?.sello === sello && items.length < total,
+    hayMas: alDia && items.length < total,
   }
 }
 
