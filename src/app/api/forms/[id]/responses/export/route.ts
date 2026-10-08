@@ -14,6 +14,7 @@ import {
   columnasDelExport, filaDeRespuesta, celdaComoTexto, camposConDatos, hayGrupo,
   type RespuestaParaExport,
 } from '@/lib/forms/filas-del-export'
+import { logAudit } from '@/lib/audit'
 import { reportarError } from '@/lib/observabilidad'
 
 /**
@@ -64,20 +65,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     /**
      * ?personales=1 suma las columnas de la FICHA de cada persona (FRM-6).
      *
-     * El gate es aparte del de ver respuestas y es el del padrón: acá salen
-     * cédulas, fechas de nacimiento y alergias —datos de salud— de todo el que
-     * haya respondido, y quien tiene el formulario compartido por
-     * `form_access_grants` puede leer las respuestas sin tener nada que ver
-     * con el padrón.
+     * El gate es aparte del de ver respuestas: acá salen cédulas, fechas de
+     * nacimiento y alergias —datos de salud—. Desde el 2026-10-07 entra, además
+     * del camino del padrón, quien tiene derecho a bajar las respuestas de ESTE
+     * formulario; las fichas que salen son las de quienes lo respondieron y de
+     * nadie más. El detalle está en `datos-personales-en-export`.
      *
      * Se RECHAZA con 403 en vez de devolver el archivo sin las columnas: si
      * alguien pidió los datos personales, el archivo sin ellos se parece al
      * archivo con ellos y se manda a imprimir creyendo que está completo.
      */
     const pidePersonales = url.searchParams.get('personales') === '1'
-    if (pidePersonales && !puedeExportarDatosPersonales(ctx.roles)) {
+    if (pidePersonales && !puedeExportarDatosPersonales({ roles: ctx.roles, scope })) {
       return NextResponse.json(
-        { error: 'No tenés permiso para exportar datos personales del padrón.' },
+        { error: 'No tenés permiso para exportar datos personales.' },
         { status: 403 },
       )
     }
@@ -85,6 +86,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       ? await getFichasPersonalesParaExport(
           responses.map(r => r.member_id).filter((x): x is string => !!x))
       : null
+
+    /**
+     * BAJAR DATOS PERSONALES QUEDA ESCRITO. Es lo que vuelve defendible haber
+     * ampliado quién puede: ahora alcanza con tener un formulario compartido,
+     * así que «¿quién se llevó las cédulas y las alergias de los del campa?»
+     * tiene que poder contestarse. El export normal no se audita — ese no
+     * lleva datos de salud.
+     */
+    if (fichas) {
+      await logAudit({
+        actorUserId: ctx.userId,
+        action: 'EXPORT',
+        entityType: 'form_personal_data',
+        entityId: id,
+        newData: {
+          formulario: form.title,
+          personas: fichas.size,
+          alcance: scope,
+          formato: url.searchParams.get('formato') === 'csv' ? 'csv' : 'xlsx',
+        },
+      })
+    }
 
     const campos = camposConDatos((form.fields ?? []).map(f => ({
       id: f.id, field_type: f.field_type, label: f.label,

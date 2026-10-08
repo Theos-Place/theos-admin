@@ -6,6 +6,8 @@ import {
   type FichaParaExport, type IntegranteDeFamilia,
 } from './datos-personales-del-export'
 import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
+import { hasModulePermission } from '@/lib/auth/roles'
+import type { RoleId } from '@/types/auth'
 
 const sinComentarios = (r: string) =>
   readFileSync(r, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
@@ -130,25 +132,71 @@ describe('FRM-6 · el cónyuge dentro de la unidad familiar', () => {
   })
 })
 
-describe('FRM-6 · el permiso', () => {
+describe('FRM-6 · el permiso · camino A, el padrón', () => {
+  const sinFormulario = (roles: string[]) =>
+    puedeExportarDatosPersonales({ roles: roles as RoleId[], scope: 'admin' })
+
   it('lo tiene quien ya puede exportar el padrón', () => {
-    expect(puedeExportarDatosPersonales(['admin'])).toBe(true)
+    expect(sinFormulario(['admin'])).toBe(true)
   })
 
-  it('NO lo tiene quien solo ve formularios', () => {
-    // Es el punto del gate: `forms` abre las respuestas, no el padrón.
-    expect(puedeExportarDatosPersonales(['forms'])).toBe(false)
+  it('sin acceso al formulario NO hay checkbox, ni siquiera con el padrón', () => {
+    // Si no puede ver las respuestas, no hay nada a lo que sumarle columnas.
+    expect(puedeExportarDatosPersonales({ roles: ['admin'], scope: 'none' })).toBe(false)
   })
 
-  it('ni solo_lectura, ni un rol vacío', () => {
-    // `solo_lectura` es el que más incomodó en PAR-4: veía sin poder exportar.
-    expect(puedeExportarDatosPersonales(['solo_lectura'])).toBe(false)
-    expect(puedeExportarDatosPersonales([])).toBe(false)
-    expect(puedeExportarDatosPersonales(null)).toBe(false)
+  it('ni un rol vacío', () => {
+    expect(sinFormulario([])).toBe(false)
+    expect(puedeExportarDatosPersonales({ roles: null, scope: 'admin' })).toBe(false)
+  })
+})
+
+describe('FRM-6 · el permiso · camino B, el formulario (2026-10-07)', () => {
+  /**
+   * EL BUG QUE CERRÓ ESTE CAMINO: al encargado de campas no le aparecía el
+   * checkbox. Tiene el formulario COMPARTIDO, baja las respuestas sin
+   * problema, y necesita las alergias de los que se apuntaron — que es,
+   * literalmente, para lo que el checkbox existe.
+   */
+  it('a quien se le COMPARTIÓ el formulario, sí', () => {
+    expect(puedeExportarDatosPersonales({ roles: ['miembro'], scope: 'grantee' })).toBe(true)
   })
 
-  it('ni lider_comite, que ve a su gente pero no el padrón entero', () => {
-    expect(puedeExportarDatosPersonales(['lider_comite'])).toBe(false)
+  it('y a la encargada del evento del formulario, también', () => {
+    expect(puedeExportarDatosPersonales({ roles: ['miembro'], scope: 'event_manager' })).toBe(true)
+  })
+
+  it('con el módulo formularios hace falta la acción `export`', () => {
+    // `forms` y `comunicaciones` la tienen; antes del 2026-10-07 no entraban
+    // por ningún lado y ahora entran por acá.
+    expect(puedeExportarDatosPersonales({ roles: ['forms'], scope: 'admin' })).toBe(true)
+    expect(puedeExportarDatosPersonales({ roles: ['comunicaciones'], scope: 'admin' })).toBe(true)
+  })
+
+  it('solo_lectura sigue AFUERA: ve formularios y no tiene `export`', () => {
+    /**
+     * Es el rol que PAR-4 señaló por poder bajarse 24.000 fichas sin permiso.
+     * Que `view` no alcance es justamente lo que lo deja afuera sin tener que
+     * nombrarlo en ninguna lista.
+     */
+    expect(puedeExportarDatosPersonales({ roles: ['solo_lectura'], scope: 'admin' })).toBe(false)
+  })
+
+  it('y lider_comite sin acceso al formulario tampoco', () => {
+    expect(puedeExportarDatosPersonales({ roles: ['lider_comite'], scope: 'none' })).toBe(false)
+  })
+
+  it('NADIE pierde lo que tenía: el camino del padrón sigue abierto', () => {
+    /**
+     * `coordinador_dirigentes` y `editor_perfiles` llegan por el padrón y NO
+     * tienen `formularios:export` (medido el 2026-10-07). Si esto se cae es
+     * que alguien cambió una regla por la otra en vez de sumarlas, y les
+     * quitó en silencio algo que ya usaban.
+     */
+    for (const r of ['coordinador_dirigentes', 'editor_perfiles']) {
+      expect(hasModulePermission([r] as RoleId[], 'formularios', 'export'), r).toBe(false)
+      expect(puedeExportarDatosPersonales({ roles: [r] as RoleId[], scope: 'admin' }), r).toBe(true)
+    }
   })
 })
 
@@ -167,10 +215,29 @@ describe('FRM-6 · cableado', () => {
     expect(RUTA.slice(i, i + 400)).toContain('403')
   })
 
-  it('el permiso es el del padrón, escrito una sola vez', () => {
+  it('el permiso está escrito una sola vez, con sus DOS caminos', () => {
     const permiso = sinComentarios('src/lib/auth/datos-personales-en-export.ts')
     expect(permiso).toContain("moduleScope(lista, 'miembros') === 'all'")
     expect(permiso).toContain("hasModulePermission(lista, 'miembros', 'export')")
+    expect(permiso).toContain("scope === 'grantee'")
+    expect(permiso).toContain("'formularios', 'export'")
+  })
+
+  it('la PANTALLA no se inventa el criterio: se lo pregunta al servidor', () => {
+    /**
+     * Era el bug exacto. El checkbox se decidía en el cliente con los roles
+     * de la sesión, y el cliente no sabe si el formulario está compartido con
+     * esa persona. Dos criterios, uno más estricto que el otro.
+     */
+    expect(PANTALLA).toContain('export_access=1')
+    expect(PANTALLA).toContain('f?.export_access?.personales')
+    expect(PANTALLA).not.toContain('puedeExportarDatosPersonales(')
+  })
+
+  it('bajar datos personales queda en la bitácora', () => {
+    // Es lo que vuelve defendible haber ampliado quién puede.
+    expect(RUTA).toContain("action: 'EXPORT'")
+    expect(RUTA).toContain("entityType: 'form_personal_data'")
   })
 
   it('el checkbox está apagado por default', () => {

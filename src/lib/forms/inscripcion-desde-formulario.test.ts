@@ -24,13 +24,32 @@ describe('llenar el formulario de un evento INSCRIBE', () => {
     expect(Q).toMatch(/const faltan = ids\.filter/)
   })
 
-  it('nace PENDING, nunca pagada', () => {
-    // Un `paid` acá le regalaría la entrada a cualquiera que llene un
-    // formulario: el cobro y la revisión van por su propio carril.
+  it('el estado de pago NO está escrito a mano en el insert', () => {
+    /**
+     * Hasta el 2026-10-07 acá decía `payment_status: 'pending'` fijo, con este
+     * argumento: «un `paid` le regalaría la entrada a cualquiera que llene un
+     * formulario». Valía mientras no se mirara el formulario — y dejó las 80
+     * inscripciones del 10 de octubre en «pendiente» cuando TODAS traían el
+     * comprobante, porque ese formulario lo pide obligatorio.
+     *
+     * Ahora lo decide `lib/forms/pago-al-inscribirse`, que tiene sus pruebas:
+     * `paid` solo si el formulario EXIGE comprobante y la persona lo adjuntó.
+     * Lo que este test cuida es que no vuelva un literal — ni el viejo
+     * `'pending'`, que taparía la regla, ni un `'paid'`, que sí regalaría la
+     * entrada.
+     */
     const bloque = Q.slice(Q.indexOf('const faltan = ids.filter'))
-    expect(bloque).toContain("payment_status: 'pending'")
+    expect(bloque).toContain('payment_status: estadoDePago')
+    expect(bloque).not.toContain("payment_status: 'pending'")
     expect(bloque).not.toContain("payment_status: 'paid'")
     expect(bloque).not.toContain("payment_status: 'exempted'")
+  })
+
+  it('y el formulario, que es quien decide, se lee de la BASE', () => {
+    // Del navegador viene si el campo trae algo; que el formulario EXIJA
+    // comprobante lo dice `form_fields`, que el cliente no escribe. Es lo
+    // único que impide que alguien se marque pagado solo.
+    expect(Q).toContain(".from('form_fields').select('id, field_type, label, is_required')")
   })
 
   it('queda enlazada a la respuesta que la creó', () => {
@@ -62,6 +81,12 @@ describe('llenar el formulario de un evento INSCRIBE', () => {
   it('sigue siendo best-effort: no tumba el envío del formulario', () => {
     // Si la inscripción falla, la respuesta ya quedó guardada — perderla
     // sería peor que una inscripción que se reconcilia después.
-    expect(Q).toMatch(/try \{\s*await linkResponseToRegistration[\s\S]{0,200}\} catch/)
+    // El try abarca ahora también el cálculo del estado de pago, que lee
+    // `form_fields`: si esa consulta fallara, tampoco debe tumbar el envío.
+    const i = Q.indexOf('await linkResponseToRegistration(supabase')
+    expect(i, 'tiene que llamarse').toBeGreaterThan(-1)
+    const antes = Q.slice(0, i)
+    expect(antes.lastIndexOf('try {')).toBeGreaterThan(antes.lastIndexOf('} catch'))
+    expect(Q.slice(i)).toMatch(/\} catch/)
   })
 })

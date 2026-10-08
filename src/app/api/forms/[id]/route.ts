@@ -3,7 +3,9 @@ import { FORM_ACTION_MESSAGES, FORM_DELETE_ROLES } from '@/lib/forms/form-action
 import { requireRoles } from '@/lib/auth/guard'
 import { getFormById, updateForm, deleteForm, resolveDynamicOptions, hasFormAccessGrant } from '@/lib/supabase/queries/forms'
 import { memberFormFillAccess } from '@/lib/supabase/queries/form-fill-access'
-import { hasFormsModule } from '@/lib/auth/forms-scope'
+import { hasFormsModule, formViewerScope } from '@/lib/auth/forms-scope'
+import { isManagerOfFormEvent } from '@/lib/supabase/queries/events'
+import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
 import { notifyFormAssignedIfNeeded } from '@/lib/email/form-assigned-notify'
 import { formToPartialWriteInput, formToFields } from '@/lib/forms/form-mapper'
 import { requireFormEdit } from '@/lib/auth/event-guard'
@@ -35,6 +37,33 @@ export async function GET(
         isStaff: hasFormsModule(auth.ctx.roles) || await hasFormAccessGrant(id, auth.ctx.memberId),
       })
       return NextResponse.json({ ...resuelto, fill_access: acceso })
+    }
+    /**
+     * ?export_access=1 · ¿esta persona puede sumarle datos personales al
+     * export de ESTE formulario? (FRM-6, 2026-10-07)
+     *
+     * Lo contesta el SERVIDOR porque la respuesta depende de `form_access_grants`
+     * y de `event_managers`, que la pantalla no conoce — y porque es la misma
+     * función que usa el endpoint del export: una sola definición, no un
+     * criterio en el cliente y otro en el servidor.
+     *
+     * Esto NO es el permiso: es para saber si se dibuja el checkbox. El
+     * permiso de verdad lo aplica el export y responde 403 (PAR-4).
+     */
+    if (_req.nextUrl.searchParams.get('export_access') === '1') {
+      const scope = formViewerScope({
+        roles: auth.ctx.roles,
+        memberId: auth.ctx.memberId,
+        form: { id },
+        hasGrant: await hasFormAccessGrant(id, auth.ctx.memberId),
+        isEventManager: await isManagerOfFormEvent(id, auth.ctx.memberId),
+      })
+      return NextResponse.json({
+        ...resuelto,
+        export_access: {
+          personales: puedeExportarDatosPersonales({ roles: auth.ctx.roles, scope }),
+        },
+      })
     }
     return NextResponse.json(resuelto)
   } catch (error) {

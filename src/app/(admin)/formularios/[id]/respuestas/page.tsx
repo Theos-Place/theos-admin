@@ -16,7 +16,7 @@ import { ChevronLeft, Download, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 import { useAuth } from '@/hooks/useAuth'
-import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
+
 import { usePermissions } from '@/hooks/usePermissions'
 import { formatDateLong } from '@/lib/format'
 
@@ -35,13 +35,19 @@ export default function RespuestasPage() {
   const [responses, setResponses] = useState<FormResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [detailResponse, setDetailResponse] = useState<FormResponse | null>(null)
-  const { hasRole, user } = useAuth()
+  const { hasRole } = useAuth()
   /**
-   * FRM-6 · El checkbox solo existe para quien ya puede exportar el padrón.
-   * Esconderlo NO es el permiso —eso lo valida el endpoint—: es no ofrecerle a
-   * alguien algo que le va a contestar 403.
+   * ¿Se dibuja el checkbox de datos personales? Lo contesta el SERVIDOR
+   * (`?export_access=1`), porque depende de si el formulario está compartido
+   * con esta persona o si es encargada de su evento — cosas que el cliente no
+   * sabe. Y porque así la pantalla y el endpoint del export usan la MISMA
+   * función: eran dos criterios y por eso al encargado de campas le faltaba
+   * el checkbox mientras el export se lo habría dado.
+   *
+   * Esconderlo NO es el permiso —eso lo valida el endpoint con un 403—: es no
+   * ofrecerle a alguien algo que le va a fallar.
    */
-  const puedePersonales = puedeExportarDatosPersonales(user?.roles ?? [])
+  const [puedePersonales, setPuedePersonales] = useState(false)
   const [conPersonales, setConPersonales] = useState(false)
   // Acceso puntual (form_access_grants): lee y exporta, pero no edita la
   // estructura del formulario — el botón de editar solo con el módulo.
@@ -51,11 +57,12 @@ export default function RespuestasPage() {
   useEffect(() => {
     let alive = true
     Promise.all([
-      fetch(`/api/forms/${id}`).then(r => (r.ok ? r.json() : null)),
+      fetch(`/api/forms/${id}?export_access=1`).then(r => (r.ok ? r.json() : null)),
       fetch(`/api/forms/${id}/responses`).then(r => (r.ok ? r.json() : [])),
     ]).then(([f, rs]) => {
       if (!alive) return
       setForm(f ? toDomainFormTemplate(f) : null)
+      setPuedePersonales(!!f?.export_access?.personales)
       setResponses(Array.isArray(rs) ? rs.map(toDomainFormResponse) : [])
       setLoading(false)
     }).catch(() => { if (alive) setLoading(false) })

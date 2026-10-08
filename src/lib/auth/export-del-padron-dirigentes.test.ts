@@ -41,21 +41,32 @@ describe('quién puede exportar el padrón', () => {
 })
 
 describe('el efecto que no se ve: los datos personales de formularios', () => {
+  /** El camino del PADRÓN, que es el que esta coordinación usa. Desde el
+   *  2026-10-07 hay un segundo camino —tener el formulario compartido—, pero
+   *  no cambia nada de lo de acá: los caminos se SUMAN. */
+  const porElPadron = (roles: string[]) =>
+    puedeExportarDatosPersonales({ roles: roles as RoleId[], scope: 'admin' })
+
   it('con export y alcance total, también puede sumarlos', () => {
     /**
-     * `datos-personales-en-export` exige `miembros` con alcance total Y
+     * `datos-personales-en-export` acepta `miembros` con alcance total Y
      * `export`. Al darle `export` a la coordinación de dirigentes, también
      * gana las columnas de cédula, fecha de nacimiento y alergias en el
      * export de respuestas (FRM-6). Es coherente con ver el padrón entero,
      * pero queda fijado acá para que sea una decisión visible y no una
      * sorpresa.
      */
-    expect(puedeExportarDatosPersonales(['coordinador_dirigentes'])).toBe(true)
+    expect(porElPadron(['coordinador_dirigentes'])).toBe(true)
   })
 
-  it('y quien solo ve el padrón sigue sin poder', () => {
-    expect(puedeExportarDatosPersonales(['coordinador_estudios'])).toBe(false)
-    expect(puedeExportarDatosPersonales(['comunicaciones'])).toBe(false)
+  it('y quien solo ve el padrón sigue sin poder POR ESE CAMINO', () => {
+    /**
+     * `comunicaciones` pasó a poder el 2026-10-07, pero por el OTRO camino:
+     * tiene `formularios:export`. No se le abrió el padrón — lo que ve son
+     * las fichas de quienes respondieron ese formulario.
+     */
+    expect(porElPadron(['coordinador_estudios'])).toBe(false)
+    expect(hasModulePermission(['comunicaciones'] as RoleId[], 'miembros', 'export')).toBe(false)
   })
 })
 

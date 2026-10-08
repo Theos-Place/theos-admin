@@ -3,6 +3,9 @@ import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { normalizeRestriction, hasRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
 import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
+import {
+  estadoDePagoAlInscribirse, type EstadoDePago, type CampoDelFormulario,
+} from '@/lib/forms/pago-al-inscribirse'
 import { memberPassesRestriction } from '@/lib/supabase/queries/audiencia'
 import {
   conyugeEnLaFamilia,
@@ -596,7 +599,24 @@ export async function submitResponse(
   // alguien. Best-effort: si falla, la respuesta y la inscripción existen igual.
   if (input.member_id) {
     try {
-      await linkResponseToRegistration(supabase, formId, input.member_id, responseId)
+      /**
+       * El estado de pago se decide ACÁ, con los campos del formulario y lo
+       * que la persona acaba de mandar. `input.answers` es lo que viene del
+       * navegador, pero no manda sobre nada: solo dice si el campo del
+       * comprobante trae algo. Quién paga lo decide el FORMULARIO, que es
+       * del sistema — si no exige comprobante, no hay forma de nacer `paid`.
+       */
+      const { data: campos } = await supabase
+        .from('form_fields').select('id, field_type, label, is_required').eq('form_id', formId)
+      const estado = estadoDePagoAlInscribirse({
+        campos: (campos ?? []) as CampoDelFormulario[],
+        respuestas: Object.entries(input.answers ?? {}).map(([field_id, value]) => ({
+          field_id,
+          value_text: typeof value === 'string' ? value : null,
+          value_json: typeof value === 'string' ? null : value,
+        })),
+      })
+      await linkResponseToRegistration(supabase, formId, input.member_id, responseId, estado)
     } catch (e) {
       console.warn('submitResponse enlace con inscripción:', e)
     }
@@ -620,9 +640,18 @@ export async function submitResponse(
  * En la práctica el formulario ES el link que se comparte, así que llenarlo
  * es inscribirse — y el sistema era el único que no lo sabía.
  *
- * NACE `pending`, NUNCA pagada. El cobro, el comprobante y la revisión
- * siguen su propio carril: esto solo registra que la persona se apuntó. Un
- * `paid` acá le regalaría la entrada a cualquiera que llene un formulario.
+ * CON QUÉ ESTADO DE PAGO NACE (cambiado el 2026-10-07, pedido de Floriana).
+ * Antes era SIEMPRE `pending`, con este argumento: «un `paid` acá le
+ * regalaría la entrada a cualquiera que llene un formulario». El argumento
+ * valía mientras no se mirara el formulario — y dejaba 80 inscripciones del
+ * 10 de octubre en «pendiente» cuando TODAS traían el comprobante adjunto,
+ * porque ese formulario lo pide obligatorio.
+ *
+ * Ahora lo decide `lib/forms/pago-al-inscribirse`: nace `paid` solo si el
+ * formulario EXIGE comprobante de pago y la persona lo ADJUNTÓ. En cualquier
+ * otro caso sigue naciendo `pending`. Nadie recibe la entrada de regalo: hay
+ * un comprobante en la respuesta. Y una actividad gratuita, o una que se
+ * paga en la puerta, no se marca pagada sola.
  *
  * Best-effort del lado de quien llama: si falla, la respuesta ya quedó
  * guardada y la inscripción se puede reconciliar después.
@@ -632,6 +661,7 @@ async function linkResponseToRegistration(
   formId: string,
   memberId: string,
   responseId: string,
+  estadoDePago: EstadoDePago,
 ): Promise<void> {
   const { data: eventos } = await supabase
     .from('events').select('id').eq('registration_form_id', formId)
@@ -663,7 +693,7 @@ async function linkResponseToRegistration(
     faltan.map(event_id => ({
       event_id,
       member_id: memberId,
-      payment_status: 'pending',
+      payment_status: estadoDePago,
       form_response_id: responseId,
     })),
   )
