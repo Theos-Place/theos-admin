@@ -3,6 +3,7 @@
 import type { DbFormTemplate, DbFormField, DbFormResponse } from '@/lib/supabase/queries/forms'
 import { formatPhoneCR } from '@/lib/phone'
 import type { FormTemplate, FormFieldNew, FormResponse, FieldType, LogicRule } from '@/types/forms'
+import type { FuenteDinamica } from '@/lib/forms/fuentes-dinamicas'
 
 // Mapea field_type de la BD al FieldType del builder (algunos tipos no existen
 // en el builder y se aproximan).
@@ -30,7 +31,7 @@ function toLogicRules(raw: unknown): LogicRule[] | undefined {
 
 function toDomainField(db: DbFormField): FormFieldNew {
   return {
-    options_source: (db as { options_source?: string | null }).options_source as 'study_groups_open' | null ?? null,
+    options_source: (db as { options_source?: string | null }).options_source as FuenteDinamica | null ?? null,
     options_source_param: (db as { options_source_param?: string | null }).options_source_param ?? null,
     id: db.id,
     type: FIELD_TYPE_MAP[db.field_type] ?? 'text',

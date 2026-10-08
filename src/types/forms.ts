@@ -1,3 +1,4 @@
+import type { FuenteDinamica } from '@/lib/forms/fuentes-dinamicas'
 // Form builder / template domain types.
 // Imported by src/data/form-config.ts and form components.
 
@@ -85,7 +86,7 @@ export interface FormFieldNew {
   options?: string[]
   /** EST-10: opciones resueltas en el servidor (grupos abiertos de un plan).
    *  Cuando viene, `options` llega ya poblado por el API. */
-  options_source?: 'study_groups_open' | null
+  options_source?: FuenteDinamica | null
   options_source_param?: string | null
   scale_min?: number
   scale_max?: number

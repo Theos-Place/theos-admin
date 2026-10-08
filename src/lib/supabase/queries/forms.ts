@@ -3,6 +3,7 @@ import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import { sendSystemEmail } from '@/lib/email/system-templates'
 import { normalizeRestriction, hasRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
 import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
+import { esFuenteDinamica, talleresQueSeOfrecen } from '@/lib/forms/fuentes-dinamicas'
 import {
   estadoDePagoAlInscribirse, pagoDeInscripcion, esCampoDeComprobante,
   type EstadoDePago, type CampoDelFormulario, type PagoDeInscripcion,
@@ -440,18 +441,23 @@ export async function formIdsFueraDeAudiencia(
 /** EST-10: ¿este miembro ya respondió el formulario? (dedupe del llenado). */
 /**
  * EST-10: resuelve las opciones DINÁMICAS de los campos que las declaran.
- * Hoy la única fuente es 'study_groups_open': grupos en matrícula del plan
+ * Las fuentes válidas viven en `lib/forms/fuentes-dinamicas`. 'study_groups_open':
+ * grupos en matrícula del plan
  * indicado, etiquetados con dirigente, día y hora + "No me sirve" al final.
  * Se llama al servir el formulario, así la lista siempre está al día.
  */
 export async function resolveDynamicOptions(form: DbFormTemplate): Promise<DbFormTemplate> {
-  const dynamic = form.fields.filter(f => (f as { options_source?: string | null }).options_source === 'study_groups_open')
-  if (dynamic.length === 0) return form
+  const fuente = (f: unknown) => (f as { options_source?: string | null }).options_source ?? null
+  const param = (f: unknown) => ((f as { options_source_param?: string | null }).options_source_param ?? '').trim()
+  const dinamicos = form.fields.filter(f => esFuenteDinamica(fuente(f)))
+  if (dinamicos.length === 0) return form
   const supabase = createAdminClient()
-  const byPlan = new Map<string, string[]>()
-  for (const f of dynamic) {
-    const planCode = ((f as { options_source_param?: string | null }).options_source_param ?? '').trim().toUpperCase()
-    if (!planCode || byPlan.has(planCode)) continue
+
+  // ── study_groups_open: grupos en matrícula del plan que diga el parámetro ──
+  const porPlan = new Map<string, string[]>()
+  for (const f of dinamicos.filter(f => fuente(f) === 'study_groups_open')) {
+    const planCode = param(f).toUpperCase()
+    if (!planCode || porPlan.has(planCode)) continue
     const { data } = await supabase
       .from('study_groups')
       .select('name, zone, schedule_days, schedule_time, status, plan:study_plans!inner(code), leader:members!study_groups_leader_id_fkey(first_name, last_name)')
@@ -468,15 +474,29 @@ export async function resolveDynamicOptions(form: DbFormTemplate): Promise<DbFor
       const days = (g.schedule_days ?? []).map(d => DAY[d] ?? d).join('/')
       return [g.name ?? planCode, leader, g.zone, days, g.schedule_time].filter(Boolean).join(' · ')
     })
-    byPlan.set(planCode, [...opts, 'No me sirve'])
+    porPlan.set(planCode, [...opts, 'No me sirve'])
   }
+
+  // ── talleres: los eventos de tipo taller, del más nuevo al más viejo ──
+  // Se consulta UNA vez aunque el formulario tenga varios campos así.
+  let talleres: string[] | null = null
+  if (dinamicos.some(f => fuente(f) === 'talleres')) {
+    const { data } = await supabase
+      .from('events').select('title, starts_at')
+      .eq('event_type', 'taller').eq('is_active', true)
+    talleres = talleresQueSeOfrecen(
+      (data ?? []) as Array<{ title: string; starts_at: string | null }>)
+  }
+
   return {
     ...form,
     fields: form.fields.map(f => {
-      const src = (f as { options_source?: string | null }).options_source
-      if (src !== 'study_groups_open') return f
-      const planCode = ((f as { options_source_param?: string | null }).options_source_param ?? '').trim().toUpperCase()
-      return { ...f, options: byPlan.get(planCode) ?? ['No me sirve'] }
+      const src = fuente(f)
+      if (src === 'study_groups_open') {
+        return { ...f, options: porPlan.get(param(f).toUpperCase()) ?? ['No me sirve'] }
+      }
+      if (src === 'talleres') return { ...f, options: talleres ?? [] }
+      return f
     }),
   }
 }
