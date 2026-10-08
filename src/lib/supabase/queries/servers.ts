@@ -12,6 +12,7 @@ import { abreMiComite } from '@/lib/servers/puestos-que-abren-mi-comite'
 import { abreReportesDeSede } from '@/lib/reports/puestos-que-abren-reportes'
 import { esPuestoDeDirectorDeArea, tituloEsDeDirectorDeArea, TITULO_DIRECTOR_DE_AREA } from '@/lib/servers/director-de-area'
 import { reportarFalla } from '@/lib/observabilidad'
+import { ultimoEstudioDe, ESTADOS_QUE_NO_CUENTAN } from '@/lib/servers/ultimo-estudio'
 
 /** PostgREST devuelve un embed to-one a veces como objeto y a veces como array. */
 function one<T>(v: unknown): T | null {
@@ -1699,7 +1700,19 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
   // infiera PostgREST; las dos formas se normalizan acá.
   const sedeEmbed = Array.isArray(per?.sede) ? per?.sede[0] : per?.sede
 
-  // El último estudio COMPLETADO, con el dirigente de su grupo.
+  /**
+   * El último estudio de la persona, con el dirigente de ESE grupo.
+   *
+   * YA NO SE PIDE `status = 'completed'`, y ese filtro era el bug: la ficha
+   * de Karen Angamarca decía «Transformados» (junio 2025) mientras ella
+   * estaba llevando Nivel 4 (jul–sep 2026). El estudio en curso ni entraba
+   * en la lista, así que el «último» era el último TERMINADO.
+   *
+   * Importa porque esta hoja existe para que el encargado LLAME AL
+   * DIRIGENTE: el que conoce a la persona es el de ahora. Cuáles cuentan y
+   * cómo se marcan los no terminados lo decide `lib/servers/ultimo-estudio`,
+   * que tiene las pruebas.
+   */
   const { data: enr } = await supabase
     .from('study_enrollments')
     .select(`status, completed_at, enrolled_at,
@@ -1708,8 +1721,9 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
                plan:study_plans!study_groups_plan_id_fkey(name),
                leader:members!study_groups_leader_id_fkey(first_name, last_name, phone))`)
     .eq('member_id', a.applicant_id as string)
-    .eq('status', 'completed')
+    .not('status', 'in', `(${ESTADOS_QUE_NO_CUENTAN.join(',')})`)
   type Fila = {
+    status: string | null
     completed_at: string | null; enrolled_at: string | null
     group: Record<string, unknown> | Record<string, unknown>[] | null
   }
@@ -1719,15 +1733,16 @@ export async function getDetalleDeAplicante(applicationId: string): Promise<{
     const lid = g ? (Array.isArray(g.leader) ? g.leader[0] : g.leader) as
       { first_name: string; last_name: string; phone: string | null } | null : null
     return {
-      // Se ordena por la fecha del ESTUDIO, no por la de la fila.
+      status: f.status,
+      // Se ordena por la fecha del ESTUDIO, no por la de la fila: la
+      // matrícula se crea al inscribirse, que puede ser meses antes.
       fecha: String((g?.ends_at ?? g?.starts_at ?? f.completed_at ?? f.enrolled_at) ?? ''),
       nombre: plan?.name ?? (g?.name as string) ?? null,
       dirigente: lid ? `${lid.first_name} ${lid.last_name}`.trim() : null,
       telefonoDirigente: lid?.phone ?? null,
     }
-  }).filter(f => !!f.nombre)
-  filas.sort((x, y) => y.fecha.localeCompare(x.fecha))
-  const ultimo = filas[0] ?? null
+  })
+  const ultimo = ultimoEstudioDe(filas)
 
   return {
     nombre: per ? `${per.first_name} ${per.last_name}`.trim() : 'Sin nombre',
