@@ -22,8 +22,14 @@ import { join } from 'node:path'
  *
  * Si este número sube, la respuesta no es subir el techo: es agregar el helper
  * que falta en `lib/format` y usarlo.
+ *
+ * 59 → 56 el 2026-10-07: cayeron las tres que pintaban una columna DATE y por
+ * eso mostraban LA VÍSPERA (la asistencia del grupo, el historial del
+ * dirigente y la línea de salarios). ESTE TRINQUETE NO LAS HABRÍA ATAJADO —
+ * cuenta llamadas, y quitar una en otro lado deja el total igual—, así que
+ * esos tres lugares quedaron clavados aparte en `fechas-solo-dia.test.ts`.
  */
-const TECHO = 59
+const TECHO = 56
 
 const RX = /\.(toLocaleDateString|toLocaleTimeString)\(/g
 

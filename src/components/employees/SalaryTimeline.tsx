@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { SalaryChange } from '@/types/employee'
-import { formatCRC } from '@/lib/format'
+import { formatCRC, formatMonthYear } from '@/lib/format'
 
 interface SalaryTimelineProps {
   history: SalaryChange[]
@@ -57,7 +57,10 @@ export function SalaryTimeline({ history, initialSalary, startDate }: SalaryTime
             {/* Content */}
             <div className={cn('pb-5', idx === items.length - 1 && 'pb-0')}>
               <p className="text-[13px] text-navy-light/80 mb-0.5 font-mono">
-                {new Date(item.date).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })}
+                {/* `change_date` es DATE: ver la nota de fmtDate en el
+                    detalle del dirigente. Un aumento con fecha del día 1
+                    salía en el mes anterior. */}
+                {formatMonthYear(item.date)}
               </p>
               <p className="text-sm font-semibold text-navy font-display">
                 {item.salary != null ? `${formatCRC(item.salary)}` : '₡ ••••••'}

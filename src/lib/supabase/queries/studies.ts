@@ -600,7 +600,7 @@ async function asistenciaDelGrupo(groupId: string): Promise<{ pct: Record<string
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('study_sessions')
-    .select('id, study_attendance(member_id, present)')
+    .select('id, study_attendance(present)')
     .eq('group_id', groupId)
   if (error) throw error
   const sesiones = (data ?? []) as Array<{ id: string; study_attendance: Array<{ member_id: string; present: boolean }> }>
@@ -618,21 +618,49 @@ export { getMemberStudyProfile, getEligibleStudiesForMember } from '@/lib/supaba
 export type { MemberStudyEligibility } from '@/lib/supabase/queries/studies-eligibility'
 
 
-/** Sesiones de asistencia de un grupo con conteo de presentes. */
-export async function getGroupSessions(groupId: string): Promise<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>> {
+export type GroupSessions = {
+  sesiones: Array<{ id: string; date: string; topic: string | null; present: number; total: number }>
+  /** Una fila por persona y sesión. La pantalla arma con esto la vista por
+   *  participante; acá no se arma la matriz porque quién está en el grupo ya
+   *  lo sabe la pantalla y definirlo dos veces es cómo se desalinean. */
+  marcas: Array<{ session_id: string; member_id: string; present: boolean }>
+}
+
+/**
+ * Sesiones de asistencia de un grupo, con el conteo por sesión Y la marca de
+ * cada persona.
+ *
+ * Antes devolvía solo el conteo («4/6 presentes»), que le dice al dirigente
+ * cuánta gente fue pero no QUIÉN —y quién es lo que necesita para llamar al
+ * que lleva tres semanas sin aparecer (pedido de Floriana, 2026-10-07)—.
+ *
+ * Las marcas van crudas, sin rellenar: a quien no se le pasó lista en una
+ * sesión simplemente NO tiene fila, y esa ausencia de fila es información
+ * («no estaba en el grupo todavía»), distinta de una fila con `present:false`
+ * («no vino»). Rellenarla acá con `false` borraría la diferencia.
+ */
+export async function getGroupSessions(groupId: string): Promise<GroupSessions> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('study_sessions')
-    .select('id, session_date, topic, study_attendance(present)')
+    .select('id, session_date, topic, study_attendance(member_id, present)')
     .eq('group_id', groupId)
     .order('session_date', { ascending: true })
   if (error) throw error
-  const rows = (data ?? []) as Array<{ id: string; session_date: string; topic: string | null; study_attendance: Array<{ present: boolean }> }>
-  return rows.map(r => ({
-    id: r.id, date: r.session_date, topic: r.topic,
-    present: r.study_attendance.filter(a => a.present).length,
-    total: r.study_attendance.length,
-  }))
+  const rows = (data ?? []) as Array<{
+    id: string; session_date: string; topic: string | null
+    study_attendance: Array<{ member_id: string; present: boolean }>
+  }>
+  return {
+    sesiones: rows.map(r => ({
+      id: r.id, date: r.session_date, topic: r.topic,
+      present: r.study_attendance.filter(a => a.present).length,
+      total: r.study_attendance.length,
+    })),
+    marcas: rows.flatMap(r => r.study_attendance.map(a => ({
+      session_id: r.id, member_id: a.member_id, present: a.present,
+    }))),
+  }
 }
 
 /** Registra la asistencia de una sesión: crea la sesión y las filas de presencia. */

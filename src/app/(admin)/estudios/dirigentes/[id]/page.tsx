@@ -14,16 +14,17 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { ChevronLeft, ExternalLink, Users, X, Pencil, Info, Loader2 } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
-import { getInitials } from '@/lib/format'
+import { getInitials, formatMonthYear } from '@/lib/format'
 import {
   LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, SETTABLE_STATUSES,
   type LeaderStatus,
 } from '@/lib/studies/leader-admin-status'
 
-function fmtDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-CR', { month: 'short', year: 'numeric' })
-}
+/** `starts_at`/`ends_at` de un grupo son DATE: `new Date` los corre un día
+ *  hacia atrás en Costa Rica. Acá solo se ve mes y año, así que el error
+ *  aparecía únicamente cuando el grupo arrancaba o cerraba un día 1 — y
+ *  entonces mostraba el mes anterior entero. */
+const fmtDate = (d: string | null) => (d ? formatMonthYear(d) : '—')
 
 /** Label de sección con tooltip accesible (visible en hover y foco de teclado). */
 function SectionLabel({ text, tooltip }: { text: string; tooltip: string }) {

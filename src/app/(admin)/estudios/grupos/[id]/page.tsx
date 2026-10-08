@@ -22,7 +22,11 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
-import { getInitials, formatDateLong } from '@/lib/format'
+import { getInitials, formatDate, formatDateLong, formatDayMonth } from '@/lib/format'
+import {
+  matrizDeAsistencia, hayQueLlamar, ETIQUETA_DE_CELDA, FALTAS_PARA_AVISAR,
+  type EstadoDeCelda,
+} from '@/lib/studies/asistencia-por-participante'
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
@@ -476,14 +480,21 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
   const [sessions, setSessions] = useState<Array<{ id: string; date: string; topic: string | null; present: number; total: number }>>([])
+  const [marcas, setMarcas] = useState<Array<{ session_id: string; member_id: string; present: boolean }>>([])
+  /** Por sesión (como siempre) o por participante (lo que pidió Floriana). */
+  const [vistaAsistencia, setVistaAsistencia] = useState<'sesiones' | 'personas'>('personas')
 
   useEffect(() => {
     if (!id) return
     let alive = true
     fetch(`/api/studies/groups/${id}/sessions`)
-      .then(r => (r.ok ? r.json() : []))
-      .then(d => { if (alive) setSessions(Array.isArray(d) ? d : []) })
-      .catch(() => { if (alive) setSessions([]) })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive) return
+        setSessions(Array.isArray(d?.sesiones) ? d.sesiones : [])
+        setMarcas(Array.isArray(d?.marcas) ? d.marcas : [])
+      })
+      .catch(() => { if (alive) { setSessions([]); setMarcas([]) } })
     return () => { alive = false }
   }, [id])
 
@@ -1101,7 +1112,36 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
       {/* Tab: Asistencia */}
       {activeTab === 'asistencia' && (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Dos lecturas de lo mismo. «Por participante» es la que se abre
+                de entrada: la pregunta del dirigente es casi siempre «¿quién
+                me está faltando?», no «cuántos vinieron el martes». */}
+            <div
+              role="tablist"
+              aria-label="Cómo ver la asistencia"
+              className="inline-flex rounded-full bg-surface-low p-1"
+            >
+              {([
+                ['personas', 'Por participante'],
+                ['sesiones', 'Por sesión'],
+              ] as const).map(([valor, texto]) => (
+                <button
+                  key={valor}
+                  role="tab"
+                  type="button"
+                  aria-selected={vistaAsistencia === valor}
+                  onClick={() => setVistaAsistencia(valor)}
+                  className={cn(
+                    'rounded-full px-4 py-1.5 text-[13px] font-body transition-colors',
+                    vistaAsistencia === valor
+                      ? 'bg-surface-card text-navy shadow-[var(--shadow-sm)]'
+                      : 'text-navy-light/80 hover:text-navy',
+                  )}
+                >
+                  {texto}
+                </button>
+              ))}
+            </div>
             <Link
               href={`/estudios/grupos/${id}/asistencia`}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors"
@@ -1110,6 +1150,19 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </Link>
           </div>
 
+          {sessions.length > 0 && vistaAsistencia === 'personas' && (
+            <AsistenciaPorPersona
+              sesiones={sessions}
+              marcas={marcas}
+              participantes={group.participants}
+            />
+          )}
+
+          {/* La vista por sesión se DESMONTA cuando no se está viendo, en vez
+              de taparse con `display:none`: un grupo de un cuatrimestre puede
+              traer veinte sesiones y no hay razón para tener las dos tablas
+              armadas a la vez. */}
+          {(sessions.length === 0 || vistaAsistencia === 'sesiones') && (
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
             {sessions.length === 0 ? (
               <div className="px-5 py-8 text-center">
@@ -1141,7 +1194,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         Sesión {i + 1}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-light/80 font-body">
-                        {new Date(s.date).toLocaleDateString('es-CR')}
+                        {/* `session_date` es un DATE ("2026-09-23"), no un
+                            timestamp: con `new Date(...)` se lee como
+                            medianoche UTC y en Costa Rica —UTC-6— eso cae el
+                            día anterior a las 6 p.m. La tabla mostraba toda la
+                            asistencia corrida un día (reportado por Floriana
+                            el 2026-10-07). `formatDate` arma la fecha en hora
+                            local y no se corre. */}
+                        {formatDate(s.date)}
                       </td>
                       <td className="px-4 py-3 text-sm text-navy font-body">
                         {s.present}/{s.total} presentes
@@ -1152,6 +1212,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               </table>
             )}
           </div>
+          )}
         </div>
       )}
 
@@ -1234,6 +1295,124 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * La asistencia leída POR PERSONA: una fila por participante, una columna por
+ * sesión (pedido de Floriana, 2026-10-07).
+ *
+ * TRES ESTADOS Y NO DOS. Presente, ausente y SIN REGISTRO. Quien se matriculó
+ * en la sesión 4 no tiene fila en las tres primeras, y pintarlas como faltas
+ * le inventaría un problema: el porcentaje se saca solo sobre las sesiones
+ * donde a esa persona le pasaron lista. La regla vive en
+ * `lib/studies/asistencia-por-participante`, con sus pruebas.
+ *
+ * EL COLOR NO ES EL ÚNICO AVISO: cada celda lleva su letra (P/A/·) y un
+ * `title` con el texto completo, porque un verde y un rojo no se distinguen
+ * con daltonismo ni se leen en voz alta.
+ */
+function AsistenciaPorPersona({
+  sesiones, marcas, participantes,
+}: {
+  sesiones: Array<{ id: string; date: string }>
+  marcas: Array<{ session_id: string; member_id: string; present: boolean }>
+  participantes: Array<{ member_id: string; member_name: string; status: string }>
+}) {
+  // El mismo orden de la pestaña de participantes: quien está estudiando
+  // primero, y dentro de cada grupo por nombre.
+  const ordenados = [...participantes].sort((a, b) =>
+    (a.status === 'enrolled' ? 0 : 1) - (b.status === 'enrolled' ? 0 : 1)
+    || a.member_name.localeCompare(b.member_name, 'es'))
+
+  const filas = matrizDeAsistencia({
+    sesiones,
+    participantes: ordenados.map(p => ({ member_id: p.member_id, nombre: p.member_name })),
+    marcas,
+  })
+  const porLlamar = filas.filter(f => hayQueLlamar(f.celdas))
+
+  const PINTA: Record<EstadoDeCelda, { clase: string; letra: string }> = {
+    presente: { clase: 'bg-teal/25 text-navy', letra: 'P' },
+    ausente: { clase: 'bg-coral/20 text-coral-deep', letra: 'A' },
+    sin_registro: { clase: 'text-navy-light/40', letra: '·' },
+  }
+
+  return (
+    <div className="space-y-3">
+      {porLlamar.length > 0 && (
+        <div className="rounded-xl bg-coral/10 border-l-4 border-coral px-4 py-3">
+          <p className="text-sm text-coral-deep font-body">
+            <strong>{porLlamar.length}</strong>{' '}
+            {porLlamar.length === 1 ? 'participante lleva' : 'participantes llevan'}{' '}
+            {FALTAS_PARA_AVISAR} o más faltas seguidas:{' '}
+            {porLlamar.map(f => f.nombre).join(', ')}.
+          </p>
+        </div>
+      )}
+
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] overflow-x-auto">
+        <table className="w-full border-collapse">
+          <caption className="sr-only">
+            Asistencia de cada participante en las {sesiones.length} sesiones registradas
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 font-display sticky left-0 bg-surface-card">
+                Participante
+              </th>
+              {sesiones.map((s, i) => (
+                <th
+                  key={s.id}
+                  scope="col"
+                  className="px-2 py-3 text-center text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap"
+                  title={`Sesión ${i + 1} · ${formatDate(s.date)}`}
+                >
+                  {formatDayMonth(s.date)}
+                </th>
+              ))}
+              <th scope="col" className="px-4 py-3 text-right text-[11px] tracking-widest uppercase text-navy-light/80 font-display whitespace-nowrap">
+                Asistencia
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map(f => (
+              <tr key={f.member_id} className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors">
+                <th scope="row" className="px-4 py-2.5 text-left text-sm text-navy font-body font-normal sticky left-0 bg-surface-card whitespace-nowrap">
+                  {f.nombre}
+                </th>
+                {f.celdas.map((c, i) => (
+                  <td key={sesiones[i].id} className="px-2 py-2.5 text-center">
+                    <span
+                      title={`${ETIQUETA_DE_CELDA[c]} · ${formatDate(sesiones[i].date)}`}
+                      className={cn(
+                        'inline-flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-body',
+                        PINTA[c].clase,
+                      )}
+                    >
+                      <span className="sr-only">{ETIQUETA_DE_CELDA[c]}</span>
+                      <span aria-hidden="true">{PINTA[c].letra}</span>
+                    </span>
+                  </td>
+                ))}
+                <td className="px-4 py-2.5 text-right text-sm text-navy-light/80 font-body whitespace-nowrap">
+                  {f.porcentaje === null
+                    // 0% diría «no viene nunca»; la verdad es que no se le pasó lista.
+                    ? <span title="Todavía no se le ha pasado lista">Sin registro</span>
+                    : <>{f.presentes}/{f.registradas} <span className="text-navy-light/80">({f.porcentaje}%)</span></>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-[13px] text-navy-light/80 font-body px-1">
+        <strong>P</strong> presente · <strong>A</strong> ausente ·{' '}
+        <strong>·</strong> sin registro (no se le pasó lista ese día, no cuenta como falta)
+      </p>
     </div>
   )
 }
