@@ -17,6 +17,7 @@ export function Modal({
   width = 480,
   titleId,
   tone = 'light',
+  encima = false,
 }: {
   onClose: () => void
   children: React.ReactNode
@@ -25,6 +26,21 @@ export function Modal({
   titleId?: string
   /** 'dark' para páginas con fondo navy (ej. check-in): panel y X claros. */
   tone?: 'light' | 'dark'
+  /**
+   * Este modal se abre DESDE otro modal y tiene que quedar encima.
+   *
+   * Sin esto los dos comparten `z-[1000]` y gana el que esté más abajo en el
+   * JSX, que no tiene por qué ser el que se abrió último. Es exactamente lo
+   * que pasaba en la cola de pagos (reportado el 2026-10-07): se abría el
+   * detalle del pago, se apretaba «Ver comprobante» y el comprobante cargaba
+   * DETRÁS, porque el modal del detalle está después en el archivo.
+   *
+   * Es un booleano y no un número a propósito: con un `zIndex` libre, cada
+   * pantalla se inventa el suyo y en un año hay un z-[9999]. Dos niveles
+   * alcanzan — un modal sobre un modal sobre un modal no es una pantalla que
+   * nadie deba construir.
+   */
+  encima?: boolean
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -83,7 +99,10 @@ export function Modal({
   return (
     <div
       role="presentation"
-      className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center p-5"
+      className={
+        'fixed inset-0 bg-black/45 flex items-center justify-center p-5 '
+        + (encima ? 'z-[1100]' : 'z-[1000]')
+      }
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div

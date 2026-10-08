@@ -4,7 +4,8 @@ import { sendSystemEmail } from '@/lib/email/system-templates'
 import { normalizeRestriction, hasRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
 import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
 import {
-  estadoDePagoAlInscribirse, type EstadoDePago, type CampoDelFormulario,
+  estadoDePagoAlInscribirse, pagoDeInscripcion, esCampoDeComprobante,
+  type EstadoDePago, type CampoDelFormulario, type PagoDeInscripcion,
 } from '@/lib/forms/pago-al-inscribirse'
 import { memberPassesRestriction } from '@/lib/supabase/queries/audiencia'
 import {
@@ -608,15 +609,30 @@ export async function submitResponse(
        */
       const { data: campos } = await supabase
         .from('form_fields').select('id, field_type, label, is_required').eq('form_id', formId)
-      const estado = estadoDePagoAlInscribirse({
-        campos: (campos ?? []) as CampoDelFormulario[],
-        respuestas: Object.entries(input.answers ?? {}).map(([field_id, value]) => ({
-          field_id,
-          value_text: typeof value === 'string' ? value : null,
-          value_json: typeof value === 'string' ? null : value,
-        })),
-      })
-      await linkResponseToRegistration(supabase, formId, input.member_id, responseId, estado)
+      const listaCampos = (campos ?? []) as CampoDelFormulario[]
+      const respuestas = Object.entries(input.answers ?? {}).map(([field_id, value]) => ({
+        field_id,
+        value_text: typeof value === 'string' ? value : null,
+        value_json: typeof value === 'string' ? null : value,
+      }))
+      const estado = estadoDePagoAlInscribirse({ campos: listaCampos, respuestas })
+
+      // El evento decide el monto; el formulario, si hay comprobante. Los dos
+      // hacen falta: sin evento no se sabe cuánto, sin comprobante no se cobra.
+      const { data: ev } = await supabase.from('events')
+        .select('requires_payment, payment_amount, title')
+        .eq('registration_form_id', formId).limit(1).maybeSingle()
+      const evento = (ev ?? {}) as { requires_payment?: boolean; payment_amount?: string; title?: string }
+      const pago = pagoDeInscripcion({ campos: listaCampos, respuestas, evento })
+
+      const idComprobante = new Set(listaCampos.filter(esCampoDeComprobante).map(c => c.id))
+      const comprobante = respuestas.find(r =>
+        idComprobante.has(r.field_id) && typeof r.value_text === 'string' && r.value_text.trim() !== '')
+        ?.value_text ?? null
+
+      await linkResponseToRegistration(
+        supabase, formId, input.member_id, responseId, estado, pago, comprobante,
+        evento.title ?? 'Inscripción')
     } catch (e) {
       console.warn('submitResponse enlace con inscripción:', e)
     }
@@ -662,6 +678,9 @@ async function linkResponseToRegistration(
   memberId: string,
   responseId: string,
   estadoDePago: EstadoDePago,
+  pago: PagoDeInscripcion | null,
+  comprobante: string | null,
+  tituloDelForm: string,
 ): Promise<void> {
   const { data: eventos } = await supabase
     .from('events').select('id').eq('registration_form_id', formId)
@@ -700,6 +719,79 @@ async function linkResponseToRegistration(
   // 23505 = alguien se inscribió entre las dos consultas. No es un error:
   // la inscripción existe, que es lo que se quería.
   if (error && (error as { code?: string }).code !== '23505') throw error
+
+  if (pago) {
+    for (const eventId of faltan) {
+      await crearPagoDeLaInscripcion(supabase, {
+        eventId, memberId, responseId, pago, comprobante, descripcion: tituloDelForm,
+      })
+    }
+  }
+}
+
+/**
+ * La fila de `payments` que acompaña a una inscripción nacida pagada.
+ *
+ * POR QUÉ HACE FALTA, y no alcanzaba con `event_registrations.payment_status`:
+ * son dos tablas y las mira gente distinta. El tab del evento lee la
+ * inscripción; la tabla de pagos y el perfil de cada persona leen `payments`.
+ * El 2026-10-07 el evento del 10 de octubre decía «pagado» en un lado y
+ * «pendiente» en los otros dos, y diez personas no tenían fila de pago.
+ *
+ * EL COMPROBANTE SE COPIA DE BUCKET. El formulario lo guarda en
+ * `form-uploads` y finanzas lee `payment-receipts`: son dos buckets privados
+ * distintos y un `receipt_path` apuntando al primero no se abre desde la
+ * pantalla de pagos. Si la copia falla, el pago se crea igual SIN
+ * comprobante en vez de no crearse: que finanzas vea un pago sin adjunto es
+ * molesto; que no vea el pago es la plata perdida.
+ */
+async function crearPagoDeLaInscripcion(
+  supabase: ReturnType<typeof createAdminClient>,
+  input: {
+    eventId: string
+    memberId: string
+    responseId: string
+    pago: PagoDeInscripcion
+    comprobante: string | null
+    descripcion: string
+  },
+): Promise<void> {
+  let receiptPath: string | null = null
+  if (input.comprobante) {
+    try {
+      const destino = `${input.memberId}/${input.comprobante}`
+      const { data: file } = await supabase.storage.from('form-uploads').download(input.comprobante)
+      if (file) {
+        const { error } = await supabase.storage.from('payment-receipts')
+          .upload(destino, file, { upsert: true, contentType: file.type || 'image/webp' })
+        if (!error) receiptPath = destino
+      }
+    } catch (e) {
+      console.warn('crearPagoDeLaInscripcion comprobante:', e)
+    }
+  }
+
+  // La inscripción recién creada, para que el pago apunte a ella.
+  const { data: reg } = await supabase
+    .from('event_registrations').select('id')
+    .eq('event_id', input.eventId).eq('member_id', input.memberId).maybeSingle()
+
+  const { error } = await supabase.from('payments').insert({
+    member_id: input.memberId,
+    event_id: input.eventId,
+    event_registration_id: (reg as { id: string } | null)?.id ?? null,
+    amount: input.pago.amount,
+    currency: 'CRC',
+    concept: 'evento',
+    entity_type: 'event',
+    payment_method: 'comprobante',
+    status: input.pago.status,
+    review_status: input.pago.review_status,
+    receipt_path: receiptPath,
+    description: input.descripcion,
+    ...(input.pago.payment_date ? { payment_date: input.pago.payment_date } : {}),
+  })
+  if (error) throw error
 }
 
 // ── Accesos puntuales por formulario (2026-08-04) ───────────────────────────

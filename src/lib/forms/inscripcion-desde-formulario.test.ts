@@ -83,7 +83,7 @@ describe('llenar el formulario de un evento INSCRIBE', () => {
     // sería peor que una inscripción que se reconcilia después.
     // El try abarca ahora también el cálculo del estado de pago, que lee
     // `form_fields`: si esa consulta fallara, tampoco debe tumbar el envío.
-    const i = Q.indexOf('await linkResponseToRegistration(supabase')
+    const i = Q.indexOf('await linkResponseToRegistration(')
     expect(i, 'tiene que llamarse').toBeGreaterThan(-1)
     const antes = Q.slice(0, i)
     expect(antes.lastIndexOf('try {')).toBeGreaterThan(antes.lastIndexOf('} catch'))

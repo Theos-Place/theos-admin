@@ -620,9 +620,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
       </div>
       )}
 
-      {/* Comprobante (imagen vía URL firmada) */}
+      {/* Comprobante (imagen vía URL firmada).
+          `encima` porque se abre DESDE el detalle del pago, que está más
+          abajo en este archivo: con el mismo z-index el comprobante cargaba
+          detrás (reportado el 2026-10-07). */}
       {receipt && (
-        <Modal onClose={() => setReceipt(null)} titleId="receipt-title" width={560}>
+        <Modal onClose={() => setReceipt(null)} titleId="receipt-title" width={560} encima>
           <div className="p-5 space-y-3">
             <h3 id="receipt-title" className="text-base font-bold text-navy font-display">Comprobante · {receipt.row.member_name}</h3>
             {receipt.loading ? (
