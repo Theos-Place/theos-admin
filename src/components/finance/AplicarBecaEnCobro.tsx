@@ -5,7 +5,9 @@ import { Loader2, GraduationCap } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/shared/Button'
 import { useToast } from '@/components/shared/Toast'
+import { cn } from '@/lib/utils'
 import { formatMoney } from '@/lib/format'
+import { avisoDeBecaQueNoCalza, type BecaAjena } from '@/lib/finance/beca-que-no-calza'
 
 /**
  * BEC-1 · Aplicarle una beca o un cupón a UN cobro, desde el perfil de la
@@ -36,6 +38,8 @@ export function AplicarBecaEnCobro({ pagoId, monto, currency, onAplicada }: {
   const [abierto, setAbierto] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [asignada, setAsignada] = useState<BecaAsignada | null>(null)
+  /** Becas activas que la persona SÍ tiene pero que no sirven para este cobro. */
+  const [otras, setOtras] = useState<BecaAjena[]>([])
   const [codigo, setCodigo] = useState('')
   const [enviando, setEnviando] = useState(false)
 
@@ -43,6 +47,7 @@ export function AplicarBecaEnCobro({ pagoId, monto, currency, onAplicada }: {
     setAbierto(true)
     setCargando(true)
     setAsignada(null)
+    setOtras([])
     setCodigo('')
     try {
       // El MISMO endpoint que usa la cola de finanzas para buscar qué becas
@@ -50,8 +55,10 @@ export function AplicarBecaEnCobro({ pagoId, monto, currency, onAplicada }: {
       const res = await fetch(`/api/payments/${pagoId}/scholarship-options`)
       const d = await res.json().catch(() => null)
       setAsignada(res.ok ? d?.scholarship ?? null : null)
+      setOtras(res.ok && Array.isArray(d?.otras) ? d.otras : [])
     } catch {
       setAsignada(null)
+      setOtras([])
     } finally {
       setCargando(false)
     }
@@ -129,10 +136,20 @@ export function AplicarBecaEnCobro({ pagoId, monto, currency, onAplicada }: {
                     </Button>
                   </div>
                 ) : (
-                  // Se DICE que no tiene, en vez de mostrar solo el campo del
-                  // cupón: así nadie se queda pensando si la pantalla falló.
-                  <p className="text-[13px] text-navy-light/80 font-body">
-                    Esta persona no tiene una beca asignada para este cobro.
+                  /**
+                   * Se DICE qué pasa, en vez de mostrar solo el campo del
+                   * cupón. Y cuando tiene becas que no calzan se nombra PARA
+                   * QUÉ son: a William Castro le habían aprobado una de
+                   * Nivel 3 sobre un cobro de Nivel 2, y «no tiene una beca
+                   * asignada para este cobro» se leyó como un bug del
+                   * sistema (Floriana, 2026-10-09).
+                   */
+                  <p className={cn(
+                    'text-[13px] font-body',
+                    otras.length ? 'rounded-xl bg-amber-50 px-3 py-2 text-amber-800' : 'text-navy-light/80',
+                  )}>
+                    {avisoDeBecaQueNoCalza(otras)
+                      ?? 'Esta persona no tiene una beca asignada para este cobro.'}
                   </p>
                 )}
 

@@ -778,6 +778,62 @@ export async function findApplicableScholarshipForPayment(paymentId: string): Pr
   }
 }
 
+/**
+ * Las becas ACTIVAS de la persona que NO sirven para este cobro.
+ *
+ * Existe para que el modal pueda decir POR QUÉ no se puede aplicar. A
+ * William Castro le aprobaron una beca de Nivel 3 y el cobro era de Nivel 2:
+ * el sistema hizo bien en no aplicarla, pero decía «no tiene una beca
+ * asignada para este cobro» y eso mandó a Floriana a preguntar (2026-10-09).
+ *
+ * Devuelve el DESTINO ya resuelto a texto —«Nivel 3», el nombre del evento—
+ * porque es lo único que la pantalla necesita, y resolverlo allá la
+ * obligaría a conocer el esquema de becas.
+ */
+export async function becasQueNoCalzan(
+  paymentId: string,
+): Promise<Array<{ destino: string | null; entity_type: string | null }>> {
+  const supabase = createAdminClient()
+  let objetivo: { entityType: string; entityId: string } | null = null
+  let memberId: string | null = null
+  try {
+    const t = await resolvePaymentScholarshipTarget(paymentId)
+    objetivo = { entityType: t.entityType, entityId: t.entityId }
+    memberId = t.payment.member_id
+  } catch {
+    // El pago no admite beca (cerrado, otro concepto): no hay nada que
+    // explicar y el modal no va a mostrar el panel igual.
+    return []
+  }
+  if (!memberId) return []
+
+  const { data } = await supabase
+    .from('scholarships')
+    .select('id, entity_type, plan_id, event_id, plan:study_plans(name), evento:events(title)')
+    .eq('member_id', memberId)
+    .eq('status', 'active')
+    .eq('is_used', false)
+  type Fila = {
+    entity_type: string | null; plan_id: string | null; event_id: string | null
+    plan: { name: string | null } | { name: string | null }[] | null
+    evento: { title: string | null } | { title: string | null }[] | null
+  }
+  const uno = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v)
+
+  return ((data ?? []) as unknown as Fila[])
+    // La que SÍ calza no se reporta: esa se aplica y no hay nada que avisar.
+    .filter(b => {
+      const id = b.entity_type === 'event' ? b.event_id : b.plan_id
+      return !(b.entity_type === objetivo!.entityType && id === objetivo!.entityId)
+    })
+    .map(b => ({
+      entity_type: b.entity_type,
+      destino: b.entity_type === 'event'
+        ? uno(b.evento)?.title ?? null
+        : uno(b.plan)?.name ?? null,
+    }))
+}
+
 export type ApplyToPaymentResult = { amount: number; covered: boolean; approved: boolean }
 
 /**

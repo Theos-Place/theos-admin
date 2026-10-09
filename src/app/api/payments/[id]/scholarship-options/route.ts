@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
-import { findApplicableScholarshipForPayment } from '@/lib/supabase/queries/scholarships'
+import { findApplicableScholarshipForPayment, becasQueNoCalzan } from '@/lib/supabase/queries/scholarships'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: beca ASIGNADA activa aplicable a este pago pendiente (para precargar
@@ -12,7 +12,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const scholarship = await findApplicableScholarshipForPayment(id)
-    return NextResponse.json({ scholarship })
+    // Cuando NO hay una aplicable, se dice qué otras tiene y para qué: el
+    // modal decía «no tiene beca» a alguien que acababa de recibir una, y
+    // eso se lee como un bug del sistema (ver `becasQueNoCalzan`).
+    const otras = scholarship ? [] : await becasQueNoCalzan(id)
+    return NextResponse.json({ scholarship, otras })
   } catch (error) {
     reportarError('GET /api/payments/[id]/scholarship-options:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
