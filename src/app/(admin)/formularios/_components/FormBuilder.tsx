@@ -13,7 +13,7 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldCheck, Archive } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
@@ -367,7 +367,20 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <Check size={12} /> : <Save size={12} />}
             {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
           </button>
-          {status === 'draft' && (
+          {/**
+            * PUBLICAR y DESACTIVAR, los dos (Floriana, 2026-10-09).
+            *
+            * Solo estaba «Publicar». Una vez activo, desde el editor no había
+            * forma de apagarlo: había que volver al listado y buscarlo en el
+            * menú de los tres puntos. Quien recibe un formulario COMPARTIDO
+            * aterriza justo acá —ese es su destino en `accionesDelFormulario`—
+            * así que para esa persona la acción directamente no existía.
+            *
+            * El permiso ya estaba: `requireFormEdit` acepta al acceso puntual
+            * desde el 2026-09-11, y `is_active` viaja en el mismo PUT que todo
+            * lo demás. Lo que faltaba era el botón.
+            */}
+          {status === 'draft' ? (
             <button
               type="button"
               onClick={() => {
@@ -379,6 +392,20 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             >
               <Send size={12} />
               Publicar
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setStatus('draft'); handleSave('draft') }}
+              disabled={saving}
+              // Desactivar no borra nada y se puede deshacer volviendo a
+              // publicar, así que no pide confirmación: pedirla acá sería
+              // enseñar a la gente a confirmar sin leer.
+              title="Deja de recibir respuestas. Las que ya llegaron se conservan."
+              className="flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors disabled:opacity-50 font-body"
+            >
+              <Archive size={12} aria-hidden="true" />
+              Desactivar
             </button>
           )}
         </div>

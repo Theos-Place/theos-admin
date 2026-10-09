@@ -13,8 +13,20 @@ export async function GET() {
     // puntuales (form_access_grants) recibe SOLO esos — el resto, 403.
     const ctx = await getAuthContext()
     if (!ctx) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    /**
+     * `mio` lo decide el SERVIDOR (Floriana, 2026-10-09: «un filtro para ver
+     * los formularios que yo creé»).
+     *
+     * `forms.created_by` es un id de `auth.users`, y la sesión del navegador
+     * no lo conoce — ni hace falta que lo conozca. Comparando acá, el filtro
+     * funciona sin meterle a la pantalla un identificador nuevo que después
+     * alguien use para otra cosa.
+     */
+    const marcar = (lista: Awaited<ReturnType<typeof getForms>>) =>
+      lista.map(f => ({ ...f, mio: !!ctx.userId && f.created_by === ctx.userId }))
+
     const forms = await getForms()
-    if (hasFormsModule(ctx.roles)) return NextResponse.json(forms)
+    if (hasFormsModule(ctx.roles)) return NextResponse.json(marcar(forms))
     // Sin el módulo: los formularios con acceso puntual MÁS los de los eventos
     // que tiene a cargo (FRM-1 B: el permiso del evento se hereda a su form).
     const granted = new Set(await getGrantedFormIds(ctx.memberId))
@@ -29,7 +41,7 @@ export async function GET() {
     const fuera = await formIdsFueraDeAudiencia(ctx.memberId, conAcceso)
     const visibles = conAcceso.filter(f => !fuera.has(f.id))
     if (visibles.length === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
-    return NextResponse.json(visibles)
+    return NextResponse.json(marcar(visibles))
   } catch (error) {
     reportarError('GET /api/forms:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
@@ -44,7 +56,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireModuleView('formularios', { action: 'create' })
     if (auth.res) return auth.res
     const body = await req.json()
-    const form = await createForm(formToWriteInput(body), formToFields(body))
+    const form = await createForm(formToWriteInput(body), formToFields(body), auth.ctx.userId)
     // FEA-1: correo form_asignado si nace activo y asignado (dedupe interno).
     try { await notifyFormAssignedIfNeeded(form.id) } catch (e) { console.warn('form_asignado notify:', e) }
     return NextResponse.json(form, { status: 201 })

@@ -109,6 +109,14 @@ export default function FormulariosPage() {
   }
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>('all')
+  /**
+   * «Creados por mí» (Floriana, 2026-10-09).
+   *
+   * `mio` lo resuelve el SERVIDOR comparando `forms.created_by` —un id de
+   * `auth.users`— contra la sesión. Acá no se compara nada: la pantalla no
+   * conoce ese id y no hace falta que lo conozca.
+   */
+  const [soloMios, setSoloMios] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<FormTemplate | null>(null)
   const [deleting, setDeleting] = useState(false)
   // Borrar es más acotado que editar (se lleva las respuestas): mismo criterio
@@ -199,13 +207,14 @@ export default function FormulariosPage() {
     return forms.filter(f => {
       if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
       if (!matchesEstado(f, estadoFilter)) return false
+      if (soloMios && !f.mio) return false
       if (query.trim()) {
         const q = query.toLowerCase()
         return f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q)
       }
       return true
     })
-  }, [forms, categoryFilter, estadoFilter, query])
+  }, [forms, categoryFilter, estadoFilter, query, soloMios])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
 
@@ -270,6 +279,25 @@ export default function FormulariosPage() {
           onSelect={k => setEstadoFilter(k as EstadoFilter)}
           ariaLabel="Filtrar formularios por estado"
         />
+        {/* Va como interruptor y no como una opción más del filtro de estado:
+            es otra pregunta («de quién») y se combina con las dos que ya hay.
+            Solo aparece si hay alguno propio — un filtro que siempre deja la
+            lista vacía es una promesa falsa. */}
+        {forms.some(f => f.mio) && (
+          <button
+            type="button"
+            aria-pressed={soloMios}
+            onClick={() => setSoloMios(v => !v)}
+            className={cn(
+              'rounded-xl px-3 py-2 text-[13px] transition-colors font-body whitespace-nowrap',
+              soloMios
+                ? 'bg-navy text-white'
+                : 'bg-surface-low text-navy-light/80 hover:text-navy',
+            )}
+          >
+            Creados por mí
+          </button>
+        )}
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
           <input

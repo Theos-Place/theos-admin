@@ -315,9 +315,24 @@ async function insertFields(supabase: ReturnType<typeof createAdminClient>, form
   if (error) throw error
 }
 
-export async function createForm(input: FormWriteInput, fields: FieldInput[] = []): Promise<{ id: string }> {
+/**
+ * `creadoPor` es el id de `auth.users` de quien lo crea.
+ *
+ * LA COLUMNA EXISTÍA Y NADIE LA ESCRIBÍA: los 41 formularios de producción
+ * tenían `created_by` en null (medido el 2026-10-09, al armar el filtro
+ * «creados por mí» que Floriana pidió — el filtro no habría encontrado nada
+ * para nadie). Tampoco se auditaba la creación, así que de esos 41 no hay de
+ * dónde recuperar el autor: quedan sin dueño y los nuevos sí lo llevan.
+ *
+ * Va como parámetro y no se resuelve acá: esta capa no conoce la sesión, y
+ * meterle el guard sería darle dos trabajos.
+ */
+export async function createForm(
+  input: FormWriteInput, fields: FieldInput[] = [], creadoPor?: string | null,
+): Promise<{ id: string }> {
   const supabase = createAdminClient()
-  const { data, error } = await supabase.from('forms').insert(conRestriccionNormalizada(input)).select('id').single()
+  const fila = { ...conRestriccionNormalizada(input), ...(creadoPor ? { created_by: creadoPor } : {}) }
+  const { data, error } = await supabase.from('forms').insert(fila).select('id').single()
   if (error) throw error
   const id = (data as { id: string }).id
   await insertFields(supabase, id, fields)

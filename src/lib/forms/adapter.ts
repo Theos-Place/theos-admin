@@ -69,6 +69,9 @@ export function toDomainFormTemplate(db: DbFormTemplate): FormTemplate {
     allow_multiple_responses: db.allow_multiple_responses ?? false,
     created_at: db.created_at,
     created_by: db.created_by ?? '',
+    // Lo calcula el API contra la sesión; sin él, el filtro «creados por mí»
+    // tendría que comparar ids de auth en el navegador.
+    mio: (db as { mio?: boolean }).mio ?? false,
     hero_image_url: db.hero_image_url ?? null,
     hero_title: db.hero_title ?? null,
     hero_subtitle: db.hero_subtitle ?? null,

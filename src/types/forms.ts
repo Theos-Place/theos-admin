@@ -116,6 +116,8 @@ export interface FormTemplate {
   allow_multiple_responses: boolean
   created_at: string
   created_by: string
+  /** ¿Lo creó quien está viendo la lista? Lo resuelve el API. */
+  mio?: boolean
   /** FRM-2 · Encabezado opcional: flyer + título + bienvenida. No es una
    *  pregunta, es la portada del formulario (por eso vive en `forms`). */
   hero_image_url: string | null
