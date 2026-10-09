@@ -1,0 +1,34 @@
+[
+  {
+    "id": "f69878f3-9d3c-4c49-b131-cebe084dc9de",
+    "nombre": "Sofia Castro Morales",
+    "memberId": "ff9d4ac4-06d6-4fce-b425-00ccc1086e8b",
+    "planId": "03eae89f-075c-4d0c-86e2-8e2bce167b70",
+    "code": "N2",
+    "fecha": "2026-05-23"
+  },
+  {
+    "id": "8a7e059a-0076-4a4b-81fd-bd7a2b60212b",
+    "nombre": "Sofia Castro Morales",
+    "memberId": "ff9d4ac4-06d6-4fce-b425-00ccc1086e8b",
+    "planId": "3db782b8-513c-48d8-89b9-adbbbc39aefb",
+    "code": "N3",
+    "fecha": "2026-08-16"
+  },
+  {
+    "id": "a390de8d-813a-442b-9630-3780f6ef8f4f",
+    "nombre": "Jose Cedeño Pares",
+    "memberId": "6424d643-653a-4073-9e27-c374b36185d8",
+    "planId": "03eae89f-075c-4d0c-86e2-8e2bce167b70",
+    "code": "N2",
+    "fecha": "2026-05-23"
+  },
+  {
+    "id": "64f61d3e-2f72-42af-9ba6-4668815d3c66",
+    "nombre": "Jose Cedeño Pares",
+    "memberId": "6424d643-653a-4073-9e27-c374b36185d8",
+    "planId": "3db782b8-513c-48d8-89b9-adbbbc39aefb",
+    "code": "N3",
+    "fecha": "2026-08-16"
+  }
+]
