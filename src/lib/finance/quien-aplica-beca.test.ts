@@ -60,6 +60,28 @@ describe('el cableado: la misma regla en las dos pantallas', () => {
   const PERFIL = sinComentarios('src/components/members/MemberPaymentsList.tsx')
   const BOTON = sinComentarios('src/components/finance/AplicarBecaEnCobro.tsx')
 
+  it('va DENTRO del modal de pago, que es lo que se abre desde los dos lados', () => {
+    /**
+     * Mi primer intento lo puso al lado del botón en la lista de pagos, y
+     * desde ahí NO se veía: la fila del HISTORIAL DE ESTUDIOS —que es desde
+     * donde Floriana lo abrió— no pasa por `MemberPaymentsList`, llama a
+     * `PayMatriculaButton` directo con el enrollmentId.
+     *
+     * En el modal lo alcanzan los dos caminos, y es el único lugar donde el
+     * cobro ya está cargado con su id.
+     */
+    const i = PERFIL.indexOf('export function PayMatriculaButton')
+    expect(i).toBeGreaterThan(-1)
+    expect(PERFIL.slice(i)).toContain('<AplicarBecaEnCobro')
+    expect(PERFIL.slice(i)).toContain('pagoId={detalle.id}')
+  })
+
+  it('y la fila de estudios abre ESE modal, no uno propio', () => {
+    const tab = sinComentarios('src/app/(admin)/miembros/[id]/_components/MemberParticipationTab.tsx')
+    expect(tab).toContain('<PayMatriculaButton')
+    expect(tab).not.toContain('AplicarBecaEnCobro')
+  })
+
   it('el perfil usa el helper, no escribe el permiso a mano', () => {
     /**
      * La línea `can('becas','edit') || canReview` vivía suelta en la pantalla
@@ -72,7 +94,8 @@ describe('el cableado: la misma regla en las dos pantallas', () => {
   })
 
   it('y solo sobre cobros que admiten beca', () => {
-    expect(PERFIL).toContain('cobroAdmiteBeca(p)')
+    // Sobre uno ya pagado no se ofrece: eso sería una devolución.
+    expect(PERFIL).toContain('cobroAdmiteBeca(detalle)')
   })
 
   it('el botón pega contra EL MISMO endpoint que la cola de finanzas', () => {

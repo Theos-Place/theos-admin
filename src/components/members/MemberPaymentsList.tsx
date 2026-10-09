@@ -52,13 +52,6 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   const [rows, setRows] = useState<MemberPaymentRow[] | null>(null)
   const [error, setError] = useState(false)
   const highlightRef = useRef<HTMLDivElement | null>(null)
-  /**
-   * Esta lista vive también en «mis pagos», donde la abre la propia persona.
-   * Sin este corte, cualquiera se aplicaría una beca a sí mismo — y la regla
-   * se comparte con la cola de finanzas en vez de reescribirse acá.
-   */
-  const { user } = useAuth()
-  const puedeBeca = puedeAplicarBeca(user?.roles)
 
   // Si memberId puede cambiar (pestañas de familia en /mis-pagos), remontar
   // con key={memberId} — acá no se resetea estado en el effect.
@@ -126,20 +119,6 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
                   la vía normal de pago. */}
               {canPay && p.payment_plan_enabled && !p.payment_plan_id && (
                 <BotonAcogerseAlArreglo pago={p} onHecho={cargar} />
-              )}
-              {/* BEC-1 · Aplicar beca desde acá (Floriana, 2026-10-09). La
-                  acción ya existía pero solo en la cola de finanzas: quien
-                  atiende a alguien en su perfil tenía que ir a buscar el
-                  mismo cobro a otra pantalla. Mismo endpoint y mismo
-                  permiso, no una copia — y el permiso de verdad lo aplica el
-                  endpoint, esto solo decide si se dibuja. */}
-              {puedeBeca && cobroAdmiteBeca(p) && (
-                <AplicarBecaEnCobro
-                  pagoId={p.id}
-                  monto={p.amount}
-                  currency={p.currency ?? 'CRC'}
-                  onAplicada={cargar}
-                />
               )}
               {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} cobro={p} />}
               {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} cobro={p} />}
@@ -242,6 +221,13 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
 }) {
   const [open, setOpen] = useState(false)
   const detalle = useCobro({ open, cobro, memberId, buscar: r => r.enrollment_id === enrollmentId })
+  /**
+   * Este modal se abre también desde «mis pagos», donde lo usa la propia
+   * persona. Sin este corte, cualquiera se aplicaría una beca a sí mismo. La
+   * regla se comparte con la cola de finanzas en vez de reescribirse acá.
+   */
+  const { user } = useAuth()
+  const puedeBeca = puedeAplicarBeca(user?.roles)
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
@@ -310,6 +296,31 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
+            {/**
+              * BEC-1 · Aplicar beca, DENTRO del modal (Floriana, 2026-10-09:
+              * «en el modal de los pagos de estudios, aún no me da la opción
+              * de aplicar beca»).
+              *
+              * Va acá y no al lado del botón de la lista, que fue mi primer
+              * intento: la fila del HISTORIAL DE ESTUDIOS —que es desde donde
+              * ella lo abrió— no pasa por `MemberPaymentsList`, llama a este
+              * botón directo. En el modal lo ven los DOS caminos, y además es
+              * el único lugar donde ya está cargado el cobro con su id.
+              *
+              * Si la beca cubre todo, el cobro queda aprobado y el modal se
+              * cierra: pedirle el comprobante después sería pedirle que
+              * pruebe un pago que no tiene que hacer.
+              */}
+            {puedeBeca && detalle && cobroAdmiteBeca(detalle) && (
+              <div className="rounded-xl bg-surface-low p-3">
+                <AplicarBecaEnCobro
+                  pagoId={detalle.id}
+                  monto={detalle.amount}
+                  currency={detalle.currency ?? 'CRC'}
+                  onAplicada={() => setOpen(false)}
+                />
+              </div>
+            )}
             {error && <p className="text-[13px] text-coral font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
