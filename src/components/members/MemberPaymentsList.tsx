@@ -10,6 +10,9 @@ import { Check, CreditCard, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
 import { formatDate, formatMoney, ymdCR } from '@/lib/format'
+import { useAuth } from '@/hooks/useAuth'
+import { puedeAplicarBeca, cobroAdmiteBeca } from '@/lib/finance/quien-aplica-beca'
+import { AplicarBecaEnCobro } from '@/components/finance/AplicarBecaEnCobro'
 import {
   isOverdue, planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
 } from '@/lib/finance/installments'
@@ -49,6 +52,13 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   const [rows, setRows] = useState<MemberPaymentRow[] | null>(null)
   const [error, setError] = useState(false)
   const highlightRef = useRef<HTMLDivElement | null>(null)
+  /**
+   * Esta lista vive también en «mis pagos», donde la abre la propia persona.
+   * Sin este corte, cualquiera se aplicaría una beca a sí mismo — y la regla
+   * se comparte con la cola de finanzas en vez de reescribirse acá.
+   */
+  const { user } = useAuth()
+  const puedeBeca = puedeAplicarBeca(user?.roles)
 
   // Si memberId puede cambiar (pestañas de familia en /mis-pagos), remontar
   // con key={memberId} — acá no se resetea estado en el effect.
@@ -116,6 +126,20 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
                   la vía normal de pago. */}
               {canPay && p.payment_plan_enabled && !p.payment_plan_id && (
                 <BotonAcogerseAlArreglo pago={p} onHecho={cargar} />
+              )}
+              {/* BEC-1 · Aplicar beca desde acá (Floriana, 2026-10-09). La
+                  acción ya existía pero solo en la cola de finanzas: quien
+                  atiende a alguien en su perfil tenía que ir a buscar el
+                  mismo cobro a otra pantalla. Mismo endpoint y mismo
+                  permiso, no una copia — y el permiso de verdad lo aplica el
+                  endpoint, esto solo decide si se dibuja. */}
+              {puedeBeca && cobroAdmiteBeca(p) && (
+                <AplicarBecaEnCobro
+                  pagoId={p.id}
+                  monto={p.amount}
+                  currency={p.currency ?? 'CRC'}
+                  onAplicada={cargar}
+                />
               )}
               {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} cobro={p} />}
               {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} cobro={p} />}
