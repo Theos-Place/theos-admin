@@ -33,6 +33,8 @@ export type FichaParaExport = {
   allergies: string | null
   dietary_restrictions: readonly string[] | null
   marital_status: string | null
+  /** Los puestos de servicio ACTIVOS, ya resueltos por la query. */
+  puestos?: ReadonlyArray<{ puesto: string | null; comite: string | null }>
 }
 
 /** Las columnas, en el orden en que se leen: quién es, cómo se le habla, qué
@@ -57,6 +59,11 @@ export const COLUMNAS_PERSONALES = [
   { header: 'Restricción alimenticia', width: 26, kind: 'text' },
   { header: 'Estado civil',            width: 16, kind: 'text' },
   { header: 'Cónyuge',                 width: 28, kind: 'text' },
+  // Pedidas el 2026-10-09. Van al final de las de padrón: son del servicio,
+  // no de la ficha, y quien exporta para un campamento busca primero las
+  // alergias.
+  { header: 'Puesto de servicio',      width: 34, kind: 'text' },
+  { header: 'Comité',                  width: 30, kind: 'text' },
 ] as const
 
 /**
@@ -165,6 +172,8 @@ export function celdasPersonales(
     // La columna solo se llena si la ficha dice casado/a: con un soltero que
     // comparte unidad familiar con su madre, «Cónyuge» diría cualquier cosa.
     (esCasado(civil) && nombreDelConyuge.trim()) || null,
+    textoDePuestos(ficha.puestos) || null,
+    textoDeComites(ficha.puestos) || null,
   ]
 }
 
@@ -174,4 +183,44 @@ export function celdasPersonales(
 export function fechaDeNacimiento(ymd: string | null | undefined): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((ymd ?? '').trim())
   return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)) : null
+}
+
+// ── Puesto de servicio y comité (2026-10-09) ────────────────────────────────
+/**
+ * Separador entre varios puestos. Es « · » y no una coma porque los nombres
+ * de los puestos ya llevan comas («Colaborador, Sede Antares») y en una celda
+ * de Excel eso se vuelve ilegible.
+ */
+export const SEPARADOR_DE_PUESTOS = ' · '
+
+/**
+ * Los puestos de una persona, en una celda.
+ *
+ * NO SE DEDUPLICAN: dos puestos con el mismo título en comités distintos son
+ * dos cosas, y colapsarlos escondería una de las dos. Medido el 2026-10-09:
+ * 284 de 738 servidores tienen más de un puesto, hasta 6.
+ */
+export function textoDePuestos(
+  puestos: ReadonlyArray<{ puesto: string | null }> | null | undefined,
+): string {
+  return (puestos ?? [])
+    .map(p => (p.puesto ?? '').trim())
+    .filter(Boolean)
+    .join(SEPARADOR_DE_PUESTOS)
+}
+
+/**
+ * Los comités, en una celda. ACÁ SÍ SE DEDUPLICAN, al revés que los puestos:
+ * quien tiene tres puestos en Sede Madrid Home pertenece a UN comité, y
+ * repetirlo tres veces no agrega nada y estorba al filtrar.
+ */
+export function textoDeComites(
+  puestos: ReadonlyArray<{ comite: string | null }> | null | undefined,
+): string {
+  const vistos = new Set<string>()
+  for (const p of puestos ?? []) {
+    const c = (p.comite ?? '').trim()
+    if (c) vistos.add(c)
+  }
+  return [...vistos].join(SEPARADOR_DE_PUESTOS)
 }

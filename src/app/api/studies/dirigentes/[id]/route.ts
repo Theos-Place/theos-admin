@@ -177,9 +177,32 @@ export async function PATCH(
       if (v !== undefined) (patch as Record<string, unknown>)[campo] = v
     }
     if (patch.available_slots) patch.available_slots = sanearSlots(patch.available_slots)
-    // `folleto_location` en blanco es «no dijo», no una cadena vacía.
+    /**
+     * `folleto_location` en blanco es «no dijo», no una cadena vacía.
+     *
+     * Y DESDE EL 2026-10-09 TIENE QUE SER UNA SEDE OFICIAL: la pantalla
+     * ahora ofrece una lista, pero la pantalla nunca fue el permiso. Se
+     * guarda el CODE de la sede y se valida contra el catálogo; un valor que
+     * no esté ahí se rechaza con 400 en vez de guardarse.
+     *
+     * Lo que ya estaba escrito a mano NO se rechaza: solo se valida lo que
+     * viene en este PATCH, así que una ficha vieja se puede seguir guardando
+     * sin tocar ese campo.
+     */
     if (typeof patch.folleto_location === 'string') {
-      patch.folleto_location = patch.folleto_location.trim() || null
+      const v = patch.folleto_location.trim()
+      if (v) {
+        const { createAdminClient } = await import('@/lib/supabase/admin')
+        const { data: sede } = await createAdminClient()
+          .from('sedes').select('code').eq('code', v).eq('is_active', true).maybeSingle()
+        if (!sede) {
+          return NextResponse.json(
+            { error: 'Los folletos se dejan en una sede oficial; esa no está en la lista.' },
+            { status: 400 },
+          )
+        }
+      }
+      patch.folleto_location = v || null
     }
     // Confirmar sella la fecha AUNQUE no venga ningún cambio: es el dato que
     // le dice al comité quién revisó y quién no.

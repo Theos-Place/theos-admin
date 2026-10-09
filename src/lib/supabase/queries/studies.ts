@@ -2588,6 +2588,17 @@ export type DisponibilidadDelComite = {
 export async function getDisponibilidadDeDirigentes(): Promise<DisponibilidadDelComite[]> {
   const supabase = createAdminClient()
   const out: DisponibilidadDelComite[] = []
+  /**
+   * `folleto_location` guarda el CODE de la sede desde el 2026-10-09; en esta
+   * hoja tiene que leerse el NOMBRE. Quien reparte folletos lee «Sede
+   * Antares», no «antares».
+   *
+   * Lo que no sea un code conocido se escribe tal cual: así una ficha que
+   * todavía tenga texto viejo se sigue viendo en vez de salir vacía.
+   */
+  const { data: sedesRows } = await supabase.from('sedes').select('code, name')
+  const nombreDeSede = new Map(
+    ((sedesRows ?? []) as Array<{ code: string; name: string }>).map(s => [s.code, s.name]))
   // PostgREST corta en 1.000 filas y hoy son 505: pagina igual, porque el día
   // que sean 1.200 el bug sería silencioso — la pantalla mostraría 1.000 y
   // nadie contaría.
@@ -2622,7 +2633,9 @@ export async function getDisponibilidadDeDirigentes(): Promise<DisponibilidadDel
         suplente: r.available_as_substitute === true,
         desde: (r.available_from as string) ?? null,
         hasta: (r.available_to as string) ?? null,
-        folletos: (r.folleto_location as string) ?? null,
+        folletos: r.folleto_location
+          ? nombreDeSede.get(r.folleto_location as string) ?? (r.folleto_location as string)
+          : null,
         confirmado_at: (r.availability_confirmed_at as string) ?? null,
       })
     }

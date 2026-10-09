@@ -102,11 +102,21 @@ describe('SRV-9 · el tab del perfil', () => {
   })
 
   it('guarda campo por campo y no con un botón «Guardar» general', () => {
-    // Con un botón general, tocar tres casillas y cerrar la pestaña pierde las
-    // tres — y esto se llena desde el teléfono.
+    /**
+     * Con un botón general, tocar tres casillas y cerrar la pestaña pierde
+     * las tres — y esto se llena desde el teléfono.
+     *
+     * Se mira que CADA control dispare `guardar(`, no que exista un `onBlur`
+     * concreto. Antes pedía `onBlur` y eso era el mecanismo, no la regla: el
+     * 2026-10-09 el campo de folletos pasó de texto a selector —guarda con
+     * `onChange`— y este test se cayó sin que nada estuviera mal.
+     */
     const src = sinComentarios(BLOQUE)
-    expect(src).toContain('onBlur')
     expect(src).not.toMatch(/>\s*Guardar cambios\s*</)
+    // Varios controles, cada uno guardando lo suyo.
+    expect((src.match(/void guardar\(/g) ?? []).length).toBeGreaterThan(3)
+    // Y ninguno espera a un submit general.
+    expect(src).not.toContain('<form')
   })
 })
 

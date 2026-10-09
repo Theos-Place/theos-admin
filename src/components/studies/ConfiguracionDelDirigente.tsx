@@ -72,7 +72,7 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
 }) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
-  const { zoneSedes } = useSedes()
+  const { zoneSedes, activeSedes } = useSedes()
   /** Se guarda DE QUIÉN es la ficha, no solo la ficha: así, al cambiar de
    *  persona, los datos de la anterior dejan de usarse en el MISMO render en
    *  que cambia el id, sin un setState al entrar al efecto que dispararía un
@@ -333,18 +333,42 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
           <label htmlFor="folleto-loc" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1">
             ¿Dónde te dejamos los folletos?
           </label>
-          <input
+          {/**
+            * SOLO SEDES OFICIALES (Floriana, 2026-10-09). Era un campo de
+            * texto libre con el placeholder «Una sede, o lo que te sirva», y
+            * las cuatro personas que lo llenaron escribieron la suya de
+            * cuatro formas distintas: «Antares», «Madrid», «Meridiano
+            * Martes», «Sede Alajuela». Para quien reparte folletos eso no es
+            * una dirección, es adivinar.
+            *
+            * El valor que se guarda es el CODE de la sede, no su nombre: si
+            * mañana se renombra una sede, lo guardado sigue apuntando a la
+            * misma y no queda un texto viejo colgando.
+            */}
+          <select
             id="folleto-loc"
             defaultValue={ficha.folleto_location ?? ''}
             disabled={!editable || guardando}
-            maxLength={200}
-            placeholder="Una sede, o lo que te sirva"
-            onBlur={e => {
-              const v = e.target.value.trim()
+            onChange={e => {
+              const v = e.target.value
               if (v !== (ficha.folleto_location ?? '')) void guardar({ folleto_location: v || null })
             }}
             className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60"
-          />
+          >
+            <option value="">Elegí una sede…</option>
+            {activeSedes.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+            {/* Lo que alguien escribió antes de que esto fuera una lista: se
+                conserva como opción para no borrarle el dato en silencio la
+                próxima vez que abra la pantalla y guarde otra cosa. */}
+            {ficha.folleto_location
+              && !activeSedes.some(s => s.id === ficha.folleto_location) && (
+              <option value={ficha.folleto_location}>
+                {ficha.folleto_location} (sede no oficial)
+              </option>
+            )}
+          </select>
         </div>
       </div>
 

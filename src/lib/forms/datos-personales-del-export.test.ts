@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   COLUMNAS_PERSONALES, celdasPersonales, esCasado, textoDeGenero,
   conyugeEnLaFamilia, fechaDeNacimiento,
-  type FichaParaExport, type IntegranteDeFamilia,
+  type FichaParaExport, type IntegranteDeFamilia, textoDePuestos, textoDeComites,
 } from './datos-personales-del-export'
 import { puedeExportarDatosPersonales } from '@/lib/auth/datos-personales-en-export'
 import { hasModulePermission } from '@/lib/auth/roles'
@@ -257,5 +257,106 @@ describe('FRM-6 · cableado', () => {
 
   it('sirve para CUALQUIER formulario: nada de «campamento» hardcodeado', () => {
     for (const src of [RUTA, PANTALLA]) expect(src.toLowerCase()).not.toContain('campamento')
+  })
+})
+
+describe('puesto de servicio y comité en el export (2026-10-09)', () => {
+  const P = (puesto: string, comite: string) => ({ puesto, comite })
+
+  it('las dos columnas existen y van al FINAL', () => {
+    // Quien exporta para un campamento busca primero las alergias; el puesto
+    // es del servicio, no de la ficha.
+    const h = COLUMNAS_PERSONALES.map(c => c.header)
+    expect(h).toContain('Puesto de servicio')
+    expect(h).toContain('Comité')
+    expect(h.slice(-2)).toEqual(['Puesto de servicio', 'Comité'])
+  })
+
+  it('con varios puestos, los escribe todos', () => {
+    // 284 de 738 servidores tienen más de uno (hasta 6).
+    expect(textoDePuestos([P('Encargado Logística', 'A'), P('Dirigente Madrid', 'B')]))
+      .toBe('Encargado Logística · Dirigente Madrid')
+  })
+
+  it('los PUESTOS no se deduplican: el mismo título en dos comités son dos', () => {
+    // Colapsarlos escondería uno de los dos servicios.
+    expect(textoDePuestos([P('Colaborador Comida', 'Sede Antares'), P('Colaborador Comida', 'Sede Liberia')]))
+      .toBe('Colaborador Comida · Colaborador Comida')
+  })
+
+  it('los COMITES sí: tres puestos en la misma sede son UN comité', () => {
+    /**
+     * Es el caso real de Camila Artavia: tres puestos en Sede Madrid Home.
+     * Repetirla tres veces no agrega nada y estorba al filtrar la hoja.
+     */
+    expect(textoDeComites([
+      P('Encargado Logística', 'Sede Madrid Home'),
+      P('Asistente Logística', 'Sede Madrid Home'),
+      P('Colaborador Bienvenida', 'Sede Madrid Home'),
+      P('Dirigente Madrid', 'Comité Dirigentes'),
+    ])).toBe('Sede Madrid Home · Comité Dirigentes')
+  })
+
+  it('sin puestos quedan vacías, no con un guion', () => {
+    // Esta hoja se filtra y se cuenta: un guion es texto que hay que acordarse
+    // de excluir en cada fórmula.
+    expect(textoDePuestos([])).toBe('')
+    expect(textoDeComites(null)).toBe('')
+    expect(textoDePuestos(undefined)).toBe('')
+  })
+
+  it('un puesto sin título o sin comité no deja separadores sueltos', () => {
+    expect(textoDePuestos([{ puesto: null }, P('Real', 'X')])).toBe('Real')
+    expect(textoDeComites([{ puesto: 'Y', comite: '  ' }, P('Y', 'Real')])).toBe('Real')
+  })
+
+  it('y las celdas de una persona traen las dos al final', () => {
+    const celdas = celdasPersonales({
+      id: 'm1', first_name: 'Ana', last_name: 'Pérez', cedula: '1', document_type: null,
+      birth_date: null, gender: null, phone: null, email: null, allergies: null,
+      dietary_restrictions: null, marital_status: null,
+      puestos: [P('Anfitrión', 'Sede Liberia')],
+    })
+    expect(celdas).toHaveLength(COLUMNAS_PERSONALES.length)
+    expect(celdas.slice(-2)).toEqual(['Anfitrión', 'Sede Liberia'])
+  })
+
+  it('sin ficha, las columnas nuevas también quedan vacías', () => {
+    expect(celdasPersonales(null)).toHaveLength(COLUMNAS_PERSONALES.length)
+  })
+})
+
+describe('puesto y comité · el cableado', () => {
+  const QUERIES = sinComentarios('src/lib/supabase/queries/forms.ts')
+
+  it('la query trae los puestos y los mete en la ficha', () => {
+    /**
+     * Es el medio del camino, que es donde esto se rompe sin avisar: las dos
+     * puntas pueden estar perfectas y la ficha llegar sin `puestos`. Pasó
+     * igual con `ofrece_casa` en EST-26.
+     */
+    const fn = QUERIES.slice(QUERIES.indexOf('export async function getFichasPersonalesParaExport'))
+    expect(fn).toContain("from('volunteers')")
+    expect(fn).toContain('service_positions!volunteers_position_id_fkey')
+    expect(fn).toContain('areas!service_positions_area_id_fkey')
+    expect(fn).toContain('puestos: puestosDe.get(f.id) ?? []')
+  })
+
+  it('SOLO los puestos activos', () => {
+    // Uno que la persona dejó no dice dónde sirve hoy, que es lo que se busca.
+    const fn = QUERIES.slice(QUERIES.indexOf('export async function getFichasPersonalesParaExport'))
+    expect(fn).toContain(".eq('status', 'active')")
+  })
+
+  it('se consulta por tandas, como el resto', () => {
+    // Un `.in()` con 800 ids revienta la URL de PostgREST.
+    const fn = QUERIES.slice(QUERIES.indexOf('const puestosDe'))
+    expect(fn.slice(0, 400)).toContain('i += 200')
+  })
+
+  it('y el texto se arma en el módulo, no en la query', () => {
+    const fn = QUERIES.slice(QUERIES.indexOf('export async function getFichasPersonalesParaExport'))
+    expect(fn).not.toContain(' · ')
+    expect(fn).not.toContain('textoDePuestos')
   })
 })

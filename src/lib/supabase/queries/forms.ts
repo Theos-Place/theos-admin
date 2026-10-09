@@ -1022,10 +1022,41 @@ export async function getFichasPersonalesParaExport(
     integrantesDe.set(p.unidad, arr)
   }
 
+  /**
+   * Los PUESTOS DE SERVICIO activos y su comité (pedidos el 2026-10-09).
+   *
+   * Solo los `active`: un puesto que alguien dejó no dice dónde sirve hoy, y
+   * es lo que se busca al exportar —a quién llamar, de qué equipo es—.
+   *
+   * El comité sale de `service_positions.area_id`. Quien tiene varios puestos
+   * trae varios: 284 de 738 servidores están así (hasta 6 puestos). Cómo se
+   * escriben en una celda lo decide `lib/forms/datos-personales-del-export`.
+   */
+  const puestosDe = new Map<string, Array<{ puesto: string | null; comite: string | null }>>()
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data, error } = await supabase
+      .from('volunteers')
+      .select('member_id, position:service_positions!volunteers_position_id_fkey(title, area:areas!service_positions_area_id_fkey(name))')
+      .eq('status', 'active')
+      .in('member_id', ids.slice(i, i + 200))
+    if (error) throw error
+    type Fila = {
+      member_id: string
+      position: { title: string | null; area: { name: string | null } | { name: string | null }[] | null } | null
+    }
+    for (const v of ((data ?? []) as unknown as Fila[])) {
+      const pos = Array.isArray(v.position) ? v.position[0] : v.position
+      const area = pos ? (Array.isArray(pos.area) ? pos.area[0] : pos.area) : null
+      const arr = puestosDe.get(v.member_id) ?? []
+      arr.push({ puesto: pos?.title ?? null, comite: area?.name ?? null })
+      puestosDe.set(v.member_id, arr)
+    }
+  }
+
   for (const f of fichas) {
     const unidad = unidadDe.get(f.id)
     const conyuge = unidad ? conyugeEnLaFamilia(integrantesDe.get(unidad) ?? [], f.id) : ''
-    out.set(f.id, { ...f, conyuge })
+    out.set(f.id, { ...f, conyuge, puestos: puestosDe.get(f.id) ?? [] })
   }
   return out
 }
