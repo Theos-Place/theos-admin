@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { campoVisible } from '@/lib/forms/logica-condicional'
+import { campoVisible, respuestasVisibles } from '@/lib/forms/logica-condicional'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -369,7 +369,8 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       const res = await fetch(`/api/forms/${id}/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...identity, answers }),
+        // Sin las de los campos ocultos: ver `respuestasVisibles`.
+        body: JSON.stringify({ ...identity, answers: respuestasVisibles(form?.fields ?? [], answers) }),
       })
       if (!res.ok) {
         const detail = await res.json().catch(() => null)

@@ -82,3 +82,33 @@ export function campoVisible(
   }
   return !reglas.some(r => r.action === 'show')
 }
+
+/**
+ * Las respuestas que de verdad se mandan: sin las de los campos ocultos.
+ *
+ * EL CASO: alguien marca «Sí, mi pareja va», escribe su nombre, se arrepiente
+ * y marca «No». El campo del nombre desaparece de la pantalla — pero su
+ * respuesta sigue en memoria, y se enviaba igual. En el export quedaba una
+ * persona que viene sola con el nombre de su pareja al lado, y nadie sabe
+ * cuál de los dos datos creer.
+ *
+ * Se resuelve acá y no en cada pantalla porque las dos que llenan formularios
+ * —la de sesión y la pública— tenían el mismo agujero. La regla de qué está
+ * visible ya vive en este módulo; lo que se manda es una consecuencia de ella
+ * y pertenece al mismo lugar.
+ *
+ * SE EVALÚA UNA VEZ sobre las respuestas completas, no en cascada. Un campo
+ * que depende de otro oculto ya sale oculto por su propia regla, y volver a
+ * correrlo sobre el resultado podría esconder de más por un orden de
+ * evaluación que nadie escribió.
+ */
+export function respuestasVisibles<T extends { id: string } & Pick<FormFieldNew, 'logic_rules'>>(
+  campos: ReadonlyArray<T>,
+  respuestas: Respuestas,
+): Respuestas {
+  const ocultos = new Set(campos.filter(c => !campoVisible(c, respuestas)).map(c => c.id))
+  if (ocultos.size === 0) return respuestas
+  const out: Respuestas = {}
+  for (const [id, v] of Object.entries(respuestas)) if (!ocultos.has(id)) out[id] = v
+  return out
+}

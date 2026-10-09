@@ -1,5 +1,6 @@
+import type { FormFieldNew } from '@/types/forms'
 import { describe, it, expect } from 'vitest'
-import { cumpleCondicion, evaluarRegla, campoVisible } from './logica-condicional'
+import { cumpleCondicion, evaluarRegla, campoVisible, respuestasVisibles } from './logica-condicional'
 import type { LogicRule } from '@/types/forms'
 
 const SOCIALES = 'Actividades Sociales'
@@ -117,5 +118,50 @@ describe('campoVisible', () => {
 
   it('con SOLO reglas de ocultar y ninguna cumplida, se muestra', () => {
     expect(campoVisible({ logic_rules: [regla({ action: 'hide' })] }, { actividades: [CORTOS] })).toBe(true)
+  })
+})
+
+describe('las respuestas que se mandan', () => {
+  const CAMPOS: Array<{ id: string } & Pick<FormFieldNew, 'logic_rules'>> = [
+    { id: 'va', logic_rules: undefined },
+    {
+      id: 'nombre_pareja',
+      logic_rules: [{
+        id: 'r1', action: 'show', condition_operator: 'AND',
+        conditions: [{ id: 'c1', field_id: 'va', operator: 'eq', value: 'Sí' }],
+      }],
+    },
+  ]
+
+  it('EL CASO: contesta Sí, escribe, se arrepiente y marca No', () => {
+    /**
+     * El nombre desaparece de la pantalla pero seguía en memoria y se
+     * enviaba. En el export quedaba una persona que viene sola con el nombre
+     * de su pareja al lado, y nadie sabe cuál de los dos datos creer.
+     */
+    const r = respuestasVisibles(CAMPOS, { va: 'No', nombre_pareja: 'Ana' })
+    expect(r).toEqual({ va: 'No' })
+  })
+
+  it('con Sí, la respuesta del campo visible SÍ se manda', () => {
+    const r = respuestasVisibles(CAMPOS, { va: 'Sí', nombre_pareja: 'Ana' })
+    expect(r).toEqual({ va: 'Sí', nombre_pareja: 'Ana' })
+  })
+
+  it('sin campos ocultos devuelve lo mismo, sin copiar de gusto', () => {
+    const resp = { va: 'Sí' }
+    expect(respuestasVisibles(CAMPOS, resp)).toBe(resp)
+  })
+
+  it('un campo sin reglas nunca se recorta', () => {
+    const r = respuestasVisibles([{ id: 'libre', logic_rules: undefined }], { libre: 'algo' })
+    expect(r).toEqual({ libre: 'algo' })
+  })
+
+  it('una respuesta de un campo que ya no existe se conserva', () => {
+    // Recortarla sería borrar datos por un campo borrado del formulario, que
+    // no es lo que esta función decide.
+    expect(respuestasVisibles(CAMPOS, { fantasma: 'x', va: 'No' }))
+      .toEqual({ fantasma: 'x', va: 'No' })
   })
 })

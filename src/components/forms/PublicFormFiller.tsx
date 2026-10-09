@@ -5,6 +5,7 @@ import { Check, Loader2 } from 'lucide-react'
 import { PublicField } from '@/components/forms/PublicField'
 import { faltaEnEnvioInvitado } from '@/lib/forms/public-access'
 import { esCampoCalculado } from '@/lib/forms/computed-fields'
+import { campoVisible, respuestasVisibles } from '@/lib/forms/logica-condicional'
 import { cn } from '@/lib/utils'
 
 type Campo = {
@@ -13,6 +14,9 @@ type Campo = {
   options: string[] | null; description: string | null
   scale_min: number | null; scale_max: number | null
   scale_min_label: string | null; scale_max_label: string | null
+  /** Las reglas de «mostrar solo si…». El API las manda desde siempre; este
+   *  componente no las conocía, que era todo el bug. */
+  conditions: unknown
 }
 
 /**
@@ -41,7 +45,31 @@ export function PublicFormFiller({ formId, form, fields }: {
 
   // Los calculados no se dibujan (no aplican sin ficha) y el API los descarta
   // igual: acá es solo para no mostrar un hueco.
-  const visibles = fields.filter(f => !esCampoCalculado(f.field_type))
+  const delFormulario = fields.filter(f => !esCampoCalculado(f.field_type))
+
+  /**
+   * LAS REGLAS CONDICIONALES, que este componente ignoraba por completo
+   * (Floriana, 2026-10-08: «no me está respetando las reglas; en el preview
+   * sirve, pero cuando lo abro no»).
+   *
+   * Tenía razón en las dos mitades. El preview usa `FormFiller`, que llama a
+   * `campoVisible`; la página PÚBLICA usa este componente, que dibujaba todos
+   * los campos siempre. En «Matrimonios - Octubre 2026» eso mostraba «¿Cómo se
+   * llama tu pareja?» y «¿Tu pareja tiene restricción alimenticia?» sin haber
+   * contestado si la pareja va.
+   *
+   * Y LO PEOR NO ERA QUE SE VIERAN: los dos son OBLIGATORIOS. Quien contestaba
+   * «No» no podía enviar, porque la validación le exigía campos que no le
+   * aplican — el mismo desastre que la nota del 2026-09-18 en
+   * `logica-condicional`.
+   *
+   * Se usa `campoVisible`, la MISMA función del preview. Copiar la regla acá
+   * habría arreglado hoy y abierto la próxima diferencia entre las dos
+   * pantallas.
+   */
+  const esVisible = (f: Campo) =>
+    campoVisible({ logic_rules: Array.isArray(f.conditions) ? f.conditions : undefined }, answers)
+  const visibles = delFormulario.filter(esVisible)
 
   async function enviar() {
     if (enviando) return
@@ -59,7 +87,18 @@ export function PublicFormFiller({ formId, form, fields }: {
     try {
       const res = await fetch(`/api/public/forms/${formId}/responder`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guest_name: nombre, guest_email: correo, answers }),
+        // Sin las de los campos ocultos: ver `respuestasVisibles`. Quien
+        // marcó Sí, escribió y se arrepintió no manda el dato que ya no aplica.
+        body: JSON.stringify({
+          guest_name: nombre, guest_email: correo,
+          answers: respuestasVisibles(
+            delFormulario.map(f => ({
+              id: f.id,
+              logic_rules: Array.isArray(f.conditions) ? f.conditions : undefined,
+            })),
+            answers,
+          ),
+        }),
       })
       const d = await res.json().catch(() => ({}))
       // Ya había una respuesta con ese correo. No es un error rojo: si el
