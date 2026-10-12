@@ -3,6 +3,7 @@ import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals 
 import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 import { rangoDePago } from '@/lib/finance/rango-de-pagos'
+import type { CobroHuerfano } from '@/lib/finance/cobros-huerfanos'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
 
@@ -859,4 +860,108 @@ export async function getDonacionesParaReporte(filtros: {
     if (lote.length < 1000) break
   }
   return out
+}
+
+/**
+ * MAT-3 · Los cobros de estudio que se quedaron sin estudio.
+ *
+ * Un cobro cuyo `enrollment_id` Y `study_group_id` son null: lo dejó así el
+ * ON DELETE SET NULL al borrarse su grupo o su matrícula. No aparece en
+ * ninguna pantalla del estudio, así que esto es lo único que los muestra.
+ *
+ * Solo conceptos de estudio: una donación o un pago de evento no tienen
+ * grupo y no son huérfanos de nada.
+ */
+export async function cobrosHuerfanos(): Promise<CobroHuerfano[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('payments')
+    .select(`
+      id, amount, currency, status, concept, updated_at,
+      miembro:members!payments_member_id_fkey(first_name, last_name)
+    `)
+    .is('enrollment_id', null)
+    .is('study_group_id', null)
+    .in('concept', ['matricula', 'folletos'])
+  if (error) throw error
+
+  type Fila = {
+    id: string; amount: number | string; currency: string | null; status: string | null
+    concept: string | null; updated_at: string | null
+    miembro: { first_name: string; last_name: string } | Array<{ first_name: string; last_name: string }> | null
+  }
+  const filas = (data ?? []) as unknown as Fila[]
+  if (filas.length === 0) return []
+
+  // ¿De cuáles ya salió un crédito? Sin esto, los tres cobros de SCJ se
+  // verían como «hay que devolver la plata» cuando su crédito existe desde
+  // el 7-oct, y finanzas pagaría dos veces.
+  const { data: creditos } = await supabase
+    .from('scholarships').select('origin_payment_id')
+    .in('origin_payment_id', filas.map(f => f.id))
+  const conCredito = new Set(((creditos ?? []) as Array<{ origin_payment_id: string | null }>)
+    .map(c => c.origin_payment_id).filter((x): x is string => !!x))
+
+  const { ordenarPorGravedad } = await import('@/lib/finance/cobros-huerfanos')
+  return ordenarPorGravedad(filas.map(f => {
+    const m = Array.isArray(f.miembro) ? f.miembro[0] : f.miembro
+    return {
+      id: f.id,
+      persona: m ? `${m.first_name} ${m.last_name}`.trim() : null,
+      monto: Number(f.amount ?? 0),
+      currency: f.currency ?? 'CRC',
+      status: f.status ?? '',
+      concepto: f.concept,
+      huerfanoDesde: f.updated_at,
+      tieneCredito: conCredito.has(f.id),
+    }
+  }))
+}
+
+/**
+ * MAT-3 · Le avisa a finanzas si hay cobros sueltos que pidan acción.
+ *
+ * Una sola notificación con el conteo, no una por cobro, y SOLO por lo que
+ * pide acción: los anulados y los que ya se resolvieron con un crédito no
+ * suenan. Un aviso que suena por ruido se deja de leer, y entonces no sirve
+ * el día que suene por algo real.
+ *
+ * Dedupe de 7 días: la lista cambia poco y avisar a diario de lo mismo es la
+ * misma forma de volverlo invisible.
+ *
+ * Best-effort: es monitoreo, no puede tumbar el cron.
+ */
+export async function avisarCobrosHuerfanos(): Promise<{ avisados: number }> {
+  const supabase = createAdminClient()
+  const { avisoDeHuerfanos } = await import('@/lib/finance/cobros-huerfanos')
+  const aviso = avisoDeHuerfanos(await cobrosHuerfanos())
+  if (!aviso) return { avisados: 0 }
+
+  const TIPO = 'cobros_huerfanos'
+  const haceUnaSemana = new Date(Date.now() - 7 * 24 * 3600_000).toISOString()
+  const { data: previos } = await supabase
+    .from('internal_notifications').select('id')
+    .eq('type', TIPO).gte('created_at', haceUnaSemana).limit(1)
+  if ((previos ?? []).length > 0) return { avisados: 0 }
+
+  const { data: roles } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+    .eq('role', 'finanzas').eq('is_active', true)
+  const dest = [...new Set(((roles ?? []) as unknown as Array<{
+    member_id: string; member: { is_active: boolean } | { is_active: boolean }[] | null
+  }>)
+    .filter(r => (Array.isArray(r.member) ? r.member[0] : r.member)?.is_active === true)
+    .map(r => r.member_id))]
+  if (dest.length === 0) return { avisados: 0 }
+
+  const { error } = await supabase.from('internal_notifications').insert(dest.map(memberId => ({
+    recipient_member_id: memberId,
+    type: TIPO,
+    title: aviso.title,
+    body: aviso.body,
+    link: '/finanzas/cobros-sin-estudio',
+  })))
+  if (error) { console.warn('avisarCobrosHuerfanos:', error.message); return { avisados: 0 } }
+  return { avisados: dest.length }
 }

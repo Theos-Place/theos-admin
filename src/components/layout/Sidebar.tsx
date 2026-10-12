@@ -39,6 +39,7 @@ import {
   CalendarRange,
   ClipboardCheck,
   Wallet,
+  Unlink,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -66,6 +67,7 @@ const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/pagos',       label: 'Pagos',        icon: CreditCard      },
   { href: '/finanzas/devoluciones',label: 'Devoluciones', icon: ArrowLeftRight  },
   { href: '/finanzas/saldos',      label: 'Saldos a favor', icon: Wallet        },
+  { href: '/finanzas/cobros-sin-estudio', label: 'Cobros sin estudio', icon: Unlink },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
   { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
 ]

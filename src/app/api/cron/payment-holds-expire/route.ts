@@ -58,11 +58,23 @@ export async function POST(req: NextRequest) {
     // reloj, así que un aviso y una baja nunca pueden discrepar sobre cuántas
     // horas pasaron.
     const avisos = await avisarMatriculasPorVencer()
+    // MAT-3 · De paso, revisar si quedaron cobros sueltos. Va acá y no en un
+    // cron nuevo porque es el barrido que ya mira pagos de estudio, y porque
+    // un cron que corre una vez por semana para contar filas no se justifica.
+    // Best-effort: es monitoreo y no puede tumbar el barrido.
+    let huerfanos = 0
+    try {
+      const { avisarCobrosHuerfanos } = await import('@/lib/supabase/queries/finance')
+      huerfanos = (await avisarCobrosHuerfanos()).avisados
+    } catch (e) {
+      console.warn('aviso de cobros huérfanos:', e instanceof Error ? e.message : e)
+    }
     await pingHealthcheck('HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE')
     return NextResponse.json({
       events_expired: events.expired,
       matriculas_expiradas: estudios.expired,
       avisos_enviados: avisos.avisados,
+      aviso_huerfanos: huerfanos,
     })
   } catch (error) {
     reportarError('POST /api/cron/payment-holds-expire:', error)
