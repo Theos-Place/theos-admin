@@ -2665,10 +2665,18 @@ export async function ofrecimientosDeCasa(
   } = await import('@/lib/studies/ofrece-casa')
 
   // Los campos que importan, buscados por su TEXTO: form_fields no tiene
-  // llave estable (ver el comentario de `ofrece-casa`).
-  const { data: campos } = await supabase
-    .from('form_fields').select('id, label, form_id')
-  const todos = (campos ?? []) as Array<{ id: string; label: string | null; form_id: string }>
+  // llave estable (ver el comentario de `ofrece-casa`). Se pagina porque
+  // PostgREST corta en 1000 filas SIN avisar, y perder la fila de la pregunta
+  // haría que la columna saliera vacia para todo el mundo.
+  const todos: Array<{ id: string; label: string | null; form_id: string }> = []
+  for (let desde = 0; ; desde += 1000) {
+    const { data: campos, error } = await supabase
+      .from('form_fields').select('id, label, form_id').range(desde, desde + 999)
+    if (error) throw new Error(`No se pudieron leer los campos de formulario: ${error.message}`)
+    const pagina = (campos ?? []) as Array<{ id: string; label: string | null; form_id: string }>
+    todos.push(...pagina)
+    if (pagina.length < 1000) break
+  }
   const idsPregunta = todos.filter(f => esLaPreguntaDeLaCasa(f.label)).map(f => f.id)
   if (idsPregunta.length === 0) return new Map()
   // La ubicación se busca SOLO en los formularios que traen la pregunta: hay
@@ -2678,19 +2686,27 @@ export async function ofrecimientosDeCasa(
     .filter(f => formsConPregunta.has(f.form_id) && esElCampoDeUbicacion(f.label))
     .map(f => f.id)
 
-  const { data: valores } = await supabase
-    .from('form_response_values')
-    .select(`
-      field_id, value_text, value_json,
-      respuesta:form_responses!inner(id, member_id, submitted_at)
-    `)
-    .in('field_id', [...idsPregunta, ...idsUbicacion])
-    .in('respuesta.member_id', memberIds as string[])
-
   type Fila = {
     field_id: string; value_text: string | null; value_json: unknown
     respuesta: { id: string; member_id: string | null; submitted_at: string }
       | Array<{ id: string; member_id: string | null; submitted_at: string }>
+  }
+
+  // En lotes de 100: un `.in()` con el roster entero arma una URL que
+  // PostgREST rechaza con 400, y antes ese error se perdía y la columna
+  // salía vacía para todos (se vio con 831 personas en el export).
+  const valores: Fila[] = []
+  for (let i = 0; i < memberIds.length; i += 100) {
+    const { data, error } = await supabase
+      .from('form_response_values')
+      .select(`
+        field_id, value_text, value_json,
+        respuesta:form_responses!inner(id, member_id, submitted_at)
+      `)
+      .in('field_id', [...idsPregunta, ...idsUbicacion])
+      .in('respuesta.member_id', memberIds.slice(i, i + 100) as string[])
+    if (error) throw new Error(`No se pudo leer quién ofrece casa: ${error.message}`)
+    valores.push(...((data ?? []) as Fila[]))
   }
   const texto = (v: Fila): string | null =>
     v.value_text ?? (typeof v.value_json === 'string' ? v.value_json : null)
@@ -2699,7 +2715,7 @@ export async function ofrecimientosDeCasa(
   // corresponde: una persona con dos respuestas tiene dos direcciones.
   const ubicacionPorRespuesta = new Map<string, string>()
   const dichos: Array<{ member_id: string; respuesta_id: string; respondido: string }> = []
-  for (const v of (valores ?? []) as Fila[]) {
+  for (const v of valores) {
     const r = Array.isArray(v.respuesta) ? v.respuesta[0] : v.respuesta
     if (!r?.member_id) continue
     if (idsUbicacion.includes(v.field_id)) {

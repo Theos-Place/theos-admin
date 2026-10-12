@@ -23,6 +23,20 @@ export type FilaParticipante = {
   correo: string
   telefono: string
   cedula: string
+  /**
+   * EST-26 punto 4 · Quién ofreció su casa, y dónde.
+   *
+   * Va en el export y no solo en la pantalla porque la pregunta operativa es
+   * «¿dónde armo el grupo de esta zona?», y eso se contesta cruzando una
+   * lista, no abriendo grupo por grupo.
+   *
+   * SOLO PARA ESTUDIANTES: la pregunta vive en la matrícula a Nivel 1. Un
+   * dirigente que además ofreció su casa aparece en su fila de estudiante si
+   * la tiene; en la de dirigente va vacío, para no sugerir que el
+   * ofrecimiento es del rol.
+   */
+  ofrece_casa: string
+  ofrece_casa_donde: string
 }
 
 /** Cómo se muestra el estado de una inscripción en el export. */
@@ -73,6 +87,8 @@ const nombre = (p?: PersonaMin) => p ? `${p.first_name ?? ''} ${p.last_name ?? '
 export function armarFilas(
   grupos: GrupoParaExport[],
   personas: Map<string, PersonaMin>,
+  /** EST-26 · member_id → dónde ofreció su casa. Quien no está, no ofreció. */
+  casas: Map<string, { ubicacion: string | null }> = new Map(),
 ): FilaParticipante[] {
   const filas: FilaParticipante[] = []
   for (const g of grupos) {
@@ -91,6 +107,7 @@ export function armarFilas(
       if (!memberId || yaPuesto.has(memberId)) return
       yaPuesto.add(memberId)
       const p = personas.get(memberId)
+      const casa = rol === 'Estudiante' ? casas.get(memberId) : undefined
       filas.push({
         ...base,
         persona: nombre(p) || '(miembro no encontrado)',
@@ -99,6 +116,10 @@ export function armarFilas(
         correo: p?.email ?? '',
         telefono: p?.phone ?? '',
         cedula: p?.cedula ?? '',
+        // Vacío y no «No»: la columna se filtra en Excel, y 25 «No» por cada
+        // «Sí» es el ruido que esta columna existe para evitar.
+        ofrece_casa: casa ? 'Sí' : '',
+        ofrece_casa_donde: casa?.ubicacion ?? '',
       })
     }
     agregar(g.leader_id, 'Dirigente', '—')

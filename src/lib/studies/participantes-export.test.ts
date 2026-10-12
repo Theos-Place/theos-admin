@@ -71,3 +71,39 @@ describe('varios grupos', () => {
     expect(f[f.length - 1].grupo).toBe('Zeta')
   })
 })
+
+describe('EST-26 · la columna de quién ofrece su casa', () => {
+  const casas = new Map([['e1', { ubicacion: 'Condominio MonteSol' }]])
+
+  it('marca «Sí» y el dónde al estudiante que la ofreció', () => {
+    const f = armarFilas([grupo()], personas, casas)
+    const zulema = f.find(x => x.persona === 'Zulema Apellido')!
+    expect(zulema.ofrece_casa).toBe('Sí')
+    expect(zulema.ofrece_casa_donde).toBe('Condominio MonteSol')
+  })
+
+  it('al que no la ofreció lo deja VACÍO, no «No»', () => {
+    // 25 «No» en fila son ruido y además ensucian el filtro de Excel:
+    // lo que se busca son los poquitos que sí.
+    const f = armarFilas([grupo()], personas, casas)
+    expect(f.find(x => x.persona === 'Ana Apellido')!.ofrece_casa).toBe('')
+  })
+
+  it('un dirigente NO sale marcado aunque esté en el mapa', () => {
+    // El ofrecimiento se pregunta en la matrícula del estudiante; un
+    // dirigente que lo contestó en otro ciclo no ofrece ESTE grupo.
+    const f = armarFilas([grupo()], personas, new Map([['d', { ubicacion: 'Casa de la dirigenta' }]]))
+    expect(f.find(x => x.rol === 'Dirigente')!.ofrece_casa).toBe('')
+  })
+
+  it('sin el dónde, igual dice que sí', () => {
+    const f = armarFilas([grupo()], personas, new Map([['e1', { ubicacion: null }]]))
+    const zulema = f.find(x => x.persona === 'Zulema Apellido')!
+    expect(zulema.ofrece_casa).toBe('Sí')
+    expect(zulema.ofrece_casa_donde).toBe('')
+  })
+
+  it('sin el mapa (llamada vieja de 2 argumentos) no revienta', () => {
+    expect(armarFilas([grupo()], personas)[0].ofrece_casa).toBe('')
+  })
+})

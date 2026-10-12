@@ -309,6 +309,9 @@ export default function GruposPage() {
       ['estado_grupo', 'Estado del grupo'], ['inicio', 'Inicio'], ['fin', 'Fin'],
       ['persona', 'Persona'], ['rol', 'Rol'], ['estado_inscripcion', 'Estado'],
       ['correo', 'Correo'], ['telefono', 'Teléfono'], ['cedula', 'Cédula'],
+      // EST-26 · Al final: las que casi siempre van vacías no deben empujar
+      // fuera de pantalla las que se leen en cada fila.
+      ['ofrece_casa', 'Ofrece casa'], ['ofrece_casa_donde', 'Dónde ofrece'],
     ]
     const XLSX = await import('xlsx')
     const ws = XLSX.utils.aoa_to_sheet([

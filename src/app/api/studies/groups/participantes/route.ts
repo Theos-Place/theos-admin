@@ -56,7 +56,20 @@ export async function GET(req: NextRequest) {
         startTo: fechaValida(searchParams.get('start_to')),
       },
     })
-    return NextResponse.json({ filas: armarFilas(grupos, personas) })
+    /**
+     * EST-26 punto 4 · Quién ofreció su casa.
+     *
+     * Se resuelve con `ofrecimientosDeCasa`, la MISMA función que alimenta la
+     * columna del detalle del grupo: el dato vive en las respuestas de un
+     * formulario y reconocerlo tiene reglas (ver `lib/studies/ofrece-casa`).
+     * Con una segunda lectura acá, la pantalla y el Excel podrían discrepar.
+     *
+     * Solo se pregunta por la gente que va en el export, no por el padrón.
+     */
+    const { ofrecimientosDeCasa } = await import('@/lib/supabase/queries/studies')
+    const casas = await ofrecimientosDeCasa([...personas.keys()])
+
+    return NextResponse.json({ filas: armarFilas(grupos, personas, casas) })
   } catch (error) {
     reportarError('GET /api/studies/groups/participantes:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
