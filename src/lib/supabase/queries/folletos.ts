@@ -757,17 +757,20 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
       .eq('resulting_folleto_request_id', t.id).maybeSingle(),
   ])
 
-  const grupo = aGrupoInfo(grupoRes.data as GrupoRow | null)
+  const grupoPropio = aGrupoInfo(grupoRes.data as GrupoRow | null)
   const origen = aGrupoInfo(origenRes.data as GrupoRow | null)
 
   // Los tiquetes anteriores al 2026-09-02 no tienen quantity_leaders: ahí el
   // desglose se deduce del grupo, que es la mejor lectura disponible. No se
   // reescribe `quantity` — sigue siendo la cantidad de estudiantes.
+  // OJO: el desglose se calcula con el grupo PROPIO del tiquete, nunca con el
+  // de destino de una reubicación. El dirigente que recibe a la persona ya
+  // tiene su folleto; sumarle uno pediría dos folletos para trasladar a uno.
   const desglose = t.quantity_leaders == null
     ? desgloseFolletos({
       estudiantes: t.quantity,
-      tieneDirigente: !!grupo?.dirigente,
-      tieneCoDirigente: !!grupo?.co_dirigente,
+      tieneDirigente: !!grupoPropio?.dirigente,
+      tieneCoDirigente: !!grupoPropio?.co_dirigente,
     })
     : { estudiantes: t.quantity, dirigentes: t.quantity_leaders, total: t.quantity + t.quantity_leaders }
 
@@ -794,6 +797,25 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
       : null,
     resuelta_por: nombre(uno(rr.revisor)),
   } : null
+
+  /**
+   * EL GRUPO QUE RECIBE. En una reubicación el tiquete no tiene
+   * `source_group_id`, así que «A quién se le entrega» salía con «Grupo: —,
+   * Dirigente: Sin asignar — nadie va a recibir los folletos», que era falso:
+   * el sistema SÍ sabe a qué grupo entró la persona (Floriana, 2026-10-12).
+   *
+   * El grupo que recibe el folleto es el de DESTINO. Se carga con el mismo
+   * select de siempre para que la tarjeta traiga también dirigente, lugar y
+   * horario, que es lo que hace falta para ir a dejarlo.
+   *
+   * Va DESPUÉS del desglose a propósito: ver el comentario de arriba.
+   */
+  let grupo = grupoPropio
+  if (!grupo && reubicacion?.grupo_destino) {
+    const { data: gd } = await supabase
+      .from('study_groups').select(GRUPO_SELECT).eq('id', reubicacion.grupo_destino.id).maybeSingle()
+    grupo = aGrupoInfo(gd as GrupoRow | null)
+  }
 
   return {
     id: t.id,
