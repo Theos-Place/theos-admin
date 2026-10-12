@@ -2362,22 +2362,65 @@ export async function expirePendingStudyEnrollments(
   return { expired: detalle.length, detalle }
 }
 
-/** Nombre de la persona y del grupo, para los mensajes y para el dry-run. */
+/** Nombre de la persona y del grupo, para los mensajes y para el dry-run.
+ *  Trae también el correo: desde MAT-3 el aviso de plazo sale por ahí. */
 async function nombresDeMiembrosYGrupos(
   supabase: ReturnType<typeof createAdminClient>,
   filas: ReadonlyArray<{ id: string; member_id: string; group_id: string | null }>,
-): Promise<Map<string, { nombre?: string; grupo?: string }>> {
-  const out = new Map<string, { nombre?: string; grupo?: string }>()
+): Promise<Map<string, { nombre?: string; grupo?: string; correo?: string }>> {
+  const out = new Map<string, { nombre?: string; grupo?: string; correo?: string }>()
   if (filas.length === 0) return out
   const [{ data: ms }, { data: gs }] = await Promise.all([
-    supabase.from('members').select('id, first_name, last_name').in('id', [...new Set(filas.map(f => f.member_id))]),
+    supabase.from('members').select('id, first_name, last_name, email').in('id', [...new Set(filas.map(f => f.member_id))]),
     supabase.from('study_groups').select('id, name').in('id', [...new Set(filas.map(f => f.group_id).filter((x): x is string => !!x))]),
   ])
-  const nm = new Map(((ms ?? []) as Array<{ id: string; first_name: string; last_name: string }>)
-    .map(m => [m.id, `${m.first_name} ${m.last_name}`.trim()]))
+  type M = { id: string; first_name: string; last_name: string; email: string | null }
+  const nm = new Map(((ms ?? []) as M[]).map(m => [m.id, `${m.first_name} ${m.last_name}`.trim()]))
+  const em = new Map(((ms ?? []) as M[]).map(m => [m.id, m.email ?? undefined]))
   const gm = new Map(((gs ?? []) as Array<{ id: string; name: string }>).map(g => [g.id, g.name]))
-  for (const f of filas) out.set(f.id, { nombre: nm.get(f.member_id), grupo: f.group_id ? gm.get(f.group_id) : undefined })
+  for (const f of filas) out.set(f.id, {
+    nombre: nm.get(f.member_id),
+    grupo: f.group_id ? gm.get(f.group_id) : undefined,
+    correo: em.get(f.member_id),
+  })
   return out
+}
+
+/**
+ * MAT-3 · Resumen a coordinación de estudios de quién está por perder el cupo.
+ *
+ * UNA notificación con la lista, no una por persona: seis campanitas seguidas
+ * el mismo día se leen como ruido y se descartan juntas.
+ *
+ * Best-effort, como todo el resto de los avisos del barrido.
+ */
+async function avisarACoordinacionDeEstudios(
+  supabase: ReturnType<typeof createAdminClient>,
+  casos: ReadonlyArray<{ persona: string; estudio: string; horas: number }>,
+): Promise<number> {
+  const { textoParaCoordinacion } = await import('@/lib/studies/aviso-de-plazo')
+  const t = textoParaCoordinacion(casos)
+  if (!t) return 0
+  const { data: roleRows } = await supabase
+    .from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+    .eq('role', 'coordinador_estudios')
+    .eq('is_active', true)
+  const dest = [...new Set(((roleRows ?? []) as unknown as Array<{
+    member_id: string; member: { is_active: boolean } | { is_active: boolean }[] | null
+  }>)
+    .filter(r => (Array.isArray(r.member) ? r.member[0] : r.member)?.is_active === true)
+    .map(r => r.member_id))]
+  if (dest.length === 0) return 0
+  const { error } = await supabase.from('internal_notifications').insert(dest.map(memberId => ({
+    recipient_member_id: memberId,
+    type: 'matriculas_por_vencer_resumen',
+    title: t.title,
+    body: t.body,
+    link: '/estudios/matriculas?estado=pendiente_de_pago',
+  })))
+  if (error) { reportarFalla('resumen de matrículas por vencer a coordinación:', error.message, {}); return 0 }
+  return dest.length
 }
 
 /**
@@ -2421,6 +2464,7 @@ export async function avisarMatriculasPorVencer(
 
   const nombres = await nombresDeMiembrosYGrupos(supabase, filas)
   const detalle: Array<{ member_id: string; grupo?: string; horas: number }> = []
+  const paraCoordinacion: Array<{ persona: string; estudio: string; horas: number }> = []
 
   for (const e of filas) {
     if (!e.group_id) continue
@@ -2443,7 +2487,36 @@ export async function avisarMatriculasPorVencer(
       recipient_member_id: e.member_id, type: TIPO_AVISO, title: t.title, body: t.body, link,
     })
     if (nErr) reportarFalla('avisar matrícula por vencer:', nErr.message, { enrollmentId: e.id })
+
+    // MAT-3 · El correo, que es el que de verdad llega. Va DESPUÉS de la
+    // campanita y sin romper el flujo: la campanita es el registro de que ya
+    // se avisó, y si el correo se cayera primero la próxima corrida mandaría
+    // dos. Sin correo en la ficha no hay nada que hacer acá.
+    if (info.correo) {
+      try {
+        const { sendSystemEmail } = await import('@/lib/email/system-templates')
+        const { horasRestantes } = await import('@/lib/studies/aviso-de-plazo')
+        await sendSystemEmail({
+          systemKey: 'matricula_por_vencer',
+          to: { email: info.correo, name: info.nombre },
+          data: {
+            nombre: info.nombre ?? '',
+            nombre_grupo: info.grupo ?? 'tu estudio',
+            horas: String(horasRestantes(horas)),
+            link_pago: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://admin.theosplace.org'}${link}`,
+          },
+        })
+      } catch (err) {
+        reportarFalla('avisar matrícula por vencer (correo):', err, { enrollmentId: e.id })
+      }
+    }
+    paraCoordinacion.push({
+      persona: info.nombre ?? 'Alguien',
+      estudio: info.grupo ?? 'un estudio',
+      horas,
+    })
   }
+  if (!opts.dryRun) await avisarACoordinacionDeEstudios(supabase, paraCoordinacion)
   return { avisados: opts.dryRun ? 0 : detalle.length, detalle }
 }
 

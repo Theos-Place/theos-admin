@@ -4,19 +4,21 @@
 //
 // REGLA (2026-08-06): SIEMPRE se pide. La matrícula ya quedó efectiva —el pago
 // va por su carril y no la deshace— pero el comprobante se pide en el momento,
-// que es cuando la persona tiene la captura a mano. Sin salida por Esc ni por
-// el fondo: el único botón es enviarlo.
+// que es cuando la persona tiene la captura a mano. Esc y el fondo no cierran:
+// abren el aviso de MAT-3, que dice el estado real (matrícula viva, pendiente,
+// con fecha de vencimiento) y desde ahí se puede volver o cancelar.
 //
 // Vive acá (y no dentro de la pantalla de matrícula) porque lo usan los DOS
 // caminos: el autoservicio de /matricula y el staff agregando a alguien desde
 // la ficha del grupo.
-import { useState } from 'react'
-import { Check, Loader2, AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, Loader2, AlertCircle, TriangleAlert } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { formatMoney, amountStep } from '@/lib/format'
 import { declaredAmountMismatch } from '@/lib/finance/payment-breakdown'
 import { cn } from '@/lib/utils'
 import { PaymentInstructions } from '@/components/finance/PaymentInstructions'
+import { avisoDeSalidaSinComprobante, AVISO_AL_CERRAR_PESTANA } from '@/lib/studies/salir-sin-comprobante'
 
 export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, memberName, amount, currency = 'CRC', onDone, onCancelada }: {
   enrollmentId: string
@@ -43,6 +45,21 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
   // cobro abierto, y alguien del staff tenía que retirarla a mano. Pasó con
   // Alexandra Forero.
   const [confirmarCancelar, setConfirmarCancelar] = useState(false)
+
+  // MAT-3 · Cerrar la pestaña era el ÚNICO camino que no avisaba nada, y es
+  // justo por donde se pierde la gente: Mariel González cerró dos veces y las
+  // dos perdió el cupo. El navegador muestra su propio texto, pero el diálogo
+  // solo sale si se le devuelve una cadena no vacía.
+  useEffect(() => {
+    if (done) return
+    const alSalir = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = AVISO_AL_CERRAR_PESTANA
+      return AVISO_AL_CERRAR_PESTANA
+    }
+    window.addEventListener('beforeunload', alSalir)
+    return () => window.removeEventListener('beforeunload', alSalir)
+  })
   const [cancelando, setCancelando] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
@@ -202,25 +219,43 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
                 quedaba la matrícula viva con su cobro abierto. */}
             {groupId && (
               confirmarCancelar ? (
-                <div className="rounded-xl bg-[rgba(214,62,61,0.06)] border border-[rgba(214,62,61,0.2)] px-3.5 py-3 space-y-2.5">
-                  <p className="text-[13px] text-navy font-body">
-                    Se cancela la matrícula en {studyName} y se anula el cobro. El cupo queda libre
-                    para otra persona; podés volver a matricularte después si querés.
-                  </p>
-                  <div className="flex items-center gap-2">
+                <div className="rounded-xl bg-[rgba(214,62,61,0.08)] border-2 border-[rgba(214,62,61,0.35)] px-3.5 py-3.5 space-y-3">
+                  {/* MAT-3 · Antes esto solo ofrecía cancelar, sin decir qué
+                      pasaba si simplemente se iba. El estado real —matrícula
+                      viva, pendiente, con fecha de vencimiento— es el dato que
+                      le faltaba a la gente que perdía el cupo sin enterarse. */}
+                  <div className="flex items-start gap-2">
+                    <TriangleAlert size={18} className="shrink-0 mt-0.5 text-coral-deep" aria-hidden="true" />
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-bold text-coral-deep font-display">
+                        {avisoDeSalidaSinComprobante(studyName).titulo}
+                      </p>
+                      <p className="text-[13px] text-navy font-body">
+                        {avisoDeSalidaSinComprobante(studyName).cuerpo}
+                      </p>
+                      <p className="text-[13px] font-bold text-coral-deep font-body">
+                        {avisoDeSalidaSinComprobante(studyName).plazo}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setConfirmarCancelar(false)}
+                    disabled={cancelando}
+                    className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                  >
+                    Subir el comprobante ahora
+                  </button>
+                  <div className="pt-0.5 border-t border-[rgba(214,62,61,0.2)]">
+                    <p className="text-[13px] text-navy-light/80 font-body pt-2.5">
+                      ¿Ya no querés el campo? Se cancela la matrícula y se anula el cobro;
+                      podés volver a matricularte después si hay campo.
+                    </p>
                     <button
                       onClick={cancelarMatricula}
                       disabled={cancelando}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-3.5 py-2 text-[13px] text-white hover:bg-coral-deep transition-colors disabled:opacity-50 font-body"
+                      className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep underline transition-colors disabled:opacity-50 font-body"
                     >
-                      {cancelando ? <><Loader2 size={14} className="animate-spin" /> Cancelando…</> : 'Sí, cancelar la matrícula'}
-                    </button>
-                    <button
-                      onClick={() => setConfirmarCancelar(false)}
-                      disabled={cancelando}
-                      className="rounded-full px-3 py-2 text-[13px] text-navy-light/80 hover:text-navy transition-colors font-body"
-                    >
-                      Mejor no
+                      {cancelando ? <><Loader2 size={14} className="animate-spin" /> Cancelando…</> : 'Cancelar la matrícula'}
                     </button>
                   </div>
                 </div>

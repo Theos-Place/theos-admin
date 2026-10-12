@@ -28,6 +28,7 @@ export type SystemTemplateKey =
   | 'solicitud_asignada'
   | 'cumpleanos'
   | 'cierre_pendiente' | 'cierre_vencido'
+  | 'matricula_por_vencer'
 
 /** Fallback mínimo si la plantilla no está en la BD (nunca debería pasar: son
  *  no borrables, pero por si la BD no está inicializada). */

@@ -17,8 +17,9 @@ import { join } from 'node:path'
 // 187 → 186 con SRV-11 (se eliminó «Importar vacantes» entero) y 186 → 185 al
 // unificar el panel de revisión de aplicaciones: los dos modales que quedaron
 // huérfanos se llevaron su botón. El trinquete aprieta en los dos sentidos,
-// que es la gracia.
-const TECHO = 185
+// que es la gracia. 185 → 184 con MAT-3: el aviso al salir del modal del
+// comprobante dejó un botón donde antes había dos.
+const TECHO = 184
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {

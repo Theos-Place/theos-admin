@@ -14,8 +14,18 @@
  * cuando quedan 24 y todavía se puede hacer algo. Decisión del usuario el
  * 2026-09-17.
  *
- * El aviso es in-app (la campanita), no correo: no depende de
- * EMAIL_SILENT_MODE ni gasta envíos.
+ * CANAL: campanita Y CORREO (cambio del 2026-10-12, MAT-3).
+ *
+ * Hasta hoy era solo in-app, para no gastar envíos. Medido un mes después:
+ * de 11 avisos se leyó 1 (9%), y de las 11 personas avisadas 6 igual
+ * perdieron el cupo. El motivo es estructural y no se arregla con más
+ * campanitas: quien necesita este aviso es justo quien ya cerró el sistema y
+ * se fue. Mariel González perdió el campo DOS veces con las dos campanitas
+ * sin leer.
+ *
+ * El correo es best-effort: si falla, la campanita igual se crea y el
+ * barrido sigue. Nunca al revés — la campanita es el registro de que se
+ * avisó, y es lo que impide avisar dos veces.
  */
 import { HORAS_DE_GRACIA } from './enrollment-hold'
 
@@ -67,5 +77,31 @@ export function textoDeLiberacion(input: { estudio: string }): { title: string; 
     title: 'Se liberó tu cupo',
     body: `Pasaron ${HORAS_DE_GRACIA} horas sin comprobante y tu matrícula de ${input.estudio} `
       + 'se liberó. Podés volver a matricularte si todavía hay campo.',
+  }
+}
+
+/**
+ * Resumen para coordinación de estudios: a quién hay que ir a buscar hoy.
+ *
+ * Va UNA notificación con la lista, no una por persona: el día que caigan
+ * seis, seis campanitas seguidas se leen como ruido y se descartan juntas.
+ *
+ * Solo cuenta como rescate si alguien puede actuar, así que el texto dice el
+ * plazo real que queda, no "pronto".
+ */
+export function textoParaCoordinacion(
+  casos: ReadonlyArray<{ persona: string; estudio: string; horas: number }>,
+): { title: string; body: string } | null {
+  if (casos.length === 0) return null
+  const n = casos.length
+  const lista = casos
+    .map(c => `${c.persona} (${c.estudio}, le quedan ${horasRestantes(c.horas)} h)`)
+    .join('; ')
+  return {
+    title: n === 1
+      ? '1 matrícula está por vencer sin comprobante'
+      : `${n} matrículas están por vencer sin comprobante`,
+    body: `${lista}. Ya se les avisó por correo y campanita. Si no suben el `
+      + 'comprobante, el cupo se les libera solo.',
   }
 }
