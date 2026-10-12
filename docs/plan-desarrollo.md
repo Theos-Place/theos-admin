@@ -157,14 +157,22 @@ evento.
 
 ## Fase 16 — Pedido el 2026-09-14
 
-### [~] FAM-2 · Familias desde CCB + reglas de menores — PARTE A HECHA · PARTE B EN PAUSA, esperando correos
+### [x] FAM-2 · Familias desde CCB + reglas de menores — CERRADO 2026-10-12
 
-> **EN PAUSA hasta que CHK-5 junte los correos (decidido 2026-09-22).** Lo que
-> falta de la parte B no se puede empezar: los 3 que califican para la
-> invitación no tienen correo, y de los 65 que cumplieron 18 solo 1 lo tiene.
-> No hay cómo invitarlos. El camino es la puerta: CHK-5 le pide el correo a
-> todo adulto que no lo tenga, así que esto se destraba solo a medida que la
-> gente vaya pasando por el check-in. **No retomar hasta entonces.**
+> **CERRADO, no en pausa (Floriana, 2026-10-12): «realmente no lo podemos
+> arreglar, eso se irá arreglando en el futuro cuando las familias hagan
+> check-in».**
+>
+> La parte A está aplicada. La parte B nunca fue un pendiente de desarrollo:
+> no hay nada que construir, falta el DATO. Los 3 que califican para la
+> invitación no tienen correo, y de los 65 que cumplieron 18 solo 1 lo tiene;
+> sin correo no hay a quién invitar. CHK-5 ya le pide el correo a todo adulto
+> que pasa por la puerta, así que el hueco se cierra solo, persona por
+> persona, sin que nadie lo empuje.
+>
+> Dejarlo como pendiente solo hacía ver la lista más larga de lo que es. Si
+> algún día hay masa suficiente de correos y se quiere mandar la invitación,
+> entra como pedido nuevo.
 
 
 **PARTE A · APLICADA 2026-09-15.** De las 1.578 familias de CCB, 1.210 ya
