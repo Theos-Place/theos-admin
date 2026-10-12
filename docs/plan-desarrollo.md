@@ -1346,7 +1346,7 @@ dice la sede y la hora, que es lo que deja decidir en la puerta.
 Solo entre charlas; el «Youth» de la misma sede no dispara el aviso; el día
 se mide en hora de Costa Rica.
 
-### [~] EST-26 · Ver quién ofreció su casa — COLUMNA HECHA 2026-10-06 · FALTAN EXPORT Y FILTRO DE PADRÓN
+### [x] EST-26 · Ver quién ofreció su casa — CERRADO 2026-10-12
 
 (Se pidió como «EST-22» el 2026-10-06; se renumeró porque ese código ya lo
 usaba el teléfono del dirigente en el export, cerrado el 2026-09-30.)
@@ -1425,14 +1425,24 @@ HECHO: columna «Ofrece casa» con la ubicación en el detalle del grupo, solo
 para gestión — ni el dirigente ni el estudiante, y el dato NO VIAJA en el
 JSON para ellos (decisión de Floriana).
 
-NO HECHO, y por qué:
-- **Export de la lista del grupo**: no existe tal export hoy. La spec lo daba
-  por hecho. Construirlo es otro ítem.
-- **Filtro en el padrón**: el dato vive en respuestas de formulario, no en una
-  columna de `members`; el sistema de condiciones no lee formularios. Es
-  posible pero es trabajo aparte.
 - **Las demás respuestas al abrir la matrícula**: ya se ven todas en
   `/formularios/[id]/respuestas`. Se dejó así en vez de duplicar la pantalla.
+
+**EST-26 · lo que faltaba, cerrado el 2026-10-12**
+
+- **Filtro en el padrón (punto 3): YA FUNCIONABA, no hizo falta código.** La
+  nota de arriba estaba equivocada: el sistema de condiciones SÍ lee
+  formularios, con una condición de tipo `form`. Corrido contra producción
+  devuelve las 6 personas exactas que contestaron que sí.
+- **Export (punto 4): HECHO.** El export de participantes existía desde
+  entonces; se le agregaron «Ofrece casa» y «Dónde ofrece» al final, solo
+  para estudiantes y solo para los que dijeron que sí (en blanco los demás:
+  la columna se filtra en Excel). La ruta usa `GROUP_ADMIN_ROLES`, así que
+  sigue siendo de gestión y el dirigente no lo ve.
+- De paso salió un bug que hacía la columna inútil: el `.in()` con los 831
+  miembros del roster daba 400 por el largo de la URL, el error no se
+  miraba, y salía vacía para todos. Ahora va en lotes de 100 y revienta si
+  falla. Guard en `src/lib/supabase/queries/in-por-lotes.test.ts`.
 
 **EST-27 · lo que estaba roto (2026-10-06)**
 
