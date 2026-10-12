@@ -21,6 +21,7 @@ const base: FolletoDetalle = {
   },
   pagos: { total: 8, pagados: 5 },
   target_leader_name: null,
+  reubicacion: null,
 }
 
 describe('asunto', () => {

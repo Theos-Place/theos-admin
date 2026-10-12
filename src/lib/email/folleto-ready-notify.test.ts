@@ -18,6 +18,7 @@ const base: FolletoDetalle = {
   cierre: null,
   pagos: { total: 5, pagados: 0 },
   target_leader_name: null,
+  reubicacion: null,
 }
 
 describe('asunto', () => {

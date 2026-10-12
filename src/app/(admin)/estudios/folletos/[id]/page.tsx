@@ -10,7 +10,7 @@ import { useToast } from '@/components/shared/Toast'
 import { cn } from '@/lib/utils'
 import {
   ChevronLeft, Loader2, MapPin, Users, CalendarDays, Printer, ChevronRight,
-  GraduationCap, AlertTriangle, Video,
+  GraduationCap, AlertTriangle, Video, ArrowRightLeft,
 } from 'lucide-react'
 import { textoDesglose } from '@/lib/studies/folleto-desglose'
 import { textoDesfase, textoHorario } from '@/lib/email/folleto-request-notify'
@@ -198,6 +198,43 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             </Dato>
             {textoHorario(d.grupo) && <Dato label="Horario">{textoHorario(d.grupo)}</Dato>}
           </Tarjeta>
+
+          {/**
+            * DE QUIÉN ES LA REUBICACIÓN (Floriana, 2026-10-12).
+            *
+            * El tiquete de una reubicación nace sin grupo de origen, así que
+            * la tarjeta de arriba salía vacía y el detalle entero no decía
+            * «prácticamente nada»: ni el estudiante, ni con quién estaba.
+            *
+            * El dato SÍ existía —`study_requests` apunta al tiquete— y solo
+            * faltaba seguir el enlace. Va en su propia tarjeta y no mezclado
+            * con «a quién se le entrega», porque son dos cosas: el folleto
+            * se le entrega al dirigente NUEVO, y esto cuenta de dónde viene
+            * la persona.
+            */}
+          {d.reubicacion && (
+            <Tarjeta icon={ArrowRightLeft} title="De quién es esta reubicación">
+              <Dato label="Estudiante" alerta={!d.reubicacion.estudiante}>
+                {d.reubicacion.estudiante_id && d.reubicacion.estudiante
+                  ? <Link href={`/miembros/${d.reubicacion.estudiante_id}`} className="text-teal-deep hover:underline">{d.reubicacion.estudiante}</Link>
+                  : d.reubicacion.estudiante ?? 'Sin nombre en la solicitud'}
+              </Dato>
+              <Dato label="Venía con" alerta={!d.reubicacion.dirigente_anterior}>
+                {d.reubicacion.dirigente_anterior ?? 'No lo dijo en la solicitud'}
+              </Dato>
+              {d.reubicacion.grupo_destino && (
+                <Dato label="Entró a">
+                  <Link href={`/estudios/grupos/${d.reubicacion.grupo_destino.id}`} className="text-teal-deep hover:underline">
+                    {d.reubicacion.grupo_destino.name ?? 'sin nombre'}
+                  </Link>
+                  {d.reubicacion.grupo_destino.dirigente ? ` · ${d.reubicacion.grupo_destino.dirigente}` : ''}
+                </Dato>
+              )}
+              {d.reubicacion.resuelta_por && (
+                <Dato label="La resolvió">{d.reubicacion.resuelta_por}</Dato>
+              )}
+            </Tarjeta>
+          )}
 
           {/* `available_at` es cuándo estarían en la sede: el cierre más los
               días de imprenta. No se muestra "se necesitan para" porque el

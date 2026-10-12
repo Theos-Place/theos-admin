@@ -627,6 +627,31 @@ export type FolletoDetalle = {
   pagos: { total: number; pagados: number }
   /** Destinatario de una solicitud manual. */
   target_leader_name: string | null
+  /**
+   * De quién es esta reubicación (FOL, 2026-10-12).
+   *
+   * El tiquete de una reubicación nace sin `source_group_id` ni
+   * `origin_group_id`, así que el detalle salía en blanco: ni estudiante, ni
+   * dirigente, ni de dónde venía. «Ese detalle no me dice prácticamente
+   * nada» (Floriana).
+   *
+   * El dato SÍ existía: `study_requests.resulting_folleto_request_id` apunta
+   * al tiquete desde la solicitud, que sabe quién es y con quién estaba.
+   * Faltaba seguir el enlace.
+   */
+  reubicacion: FolletoReubicacionInfo | null
+}
+
+export type FolletoReubicacionInfo = {
+  solicitud_id: string
+  estudiante: string | null
+  estudiante_id: string | null
+  /** Con quién estaba antes. Texto libre: lo escribe quien pide el traslado. */
+  dirigente_anterior: string | null
+  /** A qué grupo entró, si ya se resolvió. */
+  grupo_destino: { id: string; name: string | null; dirigente: string | null } | null
+  /** Quién resolvió la reubicación. */
+  resuelta_por: string | null
 }
 
 type GrupoRow = {
@@ -708,7 +733,7 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
   } | null
   if (!t) return null
 
-  const [grupoRes, origenRes, pagosRes] = await Promise.all([
+  const [grupoRes, origenRes, pagosRes, reubRes] = await Promise.all([
     t.source_group_id
       ? supabase.from('study_groups').select(GRUPO_SELECT).eq('id', t.source_group_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -716,6 +741,20 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
       ? supabase.from('study_groups').select(GRUPO_SELECT).eq('id', t.origin_group_id).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from('payments').select('status').eq('folleto_request_id', t.id),
+    /**
+     * La solicitud que generó este tiquete. Se pide SIEMPRE y no solo cuando
+     * `tipo === 'reubicacion'`: el tipo es un texto de la fila y, si mañana
+     * aparece otro que también venga de una solicitud, el detalle lo muestra
+     * sin que nadie se acuerde de agregarlo acá. Es una consulta por id
+     * indexado y va en el mismo Promise.all.
+     */
+    supabase.from('study_requests')
+      .select(`id, member_id, last_leader_name, reviewed_by,
+               estudiante:members!study_requests_member_id_fkey(first_name, last_name),
+               revisor:members!study_requests_reviewed_by_fkey(first_name, last_name),
+               destino:study_groups!study_requests_resolved_group_id_fkey(
+                 id, name, leader:members!study_groups_leader_id_fkey(first_name, last_name))`)
+      .eq('resulting_folleto_request_id', t.id).maybeSingle(),
   ])
 
   const grupo = aGrupoInfo(grupoRes.data as GrupoRow | null)
@@ -733,6 +772,29 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
     : { estudiantes: t.quantity, dirigentes: t.quantity_leaders, total: t.quantity + t.quantity_leaders }
 
   const pagos = ((pagosRes.data ?? []) as Array<{ status: string | null }>)
+
+  type ReubRow = {
+    id: string; member_id: string | null; last_leader_name: string | null
+    estudiante: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+    revisor: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+    destino: {
+      id: string; name: string | null
+      leader: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null
+    } | { id: string; name: string | null; leader: unknown }[] | null
+  }
+  const rr = (reubRes as { data: ReubRow | null }).data
+  const destino = rr ? uno(rr.destino) as { id: string; name: string | null; leader: unknown } | null : null
+  const reubicacion: FolletoReubicacionInfo | null = rr ? {
+    solicitud_id: rr.id,
+    estudiante: nombre(uno(rr.estudiante)),
+    estudiante_id: rr.member_id,
+    dirigente_anterior: rr.last_leader_name?.trim() || null,
+    grupo_destino: destino
+      ? { id: destino.id, name: destino.name, dirigente: nombre(uno(destino.leader as never)) }
+      : null,
+    resuelta_por: nombre(uno(rr.revisor)),
+  } : null
+
   return {
     id: t.id,
     tipo: t.tipo,
@@ -748,5 +810,6 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
     cierre: origen ? { grupo: origen, ...(await contarResultados(origen.id, origen.starts_at)) } : null,
     pagos: { total: pagos.length, pagados: pagos.filter(p => p.status === 'paid').length },
     target_leader_name: t.target_leader_name,
+    reubicacion,
   }
 }

@@ -1428,3 +1428,115 @@ supiera, porque el «Bloque 3 2026» cerró matrícula el 13 de setiembre:
 Las tres decían `active` y la elegibilidad las descartaba en silencio. La
 migración les quita el bloque y las revive. Las de capacitaciones no se
 tocan: ahí el bloque sí es la unidad real.
+
+## Fase 27 — Pedidos del 2026-10-12
+
+### [ ] UX-8 · Ícono del acceso directo en el celular muy oscuro
+
+Prompt para Claude Code:
+
+```
+FIX · PWA/favicon: el ícono de "agregar a inicio" sale fondo negro con la theta azul
+
+Al crear un acceso directo en el celular, el ícono queda oscuro (fondo negro, círculo
+theta azul) — debe verse con la identidad correcta (theta sobre fondo claro o navy de
+marca, legible en home screen claro y oscuro).
+1. Revisar qué se está sirviendo: manifest (icons 192/512, maskable), apple-touch-icon,
+   favicon — ¿cuál está tomando el teléfono y de dónde sale el fondo negro? (un PNG con
+   transparencia que Android rellena de negro es la causa clásica: los maskable deben
+   llevar fondo sólido y margen de seguridad).
+2. Generar el set correcto (192, 512, maskable con safe zone, apple-touch-icon 180) con
+   los colores de marca (navy #161440 de fondo + theta en blanco/coral, o fondo claro —
+   proponer las dos y que Floriana elija con un preview).
+3. Verificar theme_color/background_color del manifest.
+Probar en Android e iOS (agregar a inicio en ambos). tsc/lint.
+```
+
+### [ ] REP-15 · Crecimiento/asistencia 2026: los números de la semana no cuadran entre secciones
+
+Caso: semana 40 de 2026 — arriba dice 872 asistentes y 27 servidores de total
+de check-ins; la sección de abajo dice 875 check-ins y 839 asistentes.
+
+Prompt para Claude Code:
+
+```
+FIX · Reporte de crecimiento/asistencia: dos secciones, dos números distintos
+
+Reproducir: 2026, semana 40 → sección superior: 872 asistentes + 27 servidores; sección
+inferior: 875 check-ins / 839 asistentes. 872+27=899 ≠ 875; 839 ≠ 872. MISMA semana,
+números incompatibles entre sí.
+1. Documentar qué cuenta exactamente cada sección (¿check-ins vs personas únicas?
+   ¿asistente/servidor con checked_in_as? ¿series unificadas REP-13 en una y no en otra?
+   ¿una excluye [prueba] y la otra no? ¿snapshot viejo vs consulta viva?) y encontrar la
+   diferencia CON FILAS, no con hipótesis (las ~3 y ~33 de diferencia tienen nombres).
+2. Arreglo: TODAS las secciones del reporte salen de la misma definición/consulta base
+   (el principio de EST-19/REP-7: si dos números de la misma pantalla pueden divergir,
+   es bug por construcción). Etiquetar claro qué es check-ins y qué es personas únicas.
+Test que compara ambas secciones contra los mismos fixtures. tsc/lint/vitest.
+```
+
+### [ ] REP-16 · Reporte de estudios 2026: estudiantes no cuadran (1190 vs 1822 vs 1896)
+
+Prompt para Claude Code:
+
+```
+FIX · Reporte de estudios (REP-9): tres números de estudiantes distintos en 2026
+
+Reproducir: año 2026 → KPI dice 1.190 estudiantes; la SUMATORIA de la tabla por tipo da
+1.822; el gráfico dice 1.896. Deberían reconciliar: el KPI es personas ÚNICAS
+(des-duplicadas) y la tabla por tipo puede sumar más (una persona en 2 estudios cuenta
+en cada tipo) — ESO es legítimo y el tooltip lo explica, PERO entonces tabla (1.822) y
+gráfico (1.896) deberían ser iguales entre sí y no lo son: ahí hay bug seguro.
+1. Documentar la definición de cada uno de los tres números y encontrar las diferencias
+   con filas (74 entre tabla y gráfico; verificar si 1.190 vs 1.822 es solo
+   des-duplicación legítima o también hay fuga — medirlo, no asumirlo). Sospechosos:
+   límite de 1.000 de PostgREST (ya mordió 3 veces), estados contados distinto
+   (canceladas, en matrícula), [prueba], grupos que cruzan año.
+2. Unificar: tabla y gráfico de la MISMA consulta; KPI de personas únicas derivado de
+   esa misma base; etiquetas que digan "inscripciones" vs "personas" donde corresponda.
+Test de reconciliación (suma por tipo = gráfico; únicas ≤ inscripciones) con fixtures.
+tsc/lint/vitest.
+```
+
+### [ ] MAT-3 · Matrículas a medias: gente queda sin comprobante sin darse cuenta — PRIORITARIO
+
+Casos reales: la persona del teléfono 8816 2358 (estudios de Cartago) dejó la
+matrícula sin comprobante; y en el estudio de Guido Chavarría la encargada
+matriculó a las personas y 3 quedaron por fuera, con el cobro distinto al resto.
+
+Prompt para Claude Code:
+
+```
+FIX UX + DIAGNÓSTICO · La matrícula se está quedando a medias (sin comprobante)
+
+La desmatrícula a las 48h existe como red de seguridad, pero está atrapando gente a
+diario — señal de que el flujo deja creer que ya terminaron. NO debería pasar casi nunca.
+
+ETAPA 1 — DIAGNÓSTICO con los casos reales:
+1. Caso 1: miembro con teléfono 8816 2358, matrícula a estudios de Cartago — reconstruir
+   con audit_log qué pasó: ¿hasta dónde llegó? ¿cerró el modal antes del comprobante?
+   ¿hubo error de subida silencioso?
+2. Caso 2: estudio de Guido Chavarría — la encargada matriculó manualmente y 3 personas
+   quedaron fuera con el cobro DISTINTO al resto: reconstruir cómo se crearon esos 3
+   (¿otro camino de inscripción? ¿falló a medias el lote? ¿por qué el monto difiere?).
+3. MEDIR el problema: cuántas matrículas quedaron sin comprobante y fueron desmatriculadas
+   por el cron en los últimos 30 días, y por cuál camino entraron (autoservicio vs
+   manual) — para saber el tamaño del hueco y dónde está.
+
+ETAPA 2 — CERRAR EL GAP DE UX (autoservicio):
+1. El modal de matrícula NO debe poder sentirse "terminado" sin el comprobante: al
+   intentar cerrar con matrícula creada y comprobante pendiente, interceptar con un aviso
+   claro: "Tu matrícula NO está completa: falta adjuntar el comprobante. Si no lo subís
+   antes de 48 horas, perdés el campo" con botones "Subir comprobante ahora" / "Lo subo
+   después (entiendo el plazo)".
+2. Si sale igual: banner persistente en su perfil/Mis pagos ("Te falta el comprobante de
+   X — te quedan N horas") + la notificación de campanita existente (NOT-2) verificada.
+3. En la pantalla de ÉXITO de la matrícula, el mensaje principal debe decir el estado
+   real: "Matriculado — PENDIENTE DE PAGO" (no un check verde genérico).
+ETAPA 3 — el camino MANUAL (encargada): revisar el flujo de matrícula por staff — ¿deja
+estudiantes a medias si algo falla en el lote? Debe ser transaccional por persona y
+reportar por fila ("5 matriculados, 3 fallaron: …"), nunca éxito parcial silencioso (el
+patrón del bug FOL-2). El cobro generado debe ser consistente para todo el lote.
+Tests: intercepto al cerrar, banner, lote manual reporta por fila, montos consistentes.
+tsc/lint/vitest.
+```
