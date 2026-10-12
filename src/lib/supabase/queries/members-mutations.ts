@@ -6,6 +6,9 @@ import { normalizeCedula } from '@/lib/cedula'
 import type { DbMember } from './members'
 import { casoDeVinculo, type CasoDeVinculo } from '@/lib/members/fusion-familias'
 import { reportarFalla } from '@/lib/observabilidad'
+import {
+  queHacerConLaCuentaHeredada, avisoDeCuentaBloqueada,
+} from '@/lib/members/cuenta-heredada-al-fusionar'
 import { pedirContacto, avisarMenorSinAdulto } from '@/lib/events/contacto-en-la-puerta'
 
 /** Columnas aceptadas al crear/editar un miembro desde la UI (evita pasar
@@ -114,6 +117,10 @@ export type ResultadoFusion = {
   loginMudadoA: string | null
   /** Algo de las cuentas no se pudo hacer: hay que terminarlo a mano. */
   cuentaConProblema: string | null
+  /** La cuenta que heredó el principal venía bloqueada y se liberó. */
+  cuentaDesbloqueada: boolean
+  /** Vino bloqueada y se DEJÓ así: el motivo, para avisarlo. */
+  cuentaSigueBloqueada: string | null
 }
 
 export async function mergeMembersResuelto(
@@ -143,7 +150,10 @@ export async function mergeMembersResuelto(
     dup_auth_user_id?: string | null; dup_email?: string | null
     keep_auth_user_id?: string | null
   }
-  const out: ResultadoFusion = { cuentaDeshabilitada: null, loginMudadoA: null, cuentaConProblema: null }
+  const out: ResultadoFusion = {
+    cuentaDeshabilitada: null, loginMudadoA: null, cuentaConProblema: null,
+    cuentaDesbloqueada: false, cuentaSigueBloqueada: null,
+  }
 
   // 1) La cuenta del duplicado. Se deshabilita con un ban largo en vez de
   //    borrarla: así el historial sigue existiendo y la fusión es reversible.
@@ -159,6 +169,61 @@ export async function mergeMembersResuelto(
       out.cuentaConProblema = r.dup_email ?? r.dup_auth_user_id
     } else {
       out.cuentaDeshabilitada = r.dup_email ?? r.dup_auth_user_id
+    }
+  }
+
+  /**
+   * 1.5) LA CUENTA QUE HEREDÓ EL PRINCIPAL PUEDE VENIR BLOQUEADA.
+   *
+   * `merge_members` le pasa al principal la cuenta del duplicado cuando él no
+   * tenía. Si esa cuenta estaba bloqueada —la regla de menores, lo más
+   * común— el principal hereda el bloqueo y queda sin poder entrar.
+   *
+   * Pasó con Daniela Céspedes (2026-10-12): 33 años, su duplicado estaba
+   * registrado con fecha de nacimiento 2011, y después de fusionar pedía el
+   * enlace, le llegaba, y al abrirlo decía «no es válido». El sistema sabe
+   * avisar que una cuenta está deshabilitada, pero solo a quien es menor
+   * SEGÚN SU FICHA — y la de ella ya decía 1993. Silencio.
+   *
+   * NO ES EL MISMO CASO que el de Bárbara Solís, que ya resolvió el SQL: aquél
+   * era la fusión BLOQUEANDO la única cuenta que quedaba. Este es la fusión
+   * dejando puesto un bloqueo que ya venía de antes.
+   *
+   * Va DESPUÉS de deshabilitar la del duplicado y ANTES de mudarle el correo:
+   * tocar una cuenta bloqueada funciona, pero dejarla en un estado raro
+   * mientras se le cambia el correo es pedir problemas.
+   *
+   * Best-effort, como todo lo de Auth acá: la fusión ya está hecha y bien.
+   */
+  if (r.keep_auth_user_id) {
+    try {
+      const { data: cuenta } = await supabase.auth.admin.getUserById(r.keep_auth_user_id)
+      const hasta = (cuenta?.user as { banned_until?: string | null } | undefined)?.banned_until
+      const bloqueada = !!hasta && new Date(hasta) > new Date()
+
+      const { data: ficha } = await supabase
+        .from('members').select('birth_date, is_active').eq('id', keepId).maybeSingle()
+      const decision = queHacerConLaCuentaHeredada({
+        bloqueada,
+        ficha: (ficha ?? { birth_date: null }) as { birth_date: string | null; is_active?: boolean | null },
+      })
+
+      if (decision.accion === 'desbloquear') {
+        const { error } = await supabase.auth.admin.updateUserById(
+          r.keep_auth_user_id, { ban_duration: 'none' })
+        if (error) {
+          reportarFalla('mergeMembersResuelto: no se pudo desbloquear la cuenta heredada:', error.message)
+          out.cuentaConProblema = avisoDeCuentaBloqueada('no se pudo desbloquear automáticamente')
+        } else {
+          out.cuentaDesbloqueada = true
+        }
+      } else if (decision.accion === 'dejar_bloqueada') {
+        // Se AVISA en vez de callar: quien fusiona tiene que saber que esa
+        // persona no va a poder entrar, y por qué.
+        out.cuentaSigueBloqueada = decision.motivo
+      }
+    } catch (e) {
+      reportarFalla('mergeMembersResuelto: no se pudo revisar la cuenta heredada:', String(e))
     }
   }
 

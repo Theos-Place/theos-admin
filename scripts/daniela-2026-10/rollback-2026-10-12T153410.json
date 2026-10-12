@@ -1,0 +1,44 @@
+[
+  {
+    "nombre": "Lidia Arias Peña",
+    "email": "lidia-arias-pena@hotmail.com",
+    "edad": 69,
+    "authId": "f04dd716-61f2-49d9-963e-e3bdf9244bc5"
+  },
+  {
+    "nombre": "Jose Antonio Quiros Torres",
+    "email": "to_pr@hotmail.com",
+    "edad": 40,
+    "authId": "7a6fc194-0f68-43e6-803e-502dc26859a8"
+  },
+  {
+    "nombre": "Andy Brenes Sánchez",
+    "email": "andy.brenes03@gmail.com",
+    "edad": 18,
+    "authId": "2a0781b9-fc59-403f-935b-d5b18b02c249"
+  },
+  {
+    "nombre": "Jimena Ruiz Matamoros",
+    "email": "jimenez.ruiz.matamoros@gmail.com",
+    "edad": 18,
+    "authId": "773fe7a8-e0f9-4079-b23e-3f6578926730"
+  },
+  {
+    "nombre": "Joshua Valenzuela Perez",
+    "email": "valenzuelaperezjoshua@gmail.com",
+    "edad": 18,
+    "authId": "41008c63-54f9-4fb1-a186-ed49f259ebf3"
+  },
+  {
+    "nombre": "Lucianna Lobo Vargas",
+    "email": "luciannaw.lobo@gmail.com",
+    "edad": 18,
+    "authId": "b8f0a568-d48c-4571-9545-313f4d06217a"
+  },
+  {
+    "nombre": "Luca Calvo Alfaro",
+    "email": "procalvo5199@gmail.com",
+    "edad": 18,
+    "authId": "0e410eca-dbe6-4223-a623-294799117e3a"
+  }
+]

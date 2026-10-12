@@ -106,6 +106,14 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
       if (d?.loginMudadoA) partes.push(`Ahora se entra con ${d.loginMudadoA}.`)
       if (d?.cuentaDeshabilitada) partes.push(`La cuenta ${d.cuentaDeshabilitada} quedó deshabilitada.`)
       if (d?.cuentaConProblema) partes.push(`OJO: ${d.cuentaConProblema} — hay que terminarlo a mano.`)
+      // La cuenta que heredó el principal venía bloqueada. Se dice en los dos
+      // casos: si se liberó, para que nadie la crea rota; y si se dejó
+      // bloqueada, porque esa persona NO va a poder entrar y quien fusiona es
+      // la única que está mirando en ese momento (caso Daniela, 2026-10-12).
+      if (d?.cuentaDesbloqueada) partes.push('La cuenta venía bloqueada y se liberó.')
+      if (d?.cuentaSigueBloqueada) {
+        partes.push(`OJO: la cuenta quedó BLOQUEADA (${d.cuentaSigueBloqueada}); esa persona no va a poder entrar.`)
+      }
       onFusionado(partes.join(' '))
     } catch {
       setError('No se pudo fusionar. Revisá tu conexión.'); setEnviando(false)
