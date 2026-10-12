@@ -2,7 +2,7 @@
  * Avisarle a la persona que su matrícula está por vencer, y avisarle si se
  * venció (NOT-2).
  *
- * POR QUÉ A LAS 48 HORAS Y NO AL MATRICULARSE. El aviso al crear la matrícula
+ * POR QUÉ NO AL MATRICULARSE. El aviso al crear la matrícula
  * YA EXISTIÓ y se quitó a propósito el 2026-09-01, con la medición al lado:
  * apenas vuelve la función la UI abre el modal del comprobante, la persona lo
  * sube en el momento y el pago pasa a revisión — con la notificación diciéndole
@@ -10,9 +10,11 @@
  * los 4 se subieron en menos de 10 minutos (promedio 3). O sea 4 de 4 avisos
  * equivocados.
  *
- * Con la ventana en 72 horas hay lugar para un aviso que SÍ sirve: a las 48,
- * cuando quedan 24 y todavía se puede hacer algo. Decisión del usuario el
- * 2026-09-17.
+ * Con la ventana en 72 horas hay lugar para un aviso que SÍ sirve. Empezó a
+ * las 48 (decisión del 2026-09-17) y pasó a las 24 el 2026-10-12: avisar
+ * cuando quedan 48 horas en vez de 24 le da a la persona un día hábil
+ * entero para reaccionar, y dos oportunidades de ver el correo en vez de
+ * una. La SALIDA no se movió: sigue en 72.
  *
  * CANAL: campanita Y CORREO (cambio del 2026-10-12, MAT-3).
  *
@@ -29,8 +31,8 @@
  */
 import { HORAS_DE_GRACIA } from './enrollment-hold'
 
-/** A las 48 de 72: quedan 24 horas para subir el comprobante. */
-export const HORAS_PARA_AVISAR = 48
+/** A las 24 de 72: quedan 48 horas para subir el comprobante. */
+export const HORAS_PARA_AVISAR = 24
 
 export const TIPO_AVISO = 'matricula_por_vencer'
 export const TIPO_LIBERADA = 'matricula_liberada'
@@ -53,8 +55,12 @@ export function necesitaAviso(input: {
   if (input.reviewStatus) return false
   if (input.conPlanDePagos) return false
   if (input.yaAvisado) return false
-  // Entre las 48 y las 72. Pasadas las 72 ya no es un aviso, es una baja: la
+  // Entre las 24 y las 72. Pasadas las 72 ya no es un aviso, es una baja: la
   // hace el barrido en la misma corrida y manda su propio mensaje.
+  //
+  // La ventana dura 48 horas y el barrido corre a diario, así que caen dos
+  // corridas adentro: lo que impide el segundo aviso es `yaAvisado`, no el
+  // ancho de la ventana.
   return input.horas >= HORAS_PARA_AVISAR && input.horas < HORAS_DE_GRACIA
 }
 

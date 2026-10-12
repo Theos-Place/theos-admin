@@ -7,7 +7,7 @@ import { HORAS_DE_GRACIA } from './enrollment-hold'
 const base = { horas: 50, reviewStatus: null, yaAvisado: false }
 
 describe('necesitaAviso', () => {
-  it('avisa a las 48 horas, cuando quedan 24 y todavía se puede hacer algo', () => {
+  it('avisa a las 24 horas, cuando quedan 48 y todavía se puede hacer algo', () => {
     expect(necesitaAviso({ ...base, horas: HORAS_PARA_AVISAR })).toBe(true)
   })
 
@@ -16,7 +16,15 @@ describe('necesitaAviso', () => {
     // porque la gente sube el comprobante en minutos.
     expect(necesitaAviso({ ...base, horas: 0 })).toBe(false)
     expect(necesitaAviso({ ...base, horas: 3 })).toBe(false)
-    expect(necesitaAviso({ ...base, horas: 47.9 })).toBe(false)
+    expect(necesitaAviso({ ...base, horas: HORAS_PARA_AVISAR - 0.1 })).toBe(false)
+  })
+
+  it('el aviso cae ANTES de la baja, o no sirve de nada', () => {
+    // Las dos son constantes de negocio y se mueven: el aviso ya pasó de 48
+    // a 24 (2026-10-12). Si alguien lo pone por encima del plazo de gracia,
+    // la ventana queda vacía y NADIE recibe el aviso nunca — en silencio,
+    // que es la peor forma de romperlo.
+    expect(HORAS_PARA_AVISAR).toBeLessThan(HORAS_DE_GRACIA)
   })
 
   it('pasado el plazo ya no avisa: eso es una baja, no un aviso', () => {
@@ -42,12 +50,12 @@ describe('necesitaAviso', () => {
 
 describe('horasRestantes', () => {
   it('cuenta lo que falta para el plazo', () => {
-    expect(horasRestantes(48)).toBe(24)
+    expect(horasRestantes(24)).toBe(48)
     expect(horasRestantes(60)).toBe(12)
   })
 
   it('redondea hacia abajo: no promete más tiempo del que hay', () => {
-    expect(horasRestantes(48.9)).toBe(23)
+    expect(horasRestantes(24.9)).toBe(47)
   })
 
   it('nunca es negativo', () => {
@@ -57,8 +65,9 @@ describe('horasRestantes', () => {
 
 describe('los textos', () => {
   it('el aviso dice cuánto queda y qué pasa si no llega', () => {
-    const t = textoDelAviso({ estudio: 'Nivel 3', horas: 48 })
-    expect(t.body).toContain('24 horas')
+    const t = textoDelAviso({ estudio: 'Nivel 3', horas: HORAS_PARA_AVISAR })
+    // A las 24 de 72 quedan 48: el texto sale del cálculo, no de un literal.
+    expect(t.body).toContain(`${HORAS_DE_GRACIA - HORAS_PARA_AVISAR} horas`)
     expect(t.body).toContain('Nivel 3')
     expect(t.body).toMatch(/libera/i)
   })
