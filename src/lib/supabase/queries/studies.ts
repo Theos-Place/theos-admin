@@ -1402,15 +1402,47 @@ export async function countActiveEnrollments(groupId: string): Promise<number> {
   return count ?? 0
 }
 
-/** Elimina un grupo. Primero borra sus inscripciones (la FK no es cascade); el
- *  resto de referencias a study_groups son ON DELETE SET NULL. El guard del
- *  endpoint ya garantiza que no queden personas activas. */
-export async function deleteGroup(id: string): Promise<void> {
+/**
+ * Elimina un grupo. Primero borra sus inscripciones (la FK no es cascade); el
+ * resto de referencias a study_groups son ON DELETE SET NULL.
+ *
+ * MAT-3 (2026-10-12): el guard del endpoint solo garantizaba que no quedara
+ * nadie ACTIVO, y eso no alcanzaba. Las matrículas `transferred` y
+ * `completed` viven acá también, y al borrarlas sus cobros quedan con
+ * enrollment_id y study_group_id en null — plata real, suelta, invisible
+ * para el estudio. Pasó con dos personas de N1 — Escazú: ₡10.000.
+ *
+ * Devuelve el motivo en vez de lanzarlo: el llamador lo convierte en un 409
+ * con el texto tal cual, que es lo que la persona necesita leer. Un throw
+ * acá habría caído en el catch genérico y salido como «Error interno».
+ */
+export async function deleteGroup(id: string): Promise<{ ok: true } | { ok: false; razon: string }> {
   const supabase = createAdminClient()
+  const { razonParaNoBorrarGrupo, ESTADOS_CON_HISTORIAL } =
+    await import('@/lib/studies/borrar-grupo')
+
+  const { data: filas, error: eLeer } = await supabase
+    .from('study_enrollments')
+    .select('id, status, payments!payments_enrollment_id_fkey(status)')
+    .eq('group_id', id)
+  if (eLeer) throw eLeer
+  type Fila = { id: string; status: string | null; payments: Array<{ status: string | null }> | null }
+  const inscripciones = (filas ?? []) as unknown as Fila[]
+  const razon = razonParaNoBorrarGrupo({
+    pagosVivos: inscripciones
+      .flatMap(f => f.payments ?? [])
+      .filter(p => p.status !== 'cancelado').length,
+    transferidas: inscripciones.filter(f => f.status === 'transferred').length,
+    completadas: inscripciones.filter(f => f.status === 'completed').length,
+  })
+  if (razon) return { ok: false, razon }
+  void ESTADOS_CON_HISTORIAL
+
   const { error: eEnr } = await supabase.from('study_enrollments').delete().eq('group_id', id)
   if (eEnr) throw eEnr
   const { error } = await supabase.from('study_groups').delete().eq('id', id)
   if (error) throw error
+  return { ok: true }
 }
 
 /** Agrega un estudio al historial de un miembro SIN grupo (ej. estudios viejos,

@@ -1569,3 +1569,33 @@ patrón del bug FOL-2). El cobro generado debe ser consistente para todo el lote
 Tests: intercepto al cerrar, banner, lote manual reporta por fila, montos consistentes.
 tsc/lint/vitest.
 ```
+
+### [ ] EST-28 · Esquema viejo/nuevo visible en folletos, grupos y matrículas (pedido 2026-10-12)
+
+Durante la transición de EST-14/EST-25 conviven los dos esquemas y hoy no se
+distinguen a simple vista — hay que operar sabiendo cuál es cuál.
+
+Prompt para Claude Code:
+
+```
+MEJORA · Transición de bloques: mostrar el esquema (viejo/nuevo) donde se opera
+
+BASE: la marca legacy/bloques por grupo ya existe (la creó EST-25). Esto es EXPONERLA:
+
+1. TIQUETES DE FOLLETOS: el título/detalle del tiquete debe decir qué folletos lleva
+   según el esquema del grupo — esquema viejo: "Nivel 1" (solo el nivel); esquema nuevo:
+   "Nivel 1 y 2" o "Nivel 3 y 4" (el par). Además una columna/campo "Esquema:
+   viejo/nuevo" en la lista de tiquetes y dentro del tiquete.
+2. LISTA DE GRUPOS: columna nueva "Esquema" (valores: "viejo"/"nuevo") — VISIBLE POR
+   DEFAULT por ahora (se ordena después de estudio, dirigente, teléfono), en el selector
+   de columnas para poder ocultarla, y pensada para retirarse cuando la transición
+   termine (dejar comentario de que es temporal). Filtrable si el patrón de la tabla ya
+   lo da gratis.
+3. MATRÍCULAS/SOLICITUDES de estudio: donde se muestra el detalle de una matrícula o
+   solicitud, indicar el esquema del grupo al que pertenece (una línea/badge — ayuda a
+   soporte y finanzas a entender por qué un cobro es de ₡5.000 en par o del nivel solo).
+4. Export de la lista de grupos incluye la columna.
+Todo es LECTURA de la marca existente — este ítem no cambia ninguna regla de negocio.
+Tests: tiquete legacy dice solo el nivel, tiquete bloques dice el par; columna presente
+y exportada. tsc/lint/vitest.
+```

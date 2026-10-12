@@ -193,7 +193,12 @@ export async function DELETE(
         { status: 409 },
       )
     }
-    await deleteGroup(id)
+    // MAT-3 · El guard de arriba mira a los ACTIVOS; este mira el dinero y el
+    // historial, que es lo que el borrado destruía en silencio.
+    const r = await deleteGroup(id)
+    if (!r.ok) {
+      return NextResponse.json({ error: r.razon, code: 'tiene_rastro' }, { status: 409 })
+    }
     return NextResponse.json({ ok: true })
   } catch (error) {
     reportarError('DELETE /api/studies/groups/[id]:', error)
