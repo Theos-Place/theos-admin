@@ -338,7 +338,12 @@ completa en `docs/minutas/estudios-2026-09-24.md`. Orden sugerido: RET-1 y
 SRV-10 son urgentes (privacidad); EST-14 es el grande y se prueba en staging
 antes de producción (dicho en la reunión).
 
-### [~] EST-14 · Niveles en dos bloques — FASES 1-3 HECHAS 2026-09-30 · LA TRANSICIÓN LA REVISA FLORIANA CON DENISE
+### [x] EST-14 · Niveles en dos bloques — CERRADO 2026-10-12
+
+> **Fases 1-3 hechas el 2026-09-30.** La transición queda FUERA del plan de
+> desarrollo: la está resolviendo Denise (decisión de Floriana, 2026-10-12).
+> Las reglas de abajo se conservan porque son el contrato de lo construido;
+> si la transición devuelve un cambio, entra como pedido nuevo.
 
 Reglas decididas:
 - Matricularse a Nivel 1 cubre N1+N2 (₡5.000): el paso 1→2 sigue automático y
@@ -845,7 +850,13 @@ día anterior en Costa Rica. Para el 31 de agosto hay 41 pagos en día CR y un
 filtro ingenuo habría devuelto CERO. La conversión vive en
 `src/lib/finance/rango-de-pagos.ts` con tests.
 
-### [~] DON-3 · Donaciones con montos: reimportación del año + reporte con montos por sede — PARTE B HECHA 2026-10-05 · PARTE A ESPERA EL CONSOLIDADO DE ANDRÉS
+### [x] DON-3 · Donaciones con montos — FUERA DE LA LISTA DE FLORIANA 2026-10-12
+
+> **Parte B hecha el 2026-10-05** (el reporte con montos por sede).
+> **La parte A es de ANDRÉS**, no de desarrollo: depende de que él prepare el
+> consolidado enero-septiembre con montos y moneda. Sale de esta lista por
+> decisión de Floriana (2026-10-12). El prompt se conserva abajo para cuando
+> el consolidado exista; ese día vuelve a entrar como pedido.
 
 Prompt para Claude Code:
 
