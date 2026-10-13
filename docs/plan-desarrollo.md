@@ -1525,7 +1525,7 @@ marca, legible en home screen claro y oscuro).
 Probar en Android e iOS (agregar a inicio en ambos). tsc/lint.
 ```
 
-### [ ] REP-15 · Crecimiento/asistencia 2026: los números de la semana no cuadran entre secciones
+### [x] REP-15 · Crecimiento/asistencia: los números de la semana no cuadran — CERRADO 2026-10-12
 
 Caso: semana 40 de 2026 — arriba dice 872 asistentes y 27 servidores de total
 de check-ins; la sección de abajo dice 875 check-ins y 839 asistentes.
@@ -1548,7 +1548,7 @@ números incompatibles entre sí.
 Test que compara ambas secciones contra los mismos fixtures. tsc/lint/vitest.
 ```
 
-### [ ] REP-16 · Reporte de estudios 2026: estudiantes no cuadran (1190 vs 1822 vs 1896)
+### [x] REP-16 · Reporte de estudios: estudiantes no cuadran — CERRADO 2026-10-12
 
 Prompt para Claude Code:
 
@@ -1570,6 +1570,53 @@ gráfico (1.896) deberían ser iguales entre sí y no lo son: ahí hay bug segur
 Test de reconciliación (suma por tipo = gráfico; únicas ≤ inscripciones) con fixtures.
 tsc/lint/vitest.
 ```
+
+**REP-15 y REP-16 · lo medido (2026-10-12)**
+
+Los dos se reportaron como «los números no cuadran». **En REP-15 no cuadraba
+ningún dato: cuadraban mal las palabras. En REP-16 sí había un bug, pero no
+donde la sospecha lo ponía.**
+
+**REP-15 — semana 40 de 2026, reproducido exacto:**
+
+| | |
+|---|---|
+| 899 | CHECK-INS (872 como asistente + 27 como servidor) |
+| 875 | PERSONAS distintas los hicieron (24 vinieron dos veces) |
+| 839 | de esas personas ya habían venido antes; 36 eran primera vez |
+
+Las dos consultas miran el mismo universo (`event_type = 'charla'`) y la misma
+ventana. No había fuga, ni tope de 1.000, ni snapshot viejo. Lo que fallaba:
+abajo se llamaba «875 check-ins» a lo que son personas, arriba «872
+participantes» a lo que son check-ins, y «asistente» significaba dos cosas en
+la misma pantalla (arriba: vino a recibir y no a servir; abajo: ya vino más de
+una vez). Arreglado con etiquetas por unidad, más una frase en pantalla que
+reconcilia las dos secciones. El guard vigila el fuente, porque es un
+invariante de redacción que ningún test de datos habría atrapado.
+
+**REP-16 — 2026: KPI 1.191 · tabla 1.823 · gráfico 1.897.**
+
+KPI y tabla siempre estuvieron bien: son personas contra persona × tipo, y es
+intencional. El gráfico estaba mal por dos cosas, las dos en una sola línea
+del RPC `report_estudios_series`:
+
+1. Contaba el año en que el grupo ARRANCÓ, no los años en que estuvo en curso
+   — la definición que `lib/reports/estudios.ts` documenta como la incorrecta
+   desde que se escribió el reporte. La tabla la respetaba; la serie se quedó
+   con la vieja.
+2. Peor: con `starts_at` nulo caía a `created_at`, que en los grupos
+   importados es la fecha del IMPORT (18-jul-2026). Grupos TRANSFORMADOS
+   **cerrados en 2015** estaban contados como estudiantes de 2026 — de ahí
+   TRANS (30), UFA (11), PLANDANIEL (9) y EVA (6).
+
+La migración `20261012210000` le da a la serie los mismos dos extremos y el
+mismo universo que la tabla. Verificado contra producción: calzan exacto en
+2022, 2023, 2024, 2025 y 2026 (1.823 en el año en curso, antes 1.897).
+
+**Queda para revisar con Denise:** los grupos históricos sin `starts_at` cuyo
+cierre es anterior a su `created_at` no aparecen en NINGÚN año de la serie.
+Es lo que la tabla ya hacía con ellos y es lo honesto —su fecha es
+inconsistente—, pero si se quiere verlos hay que ponerles la fecha real.
 
 ### [x] MAT-3 · Matrículas a medias: gente queda sin comprobante sin darse cuenta — CERRADO 2026-10-12
 

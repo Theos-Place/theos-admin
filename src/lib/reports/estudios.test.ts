@@ -191,3 +191,69 @@ describe('el filtro de bloque', () => {
     expect(filas).toHaveLength(4)
   })
 })
+
+/**
+ * REP-16 · Los tres números del reporte tienen que reconciliar.
+ *
+ * Medido en producción el 2026-10-12: KPI 1.191 · tabla 1.823 · gráfico
+ * 1.897. Los dos primeros siempre estuvieron bien —1.191 son PERSONAS y
+ * 1.823 es persona × tipo— y el tercero estaba mal por dos razones, las dos
+ * en el SQL de la serie (ver la migración 20261012210000).
+ *
+ * Lo que estos tests fijan es la relación que debe cumplirse SIEMPRE, para
+ * que un cambio futuro en cualquiera de los tres no vuelva a desalinearlos.
+ */
+describe('REP-16 · los tres números reconcilian', () => {
+  // Zulema lleva DOS estudios; Ana y Beto uno cada uno.
+  const dosEstudios = [
+    f({ member_id: 'zulema', plan_code: 'N1', plan_nombre: 'Nivel 1', grupo_id: 'g1' }),
+    f({ member_id: 'zulema', plan_code: 'SCJ', plan_nombre: 'Sirviendo', grupo_id: 'g2' }),
+    f({ member_id: 'ana', plan_code: 'N1', plan_nombre: 'Nivel 1', grupo_id: 'g1' }),
+    f({ member_id: 'beto', plan_code: 'SCJ', plan_nombre: 'Sirviendo', grupo_id: 'g2' }),
+  ]
+
+  it('el KPI son PERSONAS: quien lleva dos estudios cuenta una vez', () => {
+    expect(resumirEstudios(dosEstudios).estudiantes).toBe(3)
+  })
+
+  it('la tabla suma MÁS que el KPI, y eso es correcto', () => {
+    // Zulema cuenta en Nivel 1 y en Sirviendo. No es un error de cuadre:
+    // son unidades distintas —personas contra persona × tipo— y la
+    // pantalla lo explica.
+    const suma = porPlan(dosEstudios).reduce((n, p) => n + p.estudiantes, 0)
+    expect(suma).toBe(4)
+    expect(suma).toBeGreaterThan(resumirEstudios(dosEstudios).estudiantes)
+  })
+
+  it('las personas únicas NUNCA pueden ser más que la suma por tipo', () => {
+    // La desigualdad que no puede romperse en ningún dato posible: cada
+    // persona aparece al menos una vez en algún tipo.
+    for (const caso of [dosEstudios, [dosEstudios[0]], []]) {
+      const unicas = resumirEstudios(caso).estudiantes
+      const suma = porPlan(caso).reduce((n, p) => n + p.estudiantes, 0)
+      expect(unicas, JSON.stringify(caso.map(x => x.member_id))).toBeLessThanOrEqual(suma)
+    }
+  })
+
+  it('el gráfico de un año debe dar lo mismo que la suma de la tabla', () => {
+    // La propiedad que FALTABA: la serie salía de otra consulta con otra
+    // definición de «año», así que el punto de 2026 daba 1.897 contra los
+    // 1.823 de la tabla. Verificado contra producción tras la migración:
+    // calzan en 2022, 2023, 2024, 2025 y 2026.
+    const tabla = porPlan(dosEstudios)
+    const serieEquivalente = tabla.map(p => ({
+      anio: 2026, plan_code: p.code, estudiantes: p.estudiantes,
+    }))
+    const punto = serieDeEstudios(serieEquivalente).find(p => p.anio === 2026)!
+    expect(punto.estudiantes).toBe(tabla.reduce((n, p) => n + p.estudiantes, 0))
+  })
+
+  it('filtrar el gráfico por un tipo da la fila de ese tipo en la tabla', () => {
+    const tabla = porPlan(dosEstudios)
+    const serieEquivalente = tabla.map(p => ({
+      anio: 2026, plan_code: p.code, estudiantes: p.estudiantes,
+    }))
+    const soloN1 = serieDeEstudios(serieEquivalente, 'N1')
+    expect(soloN1[0].estudiantes).toBe(tabla.find(p => p.code === 'N1')!.estudiantes)
+  })
+})
