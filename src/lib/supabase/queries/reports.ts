@@ -30,6 +30,9 @@ import {
  * sea 849 personas en vez de 4.355. Un reporte que devuelve exactamente 1.000
  * de algo casi siempre está truncado.
  */
+import { ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
+import type { DirigenteParaReporte } from '@/lib/reports/jerarquia-de-dirigentes'
+
 const TOPE_POSTGREST = 1000
 
 async function todasLasFilas<T>(
@@ -372,4 +375,65 @@ export async function getSerieDeEstudios(): Promise<Array<{ anio: number; plan_c
     (d, h) => supabase.rpc('report_estudios_series').order('anio').range(d, h),
   )
   return filas.map(f => ({ ...f, estudiantes: Number(f.estudiantes) }))
+}
+
+/**
+ * DIR-9 · Las filas que alimentan la jerarquía del reporte de dirigentes.
+ *
+ * NO va por snapshot nocturno como DIR-7. Son ~500 fichas y dos consultas:
+ * cachearlo costaría más de lo que ahorra, y este reporte se mira JUSTO para
+ * decidir a quién asignarle un grupo. Un número de anoche serviría para lo
+ * contrario de para lo que se abre la pantalla.
+ *
+ * «Dirigiendo» se arma acá desde los GRUPOS, porque en `study_leaders` ese
+ * dato no existe — ver `esta-dirigiendo.ts` para por qué se deriva.
+ */
+export async function getFilasDeJerarquiaDeDirigentes(): Promise<DirigenteParaReporte[]> {
+  const supabase = createAdminClient()
+
+  const [fichas, grupos] = await Promise.all([
+    todasLasFilas<{
+      member_id: string
+      estado_base: string | null
+      disponibilidad: string | null
+      razon_no_disponible: string | null
+      razon_inactivo: string | null
+      revision: string[] | null
+      members: { first_name: string | null; last_name: string | null } | null
+    }>((d, h) => supabase
+      .from('study_leaders')
+      .select('member_id, estado_base, disponibilidad, razon_no_disponible, razon_inactivo, revision,'
+        + ' members!inner(first_name, last_name)')
+      .order('member_id').range(d, h)),
+    todasLasFilas<{
+      leader_id: string | null
+      co_leader_id: string | null
+      study_plans: { code: string | null } | null
+    }>((d, h) => supabase
+      .from('study_groups')
+      .select('leader_id, co_leader_id, study_plans!inner(code)')
+      // Un grupo en matrícula ya ocupa: la persona tiene el compromiso
+      // agarrado aunque todavía no haya empezado.
+      .in('status', ['en_curso', 'en_matricula'])
+      .order('id').range(d, h)),
+  ])
+
+  // El CO-dirigente también cuenta como ocupado: está acompañando ese grupo.
+  const ocupados = new Set<string>()
+  for (const g of grupos) {
+    if (!ocupaAlDirigente(g.study_plans?.code)) continue
+    if (g.leader_id) ocupados.add(g.leader_id)
+    if (g.co_leader_id) ocupados.add(g.co_leader_id)
+  }
+
+  return fichas.map(f => ({
+    member_id: f.member_id,
+    nombre: `${f.members?.first_name ?? ''} ${f.members?.last_name ?? ''}`.trim(),
+    estado_base: f.estado_base,
+    disponibilidad: f.disponibilidad,
+    razon_no_disponible: f.razon_no_disponible,
+    razon_inactivo: f.razon_inactivo,
+    revision: f.revision,
+    dirigiendo: ocupados.has(f.member_id),
+  }))
 }

@@ -84,7 +84,21 @@ export const ACCESO_POR_REPORTE: Record<SlugDeReporte, ReglaDeAcceso> = {
    * de nuevo sería repetir la lista en dos lugares.
    */
   estudios: { roles: ESTUDIOS_REPORTE_ROLES, moduloAlcanza: false, porPuesto: false },
-  dirigentes: { roles: ESTUDIOS_REPORTE_ROLES, moduloAlcanza: false, porPuesto: false },
+  /**
+   * DIR-9 · `lector_dirigentes` se agrega a los de estudios y NO se reemplaza.
+   *
+   * El rediseño del reporte se pidió para la coordinación de dirigentes Y
+   * para quienes solo leen (Luis y Yeya): ellos ven la ficha de un dirigente,
+   * así que negarles el agregado de esas mismas fichas no protegería nada.
+   *
+   * Lo que sí sigue acotado es la BANDERITA: el conteo viaja solo para quien
+   * puede leer notas (`puedeVerBanderita`), y para el resto va `null` en vez
+   * de cero. Un cero afirmaría que no hay ninguna.
+   */
+  dirigentes: {
+    roles: [...ESTUDIOS_REPORTE_ROLES, 'lector_dirigentes'],
+    moduloAlcanza: false, porPuesto: false,
+  },
 
   /** Servidores y compromisos: la vista de dirección sobre la organización
    *  (REP-7). Acotado desde que se creó. */
