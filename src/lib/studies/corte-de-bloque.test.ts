@@ -219,6 +219,37 @@ describe('EST-14 · el cobro es por bloque', () => {
     expect(nivelesACobrar('N4', 'bloques')).toEqual([])
   })
 
+  /**
+   * EL CASO QUE SE ROMPIÓ EN PRODUCCIÓN (3 al 5 de octubre de 2026).
+   *
+   * En un grupo LEGACY cada nivel cobra el suyo, y N1 vale ₡0: no hay
+   * cobro. El llamador lo calculó como si fuera `bloques` —N1+N2— y le creó
+   * a cada persona un cobro de ₡5.000 que no existía. Como nunca subieron
+   * comprobante de algo que no debían pagar, el cron de las 72 horas dio de
+   * baja a tres del grupo de Pamela Madriz, y otras cinco pagaron de más.
+   *
+   * El módulo puro SIEMPRE estuvo bien; lo que faltaba era un test que
+   * dijera en voz alta cuánto cobra un legacy, para que la próxima vez que
+   * alguien toque el llamador vea el número al lado.
+   */
+  it('en LEGACY, entrar a N1 no cobra nada: N1 vale ₡0', () => {
+    expect(montoDelBloque('N1', CATALOGO, 'legacy')).toBe(0)
+    expect(nivelesACobrar('N1', 'legacy')).toEqual(['N1'])
+  })
+
+  it('y en legacy cada nivel cobra SOLO el suyo, no el par', () => {
+    expect(montoDelBloque('N2', CATALOGO, 'legacy')).toBe(5000)
+    expect(montoDelBloque('N3', CATALOGO, 'legacy')).toBe(5000)
+    expect(montoDelBloque('N4', CATALOGO, 'legacy')).toBe(5000)
+  })
+
+  it('la misma entrada da números DISTINTOS según la modalidad', () => {
+    // Si esto deja de ser cierto, es que alguien unificó las dos y hay que
+    // mirar qué le pasó a la gente de los grupos viejos.
+    expect(montoDelBloque('N1', CATALOGO, 'legacy'))
+      .not.toBe(montoDelBloque('N1', CATALOGO, 'bloques'))
+  })
+
   it('el total de la cadena no cambia: ₡15.000', () => {
     // Lo que se mueve es CUÁNDO se paga, no cuánto. Si esto se cae, alguien
     // cambió lo que la gente paga sin querer.

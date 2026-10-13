@@ -195,3 +195,39 @@ describe('DIR-10 · un componente, dos presentaciones', () => {
     expect(bloque).not.toMatch(/alternarLista\(\s*'formation_study_codes'/)
   })
 })
+
+/**
+ * El cobro de matrícula respeta la MODALIDAD del grupo.
+ *
+ * LO QUE PASÓ (3 al 5 de octubre de 2026, encontrado el 13 porque Floriana
+ * notó que el grupo de Pamela Madriz pasó de 11 inscritas a 9): el monto se
+ * calculaba sin mirar la modalidad, así que a los grupos LEGACY de N1 —que
+ * son gratis, porque en legacy cada nivel cobra el suyo y N1 vale ₡0— se
+ * les creó un cobro de ₡5.000, el precio del par N1+N2 del esquema nuevo.
+ *
+ * El daño no fue solo contable: las personas no subieron comprobante de
+ * algo que no debían pagar, y el cron de las 72 horas las dio de baja. Tres
+ * perdieron su campo en el grupo y cinco pagaron de más.
+ *
+ * El módulo puro nunca estuvo mal — `montoDelBloque` siempre supo la
+ * diferencia. Lo que faltaba era que el LLAMADOR le pasara la modalidad del
+ * grupo, y eso es lo que este test fija.
+ */
+describe('el cobro de matrícula mira la modalidad del grupo', () => {
+  const q = sinComentarios('src/lib/supabase/queries/studies.ts')
+
+  it('lee la modalidad DEL GRUPO, no una constante', () => {
+    expect(q).toContain('modalidadDe(group?.modalidad)')
+  })
+
+  it('el precio del par solo se aplica bajo «bloques»', () => {
+    // Sin esta condición, un N1 legacy cobra ₡5.000 que no debe.
+    expect(q).toContain("const esBloqueDeNiveles = modalidad === 'bloques'")
+  })
+
+  it('y un monto en cero NO genera cobro', () => {
+    // La otra mitad del guard: si esto se cae, un grupo gratis crea cobros
+    // de ₡0 que el cron de 72 horas tratará como impagos.
+    expect(q).toContain('amount > 0')
+  })
+})
