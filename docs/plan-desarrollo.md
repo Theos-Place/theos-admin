@@ -1643,3 +1643,168 @@ Todo es LECTURA de la marca existente — este ítem no cambia ninguna regla de 
 Tests: tiquete legacy dice solo el nivel, tiquete bloques dice el par; columna presente
 y exportada. tsc/lint/vitest.
 ```
+
+## Fase 28 — Estados y reporte de dirigentes (reunión Fabiola 2026-10-12)
+
+Transcript y diagramas de la reunión. Dos diagramas de referencia: el "azulito"
+de Fabiola (el real) y la infografía generada con IA (el look deseado del
+reporte). Fabiola queda de pasar: su Excel actualizado de dirigentes (el de
+Nao + sus updates, con notas) y la lista de comunidades.
+
+### [ ] DIR-8 · Taxonomía de estados del dirigente + notas confidenciales + comunidad
+
+Prompt para Claude Code:
+
+```
+REDISEÑO · Estados del dirigente (diagrama acordado con Fabiola 2026-10-12)
+
+ESTRUCTURA DE ESTADOS (reemplaza el set actual activo/inactivo/pausa/revisión/dando):
+
+1. ESTADO BASE: Activo / Inactivo (la regla automática de PAR-2 se mantiene: dirigir un
+   grupo activa; +12 meses sin dirigir desactiva — el "en curso" sigue automático).
+
+2. INACTIVO lleva SUB-RAZÓN (manual, la pone coordinación):
+   a) "No asiste a Theos".
+   b) "Asiste pero no ejerce el servicio", con detalle: «No aprobó CDEB» (y dentro:
+      definitivo / en seguimiento-proceso: cursos, oración, mejorar testimonio) o
+      «Por decisión propia».
+
+3. ACTIVO se divide en Disponible / No disponible. NO DISPONIBLE lleva razón:
+   a) Dirigiendo un estudio (AUTOMÁTICA al asignarlo a un grupo en curso — EXCEPTO
+      prematrimonial: dar prematrimonial NO cambia la disponibilidad; default
+      automático, corregible a mano para los casos tipo doña Hilda que dan varios).
+   b) Estudiante en una capacitación.
+   c) En formación para dar una capacitación.
+   d) En pasantía (dirigentes nuevos, regresando, o codirigente de apoyo).
+   e) En pausa — SIEMPRE con fecha de regreso y justificación (nota ligada a la pausa).
+
+4. "EN REVISIÓN" DEJA DE SER ESTADO → pasa a ser BANDERITA (flag) que coexiste con
+   cualquier estado. Razones de la banderita: testimonio / compromiso (charlas, donación,
+   servicio) / preparación (malas retroalimentaciones) / no confirmó sus datos.
+   La banderita NO es automática y NO la ve el dirigente — solo la vista administrativa.
+
+DÓNDE SE VE QUÉ:
+- PERFIL DEL MIEMBRO (resumen superior): el badge "Dirigente" aparece SIEMPRE para quien
+  es dirigente — APAGADO/gris si está inactivo, con tooltip "Dirigente inactivo" (hoy
+  desaparece y confunde: arriba dice dirigente y abajo no sale nada). Solo
+  activo/inactivo, SIN banderita (ese resumen lo ven más roles).
+- La sección del tab del miembro se renombra a "Disponibilidad del dirigente" (no es el
+  estado).
+- FICHA ADMINISTRATIVA DEL DIRIGENTE (la de estrellita): el detalle completo — estado,
+  sub-razón, razón de no disponibilidad, banderita con su razón, notas. Editable por
+  coordinador_dirigentes con los selectores anidados (elijo Inactivo → me abre las
+  sub-razones).
+
+NOTAS (confidenciales):
+- Dos tipos: la nota LIGADA A LA PAUSA (fecha + justificación) y una NOTA GENERAL del
+  dirigente (texto libre, casos sensibles).
+- Acceso: EDITA solo coordinador_dirigentes (Fabiola); LECTURA además para Luis y Yeya
+  (rol lector — crear la variante de solo lectura si no existe). NADIE MÁS: ni
+  editor_dirigentes (Andrés/Diego/Wilber actualizan datos pero NO ven notas), ni Ari por
+  ahora (decisión explícita: exclusivo, se amplía después si hace falta). El dirigente
+  JAMÁS ve sus notas.
+
+FORMACIÓN — SEPARAR EN DOS RUBROS: "Capacitaciones" y "Campañas" (la precampaña llevada
+habilita dar la campaña). En las búsquedas/filtros de formación salen separadas para no
+ensuciar las búsquedas de estudios de Ari. (Las campañas como tipo de plan es CAM-1 —
+aquí solo la formación del dirigente.)
+
+COMUNIDAD DEL DIRIGENTE (campo nuevo): multiselect de sedes/charlas a las que SIENTE que
+pertenece (United, Home, el este… — puede ser distinta de donde asiste y de las zonas
+donde puede dar; es para invitaciones dirigidas: talleres, get-togethers, koinonías).
+Fabiola pasa la lista de comunidades. Editable por el dirigente en su tab y por
+coordinación.
+
+EXTRAS:
+- Check manual "está en el grupo de WhatsApp" en la ficha del dirigente.
+- QUITAR del formulario de disponibilidad (SRV-9) la pregunta "dónde recibir folletos" —
+  eso pertenece al flujo de creación del grupo, no a la disponibilidad (evitar el dato
+  duplicado/basura).
+- IMPORT MASIVO: script para actualizar estados/sub-razones/notas desde el Excel de
+  Fabiola (ella lo pasa). REGLA: el sistema gana sobre el Excel en lo automático — si el
+  Excel dice inactivo pero la persona tiene grupo EN CURSO, se ignora esa fila y se
+  reporta; dry-run con lista antes de aplicar; las columnas de WhatsApp/notas entran;
+  evaluar columnas extra del Excel (orador, koinonías) y reportar si se mapean a algo
+  existente o se dejan fuera.
+Tests: transiciones automáticas (asignar grupo → no disponible/dirigiendo salvo
+prematrimonial), anidación de sub-razones, banderita coexiste, notas 403 para
+editor_dirigentes, lector lee y no escribe, badge apagado. tsc/lint/vitest.
+```
+
+### [ ] DIR-9 · Reporte de dirigentes rediseñado (el de la infografía)
+
+El reporte viejo de dirigentes del plan piloto está abandonado. Se rediseña
+con la jerarquía de la infografía (total → inactivo/activo → desgloses) y los
+números reales de DIR-8.
+
+Prompt para Claude Code:
+
+```
+FEATURE · /reportes/dirigentes: rediseño completo (correr DESPUÉS de DIR-8)
+
+ESTRUCTURA (la jerarquía de la infografía de Fabiola):
+1. Total de dirigentes.
+2. INACTIVOS (conteo y %): desglose "asiste pero no ejerce" vs "no asiste a Theos".
+3. ACTIVOS (conteo y %): desglose Disponible vs No disponible, y dentro de No disponible
+   las 5 razones (dirigiendo un estudio / estudiante en capacitación / en formación /
+   en pasantía / en pausa) con conteo y % cada una.
+4. Nota visible: "en cualquier estado puede haber banderita de revisión" + conteo de
+   banderitas (solo para quien puede verlas).
+5. CADA NÚMERO ES CLICABLE → lista de las personas que lo componen (el patrón drill-down
+   de los reportes).
+6. CAPACITADOS POR ESTUDIO (formación): conteo por estudio, clic → lista con nombres.
+   Capacitaciones y campañas SEPARADAS (DIR-8).
+7. DISPUESTOS A DAR (de la disponibilidad declarada del formulario SRV-9) por estudio.
+8. POR ZONA: dirigentes disponibles por zona declarada (una persona puede contar en
+   varias zonas — tooltip aclarando que la suma supera el total, como REP-7).
+9. CRUCE SEDE × FORMACIÓN (el ejercicio de Liberia): tabla de qué estudios puede dar la
+   gente de cada sede — para detectar huecos ("en el este sobran de Sirviendo como Jesús
+   y no hay de Panorama").
+10. Fecha de última actualización visible.
+DISEÑO: estilo del sistema (no calcar la infografía IA — misma información y jerarquía,
+componentes nuestros).
+PERMISOS: coordinador_dirigentes y los lectores (Luis/Yeya), coordinador_estudios,
+direccion/admin (el mapeo granular de REP-11). Los que no ven notas/banderitas no ven el
+conteo de banderitas.
+Export XLSX de cada lista drill-down. SQL agregado, números = los de la ficha (misma
+definición central de DIR-8 — si difieren es bug). Tests de los desgloses con fixtures.
+tsc/lint/vitest.
+```
+
+### [ ] DIR-10 · Tab "Dirigente" del perfil personal: rediseño simple + editable por el dirigente
+
+Hoy el tab se ve abrumador y el dirigente no puede editar. Decidido en la
+reunión: los "curiosos" editan directo en su perfil (y así ya están
+actualizados cuando llegue la campaña); el formulario (SRV-9) queda para la
+campaña masiva — ambos escriben sobre los MISMOS datos.
+
+Prompt para Claude Code:
+
+```
+REDISEÑO UI · Tab "Dirigente" del perfil propio: simple, ordenado y editable
+
+PROBLEMA: el tab actual es abrumador (todas las listas y opciones desplegadas de un
+solo). El dirigente además no puede editar nada.
+
+DISEÑO NUEVO — un RESUMEN limpio por secciones, no las listas abiertas:
+1. "Mi disponibilidad" (EDITABLE por el dirigente, guardado directo por campo):
+   qué quiero dar · cuándo puedo (días/franjas) · dónde (zonas) · ofrezco casa ·
+   suplente · desde cuándo puedo empezar · MI COMUNIDAD (DIR-8). Cada dato como línea de
+   resumen ("Días: lunes y miércoles por la noche") con lápiz para editar en sitio — las
+   listas completas solo se abren al editar ese campo.
+2. "Mi formación" (SOLO LECTURA): qué estoy capacitado a dar — capacitaciones y campañas
+   separadas (DIR-8) — con el botón "esto no es correcto" que abre tiquete a coordinación
+   (ya definido en SRV-9).
+3. Botón "Confirmar mis datos" visible arriba: guarda la fecha de última confirmación
+   (la que usa la campaña para saber quién ya revisó); si todo está bien, un clic y listo.
+4. Lo que NO va en este tab: estado activo/inactivo con sub-razones, banderitas y notas
+   (eso es la ficha administrativa de DIR-8 — acá el dirigente solo ve su propia
+   información operativa).
+SINCRONIZACIÓN: estos campos son LOS MISMOS que llena el formulario de la campaña
+(SRV-9) — una sola fuente; editar aquí deja el formulario prellenado y viceversa
+(verificar el round-trip). Quitar del tab cualquier campo que la reunión sacó (dónde
+recibir folletos).
+Mobile: el tab debe verse bien en 360px (criterio MAT-2).
+Tests: dirigente edita disponibilidad (y 403 a formación), confirmación guarda fecha,
+no-dirigente no ve el tab, sync tab↔formulario. tsc/lint/vitest.
+```

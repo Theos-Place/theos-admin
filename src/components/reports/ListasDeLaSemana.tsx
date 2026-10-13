@@ -8,6 +8,7 @@ import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { type ColumnDef } from '@/components/shared/ColumnSelector'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { INFO_ASISTIERON, INFO_DEJARON, SEMANAS_DE_CORTE } from '@/lib/reports/abandonos'
+import { desglosePorHistoria } from '@/lib/reports/unidades-de-la-semana'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -27,7 +28,7 @@ type Respuesta = {
   semana: string
   etiqueta: string
   puedeVerContacto: boolean
-  checkins: number
+  personas: number
   asistentes: Persona[]
   dejaron: { etiqueta: string; personas: Persona[] }
 }
@@ -215,12 +216,14 @@ export function ListasDeLaSemana({ clave }: { clave: string | null }) {
             Quiénes vinieron y quiénes dejaron de venir. La segunda lista es la de llamar.
           </p>
         </div>
-        {/* Los tres números que resumen el bloque. Check-ins y asistentes NO son
-            lo mismo, y la diferencia son los que vinieron por primera vez. */}
+        {/* REP-15 · Los tres números, cada uno con su unidad dicha.
+            El primero decía «check-ins» y son PERSONAS: el RPC devuelve una
+            fila por persona. Así nombrado, chocaba con los check-ins de la
+            sección de arriba y parecía un descuadre. */}
         <div className="flex items-center gap-5">
           {[
-            { n: datos.checkins, t: 'check-ins' },
-            { n: datos.asistentes.length, t: 'asistentes' },
+            { n: datos.personas, t: 'personas' },
+            { n: datos.asistentes.length, t: 'ya venían' },
             { n: dejaron, t: 'dejaron de venir', alerta: true },
           ].map(k => (
             <div key={k.t} className="text-right">
@@ -233,6 +236,18 @@ export function ListasDeLaSemana({ clave }: { clave: string | null }) {
           ))}
         </div>
       </div>
+
+      {/* REP-15 · La frase que faltaba. Arriba se ven CHECK-INS y acá PERSONAS;
+          que los dos números convivieran sin nada que los relacionara es
+          justo lo que hizo que se reportaran como un descuadre. */}
+      <p className="text-[13px] text-navy-light/80 font-body">
+        {desglosePorHistoria({
+          personas: datos.personas,
+          conHistoria: datos.asistentes.length,
+        }).frase}{' '}
+        Arriba se cuentan check-ins, que son más: alguien puede venir a dos charlas
+        en la misma semana.
+      </p>
 
       {dejaron > 0 && (
         <p className="text-[13px] text-navy-light/80 font-body">

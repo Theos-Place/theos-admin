@@ -66,9 +66,12 @@ export async function GET(req: NextRequest) {
       semana: `${semana.year}-W${String(semana.week).padStart(2, '0')}`,
       etiqueta: rango.etiqueta,
       puedeVerContacto,
-      // Los dos números, sin ambigüedad: no es lo mismo un check-in que un
-      // asistente, y la diferencia son los que vinieron por primera vez.
-      checkins: deEstaSemana.length,
+      // REP-15 · `personas`, no `checkins`: el RPC devuelve UNA FILA POR
+      // PERSONA, así que este número nunca fueron check-ins. Se llamaba así y
+      // la pantalla lo pintaba así, y por eso no cuadraba contra los 899
+      // check-ins de la sección de arriba — se estaban comparando unidades
+      // distintas con el mismo nombre.
+      personas: deEstaSemana.length,
       asistentes: conHistoria.map(limpiar),
       dejaron: {
         /** De qué semana salen: "10–16 ago". */

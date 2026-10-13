@@ -88,11 +88,15 @@ export function SemanaDetallePanel({
       ) : detalle ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Asistencia</p>
+            {/* REP-15 · «Check-ins», no «participantes»: `total` cuenta
+                entradas, no personas, y alguien que viene a dos charlas en la
+                semana cuenta dos veces. Decía «participantes» y por eso no
+                calzaba con las personas que lista la sección de abajo. */}
+            <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Check-ins</p>
             <p className="text-2xl font-extrabold text-navy font-display tabular-nums">{detalle.total}</p>
             <p className="text-[13px] text-navy-light/80 font-body">
-              {detalle.asistentes} participantes
-              {detalle.servidores > 0 && ` · ${detalle.servidores} servidores`}
+              {detalle.asistentes} como asistente
+              {detalle.servidores > 0 && ` · ${detalle.servidores} como servidor`}
             </p>
           </div>
           <Delta c={detalle.vsSemanaAnterior} etiqueta="vs semana anterior" />
