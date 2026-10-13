@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +29,17 @@ export const metadata: Metadata = {
   },
   description: 'Sistema administrativo interno de Theos Place. Gestión de miembros, eventos, estudios, finanzas y comunicaciones.',
   robots: { index: false, follow: false },
+};
+
+/**
+ * UX-8 · El color de la barra del navegador en el celular.
+ *
+ * Va en `viewport` y no en `metadata`: Next lo pide así desde la 14, y
+ * ponerlo en metadata lo ignora en silencio. El mismo navy del manifest,
+ * para que la barra no quede de otro color que la app.
+ */
+export const viewport: Viewport = {
+  themeColor: '#161440',
 };
 
 export default function RootLayout({

@@ -14,7 +14,12 @@ import { loginUrlWithDest, safeDest } from '@/lib/auth/redirect-target'
 // módulo '/formularios' sigue pidiendo sesión. La ruta solo sirve los que están
 // marcados abiertos y sin requerir cuenta — el filtro real está en el API, acá
 // solo se deja pasar el prefijo.
-const PUBLIC_PREFIXES = ['/login', '/registro', '/recuperar', '/calendario', '/formulario', '/completar-perfil', '/terminos', '/puestos', '/matricula-nivel-1', '/ayuda', '/auth/confirm', '/auth/continuar']
+const PUBLIC_PREFIXES = ['/login', '/registro', '/recuperar', '/calendario', '/formulario', '/completar-perfil', '/terminos', '/puestos', '/matricula-nivel-1', '/ayuda', '/auth/confirm', '/auth/continuar',
+  // UX-8 · El manifest tiene que poder leerlo el TELEFONO, que no trae sesion.
+  // Sin esto el proxy lo mandaba al login y el acceso directo se quedaba sin
+  // iconos maskable ni color de tema, que es justo lo que se estaba
+  // arreglando.
+  '/manifest.webmanifest']
 
 export function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))

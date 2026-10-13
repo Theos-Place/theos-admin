@@ -1573,7 +1573,7 @@ tocan: ahí el bloque sí es la unidad real.
 
 ## Fase 27 — Pedidos del 2026-10-12
 
-### [ ] UX-8 · Ícono del acceso directo en el celular muy oscuro
+### [x] UX-8 · Ícono del acceso directo en el celular muy oscuro — HECHO 2026-10-12
 
 Prompt para Claude Code:
 
@@ -1593,6 +1593,36 @@ marca, legible en home screen claro y oscuro).
 3. Verificar theme_color/background_color del manifest.
 Probar en Android e iOS (agregar a inicio en ambos). tsc/lint.
 ```
+
+**UX-8 · la causa y lo que se hizo (2026-10-12)**
+
+**No era el diseño: era el CANAL ALFA.** Los PNG eran transparentes, y
+Android rellena la transparencia de negro al generar el acceso directo —
+theta navy sobre negro, o sea invisible. Es la causa clásica que el propio
+prompt sospechaba, confirmada mirando los archivos (`hasAlpha: yes` en los
+tres).
+
+Y **no había manifest**, así que tampoco había íconos `maskable` ni
+`theme_color`: el teléfono recortaba el que encontrara.
+
+Qué hay ahora: set completo (192, 512, los dos maskable, apple-touch 180)
+con **fondo navy sólido y sin alfa**, generado con la theta OFICIAL del
+design system (`assets/icon-theta.svg`) y no redibujada a ojo. Los maskable
+llevan la theta al 52% del lienzo: Android recorta hasta un 20% de cada
+borde y uno a tamaño normal sale mordido. Manifest con `theme_color` y
+`background_color` en navy, para que el arranque no destelle en blanco.
+
+**Floriana eligió** fondo navy con theta blanca, viendo las dos opciones
+renderizadas (incluido el recorte circular real).
+
+**Lo que casi queda inservible:** el proxy mandaba `/manifest.webmanifest`
+al login con un 307, así que el teléfono no lo leía NUNCA y todo el arreglo
+del manifest no habría servido de nada. Se vio probándolo en el navegador;
+ningún test de datos lo habría mostrado. Está en `PUBLIC_PREFIXES` y hay un
+guard que lo vigila.
+
+**Falta probarlo en un teléfono de verdad** (Android e iOS, «agregar a
+inicio»). Eso no se puede hacer desde acá.
 
 ### [x] REP-15 · Crecimiento/asistencia: los números de la semana no cuadran — CERRADO 2026-10-12
 
