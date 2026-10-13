@@ -2011,7 +2011,34 @@ definición central de DIR-8 — si difieren es bug). Tests de los desgloses con
 tsc/lint/vitest.
 ```
 
-### [ ] DIR-10 · Tab "Dirigente" del perfil personal: rediseño simple + editable por el dirigente
+### [~] DIR-10 · Tab "Dirigente" rediseñado — HECHO 2026-10-13, falta «mi comunidad»
+
+**Lo que se entregó:** cada dato como una línea que se lee («lunes por la
+mañana y por la tarde; miércoles por la noche») con «Editar» al lado; la lista
+completa solo se abre al tocar ese dato. «Confirmar mis datos» subió arriba.
+Las campañas salen aparte de la formación. Verificado a 1024 y a 360px.
+
+**La medida del problema:** el tab abría 122 controles a la vez (21 casillas de
+horario, 30 estudios dos veces, las zonas).
+
+**UN componente, dos presentaciones.** El formulario de la campaña (SRV-9)
+sigue en modo completo: ahí la persona entró a llenarlo entero de una sentada.
+El prop `modo` cambia cómo se PRESENTA, nunca qué se guarda, y hay un test que
+lo cuida — la tentación al rediseñar uno de los dos es copiarlo, y ese día la
+campaña de marzo y el perfil empiezan a preguntar cosas distintas.
+
+**Detalle que parece menor y no lo es:** lo pendiente se dice con palabras
+(«Todavía no lo dijiste: en qué zonas podés dar») y no con un guion, que se lee
+como un error de la pantalla. Y un «no ofrezco casa» NO cuenta como pendiente:
+es una respuesta, y marcarla como falta le pediría para siempre que conteste lo
+que ya contestó.
+
+**FALTA:** el campo «mi comunidad» que pedía el prompt. Sigue bloqueado por lo
+mismo que el resto de DIR-8: no existe el catálogo de comunidades, y sin
+catálogo sería un campo de texto libre que se llena de cuatro formas distintas
+—exactamente lo que pasó con «¿dónde te dejamos los folletos?»—.
+
+### [ ] DIR-10 · prompt original (referencia)
 
 Hoy el tab se ve abrumador y el dirigente no puede editar. Decidido en la
 reunión: los "curiosos" editan directo en su perfil (y así ya están
