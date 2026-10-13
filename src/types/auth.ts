@@ -21,6 +21,13 @@ export type RoleId =
   | 'becas'
   | 'editor_grupos_estudio'
   | 'editor_dirigentes'
+  /**
+   * DIR-8 · Lectura de las notas confidenciales del dirigente, sin poder
+   * editarlas (Luis y Yeya). Existe porque `editor_dirigentes` actualiza
+   * datos todos los días y NO debe ver las notas: sin este rol, dar lectura
+   * obligaba a dar edición.
+   */
+  | 'lector_dirigentes'  
   | 'forms'
   | 'evaluaciones'
   | 'gestor_accesos'

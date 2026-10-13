@@ -571,6 +571,29 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'lector_dirigentes',
+    name: 'Lector de Dirigentes',
+    description: 'Ver la ficha del dirigente y sus notas, sin poder editarlas',
+    color: '#C9C7E4',
+    /**
+     * DIR-8 (2026-10-12). Nace para Luis y Yeya: necesitan LEER las notas
+     * confidenciales del dirigente —por qué alguien está en seguimiento, por
+     * qué en pausa— sin poder tocarlas.
+     *
+     * Sin este rol, darles lectura obligaba a darles `coordinador_dirigentes`,
+     * que escribe. Y `editor_dirigentes`, que es el otro rol acotado, NO sirve:
+     * ese actualiza datos todos los días y justamente NO debe ver las notas.
+     *
+     * Mismo molde que `editor_dirigentes`: solo `view` de módulo para poder
+     * entrar. Lo que puede leer de más se autoriza por rol explícito en
+     * `lib/leaders/notas-confidenciales`, que es donde está la regla y sus
+     * tests.
+     */
+    permissions: [
+      { module: 'estudios', actions: ['view'], scope: 'all' },
+    ],
+  },
+  {
     id: 'coordinador_estudios',
     name: 'Coordinador de Estudios',
     description: 'Estudios, dirigentes y grupos',
