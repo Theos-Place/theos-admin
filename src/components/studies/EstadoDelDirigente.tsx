@@ -30,6 +30,7 @@ import {
   ETIQUETA_NO_DISPONIBLE, ETIQUETA_REVISION,
   type EstadoDelDirigente as Estado, type RazonDeRevision,
 } from '@/lib/leaders/estado-del-dirigente'
+import { disponibilidadEfectiva } from '@/lib/leaders/esta-dirigiendo'
 
 export type EstadoGuardado = Estado & {
   notaRevision: string
@@ -95,7 +96,7 @@ function Nota({ controlId, etiqueta, valor, onChange, obligatoria }: {
 }
 
 export function EstadoDelDirigenteForm({
-  memberId, activo, inicial, puedeNotas, puedeBanderita, onGuardado,
+  memberId, activo, inicial, puedeNotas, puedeBanderita, dirigiendo = false, onGuardado,
 }: {
   memberId: string
   /**
@@ -112,10 +113,38 @@ export function EstadoDelDirigenteForm({
   /** Quien no puede, no ve los campos Y tampoco los recibe del servidor. */
   puedeNotas: boolean
   puedeBanderita: boolean
+  /**
+   * DIR-9 · ¿Tiene un grupo abierto que lo ocupe? Lo decide quien monta la
+   * ficha, con `ocupaAlDirigente` — la misma función del reporte.
+   *
+   * NO toca lo que se guarda: el selector de abajo sigue mostrando lo que
+   * eligió coordinación, porque es su decisión. Lo que cambia es el BADGE,
+   * que hasta hoy decía «Disponible» de alguien con dos grupos en curso.
+   */
+  dirigiendo?: boolean
   onGuardado: () => void
 }) {
   const toast = useToast()
   const [e, setE] = useState<EstadoGuardado>({ ...VACIO, ...inicial })
+
+  /**
+   * Lo que el badge muestra. Pasa por la misma función que el reporte, así
+   * que la ficha y el agregado no pueden contradecirse: si el reporte lo
+   * cuenta entre los que dirigen, acá se lee igual.
+   */
+  const derivada = disponibilidadEfectiva({
+    estado: {
+      estado_base: e.base,
+      disponibilidad: e.disponibilidad,
+      razon_no_disponible: e.razonNoDisponible,
+    },
+    dirigiendo,
+  })
+  const efectivo: Estado = {
+    ...e,
+    disponibilidad: derivada.disponibilidad as Estado['disponibilidad'],
+    razonNoDisponible: derivada.razonNoDisponible,
+  }
   const [guardando, setGuardando] = useState(false)
 
   const motivo = motivoInvalido(e)
@@ -183,7 +212,7 @@ export function EstadoDelDirigenteForm({
         </div>
         <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-[11px] font-display tracking-wide',
           activo ? 'bg-teal/15 text-navy' : 'bg-navy-light/10 text-navy-light/80')}>
-          {resumen(e)}
+          {resumen(efectivo)}
         </span>
       </div>
 
@@ -273,6 +302,18 @@ export function EstadoDelDirigenteForm({
               <option value="no_disponible">No disponible</option>
             </select>
           </Campo>
+
+          {/*
+            Si el grupo es el que manda, decirlo ACÁ y no dejar que el
+            coordinador crea que el selector no le hizo caso.
+          */}
+          {derivada.derivada && (
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Tiene un grupo abierto, así que figura como «dirigiendo un estudio»
+              aunque acá diga disponible. Se actualiza solo cuando el grupo cierre.
+              Para apartarlo por otra razón, elegí «No disponible».
+            </p>
+          )}
 
           {e.disponibilidad === 'no_disponible' && (
             <Campo controlId="dir-no-disponible" etiqueta="Por qué no está disponible">

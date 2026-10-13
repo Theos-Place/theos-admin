@@ -6,6 +6,7 @@ import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
 import { useAuth } from '@/hooks/useAuth'
 import { EstadoDelDirigenteForm } from '@/components/studies/EstadoDelDirigente'
+import { ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
 import { puedeEscribirNotas, puedeVerBanderita } from '@/lib/leaders/notas-confidenciales'
 import { estadoInicialDesde } from '@/lib/leaders/estado-inicial'
 import { useSedes } from '@/lib/sedes'
@@ -257,6 +258,14 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
               puedeNotas={puedeNotas}
               puedeBanderita={puedeBanderita}
               inicial={estadoInicialDesde(d.estado_admin)}
+              /**
+               * DIR-9 · Si tiene un grupo abierto, el badge lo dice aunque la
+               * ficha guarde «disponible». Se calcula con la MISMA función
+               * que el reporte (`ocupaAlDirigente`), para que la ficha y el
+               * agregado no puedan contradecirse — medido el 2026-10-13: 106
+               * personas con grupo figuraban disponibles.
+               */
+              dirigiendo={d.estudios_activos.some(g => ocupaAlDirigente(g.plan_code))}
               onGuardado={refetch}
             />
           </div>
