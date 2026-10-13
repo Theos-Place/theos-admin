@@ -620,8 +620,17 @@ export const ROLES: Role[] = [
        * comprobante, los recordatorios de pago y el listado de
        * `/finanzas/pagos`.
        *
-       * OJO, el rol `folletos` TAMBIÉN declara `revision_pagos` y no se tocó
-       * porque no se pidió. Son 4 personas, 2 de ellas solo por ese rol.
+       * OJO, el rol `folletos` TAMBIÉN declara `revision_pagos`. En FIN-14 no
+       * se tocó porque no se pidió; el 2026-10-13 se revisó con Floriana y la
+       * decisión fue DEJARLO, «por ahora». O sea que no es un olvido: quien
+       * reparte folletos sigue viendo la cola de pagos a propósito.
+       *
+       * Hoy eso alcanza a UNA cuenta, `estudios@theosplace.org`, que no tiene
+       * `revision_pagos` por su lado. La otra persona con `folletos` (Denise)
+       * ya lo tiene aparte, así que quitarlo de acá no le cambiaría nada.
+       *
+       * Si se reabre, el cambio es borrar la línea `revision_pagos` del rol
+       * `folletos` y medir a quién deja sin cola antes de aplicar.
        */
     ],
   },
