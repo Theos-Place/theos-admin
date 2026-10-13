@@ -2018,7 +2018,7 @@ Tests: dirigente edita disponibilidad (y 403 a formación), confirmación guarda
 no-dirigente no ve el tab, sync tab↔formulario. tsc/lint/vitest.
 ```
 
-### [~] DIR-11 · Graduados recientes de CDEB — 32 de 33 APLICADOS 2026-10-13
+### [x] DIR-11 · Graduados recientes de CDEB — 33 de 33 APLICADOS 2026-10-13
 
 Listas de Fabiola (captura del 12-oct). Ojo: los encabezados no cuadran con lo
 listado — "24 estudiantes" pero hay 26 nombres; "4 estudiantes" pero hay 5.
@@ -2039,8 +2039,15 @@ Esteban Hernandez · Warren Baez.
 
 **DIR-11 · lo aplicado el 2026-10-13**
 
-32 de 33 personas con su estado correcto: **24 disponibles · 8 en pasantía ·
+Las 33 personas con su estado correcto: **25 disponibles · 8 en pasantía ·
 2 inactivas por no aprobar · 1 inactiva por no asistir.**
+
+**El último lo destrabó Floriana el 13-oct.** «Luis Minor Cordero» no calzaba
+con ningún CDEB de ninguna generación porque el apellido venía incompleto: es
+**Luis Minor Cordero FONSECA**, del CDEB de Eddy Gómez que cerró el 6-dic-2025
+—la misma fecha que ella dio, y la que trae `closed_at`—. Verificado antes de
+escribir: una sola ficha viva con ese nombre, matrícula `completed`, grupo
+`finalizado` y sin ficha de dirigente previa. Quedó activo / disponible.
 
 **EL MATCH NO SE HIZO CONTRA EL PADRÓN sino contra quienes de verdad
 llevaron CDEB.** Por nombre suelto calzaban 13 de 31 —la lista viene sin
