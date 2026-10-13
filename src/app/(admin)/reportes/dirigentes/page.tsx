@@ -18,6 +18,9 @@ import { ChartCard } from '@/components/reportes/ChartCard'
 import { cn } from '@/lib/utils'
 import type { DirigentesReport, LeaderHistoryPoint } from '@/lib/reports/dirigentes'
 import { VolverAReportes } from '@/components/reportes/VolverAReportes'
+import {
+  JerarquiaDeDirigentes, type Payload as JerarquiaPayload,
+} from '@/components/reportes/JerarquiaDeDirigentes'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Users } from 'lucide-react'
 import { useAccesoAReporte } from '@/hooks/useAccesoAReporte'
@@ -31,17 +34,6 @@ const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('es-CR')
 
 type Payload = DirigentesReport & { ver_matiz: boolean }
 
-/** Tarjeta de número grande. `hint` explica qué cuenta, que en este reporte es
- *  la mitad del valor: "activos" y "dando ahora" se confunden fácil. */
-function Kpi({ label, value, hint }: { label: string; value: number; hint?: string }) {
-  return (
-    <div className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]">
-      <p className="text-[11px] uppercase tracking-wide text-navy-light/80 font-body">{label}</p>
-      <p className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">{fmt(value)}</p>
-      {hint && <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">{hint}</p>}
-    </div>
-  )
-}
 
 /** Comparación contra un punto histórico. Sin punto dice por qué no lo hay:
  *  la serie arrancó el 2026-08-21 y antes de eso no existe el dato. */
@@ -88,6 +80,8 @@ export default function ReporteDirigentesPage() {
   const { loaded, puedeVer } = useAccesoAReporte('dirigentes')
   const [report, setReport] = useState<Payload | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [jerarquia, setJerarquia] = useState<JerarquiaPayload | null>(null)
+  const [errorJerarquia, setErrorJerarquia] = useState<string | null>(null)
 
   const fetchReport = useCallback(() => {
     if (!puedeVer) return
@@ -97,6 +91,26 @@ export default function ReporteDirigentesPage() {
       .catch(e => setError(e instanceof Error ? e.message : 'Error'))
   }, [puedeVer])
   useEffect(() => { fetchReport() }, [fetchReport])
+
+  // DIR-9 · Llamada aparte de la de DIR-7: esta NO va por el snapshot
+  // nocturno, se calcula al abrir. El reporte se mira justo para decidir a
+  // quién asignarle un grupo, y un número de anoche serviría para lo
+  // contrario.
+  useEffect(() => {
+    if (!puedeVer) return
+    let vivo = true
+    fetch('/api/reports/leaders/jerarquia')
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar el resumen de dirigentes.'))
+        }
+        return r.json() as Promise<JerarquiaPayload>
+      })
+      .then(d => { if (vivo) { setJerarquia(d); setErrorJerarquia(null) } })
+      .catch(e => { if (vivo) setErrorJerarquia(e instanceof Error ? e.message : 'No se pudo cargar el resumen de dirigentes.') })
+    return () => { vivo = false }
+  }, [puedeVer])
 
   if (!loaded) return null
   if (!puedeVer) {
@@ -132,15 +146,6 @@ export default function ReporteDirigentesPage() {
   const sinZonas = report.por_zona.length === 0
     || (report.por_zona.length === 1 && report.por_zona[0].zona === 'Sin zona declarada')
 
-  const estadoData = [
-    { estado: 'Dando ahora', total: report.dando_ahora },
-    { estado: 'Disponibles', total: report.disponibles_sin_grupo },
-    ...(report.ver_matiz ? [
-      { estado: 'En pausa', total: report.en_pausa },
-      { estado: 'En revisión', total: report.en_revision },
-    ] : []),
-    { estado: 'Inactivos', total: report.inactivos },
-  ]
 
   return (
     <div className="space-y-5">
@@ -154,13 +159,19 @@ export default function ReporteDirigentesPage() {
         </p>
       </div>
 
-      {/* Titulares */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Activos" value={report.activos} hint="En el comité de dirigentes" />
-        <Kpi label="Dando ahora" value={report.dando_ahora} hint="Con grupo abierto o en curso" />
-        <Kpi label="Disponibles" value={report.disponibles_sin_grupo} hint="Activos, sin grupo asignado" />
-        <Kpi label="Designados" value={report.total} hint="Total histórico, activos e inactivos" />
-      </div>
+      {/*
+        DIR-9 · Los titulares viejos (Activos / Dando ahora / Disponibles /
+        Designados) SE FUERON, y no por estética: contaban con la taxonomía
+        anterior (`is_active` + grupo abierto) mientras la jerarquía cuenta
+        con la de DIR-8 (estado_base + disponibilidad). Dejar las dos en la
+        misma pantalla mostraría dos cifras distintas de «activos» a medio
+        metro una de otra, que es el bug que este reporte vino a arreglar.
+      */}
+      {jerarquia
+        ? <JerarquiaDeDirigentes datos={jerarquia} />
+        : errorJerarquia
+          ? <p className="text-sm text-coral font-body">{errorJerarquia}</p>
+          : <div className="h-64 rounded-2xl bg-surface-card animate-pulse" />}
 
       {/* Calidad de datos: EST-1 dice que esto no debería existir, así que
           cuando existe hay que verlo. No es una métrica del cuerpo. */}
@@ -194,26 +205,6 @@ export default function ReporteDirigentesPage() {
         <Delta label="Activos vs. hace 6 meses" actual={report.activos} punto={report.evolucion.hace_6_meses} />
       </div>
 
-      <ChartCard
-        title="En qué está cada quien"
-        subtitle="Los grupos no se solapan: suman el total de designados"
-        height={260}
-        footnote={report.ver_matiz
-          ? 'Quien tiene un grupo abierto cuenta como "dando ahora" aunque su estado diga otra cosa: dar el estudio es un hecho, el estado es una intención.'
-          : 'El desglose de pausa y revisión lo maneja la coordinación de dirigentes; acá van sumados a inactivos.'}
-      >
-        <ResponsiveContainer>
-          <BarChart data={estadoData} layout="vertical" margin={{ left: 12, right: 32 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
-            <YAxis type="category" dataKey="estado" width={anchoDeEjeCategoria(estadoData.map(d => d.estado))} tick={ETIQUETA_CATEGORIA} interval={0} />
-            <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
-            <Bar dataKey="total" fill={NAVY} radius={[0, 6, 6, 0]} name="Dirigentes">
-              <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
 
       {/* Capacidad por estudio: las dos columnas, que NO son lo mismo */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
