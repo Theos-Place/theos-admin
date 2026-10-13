@@ -20,6 +20,7 @@ export type FilaConCalidad = CharlaAggRow & { calidad?: string | null }
 
 export type SedeEnLaSemana = {
   sede: string
+  /** CHECK-INS de la semana: entradas, no personas. */
   total: number
   asistentes: number
   servidores: number
@@ -37,9 +38,24 @@ export type DetalleDeSemana = {
   week: number
   /** "2026-W37" — lo que va en la URL. */
   clave: string
+  /** CHECK-INS de la semana: entradas, no personas. */
   total: number
   asistentes: number
   servidores: number
+  /**
+   * REP-15 · Cuántas PERSONAS hay detrás de esos check-ins (pedido de
+   * Floriana, 2026-10-12).
+   *
+   * Sale de su propia consulta y NO se deriva de `porSede`: las personas
+   * únicas no se suman entre sedes —quien fue a dos cuenta en las dos— y
+   * sumarlas daría siempre el total de check-ins, que parecería correcto.
+   * Medido en la semana 40: sumar por sede da 899; las personas son 875.
+   *
+   * `null` con un filtro de sede puesto: el dato existe solo a nivel de
+   * semana completa, y poner el total de todas las sedes al lado de los
+   * check-ins de una sola sería peor que no ponerlo.
+   */
+  personas: number | null
   porSede: SedeEnLaSemana[]
   /** La semana anterior del MISMO año. */
   vsSemanaAnterior: Comparacion
@@ -107,7 +123,12 @@ export function detalleDeSemana(
   filas: readonly FilaConCalidad[],
   year: number,
   week: number,
-  opts: { sede?: string; hoy?: Date } = {},
+  opts: {
+    sede?: string
+    hoy?: Date
+    /** REP-15 · Personas únicas por semana, de `report_charla_personas_por_semana`. */
+    personasPorSemana?: ReadonlyArray<{ iso_yr: number; wk: number; personas: number }>
+  } = {},
 ): DetalleDeSemana | null {
   const sedeFiltro = opts.sede && opts.sede !== 'all' ? opts.sede : null
   const hoy = opts.hoy ?? new Date()
@@ -140,6 +161,10 @@ export function detalleDeSemana(
     asistentes: lista.reduce((n, s) => n + s.asistentes, 0),
     servidores: lista.reduce((n, s) => n + s.servidores, 0),
     porSede: lista,
+    // Solo sin filtro de sede: ver el comentario del campo.
+    personas: sedeFiltro
+      ? null
+      : opts.personasPorSemana?.find(p => p.iso_yr === year && p.wk === week)?.personas ?? null,
     // La semana 1 no tiene "semana anterior" dentro del mismo año: se deja en
     // null en vez de buscar la 52 del año pasado, que es otra comparación.
     vsSemanaAnterior: comparar(total, week > 1 ? totalDe(delFiltro, year, week - 1) : null),

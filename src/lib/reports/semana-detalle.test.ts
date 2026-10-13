@@ -144,3 +144,41 @@ describe('una semana ISO a caballo entre dos años', () => {
     expect(detalleDeSemana(filas, 2027, 53, { hoy: new Date('2027-02-01T12:00:00Z') })).toBeNull()
   })
 })
+
+/**
+ * REP-15 (ampliación 2026-10-12) · Las personas únicas de la semana.
+ *
+ * No se derivan del agregado por sede: quien fue a dos sedes la misma semana
+ * cuenta en las dos, así que sumar esa columna da el total de CHECK-INS y
+ * parece correcto. Medido en la semana 40 de 2026: sumar por sede da 899,
+ * las personas son 875.
+ */
+describe('personas únicas de la semana', () => {
+  const PERSONAS = [{ iso_yr: 2026, wk: 37, personas: 875 }]
+
+  it('toma el dato de su propia consulta', () => {
+    const d = detalleDeSemana(CONTEXTO, 2026, 37, { hoy: HOY, personasPorSemana: PERSONAS })!
+    expect(d.personas).toBe(875)
+  })
+
+  it('sin el dato queda en null, no en cero', () => {
+    // Cero se leería como «no vino nadie», que es falso: es que no se pidió.
+    expect(detalleDeSemana(CONTEXTO, 2026, 37, { hoy: HOY })!.personas).toBeNull()
+  })
+
+  it('con filtro de SEDE no se muestra, aunque el dato exista', () => {
+    // El número es de la semana completa. Ponerlo al lado de los check-ins
+    // de una sola sede invitaría a restarlos, y esa resta no significa nada.
+    const d = detalleDeSemana(CONTEXTO, 2026, 37, {
+      hoy: HOY, personasPorSemana: PERSONAS, sede: CONTEXTO[0].title,
+    })
+    if (d) expect(d.personas).toBeNull()
+  })
+
+  it('no se confunde de semana', () => {
+    const d = detalleDeSemana(CONTEXTO, 2026, 37, {
+      hoy: HOY, personasPorSemana: [{ iso_yr: 2026, wk: 36, personas: 999 }],
+    })!
+    expect(d.personas).toBeNull()
+  })
+})

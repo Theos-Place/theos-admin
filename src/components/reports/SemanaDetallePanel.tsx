@@ -98,6 +98,19 @@ export function SemanaDetallePanel({
               {detalle.asistentes} como asistente
               {detalle.servidores > 0 && ` · ${detalle.servidores} como servidor`}
             </p>
+            {/* REP-15 · Cuántas PERSONAS hay detrás de esos check-ins
+                (pedido de Floriana). Es el número que la sección de abajo
+                lista una por una, así que tenerlo acá cierra la lectura sin
+                tener que bajar. Con filtro de sede no se muestra: el dato es
+                de la semana completa. */}
+            {detalle.personas != null && (
+              <p className="text-[13px] text-navy-light/80 font-body">
+                <strong className="text-navy">{detalle.personas}</strong> personas distintas
+                {detalle.total > detalle.personas && (
+                  <> · {detalle.total - detalle.personas} {detalle.total - detalle.personas === 1 ? 'vino' : 'vinieron'} más de una vez</>
+                )}
+              </p>
+            )}
           </div>
           <Delta c={detalle.vsSemanaAnterior} etiqueta="vs semana anterior" />
           <Delta c={detalle.vsAnoPasado} etiqueta={`vs ${rangoDeSemana(year - 1, week, year - 1).etiqueta} de ${year - 1}`} />

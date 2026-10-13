@@ -54,6 +54,21 @@ describe('REP-16 · la serie y la tabla cuentan el mismo año', () => {
     expect(serie).toMatch(/\[prueba\]/)
   })
 
+  it('NO pasa del año en curso', () => {
+    // Regresión del 2026-10-12, reportada por Floriana a la hora de
+    // desplegarse: los grupos de octubre terminan la primera semana de
+    // enero, así que la expansión por años llegaba a 2027 y el gráfico
+    // pintaba 84 estudiantes en un año que no ha empezado. Una proyección
+    // dibujada como historia se lee como «el otro año empezó flojo».
+    expect(serie).toMatch(/y\.anio <= extract\(year from \(now\(\) at time zone 'America\/Costa_Rica'\)\)/)
+  })
+
+  it('el corte del año usa hora de Costa Rica, no UTC', () => {
+    // El 31 de diciembre a las 18:00 UTC ya es el año siguiente: el gráfico
+    // estrenaría un punto vacío seis horas antes de tiempo.
+    expect(serie).not.toMatch(/y\.anio <= extract\(year from now\(\)\)/)
+  })
+
   it('queda cerrada: PostgREST publica todo public en /rpc', () => {
     // La regla de AGENTS.md (SEC-3): una función nueva en public nace con
     // EXECUTE para PUBLIC y la llave pública va en el bundle del navegador.

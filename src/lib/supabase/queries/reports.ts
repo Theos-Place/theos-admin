@@ -55,6 +55,7 @@ async function todasLasFilas<T>(
 //     devuelve casi directo. El filtrado por cohorte se hace en el cliente.
 
 type AggRpc = 'report_charla_attendance' | 'report_member_growth'
+  | 'report_charla_personas_por_semana'
 type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance' | 'get_active_today'
 
 // Keys en report_snapshots. Para charla/growth = nombre del RPC (filas). Para
@@ -231,8 +232,20 @@ export async function getSemanaDetalle(
   year: number, week: number, opts: { sede?: string } = {},
 ): Promise<DetalleDeSemana | null> {
   const supabase = createAdminClient()
-  const filas = await loadAggRows<CharlaAggRow>(supabase, 'report_charla_attendance')
-  return detalleDeSemana(filas, year, week, { sede: opts.sede })
+  // REP-15 · Las personas únicas van en su propia consulta: no se pueden
+  // derivar del agregado por sede, porque no se suman entre sedes. Es una
+  // fila por semana, así que el costo es despreciable al lado del agregado.
+  const [filas, personas] = await Promise.all([
+    loadAggRows<CharlaAggRow>(supabase, 'report_charla_attendance'),
+    loadAggRows<{ iso_yr: number; wk: number; personas: number }>(
+      supabase, 'report_charla_personas_por_semana'),
+  ])
+  return detalleDeSemana(filas, year, week, {
+    sede: opts.sede,
+    personasPorSemana: personas.map(p => ({
+      iso_yr: Number(p.iso_yr), wk: Number(p.wk), personas: Number(p.personas),
+    })),
+  })
 }
 
 /** Crecimiento (personas nuevas): filas agregadas cacheadas → series (año, sede). */
