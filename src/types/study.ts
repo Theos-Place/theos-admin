@@ -158,6 +158,27 @@ export type StudyLeader = {
     is_server: boolean
   }
   evaluations: LeaderEvaluation[]
+  /**
+   * DIR-8 · El estado administrativo, TAL COMO VINO DEL SERVIDOR.
+   *
+   * Se deja pasar crudo en vez de mapearlo acá: las notas y la banderita
+   * pueden NO VENIR —el servidor se las quita a quien no puede verlas— y
+   * rellenarlas con vacíos borraría la diferencia entre «no hay nota» y «no
+   * te toca verla». `estadoAdminDe` lo interpreta donde hace falta.
+   */
+  estado_base?: string | null
+  razon_inactivo?: string | null
+  detalle_no_ejerce?: string | null
+  situacion_cdeb?: string | null
+  disponibilidad?: string | null
+  razon_no_disponible?: string | null
+  pausa_hasta?: string | null
+  revision?: string[] | null
+  nota_revision?: string | null
+  nota_cdeb?: string | null
+  nota_decision_propia?: string | null
+  nota_pausa?: string | null
+  nota_general?: string | null
 }
 
 export type WaitListEntry = {

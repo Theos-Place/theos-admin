@@ -200,6 +200,28 @@ export type DbLeaderEnriched = {
     evaluation_date: string
     comments: string | null
   }>
+  /**
+   * DIR-8 · El estado administrativo. El SELECT ya los traía; el tipo no los
+   * declaraba, así que el adaptador los dejaba caer y la lista de dirigentes
+   * se quedaba sin poder filtrar por los estados nuevos. Falló en silencio
+   * justamente porque el tipo no los pedía.
+   *
+   * Las notas son opcionales a propósito: el servidor se las quita a quien
+   * no puede verlas, y eso tiene que poder distinguirse de «no hay nota».
+   */
+  estado_base?: string | null
+  razon_inactivo?: string | null
+  detalle_no_ejerce?: string | null
+  situacion_cdeb?: string | null
+  disponibilidad?: string | null
+  razon_no_disponible?: string | null
+  pausa_hasta?: string | null
+  revision?: string[] | null
+  nota_revision?: string | null
+  nota_cdeb?: string | null
+  nota_decision_propia?: string | null
+  nota_pausa?: string | null
+  nota_general?: string | null
 }
 
 /** Item del LISTADO de grupos: en vez de enrollments embebidos lleva solo

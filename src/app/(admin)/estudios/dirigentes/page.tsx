@@ -24,9 +24,15 @@ import { useToast } from '@/components/shared/Toast'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { getInitials } from '@/lib/format'
 import {
-  LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, type LeaderStatus,
+  LEADER_STATUS_LABEL, ADMIN_ONLY_STATUSES,
 } from '@/lib/studies/leader-admin-status'
 import { dirigeAhora } from '@/lib/studies/dirigente-activo'
+import { ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
+import {
+  cumpleFiltro, gruposDeFiltros, conteoPorFiltro,
+  type DirigenteFiltrable, type ClaveDeFiltro,
+} from '@/lib/leaders/filtro-de-dirigentes'
+import { ROLES_QUE_LEEN_NOTAS } from '@/lib/leaders/notas-confidenciales'
 
 /**
  * PAR-6 · «Dando ahora» sale de la MISMA definición que decide quién es
@@ -40,18 +46,22 @@ import { dirigeAhora } from '@/lib/studies/dirigente-activo'
  */
 const estaDandoAhora = (d: Dirigente) => dirigeAhora(d.estudios_activos.map(g => g.status))
 
-const ESTADO_FILTERS = [
-  { key: 'todos', label: 'Todos' },
-  { key: 'activo', label: 'Activos' },
-  { key: 'inactivo', label: 'Inactivos' },
-] as const
-
-/** DIR-6: los dos matices son un filtro más, pero solo para quien los ve. */
-const ESTADO_ADMIN_FILTERS = ADMIN_ONLY_STATUSES.map(s => ({
-  key: s, label: LEADER_STATUS_LABEL[s],
-}))
-
-type EstadoFiltro = 'todos' | 'activo' | 'inactivo' | LeaderStatus
+/**
+ * DIR-12 · Lo que el filtro nuevo necesita de cada dirigente.
+ *
+ * `dirigiendo` NO sale de la ficha —ahí no existe—: se deriva de sus grupos
+ * con la MISMA función que el reporte y el cobro (`ocupaAlDirigente`), para
+ * que «Disponibles» no devuelva a quien ya tiene un grupo abierto.
+ */
+const paraFiltrar = (d: Dirigente): DirigenteFiltrable => ({
+  estado_base: d.estado_admin?.estado_base ?? null,
+  disponibilidad: d.estado_admin?.disponibilidad ?? null,
+  razon_no_disponible: d.estado_admin?.razon_no_disponible ?? null,
+  razon_inactivo: d.estado_admin?.razon_inactivo ?? null,
+  revision: d.estado_admin?.revision ?? [],
+  dirigiendo: d.estudios_activos.some(
+    g => dirigeAhora([g.status]) && ocupaAlDirigente(g.plan_code)),
+})
 
 type StudyBulk = { field: 'formation' | 'availability'; action: 'add' | 'remove' }
 
@@ -153,9 +163,7 @@ function DirigentesContenido() {
   const canAdd = hasRole('admin', 'direccion', 'coordinador_dirigentes')
   const canBulk = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const canExport = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
-  const [estado, setEstado] = useState<EstadoFiltro>('todos')
-  // DIR-6: los filtros de matiz solo para la coordinación de dirigentes.
-  const canAdminStatus = hasRole(...LEADER_ADMIN_ROLES)
+  const [estado, setEstado] = useState<ClaveDeFiltro>('todos')
   // PAR-6: el toggle va en la URL para poder mandar el link ya filtrado.
   const [soloDando, setSoloDando] = useUrlFlag('dando')
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
@@ -173,11 +181,10 @@ function DirigentesContenido() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return dirigentes.filter(d => {
-      // 'activo'/'inactivo' miran el estado derivado; los matices, el
-      // administrativo (que para quien no lo ve nunca viene con esos valores).
-      if (estado === 'activo' || estado === 'inactivo') {
-        if (d.status !== estado) return false
-      } else if (estado !== 'todos' && d.availability_status !== estado) return false
+      // DIR-12 · Los filtros hablan la taxonomía de DIR-8 y preguntan por la
+      // disponibilidad EFECTIVA. Antes miraban `availability_status`, el
+      // campo anterior, así que los estados nuevos no se podían filtrar.
+      if (!cumpleFiltro(paraFiltrar(d), estado)) return false
       if (soloDando && !estaDandoAhora(d)) return false
       if (dandoTipo && !matchesStudyFilter(d.estudios_activos.map(g => g.plan_code), dandoTipo)) return false
       if (formadoTipo && !matchesStudyFilter(d.formacion, formadoTipo)) return false
@@ -186,6 +193,27 @@ function DirigentesContenido() {
       return true
     })
   }, [dirigentes, estado, soloDando, dandoTipo, formadoTipo, dispTipo, query])
+
+  /**
+   * DIR-12 · Los filtros AGRUPADOS. Planos eran quince botones en fila y
+   * había que leerlos todos para encontrar uno; agrupados se busca primero
+   * la pregunta («disponibilidad») y después la respuesta.
+   *
+   * Las banderitas solo para quien puede verlas: su sola existencia dice
+   * que hay una situación abierta con esa persona.
+   */
+  const verBanderitas = hasRole(...ROLES_QUE_LEEN_NOTAS)
+  const grupos = useMemo(
+    () => gruposDeFiltros({ verBanderitas }),
+    [verBanderitas])
+
+  // El conteo es sobre TODOS y no sobre lo ya filtrado: si bajara al aplicar
+  // otro filtro, el número dejaría de responder «cuántos hay así».
+  const conteos = useMemo(
+    () => conteoPorFiltro(
+      dirigentes.map(paraFiltrar),
+      grupos.flatMap(g => g.opciones.map(o => o.clave))),
+    [dirigentes, grupos])
 
   const counts = useMemo(() => ({
     activos: dirigentes.filter(d => d.status === 'activo').length,
@@ -327,17 +355,38 @@ function DirigentesContenido() {
       {/* Filtros */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-1.5">
-          {[...ESTADO_FILTERS, ...(canAdminStatus ? ESTADO_ADMIN_FILTERS : [])].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setEstado(f.key)}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
-                estado === f.key ? 'bg-navy text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
-              )}
-            >
-              {f.label}
-            </button>
+          {grupos.map(g => (
+            <div key={g.titulo} className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
+                {g.titulo}
+              </span>
+              {g.opciones.map(o => {
+                const n = conteos[o.clave] ?? 0
+                // Una opción sin nadie se muestra apagada y no se puede
+                // apretar: dejarla viva lleva a una lista vacía que se lee
+                // como «se rompió algo».
+                const vacia = o.clave !== 'todos' && n === 0
+                return (
+                  <button
+                    key={o.clave}
+                    onClick={() => setEstado(o.clave)}
+                    disabled={vacia}
+                    aria-pressed={estado === o.clave}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-[13px] transition-colors font-body',
+                      estado === o.clave
+                        ? 'bg-navy text-white'
+                        : vacia
+                          ? 'bg-surface-low text-navy-light/80 cursor-default'
+                          : 'bg-surface-low text-navy-light hover:bg-surface-container',
+                    )}
+                  >
+                    {o.etiqueta}
+                    {o.clave !== 'todos' && <span className="ml-1.5 opacity-70">{n}</span>}
+                  </button>
+                )
+              })}
+            </div>
           ))}
           {/* PAR-6 · El toggle va entre los filtros de estado porque responde la
               misma clase de pregunta —quién, no de qué estudio—, y el

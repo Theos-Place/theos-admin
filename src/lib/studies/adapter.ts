@@ -231,6 +231,29 @@ export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[
       is_server: false,
     },
     evaluations,
+    /**
+     * DIR-8 · Los campos del estado administrativo PASAN DERECHO.
+     *
+     * No estaban, y por eso la lista de dirigentes no podía filtrar por los
+     * estados nuevos: el adaptador armaba un objeto desde cero y los dejaba
+     * afuera sin que nada fallara —el endpoint los mandaba, el tipo no los
+     * pedía y se perdían en silencio—.
+     *
+     * Las notas se copian solo SI VIENEN: el servidor se las quita a quien
+     * no puede verlas, y escribir `null` acá borraría la diferencia entre
+     * «no hay nota» y «no te toca verla».
+     */
+    estado_base: db.estado_base ?? null,
+    razon_inactivo: db.razon_inactivo ?? null,
+    detalle_no_ejerce: db.detalle_no_ejerce ?? null,
+    situacion_cdeb: db.situacion_cdeb ?? null,
+    disponibilidad: db.disponibilidad ?? null,
+    razon_no_disponible: db.razon_no_disponible ?? null,
+    pausa_hasta: db.pausa_hasta ?? null,
+    revision: db.revision ?? [],
+    ...Object.fromEntries(
+      (['nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general'] as const)
+        .filter(k => k in db).map(k => [k, db[k] ?? null])),
   }
 }
 
