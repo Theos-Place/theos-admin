@@ -1074,7 +1074,7 @@ página, el rol abre exactamente los tres módulos (403 a finanzas/reportes), pu
 da y quita el rol. tsc/lint/vitest.
 ```
 
-### [ ] EST-20 · Página pública de matrícula de Nivel 1 (pedido 2026-10-01)
+### [x] EST-20 · Página pública de matrícula de Nivel 1 — HECHO 2026-10-12
 
 Prompt para Claude Code:
 
@@ -1111,6 +1111,43 @@ Tests: solo N1 en matrícula aparece, sin login se lista pero matricular exige s
 redirect aterriza con el grupo preseleccionado, payload sin datos sensibles.
 tsc/lint/vitest.
 ```
+
+**EST-20 · lo que se hizo (2026-10-12)**
+
+`/matricula-nivel-1`, sin login, en `PUBLIC_PREFIXES`. Sin iframe, como se
+decidió. Botón «Copiar enlace público» en la matrícula interna, solo para
+admin y coordinación de estudios.
+
+**Dos cosas que se encontraron construyéndola, y las dos habrían llegado a la
+gente:**
+
+1. **El precio decía «gratis» y no lo era.** Nivel 1 cuesta 0 en el catálogo
+   porque bajo el esquema nuevo lo que se cobra es el PAR N1+N2 (₡5.000) al
+   entrar. Leer `plan.cost` —lo obvio— ponía «Gratis» en TRES de los seis
+   grupos abiertos, y la persona se encontraba el cobro al matricularse. El
+   costo sale de `montoDelBloque`, la misma función que cobra.
+2. **La página se caía entera** cuando la respuesta cacheada no traía un
+   campo nuevo (pasa en cada despliegue, por el cache de 2 minutos). Lo cazó
+   el navegador, no tsc: el tipo decía que el campo existe. Ahora degrada en
+   vez de romperse.
+
+**Decisiones del filtro** (en `lib/studies/grupos-publicos`, un subconjunto
+del de la matrícula interna — si la pública muestra algo que adentro no se
+ofrece, esa persona creó una cuenta para nada):
+ · VIRTUALES y RESTRINGIDOS no se publican: dependen de quién mira y sin
+   sesión no se puede saber, así que esconderlos es el lado seguro.
+ · El rango de EDAD sí deja pasar el grupo, y se muestra: casi todos tienen
+   rango y esconderlos dejaría la página vacía.
+
+El nombre de la sede lo resuelve el SERVIDOR: `sedeLabel` lee una caché que
+llena el provider del admin, y sin sesión esa caché está vacía — salía
+«casona-pedregal» en vez de «Casona Pedregal».
+
+**Verificado en el navegador**: los 6 grupos reales con sus nombres, precios
+y cupos; y «Apartar mi campo» lleva a
+`/login?redirect=/matricula?grupo=<id>`. Lo que NO se probó de punta a punta
+es el tramo DESPUÉS del login —requiere credenciales reales contra
+producción—; la preselección está cubierta por tests puros.
 
 ### [x] SRV-19 · Aplicaciones de puestos: mostrar la sede del aplicante (pedido 2026-10-01) — HECHO 2026-10-02
 

@@ -2838,3 +2838,132 @@ export async function ofrecimientosDeCasa(
   })))
   return new Map([...ultima].map(([id, v]) => [id, { ubicacion: v.ubicacion }]))
 }
+
+/**
+ * EST-20 · Los grupos de Nivel 1 que se muestran en la página PÚBLICA.
+ *
+ * El filtro vive en `lib/studies/grupos-publicos` con tests, y es un
+ * subconjunto del de la matrícula interna: lo que no se puede evaluar sin
+ * sesión (virtual, restringido) se esconde en vez de mostrarse.
+ *
+ * Devuelve SOLO campos de cartelera. Ni ids de miembros, ni nombres de
+ * matriculados, ni nada que no se pinte: lo que viaja al navegador es
+ * público aunque no se dibuje.
+ */
+export type GrupoPublico = {
+  id: string
+  /** El NOMBRE de la sede, ya resuelto: la pantalla pública no tiene caché. */
+  sede: string
+  zona: string | null
+  ubicacion: string | null
+  dias: string
+  hora: string | null
+  dirigente: string
+  cupos: number
+  capacidad: number
+  llena: number
+  inicio: string | null
+  edad: string | null
+  costo: number
+  moneda: string
+  gratis: boolean
+}
+
+export async function getGruposPublicosNivel1(hoyYmd: string): Promise<GrupoPublico[]> {
+  const supabase = createAdminClient()
+  const {
+    seMuestraEnPublico, cuposLibres, proporcionLlena, textoDeEdad,
+  } = await import('@/lib/studies/grupos-publicos')
+  /**
+   * El costo sale de `montoDelBloque`, la MISMA función que cobra, y no de
+   * `plan.cost`.
+   *
+   * Nivel 1 cuesta 0 en el catálogo porque bajo el esquema nuevo lo que se
+   * cobra es el PAR N1+N2 (₡5.000) al entrar. Leer `plan.cost` habría puesto
+   * «gratis» en la página pública de tres de los grupos en matrícula, y la
+   * persona se habría encontrado el cobro al matricularse. Un precio
+   * equivocado en una página que se comparte en redes es de las peores cosas
+   * que puede decir este sistema.
+   */
+  const { montoDelBloque } = await import('@/lib/studies/corte-de-bloque')
+  const { modalidadDe } = await import('@/lib/studies/modalidad-de-bloques')
+  const { data: catalogo } = await supabase.from('study_plans').select('code, cost')
+  const costos = Object.fromEntries(((catalogo ?? []) as Array<{ code: string; cost: number | null }>)
+    .map(c => [c.code, Number(c.cost ?? 0)]))
+  // El NOMBRE de la sede se resuelve acá y no en la pantalla: `sedeLabel`
+  // lee una caché que llena el provider del admin, y en una página sin
+  // sesión esa caché está vacía — saldría «casona-pedregal» en vez de
+  // «Casona Pedregal», que es lo primero que se ve de cada grupo.
+  const { data: sedes } = await supabase.from('sedes').select('code, name')
+  const nombreDeSede = new Map(((sedes ?? []) as Array<{ code: string; name: string }>)
+    .map(x => [x.code, x.name]))
+
+  const { data, error } = await supabase
+    .from('study_groups')
+    .select(`
+      id, zone, location, schedule_days, schedule_time, starts_at, status,
+      max_students, is_virtual, enrollment_restrictions, age_min, age_max, modalidad,
+      enrollment_start_date, enrollment_end_date,
+      plan:study_plans!study_groups_plan_id_fkey(code, cost, currency, requires_payment),
+      leader:members!study_groups_leader_id_fkey(first_name, last_name),
+      enrollments:study_enrollments!study_enrollments_group_id_fkey(status)
+    `)
+    .eq('status', 'en_matricula')
+  if (error) throw error
+
+  type Fila = {
+    id: string; zone: string | null; location: string | null
+    schedule_days: string[] | null; schedule_time: string | null; starts_at: string | null
+    status: string | null; max_students: number | null; is_virtual: boolean | null
+    enrollment_restrictions: unknown
+    enrollment_start_date: string | null; enrollment_end_date: string | null
+    age_min?: number | null; age_max?: number | null; modalidad?: string | null
+    plan: { code: string | null; cost: number | null; currency: string | null; requires_payment: boolean | null }
+      | Array<{ code: string | null; cost: number | null; currency: string | null; requires_payment: boolean | null }> | null
+    leader: { first_name: string; last_name: string } | Array<{ first_name: string; last_name: string }> | null
+    enrollments: Array<{ status: string | null }> | null
+  }
+  const uno = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? (v[0] ?? null) : v)
+
+  const filas = (data ?? []) as unknown as Fila[]
+  const out: GrupoPublico[] = []
+  for (const f of filas) {
+    const plan = uno(f.plan)
+    // Mismo conteo de «activos» que usa la elegibilidad: todo lo que no sea
+    // una baja ocupa cupo, incluido `pendiente_de_pago`.
+    const activos = (f.enrollments ?? []).filter(e => e.status !== 'withdrawn' && e.status !== 'dropped'
+      && e.status !== 'cancelada' && e.status !== 'transferred').length
+    const candidato = {
+      id: f.id,
+      plan_code: plan?.code ?? null,
+      status: f.status,
+      max_students: f.max_students,
+      activos,
+      enrollment_start_date: f.enrollment_start_date,
+      enrollment_end_date: f.enrollment_end_date,
+      is_virtual: f.is_virtual,
+      has_restriction: !!f.enrollment_restrictions,
+    }
+    if (!seMuestraEnPublico(candidato, hoyYmd)) continue
+    const lider = uno(f.leader)
+    const costo = montoDelBloque(plan?.code, costos, modalidadDe(f.modalidad))
+    out.push({
+      id: f.id,
+      sede: (f.zone && nombreDeSede.get(f.zone)) || 'Sede por definir',
+      zona: f.zone,
+      ubicacion: f.location,
+      dias: (f.schedule_days ?? []).join('/'),
+      hora: f.schedule_time,
+      dirigente: lider ? `${lider.first_name} ${lider.last_name}`.trim() : 'Por asignar',
+      cupos: cuposLibres(candidato),
+      capacidad: f.max_students ?? 0,
+      llena: proporcionLlena(candidato),
+      inicio: f.starts_at ? f.starts_at.slice(0, 10) : null,
+      edad: textoDeEdad({ age_min: f.age_min, age_max: f.age_max }),
+      costo,
+      moneda: plan?.currency ?? 'CRC',
+      gratis: !plan?.requires_payment || costo <= 0,
+    })
+  }
+  return out
+}

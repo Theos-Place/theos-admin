@@ -2,7 +2,11 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { textoCupos, porcentajeOcupado } from '@/lib/studies/cupos'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { usePrecarga } from '@/hooks/usePrecarga'
+import { CopiarEnlacePublico } from '@/components/studies/CopiarEnlacePublico'
+import { puedeCompartirEnlacePublico } from '@/lib/studies/grupos-publicos'
+import { estudioQueAbrir, elGrupoYaNoEsta } from '@/lib/studies/grupo-preseleccionado'
 import Link from 'next/link'
 import {
   GraduationCap, Search, ChevronDown, ChevronUp, CheckCircle2,
@@ -80,6 +84,13 @@ export default function MatriculaPage() {
   const [activeFilter, setActiveFilter]   = useState<FilterTab>('all')
   const [search, setSearch]               = useState('')
   const [expandedStudy, setExpandedStudy] = useState<string | null>(null)
+  /**
+   * EST-20 · El grupo que traía quien viene de la página pública.
+   *
+   * Ya lo eligió allá; aterrizar con la lista cerrada lo haría buscarlo otra
+   * vez, y con varios Nivel 1 abiertos elegir mal es fácil.
+   */
+  const grupoDelEnlace = useSearchParams().get('grupo')
   const [confirmModal, setConfirmModal]   = useState<ConfirmState | null>(null)
   // FIN-2: matrícula pedida por alguien sin documento — se captura antes de
   // confirmar y luego sigue con la confirmación que quedó pendiente.
@@ -171,6 +182,30 @@ export default function MatriculaPage() {
   const grouped = STAGE_ORDER
     .map(stage => ({ stage, items: filteredResults.filter(r => r.stage === stage) }))
     .filter(g => g.items.length > 0)
+
+  /**
+   * EST-20 · Abrir el estudio del grupo que venía en el enlace.
+   *
+   * Con `usePrecarga` y no con un efecto: así la lista ya aparece abierta en
+   * el primer pintado, sin el salto de verla cerrada y que se abra sola. La
+   * clave es el grupo, así que esto ocurre UNA vez y después la persona
+   * manda — si cierra el panel, se queda cerrado.
+   */
+  usePrecarga(
+    grupoDelEnlace && eligibilityResults.length > 0 ? grupoDelEnlace : null,
+    () => {
+      const code = estudioQueAbrir(eligibilityResults, grupoDelEnlace)
+      if (code) setExpandedStudy(code)
+    },
+  )
+  // Si el grupo se llenó entre que lo vio en la página pública y volvió del
+  // login, hay que DECIRLO. Sin esto la pantalla se ve normal y la persona
+  // busca un grupo que ya no está.
+  const grupoDelEnlaceSeFue = elGrupoYaNoEsta({
+    grupoId: grupoDelEnlace,
+    resultadosCargados: !loading && !loadError,
+    resultados: eligibilityResults,
+  })
 
   // Cuando una etapa (tab específico) no tiene nada matriculable, explicamos por
   // qué en vez de dejarlo vacío — reutiliza reasons_met/reasons_blocked que ya
@@ -283,6 +318,11 @@ export default function MatriculaPage() {
               {' · '}{availableCount} estudio{availableCount !== 1 ? 's' : ''} disponible{availableCount !== 1 ? 's' : ''}
             </p>
           </div>
+
+          {/* EST-20 · El enlace para compartir en redes y WhatsApp. Solo
+              admin y coordinación de estudios: la página es pública, pero
+              quién la difunde y cuándo es una decisión de comunicación. */}
+          {puedeCompartirEnlacePublico(user?.roles ?? []) && <CopiarEnlacePublico />}
 
           {/* Selector de miembro — solo admin/direccion */}
           {isAdminView && (
@@ -418,6 +458,20 @@ export default function MatriculaPage() {
           eso solo se muestra en el tab "Todos" o "Etapa Inicial". Flujo propio
           (pareja + logística + ceremonia + pago por comprobante). PRE-5: solo
           aparece si el miembro cumple el requisito (flag server-side). */}
+      {/* EST-20 · El grupo del enlace ya no está. Pasa de verdad: entre que
+          alguien lo ve en la página pública y vuelve del login puede
+          llenarse. Sin esto la pantalla se ve normal y la persona busca un
+          grupo que no va a encontrar. */}
+      {grupoDelEnlaceSeFue && (
+        <div className="rounded-2xl bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.25)] px-4 py-3">
+          <p className="text-sm text-navy font-body">
+            <strong className="text-coral-deep">El grupo que venías a tomar ya no tiene campo.</strong>{' '}
+            Se llenó mientras llegabas. Abajo están los que siguen abiertos — si ninguno
+            te sirve, escribinos y te avisamos del próximo.
+          </p>
+        </div>
+      )}
+
       {/* PAG-2 · La deuda no es un regaño: es un trámite pendiente y hay que
           decirlo así. Explica QUÉ falta, POR QUÉ no hay estudios disponibles y
           CÓMO se resuelve, en ese orden. El aviso viejo era una línea que solo
