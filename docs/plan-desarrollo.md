@@ -1821,7 +1821,7 @@ de Fabiola (el real) y la infografía generada con IA (el look deseado del
 reporte). Fabiola queda de pasar: su Excel actualizado de dirigentes (el de
 Nao + sus updates, con notas) y la lista de comunidades.
 
-### [ ] DIR-8 · Taxonomía de estados del dirigente + notas confidenciales + comunidad
+### [~] DIR-8 · Taxonomía de estados del dirigente + notas confidenciales + comunidad — MODELO HECHO 2026-10-12
 
 Prompt para Claude Code:
 
@@ -1901,6 +1901,41 @@ prematrimonial), anidación de sub-razones, banderita coexiste, notas 403 para
 editor_dirigentes, lector lee y no escribe, badge apagado. tsc/lint/vitest.
 ```
 
+**DIR-8 · etapa 1 de varias: el MODELO (2026-10-12)**
+
+Hecho: la taxonomía completa en `lib/leaders/estado-del-dirigente` (puro, 25
+tests) y la migración con los CHECK que la hacen cumplir en la base, más un
+guard que falla si las dos listas divergen — son la misma lista escrita en
+dos lugares, que es la forma de bug más repetida de este repo.
+
+**Dos precisiones del diagrama actualizado, confirmadas por Floriana:**
+ · La banderita «no confirmó datos» es **manual**, como las otras tres,
+   aunque el diagrama la pinte distinta.
+ · Las notas opcionales van **solo en los cinco lugares con flecha roja**
+   (revisión, CDEB definitivo, CDEB seguimiento, decisión propia, pausa), no
+   en todos los estados. La de la pausa es la única obligatoria, junto con la
+   fecha de regreso: una pausa sin fecha es una baja que nadie se anima a
+   declarar.
+
+**La conversión de los 505**, verificada contra producción con un SELECT
+antes de tocar nada: 209 available → activo/disponible · 294 inactive →
+inactivo SIN razón (nadie la registró nunca; inventarla sería peor) · 1
+resting → activo/no disponible/pausa · 1 en_revision → activo/**disponible**
++ banderita, que es exactamente el caso que el rediseño arregla: esa persona
+estaba disponible y el estado viejo lo escondía.
+
+**Quedan 294 inactivos sin razón** para que coordinación llene, o que lleguen
+en el Excel de Fabiola.
+
+**Lo que falta de DIR-8:** la ficha administrativa con los selectores
+anidados, las notas confidenciales con sus permisos (edita Fabiola; leen Luis
+y Yeya; `editor_dirigentes` NO), el badge apagado en el perfil, renombrar la
+sección a «Disponibilidad del dirigente», separar capacitaciones de campañas,
+el check de WhatsApp y quitar «dónde recibir folletos» de SRV-9.
+
+**Bloqueado hasta que Fabiola pase sus archivos:** el import masivo (su Excel)
+y el catálogo de comunidades (su lista). El campo ya existe, vacío.
+
 ### [ ] DIR-9 · Reporte de dirigentes rediseñado (el de la infografía)
 
 El reporte viejo de dirigentes del plan piloto está abandonado. Se rediseña
@@ -1977,4 +2012,54 @@ recibir folletos).
 Mobile: el tab debe verse bien en 360px (criterio MAT-2).
 Tests: dirigente edita disponibilidad (y 403 a formación), confirmación guarda fecha,
 no-dirigente no ve el tab, sync tab↔formulario. tsc/lint/vitest.
+```
+
+### [ ] DIR-11 · Graduados recientes de CDEB: alta como dirigentes con su estado correcto (pedido 2026-10-12)
+
+Listas de Fabiola (captura del 12-oct). Ojo: los encabezados no cuadran con lo
+listado — "24 estudiantes" pero hay 26 nombres; "4 estudiantes" pero hay 5.
+Confirmar con Fabiola los totales antes de aplicar.
+
+LISTOS PARA DAR ESTUDIOS POR SÍ SOLOS (26 listados): José Rivera · Fulvio
+Granados · Silvia Mora · Carolina Dahma · Karen Campos · Davis Badilla ·
+Karina Cavero Sandoval · María Fernanda Madrigal Alvarado · María Fernanda
+Valverde Domínguez · Falon Ceciliano Alvarado · Marco Araya Ramírez · Natalia
+Alvarado Hernández · Julián Álvarez Gómez · Tatiana Fuentes Quirós · Alonso
+Lopez · Eric Arguello · Isaac Leon · Luis Minor Cordero · Luz Caceres ·
+Roberto Fernandez · Tatiana Arauz · Valeria Martínez · Johana Vasquez ·
+Keylin Soto Pérez (Pasantía) · Jorge Delgado Montoya (Pasantía) · Brenda
+Peralta Romero (Con codirigente).
+
+NO APROBARON (5 listados): Marisol Soto · Milena Hansband · Antonio Buitrago ·
+Esteban Hernandez · Warren Baez.
+
+Prompt para Claude Code:
+
+```
+DATOS · Alta de la generación nueva de CDEB como dirigentes (correr DESPUÉS de DIR-8,
+que define los estados; si DIR-8 no ha corrido, aplicar con los estados actuales y
+anotar para re-mapear)
+
+1. MATCH por nombre contra el padrón (candidatos ambiguos o sin match → lista para
+   Floriana/Fabiola, NUNCA adivinar — regla de siempre). Verificar que todos tengan la
+   graduación de CDEB registrada en su historial; si a alguno le falta, agregarla
+   (son los cierres recientes — cruzar con las graduaciones del bloque).
+2. APROBADOS (los 26): alta en el módulo de dirigentes con estado ACTIVO:
+   - 23 → Disponible.
+   - Keylin Soto Pérez y Jorge Delgado Montoya → Activo · No disponible · En pasantía.
+   - Brenda Peralta Romero → Activo · En pasantía con nota "con codirigente" (el
+     esquema DIR-8 trata el codirigente de apoyo como pasantía).
+   Formación inicial: lo que CDEB habilita (verificar con el catálogo qué puede dar un
+   recién graduado — niveles; confirmar con Fabiola si algo más).
+3. NO APROBADOS (los 5): NO entran como dirigentes activos. Quedan INACTIVOS con
+   sub-razón "Asiste pero no ejerce — No aprobó CDEB" (DIR-8), pendiente de que Fabiola
+   marque por persona si es definitivo o en seguimiento. El sistema NO debe jalarlos
+   como dirigentes por tener el curso en su historial: la regla de "graduado de CDEB →
+   dirigente" debe respetar el RESULTADO del cierre (aprobó/no aprobó) — verificar que
+   el flujo de recomendación/alta (cdeb-recommendation/leader-activation) mire el
+   resultado y no solo la participación. Si hoy no lo mira, ESE es un bug aparte:
+   arreglarlo aquí.
+4. DRY-RUN con la lista completa de cambios para aprobación; audit_log; sin correos.
+Tests: la regla de alta respeta el resultado (aprobado entra, reprobado no).
+tsc/lint/vitest.
 ```
