@@ -13,6 +13,7 @@ import {
   GraduationCap, AlertTriangle, Video, ArrowRightLeft,
 } from 'lucide-react'
 import { textoDesglose } from '@/lib/studies/folleto-desglose'
+import { esquemaDelGrupo, porQueImporta, folletosDelTiquete } from '@/lib/studies/esquema-visible'
 import { textoDesfase, textoHorario } from '@/lib/email/folleto-request-notify'
 import { FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState } from '@/lib/studies/folletos'
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
@@ -139,6 +140,19 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
               <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', FOLLETO_STATE_BADGE[d.status])}>
                 {FOLLETO_STATE_LABEL[d.status]}
               </span>
+              {/* EST-28 · TEMPORAL. Mientras conviven los dos esquemas, quien
+                  imprime necesita saber por qué este grupo pide el par y aquel
+                  uno solo. Se quita cuando no queden grupos legacy. */}
+              {d.grupo && (
+                <span
+                  title={porQueImporta(d.grupo.modalidad)}
+                  className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
+                    esquemaDelGrupo(d.grupo.modalidad).modalidad === 'bloques'
+                      ? 'bg-teal/15 text-navy' : 'bg-navy-light/10 text-navy-light/80')}
+                >
+                  Esquema {esquemaDelGrupo(d.grupo.modalidad).nombre}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
@@ -148,6 +162,20 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
               </p>
             </div>
             <p className="text-[13px] text-navy-light font-body">{textoDesglose(d.desglose)}</p>
+            {/* EST-28 · Qué lleva el GRUPO, que no es lo mismo que lo que
+                lleva este tiquete: en el esquema nuevo el grupo recibe el par
+                y por eso hay dos tiquetes, uno por nivel. Decirlo evita que
+                alguien imprima la mitad creyendo que está completo. */}
+            {d.grupo && folletosDelTiquete({
+              planCode: d.grupo_plan_code, modalidad: d.grupo.modalidad,
+            }).codigos.length > 1 && (
+              <p className="text-[13px] text-navy font-body">
+                Este grupo lleva <strong>{folletosDelTiquete({
+                  planCode: d.grupo_plan_code, modalidad: d.grupo.modalidad,
+                }).etiqueta}</strong>: son dos folletos por persona y aparecen
+                como dos tiquetes del mismo grupo. Este es el de {d.nivel ?? 'su nivel'}.
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <MapPin size={15} className={cn('shrink-0', d.sede_entrega ? 'text-teal-deep' : 'text-coral-deep')} aria-hidden />

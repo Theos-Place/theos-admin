@@ -230,6 +230,8 @@ export default function MiembroDetailPage() {
       enrollmentId: s.enrollment_id,
       rawStatus: s.status,
       groupStatus: s.group_status ?? null,
+      // EST-28 · temporal: por qué este cobro es del par o del nivel solo.
+      groupModalidad: s.group_modalidad ?? null,
       requiresPayment: s.requires_payment,
       paymentStatus: s.payment_status,
       paymentsCount: s.payments_count ?? 0,

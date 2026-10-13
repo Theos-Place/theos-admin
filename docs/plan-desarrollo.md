@@ -1661,7 +1661,7 @@ Tests: intercepto al cerrar, banner, lote manual reporta por fila, montos consis
 tsc/lint/vitest.
 ```
 
-### [ ] EST-28 · Esquema viejo/nuevo visible en folletos, grupos y matrículas (pedido 2026-10-12)
+### [x] EST-28 · Esquema viejo/nuevo visible en folletos, grupos y matrículas — HECHO 2026-10-12
 
 Durante la transición de EST-14/EST-25 conviven los dos esquemas y hoy no se
 distinguen a simple vista — hay que operar sabiendo cuál es cuál.
@@ -1690,6 +1690,30 @@ Todo es LECTURA de la marca existente — este ítem no cambia ninguna regla de 
 Tests: tiquete legacy dice solo el nivel, tiquete bloques dice el par; columna presente
 y exportada. tsc/lint/vitest.
 ```
+
+**EST-28 · lo que se hizo (2026-10-12)**
+
+Todo es LECTURA de `study_groups.modalidad`, que ya existía. Ninguna regla
+cambió: quién cobra qué y qué folletos van lo siguen decidiendo
+`nivelesACobrar` y `folletosQuePide`.
+
+1. **Lista de grupos:** columna «Esquema» (viejo/nuevo), visible por default,
+   en el selector para poder esconderla. El tooltip dice la consecuencia, no
+   el nombre interno: «se cobra y se entrega el PAR al entrar».
+2. **Export:** sale gratis con el `exportValue` de la columna.
+3. **Tiquete de folletos:** badge del esquema, y cuando el grupo lleva el par,
+   una línea que lo dice y avisa que por eso hay DOS tiquetes del mismo grupo.
+   **Se apartó del pedido en un punto:** el tiquete sigue diciendo su propio
+   nivel en el conteo, no «Nivel 1 y 2». Cada tiquete es de un nivel y hay dos;
+   poner el par en el conteo de cada uno haría imprimir el doble.
+4. **Expediente de la persona:** marca «esquema nuevo» solo en los estudios
+   CON COSTO, que es donde sirve para entender el cobro. En todas las filas
+   sería ruido.
+
+Es temporal a propósito y está escrito en el módulo: el día que
+`select count(*) from study_groups where modalidad = 'legacy' and status in
+('en_curso','en_matricula')` dé 0, se quita `lib/studies/esquema-visible` y
+todo lo que cuelga de él.
 
 ## Fase 28 — Estados y reporte de dirigentes (reunión Fabiola 2026-10-12)
 

@@ -169,6 +169,9 @@ export function toDomainStudyGroup(db: DbGroupForDomain & { viewer_scope?: 'admi
     whatsapp_group_url: db.whatsapp_group_url,
     is_leader_training: db.is_leader_training ?? false,
     training_modality: db.training_modality ?? null,
+    // EST-28 · temporal: la columna «Esquema» de la lista mientras conviven
+    // los dos. Se quita cuando no queden grupos legacy activos.
+    modalidad: db.modalidad ?? null,
     is_virtual: db.is_virtual ?? false,
     has_restriction: hasRestriction(normalizeRestriction(db.enrollment_restrictions)),
   }

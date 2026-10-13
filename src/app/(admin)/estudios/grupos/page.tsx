@@ -16,6 +16,7 @@ import { GroupStatusBadge, NoLeaderBadge, LeaderTrainingBadge, VirtualGroupBadge
 import {
   estadoVisible, ESTADOS_VISIBLES, ETIQUETA_VISIBLE, type EstadoVisible,
 } from '@/lib/studies/estado-visible'
+import { esquemaDelGrupo, porQueImporta } from '@/lib/studies/esquema-visible'
 import { ymdCR } from '@/lib/format'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
@@ -74,6 +75,22 @@ function buildStudyGroupColumns(studyTypes: StudyType[]): ColumnDef<StudyGroup>[
      */
     key: 'leader_phone', label: 'Teléfono del dirigente', defaultVisible: false,
     exportValue: g => g.leader_phone ?? '',
+  },
+  {
+    /**
+     * EST-28 · TEMPORAL, a propósito.
+     *
+     * Mientras conviven los dos esquemas hay que operar sabiendo cuál es
+     * cuál: por qué un cobro es de ₡5.000 por el par y otro del nivel solo,
+     * por qué un tiquete pide dos folletos y otro uno. A simple vista no se
+     * distinguen.
+     *
+     * `defaultVisible: true` mientras dure la transición. El día que no
+     * queden grupos legacy activos, esta columna sobra y se quita junto con
+     * `lib/studies/esquema-visible`.
+     */
+    key: 'modalidad', label: 'Esquema', defaultVisible: true,
+    exportValue: g => esquemaDelGrupo(g.modalidad).nombre,
   },
   {
     key: 'co_leader_name', label: 'Co-dirigente', defaultVisible: false,
@@ -627,6 +644,25 @@ export default function GruposPage() {
                               ) : <span className="text-[13px] text-amber-600">Sin asignar</span>}
                             </td>
                           )
+                        case 'modalidad': {
+                          // EST-28 · temporal mientras conviven los dos esquemas.
+                          const e = esquemaDelGrupo(group.modalidad)
+                          return (
+                            <td key="modalidad" className="px-4 py-3">
+                              <span
+                                title={porQueImporta(group.modalidad)}
+                                className={cn(
+                                  'inline-block rounded-full px-2 py-0.5 text-[11px] font-display tracking-wide',
+                                  e.modalidad === 'bloques'
+                                    ? 'bg-teal/15 text-navy'
+                                    : 'bg-navy-light/10 text-navy-light/80',
+                                )}
+                              >
+                                {e.nombre}
+                              </span>
+                            </td>
+                          )
+                        }
                         case 'zone':
                           return <td key="zone" className="px-4 py-3 text-sm text-navy-light/80 font-body">{sedeLabel(group.zone)}</td>
                         case 'schedule':

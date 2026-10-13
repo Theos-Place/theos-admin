@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } from '@/components/members/MemberPaymentsList'
 import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import { cn } from '@/lib/utils'
+import { esquemaDelGrupo, porQueImporta } from '@/lib/studies/esquema-visible'
 import { formatDate, formatCRC } from '@/lib/format'
 import { studyGradeDisplay } from '@/lib/studies/grade-display'
 import { muestraDeudaDeMatricula } from '@/lib/finance/study-debt-visible'
@@ -89,7 +90,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; groupStatus: string | null; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; groupStatus: string | null; groupModalidad?: string | null; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -252,6 +253,20 @@ export function MemberParticipationTab({
                           {row.code}
                         </span>
                         <span className="text-navy-light/80 font-body">{row.name}</span>
+                        {/* EST-28 · TEMPORAL. Solo en el esquema NUEVO, y solo
+                            si el estudio tiene costo: es ahí donde hace falta
+                            explicar por qué el cobro es de ₡5.000 por el par y
+                            no del nivel solo. Ponerlo en todas las filas sería
+                            ruido en un expediente que ya tiene varias marcas. */}
+                        {row.requiresPayment
+                          && esquemaDelGrupo(row.groupModalidad).modalidad === 'bloques' && (
+                          <span
+                            className="rounded px-1.5 py-0.5 text-[11px] bg-teal/15 text-navy font-body whitespace-nowrap"
+                            title={porQueImporta(row.groupModalidad)}
+                          >
+                            esquema nuevo
+                          </span>
+                        )}
                         {/* Llevado FUERA de Theos y registrado a mano. Se marca
                             porque cuenta como prerrequisito igual que uno
                             interno: quien lea el expediente tiene que poder

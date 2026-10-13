@@ -598,6 +598,11 @@ export type FolletoGrupoInfo = {
   ubicacion: string | null
   zona: string | null
   es_virtual: boolean
+  /** EST-28 · 'legacy' | 'bloques'. Para poder decir en el tiquete por qué
+   *  este grupo pide el par y aquel uno solo. Temporal: dura lo que dure la
+   *  transición. Opcional: los fixtures de los correos no lo necesitan y
+   *  `modalidadDe` ya trata la ausencia como 'legacy'. */
+  modalidad?: string | null
   /** `study_groups.schedule_days`: es un ARRAY de códigos (L/M/X/J/V/S/D), no
    *  un texto. Tratarlo como string reventaba el correo — ver el 2026-09-02. */
   dias: string[] | null
@@ -613,6 +618,10 @@ export type FolletoDetalle = {
   tipo: string
   status: FolletoState
   nivel: string | null
+  /** EST-28 · El código del plan del GRUPO que origina el tiquete, para
+   *  poder decir si ese grupo lleva el par o un folleto solo. Temporal, y
+   *  opcional para no obligar a los fixtures de los correos a conocerlo. */
+  grupo_plan_code?: string | null
   sede_entrega: string | null
   close_date: string
   available_at: string
@@ -665,13 +674,14 @@ type GrupoRow = {
   starts_at: string | null
   leader_id: string | null
   co_leader_id: string | null
+  modalidad: string | null
   plan: { name: string | null } | { name: string | null }[] | null
   leader: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
   co_leader: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
 }
 
 const GRUPO_SELECT =
-  'id, name, location, zone, is_virtual, schedule_days, schedule_time, starts_at, leader_id, co_leader_id,'
+  'id, name, location, zone, is_virtual, schedule_days, schedule_time, starts_at, leader_id, co_leader_id, modalidad,'
   + ' plan:study_plans(name),'
   + ' leader:members!study_groups_leader_id_fkey(first_name, last_name),'
   + ' co_leader:members!study_groups_co_leader_id_fkey(first_name, last_name)'
@@ -697,6 +707,7 @@ function aGrupoInfo(row: GrupoRow | null): FolletoGrupoInfo | null {
     ubicacion: row.location,
     zona: row.zone,
     es_virtual: row.is_virtual === true,
+    modalidad: row.modalidad,
     dias: row.schedule_days,
     hora: row.schedule_time,
     starts_at: row.starts_at,
@@ -722,11 +733,13 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('folleto_requests')
-    .select('id, tipo, status, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, note, created_at, source_group_id, origin_group_id, target_leader_name')
+    .select('id, tipo, status, target_level_code, source_plan_code, quantity, quantity_leaders, sede, close_date, available_at, note, created_at, source_group_id, origin_group_id, target_leader_name')
     .eq('id', id).maybeSingle()
   if (error) throw error
   const t = data as {
     id: string; tipo: string; status: FolletoState; target_level_code: string | null
+    /** EST-28 · el plan del GRUPO, para saber si lleva el par o uno solo. */
+    source_plan_code: string | null
     quantity: number; quantity_leaders: number | null; sede: string | null
     close_date: string; available_at: string; note: string | null; created_at: string
     source_group_id: string | null; origin_group_id: string | null; target_leader_name: string | null
@@ -822,6 +835,7 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
     tipo: t.tipo,
     status: t.status,
     nivel: levelLabel(t.target_level_code),
+    grupo_plan_code: t.source_plan_code ?? null,
     sede_entrega: t.sede,
     close_date: t.close_date,
     available_at: t.available_at,
