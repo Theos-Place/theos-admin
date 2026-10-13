@@ -58,8 +58,28 @@ describe('quién filtra y quién no', () => {
     expect(ruta).not.toMatch(/is_public\s*(!==|===)\s*(false|true)[^)]*\)\s*(return|\?)/)
   })
 
-  it('la lista del calendario de miembros esconde los internos', () => {
+  /**
+   * CAMBIO DE REGLA, 2026-10-13. Este guard decía `canManage || e.is_public`
+   * y se cayó al arreglar EVT-9 — hizo exactamente su trabajo: avisó que
+   * alguien estaba cambiando una decisión escrita.
+   *
+   * LA DECISIÓN NUEVA: la lista sigue escondiendo los internos, PERO no a
+   * quien ya está adentro. «Interno» quiere decir que no se anuncia, no que
+   * se le esconda a quien se inscribió — esa persona ya sabe que existe y
+   * ya tiene el link; lo único que lograba era que no pudiera ver la hora
+   * ni el lugar. Lo reportó Floriana y había 4 personas así en producción.
+   */
+  it('la lista del calendario esconde los internos, salvo donde ya está inscrita', () => {
     const pagina = readFileSync('src/app/(admin)/eventos/page.tsx', 'utf8')
-    expect(pagina).toContain('canManage || e.is_public')
+    // La regla no se escribe a mano en la pantalla: vive en su módulo.
+    expect(pagina).toContain('visiblesEnCalendario')
+    expect(pagina).not.toContain('canManage || e.is_public')
+  })
+
+  it('y el merge suma esos internos, que no vienen en la cartelera', () => {
+    // Sin esto el filtro de arriba no se nota: la lista parte de la
+    // cartelera pública, que por definición no trae los internos.
+    const pagina = readFileSync('src/app/(admin)/eventos/page.tsx', 'utf8')
+    expect(pagina).toMatch(/memberEvents\.filter\(e => !yaEstan\.has\(e\.id\)\)/)
   })
 })
