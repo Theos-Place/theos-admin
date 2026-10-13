@@ -63,6 +63,23 @@ export type DirigenteGrupo = {
   zone: string | null
 }
 
+/** DIR-8 · Lo que la ficha administrativa muestra y edita. */
+export type EstadoAdministrativoDelDirigente = {
+  estado_base: 'activo' | 'inactivo'
+  razon_inactivo: string | null
+  detalle_no_ejerce: string | null
+  situacion_cdeb: string | null
+  disponibilidad: string | null
+  razon_no_disponible: string | null
+  pausa_hasta: string | null
+  revision: string[]
+  nota_revision?: string | null
+  nota_cdeb?: string | null
+  nota_decision_propia?: string | null
+  nota_pausa?: string | null
+  nota_general?: string | null
+}
+
 export type Dirigente = {
   member_id: string
   member_name: string
@@ -76,6 +93,18 @@ export type Dirigente = {
   formacion: string[]
   /** Disponibilidad: estudios que está dispuesto a dar ahora (study_leaders). */
   disponibilidad: string[]
+  /**
+   * DIR-8 · El estado administrativo completo, agrupado.
+   *
+   * Va en un objeto y no como campos sueltos porque `disponibilidad` acá
+   * arriba ya significa OTRA COSA —los estudios que puede dar— y dos campos
+   * con el mismo nombre y distinto significado en el mismo tipo es la forma
+   * más barata de que alguien lea el equivocado.
+   *
+   * Las notas y la banderita vienen saneadas del API: quien no puede verlas
+   * recibe el objeto sin esas llaves.
+   */
+  estado_admin?: EstadoAdministrativoDelDirigente | null
   /** Grupos en curso ahora (en_matricula / en_curso). */
   estudios_activos: DirigenteGrupo[]
   /** Grupos finalizados que lideró. */
@@ -97,7 +126,7 @@ export function buildDirigentes(
    *  liderado grupos. Quedan INACTIVO salvo que estén en el comité activo. */
   designated: ActiveDirigente[] = [],
   /** Config por dirigente (formación + disponibilidad), desde study_leaders. */
-  config: Map<string, { formacion: string[]; disponibilidad: string[]; availability_status?: LeaderStatus }> = new Map(),
+  config: Map<string, { formacion: string[]; disponibilidad: string[]; availability_status?: LeaderStatus; estado_admin?: EstadoAdministrativoDelDirigente | null }> = new Map(),
 ): Dirigente[] {
   const planNames = new Map(plans.map(p => [p.code, p.name]))
   const planName = (code: string) => planNames.get(code) ?? code
@@ -160,6 +189,9 @@ export function buildDirigentes(
       estudios_habilitados: [...(acc?.codes ?? [])],
       formacion: config.get(id)?.formacion ?? [],
       disponibilidad: config.get(id)?.disponibilidad ?? [],
+      // DIR-8 · null cuando todavía no hay estado nuevo; la ficha lo
+      // resuelve con estadoInicialDesde, en un solo lugar.
+      estado_admin: config.get(id)?.estado_admin ?? null,
       estudios_activos: activos,
       estudios_completados: completados,
       total_grupos: completados.length + activos.length,

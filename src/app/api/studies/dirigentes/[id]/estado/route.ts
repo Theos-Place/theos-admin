@@ -15,6 +15,11 @@ import { puedeEscribirNotas, puedeVerBanderita } from '@/lib/leaders/notas-confi
 /**
  * DIR-8 · Guardar el estado administrativo del dirigente.
  *
+ * El `id` de la ruta es el MEMBER_ID, igual que el resto de
+ * `/api/studies/dirigentes/[id]`: la ficha trabaja con la persona, no con la
+ * fila de `study_leaders`, y pedirle a la pantalla que conozca las dos
+ * llaves es invitar a que use la equivocada.
+ *
  * Ruta aparte del PUT general a propósito: ese lo usan los tres roles que
  * mantienen datos (`DIRIGENTES_ADMIN_ROLES`), y acá hay dos cosas que NO
  * todos pueden tocar —las notas y la banderita—. Mezclarlas en el mismo
@@ -106,7 +111,7 @@ export async function PATCH(
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (error) {
-    reportarError('PATCH /api/studies/leaders/[id]/estado:', error)
+    reportarError('PATCH /api/studies/dirigentes/[id]/estado:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

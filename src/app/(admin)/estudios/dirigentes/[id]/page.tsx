@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
 import { useAuth } from '@/hooks/useAuth'
+import { EstadoDelDirigenteForm } from '@/components/studies/EstadoDelDirigente'
+import { puedeEscribirNotas, puedeVerBanderita } from '@/lib/leaders/notas-confidenciales'
+import { estadoInicialDesde } from '@/lib/leaders/estado-inicial'
 import { useSedes } from '@/lib/sedes'
 import { StudyTypeBadge } from '@/components/studies/StudyTypeBadge'
 import { groupCodesForDisplay, studySelectOptions, expandSelectionValue } from '@/lib/studies/study-grouping'
@@ -12,12 +15,11 @@ import { cn } from '@/lib/utils'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
-import { ChevronLeft, ExternalLink, Users, X, Pencil, Info, Loader2 } from 'lucide-react'
+import { ChevronLeft, ExternalLink, Users, X, Pencil, Info } from 'lucide-react'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
 import { getInitials, formatMonthYear } from '@/lib/format'
 import {
-  LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES, SETTABLE_STATUSES,
-  type LeaderStatus,
+  LEADER_STATUS_LABEL, LEADER_ADMIN_ROLES, ADMIN_ONLY_STATUSES,
 } from '@/lib/studies/leader-admin-status'
 
 /** `starts_at`/`ends_at` de un grupo son DATE: `new Date` los corre un día
@@ -81,51 +83,11 @@ function GrupoRow({ g }: { g: DirigenteGrupo }) {
  *  explicando el efecto (activar = agrega al Comité de Dirigentes + rol dirigente;
  *  desactivar = lo saca del comité + quita el rol). No permite desactivar a quien
  *  tiene un grupo en curso/abierto (punto 1): muestra ActiveWarningModal. */
-/** DIR-6 · Estado administrativo. Solo para quien lo gestiona; el resto ni
- *  siquiera recibe el matiz del API, así que ni ve este control. */
-function AdminStatusSelect({ memberId, status, onChanged }: {
-  memberId: string; status: LeaderStatus; onChanged: () => void
-}) {
-  const toast = useToast()
-  const [saving, setSaving] = useState(false)
-
-  async function cambiar(nuevo: string) {
-    if (nuevo === status) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/studies/dirigentes/${memberId}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ availability_status: nuevo }),
-      })
-      const body = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(body?.error ?? 'No se pudo cambiar el estado')
-      onChanged()
-      toast(`Estado: ${LEADER_STATUS_LABEL[nuevo as LeaderStatus]}`, 'success')
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'No se pudo cambiar el estado', 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <label className="inline-flex items-center gap-2">
-      <span className="text-[11px] uppercase tracking-wide text-navy-light/80 font-body">Estado administrativo</span>
-      <select
-        value={status}
-        disabled={saving}
-        onChange={e => cambiar(e.target.value)}
-        aria-label="Estado administrativo del dirigente"
-        className="rounded-xl border border-navy/20 bg-surface-card px-3 py-1.5 text-[13px] text-navy font-body disabled:opacity-60"
-      >
-        {SETTABLE_STATUSES.map(s => (
-          <option key={s} value={s}>{LEADER_STATUS_LABEL[s]}</option>
-        ))}
-      </select>
-      {saving && <Loader2 size={13} className="animate-spin text-navy-light/80" aria-hidden="true" />}
-    </label>
-  )
-}
+// DIR-6 · Acá vivía `AdminStatusSelect`, un <select> plano con los cinco
+// estados. Lo reemplazó la ficha de DIR-8 (`EstadoDelDirigenteForm`): con
+// el árbol de sub-razones ya no es un selector, y mantener los dos habría
+// dejado dos formas de cambiar lo mismo, cada una escribiendo una columna
+// distinta.
 
 function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: string; memberName: string; active: boolean; onChanged: () => void }) {
   const toast = useToast()
@@ -205,10 +167,14 @@ function StatusToggle({ memberId, memberName, active, onChanged }: { memberId: s
 export default function DirigenteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { dirigentes, loading, refetch } = useDirigentes()
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const canToggle = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   // DIR-6: el matiz lo maneja la coordinación de dirigentes; dirección no.
   const canAdminStatus = hasRole(...LEADER_ADMIN_ROLES)
+  // DIR-8 · Dos permisos más finos DENTRO de la ficha: las notas y la
+  // banderita hablan de la persona, no de su disponibilidad.
+  const puedeNotas = puedeEscribirNotas(user?.roles ?? [])
+  const puedeBanderita = puedeVerBanderita(user?.roles ?? [])
   const d = dirigentes.find(x => x.member_id === id)
 
   if (loading) {
@@ -266,11 +232,9 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
                 </span>
               )}
             </div>
-            {canAdminStatus && (
-              <div className="mt-2">
-                <AdminStatusSelect memberId={d.member_id} status={d.availability_status} onChanged={refetch} />
-              </div>
-            )}
+            {/* DIR-8 · El selector plano de DIR-6 se reemplazó por la ficha
+                completa, que vive abajo como bloque propio: con el árbol de
+                sub-razones ya no cabe en una línea del encabezado. */}
             <p className="text-sm text-navy-light/80 font-body mt-1">
               {d.total_grupos} grupos liderados · {d.total_activos} activos · {totalStudents} estudiantes en total
             </p>
@@ -279,6 +243,22 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
             </Link>
           </div>
         </div>
+
+        {/* DIR-8 · La ficha administrativa del estado. Solo para quien
+            gestiona dirigentes; las notas y la banderita dentro tienen su
+            propio permiso, y lo que no se puede ver tampoco llega del
+            servidor. */}
+        {canAdminStatus && (
+          <div className="mt-4">
+            <EstadoDelDirigenteForm
+              memberId={d.member_id}
+              puedeNotas={puedeNotas}
+              puedeBanderita={puedeBanderita}
+              inicial={estadoInicialDesde(d.estado_admin)}
+              onGuardado={refetch}
+            />
+          </div>
+        )}
 
         {/* Estudios habilitados */}
         {d.estudios_habilitados.length > 0 && (

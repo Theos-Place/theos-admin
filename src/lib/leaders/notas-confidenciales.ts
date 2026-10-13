@@ -50,14 +50,31 @@ export type CampoDeNota = (typeof CAMPOS_DE_NOTA)[number]
  * es visible aunque no se pinte, y acá el campo dice por qué alguien está en
  * revisión. Mismo patrón que `visibleLeaderStatus` de DIR-6.
  */
-export function sinNotas<T extends Partial<Record<CampoDeNota, unknown>>>(
+export function sinNotas<T extends object>(
   fila: T,
   roles: readonly string[] | null | undefined,
 ): T {
   if (puedeLeerNotas(roles)) return fila
-  const limpio = { ...fila }
+  const limpio = { ...fila } as Record<string, unknown>
   for (const c of CAMPOS_DE_NOTA) delete limpio[c]
-  return limpio
+  return limpio as T
+}
+
+/**
+ * Lo mismo, y además sin la BANDERITA.
+ *
+ * Se QUITA la llave en vez de mandarla vacía: un `revision: []` diría «esta
+ * persona no tiene ninguna», que no es lo mismo que «no te toca verlo», y
+ * quien lea el payload no puede distinguirlos.
+ */
+export function sinNotasNiBanderita<T extends object>(
+  fila: T,
+  roles: readonly string[] | null | undefined,
+): T {
+  if (puedeVerBanderita(roles)) return fila
+  const limpio = { ...sinNotas(fila, roles) } as Record<string, unknown>
+  delete limpio.revision
+  return limpio as T
 }
 
 /**

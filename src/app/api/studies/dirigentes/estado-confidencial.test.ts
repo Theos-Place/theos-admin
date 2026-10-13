@@ -15,7 +15,7 @@ import { join } from 'node:path'
  * más, en silencio.
  */
 const fuente = readFileSync(
-  join(process.cwd(), 'src/app/api/studies/leaders/[id]/estado/route.ts'), 'utf8')
+  join(process.cwd(), 'src/app/api/studies/dirigentes/[id]/estado/route.ts'), 'utf8')
 
 describe('DIR-8 · PATCH del estado del dirigente', () => {
   it('exige rol para entrar', () => {

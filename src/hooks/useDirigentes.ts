@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useStudies } from '@/hooks/useStudies'
 import { buildDirigentes, type Dirigente, type ActiveDirigente } from '@/lib/dirigentes'
+import { estadoAdminDe } from '@/lib/leaders/estado-inicial'
 
 /** Lista unificada de dirigentes (servidores activos del comité Dirigentes ∪
  *  quienes lideraron grupos), enriquecida con su historial de estudios. */
@@ -36,6 +37,10 @@ export function useDirigentes() {
       formacion: l.formation_studies ?? [],
       disponibilidad: l.qualified_studies ?? [],
       availability_status: l.availability_status,
+      // DIR-8 · El estado administrativo, tal como vino del API. Las notas y
+      // la banderita pueden NO ESTAR: el servidor las quita a quien no puede
+      // verlas, y acá no se rellenan con vacíos para no borrar esa distinción.
+      estado_admin: estadoAdminDe(l),
     }])),
     [leaders],
   )

@@ -4,6 +4,7 @@ import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { getStudyLeaders, createLeader } from '@/lib/supabase/queries/studies'
 import { leaderWriteSchema } from './schema'
 import { canSeeLeaderAdminStatus, visibleLeaderStatus } from '@/lib/studies/leader-admin-status'
+import { sinNotasNiBanderita } from '@/lib/leaders/notas-confidenciales'
 import { reportarError } from '@/lib/observabilidad'
 import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 
@@ -21,9 +22,16 @@ export async function GET() {
     // Ojo: el gate es por ROL y no por módulo, así que 'direccion' tampoco lo
     // ve aunque tenga estudios con alcance 'all' (mismo criterio que DIR-5).
     const verMatiz = canSeeLeaderAdminStatus(auth.ctx.roles)
-    const sanear = <T extends { availability_status?: string | null }>(l: T): T => (
-      verMatiz ? l : { ...l, availability_status: visibleLeaderStatus(l.availability_status, false) }
-    )
+    // DIR-8 · Las NOTAS y la BANDERITA tienen su propio permiso, más
+    // estrecho que el del matiz: `editor_dirigentes` ve el estado porque es
+    // su trabajo, y no ve por qué alguien está en revisión. El permiso lo
+    // consulta `sinNotasNiBanderita`, que es donde vive la regla.
+    const sanear = <T extends { availability_status?: string | null; revision?: unknown }>(l: T): T => {
+      const conMatiz = verMatiz
+        ? l
+        : { ...l, availability_status: visibleLeaderStatus(l.availability_status, false) }
+      return sinNotasNiBanderita(conMatiz, auth.ctx.roles)
+    }
 
     // Evaluaciones (puntajes/comentarios) e is_donor solo para el módulo
     // estudios MÁS ALLÁ de 'own' (SEC-1: dirigente/miembro reciben la lista

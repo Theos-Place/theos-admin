@@ -758,6 +758,9 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
     .from('study_leaders')
     .select(`
       id, member_id, zone_preference, availability_status, is_active, qualified_study_codes, formation_study_codes,
+      estado_base, razon_inactivo, detalle_no_ejerce, situacion_cdeb,
+      disponibilidad, razon_no_disponible, pausa_hasta, revision,
+      nota_revision, nota_cdeb, nota_decision_propia, nota_pausa, nota_general,
       member:members(first_name, last_name, is_donor),
       evaluations:leader_evaluations(id, group_id, score, evaluation_date, comments)
     `)
