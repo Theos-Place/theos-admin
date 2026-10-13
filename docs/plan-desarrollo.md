@@ -1376,6 +1376,50 @@ ETAPA 2 — EXPONERLO donde se trabaja:
 Tests: columna visible para gestión, no para estudiante; dato correcto. tsc/lint/vitest.
 ```
 
+**MAT-3 · lo medido y lo que se hizo (2026-10-12)**
+
+**El autoservicio ya estaba blindado.** El modal del comprobante no se deja
+cerrar: sin botón de «después», sin Esc, sin fondo. Lo que fallaba era el
+RESCATE de quien cierra la pestaña.
+
+Medido un mes después de poner el aviso in-app: **de 11 avisos se leyó 1
+(9%)**, y de las 11 personas avisadas **6 igual perdieron el cupo**. Bajas por
+falta de comprobante: 4 en setiembre, 5 en octubre. El motivo es estructural y
+no se arregla con más campanitas — quien necesita el aviso es justo quien ya
+cerró el sistema y se fue. Mariel González (8528 6619) perdió el campo DOS
+veces, el 16-set y el 4-oct, con las dos campanitas sin leer.
+
+(Se corrigió de paso una medición previa equivocada: no había 137 matrículas
+pendientes con 127 vencidas sin barrer. Hay 4, todas en plazo. El barrido
+funciona.)
+
+**Etapa 2 — hecho:** el aviso sale por CORREO además de la campanita, y pasó de
+las 48 horas a las 24 (la salida sigue en 72, así que quedan 48 para
+reaccionar). Coordinación de estudios recibe un resumen diario de quién está
+por vencer. El modal avisa en coral el estado real al intentar salir, y cerrar
+la pestaña pregunta. El plazo del texto sale de `HORAS_DE_GRACIA`, con un test
+que falla si alguien lo vuelve a escribir a mano.
+
+**Etapa 3 — la causa era otra.** El caso de Guido Chavarría no fue un lote
+manual a medias. Reconstruido del audit_log: dos personas pagaron, las
+trasladaron al grupo nuevo, y ocho segundos después alguien borró el grupo
+viejo. `deleteGroup` borraba TODAS las inscripciones y el guard solo miraba los
+estados activos, así que las filas `transferred` se fueron con el grupo — y
+como las FK de `payments` son ON DELETE SET NULL, los cobros quedaron sin
+matrícula y sin grupo. El monto nunca se calculó distinto: **se desconectó**.
+
+Ahora el borrado mira el dinero (cobros sin cancelar) y el historial
+(transferidas o completadas), y devuelve 409 con el motivo y qué hacer.
+
+**Cobros huérfanos: 9 encontrados**, y aparecieron solo porque alguien los fue
+a buscar. 2 reconectados; 4 pagados ya tenían su crédito del congelamiento;
+Irene Arias no lo tenía y se le emitió (₡15.000, vence 2027-01-22); 2
+anulados. Queda **uno de ₡17.500 sin `member_id`** — sin dueño, pendiente de
+que Floriana diga de quién es.
+
+Se agregó **Finanzas → Cobros sin estudio** y un aviso por campanita, que suena
+solo por lo que pide acción: ni los anulados ni los ya resueltos con crédito.
+
 ### [x] EST-27 · Excepciones de niveles sin fecha de vencimiento — HECHO 2026-10-06
 
 (Se pidió como «EST-23»; se renumeró porque ese código ya lo usaba el cierre
@@ -1527,7 +1571,7 @@ Test de reconciliación (suma por tipo = gráfico; únicas ≤ inscripciones) co
 tsc/lint/vitest.
 ```
 
-### [ ] MAT-3 · Matrículas a medias: gente queda sin comprobante sin darse cuenta — PRIORITARIO
+### [x] MAT-3 · Matrículas a medias: gente queda sin comprobante sin darse cuenta — CERRADO 2026-10-12
 
 Casos reales: la persona del teléfono 8816 2358 (estudios de Cartago) dejó la
 matrícula sin comprobante; y en el estudio de Guido Chavarría la encargada
