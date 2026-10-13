@@ -13,6 +13,7 @@ import { getMemberStudyProfile } from '@/lib/supabase/queries/studies-eligibilit
 import { meetsPrematRequirementFromCodes } from '@/lib/studies/premat-requirement'
 import { createComprobantePayment } from '@/lib/supabase/queries/payments'
 import { patronDeCorreo } from '@/lib/email/correo-exacto'
+import type { CierreEnLista } from '@/lib/studies/cierres-prematrimoniales'
 
 export const PREMAT_COST = 25000
 export const PREMAT_PLAN_CODE = 'PREMAT'
@@ -418,4 +419,70 @@ export async function getParticipantesDelGrupo(
       status: f.status ?? '',
     }
   })
+}
+
+/**
+ * PRE-9 · Todos los cierres de prematrimonial, para la pantalla de lectura.
+ *
+ * El listado trae SOLO lo que hace falta para elegir a cuál entrar. El punto
+ * ciego, las observaciones y la bendición se quedan en el detalle: es
+ * contenido pastoral y una lista se mira de reojo, con la pantalla
+ * compartida. De la existencia del punto ciego sí avisa —un booleano—,
+ * porque si no, no habría cómo saber que hay algo que leer.
+ */
+export async function getCierresPrematrimoniales(): Promise<CierreEnLista[]> {
+  const sb = loose()
+  const { data, error } = await sb
+    .from('prematrimonial_evaluations')
+    .select(`id, group_id, commitment, action_plan, topics_to_work, blind_spot, created_at,
+             request:prematrimonial_requests!prematrimonial_evaluations_request_id_fkey(
+               requester:members!prematrimonial_requests_requester_member_id_fkey(first_name, last_name),
+               spouse:members!prematrimonial_requests_spouse_member_id_fkey(first_name, last_name)),
+             grupo:study_groups!prematrimonial_evaluations_group_id_fkey(name),
+             mentor:members!prematrimonial_evaluations_filled_by_fkey(first_name, last_name)`)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+
+  type Nombre = { first_name: string | null; last_name: string | null } | null
+  const nombre = (m: Nombre): string => `${m?.first_name ?? ''} ${m?.last_name ?? ''}`.trim()
+
+  return ((data ?? []) as unknown as Array<{
+    id: string; commitment: string; action_plan: string
+    topics_to_work: string[] | null; blind_spot: boolean | null; created_at: string
+    request: { requester: Nombre; spouse: Nombre } | null
+    grupo: { name: string | null } | null
+    mentor: Nombre
+  }>).map(r => {
+    const dos = [nombre(r.request?.requester ?? null), nombre(r.request?.spouse ?? null)].filter(Boolean)
+    return {
+      id: r.id,
+      // Sin la solicitud detrás no hay nombres: se dice, no se deja en blanco.
+      pareja: dos.length ? dos.join(' y ') : 'Pareja sin identificar',
+      grupo: r.grupo?.name ?? null,
+      mentores: nombre(r.mentor) || null,
+      fecha: r.created_at,
+      commitment: r.commitment,
+      action_plan: r.action_plan,
+      temas: (r.topics_to_work ?? []).length,
+      tiene_punto_ciego: !!r.blind_spot,
+    }
+  })
+}
+
+/** PRE-9 · Un cierre COMPLETO, con el contenido sensible. Se pide de a uno. */
+export async function getCierrePrematrimonial(id: string) {
+  const sb = loose()
+  const { data, error } = await sb
+    .from('prematrimonial_evaluations')
+    .select(`*,
+             request:prematrimonial_requests!prematrimonial_evaluations_request_id_fkey(
+               ceremony_date,
+               requester:members!prematrimonial_requests_requester_member_id_fkey(id, first_name, last_name),
+               spouse:members!prematrimonial_requests_spouse_member_id_fkey(id, first_name, last_name)),
+             grupo:study_groups!prematrimonial_evaluations_group_id_fkey(id, name),
+             mentor:members!prematrimonial_evaluations_filled_by_fkey(first_name, last_name)`)
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return data ?? null
 }

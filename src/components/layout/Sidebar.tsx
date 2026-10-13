@@ -112,6 +112,7 @@ interface SidebarProps {
 // Nombres bonitos desde la fuente de verdad (ROLES): el mapa manual anterior
 // solo cubría 3 roles y el resto veía su slug crudo (p. ej. coordinador_estudios).
 import { ROLES, isStudyGroupsOnly, isDirigentesOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
+import { PREMAT_EVAL_ROLES } from '@/lib/studies/premat-evaluation'
 import { formsNavPlacement } from '@/lib/auth/forms-scope'
 import type { RoleId } from '@/types/auth'
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.id, r.name]))
@@ -214,6 +215,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),
       // Folletos: quienes tienen el permiso folletos (dentro del módulo Estudios).
       ...(can('folletos', 'view') ? [{ href: '/estudios/folletos', label: 'Folletos', icon: FileText }] : []),
+      // PRE-9 · Cierres del prematrimonial: contenido pastoral, gate estrecho
+      // —el MISMO del endpoint—. No basta con ver el módulo de estudios.
+      ...(userRoles.some(r => (PREMAT_EVAL_ROLES as string[]).includes(r))
+        ? [{ href: '/estudios/prematrimonial/cierres', label: 'Cierres prematrimonial', icon: Heart }] : []),
     ]
     : userRoles.includes('dirigente')
       ? [
