@@ -133,6 +133,56 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ─── Dropdowns ──────────────────────────────────────────────────────────── */
+
+/*
+ * UI-3 · La flecha del `select`, separada del borde (2026-10-13).
+ *
+ * EL PROBLEMA: el navegador dibuja su flecha pegada al borde derecho del
+ * control y, con las esquinas redondeadas del sistema, queda montada sobre
+ * la curva. Agregar `pr-` en la clase del select NO la mueve: el navegador
+ * la ancla al borde, no al contenido.
+ *
+ * POR QUÉ VA ACÁ Y NO EN UN COMPONENTE. Son 174 `<select>` en 95 archivos.
+ * Envolver cada uno en un `<div class="relative">` para colgarle una flecha
+ * propia habría cambiado el layout de todos los que viven dentro de un flex
+ * o un grid —el wrapper no hereda `flex-1` ni `w-32`— y eso es un montón de
+ * pantallas rotas de maneras difíciles de ver. Esta regla toca el MISMO
+ * elemento: no mueve nada de sitio.
+ *
+ * El `<select>` sigue siendo nativo, que es lo que se quiere: en un celular
+ * abre el selector del sistema, y en escritorio ya trae teclado, saltar
+ * escribiendo y lector de pantalla.
+ *
+ * La flecha va como `background-image` y por eso no intercepta clics: un
+ * ícono encima habría necesitado `pointer-events: none` para que el clic
+ * sobre él siguiera abriendo el desplegable.
+ */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  /* El chevron, en navy-light. El `%23` es el `#` del color escapado. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2329365C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  /* Deja aire para la flecha. Si una clase define su propio padding
+     derecho, gana la de Tailwind y por eso se usa el mínimo acá. */
+  padding-right: 2.25rem;
+}
+
+/* Un select sin opciones elegibles o deshabilitado: la flecha acompaña. */
+select:disabled {
+  opacity: 0.6;
+}
+
+/* `multiple` y `size` muestran una lista, no un desplegable: ahí la flecha
+   sobra y el padding extra recorta el texto de las opciones. */
+select[multiple],
+select[size]:not([size='1']) {
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
 /* ─── Admin page layout ──────────────────────────────────────────────────── */
 
 .page {
