@@ -1940,7 +1940,38 @@ ya existe).
 **Bloqueado hasta que Fabiola pase sus archivos:** el import masivo (su Excel)
 y el catálogo de comunidades (su lista). El campo ya existe, vacío.
 
-### [ ] DIR-9 · Reporte de dirigentes rediseñado (el de la infografía)
+### [x] DIR-9 · Reporte de dirigentes rediseñado — HECHO 2026-10-13
+
+**Lo que se entregó:** la jerarquía del diagrama (total → inactivos/activos →
+desgloses) con cada número clicable, campañas separadas de la formación, el
+cruce sede × formación y el export en xlsx. Los permisos suman
+`lector_dirigentes` (Luis y Yeya ya ven la ficha de cada dirigente); la
+banderita se decide en el servidor y viaja `null` —no cero— para quien no
+puede verla.
+
+**EL HALLAZGO, y no estaba donde parecía.** 109 dirigentes tenían un grupo
+en curso o en matrícula y 106 figuraban `disponibilidad = 'disponible'`. El
+reporte VIEJO no arrastraba el error porque nunca leyó ese campo: deriva
+«dando ahora» de los grupos. El campo roto era el de DIR-8, que alimenta la
+FICHA. Se arregló derivándolo en los dos lados con la misma función
+(`esta-dirigiendo.ts`), en vez de correr un UPDATE que se desincroniza el
+día que alguien cierre un grupo.
+
+**Decisiones que vale la pena no reabrir:**
+ · El cero del cruce se MARCA. Esa tabla se abre para encontrar huecos.
+ · Las columnas del cruce van por cobertura, no alfabéticas: con el orden
+   del catálogo abría como un muro de ceros y los números quedaban fuera de
+   pantalla.
+ · UN solo export, no uno por celda. Quince archivos no se pueden cruzar
+   entre sí; uno con las columnas que definen cada celda sí.
+ · El export NO lleva notas ni banderita, ni para quien puede verlas: un
+   archivo se reenvía sin pensarlo.
+
+**Lo que quedó sin tocar:** el campo viejo `availability_status` sigue
+alimentando el listado de `/estudios/dirigentes`. No se migró porque ahí
+acierta (deriva de los grupos), pero son dos taxonomías vivas para lo mismo.
+
+### [~] DIR-9 · prompt original (referencia)
 
 El reporte viejo de dirigentes del plan piloto está abandonado. Se rediseña
 con la jerarquía de la infografía (total → inactivo/activo → desgloses) y los
