@@ -16,7 +16,19 @@ import {
   type PrematEvaluationInput,
 } from '@/lib/studies/premat-evaluation'
 
-export type Pair = { request_id: string; requester_name: string; spouse_name: string }
+export type Pair = {
+  request_id: string
+  requester_name: string
+  spouse_name: string
+  /** PRE-8 · false cuando el grupo se creó a mano y la pareja son sus
+   *  participantes. Entonces `requester_name` ya trae los dos nombres. */
+  de_solicitud?: boolean
+}
+
+/** Los dos nombres, vengan de una solicitud o de los participantes. */
+function nombreDeLaPareja(p: Pair): string {
+  return [p.requester_name, p.spouse_name].filter(Boolean).join(' y ')
+}
 
 const LABEL = 'block text-[13px] font-medium text-navy-light/80 font-body mb-1.5'
 const INPUT = 'w-full rounded-xl border border-navy/15 bg-white px-3 py-2.5 text-sm text-navy outline-none focus:border-navy/30 font-body'
@@ -123,7 +135,8 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
   if (pairs.length === 0) {
     return (
       <p className="rounded-2xl bg-surface-card p-5 text-[13px] text-navy-light/80 font-body">
-        Este grupo prematrimonial no tiene parejas registradas desde la cola de solicitudes, así que no hay evaluación por llenar.
+        Este grupo no tiene participantes activos, así que no hay evaluación de
+        pareja que llenar.
       </p>
     )
   }
@@ -138,7 +151,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
             <div className="flex items-center gap-2">
               <Heart size={15} className="text-coral shrink-0" />
               <h3 className="text-sm font-bold text-navy font-display">
-                {p.requester_name} &amp; {p.spouse_name}
+                {nombreDeLaPareja(p)}
               </h3>
             </div>
             <p className="text-[13px] text-navy-light/80 font-body">

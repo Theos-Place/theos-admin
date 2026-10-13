@@ -229,9 +229,18 @@ export async function savePrematEvaluations(
 ): Promise<void> {
   if (evaluations.length === 0) return
   const sb = loose()
+  /**
+   * PRE-8 (2026-10-13) · La clave puede ser la SOLICITUD o el GRUPO.
+   *
+   * Los grupos creados a mano no tienen solicitud, y la evaluación se
+   * identifica por el grupo. El `request_id` que llega en esos casos es el
+   * id del grupo —así lo arma `parejasDelCierre`— y no se guarda como
+   * solicitud: apuntaría a una fila que no existe.
+   */
+  const esDelGrupo = (requestId: string) => requestId === groupId
   const { error } = await sb.from('prematrimonial_evaluations').upsert(
     evaluations.map(e => ({
-      request_id: e.request_id,
+      request_id: esDelGrupo(e.request_id) ? null : e.request_id,
       group_id: groupId,
       commitment: e.commitment,
       strengths: e.strengths,
@@ -244,7 +253,10 @@ export async function savePrematEvaluations(
       blessing: (e.blessing ?? '').trim() || null,
       filled_by: filledBy,
     })),
-    { onConflict: 'request_id' },
+    // Sin solicitud, el conflicto se resuelve por grupo: el índice parcial
+    // `premat_eval_group_uniq` garantiza una sola evaluación por grupo, y
+    // así un reintento del cierre corrige en vez de duplicar.
+    { onConflict: evaluations.some(e => esDelGrupo(e.request_id)) ? 'group_id' : 'request_id' },
   )
   if (error) throw error
 }
@@ -377,4 +389,33 @@ export async function cancelPrematrimonialRequest(
     changed_by: actorId, notes: reason ?? (withRefund ? 'Cancelada con devolución.' : 'Cancelada.'),
   })
   return { refund_request_id: refundRequestId }
+}
+
+/**
+ * PRE-8 (2026-10-13) · Los participantes de un grupo, para armar la pareja
+ * cuando el grupo no nació de la cola de solicitudes.
+ *
+ * Solo id, nombre y estado: el cierre no necesita nada más, y esta lista
+ * viaja a la pantalla de evaluación.
+ */
+export async function getParticipantesDelGrupo(
+  groupId: string,
+): Promise<Array<{ member_id: string; member_name: string; status: string }>> {
+  const sb = loose()
+  const { data, error } = await sb.from('study_enrollments')
+    .select('member_id, status, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
+    .eq('group_id', groupId)
+  if (error) throw error
+  type Fila = {
+    member_id: string; status: string | null
+    member: { first_name: string; last_name: string } | Array<{ first_name: string; last_name: string }> | null
+  }
+  return ((data ?? []) as unknown as Fila[]).map(f => {
+    const m = Array.isArray(f.member) ? f.member[0] : f.member
+    return {
+      member_id: f.member_id,
+      member_name: m ? `${m.first_name} ${m.last_name}`.trim() : 'Sin nombre',
+      status: f.status ?? '',
+    }
+  })
 }

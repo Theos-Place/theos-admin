@@ -5,7 +5,7 @@ import { closeGroup, type CloseResult } from '@/lib/supabase/queries/studies'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
-import { PREMAT_PLAN_CODE, getRequestsForGroup, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
+import { PREMAT_PLAN_CODE, getRequestsForGroup, getParticipantesDelGrupo, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
 import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { reportarError } from '@/lib/observabilidad'
@@ -75,10 +75,27 @@ export async function POST(
     // cierre: si el cierre falla, la evaluación queda (upsert por pareja) y el
     // retry no la duplica ni la pierde.
     if (sourceCode === PREMAT_PLAN_CODE) {
-      const parejas = await getRequestsForGroup(id)
+      /**
+       * PRE-8 (2026-10-13) · Las parejas salen de la MISMA función que usa
+       * la pantalla. Antes acá se consultaba solo la cola de solicitudes, y
+       * un grupo creado a mano pasaba sin evaluación: la pantalla no la
+       * pedía y el servidor tampoco la exigía, así que el cierre quedaba sin
+       * el dato que el rediseño existe para recoger.
+       */
+      const { parejasDelCierre } = await import('@/lib/studies/pareja-del-cierre')
+      const solicitudes = await getRequestsForGroup(id)
+      const parejas = parejasDelCierre({
+        solicitudes: solicitudes.map(p => ({
+          id: p.id,
+          requester_name: `${p.requester?.first_name ?? ''} ${p.requester?.last_name ?? ''}`.trim(),
+          spouse_name: `${p.spouse?.first_name ?? ''} ${p.spouse?.last_name ?? ''}`.trim(),
+        })),
+        participantes: solicitudes.length > 0 ? [] : await getParticipantesDelGrupo(id),
+        groupId: id,
+      })
       const evaluations = body.evaluations ?? []
       const byRequest = new Map(evaluations.map(e => [e.request_id, e]))
-      const faltantes = parejas.filter(p => !byRequest.has(p.id))
+      const faltantes = parejas.filter(p => !byRequest.has(p.clave))
       if (faltantes.length > 0) {
         return NextResponse.json(
           { error: `Falta la evaluación de ${faltantes.length} pareja(s) del grupo.`, code: 'evaluacion_requerida' },
@@ -86,7 +103,7 @@ export async function POST(
         )
       }
       // Solo las parejas de ESTE grupo (ignora request_id ajenos).
-      const validIds = new Set(parejas.map(p => p.id))
+      const validIds = new Set(parejas.map(p => p.clave))
       const propias = evaluations.filter(e => validIds.has(e.request_id))
       for (const e of propias) {
         const err = validatePrematEvaluation(e)
