@@ -16,6 +16,7 @@ const leer = (p: string) => readFileSync(join(process.cwd(), p), 'utf8')
 const pares = leer('src/app/api/studies/groups/[id]/premat-pairs/route.ts')
 const cierre = leer('src/app/api/studies/groups/[id]/close/route.ts')
 const guardado = leer('src/lib/supabase/queries/prematrimonial.ts')
+const pantalla = leer('src/components/studies/PrematCoupleEvaluation.tsx')
 
 describe('PRE-8 · de dónde salen las parejas', () => {
   it('el endpoint de parejas usa la regla compartida', () => {
@@ -65,5 +66,24 @@ describe('PRE-8 · cómo se guarda sin solicitud', () => {
     // Sin esto, un reintento del cierre duplicaría la evaluación en vez de
     // corregirla, que es justo lo que el upsert existe para evitar.
     expect(guardado).toMatch(/onConflict: .*'group_id' : 'request_id'/)
+  })
+})
+
+describe('PRE-8 · el mensaje cuando algo falla', () => {
+  it('distingue el PERMISO de la caída', () => {
+    // El 403 de hoy decía «No se pudieron cargar las parejas del grupo»,
+    // igual que una caída de red. Se lee como un problema de datos y costó
+    // una vuelta entera de diagnóstico saber que era un permiso.
+    expect(pantalla).toMatch(/mensajeDeLaRespuesta\(res,/)
+  })
+
+  it('y un fallo de red se dice como fallo de red', () => {
+    expect(pantalla).toMatch(/No se pudo conectar/)
+  })
+
+  it('el catch ya no se traga el status', () => {
+    // El patrón viejo: `r.ok ? r.json() : Promise.reject(new Error())`
+    // descarta la respuesta entera antes de poder mirarla.
+    expect(pantalla).not.toMatch(/Promise\.reject\(new Error\(\)\)/)
   })
 })

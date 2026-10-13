@@ -93,15 +93,40 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
   useEffect(() => {
     let alive = true
-    fetch(`/api/studies/groups/${groupId}/premat-pairs`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then(d => {
+    /**
+     * El mensaje DISTINGUE el permiso de la caída (2026-10-13).
+     *
+     * Antes todo fallo decía «No se pudieron cargar las parejas del grupo»,
+     * y eso se lee como un problema de datos. El caso real fue un 403 —a la
+     * dirigente del grupo no la dejaban cargar sus propias parejas— y costó
+     * una vuelta entera de diagnóstico averiguar que era un permiso.
+     *
+     * `mensajeDeLaRespuesta` ya existía para esto: devuelve lo que diga el
+     * servidor, y si no dice nada, el texto correcto según el status.
+     */
+    const cargar = async () => {
+      try {
+        const res = await fetch(`/api/studies/groups/${groupId}/premat-pairs`)
+        if (!res.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          const msg = await mensajeDeLaRespuesta(res, 'No se pudieron cargar las parejas del grupo.')
+          if (alive) { setPairs([]); setError(msg) }
+          return
+        }
+        const d = await res.json()
         if (!alive) return
         const items: Pair[] = d.items ?? []
         setPairs(items)
         setEvals(Object.fromEntries(items.map(p => [p.request_id, emptyEval(p.request_id)])))
-      })
-      .catch(() => { if (alive) { setPairs([]); setError('No se pudieron cargar las parejas del grupo.') } })
+      } catch {
+        // Acá sí es la red: el fetch ni llegó.
+        if (alive) {
+          setPairs([])
+          setError('No se pudo conectar para cargar las parejas. Revisá la conexión e intentá de nuevo.')
+        }
+      }
+    }
+    void cargar()
     return () => { alive = false }
   }, [groupId])
 
