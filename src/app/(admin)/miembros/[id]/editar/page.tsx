@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, use, useEffect } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { PROVINCIAS_CR } from '@/lib/members/provincias'
 import { useToast } from '@/components/shared/Toast'
 import { useRouter } from 'next/navigation'
@@ -60,7 +61,9 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
   const [deactivateReason,    setDeactivateReason]    = useState('')
 
   // Poblar el formulario cuando carga el miembro (fetch async).
-  useEffect(() => {
+  // LINT-1 · Precarga sin efecto: el formulario no se pinta vacío
+  // un instante antes de llenarse.
+  usePrecarga(member?.id, () => {
     if (!member) return
     setFirstName(member.first_name ?? '')
     setLastName(member.last_name ?? '')
@@ -86,7 +89,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
     setEmergencyContactName(member.emergency_contact_name ?? '')
     setEmergencyContactPhone(member.emergency_contact_phone ?? '')
     setIsSystem(member.is_system ?? false)
-  }, [member])
+  })
 
   // Recordatorio de cédula (banner): ?completar=cedula resalta el campo y hace
   // scroll/focus para que la persona lo complete de una.

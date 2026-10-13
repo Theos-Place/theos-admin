@@ -1,6 +1,7 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
@@ -233,7 +234,9 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   const [saving, setSaving] = useState(false)
 
   // Poblar el formulario cuando carga el evento (fetch async).
-  useEffect(() => {
+  // LINT-1 · Precarga sin efecto. La clave incluye la ocurrencia
+  // (?date=) porque las fechas del formulario dependen de ella.
+  usePrecarga(`${event?.id ?? ''}|${occParam ?? ''}`, () => {
     if (!event) return
     setName(event.name ?? '')
     setSelectedType(event.event_type ?? '')
@@ -279,7 +282,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       survey_send_at: event.survey_send_at ?? null,
     })
      
-  }, [event, occParam])
+  })
 
   if (!event) {
     return (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { filtrarServidores, puestosDisponibles, TODOS_LOS_PUESTOS, type FiltroEstado } from '@/lib/servers/committee-filter'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -80,13 +81,15 @@ export default function CommitteeDetailPage() {
   const [committeeForm, setCommitteeForm] = useState<CommitteeFormState>({
     name: '', parent_id: '',
   })
-  useEffect(() => {
+  // LINT-1 · Precarga sin efecto: el formulario no se pinta vacío
+  // un instante antes de llenarse.
+  usePrecarga(committee?.id, () => {
     if (!committee) return
     setCommitteeForm({
       name: committee.name,
       parent_id: committee.area_code, // area_code = parent_id en el dominio
     })
-  }, [committee])
+  })
   // Áreas reales (tipo area) para el dropdown de área padre.
   const [areas, setAreas] = useState<{ id: string; name: string }[]>([])
   useEffect(() => {

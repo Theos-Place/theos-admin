@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { useParams, useRouter } from 'next/navigation'
 import type { ContractType } from '@/types/employee'
 import { useEmployees } from '@/hooks/useEmployees'
@@ -28,16 +29,16 @@ export default function EditarPuestoPage() {
   const [saving, setSaving]           = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!position) return
-    setName(position.name)
-    setDescription(position.description)
-    setArea(position.area)
-    setContractType(position.contract_type)
-    setSalaryMin(String(position.salary_min ?? ''))
-    setSalaryMax(String(position.salary_max ?? ''))
-    setIsActive(position.is_active)
-  }, [position])
+  // LINT-1 · Sin efecto: el formulario no se pinta vacío antes de llenarse.
+  usePrecarga(position?.id, () => {
+    setName(position!.name)
+    setDescription(position!.description)
+    setArea(position!.area)
+    setContractType(position!.contract_type)
+    setSalaryMin(String(position!.salary_min ?? ''))
+    setSalaryMax(String(position!.salary_max ?? ''))
+    setIsActive(position!.is_active)
+  })
 
   async function handleSave() {
     if (saving) return

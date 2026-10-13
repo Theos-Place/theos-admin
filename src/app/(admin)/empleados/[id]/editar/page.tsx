@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { type ContractType } from '@/types/employee'
@@ -28,14 +29,14 @@ export default function EditarEmpleadoPage() {
   const [saving, setSaving]                 = useState(false)
   const [error, setError]                   = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!employee) return
-    setPositionId(employee.position_id ?? '')
-    setContractType(employee.contract_type ?? 'planilla')
-    setEmail(employee.member_email ?? '')
-    setNotes(employee.notes ?? '')
-    setVacationDays(String(employee.vacation_days_total ?? 15))
-  }, [employee])
+  // LINT-1 · Sin efecto: el formulario no se pinta vacío antes de llenarse.
+  usePrecarga(employee?.id, () => {
+    setPositionId(employee!.position_id ?? '')
+    setContractType(employee!.contract_type ?? 'planilla')
+    setEmail(employee!.member_email ?? '')
+    setNotes(employee!.notes ?? '')
+    setVacationDays(String(employee!.vacation_days_total ?? 15))
+  })
 
   async function handleSave() {
     if (saving || !employee) return

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { useParams, useRouter } from 'next/navigation'
 import { useServers } from '@/hooks/useServers'
 import { useToast } from '@/components/shared/Toast'
@@ -25,7 +26,9 @@ export default function EditarVacantePage() {
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState<string | null>(null)
 
-  useEffect(() => {
+  // LINT-1 · Precarga sin efecto: el formulario no se pinta vacío
+  // un instante antes de llenarse.
+  usePrecarga(vacancy?.id, () => {
     if (!vacancy) return
     setSchedule(vacancy.schedule)
     setCommitment(vacancy.commitment)
@@ -34,7 +37,7 @@ export default function EditarVacantePage() {
     setLocation(vacancy.location ?? '')
     setNotes(vacancy.notes ?? '')
     setFeatured(!!vacancy.is_featured)
-  }, [vacancy])
+  })
 
   async function handleSave() {
     if (saving) return

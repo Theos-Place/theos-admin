@@ -80,9 +80,41 @@ existe, y si entra en el mismo flujo que FIN-4.
 > Nota 2026-09-15: REP-2 quedó HECHO — existen `SemanaDetallePanel` y el deep link
 > `?semana=`. (La nota del 2026-09-10 decía lo contrario y ya no aplica.)
 
-### [~] LINT-1 · De 93 a 57 warnings — quedan los hooks paginados
+### [~] LINT-1 · De 93 a 46 warnings — quedan los paginados y los de pantalla
 
-Van cuatro tandas (93 → 70 → 60 → 57). El techo del gate bajó a **57**.
+Van cinco tandas (93 → 70 → 60 → 57 → 53 → 46). El techo del gate bajó a **46**.
+
+**Tanda 5 (2026-10-12): las precargas de formulario.** Siete avisos, todos la
+misma forma: una pantalla de editar carga datos y los vuelca a sus `useState`
+desde un `useEffect`. El aviso tenía razón y no era solo estilo — el efecto
+corre DESPUÉS de pintar, así que el formulario aparece un instante vacío y
+salta a sus valores; con conexión lenta se ve.
+
+La pieza es **`usePrecarga`** (`src/hooks/`), con la regla en
+`lib/hooks/precarga-una-vez`. Ajusta el estado DURANTE el render comparando
+contra la clave de lo ya volcado — el patrón que React documenta como
+«adjusting state when props change»: re-renderiza antes de pintar, sin
+parpadeo y sin efecto que mantener.
+
+Migradas: plantillas/editar, empleados/editar, empleados/puestos/editar,
+eventos/editar, miembros/editar, servidores/puestos/editar y el comité.
+
+Dos cosas que había que mirar y no dar por hechas:
+ · **eventos/editar dependía de DOS cosas** (`[event, occParam]`): las fechas
+   del formulario cambian según la ocurrencia que se abra. La clave lleva las
+   dos; con solo el id, abrir otra ocurrencia habría dejado las fechas viejas.
+ · **miembros/editar tenía DOS efectos** con la misma guarda. El segundo hace
+   scroll y enfoca el input de cédula: eso SÍ es un efecto y se quedó como
+   estaba. `usePrecarga` es para volcar estado, no para tocar el DOM, y hay
+   un test que falla si alguien mete un `fetch`, un `document.` o un
+   `setTimeout` adentro.
+
+**Lo que NO entra en este patrón** (y por qué los 46 que quedan son otra
+cosa): la carga al cambiar de pestaña (`becas`, que llama un refetch desde un
+efecto) y los debounce de búsqueda (`grupos/[id]`, `servidores/[committeeId]`)
+no son precargas — ahí el efecto es legítimo y lo que marca la regla es el
+`setState` síncrono de adentro. Esos piden `useCargaRemota` o pensarse uno
+por uno.
 
 **Tanda 4 (2026-09-22): los tres de `react-hooks/purity`.** Eran tres
 `Date.now()`, y resultaron ser dos cosas distintas.

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
@@ -40,25 +41,26 @@ export default function EditarPlantillaPage() {
   const [originalBody, setOriginalBody] = useState('')
   const [saved, setSaved] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
-  const [notFound, setNotFound] = useState(false)
   const [isSystem, setIsSystem] = useState(false)
   const [systemVars, setSystemVars] = useState<string[]>([])
 
-  // Carga inicial: precarga los datos de la plantilla una sola vez.
-  useEffect(() => {
-    if (loaded || loading) return
-    const tpl = templates.find(t => t.id === id)
-    if (!tpl) { if (!loading) setNotFound(true); return }
-    setName(tpl.name)
-    setCategory(tpl.category || 'general')
-    setSubject(tpl.subject || '')
-    setEmailBody(tpl.body || '')
-    setOriginalBody(tpl.body || '')
-    setIsSystem(tpl.is_system)
-    setSystemVars(tpl.available_variables ?? [])
+  // LINT-1 · Precarga sin efecto: el vuelco ocurre DURANTE el render, así
+  // que el formulario nunca se pinta vacío un instante antes de llenarse.
+  const tpl = templates.find(t => t.id === id)
+  usePrecarga(tpl?.id, () => {
+    setName(tpl!.name)
+    setCategory(tpl!.category || 'general')
+    setSubject(tpl!.subject || '')
+    setEmailBody(tpl!.body || '')
+    setOriginalBody(tpl!.body || '')
+    setIsSystem(tpl!.is_system)
+    setSystemVars(tpl!.available_variables ?? [])
     setCategories([...new Set([...KNOWN_CATEGORIES, ...templates.map(t => t.category).filter(Boolean)])])
     setLoaded(true)
-  }, [loading, templates, id, loaded])
+  })
+  // «No existe» es distinto de «todavía no llegó»: solo con la carga
+  // terminada y sin plantilla se puede afirmar que no está.
+  const noExiste = !loading && !tpl
 
   function copyVar(key: string) {
     navigator.clipboard?.writeText(key).then(() => { setCopied(key); setTimeout(() => setCopied(null), 1200) }).catch(() => {})
@@ -108,7 +110,7 @@ export default function EditarPlantillaPage() {
     ? renderEmail(renderTemplate(rawPreview, PREVIEW_SAMPLE), { logoUrl: '/logo-theos-white.png' })
     : renderEmail(rawPreview, { unsubscribeUrl: '#', logoUrl: '/logo-theos-white.png' })
 
-  if (notFound) {
+  if (noExiste) {
     return (
       <div className="space-y-4">
         <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
