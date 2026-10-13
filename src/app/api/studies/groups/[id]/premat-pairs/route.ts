@@ -12,10 +12,32 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRoles('coordinador_estudios', 'coordinador_dirigentes', 'direccion')
+  const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
     const { id } = await params
+
+    /**
+     * MISMO criterio que el endpoint de CIERRE, y ahora de verdad: la regla
+     * vive en `lib/studies/quien-cierra` y la usan los dos.
+     *
+     * Antes acá había una lista propia con tres roles, y el comentario decía
+     * «mismos roles que pueden cerrar». No lo eran: al de cierre le faltaba
+     * el DIRIGENTE del grupo. Floriana, co-dirigente de su prematrimonial,
+     * podía cerrar pero recibía 403 al cargar las parejas, y la pantalla
+     * decía «no se pudieron cargar» sin aclarar que era un permiso.
+     */
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const { data: g } = await createAdminClient()
+      .from('study_groups').select('leader_id, co_leader_id').eq('id', id).maybeSingle()
+    const { puedeCerrarEsteGrupo } = await import('@/lib/studies/quien-cierra')
+    if (!puedeCerrarEsteGrupo({
+      roles: auth.ctx.roles,
+      memberId: auth.ctx.memberId,
+      grupo: g as { leader_id: string | null; co_leader_id: string | null } | null,
+    })) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
     const pairs = await getRequestsForGroup(id)
 
     /**

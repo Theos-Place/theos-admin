@@ -37,6 +37,24 @@ describe('PRE-8 · de dónde salen las parejas', () => {
   })
 })
 
+describe('PRE-8 · quién puede cargar las parejas', () => {
+  it('los DOS endpoints usan la misma regla de permiso', () => {
+    // El bug de verdad: el de cierre dejaba cerrar al dirigente del grupo y
+    // el de parejas no. Floriana, co-dirigente de su prematrimonial, podía
+    // cerrar pero recibía 403 al cargar las parejas — y la pantalla decía
+    // «no se pudieron cargar» sin aclarar que era un permiso.
+    for (const [nombre, src] of [['parejas', pares], ['cierre', cierre]] as const) {
+      expect(src, nombre).toMatch(/puedeCerrarEsteGrupo\(\{/)
+    }
+  })
+
+  it('ninguno vuelve a escribir su propia lista de roles', () => {
+    for (const [nombre, src] of [['parejas', pares], ['cierre', cierre]] as const) {
+      expect(src, nombre).not.toMatch(/'coordinador_estudios', 'coordinador_dirigentes', 'direccion'/)
+    }
+  })
+})
+
 describe('PRE-8 · cómo se guarda sin solicitud', () => {
   it('el request_id del grupo NO se guarda como solicitud', () => {
     // Apuntaría a una fila que no existe y la FK lo rechazaría.

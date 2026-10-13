@@ -29,16 +29,21 @@ export async function POST(
   // Body y params fuera del try: el catch de YA_CERRADO los necesita para reconciliar.
   const { id } = await params
   {
-    const closerRoles = ['coordinador_estudios', 'coordinador_dirigentes', 'direccion', 'admin']
-    const isCloser = auth.ctx.roles.some(r => closerRoles.includes(r))
-    if (!isCloser) {
+    // La regla vive en `lib/studies/quien-cierra` y la comparte el endpoint
+    // que carga las parejas del cierre: eran dos listas para la misma
+    // pregunta y divergieron.
+    const { puedeCerrarPorRol, puedeCerrarEsteGrupo } = await import('@/lib/studies/quien-cierra')
+    if (!puedeCerrarPorRol(auth.ctx.roles)) {
       const { createAdminClient } = await import('@/lib/supabase/admin')
       const { data: g } = await createAdminClient()
         .from('study_groups').select('leader_id, co_leader_id').eq('id', id).maybeSingle()
-      const row = g as { leader_id: string | null; co_leader_id: string | null } | null
-      const isLeader = !!auth.ctx.memberId && !!row
-        && (row.leader_id === auth.ctx.memberId || row.co_leader_id === auth.ctx.memberId)
-      if (!isLeader) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+      if (!puedeCerrarEsteGrupo({
+        roles: auth.ctx.roles,
+        memberId: auth.ctx.memberId,
+        grupo: g as { leader_id: string | null; co_leader_id: string | null } | null,
+      })) {
+        return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+      }
     }
   }
   const body = (await req.json().catch(() => ({}))) as {
