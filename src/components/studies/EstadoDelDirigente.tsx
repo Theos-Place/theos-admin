@@ -19,7 +19,9 @@
 import { useState } from 'react'
 import { Loader2, Flag } from 'lucide-react'
 import { Button } from '@/components/shared/Button'
+import { cn } from '@/lib/utils'
 import { useToast } from '@/components/shared/Toast'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import {
   motivoInvalido, resumen,
   RAZONES_INACTIVO, DETALLES_NO_EJERCE, SITUACIONES_CDEB,
@@ -71,8 +73,10 @@ function Campo({ controlId, etiqueta, children }: {
   )
 }
 
-const SELECT = 'w-full rounded-xl border border-navy/20 bg-surface-card px-3 py-2 text-[13px] text-navy font-body'
-const TEXTO = 'w-full rounded-xl border border-navy/20 bg-surface-card px-3 py-2 text-[13px] text-navy font-body'
+// Las mismas clases que el resto de los formularios de estudios: el borde
+// duro que tenía antes no lo usa ninguna otra pantalla y se veía pegado.
+const SELECT = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
+const TEXTO = SELECT
 
 function Nota({ controlId, etiqueta, valor, onChange, obligatoria }: {
   controlId: string; etiqueta: string; valor: string; onChange: (v: string) => void; obligatoria?: boolean
@@ -91,9 +95,19 @@ function Nota({ controlId, etiqueta, valor, onChange, obligatoria }: {
 }
 
 export function EstadoDelDirigenteForm({
-  memberId, inicial, puedeNotas, puedeBanderita, onGuardado,
+  memberId, activo, inicial, puedeNotas, puedeBanderita, onGuardado,
 }: {
   memberId: string
+  /**
+   * Activo o no, DECIDIDO AFUERA.
+   *
+   * El toggle de la cabecera ya hacía esto, y hace bastante más que cambiar
+   * un valor: agrega o saca del Comité de Dirigentes, da o quita el rol, y
+   * se niega si la persona tiene un grupo en curso. Un segundo control acá
+   * habría sido el mismo cambio por dos caminos, uno de ellos sin esos
+   * efectos — y ganaría el último que alguien tocara.
+   */
+  activo: boolean
   inicial?: Partial<EstadoGuardado>
   /** Quien no puede, no ve los campos Y tampoco los recibe del servidor. */
   puedeNotas: boolean
@@ -113,6 +127,12 @@ export function EstadoDelDirigenteForm({
       ? { ...e, base, razonInactivo: null, detalleNoEjerce: null, situacionCdeb: null, disponibilidad: 'disponible', razonNoDisponible: null, pausaHasta: null }
       : { ...e, base, disponibilidad: null, razonNoDisponible: null, pausaHasta: null, razonInactivo: 'no_asiste', detalleNoEjerce: null, situacionCdeb: null })
   }
+
+  // El toggle manda. Si allá cambian el estado, acá se limpia la rama que
+  // dejó de aplicar: si no, quedaría una sub-razón de inactividad escondida
+  // en un dirigente activo, lista para guardarse sin que nadie la viera.
+  const base: Estado['base'] = activo ? 'activo' : 'inactivo'
+  usePrecarga(base, () => cambiarBase(base))
 
   async function guardar() {
     if (motivo) return
@@ -152,17 +172,21 @@ export function EstadoDelDirigenteForm({
 
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-4">
-      <div>
-        <h3 className="text-base font-bold text-navy font-display">Estado del dirigente</h3>
-        <p className="text-[13px] text-navy-light/80 font-body mt-0.5">{resumen(e)}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-base font-bold text-navy font-display">Detalle del estado</h3>
+          <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
+            {activo
+              ? 'Por qué está o no disponible para tomar un grupo.'
+              : 'Por qué dejó de ejercer. Activar o desactivar se hace con el botón de arriba.'}
+          </p>
+        </div>
+        <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-[11px] font-display tracking-wide',
+          activo ? 'bg-teal/15 text-navy' : 'bg-navy-light/10 text-navy-light/80')}>
+          {resumen(e)}
+        </span>
       </div>
 
-      <Campo controlId="dir-estado" etiqueta="Estado">
-        <select id="dir-estado" value={e.base} onChange={ev => cambiarBase(ev.target.value as Estado['base'])} className={SELECT}>
-          <option value="activo">Activo</option>
-          <option value="inactivo">Inactivo</option>
-        </select>
-      </Campo>
 
       {/* ── Rama INACTIVO ──────────────────────────────────────────── */}
       {e.base === 'inactivo' && (

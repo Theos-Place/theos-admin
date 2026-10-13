@@ -252,6 +252,8 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
           <div className="mt-4">
             <EstadoDelDirigenteForm
               memberId={d.member_id}
+              // El toggle de arriba es el que manda sobre activo/inactivo.
+              activo={d.status === 'activo'}
               puedeNotas={puedeNotas}
               puedeBanderita={puedeBanderita}
               inicial={estadoInicialDesde(d.estado_admin)}
