@@ -53,9 +53,15 @@ function Contenido() {
     if (desde) u.set('desde', desde)
     if (hasta) u.set('hasta', hasta)
     fetch(`/api/finance/donaciones/reporte?${u.toString()}`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar el reporte.'))
+        }
+        return r.json()
+      })
       .then(d => { if (vivo) setDatos(d as ReporteDeDonantes) })
-      .catch(() => { if (vivo) toast('No se pudo cargar el reporte.', 'error') })
+      .catch((e: Error) => { if (vivo) toast(e.message || 'No se pudo cargar el reporte.', 'error') })
     return () => { vivo = false }
   }, [desde, hasta, toast])
 

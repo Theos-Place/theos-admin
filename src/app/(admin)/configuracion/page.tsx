@@ -74,15 +74,22 @@ type NotifPrefs = {
 function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
   const [prefs, setPrefs] = useState<NotifPrefs | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  // El mensaje y no un booleano: «recargá la página» no sirve si fue un permiso.
+  const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let alive = true
     fetch('/api/notifications/preferences')
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: NotifPrefs) => { if (alive) { setPrefs(d); setError(false) } })
-      .catch(() => { if (alive) setError(true) })
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudieron cargar tus preferencias.'))
+        }
+        return r.json()
+      })
+      .then((d: NotifPrefs) => { if (alive) { setPrefs(d); setError(null) } })
+      .catch((e: Error) => { if (alive) setError(e.message || 'No se pudieron cargar tus preferencias.') })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
   }, [])
@@ -129,7 +136,9 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
   if (error || !prefs) {
     return (
       <div className="rounded-2xl p-6 bg-surface-card shadow-card">
-        <p className="text-sm text-coral font-body">No se pudieron cargar tus preferencias. Recargá la página.</p>
+        <p className="text-sm text-coral font-body">
+          {error ?? 'No se pudieron cargar tus preferencias.'}
+        </p>
       </div>
     )
   }

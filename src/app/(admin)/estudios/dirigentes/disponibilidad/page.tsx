@@ -41,6 +41,7 @@ export default function DisponibilidadDirigentesPage() {
   const [forms, setForms] = useState<FormOption[]>([])
   const [formId, setFormId] = useState<string | null>(null)
   const [rows, setRows] = useState<Row[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
 
   const queryKey = formId ?? 'inicial'
@@ -50,14 +51,25 @@ export default function DisponibilidadDirigentesPage() {
     let alive = true
     const u = formId ? `?form_id=${formId}` : ''
     fetch(`/api/studies/dirigentes/disponibilidad${u}`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar la disponibilidad.'))
+        }
+        return r.json()
+      })
       .then(d => {
         if (!alive) return
         setForms(d.forms ?? [])
         setRows(d.rows ?? [])
         if (!formId && d.form_id) setFormId(d.form_id)
+        setError(null)
       })
-      .catch(() => { if (alive) setRows([]) })
+      // Antes se vaciaba la lista en silencio: una caída se veía igual que
+      // «nadie contestó el formulario», que es una conclusión muy distinta.
+      .catch((e: Error) => {
+        if (alive) { setRows([]); setError(e.message || 'No se pudo cargar la disponibilidad.') }
+      })
       .finally(() => { if (alive) setLoadedKey(queryKey) })
     return () => { alive = false }
   }, [formId, queryKey])
@@ -115,6 +127,10 @@ export default function DisponibilidadDirigentesPage() {
           title="Todavía no hay formulario de disponibilidad"
           description="Corré el seed (scripts/seed-leader-availability-form.mjs) y mandá la convocatoria por correo."
         />
+      ) : error ? (
+        /* El error va ANTES del vacío: si no, una caída se pinta como
+           «nadie contestó» y eso se concluye y se actúa en consecuencia. */
+        <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={ClipboardList}

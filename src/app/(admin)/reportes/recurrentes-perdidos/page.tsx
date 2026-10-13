@@ -66,10 +66,14 @@ function Contenido() {
     fetch('/api/reports/recurrentes-perdidos')
       .then(async r => {
         if (r.status === 403) { if (vivo) setDenegado(true); return null }
-        return r.ok ? r.json() : Promise.reject(new Error())
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar el reporte.'))
+        }
+        return r.json()
       })
       .then(d => { if (vivo && d) setDatos(d as Respuesta) })
-      .catch(() => { if (vivo) toast('No se pudo cargar el reporte.', 'error') })
+      .catch((e: Error) => { if (vivo) toast(e.message || 'No se pudo cargar el reporte.', 'error') })
       .finally(() => { if (vivo) setCargando(false) })
     return () => { vivo = false }
   }, [toast])

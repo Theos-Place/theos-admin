@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 import { ArrowLeftRight } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -44,6 +45,7 @@ export default function DevolucionesPage() {
   // (finanzas) o solo ver y comentar (responsable del origen).
   const [refunds, setRefunds] = useState<Refund[]>([])
   const [canResolve, setCanResolve] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<'all' | RefundKind>('all')
   const [planFilter, setPlanFilter] = useState<'all' | string>('all')
   const [reloadKey, setReloadKey] = useState(0)
@@ -62,13 +64,25 @@ export default function DevolucionesPage() {
     if (kindFilter !== 'all') u.set('kind', kindFilter)
     if (planFilter !== 'all') u.set('plan_id', planFilter)
     fetch(`/api/finance/refunds?${u.toString()}`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudieron cargar las devoluciones.'))
+        }
+        return r.json()
+      })
       .then(d => {
         if (!alive) return
         setRefunds(((d.refunds ?? []) as DbRefund[]).map(toDomainRefund))
         setCanResolve(!!d.can_resolve)
+        setError(null)
       })
-      .catch(() => { if (alive) setRefunds([]) })
+      // Antes acá se vaciaba la lista en silencio, y una caída se leía como
+      // «no hay devoluciones» — que es exactamente lo contrario de lo que
+      // hay que hacer con una cola de plata.
+      .catch((e: Error) => {
+        if (alive) { setRefunds([]); setError(e.message || 'No se pudieron cargar las devoluciones.') }
+      })
       .finally(() => { if (alive) setLoadedKey(queryKey) })
     return () => { alive = false }
   }, [kindFilter, planFilter, queryKey])
@@ -332,7 +346,15 @@ export default function DevolucionesPage() {
                   </tr>
                 ))}
                 {refunds.length === 0 && (
-                  <tr><td colSpan={8} className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones'}</td></tr>
+                  <tr>
+                    {/* El error gana sobre «Sin devoluciones»: una caída
+                        pintada como cola vacía se lee como que no hay nada
+                        que resolver, y acá eso es plata de alguien. */}
+                    <td colSpan={8} className={cn('px-5 py-8 text-center text-sm font-body',
+                      error ? 'text-coral-deep' : 'text-[rgba(22,20,64,0.35)]')}>
+                      {loading ? 'Cargando…' : (error ?? 'Sin devoluciones')}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>

@@ -15,16 +15,23 @@ type Spiritual = {
 export function MemberSpiritualTab({ memberId }: { memberId: string }) {
   const [data, setData] = useState<Spiritual | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  // El mensaje y no un booleano: un 403 y una caída se arreglan distinto.
+  const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     let alive = true
     fetch(`/api/members/${memberId}/spiritual`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: Spiritual) => { if (alive) { setData(d); setError(false) } })
-      .catch(() => { if (alive) setError(true) })
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudieron cargar los datos espirituales.'))
+        }
+        return r.json()
+      })
+      .then((d: Spiritual) => { if (alive) { setData(d); setError(null) } })
+      .catch((e: Error) => { if (alive) setError(e.message || 'No se pudieron cargar los datos espirituales.') })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
   }, [memberId])
@@ -43,10 +50,15 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+        throw new Error(await mensajeDeLaRespuesta(res, 'No se pudieron guardar los datos espirituales.'))
+      }
       setSaved(true)
-    } catch {
-      setError(true)
+    } catch (e) {
+      setError(e instanceof Error && e.message
+        ? e.message
+        : 'No se pudieron guardar los datos espirituales.')
     } finally {
       setSaving(false)
     }
@@ -61,7 +73,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
   if (error && !data) {
     return (
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <p className="text-sm text-coral font-body">No se pudieron cargar los datos espirituales.</p>
+        <p className="text-sm text-coral font-body">{error}</p>
       </div>
     )
   }

@@ -75,6 +75,15 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [account, setAccount] = useState<AccountStatus | null>(null)
   const [accountLoading, setAccountLoading] = useState(true)
+  /**
+   * Por qué falló la consulta de la cuenta, si falló.
+   *
+   * Hace falta separarlo de `account === null`: con el catch que había,
+   * un error pintaba «Este miembro no tiene cuenta de acceso» —una
+   * afirmación FALSA sobre la persona— y desde ahí alguien le crea una
+   * cuenta duplicada.
+   */
+  const [accountError, setAccountError] = useState<string | null>(null)
   const [resendBusy, setResendBusy] = useState(false)
   const [resendMsg, setResendMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [createBusy, setCreateBusy] = useState(false)
@@ -186,9 +195,18 @@ export function MemberAdminTab({ memberId, onChanged }: {
   const loadAccount = useCallback(() => {
     setAccountLoading(true)
     return fetch(`/api/members/${memberId}/account-status`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: AccountStatus) => setAccount(d))
-      .catch(() => setAccount(null))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo consultar el estado de la cuenta.'))
+        }
+        return r.json()
+      })
+      .then((d: AccountStatus) => { setAccount(d); setAccountError(null) })
+      .catch((e: Error) => {
+        setAccount(null)
+        setAccountError(e.message || 'No se pudo consultar el estado de la cuenta.')
+      })
       .finally(() => setAccountLoading(false))
   }, [memberId])
 
@@ -230,9 +248,15 @@ export function MemberAdminTab({ memberId, onChanged }: {
 
   const loadAdmin = useCallback(() => {
     return fetch(`/api/members/${memberId}/admin-data`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudieron cargar los datos administrativos.'))
+        }
+        return r.json()
+      })
       .then((d: AdminData) => setAdmin(d))
-      .catch(() => setError('No se pudieron cargar los datos administrativos.'))
+      .catch((e: Error) => setError(e.message || 'No se pudieron cargar los datos administrativos.'))
   }, [memberId])
 
   useEffect(() => { loadAdmin() }, [loadAdmin])
@@ -362,6 +386,10 @@ export function MemberAdminTab({ memberId, onChanged }: {
 
         {accountLoading ? (
           <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-1.5"><Loader2 size={13} className="animate-spin" /> Consultando estado de la cuenta…</p>
+        ) : accountError ? (
+          /* El error ANTES del «no tiene cuenta»: decir que no tiene cuando
+             en realidad no se pudo averiguar lleva a crear una duplicada. */
+          <p className="text-[13px] text-coral-deep font-body" role="alert">{accountError}</p>
         ) : !account || account.state === 'none' ? (
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-surface-low px-3 py-1.5">

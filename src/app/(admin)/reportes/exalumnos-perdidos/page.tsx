@@ -119,10 +119,14 @@ function Contenido() {
     fetch(`/api/reports/exalumnos-perdidos${u}`)
       .then(async r => {
         if (r.status === 403) { setDenegado(true); return null }
-        return r.ok ? r.json() : Promise.reject(new Error())
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar la lista.'))
+        }
+        return r.json()
       })
       .then(d => { if (d) setDatos(d as Respuesta) })
-      .catch(() => toast('No se pudo cargar la lista.', 'error'))
+      .catch((e: Error) => toast(e.message || 'No se pudo cargar la lista.', 'error'))
   }, [dirigente, toast])
   useEffect(() => { cargar() }, [cargar])
 

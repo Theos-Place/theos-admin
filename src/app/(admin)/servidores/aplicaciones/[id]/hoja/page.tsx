@@ -34,13 +34,22 @@ export default function HojaDeAplicantePage({ params }: { params: Promise<{ id: 
   const { id } = use(params)
   const [detalle, setDetalle] = useState<DetalleDelAplicante | null>(null)
   const [estado, setEstado] = useState<'cargando' | 'listo' | 'error'>('cargando')
+  const [motivo, setMotivo] = useState('')
 
   useEffect(() => {
     let vivo = true
     fetch(`/api/servers/applications/${id}/detalle`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar la hoja del aplicante.'))
+        }
+        return r.json()
+      })
       .then(d => { if (vivo) { setDetalle(d as DetalleDelAplicante); setEstado('listo') } })
-      .catch(() => { if (vivo) setEstado('error') })
+      .catch((e: Error) => {
+        if (vivo) { setMotivo(e.message || 'No se pudo cargar la hoja del aplicante.'); setEstado('error') }
+      })
     return () => { vivo = false }
   }, [id])
 
@@ -57,7 +66,11 @@ export default function HojaDeAplicantePage({ params }: { params: Promise<{ id: 
     return <div className="flex items-center justify-center min-h-[40vh]"><Loader2 size={20} className="animate-spin text-navy-light/80" /></div>
   }
   if (estado === 'error' || !detalle) {
-    return <p className="p-8 text-sm text-navy-light/80 font-body">No se pudo cargar la hoja.</p>
+    return (
+      <p className="p-8 text-sm text-navy-light/80 font-body">
+        {motivo || 'No se pudo cargar la hoja.'}
+      </p>
+    )
   }
 
   const lineas = lineasDelDetalle(detalle)

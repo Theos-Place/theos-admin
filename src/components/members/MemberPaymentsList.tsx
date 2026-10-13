@@ -50,16 +50,23 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   onlyActionable?: boolean
 }) {
   const [rows, setRows] = useState<MemberPaymentRow[] | null>(null)
-  const [error, setError] = useState(false)
+  // El mensaje y no un booleano: ver si fue permiso o caída cambia a quién llamar.
+  const [error, setError] = useState<string | null>(null)
   const highlightRef = useRef<HTMLDivElement | null>(null)
 
   // Si memberId puede cambiar (pestañas de familia en /mis-pagos), remontar
   // con key={memberId} — acá no se resetea estado en el effect.
   const cargar = useCallback(() => {
     fetch(`/api/members/${memberId}/payments`)
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then(async r => {
+        if (!r.ok) {
+          const { mensajeDeLaRespuesta } = await import('@/lib/api/mensaje-del-error')
+          throw new Error(await mensajeDeLaRespuesta(r, 'No se pudieron cargar los pagos.'))
+        }
+        return r.json()
+      })
       .then((d: MemberPaymentRow[]) => setRows(d))
-      .catch(() => setError(true))
+      .catch((e: Error) => setError(e.message || 'No se pudieron cargar los pagos.'))
   }, [memberId])
   useEffect(() => { cargar() }, [cargar])
 
@@ -67,7 +74,7 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
     if (rows && highlightId) highlightRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }, [rows, highlightId])
 
-  if (error) return <p className="px-4 py-3 text-[13px] text-coral font-body">No se pudieron cargar los pagos.</p>
+  if (error) return <p className="px-4 py-3 text-[13px] text-coral font-body">{error}</p>
   if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">Cargando…</p>
 
   const visible = onlyActionable ? rows.filter(p => p.queue_status === 'pendiente' || p.queue_status === 'en_revision') : rows
@@ -153,6 +160,13 @@ function useCobro({ open, cobro, memberId, buscar }: {
     fetch(`/api/members/${memberId}/payments`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error())))
       .then((d: MemberPaymentRow[]) => { if (vivo) setTraido(d.find(buscar) ?? null) })
+      /**
+       * El silencio acá SÍ es a propósito, a diferencia del resto de la
+       * tanda del 2026-10-13: esta consulta solo ENRIQUECE el modal con el
+       * cobro que ya se está mirando. Si falla, el modal sigue funcionando
+       * con lo que recibió por props; un mensaje de error encima de un
+       * modal que anda bien sería ruido.
+       */
       .catch(() => {})
     return () => { vivo = false }
     // `buscar` se recrea en cada render; la dependencia real es a quién y
