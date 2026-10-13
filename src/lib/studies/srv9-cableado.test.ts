@@ -148,3 +148,50 @@ describe('SRV-9 · el formulario espejo', () => {
       .toContain("'leader_availability'")
   })
 })
+
+/**
+ * DIR-10 · El tab del perfil se rediseñó a «resumen con lápiz» y el
+ * formulario de la campaña NO.
+ *
+ * LO QUE ESTO CUIDA es que sigan siendo EL MISMO COMPONENTE. La tentación
+ * al rediseñar uno de los dos es copiarlo y tocar la copia; el día que eso
+ * pase, la campaña de marzo y el perfil preguntan cosas distintas y nadie
+ * se entera hasta que los datos no cuadran. El modo cambia cómo se
+ * PRESENTA, nunca qué se guarda.
+ */
+describe('DIR-10 · un componente, dos presentaciones', () => {
+  const perfil = sinComentarios(PERFIL)
+  const bloque = sinComentarios(BLOQUE)
+  const filler = sinComentarios('src/components/forms/FormFiller.tsx')
+
+  it('el perfil lo pide en modo resumen', () => {
+    expect(perfil).toMatch(/<ConfiguracionDelDirigente[^>]*modo="resumen"/)
+  })
+
+  it('y el formulario de campaña NO: ahí las listas van abiertas', () => {
+    // Quien entró a llenar el formulario entero de una sentada no quiere
+    // abrir siete secciones a mano.
+    expect(filler).toContain('ConfiguracionDelDirigente')
+    expect(filler).not.toMatch(/<ConfiguracionDelDirigente[^>]*modo="resumen"/)
+  })
+
+  it('los dos usan el MISMO componente, no una copia', () => {
+    for (const src of [perfil, filler]) {
+      expect(src).toContain("from '@/components/studies/ConfiguracionDelDirigente'")
+    }
+  })
+
+  it('el modo no toca lo que se guarda', () => {
+    // Si `modo` apareciera en el cuerpo de un guardar(), estaría decidiendo
+    // datos y no presentación.
+    for (const m of bloque.matchAll(/guardar\(\{[^}]*\}/g)) {
+      expect(m[0]).not.toContain('modo')
+    }
+  })
+
+  it('la formación sigue siendo de solo lectura en los dos', () => {
+    // El rediseño no podía abrir una puerta nueva: la formación la
+    // certifica el comité.
+    expect(bloque).not.toMatch(/alternarLista\(\s*'formation_study_codes'/)
+  })
+})

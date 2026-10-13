@@ -460,7 +460,11 @@ export default function MiembroDetailPage() {
           comité la ve completa pero la edita desde /estudios/dirigentes, que
           es donde además maneja la formación y el estado. */}
       {activeTab === 'dirigente' && tieneFichaDeDirigente && (isOwnProfile || isStudyAdmin) && (
-        <ConfiguracionDelDirigente memberId={member.id} editable={isOwnProfile} />
+        /* DIR-10 · En el perfil va en modo RESUMEN: una línea por dato y la
+           lista se abre al tocar «Editar». Acá se entra a cambiar UNA cosa.
+           El formulario de la campaña usa el mismo componente en modo
+           completo, con los MISMOS datos. */
+        <ConfiguracionDelDirigente memberId={member.id} editable={isOwnProfile} modo="resumen" />
       )}
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}

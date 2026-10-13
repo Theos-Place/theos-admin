@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Loader2, CheckCircle2, AlertTriangle, GraduationCap, Home, UserCheck } from 'lucide-react'
+import {
+  Loader2, CheckCircle2, AlertTriangle, GraduationCap, Home, UserCheck,
+  Pencil, Megaphone, Check,
+} from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
 import { Button } from '@/components/shared/Button'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -15,6 +18,10 @@ import {
 import { studyLabel } from '@/data/study-catalog'
 import { formatDateLong, ymdCR } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import {
+  resumenDeHorarios, resumenDeEstudios, resumenDeZonas, resumenDeExtras,
+  type LineaDeResumen,
+} from '@/lib/studies/resumen-de-disponibilidad'
 
 /**
  * SRV-9 · «Configuración del dirigente».
@@ -62,13 +69,28 @@ const CHIP = 'rounded-full px-3 py-1.5 text-[13px] font-body border transition-a
 const CHIP_ON = 'bg-navy text-white border-navy'
 const CHIP_OFF = 'bg-transparent text-navy/80 border-outline hover:text-navy'
 
-export function ConfiguracionDelDirigente({ memberId, editable }: {
+export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo' }: {
   /** De quién es la ficha. */
   memberId: string
   /** ¿Esta sesión puede escribirla? La propia persona o el comité. Alguien del
    *  comité mirando la ficha ajena la ve completa pero no la edita desde acá:
    *  para eso está la pantalla de dirigentes, que además edita la formación. */
   editable: boolean
+  /**
+   * DIR-10 · Cómo se presenta, no qué datos tiene.
+   *
+   *  · `completo` (default) — todas las listas abiertas. Es lo que necesita
+   *    el FORMULARIO DE LA CAMPAÑA: la persona entró a llenarlo entero de
+   *    una sentada y plegarle cada sección sería estorbarle.
+   *  · `resumen` — una línea por dato y la lista se abre al tocar «Editar».
+   *    Es el TAB DEL PERFIL, donde se entra a cambiar UNA cosa y había que
+   *    buscarla entre 21 casillas de horario y 30 estudios.
+   *
+   * Los DATOS son los mismos en los dos y se guardan igual: si fueran dos
+   * componentes, la campaña de marzo y el perfil empezarían a preguntar
+   * cosas distintas y nadie se enteraría hasta que no cuadraran.
+   */
+  modo?: 'completo' | 'resumen'
 }) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
@@ -163,6 +185,73 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
   const prendido = (campo: 'qualified_study_codes' | 'interested_study_codes', valor: string) =>
     expandSelectionValue(valor).every(c => ficha[campo].includes(c))
 
+  // DIR-10 · En el perfil cada dato se lee como una frase; en el formulario
+  // de campaña no, porque ahí las listas van abiertas igual.
+  const plegable = modo === 'resumen'
+  const nombreDeZona = (id: string) => zoneSedes.find(z => z.id === id)?.name ?? id
+  const res = {
+    quiereDar: resumenDeEstudios(ficha.qualified_study_codes, studyLabel, 'qué querés dar'),
+    interes: resumenDeEstudios(ficha.interested_study_codes, studyLabel, 'qué te gustaría aprender'),
+    horarios: resumenDeHorarios(ficha.available_slots),
+    zonas: resumenDeZonas(ficha.zone_preference, nombreDeZona),
+    extras: resumenDeExtras(ficha),
+  }
+
+  /**
+   * DIR-8 · La formación, con las CAMPAÑAS aparte.
+   *
+   * Haber servido en Transformados no capacita para dar un estudio.
+   * Mezcladas, la lista de formación se ve más larga de lo que es y alguien
+   * concluye que está capacitado para algo que no.
+   */
+  const esCampana = new Set(studyTypes.filter(t => t.stage === 'campaña').map(t => t.code))
+  const formacionEstudios = formacion.filter(b => !esCampana.has(b.value))
+  const formacionCampanas = formacion.filter(b => esCampana.has(b.value))
+
+  /**
+   * DIR-10 · «Confirmar mis datos» va ARRIBA en el perfil.
+   *
+   * Al final de la pantalla solo lo encontraba quien ya había bajado por
+   * todo; y el caso más común es justamente el contrario: entro, veo que
+   * está todo bien y confirmo sin tocar nada. En el formulario de campaña
+   * se queda abajo, que es donde uno termina de llenarlo.
+   */
+  const confirmar = (
+      <div className={cn(CARD, 'lg:col-span-2')}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-navy font-body">
+              {ficha.availability_confirmed_at
+                ? `Confirmaste tus datos el ${formatDateLong(ficha.availability_confirmed_at)}.`
+                : 'Todavía no has confirmado estos datos.'}
+              {' '}
+              <span className={cn(
+                'rounded-full px-2 py-0.5 text-[13px] font-body',
+                confirmacion === 'vigente' ? 'bg-success/12 text-success'
+                  : confirmacion === 'vencida' ? 'bg-coral/10 text-coral-deep'
+                  : 'bg-surface-low text-navy-light/80',
+              )}>
+                {CONFIRMACION_LABEL[confirmacion]}
+              </span>
+            </p>
+            <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+              Apretalo aunque no hayas cambiado nada: así la coordinación sabe que lo
+              revisaste y no te vuelve a buscar.
+            </p>
+          </div>
+          {editable && (
+            <Button
+              onClick={() => void guardar({ action: 'confirmar_datos' })}
+              disabled={guardando}
+              className="shrink-0"
+            >
+              {guardando ? 'Guardando…' : 'Confirmar mis datos'}
+            </Button>
+          )}
+        </div>
+      </div>
+  )
+
   return (
     <div className="space-y-4">
       {/* DIR-8 · «Disponibilidad del dirigente», no «estado».
@@ -181,6 +270,8 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
         </p>
       </div>
 
+      {modo === 'resumen' && confirmar}
+
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
       {/* ── Formación: SOLO LECTURA. Va primero porque es lo que condiciona
              todo lo demás: no se puede estar disponible para lo que no se
@@ -197,21 +288,44 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
         <div className="flex flex-wrap gap-1.5">
           {formacion.length === 0
             ? <span className="text-[13px] text-navy-light/80 font-body">Todavía no hay formación registrada.</span>
-            : formacion.map(b => (
+            : formacionEstudios.map(b => (
               <span key={b.value} className="rounded-full bg-surface-low px-3 py-1 text-[13px] text-navy font-body">
                 {b.label}
               </span>
             ))}
         </div>
+
+        {/* DIR-8 · Las CAMPAÑAS, aparte y dicho con todas las letras.
+            Haber servido en Transformados no capacita para dar un estudio;
+            en la misma lista, alguien concluye que sí. */}
+        {formacionCampanas.length > 0 && (
+          <div className="pt-1">
+            <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
+              <Megaphone size={13} aria-hidden="true" />
+              Campañas en las que serviste
+            </p>
+            <p className="mt-1 text-[13px] text-navy-light/80 font-body">
+              Son campañas puntuales, no formación para dar un estudio.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {formacionCampanas.map(b => (
+                <span key={b.value} className="rounded-full bg-teal/15 px-3 py-1 text-[13px] text-navy font-body">
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <ReportarFormacion memberId={memberId} visible={editable && formacion.length > 0} />
       </div>
 
       {/* ── Disponibilidad: qué QUIERE dar ── */}
-      <div className={CARD}>
-        <h3 className="text-sm font-semibold text-navy font-display">¿Qué querés dar?</h3>
-        <p className="text-[13px] text-navy-light/80 font-body">
-          De lo que ya podés dar, marcá lo que estás dispuesto a dar este año.
-        </p>
+      <Seccion
+        titulo="¿Qué querés dar?"
+        ayuda="De lo que ya podés dar, marcá lo que estás dispuesto a dar este año."
+        resumen={res.quiereDar}
+        plegable={plegable}
+      >
         <div className="flex flex-wrap gap-1.5">
           {opcionesDeEstudio.map(o => (
             <button
@@ -225,15 +339,15 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             </button>
           ))}
         </div>
-      </div>
+      </Seccion>
 
       {/* ── Interés: qué quiere APRENDER a dar ── */}
-      <div className={CARD}>
-        <h3 className="text-sm font-semibold text-navy font-display">¿Qué te gustaría aprender a dar?</h3>
-        <p className="text-[13px] text-navy-light/80 font-body">
-          Marcar acá NO te asigna un grupo: es para saber a quién invitar a la próxima
-          capacitación. Si ya estás capacitado y querés darlo, va en el cuadro de al lado.
-        </p>
+      <Seccion
+        titulo="¿Qué te gustaría aprender a dar?"
+        ayuda="Marcar acá NO te asigna un grupo: es para saber a quién invitar a la próxima capacitación. Si ya estás capacitado y querés darlo, va en «¿Qué querés dar?»."
+        resumen={res.interes}
+        plegable={plegable}
+      >
         <div className="flex flex-wrap gap-1.5">
           {opcionesDeEstudio.map(o => (
             <button
@@ -247,15 +361,16 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             </button>
           ))}
         </div>
-      </div>
+      </Seccion>
 
       {/* ── Días y franjas ── */}
-      <div className={cn(CARD, 'lg:col-span-2')}>
-        <h3 className="text-sm font-semibold text-navy font-display">¿Cuándo podés?</h3>
-        <p className="text-[13px] text-navy-light/80 font-body">
-          Marcá todas las que te sirvan. Mientras más marques, más fácil es calzarte con
-          un grupo.
-        </p>
+      <Seccion
+        titulo="¿Cuándo podés?"
+        ayuda="Marcá todas las que te sirvan. Mientras más marques, más fácil es calzarte con un grupo."
+        resumen={res.horarios}
+        plegable={plegable}
+        className="lg:col-span-2"
+      >
         <div className="overflow-x-auto">
           <table className="text-[13px] font-body">
             <thead>
@@ -296,14 +411,15 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             </tbody>
           </table>
         </div>
-      </div>
+      </Seccion>
 
       {/* ── Zonas ── */}
-      <div className={CARD}>
-        <h3 className="text-sm font-semibold text-navy font-display">¿Dónde podés dar?</h3>
-        <p className="text-[13px] text-navy-light/80 font-body">
-          Opcional. Sin nada marcado se entiende que cualquier zona te sirve.
-        </p>
+      <Seccion
+        titulo="¿Dónde podés dar?"
+        ayuda="Opcional. Sin nada marcado se entiende que cualquier zona te sirve."
+        resumen={res.zonas}
+        plegable={plegable}
+      >
         <div className="flex flex-wrap gap-1.5">
           {zoneSedes.map(z => (
             <button
@@ -317,12 +433,10 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             </button>
           ))}
         </div>
-      </div>
+      </Seccion>
 
       {/* ── Lo demás ── */}
-      <div className={CARD}>
-        <h3 className="text-sm font-semibold text-navy font-display">Un par de cosas más</h3>
-
+      <Seccion titulo="Un par de cosas más" resumen={res.extras} plegable={plegable}>
         <Casilla
           icono={<Home size={14} aria-hidden="true" />}
           etiqueta="Puedo prestar mi casa para el grupo"
@@ -353,42 +467,8 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             dato que nadie consultaba y que quedaba viejo —la sede del
             grupo cambia y esto no—. La columna `folleto_location` se
             conserva con lo que ya habían contestado; deja de pedirse. */}
-      </div>
+      </Seccion>
 
-      {/* ── Confirmación ── */}
-      <div className={cn(CARD, 'lg:col-span-2')}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm text-navy font-body">
-              {ficha.availability_confirmed_at
-                ? `Confirmaste tus datos el ${formatDateLong(ficha.availability_confirmed_at)}.`
-                : 'Todavía no has confirmado estos datos.'}
-              {' '}
-              <span className={cn(
-                'rounded-full px-2 py-0.5 text-[13px] font-body',
-                confirmacion === 'vigente' ? 'bg-success/12 text-success'
-                  : confirmacion === 'vencida' ? 'bg-coral/10 text-coral-deep'
-                  : 'bg-surface-low text-navy-light/80',
-              )}>
-                {CONFIRMACION_LABEL[confirmacion]}
-              </span>
-            </p>
-            <p className="mt-1 text-[13px] text-navy-light/80 font-body">
-              Apretalo aunque no hayas cambiado nada: así la coordinación sabe que lo
-              revisaste y no te vuelve a buscar.
-            </p>
-          </div>
-          {editable && (
-            <Button
-              onClick={() => void guardar({ action: 'confirmar_datos' })}
-              disabled={guardando}
-              className="shrink-0"
-            >
-              {guardando ? 'Guardando…' : 'Confirmar mis datos'}
-            </Button>
-          )}
-        </div>
-      </div>
       </div>
     </div>
   )
@@ -558,6 +638,69 @@ function ReportarFormacion({ memberId, visible }: { memberId: string; visible: b
           {enviando ? 'Enviando…' : 'Avisar a la coordinación'}
         </Button>
       </div>
+    </div>
+  )
+}
+
+/**
+ * DIR-10 · Una sección que en el perfil se lee como una frase y se abre al
+ * tocar «Editar», y en el formulario de campaña va siempre abierta.
+ *
+ * El resumen se muestra MIENTRAS está cerrada, no en vez de los controles:
+ * al abrir, la frase se va y queda la lista, que es lo que se vino a tocar.
+ */
+function Seccion({
+  titulo, ayuda, resumen, plegable, children, className,
+}: {
+  titulo: string
+  ayuda?: string
+  resumen?: LineaDeResumen
+  /** false = modo formulario: abierta y sin botón. */
+  plegable: boolean
+  children: React.ReactNode
+  className?: string
+}) {
+  const [abierta, setAbierta] = useState(false)
+  const mostrarControles = !plegable || abierta
+  const id = `seccion-${titulo.replace(/\W+/g, '-').toLowerCase()}`
+
+  return (
+    <div className={cn(CARD, className)}>
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-sm font-semibold text-navy font-display">{titulo}</h3>
+        {plegable && (
+          <button
+            type="button"
+            onClick={() => setAbierta(a => !a)}
+            aria-expanded={abierta}
+            aria-controls={id}
+            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[13px] text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors font-body focus:outline-none focus:ring-2 focus:ring-coral/40"
+          >
+            {abierta
+              ? <><Check size={13} aria-hidden="true" /> Listo</>
+              : <><Pencil size={13} aria-hidden="true" /> Editar</>}
+          </button>
+        )}
+      </div>
+
+      {/* La frase, solo mientras está cerrada. */}
+      {plegable && !abierta && resumen && (
+        <p className={cn(
+          'text-sm font-body',
+          // Lo pendiente se ve distinto de lo contestado, pero sin alarma:
+          // no haber llenado algo no es un error.
+          resumen.vacio ? 'text-navy-light/80 italic' : 'text-navy',
+        )}>
+          {resumen.texto}
+        </p>
+      )}
+
+      {/* La ayuda larga estorba en el resumen y sirve al editar. */}
+      {mostrarControles && ayuda && (
+        <p className="text-[13px] text-navy-light/80 font-body">{ayuda}</p>
+      )}
+
+      <div id={id} hidden={!mostrarControles}>{children}</div>
     </div>
   )
 }
