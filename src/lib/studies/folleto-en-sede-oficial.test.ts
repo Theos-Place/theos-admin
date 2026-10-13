@@ -2,8 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 
 /**
- * «¿Dónde te dejamos los folletos?» · solo sedes oficiales (Floriana,
- * 2026-10-09).
+ * «¿Dónde te dejamos los folletos?»: de dónde salió y dónde se valida.
+ *
+ * 2026-10-09 · Dejó de ser texto libre y pasó a ser un select de sedes
+ * oficiales.
+ * 2026-10-12 · La pregunta SALIÓ del formulario de disponibilidad (DIR-8):
+ * el lugar de entrega es del grupo, no de la persona. El endpoint y el
+ * reporte siguen igual, porque el dato ya contestado se conserva.
  *
  * Era texto libre con el placeholder «Una sede, o lo que te sirva». Las
  * cuatro personas que lo llenaron escribieron la suya de cuatro formas:
@@ -20,23 +25,30 @@ const PANTALLA = sinComentarios('src/components/studies/ConfiguracionDelDirigent
 const API = sinComentarios('src/app/api/studies/dirigentes/[id]/route.ts')
 const QUERIES = sinComentarios('src/lib/supabase/queries/studies.ts')
 
-describe('la pantalla ofrece sedes, no un campo libre', () => {
-  it('es un select con las sedes activas', () => {
-    const i = PANTALLA.indexOf('id="folleto-loc"')
-    expect(i).toBeGreaterThan(-1)
-    const bloque = PANTALLA.slice(i - 200, i + 900)
-    expect(bloque).toContain('<select')
-    expect(bloque).toContain('activeSedes.map')
-    expect(bloque).not.toContain('Una sede, o lo que te sirva')
+describe('DIR-8 · la pregunta salió del formulario de disponibilidad', () => {
+  /**
+   * CAMBIO DE DECISIÓN, 2026-10-12 (reunión con Fabiola). El 9-oct esto se
+   * había convertido en un select de sedes oficiales, y funcionaba. Lo que
+   * se revisó no fue el CONTROL sino el LUGAR: dónde se entregan los
+   * folletos pertenece al flujo de creación del GRUPO, no a la
+   * disponibilidad de la persona.
+   *
+   * Preguntarlo en el perfil generaba un dato que nadie consultaba y que
+   * quedaba viejo: la sede del grupo cambia y la respuesta del dirigente no.
+   *
+   * Los otros dos bloques de este archivo SIGUEN valiendo: la columna
+   * conserva lo ya contestado, el endpoint la sigue validando y el reporte
+   * la sigue mostrando. Lo único que desapareció es la pregunta.
+   */
+  it('ya no se le pide al dirigente en su perfil', () => {
+    expect(PANTALLA).not.toContain('id="folleto-loc"')
+    expect(PANTALLA).not.toContain('¿Dónde te dejamos los folletos?')
   })
 
-  it('conserva como opción lo que alguien escribió antes', () => {
-    /**
-     * Sin esto, abrir la pantalla y guardar cualquier otra cosa le borraría
-     * en silencio el dato a quien lo tenía escrito a mano.
-     */
-    const i = PANTALLA.indexOf('id="folleto-loc"')
-    expect(PANTALLA.slice(i, i + 1200)).toContain('(sede no oficial)')
+  it('pero el dato ya guardado NO se borra', () => {
+    // La columna se conserva: quien la había contestado sigue apareciendo
+    // en el reporte de folletos.
+    expect(QUERIES).toContain('folleto_location')
   })
 })
 

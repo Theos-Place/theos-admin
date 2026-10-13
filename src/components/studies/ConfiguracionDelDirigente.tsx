@@ -72,7 +72,7 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
 }) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
-  const { zoneSedes, activeSedes } = useSedes()
+  const { zoneSedes } = useSedes()
   /** Se guarda DE QUIÉN es la ficha, no solo la ficha: así, al cambiar de
    *  persona, los datos de la anterior dejan de usarse en el MISMO render en
    *  que cambia el id, sin un setState al entrar al efecto que dispararía un
@@ -164,7 +164,24 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
     expandSelectionValue(valor).every(c => ficha[campo].includes(c))
 
   return (
-    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+    <div className="space-y-4">
+      {/* DIR-8 · «Disponibilidad del dirigente», no «estado».
+          Lo que se maneja acá es cuándo y qué puede dar la persona. Su
+          ESTADO —activo o inactivo, y por qué— vive en la ficha
+          administrativa de /estudios/dirigentes, lo decide coordinación y
+          no se edita desde el perfil. Sin el título, las dos cosas se leían
+          como la misma y la gente buscaba acá por qué figuraba inactiva. */}
+      <div>
+        <h2 className="text-base font-bold text-navy font-display">
+          Disponibilidad del dirigente
+        </h2>
+        <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
+          Qué podés dar, cuándo y dónde. El estado como dirigente lo maneja
+          coordinación aparte.
+        </p>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
       {/* ── Formación: SOLO LECTURA. Va primero porque es lo que condiciona
              todo lo demás: no se puede estar disponible para lo que no se
              sabe dar. ── */}
@@ -329,47 +346,13 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
           onChange={(desde, hasta) => void guardar({ available_from: desde, available_to: hasta })}
         />
 
-        <div>
-          <label htmlFor="folleto-loc" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1">
-            ¿Dónde te dejamos los folletos?
-          </label>
-          {/**
-            * SOLO SEDES OFICIALES (Floriana, 2026-10-09). Era un campo de
-            * texto libre con el placeholder «Una sede, o lo que te sirva», y
-            * las cuatro personas que lo llenaron escribieron la suya de
-            * cuatro formas distintas: «Antares», «Madrid», «Meridiano
-            * Martes», «Sede Alajuela». Para quien reparte folletos eso no es
-            * una dirección, es adivinar.
-            *
-            * El valor que se guarda es el CODE de la sede, no su nombre: si
-            * mañana se renombra una sede, lo guardado sigue apuntando a la
-            * misma y no queda un texto viejo colgando.
-            */}
-          <select
-            id="folleto-loc"
-            defaultValue={ficha.folleto_location ?? ''}
-            disabled={!editable || guardando}
-            onChange={e => {
-              const v = e.target.value
-              if (v !== (ficha.folleto_location ?? '')) void guardar({ folleto_location: v || null })
-            }}
-            className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60"
-          >
-            <option value="">Elegí una sede…</option>
-            {activeSedes.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-            {/* Lo que alguien escribió antes de que esto fuera una lista: se
-                conserva como opción para no borrarle el dato en silencio la
-                próxima vez que abra la pantalla y guarde otra cosa. */}
-            {ficha.folleto_location
-              && !activeSedes.some(s => s.id === ficha.folleto_location) && (
-              <option value={ficha.folleto_location}>
-                {ficha.folleto_location} (sede no oficial)
-              </option>
-            )}
-          </select>
-        </div>
+        {/* DIR-8 · Acá estaba «¿Dónde te dejamos los folletos?».
+            Se quitó en la reunión del 2026-10-12: el lugar de entrega
+            pertenece al flujo de CREACIÓN DEL GRUPO, no a la
+            disponibilidad de la persona. Preguntarlo acá generaba un
+            dato que nadie consultaba y que quedaba viejo —la sede del
+            grupo cambia y esto no—. La columna `folleto_location` se
+            conserva con lo que ya habían contestado; deja de pedirse. */}
       </div>
 
       {/* ── Confirmación ── */}
@@ -405,6 +388,7 @@ export function ConfiguracionDelDirigente({ memberId, editable }: {
             </Button>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

@@ -1927,11 +1927,15 @@ estaba disponible y el estado viejo lo escondía.
 **Quedan 294 inactivos sin razón** para que coordinación llene, o que lleguen
 en el Excel de Fabiola.
 
-**Lo que falta de DIR-8:** la ficha administrativa con los selectores
-anidados, las notas confidenciales con sus permisos (edita Fabiola; leen Luis
-y Yeya; `editor_dirigentes` NO), el badge apagado en el perfil, renombrar la
-sección a «Disponibilidad del dirigente», separar capacitaciones de campañas,
-el check de WhatsApp y quitar «dónde recibir folletos» de SRV-9.
+**Hecho también (etapas 2 a 4):** la ficha administrativa con los selectores
+anidados, las notas confidenciales con sus permisos y el rol nuevo
+`lector_dirigentes`, el indicador apagado en el perfil, el título
+«Disponibilidad del dirigente» en el tab, y fuera la pregunta de dónde
+recibir folletos.
+
+**Lo que falta de DIR-8:** separar capacitaciones de campañas en la
+formación, y el check manual de «está en el grupo de WhatsApp» (la columna
+ya existe).
 
 **Bloqueado hasta que Fabiola pase sus archivos:** el import masivo (su Excel)
 y el catálogo de comunidades (su lista). El campo ya existe, vacío.

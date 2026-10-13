@@ -8,6 +8,7 @@ import { Star, Heart, Hammer, CalendarCheck, BookOpen, UserCheck } from 'lucide-
 import { cn } from '@/lib/utils'
 import type { Member } from '@/types/member'
 import { initialsFromParts, formatDate } from '@/lib/format'
+import { badgeDeDirigente } from '@/lib/leaders/badge-de-dirigente'
 
 /**
  * Uno de los cinco indicadores del encabezado (donante, servidor, asistente,
@@ -70,6 +71,10 @@ function MemberActivityIcons({ member }: { member: Member }) {
   const attendanceActive = member.attendance_active ?? false
   const studyingActive = !!member.current_study
   const committee = member.comites?.[0]
+  const badge = badgeDeDirigente({
+    tieneFicha: !!member.is_dirigente,
+    activo: !!member.es_dirigente,
+  })
   const attendanceTooltip = member.last_charla_checkin
     ? `Asistencia activa · último check-in ${formatDate(member.last_charla_checkin)}`
     : 'Asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días)'
@@ -85,10 +90,22 @@ function MemberActivityIcons({ member }: { member: Member }) {
       <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral"
         tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'}
         inactiveTooltip="No lleva ningún estudio ahora" />
-      {/* A diferencia de los otros 4, este solo aparece si es dirigente activo
-          (servidor activo en el comité Dirigentes). */}
-      {member.es_dirigente && (
-        <ActivityIcon active icon={UserCheck} label="Dirigente" activeColor="text-navy" tooltip="Dirigente activo" />
+      {/* DIR-8 · Antes este era el ÚNICO de los cinco que se escondía del
+          todo cuando la persona no estaba activa, y el perfil quedaba
+          contradiciéndose: pestaña «Dirigente», enlace a su ficha, y arriba
+          nada. Ahora se apaga, como los otros cuatro.
+
+          El tooltip NO dice por qué está inactivo: este resumen lo ven
+          muchos más roles que la ficha administrativa. */}
+      {badge.mostrar && (
+        <ActivityIcon
+          active={badge.activo}
+          icon={UserCheck}
+          label={badge.etiqueta}
+          activeColor="text-navy"
+          tooltip={badge.tooltip}
+          inactiveTooltip={badge.tooltip}
+        />
       )}
     </div>
   )
