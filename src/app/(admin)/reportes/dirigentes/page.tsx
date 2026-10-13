@@ -21,6 +21,7 @@ import { VolverAReportes } from '@/components/reportes/VolverAReportes'
 import {
   JerarquiaDeDirigentes, type Payload as JerarquiaPayload,
 } from '@/components/reportes/JerarquiaDeDirigentes'
+import { CruceSedeFormacion } from '@/components/reportes/CruceSedeFormacion'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Users } from 'lucide-react'
 import { useAccesoAReporte } from '@/hooks/useAccesoAReporte'
@@ -143,6 +144,16 @@ export default function ReporteDirigentesPage() {
   // sola con el total de activos no dice nada. Mejor la tarjeta vacía con el
   // porqué — hoy nada escribe zone_preference (el formulario de DIR-1 recoge la
   // zona pero es de solo lectura para el coordinador).
+  /**
+   * DIR-9 · Capacitaciones y campañas SEPARADAS (pedido de Fabiola).
+   *
+   * Dar Nivel 3 es formación del cuerpo de dirigentes; haber dado
+   * Transformados es haber servido en una campaña puntual. Mezclados, una
+   * campaña grande infla el conteo y parece que hay más gente formada.
+   */
+  const capacitaciones = report.capacitados.filter(d => !d.es_campana)
+  const campanas = report.capacitados.filter(d => d.es_campana)
+
   const sinZonas = report.por_zona.length === 0
     || (report.por_zona.length === 1 && report.por_zona[0].zona === 'Sin zona declarada')
 
@@ -211,15 +222,15 @@ export default function ReporteDirigentesPage() {
         <ChartCard
           title="Capacitados por estudio"
           subtitle="Para qué está formado cada dirigente"
-          empty={report.capacitados.length === 0}
-          height={Math.max(220, report.capacitados.length * 30)}
-          footnote="Un dirigente cuenta en cada estudio para el que está capacitado, así que las barras no suman el total."
+          empty={capacitaciones.length === 0}
+          height={Math.max(220, capacitaciones.length * 30)}
+          footnote="Un dirigente cuenta en cada estudio para el que está capacitado, así que las barras no suman el total. Las campañas van aparte, abajo."
         >
           <ResponsiveContainer>
-            <BarChart data={report.capacitados} layout="vertical" margin={{ left: 12, right: 32 }}>
+            <BarChart data={capacitaciones} layout="vertical" margin={{ left: 12, right: 32 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(report.capacitados.map(d => d.name))} tick={ETIQUETA_CATEGORIA} interval={0} />
+              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(capacitaciones.map(d => d.name))} tick={ETIQUETA_CATEGORIA} interval={0} />
               <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
               <Bar dataKey="total" fill={NAVY} radius={[0, 6, 6, 0]} name="Capacitados">
                 <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
@@ -248,6 +259,32 @@ export default function ReporteDirigentesPage() {
           </ResponsiveContainer>
         </ChartCard>
       </div>
+
+      {/* DIR-9 · Campañas, su propia tarjeta. Solo aparece si hay alguna:
+          una tarjeta vacía ocupa el mismo espacio y no dice nada. */}
+      {campanas.length > 0 && (
+        <ChartCard
+          title="Han servido en campañas"
+          subtitle="Campañas puntuales, no formación del cuerpo de dirigentes"
+          height={Math.max(200, campanas.length * 30)}
+          footnote="Separado a propósito de la formación: haber servido en una campaña no capacita para dar un estudio."
+        >
+          <ResponsiveContainer>
+            <BarChart data={campanas} layout="vertical" margin={{ left: 12, right: 32 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+              <XAxis type="number" tick={EJE_TICK} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" width={anchoDeEjeCategoria(campanas.map(d => d.name))} tick={ETIQUETA_CATEGORIA} interval={0} />
+              <Tooltip contentStyle={ESTILO_TOOLTIP} formatter={(v) => fmt(Number(v))} />
+              <Bar dataKey="total" fill={TEAL} radius={[0, 6, 6, 0]} name="Sirvieron">
+                <LabelList dataKey="total" position="right" style={ETIQUETA_VALOR} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
+
+      {/* DIR-9 · El cruce sede × formación, para encontrar huecos. */}
+      {jerarquia && <CruceSedeFormacion datos={jerarquia.cruce} nombres={jerarquia.nombres} />}
 
       {/* Por zona */}
       <ChartCard

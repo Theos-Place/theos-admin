@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { requireAccesoAReporte } from '@/lib/auth/guard'
-import { getFilasDeJerarquiaDeDirigentes } from '@/lib/supabase/queries/reports'
+import {
+  getFilasDeJerarquiaDeDirigentes, getCruceSedeFormacion,
+} from '@/lib/supabase/queries/reports'
 import { jerarquiaDeDirigentes } from '@/lib/reports/jerarquia-de-dirigentes'
 import { puedeVerBanderita } from '@/lib/leaders/notas-confidenciales'
 import { reportarError } from '@/lib/observabilidad'
@@ -17,13 +19,18 @@ export async function GET() {
     const auth = await requireAccesoAReporte('dirigentes')
     if (auth.res) return auth.res
     const verBanderitas = puedeVerBanderita(auth.ctx.roles)
-    const filas = await getFilasDeJerarquiaDeDirigentes()
+    // Las dos en paralelo: son la misma pantalla y leen tablas distintas.
+    const [filas, cruce] = await Promise.all([
+      getFilasDeJerarquiaDeDirigentes(),
+      getCruceSedeFormacion(),
+    ])
     // Los nombres viajan todos de una. Son ~514 y el drill-down abre al
     // instante sin otra llamada; pedirlos por celda serían 15 endpoints
     // para mostrar datos que estos roles ya ven en la ficha de cada uno.
     const nombres = Object.fromEntries(filas.map(f => [f.member_id, f.nombre]))
     return NextResponse.json({
       ...jerarquiaDeDirigentes(filas, { verBanderitas }),
+      cruce,
       nombres,
       actualizado: new Date().toISOString(),
     })

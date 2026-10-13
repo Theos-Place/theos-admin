@@ -123,16 +123,16 @@ describe('capacitados vs disponibles por estudio', () => {
   // Son columnas distintas y el reporte las separa a propósito.
   it('capacitados sale de formación', () => {
     expect(r.capacitados).toEqual([
-      { code: 'N1', name: 'Nivel 1', total: 2 },
-      { code: 'DIS1', name: 'Discípulos 1', total: 1 },
-      { code: 'N2', name: 'Nivel 2', total: 1 },
+      { code: 'N1', name: 'Nivel 1', total: 2, es_campana: false },
+      { code: 'DIS1', name: 'Discípulos 1', total: 1, es_campana: false },
+      { code: 'N2', name: 'Nivel 2', total: 1, es_campana: false },
     ])
   })
 
   it('disponibles sale de disponibilidad, y da otro número', () => {
     expect(r.disponibles_por_estudio).toEqual([
-      { code: 'N1', name: 'Nivel 1', total: 2 },
-      { code: 'N2', name: 'Nivel 2', total: 1 },
+      { code: 'N1', name: 'Nivel 1', total: 2, es_campana: false },
+      { code: 'N2', name: 'Nivel 2', total: 1, es_campana: false },
     ])
     expect(r.disponibles_por_estudio).not.toEqual(r.capacitados)
   })
@@ -140,13 +140,29 @@ describe('capacitados vs disponibles por estudio', () => {
   it('un código repetido cuenta una vez', () => {
     const r2 = buildDirigentesReport(
       [leader({ member_id: 'a', formation_study_codes: ['N1', 'N1', 'N1'] })], [], PLANS)
-    expect(r2.capacitados).toEqual([{ code: 'N1', name: 'Nivel 1', total: 1 }])
+    expect(r2.capacitados).toEqual([{ code: 'N1', name: 'Nivel 1', total: 1, es_campana: false }])
+  })
+
+  /**
+   * DIR-9 · Fabiola las pidió separadas: dar Nivel 3 es formación del cuerpo
+   * de dirigentes, y haber dado Transformados es haber servido en una
+   * campaña puntual. Mezcladas, una campaña grande infla el conteo y parece
+   * que hay más gente formada de la que hay.
+   */
+  it('una campaña se marca como tal, y un estudio no', () => {
+    const r2 = buildDirigentesReport(
+      [leader({ member_id: 'a', formation_study_codes: ['N1', 'TRANS'] })], [],
+      [...PLANS, { code: 'TRANS', name: 'Transformados', level: 'campanas' }])
+    expect(r2.capacitados.find(c => c.code === 'TRANS')?.es_campana).toBe(true)
+    expect(r2.capacitados.find(c => c.code === 'N1')?.es_campana).toBe(false)
   })
 
   it('un código sin plan cae al propio código, no se pierde', () => {
     const r2 = buildDirigentesReport(
       [leader({ member_id: 'a', formation_study_codes: ['XX'] })], [], PLANS)
-    expect(r2.capacitados).toEqual([{ code: 'XX', name: 'XX', total: 1 }])
+    // Y como estudio, que es lo que hacía antes de que existiera la
+    // separación: no vale inventarle una categoría a un código desconocido.
+    expect(r2.capacitados).toEqual([{ code: 'XX', name: 'XX', total: 1, es_campana: false }])
   })
 })
 

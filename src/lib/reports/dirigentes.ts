@@ -33,7 +33,22 @@ export type ActiveGroupRow = {
   co_leader_id: string | null
 }
 
-export type PlanRow = { code: string; name: string }
+export type PlanRow = { code: string; name: string; level?: string | null }
+
+/**
+ * DIR-9 · Qué cuenta como CAMPAÑA y no como estudio.
+ *
+ * Sale de `study_plans.level`, que es donde el catálogo ya lo dice (TRANS,
+ * UFA, PQET, PRETRANS, REDESC, TPS, CAMP). No se escribe la lista de códigos
+ * acá: el día que agreguen una campaña nueva, nadie se va a acordar de este
+ * archivo.
+ *
+ * Fabiola los pidió separados porque son cosas distintas: dar Nivel 3 es una
+ * capacitación del cuerpo de dirigentes, y dar Transformados es haber
+ * servido en una campaña puntual. Mezclados, una campaña grande infla el
+ * conteo y parece que hay más gente formada de la que hay.
+ */
+export const NIVEL_DE_CAMPANA = 'campanas'
 
 /** Un punto histórico, para la evolución. */
 export type LeaderHistoryPoint = {
@@ -43,7 +58,7 @@ export type LeaderHistoryPoint = {
   disponibles_sin_grupo: number
 }
 
-export type PorEstudio = { code: string; name: string; total: number }
+export type PorEstudio = { code: string; name: string; total: number; es_campana: boolean }
 
 export type PorZona = {
   zona: string
@@ -95,6 +110,7 @@ function porEstudio(
   plans: readonly PlanRow[],
 ): PorEstudio[] {
   const nombre = new Map(plans.map(p => [p.code, p.name]))
+  const esCampana = new Map(plans.map(p => [p.code, p.level === NIVEL_DE_CAMPANA]))
   const conteo = new Map<string, number>()
   for (const l of leaders) {
     // Un dirigente con el mismo código repetido cuenta UNA vez.
@@ -103,7 +119,11 @@ function porEstudio(
     }
   }
   return [...conteo.entries()]
-    .map(([code, total]) => ({ code, name: nombre.get(code) ?? code, total }))
+    // Un código que no está en el catálogo se trata como estudio: es lo que
+    // hacía antes de esta separación, y no vale inventarle una categoría.
+    .map(([code, total]) => ({
+      code, name: nombre.get(code) ?? code, total, es_campana: esCampana.get(code) ?? false,
+    }))
     // De mayor a menor: lo primero que se busca es dónde hay más y dónde falta.
     .sort((a, b) => b.total - a.total || a.code.localeCompare(b.code, 'es'))
 }

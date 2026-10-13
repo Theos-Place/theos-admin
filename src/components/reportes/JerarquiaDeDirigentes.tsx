@@ -11,13 +11,19 @@
  * comparar entre ramas. Lo dice la nota al pie, no se deja adivinar.
  */
 import { useState } from 'react'
-import { Flag, Info, Users } from 'lucide-react'
+import { Download, Flag, Info, Users } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { cn } from '@/lib/utils'
 import type { Celda, JerarquiaDeDirigentes as Datos } from '@/lib/reports/jerarquia-de-dirigentes'
 import { NOTA_BANDERITA } from '@/lib/reports/jerarquia-de-dirigentes'
 
-export type Payload = Datos & { nombres: Record<string, string>; actualizado: string }
+import type { CruceSedeFormacion as Cruce } from '@/lib/reports/cruce-sede-formacion'
+
+export type Payload = Datos & {
+  nombres: Record<string, string>
+  actualizado: string
+  cruce: Cruce
+}
 
 const fmt = (n: number) => n.toLocaleString('es-CR')
 
@@ -66,6 +72,22 @@ export function JerarquiaDeDirigentes({ datos }: { datos: Payload }) {
 
   return (
     <div className="space-y-5">
+      {/*
+        DIR-9 · UN archivo, no uno por número. El reporte tiene quince celdas
+        clicables; quince endpoints darían quince archivos que no se pueden
+        cruzar. Este trae una fila por dirigente con las columnas que definen
+        cada celda, así que «los 8 en pasantía» es filtrar una columna.
+      */}
+      <div className="flex justify-end">
+        <a
+          href="/api/reports/leaders/export"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface-card px-4 py-2 text-[13px] text-navy shadow-[var(--shadow-md)] hover:bg-surface-low transition-colors font-body focus:outline-none focus:ring-2 focus:ring-coral/40"
+        >
+          <Download size={14} aria-hidden="true" />
+          Bajar en Excel
+        </a>
+      </div>
+
       {/* Total */}
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
         <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">

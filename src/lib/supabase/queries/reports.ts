@@ -33,6 +33,11 @@ import {
 import { ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
 import type { DirigenteParaReporte } from '@/lib/reports/jerarquia-de-dirigentes'
 
+import { cruceSedeFormacion, type CruceSedeFormacion } from '@/lib/reports/cruce-sede-formacion'
+import { NIVEL_DE_CAMPANA } from '@/lib/reports/dirigentes'
+
+import type { DirigenteParaExcel } from '@/lib/reports/export-de-dirigentes'
+
 const TOPE_POSTGREST = 1000
 
 async function todasLasFilas<T>(
@@ -65,7 +70,12 @@ type HeavyRpc = 'get_dm_flags' | 'get_dm_milestones' | 'get_group_attendance' | 
 // los pesados = payload final ya construido.
 const KEY_DISCIPULOS = 'discipulos_payload'
 const KEY_RETENCION = 'retencion_payload'
-const KEY_DIRIGENTES = 'dirigentes_payload'
+/**
+ * DIR-9 · v2 porque `PorEstudio` ganó `es_campana`. Sin el bump, el payload
+ * que dejó el cron anoche se serviría sin el campo y las campañas
+ * aparecerían como estudios hasta la próxima corrida nocturna.
+ */
+const KEY_DIRIGENTES = 'dirigentes_payload_v2'
 
 /** Trae TODAS las filas de un RPC paginando (.range corta en 1000). */
 async function fetchAllRpc<T>(supabase: SupabaseClient, rpcName: AggRpc | HeavyRpc, params?: Record<string, unknown>): Promise<T[]> {
@@ -145,7 +155,7 @@ async function computeDirigentes(supabase: SupabaseClient): Promise<DirigentesRe
       .select('member_id, is_active, availability_status, formation_study_codes, qualified_study_codes, zone_preference'),
     supabase.from('study_groups')
       .select('leader_id, co_leader_id').in('status', ['en_matricula', 'en_curso']),
-    supabase.from('study_plans').select('code, name'),
+    supabase.from('study_plans').select('code, name, level'),
     supabase.from('leader_report_history')
       .select('captured_on, activos, dando_ahora, disponibles_sin_grupo')
       .order('captured_on', { ascending: false }).limit(400),
@@ -435,5 +445,113 @@ export async function getFilasDeJerarquiaDeDirigentes(): Promise<DirigenteParaRe
     razon_inactivo: f.razon_inactivo,
     revision: f.revision,
     dirigiendo: ocupados.has(f.member_id),
+  }))
+}
+
+/**
+ * DIR-9 · El cruce sede × formación (el ejercicio de Liberia).
+ *
+ * La sede NO se calcula acá: se lee de `members.sede_id`, que mantiene la
+ * regla SQL de REF-1 (trigger por check-in + pg_cron). Recalcularla en TS
+ * sería la segunda implementación de la misma regla, y ya hay un contrato
+ * escrito justamente para que eso no pase (`sede-rule-fixtures.ts`).
+ *
+ * Los estudios de la tabla son los CURRICULARES ACTIVOS y sin campañas: son
+ * los que se abren, que es para lo que se mira el cruce. Con los 42 planes
+ * la tabla no cabe en pantalla y el hueco deja de saltar a la vista.
+ */
+export async function getCruceSedeFormacion(): Promise<CruceSedeFormacion> {
+  const supabase = createAdminClient()
+
+  const [fichas, planes] = await Promise.all([
+    todasLasFilas<{
+      member_id: string
+      estado_base: string | null
+      formation_study_codes: string[] | null
+      members: {
+        first_name: string | null; last_name: string | null
+        sedes: { name: string | null } | null
+      } | null
+    }>((d, h) => supabase
+      .from('study_leaders')
+      .select('member_id, estado_base, formation_study_codes,'
+        + ' members!inner(first_name, last_name, sedes(name))')
+      .order('member_id').range(d, h)),
+    todasLasFilas<{ code: string; name: string }>((d, h) => supabase
+      .from('study_plans')
+      .select('code, name')
+      .eq('is_active', true)
+      .eq('is_curricular', true)
+      .neq('level', NIVEL_DE_CAMPANA)
+      .order('code').range(d, h)),
+  ])
+
+  return cruceSedeFormacion(
+    fichas.map(f => ({
+      member_id: f.member_id,
+      nombre: `${f.members?.first_name ?? ''} ${f.members?.last_name ?? ''}`.trim(),
+      sede: f.members?.sedes?.name ?? null,
+      activo: f.estado_base === 'activo',
+      formacion: f.formation_study_codes ?? [],
+    })),
+    planes,
+  )
+}
+
+/**
+ * DIR-9 · Las filas del export. Trae lo mismo que la jerarquía más la sede
+ * y la formación, que en pantalla viven en secciones distintas y en el
+ * archivo tienen que ir en la misma fila para poder cruzarlas.
+ */
+export async function getDirigentesParaExcel(): Promise<DirigenteParaExcel[]> {
+  const supabase = createAdminClient()
+
+  const [fichas, grupos] = await Promise.all([
+    todasLasFilas<{
+      member_id: string
+      estado_base: string | null
+      disponibilidad: string | null
+      razon_no_disponible: string | null
+      razon_inactivo: string | null
+      detalle_no_ejerce: string | null
+      formation_study_codes: string[] | null
+      members: {
+        first_name: string | null; last_name: string | null
+        sedes: { name: string | null } | null
+      } | null
+    }>((d, h) => supabase
+      .from('study_leaders')
+      .select('member_id, estado_base, disponibilidad, razon_no_disponible, razon_inactivo,'
+        + ' detalle_no_ejerce, formation_study_codes,'
+        + ' members!inner(first_name, last_name, sedes(name))')
+      .order('member_id').range(d, h)),
+    todasLasFilas<{
+      leader_id: string | null
+      co_leader_id: string | null
+      study_plans: { code: string | null } | null
+    }>((d, h) => supabase
+      .from('study_groups')
+      .select('leader_id, co_leader_id, study_plans!inner(code)')
+      .in('status', ['en_curso', 'en_matricula'])
+      .order('id').range(d, h)),
+  ])
+
+  const ocupados = new Set<string>()
+  for (const g of grupos) {
+    if (!ocupaAlDirigente(g.study_plans?.code)) continue
+    if (g.leader_id) ocupados.add(g.leader_id)
+    if (g.co_leader_id) ocupados.add(g.co_leader_id)
+  }
+
+  return fichas.map(f => ({
+    nombre: `${f.members?.first_name ?? ''} ${f.members?.last_name ?? ''}`.trim(),
+    sede: f.members?.sedes?.name ?? null,
+    estadoBase: f.estado_base,
+    disponibilidad: f.disponibilidad,
+    razonNoDisponible: f.razon_no_disponible,
+    razonInactivo: f.razon_inactivo,
+    detalleNoEjerce: f.detalle_no_ejerce,
+    dirigiendo: ocupados.has(f.member_id),
+    formacion: f.formation_study_codes ?? [],
   }))
 }
