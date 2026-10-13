@@ -2018,7 +2018,7 @@ Tests: dirigente edita disponibilidad (y 403 a formación), confirmación guarda
 no-dirigente no ve el tab, sync tab↔formulario. tsc/lint/vitest.
 ```
 
-### [ ] DIR-11 · Graduados recientes de CDEB: alta como dirigentes con su estado correcto (pedido 2026-10-12)
+### [~] DIR-11 · Graduados recientes de CDEB — 32 de 33 APLICADOS 2026-10-13
 
 Listas de Fabiola (captura del 12-oct). Ojo: los encabezados no cuadran con lo
 listado — "24 estudiantes" pero hay 26 nombres; "4 estudiantes" pero hay 5.
@@ -2036,6 +2036,52 @@ Peralta Romero (Con codirigente).
 
 NO APROBARON (5 listados): Marisol Soto · Milena Hansband · Antonio Buitrago ·
 Esteban Hernandez · Warren Baez.
+
+**DIR-11 · lo aplicado el 2026-10-13**
+
+32 de 33 personas con su estado correcto: **24 disponibles · 8 en pasantía ·
+2 inactivas por no aprobar · 1 inactiva por no asistir.**
+
+**EL MATCH NO SE HIZO CONTRA EL PADRÓN sino contra quienes de verdad
+llevaron CDEB.** Por nombre suelto calzaban 13 de 31 —la lista viene sin
+segundos apellidos—; cruzando contra los inscritos de CDEB, 27. Y de paso
+verificó la graduación de cada uno, que era el punto 1 del prompt.
+
+**La lista de Fabiola tenía dos personas mal clasificadas, y se vio porque
+el sistema decía otra cosa:**
+ · **Antonio Buitrago** y **Milena Halsband** figuraban en «no aprobaron» y
+   los dos APROBARON. Lo confirmaron los comentarios de Eddy Gómez.
+ · Esa lista mezclaba «reprobó el curso» con «no va a dar estudios». Son
+   cosas distintas y se registran distinto: Antonio quedó activo en
+   pasantía (necesita más formación) y Milena inactiva por NO ASISTIR (se
+   fue a Casa 242), no por no aprobar. Darles de alta como decía la lista
+   les habría dejado un «no aprobó el CDEB» falso en el expediente.
+
+**Tres nombres estaban mal escritos en la captura** y por eso no aparecían:
+Carolina **Damha** (no «Dahma»), Milena **Halsband** (no «Hansband»), y
+Meysi (no «Meisy»).
+
+**Se cerraron dos grupos de CDEB** que estaban abiertos y bloqueaban el
+alta: el de Eddy Gómez de mayo y el de Andrey Mora. Los dos SIN encuesta de
+satisfacción —terminaron en agosto y una encuesta dos meses tarde se
+responde poco y mal (decisión de Floriana)—. Se llamó al RPC `close_group`
+directo en vez del endpoint, que es quien la programa.
+
+**Ana Catalina Rodríguez** estaba inscrita como ESTUDIANTE del grupo de
+Andrey y no lo era: acompañó como co-dirigente junto con Roxana Rojas. Salió
+del cierre como retirada, con el motivo escrito.
+
+**El bug que el punto 3 sospechaba NO existe:** no hay ningún automatismo
+que convierta «tiene CDEB en el historial» en dirigente. El alta es manual,
+así que los no aprobados no entran solos.
+
+**Queda UNO: Luis Minor Cordero**, que no aparece en ningún CDEB de ninguna
+generación. Falta su nombre completo o la cédula.
+
+**Y dos cosas menores:** la razón del no aprobado de Marisol Soto («ver con
+Fabi») y que la tabla `study_groups` NO TIENE campo de notas — el comentario
+general de un cierre no tiene dónde guardarse y hubo que repetirlo en la
+ficha de cada persona.
 
 Prompt para Claude Code:
 
