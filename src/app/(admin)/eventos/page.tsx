@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
+import { visiblesEnCalendario } from '@/lib/events/visibilidad-en-calendario'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
 import { type EventType, type AdminEvent } from '@/data/event-config'
@@ -268,14 +269,16 @@ function EventosContent() {
   // Fallback: si el endpoint público no trae nada, al menos los eventos a los
   // que la persona puede inscribirse (comportamiento anterior).
   //
-  // Se filtran los INTERNOS. La elegibilidad los trae a propósito —sin ellos el
-  // link de inscripción de un evento interno no encontraría nada y el botón
-  // volvería a no hacer nada— pero LISTARLOS sería justo lo que "interno" no
-  // debe hacer. El deep link no pasa por acá: usa eligibilityByEventId, que sí
-  // los tiene. Quien gestiona eventos ve todo.
+  // Se filtran los INTERNOS, con una excepción: los que ella YA TIENE
+  // INSCRITOS. «Interno» quiere decir que no se anuncia, no que se le
+  // esconda a quien ya está adentro — esconderle a alguien un evento al que
+  // se inscribió no protege nada y le quita la hora y el lugar. Reportado el
+  // 2026-10-13: 4 personas inscritas en 2 eventos internos no los veían.
+  //
+  // Quien gestiona eventos ve todo. La regla vive en
+  // `visibilidad-en-calendario.ts`, no acá.
   const memberEvents: AdminEvent[] = useMemo(
-    () => eligibility
-      .filter(e => canManage || e.is_public)
+    () => visiblesEnCalendario(eligibility, { gestiona: canManage })
       .map(eligibilityToStubEvent),
     [eligibility, canManage],
   )
@@ -284,7 +287,12 @@ function EventosContent() {
       if (publicEvents.length === 0) return memberEvents
       // Los datos de elegibilidad (cupo, precio) enriquecen al público.
       const eligById = new Map(memberEvents.map(e => [e.id, e]))
-      return publicEvents.map(e => ({ ...e, ...(eligById.get(e.id) ?? {}) }))
+      const base = publicEvents.map(e => ({ ...e, ...(eligById.get(e.id) ?? {}) }))
+      // Y los INTERNOS donde ella está inscrita se suman: no vienen en la
+      // cartelera pública —que es justo lo que «interno» significa— así que
+      // sin esto el arreglo del filtro de arriba no se vería nunca.
+      const yaEstan = new Set(base.map(e => e.id))
+      return [...base, ...memberEvents.filter(e => !yaEstan.has(e.id))]
     }
     const fullById = new Map(events.map(e => [e.id, e]))
     const result = allEventsLight.map(e => fullById.get(e.id) ?? e)
