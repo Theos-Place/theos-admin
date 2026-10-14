@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { BarChart2, Download, Package, Eye, EyeOff } from 'lucide-react'
+import { BarChart2, Download, Package } from 'lucide-react'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
 import { DonacionesPanel } from '@/components/finance/DonacionesPanel'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -46,6 +47,7 @@ export default function ReportesPage() {
   const [revelarPagos, setRevelarPagos] = useState(false)
   const nombreDeTipo = useEventTypeStyle()
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
+  const [revelarTransparencia, setRevelarTransparencia] = useState(false)
 
   // Payments tab
   // REP-17 · Cada pago con su categoría y su fecha de reporte, calculadas una vez.
@@ -216,7 +218,10 @@ export default function ReportesPage() {
         {/* Tab 2 — Payments by entity */}
         {activeTab === 'payments' && (
           <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Mismo molde que Donaciones: los filtros a la izquierda (bajan de
+                línea por dentro si no caben) y Mostrar/Exportar arriba a la derecha. */}
+            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-1 min-w-0 flex-wrap items-center gap-2">
               {/* REP-17 · rango por fecha de pago (cancelados) o de creación del cobro (el resto). */}
               <div className="flex items-center gap-2">
                 <span className="text-[13px] text-navy-light/80 font-body">Desde</span>
@@ -236,16 +241,15 @@ export default function ReportesPage() {
                 className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                 {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
-              <button type="button" onClick={() => setRevelarPagos(r => !r)}
-                className="ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] transition-all bg-navy/6 text-navy font-body">
-                {revelarPagos ? <EyeOff size={13} /> : <Eye size={13} />}
-                {revelarPagos ? 'Ocultar montos' : 'Mostrar montos'}
-              </button>
+            </div>
+              <div className="flex shrink-0 items-center gap-2">
+              <BotonMostrarMontos visibles={revelarPagos} onCambio={() => setRevelarPagos(r => !r)} />
               <button onClick={exportPaymentsCSV}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
+                className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body">
                 <Download size={14} />
                 Exportar CSV
               </button>
+              </div>
             </div>
 
             {/* Stats for filtered */}
@@ -256,9 +260,10 @@ export default function ReportesPage() {
                 { label: 'Pendiente', value: sumByCurrency(pendingPayments), color: '#E9B949' },
                 { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#3B7579' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
-                  <p className="text-[11px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
-                  <p className="text-lg font-extrabold font-display" style={{ color }}>
+                // Mismo molde que las tarjetas de Donaciones (2026-10-14).
+                <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
+                  <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
+                  <p className="text-2xl font-extrabold font-display" style={{ color }}>
                     <TotalsDisplay totals={value} revealed={revelarPagos} />
                   </p>
                 </div>
@@ -356,11 +361,14 @@ export default function ReportesPage() {
                   {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(2024 + i)).map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <button onClick={exportTransparencyCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
-                <Download size={14} />
-                Exportar informe completo
-              </button>
+              <div className="ml-auto flex items-center gap-3">
+                <BotonMostrarMontos visibles={revelarTransparencia} onCambio={() => setRevelarTransparencia(r => !r)} />
+                <button onClick={exportTransparencyCSV}
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body">
+                  <Download size={14} />
+                  Exportar informe completo
+                </button>
+              </div>
             </div>
 
             {/* Top months */}
@@ -373,8 +381,8 @@ export default function ReportesPage() {
                   {topMonths.map((m, i) => (
                     <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
                       <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
-                      <p className="text-[13px] mt-1 text-[rgba(22,20,64,0.55)] font-body">
-                        {formatTotalsInline(m.total)}
+                      <p className="text-[13px] mt-1 text-navy-light/80 font-body">
+                        <TotalsDisplay totals={m.total} revealed={revelarTransparencia} />
                       </p>
                     </div>
                   ))}
@@ -401,7 +409,7 @@ export default function ReportesPage() {
                         </td>
                         <td className="px-5 py-3.5">
                           <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/80'}`}>
-                            {barra(m) > 0 ? formatTotalsInline(m.total) : '—'}
+                            {barra(m) > 0 ? <TotalsDisplay totals={m.total} revealed={revelarTransparencia} /> : '—'}
                           </p>
                         </td>
                         <td className="px-5 py-3.5">

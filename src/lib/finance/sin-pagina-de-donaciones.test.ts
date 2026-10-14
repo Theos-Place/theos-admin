@@ -31,7 +31,7 @@ describe('DON-4 · donaciones dentro del reporte', () => {
       'MemberCombobox',
       "urlDeDonaciones(params, { all: true })", // CSV del filtrado COMPLETO, no de lo cargado
       'Total filtrado',
-      'revealAll',                       // mostrar/ocultar montos
+      'BotonMostrarMontos visibles={revealAll}', // mostrar/ocultar montos, junto a Exportar
     ]) expect(p, pieza).toContain(pieza)
   })
 
@@ -52,8 +52,24 @@ describe('DON-4 · donaciones dentro del reporte', () => {
   it('la pestaña de pagos tapa los montos y los destapa con un botón, como Donaciones', () => {
     const r = sin('src/app/(admin)/finanzas/reportes/page.tsx')
     const pagos = r.slice(r.indexOf("activeTab === 'payments'"), r.indexOf("activeTab === 'transparency'"))
-    expect(pagos).toContain('Mostrar montos')
+    expect(pagos).toContain('<BotonMostrarMontos visibles={revelarPagos}')
     expect((pagos.match(/revealed=\{revelarPagos\}/g) ?? []).length).toBeGreaterThanOrEqual(5)
     expect(pagos).not.toContain('defaultHidden={false}')
+  })
+})
+
+describe('los tres tabs del reporte, igual', () => {
+  it('cada uno tiene Mostrar montos junto a Exportar, con el MISMO botón', () => {
+    const r = sin('src/app/(admin)/finanzas/reportes/page.tsx')
+    expect(r).toContain('<BotonMostrarMontos visibles={revelarPagos}')
+    expect(r).toContain('<BotonMostrarMontos visibles={revelarTransparencia}')
+    expect(sin('src/components/finance/DonacionesPanel.tsx')).toContain('<BotonMostrarMontos visibles={revealAll}')
+  })
+
+  it('transparencia ya no pinta montos sin tapar', () => {
+    const r = sin('src/app/(admin)/finanzas/reportes/page.tsx')
+    const t = r.slice(r.indexOf("activeTab === 'transparency'"))
+    expect(t).not.toContain('formatTotalsInline(m.total)')
+    expect((t.match(/revealed=\{revelarTransparencia\}/g) ?? []).length).toBeGreaterThanOrEqual(2)
   })
 })

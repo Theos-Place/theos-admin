@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { usoDeLaBeca } from '@/lib/finance/uso-de-beca'
 import Link from 'next/link'
 import {
   DollarSign, Heart, CreditCard, ArrowLeftRight, Eye, EyeOff,
@@ -81,7 +82,12 @@ export default function FinanzasPage() {
     const d = new Date(p.created_at)
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
-  const unusedScholarships = scholarships.filter(s => s.status === 'active').length
+  // Solo BECAS ASIGNADAS sin aplicar (Floriana, 2026-10-14: «decía 9 y solo
+  // hay dos»). El 9 contaba todo lo que tiene status 'active' en la tabla
+  // scholarships, y ahí viven también los créditos por congelar (FIN-9) y los
+  // cupones genéricos: no son becas sin usar. Misma regla que la pestaña
+  // «Becas asignadas» → «Sin aplicar» (usoDeLaBeca).
+  const unusedScholarships = scholarships.filter(s => s.kind === 'asignada' && usoDeLaBeca(s) === 'sin_usar').length
 
   const PERIOD_OPTIONS = [
     { value: 'month', label: 'Este mes' },
@@ -216,7 +222,9 @@ export default function FinanzasPage() {
           <p className="text-[13px] uppercase tracking-widest mb-3 font-display text-navy-light/80">
             Accesos rápidos
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Una sola grilla de 4 (Floriana, 2026-10-14): los avisos van como
+              una tarjeta más al lado de los accesos, no en una fila suelta abajo. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Link
               href="/finanzas/donaciones/importar"
               className="flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium transition-all hover:opacity-80 bg-surface-card shadow-[var(--shadow-md)] text-navy font-body"
@@ -238,14 +246,9 @@ export default function FinanzasPage() {
               <BarChart2 size={16} className="text-[#E9B949]" />
               Ver reportes
             </Link>
-          </div>
-        </div>
-
-        {/* Avisos: solo los que tienen algo, en la misma grilla. */}
-        {(sinpePendingRefunds.length > 0 || failedRecent7.length > 0 || unusedScholarships > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            {/* Avisos: solo los que tienen algo, en la misma grilla. */}
             {sinpePendingRefunds.length > 0 && (
-              <Link href="/finanzas/devoluciones" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(233,185,73,0.10)] border border-[rgba(233,185,73,0.25)]">
+              <Link href="/finanzas/devoluciones" className="flex items-center rounded-2xl px-5 py-4 transition-all hover:opacity-80 bg-[rgba(233,185,73,0.10)] border border-[rgba(233,185,73,0.25)]">
                 <div className="flex items-start gap-2.5">
                   <RefreshCw size={15} className="text-[#E9B949] mt-[1px] shrink-0" />
                   <div>
@@ -258,7 +261,7 @@ export default function FinanzasPage() {
               </Link>
             )}
             {failedRecent7.length > 0 && (
-              <Link href="/finanzas/pagos?estado=failed" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.20)]">
+              <Link href="/finanzas/pagos?estado=failed" className="flex items-center rounded-2xl px-5 py-4 transition-all hover:opacity-80 bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.20)]">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle size={15} className="text-coral mt-[1px] shrink-0" />
                   <div>
@@ -271,7 +274,7 @@ export default function FinanzasPage() {
               </Link>
             )}
             {unusedScholarships > 0 && (
-              <Link href="/finanzas/becas" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
+              <Link href="/finanzas/becas" className="flex items-center rounded-2xl px-5 py-4 transition-all hover:opacity-80 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <div className="flex items-start gap-2.5">
                   <GraduationCap size={15} className="text-[#3DB97A] mt-[1px] shrink-0" />
                   <div>
@@ -284,7 +287,7 @@ export default function FinanzasPage() {
               </Link>
             )}
           </div>
-        )}
+        </div>
       </div>
     </FinanceGuard>
   )

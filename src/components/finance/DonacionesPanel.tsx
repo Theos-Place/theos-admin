@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart, Upload, Search, AlertTriangle, Check, Eye, EyeOff, Plus, BarChart2, Download } from 'lucide-react'
+import { Heart, Upload, Search, AlertTriangle, Check, Plus, BarChart2, Download } from 'lucide-react'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
 import Link from 'next/link'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
@@ -129,42 +130,52 @@ export function DonacionesPanel() {
   return (
     <>
       <div className="space-y-6">
-        {/* Acciones */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => setRevealAll(r => !r)}
-            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] transition-all bg-navy/6 text-navy font-body"
-          >
-            {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
-            {revealAll ? 'Ocultar montos' : 'Mostrar montos'}
-          </button>
+        {/* Acciones. Orden pedido por Floriana (2026-10-14): el rango primero,
+            después agregar, donantes y montos e importar; a la derecha mostrar
+            montos y exportar, igual que en las otras dos pestañas. */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-1 min-w-0 flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] text-navy-light/80 font-body">Desde</span>
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="Donaciones desde"
+              className="rounded-xl border px-2.5 py-1.5 text-[13px] outline-none border-[var(--outline-variant)] font-body text-navy" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] text-navy-light/80 font-body">Hasta</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta"
+              className="rounded-xl border px-2.5 py-1.5 text-[13px] outline-none border-[var(--outline-variant)] font-body text-navy" />
+          </div>
           <button
             onClick={() => setAgregando(true)}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm transition-all shrink-0 border border-navy/20 text-navy hover:bg-navy/5 font-body"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] transition-all shrink-0 border border-navy/20 text-navy hover:bg-navy/5 font-body"
           >
-            <Plus size={15} />
+            <Plus size={14} />
             Agregar donación
           </button>
           {/* DON-3B · El reporte de donantes y montos. */}
           <Link
             href="/finanzas/donaciones/reporte"
-            className="inline-flex items-center gap-2 rounded-full border border-navy/20 px-4 py-2.5 text-sm text-navy hover:bg-navy/5 transition-colors shrink-0 font-body"
+            className="inline-flex items-center gap-2 rounded-full border border-navy/20 px-3 py-2 text-[13px] text-navy hover:bg-navy/5 transition-colors shrink-0 font-body"
           >
-            <BarChart2 size={15} />
+            <BarChart2 size={14} />
             Donantes y montos
           </Link>
           <Link
             href="/finanzas/donaciones/importar"
-            className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm text-white transition-all shrink-0 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] text-white transition-all shrink-0 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"
           >
-            <Upload size={15} />
+            <Upload size={14} />
             Importar donaciones
           </Link>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+          <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
           <button onClick={exportarCSV} disabled={exportando}
-            className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body disabled:opacity-50">
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body disabled:opacity-50">
             <Download size={14} />
             {exportando ? 'Exportando…' : 'Exportar CSV'}
           </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -229,10 +240,6 @@ export function DonacionesPanel() {
               className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
             />
           </div>
-          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="Donaciones desde"
-            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy max-w-full" />
-          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta"
-            className="rounded-xl border px-3 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy max-w-full" />
           <FilterChips
             ariaLabel="Filtrar por estado de identificación"
             activeKey={statusFilter}
