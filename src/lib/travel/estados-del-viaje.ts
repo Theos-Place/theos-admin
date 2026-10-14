@@ -37,6 +37,22 @@ export const ESTADOS_DE_FASE_A: readonly EstadoDeViaje[] = [
   'borrador', 'enviada', 'en_revision', 'por_corregir', 'aprobada', 'rechazada', 'cancelada',
 ]
 
+/** Los que agrega la fase B (liquidación). */
+export const ESTADOS_DE_FASE_B: readonly EstadoDeViaje[] = [
+  'anticipo_entregado', 'liquidacion_pendiente', 'liquidada', 'cerrada',
+]
+
+/**
+ * Cuándo se pueden tocar los GASTOS de la liquidación.
+ *
+ * Es distinto de `esEditable`, que habla del presupuesto: el presupuesto se
+ * congela al enviar la solicitud y los gastos recién empiezan a existir
+ * después. Tener una sola función para las dos cosas dejaría editar el
+ * presupuesto de un viaje ya aprobado.
+ */
+export const seLiquida = (estado: EstadoDeViaje): boolean =>
+  estado === 'liquidacion_pendiente'
+
 /**
  * QUIÉN APRUEBA, en un solo lugar.
  *
@@ -89,6 +105,20 @@ export const PASOS: readonly Paso[] = [
   { de: 'en_revision', a: 'aprobada', quien: 'autoridad' },
   { de: 'por_corregir', a: 'enviada', quien: 'solicitante' },
   { de: 'por_corregir', a: 'cancelada', quien: 'solicitante' },
+
+  // --- FASE B · del viaje aprobado a la liquidación cerrada ---------------
+  // El anticipo lo marca finanzas cuando lo entrega, no el que lo recibe.
+  { de: 'aprobada', a: 'anticipo_entregado', quien: 'revision' },
+  // «Ya volví». Dos puertas porque un viaje sin anticipo no pasa por la de
+  // arriba, y obligarlo a pasar sería inventarle un anticipo de cero.
+  { de: 'aprobada', a: 'liquidacion_pendiente', quien: 'solicitante' },
+  { de: 'anticipo_entregado', a: 'liquidacion_pendiente', quien: 'solicitante' },
+  // Enviar la liquidación. La declaración jurada se exige aparte, al guardar
+  // los gastos: acá el paso ya la da por firmada.
+  { de: 'liquidacion_pendiente', a: 'liquidada', quien: 'solicitante' },
+  // Finanzas la devuelve con observaciones, o la cierra.
+  { de: 'liquidada', a: 'liquidacion_pendiente', quien: 'revision', exigeNota: true },
+  { de: 'liquidada', a: 'cerrada', quien: 'revision' },
 ]
 
 export type Veredicto =
@@ -98,12 +128,13 @@ export type Veredicto =
 export function puedeMover(
   de: EstadoDeViaje,
   a: EstadoDeViaje,
-  actor: Actor,
+  actores: Actor | readonly Actor[],
   nota: string | null | undefined,
 ): Veredicto {
+  const quienes = Array.isArray(actores) ? actores : [actores as Actor]
   const paso = PASOS.find(p => p.de === de && p.a === a)
   if (!paso) return { ok: false, motivo: `Un viaje en «${de}» no puede pasar a «${a}».` }
-  if (paso.quien !== actor) {
+  if (!quienes.includes(paso.quien)) {
     const dueno = paso.quien === 'solicitante' ? 'quien pidió el viaje'
       : paso.quien === 'revision' ? 'finanzas'
         : 'la autoridad que aprueba'
@@ -115,14 +146,29 @@ export function puedeMover(
   return { ok: true }
 }
 
-/** El actor que le toca a estos roles. El más alto gana. */
-export function actorDe(
+/**
+ * TODOS los papeles que esta persona puede hacer, no uno solo.
+ *
+ * La primera versión devolvía uno y «el más alto ganaba». Se cayó probando
+ * el flujo completo: quien tiene finanzas Y dirección —y cualquier admin—
+ * quedaba como 'autoridad' a secas y YA NO PODÍA tomar un expediente para
+ * revisarlo, porque ese paso es de 'revision'. El expediente se trababa y no
+ * había manera de destrabarlo.
+ *
+ * Que alguien con los dos roles pueda dar los dos pasos es correcto y es una
+ * decisión de la organización, no del código: la separación de las tres
+ * firmas es POR ROL. Si hace falta que además sean tres PERSONAS distintas,
+ * eso se agrega acá comparando contra quién dio el paso anterior.
+ */
+export function actoresDe(
   roles: readonly string[],
   esElDueno: boolean,
-): Actor | null {
-  if (roles.some(r => (ROLES_AUTORIDAD_COMPETENTE as readonly string[]).includes(r))) return 'autoridad'
-  if (roles.some(r => (ROLES_REVISION_FINANCIERA as readonly string[]).includes(r))) return 'revision'
-  return esElDueno ? 'solicitante' : null
+): Actor[] {
+  const out: Actor[] = []
+  if (esElDueno) out.push('solicitante')
+  if (roles.some(r => (ROLES_REVISION_FINANCIERA as readonly string[]).includes(r))) out.push('revision')
+  if (roles.some(r => (ROLES_AUTORIDAD_COMPETENTE as readonly string[]).includes(r))) out.push('autoridad')
+  return out
 }
 
 /** ¿Se puede todavía editar el contenido del expediente? */
@@ -131,4 +177,5 @@ export const esEditable = (estado: EstadoDeViaje): boolean =>
 
 /** Los que siguen vivos, para la bandeja. */
 export const ESTADOS_ABIERTOS: readonly EstadoDeViaje[] =
-  ['borrador', 'enviada', 'en_revision', 'por_corregir']
+  ['borrador', 'enviada', 'en_revision', 'por_corregir',
+    'aprobada', 'anticipo_entregado', 'liquidacion_pendiente', 'liquidada']

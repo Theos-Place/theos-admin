@@ -8,12 +8,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  puedeMover, esEditable, type Actor, type EstadoDeViaje,
+  puedeMover, esEditable, seLiquida, type Actor, type EstadoDeViaje,
 } from '@/lib/travel/estados-del-viaje'
 import {
   totales, revisarPresupuesto, anticipoCabe,
   type LineaDePresupuesto, type Moneda, type Rubro, type TotalPorMoneda,
 } from '@/lib/travel/presupuesto'
+import {
+  saldos, revisarGastos, gastosFueraDeFecha,
+  type GastoEjecutado, type SaldoDeLiquidacion,
+} from '@/lib/travel/liquidacion'
 
 /**
  * `database.ts` se genera del esquema y todavía no conoce las tres tablas de
@@ -64,6 +68,17 @@ export type ViajeFila = {
   aprobado_at: string | null
   motivo_rechazo: string | null
   created_at: string
+  // Fase B · liquidación
+  anticipo_recibido_monto: number | null
+  anticipo_recibido_moneda: Moneda | null
+  anticipo_entregado_at: string | null
+  declaracion_jurada_at: string | null
+  liquidacion_enviada_at: string | null
+  notas_liquidacion: string | null
+  gastos: Array<GastoEjecutado & { id: string; sin_comprobante_motivo: string | null; orden: number }>
+  saldos: SaldoDeLiquidacion[]
+  /** Índices de gastos con fecha lejana al viaje: aviso para quien revisa. */
+  gastos_con_fecha_rara: number[]
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
   totales: TotalPorMoneda[]
   history: Array<{
@@ -81,7 +96,10 @@ const SELECT = `
   solicitante:members!travel_requests_member_id_fkey(first_name, last_name),
   revisor:members!travel_requests_revisado_por_fkey(first_name, last_name),
   autoridad:members!travel_requests_aprobado_por_fkey(first_name, last_name),
+  anticipo_recibido_monto, anticipo_recibido_moneda, anticipo_entregado_at,
+  declaracion_jurada_at, liquidacion_enviada_at, notas_liquidacion,
   lineas:travel_budget_items(id, rubro, descripcion, cantidad, tarifa, moneda, orden),
+  gastos:travel_expenses(id, fecha, rubro, proveedor, numero_comprobante, monto, moneda, receipt_path, sin_comprobante_motivo, orden),
   history:travel_request_status_history(
     from_status, to_status, notes, created_at,
     autor:members!travel_request_status_history_changed_by_fkey(first_name, last_name)
@@ -106,9 +124,39 @@ function aFila(r: Record<string, unknown>): ViajeFila {
       orden: Number(l.orden ?? 0),
     }))
     .sort((a, b) => a.orden - b.orden)
+  const gastos = ((r.gastos ?? []) as Array<Record<string, unknown>>)
+    .map(g => ({
+      id: g.id as string,
+      fecha: g.fecha as string,
+      rubro: g.rubro as Rubro,
+      proveedor: (g.proveedor as string | null) ?? null,
+      numero_comprobante: (g.numero_comprobante as string | null) ?? null,
+      monto: Number(g.monto ?? 0),
+      moneda: g.moneda as Moneda,
+      receipt_path: (g.receipt_path as string | null) ?? null,
+      sin_comprobante_motivo: (g.sin_comprobante_motivo as string | null) ?? null,
+      orden: Number(g.orden ?? 0),
+    }))
+    .sort((a, b) => a.orden - b.orden)
+  // El anticipo que cuenta para la liquidación es el RECIBIDO, no el pedido:
+  // finanzas puede entregar menos de lo que se solicitó.
+  const anticipoReal = r.anticipo_recibido_monto != null && r.anticipo_recibido_moneda
+    ? { monto: Number(r.anticipo_recibido_monto), moneda: r.anticipo_recibido_moneda as Moneda }
+    : null
   return {
     id: r.id as string,
     member_id: r.member_id as string,
+    anticipo_recibido_monto: r.anticipo_recibido_monto == null ? null : Number(r.anticipo_recibido_monto),
+    anticipo_recibido_moneda: (r.anticipo_recibido_moneda as Moneda | null) ?? null,
+    anticipo_entregado_at: (r.anticipo_entregado_at as string | null) ?? null,
+    declaracion_jurada_at: (r.declaracion_jurada_at as string | null) ?? null,
+    liquidacion_enviada_at: (r.liquidacion_enviada_at as string | null) ?? null,
+    notas_liquidacion: (r.notas_liquidacion as string | null) ?? null,
+    gastos,
+    saldos: saldos(gastos, anticipoReal),
+    gastos_con_fecha_rara: gastosFueraDeFecha(gastos, {
+      sale_at: r.sale_at as string, vuelve_at: r.vuelve_at as string,
+    }),
     member_name: nombre(r.solicitante) ?? '—',
     status: r.status as EstadoDeViaje,
     tipo: r.tipo as ViajeFila['tipo'],
@@ -278,11 +326,12 @@ export async function moverViaje(input: {
   id: string
   de: EstadoDeViaje
   a: EstadoDeViaje
-  actor: Actor
+  /** Todos los papeles de quien lo intenta; basta con que uno sirva. */
+  actores: readonly Actor[]
   quienMemberId: string | null
   nota: string | null
 }): Promise<void> {
-  const v = puedeMover(input.de, input.a, input.actor, input.nota)
+  const v = puedeMover(input.de, input.a, input.actores, input.nota)
   if (!v.ok) throw new PasoInvalido(v.motivo)
 
   const supabase = sinTipos()
@@ -312,4 +361,88 @@ export async function moverViaje(input: {
     changed_by: input.quienMemberId, notes: input.nota,
   })
   if (errH) throw errH
+}
+
+/**
+ * FIN-11 fase B · Guardar los gastos de la liquidación.
+ *
+ * Se reemplazan enteros, igual que el presupuesto: la pantalla manda la tabla
+ * completa. El `seLiquida` es el candado —y es DISTINTO de `esEditable`: ese
+ * habla del presupuesto, que se congela al enviar la solicitud—.
+ */
+export async function guardarGastos(
+  id: string,
+  estado: EstadoDeViaje,
+  gastos: Array<GastoEjecutado & { sin_comprobante_motivo?: string | null }>,
+): Promise<void> {
+  if (!seLiquida(estado)) throw new PasoInvalido('Este viaje no está en liquidación.')
+  const problemas = revisarGastos(gastos, {
+    sinComprobante: Object.fromEntries(gastos.map((g, i) => [i, g.sin_comprobante_motivo])),
+  })
+  if (problemas.length) throw new DatosInvalidos('La liquidación tiene errores.', problemas)
+
+  const supabase = sinTipos()
+  const { error: errDel } = await supabase.from('travel_expenses').delete().eq('travel_request_id', id)
+  if (errDel) throw errDel
+  const { error } = await supabase.from('travel_expenses').insert(
+    gastos.map((g, i) => ({
+      travel_request_id: id, fecha: g.fecha, rubro: g.rubro,
+      proveedor: g.proveedor ?? null, numero_comprobante: g.numero_comprobante ?? null,
+      monto: g.monto, moneda: g.moneda, receipt_path: g.receipt_path ?? null,
+      sin_comprobante_motivo: (g.sin_comprobante_motivo ?? '').trim() || null,
+      orden: i,
+    })),
+  )
+  if (error) throw error
+}
+
+/** Finanzas anota cuánto anticipo entregó de verdad. */
+export async function anotarAnticipoEntregado(
+  id: string, monto: number | null, moneda: Moneda | null,
+): Promise<void> {
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_requests').update({
+    anticipo_recibido_monto: monto,
+    anticipo_recibido_moneda: monto == null ? null : moneda,
+    anticipo_entregado_at: monto == null ? null : new Date().toISOString(),
+  }).eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * Firmar la declaración jurada y mandar la liquidación.
+ *
+ * La firma se guarda ANTES de mover el estado, y con quién y cuándo: un
+ * booleano «firmada» no le sirve a nadie dentro de seis meses. Si el paso
+ * después falla, queda una firma sin liquidación enviada, que es visible y
+ * se arregla; al revés —liquidación enviada sin firma— no.
+ */
+export async function firmarYEnviarLiquidacion(input: {
+  id: string
+  estado: EstadoDeViaje
+  memberId: string | null
+  notas: string | null
+}): Promise<void> {
+  if (!seLiquida(input.estado)) throw new PasoInvalido('Este viaje no está en liquidación.')
+  const viaje = await verViaje(input.id)
+  if (!viaje) throw new PasoInvalido('No se encontró el viaje.')
+  // Que no se mande una liquidación vacía por la puerta de atrás.
+  const problemas = revisarGastos(viaje.gastos, {
+    sinComprobante: Object.fromEntries(viaje.gastos.map((g, i) => [i, g.sin_comprobante_motivo])),
+  })
+  if (problemas.length) throw new DatosInvalidos('La liquidación tiene errores.', problemas)
+
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_requests').update({
+    declaracion_jurada_at: new Date().toISOString(),
+    declaracion_jurada_por: input.memberId,
+    liquidacion_enviada_at: new Date().toISOString(),
+    notas_liquidacion: input.notas,
+  }).eq('id', input.id)
+  if (error) throw error
+
+  await moverViaje({
+    id: input.id, de: input.estado, a: 'liquidada', actores: ['solicitante'],
+    quienMemberId: input.memberId, nota: null,
+  })
 }

@@ -798,7 +798,7 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 
-### [~] FIN-11 · Viáticos y kilometraje — FASE A HECHA 2026-10-13
+### [~] FIN-11 · Viáticos y kilometraje — FASES A y B HECHAS 2026-10-13
 
 Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos,
 versión 1.0 del 05/05/2026). Candado de Tilopay retirado por Floriana.
@@ -853,9 +853,38 @@ cambiarlos es una línea):
   aprobar su propio viaje. Hay un test que lo deja escrito; si el reglamento
   pide otra cosa, se cambia ahí.
 
-**FALTA (fases B–D)**, y los estados ya están declarados para que no haya que
-tocar el CHECK otra vez:
-  B. Liquidación (ANX-03) + comprobantes + cálculo de reintegro/reembolso.
+**FASE B · LA LIQUIDACIÓN (ANX-03), hecha el mismo día.** Migración
+`20261013220000`: `travel_expenses` y las columnas de anticipo recibido y
+declaración jurada. El ciclo completo es
+`aprobada → anticipo entregado → ya volví → liquidada → cerrada`, con la
+devolución de finanzas («falta la factura del hotel») exigiendo motivo.
+
+- **La cuenta es por moneda, también acá.** Quien recibió $200 y gastó
+  ₡150.000 debe los $200 Y le deben los ₡150.000: no se compensan. Un
+  anticipo que no se gastó sale en la cuenta aunque no haya tiquetes en esa
+  moneda — si solo miráramos gastos, esa plata desaparecería y nadie la
+  pediría de vuelta.
+- **El comprobante es obligatorio**, y la excepción del reglamento (un taxi,
+  un parqueo de barrio) obliga a escribir por qué no hay. Queda visible en vez
+  de escondida dentro de un monto; el CHECK de la base lo exige igual.
+- **La declaración jurada guarda quién y cuándo**, no un booleano. El texto
+  vive en el módulo, no en el JSX.
+- A `liquidada` y a `anticipo entregado` NO se llega por el botón genérico de
+  mover: el primero exige la firma, el segundo exige decir CUÁNTO se entregó.
+  Los dos los rechaza el servidor por esa puerta.
+
+**TRES COSAS QUE SOLO APARECIERON PROBANDO EL FLUJO COMPLETO:**
+
+1. **`actorDe` devolvía UN actor y «el más alto ganaba»** — así que quien
+   tiene finanzas Y dirección, y cualquier admin, quedaba como autoridad a
+   secas y **ya no podía tomar un expediente para revisarlo**. El expediente
+   se trababa sin forma de destrabarlo. Ahora es `actoresDe`, una lista.
+2. **El botón de finanzas para devolver una liquidación decía «Ya volví del
+   viaje»**: el nombre del paso salía solo del destino, y a
+   `liquidacion_pendiente` se llega por dos caminos opuestos.
+3. El cero negativo: una liquidación que cuadra mostraba «-0».
+
+**FALTA (fases C–D)**, con los estados ya declarados:
   C. Bitácora de kilometraje (ANX-05) con odómetro y la aprobación del jefe
      adjunta, que la minuta pidió como requisito.
   D. Informe de viaje (ANX-04) como formulario vinculado.

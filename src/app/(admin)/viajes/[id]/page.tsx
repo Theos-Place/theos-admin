@@ -21,12 +21,15 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { formatDate, formatMoney } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
-  actorDe, puedeMover, esEditable, PASOS,
+  actoresDe, puedeMover, esEditable, PASOS,
   type EstadoDeViaje, type Actor,
 } from '@/lib/travel/estados-del-viaje'
 import { NOMBRE_DEL_RUBRO, subtotal, type TotalPorMoneda, type LineaDePresupuesto } from '@/lib/travel/presupuesto'
 import { BADGE_DE_ESTADO } from '@/components/travel/badge'
 import { FormularioDeViaje, type ValoresDelViaje } from '@/components/travel/FormularioDeViaje'
+import { Liquidacion } from '@/components/travel/Liquidacion'
+import { seLiquida } from '@/lib/travel/estados-del-viaje'
+import type { GastoEjecutado, SaldoDeLiquidacion } from '@/lib/travel/liquidacion'
 
 type Viaje = {
   id: string; member_id: string; member_name: string; status: EstadoDeViaje
@@ -40,19 +43,41 @@ type Viaje = {
   revisado_por_name: string | null; revisado_at: string | null
   aprobado_por_name: string | null; aprobado_at: string | null
   motivo_rechazo: string | null; created_at: string
+  anticipo_recibido_monto: number | null; anticipo_recibido_moneda: 'CRC' | 'USD' | null
+  anticipo_entregado_at: string | null; declaracion_jurada_at: string | null
+  liquidacion_enviada_at: string | null; notas_liquidacion: string | null
+  gastos: Array<GastoEjecutado & { id: string; sin_comprobante_motivo: string | null; orden: number }>
+  saldos: SaldoDeLiquidacion[]
+  gastos_con_fecha_rara: number[]
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
   totales: TotalPorMoneda[]
   history: Array<{ from_status: string | null; to_status: string; notes: string | null; changed_by_name: string | null; created_at: string }>
 }
 
-/** Cómo se llama cada paso en un botón. */
-const NOMBRE_DEL_PASO: Partial<Record<EstadoDeViaje, string>> = {
-  enviada: 'Enviar a revisión',
-  en_revision: 'Tomar para revisar',
-  por_corregir: 'Devolver para corregir',
-  aprobada: 'Aprobar',
-  rechazada: 'Rechazar',
-  cancelada: 'Cancelar el viaje',
+/**
+ * Cómo se llama cada paso en un botón.
+ *
+ * DEPENDE DEL ORIGEN Y NO SOLO DEL DESTINO, y esto se descubrió viéndolo: a
+ * `liquidacion_pendiente` se llega por dos caminos opuestos —quien viajó
+ * diciendo «ya volví», o finanzas devolviendo una liquidación mal armada— y
+ * con una tabla por destino, a finanzas le salía un botón que decía «Ya volví
+ * del viaje» sobre el expediente de otra persona.
+ */
+function nombreDelPaso(de: EstadoDeViaje, a: EstadoDeViaje): string {
+  if (a === 'liquidacion_pendiente') {
+    return de === 'liquidada' ? 'Devolver la liquidación' : 'Ya volví del viaje'
+  }
+  const porDestino: Partial<Record<EstadoDeViaje, string>> = {
+    enviada: de === 'por_corregir' ? 'Volver a enviar' : 'Enviar a revisión',
+    en_revision: 'Tomar para revisar',
+    por_corregir: 'Devolver para corregir',
+    aprobada: 'Aprobar',
+    rechazada: 'Rechazar',
+    cancelada: 'Cancelar el viaje',
+    anticipo_entregado: 'Marcar anticipo entregado',
+    cerrada: 'Cerrar el expediente',
+  }
+  return porDestino[a] ?? a
 }
 
 const etiqueta = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
@@ -66,6 +91,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
   const [error, setError] = useState<string | null>(null)
   const [editando, setEditando] = useState(false)
   const [paso, setPaso] = useState<EstadoDeViaje | null>(null)
+  const [dandoAnticipo, setDandoAnticipo] = useState(false)
 
   const cargar = () => {
     fetch(`/api/travel-requests/${id}`)
@@ -83,13 +109,18 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
   if (!v) return <p className="page text-[13px] text-navy-light/80 font-body">Cargando…</p>
 
   const esDueno = user?.member_id === v.member_id
-  const actor: Actor | null = actorDe(user?.roles ?? [], esDueno)
+  const actores: Actor[] = actoresDe(user?.roles ?? [], esDueno)
   const badge = BADGE_DE_ESTADO[v.status]
 
   // Los pasos que ESTE actor puede dar desde ESTE estado. Sale de la misma
   // tabla que valida el servidor.
-  const pasosPosibles = actor
-    ? PASOS.filter(p => p.de === v.status && p.quien === actor).map(p => p.a)
+  const pasosPosibles = actores.length > 0
+    ? PASOS.filter(p => p.de === v.status && actores.includes(p.quien)).map(p => p.a)
+      // Estos dos no pasan por el modal genérico: `liquidada` se llega
+      // firmando la declaración jurada, y `anticipo_entregado` necesita que
+      // finanzas diga CUÁNTO entregó. El servidor los rechaza por esa puerta
+      // también; acá solo se evita ofrecer lo que no se puede.
+      .filter(a => a !== 'liquidada')
     : []
 
   if (editando) {
@@ -139,11 +170,17 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
               <Pencil size={14} aria-hidden="true" /> Editar
             </Button>
           )}
-          {pasosPosibles.map(a => (
+          {pasosPosibles.filter(a => a === 'anticipo_entregado').map(a => (
+            <Button key={a} type="button" tamano="sm" variante="secundario"
+              onClick={() => setDandoAnticipo(true)}>
+              {nombreDelPaso(v.status, a)}
+            </Button>
+          ))}
+          {pasosPosibles.filter(a => a !== 'anticipo_entregado').map(a => (
             <Button key={a} type="button" tamano="sm"
               variante={a === 'aprobada' ? 'primario' : a === 'rechazada' || a === 'cancelada' ? 'fantasma' : 'secundario'}
               onClick={() => setPaso(a)}>
-              {NOMBRE_DEL_PASO[a] ?? a}
+              {nombreDelPaso(v.status, a)}
             </Button>
           ))}
         </div>
@@ -211,8 +248,23 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
         )}
       </section>
 
-      {actor !== 'solicitante' && actor !== null && (
+      {(actores.includes('revision') || actores.includes('autoridad')) && (
         <RevisionFinanciera viaje={v} onListo={cargar} />
+      )}
+
+      {/* La liquidación aparece cuando el viaje ya pasó de aprobado. Antes
+          no: cargar facturas de un viaje que todavía no se aprueba es
+          invitar a gastar primero y pedir permiso después. */}
+      {(['anticipo_entregado', 'liquidacion_pendiente', 'liquidada', 'cerrada'] as EstadoDeViaje[]).includes(v.status) && (
+        <Liquidacion
+          viajeId={v.id}
+          editable={esDueno && seLiquida(v.status)}
+          gastosIniciales={v.gastos}
+          anticipo={v.anticipo_recibido_monto != null && v.anticipo_recibido_moneda
+            ? { monto: v.anticipo_recibido_monto, moneda: v.anticipo_recibido_moneda } : null}
+          fechasRaras={v.gastos_con_fecha_rara}
+          onCambio={cargar}
+        />
       )}
 
       <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-2">
@@ -223,6 +275,11 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
         <p className="text-[13px] text-navy-light/80 font-body">
           Aprobación: {v.aprobado_por_name ? `${v.aprobado_por_name} · ${formatDate(v.aprobado_at!)}` : 'pendiente'}
         </p>
+        {v.declaracion_jurada_at && (
+          <p className="text-[13px] text-navy-light/80 font-body">
+            Declaración jurada firmada: {formatDate(v.declaracion_jurada_at)}
+          </p>
+        )}
         {v.history.length > 0 && (
           <ul className="space-y-1 border-t border-[var(--outline-variant)] pt-2">
             {v.history.map((h, i) => (
@@ -236,9 +293,19 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
         )}
       </section>
 
-      {paso && actor && (
+      {dandoAnticipo && (
+        <ModalDeAnticipo
+          viajeId={v.id}
+          sugerido={v.anticipo_recomendado ?? v.anticipo_monto}
+          moneda={v.anticipo_moneda ?? 'CRC'}
+          onCerrar={() => setDandoAnticipo(false)}
+          onListo={() => { setDandoAnticipo(false); toast('Anticipo registrado.', 'success'); cargar() }}
+        />
+      )}
+
+      {paso && actores.length > 0 && (
         <ModalDePaso
-          viajeId={v.id} de={v.status} a={paso} actor={actor}
+          viajeId={v.id} de={v.status} a={paso} actores={actores}
           onCerrar={() => setPaso(null)}
           onListo={() => {
             setPaso(null)
@@ -316,8 +383,8 @@ function RevisionFinanciera({ viaje, onListo }: { viaje: Viaje; onListo: () => v
   )
 }
 
-function ModalDePaso({ viajeId, de, a, actor, onCerrar, onListo }: {
-  viajeId: string; de: EstadoDeViaje; a: EstadoDeViaje; actor: Actor
+function ModalDePaso({ viajeId, de, a, actores, onCerrar, onListo }: {
+  viajeId: string; de: EstadoDeViaje; a: EstadoDeViaje; actores: readonly Actor[]
   onCerrar: () => void; onListo: () => void
 }) {
   const [nota, setNota] = useState('')
@@ -326,8 +393,8 @@ function ModalDePaso({ viajeId, de, a, actor, onCerrar, onListo }: {
 
   // Si el paso exige motivo, lo exige la MISMA regla que el servidor: acá no
   // hay una segunda lista de cuáles lo piden.
-  const v = puedeMover(de, a, actor, nota)
-  const faltaNota = !v.ok && puedeMover(de, a, actor, 'x').ok
+  const v = puedeMover(de, a, actores, nota)
+  const faltaNota = !v.ok && puedeMover(de, a, actores, 'x').ok
 
   async function confirmar() {
     setBusy(true); setError(null)
@@ -347,7 +414,7 @@ function ModalDePaso({ viajeId, de, a, actor, onCerrar, onListo }: {
     <Modal onClose={() => !busy && onCerrar()} titleId="paso-title" width={420}>
       <div className="p-5 space-y-4">
         <h2 id="paso-title" className="text-base font-bold text-navy font-display">
-          {NOMBRE_DEL_PASO[a] ?? a}
+          {nombreDelPaso(de, a)}
         </h2>
         <div className="space-y-1.5">
           <label htmlFor="paso-nota" className={etiqueta}>
@@ -361,6 +428,72 @@ function ModalDePaso({ viajeId, de, a, actor, onCerrar, onListo }: {
           <Button type="button" variante="fantasma" tamano="sm" onClick={onCerrar} disabled={busy}>Cancelar</Button>
           <Button type="button" variante="primario" tamano="sm" onClick={confirmar} disabled={busy || !v.ok}>
             {busy ? <><Loader2 size={15} className="animate-spin" aria-hidden="true" /> …</> : 'Confirmar'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+
+/**
+ * FIN-11 · «Entregué el anticipo», con el monto.
+ *
+ * Es un modal aparte y no el genérico porque el monto NO es opcional: sin él
+ * el expediente diría que hubo anticipo sin decir de cuánto, y la liquidación
+ * se calcularía contra cero. Se propone el recomendado por finanzas, o el
+ * pedido, pero quien entrega escribe lo que de verdad entregó.
+ */
+function ModalDeAnticipo({ viajeId, sugerido, moneda, onCerrar, onListo }: {
+  viajeId: string; sugerido: number | null; moneda: 'CRC' | 'USD'
+  onCerrar: () => void; onListo: () => void
+}) {
+  const [monto, setMonto] = useState(sugerido ? String(sugerido) : '')
+  const [mon, setMon] = useState<'CRC' | 'USD'>(moneda)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function confirmar() {
+    setBusy(true); setError(null)
+    try {
+      const res = await fetch(`/api/travel-requests/${viajeId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'anticipo_entregado', monto: Number(monto), moneda: mon }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo registrar.')
+      onListo()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo registrar.')
+    } finally { setBusy(false) }
+  }
+
+  const campo = 'w-full rounded-xl border border-navy/15 px-3 py-2 text-[13px] text-navy font-body focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral'
+
+  return (
+    <Modal onClose={() => !busy && onCerrar()} titleId="anticipo-title" width={400}>
+      <div className="p-5 space-y-4">
+        <h2 id="anticipo-title" className="text-base font-bold text-navy font-display">Anticipo entregado</h2>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="col-span-2 space-y-1.5">
+            <label htmlFor="ant-monto" className={etiqueta}>Monto entregado</label>
+            <input id="ant-monto" type="number" min={0} step="any" className={campo}
+              value={monto} onChange={e => setMonto(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="ant-moneda" className={etiqueta}>Moneda</label>
+            <select id="ant-moneda" className={campo} value={mon}
+              onChange={e => setMon(e.target.value as 'CRC' | 'USD')}>
+              <option value="CRC">CRC</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+        {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variante="fantasma" tamano="sm" onClick={onCerrar} disabled={busy}>Cancelar</Button>
+          <Button type="button" variante="primario" tamano="sm" onClick={confirmar}
+            disabled={busy || !(Number(monto) >= 0) || monto === ''}>
+            {busy ? <><Loader2 size={15} className="animate-spin" aria-hidden="true" /> …</> : 'Registrar'}
           </Button>
         </div>
       </div>

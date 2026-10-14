@@ -23,8 +23,8 @@ const FORM = 'src/components/travel/FormularioDeViaje.tsx'
 describe('FIN-11 · el actor sale de los roles, nunca del body', () => {
   const src = sinComentarios(RUTA_ID)
 
-  it('la ruta llama a actorDe con los roles de la sesión', () => {
-    expect(src).toContain('actorDe(auth.ctx.roles, r.esDueno)')
+  it('la ruta saca los papeles de los roles de la sesión', () => {
+    expect(src).toContain('actoresDe(auth.ctx.roles, r.esDueno)')
   })
 
   it('NO lee un actor, un rol ni un estado de autoridad del cuerpo', () => {
@@ -43,7 +43,7 @@ describe('FIN-11 · el paso lo valida el servidor', () => {
     const src = sinComentarios(QUERIES)
     const i = src.indexOf('export async function moverViaje')
     const cuerpo = src.slice(i, i + 900)
-    expect(cuerpo).toContain('puedeMover(input.de, input.a, input.actor, input.nota)')
+    expect(cuerpo).toContain('puedeMover(input.de, input.a, input.actores, input.nota)')
     expect(cuerpo.indexOf('puedeMover')).toBeLessThan(cuerpo.indexOf('.update('))
   })
 
@@ -67,12 +67,12 @@ describe('FIN-11 · el paso lo valida el servidor', () => {
 describe('FIN-11 · la pantalla no inventa pasos', () => {
   it('los botones salen de PASOS, no de una lista propia', () => {
     const src = sinComentarios(DETALLE)
-    expect(src).toContain('PASOS.filter(p => p.de === v.status && p.quien === actor)')
+    expect(src).toContain('PASOS.filter(p => p.de === v.status && actores.includes(p.quien))')
   })
 
   it('y el modal pregunta por el motivo con la misma regla', () => {
     const src = sinComentarios(DETALLE)
-    expect(src).toContain('puedeMover(de, a, actor, nota)')
+    expect(src).toContain('puedeMover(de, a, actores, nota)')
   })
 
   it('el formulario usa el módulo del presupuesto y no suma a mano', () => {
@@ -108,7 +108,9 @@ describe('FIN-11 · lo que protege la API', () => {
   })
 
   it('la validación financiera no la llena el solicitante', () => {
-    expect(sinComentarios(RUTA_ID)).toContain("if (actor === 'solicitante')")
+    const src = sinComentarios(RUTA_ID)
+    expect(src).toContain("const revisa = actores.includes('revision') || actores.includes('autoridad')")
+    expect(src).toContain('if (!revisa)')
   })
 
   it('todo escribe en el audit_log', () => {
@@ -136,5 +138,82 @@ describe('FIN-11 · la tabla queda cerrada a la llave pública', () => {
     // Guardarlo abre la puerta a que la fila diga 60.000 y sus factores otra cosa.
     const sql = readFileSync('supabase/migrations/20261013210000_fin11_expediente_de_viaje.sql', 'utf8')
     expect(sql).not.toMatch(/^\s*subtotal\s/m)
+  })
+})
+
+describe('FIN-11 fase B · a «liquidada» no se llega sin firmar', () => {
+  const src = sinComentarios(RUTA_ID)
+
+  it('el camino genérico de mover rechaza ese destino', () => {
+    // Es un paso válido de la tabla, así que «mover» lo aceptaría — y se
+    // saltaría la declaración jurada y la revisión de los gastos, que es lo
+    // único que hace que la liquidación valga algo.
+    expect(src).toContain("if (parsed.data.a === 'liquidada')")
+    expect(src).toContain('use_enviar_liquidacion')
+  })
+
+  it('y la pantalla no ofrece ese botón', () => {
+    expect(sinComentarios(DETALLE)).toContain(".filter(a => a !== 'liquidada')")
+  })
+
+  it('enviar_liquidacion exige el checkbox de la declaración', () => {
+    // `z.literal(true)`: no alcanza con mandar el campo, tiene que ir en true.
+    expect(src).toContain('declaro: z.literal(true)')
+  })
+
+  it('los gastos los carga quien viajó, no finanzas', () => {
+    expect(src).toContain('La liquidación la llena quien viajó.')
+  })
+
+  it('el anticipo entregado lo marca finanzas, no quien lo recibe', () => {
+    expect(src).toContain('El anticipo lo marca finanzas.')
+  })
+
+  it('firmar guarda QUIÉN y CUÁNDO, no un booleano', () => {
+    const q = sinComentarios(QUERIES)
+    expect(q).toContain('declaracion_jurada_at')
+    expect(q).toContain('declaracion_jurada_por')
+  })
+
+  it('y vuelve a revisar los gastos del SERVIDOR antes de firmar', () => {
+    // Si solo mirara lo que mandó la pantalla, una liquidación vacía entraría
+    // por la puerta de atrás.
+    const q = sinComentarios(QUERIES)
+    const i = q.indexOf('export async function firmarYEnviarLiquidacion')
+    const cuerpo = q.slice(i, i + 1200)
+    expect(cuerpo).toContain('await verViaje(input.id)')
+    expect(cuerpo).toContain('revisarGastos(viaje.gastos')
+  })
+
+  it('la tabla de gastos tiene RLS y exige respaldo', () => {
+    const sql = readFileSync('supabase/migrations/20261013220000_fin11_liquidacion.sql', 'utf8')
+    expect(sql).toContain('alter table public.travel_expenses enable row level security')
+    expect(sql).toContain('travel_expenses_respaldo_check')
+  })
+})
+
+describe('FIN-11 fase B · el anticipo no se marca sin decir cuánto', () => {
+  it('el camino genérico lo rechaza', () => {
+    // Si no, el expediente diría que hubo anticipo sin decir de cuánto, y la
+    // liquidación se calcularía contra cero.
+    const src = sinComentarios(RUTA_ID)
+    expect(src).toContain("if (parsed.data.a === 'anticipo_entregado')")
+    expect(src).toContain('use_anticipo_entregado')
+  })
+
+  it('la pantalla le da su propio modal con monto y moneda', () => {
+    const src = sinComentarios(DETALLE)
+    expect(src).toContain('ModalDeAnticipo')
+    expect(src).toContain("action: 'anticipo_entregado'")
+  })
+
+  it('el nombre del paso depende del ORIGEN, no solo del destino', () => {
+    // A `liquidacion_pendiente` se llega por dos caminos opuestos: «ya volví»
+    // y «finanzas devuelve la liquidación». Con una tabla por destino, a
+    // finanzas le salía un botón que decía «Ya volví del viaje» sobre el
+    // expediente de otra persona.
+    const src = sinComentarios(DETALLE)
+    expect(src).toContain('function nombreDelPaso(de: EstadoDeViaje, a: EstadoDeViaje)')
+    expect(src).toContain("de === 'liquidada' ? 'Devolver la liquidación' : 'Ya volví del viaje'")
   })
 })
