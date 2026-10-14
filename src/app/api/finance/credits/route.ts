@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { saldosAFavor, totalPorMoneda, type MatriculaConPagos } from '@/lib/finance/saldo-a-favor'
-import { montoDelBloque } from '@/lib/studies/corte-de-bloque'
+import { saldosAFavor, totalPorMoneda, type MatriculaConPagos, type DetalleDelSaldo, type PagoDelSaldo } from '@/lib/finance/saldo-a-favor'
+import { montoDelBloque, nivelesACobrar } from '@/lib/studies/corte-de-bloque'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -21,11 +21,35 @@ import { reportarError } from '@/lib/observabilidad'
 // inventado. Eran ₡50.000 que, devueltos, las habrían dejado sin el N2 que ya
 // pagaron. Hay que preguntar lo que cuesta SU matrícula, y eso depende de la
 // modalidad del grupo.
-export async function GET() {
+export async function GET(req: NextRequest) {
   const auth = await requireModuleView('finanzas')
   if (auth.res) return auth.res
   try {
     const sb = createAdminClient()
+
+    // ?enrollment_id= → el detalle de UN saldo: sus pagos (con la traza del
+    // cambio de grupo, que dice quién y cuándo) y qué cubre su costo.
+    const enrollmentId = req.nextUrl.searchParams.get('enrollment_id')
+    if (enrollmentId) {
+      const { data: enr, error: eErr } = await sb.from('study_enrollments')
+        .select('id, group:study_groups!study_enrollments_group_id_fkey(modalidad, plan:study_plans!study_groups_plan_id_fkey(code))')
+        .eq('id', enrollmentId).maybeSingle()
+      if (eErr) throw eErr
+      if (!enr) return NextResponse.json({ error: 'No se encontró la matrícula.' }, { status: 404 })
+      const g = (enr as unknown as { group: { modalidad: string | null; plan: { code: string | null } | null } | null }).group
+      const { data: pagos, error: pErr } = await sb.from('payments')
+        .select('id, amount, currency, paid_at, created_at, payment_method, reference_code, description, transfer_note')
+        .eq('enrollment_id', enrollmentId).eq('status', 'paid').eq('concept', 'matricula')
+        .order('paid_at', { ascending: true })
+      if (pErr) throw pErr
+      const modalidad = modalidadDe(g?.modalidad)
+      const detalle: DetalleDelSaldo = {
+        pagos: (pagos ?? []) as PagoDelSaldo[],
+        cubre: [...nivelesACobrar(g?.plan?.code, modalidad)],
+        modalidad,
+      }
+      return NextResponse.json(detalle)
+    }
 
     type Enr = {
       id: string; member_id: string; group_id: string | null

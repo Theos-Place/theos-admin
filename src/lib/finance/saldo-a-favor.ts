@@ -26,6 +26,35 @@ export type MatriculaConPagos = {
 
 export type SaldoAFavor = MatriculaConPagos & { saldo: number }
 
+/**
+ * El detalle de UN saldo: de dónde salió. Pedido de Floriana (2026-10-14):
+ * «de dónde salió el saldo a favor, el racional detrás de ese crédito, la
+ * fecha y quién lo convirtió».
+ *
+ * La respuesta está en los pagos de la matrícula: cada uno con su fecha, y
+ * el que viajó en un cambio de grupo trae su `transfer_note` («Movida de
+ * grupo el 07/10/2026: «A» → «B» (por Fulana)») — que es quién y cuándo. El
+ * costo se explica por los niveles que cubre la matrícula (bajo bloques, un
+ * N1 cubre el par N1+N2).
+ */
+export type PagoDelSaldo = {
+  id: string
+  amount: number
+  currency: string | null
+  paid_at: string | null
+  created_at: string
+  payment_method: string | null
+  reference_code: string | null
+  description: string | null
+  transfer_note: string | null
+}
+export type DetalleDelSaldo = {
+  pagos: PagoDelSaldo[]
+  /** Qué niveles cubre el costo (["N1","N2"] bajo bloques; ["SCJ"] en general). */
+  cubre: string[]
+  modalidad: string
+}
+
 /** Solo las que tienen plata a favor, de mayor a menor. Las que deben no van
  *  acá: eso son cobros pendientes y viven en su propia cola. */
 export function saldosAFavor(filas: readonly MatriculaConPagos[]): SaldoAFavor[] {

@@ -7,14 +7,11 @@ import {
   AlertCircle, Upload, GraduationCap, BarChart2, RefreshCw, TrendingUp,
 } from 'lucide-react'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
-import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
+import { TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { sumByCurrency, addTotals } from '@/lib/money'
-import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
-import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { requiereAtencion } from '@/lib/finance/payment-outcome'
 import { FinanceChart } from '@/components/finance/FinanceChart'
 import { useFinance } from '@/hooks/useFinance'
-import { formatDate } from '@/lib/format'
 import { anioDe, caeEn } from '@/lib/fecha/partes-de-fecha'
 import { criterioDeDonantes } from '@/lib/finance/ventana-de-donante'
 
@@ -85,10 +82,6 @@ export default function FinanzasPage() {
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
   const unusedScholarships = scholarships.filter(s => s.status === 'active').length
-
-  const recentPayments = [...payments]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 8)
 
   const PERIOD_OPTIONS = [
     { value: 'month', label: 'Este mes' },
@@ -215,129 +208,42 @@ export default function FinanzasPage() {
         {/* Chart */}
         <FinanceChart payments={payments} donations={donations} />
 
-        {/* Bottom two columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Recent payments table */}
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--outline-variant)]">
-              <p className="text-sm font-bold font-display text-navy">Pagos recientes</p>
-              <Link href="/finanzas/pagos" className="text-[13px] font-medium text-teal-deep font-body">
-                Ver todos →
-              </Link>
-            </div>
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-[var(--outline-variant)]">
-                    {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPayments.map((p, i) => (
-                    <tr
-                      key={p.id}
-                      className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}
-                    >
-                      <td className="px-4 py-3">
-                        <p className="text-[13px] font-medium font-body text-navy">
-                          {p.member_name.split(' ')[0]}
-                        </p>
-                        <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body">
-                          {p.member_cedula}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-[13px] font-body text-navy">{p.entity_name}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-[13px] font-medium font-body text-navy">
-                          <AmountDisplay amount={p.amount} currency={p.currency} revealed={revealAll} />
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <PaymentMethodBadge method={p.method} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <PaymentStatusBadge status={p.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
-                          {formatDate(p.created_at)}
-                        </p>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile: tarjetas */}
-            <ul className="md:hidden">
-              {recentPayments.map((p, i) => (
-                <li
-                  key={p.id}
-                  className="px-4 py-3 flex items-center gap-3"
-                  style={i < recentPayments.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium font-body text-navy truncate">
-                      {p.member_name.split(' ')[0]} <span className="text-[rgba(22,20,64,0.45)] font-normal">{p.member_cedula}</span>
-                    </p>
-                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">{p.entity_name}</p>
-                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">{formatDate(p.created_at)}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="text-[13px] font-medium font-body text-navy">
-                      <AmountDisplay amount={p.amount} currency={p.currency} revealed={revealAll} />
-                    </p>
-                    <PaymentStatusBadge status={p.status} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+        {/* Accesos rápidos: en una fila, a todo lo ancho. Antes vivían en una
+            columna angosta al lado de «Pagos recientes» y, al quitar esa tabla
+            (Floriana, 2026-10-14: la lista completa está en Pagos), quedaban
+            sueltos a un costado. */}
+        <div>
+          <p className="text-[13px] uppercase tracking-widest mb-3 font-display text-navy-light/80">
+            Accesos rápidos
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              href="/finanzas/donaciones/importar"
+              className="flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium transition-all hover:opacity-80 bg-surface-card shadow-[var(--shadow-md)] text-navy font-body"
+            >
+              <Upload size={16} className="text-teal-deep" />
+              Importar donaciones
+            </Link>
+            <Link
+              href="/finanzas/becas/nueva"
+              className="flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium transition-all hover:opacity-80 bg-surface-card shadow-[var(--shadow-md)] text-navy font-body"
+            >
+              <GraduationCap size={16} className="text-[#3DB97A]" />
+              Nueva beca
+            </Link>
+            <Link
+              href="/finanzas/reportes"
+              className="flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium transition-all hover:opacity-80 bg-surface-card shadow-[var(--shadow-md)] text-navy font-body"
+            >
+              <BarChart2 size={16} className="text-[#E9B949]" />
+              Ver reportes
+            </Link>
           </div>
+        </div>
 
-          {/* Quick access + alerts */}
-          <div className="space-y-4">
-            {/* Quick access */}
-            <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[13px] uppercase tracking-widest mb-3 font-display text-[rgba(22,20,64,0.60)]">
-                Accesos rápidos
-              </p>
-              <div className="space-y-2">
-                <Link
-                  href="/finanzas/donaciones/importar"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
-                >
-                  <Upload size={15} className="text-teal-deep" />
-                  Importar donaciones
-                </Link>
-                <Link
-                  href="/finanzas/becas/nueva"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
-                >
-                  <GraduationCap size={15} className="text-[#3DB97A]" />
-                  Nueva beca
-                </Link>
-                <Link
-                  href="/finanzas/reportes"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 bg-[rgba(22,20,64,0.05)] text-navy font-body"
-                >
-                  <BarChart2 size={15} className="text-[#E9B949]" />
-                  Ver reportes
-                </Link>
-              </div>
-            </div>
-
-            {/* SINPE refunds pending */}
+        {/* Avisos: solo los que tienen algo, en la misma grilla. */}
+        {(sinpePendingRefunds.length > 0 || failedRecent7.length > 0 || unusedScholarships > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {sinpePendingRefunds.length > 0 && (
               <Link href="/finanzas/devoluciones" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(233,185,73,0.10)] border border-[rgba(233,185,73,0.25)]">
                 <div className="flex items-start gap-2.5">
@@ -346,15 +252,11 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#9B7200]">
                       {sinpePendingRefunds.length} devoluci{sinpePendingRefunds.length === 1 ? 'ón' : 'ones'} SINPE pendiente{sinpePendingRefunds.length !== 1 ? 's' : ''}
                     </p>
-                    <p className="text-[13px] mt-0.5 text-[rgba(155,114,0,0.70)] font-body">
-                      Requieren procesamiento manual →
-                    </p>
+                    <p className="text-[13px] mt-0.5 text-[#9B7200] font-body">Requieren procesamiento manual →</p>
                   </div>
                 </div>
               </Link>
             )}
-
-            {/* Failed payments */}
             {failedRecent7.length > 0 && (
               <Link href="/finanzas/pagos?estado=failed" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.20)]">
                 <div className="flex items-start gap-2.5">
@@ -363,15 +265,11 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#C41A1A]">
                       {failedRecent7.length} pago{failedRecent7.length !== 1 ? 's' : ''} fallido{failedRecent7.length !== 1 ? 's' : ''} (7 días)
                     </p>
-                    <p className="text-[13px] mt-0.5 text-[rgba(196,26,26,0.70)] font-body">
-                      Revisar en módulo de pagos →
-                    </p>
+                    <p className="text-[13px] mt-0.5 text-[#C41A1A] font-body">Revisar en módulo de pagos →</p>
                   </div>
                 </div>
               </Link>
             )}
-
-            {/* Unused scholarships */}
             {unusedScholarships > 0 && (
               <Link href="/finanzas/becas" className="block rounded-2xl p-4 transition-all hover:opacity-80 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <div className="flex items-start gap-2.5">
@@ -380,15 +278,13 @@ export default function FinanzasPage() {
                     <p className="text-[13px] font-semibold font-body text-[#1E6B42]">
                       {unusedScholarships} beca{unusedScholarships !== 1 ? 's' : ''} sin usar
                     </p>
-                    <p className="text-[13px] mt-0.5 text-[rgba(30,107,66,0.70)] font-body">
-                      Ver módulo de becas →
-                    </p>
+                    <p className="text-[13px] mt-0.5 text-[#1E6B42] font-body">Ver módulo de becas →</p>
                   </div>
                 </div>
               </Link>
             )}
           </div>
-        </div>
+        )}
       </div>
     </FinanceGuard>
   )

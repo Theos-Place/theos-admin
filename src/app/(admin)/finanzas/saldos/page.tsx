@@ -2,12 +2,87 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, Loader2 } from 'lucide-react'
+import { Wallet, Loader2, ChevronRight } from 'lucide-react'
+import { Modal } from '@/components/shared/Modal'
+import { formatDate } from '@/lib/format'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
-import { plata, type SaldoAFavor } from '@/lib/finance/saldo-a-favor'
+import { plata, type SaldoAFavor, type DetalleDelSaldo } from '@/lib/finance/saldo-a-favor'
+
+const METODO: Record<string, string> = { sinpe: 'SINPE', cash: 'Efectivo', card: 'Tarjeta', comprobante: 'Comprobante', scholarship: 'Beca' }
+
+/** El detalle de un saldo: los pagos, quién y cuándo se movió, y qué cubre el costo. */
+function DetalleDeSaldo({ s, onClose }: { s: SaldoAFavor; onClose: () => void }) {
+  const [d, setD] = useState<DetalleDelSaldo | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    let vivo = true
+    fetch(`/api/finance/credits?enrollment_id=${s.enrollment_id}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error('No se pudo cargar el detalle.'))))
+      .then(x => { if (vivo) setD(x) })
+      .catch(e => { if (vivo) setError(e.message) })
+    return () => { vivo = false }
+  }, [s.enrollment_id])
+  const traslados = d?.pagos.filter(p => p.transfer_note) ?? []
+  return (
+    <Modal onClose={onClose} titleId="detalle-saldo-titulo" width={560}>
+      <div className="p-6 space-y-5 font-body">
+        <div>
+          <h2 id="detalle-saldo-titulo" className="text-lg font-bold text-navy font-display">{s.member_name}</h2>
+          <p className="text-[13px] text-navy-light/80">{s.group_name ?? '—'}</p>
+        </div>
+
+        {/* La cuenta, en una línea que se lee */}
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-xl bg-surface-low p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Pagó</p><p className="text-base font-bold text-navy font-display">{plata(s.pagado, s.currency)}</p></div>
+          <div className="rounded-xl bg-surface-low p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Cuesta</p><p className="text-base font-bold text-navy font-display">{plata(s.costo, s.currency)}</p></div>
+          <div className="rounded-xl bg-teal-soft/30 p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">A favor</p><p className="text-base font-bold text-teal-deep font-display">{plata(s.saldo, s.currency)}</p></div>
+        </div>
+
+        {error && <p role="alert" className="text-[13px] text-coral-deep">{error}</p>}
+        {!d && !error && <p className="flex items-center gap-2 text-[13px] text-navy-light/80"><Loader2 size={14} className="animate-spin" aria-hidden /> Cargando…</p>}
+
+        {d && (
+          <>
+            {/* De dónde salió */}
+            <section className="space-y-1.5">
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">De dónde salió</p>
+              {traslados.length > 0 ? (
+                traslados.map(p => <p key={p.id} className="text-[13px] text-navy">{p.transfer_note}</p>)
+              ) : (
+                <p className="text-[13px] text-navy">
+                  No hay un cambio de grupo registrado: lo pagado es más de lo que cuesta esta matrícula.
+                  Revisá los pagos de abajo — puede ser un pago duplicado o un monto distinto al del plan.
+                </p>
+              )}
+              <p className="text-[13px] text-navy-light/80">
+                El costo es {plata(s.costo, s.currency)} porque esta matrícula cubre {d.cubre.length > 0 ? d.cubre.join(' + ') : 'su estudio'}
+                {d.modalidad === 'bloques' ? ' (grupo en dos bloques: el N1 cubre también el N2)' : ''}.
+              </p>
+            </section>
+
+            {/* Los pagos */}
+            <section className="space-y-2">
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Pagos de esta matrícula</p>
+              {d.pagos.map(p => (
+                <div key={p.id} className="rounded-xl border border-[var(--outline-variant)] px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[13px] font-medium text-navy">{plata(Number(p.amount), p.currency)} · {METODO[p.payment_method ?? ''] ?? p.payment_method ?? '—'}</p>
+                    <p className="text-[13px] text-navy-light/80">{p.paid_at ? `Pagado el ${formatDate(p.paid_at)}` : `Registrado el ${formatDate(p.created_at)}`}</p>
+                  </div>
+                  {p.description && <p className="text-[13px] text-navy-light/80">{p.description}</p>}
+                  {p.reference_code && <p className="text-[13px] text-navy-light/80">Referencia {p.reference_code}</p>}
+                </div>
+              ))}
+            </section>
+          </>
+        )}
+      </div>
+    </Modal>
+  )
+}
 
 /**
  * Quién tiene plata a favor.
@@ -29,6 +104,7 @@ export default function SaldosAFavorPage() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
+  const [detalle, setDetalle] = useState<SaldoAFavor | null>(null)
 
   useEffect(() => {
     // Sin permiso la pantalla ya devuelve AccessDenied, así que el estado
@@ -110,7 +186,7 @@ export default function SaldosAFavorPage() {
             <table className="w-full border-collapse text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
-                  {['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor'].map(h => (
+                  {['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display">
                       {h}
                     </th>
@@ -129,16 +205,23 @@ export default function SaldosAFavorPage() {
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{plata(s.pagado, s.currency)}</td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{plata(s.costo, s.currency)}</td>
                     <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body">{plata(s.saldo, s.currency)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button type="button" onClick={() => setDetalle(s)}
+                        className="inline-flex items-center gap-1 rounded-full border border-navy/15 px-3 py-1 text-[13px] text-navy hover:bg-surface-low font-body">
+                        Ver detalle <ChevronRight size={13} aria-hidden />
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {filtrados.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con ese nombre.</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con ese nombre.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </>
       )}
+      {detalle && <DetalleDeSaldo s={detalle} onClose={() => setDetalle(null)} />}
     </div>
   )
 }
