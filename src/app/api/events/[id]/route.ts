@@ -3,6 +3,7 @@ import { requireRoles } from '@/lib/auth/guard'
 import { EVENT_DELETE_ROLES } from '@/lib/auth/roles'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { canSeeEventManagementData } from '@/lib/events/detail-access'
+import { isEventManager } from '@/lib/supabase/queries/events'
 import {
   getEventById, updateEventScoped, deleteEventScoped, cancelEvent,
   EventHasAttendanceError, type EventScope, type OccurrenceRef,
@@ -36,10 +37,23 @@ export async function GET(
     // La INFORMACIÓN GENERAL del evento la ve cualquier sesión (decisión
     // 2026-07-31), pero los datos de gestión NO viajan a quien no gestiona:
     // `registrations` y `checkins` traen nombres de personas inscritas.
+    //
+    // EL ENCARGADO CUENTA, y faltaba (reportado el 2026-10-13). Acá se
+    // armaban los permisos solo con los del MÓDULO, así que a quien tiene un
+    // evento a cargo sin tener el módulo —que es el caso de toda persona a
+    // la que se le «comparte» un evento— el servidor le devolvía
+    // `registrations: []`. La pantalla sí lo sabía y le mostraba el tab, con
+    // lo cual veía «Inscripciones» vacío y parecía que nadie se había
+    // inscrito. La misma regla evaluada distinto en los dos lados.
     const perms = {
       canManage: hasModulePermission(auth.ctx.roles, 'eventos', 'create'),
       canCheckin: hasModulePermission(auth.ctx.roles, 'eventos', 'edit'),
       canReport: hasModulePermission(auth.ctx.roles, 'eventos', 'export'),
+      // Solo se consulta si hace falta: quien ya tiene el módulo no necesita
+      // que le preguntemos a la base si además es encargado.
+      isManager: hasModulePermission(auth.ctx.roles, 'eventos', 'view')
+        ? false
+        : await isEventManager(id, auth.ctx.memberId),
     }
     if (!canSeeEventManagementData(perms)) {
       return NextResponse.json({ ...event, registrations: [], checkins: [], volunteers: [] })
