@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
+import { reportarError } from '@/lib/observabilidad'
 import { visiblesEnCalendario } from '@/lib/events/visibilidad-en-calendario'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
@@ -266,6 +267,32 @@ function EventosContent() {
     return () => { alive = false }
   }, [canManage])
 
+  /**
+   * EVT-9 · Los eventos que la persona tiene A CARGO.
+   *
+   * «Compartirle» un evento a alguien es nombrarlo encargado, y el
+   * encargado gestiona el evento entero —inscripciones, check-in, todos los
+   * tabs—. Pero si el evento es interno NO viene en la cartelera pública ni
+   * en la elegibilidad —no es alguien que se vaya a inscribir, es quien lo
+   * organiza—, así que sin esta llamada no le aparece en el calendario y
+   * tiene que guardarse el link para volver a entrar.
+   *
+   * Quien administra eventos no la necesita: ya los ve todos.
+   */
+  const [eventosACargo, setEventosACargo] = useState<AdminEvent[]>([])
+  useEffect(() => {
+    if (canManage) return
+    let alive = true
+    fetch('/api/events/a-mi-cargo')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!alive || !Array.isArray(d?.items)) return
+        setEventosACargo((d.items as DbEventEnriched[]).map(toDomainEvent))
+      })
+      .catch(e => reportarError('GET /api/events/a-mi-cargo:', e))
+    return () => { alive = false }
+  }, [canManage])
+
   // Fallback: si el endpoint público no trae nada, al menos los eventos a los
   // que la persona puede inscribirse (comportamiento anterior).
   //
@@ -284,15 +311,25 @@ function EventosContent() {
   )
   const merged = useMemo(() => {
     if (!canManage) {
-      if (publicEvents.length === 0) return memberEvents
       // Los datos de elegibilidad (cupo, precio) enriquecen al público.
       const eligById = new Map(memberEvents.map(e => [e.id, e]))
-      const base = publicEvents.map(e => ({ ...e, ...(eligById.get(e.id) ?? {}) }))
-      // Y los INTERNOS donde ella está inscrita se suman: no vienen en la
+      const base = publicEvents.length
+        ? publicEvents.map(e => ({ ...e, ...(eligById.get(e.id) ?? {}) }))
+        : memberEvents
+      // Los INTERNOS donde ya está adentro se SUMAN: no vienen en la
       // cartelera pública —que es justo lo que «interno» significa— así que
-      // sin esto el arreglo del filtro de arriba no se vería nunca.
-      const yaEstan = new Set(base.map(e => e.id))
-      return [...base, ...memberEvents.filter(e => !yaEstan.has(e.id))]
+      // sin esto el filtro de arriba no se vería nunca.
+      //   · a cargo  → se la nombró encargada (así se «comparte» un evento)
+      //   · inscrita → se apuntó
+      const extra = [...eventosACargo, ...memberEvents]
+      const vistos = new Set(base.map(e => e.id))
+      const sumados: AdminEvent[] = []
+      for (const e of extra) {
+        if (vistos.has(e.id)) continue
+        vistos.add(e.id)
+        sumados.push({ ...e, ...(eligById.get(e.id) ?? {}) })
+      }
+      return [...base, ...sumados]
     }
     const fullById = new Map(events.map(e => [e.id, e]))
     const result = allEventsLight.map(e => fullById.get(e.id) ?? e)
@@ -300,7 +337,7 @@ function EventosContent() {
     const seen = new Set(result.map(e => e.id))
     for (const e of events) if (!seen.has(e.id)) result.push(e)
     return result
-  }, [canManage, memberEvents, publicEvents, events, allEventsLight])
+  }, [canManage, memberEvents, publicEvents, eventosACargo, events, allEventsLight])
 
   // Ocurrencias del mes en curso (recurrentes contados por día).
   const thisMonthEvents = monthEvents(merged, now.getMonth(), now.getFullYear())

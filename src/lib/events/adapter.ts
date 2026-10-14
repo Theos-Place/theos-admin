@@ -10,6 +10,18 @@ function fullName(m: { first_name: string; last_name: string } | null): string {
   return `${m.first_name} ${m.last_name}`.trim()
 }
 
+/**
+ * Las relaciones se leen con `?? []` AUNQUE el tipo las declare obligatorias.
+ *
+ * Reventaba con «Cannot read properties of undefined (reading 'map')» en
+ * cuanto un endpoint devolvía el evento sin sus relaciones —pasó el
+ * 2026-10-13 con `/api/events/a-mi-cargo`, que trae los campos de cartelera
+ * y no las inscripciones—. Y el error no se veía: el llamador tenía un
+ * `.catch` que lo tragaba, así que la lista simplemente salía incompleta.
+ *
+ * El tipo dice que vienen; la respuesta de un SELECT acotado dice que no.
+ * Gana la respuesta.
+ */
 export function toDomainEvent(db: DbEventEnriched): AdminEvent {
   return {
     id: db.id,
@@ -57,14 +69,14 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     cancellation_reason: db.cancellation_reason,
     is_active: db.is_active,
 
-    sub_events: db.sub_events.map((s) => ({
+    sub_events: (db.sub_events ?? []).map((s) => ({
       id: s.id,
       name: s.name,
       max_capacity: s.max_capacity,
       committee_id: s.committee_id ?? null,
     })),
 
-    registrations: db.registrations.map((r) => ({
+    registrations: (db.registrations ?? []).map((r) => ({
       member_id: r.member_id,
       member_name: fullName(r.member),
       payment_status: r.payment_status,
@@ -76,7 +88,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
       payment_in_review_id: r.payment_in_review_id ?? null,
     })),
 
-    checkins: db.checkins.map((c) => ({
+    checkins: (db.checkins ?? []).map((c) => ({
       id: c.id,
       member_id: c.member_id ?? '',
       member_name: fullName(c.member),
@@ -96,7 +108,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
 
     puestos_servidores: db.puestos_servidores ?? {},
 
-    volunteer_bookings: db.volunteers.map((v) => ({
+    volunteer_bookings: (db.volunteers ?? []).map((v) => ({
       member_id: v.member_id,
       member_name: fullName(v.member),
       role: v.role ?? '',

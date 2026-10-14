@@ -12,6 +12,18 @@ describe('un evento interno lo ve quien ya está adentro', () => {
     expect(loVeEnSuCalendario({ is_public: false, already_registered: true }, NADIE)).toBe(true)
   })
 
+  /**
+   * EL CASO QUE SE ESCAPÓ la primera vez. A quien le «comparten» un evento
+   * se lo nombra ENCARGADO, no se lo inscribe: gestiona el evento entero
+   * —inscripciones, check-in, todos los tabs—. La primera versión solo miró
+   * la inscripción y por eso la persona que lo reportó siguió sin verlo.
+   */
+  it('ENCARGADA de un evento interno, sin estar inscrita: LO VE', () => {
+    expect(loVeEnSuCalendario(
+      { is_public: false, es_encargado: true, already_registered: false }, NADIE,
+    )).toBe(true)
+  })
+
   it('voluntaria en un evento interno: LO VE', () => {
     expect(loVeEnSuCalendario({ is_public: false, es_voluntario: true }, NADIE)).toBe(true)
   })

@@ -77,9 +77,20 @@ describe('quién filtra y quién no', () => {
   })
 
   it('y el merge suma esos internos, que no vienen en la cartelera', () => {
-    // Sin esto el filtro de arriba no se nota: la lista parte de la
-    // cartelera pública, que por definición no trae los internos.
+    // Sin esto el filtro no se nota: la lista parte de la cartelera
+    // pública, que por definición no trae los internos.
     const pagina = readFileSync('src/app/(admin)/eventos/page.tsx', 'utf8')
-    expect(pagina).toMatch(/memberEvents\.filter\(e => !yaEstan\.has\(e\.id\)\)/)
+    expect(pagina).toContain('const extra = [...eventosACargo, ...memberEvents]')
+  })
+
+  /**
+   * «Compartirle» un evento a alguien es nombrarlo ENCARGADO, no
+   * inscribirlo. La primera versión del arreglo solo miró la inscripción y
+   * por eso quien lo reportó siguió sin ver su evento: era encargada y no
+   * estaba inscrita.
+   */
+  it('los eventos A CARGO se piden aparte: no vienen en la elegibilidad', () => {
+    const pagina = readFileSync('src/app/(admin)/eventos/page.tsx', 'utf8')
+    expect(pagina).toContain('/api/events/a-mi-cargo')
   })
 })
