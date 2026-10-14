@@ -4,12 +4,17 @@ import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verViaje } from '@/lib/supabase/queries/travel'
-import { seLiquida } from '@/lib/travel/estados-del-viaje'
+import type { EstadoDeViaje } from '@/lib/travel/estados-del-viaje'
 import { PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
 import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
+/** Donde ya no se adjunta nada: el expediente es lo que finanzas revisó. */
+const ESTADOS_CERRADOS: EstadoDeViaje[] = ['cerrada', 'rechazada', 'cancelada']
+
 /**
- * FIN-11 fase B · Subir el comprobante de UN gasto.
+ * FIN-11 · Subir UN archivo del expediente: el comprobante de un gasto
+ * (fase B), la aprobación del jefe (fase C) o una evidencia del informe
+ * (fase D).
  *
  * Devuelve la ruta en el bucket; la fila del gasto se guarda aparte, con el
  * resto de la tabla. Separado a propósito: la persona adjunta las facturas a
@@ -32,13 +37,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const viaje = await verViaje(id)
     if (!viaje) return NextResponse.json({ error: 'No se encontró el viaje.' }, { status: 404 })
-    // Solo quien viajó, y solo mientras liquida: finanzas revisa, no carga
-    // facturas por él.
+    // Solo quien viajó: finanzas revisa, no carga facturas por él.
     if (auth.ctx.memberId !== viaje.member_id) {
-      return NextResponse.json({ error: 'La liquidación la llena quien viajó.' }, { status: 403 })
+      return NextResponse.json({ error: 'Los archivos los adjunta quien viajó.' }, { status: 403 })
     }
-    if (!seLiquida(viaje.status)) {
-      return NextResponse.json({ error: 'Este viaje no está en liquidación.' }, { status: 409 })
+    // Antes esto exigía `seLiquida`, y dejó de alcanzar con la fase D: la
+    // evidencia del informe se adjunta también después de liquidar. El
+    // candado de verdad no está acá sino donde se GUARDAN los gastos y la
+    // bitácora, que sí exigen `seLiquida`; un archivo subido fuera de ese
+    // momento no entra en ninguna cuenta.
+    if (ESTADOS_CERRADOS.includes(viaje.status)) {
+      return NextResponse.json({ error: 'Este expediente ya está cerrado.' }, { status: 409 })
+    }
+    if (viaje.status === 'borrador' || viaje.status === 'enviada' || viaje.status === 'en_revision'
+      || viaje.status === 'por_corregir') {
+      return NextResponse.json({ error: 'Todavía no hay nada que adjuntar: el viaje no está aprobado.' }, { status: 409 })
     }
 
     const form = await req.formData()

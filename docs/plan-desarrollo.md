@@ -798,7 +798,7 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 
-### [~] FIN-11 · Viáticos y kilometraje — FASES A, B y C HECHAS 2026-10-13
+### [~] FIN-11 · Viáticos y kilometraje — FASES A, B, C y D HECHAS 2026-10-13
 
 Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos,
 versión 1.0 del 05/05/2026). Candado de Tilopay retirado por Floriana.
@@ -919,8 +919,42 @@ Probado contra staging: odómetro al revés → 400; hueco de 50 km → aviso;
 enviar sin la aprobación del jefe → 400 con el mensaje del reglamento; 300 km
 registrados y la tarifa guardada en el expediente.
 
-**FALTA (fase D)**: el informe de viaje (ANX-04) como formulario vinculado, y
-el PDF de cada anexo con el patrón de SRV-14.
+**FASE D · EL INFORME DE VIAJE (ANX-04).** Migración `20261013240000`: los
+cuatro campos del anexo en el expediente y `travel_report_files` para la
+evidencia.
+
+**NO SALIÓ DEL MÓDULO DE FORMULARIOS, que era lo que este plan sugería, y la
+razón está medida**: `lib/forms/fill-access` deja CERRADO por defecto todo
+formulario suelto que no tenga audiencia definida ni envío registrado
+(decisión del 2026-08-06, puesta para que nadie se preinscribiera a CDEB sin
+ser recomendado). Un informe de viaje es justamente un formulario suelto, así
+que cada persona que volviera se habría topado con «este formulario no está
+abierto para vos» y habría que convocarla a mano por cada viaje. Lo que se
+perdía por el otro lado era poder editar las preguntas sin desplegar; no
+compensa, y si algún día compensa, el informe se migra con los datos que ya
+están guardados.
+
+- **Actividades y resultados son obligatorios; lecciones y recomendaciones,
+  no.** Exigirlas lleva a que la gente escriba «ninguna» para poder seguir, y
+  un «ninguna» parece una respuesta cuando no lo es.
+- **Se guarda incompleto**: el informe se escribe de a poco y perder lo ya
+  escrito por exigir el resto es la forma segura de que nadie lo escriba. La
+  marca de «entregado» solo se pone cuando están los dos obligatorios.
+- **NO bloquea la liquidación**, como pedía el plan: la plata y el reporte son
+  trámites distintos, y retener el reembolso de alguien hasta que escriba un
+  texto es una sanción que el reglamento no pide. Lo que sí hace es AVISAR en
+  el modal de cerrar, para que quien cierra un expediente sin informe lo vea
+  ahí y no en una auditoría.
+- Se escribe desde que el viaje se aprueba —la gente lo arma durante el
+  viaje— y hasta que se cierra.
+
+**Lo que apareció probando**: la pantalla escondía el informe antes de la
+aprobación y **la API lo aceptaba igual**. Es la misma clase de bug que se
+repitió el 2026-10-12 con los permisos de eventos; ahora la ventana
+(`sePuedeInformar`) la preguntan los dos.
+
+**FALTA**: el PDF de cada anexo con el patrón de SRV-14, para el archivo
+físico y la Junta.
 
 ## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
 

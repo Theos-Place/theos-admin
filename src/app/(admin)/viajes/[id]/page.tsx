@@ -33,6 +33,8 @@ import type { GastoEjecutado, SaldoDeLiquidacion } from '@/lib/travel/liquidacio
 import { Bitacora } from '@/components/travel/Bitacora'
 import type { Tramo } from '@/lib/travel/kilometraje'
 import type { Moneda } from '@/lib/travel/presupuesto'
+import { InformeDeViaje } from '@/components/travel/InformeDeViaje'
+import { avisarQueFaltaInforme, sePuedeInformar, type Informe } from '@/lib/travel/informe'
 
 type Viaje = {
   id: string; member_id: string; member_name: string; status: EstadoDeViaje
@@ -56,6 +58,8 @@ type Viaje = {
   km_totales: number; km_monto: number; km_tarifa: number; km_moneda: Moneda
   km_avisos: Array<{ indice: number; mensaje: string }>
   aprobacion_jefe_path: string | null
+  informe: Informe; informe_completo: boolean; informe_enviado_at: string | null
+  informe_archivos: Array<{ id: string; path: string; nombre: string }>
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
   totales: TotalPorMoneda[]
   history: Array<{ from_status: string | null; to_status: string; notes: string | null; changed_by_name: string | null; created_at: string }>
@@ -286,6 +290,19 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
         />
       )}
 
+      {/* El informe se escribe desde que el viaje está aprobado: la gente lo
+          arma durante el viaje, no al final. */}
+      {(sePuedeInformar(v.status) || v.status === 'cerrada') && (
+        <InformeDeViaje
+          viajeId={v.id}
+          editable={esDueno && sePuedeInformar(v.status)}
+          inicial={v.informe}
+          archivos={v.informe_archivos}
+          enviadoAt={v.informe_enviado_at}
+          onCambio={cargar}
+        />
+      )}
+
       <section className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-2">
         <h2 className="text-[13px] font-bold text-navy font-display">Las firmas</h2>
         <p className="text-[13px] text-navy-light/80 font-body">
@@ -325,6 +342,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
       {paso && actores.length > 0 && (
         <ModalDePaso
           viajeId={v.id} de={v.status} a={paso} actores={actores}
+          aviso={avisarQueFaltaInforme(v.informe, paso === 'cerrada')}
           onCerrar={() => setPaso(null)}
           onListo={() => {
             setPaso(null)
@@ -402,8 +420,10 @@ function RevisionFinanciera({ viaje, onListo }: { viaje: Viaje; onListo: () => v
   )
 }
 
-function ModalDePaso({ viajeId, de, a, actores, onCerrar, onListo }: {
+function ModalDePaso({ viajeId, de, a, actores, aviso, onCerrar, onListo }: {
   viajeId: string; de: EstadoDeViaje; a: EstadoDeViaje; actores: readonly Actor[]
+  /** Lo que hay que ver ANTES de dar el paso, no después (el informe que falta). */
+  aviso?: string | null
   onCerrar: () => void; onListo: () => void
 }) {
   const [nota, setNota] = useState('')
@@ -435,6 +455,11 @@ function ModalDePaso({ viajeId, de, a, actores, onCerrar, onListo }: {
         <h2 id="paso-title" className="text-base font-bold text-navy font-display">
           {nombreDelPaso(de, a)}
         </h2>
+        {aviso && (
+          <p className="rounded-xl bg-[rgba(233,185,73,0.15)] px-3 py-2 text-[13px] text-[#A8821F] font-body">
+            {aviso}
+          </p>
+        )}
         <div className="space-y-1.5">
           <label htmlFor="paso-nota" className={etiqueta}>
             {faltaNota ? 'Motivo (obligatorio)' : 'Nota (opcional)'}

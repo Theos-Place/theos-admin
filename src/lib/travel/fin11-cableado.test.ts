@@ -257,3 +257,46 @@ describe('FIN-11 fase C · la bitácora de kilometraje', () => {
     expect(sinComentarios(RUTA_ID)).toContain('La bitácora la llena quien viajó.')
   })
 })
+
+describe('FIN-11 fase D · el informe', () => {
+  it('NO salió del módulo de formularios, y queda dicho por qué', () => {
+    // No es pereza: `fill-access` deja cerrado por defecto todo formulario
+    // suelto sin audiencia, así que cada quien que volviera de viaje se
+    // habría topado con «este formulario no está abierto para vos».
+    const src = readFileSync('src/lib/travel/informe.ts', 'utf8')
+    expect(src).toContain('fill-access')
+    expect(src).toContain('cerrado')
+  })
+
+  it('no bloquea la liquidación: solo avisa al cerrar', () => {
+    const q = sinComentarios(QUERIES)
+    // El guard de enviar liquidación NO mira el informe.
+    const i = q.indexOf('export async function firmarYEnviarLiquidacion')
+    expect(q.slice(i, i + 1800)).not.toContain('informe')
+    // Y el aviso aparece en el modal de cerrar.
+    expect(sinComentarios(DETALLE)).toContain('avisarQueFaltaInforme(v.informe, paso === \'cerrada\')')
+  })
+
+  it('se guarda incompleto, y la marca de entregado solo con lo obligatorio', () => {
+    // Perder lo ya escrito por exigir el resto es la forma segura de que
+    // nadie lo escriba.
+    const q = sinComentarios(QUERIES)
+    expect(q).toContain('informe_enviado_at: completo ? new Date().toISOString() : null')
+  })
+
+  it('lo escribe quien viajó, no finanzas', () => {
+    expect(sinComentarios(RUTA_ID)).toContain('El informe lo escribe quien viajó.')
+  })
+
+  it('la ventana para informar es la MISMA en la pantalla y en el servidor', () => {
+    // La pantalla escondía la sección antes de aprobar y la API la aceptaba
+    // igual. Esa diferencia es el bug que se repitió todo el 2026-10-12.
+    expect(sinComentarios(QUERIES)).toContain('sePuedeInformar(input.estado)')
+    expect(sinComentarios(DETALLE)).toContain('sePuedeInformar(v.status)')
+  })
+
+  it('la tabla de evidencia tiene RLS', () => {
+    const sql = readFileSync('supabase/migrations/20261013240000_fin11_informe_de_viaje.sql', 'utf8')
+    expect(sql).toContain('alter table public.travel_report_files enable row level security')
+  })
+})

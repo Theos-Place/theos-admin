@@ -7,6 +7,7 @@ import {
   verViaje, editarViaje, moverViaje, anotarRevisionFinanciera,
   guardarGastos, anotarAnticipoEntregado, firmarYEnviarLiquidacion,
   guardarBitacora, guardarAprobacionDelJefe,
+  guardarInforme, agregarArchivoDeInforme, quitarArchivoDeInforme,
   PasoInvalido, DatosInvalidos,
 } from '@/lib/supabase/queries/travel'
 import { actoresDe, ESTADOS_DE_VIAJE } from '@/lib/travel/estados-del-viaje'
@@ -137,6 +138,22 @@ const accionSchema = z.discriminatedUnion('action', [
     receipt_path: z.string().trim().max(500).nullable(),
   }),
   z.object({
+    action: z.literal('informe'),
+    actividades: z.string().trim().max(5000).nullish(),
+    resultados: z.string().trim().max(5000).nullish(),
+    lecciones: z.string().trim().max(5000).nullish(),
+    recomendaciones: z.string().trim().max(5000).nullish(),
+  }),
+  z.object({
+    action: z.literal('informe_archivo'),
+    path: z.string().trim().min(1).max(500),
+    nombre: z.string().trim().min(1).max(200),
+  }),
+  z.object({
+    action: z.literal('quitar_informe_archivo'),
+    archivo_id: z.string().uuid(),
+  }),
+  z.object({
     action: z.literal('enviar_liquidacion'),
     // El checkbox de la declaración jurada. Sin él no se manda: es la firma.
     declaro: z.literal(true),
@@ -193,6 +210,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (parsed.data.action === 'aprobacion_jefe') {
       if (!r.esDueno) return NextResponse.json({ error: 'La adjunta quien viajó.' }, { status: 403 })
       await guardarAprobacionDelJefe(id, parsed.data.receipt_path)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (parsed.data.action === 'informe') {
+      // El informe lo escribe quien viajó. Finanzas lo lee, no lo redacta.
+      if (!r.esDueno) return NextResponse.json({ error: 'El informe lo escribe quien viajó.' }, { status: 403 })
+      const { completo } = await guardarInforme({
+        id, estado: r.viaje.status, memberId: auth.ctx.memberId,
+        informe: {
+          actividades: parsed.data.actividades ?? null,
+          resultados: parsed.data.resultados ?? null,
+          lecciones: parsed.data.lecciones ?? null,
+          recomendaciones: parsed.data.recomendaciones ?? null,
+        },
+      })
+      return NextResponse.json({ ok: true, completo })
+    }
+
+    if (parsed.data.action === 'informe_archivo' || parsed.data.action === 'quitar_informe_archivo') {
+      if (!r.esDueno) return NextResponse.json({ error: 'El informe lo escribe quien viajó.' }, { status: 403 })
+      if (parsed.data.action === 'informe_archivo') {
+        await agregarArchivoDeInforme(id, parsed.data.path, parsed.data.nombre)
+      } else {
+        await quitarArchivoDeInforme(id, parsed.data.archivo_id)
+      }
       return NextResponse.json({ ok: true })
     }
 

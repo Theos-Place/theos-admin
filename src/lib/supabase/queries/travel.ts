@@ -22,6 +22,7 @@ import {
   kmTotales, montoAReconocer, revisarBitacora, avisosDeBitacora,
   faltaAprobacionDelJefe, TARIFA_POR_KM, type Tramo,
 } from '@/lib/travel/kilometraje'
+import { informeEstaCompleto, sePuedeInformar, type Informe } from '@/lib/travel/informe'
 
 /**
  * `database.ts` se genera del esquema y todavía no conoce las tres tablas de
@@ -90,6 +91,11 @@ export type ViajeFila = {
   km_moneda: Moneda
   km_avisos: Array<{ indice: number; mensaje: string }>
   aprobacion_jefe_path: string | null
+  // Fase D · informe
+  informe: Informe
+  informe_completo: boolean
+  informe_enviado_at: string | null
+  informe_archivos: Array<{ id: string; path: string; nombre: string }>
   /** Índices de gastos con fecha lejana al viaje: aviso para quien revisa. */
   gastos_con_fecha_rara: number[]
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
@@ -115,6 +121,9 @@ const SELECT = `
   gastos:travel_expenses(id, fecha, rubro, proveedor, numero_comprobante, monto, moneda, receipt_path, sin_comprobante_motivo, orden),
   tramos:travel_mileage_legs(id, fecha, origen, destino, hora_salida, hora_regreso, km_inicial, km_final, orden),
   aprobacion_jefe_path, tarifa_km_aplicada, tarifa_km_moneda,
+  informe_actividades, informe_resultados, informe_lecciones, informe_recomendaciones,
+  informe_enviado_at,
+  informe_archivos:travel_report_files(id, path, nombre),
   history:travel_request_status_history(
     from_status, to_status, notes, created_at,
     autor:members!travel_request_status_history_changed_by_fkey(first_name, last_name)
@@ -176,6 +185,12 @@ function aFila(r: Record<string, unknown>): ViajeFila {
   const kmTarifa = r.tarifa_km_aplicada != null ? Number(r.tarifa_km_aplicada) : TARIFA_POR_KM.monto
   const kmMoneda = (r.tarifa_km_moneda as Moneda | null) ?? TARIFA_POR_KM.moneda
   const km = kmTotales(tramos)
+  const informe: Informe = {
+    actividades: (r.informe_actividades as string | null) ?? null,
+    resultados: (r.informe_resultados as string | null) ?? null,
+    lecciones: (r.informe_lecciones as string | null) ?? null,
+    recomendaciones: (r.informe_recomendaciones as string | null) ?? null,
+  }
   return {
     id: r.id as string,
     member_id: r.member_id as string,
@@ -186,6 +201,11 @@ function aFila(r: Record<string, unknown>): ViajeFila {
     km_monto: montoAReconocer(km, kmTarifa),
     km_avisos: avisosDeBitacora(tramos),
     aprobacion_jefe_path: (r.aprobacion_jefe_path as string | null) ?? null,
+    informe,
+    informe_completo: informeEstaCompleto(informe),
+    informe_enviado_at: (r.informe_enviado_at as string | null) ?? null,
+    informe_archivos: ((r.informe_archivos ?? []) as Array<Record<string, unknown>>)
+      .map(f => ({ id: f.id as string, path: f.path as string, nombre: f.nombre as string })),
     anticipo_recibido_monto: r.anticipo_recibido_monto == null ? null : Number(r.anticipo_recibido_monto),
     anticipo_recibido_moneda: (r.anticipo_recibido_moneda as Moneda | null) ?? null,
     anticipo_entregado_at: (r.anticipo_entregado_at as string | null) ?? null,
@@ -539,5 +559,60 @@ export async function guardarAprobacionDelJefe(id: string, path: string | null):
   const supabase = sinTipos()
   const { error } = await supabase.from('travel_requests')
     .update({ aprobacion_jefe_path: path }).eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * FIN-11 fase D · Guardar el informe del viaje.
+ *
+ * Se puede guardar incompleto: el informe se escribe de a poco y perder lo
+ * ya escrito por exigir el resto sería la forma segura de que nadie lo
+ * escriba. `informe_enviado_at` solo se pone cuando está completo, y es lo
+ * que distingue «lo está redactando» de «lo entregó».
+ *
+ * Se puede escribir hasta que el expediente se cierre. Después no: un
+ * expediente cerrado es lo que finanzas revisó.
+ */
+export async function guardarInforme(input: {
+  id: string
+  estado: EstadoDeViaje
+  memberId: string | null
+  informe: Informe
+}): Promise<{ completo: boolean }> {
+  if (!sePuedeInformar(input.estado)) {
+    throw new PasoInvalido(
+      input.estado === 'cerrada' || input.estado === 'rechazada' || input.estado === 'cancelada'
+        ? 'Este expediente ya está cerrado.'
+        : 'Todavía no hay viaje del cual informar: falta que se apruebe.',
+    )
+  }
+  const completo = informeEstaCompleto(input.informe)
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_requests').update({
+    informe_actividades: input.informe.actividades,
+    informe_resultados: input.informe.resultados,
+    informe_lecciones: input.informe.lecciones,
+    informe_recomendaciones: input.informe.recomendaciones,
+    informe_enviado_at: completo ? new Date().toISOString() : null,
+    informe_enviado_por: completo ? input.memberId : null,
+  }).eq('id', input.id)
+  if (error) throw error
+  return { completo }
+}
+
+/** Adjuntar un archivo de evidencia al informe. */
+export async function agregarArchivoDeInforme(
+  id: string, path: string, nombre: string,
+): Promise<void> {
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_report_files')
+    .insert({ travel_request_id: id, path, nombre })
+  if (error) throw error
+}
+
+export async function quitarArchivoDeInforme(id: string, archivoId: string): Promise<void> {
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_report_files')
+    .delete().eq('id', archivoId).eq('travel_request_id', id)
   if (error) throw error
 }
