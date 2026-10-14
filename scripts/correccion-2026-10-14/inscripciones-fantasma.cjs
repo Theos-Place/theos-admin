@@ -14,6 +14,12 @@
  * 10-oct, José Carlos Mora 12-oct). Adivinar «la más cercana» es justo cómo
  * terminaron cobrados de más. Se reportan y los decide Floriana.
  *
+ * LO QUE PASÓ DESPUÉS, el mismo día: Floriana resolvió los dos (respondieron
+ * en octubre, Sports Day ya había pasado → Hiking) y pidió que los 19 cobros
+ * anulados se BORRARAN en vez de quedar como «Anulado»: fueron errores desde
+ * que se crearon, no pagos que se anularon. Respaldo completo de las filas en
+ * `pagos-fantasma-borrados.json`.
+ *
  *   node scripts/correccion-2026-10-14/inscripciones-fantasma.cjs            # ensayo
  *   node scripts/correccion-2026-10-14/inscripciones-fantasma.cjs --aplicar
  */

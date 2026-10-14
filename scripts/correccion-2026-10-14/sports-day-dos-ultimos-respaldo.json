@@ -1,0 +1,24 @@
+[
+  {
+    "reg": "334b10c8-c1eb-4acc-ac2e-d72389ce23f2",
+    "persona": "Eduardo Bonilla Vega",
+    "evento": "Sports Day",
+    "sesion": "2026-09-20",
+    "respondio": "2026-10-08",
+    "checkins": "0",
+    "pagos": [
+      "fd48ad48-1228-4136-a62b-0c88a619bd62"
+    ]
+  },
+  {
+    "reg": "5ac4d40a-4a2c-4cc6-836c-b8b1462d0ea8",
+    "persona": "Jose Carlos Mora Perez",
+    "evento": "Sports Day",
+    "sesion": "2026-09-20",
+    "respondio": "2026-10-12",
+    "checkins": "0",
+    "pagos": [
+      "8b1080fa-6b91-4e35-8572-194e7dec823b"
+    ]
+  }
+]
