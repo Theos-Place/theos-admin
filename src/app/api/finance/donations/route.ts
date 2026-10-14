@@ -45,6 +45,10 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({
       donations: stripAmounts ? rows.map(d => ({ ...d, amount: null })) : rows,
+      // Desde el 2026-10-14 un monto null también significa «no conocido»
+      // (15.288 donaciones importadas sin monto). La pantalla necesita saber
+      // si el null es eso o es que a esta persona se le ocultan los montos.
+      amounts_visible: !stripAmounts,
       total,
       filtered_sum: withSum && !stripAmounts ? sum : null,
     })

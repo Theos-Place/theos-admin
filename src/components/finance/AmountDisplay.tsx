@@ -4,9 +4,16 @@ import { Eye, EyeOff } from 'lucide-react'
 import { formatMoney, currencySymbol } from '@/lib/format'
 import { totalsEntries, type MoneyTotals } from '@/lib/money'
 
-export function AmountDisplay({ amount, currency = 'CRC', defaultHidden = true, revealed: externalRevealed }: {
-  /** null = monto restringido (solo rol finanzas lo recibe): oculto sin toggle. */
+export function AmountDisplay({ amount, currency = 'CRC', defaultHidden = true, revealed: externalRevealed, restricted = true }: {
+  /** null = monto restringido (solo rol finanzas lo recibe) O monto no
+   *  conocido: lo decide `restricted`. */
   amount: number | null
+  /** ¿A quien mira se le OCULTAN los montos? Si no —puede verlos y el monto
+   *  es null— se dice «Sin monto», que es la verdad: desde el 2026-10-14 hay
+   *  15.288 donaciones importadas sin monto, y pintarlas como «•••,•••» hacía
+   *  creer a finanzas que había un monto escondido. Default true para no
+   *  cambiar a nadie que no pase el dato. */
+  restricted?: boolean
   /** INT-2: moneda de la fila (default CRC, todo lo histórico). */
   currency?: string
   defaultHidden?: boolean
@@ -17,6 +24,7 @@ export function AmountDisplay({ amount, currency = 'CRC', defaultHidden = true, 
   const hidden = `${currencySymbol(currency)} •••,•••`
 
   if (amount == null) {
+    if (!restricted) return <span className="text-navy-light/80">Sin monto</span>
     return <span className="inline-flex items-center gap-1">{hidden}</span>
   }
 

@@ -54,13 +54,19 @@ function buildQuery(params: DonationSearchParams, page: number): string {
  * cambiar de filtro se vería la suma vieja junto a la lista nueva.
  */
 export function useDonations(params: DonationSearchParams) {
-  const lista = usePaginatedList<DbDonation, Donation, MoneyTotals | null>(
+  // Viaja también `amounts_visible`: si quien pregunta puede ver montos. Sin
+  // eso la fila con monto null se pintaba como «restringida» (₡ •••,•••) para
+  // finanzas, que sí puede verlos; «Sin monto» y «monto oculto» no son lo mismo.
+  const lista = usePaginatedList<DbDonation, Donation, { filteredSum: MoneyTotals | null; amountsVisible: boolean }>(
     page => `/api/finance/donations?${buildQuery(params, page)}`,
     {
       pageSize: PAGE_SIZE,
       itemsKey: 'donations',
       mapItem: toDomainDonation,
-      leerExtra: d => (d.filtered_sum as MoneyTotals | null) ?? null,
+      leerExtra: d => ({
+        filteredSum: (d.filtered_sum as MoneyTotals | null) ?? null,
+        amountsVisible: d.amounts_visible === true,
+      }),
     },
   )
 
@@ -85,7 +91,8 @@ export function useDonations(params: DonationSearchParams) {
     donations: lista.items,
     total: lista.total,
     stats,
-    filteredSum: lista.extra,
+    filteredSum: lista.extra?.filteredSum ?? null,
+    amountsVisible: lista.extra?.amountsVisible === true,
     loading: lista.loading,
     error: lista.error,
     hasMore: lista.hasMore,

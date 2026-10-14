@@ -23,6 +23,8 @@ type StatusFilter = 'all' | 'identified' | 'unidentified'
 
 export default function DonacionesPage() {
   const [revealAll, setRevealAll] = useState(false)
+  // Lo dice el servidor: null en un monto es «restringido» para quien no
+  // tiene finanzas, y «no conocido» para quien sí (2026-10-14).
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -34,7 +36,7 @@ export default function DonacionesPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  const { donations, total, stats, filteredSum, loading, error, hasMore, loadMore, refetch } =
+  const { donations, total, stats, filteredSum, amountsVisible, loading, error, hasMore, loadMore, refetch } =
     useDonations({ search, status: statusFilter, from: dateFrom, to: dateTo })
 
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
@@ -263,7 +265,7 @@ export default function DonacionesPage() {
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-[13px] font-medium font-body text-navy">
-                        <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} />
+                        <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} restricted={!amountsVisible} />
                       </p>
                     </td>
                     <td className="px-5 py-4">
@@ -315,7 +317,7 @@ export default function DonacionesPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <p className="text-[13px] font-medium font-body text-navy">
-                    <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} />
+                    <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} restricted={!amountsVisible} />
                   </p>
                   <span
                     className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
@@ -379,7 +381,7 @@ export default function DonacionesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[13px] font-medium font-body text-navy">
-                        {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} />
+                        {formatDate(d.donation_date)} — <AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} restricted={!amountsVisible} />
                       </p>
                       <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
                         {d.source_file}
