@@ -1281,7 +1281,7 @@ export type {
 // ── Mutaciones (alta/edición/baja, fusión de duplicados, familia): extraídas a
 // ./members-mutations. Re-exportadas acá para no tocar a los consumidores. ─────
 export {
-  findMemberByCedulaOrEmail, mergeMembers, getDuplicatePairs, dismissDuplicatePair,
+  findMemberByCedulaOrEmail, getDuplicatePairs, dismissDuplicatePair,
   conAdultoEnLaFamilia,
   createMember, createFamily, getMemberFamily, linkFamilyMember, previewFamilyLink, unlinkFamilyMember, updateFamilyRelation,
   updateMember, deactivateMember,

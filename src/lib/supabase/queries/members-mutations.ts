@@ -67,35 +67,21 @@ export async function findMemberByCedulaOrEmail(
   return (byCedula?.data ?? byEmail?.data ?? null) as { id: string } | null
 }
 
-/** Fusiona dos miembros duplicados: reasigna todo lo de `dupId` a `keepId` y
- *  borra el duplicado. Corre la función transaccional `merge_members` en la BD. */
-export async function mergeMembers(
-  keepId: string,
-  dupId: string,
-  opts?: { fields?: Record<string, unknown>; soft?: boolean },
-): Promise<void> {
-  const supabase = createAdminClient()
-
-  // 1) La FUSIÓN es lo crítico y atómico (RPC). Va PRIMERO: si falla, no se tocó
-  //    nada. Solo este error es un fallo real de fusión que el front debe mostrar.
-  const { error } = await supabase.rpc('merge_members', { keep_id: keepId, dup_id: dupId, soft: opts?.soft ?? false })
-  if (error) throw error
-
-  // 2) Valores elegidos campo-por-campo para el principal (cosmético, en una
-  //    request aparte que no es transaccional con el RPC). La fusión YA ocurrió:
-  //    si esto falla NO es un fallo de fusión — se loguea y se continúa, para no
-  //    mostrarle al admin un "falló" cuando en realidad fusionó.
-  if (opts?.fields && Object.keys(opts.fields).length > 0) {
-    const { data: cur } = await supabase
-      .from('members').select('field_updated_at').eq('id', keepId).maybeSingle()
-    const now = new Date().toISOString()
-    const stamp = { ...((cur as { field_updated_at?: Record<string, string> } | null)?.field_updated_at ?? {}) }
-    for (const k of Object.keys(opts.fields)) stamp[k] = now
-    const { error: uErr } = await supabase
-      .from('members').update({ ...opts.fields, field_updated_at: stamp }).eq('id', keepId)
-    if (uErr) reportarFalla('mergeMembers: fusión OK, pero falló el update de campos del principal:', uErr.message)
-  }
-}
+/*
+ * Acá vivía `mergeMembers()`, que llamaba a `merge_members()` a secas.
+ *
+ * SE BORRÓ EL 2026-10-13 y el motivo importa: esa función NO anota el
+ * external_id del duplicado en `external_id_fusionados` del principal, así
+ * que después `member_por_external_id()` devuelve la ficha MUERTA —peor
+ * que no encontrar nada, porque la persona aparece inactiva cuando está
+ * sirviendo—. Lo descubrí fusionando las dos fichas de Víctor Guerra con
+ * ella y teniendo que reparar el rastro a mano.
+ *
+ * No la usaba ninguna pantalla: la fusión real va por
+ * `mergeMembersResuelto()`, que sí lo anota, en una sola transacción.
+ * Quedaba exportada, que es la peor forma de código muerto — una función
+ * que hace lo incorrecto y está ahí para que alguien la encuentre.
+ */
 
 /**
  * Fusión con la resolución campo por campo.
