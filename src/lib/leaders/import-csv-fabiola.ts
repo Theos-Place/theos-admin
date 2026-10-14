@@ -100,7 +100,7 @@ export function decidir(fila: FilaDelCsv, sistema: LoQueSabeElSistema): Decision
   // 5 · EN REVISIÓN: es una BANDERITA, no un estado. El estado de abajo
   //     sale de su columna de disponibilidad.
   if (status === 'en revision') {
-    const base = disponibilidadDeCsv(disp, sistema)
+    const base = disponibilidadDeCsv(disp)
     return {
       tipo: 'aplicar',
       cambios: { ...base, revision: ['no_confirmo_datos'] },
@@ -121,7 +121,7 @@ export function decidir(fila: FilaDelCsv, sistema: LoQueSabeElSistema): Decision
 
   // 7 · ACTIVO.
   if (status === 'activo') {
-    return { tipo: 'aplicar', cambios: { ...disponibilidadDeCsv(disp, sistema), revision: [] } }
+    return { tipo: 'aplicar', cambios: { ...disponibilidadDeCsv(disp), revision: [] } }
   }
 
   return { tipo: 'revisar', motivo: `Estado desconocido en el CSV: «${fila.status}».` }
@@ -131,10 +131,7 @@ export function decidir(fila: FilaDelCsv, sistema: LoQueSabeElSistema): Decision
  * La disponibilidad de un ACTIVO, según lo que dice el CSV y lo que sabe el
  * sistema.
  */
-function disponibilidadDeCsv(
-  disp: string,
-  sistema: LoQueSabeElSistema,
-): Omit<CambiosDeEstado, 'revision'> {
+function disponibilidadDeCsv(disp: string): Omit<CambiosDeEstado, 'revision'> {
   const activo = { estado_base: 'activo' as const, razon_inactivo: null }
 
   /**
@@ -150,8 +147,9 @@ function disponibilidadDeCsv(
    *     solo vale si hay un estudio en matrícula, en curso o por empezar.
    *     Sin grupo, lo que de verdad está es DISPONIBLE.
    *
-   * `sistema.dirigiendo` se usa igual, más arriba, para no desactivar a
-   * quien sí tiene grupo.
+   * Por eso esta función NO necesita saber si tiene grupo: el resultado es
+   * el mismo en los dos casos. `dirigiendo` se usa más arriba, donde sí
+   * cambia la decisión (no desactivar a quien está dando).
    */
   if (disp === 'en curso' || disp === 'codirigente en curso') {
     return { ...activo, disponibilidad: 'disponible', razon_no_disponible: null }
