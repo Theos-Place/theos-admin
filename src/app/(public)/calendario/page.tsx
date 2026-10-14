@@ -177,11 +177,12 @@ function CalendarioWidget() {
               <div key={`${ev.id}-${ev.start_at}`} onClick={() => setSelectedEvent(ev)}
                 className="flex flex-col overflow-hidden rounded-xl border border-[rgba(0,0,0,0.08)] bg-white cursor-pointer">
                 {ev.flyer_url ? (
-                  /* aspect-[16/9] + object-contain: los flyers reales son 16:9
-                     (medido), así que llenan la caja exactos. El que no lo sea se
-                     ve entero con banda a los lados, mejor que perder medio texto. */
+                  /* aspect-[16/9]: los flyers reales son 16:9 (medido). Llena la
+                     caja (object-cover): pedido de Floriana el 2026-10-14, «que
+                     nunca queden márgenes en el hero». El que no sea 16:9 se
+                     recorta centrado; entero se ve en el detalle de abajo. */
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={ev.flyer_url} alt={`Flyer de ${ev.name}`} className="aspect-[16/9] w-full object-contain bg-surface-low" />
+                  <img src={ev.flyer_url} alt={`Flyer de ${ev.name}`} className="aspect-[16/9] w-full object-cover bg-surface-low" />
                 ) : (
                   <div className="flex h-32 w-full flex-col items-center justify-center" style={{ background: `${accent}14` }}>
                     <div className="text-[28px] font-extrabold leading-none" style={{ color: primary }}>{day}</div>
