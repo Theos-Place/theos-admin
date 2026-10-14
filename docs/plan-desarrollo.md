@@ -670,7 +670,57 @@ teléfono, registrar contacto guarda historial (dos marcas = dos entradas) y el 
 por estado. tsc/lint/vitest.
 ```
 
-### [ ] DAT-14 · Histórico completo de process queues de CCB (pedido 2026-09-28)
+### [x] DAT-14 · Histórico completo de process queues de CCB — APLICADO 2026-10-13
+
+El export llegó completo (29.618 filas, 2013–2026) y **la decisión de Floriana
+al verlo fue acotar el alcance**: *«lo único que queremos con este reporte de
+CCB es confirmar si podemos encontrar alguno de los que teníamos dudas»*. No
+hay limpieza masiva. Las 321 `en_revision` sin respaldo **se quedan como
+están**: el archivo sirve para sumar lo que falta, no para borrar historia.
+
+**LO QUE SE APLICÓ** (`scripts/dat14-2026-10-13/aplicar.cjs`, con respaldo y
+dry-run; el criterio con tests en `src/lib/studies/conciliacion-ccb.ts`):
+
+- **40 cierres** que CCB tenía y el sistema no tenía de ninguna forma: 11 N3,
+  9 N1, 8 BUS, 5 DIS1, 4 N2, 3 N4. Entran como las 22.331 históricas —sin
+  grupo, con plan y fecha— y con nota de procedencia.
+- **Los 4 «CCB aprobó / el sistema reprobó», y resultaron ser tres casos
+  distintos.** Mailyn Ulate: mismo intento, CCB se lo aprueba un mes después
+  del cierre → se corrigió a `completed`. Roberto Acosta: reprobó en 2014 y
+  aprobó en 2015, dos intentos → **se agregó la aprobación y la reprobación se
+  quedó**; cambiarle la de 2014 le habría borrado que reprobó. Byron Pérez y
+  José Manuel Avendaño: el sistema ya tenía razón, no se tocaron.
+
+**TRES COSAS QUE SOLO APARECIERON MIDIENDO, y las tres cambiaban el resultado:**
+
+1. **El histórico de CCB se cargó SIN grupo** — 22.331 matrículas llevan plan y
+   resultado pero ningún `study_group`. Un `join study_groups` las desaparece y
+   con ellas el 60% de la historia: la primera corrida dio 17.562 «cierres
+   nunca registrados» que sí estaban. Con `left join`, 42.
+2. **Las campañas nunca fueron cola en CCB.** 8.488 de los 9.114 «sin respaldo»
+   son TRANS, PQET, TPS, CAMP, UFA, REDESC: no tienen cómo tener respaldo.
+3. **Las colas «Reprueba» no son una aprobación, pero sí son la prueba de la
+   reprobación.** De 54 reprobados sin cola de aprobación, 45 tienen su
+   «Reprueba» con fecha compatible. Botarlas habría mandado 45 reprobaciones
+   reales a la lista de «errores de unión al grupo».
+
+**LAS FECHAS NO SE PUDIERON RECUPERAR, y conviene que quede escrito por qué.**
+La fecha buena no está en `Due` (que es el vencimiento y difiere hasta por
+cinco días) sino incrustada en `Queue Days`: `"5 Days in queue, completed on
+24 jul 2020"`. Tomando `Due` salían 1.751 Nivel 2 con la MISMA fecha,
+2019-06-13 — que Floriana confirmó que fue **un arreglo hecho en CCB en su
+momento**, no el día en que nadie terminó nada. Esas filas dicen `completed
+on ` en blanco. Medido: de las 2.179 matrículas `completed` sin fecha del
+sistema, CCB tiene fecha real para **0**; 2.132 son exactamente las filas que
+en CCB tampoco la traen y 47 ni aparecen. El hueco vino de CCB y no hay de
+dónde sacarlo. Escribirles 2019-06-13 habría puesto una fecha falsa con pinta
+de exacta en el expediente de 1.751 personas.
+
+Queda sin tocar, por si alguna vez se decide: 321 `en_revision`, 109
+`completed` y 9 `reprobado` sin respaldo en CCB.
+
+<details><summary>El pedido original, 2026-09-28</summary>
+
 
 **LA REGLA, dicha por Floriana**: *solo deberían existir cierres o aprobaciones
 de personas que tienen process queue en CCB. Si estuvieron en un grupo y
@@ -743,6 +793,8 @@ queue_name, resultado, status, fecha_due).
 Tests: el cruce con duplicado fusionado devuelve la ficha VIVA; cero y dos coincidencias
 se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 ```
+
+</details>
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 

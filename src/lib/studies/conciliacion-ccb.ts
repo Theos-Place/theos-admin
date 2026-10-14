@@ -143,3 +143,36 @@ export function fueraDelAlcance(cierre: string | null, ultimaColaCcb: string): b
   if (!cierre) return false
   return cierre.slice(0, 10) > ultimaColaCcb.slice(0, 10)
 }
+
+/**
+ * La fecha de verdad está en «Queue Days», NO en «Due».
+ *
+ * `Due` es el vencimiento de la cola y difiere de la fecha real hasta por
+ * cinco días. La buena viene incrustada en una frase:
+ * `"5 Days in queue, completed on 24 jul 2020"`.
+ *
+ * ESTO SE DESCUBRIÓ A TIEMPO Y POR POCO: tomando `Due` había 1.751 Nivel 2
+ * con la misma fecha, 2019-06-13, que es un vencimiento masivo de CCB y no
+ * el día en que nadie terminó nada. Esas filas dicen `completed on ` a
+ * secas — están marcadas Done pero sin fecha de completado — y escribirles
+ * 2019-06-13 habría puesto una fecha falsa, con pinta de exacta, en el
+ * expediente de 1.751 personas. Cuando no hay fecha real, no se inventa: se
+ * devuelve null y la matrícula se queda sin fecha, que es honesto.
+ *
+ * Ojo con «sept»: CCB escribe cuatro letras para setiembre y tres para todos
+ * los demás meses. Un `[a-z]{3}` se come la «t» y la fila se pierde en
+ * silencio — se perdían 2.061 antes de contarlas bien.
+ */
+const MES_CCB: Readonly<Record<string, string>> = {
+  ene: '01', feb: '02', mar: '03', abr: '04', may: '05', jun: '06',
+  jul: '07', ago: '08', set: '09', sep: '09', sept: '09',
+  oct: '10', nov: '11', dic: '12',
+}
+
+export function fechaDeCompletado(queueDays: string | null | undefined): string | null {
+  const m = (queueDays ?? '').match(/completed on (\d{1,2}) ([a-zA-Zé]{3,4})\.? (\d{4})/)
+  if (!m) return null
+  const mes = MES_CCB[m[2].toLowerCase()]
+  if (!mes) return null
+  return `${m[3]}-${mes}-${m[1].padStart(2, '0')}`
+}

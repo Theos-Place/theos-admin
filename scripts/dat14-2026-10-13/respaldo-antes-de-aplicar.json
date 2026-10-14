@@ -1,0 +1,305 @@
+{
+  "generado": "2026-10-14T03:35:44.600Z",
+  "aFechar": [],
+  "aCorregir": [
+    {
+      "id": "880124c0-eba9-441d-99f8-b182f8c1b632",
+      "persona": "Mailyn Ulate Chavez",
+      "plan": "EVM",
+      "status": "reprobado",
+      "completed_at": null,
+      "fechaNueva": "2026-08-25"
+    }
+  ],
+  "aInsertar": [
+    {
+      "ext": "6305",
+      "plan": "N1",
+      "due": "2018-05-01",
+      "nombre": "Sequeira Cantillano, Gloriana",
+      "mid": "003150e7-1dbd-4e3e-abe6-dc22603253fc"
+    },
+    {
+      "ext": "19437",
+      "plan": "N1",
+      "due": "2025-12-17",
+      "nombre": "Angulo Jimenez, Steven",
+      "mid": "c4653283-4d7f-4d2e-bbf0-25126d2e8f58"
+    },
+    {
+      "ext": "25128",
+      "plan": "N1",
+      "due": "2025-12-17",
+      "nombre": "Fonseca Fernandez, Jorge Eduardo",
+      "mid": "aca1e8b1-dc89-497d-95f3-ffb2896209e5"
+    },
+    {
+      "ext": "8311",
+      "plan": "N1",
+      "due": "2026-01-06",
+      "nombre": "Merino, Sabrina",
+      "mid": "64563b7f-0ed2-496f-8524-9470eab9e27d"
+    },
+    {
+      "ext": "24942",
+      "plan": "N1",
+      "due": "2026-08-11",
+      "nombre": "Chavarría Flores, Silvia",
+      "mid": "93f24864-d382-4665-ae51-a77f8c05e1d7"
+    },
+    {
+      "ext": "23894",
+      "plan": "N1",
+      "due": "2026-05-25",
+      "nombre": "Solis, Rebeca",
+      "mid": "1aaa4b7a-d176-4aa2-8170-f9114d8de919"
+    },
+    {
+      "ext": "24971",
+      "plan": "N1",
+      "due": "2026-08-13",
+      "nombre": "López Cascante, Carmen María",
+      "mid": "d3b5b6df-c4b9-4ffa-8cb4-451f528a7139"
+    },
+    {
+      "ext": "24825",
+      "plan": "N1",
+      "due": "2026-08-27",
+      "nombre": "Mora Agüero, Rosaura Salomé",
+      "mid": "d9911d94-80e5-49f7-870b-3c629614ce87"
+    },
+    {
+      "ext": "21438",
+      "plan": "N1",
+      "due": "2026-08-27",
+      "nombre": "Serracín Badilla, Cynthia",
+      "mid": "0782ef14-2d4b-4071-bcc4-eb7e63791bd1"
+    },
+    {
+      "ext": "6305",
+      "plan": "N2",
+      "due": null,
+      "nombre": "Sequeira Cantillano, Gloriana",
+      "mid": "003150e7-1dbd-4e3e-abe6-dc22603253fc"
+    },
+    {
+      "ext": "25128",
+      "plan": "N2",
+      "due": "2026-03-26",
+      "nombre": "Fonseca Fernandez, Jorge Eduardo",
+      "mid": "aca1e8b1-dc89-497d-95f3-ffb2896209e5"
+    },
+    {
+      "ext": "19437",
+      "plan": "N2",
+      "due": "2026-03-26",
+      "nombre": "Angulo Jimenez, Steven",
+      "mid": "c4653283-4d7f-4d2e-bbf0-25126d2e8f58"
+    },
+    {
+      "ext": "8311",
+      "plan": "N2",
+      "due": "2026-04-07",
+      "nombre": "Merino, Sabrina",
+      "mid": "64563b7f-0ed2-496f-8524-9470eab9e27d"
+    },
+    {
+      "ext": "6305",
+      "plan": "N3",
+      "due": "2018-07-24",
+      "nombre": "Sequeira Cantillano, Gloriana",
+      "mid": "003150e7-1dbd-4e3e-abe6-dc22603253fc"
+    },
+    {
+      "ext": "10532",
+      "plan": "N3",
+      "due": "2022-09-08",
+      "nombre": "Sandí Gutiérrez, Laura",
+      "mid": "ac075b7b-0621-48cc-a5be-7ec30fed6522"
+    },
+    {
+      "ext": "25128",
+      "plan": "N3",
+      "due": "2026-06-18",
+      "nombre": "Fonseca Fernandez, Jorge Eduardo",
+      "mid": "aca1e8b1-dc89-497d-95f3-ffb2896209e5"
+    },
+    {
+      "ext": "19437",
+      "plan": "N3",
+      "due": "2026-06-18",
+      "nombre": "Angulo Jimenez, Steven",
+      "mid": "c4653283-4d7f-4d2e-bbf0-25126d2e8f58"
+    },
+    {
+      "ext": "8311",
+      "plan": "N3",
+      "due": "2026-06-23",
+      "nombre": "Merino, Sabrina",
+      "mid": "64563b7f-0ed2-496f-8524-9470eab9e27d"
+    },
+    {
+      "ext": "21106",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Barrantes Azofeifa, Kimberly",
+      "mid": "1168d258-017c-4427-bf1c-209ce2158535"
+    },
+    {
+      "ext": "21105",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Hernandez Ulloa, Geovany",
+      "mid": "8a9c2495-1770-4c47-8b36-facf42ac6f40"
+    },
+    {
+      "ext": "22701",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Solis Zamora, Kristhel",
+      "mid": "25b56ef2-ece6-48dc-8c84-37a67083eabe"
+    },
+    {
+      "ext": "23116",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Laya Castillo, Joeli",
+      "mid": "0f5cbaf6-1fb2-482d-9a98-3ffb728ee178"
+    },
+    {
+      "ext": "22702",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Alfaro Cortes, Andres",
+      "mid": "33fbe6af-effb-4b29-8ec0-1e34d9a821e2"
+    },
+    {
+      "ext": "22158",
+      "plan": "N3",
+      "due": "2026-08-16",
+      "nombre": "Leon Gutierrez, Cindy",
+      "mid": "aad09e06-723a-4829-868c-6e12a9a6ab45"
+    },
+    {
+      "ext": "6305",
+      "plan": "N4",
+      "due": "2018-11-06",
+      "nombre": "Sequeira Cantillano, Gloriana",
+      "mid": "003150e7-1dbd-4e3e-abe6-dc22603253fc"
+    },
+    {
+      "ext": "8311",
+      "plan": "N4",
+      "due": "2026-09-22",
+      "nombre": "Merino, Sabrina",
+      "mid": "64563b7f-0ed2-496f-8524-9470eab9e27d"
+    },
+    {
+      "ext": "19437",
+      "plan": "N4",
+      "due": "2026-08-27",
+      "nombre": "Angulo Jimenez, Steven",
+      "mid": "c4653283-4d7f-4d2e-bbf0-25126d2e8f58"
+    },
+    {
+      "ext": "6305",
+      "plan": "BUS",
+      "due": "2018-11-06",
+      "nombre": "Sequeira Cantillano, Gloriana",
+      "mid": "003150e7-1dbd-4e3e-abe6-dc22603253fc"
+    },
+    {
+      "ext": "11446",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Mora Soto, Alejandro",
+      "mid": "92ddd296-a21f-4a33-84aa-78297e56fef0"
+    },
+    {
+      "ext": "11173",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Soto Ocampo, Hazel",
+      "mid": "286751c3-ff33-4e12-a697-f9663d631b67"
+    },
+    {
+      "ext": "11163",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Jimenez Soto, Fabiola",
+      "mid": "bf2ce40d-dc5c-4240-9ac6-32bb9f696c5d"
+    },
+    {
+      "ext": "21844",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Quirós Barrantes, Paola",
+      "mid": "768c455f-6175-423f-bb2d-f428258c8f5a"
+    },
+    {
+      "ext": "11110",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Soto Ocampo, Natalia",
+      "mid": "20b02cef-123d-4102-a5ab-4da25f105d95"
+    },
+    {
+      "ext": "21781",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Mayorga Jimenez, Yoselin",
+      "mid": "696c50a7-3199-4cc7-a248-c10156cbc577"
+    },
+    {
+      "ext": "4725",
+      "plan": "BUS",
+      "due": "2026-08-10",
+      "nombre": "Corrales Mora, Gabriela",
+      "mid": "a2977144-17af-4441-8fb6-669cc7ad1e42"
+    },
+    {
+      "ext": "20026",
+      "plan": "DIS1",
+      "due": "2026-07-29",
+      "nombre": "Cedeño Carrillo, Wendy",
+      "mid": "277573b9-ad42-4466-b60f-1b1bdc5c031a"
+    },
+    {
+      "ext": "20027",
+      "plan": "DIS1",
+      "due": "2026-07-29",
+      "nombre": "Campos Piedra, Jeison",
+      "mid": "ed9aeb43-65e3-4c41-9811-677192f399e5"
+    },
+    {
+      "ext": "20082",
+      "plan": "DIS1",
+      "due": "2026-07-29",
+      "nombre": "Guillen Aguilar, Jason",
+      "mid": "1cd7ee23-9fc0-4818-a657-933f9da3b72e"
+    },
+    {
+      "ext": "10322",
+      "plan": "DIS1",
+      "due": "2026-07-29",
+      "nombre": "Cartin Molina, Melissa",
+      "mid": "0cef3e90-0104-45c5-8f7f-0411fce1f250"
+    },
+    {
+      "ext": "18097",
+      "plan": "DIS1",
+      "due": "2026-07-29",
+      "nombre": "Montes de Oca, Daniela",
+      "mid": "918824e0-5def-4b2d-ae22-dfacba9b84fc"
+    }
+  ],
+  "aAgregar": [
+    {
+      "mid": "bb15f159-28f7-426d-90e8-be30a668be81",
+      "plan": "PAN",
+      "due": "2015-04-08",
+      "nombre": "Roberto Acosta Acosta",
+      "ext": "366"
+    }
+  ]
+}

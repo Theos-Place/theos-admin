@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   esColaDeReprueba, PLAN_POR_COLA, COLAS_SIN_PLAN, planDeCola,
   clasificar, fueraDelAlcance, ESTADOS_CONCILIABLES, PROPUESTA_SIN_RESPALDO,
+  fechaDeCompletado,
 } from './conciliacion-ccb'
 
 describe('DAT-14 · qué fila del export cuenta', () => {
@@ -130,5 +131,40 @@ describe('el script puede leer el mapeo de este archivo', () => {
     const bloque = src.match(/PLAN_POR_COLA[^=]*= \{([\s\S]*?)\n\}/)![1]
     const leidas = [...bloque.matchAll(/^\s*'([^']+)': '([A-Z0-9]+)',$/gm)]
     expect(leidas.length).toBe(Object.keys(PLAN_POR_COLA).length)
+  })
+})
+
+describe('DAT-14 · la fecha real del completado', () => {
+  it('sale de «Queue Days», no de «Due»', () => {
+    expect(fechaDeCompletado('5 Days in queue, completed on 24 jul 2020')).toBe('2020-07-24')
+  })
+
+  it('«sept» tiene CUATRO letras y CCB solo la usa para setiembre', () => {
+    // Un [a-z]{3} se come la «t» y pierde la fila sin avisar: eran 2.061.
+    expect(fechaDeCompletado('N Days in queue, completed on 1 sept 2020')).toBe('2020-09-01')
+    expect(fechaDeCompletado('N Days in queue, completed on 1 set 2020')).toBe('2020-09-01')
+  })
+
+  it('el día de un solo dígito se rellena', () => {
+    expect(fechaDeCompletado('1 Day in queue, completed on 7 ago 2020')).toBe('2020-08-07')
+  })
+
+  it('«completed on » vacío devuelve null, NO el vencimiento', () => {
+    // Las 1.751 Nivel 2 de 2019-06-13. Inventarles fecha es escribir algo
+    // falso con pinta de exacto en el expediente de una persona.
+    expect(fechaDeCompletado('1501 Days in queue, completed on ')).toBeNull()
+    expect(fechaDeCompletado('')).toBeNull()
+    expect(fechaDeCompletado(null)).toBeNull()
+  })
+
+  it('un mes que no conocemos devuelve null en vez de un mes inventado', () => {
+    expect(fechaDeCompletado('N Days in queue, completed on 3 xyz 2020')).toBeNull()
+  })
+
+  it('los doce meses en la ortografía de CCB', () => {
+    const esperado = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic']
+    expect(meses.map(m => fechaDeCompletado(`N Days, completed on 1 ${m} 2024`)!.slice(5, 7)))
+      .toEqual(esperado)
   })
 })
