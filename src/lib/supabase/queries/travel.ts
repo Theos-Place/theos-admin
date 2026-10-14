@@ -18,6 +18,10 @@ import {
   saldos, revisarGastos, gastosFueraDeFecha,
   type GastoEjecutado, type SaldoDeLiquidacion,
 } from '@/lib/travel/liquidacion'
+import {
+  kmTotales, montoAReconocer, revisarBitacora, avisosDeBitacora,
+  faltaAprobacionDelJefe, TARIFA_POR_KM, type Tramo,
+} from '@/lib/travel/kilometraje'
 
 /**
  * `database.ts` se genera del esquema y todavía no conoce las tres tablas de
@@ -77,6 +81,15 @@ export type ViajeFila = {
   notas_liquidacion: string | null
   gastos: Array<GastoEjecutado & { id: string; sin_comprobante_motivo: string | null; orden: number }>
   saldos: SaldoDeLiquidacion[]
+  // Fase C · bitácora de kilometraje
+  tramos: Array<Tramo & { id: string; orden: number }>
+  km_totales: number
+  /** Con la tarifa congelada si ya se envió; con la vigente si no. */
+  km_monto: number
+  km_tarifa: number
+  km_moneda: Moneda
+  km_avisos: Array<{ indice: number; mensaje: string }>
+  aprobacion_jefe_path: string | null
   /** Índices de gastos con fecha lejana al viaje: aviso para quien revisa. */
   gastos_con_fecha_rara: number[]
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
@@ -100,6 +113,8 @@ const SELECT = `
   declaracion_jurada_at, liquidacion_enviada_at, notas_liquidacion,
   lineas:travel_budget_items(id, rubro, descripcion, cantidad, tarifa, moneda, orden),
   gastos:travel_expenses(id, fecha, rubro, proveedor, numero_comprobante, monto, moneda, receipt_path, sin_comprobante_motivo, orden),
+  tramos:travel_mileage_legs(id, fecha, origen, destino, hora_salida, hora_regreso, km_inicial, km_final, orden),
+  aprobacion_jefe_path, tarifa_km_aplicada, tarifa_km_moneda,
   history:travel_request_status_history(
     from_status, to_status, notes, created_at,
     autor:members!travel_request_status_history_changed_by_fkey(first_name, last_name)
@@ -143,9 +158,34 @@ function aFila(r: Record<string, unknown>): ViajeFila {
   const anticipoReal = r.anticipo_recibido_monto != null && r.anticipo_recibido_moneda
     ? { monto: Number(r.anticipo_recibido_monto), moneda: r.anticipo_recibido_moneda as Moneda }
     : null
+  const tramos = ((r.tramos ?? []) as Array<Record<string, unknown>>)
+    .map(t => ({
+      id: t.id as string,
+      fecha: t.fecha as string,
+      origen: t.origen as string,
+      destino: t.destino as string,
+      hora_salida: (t.hora_salida as string | null) ?? null,
+      hora_regreso: (t.hora_regreso as string | null) ?? null,
+      km_inicial: Number(t.km_inicial ?? 0),
+      km_final: Number(t.km_final ?? 0),
+      orden: Number(t.orden ?? 0),
+    }))
+    .sort((a, b) => a.orden - b.orden)
+  // La tarifa CONGELADA manda sobre la vigente. Si no, una liquidación ya
+  // pagada cambiaría de monto el día que suba el reglamento.
+  const kmTarifa = r.tarifa_km_aplicada != null ? Number(r.tarifa_km_aplicada) : TARIFA_POR_KM.monto
+  const kmMoneda = (r.tarifa_km_moneda as Moneda | null) ?? TARIFA_POR_KM.moneda
+  const km = kmTotales(tramos)
   return {
     id: r.id as string,
     member_id: r.member_id as string,
+    tramos,
+    km_totales: km,
+    km_tarifa: kmTarifa,
+    km_moneda: kmMoneda,
+    km_monto: montoAReconocer(km, kmTarifa),
+    km_avisos: avisosDeBitacora(tramos),
+    aprobacion_jefe_path: (r.aprobacion_jefe_path as string | null) ?? null,
     anticipo_recibido_monto: r.anticipo_recibido_monto == null ? null : Number(r.anticipo_recibido_monto),
     anticipo_recibido_moneda: (r.anticipo_recibido_moneda as Moneda | null) ?? null,
     anticipo_entregado_at: (r.anticipo_entregado_at as string | null) ?? null,
@@ -153,7 +193,8 @@ function aFila(r: Record<string, unknown>): ViajeFila {
     liquidacion_enviada_at: (r.liquidacion_enviada_at as string | null) ?? null,
     notas_liquidacion: (r.notas_liquidacion as string | null) ?? null,
     gastos,
-    saldos: saldos(gastos, anticipoReal),
+    // El kilometraje reconocido entra en la cuenta: es plata que se le debe.
+    saldos: saldos(gastos, anticipoReal, [{ monto: montoAReconocer(km, kmTarifa), moneda: kmMoneda }]),
     gastos_con_fecha_rara: gastosFueraDeFecha(gastos, {
       sale_at: r.sale_at as string, vuelve_at: r.vuelve_at as string,
     }),
@@ -432,12 +473,31 @@ export async function firmarYEnviarLiquidacion(input: {
   })
   if (problemas.length) throw new DatosInvalidos('La liquidación tiene errores.', problemas)
 
+  // FASE C · Si hay bitácora de kilometraje, la aprobación del jefe es
+  // REQUISITO (minuta del 2026-09-29). No la reemplaza la declaración
+  // jurada: esa la firma quien viajó y esta la firma quien lo autorizó.
+  if (viaje.tramos.length > 0 && faltaAprobacionDelJefe(viaje.aprobacion_jefe_path)) {
+    throw new DatosInvalidos(
+      'Falta adjuntar la aprobación del jefe o supervisor del viaje, que es requisito para el kilometraje.',
+    )
+  }
+  const problemasBitacora = viaje.tramos.length > 0 ? revisarBitacora(viaje.tramos) : []
+  if (problemasBitacora.length) throw new DatosInvalidos('La bitácora tiene errores.', problemasBitacora)
+
   const supabase = sinTipos()
   const { error } = await supabase.from('travel_requests').update({
     declaracion_jurada_at: new Date().toISOString(),
     declaracion_jurada_por: input.memberId,
     liquidacion_enviada_at: new Date().toISOString(),
     notas_liquidacion: input.notas,
+    // LA TARIFA SE CONGELA ACÁ y solo si hay bitácora. Desde este momento el
+    // expediente vale lo que valía hoy, aunque el reglamento suba la tarifa
+    // el año que viene: lo que alguien ya recibió no puede dejar de coincidir
+    // con lo que el sistema dice que se le reconoció.
+    ...(viaje.tramos.length > 0 ? {
+      tarifa_km_aplicada: TARIFA_POR_KM.monto,
+      tarifa_km_moneda: TARIFA_POR_KM.moneda,
+    } : {}),
   }).eq('id', input.id)
   if (error) throw error
 
@@ -445,4 +505,39 @@ export async function firmarYEnviarLiquidacion(input: {
     id: input.id, de: input.estado, a: 'liquidada', actores: ['solicitante'],
     quienMemberId: input.memberId, nota: null,
   })
+}
+
+/**
+ * FIN-11 fase C · Guardar la bitácora de kilometraje.
+ *
+ * Mismo candado que los gastos: solo mientras se liquida. La aprobación del
+ * jefe NO se exige para guardar —se junta de a poco— sino para enviar la
+ * liquidación, que es donde cuenta.
+ */
+export async function guardarBitacora(
+  id: string, estado: EstadoDeViaje, tramos: Tramo[],
+): Promise<void> {
+  if (!seLiquida(estado)) throw new PasoInvalido('Este viaje no está en liquidación.')
+  const problemas = revisarBitacora(tramos)
+  if (problemas.length) throw new DatosInvalidos('La bitácora tiene errores.', problemas)
+
+  const supabase = sinTipos()
+  const { error: errDel } = await supabase.from('travel_mileage_legs').delete().eq('travel_request_id', id)
+  if (errDel) throw errDel
+  const { error } = await supabase.from('travel_mileage_legs').insert(
+    tramos.map((t, i) => ({
+      travel_request_id: id, fecha: t.fecha, origen: t.origen.trim(), destino: t.destino.trim(),
+      hora_salida: t.hora_salida || null, hora_regreso: t.hora_regreso || null,
+      km_inicial: t.km_inicial, km_final: t.km_final, orden: i,
+    })),
+  )
+  if (error) throw error
+}
+
+/** Adjuntar (o quitar) la aprobación del jefe. */
+export async function guardarAprobacionDelJefe(id: string, path: string | null): Promise<void> {
+  const supabase = sinTipos()
+  const { error } = await supabase.from('travel_requests')
+    .update({ aprobacion_jefe_path: path }).eq('id', id)
+  if (error) throw error
 }

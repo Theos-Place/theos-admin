@@ -30,6 +30,9 @@ import { FormularioDeViaje, type ValoresDelViaje } from '@/components/travel/For
 import { Liquidacion } from '@/components/travel/Liquidacion'
 import { seLiquida } from '@/lib/travel/estados-del-viaje'
 import type { GastoEjecutado, SaldoDeLiquidacion } from '@/lib/travel/liquidacion'
+import { Bitacora } from '@/components/travel/Bitacora'
+import type { Tramo } from '@/lib/travel/kilometraje'
+import type { Moneda } from '@/lib/travel/presupuesto'
 
 type Viaje = {
   id: string; member_id: string; member_name: string; status: EstadoDeViaje
@@ -49,6 +52,10 @@ type Viaje = {
   gastos: Array<GastoEjecutado & { id: string; sin_comprobante_motivo: string | null; orden: number }>
   saldos: SaldoDeLiquidacion[]
   gastos_con_fecha_rara: number[]
+  tramos: Array<Tramo & { id: string; orden: number }>
+  km_totales: number; km_monto: number; km_tarifa: number; km_moneda: Moneda
+  km_avisos: Array<{ indice: number; mensaje: string }>
+  aprobacion_jefe_path: string | null
   lineas: Array<LineaDePresupuesto & { id: string; orden: number }>
   totales: TotalPorMoneda[]
   history: Array<{ from_status: string | null; to_status: string; notes: string | null; changed_by_name: string | null; created_at: string }>
@@ -263,6 +270,18 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
           anticipo={v.anticipo_recibido_monto != null && v.anticipo_recibido_moneda
             ? { monto: v.anticipo_recibido_monto, moneda: v.anticipo_recibido_moneda } : null}
           fechasRaras={v.gastos_con_fecha_rara}
+          onCambio={cargar}
+        />
+      )}
+
+      {(['anticipo_entregado', 'liquidacion_pendiente', 'liquidada', 'cerrada'] as EstadoDeViaje[]).includes(v.status) && (
+        <Bitacora
+          viajeId={v.id}
+          editable={esDueno && seLiquida(v.status)}
+          tramosIniciales={v.tramos}
+          tarifa={v.km_tarifa}
+          moneda={v.km_moneda}
+          aprobacionJefe={v.aprobacion_jefe_path}
           onCambio={cargar}
         />
       )}

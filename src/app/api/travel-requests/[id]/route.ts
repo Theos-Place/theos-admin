@@ -6,6 +6,7 @@ import { isUuid } from '@/lib/validate'
 import {
   verViaje, editarViaje, moverViaje, anotarRevisionFinanciera,
   guardarGastos, anotarAnticipoEntregado, firmarYEnviarLiquidacion,
+  guardarBitacora, guardarAprobacionDelJefe,
   PasoInvalido, DatosInvalidos,
 } from '@/lib/supabase/queries/travel'
 import { actoresDe, ESTADOS_DE_VIAJE } from '@/lib/travel/estados-del-viaje'
@@ -92,6 +93,16 @@ const gastoSchema = z.object({
   sin_comprobante_motivo: z.string().trim().max(300).nullish(),
 })
 
+const tramoSchema = z.object({
+  fecha: z.string().min(1),
+  origen: z.string().trim().min(1).max(200),
+  destino: z.string().trim().min(1).max(200),
+  hora_salida: z.string().trim().max(10).nullish(),
+  hora_regreso: z.string().trim().max(10).nullish(),
+  km_inicial: z.number().min(0),
+  km_final: z.number().min(0),
+})
+
 const accionSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('mover'),
@@ -116,6 +127,14 @@ const accionSchema = z.discriminatedUnion('action', [
     action: z.literal('anticipo_entregado'),
     monto: z.number().min(0).nullable(),
     moneda: z.enum(MONEDAS).nullish(),
+  }),
+  z.object({
+    action: z.literal('bitacora'),
+    tramos: z.array(tramoSchema).max(200),
+  }),
+  z.object({
+    action: z.literal('aprobacion_jefe'),
+    receipt_path: z.string().trim().max(500).nullable(),
   }),
   z.object({
     action: z.literal('enviar_liquidacion'),
@@ -162,6 +181,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // Los gastos los carga quien viajó. Finanzas revisa, no escribe por él.
       if (!r.esDueno) return NextResponse.json({ error: 'La liquidación la llena quien viajó.' }, { status: 403 })
       await guardarGastos(id, r.viaje.status, parsed.data.gastos)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (parsed.data.action === 'bitacora') {
+      if (!r.esDueno) return NextResponse.json({ error: 'La bitácora la llena quien viajó.' }, { status: 403 })
+      await guardarBitacora(id, r.viaje.status, parsed.data.tramos)
+      return NextResponse.json({ ok: true })
+    }
+
+    if (parsed.data.action === 'aprobacion_jefe') {
+      if (!r.esDueno) return NextResponse.json({ error: 'La adjunta quien viajó.' }, { status: 403 })
+      await guardarAprobacionDelJefe(id, parsed.data.receipt_path)
       return NextResponse.json({ ok: true })
     }
 

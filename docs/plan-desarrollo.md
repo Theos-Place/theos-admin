@@ -798,7 +798,7 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 
-### [~] FIN-11 · Viáticos y kilometraje — FASES A y B HECHAS 2026-10-13
+### [~] FIN-11 · Viáticos y kilometraje — FASES A, B y C HECHAS 2026-10-13
 
 Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos,
 versión 1.0 del 05/05/2026). Candado de Tilopay retirado por Floriana.
@@ -884,11 +884,43 @@ devolución de finanzas («falta la factura del hotel») exigiendo motivo.
    `liquidacion_pendiente` se llega por dos caminos opuestos.
 3. El cero negativo: una liquidación que cuadra mostraba «-0».
 
-**FALTA (fases C–D)**, con los estados ya declarados:
-  C. Bitácora de kilometraje (ANX-05) con odómetro y la aprobación del jefe
-     adjunta, que la minuta pidió como requisito.
-  D. Informe de viaje (ANX-04) como formulario vinculado.
-  Y el PDF de cada anexo con el patrón de SRV-14.
+**FASE C · LA BITÁCORA DE KILOMETRAJE (ANX-05).** Migración
+`20261013230000`: `travel_mileage_legs`, más `aprobacion_jefe_path` y la
+tarifa congelada. Una fila por desplazamiento con origen, destino, horas y
+ODÓMETRO; los kilómetros y el monto se calculan y no hay campo donde
+escribirlos. El odómetro de un tramo arranca donde terminó el anterior, que
+es de donde salen las lecturas mal tecleadas.
+
+- **Por qué odómetro y no un campo «km recorridos»**: lo pidió la minuta, y
+  la razón es que dos lecturas son verificables y un número suelto no. Se ve
+  si un tramo se solapa o si quedó un hueco.
+- **Un hueco AVISA, que el odómetro retroceda también — ninguno de los dos
+  frena.** El carro se pudo usar para otra cosa en el medio; eso lo juzga
+  quien revisa. Lo que sí frena es el odómetro final menor que el inicial o
+  un tramo de cero kilómetros, que no tienen lectura inocente.
+- **La aprobación del jefe es REQUISITO del kilometraje** (minuta
+  2026-09-29): sin ese archivo la liquidación no se manda, ni con la
+  declaración jurada firmada — son dos firmas distintas, una la pone quien
+  viajó y la otra quien lo autorizó. Solo se exige si hay bitácora: un viaje
+  en bus no la necesita.
+- **LA TARIFA SE CONGELA al enviar la liquidación.** Si no, un expediente ya
+  pagado cambiaría de monto el día que el reglamento suba la tarifa, y lo que
+  alguien recibió dejaría de coincidir con lo que el sistema dice que se le
+  reconoció.
+- **El kilometraje entra en la cuenta de la liquidación**, no se muestra al
+  lado: si no, el monto se calcula, se enseña y nadie lo liquida.
+- **La tarifa está en CERO a propósito** hasta que Floriana la confirme.
+  Inventar «₡250, que suena razonable» haría que las primeras bitácoras se
+  liquiden con una tarifa que nadie autorizó, y eso se descubre cuando ya se
+  pagó. Con cero, el monto sale en cero, la pantalla lo dice y los
+  kilómetros igual quedan registrados.
+
+Probado contra staging: odómetro al revés → 400; hueco de 50 km → aviso;
+enviar sin la aprobación del jefe → 400 con el mensaje del reglamento; 300 km
+registrados y la tarifa guardada en el expediente.
+
+**FALTA (fase D)**: el informe de viaje (ANX-04) como formulario vinculado, y
+el PDF de cada anexo con el patrón de SRV-14.
 
 ## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
 

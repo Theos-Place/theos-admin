@@ -217,3 +217,43 @@ describe('FIN-11 fase B · el anticipo no se marca sin decir cuánto', () => {
     expect(src).toContain("de === 'liquidada' ? 'Devolver la liquidación' : 'Ya volví del viaje'")
   })
 })
+
+describe('FIN-11 fase C · la bitácora de kilometraje', () => {
+  const q = sinComentarios(QUERIES)
+
+  it('sin la aprobación del jefe no se manda la liquidación', () => {
+    // Requisito de la minuta del 2026-09-29, con esas palabras.
+    expect(q).toContain('faltaAprobacionDelJefe(viaje.aprobacion_jefe_path)')
+    expect(q).toContain('aprobación del jefe o supervisor del viaje')
+  })
+
+  it('…pero solo si hay bitácora: un viaje en bus no la necesita', () => {
+    expect(q).toContain('viaje.tramos.length > 0 && faltaAprobacionDelJefe')
+  })
+
+  it('LA TARIFA SE CONGELA al enviar', () => {
+    // Si no, un expediente ya pagado cambiaría de monto el día que suba el
+    // reglamento, y lo que alguien recibió dejaría de coincidir con lo que
+    // el sistema dice que se le reconoció.
+    expect(q).toContain('tarifa_km_aplicada: TARIFA_POR_KM.monto')
+    expect(q).toContain("r.tarifa_km_aplicada != null ? Number(r.tarifa_km_aplicada) : TARIFA_POR_KM.monto")
+  })
+
+  it('el kilometraje entra en la cuenta de la liquidación', () => {
+    // Si no, el monto se calcula, se muestra y nadie lo liquida.
+    expect(q).toContain('saldos(gastos, anticipoReal, [{ monto: montoAReconocer(km, kmTarifa), moneda: kmMoneda }])')
+  })
+
+  it('los km recorridos NO se guardan en la base', () => {
+    const sql = readFileSync('supabase/migrations/20261013230000_fin11_bitacora_de_kilometraje.sql', 'utf8')
+    // El comentario del SQL sí la nombra (para decir que no se guarda), así
+    // que lo que se busca es una COLUMNA con ese nombre.
+    expect(sql).not.toMatch(/^\s+km_recorridos\s/m)
+    expect(sql).toContain('check (km_final > km_inicial)')
+    expect(sql).toContain('alter table public.travel_mileage_legs enable row level security')
+  })
+
+  it('la bitácora la llena quien viajó', () => {
+    expect(sinComentarios(RUTA_ID)).toContain('La bitácora la llena quien viajó.')
+  })
+})

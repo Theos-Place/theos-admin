@@ -50,6 +50,13 @@ const r2 = (n: number) => Math.round(n * 100) / 100 + 0
 export function saldos(
   gastos: readonly GastoEjecutado[],
   anticipo: { monto: number; moneda: Moneda } | null,
+  /**
+   * Lo que se le RECONOCE sin factura: hoy, el kilometraje (ANX-05). Entra
+   * en la cuenta como un gasto más porque es plata que la Asociación le
+   * debe; dejarlo afuera volvería decorativo el cálculo de la bitácora —se
+   * mostraría un monto que después nadie liquida.
+   */
+  reconocimientos: readonly { monto: number; moneda: Moneda }[] = [],
 ): SaldoDeLiquidacion[] {
   const porMoneda = new Map<Moneda, { gastado: number; anticipo: number }>()
   const tocar = (m: Moneda) => {
@@ -57,6 +64,10 @@ export function saldos(
     return porMoneda.get(m)!
   }
   for (const g of gastos) tocar(g.moneda).gastado += Number(g.monto || 0)
+  // Un reconocimiento en CERO no crea una moneda en la cuenta: con la tarifa
+  // por km todavía sin confirmar, si no, toda liquidación mostraría una fila
+  // «CRC 0» que no significa nada.
+  for (const r of reconocimientos) if (Number(r.monto) > 0) tocar(r.moneda).gastado += Number(r.monto)
   if (anticipo && anticipo.monto > 0) tocar(anticipo.moneda).anticipo += Number(anticipo.monto)
 
   return MONEDAS.filter(m => porMoneda.has(m)).map(m => {

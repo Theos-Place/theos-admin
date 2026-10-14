@@ -138,3 +138,29 @@ describe('FIN-11 · la declaración jurada', () => {
     expect(TEXTO_DECLARACION_JURADA).toContain('reembolso')
   })
 })
+
+describe('FIN-11 fase C · el kilometraje entra en la cuenta', () => {
+  it('lo reconocido se suma a lo gastado', () => {
+    // Dejarlo afuera volvería decorativo el cálculo de la bitácora: se
+    // mostraría un monto que después nadie liquida.
+    const s = saldos([gasto({ monto: 20000 })], { monto: 50000, moneda: 'CRC' },
+      [{ monto: 55000, moneda: 'CRC' }])
+    expect(s[0]).toMatchObject({ gastado: 75000, anticipo: 50000, resultado: 'reembolsar' })
+  })
+
+  it('un reconocimiento en CERO no inventa una fila', () => {
+    // La tarifa por km todavía no está confirmada; si no, toda liquidación
+    // mostraría un «CRC 0» que no significa nada.
+    expect(saldos([], null, [{ monto: 0, moneda: 'CRC' }])).toEqual([])
+  })
+
+  it('y respeta la moneda del reconocimiento', () => {
+    const s = saldos([], null, [{ monto: 100, moneda: 'USD' }])
+    expect(s).toEqual([{ moneda: 'USD', gastado: 100, anticipo: 0, diferencia: -100, resultado: 'reembolsar' }])
+  })
+
+  it('sin reconocimientos, la cuenta es la de antes', () => {
+    const s = saldos([gasto({ monto: 60000 })], { monto: 100000, moneda: 'CRC' })
+    expect(s[0].diferencia).toBe(40000)
+  })
+})
