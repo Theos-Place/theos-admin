@@ -356,8 +356,14 @@ export async function createGroupForRequest(
   return { group_id: groupId }
 }
 
-/** Cancela la solicitud y, opcionalmente, genera una solicitud de devolución
- *  (finance_request tipo 'refund') sobre el pago, que finanzas revisa. */
+/** Cancela la solicitud y, opcionalmente, genera una DEVOLUCIÓN real sobre el
+ *  pago, en el módulo de devoluciones (tabla `refunds`, estado pendiente).
+ *
+ *  Antes creaba una `finance_request` tipo 'refund', que solo se veía en
+ *  /finanzas/solicitudes. Esa página se eliminó el 2026-10-14 (nunca hubo una
+ *  sola de esas solicitudes en producción) y devoluciones no leía esa tabla:
+ *  de haber pasado, la devolución habría quedado en una pantalla que nadie
+ *  abre. Ahora cae donde finanzas sí mira. */
 export async function cancelPrematrimonialRequest(
   requestId: string, reason: string | null, withRefund: boolean, actorId: string,
 ): Promise<{ refund_request_id: string | null }> {
@@ -370,15 +376,18 @@ export async function cancelPrematrimonialRequest(
 
   let refundRequestId: string | null = null
   if (withRefund && r.payment_id) {
-    const { createFinanceRequest } = await import('@/lib/supabase/queries/finance-requests')
-    const fr = await createFinanceRequest({
-      request_type: 'refund',
-      member_id: r.requester_member_id,
+    const { createRefund } = await import('@/lib/supabase/queries/finance')
+    // El RPC valida que el pago esté pagado y que el monto no supere lo ya
+    // devuelto; si el pago no está pagado, no hay nada que devolver y falla
+    // con su propio motivo, que el handler ya traduce.
+    const dev = await createRefund({
       payment_id: r.payment_id,
+      member_id: r.requester_member_id,
       amount: PREMAT_COST,
       reason: reason ?? 'Cancelación de inscripción prematrimonial',
     })
-    refundRequestId = fr.id
+    if (dev.code !== 'ok') throw new Error(`DEVOLUCION_${dev.code.toUpperCase()}`)
+    refundRequestId = dev.id
   }
 
   await sb.from('prematrimonial_requests').update({

@@ -155,7 +155,17 @@ export default function BecasPage() {
     setRequestsLoading(true)
     fetch('/api/finance/requests?type=scholarship')
       .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: FinanceRequest[]) => setRequests(Array.isArray(d) ? d : []))
+      .then((d: FinanceRequest[]) => {
+        const lista = Array.isArray(d) ? d : []
+        setRequests(lista)
+        // La página de solicitudes se eliminó (2026-10-14): sus notificaciones
+        // («te asignaron una solicitud», «nueva solicitud de beca») llegan acá
+        // con ?request=<id>, y se abre esa solicitud apenas carga la lista. Se
+        // lee la URL una vez, sin useSearchParams, para no exigir Suspense.
+        const id = new URLSearchParams(window.location.search).get('request')
+        const r = id ? lista.find(x => x.id === id) : undefined
+        if (r) setReviewTarget(r)
+      })
       .catch(() => setRequests([]))
       .finally(() => setRequestsLoading(false))
   }, [])
@@ -176,6 +186,7 @@ export default function BecasPage() {
     [requests, filtroSolicitudes])
 
   const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
+
 
   if (loaded && !canView) return <AccessDenied />
 

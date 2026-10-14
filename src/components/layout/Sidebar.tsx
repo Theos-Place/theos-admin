@@ -74,7 +74,6 @@ const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/saldos',      label: 'Saldos a favor', icon: Wallet        },
   { href: '/finanzas/cobros-sin-estudio', label: 'Cobros sin estudio', icon: Unlink },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
-  { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
   { href: '/finanzas/adelantos',   label: 'Adelantos de comida', icon: UtensilsCrossed },
 ]
 
@@ -138,7 +137,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   // rol puede llegar a verlos, con el mismo permiso que decide si el badge se
   // dibuja (medido en navegador el 2026-08-24).
   const [openRequests, setOpenRequests] = useState(0)
-  const [openFinanceRequests, setOpenFinanceRequests] = useState(0)
   // La condición tiene que cubrir TODOS los casos donde el badge se dibuja, no
   // solo el obvio: el comité de estudios bíblicos también lo ve, y tiene alcance
   // 'own'. Gatear solo por alcance le apagaba el badge (encontrado al revisar
@@ -160,12 +158,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       fetch('/api/studies/requests?count=open')
         .then(r => (r.ok ? r.json() : null))
         .then(d => { if (alive && d) setOpenRequests(d.count ?? 0) })
-        .catch(() => {})
-    }
-    if (puedeVerFinanzas) {
-      fetch('/api/finance/requests?count=open')
-        .then(r => (r.ok ? r.json() : null))
-        .then(d => { if (alive && d) setOpenFinanceRequests(d.count ?? 0) })
         .catch(() => {})
     }
     return () => { alive = false }
@@ -263,7 +255,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // REV-3: la página unificada /finanzas/pagos (listado + cola de revisión)
     // sí se destapa con el permiso revision_pagos aunque falte el módulo.
     ...(can('finanzas', 'view')
-      ? FINANZAS_SUB.map(s => s.href === '/finanzas/solicitudes' ? { ...s, badge: openFinanceRequests } : s)
+      ? FINANZAS_SUB
       : can('revision_pagos', 'view')
         ? [{ href: '/finanzas/pagos', label: 'Pagos', icon: CreditCard }]
         : []),

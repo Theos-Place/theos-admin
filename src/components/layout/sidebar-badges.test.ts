@@ -15,7 +15,9 @@ describe('los badges se piden solo si pueden verse', () => {
   it('no se piden sin condición: un miembro no debe generar 403', () => {
     // El fetch va DENTRO de un if. Antes se llamaba siempre y el 403 se comía
     // en silencio: dos por navegación, por cada una de las ~18 mil cuentas.
-    for (const url of ['/api/studies/requests?count=open', '/api/finance/requests?count=open']) {
+    // El badge de finanzas se fue con /finanzas/solicitudes (2026-10-14):
+    // queda solo el de estudios.
+    for (const url of ['/api/studies/requests?count=open']) {
       const i = SIDEBAR.indexOf(url)
       expect(i, `${url} ya no está en el sidebar`).toBeGreaterThan(-1)
       const antes = SIDEBAR.slice(Math.max(0, i - 400), i)

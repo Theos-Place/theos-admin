@@ -10,12 +10,14 @@ import {
 } from '@/lib/finance/solicitud-de-beca'
 import { reportarError } from '@/lib/observabilidad'
 
-const TYPES = new Set(['scholarship', 'refund'])
+// Solo becas desde el 2026-10-14: las devoluciones son el módulo de
+// devoluciones (tabla `refunds`), y /finanzas/solicitudes se eliminó.
+const TYPES = new Set(['scholarship'])
 const STATUSES = new Set(['open', 'in_review', 'por_modificar', 'resolved', 'rejected'])
 
 // GET: el propio perfil se consulta sin permiso extra (?member_id=propio, p.ej.
 // "Mis becas"); cualquier otra consulta exige módulo finanzas o becas (según
-// pantalla: /finanzas/solicitudes ve todo, /finanzas/becas solo scholarship).
+// pantalla: /finanzas/becas).
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireRoles() // solo exige sesión
@@ -76,9 +78,6 @@ export async function POST(req: NextRequest) {
     if (reason.length < MINIMO_DEL_DETALLE) {
       return NextResponse.json(
         { error: `La razón debe tener al menos ${MINIMO_DEL_DETALLE} caracteres` }, { status: 400 })
-    }
-    if (body.request_type === 'refund' && !body.payment_id) {
-      return NextResponse.json({ error: 'Se requiere el pago a devolver' }, { status: 400 })
     }
     if (body.request_type === 'scholarship') {
       const entityType = body.entity_type
