@@ -781,6 +781,7 @@ async function linkResponseToRegistration(
     for (const eventId of faltan) {
       await crearPagoDeLaInscripcion(supabase, {
         eventId, memberId, responseId, pago, comprobante, descripcion: tituloDelForm,
+        fechaDeRespuesta,
       })
     }
   }
@@ -811,6 +812,8 @@ async function crearPagoDeLaInscripcion(
     pago: PagoDeInscripcion
     comprobante: string | null
     descripcion: string
+    /** Cuándo respondió: es cuándo adjuntó el comprobante, o sea cuándo pagó. */
+    fechaDeRespuesta: string | null
   },
 ): Promise<void> {
   let receiptPath: string | null = null
@@ -847,6 +850,12 @@ async function crearPagoDeLaInscripcion(
     receipt_path: receiptPath,
     description: input.descripcion,
     ...(input.pago.payment_date ? { payment_date: input.pago.payment_date } : {}),
+    // NACE PAGADO, ASÍ QUE LLEVA FECHA DE PAGO. Este camino no pasa por
+    // `approve_payment` (que sí la pone) y dejaba `paid_at` en null: el
+    // 2026-10-14 había 124 pagos «cancelados» que la lista de finanzas
+    // mostraba «sin fecha de pago». La fecha es la del comprobante, que es
+    // la de la respuesta; se rellenaron desde storage.objects.
+    paid_at: input.fechaDeRespuesta ?? new Date().toISOString(),
   })
   if (error) throw error
 }

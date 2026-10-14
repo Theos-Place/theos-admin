@@ -2,6 +2,7 @@ import 'server-only'
 import { fechasDelSucesor } from '@/lib/studies/successor-dates'
 import { ymdCR } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { descripcionDeEvento } from '@/lib/finance/descripcion-de-evento'
 import { nextLevelCode } from '@/lib/studies/folletos'
 import {
   ESTADOS_ACTIVOS, ESTADOS_A_CONSULTAR, repartirParaMatricula,
@@ -898,7 +899,7 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
       enrollment_id, event_registration_id, due_date, installment_number, payment_plan_id,
       payment_plan_enabled_at,
       member:members!payments_member_id_fkey(first_name, last_name),
-      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
+      event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title, starts_at)),
       enrollment:study_enrollments!payments_enrollment_id_fkey(
         group:study_groups!study_enrollments_group_id_fkey(plan:study_plans(name)),
         plan_direct:study_plans!study_enrollments_plan_id_fkey(name)
@@ -911,9 +912,12 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
 
   return ((data ?? []) as Array<Record<string, unknown>>).map(r => {
     const er = Array.isArray(r.event_registration) ? r.event_registration[0] : r.event_registration
-    const erRow = er as { event: { title: string } | { title: string }[] | null } | null
+    const erRow = er as { event: { title: string; starts_at?: string | null } | { title: string; starts_at?: string | null }[] | null } | null
     const ev = erRow ? (Array.isArray(erRow.event) ? erRow.event[0] : erRow.event) : null
-    const eventTitle = (ev as { title: string } | null)?.title ?? null
+    // CON LA FECHA DE LA SESIÓN. Un formulario compartido por cuatro Volley
+    // deja cuatro pagos que decían «Volley · ₡3.000» idénticos, y Floriana
+    // los leyó como duplicados (2026-10-14). No lo eran: eran cuatro fechas.
+    const eventTitle = descripcionDeEvento(ev as { title: string; starts_at?: string | null } | null)
     const enr = Array.isArray(r.enrollment) ? r.enrollment[0] : r.enrollment
     const enrRow = enr as { group: { plan: unknown }[] | { plan: unknown } | null; plan_direct: unknown } | null
     const grp = enrRow ? (Array.isArray(enrRow.group) ? enrRow.group[0] : enrRow.group) : null

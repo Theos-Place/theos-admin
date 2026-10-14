@@ -1,0 +1,622 @@
+[
+  {
+    "id": "2e267264-c692-4439-bcb6-9f20245de30b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:13.721Z"
+  },
+  {
+    "id": "3a028414-cc3b-471c-970f-60ecae640585",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:15.668Z"
+  },
+  {
+    "id": "b3f30655-d8d2-4e63-9978-fa18fa074f7f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:18.022Z"
+  },
+  {
+    "id": "c886c930-ce0f-460b-ae78-535c612b3456",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:21.253Z"
+  },
+  {
+    "id": "cae76620-67d3-42bc-859c-00287511582c",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:24.666Z"
+  },
+  {
+    "id": "08fbfcb8-b79c-4a7e-92c7-f3c3272e292f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:27.276Z"
+  },
+  {
+    "id": "2ccd77d7-67cd-45ae-a987-8229bfc127e5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:28.967Z"
+  },
+  {
+    "id": "a7bc8d4d-7f2d-4c26-9649-fded58e86143",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:31.744Z"
+  },
+  {
+    "id": "43bcc01e-765d-41da-9154-0ecb4d682430",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:34.084Z"
+  },
+  {
+    "id": "2af286cd-c869-4ac4-a530-123a45a4db6e",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:35.797Z"
+  },
+  {
+    "id": "6cdbf50a-de36-4ad8-bf01-4c6c15092590",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:37.890Z"
+  },
+  {
+    "id": "4759bff1-97ea-4174-a26b-8a1f88718ced",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:40.159Z"
+  },
+  {
+    "id": "65b043b3-5e2d-47eb-a20d-debd2d72d778",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:42.319Z"
+  },
+  {
+    "id": "de777b56-5afd-4a65-9933-1107302278d1",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:45.072Z"
+  },
+  {
+    "id": "27dc37a0-0ea0-4ab3-aef2-0dd1ee3bcd60",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:47.372Z"
+  },
+  {
+    "id": "1f7c32a9-1aec-4ad0-91b3-3c067e8e78f8",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:49.654Z"
+  },
+  {
+    "id": "1fd92080-2b3f-4e17-ac73-ab56d8a0cee9",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:52.244Z"
+  },
+  {
+    "id": "984b6790-f5f9-40b2-8817-c3139ed66b23",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:54.427Z"
+  },
+  {
+    "id": "2b1a42ed-134d-4027-aa84-dca09ac57eaf",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:57.180Z"
+  },
+  {
+    "id": "002411db-4206-41bc-b373-3eed4b317943",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:54:59.748Z"
+  },
+  {
+    "id": "63d5ba62-072e-45f8-b2cc-0e60cca116c5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:01.953Z"
+  },
+  {
+    "id": "76680a1d-04ce-468a-b212-b560be520e9b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:04.695Z"
+  },
+  {
+    "id": "f5f5c1ad-4ffe-4a91-971f-dd79d949d663",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:07.316Z"
+  },
+  {
+    "id": "74577e80-2f32-4f2a-811a-4b98b9833c35",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:10.027Z"
+  },
+  {
+    "id": "5c5ef59e-4aef-4321-8496-e68df987945b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:12.097Z"
+  },
+  {
+    "id": "255130ff-eb44-4767-ab27-903e31fe34ca",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:14.719Z"
+  },
+  {
+    "id": "39896eb5-4827-40c5-b14f-99dce68a60a5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:17.924Z"
+  },
+  {
+    "id": "e44fc963-a695-45fe-a0ff-38d4e6423a1e",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:20.727Z"
+  },
+  {
+    "id": "f5d85fb2-6bf1-4730-a7db-3c3786c39e3a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:23.125Z"
+  },
+  {
+    "id": "b3840bdd-67e5-49c6-9e76-1b7e466b17cc",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:25.852Z"
+  },
+  {
+    "id": "934ba099-5fa0-4f1a-95b7-b518d54fa570",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:28.279Z"
+  },
+  {
+    "id": "0a781f33-dd73-4a4b-a6a2-3c90fafb9531",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:30.692Z"
+  },
+  {
+    "id": "db746407-2a36-49b6-8a98-a43cc402f5fc",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:33.650Z"
+  },
+  {
+    "id": "8cd2beec-90a2-44a0-89f7-0d8904c407f1",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:36.173Z"
+  },
+  {
+    "id": "c6ec9598-18eb-4d29-bbff-600df782a01f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:38.734Z"
+  },
+  {
+    "id": "74f48448-8195-4a38-bedc-5af4115c15e2",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:40.717Z"
+  },
+  {
+    "id": "1467dfc3-c81c-427f-99d0-20ed4d5f55e6",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:44.097Z"
+  },
+  {
+    "id": "8991ebbf-162e-4a39-80fb-967331fb2f85",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:46.428Z"
+  },
+  {
+    "id": "0a7075f2-8d08-4341-9d6d-6307c581ba9a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:48.185Z"
+  },
+  {
+    "id": "be68c5d1-3eb3-4f43-a2b1-11e6e0dbf375",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:50.790Z"
+  },
+  {
+    "id": "2f251e57-b402-43fb-bdaa-0e0c054db0c4",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:53.576Z"
+  },
+  {
+    "id": "729f747f-fffc-4b18-8c61-8637a9bf3256",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:55.897Z"
+  },
+  {
+    "id": "2926d6f3-1946-4ad0-9984-75f1e4063f1b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:55:58.510Z"
+  },
+  {
+    "id": "bd5db0e0-d776-4e9e-bb38-342a123c0643",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:00.284Z"
+  },
+  {
+    "id": "5d8c0b37-e1ff-40d7-8bfb-fb95aa14cfd5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:02.791Z"
+  },
+  {
+    "id": "ed7c02f1-efb7-44fa-894b-14f9bd8b055d",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:06.120Z"
+  },
+  {
+    "id": "e406c7d3-0ad1-47a0-a5cc-6d3cd261452f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:08.921Z"
+  },
+  {
+    "id": "2013e165-fdf7-4b43-9210-58b8cb590acf",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:10.943Z"
+  },
+  {
+    "id": "611758a3-e8ba-416f-bf79-fc89ad8981b6",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:13.562Z"
+  },
+  {
+    "id": "3272c6e8-9483-4222-837b-f5d3f15589ca",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:15.768Z"
+  },
+  {
+    "id": "a3771f91-407a-4928-a550-8c87c5b4c9e5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:17.788Z"
+  },
+  {
+    "id": "9c14fda3-d861-46e4-813b-05c4e507932a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:20.210Z"
+  },
+  {
+    "id": "5801c056-b915-484d-8601-d7c7a0e5eda9",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:22.224Z"
+  },
+  {
+    "id": "3598f63a-d431-4a2c-8f1f-0d20fd4a0e8d",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:24.738Z"
+  },
+  {
+    "id": "d5918585-8088-46ee-be92-8a806be18583",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:26.738Z"
+  },
+  {
+    "id": "19c7379c-a449-4c28-b430-5e0d09a09147",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:28.716Z"
+  },
+  {
+    "id": "ef81aee2-bcf3-4d43-b595-1f682f4829c7",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:31.322Z"
+  },
+  {
+    "id": "c3c506ee-b67b-4243-a8e5-73c5b74b72f7",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:33.689Z"
+  },
+  {
+    "id": "079c512a-c600-4764-9704-6b72cfb083a0",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:36.446Z"
+  },
+  {
+    "id": "fd2130f2-079e-4062-b0eb-44539741514f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:38.820Z"
+  },
+  {
+    "id": "7830ff36-9053-4a77-8fe8-ac4ff1f6fc84",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:41.763Z"
+  },
+  {
+    "id": "71d5b07b-1ffa-4b5d-ab05-b87a617049d1",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:44.345Z"
+  },
+  {
+    "id": "4e8c2f2a-9918-4fd9-9b62-613cd187b10e",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:46.453Z"
+  },
+  {
+    "id": "13d1b15f-141a-41b7-9079-9e442155d084",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:48.953Z"
+  },
+  {
+    "id": "51eb69e2-1bca-4fce-aa98-22e01ff11797",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:51.172Z"
+  },
+  {
+    "id": "7a6ea2fc-5eac-43e9-9614-7b6f4d54a967",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:53.552Z"
+  },
+  {
+    "id": "c88c0e33-2508-469e-bdef-4f90ed0a4a89",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:56.203Z"
+  },
+  {
+    "id": "95782b6a-6cb7-4df5-86fa-235dedcf989a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:56:58.212Z"
+  },
+  {
+    "id": "49a4fdab-6509-41d9-b9c5-a4a0a73d61ff",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:57:00.932Z"
+  },
+  {
+    "id": "71ed96a5-2c97-48a5-8838-3855a63a54a1",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-06T21:57:04.046Z"
+  },
+  {
+    "id": "4b176427-6c53-461d-b921-793aac4f062c",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:33.482Z"
+  },
+  {
+    "id": "4930da1a-f811-46d8-be8d-0e339f87b254",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:35.634Z"
+  },
+  {
+    "id": "0035cd82-2424-4ae5-b267-50c90c39d688",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:38.085Z"
+  },
+  {
+    "id": "ef35a0e4-48d8-4e86-9080-625ba34df78a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:39.845Z"
+  },
+  {
+    "id": "993206f7-5b98-4ed2-90a5-ad644e9eb6a9",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:42.118Z"
+  },
+  {
+    "id": "e71448f7-aabc-4223-b28f-e7484a1b6284",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:43.638Z"
+  },
+  {
+    "id": "d8365923-292e-42a9-8ae2-9b92ec233749",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:45.202Z"
+  },
+  {
+    "id": "5c722ab8-e6cc-41b7-8933-3f97fa3fcedc",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:47.356Z"
+  },
+  {
+    "id": "1a3ef4e4-d5bc-41d7-8720-43c0d5f51660",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:49.060Z"
+  },
+  {
+    "id": "642409ad-7b22-4afb-9240-f37affb9c7b5",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T05:21:51.027Z"
+  },
+  {
+    "id": "541888c3-c09c-4cda-ba71-5c1c216e513a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T16:34:34.713Z"
+  },
+  {
+    "id": "395a2f22-01e9-4f84-8aea-b4f07e901808",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T20:51:10.139Z"
+  },
+  {
+    "id": "fd48ad48-1228-4136-a62b-0c88a619bd62",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T20:51:10.139Z"
+  },
+  {
+    "id": "17f572c3-49e4-4af6-87c6-863164627caa",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-08T23:00:27.170Z"
+  },
+  {
+    "id": "5c87262c-216e-4f6d-bd05-fda16b3a0c04",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T04:10:20.430Z"
+  },
+  {
+    "id": "1b0dd51e-6c16-4ab0-b468-564d343e6376",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T16:32:55.953Z"
+  },
+  {
+    "id": "1e5dfc08-6731-4f44-819e-08a8ac70c084",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T17:02:04.482Z"
+  },
+  {
+    "id": "0cd50cec-d82b-4040-802c-ee122fba177f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T17:12:18.682Z"
+  },
+  {
+    "id": "07899144-3c2d-455f-ba34-f172590d5456",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T17:42:16.218Z"
+  },
+  {
+    "id": "fba3fbd3-245c-4b22-9428-b7f54605c621",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T18:41:58.693Z"
+  },
+  {
+    "id": "a676350c-bd0f-4993-8d22-ff97876de4f1",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T18:41:58.693Z"
+  },
+  {
+    "id": "64a8e568-ad5f-4269-a91f-2851063b07a6",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T22:33:15.617Z"
+  },
+  {
+    "id": "a95b0f5f-ad20-4c99-8047-610caf1805d3",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T22:43:52.990Z"
+  },
+  {
+    "id": "bf2f84c4-169b-4877-956a-abc0846b010a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-09T23:24:07.102Z"
+  },
+  {
+    "id": "3cba3306-c65e-4076-bc07-baee9bbf9346",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-11T14:33:46.251Z"
+  },
+  {
+    "id": "2017c312-2646-4ec6-af18-374c74b2af66",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-11T14:33:46.251Z"
+  },
+  {
+    "id": "c0fecb58-40a4-4e20-a3cd-254bb7432c71",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-11T22:24:43.952Z"
+  },
+  {
+    "id": "81ee0870-e522-47a4-a9df-7cd15e950d06",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-11T22:24:43.952Z"
+  },
+  {
+    "id": "00f8a3cb-7a34-4d21-9f64-2a2ed26cfb07",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:02:19.706Z"
+  },
+  {
+    "id": "748ce176-39dd-4c59-aa11-f938f34bc92a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:02:19.706Z"
+  },
+  {
+    "id": "ab55157b-8e88-48d5-a6c3-fdb4d52afe4b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:03:31.402Z"
+  },
+  {
+    "id": "56d655f8-294b-478b-b7a2-8981b5d906ff",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:03:31.402Z"
+  },
+  {
+    "id": "8d160594-e0bd-4751-829f-169ac2a0b43b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:03:31.402Z"
+  },
+  {
+    "id": "72e01e31-d477-4bcb-92f1-2f0e3cd49d0c",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:03:31.402Z"
+  },
+  {
+    "id": "b2f7b2e6-6f2a-4bdf-99d4-4d11011bcf83",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:13:18.730Z"
+  },
+  {
+    "id": "cac9dbf0-c909-4433-a66f-fea772cf642a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T18:13:18.730Z"
+  },
+  {
+    "id": "447f7e3c-f7f6-4f74-886a-e66fe9d594cd",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T20:25:01.419Z"
+  },
+  {
+    "id": "3bbfa5f8-da7b-48eb-b9a0-80774324942b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T20:25:01.419Z"
+  },
+  {
+    "id": "bc074cc0-e27e-4d32-b6a6-d88c80158c62",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T20:29:43.284Z"
+  },
+  {
+    "id": "8b1080fa-6b91-4e35-8572-194e7dec823b",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-12T20:29:43.284Z"
+  },
+  {
+    "id": "191c577b-ee78-4411-b061-a363560f970a",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T00:40:35.190Z"
+  },
+  {
+    "id": "f2dfc912-1d5e-490b-9443-f7b873213f46",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T00:40:35.190Z"
+  },
+  {
+    "id": "7f6d7af5-917e-4274-b018-3d4c67108204",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T13:39:53.032Z"
+  },
+  {
+    "id": "bc95e841-a3ba-42ce-9528-ad8d63797dfc",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T13:39:53.032Z"
+  },
+  {
+    "id": "6e7a76bf-711f-405c-96ec-3c47ef9ccc53",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:21:35.558Z"
+  },
+  {
+    "id": "1881e9fa-cdc7-4389-9679-1c651c371159",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:21:35.558Z"
+  },
+  {
+    "id": "e6fdb5b6-e999-4b7e-8c38-b1ba86139f54",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:28:25.302Z"
+  },
+  {
+    "id": "d5274a8f-4f98-4cf3-939a-c0c84356675f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:28:25.302Z"
+  },
+  {
+    "id": "c75f91ef-b73c-46da-8468-8ecb1739247f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:49:00.979Z"
+  },
+  {
+    "id": "06b27cee-c52c-45f7-96ae-7ddacc08d13f",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T18:49:00.979Z"
+  },
+  {
+    "id": "b9ab362f-85c6-4c9f-a7b1-841b435ba72d",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T19:57:41.237Z"
+  },
+  {
+    "id": "22645592-24bd-455e-a0c6-84c4e2e4a44d",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T19:57:41.237Z"
+  },
+  {
+    "id": "e6367e5a-7a59-4330-9d4c-1ce774879367",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T19:57:41.237Z"
+  },
+  {
+    "id": "3d2d201d-8178-4da3-8bdc-d5f5ba30dbbb",
+    "paid_at_antes": null,
+    "paid_at_despues": "2026-10-13T19:57:41.237Z"
+  }
+]
