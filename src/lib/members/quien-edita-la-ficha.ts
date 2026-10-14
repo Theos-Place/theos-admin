@@ -24,6 +24,8 @@
 /** Los roles que pueden editar la ficha de otra persona. `admin` aparte. */
 export const ROLES_QUE_EDITAN_FICHA = [
   'editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios',
+  // SOP-1 · soporte corrige perfiles: es la mitad de los tiquetes que llegan.
+  'soporte_tecnico',
 ] as const
 
 /**

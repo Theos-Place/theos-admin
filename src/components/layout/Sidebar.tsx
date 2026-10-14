@@ -42,6 +42,7 @@ import {
   Wallet,
   Unlink,
   type LucideIcon,
+  LifeBuoy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -348,6 +349,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
+    // SOP-1 · la cola de soporte: solo quien tiene el módulo (soporte_tecnico, admin).
+    { href: '/soporte',        label: 'Soporte',        icon: LifeBuoy,        subs: [],                 module: 'soporte' },
     ...(formsNav === 'top_level'
       ? [{ href: '/formularios', label: 'Formularios', icon: FileText, subs: [], module: null } as NavModule]
       : []),

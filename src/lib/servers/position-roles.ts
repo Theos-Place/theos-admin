@@ -340,6 +340,20 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
       return t === 'encargado' || t.startsWith('encargado ')
     },
   },
+  {
+    role: 'soporte_tecnico',
+    description:
+      'Puesto «Soporte Técnico» del Comité de Tecnología de Información: resuelve los '
+      + 'tiquetes de soporte que levanta la puerta en los eventos (SOP-1).',
+    // Solo ESE título y solo en el comité de TI: «Colaborador de Sistemas» y
+    // «Colaborador Análisis datos» son otros trabajos y no editan perfiles de
+    // nadie. El puesto todavía no existe en el catálogo (2026-10-14): hasta
+    // que TI lo cree y asigne, nadie tiene el rol.
+    matches: (ctx) =>
+      ctx.areaType === 'committee'
+      && norm(ctx.areaName).includes('tecnolog')
+      && normSinArticulos(ctx.title) === 'soporte tecnico',
+  },
 ]
 
 /** Roles que otorga un puesto dado su contexto (puede ser más de uno si varias

@@ -16,6 +16,7 @@ import { FamilyMemberModal, type FamilyDraft } from '@/components/members/Family
 import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { ContactCapture } from '@/components/members/ContactCapture'
 import { Modal } from '@/components/shared/Modal'
+import { CrearTiqueteDeSoporte } from '@/components/support/CrearTiqueteDeSoporte'
 import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { validarAltaDePersona } from '@/lib/members/alta-persona'
 import { normalizeCedula, DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
@@ -94,7 +95,7 @@ function Clock() {
 export default function CheckinLivePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const { can } = usePermissions()
+  const { can, loaded: permisosCargados } = usePermissions()
   const canCheckin = can('eventos', 'edit') // encargado_eventos, direccion, admin
   const { event, loading, refetch } = useEvent(id)
   // Fecha de ESTA ocurrencia (si venimos de una recurrente con ?date=).
@@ -168,7 +169,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [serverInfo, setServerInfo] = useState<{ hasCommittees: boolean; isServer: boolean } | null>(null)
 
   // Sin permiso → fuera (el registro lo hace un encargado autenticado).
-  useEffect(() => { if (!canCheckin) router.replace('/dashboard') }, [canCheckin, router])
+  // Se decide cuando los permisos YA cargaron. Antes se preguntaba en el
+  // primer render, cuando `can()` todavía dice que no a todo, y abrir el
+  // check-in por URL directa (el QR, un marcador) mandaba al dashboard a
+  // quien sí podía operar (visto el 2026-10-14 probando SOP-1).
+  useEffect(() => { if (permisosCargados && !canCheckin) router.replace('/dashboard') }, [permisosCargados, canCheckin, router])
 
   // Sincroniza los check-ins ya registrados cuando carga (o recarga) el evento.
   // Es copia local porque cada registro se agrega de forma optimista antes de
@@ -666,7 +671,11 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
           >
             <ChevronLeft size={16} /> Volver
           </Link>
-          <span className="hidden sm:inline-flex text-navy-light/80"><Clock /></span>
+          <div className="flex items-center gap-3">
+            {/* SOP-1 · la puerta levanta tiquetes de soporte desde acá. */}
+            <CrearTiqueteDeSoporte eventId={id} />
+            <span className="hidden sm:inline-flex text-navy-light/80"><Clock /></span>
+          </div>
         </div>
         <div className="mt-2 flex items-end justify-between gap-4">
           <div className="min-w-0">

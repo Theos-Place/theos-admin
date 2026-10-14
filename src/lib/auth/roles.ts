@@ -362,6 +362,21 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'soporte_tecnico',
+    name: 'Soporte técnico',
+    description: 'Resuelve los tiquetes de soporte: perfiles, familias y correos de acceso',
+    color: '#5B8DEF',
+    // SOP-1 · Rol AUTOMÁTICO por el puesto «Soporte Técnico» del Comité de
+    // Tecnología de Información (position-roles). Su alcance es EXACTAMENTE
+    // lo que necesita para resolver un tiquete: la cola de soporte y la
+    // edición de miembros (perfiles, familias, correo de acceso). Nada de
+    // finanzas, reportes ni estudios — fijado por sop1-cableado.test.ts.
+    permissions: [
+      { module: 'soporte', actions: ['view', 'edit'], scope: 'all' },
+      { module: 'miembros', actions: ['view', 'edit'], scope: 'all' },
+    ],
+  },
+  {
     id: 'colaborador_finanzas',
     name: 'Colaborador de Finanzas (sede)',
     description: 'Registra las facturas del adelanto de comida de su sede',

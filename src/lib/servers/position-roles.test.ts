@@ -359,3 +359,25 @@ describe('FIN-12 · colaborador_finanzas por puesto de sede', () => {
     expect(rolesGrantedByPosition(enSede('Colaborador Bienvenida'))).not.toContain('colaborador_finanzas')
   })
 })
+
+describe('SOP-1 · soporte_tecnico por el puesto de TI', () => {
+  const enTI = (title: string): PositionContext =>
+    ({ title, areaName: 'Comité Tecnología de Información', areaType: 'committee', parentAreaName: null })
+
+  it('«Soporte Técnico» en el comité de TI lo da', () => {
+    expect(rolesGrantedByPosition(enTI('Soporte Técnico'))).toContain('soporte_tecnico')
+    expect(rolesGrantedByPosition(enTI('Soporte Tecnico'))).toContain('soporte_tecnico')
+    expect(rolesGrantedByPosition(enTI('Soporte de Técnico'))).toContain('soporte_tecnico')
+  })
+
+  it('los otros puestos de TI, no', () => {
+    // Los tres que existen hoy: son otros trabajos y no editan perfiles.
+    expect(rolesGrantedByPosition(enTI('Colaborador de Sistemas'))).not.toContain('soporte_tecnico')
+    expect(rolesGrantedByPosition(enTI('Colaborador Analisis datos'))).not.toContain('soporte_tecnico')
+    expect(rolesGrantedByPosition(enTI('Encargado Comité'))).not.toContain('soporte_tecnico')
+  })
+
+  it('el mismo título fuera de TI, no', () => {
+    expect(rolesGrantedByPosition(enSede('Soporte Técnico'))).not.toContain('soporte_tecnico')
+  })
+})

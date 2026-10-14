@@ -1314,7 +1314,31 @@ la misma persona la misma noche— o aparte. No se implementó a propósito.
 
 ## Fase 26 — Reunión 2026-09-30: Mi comité y accesos a reportes
 
-### [ ] SOP-1 · Tiquetes de soporte desde el check-in + rol de soporte técnico (pedido 2026-09-30)
+### [x] SOP-1 · Tiquetes de soporte desde el check-in + rol de soporte técnico — HECHO 2026-10-14 (staging)
+
+Lo construido, tal cual el prompt de abajo:
+
+ · Botón «Tiquete de soporte» en el check-in de cada evento. Lo ve quien
+   entra a esa pantalla (eventos:edit) y el endpoint pregunta por el MISMO
+   permiso, no por una lista aparte. Tres cosas: quién (sesión), cuándo,
+   texto (mínimo 10 caracteres). Queda ligado al evento; el miembro es
+   opcional y hoy no se manda (el texto lo dice).
+ · /soporte: el RequestBoard de siempre (tomar / resolver / rechazar, con
+   historial). La ven `soporte_tecnico` y admin.
+ · Rol `soporte_tecnico`: módulos `soporte` + `miembros` (edit, no create),
+   familias (FAMILY_EDIT_ROLES), correo de acceso (ACCESS_EMAIL_ROLES) y
+   reenviar activación. Nada de finanzas/reportes/estudios: el censo de
+   requireRoles está fijado en `src/lib/support/sop1-cableado.test.ts`.
+ · Rol automático por el puesto **«Soporte Técnico» del Comité Tecnología de
+   Información**. Ese puesto NO existe todavía: TI lo crea y asigna, y el
+   sync hace el resto. Los tres puestos actuales de TI no lo dan.
+ · Migración `20261014200000`: tablas con RLS, CHECK de member_roles, y
+   `private.ve_padron()` con el rol (INF-2).
+
+De paso: el check-in por URL directa mandaba al dashboard a quien sí podía
+operar, porque decidía antes de que cargaran los permisos. Arreglado.
+
+#### SOP-1 · prompt original (referencia, ya ejecutado)
 
 Prompt para Claude Code:
 

@@ -8,7 +8,7 @@ import { reportarError } from '@/lib/observabilidad'
 // Roles con permiso de editar miembros (miembros:edit): editor_perfiles,
 // direccion y admin (este último pasa siempre en requireRoles). Alinea el
 // server con el gate de UI can('miembros','edit').
-const FAMILY_EDIT_ROLES = ['editor_perfiles', 'direccion'] as const
+const FAMILY_EDIT_ROLES = ['editor_perfiles', 'direccion', 'soporte_tecnico'] as const
 
 // GET: otros integrantes de la familia del miembro (para check-in en familia).
 export async function GET(

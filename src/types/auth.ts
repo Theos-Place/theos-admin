@@ -6,6 +6,8 @@ export type RoleId =
   | 'finanzas'
   /** FIN-12 · Colaborador de Finanzas de una sede: registra los adelantos de comida. Rol automático por puesto. */
   | 'colaborador_finanzas'
+  /** SOP-1 · Resuelve los tiquetes de soporte que levanta la puerta. Rol automático por el puesto «Soporte Técnico» de TI. */
+  | 'soporte_tecnico'
   | 'encargado_staff'
   | 'coordinador_servidores'
   | 'coordinador_estudios'

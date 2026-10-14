@@ -51,7 +51,9 @@ describe('quién puede cambiarlo', () => {
     // Por igualdad y no por "contiene" a propósito: agregar un rol acá tiene
     // que costar cambiar esta línea. De fábrica lo puede solo admin (pasa
     // siempre por requireRoles); el rol es para dárselo a alguien puntual.
-    expect(ACCESS_EMAIL_ROLES).toEqual(['gestor_accesos'])
+    // SOP-1 (2026-10-14): soporte_tecnico entra porque «mi correo está mal»
+    // es el tiquete más común de la puerta, y resolverlo ES este permiso.
+    expect(ACCESS_EMAIL_ROLES).toEqual(['gestor_accesos', 'soporte_tecnico'])
   })
 })
 

@@ -11,7 +11,7 @@ import { reportarError } from '@/lib/observabilidad'
 // pide su enlace desde el login cuando lo va a usar. Si la cuenta ya está
 // activada, no reenvía.
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireRoles(...STUDY_ADMIN_ROLES)
+  const auth = await requireRoles(...STUDY_ADMIN_ROLES, 'soporte_tecnico')
   if (auth.res) return auth.res
   const { id } = await params
   if (!isUuid(id)) return NextResponse.json({ error: 'Miembro no encontrado' }, { status: 404 })

@@ -20,8 +20,10 @@ describe('permisos sobre la familia', () => {
     .map(r => r.id)
     .filter(r => hasModulePermission([r], 'miembros', 'edit'))
 
-  it('los que editan perfiles son editor_perfiles, direccion y admin', () => {
-    expect(editanPerfiles.sort()).toEqual(['admin', 'direccion', 'editor_perfiles'])
+  it('los que editan perfiles son editor_perfiles, direccion, soporte_tecnico y admin', () => {
+    // SOP-1 (2026-10-14): soporte entra porque corregir perfiles y familias
+    // es justo lo que resuelve. Es la ÚNICA ampliación desde el 2026-09-10.
+    expect(editanPerfiles.sort()).toEqual(['admin', 'direccion', 'editor_perfiles', 'soporte_tecnico'])
   })
 
   it('el gate de la ruta lista los mismos, menos admin (que pasa siempre)', () => {

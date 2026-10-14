@@ -6,7 +6,7 @@ import { reportarError } from '@/lib/observabilidad'
 // POST: crea una familia. Body: { name, members: [{ member_id, relation }] }
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios')
+    const auth = await requireRoles('editor_perfiles', 'direccion', 'encargado_staff', 'coordinador_estudios', 'soporte_tecnico')
     if (auth.res) return auth.res
     const body = await req.json()
     if (!body?.name || !Array.isArray(body?.members) || body.members.length === 0) {

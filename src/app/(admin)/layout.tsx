@@ -31,6 +31,7 @@ const pageTitles: Record<string, string> = {
   // REV-3: /pagos/revision ahora redirige a /finanzas/pagos (página unificada).
   '/finanzas/pagos': 'Pagos',
   '/mis-pagos':      'Pagos pendientes',
+  '/soporte':        'Soporte',
 }
 
 function getTitle(pathname: string): string {
@@ -54,6 +55,7 @@ const MODULE_BY_PREFIX: Record<string, string> = {
   '/formularios':    'formularios',
   '/reportes':       'reportes',
   '/accesos':        'accesos',
+  '/soporte':        'soporte',
 }
 
 /** Bloquea el contenido del módulo si el rol no tiene 'view' sobre él. */

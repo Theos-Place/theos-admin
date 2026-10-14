@@ -23,7 +23,8 @@ import type { RoleId } from '@/types/auth'
  * alguien puntual. Un rol que ya venga con dirección adentro no sería un
  * permiso otorgado a dedo, que es lo que se pidió.
  */
-export const ACCESS_EMAIL_ROLES: RoleId[] = ['gestor_accesos']
+// SOP-1 · soporte también: «mi correo está mal» es el tiquete más común.
+export const ACCESS_EMAIL_ROLES: RoleId[] = ['gestor_accesos', 'soporte_tecnico']
 
 export function normalizarCorreo(valor: string | null | undefined): string {
   return (valor ?? '').trim().toLowerCase()
