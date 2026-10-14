@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   puedeMover, actoresDe, esEditable, puedePedirViaje,
   PASOS, ESTADOS_DE_VIAJE, ESTADOS_DE_FASE_A, ESTADOS_DE_FASE_B, ESTADOS_ABIERTOS,
-  seLiquida,
+  seLiquida, puedeEntrarAViaticos,
 } from './estados-del-viaje'
 
 describe('FIN-11 · el camino del expediente', () => {
@@ -113,15 +113,16 @@ describe('FIN-11 · qué papeles puede hacer cada quien', () => {
 })
 
 describe('FIN-11 · quién puede pedir un viaje', () => {
-  it('alguien con un rol de trabajo, sí', () => {
-    expect(puedePedirViaje(['finanzas'])).toBe(true)
-    expect(puedePedirViaje(['dirigente'])).toBe(true)
+  it('solo quien tiene ficha de empleado', () => {
+    // Floriana, 2026-10-14: «por ahora nadie, hasta que se llene la lista de
+    // empleados». Es una fila viva en `employees`, no un rol.
+    expect(puedePedirViaje(true)).toBe(true)
   })
 
-  it('un miembro raso, no', () => {
-    expect(puedePedirViaje(['miembro'])).toBe(false)
-    expect(puedePedirViaje([])).toBe(false)
-    expect(puedePedirViaje(['miembro', 'solo_lectura'])).toBe(false)
+  it('un rol de trabajo NO alcanza: dirigentes y folletos quedaron fuera', () => {
+    expect(puedePedirViaje(false)).toBe(false)
+    expect(puedePedirViaje(null)).toBe(false)
+    expect(puedePedirViaje(undefined)).toBe(false)
   })
 })
 
@@ -206,5 +207,21 @@ describe('FIN-11 fase B · de aprobada a cerrada', () => {
     expect(seLiquida('liquidada')).toBe(false)
     expect(seLiquida('aprobada')).toBe(false)
     expect(esEditable('liquidacion_pendiente')).toBe(false)
+  })
+})
+
+describe('FIN-11 · quién ENTRA a la pantalla', () => {
+  it('el empleado, aunque no tenga ningún rol de revisión', () => {
+    expect(puedeEntrarAViaticos(true, [])).toBe(true)
+  })
+
+  it('finanzas y dirección, aunque no sean empleados', () => {
+    expect(puedeEntrarAViaticos(false, ['finanzas'])).toBe(true)
+    expect(puedeEntrarAViaticos(false, ['direccion'])).toBe(true)
+  })
+
+  it('un dirigente sin ficha de empleado, NO', () => {
+    expect(puedeEntrarAViaticos(false, ['dirigente'])).toBe(false)
+    expect(puedeEntrarAViaticos(undefined, ['folletos'])).toBe(false)
   })
 })

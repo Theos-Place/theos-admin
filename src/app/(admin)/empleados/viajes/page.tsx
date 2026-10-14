@@ -39,7 +39,7 @@ export default function ViajesPage() {
       .catch((e: Error) => setError(e.message))
   }, [])
 
-  const puedePedir = puedePedirViaje(user?.roles ?? [])
+  const puedePedir = puedePedirViaje(user?.es_empleado)
   const mios = (items ?? []).filter(v => v.member_id === user?.member_id)
   const ajenos = (items ?? []).filter(v => v.member_id !== user?.member_id)
   const visibles = tab === 'mios' ? mios : ajenos
@@ -60,7 +60,7 @@ export default function ViajesPage() {
           </div>
         </div>
         {puedePedir && (
-          <Button href="/viajes/nuevo" variante="primario" tamano="sm" className="self-start">
+          <Button href="/empleados/viajes/nuevo" variante="primario" tamano="sm" className="self-start">
             <Plus size={14} aria-hidden="true" /> Nuevo viaje
           </Button>
         )}
@@ -94,7 +94,7 @@ export default function ViajesPage() {
             {visibles.map(v => {
               const badge = BADGE_DE_ESTADO[v.status]
               return (
-                <Link key={v.id} href={`/viajes/${v.id}`}
+                <Link key={v.id} href={`/empleados/viajes/${v.id}`}
                   className="flex flex-col gap-2 px-4 py-3 hover:bg-surface-low transition-colors sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold text-navy font-body truncate">{v.destino}</p>

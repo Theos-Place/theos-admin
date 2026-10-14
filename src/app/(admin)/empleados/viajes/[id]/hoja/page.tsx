@@ -78,7 +78,7 @@ export default function HojaDelViaje({ params }: { params: Promise<{ id: string 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Link href={`/viajes/${id}`}
+        <Link href={`/empleados/viajes/${id}`}
           className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
           <ChevronLeft size={16} aria-hidden="true" /> Volver al expediente
         </Link>
@@ -89,12 +89,12 @@ export default function HojaDelViaje({ params }: { params: Promise<{ id: string 
       </div>
       <div className="flex flex-wrap items-center gap-2 print:hidden">
         <span className="text-[13px] text-navy-light/80 font-body">Imprimir solo:</span>
-        <Link href={`/viajes/${id}/hoja`}
+        <Link href={`/empleados/viajes/${id}/hoja`}
           className={`rounded-full border px-3 py-1 text-[13px] font-display transition-colors ${!solo ? 'border-navy/80 bg-navy/80 text-white' : 'border-navy/15 text-navy-light hover:text-navy'}`}>
           Todo el expediente
         </Link>
         {CLAVES.map(c => (
-          <Link key={c} href={`/viajes/${id}/hoja?anexo=${c}`}
+          <Link key={c} href={`/empleados/viajes/${id}/hoja?anexo=${c}`}
             className={`rounded-full border px-3 py-1 text-[13px] font-display transition-colors ${solo === c ? 'border-navy/80 bg-navy/80 text-white' : 'border-navy/15 text-navy-light hover:text-navy'}`}>
             {c === 'solicitud' ? 'ANX-01' : c === 'presupuesto' ? 'ANX-02'
               : c === 'liquidacion' ? 'ANX-03' : c === 'bitacora' ? 'ANX-05' : 'ANX-04'}

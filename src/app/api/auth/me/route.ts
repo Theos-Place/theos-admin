@@ -32,7 +32,7 @@ export async function GET() {
     if (!member) {
       // Usuario de auth sin member enlazado: sin acceso a módulos.
       return NextResponse.json({
-        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [], managed_event_ids: [] },
+        user: { name: user.email ?? '', email: user.email ?? '', roles: [], role: null, member_id: null, family_member_ids: [], has_cedula: true, is_system: false, in_study_committee: false, granted_form_ids: [], managed_event_ids: [], es_empleado: false },
       })
     }
 
@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente,
+      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente, esEmpleado,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -185,6 +185,12 @@ export async function GET() {
           return false
         }
       })(),
+      // FIN-11 · ¿Es empleado? Decide quién puede pedir viáticos (Floriana,
+      // 2026-10-14: «nadie hasta que se llene la lista de empleados»). Es
+      // una fila VIVA en `employees`, no un rol.
+      admin.from('employees').select('id')
+        .eq('member_id', member.id).is('end_date', null).limit(1)
+        .then(r => (r.data ?? []).length > 0, () => false),
     ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
@@ -212,6 +218,7 @@ export async function GET() {
         in_study_committee: inStudyCommittee,
         granted_form_ids: grantedFormIds,
         managed_event_ids: managedEventIds,
+        es_empleado: esEmpleado,
         abre_mi_comite: abreMiComite,
         abre_reportes_por_puesto: abreReportes,
         es_dirigente: esDirigente,

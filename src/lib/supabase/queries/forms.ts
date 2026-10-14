@@ -6,6 +6,7 @@ import { ajustesPorRestriccion } from '@/lib/forms/audiencia'
 import { esFuenteDinamica, talleresQueSeOfrecen } from '@/lib/forms/fuentes-dinamicas'
 import {
   estadoDePagoAlInscribirse, pagoDeInscripcion, esCampoDeComprobante,
+  eventosDondeInscribir, fechaDeActividadDeclarada,
   type EstadoDePago, type CampoDelFormulario, type PagoDeInscripcion,
 } from '@/lib/forms/pago-al-inscribirse'
 import { memberPassesRestriction } from '@/lib/supabase/queries/audiencia'
@@ -673,7 +674,8 @@ export async function submitResponse(
       await linkResponseToRegistration(
         supabase, formId, input.member_id, responseId, estado, pago, comprobante,
         evento.title ?? 'Inscripción',
-        (resp as { submitted_at: string } | null)?.submitted_at ?? null)
+        (resp as { submitted_at: string } | null)?.submitted_at ?? null,
+        fechaDeActividadDeclarada(listaCampos, respuestas))
     } catch (e) {
       console.warn('submitResponse enlace con inscripción:', e)
     }
@@ -713,6 +715,14 @@ export async function submitResponse(
  * Best-effort del lado de quien llama: si falla, la respuesta ya quedó
  * guardada y la inscripción se puede reconciliar después.
  */
+/** `YYYY-MM-DD` de un instante, en hora de Costa Rica (UTC-6, sin DST). */
+function diaEnCostaRica(iso: string | null): string | null {
+  if (!iso) return null
+  const t = Date.parse(iso)
+  if (!Number.isFinite(t)) return null
+  return new Date(t - 6 * 3600_000).toISOString().slice(0, 10)
+}
+
 async function linkResponseToRegistration(
   supabase: ReturnType<typeof createAdminClient>,
   formId: string,
@@ -723,10 +733,25 @@ async function linkResponseToRegistration(
   comprobante: string | null,
   tituloDelForm: string,
   fechaDeRespuesta: string | null,
+  /** El `YYYY-MM-DD` que la persona eligió en el formulario, si lo hay. */
+  fechaDeActividad: string | null = null,
 ): Promise<void> {
   const { data: eventos } = await supabase
-    .from('events').select('id').eq('registration_form_id', formId)
-  const ids = ((eventos ?? []) as Array<{ id: string }>).map(e => e.id)
+    .from('events').select('id, starts_at').eq('registration_form_id', formId)
+  // SOLO LA SESIÓN DEL DÍA QUE ELIGIÓ. Un formulario compartido por varias
+  // sesiones inscribía —y cobraba— en todas (Sabrina Arguedas, cuatro Volley
+  // por una respuesta; veinte personas con dos cobros de Hiking). La regla
+  // vive en `eventosDondeInscribir`, con sus tests; acá solo se le pasa el
+  // día de cada evento en hora de Costa Rica.
+  const candidatos = ((eventos ?? []) as Array<{ id: string; starts_at: string | null }>)
+    .map(e => ({ id: e.id, fechaLocal: diaEnCostaRica(e.starts_at) }))
+  const eleccion = eventosDondeInscribir(candidatos, fechaDeActividad)
+  if (eleccion.motivo === 'sin_dia' || eleccion.motivo === 'sin_coincidencia') {
+    console.warn(`linkResponseToRegistration: formulario ${formId} tiene ${candidatos.length} eventos y la respuesta ${responseId} `
+      + (eleccion.motivo === 'sin_dia' ? 'no eligió día' : `eligió ${fechaDeActividad}, que no es ninguna sesión`)
+      + '; no se inscribe en ninguno.')
+  }
+  const ids = eleccion.ids
   if (ids.length === 0) return
 
   // 1 · Enlazar las que YA existen. No se pisa un enlace puesto: la primera

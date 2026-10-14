@@ -17,7 +17,7 @@ const sinComentarios = (ruta: string): string =>
 const RUTA_ID = 'src/app/api/travel-requests/[id]/route.ts'
 const RUTA = 'src/app/api/travel-requests/route.ts'
 const QUERIES = 'src/lib/supabase/queries/travel.ts'
-const DETALLE = 'src/app/(admin)/viajes/[id]/page.tsx'
+const DETALLE = 'src/app/(admin)/empleados/viajes/[id]/page.tsx'
 const FORM = 'src/components/travel/FormularioDeViaje.tsx'
 
 describe('FIN-11 · el actor sale de los roles, nunca del body', () => {
@@ -89,8 +89,14 @@ describe('FIN-11 · lo que protege la API', () => {
     expect(sinComentarios(RUTA_ID)).toContain('requireRoles()')
   })
 
-  it('crear es para staff', () => {
-    expect(sinComentarios(RUTA)).toContain('puedePedirViaje(auth.ctx.roles)')
+  it('crear es SOLO para quien tiene ficha de empleado, y lo comprueba la base', () => {
+    // Floriana, 2026-10-14: «nadie hasta que se llene la lista de empleados».
+    // El servidor pregunta a `employees`; no confía en el es_empleado de la
+    // sesión, que es solo para esconder el botón.
+    const src = sinComentarios(RUTA)
+    expect(src).toContain("from('employees')")
+    expect(src).toContain('puedePedirViaje((ficha ?? []).length > 0)')
+    expect(src).not.toContain('puedePedirViaje(auth.ctx.roles)')
   })
 
   it('el expediente es de quien lo pide: no se acepta member_id del body', () => {
@@ -302,7 +308,7 @@ describe('FIN-11 fase D · el informe', () => {
 })
 
 describe('FIN-11 · los anexos en PDF', () => {
-  const HOJA = 'src/app/(admin)/viajes/[id]/hoja/page.tsx'
+  const HOJA = 'src/app/(admin)/empleados/viajes/[id]/hoja/page.tsx'
 
   it('la hoja no arma su propio contenido: lo pide al módulo', () => {
     // Si lo armara, el papel que firma la Junta y lo que se ve en pantalla
@@ -344,5 +350,21 @@ describe('FIN-11 · los anexos en PDF', () => {
 
   it('y el expediente tiene el botón para abrirla', () => {
     expect(sinComentarios(DETALLE)).toContain('/hoja')
+  })
+})
+
+describe('FIN-11 · la puerta de la pantalla es UNA y la comparten tres lugares', () => {
+  it('el guard del layout, el sidebar y la API preguntan lo mismo', () => {
+    // Floriana (2026-10-14): viáticos vive en Empleados y no es para todos.
+    // Finanzas NO tiene el módulo Empleados; sin la excepción, el guard por
+    // prefijo la dejaba fuera de lo que ella misma revisa.
+    expect(sinComentarios('src/app/(admin)/layout.tsx')).toContain("pathname.startsWith('/empleados/viajes') && puedeEntrarAViaticos(user.es_empleado, user.roles ?? [])")
+    expect(sinComentarios('src/components/layout/Sidebar.tsx')).toContain('puedeEntrarAViaticos(user?.es_empleado, userRoles)')
+    expect(sinComentarios(RUTA)).toContain('export const veTodosLosViajes = puedeRevisarViajes')
+  })
+
+  it('ya no hay una entrada suelta /viajes en el menú', () => {
+    expect(sinComentarios('src/components/layout/Sidebar.tsx')).not.toContain("href: '/viajes'")
+    expect(sinComentarios('src/components/layout/Sidebar.tsx')).toContain("href: '/empleados/viajes'")
   })
 })

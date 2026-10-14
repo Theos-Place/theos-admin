@@ -55,9 +55,13 @@ describe('el filtro «creados por mí»', () => {
     expect(LISTA).toMatch(/\[forms, categoryFilter, estadoFilter, query, soloMios\]/)
   })
 
-  it('no se ofrece si la persona no creó ninguno', () => {
-    // Un filtro que siempre deja la lista vacía es una promesa falsa.
-    expect(LISTA).toContain('forms.some(f => f.mio)')
+  it('se ofrece SIEMPRE, haya o no formularios propios', () => {
+    // Cambió el 2026-10-14. Antes: «solo si hay alguno propio» (un filtro que
+    // deja la lista vacía es una promesa falsa). Pero 41 de 43 formularios no
+    // tienen autor y no hay de dónde recuperarlo, así que esa regla escondía
+    // el botón para todo el mundo. Los nuevos sí llevan autor y lo van llenando.
+    expect(LISTA).not.toContain('forms.some(f => f.mio)')
+    expect(LISTA).toContain('aria-pressed={soloMios}')
   })
 
   it('y las dos ramas del endpoint lo marcan: con módulo y con acceso puntual', () => {

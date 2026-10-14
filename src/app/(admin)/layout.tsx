@@ -1,5 +1,6 @@
 'use client'
 
+import { puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
 import { usePathname } from 'next/navigation'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/lib/auth/auth-context'
@@ -98,6 +99,12 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // roles de revisión (revision_pagos, folletos, coordinadores) la ven sin el
   // módulo finanzas completo. Espejo del guard de GET /api/finance/payments.
   if (pathname.startsWith('/finanzas/pagos') && can('revision_pagos', 'view')) return <>{children}</>
+  // Excepción (FIN-11, 2026-10-14): /empleados/viajes es para quien tiene ficha
+  // de empleado —que pide— y para quien revisa (finanzas, dirección), que NO
+  // tiene el módulo Empleados. La regla es una sola, `puedeEntrarAViaticos`,
+  // y la comparten el sidebar y la API. Sin esto, el guard por prefijo dejaba
+  // a finanzas fuera de lo que ella misma revisa.
+  if (pathname.startsWith('/empleados/viajes') && puedeEntrarAViaticos(user.es_empleado, user.roles ?? [])) return <>{children}</>
   // Excepción: /formularios/[id]/responder es el llenado de un formulario —
   // cualquier sesión autenticada (las convocatorias por correo apuntan ahí).
   // El módulo formularios (dirección/admin) sigue exigiéndose para el resto.

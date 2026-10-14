@@ -66,18 +66,31 @@ export const ROLES_REVISION_FINANCIERA = ['finanzas', 'admin'] as const
 export const ROLES_AUTORIDAD_COMPETENTE = ['direccion', 'admin'] as const
 
 /**
- * Quién puede PEDIR un viaje.
+ * Quién puede PEDIR un viaje: SOLO QUIEN TIENE FICHA DE EMPLEADO.
  *
- * La minuta del 2026-09-29 dice «formularios restringidos a staff». El
- * sistema no tiene todavía una tabla de empleados (EMP-1 quedó para 2027),
- * así que «staff» se aproxima con lo único que hoy existe y es verificable:
- * tener algún rol que no sea el de miembro raso. Es una aproximación, está
- * dicho que lo es, y se cambia acá cuando EMP-1 traiga la definición buena.
+ * La primera versión aproximaba «staff» con «cualquier rol que no sea
+ * miembro raso», y eso dejaba pedir viáticos a dirigentes, folletos y
+ * formularios. Floriana lo cerró el 2026-10-14: «por ahora nadie, hasta que
+ * se llene la lista de empleados». La puerta es una fila viva en
+ * `employees` (`end_date` null), que RH carga; no es un rol. Hoy esa tabla
+ * está vacía, así que hoy no pide nadie — y eso es lo correcto.
+ *
+ * Los que REVISAN y APRUEBAN no pasan por acá: esos sí son roles.
  */
-export const ROLES_QUE_NO_SON_STAFF = ['miembro', 'solo_lectura'] as const
+export const puedePedirViaje = (esEmpleado: boolean | null | undefined): boolean => esEmpleado === true
 
-export const puedePedirViaje = (roles: readonly string[]): boolean =>
-  roles.some(r => !(ROLES_QUE_NO_SON_STAFF as readonly string[]).includes(r))
+/** Quien revisa o aprueba ve todos los expedientes: finanzas, dirección, admin. */
+export const puedeRevisarViajes = (roles: readonly string[]): boolean =>
+  [...ROLES_REVISION_FINANCIERA, ...ROLES_AUTORIDAD_COMPETENTE].some(r => roles.includes(r))
+
+/**
+ * Quién puede ENTRAR a la pantalla de viáticos. Es la unión de las dos puertas
+ * —pedir o revisar— y vive acá para que el guard del layout, el sidebar y la
+ * API digan lo mismo. Finanzas NO tiene el módulo Empleados: sin esta regla
+ * el guard por prefijo de ruta la dejaba fuera de lo que ella misma revisa.
+ */
+export const puedeEntrarAViaticos = (esEmpleado: boolean | null | undefined, roles: readonly string[]): boolean =>
+  puedePedirViaje(esEmpleado) || puedeRevisarViajes(roles)
 
 /** Quién puede mover el expediente: el dueño, finanzas o la autoridad. */
 export type Actor = 'solicitante' | 'revision' | 'autoridad'

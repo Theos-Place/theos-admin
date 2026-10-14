@@ -5,7 +5,7 @@ import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { puedePedirViaje } from '@/lib/travel/estados-del-viaje'
+import { puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
 import {
   LayoutDashboard,
   Users,
@@ -61,6 +61,10 @@ const EVENTOS_SUB: SubItem[] = [
 const EMPLEADOS_SUB: SubItem[] = [
   { href: '/empleados/puestos', label: 'Puestos pagados', icon: Tag },
 ]
+// FIN-11 · Viáticos vive DENTRO de Empleados (Floriana, 2026-10-14). La ve
+// quien tiene ficha de empleado —que es quien puede pedir— y quien tiene el
+// módulo, que es quien revisa.
+const VIATICOS_SUB: SubItem = { href: '/empleados/viajes', label: 'Viáticos', icon: Plane }
 
 
 const FINANZAS_SUB: SubItem[] = [
@@ -244,6 +248,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     estudiosSub.push({ href: '/estudios/evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck })
   }
 
+  // FIN-11 · Un empleado sin el módulo ve SOLO Viáticos adentro de Empleados;
+  // quien tiene el módulo ve todo. `es_empleado` lo calcula el servidor.
+  const entraAViaticos = puedeEntrarAViaticos(user?.es_empleado, userRoles)
+  const empleadosSub: SubItem[] = [
+    ...(can('empleados', 'view') ? EMPLEADOS_SUB : []),
+    ...(entraAViaticos || can('empleados', 'view') ? [VIATICOS_SUB] : []),
+  ]
+
   const finanzasSub: SubItem[] = [
     // Suite completa de finanzas: solo con el módulo 'finanzas' (becas/revision_pagos
     // solas NO destapan donaciones/devoluciones/reportes/solicitudes).
@@ -335,14 +347,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/eventos',        label: 'Eventos',        icon: Calendar,        subs: eventosSub,        module: 'eventos', summaryLabel: 'Calendario' },
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: groupsOnly || !canSeeSummaryRoute('/estudios', getScope('estudios')) },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeSummaryRoute('/servidores', getScope('servidores')) },
-    { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
-    // FIN-11 · Viáticos. Sin módulo propio: la entrada se muestra a quien
-    // puede pedir un viaje —el equipo de trabajo— y adentro la pestaña «Por
-    // revisar» solo aparece para finanzas y dirección. Es el mismo corte que
-    // hace la API, no uno paralelo.
-    ...(puedePedirViaje(userRoles)
-      ? [{ href: '/viajes', label: 'Viáticos', icon: Plane, subs: [], module: null } as NavModule]
-      : []),
+    { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: empleadosSub,       module: 'empleados', hideSummary: !can('empleados', 'view') },
+
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
@@ -365,6 +371,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // Estudios" (y su resumen queda oculto por hideSummary).
     if (m.href === '/estudios') return true
     if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
+    // FIN-11 · Empleados aparece también para quien tiene ficha de empleado
+    // sin el módulo: adentro ve solo Viáticos.
+    if (m.href === '/empleados') return can('empleados', 'view') || entraAViaticos
     /**
      * SRV-16 · Servidores también aparece para quien entra por su PUESTO.
      *

@@ -30,6 +30,8 @@ export interface AuthUser {
   /** Eventos que tiene a cargo (event_managers). Le abren /eventos y el detalle
    *  de ESOS eventos aunque no tenga el módulo. */
   managed_event_ids?: string[]
+  /** FIN-11 · fila viva en `employees`: puede pedir viáticos. */
+  es_empleado?: boolean
   /**
    * SRV-16 · ¿Algún puesto suyo le abre "Mi comité"? Lo decide el SERVIDOR
    * mirando los puestos (`getComitesQueAbrenMiComite`), que es donde vive la

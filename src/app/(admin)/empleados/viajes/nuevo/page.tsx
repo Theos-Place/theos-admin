@@ -14,16 +14,16 @@ export default function NuevoViajePage() {
   const { user, loaded } = useAuth()
 
   if (!loaded) return <p className="page text-[13px] text-navy-light/80 font-body">Cargando…</p>
-  // El mismo corte que la API: «formularios restringidos a staff» (minuta
-  // 2026-09-29). La pantalla lo repite para no ofrecer lo que el servidor va
-  // a negar — pero quien manda es el servidor.
-  if (!puedePedirViaje(user?.roles ?? [])) {
+  // El mismo corte que la API: solo quien tiene ficha de empleado. La
+  // pantalla lo repite para no ofrecer lo que el servidor va a negar — pero
+  // quien manda es el servidor, que pregunta a `employees` directamente.
+  if (!puedePedirViaje(user?.es_empleado)) {
     return <AccessDenied />
   }
 
   return (
     <PageContainer width="form" className="page space-y-4">
-      <Link href="/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
+      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
         <ArrowLeft size={14} aria-hidden="true" /> Volver a mis viajes
       </Link>
       <div>
@@ -32,7 +32,7 @@ export default function NuevoViajePage() {
           Se guarda como borrador: lo podés seguir editando hasta que lo mandés a revisión.
         </p>
       </div>
-      <FormularioDeViaje onListo={id => router.push(`/viajes/${id}`)} />
+      <FormularioDeViaje onListo={id => router.push(`/empleados/viajes/${id}`)} />
     </PageContainer>
   )
 }

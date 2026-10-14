@@ -1,0 +1,410 @@
+[
+  {
+    "reg": "33f97ffa-133f-4fe1-8670-5fbcf902f675",
+    "member_id": "68dd08a9-978d-468c-8432-566be07f2cf0",
+    "persona": "Adrian Chavarria Cordoba",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "756d088f-7c40-422d-ac28-7e434d9e4270",
+    "member_id": "a95438d4-f145-43b2-88ec-ae5169f542b0",
+    "persona": "Ana Silvia Arias Oviedo",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "748ce176-39dd-4c59-aa11-f938f34bc92a"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "1cf4f164-1616-44e3-880d-00df20d0b99e",
+    "member_id": "246df3d4-2780-4053-a6b1-65346c02c98b",
+    "persona": "Andrea Dayana Jiménez Sancho",
+    "evento": "Abuelitos",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "93a5fdbb-0ff8-47be-a04f-bd041ba395c6",
+    "member_id": "daa8b47a-e33e-4984-b5b1-b9c5a43c47b4",
+    "persona": "Carmen Mora Aparicio",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "b5443ff8-fae2-44d5-887f-c5d182f11ea4",
+    "member_id": "3a66e8d1-90a7-4010-87f1-15ed083a477a",
+    "persona": "Carolina Fonseca Prado",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "645339f7-a86b-40cc-afdb-3a7573ea3fb8",
+    "member_id": "c55c249a-9c11-453e-ba03-d4d7166e5f79",
+    "persona": "Daniela Céspedes Cedeño",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "cac9dbf0-c909-4433-a66f-fea772cf642a"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "02c34741-d032-4497-a58e-28fcd0c3d72d",
+    "member_id": "c00ad2d2-d629-48fc-9145-7e894f6927ec",
+    "persona": "Eimy Cordero Roa",
+    "evento": "Semillitas Kids&Teens",
+    "dia": "2026-09-12",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "c95922a2-ab2c-4f46-8ace-40df8475d2ac",
+    "member_id": "8dba0ec5-8fb3-4a5e-91eb-f429fb9a5713",
+    "persona": "Greivin Núñez Barrientos",
+    "evento": "Funcionales",
+    "dia": "2026-09-19",
+    "elegida": "2026-10-24",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "3e4544c1-9929-4c6e-8502-0bfba4f409ad",
+    "member_id": "6269dc09-fc84-43b6-bbe3-81edfd08fb27",
+    "persona": "Grettel Fajardo Sanchez",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "3bbfa5f8-da7b-48eb-b9a0-80774324942b"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "f96e21da-c3ac-40d0-a9a9-64d94d71ee6e",
+    "member_id": "66c9d8f0-83c1-42a7-ad07-3dfe63fde244",
+    "persona": "Jahaira Granados Miranda",
+    "evento": "Abuelitos",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "29698a2c-9159-450c-8b37-d35044fafdad",
+    "member_id": "720ac634-37e5-4197-9e8d-55f35db6e616",
+    "persona": "Jose Quiros Abarca",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "f2dfc912-1d5e-490b-9443-f7b873213f46"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "8d48f585-7ef0-4c9f-b5a0-ac9a346c1f2e",
+    "member_id": "0a34f479-fb5d-4440-b5c7-0f7346b54b32",
+    "persona": "Karen Solis Urena",
+    "evento": "Funcionales",
+    "dia": "2026-09-19",
+    "elegida": "2026-10-24",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "50eaeae7-8f75-4fe5-8f03-0c598e7b094f",
+    "member_id": "024a5462-df36-4ebd-af75-a6854a2302fb",
+    "persona": "Karla Gabriela Portilla Carvajal",
+    "evento": "Padel",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-25",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "832665b6-83b3-4d3f-87f9-5098d8993f5d",
+    "member_id": "57656407-6b9c-4e21-ba33-e2a4f0109f4f",
+    "persona": "Leonel Badilla Granados",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "efba2b96-4c5b-4d96-89a2-c253c6f127ce",
+    "member_id": "af90bae1-7189-4d86-8cd0-786be28c14e0",
+    "persona": "Linsey Vega Chaves",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "fba3fbd3-245c-4b22-9428-b7f54605c621"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "e2336b28-8ffc-498a-b82a-b5939ab80513",
+    "member_id": "4ea606c0-14e9-4af6-b651-f680d8d229c8",
+    "persona": "Marco Leiva Beeche",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "bc95e841-a3ba-42ce-9528-ad8d63797dfc"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "bd5704d0-3de2-4885-8446-864a1da20957",
+    "member_id": "b441f59c-584e-4587-bd11-ef14da50767e",
+    "persona": "Marco Soto Soto",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "2017c312-2646-4ec6-af18-374c74b2af66"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "3f1546cc-cfad-4ebe-92f8-2512a39d4f91",
+    "member_id": "d3709eda-6045-48f8-ab28-95e40c081320",
+    "persona": "Maria jose Castillo González",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "6e7a76bf-711f-405c-96ec-3c47ef9ccc53"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "aad772ab-bbf9-499b-a007-8080c0f51755",
+    "member_id": "ef382d74-60a9-4de8-b718-6ce2c667f64c",
+    "persona": "Mariangel Matamoros Chacon",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "3ebaca6d-e3ea-47c4-adfd-79bde0b22d9d",
+    "member_id": "a855ea9a-17b7-4e4f-a2b3-d05e96291af0",
+    "persona": "Mariel Rojas Montoya",
+    "evento": "Semillitas Kids&Teens",
+    "dia": "2026-09-12",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "cd5c1b20-38b3-45f6-8461-1a61eb90f265",
+    "member_id": "7553033e-d52f-49e9-a3e8-3d54cef26304",
+    "persona": "Mariela Meléndez",
+    "evento": "Volley",
+    "dia": "2026-09-11",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "8d160594-e0bd-4751-829f-169ac2a0b43b"
+    ],
+    "monto": "3000.00"
+  },
+  {
+    "reg": "d9e2fb81-c6a3-48bf-8f2f-a3420c96fa94",
+    "member_id": "7553033e-d52f-49e9-a3e8-3d54cef26304",
+    "persona": "Mariela Meléndez",
+    "evento": "Volley",
+    "dia": "2026-09-27",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "72e01e31-d477-4bcb-92f1-2f0e3cd49d0c"
+    ],
+    "monto": "3000.00"
+  },
+  {
+    "reg": "652c0ef3-1f88-4e3d-990b-8eb55a875440",
+    "member_id": "7553033e-d52f-49e9-a3e8-3d54cef26304",
+    "persona": "Mariela Meléndez",
+    "evento": "Volley",
+    "dia": "2026-10-30",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "ab55157b-8e88-48d5-a6c3-fdb4d52afe4b"
+    ],
+    "monto": "3000.00"
+  },
+  {
+    "reg": "68a55ef3-bf06-4de1-8ec0-545b060da6aa",
+    "member_id": "37c1d9a8-38ae-473a-9099-19138d367630",
+    "persona": "Marlice Soto Viales",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "7c8312f1-bb10-4fcc-980a-83040a7af31a",
+    "member_id": "2e9bd1a8-91f6-4cf6-874d-0acf90dc5dd3",
+    "persona": "Marvin Jose Murillo Rodríguez",
+    "evento": "Padel",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-25",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "b8381aaf-7d4c-4e4b-9328-8f2ae2fc8d26",
+    "member_id": "4413fdbe-2c79-49af-b7aa-af8380c37199",
+    "persona": "Meilin Marchena Brenes",
+    "evento": "Calles PM",
+    "dia": "2026-09-25",
+    "elegida": "2026-10-23",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "901bea9e-d498-4599-81f7-0349708cd4f7",
+    "member_id": "2ecc4cb5-aea3-4be6-a53a-03413d80b66d",
+    "persona": "Milay Arturo Céspedes Calvo",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "d5274a8f-4f98-4cf3-939a-c0c84356675f"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "ed6a4b53-0709-4571-90e5-78fe2fe9caa1",
+    "member_id": "772ebef0-9f4f-4858-86d3-ea9922bd4253",
+    "persona": "Monica Chavarria",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "c75f91ef-b73c-46da-8468-8ecb1739247f"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "f2112686-5650-41a0-ba21-0c1032ed8b22",
+    "member_id": "21105d3e-4572-4ea0-bbed-aac27628ac7b",
+    "persona": "Natalia Gonzalez Salazar",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "a7fdb0fb-25e8-4f05-840d-4dcd577037a1",
+    "member_id": "4f75b24c-ec0a-4f1a-aa6c-a70ff9698950",
+    "persona": "Osvaldo Picado Murillo",
+    "evento": "Abuelitos",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [],
+    "monto": "0"
+  },
+  {
+    "reg": "73e9dfed-e5c0-436d-8091-855378217a71",
+    "member_id": "b3c18c4b-d237-4de8-8c59-2a444b018104",
+    "persona": "Roger Ramos Alfaro",
+    "evento": "Sports Day",
+    "dia": "2026-09-20",
+    "elegida": "2026-10-17",
+    "checkins": "0",
+    "pagos": [
+      "c0fecb58-40a4-4e20-a3cd-254bb7432c71"
+    ],
+    "monto": "2000.00"
+  },
+  {
+    "reg": "f178118d-66ba-431f-a927-44c2361a451d",
+    "member_id": "96d03333-7f3a-4aa1-8b47-ae5e9e154985",
+    "persona": "Sabrina Arguedas Espinoza",
+    "evento": "Volley",
+    "dia": "2026-09-11",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "b9ab362f-85c6-4c9f-a7b1-841b435ba72d"
+    ],
+    "monto": "3000.00"
+  },
+  {
+    "reg": "62bfbae3-34a3-45af-917a-76bdb95d0a3c",
+    "member_id": "96d03333-7f3a-4aa1-8b47-ae5e9e154985",
+    "persona": "Sabrina Arguedas Espinoza",
+    "evento": "Volley",
+    "dia": "2026-09-27",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "22645592-24bd-455e-a0c6-84c4e2e4a44d"
+    ],
+    "monto": "3000.00"
+  },
+  {
+    "reg": "17860500-395f-4e62-a29c-b25f843c4121",
+    "member_id": "96d03333-7f3a-4aa1-8b47-ae5e9e154985",
+    "persona": "Sabrina Arguedas Espinoza",
+    "evento": "Volley",
+    "dia": "2026-10-30",
+    "elegida": "2026-10-18",
+    "checkins": "0",
+    "pagos": [
+      "e6367e5a-7a59-4330-9d4c-1ce774879367"
+    ],
+    "monto": "3000.00"
+  }
+]

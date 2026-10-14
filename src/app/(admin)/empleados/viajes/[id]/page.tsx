@@ -160,7 +160,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <PageContainer width="form" className="page space-y-4">
-      <Link href="/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
+      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
         <ArrowLeft size={14} aria-hidden="true" /> Volver a viajes
       </Link>
 
@@ -177,7 +177,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* El PDF del expediente, para el archivo físico y la Junta. */}
-          <Button href={`/viajes/${v.id}/hoja`} variante="fantasma" tamano="sm">
+          <Button href={`/empleados/viajes/${v.id}/hoja`} variante="fantasma" tamano="sm">
             <Printer size={14} aria-hidden="true" /> Anexos en PDF
           </Button>
           {esDueno && esEditable(v.status) && (
@@ -351,7 +351,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
           onListo={() => {
             setPaso(null)
             toast('Listo.', 'success')
-            if (paso === 'cancelada') router.push('/viajes'); else cargar()
+            if (paso === 'cancelada') router.push('/empleados/viajes'); else cargar()
           }}
         />
       )}

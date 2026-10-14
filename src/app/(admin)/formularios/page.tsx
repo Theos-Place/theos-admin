@@ -281,9 +281,11 @@ export default function FormulariosPage() {
         />
         {/* Va como interruptor y no como una opción más del filtro de estado:
             es otra pregunta («de quién») y se combina con las dos que ya hay.
-            Solo aparece si hay alguno propio — un filtro que siempre deja la
-            lista vacía es una promesa falsa. */}
-        {forms.some(f => f.mio) && (
+            SE MUESTRA SIEMPRE (Floriana, 2026-10-14): 41 de los 43 formularios
+            viejos no tienen autor y no hay de dónde recuperarlo, así que con
+            la regla anterior —solo si hay alguno propio— el botón no le
+            aparecía a nadie. Los nuevos sí llevan autor y lo van llenando. */}
+        {(
           <button
             type="button"
             aria-pressed={soloMios}

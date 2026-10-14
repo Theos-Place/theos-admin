@@ -154,3 +154,62 @@ export function pagoDeInscripcion(input: {
     payment_date: fechaDePagoDeclarada(input.campos, input.respuestas),
   }
 }
+
+/**
+ * EL DÍA QUE LA PERSONA ELIGIÓ (2026-10-14).
+ *
+ * LO QUE PASÓ. Un mismo formulario se pega a varias sesiones de la misma
+ * actividad —«Sport - Volley» a cuatro fechas, «Sport - Hiking» a Sports Day
+ * y Hiking— y `linkResponseToRegistration` inscribía, y COBRABA, en todas.
+ * Sabrina Arguedas quedó con cuatro Volley y ₡12.000 por una respuesta;
+ * veinte personas con dos cobros de Hiking. Ninguna fue a la sesión que no
+ * eligió: cero check-ins. La regla de Floriana: «se inscriben únicamente al
+ * día que están escogiendo».
+ *
+ * Y el día SÍ lo escogen: los dos formularios tienen un campo de fecha
+ * «Fecha del mes en la que se llevará a cabo la actividad de mi interés».
+ * Esta función lo encuentra por la etiqueta —igual que `esCampoDeFechaDePago`
+ * encuentra la del pago— y lo distingue de aquél: una fecha de PAGO no es
+ * una fecha de ACTIVIDAD, y confundirlas inscribiría a la gente el día que
+ * transfirió.
+ */
+export function esCampoDeFechaDeActividad(campo: CampoDelFormulario): boolean {
+  if (campo.field_type !== 'date') return false
+  if (esCampoDeFechaDePago(campo)) return false
+  const l = (campo.label ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  return /actividad|sesion|fecha del mes|dia que|evento/.test(l)
+}
+
+/** El `YYYY-MM-DD` que eligió, o null si no hay campo, no lo llenó o es basura. */
+export function fechaDeActividadDeclarada(
+  campos: readonly CampoDelFormulario[],
+  respuestas: readonly { field_id: string; value_text?: string | null }[],
+): string | null {
+  const ids = new Set(campos.filter(esCampoDeFechaDeActividad).map(c => c.id))
+  for (const r of respuestas) {
+    if (!ids.has(r.field_id)) continue
+    const m = (r.value_text ?? '').trim().match(/^(\d{4}-\d{2}-\d{2})/)
+    if (m) return m[1]
+  }
+  return null
+}
+
+/**
+ * De los eventos que comparten el formulario, EN CUÁL se inscribe.
+ *
+ *  · Un solo evento → ese, como siempre (el día no hace falta).
+ *  · Varios y un día elegido que coincide → solo ese.
+ *  · Varios y ningún día, o uno que no coincide → NINGUNO. No se adivina:
+ *    inscribir «al más cercano» es cómo Eduardo Bonilla, que escribió
+ *    2026-10-10 (no hay sesión ese día), habría terminado cobrado igual. Se
+ *    deja sin inscripción y se avisa; es mejor que cobrar de más.
+ */
+export function eventosDondeInscribir(
+  eventos: readonly { id: string; fechaLocal: string | null }[],
+  fechaElegida: string | null,
+): { ids: string[]; motivo: 'unico' | 'coincide' | 'sin_dia' | 'sin_coincidencia' } {
+  if (eventos.length <= 1) return { ids: eventos.map(e => e.id), motivo: 'unico' }
+  if (!fechaElegida) return { ids: [], motivo: 'sin_dia' }
+  const ids = eventos.filter(e => e.fechaLocal === fechaElegida).map(e => e.id)
+  return ids.length ? { ids, motivo: 'coincide' } : { ids: [], motivo: 'sin_coincidencia' }
+}
