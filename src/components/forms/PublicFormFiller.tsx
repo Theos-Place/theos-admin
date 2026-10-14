@@ -188,6 +188,7 @@ export function PublicFormFiller({ formId, form, fields }: {
               </label>
               {f.help_text && <p className="text-[13px] text-navy-light/80 font-body">{f.help_text}</p>}
               <PublicField
+                uploadUrl={`/api/public/forms/${formId}/upload-attachment`}
                 field={{ ...f, type: f.field_type, options: f.options ?? undefined } as never}
                 value={answers[f.id]}
                 onChange={v => setAnswers(a => ({ ...a, [f.id]: v }))}

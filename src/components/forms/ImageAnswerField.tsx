@@ -14,10 +14,13 @@ import { cn } from '@/lib/utils'
  * la imagen es pesada o la conexión mala, la persona lo ve enseguida y no
  * después de llenar todo — y el envío queda instantáneo.
  */
-export function ImageAnswerField({ value, onChange, controlId }: {
+export function ImageAnswerField({ value, onChange, controlId, uploadUrl = '/api/forms/upload-attachment' }: {
   value: string
   onChange: (path: string) => void
   controlId: string
+  /** A dónde se sube. La página PÚBLICA pasa su propia ruta, sin sesión:
+   *  con la de siempre, un invitado veía «No autenticado» (2026-10-14). */
+  uploadUrl?: string
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [subiendo, setSubiendo] = useState(false)
@@ -30,7 +33,7 @@ export function ImageAnswerField({ value, onChange, controlId }: {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch('/api/forms/upload-attachment', { method: 'POST', body: fd })
+      const res = await fetch(uploadUrl, { method: 'POST', body: fd })
       const d = await res.json().catch(() => ({}))
       if (!res.ok || !d.path) { setError(d.error ?? 'No se pudo subir la imagen.'); return }
       setNombre(file.name)

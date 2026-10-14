@@ -6,12 +6,14 @@ import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
 interface PublicFieldProps {
+  /** Ruta de subida del campo de imagen; la página pública pasa la suya (sin sesión). */
+  uploadUrl?: string
   field: FormFieldNew
   value: string | string[] | number | undefined
   onChange: (value: string | string[] | number) => void
 }
 
-export function PublicField({ field, value, onChange }: PublicFieldProps) {
+export function PublicField({ field, value, onChange, uploadUrl }: PublicFieldProps) {
   const inputBase = 'w-full rounded-xl border px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 transition-colors border-[var(--outline-variant)] bg-surface-low'
 
   // EST-10: bloque de TEXTO INFORMATIVO — sin input. El cuerpo va en
@@ -84,6 +86,7 @@ export function PublicField({ field, value, onChange }: PublicFieldProps) {
         controlId={controlId}
         value={stringVal}
         onChange={v => onChange(v)}
+        uploadUrl={uploadUrl}
       />
     )
   }
