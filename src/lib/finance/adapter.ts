@@ -56,6 +56,9 @@ export function toDomainPayment(db: DbPayment): Payment {
     // un estudio o de un evento, y de cuál. Se DERIVA (no depende de que alguien
     // haya escrito una descripción), así que también arregla el histórico.
     concept: db.concept,
+    event_type: db.event?.event_type ?? null,
+    plan_code: db.study_group?.plan?.code ?? null,
+    plan_level: db.study_group?.plan?.level ?? null,
     kind_label: paymentKindLabel(labelInput(db)),
     description_label: paymentDescription(labelInput(db)),
   }

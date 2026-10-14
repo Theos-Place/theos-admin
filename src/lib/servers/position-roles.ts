@@ -86,15 +86,26 @@ export function esComiteDeSede(ctx: PositionContext): boolean {
   return norm(ctx.parentAreaName ?? '') === 'sedes' || norm(ctx.areaName).startsWith('sede ')
 }
 
+/**
+ * FIN-12 · Los puestos de sede que administran el adelanto de comida.
+ * Decisión de Floriana (2026-10-14): SOLO quien encabeza logística y quien
+ * coordina la comida, además de finanzas, dirección y admin por su módulo.
+ * «Colaborador Finanzas» (el diseño original) ya no lo da. El catálogo no
+ * tiene «Encargado Comida»: el puesto real se llama «Coordinador Comida».
+ * UNA lista para el rol y para el alcance por sede (queries/adelantos.ts).
+ */
+export const TITULOS_DE_ADELANTOS: ReadonlySet<string> = new Set(['encargado logistica', 'coordinador comida'])
+export const esPuestoDeAdelantos = (title: string): boolean => TITULOS_DE_ADELANTOS.has(normSinArticulos(title))
+
 export const POSITION_ROLE_RULES: PositionRoleRule[] = [
   {
     role: 'colaborador_finanzas',
     description:
-      'Colaborador Finanzas de un comité de sede: registra las facturas del adelanto '
-      + 'de comida de esa sede (FIN-12).',
-    // Solo en comités de SEDE: el área «Finanzas» central tiene sus propios
-    // roles, y un «colaborador» ahí no administra el adelanto de ninguna sede.
-    matches: (ctx) => esComiteDeSede(ctx) && normSinArticulos(ctx.title) === 'colaborador finanzas',
+      'Encargado Logística y Coordinador Comida de un comité de sede: administran el '
+      + 'adelanto de comida de esa sede (FIN-12).',
+    // Solo en comités de SEDE: un «Encargado Logística» de otro comité no
+    // administra el adelanto de ninguna sede.
+    matches: (ctx) => esComiteDeSede(ctx) && esPuestoDeAdelantos(ctx.title),
   },
   {
     role: 'encargado_eventos',

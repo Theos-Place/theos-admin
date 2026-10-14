@@ -378,11 +378,11 @@ export const ROLES: Role[] = [
   },
   {
     id: 'colaborador_finanzas',
-    name: 'Colaborador de Finanzas (sede)',
-    description: 'Registra las facturas del adelanto de comida de su sede',
+    name: 'Adelanto de comida (sede)',
+    description: 'Encargado Logística y Coordinador Comida: administran el adelanto de comida de su sede',
     color: '#3DB97A',
-    // FIN-12 · Rol AUTOMÁTICO por el puesto «Colaborador Finanzas» de cada
-    // comité de sede (position-roles). Alcance 'committee': ve y escribe el
+    // FIN-12 · Rol AUTOMÁTICO por los puestos «Encargado Logística» y
+    // «Coordinador Comida» de cada comité de sede (position-roles, 2026-10-14). Alcance 'committee': ve y escribe el
     // adelanto de SU sede —la que sale del comité donde sirve—, no el de las
     // demás. Finanzas y dirección ven todas por su propio módulo.
     permissions: [

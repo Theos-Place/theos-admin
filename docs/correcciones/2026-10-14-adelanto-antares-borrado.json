@@ -1,0 +1,14 @@
+{
+  "id": "25cdf01f-8345-4c6d-baa0-e4c4ed405056",
+  "sede_code": "antares",
+  "mes": "2026-10",
+  "presupuesto": "0",
+  "moneda": "CRC",
+  "estado": "abierto",
+  "saldo_final": null,
+  "cerrado_por": null,
+  "cerrado_at": null,
+  "notas": null,
+  "created_at": "2026-10-14T20:50:24.648Z",
+  "updated_at": "2026-10-14T20:50:24.648Z"
+}

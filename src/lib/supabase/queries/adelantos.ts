@@ -6,6 +6,7 @@
  * `lib/finance/sede-del-area`. Acá solo lo que necesita la base.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { esPuestoDeAdelantos } from '@/lib/servers/position-roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   saldo, porSemana, revisarFactura, sePuedeCerrar, esMesValido,
@@ -115,8 +116,9 @@ export async function sedesQueAtiende(memberId: string): Promise<string[]> {
   const areas: string[] = []
   for (const v of (data ?? []) as Array<Record<string, unknown>>) {
     const p = (Array.isArray(v.position) ? v.position[0] : v.position) as { title?: string; area?: unknown } | null
-    const t = (p?.title ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\bde\b/g, '').replace(/\s+/g, ' ').trim()
-    if (t !== 'colaborador finanzas') continue
+    // La MISMA lista que da el rol (position-roles): si difirieran, alguien
+    // tendría el rol sin sede, o la sede sin rol.
+    if (!esPuestoDeAdelantos(p?.title ?? '')) continue
     const a = (Array.isArray(p?.area) ? (p!.area as unknown[])[0] : p?.area) as { name?: string } | null
     if (a?.name) areas.push(a.name)
   }

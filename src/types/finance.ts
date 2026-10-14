@@ -27,6 +27,11 @@ export type Payment = {
   paid_at: string | null
   /** Concepto crudo del cobro ('matricula' | 'evento' | …). */
   concept?: string | null
+  /** REP-17 · para agrupar por comité en el reporte: tipo del evento (slug) y
+   *  código/nivel del plan del grupo. Ver lib/finance/categoria-de-pago.ts. */
+  event_type?: string | null
+  plan_code?: string | null
+  plan_level?: string | null
   /** "Estudio" | "Evento" | "Prematrimonial" | "Folletos" | "Otro". */
   kind_label?: string
   /** Una línea: "Estudio · Transformados". Ver lib/finance/payment-label.ts. */

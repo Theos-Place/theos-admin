@@ -10,6 +10,11 @@ import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 import { formatDate } from '@/lib/format'
 import { anioDe, caeEn, fechaLocal } from '@/lib/fecha/partes-de-fecha'
+import { useEventTypeStyle } from '@/hooks/useEventTypes'
+import {
+  categoriaDePago, claveDeCategoria, etiquetaDeCategoria, cumpleFiltroDeCategoria, fechaDelPago, enRango,
+  ETIQUETA_DE_AREA, type AreaDePago,
+} from '@/lib/finance/categoria-de-pago'
 
 // Etiquetas en español para la tabla (los values crudos venían de la BD).
 const METHOD_LABEL: Record<string, string> = {
@@ -32,6 +37,11 @@ export default function ReportesPage() {
   const [donDateFrom, setDonDateFrom] = useState('')
   const [donDateTo, setDonDateTo] = useState('')
   const [entityFilter, setEntityFilter] = useState('all')
+  // REP-17 · rango de fechas y comité (área/categoría) de la pestaña de pagos.
+  const [pagoDesde, setPagoDesde] = useState('')
+  const [pagoHasta, setPagoHasta] = useState('')
+  const [categoriaFilter, setCategoriaFilter] = useState('all')
+  const nombreDeTipo = useEventTypeStyle()
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
 
   // Donations tab
@@ -48,19 +58,68 @@ export default function ReportesPage() {
   }, [donations, donDateFrom, donDateTo])
 
   // Payments tab
+  // REP-17 · Cada pago con su categoría y su fecha de reporte, calculadas una vez.
+  const pagosClasificados = useMemo(
+    () => payments.map(p => ({ p, cat: categoriaDePago(p), fecha: fechaDelPago(p) })),
+    [payments],
+  )
+  // El rango y el comité acotan primero; la entidad elige dentro de eso. Así
+  // el desplegable de entidades solo ofrece lo que existe en lo que se mira.
+  const enRangoYComite = useMemo(
+    () => pagosClasificados.filter(x => enRango(x.fecha, pagoDesde, pagoHasta) && cumpleFiltroDeCategoria(x.cat, categoriaFilter)),
+    [pagosClasificados, pagoDesde, pagoHasta, categoriaFilter],
+  )
+  const etiqueta = (cat: ReturnType<typeof categoriaDePago>) => etiquetaDeCategoria(cat, slug => nombreDeTipo(slug).label)
+  // Las opciones del comité salen de los pagos reales (en el rango): un área
+  // entera («Estudios») y, debajo, cada categoría que tenga algo.
+  const opcionesDeCategoria = useMemo(() => {
+    const porClave = new Map<string, { area: AreaDePago; label: string }>()
+    for (const x of pagosClasificados) {
+      if (!enRango(x.fecha, pagoDesde, pagoHasta)) continue
+      const k = claveDeCategoria(x.cat)
+      if (!porClave.has(k)) porClave.set(k, { area: x.cat.area, label: etiqueta(x.cat) })
+    }
+    const out: Array<{ value: string; label: string }> = [{ value: 'all', label: 'Todos los comités' }]
+    for (const area of ['estudios', 'eventos', 'otro'] as AreaDePago[]) {
+      const hijas = [...porClave].filter(([, v]) => v.area === area).sort((a, b) => a[1].label.localeCompare(b[1].label, 'es'))
+      if (hijas.length === 0) continue
+      out.push({ value: area, label: `${ETIQUETA_DE_AREA[area]} (todo)` })
+      for (const [k, v] of hijas) out.push({ value: k, label: `   ${v.label}` })
+    }
+    return out
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagosClasificados, pagoDesde, pagoHasta, nombreDeTipo])
   const entities = useMemo(() => {
     const byId = new Map<string, string>()
-    for (const p of payments) {
+    for (const { p } of enRangoYComite) {
       if (p.entity_id && !byId.has(p.entity_id)) byId.set(p.entity_id, p.entity_name || p.entity_id)
     }
     return [{ id: 'all', name: 'Todas las entidades' },
       ...[...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'))]
-  }, [payments])
+  }, [enRangoYComite])
 
   const filteredPayments = useMemo(() => {
-    if (entityFilter === 'all') return payments
-    return payments.filter(p => p.entity_id === entityFilter)
-  }, [entityFilter, payments])
+    const base = enRangoYComite.map(x => x.p)
+    if (entityFilter === 'all') return base
+    return base.filter(p => p.entity_id === entityFilter)
+  }, [entityFilter, enRangoYComite])
+
+  // REP-17 · El resumen por comité, sobre el rango y el comité elegidos (la
+  // entidad no lo acota: es justamente la vista de arriba).
+  const resumenPorComite = useMemo(() => {
+    const acc = new Map<string, { label: string; cobrado: typeof payments; pendiente: typeof payments; devuelto: typeof payments; n: number }>()
+    for (const x of enRangoYComite) {
+      const k = claveDeCategoria(x.cat)
+      let fila = acc.get(k)
+      if (!fila) { fila = { label: etiqueta(x.cat), cobrado: [], pendiente: [], devuelto: [], n: 0 }; acc.set(k, fila) }
+      fila.n++
+      if (x.p.status === 'paid') fila.cobrado.push(x.p)
+      else if (x.p.status === 'pending') fila.pendiente.push(x.p)
+      else if (x.p.status === 'refunded' || x.p.status === 'partial_refund') fila.devuelto.push(x.p)
+    }
+    return [...acc.entries()].map(([k, v]) => ({ clave: k, ...v })).sort((a, b) => a.label.localeCompare(b.label, 'es'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enRangoYComite, nombreDeTipo])
 
   const paidPayments = filteredPayments.filter(p => p.status === 'paid')
   const pendingPayments = filteredPayments.filter(p => p.status === 'pending')
@@ -110,8 +169,8 @@ export default function ReportesPage() {
 
   function exportPaymentsCSV() {
     generateCSV(
-      ['ID', 'Miembro', 'Cédula', 'Entidad', 'Tipo', 'Monto', 'Moneda', 'Método', 'Estado', 'Fecha'],
-      filteredPayments.map(p => [p.id, p.member_name, p.member_cedula, p.entity_name, p.entity_type === 'event' ? 'Evento' : 'Grupo', p.amount, toCurrency(p.currency), p.method, p.status, p.created_at.split('T')[0]])
+      ['ID', 'Miembro', 'Cédula', 'Comité', 'Entidad', 'Tipo', 'Monto', 'Moneda', 'Método', 'Estado', 'Fecha'],
+      filteredPayments.map(p => [p.id, p.member_name, p.member_cedula, etiqueta(categoriaDePago(p)), p.entity_name, p.entity_type === 'event' ? 'Evento' : 'Grupo', p.amount, toCurrency(p.currency), p.method, p.status, fechaDelPago(p)])
       , 'reporte-pagos'
     )
   }
@@ -220,7 +279,22 @@ export default function ReportesPage() {
         {activeTab === 'payments' && (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
-              <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)}
+              {/* REP-17 · rango por fecha de pago (cancelados) o de creación del cobro (el resto). */}
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] text-navy-light/80 font-body">Desde</span>
+                <input type="date" value={pagoDesde} onChange={e => setPagoDesde(e.target.value)} aria-label="Pagos desde"
+                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] text-navy-light/80 font-body">Hasta</span>
+                <input type="date" value={pagoHasta} onChange={e => setPagoHasta(e.target.value)} aria-label="Pagos hasta"
+                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+              </div>
+              <select value={categoriaFilter} onChange={e => { setCategoriaFilter(e.target.value); setEntityFilter('all') }} aria-label="Comité"
+                className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
+                {opcionesDeCategoria.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} aria-label="Entidad"
                 className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                 {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
@@ -248,12 +322,50 @@ export default function ReportesPage() {
               ))}
             </div>
 
+            {/* REP-17 · Por comité: lo que pide finanzas de un vistazo. */}
+            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Por comité</p>
+                <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
+                  {pagoDesde || pagoHasta
+                    ? `Pagos ${pagoDesde ? `desde ${formatDate(pagoDesde)}` : ''} ${pagoHasta ? `hasta ${formatDate(pagoHasta)}` : ''}`.trim()
+                    : 'Toda la historia · elegí un rango arriba para acotar'}
+                  {' · '}{filteredPayments.length} pagos
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-[var(--outline-variant)]">
+                      {['Comité', 'Pagos', 'Cobrado', 'Pendiente', 'Devuelto'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resumenPorComite.length === 0 && (
+                      <tr><td colSpan={5} className="px-5 py-6 text-center text-[13px] text-navy-light/80 font-body">No hay pagos en ese rango.</td></tr>
+                    )}
+                    {resumenPorComite.map((r, i) => (
+                      <tr key={r.clave} className={`border-b border-[var(--outline-variant)] ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
+                        <td className="px-5 py-3"><p className="text-[13px] font-medium font-body text-navy">{r.label}</p></td>
+                        <td className="px-5 py-3"><p className="text-[13px] font-body text-navy-light/80 tabular-nums">{r.n}</p></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.cobrado)} defaultHidden={false} /></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.pendiente)} defaultHidden={false} /></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.devuelto)} defaultHidden={false} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
-                      {['Miembro', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
+                      {['Miembro', 'Comité', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
                         <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
                       ))}
                     </tr>
@@ -262,11 +374,12 @@ export default function ReportesPage() {
                     {filteredPayments.slice(0, 15).map((p, i) => (
                       <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy-light/80">{etiqueta(categoriaDePago(p))}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
                         <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} defaultHidden={false} /></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">{p.created_at.split('T')[0]}</p></td>
+                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">{formatDate(fechaDelPago(p))}</p></td>
                       </tr>
                     ))}
                   </tbody>

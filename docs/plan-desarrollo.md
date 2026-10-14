@@ -128,6 +128,43 @@ pide viáticos); fijar la tarifa por km (hoy ₡0); confirmar que Dirección
 aprueba viajes; Meli con la hoja de donaciones de FIN-12; cargar montos de
 donaciones jul–ago si se quieren (hoy son null).
 
+### [x] REP-17 · Reporte de finanzas: rango de fechas y «por comité» — HECHO 2026-10-14 (staging)
+
+Pedido de Floriana: «agregar un rango para hacer el reporte basado en el
+rango; no entiendo de dónde salen los ₡4.102.500; donde dice por entidad,
+agruparlos por comité (estudios, eventos de ayuda social, sports…)».
+
+ · Los ₡4.102.500 eran la suma de los 384 pagos cancelados de TODA la
+   historia: la pestaña no tenía rango. Ahora tiene Desde/Hasta por fecha de
+   pago (cancelados) o de creación del cobro (lo demás), y el encabezado dice
+   «Toda la historia» cuando no hay rango.
+ · «Comité» = área + categoría (`lib/finance/categoria-de-pago.ts`, puro):
+   Estudios · Niveles / Discípulos / Capacitaciones / Prematrimonial /
+   Folletos; Eventos · <tipo del catálogo> (Ayuda Social, Sports, Taller…).
+   Filtro por área entera o por categoría, y debajo el de entidad acotado a
+   lo que se mira. Tabla «Por comité» con pagos, cobrado, pendiente y
+   devuelto; el CSV lleva la columna.
+ · El pago viaja con `event_type` y `plan_code/level` (query + adapter).
+
+Lo que NO se hizo: un comité «Servidores». No hay nada en los pagos que
+diga «lo pagó un servidor»; si se quiere, hay que decidir qué significa.
+
+### [x] FIN-12 (acceso) · Adelantos: Encargado Logística y Coordinador Comida — 2026-10-14 (staging)
+
+Decisión de Floriana: «solamente el encargado de logística y el encargado
+de comida (puestos), además de finanzas, admin y dirección». El catálogo no
+tiene «Encargado Comida»: el puesto real es «Coordinador Comida» (9 sedes), y
+así quedó. Lista única `TITULOS_DE_ADELANTOS` para el rol y para el alcance
+por sede. Migración `20261014210000` hace el backfill: 27 personas en 14
+sedes lo reciben (medido en prod); nadie tenía el rol viejo.
+
+Datos: el mes de Antares abierto por error (2026-10, ₡0, sin facturas) se
+borró en prod; respaldo en `docs/correcciones/`. El presupuesto de Antares
+(₡10.000) quedó.
+
+Centro de ayuda: dos guías nuevas, `solicitar-viaticos` (pública) y
+`adelantos-de-comida` (colaborador_finanzas, finanzas, dirección).
+
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
 Que el pase del evento se pueda guardar en la billetera del teléfono, en vez de

@@ -342,21 +342,26 @@ describe('SRV-11 · puestos_servicio', () => {
 })
 
 describe('FIN-12 · colaborador_finanzas por puesto de sede', () => {
-  it('«Colaborador Finanzas» en un comité de sede lo da', () => {
-    expect(rolesGrantedByPosition(enSede('Colaborador Finanzas'))).toContain('colaborador_finanzas')
-    // Con artículo también: «Colaborador de Finanzas».
-    expect(rolesGrantedByPosition(enSede('Colaborador de Finanzas'))).toContain('colaborador_finanzas')
+  it('«Encargado Logística» y «Coordinador Comida» en un comité de sede lo dan', () => {
+    expect(rolesGrantedByPosition(enSede('Encargado Logística'))).toContain('colaborador_finanzas')
+    expect(rolesGrantedByPosition(enSede('Coordinador Comida'))).toContain('colaborador_finanzas')
+    // Con artículo también.
+    expect(rolesGrantedByPosition(enSede('Coordinador de Comida'))).toContain('colaborador_finanzas')
+  })
+
+  it('«Colaborador Finanzas» YA NO lo da (decisión 2026-10-14)', () => {
+    expect(rolesGrantedByPosition(enSede('Colaborador Finanzas'))).not.toContain('colaborador_finanzas')
   })
 
   it('el mismo título FUERA de un comité de sede, no', () => {
-    // El área Finanzas central tiene sus propios roles; un colaborador ahí no
-    // administra el adelanto de ninguna sede.
-    const central: PositionContext = { title: 'Colaborador Finanzas', areaName: 'Finanzas', areaType: 'area', parentAreaName: null }
+    const central: PositionContext = { title: 'Encargado Logística', areaName: 'Logística', areaType: 'committee', parentAreaName: 'Ministerios' }
     expect(rolesGrantedByPosition(central)).not.toContain('colaborador_finanzas')
   })
 
-  it('otro colaborador de la sede, no', () => {
-    expect(rolesGrantedByPosition(enSede('Colaborador Bienvenida'))).not.toContain('colaborador_finanzas')
+  it('los otros puestos de comida y logística de la sede, no', () => {
+    expect(rolesGrantedByPosition(enSede('Colaborador Comida'))).not.toContain('colaborador_finanzas')
+    expect(rolesGrantedByPosition(enSede('Asistente Logistica'))).not.toContain('colaborador_finanzas')
+    expect(rolesGrantedByPosition(enSede('Colaborador Logistica'))).not.toContain('colaborador_finanzas')
   })
 })
 

@@ -25,7 +25,10 @@ describe('FIN-12 · el alcance por sede es uno solo', () => {
     const q = sin(Q)
     expect(q).toContain("from('volunteers')")
     expect(q).toContain('sedesDeLasAreas(areas, await sedesOperativas())')
-    expect(q).toContain("if (t !== 'colaborador finanzas') continue")
+    // La lista de puestos es UNA (position-roles): el rol y el alcance no
+    // pueden desalinearse.
+    expect(q).toContain("if (!esPuestoDeAdelantos(p?.title ?? '')) continue")
+    expect(sin('src/lib/servers/position-roles.ts')).toContain("new Set(['encargado logistica', 'coordinador comida'])")
   })
 
   it('una sede ajena es 403, no una lista vacía', () => {
@@ -69,7 +72,7 @@ describe('FIN-12 · las tres puertas de la pantalla', () => {
   })
 
   it('el rol lo da el puesto, solo en comités de sede', () => {
-    expect(sin('src/lib/servers/position-roles.ts')).toContain("esComiteDeSede(ctx) && normSinArticulos(ctx.title) === 'colaborador finanzas'")
+    expect(sin('src/lib/servers/position-roles.ts')).toContain('esComiteDeSede(ctx) && esPuestoDeAdelantos(ctx.title)')
   })
 
   it('la migración prende RLS en las tres tablas y abre el CHECK de roles', () => {
