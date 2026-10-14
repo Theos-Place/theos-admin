@@ -88,6 +88,7 @@ export function estadoAdminDe(
     razon_no_disponible: s('razon_no_disponible'),
     pausa_hasta: s('pausa_hasta'),
     revision: Array.isArray(fila.revision) ? (fila.revision as string[]) : [],
+    en_grupo_whatsapp: fila.en_grupo_whatsapp === true,
   }
   for (const k of ['nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general'] as const) {
     if (k in fila) out[k] = s(k)

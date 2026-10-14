@@ -40,6 +40,13 @@ const esquema = z.object({
   nota_decision_propia: z.string().trim().max(2000).nullable().optional(),
   nota_pausa: z.string().trim().max(2000).nullable().optional(),
   nota_general: z.string().trim().max(4000).nullable().optional(),
+  /**
+   * DIR-8 · «Está en el grupo de WhatsApp». Manual: nadie puede saberlo
+   * desde el sistema, lo marca quien administra el grupo. No es una nota
+   * confidencial —es logística— así que lo edita cualquiera que pueda
+   * editar el estado.
+   */
+  en_grupo_whatsapp: z.boolean().optional(),
 })
 
 const CAMPOS_RESERVADOS = [
@@ -90,6 +97,9 @@ export async function PATCH(
       // `is_active` se mantiene en espejo mientras quede código leyéndola.
       is_active: estado_base === 'activo',
     }
+    // Opcional de verdad: si no viene, NO se toca. Mandar `false` por
+    // omisión sacaría del grupo a todo el que se edite desde otra pantalla.
+    if (d.en_grupo_whatsapp !== undefined) cambios.en_grupo_whatsapp = d.en_grupo_whatsapp
 
     // La BANDERITA y las NOTAS solo las toca quien puede. Quien no, puede
     // seguir editando el estado —es su trabajo— y lo que mandó de estos
@@ -107,8 +117,32 @@ export async function PATCH(
     // de DIR-8: se regenera con el CLI de Supabase, que pide Docker. Mismo
     // patrón que los inserts de finance.ts. La forma la garantizan el zod de
     // arriba, `motivoInvalido` y los CHECK de la tabla.
-    const { error } = await supabase.from('study_leaders').update(cambios as never).eq('id', id)
+    /**
+     * `member_id`, NO `id`. El `[id]` de la ruta es el del MIEMBRO —así lo
+     * arma la lista y así lo espera el resto de la pantalla—, y
+     * `study_leaders` tiene su propia PK.
+     *
+     * BUG hasta el 2026-10-13: decía `.eq('id', id)`. Los dos UUID son
+     * válidos y distintos, así que el update no encontraba fila, no daba
+     * error y devolvía 200 OK. O sea que TODO lo que se editaba en la ficha
+     * administrativa —estado, razón, banderita, notas— se perdía en
+     * silencio y la pantalla decía «guardado».
+     *
+     * Se encontró porque el check de WhatsApp no persistía; el resto de los
+     * campos llevaba un día haciendo lo mismo sin que nadie lo notara.
+     */
+    const { error, count } = await supabase
+      .from('study_leaders')
+      .update(cambios as never, { count: 'exact' })
+      .eq('member_id', id)
     if (error) throw error
+    // Si no tocó ninguna fila, la pantalla NO puede decir «guardado». Es
+    // exactamente lo que escondía el bug de arriba.
+    if (count === 0) {
+      return NextResponse.json(
+        { error: 'Ese dirigente no tiene ficha.', code: 'sin_ficha' }, { status: 404 },
+      )
+    }
     return NextResponse.json({ ok: true })
   } catch (error) {
     reportarError('PATCH /api/studies/dirigentes/[id]/estado:', error)

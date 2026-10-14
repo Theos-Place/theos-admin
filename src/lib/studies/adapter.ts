@@ -251,6 +251,7 @@ export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[
     razon_no_disponible: db.razon_no_disponible ?? null,
     pausa_hasta: db.pausa_hasta ?? null,
     revision: db.revision ?? [],
+    en_grupo_whatsapp: db.en_grupo_whatsapp ?? false,
     ...Object.fromEntries(
       (['nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general'] as const)
         .filter(k => k in db).map(k => [k, db[k] ?? null])),

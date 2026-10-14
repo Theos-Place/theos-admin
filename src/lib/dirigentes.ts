@@ -78,6 +78,8 @@ export type EstadoAdministrativoDelDirigente = {
   nota_decision_propia?: string | null
   nota_pausa?: string | null
   nota_general?: string | null
+  /** DIR-8 · «Está en el grupo de WhatsApp». Manual. */
+  en_grupo_whatsapp?: boolean | null
 }
 
 export type Dirigente = {

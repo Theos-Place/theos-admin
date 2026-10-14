@@ -17,7 +17,7 @@
  * que el endpoint va a rechazar.
  */
 import { useState } from 'react'
-import { Loader2, Flag } from 'lucide-react'
+import { Loader2, Flag, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/shared/Button'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/shared/Toast'
@@ -33,6 +33,9 @@ import {
 import { disponibilidadEfectiva } from '@/lib/leaders/esta-dirigiendo'
 
 export type EstadoGuardado = Estado & {
+  /** DIR-8 · «Está en el grupo de WhatsApp». Manual y logístico: no es una
+   *  nota confidencial, así que lo marca quien puede editar el estado. */
+  enGrupoWhatsapp: boolean
   notaRevision: string
   notaCdeb: string
   notaDecisionPropia: string
@@ -43,6 +46,7 @@ export type EstadoGuardado = Estado & {
 const VACIO: EstadoGuardado = {
   base: 'activo', razonInactivo: null, detalleNoEjerce: null, situacionCdeb: null,
   disponibilidad: 'disponible', razonNoDisponible: null, pausaHasta: null, revision: [],
+  enGrupoWhatsapp: false,
   notaRevision: '', notaCdeb: '', notaDecisionPropia: '', notaPausa: '', notaGeneral: '',
 }
 
@@ -176,6 +180,7 @@ export function EstadoDelDirigenteForm({
           detalle_no_ejerce: e.detalleNoEjerce,
           situacion_cdeb: e.situacionCdeb,
           disponibilidad: e.disponibilidad,
+          en_grupo_whatsapp: e.enGrupoWhatsapp,
           razon_no_disponible: e.razonNoDisponible,
           pausa_hasta: e.pausaHasta,
           revision: e.revision,
@@ -351,6 +356,34 @@ export function EstadoDelDirigenteForm({
           )}
         </>
       )}
+
+      {/*
+        DIR-8 · El grupo de WhatsApp. Va FUERA de las ramas activo/inactivo
+        porque no depende del estado: alguien inactivo puede seguir en el
+        grupo, y alguien recién activado puede no estar todavía.
+
+        Nadie puede saberlo desde el sistema —WhatsApp no nos habla—, así
+        que es una marca manual de quien administra el grupo. Por eso no
+        lleva «se actualiza solo» ni nada que lo sugiera.
+      */}
+      <label className="flex items-start gap-2.5 rounded-xl bg-surface-low p-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={e.enGrupoWhatsapp}
+          disabled={guardando}
+          onChange={ev => setE({ ...e, enGrupoWhatsapp: ev.target.checked })}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-coral"
+        />
+        <span>
+          <span className="flex items-center gap-1.5 text-sm text-navy font-body">
+            <MessageCircle size={14} className="text-navy-light/80" aria-hidden="true" />
+            Está en el grupo de WhatsApp de dirigentes
+          </span>
+          <span className="block text-[13px] text-navy-light/80 font-body">
+            Se marca a mano: el sistema no puede saberlo.
+          </span>
+        </span>
+      </label>
 
       {/* ── La banderita, que convive con cualquier estado ──────────── */}
       {puedeBanderita && (

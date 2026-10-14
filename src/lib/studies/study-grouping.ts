@@ -72,3 +72,44 @@ export function matchesStudyFilter(codes: string[], value: string): boolean {
   const wanted = expandSelectionValue(value)
   return codes.some(c => wanted.includes(c))
 }
+
+/**
+ * DIR-8 · Las mismas opciones, pero con las CAMPAÑAS aparte.
+ *
+ * POR QUÉ: en los filtros de formación de dirigentes, las campañas
+ * —Transformados, Una Fe Audaz, ¿Para qué estoy aquí?— salían revueltas
+ * entre los estudios, en una lista de más de treinta. Quien busca «¿quién
+ * puede dar Panorama?» tiene que pasar por encima de ellas, y además son
+ * otra cosa: haber servido en una campaña no capacita para dar un estudio.
+ *
+ * Es `studySelectOptions` agrupado, no un reemplazo: las otras cinco
+ * pantallas que usan la lista plana no necesitan la distinción y cambiarles
+ * la forma por esto sería moverles el piso sin motivo.
+ */
+export type GrupoDeOpciones = {
+  titulo: string
+  opciones: Array<{ value: string; label: string }>
+}
+
+/** El `stage` del dominio que marca una campaña (ver `types/study.ts`). */
+export const STAGE_CAMPANA = 'campaña'
+
+export function studySelectGroups(
+  allTypes: Array<{ code: string; name: string; stage?: string }>,
+): GrupoDeOpciones[] {
+  const esCampana = new Set(
+    allTypes.filter(t => t.stage === STAGE_CAMPANA).map(t => t.code))
+
+  const todas = studySelectOptions(allTypes)
+  // Una opción de GRUPO (niveles, discípulos) nunca es campaña: agrupa
+  // códigos curriculares.
+  const deCampana = todas.filter(o => !o.value.startsWith('GRP:') && esCampana.has(o.value))
+  const deEstudio = todas.filter(o => !deCampana.includes(o))
+
+  // Un grupo vacío no se devuelve: un `optgroup` sin opciones se ve como un
+  // encabezado suelto que no hace nada.
+  return [
+    { titulo: 'Capacitaciones', opciones: deEstudio },
+    { titulo: 'Campañas', opciones: deCampana },
+  ].filter(g => g.opciones.length > 0)
+}

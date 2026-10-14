@@ -222,6 +222,8 @@ export type DbLeaderEnriched = {
   nota_decision_propia?: string | null
   nota_pausa?: string | null
   nota_general?: string | null
+  /** DIR-8 · «Está en el grupo de WhatsApp». Manual, logístico: no es nota. */
+  en_grupo_whatsapp?: boolean | null
 }
 
 /** Item del LISTADO de grupos: en vez de enrollments embebidos lleva solo
@@ -783,6 +785,7 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
       estado_base, razon_inactivo, detalle_no_ejerce, situacion_cdeb,
       disponibilidad, razon_no_disponible, pausa_hasta, revision,
       nota_revision, nota_cdeb, nota_decision_propia, nota_pausa, nota_general,
+      en_grupo_whatsapp,
       member:members(first_name, last_name, is_donor),
       evaluations:leader_evaluations(id, group_id, score, evaluation_date, comments)
     `)

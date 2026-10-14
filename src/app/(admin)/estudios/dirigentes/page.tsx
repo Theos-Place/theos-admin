@@ -13,7 +13,10 @@ import { useUrlFlag } from '@/hooks/useUrlFilter'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { ActiveWarningModal } from '@/components/shared/ActiveWarningModal'
-import { studySelectOptions, expandSelectionValue, matchesStudyFilter, groupCodesForDisplay } from '@/lib/studies/study-grouping'
+import {
+  studySelectOptions, studySelectGroups, expandSelectionValue, matchesStudyFilter,
+  groupCodesForDisplay,
+} from '@/lib/studies/study-grouping'
 import { ColumnSelector, type ColumnDef } from '@/components/shared/ColumnSelector'
 import { ExportButton } from '@/components/shared/ExportButton'
 import type { Dirigente } from '@/lib/dirigentes'
@@ -554,9 +557,17 @@ function StudyFilter({
   label, hint, value, onChange, options,
 }: {
   label: string; hint: string; value: string; onChange: (v: string) => void
-  options: { code: string; name: string }[]
+  options: { code: string; name: string; stage?: string }[]
 }) {
-  const opts = studySelectOptions(options)
+  /**
+   * DIR-8 · Las CAMPAÑAS van en su propio bloque del desplegable.
+   *
+   * Antes salían revueltas entre los estudios, en una lista de más de
+   * treinta: quien busca «¿quién puede dar Panorama?» tenía que pasar por
+   * encima de Transformados y compañía. Y son otra cosa — haber servido en
+   * una campaña no capacita para dar un estudio.
+   */
+  const grupos = studySelectGroups(options)
   return (
     <div className="space-y-1">
       <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display" title={hint}>{label}</p>
@@ -570,7 +581,11 @@ function StudyFilter({
         )}
       >
         <option value="">Cualquiera</option>
-        {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {grupos.map(g => (
+          <optgroup key={g.titulo} label={g.titulo}>
+            {g.opciones.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </optgroup>
+        ))}
       </select>
     </div>
   )

@@ -179,6 +179,7 @@ export type StudyLeader = {
   nota_decision_propia?: string | null
   nota_pausa?: string | null
   nota_general?: string | null
+  en_grupo_whatsapp?: boolean | null
 }
 
 export type WaitListEntry = {
