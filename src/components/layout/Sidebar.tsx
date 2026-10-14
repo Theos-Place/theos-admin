@@ -264,7 +264,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // FIN-12 · El Colaborador de Finanzas de una sede entra a Adelantos sin el
     // módulo finanzas: su permiso es `adelantos`, que le da el puesto.
     ...(!can('finanzas', 'view') && can('adelantos', 'view') ? [{ href: '/finanzas/adelantos', label: 'Adelantos de comida', icon: UtensilsCrossed }] : []),
-  ]
+  // Orden alfabético (Floriana, 2026-10-14). «Resumen» no está en esta lista:
+  // lo pinta el menú primero, siempre. Se ordena DESPUÉS de armarla porque
+  // Becas y Adelantos se agregan aparte según el permiso y quedaban al final.
+  ].sort((a, b) => a.label.localeCompare(b.label, 'es'))
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
   const canServiceAdmin = userRoles.some(r => SERVICE_ADMIN.includes(r))
