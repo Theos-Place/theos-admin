@@ -29,10 +29,13 @@ import { getInitials } from '@/lib/format'
 import {
   LEADER_STATUS_LABEL, ADMIN_ONLY_STATUSES,
 } from '@/lib/studies/leader-admin-status'
+import {
+  estadoMostrado, conteoDeEstados, resumenDeDirigentes, ETIQUETA_MOSTRADA,
+} from '@/lib/leaders/estado-mostrado'
 import { dirigeAhora } from '@/lib/studies/dirigente-activo'
 import { ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
 import {
-  cumpleFiltro, gruposDeFiltros, conteoPorFiltro,
+  cumpleFiltros, alternarFiltro, gruposDeFiltros, conteosConSeleccion,
   type DirigenteFiltrable, type ClaveDeFiltro,
 } from '@/lib/leaders/filtro-de-dirigentes'
 import { ROLES_QUE_LEEN_NOTAS } from '@/lib/leaders/notas-confidenciales'
@@ -47,7 +50,6 @@ import { ROLES_QUE_LEEN_NOTAS } from '@/lib/leaders/notas-confidenciales'
  * la definición central, y acá se dice en el tooltip para que nadie tenga que
  * adivinarlo leyendo el número.
  */
-const estaDandoAhora = (d: Dirigente) => dirigeAhora(d.estudios_activos.map(g => g.status))
 
 /**
  * DIR-12 · Lo que el filtro nuevo necesita de cada dirigente.
@@ -102,9 +104,11 @@ function DirigenteRow({
             <p className="text-navy font-body font-medium truncate">{d.member_name || 'Sin nombre'}</p>
             <span className={cn(
               'rounded-full px-2 py-0.5 text-[11px] font-medium font-body',
-              d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/80',
+              estadoMostrado(d.estado_admin?.estado_base) === 'activo'
+                ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]'
+                : 'bg-surface-low text-navy-light/80',
             )}>
-              {d.status === 'activo' ? 'Activo' : 'Inactivo'}
+              {ETIQUETA_MOSTRADA[estadoMostrado(d.estado_admin?.estado_base)]}
             </span>
             {/* DIR-6: el matiz solo llega a quien lo administra (el API lo
                 colapsa para el resto), y solo se pinta cuando lo hay. */}
@@ -166,9 +170,15 @@ function DirigentesContenido() {
   const canAdd = hasRole('admin', 'direccion', 'coordinador_dirigentes')
   const canBulk = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
   const canExport = hasRole('admin', 'direccion', 'coordinador_dirigentes', 'coordinador_estudios')
-  const [estado, setEstado] = useState<ClaveDeFiltro>('todos')
-  // PAR-6: el toggle va en la URL para poder mandar el link ya filtrado.
-  const [soloDando, setSoloDando] = useUrlFlag('dando')
+  // DIR-15 · Varios a la vez: tocar prende y vuelve a tocar apaga, y se
+  // combinan entre sí (pedido de Floriana, 2026-10-14).
+  // PAR-6 · El link con `?dando=1` sigue funcionando: se lee UNA vez para
+  // sembrar la selección. No se mantiene como estado aparte — tener el mismo
+  // filtro en dos lugares es justo lo que hizo que esta pantalla mostrara
+  // dos conteos distintos el 2026-10-14.
+  const [dandoEnUrl] = useUrlFlag('dando')
+  const [estado, setEstado] = useState<ClaveDeFiltro[]>(dandoEnUrl ? ['dirigiendo'] : [])
+  const soloDando = estado.includes('dirigiendo')
   // Tres conceptos DISTINTOS, cada uno filtrable por tipo de estudio.
   const [dandoTipo, setDandoTipo] = useState('')      // grupo activo de ese estudio
   const [formadoTipo, setFormadoTipo] = useState('')  // capacitado/formado para darlo
@@ -187,15 +197,14 @@ function DirigentesContenido() {
       // DIR-12 · Los filtros hablan la taxonomía de DIR-8 y preguntan por la
       // disponibilidad EFECTIVA. Antes miraban `availability_status`, el
       // campo anterior, así que los estados nuevos no se podían filtrar.
-      if (!cumpleFiltro(paraFiltrar(d), estado)) return false
-      if (soloDando && !estaDandoAhora(d)) return false
+      if (!cumpleFiltros(paraFiltrar(d), estado)) return false
       if (dandoTipo && !matchesStudyFilter(d.estudios_activos.map(g => g.plan_code), dandoTipo)) return false
       if (formadoTipo && !matchesStudyFilter(d.formacion, formadoTipo)) return false
       if (dispTipo && !matchesStudyFilter(d.disponibilidad, dispTipo)) return false
       if (q && !d.member_name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [dirigentes, estado, soloDando, dandoTipo, formadoTipo, dispTipo, query])
+  }, [dirigentes, estado, dandoTipo, formadoTipo, dispTipo, query])
 
   /**
    * DIR-12 · Los filtros AGRUPADOS. Planos eran quince botones en fila y
@@ -212,20 +221,22 @@ function DirigentesContenido() {
 
   // El conteo es sobre TODOS y no sobre lo ya filtrado: si bajara al aplicar
   // otro filtro, el número dejaría de responder «cuántos hay así».
+  // Los conteos se calculan CON lo que ya está elegido: así una opción que
+  // no lleva a ningún lado se ve en cero y queda deshabilitada sola, sin una
+  // tabla de qué excluye a qué.
   const conteos = useMemo(
-    () => conteoPorFiltro(
+    () => conteosConSeleccion(
       dirigentes.map(paraFiltrar),
+      estado,
       grupos.flatMap(g => g.opciones.map(o => o.clave))),
-    [dirigentes, grupos])
+    [dirigentes, grupos, estado])
 
-  const counts = useMemo(() => ({
-    activos: dirigentes.filter(d => d.status === 'activo').length,
-    inactivos: dirigentes.filter(d => d.status === 'inactivo').length,
-    // El conteo del botón es sobre TODOS, no sobre lo ya filtrado: si bajara al
-    // aplicar otro filtro, el número dejaría de responder «cuántos están dando
-    // ahora» y pasaría a ser un resultado parcial disfrazado de total.
-    dando: dirigentes.filter(estaDandoAhora).length,
-  }), [dirigentes])
+  // DIR-14 · El encabezado cuenta lo MISMO que los chips del filtro: el
+  // estado administrativo. Antes usaba `d.status` —derivado de los grupos— y
+  // la pantalla mostraba dos cifras distintas que no sumaban ni el total.
+  const porEstado = useMemo(
+    () => conteoDeEstados(dirigentes.map(d => ({ estado_base: d.estado_admin?.estado_base ?? null }))),
+    [dirigentes])
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
 
@@ -243,7 +254,7 @@ function DirigentesContenido() {
   )
   const exportColumns = useMemo<ColumnDef<DirigenteExportRow>[]>(() => [
     { key: 'nombre',         label: 'Nombre',         defaultVisible: true, alwaysVisible: true, exportValue: d => d.member_name || 'Sin nombre' },
-    { key: 'estado',         label: 'Estado',         defaultVisible: true, exportValue: d => d.status === 'activo' ? 'Activo' : 'Inactivo' },
+    { key: 'estado',         label: 'Estado',         defaultVisible: true, exportValue: d => ETIQUETA_MOSTRADA[estadoMostrado(d.estado_admin?.estado_base)] },
     { key: 'formacion',      label: 'Formación',      defaultVisible: true, exportValue: d => groupedLabels(d.formacion) },
     { key: 'dando_ahora',    label: 'Dando ahora',    defaultVisible: true, exportValue: d => groupedLabels(d.estudios_activos.map(g => g.plan_code)) },
     { key: 'disponibilidad', label: 'Disponibilidad', defaultVisible: true, exportValue: d => groupedLabels(d.disponibilidad) },
@@ -307,7 +318,7 @@ function DirigentesContenido() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Dirigentes</h1>
           <p className="text-sm text-navy-light/80 font-body">
-            {counts.activos} activos · {counts.inactivos} inactivos (con historial)
+            {resumenDeDirigentes(porEstado)}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -368,16 +379,18 @@ function DirigentesContenido() {
                 // Una opción sin nadie se muestra apagada y no se puede
                 // apretar: dejarla viva lleva a una lista vacía que se lee
                 // como «se rompió algo».
-                const vacia = o.clave !== 'todos' && n === 0
+                // La que ya está puesta NUNCA se deshabilita: apagarla
+                // siempre tiene que poder hacerse, aunque su conteo sea 0.
+                const vacia = o.clave !== 'todos' && n === 0 && !estado.includes(o.clave)
                 return (
                   <button
                     key={o.clave}
-                    onClick={() => setEstado(o.clave)}
+                    onClick={() => setEstado(s => alternarFiltro(s, o.clave))}
                     disabled={vacia}
-                    aria-pressed={estado === o.clave}
+                    aria-pressed={o.clave === 'todos' ? estado.length === 0 : estado.includes(o.clave)}
                     className={cn(
                       'rounded-full px-3 py-1.5 text-[13px] transition-colors font-body',
-                      estado === o.clave
+                      (o.clave === 'todos' ? estado.length === 0 : estado.includes(o.clave))
                         ? 'bg-navy text-white'
                         : vacia
                           ? 'bg-surface-low text-navy-light/80 cursor-default'
@@ -391,21 +404,6 @@ function DirigentesContenido() {
               })}
             </div>
           ))}
-          {/* PAR-6 · El toggle va entre los filtros de estado porque responde la
-              misma clase de pregunta —quién, no de qué estudio—, y el
-              desplegable de abajo ahora se llama distinto para que no haya dos
-              controles con el mismo nombre. */}
-          <button
-            onClick={() => setSoloDando(!soloDando)}
-            aria-pressed={soloDando}
-            title="Dirige o co-dirige un grupo en curso o en matrícula ahora mismo. Es el mismo criterio que usa el recálculo mensual de dirigentes activos."
-            className={cn(
-              'rounded-full px-3.5 py-1.5 text-sm transition-colors font-body',
-              soloDando ? 'bg-coral text-white' : 'bg-surface-low text-navy-light hover:bg-surface-container',
-            )}
-          >
-            Dando ahora · {counts.dando}
-          </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-1.5 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
             <Search size={15} className="text-navy-light/80 shrink-0" />

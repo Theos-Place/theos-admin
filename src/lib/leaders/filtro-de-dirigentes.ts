@@ -64,6 +64,18 @@ export function gruposDeFiltros(opts: { verBanderitas: boolean }): GrupoDeFiltro
       ],
     },
     {
+      // «Dando ahora» estaba suelto al final de la pantalla, lejos del resto
+      // (Floriana, 2026-10-14). Es la pregunta que más se hace —quién tiene
+      // grupo abierto— y va pegada al estado. Su propio grupo y no una
+      // opción de «Estado» porque se CRUZA con él: «activo Y dando ahora»
+      // es una pregunta legítima, y dentro de un grupo las opciones suman.
+      titulo: 'Grupos',
+      opciones: [
+        { clave: 'dirigiendo', etiqueta: 'Dando ahora' },
+        { clave: 'dirigiendo:no', etiqueta: 'Sin grupo abierto' },
+      ],
+    },
+    {
       titulo: 'Disponibilidad',
       opciones: [
         { clave: 'disp:disponible', etiqueta: ETIQUETA_DISPONIBILIDAD.disponible },
@@ -123,6 +135,9 @@ export function cumpleFiltro(d: DirigenteFiltrable, clave: ClaveDeFiltro): boole
       return valor
         ? (d.revision ?? []).includes(valor)
         : (d.revision ?? []).length > 0
+    case 'dirigiendo':
+      // Se deriva de sus grupos, no de la ficha: quien llama ya lo resolvió.
+      return valor === 'no' ? !d.dirigiendo : d.dirigiendo
     default:
       // Una clave que nadie reconoce NO filtra nada: mostrar todo es menos
       // malo que una lista vacía que parece «no hay dirigentes».
@@ -138,4 +153,92 @@ export function conteoPorFiltro(
   const out: Record<string, number> = {}
   for (const c of claves) out[c] = gente.filter(d => cumpleFiltro(d, c)).length
   return out
+}
+
+/**
+ * DIR-15 · VARIOS FILTROS A LA VEZ (pedido de Floriana, 2026-10-14).
+ *
+ * Hasta ahora era uno solo: tocar un filtro apagaba el anterior, así que no
+ * se podía pedir «los activos que están en pasantía». Tampoco se podía
+ * apagar el que estaba puesto sin volver a «Todos».
+ *
+ * CÓMO COMBINAN, que es la decisión de fondo: dentro de un mismo grupo las
+ * opciones suman (activo O inactivo = los dos), y entre grupos se cruzan
+ * (activo Y en pasantía). Es lo que la gente espera de una barra de filtros
+ * y es lo único que vuelve útil elegir dos cosas del mismo grupo: con «Y»,
+ * «activo + inactivo» daría cero y parecería un error del sistema.
+ */
+
+/** A qué grupo pertenece una clave, para poder agruparlas al evaluar. */
+export const grupoDeLaClave = (clave: ClaveDeFiltro): string => {
+  const [tipo] = clave.split(':')
+  // `disp:` y `razon:` son el mismo grupo en la pantalla («Disponibilidad»),
+  // y tienen que sumar entre sí: «no disponible» y «en pasantía» juntos son
+  // lo mismo que «no disponible», no cero.
+  if (tipo === 'disp' || tipo === 'razon') return 'disponibilidad'
+  return tipo
+}
+
+export function cumpleFiltros(
+  d: DirigenteFiltrable,
+  claves: readonly ClaveDeFiltro[],
+): boolean {
+  const reales = claves.filter(c => c && c !== 'todos')
+  if (reales.length === 0) return true
+  const porGrupo = new Map<string, ClaveDeFiltro[]>()
+  for (const c of reales) {
+    const g = grupoDeLaClave(c)
+    porGrupo.set(g, [...(porGrupo.get(g) ?? []), c])
+  }
+  // Y entre grupos, O dentro de cada uno.
+  for (const [, delGrupo] of porGrupo) {
+    if (!delGrupo.some(c => cumpleFiltro(d, c))) return false
+  }
+  return true
+}
+
+/**
+ * Cuántos quedarían si se tocara CADA opción, con lo que ya está elegido.
+ *
+ * Es lo que apaga las opciones que no llevan a ningún lado: si está puesto
+ * «Activo», «no asiste» da cero —ninguna persona activa tiene razón de
+ * inactividad— y el botón se ve deshabilitado. La dependencia que pidió
+ * Floriana («si escojo activo, los de inactivo se desactivan») sale SOLA de
+ * los datos, sin una tabla de qué excluye a qué: esa tabla habría que
+ * mantenerla a mano y se desalinearía con la taxonomía el día que se agregue
+ * una razón.
+ *
+ * Para la opción ya elegida se cuenta cuántos hay CON ella puesta, que es lo
+ * que la persona está viendo; apagarla es siempre posible.
+ */
+export function conteosConSeleccion(
+  gente: readonly DirigenteFiltrable[],
+  seleccion: readonly ClaveDeFiltro[],
+  todas: readonly ClaveDeFiltro[],
+): Record<ClaveDeFiltro, number> {
+  const out: Record<string, number> = {}
+  const elegidas = seleccion.filter(c => c && c !== 'todos')
+  for (const clave of todas) {
+    if (clave === 'todos') { out[clave] = gente.length; continue }
+    const grupo = grupoDeLaClave(clave)
+    const yaEsta = elegidas.includes(clave)
+    // El resto de la selección: lo de OTROS grupos siempre, y lo del mismo
+    // grupo solo si esta opción ya estaba (ahí se mira el resultado actual).
+    const resto = elegidas.filter(c => grupoDeLaClave(c) !== grupo)
+    const conEsta = yaEsta ? elegidas : [...resto, clave]
+    out[clave] = gente.filter(d => cumpleFiltros(d, conEsta)).length
+  }
+  return out
+}
+
+/** Tocar una opción: la prende si estaba apagada y la apaga si estaba puesta. */
+export function alternarFiltro(
+  seleccion: readonly ClaveDeFiltro[],
+  clave: ClaveDeFiltro,
+): ClaveDeFiltro[] {
+  // «Todos» no es una opción más: es borrar la selección.
+  if (clave === 'todos') return []
+  return seleccion.includes(clave)
+    ? seleccion.filter(c => c !== clave)
+    : [...seleccion.filter(c => c !== 'todos'), clave]
 }
