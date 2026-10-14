@@ -48,6 +48,12 @@ export type ViajeFila = {
   id: string
   member_id: string
   member_name: string
+  /** De la ficha, para el encabezado de los anexos. NO se re-piden en el
+   *  formulario: tener dos versiones del teléfono de alguien es peor que
+   *  tener una desactualizada, porque no se sabe cuál sirve. */
+  member_cedula: string | null
+  member_phone: string | null
+  member_email: string | null
   status: EstadoDeViaje
   tipo: 'trabajo' | 'capacitacion'
   alcance: 'nacional' | 'internacional'
@@ -112,7 +118,7 @@ const SELECT = `
   anticipo_monto, anticipo_moneda, monto_maximo_politica, anticipo_recomendado,
   disponibilidad_verificada, notas_finanzas, revisado_at, aprobado_at,
   motivo_rechazo, created_at,
-  solicitante:members!travel_requests_member_id_fkey(first_name, last_name),
+  solicitante:members!travel_requests_member_id_fkey(first_name, last_name, cedula, phone, email),
   revisor:members!travel_requests_revisado_por_fkey(first_name, last_name),
   autoridad:members!travel_requests_aprobado_por_fkey(first_name, last_name),
   anticipo_recibido_monto, anticipo_recibido_moneda, anticipo_entregado_at,
@@ -134,6 +140,12 @@ const nombre = (x: unknown): string | null => {
   const m = (Array.isArray(x) ? x[0] : x) as { first_name?: string; last_name?: string } | null
   const n = [m?.first_name, m?.last_name].filter(Boolean).join(' ').trim()
   return n || null
+}
+
+const datoDeLaFicha = (x: unknown, campo: string): string | null => {
+  const m = (Array.isArray(x) ? x[0] : x) as Record<string, unknown> | null
+  const val = m?.[campo]
+  return typeof val === 'string' && val.trim() ? val.trim() : null
 }
 
 function aFila(r: Record<string, unknown>): ViajeFila {
@@ -219,6 +231,9 @@ function aFila(r: Record<string, unknown>): ViajeFila {
       sale_at: r.sale_at as string, vuelve_at: r.vuelve_at as string,
     }),
     member_name: nombre(r.solicitante) ?? '—',
+    member_cedula: datoDeLaFicha(r.solicitante, 'cedula'),
+    member_phone: datoDeLaFicha(r.solicitante, 'phone'),
+    member_email: datoDeLaFicha(r.solicitante, 'email'),
     status: r.status as EstadoDeViaje,
     tipo: r.tipo as ViajeFila['tipo'],
     alcance: r.alcance as ViajeFila['alcance'],

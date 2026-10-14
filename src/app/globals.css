@@ -634,6 +634,25 @@ select[size]:not([size='1']) {
 @media print {
   @page { size: letter; margin: 12mm; }
 
+  /* ESTO FALTABA, y el comentario de arriba lo daba por hecho desde SRV-14:
+     no había ninguna regla que escondiera el resto de la pantalla, así que
+     el PDF salía con la barra lateral del sistema impresa al lado de la
+     hoja. Se descubrió el 2026-10-14 preguntándole al navegador qué reglas
+     de `print` existían de verdad, en vez de creerle al comentario.
+
+     Se oculta con `visibility` y no con `display:none` porque hay que
+     esconder a los ANTEPASADOS de la hoja sin esconderla a ella: con
+     `display` se iría también el contenido. */
+  body * { visibility: hidden; }
+  .hoja-impresa,
+  .hoja-impresa * { visibility: visible; }
+  .hoja-impresa {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
   /* Ni sombras ni fondos grises: en papel se ven como manchas y se comen la
      tinta. Los colores de MARCA sí se conservan (print-color-adjust), porque
      el encabezado navy es lo que hace que la hoja se vea de Theos. */

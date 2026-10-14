@@ -12,7 +12,7 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Pencil } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, Printer } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Button } from '@/components/shared/Button'
 import { Modal } from '@/components/shared/Modal'
@@ -176,6 +176,10 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* El PDF del expediente, para el archivo físico y la Junta. */}
+          <Button href={`/viajes/${v.id}/hoja`} variante="fantasma" tamano="sm">
+            <Printer size={14} aria-hidden="true" /> Anexos en PDF
+          </Button>
           {esDueno && esEditable(v.status) && (
             <Button type="button" variante="secundario" tamano="sm" onClick={() => setEditando(true)}>
               <Pencil size={14} aria-hidden="true" /> Editar

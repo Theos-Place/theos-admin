@@ -300,3 +300,49 @@ describe('FIN-11 fase D · el informe', () => {
     expect(sql).toContain('alter table public.travel_report_files enable row level security')
   })
 })
+
+describe('FIN-11 · los anexos en PDF', () => {
+  const HOJA = 'src/app/(admin)/viajes/[id]/hoja/page.tsx'
+
+  it('la hoja no arma su propio contenido: lo pide al módulo', () => {
+    // Si lo armara, el papel que firma la Junta y lo que se ve en pantalla
+    // se irían separando sin que nadie lo note — y el papel es el que queda
+    // archivado.
+    const src = sinComentarios(HOJA)
+    expect(src).toContain('anexosDelExpediente(v, solo)')
+    expect(src).not.toMatch(/NOMBRE_DEL_RUBRO|subtotal\(/)
+  })
+
+  it('usa el patrón de SRV-14: hoja-impresa y window.print', () => {
+    const src = sinComentarios(HOJA)
+    expect(src).toContain('hoja-impresa')
+    expect(src).toContain('window.print()')
+  })
+
+  it('la barra de acciones no se imprime', () => {
+    expect(sinComentarios(HOJA)).toContain('print:hidden')
+  })
+
+  it('cada anexo arranca en su propia página, menos el primero', () => {
+    expect(sinComentarios(HOJA)).toContain("primero ? '' : 'print:break-before-page'")
+  })
+
+  it('lleva las tres rayas para firmar a mano', () => {
+    // El expediente se archiva en papel aunque el trámite sea digital.
+    const src = sinComentarios(HOJA)
+    expect(src).toContain('Autoridad competente')
+    expect(src).toContain('border-b border-navy/30')
+  })
+
+  it('el expediente trae los datos de la FICHA, no se re-piden', () => {
+    const q = sinComentarios(QUERIES)
+    expect(q).toContain('member_cedula')
+    expect(q).toContain('cedula, phone, email')
+    // Y el formulario de solicitud no los pregunta.
+    expect(sinComentarios(FORM)).not.toMatch(/cedula|Cédula/)
+  })
+
+  it('y el expediente tiene el botón para abrirla', () => {
+    expect(sinComentarios(DETALLE)).toContain('/hoja')
+  })
+})

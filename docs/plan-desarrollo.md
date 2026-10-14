@@ -798,7 +798,7 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 
-### [~] FIN-11 · Viáticos y kilometraje — FASES A, B, C y D HECHAS 2026-10-13
+### [x] FIN-11 · Viáticos y kilometraje — COMPLETO 2026-10-14 (fases A–D + PDF)
 
 Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos,
 versión 1.0 del 05/05/2026). Candado de Tilopay retirado por Floriana.
@@ -953,8 +953,30 @@ aprobación y **la API lo aceptaba igual**. Es la misma clase de bug que se
 repitió el 2026-10-12 con los permisos de eventos; ahora la ventana
 (`sePuedeInformar`) la preguntan los dos.
 
-**FALTA**: el PDF de cada anexo con el patrón de SRV-14, para el archivo
-físico y la Junta.
+**EL PDF DE LOS ANEXOS**, con el patrón de SRV-14: `/viajes/<id>/hoja` arma
+el expediente completo —ANX-01, 02, 03, 05 y 04, en el orden del reglamento—
+con el encabezado de marca, cada anexo en su propia página y las tres rayas
+para firmar a mano. `?anexo=bitacora` imprime uno solo, incluso vacío, que es
+lo que a veces hace falta para el archivo físico. El PDF lo hace el navegador:
+sin librería, con los tokens de marca del sistema y con el texto
+seleccionable. Los datos personales (cédula, teléfono, correo) salen de la
+ficha al imprimir, nunca se re-piden en el formulario.
+
+Qué dice cada anexo vive en `lib/travel/anexos` y no en la hoja: si la hoja
+armara sus propias líneas, el papel que firma la Junta y lo que se ve en
+pantalla se irían separando sin que nadie lo note — y el papel es el que
+queda archivado. En el papel la plata no se formatea con `Intl`: una hoja que
+se archiva no puede cambiar de separador de miles según desde qué computadora
+se imprimió.
+
+**UN BUG VIEJO QUE APARECIÓ ACÁ, y es de SRV-14, no de esto.** El bloque
+`@media print` traía un comentario diciendo que al imprimir «se oculta TODO
+lo demás —el menú, el encabezado del sistema, los botones»… **y esa regla
+nunca se escribió**. O sea que todo PDF guardado desde la hoja del aplicante
+salía con la barra lateral del sistema impresa al lado. Se descubrió
+preguntándole al navegador qué reglas de `print` existían de verdad en vez de
+creerle al comentario. Arreglado para las dos hojas y fijado con
+`src/app/impresion.test.ts`.
 
 ## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
 
