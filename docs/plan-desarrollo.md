@@ -165,6 +165,30 @@ borró en prod; respaldo en `docs/correcciones/`. El presupuesto de Antares
 Centro de ayuda: dos guías nuevas, `solicitar-viaticos` (pública) y
 `adelantos-de-comida` (colaborador_finanzas, finanzas, dirección).
 
+### [x] DON-4 · Donaciones dentro del reporte de finanzas — HECHO 2026-10-14 (staging)
+
+«Podría incluirse en el primer tab del reporte y así eliminar la pantalla,
+sin perder ninguna funcionalidad.» `DonacionesPanel` es la pantalla entera
+(stats, lista paginada de 50 en 50, rango, identificar, alta manual, importar,
+donantes y montos, CSV del filtrado completo vía `?all=1`). La ruta vieja
+redirige al reporte; el menú ya no la lista. Los pagos del reporte se listan
+todos, de 50 en 50 (antes se cortaban en 15). Fijado por
+`sin-pagina-de-donaciones.test.ts`.
+
+### [~] AYU-5 · Centro de ayuda: viáticos, adelantos, datos del dirigente — guías e infografías 2026-10-14; GIF pendiente de prod
+
+Guías nuevas: `solicitar-viaticos` (pública, sin códigos de anexo: «eso
+ANX-01 no me dice nada»), `adelantos-de-comida` (colaborador_finanzas,
+finanzas, dirección) y `datos-del-dirigente` (dirigente y los roles de
+dirigentes). Infografías: `solicitar-viaticos.svg`, `adelantos-de-comida.svg`.
+`registrar-donaciones` apunta a la pestaña del reporte.
+
+**GIF pendiente**: los flujos `scripts/tutoriales/viaticos.ts` y
+`adelantos.ts` están escritos (`npm run tutorial:viaticos|adelantos`), pero
+graban contra PRODUCCIÓN con la cuenta [prueba] de finanzas, así que corren
+DESPUÉS de subir a prod. El de donaciones (`tutorial:donaciones`) hay que
+regrabarlo por lo mismo: la pantalla cambió de lugar.
+
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
 Que el pase del evento se pueda guardar en la billetera del teléfono, en vez de

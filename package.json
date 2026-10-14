@@ -21,7 +21,9 @@
     "tutorial:folletos": "tsx scripts/tutoriales/run.ts folletos",
     "tutorial:reubicacion": "tsx scripts/tutoriales/run.ts reubicacion",
     "tutorial:estudio-externo": "tsx scripts/tutoriales/run.ts estudio-externo",
-    "tutorial:pago-pendiente": "tsx scripts/tutoriales/run.ts pago-pendiente"
+    "tutorial:pago-pendiente": "tsx scripts/tutoriales/run.ts pago-pendiente",
+    "tutorial:viaticos": "tsx scripts/tutoriales/run.ts viaticos",
+    "tutorial:adelantos": "tsx scripts/tutoriales/run.ts adelantos"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

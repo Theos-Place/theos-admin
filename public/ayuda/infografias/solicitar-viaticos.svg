@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1010" role="img" aria-labelledby="t-via d-via" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-via">Cómo pido viáticos para un viaje</title>
+  <desc id="d-via">Los seis pasos de un viaje con viáticos: pedir el viaje, poner el presupuesto, enviarlo a revisión, la aprobación de dirección, liquidar al volver y el informe. Quién hace cada paso.</desc>
+
+  <rect width="720" height="1010" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Viáticos: un viaje, un expediente</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">Empleados → Viáticos. Lo pedís, lo revisan, lo aprueban y al volver entregás las facturas.</text>
+
+  <!-- Quién -->
+  <g font-size="13">
+    <rect x="48" y="138" width="200" height="34" rx="17" fill="#161440"/>
+    <text x="148" y="160" text-anchor="middle" fill="#FFFFFF" font-weight="bold">VOS (empleado)</text>
+    <rect x="260" y="138" width="200" height="34" rx="17" fill="#70BDC2"/>
+    <text x="360" y="160" text-anchor="middle" fill="#161440" font-weight="bold">FINANZAS</text>
+    <rect x="472" y="138" width="200" height="34" rx="17" fill="#D63E3D"/>
+    <text x="572" y="160" text-anchor="middle" fill="#FFFFFF" font-weight="bold">DIRECCIÓN</text>
+  </g>
+
+  <!-- Línea vertical de pasos -->
+  <line x1="84" y1="214" x2="84" y2="930" stroke="#E2E1DA" stroke-width="4"/>
+
+  <!-- Paso 1 -->
+  <g>
+    <circle cx="84" cy="236" r="22" fill="#161440"/>
+    <text x="84" y="243" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">1</text>
+    <rect x="124" y="204" width="548" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="204" width="6" height="96" rx="3" fill="#161440"/>
+    <text x="150" y="236" font-size="18" font-weight="bold" fill="#161440">Pedí el viaje</text>
+    <text x="150" y="260" font-size="14" fill="#5B5975">Adónde, cuándo, con quién y para qué. Mientras no lo envíes</text>
+    <text x="150" y="280" font-size="14" fill="#5B5975">es un borrador: lo podés cambiar cuanto querás.</text>
+  </g>
+
+  <!-- Paso 2 -->
+  <g>
+    <circle cx="84" cy="352" r="22" fill="#161440"/>
+    <text x="84" y="359" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">2</text>
+    <rect x="124" y="320" width="548" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="320" width="6" height="96" rx="3" fill="#161440"/>
+    <text x="150" y="352" font-size="18" font-weight="bold" fill="#161440">Poné el presupuesto</text>
+    <text x="150" y="376" font-size="14" fill="#5B5975">Una línea por gasto: transporte, hospedaje, comida. En colones o dólares.</text>
+    <text x="150" y="396" font-size="14" fill="#5B5975">Si querés plata por adelantado, pedila acá: tiene que caber en el presupuesto.</text>
+  </g>
+
+  <!-- Paso 3 -->
+  <g>
+    <circle cx="84" cy="468" r="22" fill="#70BDC2"/>
+    <text x="84" y="475" text-anchor="middle" font-size="18" font-weight="bold" fill="#161440">3</text>
+    <rect x="124" y="436" width="548" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="436" width="6" height="96" rx="3" fill="#70BDC2"/>
+    <text x="150" y="468" font-size="18" font-weight="bold" fill="#161440">Finanzas lo revisa</text>
+    <text x="150" y="492" font-size="14" fill="#5B5975">Si falta algo te lo devuelve con una nota. Corregís y lo volvés</text>
+    <text x="150" y="512" font-size="14" fill="#5B5975">a enviar. La nota aparece arriba del formulario.</text>
+  </g>
+
+  <!-- Paso 4 -->
+  <g>
+    <circle cx="84" cy="584" r="22" fill="#D63E3D"/>
+    <text x="84" y="591" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">4</text>
+    <rect x="124" y="552" width="548" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="552" width="6" height="96" rx="3" fill="#D63E3D"/>
+    <text x="150" y="584" font-size="18" font-weight="bold" fill="#161440">Dirección aprueba</text>
+    <text x="150" y="608" font-size="14" fill="#5B5975">O rechaza, con el motivo. Aprobado, finanzas te entrega el adelanto</text>
+    <text x="150" y="628" font-size="14" fill="#5B5975">si lo pediste, y lo deja marcado en el expediente.</text>
+  </g>
+
+  <!-- Paso 5 -->
+  <g>
+    <circle cx="84" cy="700" r="22" fill="#161440"/>
+    <text x="84" y="707" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">5</text>
+    <rect x="124" y="668" width="548" height="116" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="668" width="6" height="116" rx="3" fill="#161440"/>
+    <text x="150" y="700" font-size="18" font-weight="bold" fill="#161440">Al volver, liquidá</text>
+    <text x="150" y="724" font-size="14" fill="#5B5975">«Ya volví del viaje» → cada gasto con la foto o el PDF de la factura.</text>
+    <text x="150" y="744" font-size="14" fill="#5B5975">El sistema compara con el adelanto: te sobró o te deben.</text>
+    <text x="150" y="764" font-size="14" fill="#5B5975">¿Fuiste en tu carro? Anotá los kilómetros: se reconocen a la tarifa de finanzas.</text>
+  </g>
+
+  <!-- Paso 6 -->
+  <g>
+    <circle cx="84" cy="836" r="22" fill="#161440"/>
+    <text x="84" y="843" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">6</text>
+    <rect x="124" y="804" width="548" height="96" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <rect x="124" y="804" width="6" height="96" rx="3" fill="#161440"/>
+    <text x="150" y="836" font-size="18" font-weight="bold" fill="#161440">Contá cómo fue</text>
+    <text x="150" y="860" font-size="14" fill="#5B5975">El informe del viaje —qué se logró— se puede entregar después de liquidar,</text>
+    <text x="150" y="880" font-size="14" fill="#5B5975">pero el expediente no se cierra sin él.</text>
+  </g>
+
+  <!-- Pie -->
+  <rect x="48" y="936" width="624" height="48" rx="12" fill="#161440"/>
+  <text x="360" y="965" text-anchor="middle" font-size="14" fill="#FFFFFF">Botón «Hoja»: los formularios del reglamento listos para imprimir o guardar en PDF.</text>
+</svg>

@@ -4,56 +4,56 @@ seccion: Finanzas
 tipo: tutorial
 visibilidad: publica
 orden: 40
-resumen: Dónde está la solicitud de viáticos, quién puede pedirla, qué lleva cada paso (solicitud, presupuesto, anticipo, liquidación, kilometraje e informe) y qué pasa en cada firma.
+resumen: Dónde está la solicitud de viáticos, quién puede pedirla y qué pasa en cada paso, desde que la pedís hasta que entregás las facturas al volver.
 ---
 
 # Cómo pido viáticos para un viaje
 
-La solicitud de viáticos vive en **Empleados → Viáticos** (`/empleados/viajes`).
-Es el expediente completo del Reglamento de Viajes en una sola pantalla: no son
-cinco formularios sueltos, son cinco etapas de un mismo viaje.
+![Los seis pasos de un viaje: pedir, presupuestar, aprobar, viajar, liquidar e informar](/ayuda/infografias/solicitar-viaticos.svg)
+
+La solicitud está en **Empleados → Viáticos**. Es un solo expediente por
+viaje: ahí mismo pedís la plata, finanzas la revisa, dirección la aprueba y,
+al volver, entregás las facturas.
 
 ## Quién la ve
 
-- **Quien tiene ficha de empleado** puede pedir un viaje y ver los suyos. Si no
-  aparece «Viáticos» en el menú de Empleados, es que RH todavía no te registró
-  como empleado: pedilo ahí, no es un permiso que se dé a mano.
-- **Finanzas** revisa el presupuesto y la liquidación.
+- **Quien es empleado** puede pedir un viaje y ver los suyos. Si no te
+  aparece «Viáticos» en el menú de Empleados, Recursos Humanos todavía no te
+  registró como empleado: pedilo ahí, no es un permiso que se dé a mano.
+- **Finanzas** revisa el presupuesto y las facturas.
 - **Dirección** aprueba el viaje.
 
-## Las etapas, en orden
+## Paso a paso
 
-1. **Solicitud (ANX-01).** Qué viaje es (trabajo o capacitación, nacional o
-   internacional), destino, fechas, acompañantes, y la justificación: objetivo,
-   agenda, beneficio y resultado esperado. Mientras está en *borrador* se puede
-   editar cuanto haga falta. Al enviarla pasa a *enviada*.
-2. **Presupuesto (ANX-02).** Las líneas de gasto por rubro (transporte,
-   hospedaje, alimentación…) con cantidad y tarifa, en colones o dólares. Si
-   pedís anticipo, tiene que caber en el presupuesto. Finanzas lo revisa: puede
-   devolverlo *por corregir* con una nota, o pasarlo a dirección.
-3. **Aprobación.** Dirección aprueba o rechaza. Aprobado, finanzas entrega el
-   anticipo y el viaje queda *en viaje*.
-4. **Liquidación (ANX-03).** Al volver, cada gasto con su comprobante (foto o
-   PDF). El sistema compara contra el anticipo y dice si hay que devolver o si
-   te deben. Se envía a finanzas, que la aprueba o la devuelve para corregir.
-5. **Kilometraje (ANX-04).** Si fuiste en vehículo propio: la bitácora de
-   tramos con kilómetro inicial y final. El monto a reconocer sale de la tarifa
-   por kilómetro vigente, que fija finanzas (hoy está en ₡0 hasta que se
-   defina).
-6. **Informe del viaje (ANX-05).** Qué se logró. No bloquea la liquidación:
-   se puede entregar después, pero el expediente no se cierra sin él.
+1. **Pedí el viaje.** Tocá **Nuevo viaje** y contá adónde vas, cuándo, con
+   quién y para qué. Mientras no lo envíes queda como *borrador* y lo podés
+   cambiar cuanto querás.
+2. **Poné el presupuesto.** Una línea por cada gasto —transporte, hospedaje,
+   comida— con cuánto cuesta, en colones o dólares. Si necesitás plata por
+   adelantado, pedila ahí: tiene que caber dentro del presupuesto.
+3. **Envialo a revisión.** Finanzas lo revisa. Si falta algo te lo devuelve
+   con una nota; corregís y lo volvés a enviar.
+4. **Dirección aprueba** (o rechaza, con el motivo). Si pediste adelanto,
+   finanzas te lo entrega y lo deja marcado.
+5. **Al volver, liquidá.** Tocá **Ya volví del viaje** y registrá cada gasto
+   con la foto o el PDF de la factura. El sistema compara contra lo que te
+   adelantaron y te dice si te sobró plata o te deben. Si fuiste en tu
+   carro, anotá los kilómetros recorridos: se te reconocen a la tarifa que
+   fija finanzas.
+6. **Contá cómo fue.** El informe del viaje —qué se logró— se puede entregar
+   después de liquidar, pero el expediente no se cierra sin él.
 
-Cada firma queda registrada con quién y cuándo. Si algo vuelve *por corregir*,
-la nota de quien lo devolvió aparece arriba del formulario.
+Cada firma queda registrada con quién y cuándo. Si algo vuelve «para
+corregir», la nota de quien lo devolvió aparece arriba del formulario.
 
 ## Imprimir o guardar en PDF
 
-Dentro del viaje, **Hoja** arma los anexos del reglamento listos para imprimir
-o guardar como PDF (el botón de imprimir del navegador). Es la misma
-información del expediente, no una copia aparte.
+Dentro del viaje, el botón **Hoja** arma los formularios del reglamento
+listos para imprimir o guardar en PDF. Es la misma información del
+expediente, no hay que llenar nada dos veces.
 
-## Lo que no hace el sistema
+## Lo que el sistema no hace
 
-- No calcula impuestos ni tipos de cambio: cada línea va en su moneda.
-- No paga: registra lo aprobado y lo liquidado. La transferencia la hace
-  finanzas por fuera y marca el anticipo como entregado.
+- No convierte monedas: cada gasto va en la moneda en que se pagó.
+- No transfiere plata: registra lo aprobado y lo liquidado. El depósito lo
+  hace finanzas por fuera y lo marca en el expediente.

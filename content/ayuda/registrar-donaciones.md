@@ -16,7 +16,10 @@ Hay dos caminos y sirven para cosas distintas. Si te llegó el reporte del banco
 subilo: el sistema se encarga de buscar a cada persona. Si es una donación
 suelta, agregala a mano.
 
-Las dos están en **Finanzas → Donaciones**, arriba a la derecha.
+Las dos están en **Finanzas → Reportes**, en la pestaña **Donaciones**, arriba
+a la derecha. (Desde el 14 de octubre de 2026 la pantalla de Donaciones vive
+ahí: la lista completa, las estadísticas, el importador y el reporte de
+donantes están en esa pestaña, y el enlace viejo lleva al mismo lugar.)
 
 ## Una por una
 
@@ -74,7 +77,7 @@ que faltan** para trabajarlas aparte.
 
 ## Las que quedaron sin identificar
 
-En la pantalla de Donaciones, el filtro **No identificado** las junta todas. En
+En la pestaña Donaciones del reporte, el filtro **No identificado** las junta todas. En
 cada una tenés **Vincular a miembro**: buscás a la persona y confirmás. La
 donación queda a su nombre.
 
