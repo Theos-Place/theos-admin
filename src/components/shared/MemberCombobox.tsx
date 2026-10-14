@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Search, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { initialsFromParts } from '@/lib/format'
@@ -83,43 +85,34 @@ export function MemberCombobox({
   searchUrl = MEMBER_LOOKUP_URL,
 }: MemberComboboxProps) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<MemberHit[]>([])
-  const [searching, setSearching] = useState(false)
+  const excludeKey = excludeIds?.join(',') ?? ''
+
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida): qué mostrar y si
+  // «está buscando» salen de comparar la consulta con lo que llegó.
+  const { resultados: results, buscando: searching, setResultados } = useBusquedaDiferida<MemberHit>(
+    query,
+    (q, signal) => {
+      const sep = searchUrl.includes('?') ? '&' : '?'
+      return fetch(`${searchUrl}${sep}search=${encodeURIComponent(q)}&pageSize=${pageSize}`, { signal })
+        .then(r => (r.ok ? r.json() : { members: [] }))
+        .then(d => {
+          const excluded = excludeKey ? excludeKey.split(',') : []
+          return ((d.members ?? []) as MemberHit[]).filter(m => !excluded.includes(m.id))
+        })
+    },
+    { minimo: minChars, dependencias: `${pageSize}|${excludeKey}|${searchUrl}` },
+  )
 
   const { highlight, setHighlight, onKeyDown } = useListNavigation({
     count: results.length,
     onPick: i => { const m = results[i]; if (m) pick(m) },
-    onClose: () => setResults([]),
+    onClose: () => setResultados(() => []),
   })
-
-  const excludeKey = excludeIds?.join(',') ?? ''
-
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < minChars) { setResults([]); setSearching(false); return }
-    const ctrl = new AbortController()
-    let alive = true
-    const t = setTimeout(() => {
-      setSearching(true)
-      const sep = searchUrl.includes('?') ? '&' : '?'
-      fetch(`${searchUrl}${sep}search=${encodeURIComponent(q)}&pageSize=${pageSize}`, { signal: ctrl.signal })
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => {
-          if (!alive) return
-          const excluded = excludeKey ? excludeKey.split(',') : []
-          setResults(((d.members ?? []) as MemberHit[]).filter(m => !excluded.includes(m.id)))
-          setHighlight(0)
-          setSearching(false)
-        })
-        .catch(() => { if (alive) setSearching(false) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t); ctrl.abort() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, minChars, pageSize, excludeKey, searchUrl])
+  // El resaltado vuelve al primero con cada consulta nueva.
+  usePrecarga(query.trim() || null, () => setHighlight(0))
 
   function pick(m: MemberHit) {
     setQuery('')
-    setResults([])
     onSelect(m)
   }
 

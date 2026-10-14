@@ -1,6 +1,8 @@
 'use client'
 
 import { use, useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { type AttendanceType, type EventCheckin } from '@/types/event'
 import { useEvent } from '@/hooks/useEvents'
@@ -128,12 +130,6 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<{ id: string; name: string; birth_md?: string | null } | null>(null)
   const [checkins, setCheckins] = useState<EventCheckin[]>([])
-  const [memberResults, setMemberResults] = useState<{
-    id: string; name: string; has_document?: boolean; birth_md?: string | null
-    pedir_documento?: boolean
-    falta_contacto?: { email: boolean; phone: boolean }
-    menor_sin_adulto?: boolean
-  }[]>([])
   // FIN-2 (3): captura OPCIONAL de documento tras un check-in. Vive fuera del
   // flujo de la fila: se puede ignorar y seguir registrando gente.
   const [docCapture, setDocCapture] = useState<{ id: string; name: string } | null>(null)
@@ -151,7 +147,6 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const siguienteContacto = () => setColaDeContacto(prev => prev.slice(1))
   const encolarContacto = (p: PendienteDeContacto[]) =>
     setColaDeContacto(prev => encolarPendientes(prev, p))
-  const [searching, setSearching] = useState(false)
   const [showNewPerson, setShowNewPerson] = useState(false)
   const [familyCheckin, setFamilyCheckin] = useState<{
     member: { id: string; name: string }
@@ -166,7 +161,6 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Camino en curso del cobro en sitio ('pending' | 'verified'), para el estado del botón.
   const [cobroSubmitting, setCobroSubmitting] = useState<'pending' | 'verified' | null>(null)
   // ¿El miembro seleccionado es servidor de algún comité organizador? (gating de "Servidor")
-  const [serverInfo, setServerInfo] = useState<{ hasCommittees: boolean; isServer: boolean } | null>(null)
 
   // Sin permiso → fuera (el registro lo hace un encargado autenticado).
   // Se decide cuando los permisos YA cargaron. Antes se preguntaba en el
@@ -196,16 +190,18 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   // Al seleccionar un miembro, consulta si es servidor de los comités organizadores.
-  useEffect(() => {
-    if (!selectedMember) { setServerInfo(null); return }
-    let alive = true
-    setServerInfo(null)
-    fetch(`/api/events/${id}/server-check?member_id=${selectedMember.id}`)
+  // LINT-1 · por clave (el miembro) con useCargaRemota. Mientras carga el
+  // dato de OTRO miembro, serverInfo es null: la puerta no debe decidir con
+  // la respuesta del anterior.
+  const { datos: serverCheck, cargando: cargandoServerCheck } = useCargaRemota<{ hasCommittees: boolean; isServer: boolean }>(
+    selectedMember?.id ?? '',
+    () => fetch(`/api/events/${id}/server-check?member_id=${selectedMember!.id}`)
       .then(r => (r.ok ? r.json() : { hasCommittees: false, isServer: false }))
-      .then(d => { if (alive) setServerInfo({ hasCommittees: !!d.hasCommittees, isServer: !!d.isServer }) })
-      .catch(() => { if (alive) setServerInfo({ hasCommittees: false, isServer: false }) })
-    return () => { alive = false }
-  }, [selectedMember, id])
+      .then(d => ({ hasCommittees: !!d.hasCommittees, isServer: !!d.isServer }))
+      .catch(() => ({ hasCommittees: false, isServer: false })),
+    { activo: !!selectedMember },
+  )
+  const serverInfo = cargandoServerCheck ? null : serverCheck
 
   /**
    * CHK-2 · El día de HOY en hora de Costa Rica, para saber quién cumple años
@@ -225,44 +221,41 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // por /api/members: el rol encargado_eventos —el que hace check-in— no tiene
   // el módulo miembros, así que ahí la búsqueda devolvía siempre vacío
   // (bug 2026-08-04).
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setMemberResults([]); return }
-    let alive = true
-    setSearching(true)
-    const t = setTimeout(() => {
-      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => {
-          if (!alive) return
-          const list = (d.members ?? []) as Array<{
-            id: string; first_name: string; last_name: string; cedula?: string | null
-            birth_md?: string | null; falta_contacto?: { email: boolean; phone: boolean }
-            menor_sin_adulto?: boolean; pedir_documento?: boolean
-          }>
-          // FIN-2: el lookup ya trae el documento; se conserva para marcar a
-          // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
-          setMemberResults(list.map(m => ({
-            id: m.id,
-            name: `${m.first_name} ${m.last_name}`.trim(),
-            has_document: !!String(m.cedula ?? '').trim(),
-            // FIN-2 + 2026-09-22: la cédula se pide SOLO a mayores de 18, y
-            // quién lo es lo decide el servidor (la puerta no recibe el año de
-            // nacimiento — ver CHK-2).
-            pedir_documento: m.pedir_documento === true,
-            // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
-            // para felicitar a alguien).
-            birth_md: m.birth_md ?? null,
-            // CHK-5 y DAT-12: ver el comentario de colaDeContacto.
-            falta_contacto: m.falta_contacto,
-            menor_sin_adulto: m.menor_sin_adulto,
-          })))
-        })
-        .catch(() => { if (alive) setMemberResults([]) })
-        .finally(() => { if (alive) setSearching(false) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida).
+  const { resultados: memberResults, buscando: searching, setResultados: setMemberResults } = useBusquedaDiferida<{
+    id: string; name: string; has_document?: boolean; birth_md?: string | null
+    pedir_documento?: boolean
+    falta_contacto?: { email: boolean; phone: boolean }
+    menor_sin_adulto?: boolean
+  }>(
+    query,
+    (q, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => {
+        const list = (d.members ?? []) as Array<{
+          id: string; first_name: string; last_name: string; cedula?: string | null
+          birth_md?: string | null; falta_contacto?: { email: boolean; phone: boolean }
+          menor_sin_adulto?: boolean; pedir_documento?: boolean
+        }>
+        // FIN-2: el lookup ya trae el documento; se conserva para marcar a
+        // quién le falta y poder capturarlo al vuelo (nunca frena la fila).
+        return list.map(m => ({
+          id: m.id,
+          name: `${m.first_name} ${m.last_name}`.trim(),
+          has_document: !!String(m.cedula ?? '').trim(),
+          // FIN-2 + 2026-09-22: la cédula se pide SOLO a mayores de 18, y
+          // quién lo es lo decide el servidor (la puerta no recibe el año de
+          // nacimiento — ver CHK-2).
+          pedir_documento: m.pedir_documento === true,
+          // CHK-2: 'MM-DD' — el lookup no manda el año (no hace falta la edad
+          // para felicitar a alguien).
+          birth_md: m.birth_md ?? null,
+          // CHK-5 y DAT-12: ver el comentario de colaDeContacto.
+          falta_contacto: m.falta_contacto,
+          menor_sin_adulto: m.menor_sin_adulto,
+        }))
+      }),
+  )
 
   if (loading) {
     return (
@@ -633,7 +626,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Crea un miembro nuevo (primera visita) y lo deja seleccionado para el check-in.
   async function handlePersonCreated(member: { id: string; name: string }) {
     setShowNewPerson(false)
-    setMemberResults([])
+    setMemberResults(() => [])
     setSelectedMember(member)
     setQuery(member.name)
   }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -9,6 +10,9 @@ import { principalSugerido } from '@/lib/members/resolucion-de-fusion'
 import { useToast } from '@/components/shared/Toast'
 import { calcAge, formatDateNumeric, initialsFromParts } from '@/lib/format'
 import { ChevronLeft, Users } from 'lucide-react'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: DupPair[] = []
 
 type DupMember = {
   id: string; first_name: string; last_name: string
@@ -107,20 +111,15 @@ const FILTERS = [
 
 export default function DuplicadosPage() {
   const toast = useToast()
-  const [pairs, setPairs] = useState<DupPair[]>([])
-  const [loading, setLoading] = useState(true)
   const [merging, setMerging] = useState<DupPair | null>(null)
   const [filter, setFilter] = useState<typeof FILTERS[number]['key']>('todos')
 
-  const load = useCallback(() => {
-    setLoading(true)
-    fetch('/api/members/duplicates')
-      .then(r => (r.ok ? r.json() : []))
-      .then(d => setPairs(Array.isArray(d) ? d : []))
-      .catch(() => setPairs([]))
-      .finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, recargar: load, setDatos } = useCargaRemota<DupPair[]>(
+    'duplicados', () => json<DupPair[]>('/api/members/duplicates', 'No se pudieron cargar los duplicados.'),
+  )
+  const pairs = datos ?? SIN_DATOS
+  const setPairs = (f: (prev: DupPair[]) => DupPair[]) => setDatos(prev => f(prev ?? []))
 
   const pairKey = (p: DupPair) => [p.a.id, p.b.id].sort().join('|')
 

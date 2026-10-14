@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Search, X, Users, BookOpen, UsersRound, Megaphone, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
@@ -58,7 +59,6 @@ const MODE_OPTIONS: { key: RecipientMode; label: string; icon: React.ElementType
 
 export function RecipientSelector({ value, onChange, onOpenListModal, fromList = false }: Props) {
   const [memberSearch, setMemberSearch] = useState('')
-  const [memberResults, setMemberResults] = useState<MemberLite[]>([])
   const [selectedMembers, setSelectedMembers] = useState<MemberLite[]>([])
   const [events, setEvents] = useState<EventLite[]>([])
 
@@ -96,22 +96,14 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
   }, [])
 
   // Búsqueda real de miembros (debounced) para el modo "selección manual".
-  useEffect(() => {
-    const q = memberSearch.trim()
-    if (q.length < 2) { setMemberResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => {
-          if (!alive) return
-          const list = (d.members ?? []) as MemberLite[]
-          setMemberResults(list.filter(m => !value.manualMemberIds.includes(m.id)))
-        })
-        .catch(() => { if (alive) setMemberResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [memberSearch, value.manualMemberIds])
+  // LINT-1 · se deriva (useBusquedaDiferida); los ya elegidos se quitan en el render.
+  const { resultados: hallados } = useBusquedaDiferida<MemberLite>(
+    memberSearch,
+    (q, signal) => fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=6`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => (d.members ?? []) as MemberLite[]),
+  )
+  const memberResults = hallados.filter(m => !value.manualMemberIds.includes(m.id))
 
   const upcomingEvents = useMemo(
     () => events.filter(e => e.status !== 'cancelled' && e.status !== 'archived').slice(0, 50),
@@ -138,7 +130,6 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
       label: `${newIds.length} persona${newIds.length !== 1 ? 's' : ''} seleccionada${newIds.length !== 1 ? 's' : ''}`,
     })
     setMemberSearch('')
-    setMemberResults([])
   }
 
   function removeMember(id: string) {

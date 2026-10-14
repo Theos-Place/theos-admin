@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { ArrowLeftRight, BookOpen, Loader2, Info } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
@@ -11,6 +12,9 @@ import { ANY_ZONE, DIAS_DE_ESTUDIO } from '@/lib/studies/request-prefs'
 import { cn } from '@/lib/utils'
 import type { StudyRequestType } from '@/types/study'
 import { textoFalta } from '@/lib/studies/relocation'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_OPCIONES: StudyOption[] = []
 
 const CLASS_OPTIONS = [...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'no_recuerda'] as const
 const TIME_SLOTS = ['mañana', 'tarde', 'noche'] as const
@@ -51,9 +55,17 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
 
   // Interés de estudio (v2): opciones (no llevados) + si ya tiene una abierta.
-  const [options, setOptions] = useState<StudyOption[]>([])
-  const [hasOpenReq, setHasOpenReq] = useState(false)
-  const [optionsLoaded, setOptionsLoaded] = useState(false)
+  // LINT-1 · las opciones se cargan por miembro con useCargaRemota: «ya
+  // cargó» es la negación de «cargando», no un booleano aparte.
+  const { datos: opcionesCargadas, cargando: cargandoOpciones, setDatos: setOpciones } = useCargaRemota<{ options: StudyOption[]; has_open_request: boolean }>(
+    memberId,
+    () => fetch(`/api/studies/request-options?member_id=${memberId}`)
+      .then(r => (r.ok ? r.json() : { options: [], has_open_request: false }))
+      .then(d => ({ options: d.options ?? [], has_open_request: !!d.has_open_request })),
+  )
+  const options = opcionesCargadas?.options ?? SIN_OPCIONES
+  const hasOpenReq = opcionesCargadas?.has_open_request ?? false
+  const optionsLoaded = !cargandoOpciones
 
   const [planId, setPlanId] = useState('')
   const [reason, setReason] = useState('')
@@ -70,17 +82,6 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   const [wantsFolleto, setWantsFolleto] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-
-  // Opciones de interés + estado de "ya tiene una abierta" (para bloquear el botón).
-  useEffect(() => {
-    let alive = true
-    setOptionsLoaded(false)
-    fetch(`/api/studies/request-options?member_id=${memberId}`)
-      .then(r => (r.ok ? r.json() : { options: [], has_open_request: false }))
-      .then(d => { if (alive) { setOptions(d.options ?? []); setHasOpenReq(!!d.has_open_request); setOptionsLoaded(true) } })
-      .catch(() => { if (alive) setOptionsLoaded(true) })
-    return () => { alive = false }
-  }, [memberId])
 
   function loadData() {
     if (loadedFor === memberId || dataLoading) return
@@ -172,7 +173,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
       }
       const wasInterest = openModal === 'study_interest'
       setOpenModal(null)
-      if (wasInterest) setHasOpenReq(true)
+      if (wasInterest) setOpciones(o => (o ? { ...o, has_open_request: true } : o))
       // EST-6: el interés es informativo — no prometemos gestión de un coordinador.
       toast(wasInterest
         ? '¡Gracias! Registramos tu interés. Revisá la página de Matrícula para ver cuándo se abren grupos nuevos.'

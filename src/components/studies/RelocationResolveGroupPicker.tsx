@@ -1,11 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { Loader2 } from 'lucide-react'
 import { sedeLabel } from '@/lib/sedes'
 import { relocationGroupScore, requestZones } from '@/lib/studies/request-prefs'
 import { useStudies } from '@/hooks/useStudies'
 import type { StudyRequest } from '@/types/study'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_GRUPOS: GroupOption[] = []
 
 type GroupOption = {
   id: string
@@ -45,31 +50,20 @@ export function RelocationResolveGroupPicker({
   onChange: (payload: Record<string, unknown> | null) => void
 }) {
   const { studyTypes } = useStudies('plans')
-  const [allGroups, setAllGroups] = useState<GroupOption[]>([])
-  const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState('')
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading } = useCargaRemota<GroupOption[]>(
+    request.id,
+    () => json<GroupOption[]>('/api/studies/groups', 'No se pudieron cargar los grupos.')
+      .then(all => (Array.isArray(all) ? all : []).filter(g => g.status === 'en_matricula' || g.status === 'en_curso')),
+  )
+  const allGroups = datos ?? SIN_GRUPOS
 
   // El nivel anterior en la cadena del estudio pedido (N3 → N2, DIS1 → SCJ…).
   const prevCode = useMemo(
     () => studyTypes.find(s => s.code === request.needed_study_code)?.prerequisite ?? null,
     [studyTypes, request.needed_study_code],
   )
-
-  useEffect(() => {
-    let alive = true
-    setLoading(true)
-    fetch('/api/studies/groups')
-      .then(r => (r.ok ? r.json() : []))
-      .then((all: GroupOption[]) => {
-        if (!alive) return
-        setAllGroups((Array.isArray(all) ? all : []).filter(g =>
-          g.status === 'en_matricula' || g.status === 'en_curso',
-        ))
-      })
-      .catch(() => { if (alive) setAllGroups([]) })
-      .finally(() => { if (alive) setLoading(false) })
-    return () => { alive = false }
-  }, [request.id])
 
   // REU-1: los candidatos que calzan con las zonas/días pedidos van primero.
   const sortByPrefs = useMemo(() => {
@@ -90,13 +84,15 @@ export function RelocationResolveGroupPicker({
   )
 
   // Preselecciona el grupo que la persona había pedido, si sigue disponible.
+  // El estado local se vuelca como precarga (sin parpadeo); avisarle al padre
+  // SÍ es un efecto, y se queda como tal.
+  const available = [...neededGroups, ...prevGroups]
+  const preferred = request.existing_group_id && available.some(g => g.id === request.existing_group_id)
+    ? request.existing_group_id
+    : ''
+  usePrecarga(loading ? null : request.id, () => setSelected(preferred))
   useEffect(() => {
     if (loading) return
-    const available = [...neededGroups, ...prevGroups]
-    const preferred = request.existing_group_id && available.some(g => g.id === request.existing_group_id)
-      ? request.existing_group_id
-      : ''
-    setSelected(preferred)
     onChange(preferred ? { target_group_id: preferred } : null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, request.id])

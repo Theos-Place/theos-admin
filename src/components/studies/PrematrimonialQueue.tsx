@@ -1,11 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import Link from 'next/link'
 import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home, Heart } from 'lucide-react'
 import { DATING_TIME_OPTIONS, LIVING_OPTIONS } from '@/lib/studies/premat-background'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: Req[] = []
 
 type Req = {
   id: string
@@ -44,8 +48,6 @@ const nm = (m: Req['requester']) => m ? `${m.first_name ?? ''} ${m.last_name ?? 
 
 export function PrematrimonialQueue() {
   const notify = useToast()
-  const [items, setItems] = useState<Req[]>([])
-  const [loading, setLoading] = useState(true)
   const [panel, setPanel] = useState<{ id: string; mode: 'group' | 'cancel' } | null>(null)
   // form crear grupo
   const [gName, setGName] = useState(''); const [leader, setLeader] = useState<MemberHit | null>(null)
@@ -54,12 +56,12 @@ export function PrematrimonialQueue() {
   const [cancelReason, setCancelReason] = useState(''); const [withRefund, setWithRefund] = useState(true)
   const [busy, setBusy] = useState(false)
 
-  const load = useCallback(() => {
-    setLoading(true)
-    fetch('/api/studies/prematrimonial')
-      .then(r => r.json()).then(d => setItems(d.items ?? [])).catch(() => setItems([])).finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, recargar: load } = useCargaRemota<Req[]>(
+    'prematrimonial',
+    () => json<{ items?: Req[] }>('/api/studies/prematrimonial', 'No se pudo cargar la cola.').then(d => d.items ?? []),
+  )
+  const items = datos ?? SIN_DATOS
 
   function openGroup(r: Req) {
     setPanel({ id: r.id, mode: 'group' })

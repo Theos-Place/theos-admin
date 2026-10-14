@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, use, useEffect } from 'react'
+import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { PROVINCIAS_CR } from '@/lib/members/provincias'
 import { useToast } from '@/components/shared/Toast'
@@ -93,14 +94,15 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
 
   // Recordatorio de cédula (banner): ?completar=cedula resalta el campo y hace
   // scroll/focus para que la persona lo complete de una.
+  // LINT-1 · El resaltado es estado y se vuelca como precarga; el scroll y el
+  // foco SÍ son un efecto (tocan el DOM) y se quedan como tal.
+  const pideCedula = new URLSearchParams(useUbicacionDeEntrada().search).get('completar') === 'cedula'
+  usePrecarga(member && pideCedula ? `cedula:${member.id}` : null, () => setHighlightCedula(true))
   useEffect(() => {
-    if (!member) return
-    if (typeof window === 'undefined') return
-    if (new URLSearchParams(window.location.search).get('completar') !== 'cedula') return
-    setHighlightCedula(true)
+    if (!member || !pideCedula) return
     const el = document.getElementById('edit-cedula')
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); (el as HTMLInputElement).focus() }
-  }, [member])
+  }, [member, pideCedula])
 
   if (!member) {
     return (

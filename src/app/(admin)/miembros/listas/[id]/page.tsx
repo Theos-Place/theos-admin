@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { MemberList } from '@/types/member-list'
@@ -17,6 +18,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
 import { calcAge, formatDate, initialsFromParts } from '@/lib/format'
 import { mensajeRecalculo, motivoNoRecalculable } from '@/lib/members/list-refresh'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_MIEMBROS: Member[] = []
 
 function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -92,41 +96,32 @@ export default function ListaDetailPage() {
   const router = useRouter()
   const toast = useToast()
 
-  const [list, setList] = useState<MemberList | null>(null)
   /** Va acá arriba con el resto de los hooks: abajo caía después de los
    *  early returns de carga y de "lista no encontrada". */
   const [refrescando, setRefrescando] = useState(false)
-  const [listMembers, setListMembers] = useState<Member[]>([])
-  const [loading, setLoading] = useState(true)
+  // LINT-1 · la lista y sus miembros son UNA carga (useCargaRemota): el
+  // segundo fetch depende del primero, y «cargando» se deriva del sello.
+  const { datos, cargando: loading } = useCargaRemota<{ list: MemberList | null; members: Member[] }>(
+    id,
+    async () => {
+      const r = await fetch(`/api/member-lists/${id}`)
+      const l: MemberList | null = r.ok ? await r.json() : null
+      if (!l || l.member_ids.length === 0) return { list: l, members: [] }
+      const res = await fetch('/api/members/by-ids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: l.member_ids }),
+      })
+      const d = res.ok ? await res.json() : { members: [] }
+      return { list: l, members: d.members ?? [] }
+    },
+  )
+  const list = datos?.list ?? null
+  const listMembers = datos?.members ?? SIN_MIEMBROS
 
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<Member>[]>(
     LIST_MEMBER_COLUMNS.filter(c => c.defaultVisible)
   )
-
-  useEffect(() => {
-    let alive = true
-    setLoading(true)
-    fetch(`/api/member-lists/${id}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(async (l: MemberList | null) => {
-        if (!alive) return
-        setList(l)
-        if (l && l.member_ids.length > 0) {
-          const res = await fetch('/api/members/by-ids', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids: l.member_ids }),
-          })
-          const d = res.ok ? await res.json() : { members: [] }
-          if (alive) setListMembers(d.members ?? [])
-        } else {
-          setListMembers([])
-        }
-        if (alive) setLoading(false)
-      })
-      .catch(() => { if (alive) setLoading(false) })
-    return () => { alive = false }
-  }, [id])
 
   const { sorted, sortKey, sortDir, toggleSort } = useSortableTable(listMembers)
 

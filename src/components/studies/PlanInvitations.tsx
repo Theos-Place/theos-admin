@@ -1,11 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { X, UserPlus } from 'lucide-react'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
 import { getInitials } from '@/lib/format'
 import { cn } from '@/lib/utils'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: Invitation[] = []
 
 type Invitation = {
   id: string
@@ -25,20 +29,16 @@ const STATUS_LABEL: Record<Invitation['status'], { label: string; cls: string }>
 /** Sección "Invitados" del detalle de un plan invitation_only. Solo para roles de estudios. */
 export function PlanInvitations({ planId }: { planId: string }) {
   const toast = useToast()
-  const [invitations, setInvitations] = useState<Invitation[]>([])
-  const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
 
-  const load = useCallback(() => {
-    setLoading(true)
-    fetch(`/api/studies/invitations?plan_id=${planId}`)
-      .then(r => (r.ok ? r.json() : { invitations: [] }))
-      .then(d => setInvitations(d.invitations ?? []))
-      .catch(() => setInvitations([]))
-      .finally(() => setLoading(false))
-  }, [planId])
-
-  useEffect(() => { load() }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, recargar: load, setDatos } = useCargaRemota<Invitation[]>(
+    planId,
+    () => json<{ invitations?: Invitation[] }>(`/api/studies/invitations?plan_id=${planId}`, 'No se pudieron cargar las invitaciones.')
+      .then(d => d.invitations ?? []),
+  )
+  const invitations = datos ?? SIN_DATOS
+  const setInvitations = (f: (prev: Invitation[]) => Invitation[]) => setDatos(prev => f(prev ?? []))
 
   async function invite(m: MemberHit) {
     setAdding(true)

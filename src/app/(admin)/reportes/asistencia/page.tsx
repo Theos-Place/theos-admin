@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, Legend, Cell, LabelList, ComposedChart, Line,
@@ -30,8 +31,6 @@ import {
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export default function ReporteAsistenciaPage() {
-  const [report, setReport] = useState<CharlaReport | null>(null)
-  const [growth, setGrowth] = useState<GrowthReport | null>(null)
   const [year, setYear] = useState<number | null>(null)
   const [sede, setSede] = useState<string>(ALL_SEDES)
   // La semana abierta vive en la URL, no en un estado suelto: así el enlace se
@@ -51,30 +50,26 @@ export default function ReporteAsistenciaPage() {
   // se muestra la serie de una sede bajo el rótulo de otra mientras carga.
   const [comparar, setComparar] = useState<string>('')
   const [serieComp, setSerieComp] = useState<{ clave: string; puntos: { week: number; total: number; partial: boolean }[] } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = useCallback((y: number | null, s: string) => {
-    setLoading(true); setError(null)
-    const qs = new URLSearchParams()
-    if (y) qs.set('year', String(y))
-    if (s) qs.set('sede', s)
-    const q = qs.toString()
-    Promise.all([
-      fetch(`/api/reports/charla-attendance?${q}`).then(r => { if (!r.ok) throw new Error('Error cargando el reporte'); return r.json() as Promise<CharlaReport> }),
-      fetch(`/api/reports/member-growth?${q}`).then(r => { if (!r.ok) throw new Error('Error cargando crecimiento'); return r.json() as Promise<GrowthReport> }),
-    ])
-      .then(([d, g]) => {
-        setReport(d)
-        setGrowth(g)
-        setYear(d.year)
-        setSede(d.sede)
-      })
-      .catch(e => setError(e instanceof Error ? e.message : 'Error'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => { load(null, ALL_SEDES) }, [load])
+  // LINT-1 · El reporte se pide por CLAVE (año|sede): cambiar el año o la
+  // sede cambia la clave y vuelve a pedir, sin `load()` a mano ni un efecto
+  // que encienda «cargando». El año que muestra la pantalla es el del
+  // reporte (`report.year`): sin `?year=` el servidor elige el más reciente.
+  const qs = new URLSearchParams()
+  if (year) qs.set('year', String(year))
+  if (sede) qs.set('sede', sede)
+  const claveDelReporte = qs.toString()
+  const { datos, cargando: loading, error } = useCargaRemota<{ report: CharlaReport; growth: GrowthReport }>(
+    claveDelReporte,
+    async () => {
+      const [report, growth] = await Promise.all([
+        json<CharlaReport>(`/api/reports/charla-attendance?${claveDelReporte}`, 'Error cargando el reporte'),
+        json<GrowthReport>(`/api/reports/member-growth?${claveDelReporte}`, 'Error cargando crecimiento'),
+      ])
+      return { report, growth }
+    },
+  )
+  const report = datos?.report ?? null
+  const growth = datos?.growth ?? null
 
   // Serie de la sede con la que se compara. Se pide al mismo endpoint cambiando
   // `sede`: no hace falta nada nuevo en el servidor.
@@ -119,9 +114,9 @@ export default function ReporteAsistenciaPage() {
   const errorSemana = listo ? resultado!.error : null
   const cargandoSemana = !!claveConSede && !listo
 
-  function onYear(y: number) { setYear(y); load(y, sede); setSemana(null); setComparar('') }
+  function onYear(y: number) { setYear(y); setSemana(null); setComparar('') }
   function onSede(s: string) {
-    setSede(s); load(year, s)
+    setSede(s)
     // La comparación se limpia al cambiar la sede principal: dejarla pegada
     // mostraría dos series que ya no son las que se eligieron.
     setComparar('')

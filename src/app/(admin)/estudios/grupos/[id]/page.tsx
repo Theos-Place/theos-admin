@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
@@ -87,7 +88,6 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
   const toast = useToast()
   const { roles } = useAuth()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<{ id: string; first_name: string; last_name: string; cedula: string | null }[]>([])
   const [adding, setAdding] = useState<string | null>(null)
   // GRU-2: si la persona no cumple la restricción de audiencia del grupo, el
   // staff puede matricularla igual — pero confirmándolo, y queda registrado.
@@ -97,20 +97,15 @@ function AddMemberModal({ groupId, studyName, enrolledIds, onClose, onEnrolled }
   // staff. La matrícula ya quedó hecha; esto es el pago, que va por su carril.
   const [comprobante, setComprobante] = useState<{ enrollmentId: string; amount: number; currency: string | null; memberName: string | null; memberId: string } | null>(null)
 
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      // /lookup: editor_grupos_estudio no tiene el módulo miembros y no podía
-      // buscar a quién agregar al grupo (bug 2026-08-04).
-      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=6`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setResults(d.members ?? []) })
-        .catch(() => { if (alive) setResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida).
+  // /lookup: editor_grupos_estudio no tiene el módulo miembros y no podía
+  // buscar a quién agregar al grupo (bug 2026-08-04).
+  const { resultados: results } = useBusquedaDiferida<{ id: string; first_name: string; last_name: string; cedula: string | null }>(
+    query,
+    (q, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=6`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => d.members ?? []),
+  )
 
   async function enroll(memberId: string, overrideRestriccion = false) {
     setAdding(memberId)

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useAuth } from '@/hooks/useAuth'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -13,6 +14,9 @@ import { bloqueMilestones, bloqueCierre, suggestedBlocksForYear, BLOQUE_ESTADO_L
 import { BloqueCalendar } from '@/components/studies/BloqueCalendar'
 import { availableYears, type VentanaGrupo } from '@/lib/studies/bloque-calendar'
 import { formatDate, ymdCR } from '@/lib/format'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: Bloque[] = []
 
 type Bloque = {
   id: string; nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string
@@ -28,8 +32,6 @@ export default function BloquesPage() {
   const { hasRole, loaded } = useAuth()
   const canManage = hasRole('coordinador_estudios', 'admin')
 
-  const [rows, setRows] = useState<Bloque[]>([])
-  const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<string | null>(null)
   const [editing, setEditing] = useState<Bloque | null>(null)
   const [form, setForm] = useState<{ nombre: string; anio: number; fecha_apertura: string; fecha_cierre_matricula: string }>(emptyForm)
@@ -45,15 +47,11 @@ export default function BloquesPage() {
   const [ventanas, setVentanas] = useState<VentanaGrupo[]>([])
   const [resaltado, setResaltado] = useState<string | null>(null)
 
-  const refetch = useCallback(() => {
-    setLoading(true)
-    fetch('/api/studies/bloques')
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: Bloque[]) => setRows(Array.isArray(d) ? d : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { if (canManage) refetch() }, [canManage, refetch])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, recargar: refetch } = useCargaRemota<Bloque[]>(
+    'bloques', () => json<Bloque[]>('/api/studies/bloques', 'No se pudieron cargar los bloques.'), { activo: canManage },
+  )
+  const rows = datos ?? SIN_DATOS
 
   // GRU-1: ventanas de matrícula por grupo, para el carril de abajo del
   // calendario. Se piden solo al abrir esa vista (el listado no las usa).

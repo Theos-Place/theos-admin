@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import Link from 'next/link'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
@@ -207,8 +209,11 @@ export default function GruposPage() {
   // Deep-link de las alertas del dashboard. Para que el conteo del filtro coincida
   // EXACTO con el de la alerta, al entrar por estos links se limpia el filtro de
   // estado explícito (closing_soon ya excluye 'finalizado' del lado del servidor).
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search)
+  // LINT-1 · La URL de entrada se lee sin efecto y el filtro se vuelca como
+  // precarga, antes de pintar.
+  const { search: urlDeEntrada } = useUbicacionDeEntrada()
+  usePrecarga(urlDeEntrada || null, () => {
+    const p = new URLSearchParams(urlDeEntrada)
     const f = p.get('filter')
     if (f === 'without_leader' || p.get('sin_dirigente') === '1') {
       setNoLeaderOnly(true)
@@ -218,7 +223,7 @@ export default function GruposPage() {
       setClosingSoonOnly(true)
       setSelectedStatuses([])
     }
-  }, [])
+  })
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
     STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
   )

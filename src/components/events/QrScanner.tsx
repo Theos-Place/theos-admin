@@ -18,13 +18,17 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
   // durante el render, que es justo lo que React pide no hacer.
   const emitir = useEffectEvent((texto: string) => onResult(texto))
   const [facing, setFacing] = useState<Facing>('environment')
-  const [error, setError] = useState<string | null>(null)
   const [retry, setRetry] = useState(0)
+  // LINT-1 · El error va atado al INTENTO (cámara + reintento) que lo produjo:
+  // cambiar de cámara o reintentar lo deja fuera de foco solo, sin un
+  // `setError(null)` al entrar al efecto.
+  const intento = `${facing}|${retry}`
+  const [fallo, setFallo] = useState<{ intento: string; msg: string } | null>(null)
+  const error = fallo?.intento === intento ? fallo.msg : null
 
   useEffect(() => {
     let cancelled = false
     const reader = new BrowserQRCodeReader()
-    setError(null)
     reader
       .decodeFromConstraints({ video: { facingMode: facing } }, videoRef.current!, (result) => {
         if (result) emitir(result.getText())
@@ -35,14 +39,15 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
       })
       .catch((e: unknown) => {
         const name = (e as { name?: string })?.name
-        setError(
-          name === 'NotAllowedError' ? 'Permiso de cámara denegado. Activalo en los ajustes del navegador.'
-          : name === 'NotFoundError' ? 'No se encontró cámara en el dispositivo.'
-          : 'No se pudo iniciar la cámara.',
-        )
+        setFallo({
+          intento,
+          msg: name === 'NotAllowedError' ? 'Permiso de cámara denegado. Activalo en los ajustes del navegador.'
+            : name === 'NotFoundError' ? 'No se encontró cámara en el dispositivo.'
+            : 'No se pudo iniciar la cámara.',
+        })
       })
     return () => { cancelled = true; controlsRef.current?.stop(); controlsRef.current = null }
-  }, [facing, retry])
+  }, [facing, retry, intento])
 
   if (error) {
     return (
@@ -50,7 +55,7 @@ export function QrScanner({ onResult, className }: { onResult: (text: string) =>
         <CameraOff size={32} className="text-coral/70" />
         <p className="text-navy text-sm font-medium font-body">{error}</p>
         <button
-          onClick={() => { setError(null); setRetry(n => n + 1) }}
+          onClick={() => setRetry(n => n + 1)}
           className="rounded-full bg-coral px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body min-h-[40px]"
         >
           Reintentar

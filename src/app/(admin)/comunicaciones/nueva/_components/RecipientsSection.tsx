@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react'
+
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { RecipientSelector, type RecipientState } from '@/components/communications/RecipientSelector'
 import { cn } from '@/lib/utils'
 import { Check, X } from 'lucide-react'
 import type { CommunicationMessage } from '@/types/communication'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_PREVIEW: Array<{ id: string; first_name: string; last_name: string }> = []
 
 const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
 const PREVIEW_COUNT = 20
@@ -34,21 +38,21 @@ export function RecipientsSection({
 }: Props) {
   // Nombres reales para el preview de la lista importada (antes venían de
   // mockMembers, que no coincide con los ids reales → preview vacío).
-  const [previewMembers, setPreviewMembers] = useState<Array<{ id: string; first_name: string; last_name: string }>>([])
-  useEffect(() => {
-    const ids = initialMemberIds.slice(0, PREVIEW_COUNT)
-    if (ids.length === 0) { setPreviewMembers([]); return }
-    let alive = true
-    fetch('/api/members/by-ids', {
+  // LINT-1 · se piden por clave (los ids) con useCargaRemota; sin ids no se
+  // pide nada y el preview es vacío.
+  const idsDePreview = initialMemberIds.slice(0, PREVIEW_COUNT).join(',')
+  const { datos: previewCargado } = useCargaRemota<Array<{ id: string; first_name: string; last_name: string }>>(
+    idsDePreview,
+    () => fetch('/api/members/by-ids', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify({ ids: idsDePreview.split(',') }),
     })
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d?.members) setPreviewMembers(d.members) })
-      .catch(() => {})
-    return () => { alive = false }
-  }, [initialMemberIds])
+      .then(d => d?.members ?? []),
+    { activo: idsDePreview !== '' },
+  )
+  const previewMembers = previewCargado ?? SIN_PREVIEW
 
   return (
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Search, UserCheck, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { validarAltaDePersona, noLlevaCuenta } from '@/lib/members/alta-persona'
@@ -38,11 +39,10 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
    *  `cedula` porque el flujo B lo reusa como el documento del integrante nuevo. */
   const [cedula, setCedula] = useState('')
   const [documentType, setDocumentType] = useState<string>('cedula')
-  const [searching, setSearching] = useState(false)
-  const [resultados, setResultados] = useState<Found[]>([])
-  const [found, setFound] = useState<Found | null>(null)
-  const [searched, setSearched] = useState(false)
   const [relation, setRelation] = useState('')
+  // Elección a mano de la persona, atada a la consulta con la que se hizo:
+  // al escribir otra cosa deja de valer y vuelve la selección automática.
+  const [eleccion, setEleccion] = useState<{ q: string; r: Found | null } | null>(null)
   /**
    * Clave ESTABLE de los ya vinculados, para la dependencia del efecto.
    *
@@ -64,34 +64,28 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
   // Búsqueda (debounced) por cédula, nombre o apellidos. El buscador de atrás
   // ya sabía hacer las tres; lo que acá se descartaba era todo resultado cuya
   // cédula no fuera exactamente la escrita, y por eso solo servía el número.
-  useEffect(() => {
-    if (mode !== 'search') return
-    const q = cedula.trim()
-    if (!sePuedeBuscar(q)) { setResultados([]); setFound(null); setSearched(false); return }
-    let alive = true
-    setSearching(true)
-    const t = setTimeout(() => {
-      // Por /lookup y no por /api/members: ese es el PADRÓN y exige un módulo
-      // que encargado_eventos no tiene. Como el .then se traga el error con
-      // `{ members: [] }`, en el check-in la búsqueda no fallaba: devolvía
-      // vacío para siempre y parecía que la persona no existía (2026-09-09).
-      fetch(`/api/members/lookup?search=${encodeURIComponent(consultaParaElServidor(q))}&pageSize=10`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => {
-          if (!alive) return
-          const excluidos = excluidosKey ? excluidosKey.split(',') : []
-          const lista = candidatosVisibles((d.members ?? []) as Found[], excluidos)
-          setResultados(lista)
-          // Cédula completa con un solo dueño: se elige sola, como siempre. Un
-          // nombre nunca — dos personas pueden llamarse igual.
-          setFound(seleccionAutomatica(lista, q))
-          setSearched(true)
-        })
-        .catch(() => { if (alive) { setResultados([]); setFound(null); setSearched(true) } })
-        .finally(() => { if (alive) setSearching(false) })
-    }, 350)
-    return () => { alive = false; clearTimeout(t) }
-  }, [cedula, mode, excluidosKey])
+  //
+  // LINT-1 · se deriva con useBusquedaDiferida. La consulta vale '' cuando no
+  // se puede buscar (`sePuedeBuscar`), que es como se apaga.
+  const q = cedula.trim()
+  const consulta = mode === 'search' && sePuedeBuscar(q) ? q : ''
+  const { resultados, buscando: searching } = useBusquedaDiferida<Found>(
+    consulta,
+    // Por /lookup y no por /api/members: ese es el PADRÓN y exige un módulo
+    // que encargado_eventos no tiene. Como el .then se traga el error con
+    // `{ members: [] }`, en el check-in la búsqueda no fallaba: devolvía
+    // vacío para siempre y parecía que la persona no existía (2026-09-09).
+    (texto, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(consultaParaElServidor(texto))}&pageSize=10`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => candidatosVisibles((d.members ?? []) as Found[], excluidosKey ? excluidosKey.split(',') : [])),
+    { minimo: 1, espera: 350, dependencias: excluidosKey },
+  )
+  const searched = consulta !== '' && !searching
+  // Cédula completa con un solo dueño: se elige sola, como siempre. Un nombre
+  // nunca — dos personas pueden llamarse igual. La elección a mano manda
+  // mientras sea de ESTA consulta.
+  const found: Found | null = eleccion?.q === q ? eleccion.r : seleccionAutomatica(resultados, q)
+  const setFound = (r: Found | null) => setEleccion({ q, r })
 
   const isMinor = birthDate ? calcAge(birthDate) < 18 : false
   // El correo se le pide a todo el que pueda tener cuenta (12+), no solo a los

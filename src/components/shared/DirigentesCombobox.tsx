@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import type { Dirigente } from '@/lib/dirigentes'
 import { cn } from '@/lib/utils'
@@ -57,24 +57,29 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
       .slice(0, 50)
   }, [dirigentes, q, excludeId, filter])
 
-  useDismissOnOutsideClick(ref, open, () => setOpen(false))
+  useDismissOnOutsideClick(ref, open, cerrar)
 
   const { highlight, setHighlight, onKeyDown } = useListNavigation({
     count: options.length,
     onPick: i => pick(options[i].member_id),
-    onClose: () => setOpen(false),
+    onClose: cerrar,
   })
 
-  // Al abrir, foco en el buscador y reset del resaltado.
-  useEffect(() => {
-    if (open) { setHighlight(0); setTimeout(() => inputRef.current?.focus(), 0) }
-    else setQ('')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  // LINT-1 · Abrir y cerrar son ACCIONES: el foco y los reseteos van en el
+  // manejador, no en un efecto que mire `open` después de pintar.
+  function abrir() {
+    abrir()
+    setHighlight(0)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+  function cerrar() {
+    setOpen(false)
+    setQ('')
+  }
 
   function pick(id: string) {
     onChange(id)
-    setOpen(false)
+    cerrar()
   }
 
   return (
@@ -88,8 +93,8 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
           aria-label={ariaLabel}
           ref={inputRef}
           value={open ? q : (selected?.member_name ?? '')}
-          onChange={e => { setQ(e.target.value); if (!open) setOpen(true) }}
-          onFocus={() => setOpen(true)}
+          onChange={e => { setQ(e.target.value); if (!open) abrir() }}
+          onFocus={() => abrir()}
           onKeyDown={onKeyDown}
           placeholder={selected ? selected.member_name : placeholder}
           className="min-w-0 flex-1 bg-transparent text-sm text-navy outline-none font-body placeholder:text-navy-light/80"

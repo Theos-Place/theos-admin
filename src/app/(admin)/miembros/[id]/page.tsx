@@ -2,6 +2,7 @@
 
 import { vencimientoDeLaReserva } from '@/lib/studies/enrollment-hold'
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Tabs } from '@/components/shared/Tabs'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { openSectionsFromParam } from '@/lib/members/profile-deeplink'
@@ -196,7 +197,6 @@ export default function MiembroDetailPage() {
     : null
 
   const currentWeek = member?.current_study_week ?? 0
-
 
   const lastStudyCode = member?.completed_studies[member.completed_studies.length - 1]
   const lastStudyEntry = lastStudyCode ? studyTypes.find(s => s.code === lastStudyCode) : null
@@ -444,7 +444,6 @@ export default function MiembroDetailPage() {
         </div>
       )}
 
-
       {avisoFusion && (
         <div className="rounded-2xl bg-teal-soft/25 px-4 py-3 flex items-start gap-2">
           <p className="flex-1 text-[13px] text-teal-deep font-body">{avisoFusion}</p>
@@ -534,9 +533,7 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
   onMerged: (aviso: string) => void
 }) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchHit[]>([])
   const [picked, setPicked] = useState<SearchHit | null>(null)
-  const [searching, setSearching] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   /**
    * Las dos fichas COMPLETAS, que es lo que necesita la resolución campo por
@@ -564,28 +561,22 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
     } finally { setCargandoFichas(false) }
   }
 
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    setSearching(true)
-    const t = setTimeout(() => {
-      // Un duplicado suele estar DADO DE BAJA, y el padrón filtra activos por
-      // defecto: se busca en los dos lados y se juntan.
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida).
+  // Un duplicado suele estar DADO DE BAJA, y el padrón filtra activos por
+  // defecto: se busca en los dos lados y se juntan.
+  const { resultados: results, buscando: searching } = useBusquedaDiferida<SearchHit>(
+    query,
+    (q, signal) => {
       const buscar = (activos: boolean) =>
-        fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8&is_active=${activos}`)
+        fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=8&is_active=${activos}`, { signal })
           .then(r => (r.ok ? r.json() : null))
           .then(hitsFrom)
           .catch(() => [] as SearchHit[])
-      Promise.all([buscar(true), buscar(false)])
-        .then(([activos, inactivos]) => {
-          if (!alive) return
-          setResults([...activos, ...inactivos].filter(m => m.id !== keepId).slice(0, 12))
-        })
-        .finally(() => { if (alive) setSearching(false) })
-    }, 250)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query, keepId])
+      return Promise.all([buscar(true), buscar(false)])
+        .then(([activos, inactivos]) => [...activos, ...inactivos].filter(m => m.id !== keepId).slice(0, 12))
+    },
+    { espera: 250, dependencias: keepId },
+  )
 
   return (
     <Modal onClose={onClose} titleId="fusionar-duplicado-title" width={448}>

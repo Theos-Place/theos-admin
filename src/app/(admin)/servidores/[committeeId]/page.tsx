@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { filtrarServidores, puestosDisponibles, TODOS_LOS_PUESTOS, type FiltroEstado } from '@/lib/servers/committee-filter'
 import { useParams, useRouter } from 'next/navigation'
@@ -60,7 +61,6 @@ export default function CommitteeDetailPage() {
   // resumen de estudios de cada servidor.
   const isDirigentes = !!committee && esComiteDirigentes(committee.name, { excludeAdministrativo: true })
 
-
   const [tab, setTab] = useState<Tab>('miembros')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
@@ -68,7 +68,6 @@ export default function CommitteeDetailPage() {
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<FlatServer>[]>(
     SERVER_COLUMNS.filter(c => c.defaultVisible),
   )
-
 
   // Disconnect modal
   const [disconnectTarget, setDisconnectTarget] = useState<CommitteeServer | null>(null)
@@ -107,7 +106,6 @@ export default function CommitteeDetailPage() {
   const [serverSearch, setServerSearch] = useState('')
   const [addPositionId, setAddPositionId] = useState('')
   const [addPositionTarget, setAddPositionTarget] = useState<{ member_id: string; name: string } | null>(null)
-  const [candidates, setCandidates] = useState<Array<{ id: string; first_name: string; last_name: string; email: string | null; reintegro?: boolean }>>([])
 
   // Change position modal (newPosition guarda el position_id destino)
   const [changePositionTarget, setChangePositionTarget] = useState<CommitteeServer | null>(null)
@@ -223,29 +221,24 @@ export default function CommitteeDetailPage() {
   // 2. Iba a /api/members, que es el PADRÓN y exige alcance total: lider_comite
   //    no lo tiene, así que a un encargado de comité el buscador le devolvía
   //    siempre vacío. Va por /lookup, igual que el check-in y las familias.
-  useEffect(() => {
-    const q = serverSearch.trim()
-    if (!q) { setCandidates([]); return }
-    const ctrl = new AbortController()
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`, { signal: ctrl.signal })
-        if (!res.ok) return
-        const { members } = await res.json()
-        setCandidates(
-          (members ?? [])
-            .filter((m: { id: string }) => !seOcultaDelBuscador(m.id, registrosDelComite))
-            .map((m: { id: string; first_name: string; last_name: string; email: string | null }) => ({
-              ...m,
-              // Se marca para que la pantalla pueda decir "ya sirvió acá" en vez
-              // de presentarlo como alguien nuevo.
-              reintegro: candidaturaEnComite(m.id, registrosDelComite).tipo === 'reintegro',
-            })),
-        )
-      } catch { /* abortado */ }
-    }, 250)
-    return () => { clearTimeout(t); ctrl.abort() }
-  }, [serverSearch, registrosDelComite])
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida); el filtro contra el
+  // comité se aplica sobre lo que llegó, en el render.
+  type Hallado = { id: string; first_name: string; last_name: string; email: string | null }
+  const { resultados: hallados } = useBusquedaDiferida<Hallado>(
+    serverSearch,
+    (q, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=8`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => d.members ?? []),
+    { minimo: 1, espera: 250 },
+  )
+  const candidates = useMemo(() => hallados
+    .filter(m => !seOcultaDelBuscador(m.id, registrosDelComite))
+    .map(m => ({
+      ...m,
+      // Se marca para que la pantalla pueda decir "ya sirvió acá" en vez
+      // de presentarlo como alguien nuevo.
+      reintegro: candidaturaEnComite(m.id, registrosDelComite).tipo === 'reintegro',
+    })), [hallados, registrosDelComite])
 
   const filteredCandidates = candidates
 

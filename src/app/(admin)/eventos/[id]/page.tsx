@@ -1,9 +1,10 @@
 'use client'
 
 import { use, useState, useMemo, useEffect } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEvent } from '@/hooks/useEvents'
-import type { Member } from '@/types/member'
+
 import { toDomainMember } from '@/lib/members/adapter'
 import { CancellationModal } from '@/components/events/CancellationModal'
 import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
@@ -230,7 +231,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const seeManagementData = canSeeEventManagementData({ canManage, canCheckin, canReport, isManager: isEventManager })
   const [activeTab, setActiveTab] = useState<Tab>('informacion')
 
-
   // Inscripción desde la ficha: misma elegibilidad y mismo modal que la lista
   // de eventos, para no tener dos caminos que se puedan desincronizar.
   const memberId = user?.member_id ?? null
@@ -271,7 +271,6 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
 
   // Servidores tab state
   const [localBookings] = useState<VolunteerBooking[]>([])
-  const [memberResults, setMemberResults] = useState<Member[]>([])
   const [assigning, setAssigning] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [modalStep, setModalStep] = useState<1 | 2>(1)
@@ -303,20 +302,15 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   ], [event?.volunteer_bookings, localBookings])
 
   // Búsqueda real de miembros (debounced) mientras el modal está abierto.
-  useEffect(() => {
-    if (!showAssignModal) return
-    const q = searchQuery.trim()
-    if (q.length < 2) { setMemberResults([]); return }
-    let alive = true
-    const t = setTimeout(() => {
-      // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
-      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setMemberResults(((d.members ?? []) as Parameters<typeof toDomainMember>[0][]).map(toDomainMember)) })
-        .catch(() => { if (alive) setMemberResults([]) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [searchQuery, showAssignModal])
+  // LINT-1 · se deriva (useBusquedaDiferida); con el modal cerrado está apagada.
+  // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
+  const { resultados: memberResults } = useBusquedaDiferida<ReturnType<typeof toDomainMember>>(
+    searchQuery,
+    (q, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => ((d.members ?? []) as Parameters<typeof toDomainMember>[0][]).map(toDomainMember)),
+    { activa: showAssignModal },
+  )
 
   // organizing_committee_ids son ids de área; service_history.committee es el
   // nombre. Se resuelven los ids → nombres para comparar (cualquiera de ellos).

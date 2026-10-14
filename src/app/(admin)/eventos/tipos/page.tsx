@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { type EventTypeEntry } from '@/data/event-config'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
@@ -9,6 +10,8 @@ import {
   Plus, Edit2, Mic, Tent, Users, Star, BookOpen,
   Heart, MapPin, Music, Coffee, Zap, Calendar, Check, Globe,
 } from 'lucide-react'
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: EventTypeEntry[] = []
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   mic: Mic, tent: Tent, users: Users, star: Star, 'book-open': BookOpen,
@@ -202,25 +205,17 @@ function TypeModal({
 
 export default function TiposEventoPage() {
   const toast = useToast()
-  const [types, setTypes] = useState<EventTypeEntry[]>([])
-  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<EventTypeEntry | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const loadTypes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/events/types')
-      if (res.ok) setTypes(await res.json())
-    } catch (err) {
-      console.error('No se pudieron cargar los tipos de evento:', err)
-      toast('No se pudieron cargar los tipos de evento. Recargá la página.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  useEffect(() => { loadTypes() }, [loadTypes])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, error, recargar: loadTypes, setDatos } = useCargaRemota<EventTypeEntry[]>(
+    'event-types:admin', () => json<EventTypeEntry[]>('/api/events/types', 'No se pudieron cargar los tipos de evento. Recargá la página.'),
+  )
+  const types = datos ?? SIN_DATOS
+  const setTypes = (f: (prev: EventTypeEntry[]) => EventTypeEntry[]) => setDatos(prev => f(prev ?? []))
+  useEffect(() => { if (error) toast(error, 'error') }, [error, toast])
 
   async function handleSave(data: FormState) {
     if (saving) return

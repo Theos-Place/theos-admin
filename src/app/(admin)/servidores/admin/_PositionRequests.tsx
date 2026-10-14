@@ -1,8 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useToast } from '@/components/shared/Toast'
 import { Check, X, Clock, Loader2 } from 'lucide-react'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: PositionRequest[] = []
 
 type PositionRequest = {
   id: string
@@ -20,20 +24,16 @@ type PositionRequest = {
  *  puesto en el catálogo, o rechaza. Se monta en /servidores/admin. */
 export function PositionRequestsSection() {
   const toast = useToast()
-  const [reqs, setReqs] = useState<PositionRequest[]>([])
-  const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [open, setOpen] = useState<string | null>(null)
 
-  const load = useCallback(() => {
-    setLoading(true)
-    fetch('/api/servers/position-requests?status=pending')
-      .then(r => (r.ok ? r.json() : []))
-      .then(d => setReqs(Array.isArray(d) ? d : []))
-      .catch(() => setReqs([]))
-      .finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, setDatos } = useCargaRemota<PositionRequest[]>(
+    'position-requests:pending',
+    () => json<PositionRequest[]>('/api/servers/position-requests?status=pending', 'No se pudieron cargar las solicitudes.'),
+  )
+  const reqs = datos ?? SIN_DATOS
+  const setReqs = (f: (prev: PositionRequest[]) => PositionRequest[]) => setDatos(prev => f(prev ?? []))
 
   async function resolve(id: string, action: 'approve' | 'reject') {
     if (busy) return

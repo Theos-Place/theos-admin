@@ -9,7 +9,9 @@
  * El módulo dueño aporta: requests cargadas, etiquetas, endpoint de PATCH y
  * el render de los detalles específicos del tipo.
  */
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import Link from 'next/link'
 import {
   Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, ArrowUp, History, Search, UserPlus, Clock,
@@ -217,31 +219,34 @@ export function RequestBoard<R extends BaseRequest>({
   // Deep-link desde una notificación (?request=ID): abre esa solicitud
   // específica — cambia al tab de su tipo, quita el filtro de estado, expande
   // su año y la fila, y hace scroll. Una sola vez por carga.
-  const focusedRef = useRef(false)
-  // `tabs` llega inline desde la página (array nuevo en cada render): la dep va
-  // por las keys para no re-disparar el efecto de gusto.
+  // `tabs` llega inline desde la página (array nuevo en cada render): se
+  // comparan las keys para no re-disparar nada de gusto.
   const tabKeys = tabs.map(t => t.key).join(',')
-  useEffect(() => {
-    if (focusedRef.current || requests.length === 0) return
-    const id = new URLSearchParams(window.location.search).get('request')
-    if (!id) return
-    const req = requests.find(r => r.id === id)
-    if (!req) return
+  // LINT-1 · La URL de entrada se lee sin efecto; los estados se vuelcan como
+  // precarga cuando la solicitud YA está en la lista (la clave lleva ese
+  // «está», así que si llega en una recarga posterior también se abre).
+  const idEnUrl = new URLSearchParams(useUbicacionDeEntrada().search).get('request')
+  const pedida = idEnUrl ? requests.find(r => r.id === idEnUrl) : undefined
+  usePrecarga(pedida ? `${idEnUrl}|si` : null, () => {
     // El tablero puede estar montado con UN solo tipo (la página de estudios
     // renderiza un tab por sección): si la solicitud es de otro tipo, la que
     // cambia de sección es la página — acá cambiar el tab dejaría la lista
     // filtrada por un tipo que no está en `tabs` y se vería vacía (bug
     // 2026-08-04: el deep link "abría otro tab" sin la solicitud).
-    if (!tabKeys.split(',').includes(req.request_type)) return
-    focusedRef.current = true
-    setTab(req.request_type)
+    if (!pedida || !tabKeys.split(',').includes(pedida.request_type)) return
+    setTab(pedida.request_type)
     setStatusFilter('all')
-    setExpandedRequest(id)
-    setExpandedYears(prev => new Set(prev).add(new Date(req.created_at).getFullYear()))
-    setTimeout(() => {
-      document.querySelector(`[data-request-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setExpandedRequest(pedida.id)
+    setExpandedYears(prev => new Set(prev).add(new Date(pedida.created_at).getFullYear()))
+  })
+  // El scroll sí es un efecto: toca el DOM cuando la fila ya está expandida.
+  useEffect(() => {
+    if (!idEnUrl || expandedRequest !== idEnUrl) return
+    const t = setTimeout(() => {
+      document.querySelector(`[data-request-id="${idEnUrl}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 150)
-  }, [requests, tabKeys])
+    return () => clearTimeout(t)
+  }, [idEnUrl, expandedRequest])
 
   const visible = useMemo(() => {
     const fromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : null

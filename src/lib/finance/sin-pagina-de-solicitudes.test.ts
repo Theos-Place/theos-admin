@@ -21,7 +21,7 @@ describe('sin página de solicitudes financieras', () => {
   it('las notificaciones de beca llevan a /finanzas/becas, que abre la solicitud', () => {
     expect(sin('src/lib/supabase/queries/finance-requests.ts')).not.toContain('/finanzas/solicitudes')
     expect(sin('src/lib/supabase/queries/finance-requests.ts').match(/\/finanzas\/becas\?request=/g)?.length).toBe(2)
-    expect(sin('src/app/(admin)/finanzas/becas/page.tsx')).toContain("new URLSearchParams(window.location.search).get('request')")
+    expect(sin('src/app/(admin)/finanzas/becas/page.tsx')).toContain("new URLSearchParams(useUbicacionDeEntrada().search).get('request')")
   })
 
   it('la cancelación prematrimonial crea una devolución REAL, no una solicitud huérfana', () => {

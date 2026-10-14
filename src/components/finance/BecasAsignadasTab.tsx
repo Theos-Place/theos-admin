@@ -11,7 +11,8 @@
  * vivas apuntando ahí.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { GraduationCap, Loader2, ArrowRightLeft, Search, X, Ban } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
@@ -32,6 +33,8 @@ import {
   FILTROS_CUPO, conteosPorCupo, ETIQUETA_CUPO, BADGE_CUPO, AYUDA_CUPO,
   type EstadoDelCupo, type FiltroCupo,
 } from '@/lib/finance/cupo-del-destino'
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: BecaAsignada[] = []
 
 export type BecaAsignada = {
   id: string
@@ -62,28 +65,19 @@ type Destino = { id: string; nombre: string; cost: number | null; currency: stri
 
 export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
   const toast = useToast()
-  const [becas, setBecas] = useState<BecaAsignada[]>([])
-  const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState<FiltroUso>('sin_usar')
   // Filtro aparte del de uso, no un valor más de la misma pastilla: las dos
   // preguntas son distintas ("¿ya se gastó?" y "¿se puede gastar?") y cruzarlas
   // es justo lo que hace falta — las que importan son sin usar Y sin cupo.
   const [cupo, setCupo] = useState<FiltroCupo>('todas')
 
-  // El setState va DESPUÉS del await, no en el cuerpo del efecto: hacerlo
-  // sincrónico dispara el render en cascada que marca react-hooks.
-  const cargar = useCallback(async () => {
-    try {
-      const r = await fetch('/api/scholarships/coupons?kind=asignada')
-      setBecas(r.ok ? ((await r.json())?.items ?? []) : [])
-    } catch {
-      setBecas([])
-    } finally {
-      setCargando(false)
-    }
-  }, [])
-  useEffect(() => { cargar() }, [cargar])
-  const recargar = useCallback(() => { setCargando(true); cargar() }, [cargar])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando, recargar } = useCargaRemota<BecaAsignada[]>(
+    'coupons:asignada',
+    () => json<{ items?: BecaAsignada[] }>('/api/scholarships/coupons?kind=asignada', 'No se pudieron cargar las becas.')
+      .then(d => d.items ?? []),
+  )
+  const becas = datos ?? SIN_DATOS
 
   // Los conteos se cuentan sobre la lista COMPLETA: si dependieran del filtro
   // activo, las otras pastillas mostrarían cero.

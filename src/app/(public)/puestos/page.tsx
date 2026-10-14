@@ -1,12 +1,16 @@
 'use client'
 
-import { useEffect, useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, Suspense } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useSearchParams } from 'next/navigation'
 import { esVistaEmbebida, PARAM_EMBEBIDO } from '@/lib/vista-embebida'
 import { MapPin, Clock, Users, Search, Briefcase, GraduationCap } from 'lucide-react'
 import { PublicApplyButton } from '@/components/servers/PublicApplyButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Modal } from '@/components/shared/Modal'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_PUESTOS: PublicVacancy[] = []
 
 /**
  * SRV-13 · La cartelera PÚBLICA de puestos de servicio.
@@ -42,9 +46,6 @@ function VacantesPublicasContent() {
   const params = useSearchParams()
   /** Dentro del sitio de Theos el header lo pone el sitio, no esta página. */
   const embebida = esVistaEmbebida(params.get(PARAM_EMBEBIDO))
-  const [vacancies, setVacancies] = useState<PublicVacancy[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [comiteFilter, setComiteFilter] = useState('all')
   const [ubicacionFilter, setUbicacionFilter] = useState('all')
@@ -58,14 +59,12 @@ function VacantesPublicasContent() {
   const puestoEnURL = params.get('puesto')
   const [yaAbrio, setYaAbrio] = useState(false)
 
-  useEffect(() => {
-    setLoading(true); setError(null)
-    fetch('/api/public/vacancies')
-      .then(r => { if (!r.ok) throw new Error('No se pudieron cargar los puestos'); return r.json() })
-      .then((d: { items: PublicVacancy[] }) => setVacancies(d.items ?? []))
-      .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
-      .finally(() => setLoading(false))
-  }, [])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, error } = useCargaRemota<PublicVacancy[]>(
+    'public-vacancies',
+    () => json<{ items: PublicVacancy[] }>('/api/public/vacancies', 'No se pudieron cargar los puestos').then(d => d.items ?? []),
+  )
+  const vacancies = datos ?? SIN_PUESTOS
 
   // Se abre una sola vez y después de que carguen: antes de eso el puesto no
   // existe todavía en memoria.

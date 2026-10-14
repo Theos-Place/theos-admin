@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { opcionesDeUbicacion } from '@/lib/servers/ubicacion-del-puesto'
 import { ACCIONES_DE_PUESTO } from '@/lib/auth/roles'
 import Link from 'next/link'
@@ -16,6 +17,9 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { ApplyToVacancyButton } from '@/components/servers/ApplyToVacancyButton'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: Vacancy[] = []
 
 export default function VacantesPage() {
   const { hasRole } = useAuth()
@@ -64,19 +68,14 @@ export default function VacantesPage() {
   const PUEDE_SOLICITAR = ['lider_comite', 'coordinador_servidores', 'admin'] as const
   const canRequest = hasRole(...PUEDE_SOLICITAR)
 
-  const [vacancies, setVacancies] = useState<Vacancy[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const refetch = useCallback(() => {
-    setError(null); setLoading(true)
-    // ?published=1: solo puestos disponibles, abierto a cualquier miembro.
-    fetch('/api/servers/vacancies?published=1')
-      .then(r => { if (!r.ok) throw new Error('Error cargando puestos'); return r.json() })
-      .then((d: DbVacancy[]) => setVacancies((Array.isArray(d) ? d : []).map(toDomainVacancy)))
-      .catch(e => setError(e instanceof Error ? e.message : 'Error desconocido'))
-      .finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { refetch() }, [refetch])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  // ?published=1: solo puestos disponibles, abierto a cualquier miembro.
+  const { datos, cargando: loading, error, recargar: refetch } = useCargaRemota<Vacancy[]>(
+    'vacancies:published',
+    () => json<DbVacancy[]>('/api/servers/vacancies?published=1', 'Error cargando puestos')
+      .then(d => (Array.isArray(d) ? d : []).map(toDomainVacancy)),
+  )
+  const vacancies = datos ?? SIN_DATOS
 
   const [qPuesto, setQPuesto] = useState('')
   const [committeeFilter, setCommitteeFilter] = useState('all')

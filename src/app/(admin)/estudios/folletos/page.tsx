@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { resumenDelLote, type ResultadoPorTiquete } from '@/lib/studies/cambio-de-estado-folleto'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import Link from 'next/link'
@@ -20,6 +21,9 @@ import {
 import { FOLLETO_TIPO_LABEL, FOLLETO_TIPO_BADGE, type FolletoTipo } from '@/lib/studies/bloques'
 import { textoDesgloseCorto } from '@/lib/studies/folleto-desglose'
 import { ManualFolletoRequestButton } from '@/components/studies/ManualFolletoRequestButton'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: DbFolletoRequest[] = []
 
 const STATUS_FILTERS: { key: FolletoState | 'all'; label: string }[] = [
   { key: 'all', label: 'Todos' },
@@ -41,8 +45,6 @@ export default function FolletosPage() {
   const canView = can('folletos', 'view')
   const canEdit = can('folletos', 'edit')
 
-  const [rows, setRows] = useState<DbFolletoRequest[]>([])
-  const [loading, setLoading] = useState(true)
   const [sedeFilter, setSedeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<FolletoState | 'all'>('all')
   const [tipoFilter, setTipoFilter] = useState<FolletoTipo | 'all'>('all')
@@ -52,15 +54,11 @@ export default function FolletosPage() {
   const [noMovidos, setNoMovidos] = useState<ResultadoPorTiquete[]>([])
   const [confirm, setConfirm] = useState<FolletoState | null>(null)
 
-  const refetch = useCallback(() => {
-    setLoading(true)
-    fetch('/api/studies/folletos')
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: DbFolletoRequest[]) => setRows(Array.isArray(d) ? d : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { if (canView) refetch() }, [canView, refetch])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, recargar: refetch } = useCargaRemota<DbFolletoRequest[]>(
+    'folletos', () => json<DbFolletoRequest[]>('/api/studies/folletos', 'No se pudieron cargar los folletos.'), { activo: canView },
+  )
+  const rows = datos ?? SIN_DATOS
 
   const sedeOptions = useMemo(
     () => Array.from(new Set(rows.map(r => r.sede).filter((s): s is string => !!s))).sort((a, b) => a.localeCompare(b)),

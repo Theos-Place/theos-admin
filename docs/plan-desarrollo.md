@@ -145,7 +145,41 @@ existe, y si entra en el mismo flujo que FIN-4.
 > Nota 2026-09-15: REP-2 quedó HECHO — existen `SemanaDetallePanel` y el deep link
 > `?semana=`. (La nota del 2026-09-10 decía lo contrario y ya no aplica.)
 
-### [~] LINT-1 · De 93 a 46 warnings — quedan los paginados y los de pantalla
+### [x] LINT-1 · De 93 a CERO warnings — CERRADO 2026-10-14
+
+Seis tandas (93 → 70 → 60 → 57 → 53 → 46 → 0). El gate del CI quedó en
+**`--max-warnings=0`**: a partir de acá un aviso nuevo rompe el build.
+
+**Tanda 6 (2026-10-14): los 46 que quedaban, en tres familias.**
+
+ · **Cargas al montar (24)** — `useCargaRemota` ganó dos cosas que faltaban
+   para absorberlas: `activo` (no pedir sin permiso / con la pestaña cerrada,
+   que era el `if (canView) refetch()` del efecto) y `setDatos` (ajustar lo
+   cargado sin volver a pedir: quitar la fila borrada, marcar la aprobada).
+   Migradas 20 pantallas/componentes y `useDashboard`, `useEvents`,
+   `useEvent`. El vacío va en una constante de módulo (`SIN_DATOS`): un
+   `datos ?? []` es un array nuevo por render y revienta los `useMemo`.
+ · **Búsquedas con debounce (11)** — pieza nueva `useBusquedaDiferida`, con
+   la regla pura en `lib/hooks/busqueda-diferida`: los resultados y «está
+   buscando» se derivan comparando la consulta con la que produjo lo
+   guardado. Debounce, `AbortSignal`, mínimo, apagado y dependencias
+   (excluidos, id) van por parámetro. `useMembers` (paginado) usa la misma
+   idea a mano: la lista guarda su clave y «cargando» es que no coincida.
+ · **Sincronizar estado con props/URL (11)** — `usePrecarga` donde era un
+   vuelco (canal→vista previa, plantilla por URL, config del dirigente) y
+   pieza nueva `useUbicacionDeEntrada` (`useSyncExternalStore` sobre
+   `window.location`: '' en el servidor, real en el cliente, sin romper la
+   hidratación) para los deep links (grupos, becas, RequestBoard, cédula,
+   completar-perfil). Dos eran acciones disfrazadas de efecto y pasaron al
+   manejador (abrir/cerrar del combobox de dirigentes). El error del escáner
+   de QR va atado al intento que lo produjo.
+
+Verificado en staging: eventos, grupos con `?filter=without_leader`,
+dirigentes, check-in con búsqueda, soporte. tsc, lint 0 y 5.953 tests.
+
+---
+
+#### Historia de las tandas 1–5 (referencia)
 
 Van cinco tandas (93 → 70 → 60 → 57 → 53 → 46). El techo del gate bajó a **46**.
 

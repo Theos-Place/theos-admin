@@ -25,8 +25,25 @@ import {
 export function useCargaRemota<T>(
   clave: string,
   cargar: () => Promise<T>,
-  opciones: { generico?: string } = {},
-): EstadoDeCarga<T> & { recargar: () => Promise<void> } {
+  opciones: {
+    generico?: string
+    /**
+     * false = no pedir nada (sin permiso, pestaña cerrada). Reemplaza el
+     * `useEffect(() => { if (canView) refetch() })` de las pantallas: con la
+     * carga apagada no hay datos, no hay error y NO está cargando.
+     */
+    activo?: boolean
+  } = {},
+): EstadoDeCarga<T> & {
+  recargar: () => Promise<void>
+  /**
+   * Ajustar lo cargado sin volver a pedir: quitar la fila que se acaba de
+   * borrar, marcar la que se acaba de aprobar. Toca solo los datos y conserva
+   * el sello, así «cargando» sigue diciendo la verdad.
+   */
+  setDatos: (f: (prev: T | null) => T | null) => void
+} {
+  const activo = opciones.activo ?? true
   const [intento, setIntento] = useState(0)
   const [guardado, setGuardado] = useState<Guardado<T> | null>(null)
   const sello = selloDeCarga(clave, intento)
@@ -56,6 +73,7 @@ export function useCargaRemota<T>(
   }
 
   useEffect(() => {
+    if (!activo) return
     let vivo = true
     cargarRef.current()
       .then(datos => { if (vivo) setGuardado({ sello, datos, error: null }) })
@@ -64,14 +82,21 @@ export function useCargaRemota<T>(
       })
       .finally(() => { if (vivo) avisarQueTerminó() })
     return () => { vivo = false }
-  }, [sello])
+  }, [sello, activo])
+
+  const setDatos = useCallback((f: (prev: T | null) => T | null) => {
+    setGuardado(g => (g ? { ...g, datos: f(g.datos) } : g))
+  }, [])
 
   const recargar = useCallback(() => {
     const listo = new Promise<void>(resolver => { esperandoRef.current.push(resolver) })
     setIntento(n => n + 1)
     return listo
   }, [])
-  return { ...estadoDeCarga(sello, guardado), recargar }
+  const estado = estadoDeCarga(sello, guardado)
+  return activo
+    ? { ...estado, recargar, setDatos }
+    : { datos: null, cargando: false, error: null, recargar, setDatos }
 }
 
 /** Lo que devuelve un fetch que ya validó el status, listo para `cargar`. */

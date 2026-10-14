@@ -7,6 +7,7 @@
 // recordatorio manual (REV-2) y los guards 409 anti-carrera del server.
 
 import { useState, useEffect, useCallback, useMemo, useImperativeHandle, type Ref } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -20,6 +21,8 @@ import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-r
 import {
   planInstallments, FREQUENCIES, FREQUENCY_LABEL, type PlanFrequency,
 } from '@/lib/finance/installments'
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: QueueRow[] = []
 
 type PaymentConcept = 'matricula' | 'folletos' | 'evento'
 type QueueStatus = 'pendiente' | 'en_revision' | 'cerrado'
@@ -108,8 +111,6 @@ type ScholarshipPanel = {
 export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = false, canPlan = false, onMutated, ref }: PaymentReviewQueueProps) {
   const toast = useToast()
 
-  const [rows, setRows] = useState<QueueRow[]>([])
-  const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<StatusTab>('all')
   const [conceptFilter, setConceptFilter] = useState<ConceptFilter>('all')
   // REV-1: filtros por plan y dirigente del grupo (solo aplican a matrícula).
@@ -134,22 +135,21 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   // FIN-4: panel de arreglo de pago (null = cerrado).
   const [planPanel, setPlanPanel] = useState<PlanPanel | null>(null)
 
-  const refetch = useCallback(() => {
-    setLoading(true)
-    const params = new URLSearchParams()
-    if (statusFilter !== 'all') params.set('status', statusFilter)
-    if (conceptFilter !== 'all') params.set('concept', conceptFilter)
-    if (conceptFilter === 'matricula') {
-      if (planFilter !== 'all') params.set('planId', planFilter)
-      if (leaderFilter !== 'all') params.set('leaderId', leaderFilter)
-    }
-    fetch(`/api/payments/queue?${params.toString()}`)
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: QueueRow[]) => setRows(Array.isArray(d) ? d : []))
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
-  }, [statusFilter, conceptFilter, planFilter, leaderFilter])
-  useEffect(() => { refetch() }, [refetch])
+  // LINT-1 · «cargando» se deriva (useCargaRemota): la clave son los filtros,
+  // y cambiarlos vuelve a pedir sin un efecto que encienda nada a mano.
+  const params = new URLSearchParams()
+  if (statusFilter !== 'all') params.set('status', statusFilter)
+  if (conceptFilter !== 'all') params.set('concept', conceptFilter)
+  if (conceptFilter === 'matricula') {
+    if (planFilter !== 'all') params.set('planId', planFilter)
+    if (leaderFilter !== 'all') params.set('leaderId', leaderFilter)
+  }
+  const claveDeCola = params.toString()
+  const { datos, cargando: loading, recargar: refetch } = useCargaRemota<QueueRow[]>(
+    claveDeCola,
+    () => json<QueueRow[]>(`/api/payments/queue?${claveDeCola}`, 'No se pudo cargar la cola.').then(d => (Array.isArray(d) ? d : [])),
+  )
+  const rows = datos ?? SIN_DATOS
 
   // Opciones de los filtros de matrícula (planes activos + dirigentes con grupo).
   useEffect(() => {

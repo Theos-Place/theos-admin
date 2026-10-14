@@ -41,24 +41,27 @@ function buildQuery(params: MemberSearchParams, page: number, pageSize: number =
  * Búsqueda de miembros paginada server-side con acumulación.
  * `enabled` controla si se hace fetch (la tabla arranca vacía sin búsqueda/filtro).
  */
-export function useMembers(params: MemberSearchParams, enabled: boolean) {
-  const [members, setMembers] = useState<Member[]>([])
-  const [total, setTotal]     = useState(0)
-  const [page, setPage]       = useState(1)
-  // Tamaño de la última tanda pedida. "Cargar todos" usa tandas grandes, y
-  // loadMore tiene que seguir con ESE tamaño o el offset se corre.
-  const [tamano, setTamano]   = useState(PAGE_SIZE)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+/** La lista acumulada, junto con la clave (los filtros) que la produjo. */
+type Lista = { key: string; members: Member[]; total: number; page: number; tamano: number }
+const SIN_MIEMBROS: Member[] = []
 
+export function useMembers(params: MemberSearchParams, enabled: boolean) {
   const conditionsKey = JSON.stringify([params.conditions ?? [], params.groups ?? [], params.topLevelOps ?? {}])
   const key = useMemo(() => buildQuery(params, 1), [params.search, params.is_donor, params.is_server, params.active_attendance, conditionsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // LINT-1 · Lo guardado lleva su CLAVE, y «cargando» es que lo guardado no
+  // sea de la clave actual —igual que estado-de-carga—. Así el efecto no
+  // resetea nada a mano: cambiar los filtros deja lo viejo fuera de foco solo.
+  const [lista, setLista] = useState<Lista | null>(null)
+  const [cargandoMas, setCargandoMas] = useState(false)
+  // El error también va con su clave: uno de los filtros anteriores no debe
+  // seguir en pantalla cuando ya se cambió la búsqueda.
+  const [fallo, setFallo] = useState<{ key: string; msg: string } | null>(null)
+
   // Primera página: corre cuando cambia el query o el enabled.
   useEffect(() => {
-    if (!enabled) { setMembers([]); setTotal(0); setPage(1); setTamano(PAGE_SIZE); setError(null); setLoading(false); return }
+    if (!enabled) return
     let cancelled = false
-    setLoading(true); setError(null)
     fetch(`/api/members?${key}`)
       .then(async r => {
         if (!r.ok) {
@@ -69,32 +72,38 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
       })
       .then((d: { members: DbMemberEnriched[]; total: number }) => {
         if (cancelled) return
-        setMembers((d.members ?? []).map(toDomainMember))
-        setTotal(d.total ?? 0)
-        setPage(1)
-        setTamano(PAGE_SIZE)
+        setLista({ key, members: (d.members ?? []).map(toDomainMember), total: d.total ?? 0, page: 1, tamano: PAGE_SIZE })
       })
-      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Error desconocido') })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .catch(e => { if (!cancelled) setFallo({ key, msg: e instanceof Error ? e.message : 'Error desconocido' }) })
     return () => { cancelled = true }
   }, [key, enabled])
 
+  const alDia = enabled && lista?.key === key
+  const members = alDia ? lista!.members : SIN_MIEMBROS
+  const total = alDia ? lista!.total : 0
+  const page = alDia ? lista!.page : 1
+  // Tamaño de la última tanda pedida. "Cargar todos" usa tandas grandes, y
+  // loadMore tiene que seguir con ESE tamaño o el offset se corre.
+  const tamano = alDia ? lista!.tamano : PAGE_SIZE
+  const error = enabled && fallo?.key === key ? fallo.msg : null
+  const loading = (enabled && !alDia && error === null) || cargandoMas
+
   const loadMore = useCallback(async () => {
     const next = page + 1
-    setLoading(true)
+    setCargandoMas(true)
     try {
       const res = await fetch(`/api/members?${buildQuery(params, next, tamano)}`)
       if (!res.ok) throw new Error('Error cargando más miembros')
       const d = (await res.json()) as { members: DbMemberEnriched[]; total: number }
-      setMembers(prev => [...prev, ...(d.members ?? []).map(toDomainMember)])
-      setTotal(d.total ?? 0)
-      setPage(next)
+      setLista(l => (l && l.key === key
+        ? { ...l, members: [...l.members, ...(d.members ?? []).map(toDomainMember)], total: d.total ?? 0, page: next }
+        : l))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      setFallo({ key, msg: e instanceof Error ? e.message : 'Error desconocido' })
     } finally {
-      setLoading(false)
+      setCargandoMas(false)
     }
-  }, [page, params, tamano])
+  }, [page, params, tamano, key])
 
   /**
    * Trae de un solo golpe todos los resultados del filtro. Relee desde la
@@ -105,7 +114,7 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
   const cargarTodo = useCallback(async () => {
     const plan = planDeCargaCompleta(members.length, total)
     if (!plan.puede) return
-    setLoading(true); setError(null)
+    setCargandoMas(true)
     try {
       const acumulado: Member[] = []
       let ultimoTotal = total
@@ -118,16 +127,13 @@ export function useMembers(params: MemberSearchParams, enabled: boolean) {
         ultimoTotal = d.total ?? ultimoTotal
         if (lote.length < plan.tamano) break
       }
-      setMembers(acumulado)
-      setTotal(ultimoTotal)
-      setPage(plan.paginas.length)
-      setTamano(plan.tamano)
+      setLista({ key, members: acumulado, total: ultimoTotal, page: plan.paginas.length, tamano: plan.tamano })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
+      setFallo({ key, msg: e instanceof Error ? e.message : 'Error desconocido' })
     } finally {
-      setLoading(false)
+      setCargandoMas(false)
     }
-  }, [members.length, total, params])
+  }, [members.length, total, params, key])
 
   const hasMore = members.length < total
   /** Se ofrece "cargar todos" solo si falta gente y el total cabe en la tabla. */

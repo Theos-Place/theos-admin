@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, useCallback, Suspense } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { type CommunicationChannel, type MessageTemplate } from '@/types/communication'
@@ -134,11 +135,9 @@ function NuevaComunicacionContent() {
 
   const waRef = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(() => {
-    if (channel === 'whatsapp') setPreviewChannel('whatsapp')
-    if (channel === 'email') setPreviewChannel('email')
-    if (channel === 'both') setPreviewChannel('whatsapp')
-  }, [channel])
+  // LINT-1 · Al cambiar el canal, la vista previa lo sigue: precarga (ajuste
+  // durante el render), no un efecto que corrija después de pintar.
+  usePrecarga(channel, () => setPreviewChannel(channel === 'email' ? 'email' : 'whatsapp'))
 
   // Email: el envío usa SES por env (no channel_configs). WhatsApp pendiente.
   const waConfig = configs.find(c => c.type === 'whatsapp' && c.is_active && c.is_verified)
@@ -175,16 +174,11 @@ function NuevaComunicacionContent() {
 
   // "Usar plantilla" desde el listado llega como ?template=ID: precargar esa
   // plantilla (canal + asunto + cuerpo) una sola vez, cuando ya cargaron.
-  const [tplApplied, setTplApplied] = useState(false)
-  useEffect(() => {
-    const tid = searchParams.get('template')
-    if (tplApplied || !tid || templates.length === 0) return
-    const tpl = templates.find(t => t.id === tid)
-    if (!tpl) return
-    applyTemplate(tpl, { setChannelToo: true })
-    setTplApplied(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tplApplied, templates])
+  const plantillaEnUrl = searchParams.get('template')
+  usePrecarga(plantillaEnUrl && templates.length > 0 ? plantillaEnUrl : null, () => {
+    const tpl = templates.find(t => t.id === plantillaEnUrl)
+    if (tpl) applyTemplate(tpl, { setChannelToo: true })
+  })
 
   /**
    * "Continuar editando" llega como ?borrador=ID: carga ese borrador.

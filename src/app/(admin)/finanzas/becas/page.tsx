@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
+import { usePrecarga } from '@/hooks/usePrecarga'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import Link from 'next/link'
 import { GraduationCap, Plus, Loader2, AlertTriangle } from 'lucide-react'
 import { ETIQUETA_ESTADO_BECA } from '@/lib/finance/uso-de-beca'
@@ -25,6 +28,10 @@ import { MemberCombobox, MEMBER_LOOKUP_URL, type MemberHit } from '@/components/
 import { BecasAsignadasTab } from '@/components/finance/BecasAsignadasTab'
 import { CancelarBecaModal } from '@/components/finance/CancelarBecaModal'
 import type { FinanceRequest } from '@/types/finance'
+
+/** Vacíos con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_CUPONES: Scholarship[] = []
+const SIN_SOLICITUDES: FinanceRequest[] = []
 
 type Scholarship = {
   /** INT-3: moneda del descuento fijo. */
@@ -64,19 +71,16 @@ export default function BecasPage() {
   const [tab, setTab] = useState<'cupones' | 'asignadas' | 'solicitudes'>('cupones')
 
   // ── Cupones/becas ────────────────────────────────────────────────────────
-  const [coupons, setCoupons] = useState<Scholarship[]>([])
-  const [couponsLoading, setCouponsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'used' | 'revoked'>('all')
 
-  const refetchCoupons = useCallback(() => {
-    setCouponsLoading(true)
-    fetch('/api/scholarships/coupons?kind=generica')
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then(d => setCoupons(d?.items ?? []))
-      .catch(() => setCoupons([]))
-      .finally(() => setCouponsLoading(false))
-  }, [])
-  useEffect(() => { if (canView && tab === 'cupones') refetchCoupons() }, [canView, tab, refetchCoupons])
+  // LINT-1 · «cargando» se deriva (useCargaRemota); se pide solo con la
+  // pestaña abierta, que es lo que antes hacía el efecto con `tab`.
+  const { datos: cuponesCargados, cargando: couponsLoading, recargar: refetchCoupons } = useCargaRemota<Scholarship[]>(
+    'coupons:generica',
+    () => json<{ items?: Scholarship[] }>('/api/scholarships/coupons?kind=generica', 'No se pudieron cargar las becas.').then(d => d?.items ?? []),
+    { activo: canView && tab === 'cupones' },
+  )
+  const coupons = cuponesCargados ?? SIN_CUPONES
 
   const filteredCoupons = useMemo(
     () => (statusFilter === 'all' ? coupons : coupons.filter(c => c.status === statusFilter)),
@@ -149,29 +153,22 @@ export default function BecasPage() {
   }
 
   // ── Solicitudes de beca ──────────────────────────────────────────────────
-  const [requests, setRequests] = useState<FinanceRequest[]>([])
-  const [requestsLoading, setRequestsLoading] = useState(true)
-  // Declarado ANTES de refetchRequests, que lo usa al abrir ?request=<id>.
   const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
-  const refetchRequests = useCallback(() => {
-    setRequestsLoading(true)
-    fetch('/api/finance/requests?type=scholarship')
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((d: FinanceRequest[]) => {
-        const lista = Array.isArray(d) ? d : []
-        setRequests(lista)
-        // La página de solicitudes se eliminó (2026-10-14): sus notificaciones
-        // («te asignaron una solicitud», «nueva solicitud de beca») llegan acá
-        // con ?request=<id>, y se abre esa solicitud apenas carga la lista. Se
-        // lee la URL una vez, sin useSearchParams, para no exigir Suspense.
-        const id = new URLSearchParams(window.location.search).get('request')
-        const r = id ? lista.find(x => x.id === id) : undefined
-        if (r) setReviewTarget(r)
-      })
-      .catch(() => setRequests([]))
-      .finally(() => setRequestsLoading(false))
-  }, [])
-  useEffect(() => { if (canView && tab === 'solicitudes') refetchRequests() }, [canView, tab, refetchRequests])
+  const { datos: solicitudesCargadas, cargando: requestsLoading, recargar: refetchRequests } = useCargaRemota<FinanceRequest[]>(
+    'finance-requests:scholarship',
+    () => json<FinanceRequest[]>('/api/finance/requests?type=scholarship', 'No se pudieron cargar las solicitudes.').then(d => (Array.isArray(d) ? d : [])),
+    { activo: canView && tab === 'solicitudes' },
+  )
+  const requests = solicitudesCargadas ?? SIN_SOLICITUDES
+  // La página de solicitudes se eliminó (2026-10-14): sus notificaciones («te
+  // asignaron una solicitud», «nueva solicitud de beca») llegan acá con
+  // ?request=<id>, y se abre esa solicitud apenas carga la lista. La URL de
+  // entrada se lee sin efecto y el vuelco es una precarga: una sola vez.
+  const requestEnUrl = new URLSearchParams(useUbicacionDeEntrada().search).get('request')
+  usePrecarga(solicitudesCargadas && requestEnUrl ? requestEnUrl : null, () => {
+    const r = solicitudesCargadas!.find(x => x.id === requestEnUrl)
+    if (r) setReviewTarget(r)
+  })
 
   /**
    * Filtro de estado de las solicitudes. Arranca en "Por revisar" cuando hay
@@ -186,8 +183,6 @@ export default function BecasPage() {
   const solicitudesVisibles = useMemo(
     () => filtrarSolicitudes(requests, filtroSolicitudes),
     [requests, filtroSolicitudes])
-
-
 
   if (loaded && !canView) return <AccessDenied />
 

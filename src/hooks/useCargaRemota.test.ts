@@ -53,8 +53,8 @@ describe('la clave de useCargaRemota es estable', () => {
       // 'donaciones:stats' es FIJA a propósito: las estadísticas son del padrón
       // entero y no dependen del filtro. Con una clave que incluyera la
       // búsqueda, cada tecleo dispararía una consulta agregada.
-      "'donaciones:stats'",
-      "'employees'", "'event-types'", "'forms'", "'plans'", 'id ?? \'\'', 'wantedKey',
+      "'dashboard'", "'donaciones:stats'",
+      "'employees'", "'event-types'", "'forms'", "'plans'", 'claveDeEventos', 'id ?? \'\'', 'wantedKey',
     ])
   })
 })
@@ -64,7 +64,7 @@ describe('el contrato de useCargaRemota', () => {
 
   it('NO hay setState síncrono en el efecto: es el punto de todo esto', () => {
     // Lo que se busca es que los setGuardado vivan dentro de .then/.catch.
-    const efecto = fuente.slice(fuente.indexOf('useEffect(() => {\n    let vivo'))
+    const efecto = fuente.slice(fuente.indexOf('useEffect(() => {\n    if (!activo) return\n    let vivo'))
     const cuerpo = efecto.slice(0, efecto.indexOf('return () => { vivo = false }'))
     for (const linea of cuerpo.split('\n')) {
       const t = linea.trim()

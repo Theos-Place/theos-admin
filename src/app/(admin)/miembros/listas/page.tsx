@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { MemberList } from '@/types/member-list'
@@ -14,6 +15,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate } from '@/lib/format'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_DATOS: MemberList[] = []
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return 'Nunca'
@@ -32,8 +36,6 @@ export default function ListasGuardadasPage() {
   const router = useRouter()
   const toast = useToast()
 
-  const [lists, setLists]         = useState<MemberList[]>([])
-  const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [openMenu, setOpenMenu]   = useState<string | null>(null)
@@ -42,21 +44,12 @@ export default function ListasGuardadasPage() {
   const [editTags, setEditTags]   = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
-  // useCallback: `toast` viene del contexto y es estable, así que loadLists
-  // tampoco cambia entre renders y el efecto corre una sola vez.
-  const loadLists = useCallback(async () => {
-    try {
-      const res = await fetch('/api/member-lists')
-      if (res.ok) setLists(await res.json())
-      else toast('No se pudieron cargar las listas.', 'error')
-    } catch (err) {
-      console.error('No se pudieron cargar las listas:', err)
-      toast('No se pudieron cargar las listas.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-  useEffect(() => { loadLists() }, [loadLists])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, error, recargar: loadLists } = useCargaRemota<MemberList[]>(
+    'member-lists', () => json<MemberList[]>('/api/member-lists', 'No se pudieron cargar las listas.'),
+  )
+  const lists = datos ?? SIN_DATOS
+  useEffect(() => { if (error) toast(error, 'error') }, [error, toast])
 
   const allTags = Array.from(new Set(lists.flatMap(l => l.tags))).sort()
 

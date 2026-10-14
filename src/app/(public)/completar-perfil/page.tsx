@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/shared/Button'
@@ -19,7 +20,6 @@ export default function CompletarPerfilPage() {
   const [ready, setReady] = useState(false)
   const [hasSession, setHasSession] = useState(false)
   const [email, setEmail] = useState<string | null>(null)
-  const [isRecovery, setIsRecovery] = useState(false)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [saving, setSaving] = useState(false)
@@ -33,14 +33,14 @@ export default function CompletarPerfilPage() {
   // El tipo de link (invite vs recovery) viaja en el fragmento → cambia el mensaje.
   // Y si el link falló, Supabase manda el motivo ahí mismo: con eso se distingue
   // "ya se usó" de "está roto" en vez de mandar a todo el mundo a pedir otro.
-  const [linkMsg, setLinkMsg] = useState<AuthLinkMessage | null>(null)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-    if (params.get('type') === 'recovery') setIsRecovery(true)
-    const err = readAuthLinkError(window.location)
-    setLinkMsg(authLinkMessage(err, params.get('type') === 'recovery' ? 'recuperacion' : 'invitacion'))
-  }, [])
+  // LINT-1 · Se DERIVA de la URL de entrada (sin efecto ni estado): en el
+  // servidor no hay fragmento y vale «invitación sin error»; en el cliente el
+  // primer render ya trae el real.
+  const { search, hash } = useUbicacionDeEntrada()
+  const isRecovery = new URLSearchParams(hash.replace(/^#/, '')).get('type') === 'recovery'
+  const linkMsg: AuthLinkMessage | null = (search || hash)
+    ? authLinkMessage(readAuthLinkError(window.location), isRecovery ? 'recuperacion' : 'invitacion')
+    : null
 
   // Quién es la persona se resuelve con getUser(), que PREGUNTA AL SERVIDOR con
   // la cookie actual — no con getSession(), que puede devolver la sesión cacheada

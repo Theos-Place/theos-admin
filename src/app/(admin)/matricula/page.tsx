@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import { textoCupos, porcentajeOcupado } from '@/lib/studies/cupos'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePrecarga } from '@/hooks/usePrecarga'
@@ -33,6 +34,17 @@ import { buildPaymentBreakdown, formatDiscount } from '@/lib/finance/payment-bre
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { CuestionarioNivel1 } from '@/components/studies/CuestionarioNivel1'
 import { PLAN_CON_CUESTIONARIO } from '@/lib/studies/cuestionario-de-matricula'
+
+/** Lo que devuelve /api/matricula/eligibility, ya normalizado. */
+type Elegibilidad = {
+  eligibility: EligibilityResult[]
+  profile: MemberStudyProfile | null
+  premat_ok: boolean
+  pending_study_payments: number
+  blocking_debt: { count: number; total: number; currency: string; planCodes: string[] } | null
+}
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_ELEGIBILIDAD: EligibilityResult[] = []
 
 // 'prematrimonial' NO es una etapa: es una pestaña propia (pedido 2026-07-31),
 // porque el curso tiene su propio flujo (pareja, logística, ceremonia y pago) y
@@ -104,41 +116,39 @@ export default function MatriculaPage() {
   const [scholarshipTarget, setScholarshipTarget] = useState<{ entity_type: 'study_plan'; id: string; name: string } | null>(null)
   const [enrollError, setEnrollError] = useState<string | null>(null)
 
-  const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([])
-  const [profile, setProfile] = useState<MemberStudyProfile | null>(null)
-  // PRE-5: la tarjeta del prematrimonial solo se muestra si el miembro cumple
-  // el requisito (N1 completado + inscrito en N2). Server-side en el flag.
-  const [prematOk, setPrematOk] = useState(false)
-  // PAG-2: pagos de estudios pendientes → banner y bloqueo (con override staff).
-  const [pendingPayments, setPendingPayments] = useState(0)
-  // El DETALLE de la deuda (cuánto y de qué estudio), para poder explicarla en
-  // vez de solo contarla.
-  const [deuda, setDeuda] = useState<{ count: number; total: number; currency: string; planCodes: string[] } | null>(null)
   const [overridePrompt, setOverridePrompt] = useState<{ count: number } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
 
   // Elegibilidad + perfil académico desde datos reales.
-  useEffect(() => {
-    if (!effectiveMemberId) { setLoading(false); return }
-    let alive = true
-    setLoading(true)
-    setLoadError(false)
-    fetch(`/api/matricula/eligibility?member_id=${effectiveMemberId}`)
+  // LINT-1 · UNA carga (useCargaRemota) y de ahí se deriva todo: «cargando»
+  // es la comparación con el sello, y «falló» es que haya error. `retryKey`
+  // entra en la clave: reintentar es pedir con otra clave.
+  const { datos: elegibilidad, cargando: loading, error: errorDeCarga, setDatos: setElegibilidad } = useCargaRemota<Elegibilidad>(
+    `${effectiveMemberId ?? ''}|${retryKey}`,
+    () => fetch(`/api/matricula/eligibility?member_id=${effectiveMemberId}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(d => {
-        if (!alive) return
-        setEligibilityResults(d?.eligibility ?? [])
-        setProfile(d?.profile ?? null)
-        setPrematOk(!!d?.premat_ok)
-        setPendingPayments(Number(d?.pending_study_payments ?? 0))
-        setDeuda(d?.blocking_debt ?? null)
-        setLoading(false)
-      })
-      .catch(() => { if (alive) { setLoadError(true); setLoading(false) } })
-    return () => { alive = false }
-  }, [effectiveMemberId, retryKey])
+      .then(d => ({
+        eligibility: d?.eligibility ?? [],
+        profile: d?.profile ?? null,
+        premat_ok: !!d?.premat_ok,
+        pending_study_payments: Number(d?.pending_study_payments ?? 0),
+        blocking_debt: d?.blocking_debt ?? null,
+      })),
+    { activo: !!effectiveMemberId },
+  )
+  const eligibilityResults = elegibilidad?.eligibility ?? SIN_ELEGIBILIDAD
+  const profile = elegibilidad?.profile ?? null
+  const setProfile = (f: (p: MemberStudyProfile | null) => MemberStudyProfile | null) =>
+    setElegibilidad(e => (e ? { ...e, profile: f(e.profile) } : e))
+  // PRE-5: la tarjeta del prematrimonial solo se muestra si el miembro cumple
+  // el requisito (N1 completado + inscrito en N2). Server-side en el flag.
+  const prematOk = elegibilidad?.premat_ok ?? false
+  // PAG-2: pagos de estudios pendientes → banner y bloqueo (con override staff).
+  const pendingPayments = elegibilidad?.pending_study_payments ?? 0
+  // El DETALLE de la deuda (cuánto y de qué estudio), para poder explicarla en
+  // vez de solo contarla.
+  const deuda = elegibilidad?.blocking_debt ?? null
+  const loadError = !!errorDeCarga
 
   // Solo se ofrecen los estudios con grupos abiertos y matriculables para el
   // miembro. El plan completo (con descripciones) vive en /estudios/plan.

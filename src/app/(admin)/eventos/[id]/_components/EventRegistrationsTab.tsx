@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Download, Send, UserPlus, Search, Trash2, Image as ImageIcon } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
@@ -389,27 +390,18 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
 }) {
   const toast = useToast()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<MemberResult[]>([])
-  const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState<string | null>(null)
   // Evento pago: al elegir, se resuelve el precio/exención antes de confirmar.
   const [payFor, setPayFor] = useState<{ id: string; name: string; pricing: Pricing } | null>(null)
 
-  useEffect(() => {
-    const q = query.trim()
-    if (q.length < 2) { setResults([]); return }
-    let alive = true
-    setLoading(true)
-    const t = setTimeout(() => {
-      // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
-      fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`)
-        .then(r => (r.ok ? r.json() : { members: [] }))
-        .then(d => { if (alive) setResults(d.members ?? []) })
-        .catch(() => { if (alive) setResults([]) })
-        .finally(() => { if (alive) setLoading(false) })
-    }, 300)
-    return () => { alive = false; clearTimeout(t) }
-  }, [query])
+  // LINT-1 · la búsqueda se deriva (useBusquedaDiferida).
+  // /lookup: encargado_eventos no tiene el módulo miembros (bug 2026-08-04).
+  const { resultados: results, buscando: loading, setResultados: setResults } = useBusquedaDiferida<MemberResult>(
+    query,
+    (q, signal) => fetch(`/api/members/lookup?search=${encodeURIComponent(q)}&pageSize=10`, { signal })
+      .then(r => (r.ok ? r.json() : { members: [] }))
+      .then(d => d.members ?? []),
+  )
 
   async function inscribir(memberId: string, paymentStatus?: 'paid' | 'exempted') {
     setAdding(memberId)

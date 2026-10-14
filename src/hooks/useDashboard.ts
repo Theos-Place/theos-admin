@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import type { DashboardStats, DbActivity } from '@/lib/supabase/queries/dashboard'
 import { useMinutoActual } from '@/hooks/useReloj'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_ACTIVIDAD: DbActivity[] = []
+type Dashboard = { stats: Partial<DashboardStats>; activity: DbActivity[] }
 
 /** Item del feed de actividad reciente del dashboard (vista). */
 export type ActivityItem = {
@@ -47,27 +52,18 @@ function toActivityItem(db: DbActivity, now: number): ActivityItem {
  *  payload de /api/dashboard viene RECORTADO por permiso (bloques parciales). */
 export function useDashboard(opts: { enabled?: boolean } = {}) {
   const enabled = opts.enabled ?? true
-  const [stats, setStats]       = useState<Partial<DashboardStats> | null>(null)
-  const [dbActivity, setActivity] = useState<DbActivity[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState<string | null>(null)
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, error, recargar: fetchAll } = useCargaRemota<Dashboard>(
+    'dashboard',
+    async () => {
       const [s, a] = await Promise.all([fetch('/api/dashboard'), fetch('/api/dashboard/activity')])
       if (![s, a].every((r) => r.ok)) throw new Error('Error cargando dashboard')
-      setStats(await s.json())
-      setActivity(await a.json())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { if (enabled) fetchAll() }, [enabled, fetchAll])
+      return { stats: await s.json(), activity: await a.json() }
+    },
+    { activo: enabled },
+  )
+  const stats = datos?.stats ?? null
+  const dbActivity = datos?.activity ?? SIN_ACTIVIDAD
 
   // El "hace X min" avanza solo. Antes `Date.now()` se leía dentro del memo, que
   // solo se recalcula cuando llegan datos nuevos: un dashboard abierto toda la

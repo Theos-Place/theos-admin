@@ -1,6 +1,7 @@
 'use client'
 
-import { use, useState, useEffect, useMemo } from 'react'
+import { use, useState, useMemo } from 'react'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import Link from 'next/link'
 import { useDirigentes } from '@/hooks/useDirigentes'
 import { useStudies } from '@/hooks/useStudies'
@@ -342,19 +343,16 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
   const leader = useMemo(() => leaders.find(l => l.member_id === memberId), [leaders, memberId])
   const [studies, setStudies] = useState<string[]>([])
   const [zones, setZones] = useState<string[]>([])
-  const [init, setInit] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   // Inicializa una sola vez con los datos del dirigente (si existen).
-  useEffect(() => {
-    if (init) return
-    if (leaders.length === 0) return
+  // LINT-1 · precarga: se vuelca cuando la lista ya cargó, sin parpadeo.
+  usePrecarga(leaders.length > 0 ? (leader?.member_id ?? 'sin-ficha') : null, () => {
     setStudies(leader?.qualified_studies ?? [])
     setZones(leader?.zone_preference ?? [])
-    setInit(true)
-  }, [leaders, leader, init])
+  })
 
   // Agregar/quitar acepta un value de opción (grupo 'GRP:*' o code) y opera sobre
   // todos los códigos reales que representa — el modelo sigue por estudio individual.

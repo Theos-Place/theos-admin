@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
+import { useSyncExternalStore } from 'react'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
 import {
   Shield, Eye, EyeOff, Check, Loader2, AlertCircle,
   Fingerprint, Plus, Trash2, ShieldCheck, Smartphone, Monitor,
@@ -12,6 +14,10 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { setPasskeySuggestion, clearPasskeySuggestion } from '@/lib/auth/passkey-suggestion'
 import type { PasskeyListItem, Factor } from '@supabase/supabase-js'
 import { formatDateLong } from '@/lib/format'
+
+/** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
+const SIN_PASSKEYS: PasskeyListItem[] = []
+const nadie = () => () => {}
 
 const INPUT = [
   'w-full rounded-xl border px-4 py-3 text-sm text-navy bg-white',
@@ -207,36 +213,31 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
 
 /* ── Sección A · Passkeys (huella / Face ID) ── */
 function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
-  const [passkeys, setPasskeys]   = useState<PasskeyListItem[]>([])
-  const [loading, setLoading]     = useState(true)
   const [registering, setRegistering] = useState(false)
-  const [supported, setSupported] = useState(true)
-  const [error, setError]         = useState('')
+  // LINT-1 · «¿hay WebAuthn?» se lee del navegador sin efecto: en el servidor
+  // y en la hidratación vale true (el snapshot de servidor), y el primer render
+  // del cliente ya trae la respuesta real.
+  const supported = useSyncExternalStore(nadie, () => !!window.PublicKeyCredential, () => true)
+  const [errorDeAccion, setError] = useState('')
   const [toDelete, setToDelete]   = useState<PasskeyListItem | null>(null)
   const [deleting, setDeleting]   = useState(false)
 
-  const load = useCallback(async () => {
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.passkey.list()
-      if (error) { setError('No se pudieron cargar tus passkeys.'); return }
-      setPasskeys(data ?? [])
-    } catch {
-      setError('No se pudieron cargar tus passkeys.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !window.PublicKeyCredential) setSupported(false)
-    load()
-  }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos, cargando: loading, error: errorDeCarga, recargar: load, setDatos } = useCargaRemota<PasskeyListItem[]>(
+    'passkeys',
+    async () => {
+      const { data, error } = await createClient().auth.passkey.list()
+      if (error) throw new Error('No se pudieron cargar tus passkeys.')
+      return data ?? []
+    },
+    { generico: 'No se pudieron cargar tus passkeys.' },
+  )
+  const passkeys = datos ?? SIN_PASSKEYS
+  const error = errorDeAccion || errorDeCarga || ''
 
   async function handleRegister() {
     setError('')
     if (typeof window !== 'undefined' && !window.PublicKeyCredential) {
-      setSupported(false)
       setError('Tu dispositivo no soporta passkeys. Podés usarlas desde un dispositivo compatible.')
       return
     }
@@ -263,7 +264,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       const { error } = await supabase.auth.passkey.delete({ passkeyId: toDelete.id })
       if (error) { setError('No se pudo eliminar la passkey. Intentá de nuevo.'); return }
       const remaining = passkeys.filter(p => p.id !== toDelete.id)
-      setPasskeys(remaining)
+      setDatos(() => remaining)
       // Si quedó sin passkeys, permitimos que el login vuelva a sugerirla.
       if (remaining.length === 0) clearPasskeySuggestion()
       setToDelete(null)
@@ -371,9 +372,7 @@ function qrSrc(qr: string): string {
 }
 
 function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
-  const [loading, setLoading]     = useState(true)
-  const [factor, setFactor]       = useState<Factor | null>(null)
-  const [error, setError]         = useState('')
+  const [errorDeAccion, setError] = useState('')
 
   // Flujo de enrollment
   const [enroll, setEnroll]       = useState<{ factorId: string; qr: string; secret: string } | null>(null)
@@ -385,21 +384,19 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
   const [showDisable, setShowDisable] = useState(false)
   const [disabling, setDisabling]     = useState(false)
 
-  const load = useCallback(async () => {
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase.auth.mfa.listFactors()
-      if (error) { setError('No se pudo cargar el estado de la autenticación en dos pasos.'); return }
-      const verified = data?.all?.find(f => f.factor_type === 'totp' && f.status === 'verified') ?? null
-      setFactor(verified)
-    } catch {
-      setError('No se pudo cargar el estado de la autenticación en dos pasos.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { load() }, [load])
+  // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
+  const { datos: factorCargado, cargando: loading, error: errorDeCarga, recargar: load, setDatos } = useCargaRemota<Factor | null>(
+    'mfa-factor',
+    async () => {
+      const { data, error } = await createClient().auth.mfa.listFactors()
+      if (error) throw new Error('No se pudo cargar el estado de la autenticación en dos pasos.')
+      return data?.all?.find(f => f.factor_type === 'totp' && f.status === 'verified') ?? null
+    },
+    { generico: 'No se pudo cargar el estado de la autenticación en dos pasos.' },
+  )
+  const factor = factorCargado ?? null
+  const setFactor = (v: Factor | null) => setDatos(() => v)
+  const error = errorDeAccion || errorDeCarga || ''
 
   async function handleStart() {
     setError('')
