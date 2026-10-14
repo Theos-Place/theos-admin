@@ -9,7 +9,7 @@ resumen: Dónde está la solicitud de viáticos, quién puede pedirla y qué pas
 
 # Cómo pido viáticos para un viaje
 
-![Los seis pasos de un viaje: pedir, presupuestar, aprobar, viajar, liquidar e informar](/ayuda/infografias/solicitar-viaticos.svg)
+![Los seis pasos de un viaje: pedir, presupuestar, aprobar, viajar, liquidar e informar](/ayuda/infografias/solicitar-viaticos.svg) ![Pedir un viaje con viáticos, paso a paso: solicitud, presupuesto y envío](/ayuda/tutoriales/viaticos/viaticos.gif)
 
 La solicitud está en **Empleados → Viáticos**. Es un solo expediente por
 viaje: ahí mismo pedís la plata, finanzas la revisa, dirección la aprueba y,
@@ -57,3 +57,5 @@ expediente, no hay que llenar nada dos veces.
 - No convierte monedas: cada gasto va en la moneda en que se pagó.
 - No transfiere plata: registra lo aprobado y lo liquidado. El depósito lo
   hace finanzas por fuera y lo marca en el expediente.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/viaticos/viaticos.mp4)

@@ -80,7 +80,7 @@ export const flujo: TutorialFlow = {
     await t.fill('#f-enc', 'Karina')
     await t.fill('#f-prov', 'Panadería La Espiga')
     await t.fill('#f-num', '00100001010000012345')
-    await t.fill('#f-monto', '18500')
+    await t.fill('#f-monto', '6500')
     await t.badge(4)
     await t.pause(800)
     await t.shot('04-la-factura')

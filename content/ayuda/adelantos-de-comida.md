@@ -10,7 +10,7 @@ resumen: Qué es el adelanto mensual de comida de una sede, quién lo administra
 
 # Adelantos de comida por sede
 
-![El mes de una sede: presupuesto, abrir el mes, facturas por semana, el saldo y el cierre](/ayuda/infografias/adelantos-de-comida.svg)
+![El mes de una sede: presupuesto, abrir el mes, facturas por semana, el saldo y el cierre](/ayuda/infografias/adelantos-de-comida.svg) ![Abrir el mes de una sede y registrar la factura de una semana](/ayuda/tutoriales/adelantos/adelantos.gif)
 
 Cada sede recibe un **adelanto mensual** para la comida de sus charlas. La
 pantalla **Finanzas → Adelantos de comida** (`/finanzas/adelantos`) reemplaza
@@ -59,3 +59,5 @@ puesto esté activo en el comité de la sede: el acceso sale de ahí.
 
 Finanzas puede bajar el mes en Excel, con las facturas por semana y el saldo,
 para la conciliación.
+
+![Ver el video del flujo completo](/ayuda/tutoriales/adelantos/adelantos.mp4)

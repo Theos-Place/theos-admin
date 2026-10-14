@@ -33,13 +33,13 @@ export const flujo: TutorialFlow = {
 
   async run(t: Tools) {
     // 1 · Entrar como finanzas, directo a donaciones.
-    await t.goto('/login?redirect=/finanzas/donaciones')
+    await t.goto('/login?redirect=/finanzas/reportes')
     await t.badge(1)
     await t.shot('01-login')
     await t.fill('input[placeholder*="ejemplo@correo"]', FINANZAS)
     await t.fill('input[type="password"]', clave())
     await t.click(t.page.getByRole('button', { name: 'Iniciar sesión' }))
-    await t.page.waitForURL('**/finanzas/donaciones**', { timeout: 30_000 })
+    await t.page.waitForURL('**/finanzas/reportes**', { timeout: 30_000 })
     await t.pause(2000)
     await t.badge(2)
     await t.shot('02-la-pantalla')

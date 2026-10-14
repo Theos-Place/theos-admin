@@ -175,7 +175,7 @@ redirige al reporte; el menú ya no la lista. Los pagos del reporte se listan
 todos, de 50 en 50 (antes se cortaban en 15). Fijado por
 `sin-pagina-de-donaciones.test.ts`.
 
-### [~] AYU-5 · Centro de ayuda: viáticos, adelantos, datos del dirigente — guías e infografías 2026-10-14; GIF pendiente de prod
+### [x] AYU-5 · Centro de ayuda: viáticos, adelantos, datos del dirigente — guías, infografías y GIF 2026-10-14
 
 Guías nuevas: `solicitar-viaticos` (pública, sin códigos de anexo: «eso
 ANX-01 no me dice nada»), `adelantos-de-comida` (colaborador_finanzas,
@@ -183,11 +183,12 @@ finanzas, dirección) y `datos-del-dirigente` (dirigente y los roles de
 dirigentes). Infografías: `solicitar-viaticos.svg`, `adelantos-de-comida.svg`.
 `registrar-donaciones` apunta a la pestaña del reporte.
 
-**GIF pendiente**: los flujos `scripts/tutoriales/viaticos.ts` y
-`adelantos.ts` están escritos (`npm run tutorial:viaticos|adelantos`), pero
-graban contra PRODUCCIÓN con la cuenta [prueba] de finanzas, así que corren
-DESPUÉS de subir a prod. El de donaciones (`tutorial:donaciones`) hay que
-regrabarlo por lo mismo: la pantalla cambió de lugar.
+GIF grabados en prod tras el deploy (`tutorial:viaticos`, `tutorial:adelantos`,
+y `tutorial:donaciones` regrabado porque la pantalla cambió de lugar). Dos
+gotchas de los flujos nuevos: las fechas del viaje son `datetime-local` (piden
+hora), y la factura del tutorial tiene que caber en el presupuesto real de la
+sede (Antares, ₡10.000) o el GIF enseña un sobregiro. Los datos de prueba se
+borran al terminar (viaje, ficha de empleado, mes de Antares).
 
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
