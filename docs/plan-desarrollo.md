@@ -333,15 +333,22 @@ específica; si no, el insert choca contra el único de `family_members`.
    Quedan **~22 con señales de adulto** (cédula, o estudios pero con 12+ años)
    sin una prueba dura: esos hay que preguntarlos uno por uno.
 
-### [ ] DAT-9 · `member_por_external_id()` existe y nadie la llama
+### [x] DAT-9 · la nota pasó a ser un guard — 2026-10-13
 
-La función y la regla en AGENTS.md quedaron listas el 2026-09-15, pero hoy no
-hay ningún import de CCB dentro de `src/` que la use — son todos scripts
-puntuales. Cuando se escriba el próximo import, tiene que entrar por ahí.
+El ítem decía «no es trabajo pendiente: es una nota para el próximo import».
+Medido el 13-oct: la nota SE ESTÁ CUMPLIENDO —`src/` solo lee `external_id`
+como dato de la ficha, nunca filtra por él, y los scripts que cruzan contra
+CCB usan la función—. No había riesgo activo.
 
-**No es trabajo pendiente: es una nota para el próximo import.** SEC-3
-(2026-09-17) la dejó ejecutable solo con la llave de servicio, que es como la
-llamaría ese import de todos modos.
+**Lo que se hizo es que deje de depender de que alguien lea AGENTS.md.** Una
+nota en un archivo de 300 líneas sirve si la persona la encuentra justo el día
+que escribe el import. El guard (`buscar-por-external-id.test.ts`) falla si
+aparece un `.eq('external_id')` o un `where external_id =` en `src/`, con el
+motivo escrito en el propio error.
+
+Mira FILTRAR, no leer: traer la columna en un SELECT o copiarla en una fusión
+es legítimo. Y mira solo `src/`: los scripts de un solo uso ya corrieron
+—varios son anteriores a la regla— y reescribirlos no cambiaría ningún dato.
 
 ## Fase 21 — QA integral (pedido 2026-09-22, reordenado el mismo día)
 
@@ -2226,3 +2233,66 @@ alcance con dirección antes de los prompts — este ítem deja el inventario:
 PASO 1: reunión con dirección para el alcance (¿planillas/aguinaldo quedan
 fuera? ¿control de asistencia del staff?) → luego se fasean los prompts como
 FIN-11.
+
+### [ ] DIR-12 · Importar el CSV de estados y formación de dirigentes de Fabiola (2026-10-13)
+
+Archivo: `data-import/dirigentes-status-fabiola-2026-10-13.csv` (485 filas,
+latin-1). Analizado con Floriana; reglas acordadas abajo.
+
+Prompt para Claude Code:
+
+```
+IMPORT · Dirigentes: estados, formación y datos desde el CSV de Fabiola
+
+ARCHIVO: data-import/dirigentes-status-fabiola-2026-10-13.csv — OJO: encoding latin-1,
+booleanos como VERDADERO/FALSO, fechas M/D/YYYY. 485 filas; 471 con Individual ID (CCB),
+14 sin ID, 0 IDs duplicados. Es manual: puede traer errores — por eso todo pasa por
+dry-run.
+
+MATCH: por Individual ID = external_id (member_por_external_id, DAT-9). Los 14 sin ID:
+match por nombre SOLO si es único e inequívoco; el resto a lista de revisión manual.
+
+REGLA DE ESTADOS — ASIMÉTRICA (decidida 2026-10-13):
+- CSV Activo + sistema Inactivo → REACTIVAR con el sub-estado del CSV (la lista completa
+  de reactivaciones va en el dry-run para aprobación).
+- CSV Inactivo + sistema Activo o dirigiendo → EL SISTEMA GANA: no se desactiva a nadie.
+  Reportar estas filas (son el CSV desactualizado).
+- Mapeo de la taxonomía vieja → DIR-8:
+  · "Activo + En Curso" / "CoDirigente En Curso" → el sistema ya los tiene (automático);
+    solo verificar coincidencia.
+  · "Activo + Disponible" → Activo · Disponible.
+  · "Activo + Descanso" (51) → Activo · No disponible · EN PAUSA SIN FECHA, marcados
+    "pausa por completar" para que Fabiola agregue fecha/justificación.
+  · "Activo + En Capacitación" → Activo · No disponible · Estudiante en capacitación.
+  · "Pasantía" (2) → Activo · No disponible · En pasantía.
+  · "En revisión" (50) → BANDERITA de revisión + estado subyacente según su columna de
+    disponibilidad (Descanso→pausa sin fecha, Disponible→disponible, En Curso→lo
+    automático, vacío→disponible con nota).
+  · "Inactivo" (183) → Inactivo · sub-razón "POR CLASIFICAR" (el CSV no la trae).
+  · Contradicciones ("Inactivo + Disponible" x2, 1 sin status) → lista de revisión, no
+    se importan.
+
+⚠️ PREREQUISITO EN EL MISMO PR: el recálculo automático de dirigente activo (PAR-2, cron
+del 1°) debe RESPETAR los estados con clasificación manual de DIR-8 (pausa, capacitación,
+formación, pasantía, y las reactivaciones de este import): el cron solo mueve a quienes
+NO tienen sub-estado manual. Sin esto, el import se deshace solo el 1° de noviembre.
+Test explícito de que el cron no pisa un estado manual.
+
+FORMACIÓN — SOLO ADITIVA (regla de Floriana): agregar Niveles, SCJ, Discípulos y
+Prematrimonial donde el CSV diga VERDADERO y el sistema no lo tenga. JAMÁS quitar
+formación existente (las columnas en FALSO no niegan nada — el CSV casi no las usó).
+Año de CDEB: guardarlo si hay campo para eso; "Pendiente"(15) y "-"(21) no son años —
+reportarlos aparte.
+
+OTROS CAMPOS:
+- "Están en el grupo de whatsapp" → el check de WhatsApp de DIR-8 (190 en VERDADERO).
+- "Es orador" (80) y "En koinonía" (44): REPORTAR primero dónde vivirían (¿puesto de
+  orador existente? ¿campo nuevo?) — no inventar campo sin confirmar con Floriana.
+- Zona/Ubicación/teléfono/correo: NO pisar datos del perfil — solo reportar diferencias
+  grandes (el perfil del sistema es la fuente de contacto, no este CSV).
+
+DRY-RUN OBLIGATORIO con: conteo por tipo de cambio, lista nominal de reactivaciones,
+lista de conflictos/no-matcheados/contradicciones, y muestra de 10 filas aplicadas.
+Aplicar solo tras aprobación. Idempotente (segunda corrida = cero cambios). Audit_log.
+Sin correos. tsc/lint/vitest.
+```
