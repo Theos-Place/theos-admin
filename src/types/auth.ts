@@ -4,6 +4,8 @@ export type RoleId =
   | 'admin'
   | 'direccion'
   | 'finanzas'
+  /** FIN-12 · Colaborador de Finanzas de una sede: registra los adelantos de comida. Rol automático por puesto. */
+  | 'colaborador_finanzas'
   | 'encargado_staff'
   | 'coordinador_servidores'
   | 'coordinador_estudios'

@@ -12,7 +12,7 @@ import {
   Calendar,
   BookOpen,
   UsersRound,
-  Briefcase, Plane,
+  Briefcase, Plane, UtensilsCrossed,
   DollarSign,
   MessageCircle,
   FileText,
@@ -75,6 +75,7 @@ const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/cobros-sin-estudio', label: 'Cobros sin estudio', icon: Unlink },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
   { href: '/finanzas/solicitudes', label: 'Solicitudes',  icon: Inbox           },
+  { href: '/finanzas/adelantos',   label: 'Adelantos de comida', icon: UtensilsCrossed },
 ]
 
 const COMUNICACIONES_SUB: SubItem[] = [
@@ -268,6 +269,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         : []),
     // Becas: quienes tienen el permiso becas (dentro de Finanzas, aunque no tengan el módulo completo).
     ...(can('becas', 'view') ? [{ href: '/finanzas/becas', label: 'Becas', icon: GraduationCap }] : []),
+    // FIN-12 · El Colaborador de Finanzas de una sede entra a Adelantos sin el
+    // módulo finanzas: su permiso es `adelantos`, que le da el puesto.
+    ...(!can('finanzas', 'view') && can('adelantos', 'view') ? [{ href: '/finanzas/adelantos', label: 'Adelantos de comida', icon: UtensilsCrossed }] : []),
   ]
 
   // Mantenimiento de áreas/comités/puestos: solo para roles de admin de servidores.
@@ -370,7 +374,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // Estudios se muestra siempre — adentro, quien no gestiona ve solo "Plan de
     // Estudios" (y su resumen queda oculto por hideSummary).
     if (m.href === '/estudios') return true
-    if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view')
+    if (m.href === '/finanzas') return can('finanzas', 'view') || can('revision_pagos', 'view') || can('becas', 'view') || can('adelantos', 'view')
     // FIN-11 · Empleados aparece también para quien tiene ficha de empleado
     // sin el módulo: adentro ve solo Viáticos.
     if (m.href === '/empleados') return can('empleados', 'view') || entraAViaticos

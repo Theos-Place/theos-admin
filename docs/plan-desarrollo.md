@@ -1236,43 +1236,42 @@ la spec.
 > pedido frecuente de "congelar matrícula". NO CORRER hasta que Floriana lo
 > valide con Melissa (finanzas) — quedó explícito en la reunión que no se
 > decide por ellos.
-### [ ] FIN-12 · Adelantos de comida por sede (reemplaza los Excels mensuales)
+### [x] FIN-12 · Adelantos de comida por sede — COMIDAS HECHO 2026-10-14; DONACIONES pendiente de Meli
 
-Prompt para Claude Code:
+Reemplaza los Excels mensuales. Migración `20261014120000`: `sede_advance_budgets`
+(presupuesto por sede, lo fija finanzas), `sede_advances` (el mes de cada sede)
+y `sede_advance_expenses` (las facturas, por SEMANA de charla con su encargado,
+proveedor, N° de factura electrónica, monto, estado pendiente/liquidada, foto).
+Pantalla `/finanzas/adelantos`, una sola para los dos lectores: el colaborador
+ve su sede; finanzas ve todas, fija presupuestos, cierra meses y exporta XLSX.
 
-```
-FEATURE · Control de adelantos de comida por sede
+**QUIÉN.** El rol `colaborador_finanzas` lo da el puesto «Colaborador Finanzas»
+de cada comité de sede (regla en `position-roles`, solo en comités de sede: el
+área Finanzas central no cuenta). El ALCANCE sale por el mismo camino —
+volunteers → puesto → área → sede por nombre (`sede-del-area`, verificado
+contra las 12 sedes activas)— así que el rol y el alcance no pueden
+desalinearse. Sede ajena = 403.
 
-QUIÉN: personas con el puesto "Colaborador de Finanzas" de cada sede (rol automático por
-puesto — position-role-sync, como los demás), más finanzas/direccion que ven todo.
+**LAS DECISIONES QUE QUEDARON EN EL CÓDIGO, con sus tests:**
+- Lo PENDIENTE de liquidar también resta del saldo: la plata ya está
+  comprometida; un saldo que no la cuenta invita a gastar lo que ya se debe.
+- El sobregiro se MARCA (rojo, «SOBREGIRO»), no se bloquea: hay que
+  identificar por qué y decidir el reintegro.
+- No se cierra con facturas pendientes: el saldo final decide la reposición
+  y mentiría.
+- El presupuesto se COPIA al abrir el mes: subirlo en noviembre no reescribe
+  el saldo de octubre. Sin presupuesto fijado el mes no se abre.
+- Una factura de otro mes no entra: descuadra los dos.
+- Cerrar ESCRIBE el saldo final y lo hace finanzas.
 
-QUÉ: cada sede recibe un ADELANTO mensual con presupuesto predefinido (monto por sede,
-configurable por finanzas). El colaborador registra los gastos del mes: fecha, detalle/
-proveedor, número de factura, monto, y FOTO de la factura adjunta (mecanismo de
-comprobantes existente). El sistema RESTA del presupuesto y muestra el saldo restante en
-vivo ("te quedan ₡X de ₡Y").
+Probado contra staging de punta a punta: presupuesto → abrir → facturas →
+pendiente resta → factura de otro mes 400 → cerrar con pendiente 409 →
+cerrar 200 → después del cierre 409; saldo final guardado.
 
-PARA FINANZAS (Andrés): vista por sede y mes con todas las facturas (para asociarlas a
-la sede al registrar en contabilidad), totales, saldo final del mes (lo que determina
-cuánto se repone el mes siguiente), y export XLSX. Si se pasan del presupuesto, se marca
-visible (no se bloquea — hay que identificar por qué y decidir el reintegro).
-REFERENCIA REAL: data-import no — el Excel de Liberia lo pasó Floriana
-("09. SETIEMBRE 2026 Comidas-Donaciones Place LIBERIA.xlsx"). Su estructura manda:
-- La operación es SEMANAL, por fecha de charla, con el ENCARGADO de esa semana anotado.
-- COMIDAS: por semana, facturas con proveedor, monto, # de FACTURA ELECTRÓNICA, fecha y
-  observaciones (comida/desechables…), total semanal, y una lista aparte de FACTURAS
-  PENDIENTES (proveedor, monto, fecha, estatus) — incluir ese estado pendiente/liquidada.
-- OJO: el Excel trae una SEGUNDA hoja, DONACIONES — el cierre semanal de la sede:
-  cajitas ₡ y $, efectivo (nombre, monto, detalle, # recibo), datáfono (# voucher), y
-  depósitos con # de referencia y # de cuenta. Decidir con Meli si entra en este ítem o
-  en uno aparte (recomendado: MISMO módulo "cierre semanal de sede" con dos secciones,
-  porque lo llena la misma persona la misma noche) — confirmar antes de implementar la
-  parte de donaciones; la de comidas va segura.
-Cierre de mes: al cerrar, el saldo queda registrado y arranca el mes nuevo con el
-presupuesto completo (la reposición la maneja finanzas por fuera).
-Tests: resta en vivo, sobregiro marcado, colaborador ve solo su sede (403 a otra),
-export. tsc/lint/vitest.
-```
+**FALTA — la hoja DONACIONES del Excel** (cierre semanal de sede: cajitas ₡
+y $, efectivo con recibo, datáfono con voucher, depósitos con referencia).
+Confirmar con Meli si va en este mismo módulo como segunda sección —lo llena
+la misma persona la misma noche— o aparte. No se implementó a propósito.
 
 ## Fase 26 — Reunión 2026-09-30: Mi comité y accesos a reportes
 

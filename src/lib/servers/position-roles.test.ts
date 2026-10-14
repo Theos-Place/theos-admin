@@ -340,3 +340,22 @@ describe('SRV-11 · puestos_servicio', () => {
       .not.toContain('puestos_servicio')
   })
 })
+
+describe('FIN-12 · colaborador_finanzas por puesto de sede', () => {
+  it('«Colaborador Finanzas» en un comité de sede lo da', () => {
+    expect(rolesGrantedByPosition(enSede('Colaborador Finanzas'))).toContain('colaborador_finanzas')
+    // Con artículo también: «Colaborador de Finanzas».
+    expect(rolesGrantedByPosition(enSede('Colaborador de Finanzas'))).toContain('colaborador_finanzas')
+  })
+
+  it('el mismo título FUERA de un comité de sede, no', () => {
+    // El área Finanzas central tiene sus propios roles; un colaborador ahí no
+    // administra el adelanto de ninguna sede.
+    const central: PositionContext = { title: 'Colaborador Finanzas', areaName: 'Finanzas', areaType: 'area', parentAreaName: null }
+    expect(rolesGrantedByPosition(central)).not.toContain('colaborador_finanzas')
+  })
+
+  it('otro colaborador de la sede, no', () => {
+    expect(rolesGrantedByPosition(enSede('Colaborador Bienvenida'))).not.toContain('colaborador_finanzas')
+  })
+})

@@ -88,6 +88,15 @@ export function esComiteDeSede(ctx: PositionContext): boolean {
 
 export const POSITION_ROLE_RULES: PositionRoleRule[] = [
   {
+    role: 'colaborador_finanzas',
+    description:
+      'Colaborador Finanzas de un comité de sede: registra las facturas del adelanto '
+      + 'de comida de esa sede (FIN-12).',
+    // Solo en comités de SEDE: el área «Finanzas» central tiene sus propios
+    // roles, y un «colaborador» ahí no administra el adelanto de ninguna sede.
+    matches: (ctx) => esComiteDeSede(ctx) && normSinArticulos(ctx.title) === 'colaborador finanzas',
+  },
+  {
     role: 'encargado_eventos',
     description:
       'Puestos que operan el evento en los comités de sede: Logística, Asistente Logística, ' +

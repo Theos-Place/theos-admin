@@ -362,6 +362,19 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'colaborador_finanzas',
+    name: 'Colaborador de Finanzas (sede)',
+    description: 'Registra las facturas del adelanto de comida de su sede',
+    color: '#3DB97A',
+    // FIN-12 · Rol AUTOMÁTICO por el puesto «Colaborador Finanzas» de cada
+    // comité de sede (position-roles). Alcance 'committee': ve y escribe el
+    // adelanto de SU sede —la que sale del comité donde sirve—, no el de las
+    // demás. Finanzas y dirección ven todas por su propio módulo.
+    permissions: [
+      { module: 'adelantos', actions: ['view', 'create', 'edit'], scope: 'committee' },
+    ],
+  },
+  {
     id: 'revision_pagos',
     name: 'Revisión de pagos',
     description: 'Revisar y aprobar/rechazar pagos por comprobante',

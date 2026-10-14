@@ -95,6 +95,9 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Excepción: /finanzas/becas tiene su propio permiso ('becas'), asignable sin
   // depender del módulo finanzas completo.
   if (pathname.startsWith('/finanzas/becas') && can('becas', 'view')) return <>{children}</>
+  // Excepción (FIN-12): /finanzas/adelantos tiene su propio permiso, `adelantos`,
+  // que el puesto «Colaborador Finanzas» de cada sede da sin el módulo finanzas.
+  if (pathname.startsWith('/finanzas/adelantos') && can('adelantos', 'view')) return <>{children}</>
   // Excepción (REV-3): /finanzas/pagos es la página unificada de pagos — los
   // roles de revisión (revision_pagos, folletos, coordinadores) la ven sin el
   // módulo finanzas completo. Espejo del guard de GET /api/finance/payments.
