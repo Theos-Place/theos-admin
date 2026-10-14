@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { BarChart2, Download, Package } from 'lucide-react'
+import { DonacionesPanel } from '@/components/finance/DonacionesPanel'
+import { usePrecarga } from '@/hooks/usePrecarga'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
 import { sumByCurrency, toCurrency, addTotals, mainCurrency, totalIn, formatTotalsInline, type MoneyTotals } from '@/lib/money'
 import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
@@ -9,7 +11,7 @@ import { Tabs } from '@/components/shared/Tabs'
 import { useFinance } from '@/hooks/useFinance'
 import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 import { formatDate } from '@/lib/format'
-import { anioDe, caeEn, fechaLocal } from '@/lib/fecha/partes-de-fecha'
+import { anioDe, caeEn } from '@/lib/fecha/partes-de-fecha'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
 import {
   categoriaDePago, claveDeCategoria, etiquetaDeCategoria, cumpleFiltroDeCategoria, fechaDelPago, enRango,
@@ -34,8 +36,6 @@ const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Jul
 export default function ReportesPage() {
   const { payments, donations } = useFinance('payments', 'donations')
   const [activeTab, setActiveTab] = useState<'donations' | 'payments' | 'transparency'>('donations')
-  const [donDateFrom, setDonDateFrom] = useState('')
-  const [donDateTo, setDonDateTo] = useState('')
   const [entityFilter, setEntityFilter] = useState('all')
   // REP-17 · rango de fechas y comité (área/categoría) de la pestaña de pagos.
   const [pagoDesde, setPagoDesde] = useState('')
@@ -43,19 +43,6 @@ export default function ReportesPage() {
   const [categoriaFilter, setCategoriaFilter] = useState('all')
   const nombreDeTipo = useEventTypeStyle()
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
-
-  // Donations tab
-  const filteredDonations = useMemo(() => {
-    return donations.filter(d => {
-      // QA-1/C1: `fechaLocal` en los TRES lados. Con `new Date` la donación se
-      // arma en UTC y los límites del filtro también, pero una columna `date`
-      // y un input `date` no tienen por qué coincidir en el corrimiento.
-      const dt = fechaLocal(d.donation_date)
-      const matchFrom = !donDateFrom || dt >= fechaLocal(donDateFrom)
-      const matchTo = !donDateTo || dt <= fechaLocal(donDateTo)
-      return matchFrom && matchTo
-    })
-  }, [donations, donDateFrom, donDateTo])
 
   // Payments tab
   // REP-17 · Cada pago con su categoría y su fecha de reporte, calculadas una vez.
@@ -121,6 +108,12 @@ export default function ReportesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enRangoYComite, nombreDeTipo])
 
+  // Floriana (2026-10-14): «no quiero que solo liste 15, queremos todos, de
+  // 50 en 50». Se muestran de a 50 y el tope vuelve a 50 al cambiar un filtro.
+  const PAGINA = 50
+  const [visibles, setVisibles] = useState(PAGINA)
+  usePrecarga(`${pagoDesde}|${pagoHasta}|${categoriaFilter}|${entityFilter}`, () => setVisibles(PAGINA))
+
   const paidPayments = filteredPayments.filter(p => p.status === 'paid')
   const pendingPayments = filteredPayments.filter(p => p.status === 'pending')
   const refundedPayments = filteredPayments.filter(p => p.status === 'refunded' || p.status === 'partial_refund')
@@ -157,15 +150,6 @@ export default function ReportesPage() {
   const barra = (m: { total: MoneyTotals }) => totalIn(m.total, monedaInforme)
   const maxMonthTotal = Math.max(...monthlyData.map(barra), 1)
   const topMonths = [...monthlyData].filter(m => barra(m) > 0).sort((a, b) => barra(b) - barra(a)).slice(0, 3)
-
-  function exportDonationsCSV() {
-    generateCSV(
-      // INT-3: el monto NUNCA sale sin su moneda.
-      ['ID', 'Miembro', 'Cédula', 'Fecha', 'Monto', 'Moneda', 'Lote', 'Estado'],
-      filteredDonations.map(d => [d.id, d.member_name, d.member_cedula, d.donation_date, d.amount, toCurrency(d.currency), d.source_file, d.is_identified ? 'Identificado' : 'Sin identificar'])
-      , 'reporte-donaciones'
-    )
-  }
 
   function exportPaymentsCSV() {
     generateCSV(
@@ -223,57 +207,8 @@ export default function ReportesPage() {
           onChange={v => setActiveTab(v as typeof activeTab)}
         />
 
-        {/* Tab 1 — Donations */}
-        {activeTab === 'donations' && (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Desde</span>
-                <input type="date" value={donDateFrom} onChange={e => setDonDateFrom(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Hasta</span>
-                <input type="date" value={donDateTo} onChange={e => setDonDateTo(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
-              </div>
-              <button onClick={exportDonationsCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
-                <Download size={14} />
-                Exportar CSV
-              </button>
-            </div>
-
-            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-[var(--outline-variant)]">
-                      {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Estado'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDonations.slice(0, 15).map((d, i) => (
-                      <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{d.member_name}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{d.member_cedula}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{formatDate(d.donation_date)}</p></td>
-                        <td className="px-5 py-3.5"><AmountDisplay amount={d.amount} currency={d.currency} defaultHidden={false} /></td>
-                        <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium ${d.is_identified ? 'text-success bg-success/10' : 'text-coral bg-coral/10'}`}>
-                            {d.is_identified ? 'Identificado' : 'Sin identificar'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Tab 1 — Donaciones: la gestión completa (DON-4), no un extracto. */}
+        {activeTab === 'donations' && <DonacionesPanel />}
 
         {/* Tab 2 — Payments by entity */}
         {activeTab === 'payments' && (
@@ -371,7 +306,7 @@ export default function ReportesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPayments.slice(0, 15).map((p, i) => (
+                    {filteredPayments.slice(0, visibles).map((p, i) => (
                       <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy-light/80">{etiqueta(categoriaDePago(p))}</p></td>
@@ -386,6 +321,19 @@ export default function ReportesPage() {
                 </table>
               </div>
             </div>
+            {filteredPayments.length > 0 && (
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm text-navy-light/80 font-body">
+                  Mostrando {Math.min(visibles, filteredPayments.length).toLocaleString('es-CR')} de {filteredPayments.length.toLocaleString('es-CR')} pagos
+                </p>
+                {filteredPayments.length > visibles && (
+                  <button onClick={() => setVisibles(v => v + PAGINA)}
+                    className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
+                    Mostrar 50 más
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 

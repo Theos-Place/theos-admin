@@ -15,6 +15,7 @@ import { execSync } from 'node:child_process'
 /** Pantallas exentas, con su razón. */
 const EXENTAS: Record<string, string> = {
   'pagos/revision': 'es un redirect() a /finanzas/pagos, no renderiza nada',
+  'finanzas/donaciones': 'DON-4: es un redirect() a /finanzas/reportes, la gestión vive en la primera pestaña',
 }
 
 function resolver(imp: string, desde: string): string | null {

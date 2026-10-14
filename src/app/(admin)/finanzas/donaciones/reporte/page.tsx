@@ -87,7 +87,7 @@ function Contenido() {
 
   return (
     <div className="space-y-5">
-      <Link href="/finanzas/donaciones" className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
+      <Link href="/finanzas/reportes" className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
         <ChevronLeft size={16} /> Donaciones
       </Link>
 

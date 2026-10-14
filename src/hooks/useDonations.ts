@@ -43,6 +43,14 @@ function buildQuery(params: DonationSearchParams, page: number): string {
   return u.toString()
 }
 
+/** La URL del listado con estos filtros. `all` = sin paginar (el CSV del
+ *  resultado filtrado completo, DON-4). */
+export function urlDeDonaciones(params: DonationSearchParams, opts: { all?: boolean } = {}): string {
+  const u = new URLSearchParams(buildQuery(params, 1))
+  if (opts.all) { u.delete('page'); u.delete('pageSize'); u.set('all', '1') }
+  return `/api/finance/donations?${u.toString()}`
+}
+
 /**
  * Donaciones paginadas server-side con acumulación + stats globales (SQL).
  *

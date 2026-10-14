@@ -172,7 +172,7 @@ export default function ImportarDonacionesPage() {
     <FinanceGuard>
       <div className="space-y-5">
         <div className="rounded-2xl bg-navy px-6 py-5 shadow-[var(--shadow-md)]">
-          <Link href="/finanzas/donaciones" className="inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
+          <Link href="/finanzas/reportes" className="inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
             <ArrowLeft size={14} /> Donaciones
           </Link>
           <h1 className="text-2xl font-extrabold text-white font-display">Importar donaciones</h1>
@@ -395,7 +395,7 @@ export default function ImportarDonacionesPage() {
                   <Download size={15} aria-hidden /> Descargar las que faltan
                 </button>
               )}
-              <Link href="/finanzas/donaciones"
+              <Link href="/finanzas/reportes"
                 className="inline-flex items-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body">
                 Ver donaciones
               </Link>

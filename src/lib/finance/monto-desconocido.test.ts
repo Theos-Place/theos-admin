@@ -26,7 +26,7 @@ describe('monto desconocido vs. monto restringido', () => {
     // La bandera viene con la lista (mismo fetch): si se guardara aparte, al
     // cambiar de filtro podría quedar la bandera vieja junto a la lista nueva.
     expect(sin('src/hooks/useDonations.ts')).toContain("amountsVisible: d.amounts_visible === true")
-    const p = sin('src/app/(admin)/finanzas/donaciones/page.tsx')
+    const p = sin('src/components/finance/DonacionesPanel.tsx')
     expect(p).toMatch(/const \{[^}]*amountsVisible[^}]*\} =\s*useDonations\(/)
     expect((p.match(/restricted=\{!amountsVisible\}/g) ?? []).length).toBeGreaterThanOrEqual(3)
   })
