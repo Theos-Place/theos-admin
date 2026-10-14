@@ -63,6 +63,32 @@ Absorbe a DAT-3 (los 48 grupos sin una sola nota son un subconjunto).
 
 Script: `scripts/cierre-2026-09/pendientes-de-nota.ts`.
 
+### [x] Jornada del 2026-10-13 · lo que salió de reportes del día
+
+Nada de esto estaba en el plan: salió de lo que Floriana fue encontrando.
+Todo en producción el mismo día.
+
+ · **DIR-12** — los filtros de la lista de dirigentes hablaban el vocabulario
+   ANTERIOR a DIR-8, así que los estados nuevos no se podían filtrar. La causa
+   de fondo no era el filtro: el adaptador armaba el dirigente desde cero y no
+   copiaba los campos de DIR-8, y el tipo tampoco los declaraba — el endpoint
+   los mandaba y se perdían en silencio.
+ · **PRE-9** — pantalla para leer los cierres del prematrimonial. El dato
+   existía desde PRE-8 y solo se alcanzaba sabiendo el id de la pareja.
+ · **EVT-9 / EVT-10** — tres bugs encadenados del evento compartido: no
+   aparecía en el calendario de quien estaba adentro; «compartir» resultó ser
+   nombrar ENCARGADO y eso no estaba contemplado; y el servidor no le mandaba
+   las inscripciones al encargado, así que el tab abría vacío.
+ · **MAT-4** — aviso el mismo día a quien deja la matrícula a medias. El de 24
+   horas llegaba hasta 48 horas tarde porque el cron corre una vez al día.
+ · **UI-3** — la flecha de los 174 dropdowns, separada del borde.
+ · **EST-14 (datos)** — 8 cobros de ₡5.000 creados por error en grupos N1
+   legacy, que son gratis. Tres personas habían perdido el cupo por no pagar
+   algo que no debían: devueltas. Las cinco que sí pagaron quedan con crédito
+   para su N2.
+ · **Accesos** — censo de quién ve montos; Sofía y Gisselle fuera, la cuenta de
+   Finanzas Madrid desactivada.
+
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
 Que el pase del evento se pueda guardar en la billetera del teléfono, en vez de
@@ -716,9 +742,9 @@ Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 ### [ ] FIN-11 · Viáticos y kilometraje: flujo digital del reglamento de viajes (pedido 2026-09-29)
 
 Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos
-operativos, versión 1.0 del 05/05/2026 — reglamento EN PROCESO FINAL de
-aprobación por Junta Directiva: **no correr hasta que esté aprobado**, y
-parametrizar tarifas/montos porque pueden cambiar en la aprobación).
+operativos, versión 1.0 del 05/05/2026). **CANDADO RETIRADO 2026-10-13 por
+Floriana: se arranca ya** (antes de Tilopay). Tarifas/montos van como
+parámetros configurables por si la versión final del reglamento los ajusta.
 
 DISEÑO: un solo flujo "Viaje" con etapas, no 5 formularios sueltos. Cada viaje
 es un expediente que avanza:
@@ -769,8 +795,9 @@ PERMISOS: solicitante ve/edita SU expediente (anti-suplantación
 resolveTargetMemberId); finanzas y dirección ven todos; aprobar según el rol
 que defina el reglamento. PDF de cada anexo descargable desde el expediente
 (para archivo físico/Junta) — con el patrón de PDF de SRV-14.
-Los prompts por fase se arman cuando el reglamento esté aprobado y Floriana
-confirme tarifas, plazos y quién es "autoridad competente".
+Los prompts por fase se arman ahora, empezando por la FASE A (expediente +
+solicitud + presupuesto + aprobaciones); Floriana confirma tarifas, plazos y
+quién es la "autoridad competente" sobre la marcha, como parámetros.
 
 ## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
 
@@ -1971,7 +1998,7 @@ día que alguien cierre un grupo.
 alimentando el listado de `/estudios/dirigentes`. No se migró porque ahí
 acierta (deriva de los grupos), pero son dos taxonomías vivas para lo mismo.
 
-### [~] DIR-9 · prompt original (referencia)
+#### DIR-9 · prompt original (referencia, ya ejecutado)
 
 El reporte viejo de dirigentes del plan piloto está abandonado. Se rediseña
 con la jerarquía de la infografía (total → inactivo/activo → desgloses) y los
@@ -2038,7 +2065,7 @@ mismo que el resto de DIR-8: no existe el catálogo de comunidades, y sin
 catálogo sería un campo de texto libre que se llena de cuatro formas distintas
 —exactamente lo que pasó con «¿dónde te dejamos los folletos?»—.
 
-### [ ] DIR-10 · prompt original (referencia)
+#### DIR-10 · prompt original (referencia, ya ejecutado)
 
 Hoy el tab se ve abrumador y el dirigente no puede editar. Decidido en la
 reunión: los "curiosos" editan directo en su perfil (y así ya están
@@ -2178,3 +2205,24 @@ anotar para re-mapear)
 Tests: la regla de alta respeta el resultado (aprobado entra, reprobado no).
 tsc/lint/vitest.
 ```
+
+### [ ] EMP-1 · Módulo de empleados completo: vacaciones, feriados, jornadas, contratos (pedido 2026-10-13)
+
+Lo construido hasta ahora (perfiles, salarios, documentos, vacaciones básicas)
+necesita completarse para ser el módulo de RRHH real. Requiere definición de
+alcance con dirección antes de los prompts — este ítem deja el inventario:
+
+- VACACIONES: saldo por empleado (acumulación según ley CR — 2 semanas por 50
+  semanas—, o la política interna que dirección defina), solicitud del empleado
+  → aprobación del jefe, calendario del equipo, historial.
+- FERIADOS: calendario de feriados CR (de ley y de pago obligatorio vs no
+  obligatorio) + feriados internos de Theos; afecta el cálculo de jornadas.
+- JORNADAS: definición por empleado (tiempo completo/medio/por horas, horario),
+  base para vacaciones proporcionales y control de tiempo si se quiere.
+- CONTRATOS: tipo (indefinido/plazo/servicios profesionales), fechas, puesto,
+  salario vigente con historial de cambios, documentos adjuntos (el módulo de
+  documentos ya existe), alertas de vencimiento de plazo/período de prueba.
+- Permisos: módulo exclusivo (RRHH/dirección) — censar quién ve salarios hoy.
+PASO 1: reunión con dirección para el alcance (¿planillas/aguinaldo quedan
+fuera? ¿control de asistencia del staff?) → luego se fasean los prompts como
+FIN-11.
