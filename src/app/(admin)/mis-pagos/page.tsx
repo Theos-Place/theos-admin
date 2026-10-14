@@ -186,7 +186,7 @@ function MisPagosContent() {
         <div className="lg:col-span-2 space-y-3">
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             {memberId ? (
-              <MemberPaymentsList key={memberId} memberId={memberId} highlightId={highlightId} onlyActionable={!showAll} />
+              <MemberPaymentsList key={memberId} memberId={memberId} highlightId={highlightId} onlyActionable={!showAll} permitirPagoJunto />
             ) : (
               <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">Cargando…</p>
             )}

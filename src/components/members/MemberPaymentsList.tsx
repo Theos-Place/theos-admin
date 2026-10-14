@@ -6,7 +6,7 @@
 // notificaciones) resalta y hace scroll al pago indicado.
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CreditCard, Loader2 } from 'lucide-react'
+import { Check, CreditCard, Loader2, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
 import { formatDate, formatMoney, ymdCR } from '@/lib/format'
@@ -19,6 +19,8 @@ import {
 import { opcionesPermitidas } from '@/lib/finance/limites-de-arreglo'
 import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 import { Modal } from '@/components/shared/Modal'
+import { BarraDePagoJunto } from '@/components/finance/PagarVariosJuntos'
+import { ofrecerPagoJunto, sePuedeIncluir } from '@/lib/finance/comprobante-multiple'
 
 /** Estado visual de un pago del miembro. */
 export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string } {
@@ -42,13 +44,18 @@ export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string 
 /** Lista los pagos del miembro (fetch propio). Los pendientes de matrícula/
  *  evento muestran botón para pagar. Gate en el endpoint: el propio miembro,
  *  su familia o el staff de finanzas. */
-export function MemberPaymentsList({ memberId, highlightId, onlyActionable = false }: {
+export function MemberPaymentsList({ memberId, highlightId, onlyActionable = false, permitirPagoJunto = false }: {
   memberId: string
   /** Pago a resaltar (deep link de notificaciones: /mis-pagos?pago=<id>). */
   highlightId?: string | null
   /** Solo pendientes + en revisión (la vista "mis pagos" esconde el historial cerrado). */
   onlyActionable?: boolean
+  /** PAG-5 · Ofrecer «pagar varios con un comprobante». Solo en Mis pagos:
+   *  en la ficha de un miembro quien mira es staff y tiene otras vías. */
+  permitirPagoJunto?: boolean
 }) {
+  // PAG-5 · null = modo normal; un Set = modo selección (puede estar vacío).
+  const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
   const [rows, setRows] = useState<MemberPaymentRow[] | null>(null)
   // El mensaje y no un booleano: ver si fue permiso o caída cambia a quién llamar.
   const [error, setError] = useState<string | null>(null)
@@ -78,6 +85,9 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">Cargando…</p>
 
   const visible = onlyActionable ? rows.filter(p => p.queue_status === 'pendiente' || p.queue_status === 'en_revision') : rows
+  const ofreceJunto = permitirPagoJunto && ofrecerPagoJunto(visible)
+  const enSeleccion = seleccion !== null
+  const elegidos = visible.filter(p => seleccion?.has(p.id))
   if (visible.length === 0) {
     return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
   }
@@ -87,16 +97,45 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
 
   return (
     <div className="divide-y divide-[var(--outline-variant)]">
+      {/* PAG-5 · La entrada al modo. Solo si de verdad hay dos pendientes:
+          un botón que lleva a una pantalla donde no se puede hacer nada es
+          peor que no tenerlo. */}
+      {ofreceJunto && !enSeleccion && (
+        <div className="flex justify-end px-4 py-2">
+          <button
+            type="button"
+            onClick={() => setSeleccion(new Set())}
+            className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+          >
+            <Receipt size={13} aria-hidden="true" /> Pagué varios con una sola transferencia
+          </button>
+        </div>
+      )}
       {visible.map(p => {
         const badge = paymentBadge(p)
         const canPay = p.queue_status === 'pendiente'
         const highlighted = p.id === highlightId
+        const seleccionable = enSeleccion && sePuedeIncluir(p)
         return (
           <div
             key={p.id}
             ref={highlighted ? highlightRef : undefined}
             className={cn('flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3', highlighted && 'ring-2 ring-coral/50 rounded-xl bg-coral/5')}
           >
+            {enSeleccion && (
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0 accent-coral sm:mt-0"
+                checked={!!seleccion?.has(p.id)}
+                disabled={!seleccionable}
+                aria-label={`Incluir ${p.description} en el comprobante`}
+                onChange={e => setSeleccion(prev => {
+                  const s = new Set(prev)
+                  if (e.target.checked) s.add(p.id); else s.delete(p.id)
+                  return s
+                })}
+              />
+            )}
             <div className="min-w-0">
               <p className="text-[13px] text-navy font-body truncate">{p.description}</p>
               <p className="text-[13px] text-navy-light/80 font-body">
@@ -124,15 +163,23 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
                   público: el de becas nunca se promocionó y la gente curiosa
                   lo encontró igual, así que uno abierto volvería la excepción
                   la vía normal de pago. */}
-              {canPay && p.payment_plan_enabled && !p.payment_plan_id && (
+              {!enSeleccion && canPay && p.payment_plan_enabled && !p.payment_plan_id && (
                 <BotonAcogerseAlArreglo pago={p} onHecho={cargar} />
               )}
-              {canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} cobro={p} />}
-              {canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} cobro={p} />}
+              {!enSeleccion && canPay && p.enrollment_id && <PayMatriculaButton enrollmentId={p.enrollment_id} retry={false} cobro={p} />}
+              {!enSeleccion && canPay && !p.enrollment_id && p.event_registration_id && <PayEventRegistrationButton registrationId={p.event_registration_id} retry={false} cobro={p} />}
             </div>
           </div>
         )
       })}
+      {enSeleccion && (
+        <BarraDePagoJunto
+          memberId={memberId}
+          seleccionados={elegidos}
+          onCancelar={() => setSeleccion(null)}
+          onListo={() => { setSeleccion(null); cargar() }}
+        />
+      )}
     </div>
   )
 }

@@ -1030,17 +1030,17 @@ export async function getPendingPaymentsQueue(filters: {
   const rows = (data ?? []) as Array<Record<string, unknown>>
   const refs = rows.map(r => (r.reference_code as string | null)?.trim()).filter((v): v is string => !!v)
 
-  // Referencias que aparecen en más de un pago (en cualquier estado) → posible reuso.
-  const dupSet = new Set<string>()
+  // Referencias que aparecen en más de un pago (en cualquier estado) → posible
+  // reuso. PAG-5: los pagos que comparten `comprobante_grupo` son UNA sola
+  // transferencia declarada como tal y no encienden la banderita; la regla
+  // vive en `referenciasRepetidas`, con tests.
+  let dupSet = new Set<string>()
   if (refs.length) {
     const { data: allRefs } = await supabase
-      .from('payments').select('reference_code').in('reference_code', refs)
-    const counts = new Map<string, number>()
-    for (const r of (allRefs ?? []) as Array<{ reference_code: string | null }>) {
-      const k = r.reference_code?.trim()
-      if (k) counts.set(k, (counts.get(k) ?? 0) + 1)
-    }
-    for (const [k, n] of counts) if (n > 1) dupSet.add(k)
+      .from('payments').select('reference_code, comprobante_grupo').in('reference_code', refs)
+    const { referenciasRepetidas } = await import('@/lib/finance/comprobante-multiple')
+    // `database.ts` todavía no conoce comprobante_grupo (migración de hoy).
+    dupSet = referenciasRepetidas((allRefs ?? []) as unknown as Array<{ reference_code: string | null; comprobante_grupo: string | null }>)
   }
 
   return rows.map(r => {
@@ -1228,4 +1228,141 @@ export async function signReceiptUrl(path: string, seconds = 120): Promise<strin
   const { data, error } = await supabase.storage.from(PAYMENT_RECEIPTS_BUCKET).createSignedUrl(path, seconds)
   if (error) { console.warn('signReceiptUrl:', error.message); return null }
   return data?.signedUrl ?? null
+}
+
+/** PAG-5 · La selección no se pudo cubrir con un comprobante. Lleva `code`
+ *  para que la ruta responda 409/400 y la pantalla diga qué hacer. */
+export class SeleccionInvalida extends Error {
+  constructor(mensaje: string, public code: string) {
+    super(mensaje)
+    this.name = 'SeleccionInvalida'
+  }
+}
+
+/**
+ * PAG-5 · Un comprobante que cubre VARIOS cobros pendientes.
+ *
+ * Los pagos ya existen —la pantalla los lista— así que esto no crea nada:
+ * les cuelga el mismo archivo, la misma referencia y un `comprobante_grupo`
+ * común, y después los acepta uno por uno por el MISMO camino que usa
+ * finanzas (`approve_payment`), para que la matrícula o la inscripción se
+ * activen igual que siempre.
+ *
+ * EL GUARD DE FIN-6 SE CONSULTA UNA SOLA VEZ Y POR EL TOTAL. Preguntarlo por
+ * cada cobro bloquearía el segundo contra el primero: los tres comparten
+ * referencia a propósito, que es justo lo que FIN-6 persigue cuando NO es a
+ * propósito. El `comprobante_grupo` es lo que distingue las dos cosas.
+ *
+ * NO HACE FALTA REVISAR QUE LA MATRÍCULA SIGA VIVA, y conviene decir por qué
+ * para que nadie lo "arregle": cancelar una matrícula pone su pago en
+ * 'cancelado', y acá solo entran pagos en 'pending'. El caso de Michelle
+ * Alfaro —pagar un curso del que ya la habían sacado— no entra por esta
+ * puerta; si alguna vez cambia esa regla, este filtro deja de alcanzar.
+ */
+export async function submitComprobanteCompartido(input: {
+  payment_ids: string[]
+  member_id: string
+  receipt_path: string
+  reference_code: string | null
+}): Promise<{
+  grupo: string; total: number; currency: string
+  aplicados: string[]; noAceptados: string[]
+}> {
+  const { evaluarSeleccion } = await import('@/lib/finance/comprobante-multiple')
+  const supabase = createAdminClient()
+
+  const { data: filas, error: errLectura } = await supabase
+    .from('payments')
+    .select('id, member_id, amount, currency, status, review_status, concept, enrollment_id')
+    .in('id', input.payment_ids)
+  if (errLectura) throw errLectura
+
+  const cobros = ((filas ?? []) as Array<{
+    id: string; member_id: string | null; amount: number; currency: string | null
+    status: string; review_status: string | null
+  }>).map(r => ({
+    id: r.id,
+    amount: Number(r.amount ?? 0),
+    currency: r.currency ?? 'CRC',
+    queue_status: computeQueueStatus(r.status, r.review_status),
+    member_id: r.member_id,
+  }))
+
+  // Un id que no existe no puede quedar en silencio: la persona creería que
+  // pagó algo que el sistema nunca vio.
+  if (cobros.length !== input.payment_ids.length) {
+    throw new SeleccionInvalida('Uno de los cobros ya no existe. Recargá la página.', 'no_existe')
+  }
+
+  const veredicto = evaluarSeleccion(cobros, input.member_id)
+  if (!veredicto.ok) throw new SeleccionInvalida(veredicto.error.mensaje, veredicto.error.code)
+
+  // FIN-6, una vez y por el total.
+  if (tieneReferenciaComparable(input.reference_code)) {
+    const { data: previos } = await supabase
+      .from('payments')
+      .select('id, member_id, amount, status, review_status, description, created_at')
+      .eq('reference_code', input.reference_code)
+    const dictamen = revisarReferencia(
+      { member_id: input.member_id, amount: veredicto.total },
+      ((previos ?? []) as Array<{
+        id: string; member_id: string | null; amount: number; status: string
+        review_status: string | null; description: string | null; created_at: string | null
+      }>).map(x => ({ ...x, descripcion: x.description, creado: x.created_at })),
+    )
+    if (dictamen.nivel === 'bloqueo') throw new ReferenciaYaUsada(dictamen.mensaje, dictamen.pagoExistente)
+  }
+
+  const grupo = crypto.randomUUID()
+  // El `eq('status','pending')` no es decorativo: entre que se leyó la lista y
+  // esto, la persona pudo haber pagado uno desde el celular. Las filas que
+  // devuelve el update son las que de verdad se tocaron.
+  const { data: tocadas, error: errUpdate } = await supabase
+    .from('payments')
+    .update({
+      receipt_path: input.receipt_path,
+      reference_code: input.reference_code,
+      payment_method: 'comprobante',
+      review_status: 'en_revision',
+      rejection_reason: null,
+      comprobante_grupo: grupo,
+    } as never)
+    .in('id', veredicto.ids)
+    .eq('status', 'pending')
+    .select('id, concept, enrollment_id')
+  if (errUpdate) throw errUpdate
+
+  const aplicados: string[] = []
+  const noAceptados: string[] = []
+  for (const t of (tocadas ?? []) as Array<{ id: string; concept: string | null; enrollment_id: string | null }>) {
+    try {
+      await autoAcceptComprobante(t.id)
+      aplicados.push(t.id)
+    } catch (e) {
+      // Igual que en el camino de a uno: si la aceptación falla, el pago queda
+      // en la cola de finanzas con su comprobante. Es mejor que quede por
+      // revisar a que se pierda.
+      console.warn('autoAcceptComprobante (PAG-5):', e)
+      noAceptados.push(t.id)
+    }
+  }
+  return { grupo, total: veredicto.total, currency: veredicto.currency, aplicados, noAceptados }
+}
+
+/** Los grupos de matrícula de unos pagos, para el correo de bienvenida. */
+export async function gruposDeMatriculaDe(paymentIds: string[]): Promise<Array<{ group_id: string; member_id: string }>> {
+  if (paymentIds.length === 0) return []
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('payments')
+    .select('member_id, enrollment:study_enrollments!payments_enrollment_id_fkey(group_id)')
+    .in('id', paymentIds)
+    .eq('concept', 'matricula')
+  const out: Array<{ group_id: string; member_id: string }> = []
+  for (const r of (data ?? []) as Array<Record<string, unknown>>) {
+    const enr = Array.isArray(r.enrollment) ? r.enrollment[0] : r.enrollment
+    const gid = (enr as { group_id: string | null } | null)?.group_id
+    if (gid && r.member_id) out.push({ group_id: gid, member_id: r.member_id as string })
+  }
+  return out
 }
