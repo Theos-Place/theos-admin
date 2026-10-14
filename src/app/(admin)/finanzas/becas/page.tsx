@@ -151,6 +151,8 @@ export default function BecasPage() {
   // ── Solicitudes de beca ──────────────────────────────────────────────────
   const [requests, setRequests] = useState<FinanceRequest[]>([])
   const [requestsLoading, setRequestsLoading] = useState(true)
+  // Declarado ANTES de refetchRequests, que lo usa al abrir ?request=<id>.
+  const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
   const refetchRequests = useCallback(() => {
     setRequestsLoading(true)
     fetch('/api/finance/requests?type=scholarship')
@@ -185,7 +187,6 @@ export default function BecasPage() {
     () => filtrarSolicitudes(requests, filtroSolicitudes),
     [requests, filtroSolicitudes])
 
-  const [reviewTarget, setReviewTarget] = useState<FinanceRequest | null>(null)
 
 
   if (loaded && !canView) return <AccessDenied />
