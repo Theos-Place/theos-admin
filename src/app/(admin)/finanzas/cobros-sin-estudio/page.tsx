@@ -24,8 +24,14 @@ import {
  * El borrado ya no los crea (ver `lib/studies/borrar-grupo`), pero los que
  * hay siguen ahí y los que puedan aparecer por otro camino también.
  */
+/**
+ * PAG-6 · Dice «Cancelado» y no «Pagado» porque esta pantalla es de
+ * FINANZAS: ahí «cancelar» es pagar. En «Mis pagos» el mismo estado se
+ * escribe «Pagado», porque para la persona «cancelado» significa que se lo
+ * anularon — lo contrario. Decisión de Floriana, confirmada el 2026-10-13.
+ */
 const ETIQUETA: Record<Gravedad, { texto: string; clase: string }> = {
-  pagado:    { texto: 'Pagado',      clase: 'bg-coral/15 text-coral-deep' },
+  pagado:    { texto: 'Cancelado',   clase: 'bg-coral/15 text-coral-deep' },
   sin_dueno: { texto: 'Sin dueño',   clase: 'bg-coral/15 text-coral-deep' },
   pendiente: { texto: 'Pendiente',   clase: 'bg-teal/15 text-navy' },
   anulado:   { texto: 'Anulado',     clase: 'bg-navy-light/10 text-navy-light/80' },

@@ -911,12 +911,16 @@ Tests: rango filtra por fecha de pago, export respeta filtros. tsc/lint/vitest.
 XLSX del resultado filtrado con totales por moneda, y la columna que decía
 «Fecha» mostrando `created_at` ahora dice «Fecha de pago» y muestra `paid_at`.
 
-**PENDIENTE DE DECISIÓN — el punto 1.** El estado `cancelado` YA EXISTE y
-significa ANULADO: 30 pagos en producción contra 239 en `paid`. Renombrar
-«Pagado» a «Cancelado» dejaría dos «Cancelado» indistinguibles en la pantalla
-de conciliación. Hay que elegir: o `paid` pasa a verse «Cancelado» y el actual
-`cancelado` pasa a «Anulado» (solo etiquetas, la base no cambia), o se queda
-«Pagado». No se tocó nada hasta que Floriana decida.
+**EL PUNTO 1 QUEDÓ DECIDIDO (2026-10-13).** Floriana eligió: `paid` se ve
+«Cancelado» y el actual `cancelado` se ve «Anulado». Solo etiquetas; la base
+no cambia. La decisión ya estaba implementada en `payment-outcome.ts`
+—`etiquetaDeEstado(status, audiencia)`, con la audiencia OBLIGATORIA para que
+una pantalla nueva no herede en silencio la de finanzas— y el 13-oct se
+completó la última pantalla que la escribía a mano (`cobros-sin-estudio`).
+
+Y se mantiene la asimetría a propósito: en **Mis pagos** el mismo estado dice
+«Pagado». En contabilidad «cancelar» es pagar, pero para la persona que mira
+su propio cobro «Cancelado» suena a que se lo anularon.
 
 **Lo que se encontró midiendo, y es el motivo real del ítem:** `paid_at` es
 timestamptz y hay pagos registrados a las 00:57 UTC, o sea las 6:57 p.m. del

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   etiquetaDeEstado, PAYMENT_STATUS_LABEL, PAYMENT_STATUS_LABEL_FINANZAS,
 } from '@/lib/finance/payment-outcome'
@@ -84,5 +85,43 @@ describe('PAG-6 · dónde se aplica cada juego', () => {
     const src = sinComentarios('src/app/(admin)/finanzas/reportes/page.tsx')
     expect(src).toMatch(/paid: 'Cancelado'/)
     expect(src).toMatch(/cancelado: 'Anulado'/)
+  })
+})
+
+
+/**
+ * PAG-6 · Ninguna pantalla de finanzas escribe la etiqueta a mano.
+ *
+ * El 2026-10-13, al confirmar la decisión, quedaba UNA que sí:
+ * `cobros-sin-estudio` decía «Pagado» en una pantalla de finanzas. Una
+ * sola basta para que la conciliación muestre dos palabras distintas para
+ * el mismo estado, que es justo lo que esta decisión vino a evitar.
+ */
+describe('la etiqueta no se escribe a mano en finanzas', () => {
+  const archivos = (dir: string, acc: string[] = []): string[] => {
+    for (const e of readdirSync(dir)) {
+      const p = join(dir, e)
+      if (statSync(p).isDirectory()) archivos(p, acc)
+      else if (e.endsWith('.tsx') || e.endsWith('.ts')) acc.push(p)
+    }
+    return acc
+  }
+
+  it('ninguna pantalla de finanzas dice «Pagado»', () => {
+    const culpables: string[] = []
+    for (const dir of ['src/app/(admin)/finanzas', 'src/components/finance']) {
+      for (const ruta of archivos(dir)) {
+        if (ruta.includes('.test.')) continue
+        readFileSync(ruta, 'utf8').split('\n').forEach((linea, i) => {
+          // Solo la etiqueta VISIBLE: `total_paid` o `montoPagado` son otra cosa.
+          if (/['"`]Pagado['"`]/.test(linea)) culpables.push(`${ruta}:${i + 1}`)
+        })
+      }
+    }
+    expect(culpables, [
+      'En finanzas el estado `paid` se escribe «Cancelado», no «Pagado».',
+      'Usá `etiquetaDeEstado(status, \'finanzas\')`.',
+      ...culpables,
+    ].join('\n  ')).toEqual([])
   })
 })
