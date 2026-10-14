@@ -41,8 +41,10 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
   const body = (
     <>
       {/* Flyer o placeholder */}
-      {/* aspect-[16/9] en vez de una altura fija: es la proporción real de los
-          flyers (medido), así que la tarjeta ya no los recorta. */}
+      {/* aspect-[16/9]: la proporción real de los flyers (medido). El flyer
+          LLENA la caja (object-cover): pedido de Floriana el 2026-10-14, «que
+          nunca queden márgenes en el hero». Un flyer que no sea 16:9 se recorta
+          centrado en vez de dejar franjas; para verlo entero está el detalle. */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-surface-low">
         {event.flyer_url ? (
           <Image
@@ -50,7 +52,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
             alt={`Flyer de ${event.name}`}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-contain transition-transform group-hover:scale-105"
+            className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center" style={{ backgroundColor: typeColor + '1A', color: typeColor }}>
