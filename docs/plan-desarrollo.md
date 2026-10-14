@@ -1859,7 +1859,20 @@ de Fabiola (el real) y la infografía generada con IA (el look deseado del
 reporte). Fabiola queda de pasar: su Excel actualizado de dirigentes (el de
 Nao + sus updates, con notas) y la lista de comunidades.
 
-### [~] DIR-8 · Taxonomía de estados del dirigente + notas confidenciales + comunidad — MODELO HECHO 2026-10-12
+### [x] DIR-8 · Taxonomía de estados del dirigente — COMPLETO 2026-10-13
+
+Modelo, permisos de notas, ficha administrativa, badge, filtros, «mi
+comunidad» (catálogo = sedes activas, por decisión de Floriana) y el check de
+WhatsApp. La formación quedó separada en capacitaciones y campañas.
+
+**EL BUG QUE APARECIÓ CERRÁNDOLO, y es el que conviene recordar:** la ficha
+administrativa NO ESTABA GUARDANDO NADA desde el 12-oct. El endpoint buscaba
+la fila con `.eq('id', …)` y recibe un `member_id`: los dos son UUID válidos
+y distintos, así que el update no encontraba fila, no daba error y devolvía
+200 OK. Un día entero diciendo «guardado» sin guardar. Se descubrió al
+agregar el check de WhatsApp y ver que tampoco persistía. El guard tiene dos
+mitades: la clave correcta, y un 404 cuando no toca ninguna fila — para que
+la próxima variante del mismo error sea ruidosa y no silenciosa.
 
 Prompt para Claude Code:
 
@@ -2049,7 +2062,7 @@ definición central de DIR-8 — si difieren es bug). Tests de los desgloses con
 tsc/lint/vitest.
 ```
 
-### [~] DIR-10 · Tab "Dirigente" rediseñado — HECHO 2026-10-13, falta «mi comunidad»
+### [x] DIR-10 · Tab "Dirigente" rediseñado — COMPLETO 2026-10-13 («mi comunidad» incluida)
 
 **Lo que se entregó:** cada dato como una línea que se lee («lunes por la
 mañana y por la tarde; miércoles por la noche») con «Editar» al lado; la lista
