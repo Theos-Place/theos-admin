@@ -1,5 +1,6 @@
 'use client'
 
+import { vencimientoDeLaReserva } from '@/lib/studies/enrollment-hold'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Tabs } from '@/components/shared/Tabs'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
@@ -235,6 +236,18 @@ export default function MiembroDetailPage() {
       requiresPayment: s.requires_payment,
       paymentStatus: s.payment_status,
       paymentsCount: s.payments_count ?? 0,
+      // Hasta cuándo puede pagar (pedido de Floriana, 2026-10-14). SOLO se
+      // muestra un plazo que algo ejecute de verdad:
+      //  · `pendiente_de_pago` → el reloj de 72h del cron que suelta el cupo.
+      //  · un cobro con `due_date` → lo que fijó el plan de pagos.
+      // Una matrícula `enrolled` sin pagar NO vence nunca (desde el 2026-08-04
+      // la matrícula es efectiva de inmediato), y eran 144 el 2026-10-14:
+      // inventarles «vence el jueves» sería un plazo que nadie hace cumplir.
+      vence: s.status === 'pendiente_de_pago' && s.reserva_desde
+        ? vencimientoDeLaReserva({ enrollmentCreatedAt: s.reserva_desde, pagos: [], ahora: new Date() })
+        : s.cobro_vence
+          ? { vence: s.cobro_vence, vencida: s.cobro_vence < new Date().toISOString().slice(0, 10), horasRestantes: 0 }
+          : null,
       cost: s.cost,
       grade: s.grade ?? null,
       notes: s.notes ?? null,

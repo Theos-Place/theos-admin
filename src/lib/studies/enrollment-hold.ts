@@ -149,3 +149,29 @@ export function relojDeLaReserva(input: {
   // fechar la reserva con él la mataría igual que el bug que esto arregla.
   return pendientes.length ? pendientes[pendientes.length - 1] : input.enrollmentCreatedAt
 }
+
+/**
+ * CUÁNDO VENCE esta reserva, para decírselo a la persona (pedido de Floriana,
+ * 2026-10-14: «en el perfil, que diga pago pendiente y hasta cuándo»).
+ *
+ * Es el mismo reloj que usa el cron para expirarla —`relojDeLaReserva`— más
+ * la misma ventana —`HORAS_DE_GRACIA`—. No se calcula aparte: si la pantalla
+ * dijera «vence el jueves» y el cron la matara el miércoles, la pantalla
+ * habría mentido en lo único que prometía.
+ */
+export function vencimientoDeLaReserva(input: {
+  enrollmentCreatedAt: string
+  pagos: PagoDeMatricula[] | null | undefined
+  ahora: Date
+}): { vence: string; vencida: boolean; horasRestantes: number } {
+  const desde = Date.parse(relojDeLaReserva(input))
+  const vence = desde + HORAS_DE_GRACIA * 3600_000
+  const restante = vence - input.ahora.getTime()
+  return {
+    vence: new Date(vence).toISOString(),
+    vencida: restante <= 0,
+    // Redondeo hacia ARRIBA: «queda 1 hora» con 10 minutos restantes es
+    // falso, pero «quedan 0 horas» cuando aún quedan 50 minutos es peor.
+    horasRestantes: Math.max(0, Math.ceil(restante / 3600_000)),
+  }
+}

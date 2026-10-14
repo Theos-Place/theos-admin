@@ -13,7 +13,7 @@ import { MemberPaymentsList, PayMatriculaButton, PayEventRegistrationButton } fr
 import { HistorialPanel } from '@/components/shared/HistorialPanel'
 import { cn } from '@/lib/utils'
 import { esquemaDelGrupo, porQueImporta } from '@/lib/studies/esquema-visible'
-import { formatDate, formatCRC } from '@/lib/format'
+import { formatDate, formatDateTime, formatCRC } from '@/lib/format'
 import { studyGradeDisplay } from '@/lib/studies/grade-display'
 import { muestraDeudaDeMatricula } from '@/lib/finance/study-debt-visible'
 
@@ -90,7 +90,7 @@ function SectionAccordion({
   )
 }
 
-export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; groupStatus: string | null; groupModalidad?: string | null; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
+export type StudyRow = { code: string; name: string; startYear: number; startLabel: string; duration: string; status: string; groupId: string | null; enrollmentId: string; rawStatus: string; groupStatus: string | null; groupModalidad?: string | null; requiresPayment: boolean; paymentStatus: string | null; paymentsCount: number; /** Hasta cuándo puede pagar la matrícula pendiente; null si no aplica. */ vence?: { vence: string; vencida: boolean; horasRestantes: number } | null; cost: number; grade: number | null; notes: string | null; esExterno: boolean; fuenteExterna: string | null; registradoPor: string | null }
 export type ServiceRow = { position: string; committee: string; from: string; to: string; status: string }
 export type EventoRow = { name: string; type: string; date: string; attendance_type: string }
 export type DonacionRow = { date: string; description: string; amount: number | null }
@@ -353,10 +353,24 @@ export function MemberParticipationTab({
                           ) : row.paymentStatus === 'aprobado' ? (
                             <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[13px] font-semibold font-display">Pagado</span>
                           ) : (
-                            <span className="inline-flex items-center gap-2">
+                            <span className="inline-flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-coral/10 text-coral px-2.5 py-0.5 text-[13px] font-semibold font-display whitespace-nowrap">
+                                Pago pendiente
+                              </span>
                               {row.cost > 0 && (
                                 <span className="text-[13px] text-navy-light/80 font-body whitespace-nowrap">
-                                  Pendiente: {formatCRC(row.cost)}
+                                  {formatCRC(row.cost)}
+                                </span>
+                              )}
+                              {/* Hasta cuándo: el mismo reloj y la misma ventana
+                                  que el cron que libera el cupo. Si dijera otra
+                                  fecha, mentiría en lo único que promete. */}
+                              {row.vence && (
+                                <span className={cn('text-[13px] font-body whitespace-nowrap',
+                                  row.vence.vencida ? 'text-coral-deep font-medium' : 'text-navy-light/80')}>
+                                  {row.vence.vencida
+                                    ? 'Plazo vencido'
+                                    : `Vence ${row.vence.vence.length <= 10 ? formatDate(row.vence.vence) : formatDateTime(row.vence.vence)}`}
                                 </span>
                               )}
                               <PayMatriculaButton

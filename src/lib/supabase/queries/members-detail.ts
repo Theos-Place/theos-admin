@@ -98,7 +98,7 @@ export type DbMemberFull = DbMemberEnriched & {
    *  activo = más asistida en los últimos 6 meses; inactivo = más asistida en
    *  los 6 meses previos a su última asistencia. null = nunca asistió. */
   attendance_sede: MemberSedeResult | null
-  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; /** Estado del GRUPO (no de la inscripción): 'finalizado' | 'en_curso' | 'en_matricula'. */ group_status: string | null; /** EST-28 · esquema del grupo: 'legacy' | 'bloques'. Temporal, mientras dure la transición. */ group_modalidad?: string | null; requires_payment: boolean; payment_status: string | null; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
+  study_history: Array<{ group_id: string | null; enrollment_id: string; code: string; name: string; date: string | null; year: number | null; weeks: number | null; status: string; /** Estado del GRUPO (no de la inscripción): 'finalizado' | 'en_curso' | 'en_matricula'. */ group_status: string | null; /** EST-28 · esquema del grupo: 'legacy' | 'bloques'. Temporal, mientras dure la transición. */ group_modalidad?: string | null; requires_payment: boolean; payment_status: string | null; /** Desde cuándo corre la ventana de gracia del cobro pendiente (el MISMO reloj que usa el cron para expirarla). null si no hay cobro pendiente. */ reserva_desde?: string | null; /** Vencimiento explícito del cobro pendiente (lo pone un plan de pagos); null si no tiene. */ cobro_vence?: string | null; cost: number; grade: number | null; notes: string | null; es_externo: boolean; fuente_externa: string | null; registrado_por: string | null }>
   event_registration_history: Array<{
     registration_id: string; event_id: string; event_name: string; event_date: string
     requires_payment: boolean; cost: number
@@ -321,15 +321,24 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
   // agregar uno de seguimiento, así que puede haber más de uno y la ficha lo
   // tiene que decir (el badge muestra el estado del MÁS NUEVO).
   const paymentCountByEnrollment = new Map<string, number>()
+  // El reloj de la reserva: el cobro PENDIENTE más reciente. Es lo que
+  // `relojDeLaReserva` usa para expirarla, así que la ficha dice «vence el…»
+  // con la misma fecha con la que el cron la mataría.
+  const reservaDesdeByEnrollment = new Map<string, string>()
+  const cobroVenceByEnrollment = new Map<string, string>()
   if (enrollmentIds.length) {
     const loose = supabase as unknown as SupabaseClient
     const { data: pays } = await loose
-      .from('payments').select('enrollment_id, review_status, created_at')
+      .from('payments').select('enrollment_id, review_status, created_at, status, due_date')
       .in('enrollment_id', enrollmentIds).eq('concept', 'matricula')
       .order('created_at', { ascending: false })
-    for (const p of (pays ?? []) as Array<{ enrollment_id: string | null; review_status: string | null }>) {
+    for (const p of (pays ?? []) as Array<{ enrollment_id: string | null; review_status: string | null; created_at: string; status: string | null; due_date: string | null }>) {
       if (!p.enrollment_id) continue
       paymentCountByEnrollment.set(p.enrollment_id, (paymentCountByEnrollment.get(p.enrollment_id) ?? 0) + 1)
+      if (p.status === 'pending' && !reservaDesdeByEnrollment.has(p.enrollment_id)) {
+        reservaDesdeByEnrollment.set(p.enrollment_id, p.created_at)
+        if (p.due_date) cobroVenceByEnrollment.set(p.enrollment_id, p.due_date)
+      }
       if (p.review_status && !paymentStatusByEnrollment.has(p.enrollment_id)) {
         paymentStatusByEnrollment.set(p.enrollment_id, p.review_status)
       }
@@ -408,6 +417,8 @@ export async function getMemberFullById(id: string): Promise<DbMemberFull | null
         requires_payment: !!plan.requires_payment && Number(plan.cost ?? 0) > 0,
         payment_status: paymentStatusByEnrollment.get(e.id) ?? null,
         payments_count: paymentCountByEnrollment.get(e.id) ?? 0,
+        reserva_desde: reservaDesdeByEnrollment.get(e.id) ?? null,
+        cobro_vence: cobroVenceByEnrollment.get(e.id) ?? null,
         cost: Number(plan.cost ?? 0),
         // EST-8: nota numérica y resultado del cierre ('aprobado' | 'reprobado: motivo').
         grade: e.grade ?? null,

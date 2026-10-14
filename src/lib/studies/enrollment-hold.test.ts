@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { HORAS_DE_GRACIA, MOTIVO_EXPIRADA, reservaExpirada, relojDeLaReserva } from './enrollment-hold'
+import { HORAS_DE_GRACIA, MOTIVO_EXPIRADA, relojDeLaReserva, reservaExpirada, vencimientoDeLaReserva } from './enrollment-hold'
 
 const ahora = new Date('2026-09-02T12:00:00Z')
 // Las horas van RELATIVAS a HORAS_DE_GRACIA, nunca fijas: cuando el plazo pasó
@@ -99,5 +99,55 @@ describe('relojDeLaReserva', () => {
   it('la que de verdad quedó abandonada sí expira', () => {
     const reloj = relojDeLaReserva({ enrollmentCreatedAt: haceHoras(HORAS_DE_GRACIA + 8), pagos: [pago({ created_at: haceHoras(HORAS_DE_GRACIA + 8) })] })
     expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: reloj, ahora })).toBe(true)
+  })
+})
+
+describe('cuándo vence la reserva (lo que ve la persona)', () => {
+  const T0 = '2026-10-14T10:00:00.000Z'
+
+  it('es el reloj de la reserva más la ventana de gracia', () => {
+    const r = vencimientoDeLaReserva({ enrollmentCreatedAt: T0, pagos: [], ahora: new Date('2026-10-14T12:00:00Z') })
+    expect(r.vence).toBe(new Date(Date.parse(T0) + HORAS_DE_GRACIA * 3600_000).toISOString())
+    expect(r.vencida).toBe(false)
+    expect(r.horasRestantes).toBe(HORAS_DE_GRACIA - 2)
+  })
+
+  it('USA EL MISMO RELOJ QUE EL CRON: el cobro pendiente más reciente, no la matrícula', () => {
+    // Si la pantalla dijera «vence el jueves» y el cron la matara el
+    // miércoles, la pantalla habría mentido en lo único que prometía.
+    const viejo = '2026-09-01T10:00:00.000Z'
+    const cobro = { concept: 'matricula', status: 'pending', review_status: null, created_at: T0 }
+    const r = vencimientoDeLaReserva({ enrollmentCreatedAt: viejo, pagos: [cobro], ahora: new Date('2026-10-14T11:00:00Z') })
+    expect(r.vence).toBe(new Date(Date.parse(T0) + HORAS_DE_GRACIA * 3600_000).toISOString())
+    expect(r.vencida).toBe(false)
+  })
+
+  it('pasada la ventana, está vencida y no quedan horas negativas', () => {
+    const r = vencimientoDeLaReserva({ enrollmentCreatedAt: T0, pagos: [], ahora: new Date(Date.parse(T0) + (HORAS_DE_GRACIA + 5) * 3600_000) })
+    expect(r.vencida).toBe(true)
+    expect(r.horasRestantes).toBe(0)
+  })
+
+  it('las horas restantes se redondean hacia arriba', () => {
+    // «quedan 0 horas» con 50 minutos por delante es peor que «queda 1».
+    const r = vencimientoDeLaReserva({ enrollmentCreatedAt: T0, pagos: [], ahora: new Date(Date.parse(T0) + HORAS_DE_GRACIA * 3600_000 - 50 * 60_000) })
+    expect(r.horasRestantes).toBe(1)
+    expect(r.vencida).toBe(false)
+  })
+
+  it('el vencimiento coincide EXACTAMENTE con el momento en que reservaExpirada dice que sí', () => {
+    const ahora = new Date(Date.parse(T0) + HORAS_DE_GRACIA * 3600_000)
+    const r = vencimientoDeLaReserva({ enrollmentCreatedAt: T0, pagos: [], ahora })
+    expect(r.vencida).toBe(true)
+    expect(reservaExpirada({ status: 'pendiente_de_pago', reviewStatus: null, creadaEn: T0, ahora })).toBe(true)
+  })
+
+  it('OJO: una matrícula `enrolled` sin pagar NO expira, así que no se le muestra vencimiento', () => {
+    // Desde el 2026-08-04 la matrícula es efectiva de inmediato y
+    // `pendiente_de_pago` casi no se escribe. El cron solo suelta cupos en
+    // ese estado; a una `enrolled` no le corre ningún reloj. Decirle «vence
+    // el jueves» sería inventar un plazo que nada ejecuta.
+    const ahora = new Date(Date.parse(T0) + (HORAS_DE_GRACIA + 100) * 3600_000)
+    expect(reservaExpirada({ status: 'enrolled', reviewStatus: null, creadaEn: T0, ahora })).toBe(false)
   })
 })
