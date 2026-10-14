@@ -136,9 +136,23 @@ export async function transferEnrollment(input: {
   // La beca viaja en el cálculo: un pago saldado con beca tiene amount 0 pero
   // deja la matrícula cubierta. Sin esto se le cobraba todo de nuevo (Gisselle
   // López, 2026-09-16) — ver `cubiertoPorBeca` en lib/studies/transferencia.ts.
-  const { data: pagosRaw } = await sb.from('payments')
-    .select('id, status, review_status, concept, amount, scholarship:scholarships(original_amount, final_amount)')
+  //
+  // EL HINT DE LA FK ES OBLIGATORIO (bug de Kristel Guzmán, 2026-10-07). Desde
+  // FIN-9 (2026-10-06) `scholarships` tiene una SEGUNDA FK hacia payments
+  // (`origin_payment_id`), y el embed sin hint pasó a ser ambiguo: PostgREST
+  // respondía PGRST201, `data` venía null, y como el error no se leía el
+  // traslado creía que la persona no había pagado nada — le dejaba el pago en
+  // el grupo viejo y le cobraba el grupo nuevo entero. Ahora el error se lee y
+  // corta: es preferible que el cambio de grupo falle a que cobre dos veces.
+  const { data: pagosRaw, error: pagosErr } = await sb.from('payments')
+    .select('id, status, review_status, concept, amount, scholarship:scholarships!payments_scholarship_id_fkey(original_amount, final_amount)')
     .eq('member_id', memberId).eq('enrollment_id', origenEnr.id)
+  if (pagosErr) {
+    // Devolver la persona al origen: sin esto queda en los dos grupos.
+    await sb.from('study_enrollments').update({ status: origenEnr.status, transferred_to: null }).eq('id', origenEnr.id)
+    await sb.from('study_enrollments').update({ status: 'dropped', drop_reason: 'Traslado abortado' }).eq('id', nuevaId)
+    throw pagosErr
+  }
   type FilaDePago = PagoConMonto & {
     scholarship: { original_amount: number | null; final_amount: number | null }
       | Array<{ original_amount: number | null; final_amount: number | null }> | null

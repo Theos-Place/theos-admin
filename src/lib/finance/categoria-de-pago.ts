@@ -10,8 +10,13 @@
  * Dos capas, porque se filtra en las dos:
  *  · el ÁREA ('estudios' | 'eventos' | 'otro'): «todo estudios»;
  *  · la CATEGORÍA dentro del área: niveles, discípulos, capacitaciones,
- *    prematrimonial, folletos; y para eventos, el TIPO del evento (ayuda
- *    social, sports, taller…), que es el catálogo vivo de `event_types`.
+ *    prematrimonial; y para eventos, el TIPO del evento (ayuda social,
+ *    sports, taller…), que es el catálogo vivo de `event_types`.
+ *
+ * LOS FOLLETOS VAN CON SU ESTUDIO (Floriana, 2026-10-14): «todos los folletos
+ * deberían ir asociados a un estudio». Un cobro de folletos de un N2 es plata
+ * de Niveles, no una categoría aparte. Si alguno llegara sin grupo, se dice
+ * («Folletos sin estudio») en vez de esconderlo dentro de otra categoría.
  *
  * Módulo PURO.
  */
@@ -45,11 +50,11 @@ const NIVELES = new Set(STUDY_GROUPS.niveles.codes)
 export function categoriaDePago(p: PagoParaCategoria): CategoriaDePago {
   const c = (p.concept ?? '').toLowerCase()
   if (c === 'prematrimonial') return { area: 'estudios', categoria: 'prematrimonial' }
-  if (c === 'folletos') return { area: 'estudios', categoria: 'folletos' }
   const esEvento = c === 'evento' || p.entity_type === 'event'
   if (esEvento) return { area: 'eventos', categoria: (p.event_type ?? '').trim() || 'sin-tipo' }
-  const esEstudio = c === 'matricula' || p.entity_type === 'study_group'
+  const esEstudio = c === 'matricula' || c === 'folletos' || p.entity_type === 'study_group'
   if (esEstudio) {
+    if (c === 'folletos' && !p.plan_code && !p.plan_level) return { area: 'estudios', categoria: 'folletos-sin-estudio' }
     const code = (p.plan_code ?? '').toUpperCase()
     if (NIVELES.has(code) || p.plan_level === 'niveles') return { area: 'estudios', categoria: 'niveles' }
     if (DISCIPULOS.has(code)) return { area: 'estudios', categoria: 'discipulos' }
@@ -71,7 +76,7 @@ const ETIQUETA_ESTUDIOS: Readonly<Record<string, string>> = {
   discipulos: 'Discípulos',
   capacitaciones: 'Capacitaciones',
   prematrimonial: 'Prematrimonial',
-  folletos: 'Folletos',
+  'folletos-sin-estudio': 'Folletos sin estudio',
 }
 
 /**

@@ -15,9 +15,16 @@ describe('REP-17 · categoría de un pago', () => {
     expect(categoriaDePago({ concept: 'matricula', plan_code: 'SCJ', plan_level: 'etapa_inicial' }).categoria).toBe('capacitaciones')
   })
 
-  it('prematrimonial y folletos van aparte dentro de Estudios', () => {
+  it('prematrimonial va aparte dentro de Estudios', () => {
     expect(categoriaDePago({ concept: 'prematrimonial' })).toEqual({ area: 'estudios', categoria: 'prematrimonial' })
-    expect(categoriaDePago({ concept: 'folletos', entity_type: 'study_group' })).toEqual({ area: 'estudios', categoria: 'folletos' })
+  })
+
+  it('los folletos van con SU estudio, no en una categoría aparte', () => {
+    // El caso real: los folletos de un N2 son plata de Niveles.
+    expect(categoriaDePago({ concept: 'folletos', entity_type: 'study_group', plan_code: 'N2', plan_level: 'niveles' })).toEqual({ area: 'estudios', categoria: 'niveles' })
+    expect(categoriaDePago({ concept: 'folletos', plan_code: 'HER', plan_level: 'etapa_avanzada' }).categoria).toBe('capacitaciones')
+    // Sin grupo no se esconde: se dice.
+    expect(categoriaDePago({ concept: 'folletos' })).toEqual({ area: 'estudios', categoria: 'folletos-sin-estudio' })
   })
 
   it('un evento se ubica por su TIPO; sin tipo, queda dicho', () => {
