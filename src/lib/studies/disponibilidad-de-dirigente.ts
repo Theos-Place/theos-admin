@@ -83,6 +83,18 @@ export const CAMPOS_DEL_DIRIGENTE = [
   'available_from',
   'available_to',
   'folleto_location',
+  /**
+   * DIR-8 · «Mi comunidad»: a qué sedes/charlas SIENTE que pertenece. Puede
+   * ser distinta de donde asiste y de las zonas donde puede dar — es para
+   * invitaciones dirigidas (talleres, get-togethers, koinonías).
+   *
+   * Lo dice la persona, por eso va acá y no entre los del comité. Por ahora
+   * el catálogo son las SEDES ACTIVAS (decisión de Floriana, 2026-10-13):
+   * empezar con lo que existe en vez de esperar una lista aparte que nadie
+   * ha escrito. El día que las comunidades sean su propia cosa, cambia el
+   * catálogo y no este permiso.
+   */
+  'comunidades',
 ] as const
 export type CampoDelDirigente = typeof CAMPOS_DEL_DIRIGENTE[number]
 

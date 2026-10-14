@@ -61,6 +61,8 @@ export type FichaDisponibilidad = {
   available_from: string | null
   available_to: string | null
   folleto_location: string | null
+  /** DIR-8 · «Mi comunidad»: ids de sedes. Ver la sección en la pantalla. */
+  comunidades: string[]
   availability_confirmed_at: string | null
 }
 
@@ -94,7 +96,7 @@ export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo
 }) {
   const toast = useToast()
   const { studyTypes } = useStudyPlans()
-  const { zoneSedes } = useSedes()
+  const { zoneSedes, activeSedes } = useSedes()
   /** Se guarda DE QUIÉN es la ficha, no solo la ficha: así, al cambiar de
    *  persona, los datos de la anterior dejan de usarse en el MISMO render en
    *  que cambia el id, sin un setState al entrar al efecto que dispararía un
@@ -166,9 +168,9 @@ export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo
     )
   }
 
-  const alternarLista = (campo: 'qualified_study_codes' | 'interested_study_codes' | 'zone_preference' | 'available_slots', valor: string) => {
+  const alternarLista = (campo: 'qualified_study_codes' | 'interested_study_codes' | 'zone_preference' | 'available_slots' | 'comunidades', valor: string) => {
     const actual = ficha[campo]
-    const codigos = campo === 'zone_preference' || campo === 'available_slots'
+    const codigos = campo === 'zone_preference' || campo === 'available_slots' || campo === 'comunidades'
       ? [valor]
       : expandSelectionValue(valor)
     // Prendido = están TODOS los códigos que representa la opción.
@@ -189,11 +191,13 @@ export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo
   // de campaña no, porque ahí las listas van abiertas igual.
   const plegable = modo === 'resumen'
   const nombreDeZona = (id: string) => zoneSedes.find(z => z.id === id)?.name ?? id
+  const nombreDeSede = (id: string) => activeSedes.find(x => x.id === id)?.name ?? id
   const res = {
     quiereDar: resumenDeEstudios(ficha.qualified_study_codes, studyLabel, 'qué querés dar'),
     interes: resumenDeEstudios(ficha.interested_study_codes, studyLabel, 'qué te gustaría aprender'),
     horarios: resumenDeHorarios(ficha.available_slots),
     zonas: resumenDeZonas(ficha.zone_preference, nombreDeZona),
+    comunidades: resumenDeZonas(ficha.comunidades ?? [], nombreDeSede, 'con cuál comunidad vas'),
     extras: resumenDeExtras(ficha),
   }
 
@@ -430,6 +434,40 @@ export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo
               className={cn(CHIP, ficha.zone_preference.includes(z.id) ? CHIP_ON : CHIP_OFF, !editable && 'opacity-60')}
             >
               {z.name}
+            </button>
+          ))}
+        </div>
+      </Seccion>
+
+      {/*
+        DIR-8 · «Mi comunidad».
+        
+        NO es lo mismo que «dónde podés dar» ni que la sede donde asiste: es
+        a qué grupo SIENTE que pertenece, y sirve para invitaciones
+        dirigidas —talleres, get-togethers, koinonías—. Alguien asiste en
+        Pedregal, puede dar en el este y sentirse de Antares.
+        
+        El catálogo son las SEDES ACTIVAS por ahora (decisión de Floriana,
+        2026-10-13): se empieza con lo que existe en vez de esperar una
+        lista aparte. El día que las comunidades sean su propia cosa, cambia
+        el catálogo y no la pantalla.
+      */}
+      <Seccion
+        titulo="Mi comunidad"
+        ayuda="¿Con cuál grupo sentís que vas? Puede ser distinto de dónde asistís y de dónde das estudios. Es para invitarte a lo que pase ahí."
+        resumen={res.comunidades}
+        plegable={plegable}
+      >
+        <div className="flex flex-wrap gap-1.5">
+          {activeSedes.map(x => (
+            <button
+              key={x.id}
+              disabled={!editable || guardando}
+              onClick={() => alternarLista('comunidades', x.id)}
+              aria-pressed={(ficha.comunidades ?? []).includes(x.id)}
+              className={cn(CHIP, (ficha.comunidades ?? []).includes(x.id) ? CHIP_ON : CHIP_OFF, !editable && 'opacity-60')}
+            >
+              {x.name}
             </button>
           ))}
         </div>

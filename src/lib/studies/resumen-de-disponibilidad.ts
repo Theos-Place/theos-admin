@@ -71,8 +71,9 @@ export function resumenDeEstudios(
 export function resumenDeZonas(
   zonas: readonly string[],
   nombreDeZona: (code: string) => string,
+  queFalta = 'en qué zonas podés dar',
 ): LineaDeResumen {
-  if (zonas.length === 0) return NADA('en qué zonas podés dar')
+  if (zonas.length === 0) return NADA(queFalta)
   const nombres = [...new Set(zonas)].map(nombreDeZona).sort((a, b) => a.localeCompare(b, 'es'))
   return { texto: enumerar(nombres), vacio: false }
 }

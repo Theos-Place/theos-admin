@@ -28,6 +28,8 @@ const bodySchema = z.object({
   available_from: z.string().nullable().optional(),
   available_to: z.string().nullable().optional(),
   folleto_location: z.string().max(200).nullable().optional(),
+  /** DIR-8 · «Mi comunidad». Catálogo = sedes activas (ver abajo). */
+  comunidades: z.array(z.string()).optional(),
   /** Sella la fecha de confirmación aunque no venga ningún cambio: para el
    *  comité, «no cambió nada» y «no contestó» son cosas distintas. */
   action: z.literal('confirmar_datos').optional(),
@@ -203,6 +205,42 @@ export async function PATCH(
         }
       }
       patch.folleto_location = v || null
+    }
+    /**
+     * DIR-8 · «Mi comunidad» se valida contra el MISMO catálogo de sedes.
+     *
+     * Por ahora comunidad = sede activa (decisión de Floriana, 2026-10-13):
+     * se empieza con lo que ya existe en vez de esperar una lista aparte.
+     * Validarlo importa igual — sin esto el campo se llena de texto libre
+     * escrito de cuatro formas, que es exactamente lo que le pasó a «dónde
+     * te dejamos los folletos» antes de que fuera un select.
+     *
+     * Se valida SOLO lo que viene en este PATCH: una ficha con un valor
+     * viejo se puede seguir guardando sin tocar este campo.
+     */
+    if (Array.isArray(patch.comunidades)) {
+      const pedidas = [...new Set(patch.comunidades.map(c => String(c).trim()).filter(Boolean))]
+      if (pedidas.length) {
+        const { createAdminClient } = await import('@/lib/supabase/admin')
+        /**
+         * Por `code`, NO por el UUID: el catálogo que ve la pantalla
+         * (`/api/sedes`) expone el CODE como `id` y deja el UUID en
+         * `sede_id`. Validar contra la PK rechazaba todo con 400 —lo
+         * primero que pasó al probarlo—. Es además lo que ya hace
+         * `folleto_location`, así que los dos campos guardan lo mismo.
+         */
+        const { data: sedes } = await createAdminClient()
+          .from('sedes').select('code').in('code', pedidas).eq('is_active', true)
+        const validas = new Set(((sedes ?? []) as Array<{ code: string }>).map(x => x.code))
+        const fuera = pedidas.filter(p => !validas.has(p))
+        if (fuera.length) {
+          return NextResponse.json(
+            { error: 'Esa comunidad no está en la lista.' },
+            { status: 400 },
+          )
+        }
+      }
+      patch.comunidades = pedidas
     }
     // Confirmar sella la fecha AUNQUE no venga ningún cambio: es el dato que
     // le dice al comité quién revisó y quién no.

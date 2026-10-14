@@ -2157,6 +2157,8 @@ export type DirigenteConfigPatch = {
   available_from?: string | null
   available_to?: string | null
   folleto_location?: string | null
+  /** DIR-8 · «Mi comunidad»: ids de sedes activas. */
+  comunidades?: string[]
   /** Se sella AUNQUE no cambie nada: para el comité, «no cambió» y «no
    *  contestó» son cosas distintas. */
   availability_confirmed_at?: string
@@ -2184,6 +2186,8 @@ export type FichaDeDisponibilidad = {
   available_from: string | null
   available_to: string | null
   folleto_location: string | null
+  /** DIR-8 · «Mi comunidad»: ids de sedes activas. */
+  comunidades: string[]
   availability_confirmed_at: string | null
 }
 
@@ -2194,12 +2198,15 @@ export async function getFichaDeDisponibilidad(memberId: string): Promise<FichaD
     .select(`member_id, is_active, formation_study_codes, qualified_study_codes,
              interested_study_codes, zone_preference, available_slots, offers_home,
              available_as_substitute, available_from, available_to, folleto_location,
-             availability_confirmed_at`)
+             comunidades, availability_confirmed_at`)
     .eq('member_id', memberId)
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  const r = data as Record<string, unknown>
+  // `as unknown` primero: `database.ts` todavía no conoce `comunidades` y el
+  // tipo inferido del SELECT es un error de columna, no una fila. Se regenera
+  // con el CLI de Supabase, que pide Docker.
+  const r = data as unknown as Record<string, unknown>
   return {
     member_id: String(r.member_id),
     is_active: r.is_active === true,
@@ -2213,6 +2220,7 @@ export async function getFichaDeDisponibilidad(memberId: string): Promise<FichaD
     available_from: (r.available_from as string) ?? null,
     available_to: (r.available_to as string) ?? null,
     folleto_location: (r.folleto_location as string) ?? null,
+    comunidades: (r.comunidades as string[]) ?? [],
     availability_confirmed_at: (r.availability_confirmed_at as string) ?? null,
   }
 }
@@ -2225,7 +2233,10 @@ export async function updateDirigenteConfig(
   const { data: existing } = await supabase
     .from('study_leaders').select('id').eq('member_id', memberId).maybeSingle()
   if (existing) {
-    const { error } = await supabase.from('study_leaders').update(patch).eq('member_id', memberId)
+    // `as never`: `database.ts` todavía no conoce `comunidades` (se regenera
+    // con el CLI de Supabase, que pide Docker). Mismo patrón que el endpoint
+    // del estado; la forma la garantiza el zod del handler.
+    const { error } = await supabase.from('study_leaders').update(patch as never).eq('member_id', memberId)
     if (error) throw error
   } else {
     // Nace INACTIVA a propósito: llenar la disponibilidad no es activarse como
@@ -2237,7 +2248,7 @@ export async function updateDirigenteConfig(
       zone_preference: patch.zone_preference ?? [],
       qualified_study_codes: patch.qualified_study_codes ?? [],
       ...patch,
-    })
+    } as never)
     if (error) throw error
   }
 }
