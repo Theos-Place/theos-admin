@@ -18,6 +18,8 @@ import type { DbDonation } from '@/lib/supabase/queries/finance'
 import { TOAST_MS } from '@/lib/constants'
 import { formatDate } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
+import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
+import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 
 type StatusFilter = 'all' | 'identified' | 'unidentified'
 
@@ -168,14 +170,18 @@ export function DonacionesPanel() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: 'Donantes identificados', value: uniqueDonors, isAmount: false },
-            { label: 'Total donado este mes', value: totalThisMonth, isAmount: true },
-            // FIN-1: Donantes activos = members.is_donor (mes actual + los 5
-            // anteriores; la regla vive en refresh_donor_flags()).
-            { label: 'Donantes activos', value: activeDonors, isAmount: false },
-          ].map(({ label, value, isAmount }) => (
+            // Pedido de Floriana (2026-10-14): que cada número diga a qué se refiere.
+            { label: 'Donantes identificados', value: uniqueDonors, isAmount: false,
+              info: 'Personas distintas que alguna vez donaron y a las que se les pudo identificar (la donación está vinculada a su ficha). Cuenta toda la historia, no un período, y cada persona una sola vez aunque haya donado muchas veces.' },
+            { label: 'Total donado este mes', value: totalThisMonth, isAmount: true, info: null },
+            // FIN-1/FIN-10: la ventana vive en ventana-de-donante.ts y en
+            // refresh_donor_flags(); la explicación sale de ahí, no a mano.
+            { label: 'Donantes activos', value: activeDonors, isAmount: false, info: explicacionDeDonantes(new Date()) },
+          ].map(({ label, value, isAmount, info }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
+              <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">
+                {label}{info && <InfoDelEncabezado texto={info} />}
+              </p>
               {isAmount
                 ? <p className="text-2xl font-extrabold font-display text-teal-deep">
                     {/* INT-3: una línea por moneda; con una sola se ve igual que antes. */}

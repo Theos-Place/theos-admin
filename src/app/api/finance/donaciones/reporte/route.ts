@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ROLES_QUE_VEN_MONTOS_DE_DONACION } from '@/lib/finance/quien-ve-montos'
 import ExcelJS from 'exceljs'
 import { requireRoles } from '@/lib/auth/guard'
 import { getDonacionesParaReporte } from '@/lib/supabase/queries/finance'
@@ -21,7 +22,7 @@ import { reportarError } from '@/lib/observabilidad'
  * `?export=1` devuelve el .xlsx y QUEDA EN AUDIT_LOG: una hoja con nombres de
  * sede y montos de donación sale del sistema.
  */
-const ROLES = ['finanzas', 'direccion', 'admin'] as const
+const ROLES = ROLES_QUE_VEN_MONTOS_DE_DONACION
 
 const YMD = /^\d{4}-\d{2}-\d{2}$/
 

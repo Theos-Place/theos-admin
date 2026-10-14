@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { veMontosDeDonacion } from '@/lib/finance/quien-ve-montos'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import {
   getDonations, getDonationStats, getDonationsFilteredSum, crearDonacionAMano,
@@ -16,7 +17,8 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await requireModuleView('finanzas')
     if (auth.res) return auth.res
-    const stripAmounts = !auth.ctx.roles.includes('finanzas')
+    // Misma regla que el reporte de donantes (quien-ve-montos.ts).
+    const stripAmounts = !veMontosDeDonacion(auth.ctx.roles)
     const { searchParams } = req.nextUrl
 
     if (searchParams.get('stats') === '1') {
