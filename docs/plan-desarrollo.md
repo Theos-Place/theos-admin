@@ -798,65 +798,68 @@ se reportan sin tocar; 'cancelada' ≠ 'dropped'. tsc/lint/vitest.
 
 Cierra lo que [~] DAT-5 dejó abierto y le da respaldo real a la limpieza.
 
-### [ ] FIN-11 · Viáticos y kilometraje: flujo digital del reglamento de viajes (pedido 2026-09-29)
+### [~] FIN-11 · Viáticos y kilometraje — FASE A HECHA 2026-10-13
 
-Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos
-operativos, versión 1.0 del 05/05/2026). **CANDADO RETIRADO 2026-10-13 por
-Floriana: se arranca ya** (antes de Tilopay). Tarifas/montos van como
-parámetros configurables por si la versión final del reglamento los ajusta.
+Base: `Anexos_Reglamento_Viajes_Asociacion_THEOSPLACE_Version1.docx` (5 anexos,
+versión 1.0 del 05/05/2026). Candado de Tilopay retirado por Floriana.
 
-DISEÑO: un solo flujo "Viaje" con etapas, no 5 formularios sueltos. Cada viaje
-es un expediente que avanza:
+**LO CONSTRUIDO (fase A): el expediente, la solicitud, el presupuesto y las
+tres firmas.** Migración `20261013210000`: `travel_requests`,
+`travel_budget_items` y `travel_request_status_history`, con RLS prendida y
+sin políticas (todo pasa por el servidor; sin eso PostgREST publicaría los
+viáticos de todo el mundo con la llave del bundle — SEC-3). Pantallas:
+`/viajes` (bandeja, con pestaña «Por revisar» solo para quien revisa),
+`/viajes/nuevo` y `/viajes/[id]`.
 
-  solicitud → presupuesto → aprobación → (anticipo) → viaje →
-  liquidación → reintegro/reembolso → informe → cerrado
+**LAS TRES FIRMAS SON TRES MANOS, y es lo único que de verdad había que
+proteger.** `solicitante → finanzas revisa → la autoridad aprueba`. Finanzas
+NO puede aprobar lo que revisó: si pudiera, el control de tres firmas del
+reglamento se vuelve una sola. El camino vive en una tabla de pasos
+(`lib/travel/estados-del-viaje`), no en `if`s repartidos, y la pantalla arma
+sus botones de ESA tabla — así no puede ofrecer un paso que el servidor vaya
+a negar. El actor sale de los roles de la sesión, nunca del cuerpo del
+request.
 
-Mapa de los anexos al sistema:
-1. **Solicitud de viaje (ANX-01)** — formulario digital: los datos personales
-   (nombre, cédula, puesto, comité, correo, teléfono) SE AUTOLLENAN de la
-   ficha, no se piden. Tipo (trabajo/capacitación, nacional/internacional),
-   destino, fechas/horas, acompañantes, justificación (objetivo, agenda,
-   beneficio, resultado esperado), fuente de financiamiento, anticipo sí/no y
-   monto, centro de costo. Adjuntos (agenda/invitación).
-2. **Presupuesto (ANX-02)** — tabla de rubros dentro del mismo expediente
-   (pasajes, transporte local, hospedaje, alimentación, inscripción, seguro,
-   peajes, combustible/km, otros) con cantidad × tarifa = subtotal, POR
-   MONEDA (CRC/USD — regla INT-3: jamás sumar entre monedas; total por cada
-   moneda). Campos de validación financiera (monto máximo según política,
-   anticipo recomendado, disponibilidad verificada) los llena finanzas.
-3. **Aprobaciones** — las 3 firmas del papel se vuelven estados con actor y
-   fecha (solicitante envía → revisión administrativa/financiera → aprobación
-   de autoridad competente). Patrón RequestBoard/tiquetes existente —
-   REUTILIZAR. Todo al audit_log.
-4. **Liquidación (ANX-03)** — al volver del viaje: anticipo recibido, detalle
-   de gastos ejecutados (fecha, rubro, proveedor, nº comprobante, monto) con
-   COMPROBANTES adjuntos (mecanismo de comprobantes existente), y el cálculo
-   automático de la diferencia: a reintegrar a la Asociación o a reembolsar a
-   la persona. Declaración jurada como checkbox con texto del reglamento.
-   Plazo de presentación según reglamento (recordatorio in-app, no correo).
-5. **Informe de viaje (ANX-04)** — formulario del módulo de formularios
-   vinculado al expediente (actividades, resultados, lecciones,
-   recomendaciones, evidencia adjunta). No bloquea la liquidación salvo que
-   el reglamento diga lo contrario (verificar al aprobar).
-6. **Bitácora de kilometraje (ANX-05)** — sección repetible dentro del
-   expediente (una fila por desplazamiento: origen, destino, horas, km
-   inicial/final con km recorridos calculados) + gastos asociados
-   (combustible/peajes/parqueos con comprobante) + tarifa por km AUTORIZADA
-   COMO PARÁMETRO del sistema (constante configurable) y monto a reconocer
-   calculado.
+**El presupuesto nunca da un total único.** `totales()` devuelve una lista por
+moneda y no un número, y no existe —ni se le agrega— una función que
+convierta: un viaje internacional tiene los pasajes en dólares y los peajes en
+colones, y sumarlos inventa un tipo de cambio que nadie autorizó (INT-3). El
+anticipo se compara contra el total DE SU MISMA MONEDA: pedir $300 en un viaje
+presupuestado en colones no es un anticipo chico, es un error de captura.
 
-FASEO SUGERIDO (cada fase corrible por separado):
-  A. Expediente + solicitud + presupuesto + estados de aprobación.
-  B. Liquidación + comprobantes + cálculo de diferencias.
-  C. Bitácora de kilometraje.
-  D. Informe (formulario vinculado).
-PERMISOS: solicitante ve/edita SU expediente (anti-suplantación
-resolveTargetMemberId); finanzas y dirección ven todos; aprobar según el rol
-que defina el reglamento. PDF de cada anexo descargable desde el expediente
-(para archivo físico/Junta) — con el patrón de PDF de SRV-14.
-Los prompts por fase se arman ahora, empezando por la FASE A (expediente +
-solicitud + presupuesto + aprobaciones); Floriana confirma tarifas, plazos y
-quién es la "autoridad competente" sobre la marcha, como parámetros.
+**Los datos personales no se piden**: cédula, puesto, comité, correo y
+teléfono salen de la ficha al imprimir. El `subtotal` tampoco se guarda —es
+cantidad × tarifa— para que la fila no pueda decir 60.000 mientras sus
+factores dicen otra cosa.
+
+Probado contra staging de punta a punta: crear → enviar → finanzas toma y
+valida → dirección aprueba, con ₡180.000 y $340 separados y las dos firmas
+registradas. Y los cinco intentos que deben fallar fallan: saltarse la
+revisión (409), finanzas aprobando (409), rechazar sin motivo (409), editar
+una ya enviada (409) y un anticipo en una moneda que el presupuesto no tiene
+(400).
+
+**PARÁMETROS QUE FALTA QUE FLORIANA CONFIRME** (los tres en un solo lugar,
+cambiarlos es una línea):
+- *Autoridad competente* = `direccion` + `admin`; *revisión financiera* =
+  `finanzas` + `admin`.
+- *Quién puede pedir un viaje* = cualquiera con un rol que no sea `miembro` ni
+  `solo_lectura`. Es una aproximación de «staff» (minuta 2026-09-29) porque el
+  sistema todavía no tiene tabla de empleados; se corrige cuando EMP-1 la
+  traiga.
+- *Tarifa por kilómetro*: declarada en `lib/travel/presupuesto` y hoy en 0, a
+  la espera de la versión final del reglamento.
+- **Decisión tomada, no descuido**: con la cadena de hoy, quien dirige puede
+  aprobar su propio viaje. Hay un test que lo deja escrito; si el reglamento
+  pide otra cosa, se cambia ahí.
+
+**FALTA (fases B–D)**, y los estados ya están declarados para que no haya que
+tocar el CHECK otra vez:
+  B. Liquidación (ANX-03) + comprobantes + cálculo de reintegro/reembolso.
+  C. Bitácora de kilometraje (ANX-05) con odómetro y la aprobación del jefe
+     adjunta, que la minuta pidió como requisito.
+  D. Informe de viaje (ANX-04) como formulario vinculado.
+  Y el PDF de cada anexo con el patrón de SRV-14.
 
 ## Fase 25 — Reunión TI + Finanzas (2026-09-29, Meli/Andrés/María José)
 

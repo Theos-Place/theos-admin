@@ -5,13 +5,14 @@ import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { puedePedirViaje } from '@/lib/travel/estados-del-viaje'
 import {
   LayoutDashboard,
   Users,
   Calendar,
   BookOpen,
   UsersRound,
-  Briefcase,
+  Briefcase, Plane,
   DollarSign,
   MessageCircle,
   FileText,
@@ -335,6 +336,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/estudios',       label: 'Estudios',       icon: BookOpen,        subs: estudiosSub,        module: 'estudios', hideSummary: groupsOnly || !canSeeSummaryRoute('/estudios', getScope('estudios')) },
     { href: '/servidores',     label: 'Servidores',     icon: UsersRound,      subs: servidoresSub,      module: 'servidores', hideSummary: !canSeeSummaryRoute('/servidores', getScope('servidores')) },
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: EMPLEADOS_SUB,      module: 'empleados' },
+    // FIN-11 · Viáticos. Sin módulo propio: la entrada se muestra a quien
+    // puede pedir un viaje —el equipo de trabajo— y adentro la pestaña «Por
+    // revisar» solo aparece para finanzas y dirección. Es el mismo corte que
+    // hace la API, no uno paralelo.
+    ...(puedePedirViaje(userRoles)
+      ? [{ href: '/viajes', label: 'Viáticos', icon: Plane, subs: [], module: null } as NavModule]
+      : []),
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas' },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
