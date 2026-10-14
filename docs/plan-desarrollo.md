@@ -2217,7 +2217,12 @@ Tests: la regla de alta respeta el resultado (aprobado entra, reprobado no).
 tsc/lint/vitest.
 ```
 
-### [ ] EMP-1 · Módulo de empleados completo: vacaciones, feriados, jornadas, contratos (pedido 2026-10-13)
+### [ ] EMP-1 · Módulo de empleados completo — PARA 2027, falta definirlo
+
+**APARCADO A PROPÓSITO (decisión de Floriana, 2026-10-13): se retoma en 2027.**
+No es que esté bloqueado por algo técnico — falta definir el alcance, y hasta
+que eso pase no hay nada que construir. Queda escrito para no perder el
+inventario.
 
 Lo construido hasta ahora (perfiles, salarios, documentos, vacaciones básicas)
 necesita completarse para ser el módulo de RRHH real. Requiere definición de
@@ -2238,7 +2243,37 @@ PASO 1: reunión con dirección para el alcance (¿planillas/aguinaldo quedan
 fuera? ¿control de asistencia del staff?) → luego se fasean los prompts como
 FIN-11.
 
-### [ ] DIR-12 · Importar el CSV de estados y formación de dirigentes de Fabiola (2026-10-13)
+### [x] DIR-13 · CSV de Fabiola IMPORTADO — 2026-10-13
+
+**Aplicado:** 470 de 485 filas. El cuerpo quedó en 248 activos disponibles, 75
+en pausa, 9 en pasantía, 1 estudiante en capacitación y 245 inactivos, más 49
+banderitas y 185 marcados en WhatsApp. Se crearon 64 fichas de dirigente
+nuevas y 300 personas sumaron formación (solo aditiva).
+
+**Verificado después de aplicar:** ningún inactivo con grupo abierto —la regla
+que podía hacer daño—, e idempotente (la segunda corrida comparó las 578
+fichas campo por campo y no cambió nada).
+
+**Dos bugs del propio script que el dry run atrapó**, y los dos habrían pasado
+desapercibidos al aplicar: el RPC se llamaba con el nombre de parámetro
+equivocado y devolvía vacío para las 485 filas; y el padrón se traía sin
+paginar, así que PostgREST cortaba en 1.000 de ~18.000 y los resueltos a mano
+no aparecían. Ese segundo es el MISMO corte que esa noche dejó 82 check-ins
+fuera de la pantalla de Meridiano.
+
+**QUEDA PARA FABIOLA, y conviene no perderlo de vista:**
+ · **75 pausas sin fecha.** Cada una con su nota; el sistema exige la fecha.
+ · **245 inactivos sin sub-razón.** El CSV no la traía y no se inventó.
+ · **13 filas ignoradas**, que son la señal de que su Excel está viejo: 10 que
+   da de baja y el sistema tiene activas, 2 contradicciones, y 1 que da de baja
+   teniendo un grupo en curso.
+ · **2 sin resolver:** «Solis, Adriana» —cuatro candidatas, ninguna dirigente,
+   y se decidió no adivinar— y una fila sin nombre.
+
+**Fuera por decisión:** «Es orador» se maneja por puestos de servicio y «En
+koinonía» no se importa.
+
+### [x] DIR-13 · prompt original (referencia, ya ejecutado)
 
 Archivo: `data-import/dirigentes-status-fabiola-2026-10-13.csv` (485 filas,
 latin-1). Analizado con Floriana; reglas acordadas abajo.
