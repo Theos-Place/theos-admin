@@ -122,13 +122,17 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
             ref={highlighted ? highlightRef : undefined}
             className={cn('flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3', highlighted && 'ring-2 ring-coral/50 rounded-xl bg-coral/5')}
           >
+            {/* PAG-5 · El monto va en la etiqueta porque la descripción se
+                repite: dos inscripciones a eventos distintos dicen las dos
+                «Evento», y con lector de pantalla quedaban dos casillas
+                idénticas. */}
             {enSeleccion && (
               <input
                 type="checkbox"
                 className="mt-1 h-4 w-4 shrink-0 accent-coral sm:mt-0"
                 checked={!!seleccion?.has(p.id)}
                 disabled={!seleccionable}
-                aria-label={`Incluir ${p.description} en el comprobante`}
+                aria-label={`Incluir ${p.description} de ${formatMoney(p.amount, p.currency)} en el comprobante`}
                 onChange={e => setSeleccion(prev => {
                   const s = new Set(prev)
                   if (e.target.checked) s.add(p.id); else s.delete(p.id)

@@ -933,13 +933,45 @@ tienen `enrollment_end_date`, pero los 12 abiertos la tienen todos. El
 respaldo para el resto es `starts_at`; 60 grupos no tienen ninguna de las dos
 y ahí la regla no acota.
 
-### [ ] PAG-5 · Pago en línea: pagar varios cobros pendientes de una vez
+### [x] PAG-5 · Un solo comprobante para varios cobros — HECHO 2026-10-13
 
-Cuando llegue Tilopay (FIN-5): en la ventana de pago, si la persona tiene más
-de un cobro pendiente, mostrar "Tenés N pagos pendientes" con checkboxes para
-seleccionar cuáles paga en una sola transacción (suma por moneda, jamás
-mezclando monedas — INT-3). Útil para arreglos de pago con tracto acumulado.
-Se implementa JUNTO con FIN-5, no antes — dejarlo en la spec de Tilopay.
+**Se desatoró de Tilopay por decisión de Floriana**: *«podemos seguir con
+PAG-5, pero que no dependa de FIN-5, que se unan con un solo comprobante»*.
+El pedido viejo decía «se implementa JUNTO con FIN-5, no antes», y la pasarela
+nunca hizo falta para el problema real: alguien con tres cobros pendientes hace
+UNA transferencia y hoy tiene que subir el mismo comprobante tres veces — y a
+la tercera FIN-6 se lo bloquea, con razón. Cuando llegue Tilopay, la selección
+y la suma ya están hechas y se reusan.
+
+En Mis pagos, con dos o más pendientes aparece «Pagué varios con una sola
+transferencia»: se marcan los cobros, se ve el total, y un comprobante los
+cubre a todos.
+
+**EL CHOQUE CON FIN-6, QUE ES LO ÚNICO DELICADO DE ESTO.** FIN-6 bloquea la
+misma referencia de la misma persona porque esa es exactamente la forma del
+bug de Adriana y Raquel (₡5.000 transferidos una vez, contados dos). Lo que
+separa los dos casos no es la referencia ni el monto: es si la persona
+DECLARÓ que ese comprobante cubre varios cobros. Eso es `comprobante_grupo`
+(migración `20261013200000`). El guard se consulta UNA vez y por el TOTAL; dos
+cargas sueltas de la misma referencia se siguen bloqueando igual, y la
+banderita de referencia repetida de la cola de finanzas ya no se enciende sola
+en los tres pagos de un mismo comprobante.
+
+**El monto no viaja desde el navegador**: se lee de los pagos y se suma en el
+servidor. Mandarlo desde la pantalla sería dejar que quien paga declare cuánto
+pagó.
+
+Reglas en `lib/finance/comprobante-multiple.ts` (21 tests), y la pantalla no
+repite ninguna: solo cobros `pendiente` —uno `en_revision` ya tiene
+comprobante encima—, una sola moneda (INT-3), una sola persona (una familia
+pagando junta sigue subiendo el comprobante en cada ficha, que es lo que FIN-6
+permite a propósito) y techo de 25.
+
+Probado contra staging con cuatro cobros sembrados: ₡15.000 + ₡10.000 + ₡5.000
+quedan pagados con un solo archivo, el de $20 no se deja mezclar, reusar la
+referencia da 409 y los cobros de otra persona 403. **Hueco de ambiente que
+apareció probando: staging no tenía el bucket `payment-receipts`** (no tenía
+ninguno) — se creó privado.
 
 ### [x] PAG-6 · Pagos cancelados: rango de fechas + export para conciliación (Andrés) — HECHO 2026-10-05. El nombre quedó decidido: «Cancelado» en finanzas, «Pagado» en Mis pagos (son dos audiencias y el mismo término significa lo contrario para cada una)
 
