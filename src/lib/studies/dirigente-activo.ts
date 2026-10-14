@@ -108,6 +108,8 @@ export type RepartoDeDirigentes = {
   activar: CambioDeDirigente[]
   desactivar: CambioDeDirigente[]
   sinCambio: number
+  /** Los que el cron NO tocó por tener clasificación manual. */
+  respetados: Array<{ memberId: string; nombre: string }>
 }
 
 /**
@@ -124,20 +126,55 @@ export type RepartoDeDirigentes = {
  *
  * Lo que sí hay que respetar es que activar NO borre la etiqueta: de eso se
  * encarga `setDirigenteActive`, que la conserva.
+ *
+ * LO QUE EL CRON NO TOCA (DIR-13, 2026-10-13): a quien tiene una
+ * CLASIFICACIÓN MANUAL de DIR-8 —en pausa, estudiante en capacitación, en
+ * formación, en pasantía, o un motivo escrito de por qué está inactivo—.
+ *
+ * Sin esto el import de Fabiola se deshacía solo el 1 de noviembre: el cron
+ * mira si dirigió en los últimos 12 meses, y alguien que está EN PAUSA
+ * justamente no está dirigiendo. Los 51 «en pausa» y los 170 inactivos del
+ * CSV se habrían recalculado encima a los dos días de cargarlos.
+ *
+ * «Dirigiendo» NO cuenta como clasificación manual, y es la distinción que
+ * importa: esa razón la DERIVA el sistema de los grupos, así que no hay una
+ * decisión humana que respetar.
  */
 export function repartirDirigentes(
   dirigentes: Array<{
     memberId: string; nombre: string; activoHoy: boolean
     situacion: SituacionDelDirigente
+    /** Clasificación puesta a mano por coordinación. Ver arriba. */
+    clasificacionManual?: boolean
   }>,
   hoy: string,
 ): RepartoDeDirigentes {
-  const out: RepartoDeDirigentes = { activar: [], desactivar: [], sinCambio: 0 }
+  const out: RepartoDeDirigentes = { activar: [], desactivar: [], sinCambio: 0, respetados: [] }
   for (const d of dirigentes) {
+    if (d.clasificacionManual) {
+      out.respetados.push({ memberId: d.memberId, nombre: d.nombre })
+      continue
+    }
     const deberia = esDirigenteActivo(d.situacion, hoy)
     if (deberia === d.activoHoy) { out.sinCambio++; continue }
     const cambio = { memberId: d.memberId, nombre: d.nombre, de: d.activoHoy, a: deberia }
     ;(deberia ? out.activar : out.desactivar).push(cambio)
   }
   return out
+}
+
+/**
+ * ¿Esta ficha tiene una clasificación puesta A MANO que el cron deba
+ * respetar?
+ *
+ * Un motivo de inactividad, o una razón de no disponibilidad que NO sea
+ * «dirigiendo» —la única que el sistema deriva solo—.
+ */
+export function tieneClasificacionManual(ficha: {
+  razon_inactivo?: string | null
+  razon_no_disponible?: string | null
+}): boolean {
+  if (ficha.razon_inactivo) return true
+  const r = ficha.razon_no_disponible
+  return !!r && r !== 'dirigiendo'
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   esDirigenteActivo, limiteDeVigencia, repartirDirigentes, MESES_DE_VIGENCIA,
-  dirigeAhora, ESTADOS_DIRIGIENDO,
+  dirigeAhora, ESTADOS_DIRIGIENDO, tieneClasificacionManual,
 } from './dirigente-activo'
 
 const HOY = '2026-09-23'
@@ -135,5 +135,68 @@ describe('PAR-6 · dirigeAhora', () => {
 
   it('ESTADOS_DIRIGIENDO no incluye finalizado', () => {
     expect([...ESTADOS_DIRIGIENDO]).toEqual(['en_curso', 'en_matricula'])
+  })
+})
+
+/**
+ * DIR-13 · El recálculo mensual NO pisa lo que puso coordinación a mano.
+ *
+ * EL RIESGO CONCRETO: el import del CSV de Fabiola carga 51 personas «en
+ * pausa» y 170 inactivas. El cron del 1° mira si dirigieron en los últimos
+ * 12 meses — y alguien EN PAUSA justamente no está dirigiendo. Sin esto,
+ * el import se deshacía solo a los dos días de cargarlo, y nadie habría
+ * entendido por qué los estados «se devolvieron».
+ */
+describe('el cron respeta la clasificación manual', () => {
+  const situacionVieja = { dirigeAhora: false, ultimoCierre: '2020-01-01' }
+
+  it('a quien está EN PAUSA no lo desactiva', () => {
+    const r = repartirDirigentes([{
+      memberId: 'p', nombre: 'En pausa', activoHoy: true,
+      situacion: situacionVieja, clasificacionManual: true,
+    }], '2026-11-01')
+    expect(r.desactivar).toEqual([])
+    expect(r.respetados.map(x => x.nombre)).toEqual(['En pausa'])
+  })
+
+  it('pero a quien no tiene clasificación manual SÍ', () => {
+    const r = repartirDirigentes([{
+      memberId: 'x', nombre: 'Sin clasificar', activoHoy: true,
+      situacion: situacionVieja,
+    }], '2026-11-01')
+    expect(r.desactivar.map(x => x.nombre)).toEqual(['Sin clasificar'])
+    expect(r.respetados).toEqual([])
+  })
+
+  it('tampoco lo ACTIVA: el estado manual manda en los dos sentidos', () => {
+    const r = repartirDirigentes([{
+      memberId: 'i', nombre: 'Inactivo a mano', activoHoy: false,
+      situacion: { dirigeAhora: true, ultimoCierre: null }, clasificacionManual: true,
+    }], '2026-11-01')
+    expect(r.activar).toEqual([])
+    expect(r.respetados).toHaveLength(1)
+  })
+})
+
+describe('qué cuenta como clasificación manual', () => {
+  it('un motivo de inactividad, sí', () => {
+    expect(tieneClasificacionManual({ razon_inactivo: 'no_asiste' })).toBe(true)
+  })
+
+  it('pausa, pasantía, capacitación y formación, sí', () => {
+    for (const r of ['pausa', 'pasantia', 'estudiante_capacitacion', 'en_formacion']) {
+      expect(tieneClasificacionManual({ razon_no_disponible: r }), r).toBe(true)
+    }
+  })
+
+  it('«dirigiendo» NO: esa la deriva el sistema de los grupos', () => {
+    // Es la distinción que importa. No hay decisión humana que respetar,
+    // y tratarla como manual congelaría a medio cuerpo de dirigentes.
+    expect(tieneClasificacionManual({ razon_no_disponible: 'dirigiendo' })).toBe(false)
+  })
+
+  it('una ficha sin razones, tampoco', () => {
+    expect(tieneClasificacionManual({})).toBe(false)
+    expect(tieneClasificacionManual({ razon_inactivo: null, razon_no_disponible: null })).toBe(false)
   })
 })

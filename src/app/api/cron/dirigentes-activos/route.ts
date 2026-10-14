@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { setDirigenteActive } from '@/lib/supabase/queries/studies'
-import { repartirDirigentes, dirigeAhora, MESES_DE_VIGENCIA, type SituacionDelDirigente } from '@/lib/studies/dirigente-activo'
+import {
+  repartirDirigentes, dirigeAhora, tieneClasificacionManual, MESES_DE_VIGENCIA,
+  type SituacionDelDirigente,
+} from '@/lib/studies/dirigente-activo'
 import { todayCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 import { pingHealthcheck } from '@/lib/health'
@@ -47,10 +50,22 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createAdminClient()
 
+    /**
+     * DIR-13 · Se traen también las razones, para NO pisar lo que puso
+     * coordinación a mano. Ver `tieneClasificacionManual`: sin esto, el
+     * import de Fabiola se deshacía solo en la corrida del 1 de noviembre
+     * —alguien EN PAUSA justamente no está dirigiendo, así que el cálculo
+     * lo habría dado de baja—.
+     */
     const { data: sl, error: eSl } = await supabase
-      .from('study_leaders').select('member_id, is_active')
+      .from('study_leaders').select('member_id, is_active, razon_inactivo, razon_no_disponible')
     if (eSl) throw eSl
-    const dirigentes = (sl ?? []) as Array<{ member_id: string; is_active: boolean | null }>
+    // `as unknown` primero: database.ts todavia no conoce las columnas de
+    // DIR-8, asi que el tipo inferido del SELECT es un error de columna.
+    const dirigentes = (sl ?? []) as unknown as Array<{
+      member_id: string; is_active: boolean | null
+      razon_inactivo: string | null; razon_no_disponible: string | null
+    }>
     if (dirigentes.length === 0) {
       await pingHealthcheck('HEALTHCHECK_URL_DIRIGENTES_ACTIVOS')
       return NextResponse.json({ ok: true, total: 0, activados: 0, desactivados: 0 })
@@ -106,6 +121,7 @@ export async function GET(req: NextRequest) {
       nombre: nombres.get(d.member_id) ?? d.member_id,
       activoHoy: d.is_active === true,
       situacion: situaciones.get(d.member_id) ?? { dirigeAhora: false, ultimoCierre: null },
+      clasificacionManual: tieneClasificacionManual(d),
     })), hoy)
 
     if (ensayo) {
@@ -114,6 +130,7 @@ export async function GET(req: NextRequest) {
         total: dirigentes.length, sin_cambio: reparto.sinCambio,
         activar: reparto.activar.map(x => x.nombre),
         desactivar: reparto.desactivar.map(x => x.nombre),
+        respetados_por_estado_manual: reparto.respetados.length,
       })
     }
 
