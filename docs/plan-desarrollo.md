@@ -89,6 +89,45 @@ Todo en producción el mismo día.
  · **Accesos** — censo de quién ve montos; Sofía y Gisselle fuera, la cuenta de
    Finanzas Madrid desactivada.
 
+### [x] Jornada del 2026-10-14 · lo que salió del día
+
+Igual que la del 13: nada estaba en el plan. Todo en producción el mismo día,
+menos lo que dice «staging».
+
+ · **DIR-14 / DIR-15** — la lista de dirigentes mostraba DOS conteos distintos
+   (encabezado por estado derivado, chips por estado administrativo). Manda el
+   administrativo; «Dando ahora» pasó a ser una opción del filtro, al lado de
+   Estado, combinable y con conteos contextuales (las opciones que dejan la
+   lista vacía se apagan). Aparece el tercer grupo «sin ficha».
+ · **FOR-x** — filtro «Creados por mí» en formularios, visible siempre.
+ · **EVT-11** — un formulario compartido por N eventos inscribía a la persona
+   en TODOS (Sabrina con 4 pagos de Volley; Sports Day + Hiking). Ahora se
+   inscribe solo al día que eligió. Limpieza: 36 inscripciones fantasma y 19
+   pagos borrados (no anulados: pedido de Floriana), 1 cobro huérfano de
+   ₡17.500 borrado, 124 `paid_at` rellenados desde la fecha del comprobante.
+ · **MAT-5** — en el perfil, tab Participación: «Pago pendiente · vence …»
+   para las matrículas sin comprobante, con el mismo reloj que usa el cron.
+ · **FIN-11 (acceso)** — viáticos vive en /empleados/viajes y solo entra quien
+   tiene fila activa en `employees` o revisa (finanzas/dirección). Hoy nadie
+   es empleado: la lista la llena RH.
+ · **FIN-12** — adelantos de comida por sede (ver su ítem).
+ · **INC** — incidente en prod: subir comprobante en una inscripción pública
+   decía «No autenticado». Ruta pública nueva para el adjunto, con ventana del
+   formulario y rate limit por IP.
+ · **FIN-14** — se eliminó /finanzas/solicitudes: becas y devoluciones ya la
+   cubrían; las notificaciones apuntan a /finanzas/becas.
+ · **DON-4** — 15.135 donaciones con monto 0 pasaron a null, y la lista
+   distingue «Sin monto» de «monto oculto». Familias quedan como están.
+ · **Cuenta** — borrada la cuenta de miembro «Coordinador de Estudios Theos
+   Place» (la real es estudios@theosplace.org, intacta). Respaldo en docs.
+ · **UI-4** — el flyer llena el hero de la tarjeta (cuadrícula de eventos y
+   calendario público): object-cover, sin franjas.
+
+**Queda del lado de Floriana / otros:** RH llena `employees` (sin eso nadie
+pide viáticos); fijar la tarifa por km (hoy ₡0); confirmar que Dirección
+aprueba viajes; Meli con la hoja de donaciones de FIN-12; cargar montos de
+donaciones jul–ago si se quieren (hoy son null).
+
 ### [ ] EVE-11 · Google Wallet y Apple Wallet
 
 Que el pase del evento se pueda guardar en la billetera del teléfono, en vez de
