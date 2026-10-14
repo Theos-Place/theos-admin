@@ -273,6 +273,37 @@ export async function getEventById(id: string): Promise<DbEventEnriched | null> 
   if (!data) return null
   const ev = normalize(data as Record<string, unknown>)
 
+  /**
+   * LOS CHECK-INS SE RECARGAN PAGINADOS. El embed de arriba los trae, pero
+   * PostgREST corta en 1.000 filas POR EMBED y no avisa.
+   *
+   * PASÓ EN VIVO el 2026-10-13, en plena charla: «Charla Meridiano Martes»
+   * es un evento RECURRENTE y lleva 1.082 check-ins acumulados. Con 913
+   * históricos, los de esa noche entraban hasta el número 87 y del 88 en
+   * adelante NO LLEGABAN A LA PANTALLA. Se guardaban perfecto —la tabla los
+   * tenía todos—, pero quien estaba en la puerta veía el contador clavado y
+   * creía que el sistema había dejado de registrar.
+   *
+   * La aritmética dio exacto: 913 + 87 = 1.000.
+   */
+  if ((ev.checkins?.length ?? 0) >= 1000) {
+    const todos: typeof ev.checkins = []
+    for (let desde = 0; ; desde += 1000) {
+      const { data: lote, error: eCk } = await supabase
+        .from('event_checkins')
+        .select('id, member_id, sub_event_id, checked_in_at, checked_in_as,'
+          + ' member:members(first_name, last_name, created_at)')
+        .eq('event_id', id)
+        .order('checked_in_at')
+        .range(desde, desde + 999)
+      if (eCk) { console.warn('getEventById: recarga de check-ins:', eCk.message); break }
+      const filas = (lote ?? []) as unknown as typeof ev.checkins
+      todos.push(...filas)
+      if (filas.length < 1000) break
+    }
+    if (todos.length > ev.checkins.length) ev.checkins = todos
+  }
+
   // Cuáles inscripciones tienen comprobante esperando a finanzas. Va como
   // consulta APARTE y no como embed en SELECT: SELECT lo comparte la lista de
   // eventos (miles de filas) y, sobre todo, agregar un embed más entre estas
