@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { BarChart2, Download, Package } from 'lucide-react'
+import { BarChart2, Download, Package, Eye, EyeOff } from 'lucide-react'
 import { DonacionesPanel } from '@/components/finance/DonacionesPanel'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -41,6 +41,9 @@ export default function ReportesPage() {
   const [pagoDesde, setPagoDesde] = useState('')
   const [pagoHasta, setPagoHasta] = useState('')
   const [categoriaFilter, setCategoriaFilter] = useState('all')
+  // Igual que en Donaciones: los montos arrancan tapados y se destapan todos
+  // juntos con un botón (pedido de Floriana, 2026-10-14).
+  const [revelarPagos, setRevelarPagos] = useState(false)
   const nombreDeTipo = useEventTypeStyle()
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString())
 
@@ -233,8 +236,13 @@ export default function ReportesPage() {
                 className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
                 {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
+              <button type="button" onClick={() => setRevelarPagos(r => !r)}
+                className="ml-auto flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] transition-all bg-navy/6 text-navy font-body">
+                {revelarPagos ? <EyeOff size={13} /> : <Eye size={13} />}
+                {revelarPagos ? 'Ocultar montos' : 'Mostrar montos'}
+              </button>
               <button onClick={exportPaymentsCSV}
-                className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium bg-navy text-white font-body">
                 <Download size={14} />
                 Exportar CSV
               </button>
@@ -251,7 +259,7 @@ export default function ReportesPage() {
                 <div key={label} className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
                   <p className="text-[11px] uppercase tracking-widest mb-1.5 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
                   <p className="text-lg font-extrabold font-display" style={{ color }}>
-                    <TotalsDisplay totals={value} defaultHidden={false} />
+                    <TotalsDisplay totals={value} revealed={revelarPagos} />
                   </p>
                 </div>
               ))}
@@ -285,9 +293,9 @@ export default function ReportesPage() {
                       <tr key={r.clave} className={`border-b border-[var(--outline-variant)] ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
                         <td className="px-5 py-3"><p className="text-[13px] font-medium font-body text-navy">{r.label}</p></td>
                         <td className="px-5 py-3"><p className="text-[13px] font-body text-navy-light/80 tabular-nums">{r.n}</p></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.cobrado)} defaultHidden={false} /></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.pendiente)} defaultHidden={false} /></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.devuelto)} defaultHidden={false} /></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.cobrado)} revealed={revelarPagos} /></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.pendiente)} revealed={revelarPagos} /></td>
+                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.devuelto)} revealed={revelarPagos} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -311,7 +319,7 @@ export default function ReportesPage() {
                         <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy-light/80">{etiqueta(categoriaDePago(p))}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
-                        <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} defaultHidden={false} /></td>
+                        <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} revealed={revelarPagos} /></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
                         <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">{formatDate(fechaDelPago(p))}</p></td>

@@ -48,4 +48,12 @@ describe('DON-4 · donaciones dentro del reporte', () => {
     // y el tope vuelve a 50 al cambiar un filtro
     expect(r).toContain('() => setVisibles(PAGINA))')
   })
+
+  it('la pestaña de pagos tapa los montos y los destapa con un botón, como Donaciones', () => {
+    const r = sin('src/app/(admin)/finanzas/reportes/page.tsx')
+    const pagos = r.slice(r.indexOf("activeTab === 'payments'"), r.indexOf("activeTab === 'transparency'"))
+    expect(pagos).toContain('Mostrar montos')
+    expect((pagos.match(/revealed=\{revelarPagos\}/g) ?? []).length).toBeGreaterThanOrEqual(5)
+    expect(pagos).not.toContain('defaultHidden={false}')
+  })
 })
