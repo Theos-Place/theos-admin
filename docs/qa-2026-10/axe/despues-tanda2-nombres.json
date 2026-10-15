@@ -1,0 +1,66 @@
+{
+  "cuenta": "ti@theosplace.org",
+  "hallazgos": [
+    {
+      "ruta": "/comunicaciones/plantillas/[id]/editar",
+      "ancho": "desktop",
+      "id": "aria-required-parent",
+      "impacto": "critical",
+      "descripcion": "Certain ARIA roles must be contained by particular parents",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" role=\"tab\" aria-selected=\"false\" class=\"px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors border-transparent text-navy-light"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas/nueva",
+      "ancho": "desktop",
+      "id": "aria-required-parent",
+      "impacto": "critical",
+      "descripcion": "Certain ARIA roles must be contained by particular parents",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" role=\"tab\" aria-selected=\"true\" class=\"px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors border-coral text-navy font-semibol"
+    },
+    {
+      "ruta": "/eventos/embed",
+      "ancho": "desktop",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 3,
+      "ejemplo": "<input type=\"color\" class=\"h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent\" value=\"#161440\">"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas/[id]/editar",
+      "ancho": "mobile",
+      "id": "aria-required-parent",
+      "impacto": "critical",
+      "descripcion": "Certain ARIA roles must be contained by particular parents",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" role=\"tab\" aria-selected=\"false\" class=\"px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors border-transparent text-navy-light"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas/nueva",
+      "ancho": "mobile",
+      "id": "aria-required-parent",
+      "impacto": "critical",
+      "descripcion": "Certain ARIA roles must be contained by particular parents",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" role=\"tab\" aria-selected=\"true\" class=\"px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors border-coral text-navy font-semibol"
+    },
+    {
+      "ruta": "/eventos/embed",
+      "ancho": "mobile",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 3,
+      "ejemplo": "<input type=\"color\" class=\"h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent\" value=\"#161440\">"
+    }
+  ],
+  "desbordes": [],
+  "sinCargar": [],
+  "sinDato": [
+    "/empleados/puestos/[id]",
+    "/empleados/puestos/[id]/editar"
+  ],
+  "redirigidas": []
+}
