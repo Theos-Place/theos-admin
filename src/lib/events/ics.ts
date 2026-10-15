@@ -42,6 +42,17 @@ export type OpcionesIcs = {
   nombre?: string
 }
 
+/**
+ * Duración que se le da en el calendario a un evento SIN hora de fin (decisión
+ * de Floriana, 2026-10-15: «una hora por defecto»). Sin esto aparecía como un
+ * instante —sin bloque en la agenda—, y eran 109 de los 151 eventos recientes.
+ *
+ * Va SOLO en el feed y no se escribe en la base a propósito: la ventana del
+ * check-in y el envío de la encuesta se calculan con `ends_at`, y ponérselo a
+ * esos eventos cambiaría a qué hora cierra la puerta.
+ */
+export const DURACION_POR_DEFECTO_MS = 60 * 60 * 1000
+
 /** Instante → `YYYYMMDDTHHMMSSZ`. */
 export function fechaIcs(iso: string | Date): string {
   const d = typeof iso === 'string' ? new Date(iso) : iso
@@ -116,10 +127,7 @@ export function armarIcs(eventos: EventoParaIcs[], op: OpcionesIcs): string {
       `UID:${uidDe(e)}`,
       `DTSTAMP:${stamp}`,
       `DTSTART:${fechaIcs(inicio)}`,
-      // Sin un fin posterior al inicio, el evento es un instante (RFC 5545
-      // §3.6.1): sin DTEND. Inventarle una duración sería afirmar algo que
-      // Theos no publicó.
-      ...(!isNaN(fin.getTime()) && fin > inicio ? [`DTEND:${fechaIcs(fin)}`] : []),
+      `DTEND:${fechaIcs(!isNaN(fin.getTime()) && fin > inicio ? fin : new Date(inicio.getTime() + DURACION_POR_DEFECTO_MS))}`,
       `SUMMARY:${escaparTexto(e.name)}`,
       ...(e.description ? [`DESCRIPTION:${escaparTexto(e.description)}`] : []),
       ...(e.location ? [`LOCATION:${escaparTexto(e.location)}`] : []),

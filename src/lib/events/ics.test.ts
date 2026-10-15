@@ -46,10 +46,10 @@ describe('un evento', () => {
     expect(ics).toContain('LAST-MODIFIED:20261010T000000Z')
   })
 
-  it('sin un fin posterior al inicio, no inventa una duración', () => {
+  it('sin hora de fin, dura una hora (decisión 2026-10-15)', () => {
     const sinFin = armarIcs([{ ...ev, end_at: ev.start_at }], { base: BASE, ahora: AHORA })
     expect(sinFin).toContain('DTSTART:20261021T010000Z')
-    expect(sinFin).not.toContain('DTEND')
+    expect(sinFin).toContain('DTEND:20261021T020000Z')
   })
 
   it('pide que se refresque solo cada 6 horas', () => {

@@ -1,0 +1,149 @@
+{
+  "motivo": "Fin con la fecha de la ultima repeticion. Aprobado por Floriana 2026-10-15: ayuda social al mismo dia; campamentos y Navidad como un solo evento de varios dias",
+  "antes": [
+    {
+      "id": "36d6d497-14ab-4cd8-a1ce-39c5fffe915f",
+      "title": "Navidad 2026",
+      "event_type": "social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-12-19T23:00:00.000Z",
+      "ends_at": "2026-12-20T18:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:SAT,SUN",
+      "recurrence_end": "2026-12-21T05:59:00.000Z",
+      "updated_at": "2026-09-25T15:18:20.626Z"
+    },
+    {
+      "id": "6293d983-d256-4b2c-879c-acc1e557683a",
+      "title": "Cárcel de Mujeres",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-02T19:30:00.000Z",
+      "ends_at": "2026-10-16T21:30:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
+      "recurrence_end": "2026-10-17T05:59:00.000Z",
+      "updated_at": "2026-10-01T19:19:27.375Z"
+    },
+    {
+      "id": "551ffecb-00c4-4062-8a86-c4826c252f86",
+      "title": "Calles AM",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-10T15:00:00.000Z",
+      "ends_at": "2026-10-24T17:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA",
+      "recurrence_end": "2026-10-25T05:59:00.000Z",
+      "updated_at": "2026-10-01T19:20:10.889Z"
+    },
+    {
+      "id": "97469dbf-6e52-44f8-b302-19b9128a57b1",
+      "title": "Semillitas Kids&Teens",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-17T15:00:00.000Z",
+      "ends_at": "2026-10-24T18:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:SAT",
+      "recurrence_end": "2026-10-25T05:59:00.000Z",
+      "updated_at": "2026-10-01T19:23:04.722Z"
+    },
+    {
+      "id": "8245152f-a29b-4506-ab39-61de00c5c5be",
+      "title": "Calles PM",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-24T01:00:00.000Z",
+      "ends_at": "2026-10-25T03:30:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:FRI,SAT",
+      "recurrence_end": "2026-10-25T05:59:00.000Z",
+      "updated_at": "2026-10-01T19:23:45.144Z"
+    },
+    {
+      "id": "be6cec5d-1311-4e14-a78f-8f52470ef5d7",
+      "title": "Cárcel de Menores",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-16T21:30:00.000Z",
+      "ends_at": "2026-10-23T23:30:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:FRI",
+      "recurrence_end": "2026-10-24T05:59:00.000Z",
+      "updated_at": "2026-10-01T19:22:24.141Z"
+    },
+    {
+      "id": "b34912fa-8277-4cb6-98f9-fdfb9d936f57",
+      "title": "Campa Mujeres",
+      "event_type": "campamento",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-09-26T13:00:00.000Z",
+      "ends_at": "2026-09-28T00:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:SAT,SUN",
+      "recurrence_end": "2026-09-28T05:59:00.000Z",
+      "updated_at": "2026-09-18T00:02:02.184Z"
+    },
+    {
+      "id": "a8ce5cd6-f141-425e-9cd1-34a4f1bbe489",
+      "title": "Calles AM",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-09-12T15:00:00.000Z",
+      "ends_at": "2026-09-26T17:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA",
+      "recurrence_end": "2026-09-27T05:59:59.000Z",
+      "updated_at": "2026-08-28T19:29:04.154Z"
+    },
+    {
+      "id": "9163b290-cbd2-480a-a81e-e564a4690a88",
+      "title": "Semillitas Kids&Teens",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-09-12T15:00:00.000Z",
+      "ends_at": "2026-09-26T18:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "FREQ=WEEKLY;INTERVAL=2;BYDAY=SA",
+      "recurrence_end": "2026-09-27T05:59:59.000Z",
+      "updated_at": "2026-08-28T19:32:05.379Z"
+    },
+    {
+      "id": "58c6d07f-6b85-4a57-9776-12ba394dc84d",
+      "title": "Cárcel de Menores",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-09-18T21:30:00.000Z",
+      "ends_at": "2026-09-25T23:30:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:FRI",
+      "recurrence_end": "2026-09-26T05:59:59.000Z",
+      "updated_at": "2026-08-28T19:37:29.992Z"
+    },
+    {
+      "id": "0c15a315-a20f-4fa2-bf52-87895c1ff860",
+      "title": "Calles PM",
+      "event_type": "ayuda-social",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-09-26T01:00:00.000Z",
+      "ends_at": "2026-09-27T03:30:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:FRI,SAT",
+      "recurrence_end": "2026-09-27T05:59:59.000Z",
+      "updated_at": "2026-08-28T19:56:02.975Z"
+    },
+    {
+      "id": "e909f886-4bb1-4150-9b40-42ed33703191",
+      "title": "Campa Hombres",
+      "event_type": "campamento",
+      "timezone": "America/Costa_Rica",
+      "starts_at": "2026-10-03T00:00:00.000Z",
+      "ends_at": "2026-10-05T00:00:00.000Z",
+      "is_recurring": true,
+      "recurrence_rule": "WEEKLY:FRI,SAT,SUN",
+      "recurrence_end": "2026-10-05T05:59:59.000Z",
+      "updated_at": "2026-08-28T20:14:25.434Z"
+    }
+  ]
+}

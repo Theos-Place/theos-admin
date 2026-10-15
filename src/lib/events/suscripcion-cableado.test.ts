@@ -43,6 +43,13 @@ describe('el botón', () => {
   })
 })
 
+describe('la hora por defecto vive en el feed, no en la base', () => {
+  it('nadie la escribe en ends_at: de ahí salen la puerta del check-in y la encuesta', () => {
+    expect(leer('src/lib/events/form-mapper.ts')).not.toMatch(/DURACION_POR_DEFECTO_MS/)
+    expect(leer('src/lib/supabase/queries/events.ts')).not.toMatch(/DURACION_POR_DEFECTO_MS/)
+  })
+})
+
 describe('las series que se pisan no se guardan', () => {
   it('ni al crear ni al editar', () => {
     expect(leer('src/app/api/events/route.ts')).toMatch(/solapamientoDeLaSerie\(entrada\)/)
