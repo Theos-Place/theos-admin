@@ -239,27 +239,44 @@ export async function savePrematEvaluations(
    * solicitud: apuntaría a una fila que no existe.
    */
   const esDelGrupo = (requestId: string) => requestId === groupId
-  const { error } = await sb.from('prematrimonial_evaluations').upsert(
-    evaluations.map(e => ({
-      request_id: esDelGrupo(e.request_id) ? null : e.request_id,
-      group_id: groupId,
-      commitment: e.commitment,
-      strengths: e.strengths,
-      strengths_notes: (e.strengths_notes ?? '').trim() || null,
-      topics_to_work: e.topics_to_work,
-      observations: (e.observations ?? '').trim() || null,
-      blind_spot: !!e.blind_spot,
-      blind_spot_notes: e.blind_spot ? ((e.blind_spot_notes ?? '').trim() || null) : null,
-      action_plan: e.action_plan,
-      blessing: (e.blessing ?? '').trim() || null,
-      filled_by: filledBy,
-    })),
-    // Sin solicitud, el conflicto se resuelve por grupo: el índice parcial
-    // `premat_eval_group_uniq` garantiza una sola evaluación por grupo, y
-    // así un reintento del cierre corrige en vez de duplicar.
-    { onConflict: evaluations.some(e => esDelGrupo(e.request_id)) ? 'group_id' : 'request_id' },
-  )
-  if (error) throw error
+  const filas = evaluations.map(e => ({
+    request_id: esDelGrupo(e.request_id) ? null : e.request_id,
+    group_id: groupId,
+    commitment: e.commitment,
+    strengths: e.strengths,
+    strengths_notes: (e.strengths_notes ?? '').trim() || null,
+    topics_to_work: e.topics_to_work,
+    observations: (e.observations ?? '').trim() || null,
+    blind_spot: !!e.blind_spot,
+    blind_spot_notes: e.blind_spot ? ((e.blind_spot_notes ?? '').trim() || null) : null,
+    action_plan: e.action_plan,
+    blessing: (e.blessing ?? '').trim() || null,
+    filled_by: filledBy,
+  }))
+  /**
+   * SIN upsert (2026-10-15, el cierre de Danilo daba 500). Los dos índices
+   * únicos de la tabla son PARCIALES —`premat_eval_request_uniq` (WHERE
+   * request_id IS NOT NULL) y `premat_eval_group_uniq` (WHERE request_id IS
+   * NULL)— y PostgreSQL no usa un índice parcial en `ON CONFLICT (col)` si no
+   * se le da el mismo WHERE, que PostgREST no sabe mandar: respondía 42P10 en
+   * los DOS casos. Así que se busca la fila y se actualiza, o se crea. Los
+   * índices siguen siendo la garantía contra duplicados.
+   */
+  // Por grupo O por solicitud: la evaluación de una solicitud es una sola aunque
+  // la pareja haya pasado por otro grupo (el índice es por request_id).
+  const solicitudes = filas.map(f => f.request_id).filter((x): x is string => !!x)
+  const { data: existentes, error: eLeer } = await sb.from('prematrimonial_evaluations')
+    .select('id, request_id')
+    .or(solicitudes.length ? `group_id.eq.${groupId},request_id.in.(${solicitudes.join(',')})` : `group_id.eq.${groupId}`)
+  if (eLeer) throw eLeer
+  const previas = (existentes ?? []) as Array<{ id: string; request_id: string | null }>
+  for (const fila of filas) {
+    const previa = previas.find(p => p.request_id === fila.request_id)
+    const { error } = previa
+      ? await sb.from('prematrimonial_evaluations').update(fila).eq('id', previa.id)
+      : await sb.from('prematrimonial_evaluations').insert(fila)
+    if (error) throw error
+  }
 }
 
 /** PRE-8: evaluaciones (contenido pastoral) por solicitud o por miembro de la
