@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { esMenor } from '@/lib/members/reglas-de-menores'
+import { useCerrarConEscape } from '@/hooks/useCerrarConEscape'
 import {
   estadoDeAutorizacion, ETIQUETA as ETIQUETA_AUTORIZACION,
 } from '@/lib/members/autorizacion-de-imagen'
@@ -79,7 +80,7 @@ function MemberActivityIcons({ member }: { member: Member }) {
     ? `Asistencia activa · último check-in ${formatDate(member.last_charla_checkin)}`
     : 'Asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días)'
   return (
-    <div className="mt-3 flex items-center gap-5">
+    <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
       <ActivityIcon active={member.is_donor} icon={Heart} label="Donante" activeColor="text-coral-deep"
         tooltip="Donante activo" inactiveTooltip="No registra donaciones activas" />
       <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep"
@@ -148,10 +149,12 @@ export function MemberHeader({
   onEdit,
   menuOpen,
   onMenuToggle,
+  onMenuClose,
   canDeactivate = false,
   onDeactivate,
   onMerge,
 }: Props) {
+  useCerrarConEscape(menuOpen, onMenuClose)
   return (
     <div
       className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]"
@@ -258,13 +261,16 @@ export function MemberHeader({
           <div className="relative">
             <button
               onClick={onMenuToggle}
+              aria-label="Más acciones"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
               className="rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
             >
               ···
             </button>
             {menuOpen && (
               <div
-                className="absolute right-0 top-full mt-1 w-48 rounded-xl bg-surface-card py-1 z-20 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
+                className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 w-48 rounded-xl bg-surface-card py-1 z-20 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
               >
                 {canDeactivate && (
                   <button

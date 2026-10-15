@@ -207,51 +207,53 @@ export default function CierresPrematrimonialesPage() {
 
         {abierto && (
           <Modal onClose={() => setAbierto(null)} titleId="cierre-titulo" width={640}>
-            <h2 id="cierre-titulo" className="text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
-              {[nombre(abierto.request?.requester), nombre(abierto.request?.spouse)]
-                .filter(Boolean).join(' y ') || 'Pareja sin identificar'}
-            </h2>
-            <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
-              {abierto.grupo?.name ?? 'Sin grupo'}
-              {nombre(abierto.mentor) && <> · lo llenó {nombre(abierto.mentor)}</>}
-              {' · '}{formatDateLong(abierto.created_at)}
-              {abierto.request?.ceremony_date && <> · boda el {formatDateLong(abierto.request.ceremony_date)}</>}
-            </p>
+            <div className="p-6">
+              <h2 id="cierre-titulo" className="pr-8 text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
+                {[nombre(abierto.request?.requester), nombre(abierto.request?.spouse)]
+                  .filter(Boolean).join(' y ') || 'Pareja sin identificar'}
+              </h2>
+              <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
+                {abierto.grupo?.name ?? 'Sin grupo'}
+                {nombre(abierto.mentor) && <> · lo llenó {nombre(abierto.mentor)}</>}
+                {' · '}{formatDateLong(abierto.created_at)}
+                {abierto.request?.ceremony_date && <> · boda el {formatDateLong(abierto.request.ceremony_date)}</>}
+              </p>
 
-            <div className="mt-5 space-y-4 max-h-[65vh] overflow-y-auto pr-1">
-              <Dato etiqueta={COMMITMENT_QUESTION}>{etiquetaDeCompromiso(abierto.commitment)}</Dato>
+              <div className="mt-5 space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+                <Dato etiqueta={COMMITMENT_QUESTION}>{etiquetaDeCompromiso(abierto.commitment)}</Dato>
 
-              <Dato etiqueta={STRENGTHS_QUESTION}><Lista items={abierto.strengths} /></Dato>
-              {abierto.strengths_notes && (
-                <Dato etiqueta="Notas sobre las fortalezas">{abierto.strengths_notes}</Dato>
-              )}
+                <Dato etiqueta={STRENGTHS_QUESTION}><Lista items={abierto.strengths} /></Dato>
+                {abierto.strengths_notes && (
+                  <Dato etiqueta="Notas sobre las fortalezas">{abierto.strengths_notes}</Dato>
+                )}
 
-              <Dato etiqueta={TOPICS_QUESTION}><Lista items={abierto.topics_to_work} /></Dato>
-              {abierto.observations && (
-                <Dato etiqueta={OBSERVATIONS_LABEL}>{abierto.observations}</Dato>
-              )}
+                <Dato etiqueta={TOPICS_QUESTION}><Lista items={abierto.topics_to_work} /></Dato>
+                {abierto.observations && (
+                  <Dato etiqueta={OBSERVATIONS_LABEL}>{abierto.observations}</Dato>
+                )}
 
-              <Dato etiqueta={BLIND_SPOT_QUESTION}>
-                {abierto.blind_spot ? 'Sí' : 'No'}
-              </Dato>
-              {abierto.blind_spot && abierto.blind_spot_notes && (
-                <div className="rounded-xl bg-coral/8 p-3">
-                  <p className="text-[11px] uppercase tracking-wider text-coral-deep font-display">
-                    Qué detectaron
-                  </p>
-                  <p className="mt-1 text-sm text-navy font-body">{abierto.blind_spot_notes}</p>
-                </div>
-              )}
+                <Dato etiqueta={BLIND_SPOT_QUESTION}>
+                  {abierto.blind_spot ? 'Sí' : 'No'}
+                </Dato>
+                {abierto.blind_spot && abierto.blind_spot_notes && (
+                  <div className="rounded-xl bg-coral/8 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-coral-deep font-display">
+                      Qué detectaron
+                    </p>
+                    <p className="mt-1 text-sm text-navy font-body">{abierto.blind_spot_notes}</p>
+                  </div>
+                )}
 
-              <Dato etiqueta={ACTION_PLAN_LABEL}>{etiquetaDePlan(abierto.action_plan)}</Dato>
-              {abierto.blessing && <Dato etiqueta={BLESSING_LABEL}>{abierto.blessing}</Dato>}
+                <Dato etiqueta={ACTION_PLAN_LABEL}>{etiquetaDePlan(abierto.action_plan)}</Dato>
+                {abierto.blessing && <Dato etiqueta={BLESSING_LABEL}>{abierto.blessing}</Dato>}
+              </div>
+
+              <p className="mt-4 flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
+                <Users size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+                Esto lo escribieron los mentores de la pareja. No lo ve la pareja ni el
+                resto de la coordinación.
+              </p>
             </div>
-
-            <p className="mt-4 flex items-start gap-1.5 text-[13px] text-navy-light/80 font-body">
-              <Users size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-              Esto lo escribieron los mentores de la pareja. No lo ve la pareja ni el
-              resto de la coordinación.
-            </p>
           </Modal>
         )}
       </div>

@@ -140,24 +140,26 @@ export function CruceSedeFormacion({
 
       {abierta && (
         <Modal onClose={() => setAbierta(null)} titleId="cruce-titulo" width={520}>
-          <h2 id="cruce-titulo" className="text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
-            {abierta.titulo}
-          </h2>
-          <ul className="mt-4 max-h-[60vh] overflow-y-auto divide-y divide-navy/10">
-            {abierta.miembros
-              .map(id => ({ id, nombre: nombres[id] ?? 'Sin nombre' }))
-              .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-              .map(p => (
-                <li key={p.id} className="py-2">
-                  <a
-                    href={`/estudios/dirigentes/${p.id}`}
-                    className="text-sm text-navy hover:text-coral-deep font-body focus:outline-none focus:ring-2 focus:ring-coral/40 rounded"
-                  >
-                    {p.nombre}
-                  </a>
-                </li>
-              ))}
-          </ul>
+          <div className="p-6">
+            <h2 id="cruce-titulo" className="text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
+              {abierta.titulo}
+            </h2>
+            <ul className="mt-4 max-h-[60vh] overflow-y-auto divide-y divide-navy/10">
+              {abierta.miembros
+                .map(id => ({ id, nombre: nombres[id] ?? 'Sin nombre' }))
+                .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+                .map(p => (
+                  <li key={p.id} className="py-2">
+                    <a
+                      href={`/estudios/dirigentes/${p.id}`}
+                      className="text-sm text-navy hover:text-coral-deep font-body focus:outline-none focus:ring-2 focus:ring-coral/40 rounded"
+                    >
+                      {p.nombre}
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </div>
         </Modal>
       )}
     </div>

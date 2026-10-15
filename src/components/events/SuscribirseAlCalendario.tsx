@@ -70,8 +70,12 @@ export function SuscribirseAlCalendario({ tipos, className, children }: {
                 <span className="text-[13px] font-normal text-navy-light/80">abre Calendario</span>
               </a>
               <a href={links.outlook} target="_blank" rel="noopener noreferrer" className={opcion}>
-                <span>Outlook</span>
-                <span className="text-[13px] font-normal text-navy-light/80">outlook.com</span>
+                <span>Outlook de trabajo</span>
+                <span className="text-[13px] font-normal text-navy-light/80">Microsoft 365</span>
+              </a>
+              <a href={links.outlookPersonal} target="_blank" rel="noopener noreferrer" className={opcion}>
+                <span>Outlook personal</span>
+                <span className="text-[13px] font-normal text-navy-light/80">hotmail, outlook.com</span>
               </a>
             </div>
 

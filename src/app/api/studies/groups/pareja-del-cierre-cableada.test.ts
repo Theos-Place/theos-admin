@@ -62,10 +62,15 @@ describe('PRE-8 · cómo se guarda sin solicitud', () => {
     expect(guardado).toMatch(/esDelGrupo\(e\.request_id\) \? null : e\.request_id/)
   })
 
-  it('el conflicto se resuelve por grupo cuando no hay solicitud', () => {
-    // Sin esto, un reintento del cierre duplicaría la evaluación en vez de
-    // corregirla, que es justo lo que el upsert existe para evitar.
-    expect(guardado).toMatch(/onConflict: .*'group_id' : 'request_id'/)
+  it('un reintento del cierre corrige la evaluación en vez de duplicarla', () => {
+    // Antes era un upsert con onConflict 'group_id' / 'request_id', y daba 500
+    // en prod (42P10, 2026-10-15): los índices únicos son PARCIALES y
+    // PostgREST no sabe mandarles el WHERE. Ahora se busca la previa —por
+    // grupo o por solicitud— y se actualiza; si no hay, se crea.
+    const fn = guardado.slice(guardado.indexOf('export async function savePrematEvaluations'), guardado.indexOf('export async function getPrematEvaluations'))
+    expect(fn).not.toMatch(/onConflict/)
+    expect(guardado).toMatch(/group_id\.eq\.\$\{groupId\},request_id\.in\./)
+    expect(guardado).toMatch(/\.update\(fila\)\.eq\('id', previa\.id\)/)
   })
 })
 

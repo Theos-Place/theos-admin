@@ -149,7 +149,12 @@ export function linksDeSuscripcion(feedHttps: string, nombre = 'Theos Place') {
     webcal,
     // Google acepta el webcal:// en `cid` y abre «¿Agregar este calendario?».
     google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`,
-    outlook: `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(feedHttps)}&name=${encodeURIComponent(nombre)}`,
+    // Dos Outlook distintos, con dos direcciones (2026-10-15). Theos usa
+    // Microsoft 365 (cuentas de trabajo): el enlace de outlook.live.com, que es
+    // el de cuentas PERSONALES, mandaba a una cuenta de trabajo a la página de
+    // publicidad de Microsoft sin agregar nada.
+    outlook: `https://outlook.office.com/calendar/0/addfromweb?url=${encodeURIComponent(feedHttps)}&name=${encodeURIComponent(nombre)}`,
+    outlookPersonal: `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(feedHttps)}&name=${encodeURIComponent(nombre)}`,
     https: feedHttps,
   }
 }

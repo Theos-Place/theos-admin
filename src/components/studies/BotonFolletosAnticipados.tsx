@@ -80,25 +80,27 @@ export function BotonFolletosAnticipados({
 
       {open && (
         <Modal onClose={() => setOpen(false)} titleId="folletos-anticipados-titulo">
-          <div className="space-y-4">
-            <h2 id="folletos-anticipados-titulo" className="text-lg font-display font-bold text-navy">
-              Mandar a imprimir folletos
-            </h2>
-            <p className="text-sm text-navy-light/80 font-body leading-relaxed">
-              Se crea una orden con los folletos de <strong>{folletos.join(' y ')}</strong> para
-              los estudiantes matriculados hoy, y se le avisa por correo a quien imprime.
-            </p>
-            <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
-              El grupo sigue en matrícula: si después entra más gente, se pide una orden
-              adicional desde la pantalla de folletos. Esta no se vuelve a generar.
-            </p>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button onClick={() => setOpen(false)} variante="fantasma">Cancelar</Button>
-              <Button onClick={pedir} disabled={enviando} variante="primario" resplandor>
-                {enviando
-                  ? <><Loader2 size={14} className="animate-spin" aria-hidden="true" /> Pidiendo…</>
-                  : <><Printer size={14} aria-hidden="true" /> Mandar a imprimir</>}
-              </Button>
+          <div className="p-6">
+            <div className="space-y-4">
+              <h2 id="folletos-anticipados-titulo" className="text-lg font-display font-bold text-navy">
+                Mandar a imprimir folletos
+              </h2>
+              <p className="text-sm text-navy-light/80 font-body leading-relaxed">
+                Se crea una orden con los folletos de <strong>{folletos.join(' y ')}</strong> para
+                los estudiantes matriculados hoy, y se le avisa por correo a quien imprime.
+              </p>
+              <p className="text-[13px] text-navy-light/80 font-body leading-relaxed">
+                El grupo sigue en matrícula: si después entra más gente, se pide una orden
+                adicional desde la pantalla de folletos. Esta no se vuelve a generar.
+              </p>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button onClick={() => setOpen(false)} variante="fantasma">Cancelar</Button>
+                <Button onClick={pedir} disabled={enviando} variante="primario" resplandor>
+                  {enviando
+                    ? <><Loader2 size={14} className="animate-spin" aria-hidden="true" /> Pidiendo…</>
+                    : <><Printer size={14} aria-hidden="true" /> Mandar a imprimir</>}
+                </Button>
+              </div>
             </div>
           </div>
         </Modal>

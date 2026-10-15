@@ -91,7 +91,11 @@ describe('links de suscripción', () => {
   it('Google recibe el feed en cid', () => {
     expect(l.google).toBe('https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(l.webcal))
   })
-  it('Outlook.com recibe la URL https', () => {
+  it('Outlook de trabajo (Microsoft 365, el de Theos) va a outlook.office.com', () => {
+    expect(l.outlook.startsWith('https://outlook.office.com/calendar/0/addfromweb?url=')).toBe(true)
     expect(l.outlook).toContain(encodeURIComponent(`${BASE}/api/public/events.ics`))
+  })
+  it('Outlook personal va a outlook.live.com', () => {
+    expect(l.outlookPersonal.startsWith('https://outlook.live.com/calendar/0/addfromweb?url=')).toBe(true)
   })
 })

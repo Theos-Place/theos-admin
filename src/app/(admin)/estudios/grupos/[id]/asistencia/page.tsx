@@ -364,19 +364,21 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
 
       {confirmandoBorrado && (
         <Modal onClose={() => setConfirmandoBorrado(false)} titleId="borrar-sesion">
-          <h2 id="borrar-sesion" className="text-lg font-bold text-navy font-display">
-            Borrar la sesión
-          </h2>
-          <p className="mt-2 text-sm text-navy-light/80 font-body">
-            {textoDeBorrado({ session_date: formatDate(sessionDate), marcas: Array(marcasPrevias).fill(0) })}
-          </p>
-          <div className="mt-5 flex justify-end gap-2">
-            <Button variante="fantasma" onClick={() => setConfirmandoBorrado(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleBorrar} disabled={borrando}>
-              {borrando ? 'Borrando…' : 'Sí, borrarla'}
-            </Button>
+          <div className="p-6">
+            <h2 id="borrar-sesion" className="text-lg font-bold text-navy font-display">
+              Borrar la sesión
+            </h2>
+            <p className="mt-2 text-sm text-navy-light/80 font-body">
+              {textoDeBorrado({ session_date: formatDate(sessionDate), marcas: Array(marcasPrevias).fill(0) })}
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variante="fantasma" onClick={() => setConfirmandoBorrado(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleBorrar} disabled={borrando}>
+                {borrando ? 'Borrando…' : 'Sí, borrarla'}
+              </Button>
+            </div>
           </div>
         </Modal>
       )}

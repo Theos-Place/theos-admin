@@ -197,32 +197,34 @@ export function JerarquiaDeDirigentes({ datos }: { datos: Payload }) {
 
       {abierta && (
         <Modal onClose={() => setAbierta(null)} titleId="drill-titulo" width={560}>
-          <h2 id="drill-titulo" className="text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
-            {abierta.etiqueta}
-          </h2>
-          <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
-            {fmt(abierta.total)} {abierta.total === 1 ? 'persona' : 'personas'}
-          </p>
-          <ul className="mt-4 max-h-[60vh] overflow-y-auto divide-y divide-navy/10">
-            {abierta.miembros
-              .map(id => ({ id, nombre: datos.nombres[id] ?? 'Sin nombre' }))
-              .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-              .map(p => (
-                <li key={p.id} className="py-2">
-                  <a
-                    href={`/miembros/${p.id}`}
-                    className="text-sm text-navy hover:text-coral-deep font-body focus:outline-none focus:ring-2 focus:ring-coral/40 rounded"
-                  >
-                    {p.nombre}
-                  </a>
-                </li>
-              ))}
-          </ul>
-          {abierta.miembros.length === 0 && (
-            <p className="mt-4 flex items-center gap-2 text-sm text-navy-light/80 font-body">
-              <Users size={15} aria-hidden="true" /> Nadie en este grupo.
+          <div className="p-6">
+            <h2 id="drill-titulo" className="text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
+              {abierta.etiqueta}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
+              {fmt(abierta.total)} {abierta.total === 1 ? 'persona' : 'personas'}
             </p>
-          )}
+            <ul className="mt-4 max-h-[60vh] overflow-y-auto divide-y divide-navy/10">
+              {abierta.miembros
+                .map(id => ({ id, nombre: datos.nombres[id] ?? 'Sin nombre' }))
+                .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+                .map(p => (
+                  <li key={p.id} className="py-2">
+                    <a
+                      href={`/miembros/${p.id}`}
+                      className="text-sm text-navy hover:text-coral-deep font-body focus:outline-none focus:ring-2 focus:ring-coral/40 rounded"
+                    >
+                      {p.nombre}
+                    </a>
+                  </li>
+                ))}
+            </ul>
+            {abierta.miembros.length === 0 && (
+              <p className="mt-4 flex items-center gap-2 text-sm text-navy-light/80 font-body">
+                <Users size={15} aria-hidden="true" /> Nadie en este grupo.
+              </p>
+            )}
+          </div>
         </Modal>
       )}
     </div>
