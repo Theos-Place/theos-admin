@@ -508,50 +508,18 @@ encargado en la puerta, miembro matriculándose desde el celular): ¿sé dónde 
 qué hacer? ¿el error me dice cómo salir? ¿cuántos clics costó? El prompt se detalla
 cuando staging exista, sumando lo aprendido en QA-1.
 
-### [~] QA-3 · Auditoría de código: endpoints, llamados a la BD y rendimiento — PLAN LISTO 2026-10-15
+### [x] QA-3 · Auditoría de código: endpoints, llamados a la BD y rendimiento — INFORME 2026-10-15
 
-Prompt actualizado (299 endpoints hoy, medición con EXPLAIN en prod, censo
-aparte) en `docs/qa-2026-10/plan.md`. Corre en paralelo con QA-2, sin
-ambiente; informe a `docs/qa-2026-10/informe-codigo.md`.
+`docs/qa-2026-10/informe-codigo.md` + `censo-endpoints.md` (397 handlers, 0 sin
+guard, 0 IDOR, sec3 limpio). Hallazgos: 6 MEDIO (matrícula carga los 2.222
+grupos: la consulta 1.ª de prod con 1.894 s acumulados; lista de eventos con 6
+embeds; `get_group_attendance()` sin rango y derramando a disco; 82 escrituras
+sin zod; 129 exports muertos incluidas 6 funciones de escritura; 85 clones) y 6
+MENOR. Sin CRÍTICOS. Línea base: tsc/eslint limpios, 5.984 tests.
 
-
-No necesita cuentas ni staging — es sobre el código. Puede correr en paralelo con QA-1.
-
-Prompt para Claude Code:
-
-```
-QA PARTE 3 · Auditoría de código: los ~340 endpoints y sus llamados a la base
-
-MISMO ESPÍRITU QUE QA-1: LEVANTAR EL MAPA, NO ARREGLAR. Informe a
-docs/qa-2026-09/informe-codigo.md, hallazgos CRÍTICO/MEDIO/MENOR con archivo:línea y fix
-propuesto de una línea. Los fixes salen después en tandas.
-
-1. CENSO DE ENDPOINTS (todo src/app/api/**): tabla ruta → método → autorización
-   (requireRoles/requireModuleView/ninguna) → validación de entrada (zod/a mano/ninguna)
-   → cuántas consultas a la BD hace. Marcar: endpoints SIN autorización (crítico salvo
-   los públicos a propósito — cotejar con PUBLIC_PREFIXES), sin validación de entrada,
-   y los que no usan reportarError en sus catch.
-
-2. PATRONES DE BD CAROS — buscar sistemáticamente:
-   - N+1: consultas dentro de loops (for/map con await de supabase adentro).
-   - El bug de las 1.000 filas de PostgREST (ya mordió en REP-7): TODA consulta que pueda
-     devolver >1.000 filas sin .range()/paginación — censarlas, es un patrón repetido.
-   - SELECT * o embeds anchos donde se usan 2 campos; consultas sin filtro de sede/estado
-     que traen el padrón entero al server para filtrar en JS.
-   - Consultas repetidas en el mismo request (mismo dato pedido 2+ veces sin caché).
-   - Falta de índices: cruzar las columnas más filtradas/ordenadas en queries contra los
-     índices del baseline SQL; listar candidatos con su consulta de evidencia.
-3. RENDIMIENTO DE PÁGINA (estático): páginas que cargan todo al montar sin paginación,
-   imports pesados que entran al bundle del cliente (revisar con next build --profile o
-   @next/bundle-analyzer si está), useEffect en cascada (patrón que ya costó renders en
-   matrícula).
-4. HALLAZGOS TRANSVERSALES: código muerto evidente (exports sin importadores en src/),
-   duplicaciones de reglas de negocio (la misma regla escrita en dos lados — riesgo de
-   divergencia, como pasó con las definiciones de donante), y TODOs/FIXMEs con más de un
-   mes.
-MEDIR ANTES DE AFIRMAR (regla de la casa): cada hallazgo de rendimiento con evidencia
-(conteo de filas, número de consultas por request, tamaño de bundle), no impresiones.
-```
+**Plan combinado de los dos QA en `docs/qa-2026-10/plan-de-corrida.md`:** seis
+tandas (accesibilidad de base → nombres y foco → las tres consultas que dominan
+prod → limpieza → menores → zod por módulo).
 
 ## Fase 23 — Reuniones de estudios y dirigentes (2026-09-24, dos llamadas grabadas)
 
