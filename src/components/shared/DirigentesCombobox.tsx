@@ -32,7 +32,7 @@ function StatusBadge({ status }: { status: 'activo' | 'inactivo' }) {
   return (
     <span className={cn(
       'rounded-full px-2 py-0.5 text-[11px] font-medium font-body shrink-0',
-      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/80',
+      status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-surface-low text-navy-light/80',
     )}>
       {status === 'activo' ? 'Activo' : 'Inactivo'}
     </span>

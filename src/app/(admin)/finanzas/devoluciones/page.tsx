@@ -19,11 +19,11 @@ import { formatDate, formatMoney } from '@/lib/format'
 
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
-    pending:    { label: 'Pendiente',   color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
+    pending:    { label: 'Pendiente',   color: '#7F6210', bg: 'rgba(233,185,73,0.15)'  },
     processing: { label: 'En proceso',  color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
-    completed:  { label: 'Completada',  color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
+    completed:  { label: 'Completada',  color: '#1E6B42', bg: 'rgba(61,185,122,0.12)'  },
     rejected:   { label: 'Rechazada',   color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
-    convertida_donacion: { label: 'Convertida en donación', color: '#7C5EC2', bg: 'rgba(155,127,212,0.15)' },
+    convertida_donacion: { label: 'Convertida en donación', color: '#6A4CB0', bg: 'rgba(155,127,212,0.15)' },
   }
   const c = cfg[status]
   return (
@@ -256,17 +256,17 @@ export default function DevolucionesPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Pendientes',    value: stats.pending,    color: '#E9B949' },
+            { label: 'Pendientes',    value: stats.pending,    color: '#7F6210' },
             { label: 'En proceso',    value: stats.processing, color: '#3B7579' },
-            { label: 'Completadas',   value: stats.completed,  color: '#3DB97A' },
+            { label: 'Completadas',   value: stats.completed,  color: '#1E6B42' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
               <p className="text-4xl font-extrabold font-display" style={{ color }}>{value}</p>
             </div>
           ))}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">Total devuelto</p>
+            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">Total devuelto</p>
             <p className="text-xl font-extrabold font-display text-navy">
               <TotalsDisplay totals={stats.totalAmount} defaultHidden={false} />
             </p>
@@ -279,7 +279,7 @@ export default function DevolucionesPage() {
             <p className="text-sm font-bold font-display text-navy">
               Devoluciones
             </p>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(214,62,61,0.10)] text-coral">
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(214,62,61,0.10)] text-coral-deep">
               Proceso manual
             </span>
           </div>
@@ -288,7 +288,7 @@ export default function DevolucionesPage() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Método', 'Motivo', 'Estado', 'Solicitada', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">
                       {h}
                     </th>
                   ))}
@@ -309,21 +309,21 @@ export default function DevolucionesPage() {
                       </p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{REFUND_METHOD_LABEL[r.method] ?? r.method}</p>
+                      <p className="text-[13px] text-navy-light/80 font-body">{REFUND_METHOD_LABEL[r.method] ?? r.method}</p>
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{r.reason}</p>
+                      <p className="text-[13px] text-navy-light/80 font-body">{r.reason}</p>
                     </td>
                     <td className="px-5 py-3.5"><RefundStatusBadge status={r.status} /></td>
                     <td className="px-5 py-3.5">
-                      <p className="text-[13px] whitespace-nowrap text-[rgba(22,20,64,0.55)] font-body">{formatDate(r.requested_at)}</p>
+                      <p className="text-[13px] whitespace-nowrap text-navy-light/80 font-body">{formatDate(r.requested_at)}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       {canResolve && (r.status === 'pending' || r.status === 'processing') && (
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
                             onClick={() => setCompleteTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-success-deep font-body"
                           >
                             Completar
                           </button>
@@ -336,7 +336,7 @@ export default function DevolucionesPage() {
                           {/* FIN-6 (4): la persona no quiere el reembolso. */}
                           <button
                             onClick={() => setConvertTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(155,127,212,0.35)] text-[#7C5EC2] font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(155,127,212,0.35)] text-[#6A4CB0] font-body"
                           >
                             Convertir en donación
                           </button>
@@ -351,7 +351,7 @@ export default function DevolucionesPage() {
                         pintada como cola vacía se lee como que no hay nada
                         que resolver, y acá eso es plata de alguien. */}
                     <td colSpan={8} className={cn('px-5 py-8 text-center text-sm font-body',
-                      error ? 'text-coral-deep' : 'text-[rgba(22,20,64,0.35)]')}>
+                      error ? 'text-coral-deep' : 'text-navy-light/80')}>
                       {loading ? 'Cargando…' : (error ?? 'Sin devoluciones')}
                     </td>
                   </tr>
@@ -371,9 +371,9 @@ export default function DevolucionesPage() {
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{r.member_name}</p>
-                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">{r.entity_name}</p>
-                    {r.reason && <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body mt-0.5">{r.reason}</p>}
-                    <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
+                    <p className="text-[13px] text-navy-light/80 font-body truncate">{r.entity_name}</p>
+                    {r.reason && <p className="text-[13px] text-navy-light/80 font-body mt-0.5">{r.reason}</p>}
+                    <p className="text-[13px] text-navy-light/80 font-body mt-0.5">Solicitada {formatDate(r.requested_at)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
@@ -386,7 +386,7 @@ export default function DevolucionesPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setCompleteTarget(r)}
-                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-[#3DB97A] font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(61,185,122,0.30)] text-success-deep font-body"
                     >
                       Completar
                     </button>
@@ -401,7 +401,7 @@ export default function DevolucionesPage() {
               </li>
             ))}
             {refunds.length === 0 && (
-              <li className="px-5 py-8 text-center text-sm text-[rgba(22,20,64,0.35)] font-body">{loading ? 'Cargando…' : 'Sin devoluciones'}</li>
+              <li className="px-5 py-8 text-center text-sm text-navy-light/80 font-body">{loading ? 'Cargando…' : 'Sin devoluciones'}</li>
             )}
           </ul>
         </div>
@@ -418,12 +418,12 @@ export default function DevolucionesPage() {
                 Devolución de <strong>{formatMoney(completeTarget.amount, completeTarget.currency)}</strong> a <strong>{completeTarget.member_name}</strong>
               </p>
               <div>
-                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Fecha de transferencia</label>
+                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Fecha de transferencia</label>
                 <input id="fecha-de-transferencia" type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
-                <label htmlFor="numero-de-confirmacion" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Número de confirmación</label>
+                <label htmlFor="numero-de-confirmacion" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Número de confirmación</label>
                 <input id="numero-de-confirmacion" type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
@@ -477,7 +477,7 @@ export default function DevolucionesPage() {
               <button
                 onClick={handleConvert}
                 disabled={converting}
-                className="flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 font-body bg-[#7C5EC2]"
+                className="flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50 font-body bg-[#6A4CB0]"
               >
                 {converting ? 'Convirtiendo…' : `Convertir ${formatMoney(convertTarget.amount, convertTarget.currency)} en donación`}
               </button>
@@ -497,7 +497,7 @@ export default function DevolucionesPage() {
                 Rechazando devolución de <strong>{rejectTarget.member_name}</strong>
               </p>
               <div>
-                <label htmlFor="motivo-del-rechazo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">Motivo del rechazo</label>
+                <label htmlFor="motivo-del-rechazo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Motivo del rechazo</label>
                 <textarea id="motivo-del-rechazo" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
                   className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />

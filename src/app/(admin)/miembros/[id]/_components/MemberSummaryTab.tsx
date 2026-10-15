@@ -10,12 +10,12 @@ import { formatSedeRecency } from '@/lib/sede-attendance'
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
   Campamento: 'bg-teal-soft/30 text-teal-deep',
-  'Actividad Social': 'bg-coral-soft/20 text-coral',
+  'Actividad Social': 'bg-coral/10 text-coral-deep',
   United: 'bg-navy-light/10 text-navy-light',
 }
 
 const ATTENDANCE_BADGE: Record<string, string> = {
-  servidor: 'bg-coral-soft/20 text-coral',
+  servidor: 'bg-coral/10 text-coral-deep',
   participante: 'bg-surface-low text-navy-light/80',
 }
 
@@ -23,7 +23,7 @@ function studyStageColor(stage: string): string {
   if (stage === 'niveles') return 'bg-navy/10 text-navy'
   if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-deep'
   if (stage === 'campaña') return 'bg-purple-100 text-purple-700'
-  return 'bg-coral-soft/20 text-coral'
+  return 'bg-coral/10 text-coral-deep'
 }
 
 /** Etapa de un estudio por código (catálogo real de la BD). */

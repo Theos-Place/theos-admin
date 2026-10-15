@@ -167,7 +167,7 @@ export function ScholarshipRequestModal({
             <div className="grid grid-cols-2 gap-2">
               {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
                 <button key={v} type="button" onClick={() => { setEntityType(v); setTarget(null); setGrupoId('') }}
-                  className={cn('rounded-xl p-2.5 text-sm font-medium border transition-all text-left font-body', entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80')}>
+                  className={cn('rounded-xl p-2.5 text-sm font-medium border transition-all text-left font-body', entityType === v ? 'border-coral bg-coral/5 text-coral-deep' : 'border-outline bg-surface-low text-navy/80')}>
                   {l}
                 </button>
               ))}
@@ -255,7 +255,7 @@ export function ScholarshipRequestModal({
             placeholder={`Ampliá un poco (mínimo ${MINIMO_DEL_DETALLE} caracteres)…`}
             className={cn(FIELD_CLS, 'resize-none placeholder:text-navy-light/80')}
           />
-          <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MINIMO_DEL_DETALLE ? 'text-navy-light/80' : 'text-success')}>
+          <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MINIMO_DEL_DETALLE ? 'text-navy-light/80' : 'text-success-deep')}>
             {reason.trim().length}/{MINIMO_DEL_DETALLE} caracteres mínimos
           </p>
         </div>

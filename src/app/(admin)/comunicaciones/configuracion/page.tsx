@@ -222,7 +222,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral-deep')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ Conexión exitosa' : '✗ No se pudo conectar. Verificá los datos.'}
           </div>
@@ -269,7 +269,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral-deep')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ WhatsApp conectado correctamente' : '✗ No se pudo conectar con la API.'}
           </div>
@@ -654,7 +654,7 @@ function EmailSection() {
         </div>
         <span className={cn(
           'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0 font-display',
-          status.configured ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral/10 text-coral',
+          status.configured ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral/10 text-coral-deep',
         )}>
           {status.configured ? <><CheckCircle2 size={10} /> Configurado</> : <><XCircle size={10} /> Sin configurar</>}
         </span>

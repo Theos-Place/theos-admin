@@ -357,7 +357,7 @@ export function CalendarGrid({
                   return (
                     <button
                       onClick={() => { setPop(null); onRegister?.(elig) }}
-                      className="w-full rounded-full bg-coral/10 hover:bg-coral/20 px-4 py-2 text-sm font-medium text-coral transition-colors font-body"
+                      className="w-full rounded-full bg-coral/10 hover:bg-coral/20 px-4 py-2 text-sm font-medium text-coral-deep transition-colors font-body"
                     >
                       Inscribirme
                     </button>

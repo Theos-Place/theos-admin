@@ -51,8 +51,8 @@ export const APPLICATION_STATE_HELP: Record<ApplicationState, string> = {
 export const APPLICATION_STATE_BADGE: Record<ApplicationState, string> = {
   pending: 'bg-navy-light/10 text-navy-light/80',
   sent_to_leader: 'bg-[rgba(59,117,121,0.14)] text-[#2F5C5F]',
-  reviewing: 'bg-[rgba(233,185,73,0.15)] text-[#A8821F]',
-  approved: 'bg-success/12 text-success',
+  reviewing: 'bg-[rgba(233,185,73,0.15)] text-[#7F6210]',
+  approved: 'bg-success/12 text-success-deep',
   rejected: 'bg-coral/10 text-coral-deep',
 }
 

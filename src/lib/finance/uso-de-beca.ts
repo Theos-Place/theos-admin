@@ -67,7 +67,7 @@ export const ETIQUETA_ESTADO_BECA: Record<'active' | 'used' | 'revoked', string>
 export const BADGE_USO: Record<Uso, string> = {
   sin_usar: 'bg-amber-50 text-amber-700',
   usada: 'bg-teal-soft/30 text-teal-deep',
-  revocada: 'bg-coral-soft/20 text-coral',
+  revocada: 'bg-coral/10 text-coral-deep',
 }
 
 /** El orden importa: "Sin aplicar" primero porque es la única que pide acción. */

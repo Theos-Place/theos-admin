@@ -154,8 +154,8 @@ export default function FinanzasPage() {
           {/* Total ingresos */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={16} className="text-[#3DB97A]" />
-              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Total ingresos</p>
+              <TrendingUp size={16} className="text-success-deep" />
+              <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Total ingresos</p>
             </div>
             <p className="text-2xl font-extrabold font-display text-navy">
               <TotalsDisplay totals={totalIngresos} defaultHidden={false} revealed={revealAll} />
@@ -166,7 +166,7 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <Heart size={16} className="text-teal-deep" />
-              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Donantes activos</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Donantes activos</p>
             </div>
             <p className="text-4xl font-extrabold font-display text-teal-deep">
               {activeDonors ?? '—'}
@@ -178,14 +178,14 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Pagos pendientes</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
-                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral-deep">
                   Revisar
                 </span>
               )}
@@ -196,14 +196,14 @@ export default function FinanzasPage() {
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
               <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
-              <p className="text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">Devoluciones pend.</p>
+              <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
               <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
-                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral">
+                <span className="text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral-deep">
                   Revisar
                 </span>
               )}
@@ -236,7 +236,7 @@ export default function FinanzasPage() {
               href="/finanzas/becas/nueva"
               className="flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium transition-all hover:opacity-80 bg-surface-card shadow-[var(--shadow-md)] text-navy font-body"
             >
-              <GraduationCap size={16} className="text-[#3DB97A]" />
+              <GraduationCap size={16} className="text-success-deep" />
               Nueva beca
             </Link>
             <Link
@@ -276,7 +276,7 @@ export default function FinanzasPage() {
             {unusedScholarships > 0 && (
               <Link href="/finanzas/becas" className="flex items-center rounded-2xl px-5 py-4 transition-all hover:opacity-80 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <div className="flex items-start gap-2.5">
-                  <GraduationCap size={15} className="text-[#3DB97A] mt-[1px] shrink-0" />
+                  <GraduationCap size={15} className="text-success-deep mt-[1px] shrink-0" />
                   <div>
                     <p className="text-[13px] font-semibold font-body text-[#1E6B42]">
                       {unusedScholarships} beca{unusedScholarships !== 1 ? 's' : ''} sin usar

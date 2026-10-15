@@ -5,8 +5,8 @@ import type { PaymentMethod } from '@/types/finance'
 const METHOD_CONFIG: Record<PaymentMethod, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   card:        { label: 'Tarjeta',     color: '#161440', bg: 'rgba(22,20,64,0.08)',    Icon: CreditCard    },
   sinpe:       { label: 'SINPE',       color: '#3B7579', bg: 'rgba(81,157,162,0.12)',  Icon: Smartphone    },
-  scholarship: { label: 'Beca',        color: '#3DB97A', bg: 'rgba(61,185,122,0.12)', Icon: GraduationCap },
-  cash:        { label: 'Efectivo',    color: '#E9B949', bg: 'rgba(233,185,73,0.15)', Icon: Banknote      },
+  scholarship: { label: 'Beca',        color: '#1E6B42', bg: 'rgba(61,185,122,0.12)', Icon: GraduationCap },
+  cash:        { label: 'Efectivo',    color: '#7F6210', bg: 'rgba(233,185,73,0.15)', Icon: Banknote      },
   comprobante: { label: 'Comprobante', color: '#3B7579', bg: 'rgba(81,157,162,0.12)', Icon: Receipt       },
 }
 

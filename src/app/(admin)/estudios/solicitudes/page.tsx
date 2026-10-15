@@ -254,7 +254,7 @@ export default function SolicitudesPage() {
               <span>Último dirigente: {r.last_leader_name}</span>
             )}
             {r.request_type === 'relocation' && r.wants_folleto && (
-              <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[13px] font-semibold text-coral font-display">
+              <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[13px] font-semibold text-coral-deep font-display">
                 Ocupa folleto
               </span>
             )}

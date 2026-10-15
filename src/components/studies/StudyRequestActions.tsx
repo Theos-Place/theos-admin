@@ -331,7 +331,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                     <div>
                       <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
                       <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')} />
-                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
+                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success-deep')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
                     </div>
                   </>
                 )}

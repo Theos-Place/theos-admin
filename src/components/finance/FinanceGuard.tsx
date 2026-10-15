@@ -27,7 +27,7 @@ export function FinanceGuard({ children }: { children: React.ReactNode }) {
           Acceso restringido
         </h2>
         <p
-          className="text-sm text-center max-w-sm font-body text-[rgba(22,20,64,0.60)]"
+          className="text-sm text-center max-w-sm font-body text-navy-light/80"
         >
           Este módulo es solo para el equipo de Finanzas.
         </p>

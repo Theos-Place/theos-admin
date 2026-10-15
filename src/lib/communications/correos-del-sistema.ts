@@ -44,8 +44,8 @@ export const ETIQUETA_ESTADO: Record<EstadoCorreo, string> = {
 export const BADGE_ESTADO: Record<EstadoCorreo, string> = {
   delivered: 'bg-teal-soft/30 text-teal-deep',
   sent: 'bg-navy/10 text-navy',
-  bounced: 'bg-coral-soft/20 text-coral',
-  failed: 'bg-coral-soft/20 text-coral',
+  bounced: 'bg-coral/10 text-coral-deep',
+  failed: 'bg-coral/10 text-coral-deep',
   pending: 'bg-amber-50 text-amber-700',
   silenciado: 'bg-amber-50 text-amber-700',
 }

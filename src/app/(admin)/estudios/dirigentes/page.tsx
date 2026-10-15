@@ -105,7 +105,7 @@ function DirigenteRow({
             <span className={cn(
               'rounded-full px-2 py-0.5 text-[11px] font-medium font-body',
               estadoMostrado(d.estado_admin?.estado_base) === 'activo'
-                ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]'
+                ? 'bg-[rgba(61,185,122,0.12)] text-success-deep'
                 : 'bg-surface-low text-navy-light/80',
             )}>
               {ETIQUETA_MOSTRADA[estadoMostrado(d.estado_admin?.estado_base)]}
@@ -113,12 +113,12 @@ function DirigenteRow({
             {/* DIR-6: el matiz solo llega a quien lo administra (el API lo
                 colapsa para el resto), y solo se pinta cuando lo hay. */}
             {(ADMIN_ONLY_STATUSES as readonly string[]).includes(d.availability_status) && (
-              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-[rgba(233,185,73,0.15)] text-[#A8821F] font-body">
+              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-[rgba(233,185,73,0.15)] text-[#7F6210] font-body">
                 {LEADER_STATUS_LABEL[d.availability_status]}
               </span>
             )}
             {d.estudios_activos.length > 0 && (
-              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-coral/10 text-coral font-body">
+              <span className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-coral/10 text-coral-deep font-body">
                 Dando ahora
               </span>
             )}

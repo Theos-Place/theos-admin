@@ -21,7 +21,7 @@ const REC_LABEL: Record<string, string> = { oracion: 'Oración', servicio: 'Serv
 const REC_BADGE: Record<string, string> = {
   oracion: 'bg-navy/10 text-navy',
   servicio: 'bg-teal-soft/30 text-teal-deep',
-  dirigente: 'bg-coral-soft/20 text-coral',
+  dirigente: 'bg-coral/10 text-coral-deep',
 }
 
 type Recommendation = {

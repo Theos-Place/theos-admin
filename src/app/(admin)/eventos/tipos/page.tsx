@@ -115,7 +115,7 @@ function TypeModal({
               onClick={() => setCustomColor(true)}
               className={cn(
                 'h-8 px-3 rounded-full text-[13px] border transition-all',
-                customColor ? 'border-coral text-coral bg-coral/5' : 'text-navy-light/80 hover:bg-surface-low',
+                customColor ? 'border-coral text-coral-deep bg-coral/5' : 'text-navy-light/80 hover:bg-surface-low',
                 'font-display'
               )}
               style={{ borderColor: customColor ? undefined : 'var(--outline-variant)' }}
@@ -153,7 +153,7 @@ function TypeModal({
                   onClick={() => setForm(f => ({ ...f, icon: ico }))}
                   className={cn(
                     'h-10 rounded-xl flex items-center justify-center border transition-all duration-150',
-                    form.icon === ico ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/80 hover:bg-surface-low'
+                    form.icon === ico ? 'border-coral bg-coral/5 text-coral-deep' : 'text-navy-light/80 hover:bg-surface-low'
                   )}
                   style={{ borderColor: form.icon === ico ? undefined : 'var(--outline-variant)' }}
                   title={ico}

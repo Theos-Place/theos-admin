@@ -1,5 +1,6 @@
 'use client'
 
+import { textoSobreSuTinte } from '@/lib/contrast'
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Search, UserPlus, Check, AlertTriangle } from 'lucide-react'
@@ -19,14 +20,14 @@ function RoleBadge({ roleId, small }: { roleId: RoleId; small?: boolean }) {
   return (
     <span
       className={cn('inline-flex items-center rounded-full font-medium', small ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-[13px]')}
-      style={{ background: `${role.color}18`, color: role.color, border: `1px solid ${role.color}30` }}
+      style={{ background: `${role.color}18`, color: textoSobreSuTinte(role.color, 0x18 / 255), border: `1px solid ${role.color}30` }}
     >
       {role.name}
     </span>
   )
 }
 
-const AVATAR_COLORS = ['#161440', '#D63E3D', '#3B7579', '#9B7FD4', '#E9B949', '#3DB97A']
+const AVATAR_COLORS = ['#161440', '#C43635', '#3B7579', '#6A4CB0', '#7F6210', '#1E6B42'] // QA-2/M1: todos con letra blanca ≥ 5.2:1
 function avatarBg(id: string) {
   return AVATAR_COLORS[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length]
 }
@@ -208,7 +209,7 @@ export default function AccesosPage() {
                 <div>
                   <p className="text-[13px] font-semibold text-navy font-body">{miembro.name}</p>
                   <p className="text-[13px] text-navy-light/80 leading-relaxed mb-1.5 font-body">{miembro.description}</p>
-                  <span className="inline-flex text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body">
+                  <span className="inline-flex text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#5F6378] font-body">
                     Asignado automáticamente a todos — no requiere gestión manual
                   </span>
                 </div>

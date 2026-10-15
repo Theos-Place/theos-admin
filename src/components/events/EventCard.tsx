@@ -106,7 +106,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
             <button
               type="button"
               onClick={onRegister}
-              className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral transition-colors font-body"
+              className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral-deep transition-colors font-body"
             >
               Inscribirme
             </button>
@@ -126,7 +126,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
               <button
                 type="button"
                 onClick={onUploadReceipt}
-                className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral transition-colors font-body"
+                className="w-full rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2 text-[13px] font-medium text-coral-deep transition-colors font-body"
               >
                 Subir comprobante
               </button>

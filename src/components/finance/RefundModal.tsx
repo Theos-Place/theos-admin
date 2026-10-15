@@ -63,7 +63,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               <p id="solicitar-devolucion" className="text-sm font-bold font-display text-navy">
                 Solicitar devolución
               </p>
-              <p className="text-[13px] font-body text-[rgba(22,20,64,0.45)]">
+              <p className="text-[13px] font-body text-navy-light/80">
                 {payment.member_name}
               </p>
             </div>
@@ -76,11 +76,11 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Summary */}
           <div className="rounded-xl p-4 space-y-2 bg-[rgba(22,20,64,0.03)] border border-[rgba(22,20,64,0.08)]">
             <div className="flex justify-between text-[13px] font-body">
-              <span className="text-[rgba(22,20,64,0.55)]">Concepto</span>
+              <span className="text-navy-light/80">Concepto</span>
               <span className="text-navy font-medium">{payment.entity_name}</span>
             </div>
             <div className="flex justify-between text-[13px] font-body">
-              <span className="text-[rgba(22,20,64,0.55)]">Monto pagado</span>
+              <span className="text-navy-light/80">Monto pagado</span>
               <span className="text-navy font-medium">
                 <AmountDisplay amount={payment.amount} currency={payment.currency} defaultHidden={false} />
               </span>
@@ -89,7 +89,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Type */}
           <div>
-            <p className="text-[13px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">
+            <p className="text-[13px] uppercase tracking-widest mb-2 font-display text-navy-light/80">
               Tipo de devolución
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -113,7 +113,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
           {/* Partial amount input */}
           {type === 'partial' && (
             <div>
-              <label htmlFor="monto-a-devolver" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+              <label htmlFor="monto-a-devolver" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">
                 Monto a devolver (₡)
               </label>
               <input id="monto-a-devolver"
@@ -130,7 +130,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
 
           {/* Reason */}
           <div>
-            <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+            <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">
               Motivo
             </label>
             <select id="motivo"

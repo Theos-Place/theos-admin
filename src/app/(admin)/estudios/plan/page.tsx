@@ -20,7 +20,7 @@ function StageLabel({ children, color }: { children: React.ReactNode; color: 'na
   const styles = {
     navy:   'bg-navy/10 text-navy',
     teal:   'bg-teal-soft/30 text-teal-deep',
-    coral:  'bg-coral/10 text-coral',
+    coral:  'bg-coral/10 text-coral-deep',
     purple: 'bg-purple-100 text-purple-700',
   }
   return (
@@ -134,7 +134,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
         const STAGE_TAG: Record<string, { label: string; cls: string }> = {
           niveles:    { label: 'Niveles',    cls: 'bg-navy/8 text-navy-light' },
           inicial:    { label: 'Inicial',    cls: 'bg-teal-soft/30 text-teal-deep' },
-          intermedia: { label: 'Intermedia', cls: 'bg-coral/10 text-coral' },
+          intermedia: { label: 'Intermedia', cls: 'bg-coral/10 text-coral-deep' },
           avanzada:   { label: 'Avanzada · Por invitación', cls: 'bg-amber-50 text-amber-700' },
           'campaña':  { label: 'Abiertas a todo público', cls: 'bg-[rgba(155,127,212,0.15)] text-[#7c5cc4]' },
         }

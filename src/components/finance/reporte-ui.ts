@@ -42,7 +42,7 @@ export const TARJETA_ETIQUETA = 'flex items-center gap-1.5 text-[11px] uppercase
 export const TARJETA_VALOR = 'text-3xl font-extrabold font-display'
 export const VALOR_NEUTRO = 'text-navy'
 export const VALOR_DINERO = 'text-teal-deep'
-export const VALOR_PENDIENTE = 'text-[#A8821F]'
+export const VALOR_PENDIENTE = 'text-[#7F6210]'
 
 // ── Tablas ───────────────────────────────────────────────────────────────
 export const CAJA_TABLA = 'rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]'

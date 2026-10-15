@@ -59,7 +59,7 @@ type Scholarship = {
 // pantallas y renombrar una etiqueta pedía acordarse de las tres.
 const STATUS_LABEL: Record<string, string> = ETIQUETA_ESTADO_BECA
 const STATUS_BADGE: Record<string, string> = {
-  active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral-soft/20 text-coral',
+  active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral/10 text-coral-deep',
 }
 
 export default function BecasPage() {
@@ -369,7 +369,7 @@ export default function BecasPage() {
                       <td className="px-4 py-3">
                         <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display',
                           r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-deep'
-                          : r.status === 'rejected' ? 'bg-coral-soft/20 text-coral'
+                          : r.status === 'rejected' ? 'bg-coral/10 text-coral-deep'
                           : 'bg-amber-50 text-amber-700')}>
                           {r.status === 'open' ? 'Abierta' : r.status === 'in_review' ? 'En revisión' : r.status === 'resolved' ? 'Aprobada' : 'Rechazada'}
                         </span>

@@ -29,7 +29,7 @@ function levelPillCls(level: string): string {
   switch (level) {
     case 'Básico':     return 'bg-teal-soft/30 text-teal-deep'
     case 'Intermedio': return 'bg-navy/10 text-navy'
-    case 'Avanzado':   return 'bg-coral/10 text-coral'
+    case 'Avanzado':   return 'bg-coral/10 text-coral-deep'
     default:           return 'bg-surface-low text-navy-light/80'
   }
 }
@@ -294,7 +294,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
               <div>
                 <p className={sectionLabelCls}>Acceso</p>
                 <div className="mt-1.5">
-                  <span className="inline-flex items-center rounded-full bg-[rgba(155,127,212,0.15)] px-2.5 py-1 text-[13px] font-medium text-[#7C5EC2] font-body">
+                  <span className="inline-flex items-center rounded-full bg-[rgba(155,127,212,0.15)] px-2.5 py-1 text-[13px] font-medium text-[#6A4CB0] font-body">
                     Solo por invitación
                   </span>
                 </div>
@@ -307,7 +307,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                 <p className={sectionLabelCls}>Compromisos requeridos para matricular</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   {view.req_donor && (
-                    <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral font-body">
+                    <span className="inline-flex items-center rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral-deep font-body">
                       Ser donante activo
                     </span>
                   )}
@@ -323,7 +323,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                   )}
                   {view.req_bus && (
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral font-body"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral-deep font-body"
                       title="Haber asistido a la charla del Bus"
                     >
                       <Bus size={14} aria-hidden />

@@ -352,7 +352,7 @@ export default function ListaDetailPage() {
                     {member.birth_date ? ` · ${calcAge(member.birth_date)} años` : ''}
                   </p>
                 </div>
-                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-coral/10 text-coral-deep')}>
                   {member.is_active ? 'Activo' : 'Inactivo'}
                 </span>
                 <ArrowRight size={15} className="shrink-0 text-navy-light/80" strokeWidth={1.75} />
@@ -424,7 +424,7 @@ export default function ListaDetailPage() {
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-coral/10 text-coral-deep')}>
                                 {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
@@ -433,7 +433,7 @@ export default function ListaDetailPage() {
                           return (
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
-                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
+                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral-deep font-body">Sí</span>
                                 : <span className="text-sm text-navy-light/80">—</span>
                               }
                             </td>

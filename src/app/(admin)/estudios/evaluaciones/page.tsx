@@ -116,7 +116,7 @@ function TicketDetail({
       </p>
 
       {pocas && (
-        <p className="rounded-xl bg-[rgba(233,185,73,0.12)] px-3 py-2 text-[13px] text-[#A8821F] font-body">
+        <p className="rounded-xl bg-[rgba(233,185,73,0.12)] px-3 py-2 text-[13px] text-[#7F6210] font-body">
           Con menos de {MIN_RESPUESTAS_PARA_MOSTRAR} respuestas, al dirigente no se le muestran
           los comentarios: con tan pocas, quién los escribió deja de ser anónimo.
         </p>
@@ -228,7 +228,7 @@ function TicketDetail({
                 {participants.map(p => (
                   <li key={p.member_id} className="flex items-center gap-1.5 text-[13px] font-body">
                     {p.responded
-                      ? <Check size={13} className="text-success shrink-0" aria-hidden="true" />
+                      ? <Check size={13} className="text-success-deep shrink-0" aria-hidden="true" />
                       : <span className="w-[13px] shrink-0" aria-hidden="true" />}
                     <span className={p.responded ? 'text-navy' : 'text-navy-light/80'}>
                       {p.member_name}

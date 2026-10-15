@@ -62,11 +62,11 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-navy" />
-            <span className="text-[13px] font-body text-[rgba(22,20,64,0.55)]">Pagos</span>
+            <span className="text-[13px] font-body text-navy-light/80">Pagos</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-2.5 rounded-sm bg-teal-deep" />
-            <span className="text-[13px] font-body text-[rgba(22,20,64,0.55)]">Donaciones</span>
+            <span className="text-[13px] font-body text-navy-light/80">Donaciones</span>
           </div>
           {presentes.length > 1 && (
             <select
@@ -86,7 +86,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
           {[1, 0.75, 0.5, 0.25, 0].map(frac => (
             <div key={frac} className="flex items-center gap-2">
-              <span className="text-[11px] w-12 text-right shrink-0 text-[rgba(22,20,64,0.30)] font-body">
+              <span className="text-[11px] w-12 text-right shrink-0 text-navy-light/80 font-body">
                 {frac === 0 ? '0' : `${currencySymbol(cur)}${Math.round(maxVal * frac / 1000)}k`}
               </span>
               <div className="flex-1 border-t border-[rgba(22,20,64,0.06)]" />
@@ -121,7 +121,7 @@ export function FinanceChart({ payments, donations }: { payments: Payment[]; don
                     title={`Donaciones: ${formatMoney(dv, cur)}`}
                   />
                 </div>
-                <span className="text-[13px] mt-2 text-center font-body text-[rgba(22,20,64,0.60)]">
+                <span className="text-[13px] mt-2 text-center font-body text-navy-light/80">
                   {label}
                 </span>
               </div>

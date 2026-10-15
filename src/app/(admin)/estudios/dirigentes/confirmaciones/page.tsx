@@ -61,7 +61,7 @@ const FILTROS: Array<{ key: 'pendientes' | EstadoDeConfirmacion | 'todos'; label
 const BADGE: Record<EstadoDeConfirmacion, string> = {
   nunca: 'bg-surface-low text-navy-light/80',
   vencida: 'bg-coral/10 text-coral-deep',
-  vigente: 'bg-success/12 text-success',
+  vigente: 'bg-success/12 text-success-deep',
 }
 
 export default function ConfirmacionesPage() {

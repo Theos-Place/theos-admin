@@ -70,7 +70,7 @@ export function Combobox({
           {display || placeholder}
         </span>
         {value.kind === 'new' && (
-          <span className="shrink-0 rounded-full bg-coral/15 px-2 py-0.5 text-[11px] font-medium text-coral font-body">nueva</span>
+          <span className="shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-medium text-coral-deep font-body">nueva</span>
         )}
         <ChevronDown size={15} className="shrink-0 text-navy-light/80" />
       </button>

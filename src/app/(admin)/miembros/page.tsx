@@ -634,7 +634,7 @@ function MiembrosContent() {
                         case 'status':
                           return (
                             <td key="status" className="px-4 py-3.5">
-                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                              <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-coral/10 text-coral-deep')}>
                                 {member.is_active ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
@@ -643,7 +643,7 @@ function MiembrosContent() {
                           return (
                             <td key="is_donor" className="px-4 py-3.5">
                               {member.is_donor
-                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral font-body">Sí</span>
+                                ? <span className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral-deep font-body">Sí</span>
                                 : <span className="text-sm text-navy-light/80 font-body">—</span>
                               }
                             </td>
@@ -735,9 +735,9 @@ function MiembrosContent() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] text-coral font-body">Donante</span>}
+                    {member.is_donor && <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] text-coral-deep font-body">Donante</span>}
                     <AccountBadge state={member.account_state} />
-                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-coral/10 text-coral')}>
+                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium font-body', member.is_active ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-coral/10 text-coral-deep')}>
                       {member.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </div>

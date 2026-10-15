@@ -8,13 +8,27 @@ Cada tanda es un commit a `staging` verificado; a prod cuando se pida.
 Regla de cada tanda: medir antes y después (axe para accesibilidad,
 `pg_stat_statements` para BD), y dejar un test o un ratchet que impida volver.
 
-## Tanda 1 — Accesibilidad de base (QA-2 M1, M4, M5) · S · un día
+## Tanda 1 — Accesibilidad de base (QA-2 M1, M4, M5) · S · HECHA 2026-10-15 (staging)
 
 - Seis tokens de color bajo 4,5:1 → arregla 268 elementos en 39 pantallas.
   Sumar los pares a `src/lib/contrast.test.ts`.
 - «Saltar al contenido» en el AppShell (60 Tab hoy hasta llegar a trabajar).
 - `Modal.tsx`: devolver el foco al botón que abrió aunque haya `autoFocus`
   (23 archivos se benefician sin tocarlos).
+
+**Resultado medido** (axe sobre las 40 pantallas que tenían contraste bajo,
+`axe/despues-tanda1-contraste.json`): escritorio de 268 a 110 elementos y de 39
+a 17 pantallas; móvil de 237 a 81 y de 40 a 16. Saltar al contenido: el primer
+Tab lo enfoca y Enter + Tab entra a `<main>` en las 5 pantallas probadas
+(`scripts/qa/probar-salto.ts`). Modal: el foco vuelve a «Agregar donación».
+
+**Lo que quedó de contraste, para la tanda 2** (pares distintos de los seis):
+- `text-coral` sobre el fondo gris de página (4.35): enlaces y pestañas activas.
+  Decidir si el coral de texto pasa a `coral-deep` en todo el admin.
+- `text-teal-deep` sobre tintes teal cuando la tarjeta no es blanca
+  (`/estudios/plan`, 44 nodos): hace falta un teal de texto más oscuro.
+- Sueltos: banner de vista previa de formularios, cifras sobre barras de
+  `/reportes/asistencia`, montos ocultos en `/finanzas/pagos`.
 
 ## Tanda 2 — Nombres accesibles y foco (QA-2 M2, M3, M6) · S/M · un día
 

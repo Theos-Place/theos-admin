@@ -1,6 +1,6 @@
 'use client'
 import { X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const FOCUSABLE = [
   'a[href]',
@@ -44,6 +44,15 @@ export function Modal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // A dónde volver al cerrar. Se toma EN EL PRIMER RENDER y no en el efecto
+  // (QA-2/M5, 2026-10-15): un hijo con `autoFocus` se enfoca en el commit,
+  // ANTES de que corran los efectos, así que el efecto guardaba el input del
+  // propio modal. Al cerrar, ese input ya no existía y el foco caía al
+  // principio de la página — en staging, al banner. 23 modales tienen un
+  // campo con autoFocus.
+  const [origen] = useState<HTMLElement | null>(() =>
+    typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null))
+
   // Escape key to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -56,14 +65,15 @@ export function Modal({
     const panel = panelRef.current
     if (!panel) return
 
-    // A dónde volver al cerrar. Sin esto el foco cae al <body> y quien navega
-    // con teclado pierde el lugar: cerrar un modal abierto desde la fila 40 de
-    // una tabla obligaba a tabular desde el principio otra vez.
-    const origen = document.activeElement as HTMLElement | null
+    // Sin `origen` el foco cae al <body> y quien navega con teclado pierde el
+    // lugar: cerrar un modal abierto desde la fila 40 de una tabla obligaba a
+    // tabular desde el principio otra vez.
 
-    // Move focus inside on mount
-    const firstFocusable = panel.querySelector<HTMLElement>(FOCUSABLE)
-    firstFocusable?.focus()
+    // Meter el foco adentro, salvo que un hijo con autoFocus ya lo haya hecho:
+    // pisarlo mandaría el foco a la X de cerrar en vez de al campo.
+    if (!panel.contains(document.activeElement)) {
+      panel.querySelector<HTMLElement>(FOCUSABLE)?.focus()
+    }
 
     function handleTab(e: KeyboardEvent) {
       if (e.key !== 'Tab') return
@@ -87,7 +97,7 @@ export function Modal({
       // foco al body. En ese caso es mejor no tocar nada.
       if (origen?.isConnected) origen.focus()
     }
-  }, [])
+  }, [origen])
 
   // Prevent body scroll while modal is open
   useEffect(() => {

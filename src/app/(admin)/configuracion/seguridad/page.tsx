@@ -282,7 +282,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
         <div className="flex items-center gap-2.5">
           <p className={SECTION_TITLE}>Passkeys · huella / Face ID</p>
           {!loading && passkeys.length > 0 && (
-            <span className="flex items-center gap-1 text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
+            <span className="flex items-center gap-1 text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success-deep">
               <Check size={11} /> Activado
             </span>
           )}
@@ -494,14 +494,14 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-success/12">
-                <ShieldCheck size={16} className="text-success" />
+                <ShieldCheck size={16} className="text-success-deep" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-navy font-body">
                     {factor.friendly_name?.trim() || 'App de autenticación'}
                   </p>
-                  <span className="text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success">
+                  <span className="text-[13px] rounded-full px-2.5 py-0.5 font-medium font-body bg-success/10 text-success-deep">
                     Activa
                   </span>
                 </div>
@@ -636,7 +636,7 @@ function SessionsCard({ onSave }: { onSave: (msg: string) => void }) {
             <p className="text-[13px] text-navy-light/80 font-body">Sesión actual</p>
           </div>
         </div>
-        <span className="text-[13px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success">
+        <span className="text-[13px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success-deep">
           Esta sesión
         </span>
       </div>

@@ -39,7 +39,7 @@ function levelOf(score: number): 'alto' | 'medio' | 'bajo' {
   return 'bajo'
 }
 const LEVEL = {
-  alto:  { label: 'Alta coincidencia',  cls: 'text-coral bg-coral/10' },
+  alto:  { label: 'Alta coincidencia',  cls: 'text-coral-deep bg-coral/10' },
   medio: { label: 'Media coincidencia', cls: 'text-yellow-600 bg-yellow-50' },
   bajo:  { label: 'Baja coincidencia',  cls: 'text-navy-light/80 bg-surface-low' },
 }

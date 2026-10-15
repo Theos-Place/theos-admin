@@ -252,7 +252,7 @@ export function EventInfoTab({
                     Cambiar
                   </button>
                   <button type="button" onClick={onFlyerClear}
-                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body">
+                    className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-coral-deep bg-coral/10 hover:bg-coral/30 transition-colors font-body">
                     Eliminar
                   </button>
                 </div>

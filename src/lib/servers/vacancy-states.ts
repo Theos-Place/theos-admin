@@ -54,8 +54,8 @@ export const VACANCY_STATE_HELP: Record<VacancyState, string> = {
 
 /** Clases de badge (paleta navy/coral/teal del sistema). */
 export const VACANCY_STATE_BADGE: Record<VacancyState, string> = {
-  lista_para_publicar: 'bg-[rgba(233,185,73,0.15)] text-[#A8821F]',
-  publicada: 'bg-success/12 text-success',
+  lista_para_publicar: 'bg-[rgba(233,185,73,0.15)] text-[#7F6210]',
+  publicada: 'bg-success/12 text-success-deep',
   despublicada: 'bg-navy/10 text-navy',
   denegado: 'bg-coral/10 text-coral-deep',
 }

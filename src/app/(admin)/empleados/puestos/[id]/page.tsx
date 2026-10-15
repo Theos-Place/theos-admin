@@ -52,7 +52,7 @@ export default function PuestoDetailPage() {
               <ContractTypeBadge type={position.contract_type} size="sm" />
               {!position.is_active && (
                 <span
-                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display"
+                  className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral-deep font-display"
                 >
                   Inactivo
                 </span>

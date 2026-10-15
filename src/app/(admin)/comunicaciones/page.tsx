@@ -184,7 +184,7 @@ export default function ComunicacionesPage() {
     scheduled: 'bg-teal-soft/20 text-teal-deep',
     sending:   'bg-amber-50 text-amber-700',
     sent:    'bg-teal-soft/30 text-teal-deep',
-    failed:  'bg-coral/10 text-coral',
+    failed:  'bg-coral/10 text-coral-deep',
     partial: 'bg-amber-50 text-amber-700',
   }
   const STATUS_LABEL: Record<CommunicationStatus, string> = {

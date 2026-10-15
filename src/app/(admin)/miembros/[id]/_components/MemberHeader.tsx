@@ -200,7 +200,7 @@ export function MemberHeader({
                 title="Autorización para aparecer en fotos y publicaciones"
                 className={cn('rounded-full px-2.5 py-0.5 text-xs font-body',
                   member.autorizacion_imagen === true ? 'bg-teal-soft/30 text-teal-deep'
-                    : member.autorizacion_imagen === false ? 'bg-coral/15 text-coral-deep'
+                    : member.autorizacion_imagen === false ? 'bg-coral/10 text-coral-deep'
                     : 'bg-coral-soft/25 text-coral-deep')}
               >
                 Menor · fotos: {ETIQUETA_AUTORIZACION[estadoDeAutorizacion(member.autorizacion_imagen)].toLowerCase()}
@@ -208,7 +208,7 @@ export function MemberHeader({
             )}
             {member.is_donor && (
               <span
-                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"
+                className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral-deep font-body"
               >
                 Donante
               </span>
@@ -233,7 +233,7 @@ export function MemberHeader({
             )}
             {member.roles.includes('admin') && (
               <span
-                className="rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body"
+                className="rounded-full bg-coral/10 px-2.5 py-0.5 text-xs text-coral-deep font-body"
               >
                 Admin
               </span>

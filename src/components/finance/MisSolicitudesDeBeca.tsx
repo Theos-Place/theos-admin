@@ -37,7 +37,7 @@ export const SOLICITUD_LABEL: Record<string, string> = {
 
 export const SOLICITUD_BADGE: Record<string, string> = {
   open: 'bg-amber-50 text-amber-700', in_review: 'bg-amber-50 text-amber-700',
-  resolved: 'bg-teal-soft/30 text-teal-deep', rejected: 'bg-coral-soft/20 text-coral',
+  resolved: 'bg-teal-soft/30 text-teal-deep', rejected: 'bg-coral/10 text-coral-deep',
   por_modificar: 'bg-amber-50 text-amber-700',
 }
 

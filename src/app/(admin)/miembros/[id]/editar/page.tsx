@@ -232,7 +232,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
                 </label>
                 <span
                   className="text-[13px] font-semibold font-body"
-                  style={{ color: isActive ? 'var(--success)' : 'var(--fg-muted)' }}
+                  style={{ color: isActive ? 'var(--success-deep)' : 'var(--fg-muted)' }}
                 >
                   {isActive ? 'Activo' : 'Inactivo'}
                 </span>
@@ -573,7 +573,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
         <div
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body"
         >
-          <Check size={15} className="text-[#3DB97A] shrink-0" />
+          <Check size={15} className="text-success-deep shrink-0" />
           Perfil actualizado exitosamente
         </div>
       )}

@@ -319,7 +319,7 @@ function PagosContent() {
             { label: 'Pendientes', value: totalPending, color: '#E9B949' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-[rgba(22,20,64,0.60)]">{label}</p>
+              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
               <p className="text-xl font-extrabold font-display" style={{ color }}>
                 <TotalsDisplay totals={value} defaultHidden={false} revealed={revealAll} />
               </p>
@@ -330,7 +330,7 @@ function PagosContent() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
-            <Search size={14} className="text-[rgba(22,20,64,0.60)] shrink-0" />
+            <Search size={14} className="text-navy-light/80 shrink-0" />
             <input
               type="search"
               placeholder="Buscar por miembro, concepto..."
@@ -466,7 +466,7 @@ function PagosContent() {
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Concepto', 'Monto', 'Método', 'Estado', 'Fecha de pago', 'Acciones'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">
+                    <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">
                       {h}
                     </th>
                   ))}
@@ -489,13 +489,13 @@ function PagosContent() {
                       ) : (
                         <p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p>
                       )}
-                      <p className="text-[13px] text-[rgba(22,20,64,0.45)] font-body">{p.member_cedula}</p>
+                      <p className="text-[13px] text-navy-light/80 font-body">{p.member_cedula}</p>
                     </td>
                     <td className="px-5 py-4">
                       {/* Qué se está pagando: el NOMBRE del estudio o del
                           evento, y de qué tipo es (2026-08-06). */}
                       <p className="text-[13px] font-body text-navy">{paymentEntityName(toLabel(p)) || p.entity_name}</p>
-                      <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
+                      <p className="text-[13px] text-navy-light/80 font-body">
                         {p.kind_label ?? paymentKindLabel(toLabel(p))}
                       </p>
                     </td>
@@ -516,7 +516,7 @@ function PagosContent() {
                           ahí se dice qué es la fecha que se está viendo en
                           vez de dejar la celda vacía. */}
                       {p.paid_at ? (
-                        <p className="text-[13px] whitespace-nowrap font-body text-[rgba(22,20,64,0.55)]">
+                        <p className="text-[13px] whitespace-nowrap font-body text-navy-light/80">
                           {formatDate(p.paid_at)}
                         </p>
                       ) : (
@@ -582,7 +582,7 @@ function PagosContent() {
                 <button onClick={() => openPayment(p)} className="flex items-start gap-3 w-full text-left">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium font-body text-navy truncate">{p.member_name}</p>
-                    <p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body truncate">
+                    <p className="text-[13px] text-navy-light/80 font-body truncate">
                       {p.description_label ?? paymentDescription(toLabel(p))}
                     </p>
                     <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
@@ -676,7 +676,7 @@ function PagosContent() {
               ))}
             </div>
             {p.notes && (
-              <p className="rounded-xl p-3 text-[13px] text-[rgba(22,20,64,0.65)] font-body bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">{p.notes}</p>
+              <p className="rounded-xl p-3 text-[13px] text-navy-light/80 font-body bg-[rgba(22,20,64,0.04)] border border-[rgba(22,20,64,0.08)]">{p.notes}</p>
             )}
             {canFinance && (
               <Link
@@ -714,7 +714,7 @@ function PagosContent() {
                 <strong>{sinpeTarget.member_name}</strong> — {sinpeTarget.description_label ?? sinpeTarget.entity_name}
               </p>
               <div>
-                <label htmlFor="numero-de-confirmacion-sinpe" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label htmlFor="numero-de-confirmacion-sinpe" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">
                   Número de confirmación SINPE
                 </label>
                 <input id="numero-de-confirmacion-sinpe"
@@ -726,7 +726,7 @@ function PagosContent() {
                 />
               </div>
               <div>
-                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-[rgba(22,20,64,0.60)]">
+                <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">
                   Fecha de transferencia
                 </label>
                 <input id="fecha-de-transferencia"

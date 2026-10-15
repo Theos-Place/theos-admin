@@ -108,7 +108,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                 </div>
                 <span className={cn(
                   'rounded-md px-2 py-0.5 text-[11px] font-medium',
-                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral' : 'bg-teal-soft/30 text-teal-deep'
+                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-deep'
                 )}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>

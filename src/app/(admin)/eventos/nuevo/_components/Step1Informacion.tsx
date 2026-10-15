@@ -78,7 +78,7 @@ export function Step1Informacion({
                 className={cn(
                   'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
                   event_type === t.id
-                    ? 'border-coral bg-coral/5 text-coral'
+                    ? 'border-coral bg-coral/5 text-coral-deep'
                     : 'text-navy-light/80 hover:bg-surface-low',
                 )}
                 style={{ borderColor: event_type === t.id ? undefined : 'var(--outline-variant)' }}
@@ -201,7 +201,7 @@ export function Step1Informacion({
               <button
                 type="button"
                 onClick={onFlyerRemove}
-                className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-coral bg-coral/20 hover:bg-coral/30 transition-colors font-body"
+                className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-coral-deep bg-coral/10 hover:bg-coral/30 transition-colors font-body"
               >
                 Eliminar
               </button>

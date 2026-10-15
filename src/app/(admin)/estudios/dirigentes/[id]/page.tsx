@@ -221,7 +221,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
               ) : (
                 <span className={cn(
                   'rounded-full px-2.5 py-0.5 text-[13px] font-medium font-body',
-                  d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-[#3DB97A]' : 'bg-surface-low text-navy-light/80',
+                  d.status === 'activo' ? 'bg-[rgba(61,185,122,0.12)] text-success-deep' : 'bg-surface-low text-navy-light/80',
                 )}>
                   {d.status === 'activo' ? 'Activo' : 'Inactivo'}
                 </span>
@@ -229,7 +229,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
               {/* El matiz solo aparece cuando LO HAY: para un dirigente
                   disponible, "Disponible" al lado de "Activo" no agrega nada. */}
               {(ADMIN_ONLY_STATUSES as readonly string[]).includes(d.availability_status) && (
-                <span className="rounded-full bg-[rgba(233,185,73,0.15)] px-2.5 py-0.5 text-[13px] font-medium text-[#A8821F] font-body">
+                <span className="rounded-full bg-[rgba(233,185,73,0.15)] px-2.5 py-0.5 text-[13px] font-medium text-[#7F6210] font-body">
                   {LEADER_STATUS_LABEL[d.availability_status]}
                 </span>
               )}
@@ -460,7 +460,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           </button>
         </div>
       )}
-      {saved && !editing && <span className="text-xs text-[#3DB97A] font-body">Guardado ✓</span>}
+      {saved && !editing && <span className="text-xs text-success-deep font-body">Guardado ✓</span>}
     </div>
   )
 }

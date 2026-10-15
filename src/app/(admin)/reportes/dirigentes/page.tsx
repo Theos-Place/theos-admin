@@ -56,7 +56,7 @@ function Delta({ label, actual, punto }: { label: string; actual: number; punto:
       <p className="text-[11px] uppercase tracking-wide text-navy-light/80 font-body">{label}</p>
       <p className={cn(
         'mt-1 flex items-center gap-1 text-2xl font-display font-extrabold tracking-[-0.02em]',
-        d > 0 ? 'text-success' : d < 0 ? 'text-coral' : 'text-navy',
+        d > 0 ? 'text-success-deep' : d < 0 ? 'text-coral' : 'text-navy',
       )}>
         <Icon size={18} aria-hidden="true" />
         {d > 0 ? '+' : ''}{fmt(d)}
@@ -188,7 +188,7 @@ export default function ReporteDirigentesPage() {
           cuando existe hay que verlo. No es una métrica del cuerpo. */}
       {(report.dando_inactivos > 0 || report.dando_sin_ficha > 0) && (
         <div className="rounded-2xl bg-[rgba(233,185,73,0.12)] px-4 py-3">
-          <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#A8821F] font-body">
+          <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#7F6210] font-body">
             <AlertTriangle size={14} aria-hidden="true" /> Datos por revisar
           </p>
           <ul className="mt-1 space-y-0.5 text-[13px] text-navy-light/80 font-body">

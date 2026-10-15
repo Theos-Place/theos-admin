@@ -59,7 +59,7 @@ const STATUS_TABS: { key: StatusTab; label: string }[] = [
 ]
 const QUEUE_STATUS_BADGE: Record<QueueStatus, { label: string; cls: string }> = {
   pendiente: { label: 'Pendiente', cls: 'bg-amber-50 text-amber-700' },
-  en_revision: { label: 'En revisión', cls: 'bg-coral/10 text-coral' },
+  en_revision: { label: 'En revisión', cls: 'bg-coral/10 text-coral-deep' },
   cerrado: { label: 'Cerrado', cls: 'bg-teal-soft/30 text-teal-deep' },
 }
 

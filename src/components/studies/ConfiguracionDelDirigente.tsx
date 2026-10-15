@@ -231,7 +231,7 @@ export function ConfiguracionDelDirigente({ memberId, editable, modo = 'completo
               {' '}
               <span className={cn(
                 'rounded-full px-2 py-0.5 text-[13px] font-body',
-                confirmacion === 'vigente' ? 'bg-success/12 text-success'
+                confirmacion === 'vigente' ? 'bg-success/12 text-success-deep'
                   : confirmacion === 'vencida' ? 'bg-coral/10 text-coral-deep'
                   : 'bg-surface-low text-navy-light/80',
               )}>

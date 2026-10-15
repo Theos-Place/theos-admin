@@ -942,7 +942,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                         <span className={cn(
                           'rounded-md px-2 py-0.5 text-[11px] font-medium',
                           p.status === 'withdrawn' ? 'bg-surface-low text-navy-light/80'
-                            : p.result === 'reprobado' ? 'bg-coral/15 text-coral'
+                            : p.result === 'reprobado' ? 'bg-coral/10 text-coral-deep'
                             : 'bg-teal-soft/30 text-teal-deep'
                         )}>
                           {p.status === 'withdrawn' ? 'Retirado' : p.result === 'reprobado' ? 'Reprobó' : 'Aprobado'}
@@ -1342,7 +1342,7 @@ function AsistenciaPorPersona({
 
   const PINTA: Record<EstadoDeCelda, { clase: string; letra: string }> = {
     presente: { clase: 'bg-teal/25 text-navy', letra: 'P' },
-    ausente: { clase: 'bg-coral/20 text-coral-deep', letra: 'A' },
+    ausente: { clase: 'bg-coral/10 text-coral-deep', letra: 'A' },
     sin_registro: { clase: 'text-navy-light/40', letra: '·' },
   }
 

@@ -172,7 +172,7 @@ export function Liquidacion({ viajeId, editable, gastosIniciales, anticipo, fech
                     aria-label={`Comprobante del gasto ${i + 1}`}
                     onChange={e => { const f = e.target.files?.[0]; if (f) subir(i, f) }} />
                 </label>
-                {g.receipt_path && <span className="text-[13px] text-success font-body">Adjunto ✓</span>}
+                {g.receipt_path && <span className="text-[13px] text-success-deep font-body">Adjunto ✓</span>}
                 {!g.receipt_path && (
                   <input className={`${campo} max-w-xs`} value={g.sin_comprobante_motivo ?? ''}
                     aria-label={`Por qué el gasto ${i + 1} no tiene comprobante`}

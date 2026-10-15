@@ -114,7 +114,7 @@ export default function NuevoCuponPage() {
             <div className="grid grid-cols-2 gap-2">
               {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => { setEntityType(v); setSelectedEntity(null); setEntityQuery('') }}
-                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${entityType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80'}`}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${entityType === v ? 'border-coral bg-coral/5 text-coral-deep' : 'border-outline bg-surface-low text-navy/80'}`}>
                   {l}
                 </button>
               ))}
@@ -167,7 +167,7 @@ export default function NuevoCuponPage() {
             <div className="grid grid-cols-2 gap-2 mb-4">
               {([['percentage', 'Porcentaje'], ['fixed', 'Monto fijo']] as const).map(([v, l]) => (
                 <button key={v} onClick={() => setDiscountType(v)}
-                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${discountType === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80'}`}>
+                  className={`rounded-xl p-3 text-sm font-medium border transition-all text-left font-body ${discountType === v ? 'border-coral bg-coral/5 text-coral-deep' : 'border-outline bg-surface-low text-navy/80'}`}>
                   {l}
                 </button>
               ))}

@@ -310,7 +310,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
         >
           Lógica
           {logicCount > 0 && (
-            <span className="rounded-full bg-coral/20 text-coral text-[11px] px-1.5 py-0.5 font-bold">{logicCount}</span>
+            <span className="rounded-full bg-coral/10 text-coral-deep text-[11px] px-1.5 py-0.5 font-bold">{logicCount}</span>
           )}
         </button>
       </div>

@@ -58,7 +58,7 @@ const STAGE_META: Record<string, { label: string; bg: string; text: string }> = 
   inicial:    { label: 'Etapa Inicial',    bg: 'rgba(181,221,224,0.35)',   text: '#3B7579' },
   intermedia: { label: 'Etapa Intermedia', bg: 'rgba(214,62,61,0.12)',     text: '#C43635' },
   avanzada:   { label: 'Etapa Avanzada',   bg: 'rgba(233,185,73,0.18)',    text: '#9B7200' },
-  'campaña':  { label: 'Campañas',         bg: 'rgba(155,127,212,0.15)',   text: '#7C5EC2' },
+  'campaña':  { label: 'Campañas',         bg: 'rgba(155,127,212,0.15)',   text: '#6A4CB0' },
 }
 
 // Campañas se agrega dinámicamente solo si hay grupos de campaña abiertos.
@@ -383,7 +383,7 @@ export default function MatriculaPage() {
                   En curso
                 </p>
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold bg-coral/15 text-coral font-display"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold bg-coral/10 text-coral-deep font-display"
                 >
                   {currentStudyInfo.code} — {currentStudyInfo.name}
                 </span>
@@ -1020,7 +1020,7 @@ function StudyCard({
                 </span>
               )}
               {result.by_invitation && (
-                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-coral/10 text-coral font-display">
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-coral/10 text-coral-deep font-display">
                   Por invitación
                 </span>
               )}
@@ -1125,7 +1125,7 @@ function StudyCard({
         {result.is_eligible && (
           <button
             onClick={onToggleExpand}
-            className="w-full flex items-center justify-between gap-2 rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2.5 text-[13px] font-medium text-coral transition-colors font-body"
+            className="w-full flex items-center justify-between gap-2 rounded-xl bg-coral/10 hover:bg-coral/20 px-4 py-2.5 text-[13px] font-medium text-coral-deep transition-colors font-body"
           >
             <span>
               {result.available_groups.length} grupo{result.available_groups.length !== 1 ? 's' : ''} disponible{result.available_groups.length !== 1 ? 's' : ''}

@@ -93,7 +93,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[13px] font-medium font-body"><AlertTriangle size={11} /> Correo rebotado</span>
             )}
             {status.complained && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[13px] font-medium font-body"><AlertTriangle size={11} /> Marcó como spam</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral-deep px-2 py-0.5 text-[13px] font-medium font-body"><AlertTriangle size={11} /> Marcó como spam</span>
             )}
           </div>
           <p className="text-[13px] text-navy-light/80 font-body">
@@ -121,7 +121,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
                     </span>
                   )}
                   {status.complained && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral px-2 py-0.5 text-[13px] font-medium font-body">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 text-coral-deep px-2 py-0.5 text-[13px] font-medium font-body">
                       <AlertTriangle size={11} /> Marcó como spam
                     </span>
                   )}

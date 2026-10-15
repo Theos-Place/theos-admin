@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
-import { ratio, contrastRatio, hexToRgb, composite, AA_NORMAL, TOKENS } from './contrast'
+import { ratio, contrastRatio, hexToRgb, composite, AA_NORMAL, TOKENS, textoSobreSuTinte } from './contrast'
+import { ROLES } from './auth/roles'
 
 describe('la matemática, contra valores conocidos', () => {
   it('negro sobre blanco es 21', () => {
@@ -278,5 +279,86 @@ describe('REU-2 · la insignia «En espera» se lee', () => {
 
   it('y el teal-deep de marca NO pasaría sobre su propio tinte', () => {
     expect(contrastRatio(hexToRgb(TINTE_TEAL), fondo)).toBeLessThan(AA_NORMAL)
+  })
+})
+
+// QA-2/M1 (2026-10-15) · Los seis pares que explicaban 268 elementos bajo AA en
+// 39 pantallas. Cada uno con el número de antes, para que nadie lo reintroduzca.
+describe('QA-2/M1 · los seis pares que fallaban, ya arreglados', () => {
+  const sobreTinte = (fg: string, tinte: string, alfa: number, papel: string = TOKENS.white) =>
+    contrastRatio(hexToRgb(fg), composite(hexToRgb(tinte), hexToRgb(papel), alfa))
+
+  it('subtítulo de página (.psub) y --fg-muted: navy-light/80 (antes 0.55 → 3.18 y 0.5 → 2.78)', () => {
+    const css = readFileSync('src/app/globals.css', 'utf8')
+    expect(css).toMatch(/\.psub \{[^}]*color: rgba\(41, 54, 92, 0\.8\)/)
+    expect(css).toMatch(/--fg-muted:\s+rgba\(41, 54, 92, 0\.8\)/)
+    // La etiqueta de los formularios, mismo caso (era 0.6 → 3.62).
+    expect(css).toMatch(/\.form-label \{[^}]*color: rgba\(41, 54, 92, 0\.8\)/)
+    expect(ratio(TOKENS.navyLight, TOKENS.white, 0.8)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('verde como texto: success-deep sobre su tinte /12 (el #3DB97A daba 2.25)', () => {
+    expect(sobreTinte('#3DB97A', '#3DB97A', 0.12)).toBeLessThan(AA_NORMAL)
+    expect(sobreTinte('#1E6B42', '#3DB97A', 0.12)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('ámbar como texto: #7F6210 sobre su tinte /15 (el #A8821F daba 3.29)', () => {
+    expect(sobreTinte('#A8821F', '#E9B949', 0.15)).toBeLessThan(AA_NORMAL)
+    expect(sobreTinte('#7F6210', '#E9B949', 0.15)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  it('coral-deep sobre coral /10 pasa; sobre /15 NO: por eso los chips bajaron a /10', () => {
+    expect(sobreTinte(TOKENS.coral, TOKENS.coral, 0.1)).toBeLessThan(AA_NORMAL)
+    expect(sobreTinte(TOKENS.coralDeep, TOKENS.coral, 0.1)).toBeGreaterThanOrEqual(AA_NORMAL)
+    expect(sobreTinte(TOKENS.coralDeep, TOKENS.coral, 0.15)).toBeLessThan(AA_NORMAL)
+  })
+
+  it('el texto de CADA rol pasa sobre su tinte (el de «Miembro» daba 2.30)', () => {
+    for (const r of ROLES) {
+      const fg = textoSobreSuTinte(r.color, 0x18 / 255)
+      expect(sobreTinte(fg, r.color, 0x18 / 255), r.id).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+
+  it('el chip gris de «Miembro» en /accesos: #5F6378 sobre #9CA0B4/15', () => {
+    expect(sobreTinte('#5F6378', '#9CA0B4', 0.15)).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+})
+
+describe('QA-2/M1 · las combinaciones retiradas no vuelven al código', () => {
+  // Se barre en JS y no con grep: los patrones llevan comillas y backticks que
+  // la shell interpreta.
+  const archivos = execSync('git ls-files src', { encoding: 'utf8' }).split('\n')
+    .filter(f => /\.(tsx?)$/.test(f) && !/\.test\./.test(f))
+  const buscar = (re: RegExp) => archivos.flatMap(f => {
+    const lineas = readFileSync(f, 'utf8').split('\n')
+    return lineas.flatMap((l, i) => (re.test(l) ? [`${f}:${i + 1}`] : []))
+  })
+  // Un string de clases (entre comillas) que pone texto coral sobre un tinte
+  // coral estático. `hover:bg-coral/5` no cuenta: es un estado, no el reposo.
+  const coralSobreTinte = (l: string) => [...l.matchAll(/(['"`])([^'"`]*)\1/g)].some(([, , c]) =>
+    /(^|\s)(bg-coral(-soft)?\/\d+|bg-\[rgba\(214,\s?62,\s?61)/.test(c) && /(^|\s)text-coral(?![-\w/])/.test(c))
+  const coralDeepSobreTinteFuerte = (l: string) => [...l.matchAll(/(['"`])([^'"`]*)\1/g)].some(([, , c]) =>
+    /(^|\s)bg-coral\/(1[5-9]|[2-9]\d)\b/.test(c) && /(^|\s)text-coral-deep\b/.test(c))
+
+  it('nadie pinta el verde #3DB97A como texto', () => {
+    expect(buscar(/text-\[#3DB97A\]/)).toEqual([])
+  })
+  it('nadie pinta texto navy a 0.65 o menos escrito como rgba (0.60 daba 4.2; era la vía de escape de la regla de /50-/70)', () => {
+    expect(buscar(/text-\[rgba\(22, ?20, ?64, ?0?\.(?:[0-5]\d?|6[0-5]?)\)\]/)).toEqual([])
+  })
+  it('ni el morado #7C5EC2 ni el ámbar #C08A00 (2.81 sobre su tinte)', () => {
+    expect(buscar(/#7C5EC2|#C08A00/)).toEqual([])
+  })
+  it('nadie pinta el ámbar #A8821F', () => {
+    expect(buscar(/#A8821F/)).toEqual([])
+  })
+  it('ningún chip pone text-coral sobre un tinte coral', () => {
+    expect(archivos.flatMap(f => readFileSync(f, 'utf8').split('\n')
+      .flatMap((l, i) => (coralSobreTinte(l) ? [`${f}:${i + 1}`] : [])))).toEqual([])
+  })
+  it('ni coral-deep sobre un tinte de /15 para arriba (no llega a 4.5)', () => {
+    expect(archivos.flatMap(f => readFileSync(f, 'utf8').split('\n')
+      .flatMap((l, i) => (coralDeepSobreTinteFuerte(l) ? [`${f}:${i + 1}`] : [])))).toEqual([])
   })
 })

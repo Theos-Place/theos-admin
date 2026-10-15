@@ -186,7 +186,7 @@ export function Bitacora({ viajeId, editable, tramosIniciales, tarifa, moneda, a
         </ul>
       )}
       {avisos.length > 0 && (
-        <ul className="space-y-0.5 text-[13px] text-[#A8821F] font-body">
+        <ul className="space-y-0.5 text-[13px] text-[#7F6210] font-body">
           {avisos.map((a, i) => <li key={i}>⚠ Tramo {a.indice + 1}: {a.mensaje}</li>)}
         </ul>
       )}
@@ -206,7 +206,7 @@ export function Bitacora({ viajeId, editable, tramosIniciales, tarifa, moneda, a
             <p className="text-base font-bold text-navy font-display">{formatMoney(monto, moneda)}</p>
           </div>
           {tarifa === 0 && (
-            <p className="text-[13px] text-[#A8821F] font-body">
+            <p className="text-[13px] text-[#7F6210] font-body">
               La tarifa por kilómetro todavía no está confirmada en el reglamento, así que el
               monto sale en cero. Los kilómetros sí quedan registrados.
             </p>

@@ -31,8 +31,8 @@ import {
  * anularon — lo contrario. Decisión de Floriana, confirmada el 2026-10-13.
  */
 const ETIQUETA: Record<Gravedad, { texto: string; clase: string }> = {
-  pagado:    { texto: 'Cancelado',   clase: 'bg-coral/15 text-coral-deep' },
-  sin_dueno: { texto: 'Sin dueño',   clase: 'bg-coral/15 text-coral-deep' },
+  pagado:    { texto: 'Cancelado',   clase: 'bg-coral/10 text-coral-deep' },
+  sin_dueno: { texto: 'Sin dueño',   clase: 'bg-coral/10 text-coral-deep' },
   pendiente: { texto: 'Pendiente',   clase: 'bg-teal/15 text-navy' },
   anulado:   { texto: 'Anulado',     clase: 'bg-navy-light/10 text-navy-light/80' },
 }

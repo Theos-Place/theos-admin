@@ -1,49 +1,10 @@
 [
   {
-    "flujo": "d) finanzas pagos",
-    "ruta": "/finanzas/pagos",
-    "paradas": 107,
-    "alcanzaAccion": true,
-    "tabsHastaElContenido": 60,
-    "sinFocoVisible": [],
-    "sinNombre": [
-      "a"
-    ],
-    "modal": null
-  },
-  {
-    "flujo": "e) solicitudes",
-    "ruta": "/estudios/solicitudes",
-    "paradas": 60,
-    "alcanzaAccion": false,
-    "tabsHastaElContenido": 60,
-    "sinFocoVisible": [],
-    "sinNombre": [
-      "a"
-    ],
-    "modal": null
-  },
-  {
-    "flujo": "f) soporte",
-    "ruta": "/soporte",
-    "paradas": 69,
-    "alcanzaAccion": false,
-    "tabsHastaElContenido": 60,
-    "sinFocoVisible": [
-      "input «Desde»",
-      "input «Hasta»"
-    ],
-    "sinNombre": [
-      "a"
-    ],
-    "modal": null
-  },
-  {
-    "flujo": "reportes",
+    "flujo": "donaciones",
     "ruta": "/finanzas/reportes",
-    "paradas": 75,
-    "alcanzaAccion": true,
-    "tabsHastaElContenido": 60,
+    "paradas": 20,
+    "alcanzaAccion": false,
+    "tabsHastaElContenido": 0,
     "sinFocoVisible": [],
     "sinNombre": [
       "a"
@@ -52,7 +13,31 @@
       "abrio": true,
       "focoSeEscapo": 0,
       "escCierra": true,
-      "focoVuelveA": "STAGING · los datos de esta pantalla son"
+      "focoVuelveA": "Agregar donación"
     }
+  },
+  {
+    "flujo": "pagos",
+    "ruta": "/finanzas/pagos",
+    "paradas": 20,
+    "alcanzaAccion": false,
+    "tabsHastaElContenido": 0,
+    "sinFocoVisible": [],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": null
+  },
+  {
+    "flujo": "dirigentes",
+    "ruta": "/estudios/dirigentes",
+    "paradas": 20,
+    "alcanzaAccion": false,
+    "tabsHastaElContenido": 0,
+    "sinFocoVisible": [],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": null
   }
 ]

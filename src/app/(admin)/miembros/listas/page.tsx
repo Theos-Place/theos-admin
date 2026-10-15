@@ -322,7 +322,7 @@ export default function ListasGuardadasPage() {
               <div className="flex items-center gap-2 pt-1 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={() => handleComunicar(list.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[13px] font-medium text-coral hover:bg-coral/20 transition-colors font-body"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[13px] font-medium text-coral-deep hover:bg-coral/20 transition-colors font-body"
                 >
                   <MessageCircle size={13} />
                   Comunicar

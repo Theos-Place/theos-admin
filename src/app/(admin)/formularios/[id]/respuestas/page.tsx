@@ -385,7 +385,7 @@ export default function RespuestasPage() {
                 <p id="detalle-respuesta-title" className="text-sm font-bold text-navy font-display">
                   {detailResponse.member_name}
                   {detailResponse.recorded_by_name && (
-                    <span className="ml-2 rounded-full bg-[rgba(233,185,73,0.15)] px-2 py-0.5 text-[13px] font-medium text-[#A8821F] font-body">
+                    <span className="ml-2 rounded-full bg-[rgba(233,185,73,0.15)] px-2 py-0.5 text-[13px] font-medium text-[#7F6210] font-body">
                       {recordedByLabel(detailResponse.recorded_by_name)}
                     </span>
                   )}

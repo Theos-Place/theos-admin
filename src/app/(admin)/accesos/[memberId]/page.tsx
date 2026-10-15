@@ -1,5 +1,6 @@
 'use client'
 
+import { textoSobreSuTinte } from '@/lib/contrast'
 import { useState, use, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, X, Check, ExternalLink } from 'lucide-react'
@@ -9,7 +10,7 @@ import { useToast } from '@/components/shared/Toast'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, todayCR, getInitials } from '@/lib/format'
 
-const AVATAR_COLORS = ['#161440', '#D63E3D', '#3B7579', '#9B7FD4', '#E9B949', '#3DB97A']
+const AVATAR_COLORS = ['#161440', '#C43635', '#3B7579', '#6A4CB0', '#7F6210', '#1E6B42'] // QA-2/M1: todos con letra blanca ≥ 5.2:1
 function avatarBg(id: string) {
   return AVATAR_COLORS[id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length]
 }
@@ -272,7 +273,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                     {role.description}
                   </p>
                   {assigned ? (
-                    <div className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: role.color, fontFamily: 'var(--font-body)' }}>
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: textoSobreSuTinte(role.color, 0x08 / 255), fontFamily: 'var(--font-body)' }}>
                       <Check size={13} />
                       Ya asignado
                     </div>
@@ -313,7 +314,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                     style={{ background: entry.action === 'assigned' ? 'rgba(61,185,122,0.12)' : 'rgba(214,62,61,0.10)', border: '2px solid var(--surface-card)', zIndex: 1 }}
                   >
                     {entry.action === 'assigned'
-                      ? <Check size={12} className="text-success" />
+                      ? <Check size={12} className="text-success-deep" />
                       : <X size={12} className="text-coral" />
                     }
                   </div>

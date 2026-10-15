@@ -99,7 +99,7 @@ export function CruceSedeFormacion({
                     <td key={c.code} className="px-1 py-1 text-center">
                       {c.total === 0 ? (
                         <span
-                          className="inline-block w-7 rounded bg-coral/15 py-1 text-coral-deep"
+                          className="inline-block w-7 rounded bg-coral/10 py-1 text-coral-deep"
                           title={`${f.sede} no tiene a nadie formado en ${estudio?.name ?? c.code}`}
                         >
                           0

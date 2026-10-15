@@ -346,7 +346,7 @@ function MoverBecaModal({ beca, onClose, onDone, onError }: {
             {([['study_plan', 'Estudio'], ['event', 'Evento']] as const).map(([v, l]) => (
               <button key={v} onClick={() => { setTipo(v); setElegido(null); setQ('') }}
                 className={cn('rounded-xl p-2.5 text-sm font-medium border transition-all font-body',
-                  tipo === v ? 'border-coral bg-coral/5 text-coral' : 'border-outline bg-surface-low text-navy/80')}>
+                  tipo === v ? 'border-coral bg-coral/5 text-coral-deep' : 'border-outline bg-surface-low text-navy/80')}>
                 {l}
               </button>
             ))}

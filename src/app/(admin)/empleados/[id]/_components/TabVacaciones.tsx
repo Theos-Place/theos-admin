@@ -16,7 +16,7 @@ const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
 const STATUS_COLORS: Record<string, string> = {
   aprobado:  'bg-teal-soft/30 text-teal-deep',
   pendiente: 'bg-amber-100 text-amber-700',
-  rechazado: 'bg-coral/10 text-coral',
+  rechazado: 'bg-coral/10 text-coral-deep',
 }
 
 function calcularDiasHabiles(desde: string, hasta: string): number {

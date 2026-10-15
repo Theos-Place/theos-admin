@@ -898,7 +898,7 @@ export default function ServidoresAdminPage() {
             </span>
             <button
               onClick={() => setAreaModal({ open: true, editing: null })}
-              className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
+              className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral-deep px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
             >
               <Plus size={12} />
               Nueva
@@ -1015,7 +1015,7 @@ export default function ServidoresAdminPage() {
               </div>
               <button
                 onClick={() => setCommModal({ open: true, editing: null })}
-                className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
+                className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral-deep px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
               >
                 <Plus size={12} />
                 Nuevo
@@ -1174,7 +1174,7 @@ export default function ServidoresAdminPage() {
                     script suelto. */}
                 <button
                   onClick={() => setNuevoPuesto(true)}
-                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
+                  className="inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral-deep px-3 py-1.5 text-[13px] font-medium transition-colors font-body"
                 >
                   <Plus size={12} />
                   Nuevo

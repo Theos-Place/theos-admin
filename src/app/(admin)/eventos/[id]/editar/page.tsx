@@ -111,7 +111,7 @@ function RecurringSaveModal({
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-navy font-body">{opt.title}</p>
                     {opt.warn && (
-                      <span className="rounded-md bg-coral/10 px-1.5 py-0.5 text-[11px] font-semibold text-coral uppercase font-display">
+                      <span className="rounded-md bg-coral/10 px-1.5 py-0.5 text-[11px] font-semibold text-coral-deep uppercase font-display">
                         Atención
                       </span>
                     )}
@@ -502,7 +502,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                     onClick={() => setSelectedType(t.id as EventType)}
                     className={cn(
                       'flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-all duration-150',
-                      selectedType === t.id ? 'border-coral bg-coral/5 text-coral' : 'text-navy-light/80 hover:bg-surface-low'
+                      selectedType === t.id ? 'border-coral bg-coral/5 text-coral-deep' : 'text-navy-light/80 hover:bg-surface-low'
                     )}
                     style={{ borderColor: selectedType === t.id ? undefined : 'var(--outline-variant)' }}
                   >

@@ -84,7 +84,7 @@ function ConditionPill({
           ? cn(
               'cursor-pointer select-none',
               isPicked
-                ? 'bg-coral/15 ring-1 ring-coral text-coral'
+                ? 'bg-coral/10 ring-1 ring-coral text-coral-deep'
                 : 'bg-surface-low text-navy-light/80 hover:bg-navy/8 hover:text-navy',
             )
           : 'bg-navy/8 text-navy-light',
@@ -128,7 +128,7 @@ function GroupBracket({
                 'rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide transition-colors',
                 group.op === 'AND'
                   ? 'bg-navy/10 text-navy hover:bg-navy/20'
-                  : 'bg-coral/10 text-coral hover:bg-coral/20',
+                  : 'bg-coral/10 text-coral-deep hover:bg-coral/20',
                 'font-display',
               )}
             >

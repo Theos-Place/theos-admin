@@ -464,7 +464,7 @@ export default function ReportesPage() {
               onClick={exportQuickBooksPayments}
               className="flex items-center gap-3 rounded-xl p-4 transition-all hover:opacity-80 border border-[var(--outline-variant)] bg-surface-low"
             >
-              <Download size={16} className="text-[#3DB97A] shrink-0" />
+              <Download size={16} className="text-success-deep shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
                 <p className={CELDA}>Formato CSV compatible QuickBooks</p>

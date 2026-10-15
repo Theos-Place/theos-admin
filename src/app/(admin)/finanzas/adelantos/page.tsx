@@ -96,7 +96,7 @@ export default function AdelantosPage() {
                 className={cn('w-full rounded-2xl bg-surface-card p-4 text-left shadow-[var(--shadow-md)] transition-colors', seleccionado?.id === a.id ? 'ring-2 ring-coral/50' : 'hover:bg-surface-low')}>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[13px] font-bold text-navy font-display">{a.sede_name}</p>
-                  {a.estado === 'cerrado' ? <Lock size={13} className="text-navy-light/80" aria-label="Mes cerrado" /> : a.saldo.sobregiro ? <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display">SOBREGIRO</span> : null}
+                  {a.estado === 'cerrado' ? <Lock size={13} className="text-navy-light/80" aria-label="Mes cerrado" /> : a.saldo.sobregiro ? <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral-deep font-display">SOBREGIRO</span> : null}
                 </div>
                 <p className="text-[13px] text-navy-light/80 font-body">Quedan <strong className={cn('font-display', a.saldo.sobregiro ? 'text-coral-deep' : 'text-navy')}>{formatCRC(a.saldo.restante)}</strong> de {formatCRC(a.presupuesto)}</p>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-low"><div className={cn('h-full', a.saldo.sobregiro ? 'bg-coral' : 'bg-teal')} style={{ width: `${a.saldo.porcentaje}%` }} /></div>
@@ -193,7 +193,7 @@ function DetalleDelMes({ a, finanzas, onCambio }: { a: Adelanto; finanzas: boole
             {editable && finanzas && <Button type="button" variante="secundario" tamano="sm" onClick={() => setCerrando(true)} disabled={!cierre.ok} title={cierre.ok ? '' : cierre.motivo}><Lock size={14} aria-hidden="true" /> Cerrar mes</Button>}
           </div>
         </div>
-        {editable && finanzas && !cierre.ok && <p className="mt-2 text-[13px] text-[#A8821F] font-body">{cierre.motivo}</p>}
+        {editable && finanzas && !cierre.ok && <p className="mt-2 text-[13px] text-[#7F6210] font-body">{cierre.motivo}</p>}
       </section>
 
       {a.semanas.length === 0 ? (
@@ -211,7 +211,7 @@ function DetalleDelMes({ a, finanzas, onCambio }: { a: Adelanto; finanzas: boole
                   <p className="text-[13px] text-navy font-body truncate">{ff.proveedor}{ff.numero_factura ? ` · N° ${ff.numero_factura}` : ''}</p>
                   <p className="text-[13px] text-navy-light/80 font-body truncate">
                     {formatDate(ff.fecha)}{ff.observaciones ? ` · ${ff.observaciones}` : ''}{ff.receipt_path ? ' · con foto' : ' · SIN foto'}
-                    {ff.estado === 'pendiente' && <span className="ml-1 rounded-full bg-[rgba(233,185,73,0.15)] px-2 py-0.5 text-[11px] font-semibold text-[#A8821F] font-display">PENDIENTE</span>}
+                    {ff.estado === 'pendiente' && <span className="ml-1 rounded-full bg-[rgba(233,185,73,0.15)] px-2 py-0.5 text-[11px] font-semibold text-[#7F6210] font-display">PENDIENTE</span>}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -275,7 +275,7 @@ function ModalFactura({ a, onCerrar, onListo }: { a: Adelanto; onCerrar: () => v
           <Paperclip size={14} aria-hidden="true" /> {f.receipt_path ? 'Cambiar foto de la factura' : 'Adjuntar foto de la factura'}
           <input type="file" accept="image/*,application/pdf" className="sr-only" aria-label="Foto de la factura" onChange={e => { const x = e.target.files?.[0]; if (x) subir(x) }} />
         </label>
-        {f.receipt_path && <span className="ml-2 text-[13px] text-success font-body">Adjunta ✓</span>}
+        {f.receipt_path && <span className="ml-2 text-[13px] text-success-deep font-body">Adjunta ✓</span>}
         {problemas.length > 0 && <ul className="text-[13px] text-coral-deep font-body">{problemas.map((p, i) => <li key={i}>{p.mensaje}</li>)}</ul>}
         {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
         <div className="flex justify-end gap-2">

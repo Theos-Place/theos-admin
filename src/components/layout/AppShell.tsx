@@ -39,6 +39,16 @@ export function AppShell({
         <SedesProvider>
           <OrgProvider>
             <div className="min-h-screen bg-surface">
+              {/* QA-2/M4 (2026-10-15) · «Saltar al contenido». Sin esto, quien
+                  navega con teclado recorría todo el menú y la barra superior
+                  —60 Tab, medido en 9 pantallas— antes de llegar a trabajar.
+                  Invisible hasta que recibe foco; es lo PRIMERO del shell. */}
+              <a
+                href="#contenido"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[1200] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-navy focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 font-body"
+              >
+                Saltar al contenido
+              </a>
               <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
               {/* Main content — offset for the fixed sidebar on desktop */}
@@ -51,7 +61,7 @@ export function AppShell({
                     admin: las pantallas de gestión no envuelven nada. Las de
                     lectura y las de formulario declaran el suyo con
                     <PageContainer width="reading|form"> (ver layout.md). */}
-                <main className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip">
+                <main id="contenido" tabIndex={-1} className="flex-1 p-4 lg:p-6 min-w-0 overflow-x-clip focus:outline-none">
                   <div className={cn('mx-auto w-full min-w-0', PAGE_WIDTH.work)}>
                     {showCedulaReminder && <DocumentPromptModal />}
                     <ErrorBoundary>{children}</ErrorBoundary>

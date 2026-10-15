@@ -25,7 +25,7 @@ import { ofrecerPagoJunto, sePuedeIncluir } from '@/lib/finance/comprobante-mult
 /** Estado visual de un pago del miembro. */
 export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string } {
   if (p.queue_status === 'en_revision') return { label: 'En revisión', cls: 'bg-amber-50 text-amber-700' }
-  if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral' }
+  if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral-deep' }
   /**
    * PAG-6 · Acá dice «Pagado» A PROPÓSITO, aunque en las pantallas de
    * finanzas el mismo estado se escriba «Cancelado».

@@ -66,3 +66,22 @@ export const TOKENS = {
   surface: '#F8FAFB',
   surfaceCard: '#FFFFFF',
 } as const
+
+/**
+ * QA-2/M1 · El color de un rol (o de cualquier categoría) pintado como TEXTO
+ * sobre su propio tinte. Los colores de rol son de identificación —el punto,
+ * el borde— y la mayoría no llega a 4.5 como letra: el de «Miembro» daba 2.30.
+ *
+ * En vez de oscurecer la paleta (cambiaría los puntos y los bordes, que están
+ * bien), la letra se acerca al navy de a 5 % hasta pasar AA sobre el tinte.
+ * El tono se conserva; solo baja la luz lo justo.
+ */
+export function textoSobreSuTinte(hex: string, alfaTinte: number, papelHex: string = TOKENS.white): string {
+  const fondo = composite(hexToRgb(hex), hexToRgb(papelHex), alfaTinte)
+  const navy = hexToRgb(TOKENS.navy)
+  for (let paso = 0; paso <= 20; paso++) {
+    const c = composite(navy, hexToRgb(hex), paso / 20)
+    if (contrastRatio(c, fondo) >= AA_NORMAL) return '#' + c.map(x => x.toString(16).padStart(2, '0')).join('')
+  }
+  return TOKENS.navy
+}

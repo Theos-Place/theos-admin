@@ -682,7 +682,7 @@ function EventosContent() {
                             <button
                               type="button"
                               onClick={() => openRegister(elig)}
-                              className="rounded-lg px-2.5 py-1 text-[13px] font-medium text-coral bg-coral/10 hover:bg-coral/20 transition-colors font-body whitespace-nowrap"
+                              className="rounded-lg px-2.5 py-1 text-[13px] font-medium text-coral-deep bg-coral/10 hover:bg-coral/20 transition-colors font-body whitespace-nowrap"
                             >
                               Inscribirme
                             </button>
@@ -747,7 +747,7 @@ function EventosContent() {
                       <button
                         type="button"
                         onClick={e => { e.stopPropagation(); openRegister(elig) }}
-                        className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-coral bg-coral/10 font-body whitespace-nowrap"
+                        className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-coral-deep bg-coral/10 font-body whitespace-nowrap"
                       >
                         Inscribirme
                       </button>

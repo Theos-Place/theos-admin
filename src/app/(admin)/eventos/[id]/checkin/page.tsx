@@ -736,7 +736,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <div className={cn('rounded-xl px-4 py-3 text-sm font-medium font-body text-center',
                   scanMsg.kind === 'ok' ? 'bg-teal-soft/40 text-teal-deep'
                   : scanMsg.kind === 'dup' ? 'bg-amber-50 text-amber-700'
-                  : 'bg-coral/10 text-coral')}>
+                  : 'bg-coral/10 text-coral-deep')}>
                   {scanMsg.text}
                 </div>
               )}
@@ -1057,7 +1057,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </p>
                 </div>
                 <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0',
-                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral' : 'bg-teal-soft/30 text-teal-deep')}>
+                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-deep')}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>
                 {canCheckin && (

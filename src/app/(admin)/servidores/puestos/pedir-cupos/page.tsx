@@ -326,7 +326,7 @@ function SolicitarVacantesContent() {
                         type="button"
                         onClick={() => setQty(p.id, 1)}
                         aria-label={`Sumar un cupo a ${p.title}`}
-                        className="h-10 w-10 rounded-full bg-coral/15 text-coral-deep flex items-center justify-center hover:bg-coral/25 active:scale-95 transition"
+                        className="h-10 w-10 rounded-full bg-coral/10 text-coral-deep flex items-center justify-center hover:bg-coral/25 active:scale-95 transition"
                       >
                         <Plus size={18} />
                       </button>

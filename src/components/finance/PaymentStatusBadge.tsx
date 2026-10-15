@@ -16,10 +16,10 @@ import { etiquetaDeEstado } from '@/lib/finance/payment-outcome'
  * no haya dos verdades sobre cómo se llama un estado.
  */
 const STATUS_COLOR: Record<PaymentStatus, { color: string; bg: string }> = {
-  paid:           { color: '#3DB97A', bg: 'rgba(61,185,122,0.12)'  },
-  pending:        { color: '#E9B949', bg: 'rgba(233,185,73,0.15)'  },
+  paid:           { color: '#1E6B42', bg: 'rgba(61,185,122,0.12)'  },
+  pending:        { color: '#7F6210', bg: 'rgba(233,185,73,0.15)'  },
   refunded:       { color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
-  partial_refund: { color: '#70BDC2', bg: 'rgba(112,189,194,0.15)' },
+  partial_refund: { color: '#3B7579', bg: 'rgba(112,189,194,0.15)' },
   // Anulado va en gris, no en rojo: es un desenlace normal (la persona
   // canceló, se venció el plazo) y no hay nada que atender. El rojo se reserva
   // para 'failed', que sí es una avería del sistema.

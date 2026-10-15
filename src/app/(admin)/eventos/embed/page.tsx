@@ -119,7 +119,7 @@ export default function EmbedPage() {
                     className={cn(
                       'flex-1 rounded-xl border py-2 text-[13px] font-medium transition-all',
                       cfg.view === v
-                        ? 'border-coral bg-coral/5 text-coral'
+                        ? 'border-coral bg-coral/5 text-coral-deep'
                         : 'text-navy-light/80 hover:bg-surface-low',
                       'font-body'
                     )}

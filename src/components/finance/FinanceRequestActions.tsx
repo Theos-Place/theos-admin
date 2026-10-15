@@ -93,7 +93,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
         <button
           type="button"
           onClick={() => setShowScholarshipModal(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-3.5 py-2 text-[13px] text-coral font-body hover:bg-coral/20 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-3.5 py-2 text-[13px] text-coral-deep font-body hover:bg-coral/20 transition-colors"
         >
           <GraduationCap size={13} />
           Solicitar beca
@@ -157,7 +157,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                         placeholder="Contanos por qué (mínimo 20 caracteres)…"
                         className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')}
                       />
-                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success')}>
+                      <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success-deep')}>
                         {reason.trim().length}/{MIN_REASON} caracteres mínimos
                       </p>
                     </div>

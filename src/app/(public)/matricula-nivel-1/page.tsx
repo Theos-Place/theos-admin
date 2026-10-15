@@ -173,7 +173,7 @@ export default function MatriculaNivel1Publica() {
                       </p>
                     </div>
                     <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-[11px] font-display tracking-wide',
-                      g.gratis ? 'bg-teal/15 text-navy' : 'bg-coral/15 text-coral-deep')}>
+                      g.gratis ? 'bg-teal/15 text-navy' : 'bg-coral/10 text-coral-deep')}>
                       {g.gratis ? 'Gratis' : formatMoney(g.costo, g.moneda)}
                     </span>
                   </div>

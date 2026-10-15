@@ -15,7 +15,7 @@ const KNOWN_COLORS: Record<string, string> = {
   bienvenida: 'bg-teal-soft/30 text-teal-deep',
   recordatorio: 'bg-amber-50 text-amber-700',
   inscripcion: 'bg-blue-50 text-blue-700',
-  cancelacion: 'bg-coral/10 text-coral',
+  cancelacion: 'bg-coral/10 text-coral-deep',
   general: 'bg-navy/10 text-navy-light',
 }
 

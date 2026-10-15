@@ -61,7 +61,7 @@ export const ETIQUETA_CUPO: Record<EstadoDelCupo, string> = {
 /** Coral solo para lo que pide acción hoy; ámbar para lo que hay que vigilar. */
 export const BADGE_CUPO: Record<EstadoDelCupo, string> = {
   con_cupo: 'bg-teal-soft/30 text-teal-deep',
-  lleno: 'bg-coral-soft/20 text-coral',
+  lleno: 'bg-coral/10 text-coral-deep',
   sin_grupos: 'bg-amber-50 text-amber-700',
   no_aplica: 'bg-navy/5 text-navy-light/80',
 }

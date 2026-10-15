@@ -125,7 +125,7 @@ function StatCard({
         <div className="text-[13px] text-navy-light/80 font-body">{sub}</div>
       )}
       {delta && (
-        <div className="flex items-center gap-1 text-[13px] text-[#3DB97A] font-body">
+        <div className="flex items-center gap-1 text-[13px] text-success-deep font-body">
           <TrendingUp size={12} />
           {delta}
         </div>
@@ -191,7 +191,7 @@ function ModuleCard({
           const valueEl = row.badge ? (
             <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full font-body"
               style={{
-                color: row.badge === 'coral' ? '#D63E3D' : '#C08A00',
+                color: row.badge === 'coral' ? '#C43635' : '#7F6210',
                 background: row.badge === 'coral' ? 'rgba(214,62,61,0.10)' : 'rgba(233,185,73,0.15)',
               }}>
               {typeof row.value === 'number' ? row.value.toLocaleString('es-CR') : row.value}
@@ -419,7 +419,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[13px] text-navy/80 font-body">Asistencias registradas</div>
             </div>
-            <CheckCircle2 size={18} className="text-[#3DB97A]/60" />
+            <CheckCircle2 size={18} className="text-success-deep/60" />
           </div>
 
           <div className="text-4xl font-bold text-navy mb-4 font-display">
@@ -546,7 +546,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-navy/80 font-body">Devoluciones pend.</span>
-                <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full text-coral bg-[rgba(214,62,61,0.10)] font-body">
+                <span className="text-[13px] font-semibold px-2 py-0.5 rounded-full text-coral-deep bg-[rgba(214,62,61,0.10)] font-body">
                   {DASHBOARD_STATS.finance.pending_refunds}
                 </span>
               </div>
@@ -713,7 +713,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[13px] px-2 py-1 rounded-full font-semibold bg-[rgba(214,62,61,0.10)] text-coral font-body">
+          <span className="text-[13px] px-2 py-1 rounded-full font-semibold bg-[rgba(214,62,61,0.10)] text-coral-deep font-body">
             1 evaluación baja (≤2)
           </span>
           <Link href="/estudios/dirigentes"

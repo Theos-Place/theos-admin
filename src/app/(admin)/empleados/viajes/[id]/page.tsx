@@ -460,7 +460,7 @@ function ModalDePaso({ viajeId, de, a, actores, aviso, onCerrar, onListo }: {
           {nombreDelPaso(de, a)}
         </h2>
         {aviso && (
-          <p className="rounded-xl bg-[rgba(233,185,73,0.15)] px-3 py-2 text-[13px] text-[#A8821F] font-body">
+          <p className="rounded-xl bg-[rgba(233,185,73,0.15)] px-3 py-2 text-[13px] text-[#7F6210] font-body">
             {aviso}
           </p>
         )}

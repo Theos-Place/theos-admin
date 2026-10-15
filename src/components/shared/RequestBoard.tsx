@@ -55,10 +55,10 @@ export type BaseRequest = {
 }
 
 export const REQUEST_STATUS_BADGE: Record<RequestStatus, { label: string; cls: string }> = {
-  open:      { label: 'Abierta',     cls: 'bg-coral/10 text-coral' },
-  in_review: { label: 'En revisión', cls: 'bg-[rgba(233,185,73,0.15)] text-[#A8821F]' },
+  open:      { label: 'Abierta',     cls: 'bg-coral/10 text-coral-deep' },
+  in_review: { label: 'En revisión', cls: 'bg-[rgba(233,185,73,0.15)] text-[#7F6210]' },
   escalated: { label: 'Escalada',    cls: 'bg-[rgba(155,127,212,0.18)] text-[#6B4FA0]' },
-  resolved:  { label: 'Resuelta',    cls: 'bg-success/12 text-success' },
+  resolved:  { label: 'Resuelta',    cls: 'bg-success/12 text-success-deep' },
   rejected:  { label: 'Rechazada',   cls: 'bg-surface-low text-navy-light/80' },
   // Se venció el bloque de matrícula para el que servía. No es un rechazo: la
   // persona puede volver a pedirla en el bloque siguiente.
@@ -692,14 +692,14 @@ export function RequestBoard<R extends BaseRequest>({
                                   <button
                                     onClick={() => { setActionTarget({ req: r, action: 'resolve' }); setNotes(''); setResolveExtra(null) }}
                                     disabled={submitting || !!closeBlockedReason?.(r)}
-                                    className="rounded-full bg-success/12 px-4 py-1.5 text-[13px] text-success font-body font-medium hover:bg-success/20 transition-colors disabled:opacity-60"
+                                    className="rounded-full bg-success/12 px-4 py-1.5 text-[13px] text-success-deep font-body font-medium hover:bg-success/20 transition-colors disabled:opacity-60"
                                   >
                                     Resolver
                                   </button>
                                   <button
                                     onClick={() => { setActionTarget({ req: r, action: 'reject' }); setNotes('') }}
                                     disabled={submitting || !!closeBlockedReason?.(r)}
-                                    className="rounded-full bg-coral/10 px-4 py-1.5 text-[13px] text-coral font-body font-medium hover:bg-coral/20 transition-colors disabled:opacity-60"
+                                    className="rounded-full bg-coral/10 px-4 py-1.5 text-[13px] text-coral-deep font-body font-medium hover:bg-coral/20 transition-colors disabled:opacity-60"
                                   >
                                     Rechazar
                                   </button>

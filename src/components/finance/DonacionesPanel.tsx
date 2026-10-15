@@ -393,7 +393,7 @@ export function DonacionesPanel() {
 
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-sm text-white bg-navy shadow-[0_12px_32px_rgba(22,20,64,0.20)] font-body">
-          <Check size={15} className="text-[#3DB97A]" />
+          <Check size={15} className="text-success-deep" />
           {toast}
         </div>
       )}

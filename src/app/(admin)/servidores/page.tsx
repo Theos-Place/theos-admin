@@ -32,7 +32,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
         </p>
         {committee.open_vacancies > 0 && (
           <span
-            className="shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display"
+            className="shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral-deep font-display"
           >
             {committee.open_vacancies} cupo{committee.open_vacancies !== 1 ? 's' : ''}
           </span>
