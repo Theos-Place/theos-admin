@@ -491,7 +491,12 @@ es legítimo. Y mira solo `src/`: los scripts de un solo uso ya corrieron
 Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
 sembradas ahí, y desde staging el QA autenticado completo (QA-2).
 
-### [ ] QA-2 · QA autenticado completo, desde staging (después de INF-1)
+### [~] QA-2 · QA autenticado completo, desde staging — PLAN LISTO 2026-10-15
+
+Prompt completo, cuentas, roles a cubrir y los 6 flujos de teclado en
+`docs/qa-2026-10/plan.md`. Se ejecuta en una sesión aparte (Opus) contra el
+dev server de staging; informe a `docs/qa-2026-10/informe-autenticado.md`.
+
 
 Con las cuentas de staging: axe + mobile + teclado sobre las pantallas de cada módulo,
 y el recorrido heurístico por rol (dirigente cerrando grupo, finanzas aprobando pagos,
@@ -499,7 +504,12 @@ encargado en la puerta, miembro matriculándose desde el celular): ¿sé dónde 
 qué hacer? ¿el error me dice cómo salir? ¿cuántos clics costó? El prompt se detalla
 cuando staging exista, sumando lo aprendido en QA-1.
 
-### [ ] QA-3 · Auditoría de código: endpoints, llamados a la BD y rendimiento
+### [~] QA-3 · Auditoría de código: endpoints, llamados a la BD y rendimiento — PLAN LISTO 2026-10-15
+
+Prompt actualizado (299 endpoints hoy, medición con EXPLAIN en prod, censo
+aparte) en `docs/qa-2026-10/plan.md`. Corre en paralelo con QA-2, sin
+ambiente; informe a `docs/qa-2026-10/informe-codigo.md`.
+
 
 No necesita cuentas ni staging — es sobre el código. Puede correr en paralelo con QA-1.
 
