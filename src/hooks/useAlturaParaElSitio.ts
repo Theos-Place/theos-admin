@@ -40,3 +40,27 @@ export function useAlturaParaElSitio(activo: boolean) {
     avisar()
   }, [activo])
 }
+
+/**
+ * Embebida, un modal se centra en el IFRAME, que mide lo que mide la página
+ * (2026-10-15, calendario en la página de actividades). Con un calendario de
+ * 1.800 px, el detalle de un evento aparecía a 900 px del borde del iframe:
+ * fuera de la vista de quien tocó el evento arriba de todo.
+ *
+ * El iframe no puede mover el scroll del sitio, así que le pide al sitio que lo
+ * haga: manda `{ tipo: 'theos:ver', y }`, con `y` medido desde el borde de
+ * arriba del iframe, y el fragmento de `docs/embeber-en-el-sitio.md` hace el
+ * scroll. Sin ese fragmento no pasa nada: el mensaje se ignora.
+ *
+ * Se llama en un efecto, cuando el modal ya está pintado. Con `y`, baja hasta
+ * ese punto en vez de hasta el modal: al cerrarlo, se vuelve a donde se tocó.
+ */
+export function pedirAlSitioQueMuestre(activo: boolean, y?: number) {
+  if (!activo || typeof window === 'undefined' || window.parent === window) return
+  if (y === undefined) {
+    const panel = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]')
+    if (!panel) return
+    y = panel.getBoundingClientRect().top + window.scrollY
+  }
+  window.parent.postMessage({ tipo: 'theos:ver', y: Math.max(0, Math.round(y) - 24), pagina: window.location.pathname }, '*')
+}

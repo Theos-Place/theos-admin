@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { esVistaEmbebida, PARAM_EMBEBIDO } from '@/lib/vista-embebida'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,7 @@ import { Modal } from '@/components/shared/Modal'
 import { Image as ImageIcon } from 'lucide-react'
 import { formatTime } from '@/lib/format'
 import { SuscribirseAlCalendario } from '@/components/events/SuscribirseAlCalendario'
+import { useAlturaParaElSitio, pedirAlSitioQueMuestre } from '@/hooks/useAlturaParaElSitio'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -66,6 +67,19 @@ function CalendarioWidget() {
   const contador = etiquetaContador(view, esVistaDeProximos(view) ? rangedEvents.length : monthCount)
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null)
   const [dayModal, setDayModal] = useState<{ date: number; events: AdminEvent[] } | null>(null)
+  // Embebida en el sitio: el iframe crece con el contenido (sin scroll propio)
+  // y, al abrir un modal, el sitio baja hasta donde quedó. Ver el hook.
+  const medirParaElSitio = useAlturaParaElSitio(embebida)
+  const hayModal = Boolean(selectedEvent || dayModal)
+  // Dónde se tocó, para volver ahí al cerrar: si no, la persona queda a media
+  // página, lejos del día que estaba mirando.
+  const dondeSeToco = useRef<number | null>(null)
+  useEffect(() => {
+    if (hayModal) { pedirAlSitioQueMuestre(embebida); return }
+    if (dondeSeToco.current === null) return
+    pedirAlSitioQueMuestre(embebida, dondeSeToco.current - 120)
+    dondeSeToco.current = null
+  }, [hayModal, selectedEvent, embebida])
 
   function formatEventTime(iso: string) {
     return formatTime(iso)
@@ -114,7 +128,9 @@ function CalendarioWidget() {
   }
 
   return (
-    <div className="min-h-screen font-[system-ui,sans-serif]" style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg } as React.CSSProperties}>
+    // Sin `min-h-screen` embebida: adentro del iframe la pantalla ES el iframe,
+    // y medir un contenedor que llena la pantalla hace crecer el iframe sin fin.
+    <div ref={medirParaElSitio} onPointerDownCapture={e => { if (embebida && !hayModal) dondeSeToco.current = e.clientY + window.scrollY }} className={embebida ? 'font-[system-ui,sans-serif]' : 'min-h-screen font-[system-ui,sans-serif]'} style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg } as React.CSSProperties}>
       {/* Header */}
       {!embebida && (
       <div className="py-3 px-5 flex flex-wrap items-center justify-between gap-2" style={{ background: primary }}>

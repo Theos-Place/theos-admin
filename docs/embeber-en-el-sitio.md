@@ -23,9 +23,12 @@ que está hoy:
   window.addEventListener('message', function (e) {
     if (e.origin !== 'https://admin.theosplace.org') return
     var d = e.data || {}
-    if (d.tipo !== 'theos:altura' || typeof d.alto !== 'number') return
     document.querySelectorAll('iframe[src^="https://admin.theosplace.org"]').forEach(function (f) {
-      if (f.contentWindow === e.source) f.style.height = d.alto + 'px'
+      if (f.contentWindow !== e.source) return
+      if (d.tipo === 'theos:altura' && typeof d.alto === 'number') f.style.height = d.alto + 'px'
+      if (d.tipo === 'theos:ver' && typeof d.y === 'number') {
+        window.scrollTo({ top: f.getBoundingClientRect().top + window.scrollY + d.y, behavior: 'smooth' })
+      }
     })
   })
 </script>
@@ -40,3 +43,16 @@ que está hoy:
 
 Sin el `script`, el iframe se ve igual que antes: con su alto fijo y scroll
 propio. No se rompe nada.
+
+## Calendario en la página de actividades (2026-10-15)
+
+El mismo script del sitio sirve para el calendario: es uno solo por página y
+reconoce los dos iframes. Antes no funcionaba porque el calendario no mandaba
+su alto; ahora sí, y además, cuando alguien abre el detalle de un evento, le
+pide al sitio que baje hasta él (`theos:ver`). Sin eso, con el iframe del
+tamaño del calendario, el detalle quedaba a media página, fuera de la vista.
+
+El código completo, iframe y script, sale del generador en `/eventos/embed`.
+El script de esta guía y el del generador son el mismo texto
+(`SCRIPT_DEL_SITIO` en `src/lib/vista-embebida.ts`): si en el sitio ya está
+pegado el de puestos, hay que reemplazarlo por este, que agrega `theos:ver`.

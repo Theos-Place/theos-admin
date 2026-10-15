@@ -36,3 +36,31 @@ export function urlParaEmbeber(base: string): string {
   const sep = base.includes('?') ? '&' : '?'
   return base.includes(`${PARAM_EMBEBIDO}=`) ? base : `${base}${sep}${PARAM_EMBEBIDO}=1`
 }
+
+/**
+ * El script que el SITIO pega una vez por página, debajo de los iframes del
+ * admin (2026-10-15). Hace dos cosas con los mensajes de las páginas embebidas:
+ *
+ * - `theos:altura`: le pone al iframe el alto de su contenido, para que no
+ *   tenga scroll propio.
+ * - `theos:ver`: baja el scroll del sitio hasta un punto del iframe. Lo pide el
+ *   calendario al abrir el detalle de un evento, que si no quedaba fuera de la
+ *   vista (ver `pedirAlSitioQueMuestre`).
+ *
+ * Solo acepta mensajes de admin.theosplace.org, y cada uno lo aplica al iframe
+ * que lo mandó. Vive acá y no copiado en cada generador: el de eventos y la
+ * guía `docs/embeber-en-el-sitio.md` muestran ESTE texto.
+ */
+export const SCRIPT_DEL_SITIO = `<script>
+  window.addEventListener('message', function (e) {
+    if (e.origin !== 'https://admin.theosplace.org') return
+    var d = e.data || {}
+    document.querySelectorAll('iframe[src^="https://admin.theosplace.org"]').forEach(function (f) {
+      if (f.contentWindow !== e.source) return
+      if (d.tipo === 'theos:altura' && typeof d.alto === 'number') f.style.height = d.alto + 'px'
+      if (d.tipo === 'theos:ver' && typeof d.y === 'number') {
+        window.scrollTo({ top: f.getBoundingClientRect().top + window.scrollY + d.y, behavior: 'smooth' })
+      }
+    })
+  })
+</script>`

@@ -1,0 +1,51 @@
+{
+ "fuente": "Book2.xlsx (Individual ID, Están en el grupo de whatsapp)",
+ "campo": "study_leaders.en_grupo_whatsapp",
+ "filas": [
+  {
+   "external_id": "2066",
+   "leader_id": "129383f9-1610-4898-a601-348232e81c2b",
+   "nombre": "Adrián Castro Montealegre",
+   "antes": false,
+   "nuevo": true,
+   "lider_activo": true,
+   "ficha_activa": true
+  },
+  {
+   "external_id": "13102",
+   "leader_id": "819fc2a8-8c8b-4ff5-aead-231bb1008671",
+   "nombre": "Luis Minor Cordero Fonseca",
+   "antes": false,
+   "nuevo": true,
+   "lider_activo": true,
+   "ficha_activa": true
+  },
+  {
+   "external_id": "173",
+   "leader_id": "0d29e6c6-8280-4bbb-9921-634870ec4452",
+   "nombre": "Yendry Corrales Quiros",
+   "antes": false,
+   "nuevo": true,
+   "lider_activo": true,
+   "ficha_activa": true
+  },
+  {
+   "external_id": "5775",
+   "leader_id": "f4cfe3b4-a278-4636-8a83-a813f36a622c",
+   "nombre": "Pablo Monterroso Pacheco",
+   "antes": false,
+   "nuevo": true,
+   "lider_activo": true,
+   "ficha_activa": true
+  },
+  {
+   "external_id": "1893",
+   "leader_id": "e1b53afb-8f84-4420-8c43-3e35e75a9c27",
+   "nombre": "Jessica Cordero Jauberth",
+   "antes": false,
+   "nuevo": true,
+   "lider_activo": false,
+   "ficha_activa": true
+  }
+ ]
+}

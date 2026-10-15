@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { PARAM_EMBEBIDO } from '@/lib/vista-embebida'
+import { PARAM_EMBEBIDO, SCRIPT_DEL_SITIO } from '@/lib/vista-embebida'
 import Link from 'next/link'
 import { ChevronLeft, Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -62,16 +62,19 @@ export default function EmbedPage() {
    * El código lleva `embed=1`: sin él la página pinta su propia banda
    * «Theos Place — Eventos» y, dentro del sitio que ya tiene header, se ven
    * dos encabezados pegados (2026-10-06).
+   *
+   * Y lleva el script del sitio (2026-10-15): con él, el iframe crece con el
+   * calendario en vez de tener scroll propio, y la altura de acá queda solo
+   * como el alto mientras carga.
    */
   const iframeCode = `<!-- Calendario Theos Place -->
 <iframe
   src="https://admin.theosplace.org/calendario?${PARAM_EMBEBIDO}=1&view=${cfg.view}&types=${cfg.types.join(',')}&primary=%23${cfg.primary.slice(1)}&accent=%23${cfg.accent.slice(1)}&lang=${cfg.lang}"
-  width="100%"
-  height="${cfg.height}px"
-  frameborder="0"
-  style="border-radius: 12px; border: 1px solid #e4e6ee;"
   title="Calendario Theos Place"
-></iframe>`
+  scrolling="no"
+  style="width:100%; display:block; height:${cfg.height}px; border-radius: 12px; border: 1px solid #e4e6ee;"
+></iframe>
+${SCRIPT_DEL_SITIO}`
 
   const currentCode = iframeCode
 
