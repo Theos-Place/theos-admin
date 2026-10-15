@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Check, Loader2 } from 'lucide-react'
+import { AlertCircle, Check } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
+import { FormularioDeComprobante } from '@/components/finance/FormularioDeComprobante'
 import { PaymentMethodSelector, type PaymentMethodValue } from '@/components/shared/PaymentMethodSelector'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { cn } from '@/lib/utils'
@@ -280,27 +281,8 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
   // lista de eventos), así que el nombre de la sesión es el correcto.
   const { user: sesion } = useAuth()
   const memberName = sesion?.name ?? null
-  const [file, setFile] = useState<File | null>(null)
-  const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function submit() {
-    if (busy || !file) return
-    setBusy(true); setError(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('reference', reference.trim())
-      const res = await fetch(`/api/event-registrations/${registrationId}/comprobante`, { method: 'POST', body: fd })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
-      setDone(true)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally { setBusy(false) }
-  }
 
   return (
     <Modal onClose={() => !busy && onDone()} titleId="comprobante-evento-title" width={420}>
@@ -325,39 +307,14 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
               {eventTitle} — {`${formatCRC(amount)}`}. Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia.
             </p>
             <PaymentInstructions concepto={eventTitle} nombre={memberName} />
-            <div className="space-y-1">
-              <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input id="comprobante-imagen"
-                type="file"
-                accept="image/*"
-                aria-label="Comprobante de pago"
-                onChange={e => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="ev-pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
-              <input
-                id="ev-pay-ref"
-                value={reference}
-                onChange={e => setReference(e.target.value)}
-                placeholder="Ej. 2026070212345"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
-            </div>
-            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={submit}
-                disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
-              >
-                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
-              </button>
-              <button onClick={onDone} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
-                Más tarde
-              </button>
-            </div>
+            <FormularioDeComprobante
+              id="ev-pay"
+              enviar={{ url: `/api/event-registrations/${registrationId}/comprobante` }}
+              onEnviado={() => setDone(true)}
+              onCancelar={onDone}
+              textoCancelar="Más tarde"
+              onOcupado={setBusy}
+            />
           </>
         )}
       </div>

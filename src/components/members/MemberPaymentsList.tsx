@@ -6,7 +6,7 @@
 // notificaciones) resalta y hace scroll al pago indicado.
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CreditCard, Loader2, Receipt } from 'lucide-react'
+import { Check, CreditCard, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
 import { formatDate, formatMoney, ymdCR } from '@/lib/format'
@@ -19,6 +19,7 @@ import {
 import { opcionesPermitidas } from '@/lib/finance/limites-de-arreglo'
 import type { MemberPaymentRow } from '@/lib/supabase/queries/payments'
 import { Modal } from '@/components/shared/Modal'
+import { FormularioDeComprobante } from '@/components/finance/FormularioDeComprobante'
 import { BarraDePagoJunto } from '@/components/finance/PagarVariosJuntos'
 import { ofrecerPagoJunto, sePuedeIncluir } from '@/lib/finance/comprobante-multiple'
 
@@ -300,28 +301,8 @@ function PagarConComprobante({ id, titulo, etiqueta, retry, enviar, cobro, membe
   const [open, setOpen] = useState(false)
   // Solo al abrir: una lista con veinte cobros no hace veinte consultas.
   const detalle = useCobro({ open, cobro, memberId, buscar })
-  const [file, setFile] = useState<File | null>(null)
-  const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function submit() {
-    if (busy || !file) return
-    setBusy(true); setError(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      for (const [k, v] of Object.entries(enviar.campos ?? {})) fd.append(k, v)
-      fd.append('reference', reference.trim())
-      const res = await fetch(enviar.url, { method: 'POST', body: fd })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
-      setDone(true); setOpen(false)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally { setBusy(false) }
-  }
 
   if (done) {
     return (
@@ -348,38 +329,13 @@ function PagarConComprobante({ id, titulo, etiqueta, retry, enviar, cobro, membe
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
             {detalle && <DetalleDelCobro p={detalle} />}
-            <div className="space-y-1">
-              <label htmlFor={`${id}-imagen`} className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input id={`${id}-imagen`}
-                type="file"
-                accept="image/*"
-                aria-label="Comprobante de pago"
-                onChange={e => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor={`${id}-ref`} className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
-              <input
-                id={`${id}-ref`}
-                value={reference}
-                onChange={e => setReference(e.target.value)}
-                placeholder="Ej. 2026070212345"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
-            </div>
-            {extra?.(detalle, () => setOpen(false))}
-            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={submit}
-                disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
-              >
-                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
-              </button>
-              <button onClick={() => setOpen(false)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-            </div>
+            <FormularioDeComprobante
+              id={id} enviar={enviar}
+              onEnviado={() => { setDone(true); setOpen(false) }}
+              onCancelar={() => setOpen(false)}
+              onOcupado={setBusy}
+              antesDelEnvio={extra?.(detalle, () => setOpen(false))}
+            />
           </div>
         </Modal>
       )}

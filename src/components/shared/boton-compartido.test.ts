@@ -20,7 +20,9 @@ import { join } from 'node:path'
 // que es la gracia. 185 → 184 con MAT-3: el aviso al salir del modal del
 // comprobante dejó un botón donde antes había dos. 180 → 179 (QA-3 tanda 4):
 // «Pagar matrícula» y «Pagar inscripción» pasaron a ser UN componente.
-const TECHO = 179
+// 179 → 178: el comprobante de la inscripción a eventos usa el mismo
+// FormularioDeComprobante.
+const TECHO = 178
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {

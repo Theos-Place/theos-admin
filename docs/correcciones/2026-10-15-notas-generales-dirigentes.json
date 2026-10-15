@@ -1,0 +1,1253 @@
+{
+ "fuente": "Status Dirigentes(Dirigentes Status).csv, columna Notas 20 feb",
+ "campo": "study_leaders.nota_general",
+ "antes": "null en las 178",
+ "filas": [
+  {
+   "external_id": "3499",
+   "member_id": "7be38169-73ef-4fc5-a24d-498f868ccdfa",
+   "leader_id": "aee67a45-2b6a-4df6-a389-93aced271d1a",
+   "nombre": "Kattya Abarca Guerrero",
+   "nota": "Confirmar si puede dar SCJ y Disc"
+  },
+  {
+   "external_id": "737",
+   "member_id": "5e33097b-b3ac-4aad-a63c-208235508b94",
+   "leader_id": "caedde4e-4288-408f-935e-400b311eec6d",
+   "nombre": "Daniela Acosta",
+   "nota": "Estudiante en campaña pero no ha vuelto, confirmar si se salió de Theos o qué pasa. Referencia puede ser Melania Pachecho fue dirigente y Daniela Codirigente"
+  },
+  {
+   "external_id": "366",
+   "member_id": "bb15f159-28f7-426d-90e8-be30a668be81",
+   "leader_id": "e8d5c8eb-6eed-423f-8bca-a01f7779e219",
+   "nombre": "Roberto Acosta Acosta",
+   "nota": "DON ROBERTO ESTÁ CON OTRO MONTÓN DE COSAS, POR LO QUE SE INACTIVA COMO DIRIGENTE DE FORMA INDEFINIDA///"
+  },
+  {
+   "external_id": "137",
+   "member_id": "ff80cb35-336e-4963-87e1-86bbea400e3a",
+   "leader_id": "b37d3bab-0fa1-4119-8fa4-8a5d4607b069",
+   "nombre": "Lara Aguilar",
+   "nota": "Confirmar si se le abrió curso en 2025-B3"
+  },
+  {
+   "external_id": "142",
+   "member_id": "4dfde84f-948e-4458-bfff-8517ae1b458e",
+   "leader_id": "f305f305-9055-4427-81f6-bc1602a10927",
+   "nombre": "Luis Roberto Aguilar Morales",
+   "nota": "Confirmar si da capacitaciones"
+  },
+  {
+   "external_id": "6949",
+   "member_id": "08acdf3e-e497-4c9a-9ad5-d862e527ab8a",
+   "leader_id": "342b493b-4d69-405d-961d-bfa031ea4e7b",
+   "nombre": "Eyleen Alfaro Porras",
+   "nota": "Disponible para dar discípulos (virtual)"
+  },
+  {
+   "external_id": "2207",
+   "member_id": "3d2d88de-9f46-4a7d-bffc-7a9e99a3bd98",
+   "leader_id": "384f072d-3b0c-4e39-9ba9-55c8b8a3bba8",
+   "nombre": "Luis Fernando Alfaro Ubico",
+   "nota": "CONTACTAR / Preguntar si es CoDirigente de Lissette Gomez"
+  },
+  {
+   "external_id": "12075",
+   "member_id": "6f47fcc5-e9d4-486f-a2a4-047a80a492c0",
+   "leader_id": "3dffdfe4-a84e-45d8-9264-a0d42495d6c1",
+   "nombre": "Mariana Alvarado Bermudez",
+   "nota": "GRADUADO DE CDEB JUNIO 2024/ LISTA PARA ARRANCAR PERO CON APOYO"
+  },
+  {
+   "external_id": "5564",
+   "member_id": "02dfa295-6bfb-4145-b7e3-efce7917f044",
+   "leader_id": "8351caa2-b4c1-47f5-bdaa-2795764f75b6",
+   "nombre": "Gabriela Alvarado Oconitrillo",
+   "nota": "ANFITRIONA PRO - NO TIENE TIEMPO EN ESTE MOMENTO"
+  },
+  {
+   "external_id": "375",
+   "member_id": "d429c90d-bbf2-4baa-9773-d1930ea85a20",
+   "leader_id": "6fa0200c-1e4b-4785-974e-575b272fccd1",
+   "nombre": "Santiago Alvarez Ovares",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025?"
+  },
+  {
+   "external_id": "3280",
+   "member_id": "bc0720ee-ebad-4463-b9c2-6a76be957ba6",
+   "leader_id": "db1e6a52-509b-4711-962e-18256fb76cde",
+   "nombre": "Layla Amado Mora",
+   "nota": "EMBARAZO SIN ESTAR CASADO"
+  },
+  {
+   "external_id": "6559",
+   "member_id": "c19daca0-a17b-402b-889f-f6151c6712bf",
+   "leader_id": "719de8fe-09db-4570-9044-78711acac3b3",
+   "nombre": "Hernan Ampuero Guillermo",
+   "nota": "Preguntar si es CoDirigente de Paola Goiri"
+  },
+  {
+   "external_id": "12793",
+   "member_id": "531f4867-8884-4501-bf0a-3a425e55a470",
+   "leader_id": "29462276-ba19-4aa7-8606-f2ff41ae6206",
+   "nombre": "Gabriela Anchia Ureña",
+   "nota": "QUIERE CAPACITARSE PARA DAR RELIGIONES DEL MUNDO 2025 / Preguntar si es CoDirigente de Christian Morales"
+  },
+  {
+   "external_id": "4263",
+   "member_id": "6133e47e-b5d8-4cf2-88c4-712a4183e9b9",
+   "leader_id": "10fc8068-c43c-487d-ae07-615889d2876e",
+   "nombre": "Elvia Arevalo",
+   "nota": "CONTACTAR"
+  },
+  {
+   "external_id": "16242",
+   "member_id": "c6fb8c84-70f7-4c04-8fc8-1b20811a7f74",
+   "leader_id": "a370d3ec-6df2-4592-b63f-db7f0a636585",
+   "nombre": "Eric Arguello Ballestero",
+   "nota": "Consultar disponibilidad, cuándo puede dar estudio por otro servicio"
+  },
+  {
+   "external_id": "9787",
+   "member_id": "5eb26303-2da1-45d6-bec6-9c951f7ea9e3",
+   "leader_id": "2330dad8-7a79-4057-b77d-2c8e992940da",
+   "nombre": "Melissa Armijo Losilla",
+   "nota": "Pausa por maternidad: Tuvo bebé en nov 2025 (enviar mensaje o felicitaciones)"
+  },
+  {
+   "external_id": "3255",
+   "member_id": "6d8c3c13-20f0-4a7c-9e5f-5253dbd4d757",
+   "leader_id": "8e9423df-004e-4324-9df9-2a61b7572300",
+   "nombre": "Natalia Artavia Estrada",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025?"
+  },
+  {
+   "external_id": "8955",
+   "member_id": "75928594-8eea-4a38-a7c8-561ffc3a8497",
+   "leader_id": "72e08d10-e29c-48e6-a283-312477731d49",
+   "nombre": "Salvador Avila Duenas",
+   "nota": "YA NO ESTÁ EN HEREDIA ,VIVE EN GRECIA, DISPONE DE SU CASA PARA GRUPO 6-7 PAX, PARA INICIAR EN 2024"
+  },
+  {
+   "external_id": "9267",
+   "member_id": "efcbcd88-30cf-4740-a228-88c35bd9f721",
+   "leader_id": "a632b4ee-890c-476f-b56f-c4611932f069",
+   "nombre": "Gustavo Badilla Araya",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025? / Se contactó Nov 25 y se tuvo respuesta"
+  },
+  {
+   "external_id": "489",
+   "member_id": "59575d63-ef1b-4a0d-b9bc-2f7949a16bbb",
+   "leader_id": "b0da0ad1-b656-40ba-be41-1ae84eb8ab23",
+   "nombre": "Alexander Badilla Guadamuz",
+   "nota": "Consultar disponibilidad"
+  },
+  {
+   "external_id": "6804",
+   "member_id": "c1379fb2-902d-45cb-8f31-c5f2bf0650d1",
+   "leader_id": "d969d0dc-f624-4d5c-8de3-1c49538c4a9f",
+   "nombre": "Laura Badilla Quesada",
+   "nota": "Confirmar si están dando Prematrimonial y ver disponibilidad"
+  },
+  {
+   "external_id": "16224",
+   "member_id": "4fb38e72-9ac7-478d-ad2a-d244ddc1e7b4",
+   "leader_id": "0276055c-c3f2-4b8d-bdfd-c18221ef3875",
+   "nombre": "Felix Badilla Vargas",
+   "nota": "Confirmar si es dirigente. Va a charlas"
+  },
+  {
+   "external_id": "9306",
+   "member_id": "b839564a-5778-4e85-9bce-ee9704eada03",
+   "leader_id": "2cc4f788-2ff5-4d22-bf82-f4ca0824c298",
+   "nombre": "Warren Baez Ramirez",
+   "nota": "Importante: No tiene aprobación de dirigente de CDEB"
+  },
+  {
+   "external_id": "2702",
+   "member_id": "f963bd0a-879d-4ab6-8c12-3418474956d0",
+   "leader_id": "866c9003-a206-4605-8b89-681d41bd9df0",
+   "nombre": "Maria Barrantes Serrano",
+   "nota": "NO QUIERE DAR NIVELES QUIERE DAR CAPACITACIONES : SIRVIENDO COMO JESÚS (DISPONIBLE JUEVES) / Dejó de ir a charla, si dona"
+  },
+  {
+   "external_id": "388",
+   "member_id": "6bae2885-fc63-4f3a-98b2-ea84047a8ad3",
+   "leader_id": "186e2230-ad55-4b12-ae9d-afb4a28892f6",
+   "nombre": "Stanley Benavides Corella",
+   "nota": "En revisión (feb 2025)"
+  },
+  {
+   "external_id": "4038",
+   "member_id": "b2fc54a1-04ff-46d3-acc4-bf9ce8e8591d",
+   "leader_id": "52d8660e-9513-475e-950a-082e7b2d8d99",
+   "nombre": "Monserrat Bonilla Morales",
+   "nota": "*LIFE - GRADUADO DE CDEB JUNIO 2024"
+  },
+  {
+   "external_id": "9665",
+   "member_id": "10c9d81d-b5a5-4b4e-b863-755d95f23bd2",
+   "leader_id": "260d7fbf-3eda-4f9f-9a95-b6636f7b9596",
+   "nombre": "Gabriela Boza Calvo",
+   "nota": "Estudiante Transformados 2025"
+  },
+  {
+   "external_id": "2286",
+   "member_id": "b2523230-fb2a-4b3d-93a1-9b07f1c8cedc",
+   "leader_id": "65dd2e52-7135-4f04-b298-f88a3f729db6",
+   "nombre": "Laura Brenes Brenes",
+   "nota": "Confirmar que esté en España?"
+  },
+  {
+   "external_id": "942",
+   "member_id": "8a170046-3a49-41f0-a9e7-dfe7ce0e2268",
+   "leader_id": "8c118a2d-f744-4b4a-b7bb-c0b5728d15ba",
+   "nombre": "Giuliana Bresciani Gutierrez",
+   "nota": "Contactarla para preguntar por disponibilidad"
+  },
+  {
+   "external_id": "4573",
+   "member_id": "69383f03-ca15-4a65-84b6-26edb55f0bef",
+   "leader_id": "9b80eb7c-3596-4c6a-98a9-96e3086bd3a6",
+   "nombre": "Daniella Bresciani Gutiérrez",
+   "nota": "No dona / Situacion con Denise y el cierre del grupo de Transformados"
+  },
+  {
+   "external_id": "382",
+   "member_id": "80441af5-d43b-4856-be72-5f72e26e4224",
+   "leader_id": "8a1ef307-3530-427c-83f4-5c10438601a3",
+   "nombre": "Sheyla Britton",
+   "nota": "SOLO PARA DAR APOLOGÉTICA. KRA-FEB 2024: SHEYLA NO ES ACTIVA EN THEOS, ELLA SOLO ESTÁ AUTORIZADA EN DAAR APOLOGÉTICA, DEBBIE NO QUIERE QUE POR AHORITA SE DE HASTA QUE ELLA REVISE EL MATERIAL, POR LO QUE DEBBIE DEBE APROBAR ANTES DE QUE ELLA SE REACTIVE///"
+  },
+  {
+   "external_id": "303",
+   "member_id": "3ae9fbb5-446f-46d2-8b60-65c2fc1d2497",
+   "leader_id": "2bc5d5f8-0d78-4b4d-88e9-10f7e18b4629",
+   "nombre": "Leyla Bukele",
+   "nota": "OTROS SERVICIOS"
+  },
+  {
+   "external_id": "2017",
+   "member_id": "8e5602ab-66ae-4b81-beac-f733214b4792",
+   "leader_id": "80e191a9-9300-4b6e-bbc7-95224d0e0d80",
+   "nombre": "Danny Calvo Morales",
+   "nota": "En revisión por Evaluaciones de parte de estudiantes"
+  },
+  {
+   "external_id": "1923",
+   "member_id": "21297cac-f42a-4d6b-ae76-100f93a12580",
+   "leader_id": "b67ad38f-fa47-4b39-ab3d-5300eb0297b9",
+   "nombre": "Marisol Calvo Rivera",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025? / Si dona, no volvió a charlas"
+  },
+  {
+   "external_id": "4338",
+   "member_id": "50902b53-6363-4bbc-873d-d0fa662a9c1d",
+   "leader_id": "ebb7ba33-48f9-41fd-9ba8-03180be76ed3",
+   "nombre": "Carlos Campos Monge",
+   "nota": "No va a charlas ni dona. Tiene parejas en Pre matrimonial"
+  },
+  {
+   "external_id": "409",
+   "member_id": "69e35406-2de0-44f6-9bb1-819d1949e988",
+   "leader_id": "e7c2cb3d-b066-4131-aff2-c520afb61730",
+   "nombre": "Allan Campos Sibaja",
+   "nota": "Darle seguimiento: No ha regresado a charlas desde Agosto. Tal vez en comité Oración. Esta dando Prematrimonial?"
+  },
+  {
+   "external_id": "12945",
+   "member_id": "8ab91aae-978b-4b1b-9847-527f98fdd00a",
+   "leader_id": "79e1987d-3ab5-434b-b3cd-9a7fcb19e973",
+   "nombre": "Raquel Carazo Navarrete",
+   "nota": "SIRVIENDO COMO ANFITRIONES, DISPONIBLE PARA PANORAMA EN SET."
+  },
+  {
+   "external_id": "5515",
+   "member_id": "2fee675a-973a-466d-98df-4ccbef607700",
+   "leader_id": "158e9e46-df94-4c2f-8bd4-5fb8fb57448f",
+   "nombre": "Larisa Carmona González",
+   "nota": "Envió mensaje el 6 enero, comunicando que solo continúa en Comité Oración. No continúa como dirigente hasta nuevo aviso"
+  },
+  {
+   "external_id": "326",
+   "member_id": "adaa6598-a941-42f6-8b55-a1be222ae8a4",
+   "leader_id": "1f6f6d8d-be7a-4f6a-bf85-0d86e0553ec3",
+   "nombre": "Mariel Cartin Chaves",
+   "nota": "DIRIGENTES NO ES SU FAVORITO, PREFIERE NO DAR / Darle seguimiento"
+  },
+  {
+   "external_id": "1863",
+   "member_id": "082e812d-fee3-4702-8fdb-9bc1f5158986",
+   "leader_id": "449387de-53ee-40a3-b711-5db7b7173df6",
+   "nombre": "Ana Maria Carvajal",
+   "nota": "NO ESTA ACTIVA EN CHARLAS (BEBE) - MOTIVAR A VOLVER / Tampoco está activa en donación"
+  },
+  {
+   "external_id": "245",
+   "member_id": "93a18647-c708-405d-a4de-5d57c2ad115d",
+   "leader_id": "51b64abc-7ba9-497e-a4bf-3c1d68ed16a3",
+   "nombre": "Erick Cascante Chavarria",
+   "nota": "ESTÁ EN ESPAÑA DESDE SET 2023, AL MENOS POR UN AÑO / Darle seguimiento, preguntar por disponibilidad"
+  },
+  {
+   "external_id": "2620",
+   "member_id": "66dc3624-02c9-4b44-9974-9b4907dd3788",
+   "leader_id": "cb2a4d11-a628-4e71-88a1-548fcf39ddef",
+   "nombre": "Juan Cascante Salgado",
+   "nota": "Darle Seguimiento, dona, no va a charla desde set 2025. Consultar disponibilidad"
+  },
+  {
+   "external_id": "3803",
+   "member_id": "8c8529b7-9b31-413a-aa8b-c7ea14c74f75",
+   "leader_id": "cb346511-e365-48c0-a9e0-d5746438a08e",
+   "nombre": "Marcela Castillo Cortes",
+   "nota": "03-09-23: ACTIVO DEL 2014 AL 2019, NADA EN 2020, 1 CHARLA 2021, 1 CHARLA EN 2022, 3 CHARLAS EN 2023 HASTA MAYO, DESPUÉS DE ESO NADA,ESTAR PENDIENTE POR SI VUELVE / Preguntar si puede ser CoDirigenten de Josué o dirigente"
+  },
+  {
+   "external_id": "11500",
+   "member_id": "b3cdad41-60f4-4e55-9281-e40056f84704",
+   "leader_id": "733faeb7-24ec-4987-9eab-67f58fa7f424",
+   "nombre": "Maritza Castillo Torres",
+   "nota": "COORDINADORA DIRIGENTES MADRID"
+  },
+  {
+   "external_id": "3716",
+   "member_id": "8ffe5521-25a2-48d3-b840-fc3d81146f9d",
+   "leader_id": "5ed826f1-816f-4226-b91f-e496aea8e20c",
+   "nombre": "Roylin Castrillo Sequeira",
+   "nota": "En revisión por Evaluaciones de estudiantes. Se salieron del grupo pero él también tiene viajes de trabajo durante B1 2026, por lo que no se le ofrece otro grupo por ahora"
+  },
+  {
+   "external_id": "2066",
+   "member_id": "47df7712-0747-4a6d-a1cb-4ba46169168a",
+   "leader_id": "129383f9-1610-4898-a601-348232e81c2b",
+   "nombre": "Adrián Castro Montealegre",
+   "nota": "Darle seguimiento, me parece que tuvo bebé. Dejó de ir a charlas, no dona."
+  },
+  {
+   "external_id": "384",
+   "member_id": "7fc85c03-429b-4d29-89a0-21597e2a7266",
+   "leader_id": "b2fba7f3-519c-4b51-8eda-ac92dd93547b",
+   "nombre": "Sofia Castro Sasso",
+   "nota": "NO ESTA ACTIVA EN CHARLAS - MOTIVAR A VOLVER / Esposo Manuel ofreció dar N1. Consultar si puede ser CoDirigente. Si donan, no van a charla desde junio 2025"
+  },
+  {
+   "external_id": "11672",
+   "member_id": "4ae19fa9-9b9d-465c-8100-4b83aab3d2cd",
+   "leader_id": "71fc81fc-0131-4ccd-8240-5af69039ddb6",
+   "nombre": "Jose Luis Cavero Sandoval",
+   "nota": "Ofreció dar SCJ B3 2025 y B1 2026, pero no se abrieron los grupos. Preguntar disponibilidad"
+  },
+  {
+   "external_id": "10752",
+   "member_id": "d3bd17f5-3a32-41f9-a913-f0d00b4cd671",
+   "leader_id": "0cf5f580-043d-48a4-b243-f23c6cd81f60",
+   "nombre": "Falon Ceciliano Alvarado",
+   "nota": "Ofreció dar Niveles. Jueves-Viernes Oeste (Sabana, Pavas, Escazú) Este (B Escalante, Los Yoses, B Dent, Tibás)"
+  },
+  {
+   "external_id": "8267",
+   "member_id": "f200c00c-b699-40ff-b836-9beb44596053",
+   "leader_id": "acabb1ff-f184-4ff6-af78-5eab067ea18d",
+   "nombre": "Jennifer Cervantes Garita",
+   "nota": "*SEGUIMIENTO CON NELA"
+  },
+  {
+   "external_id": "9412",
+   "member_id": "5b32272c-eadf-4e33-8c8a-c18b36a84edc",
+   "leader_id": "a513efc2-b265-4d2f-8799-59712f9e3267",
+   "nombre": "Wilbert Céspedes Chaves",
+   "nota": "Disponible para dar en Cartago en abril 2026. Se puede volver a consultar"
+  },
+  {
+   "external_id": "205",
+   "member_id": "6d54ad6a-4fed-4f5d-a802-bb529902ba4c",
+   "leader_id": "3e620960-121e-4823-b537-2e2c7e2efcf9",
+   "nombre": "Andrea Chaves Castillo",
+   "nota": "Consultar disponibilidad y por qué estaba eb revisión? Dona y no va a charla desde julio 2025"
+  },
+  {
+   "external_id": "2046",
+   "member_id": "31642f54-2473-4469-8312-891806ef2032",
+   "leader_id": "6ce0b47f-e2b6-4f06-bf68-2c99faea2965",
+   "nombre": "Daniela Conejo",
+   "nota": "Consultar disponibilidad, ya que sirve en Grupo Matrimonios"
+  },
+  {
+   "external_id": "13302",
+   "member_id": "fb0f728d-fc7d-45f5-adc8-97fb3e764a63",
+   "leader_id": "ba6f5ea1-da9e-4650-9b33-2c0c3dbe0d75",
+   "nombre": "Amanda Coronado Arauz",
+   "nota": "Tiene disponibilidad de dar Nivel 1 en Liberia, a partir de Mayo 2026"
+  },
+  {
+   "external_id": "3357",
+   "member_id": "881a0287-7ba3-4e73-a536-1b79865e4d75",
+   "leader_id": "63347dbb-c47a-4e70-8967-fa7d1a9d18c6",
+   "nombre": "Daniela Corrales Garita",
+   "nota": "No ha vuelto"
+  },
+  {
+   "external_id": "173",
+   "member_id": "83d8aecb-9b75-46c2-8775-07ffa1c060b0",
+   "leader_id": "0d29e6c6-8280-4bbb-9921-634870ec4452",
+   "nombre": "Yendry Corrales Quiros",
+   "nota": "B1 2026 está formando un curso. Se debe volver a consultar disponibilidad para B2"
+  },
+  {
+   "external_id": "6404",
+   "member_id": "d8810cfb-32a6-4899-b5e1-1cba29db0b4f",
+   "leader_id": "16e2f139-d168-487a-9556-9f2ed0977e3b",
+   "nombre": "Xinia Coto",
+   "nota": "*DAR SEGUIMIENTO CON NELA. SE PUEDE REACTIVAR"
+  },
+  {
+   "external_id": "6715",
+   "member_id": "2dae5c34-b84a-406e-9d8b-fcc0b069e7e9",
+   "leader_id": "396ef070-ae92-4a7a-abca-53d50c9a8cd1",
+   "nombre": "Malik Joel Cubillo Ramirez",
+   "nota": "Puede ofrecer admin virtual. Consultar por qué no está yendo a charlas y no está donando"
+  },
+  {
+   "external_id": "4795",
+   "member_id": "d88e8f7f-f77f-4831-8fda-9a3fe53a0dfc",
+   "leader_id": "bdcaa066-7f7d-40ad-8ab6-75804d8def7b",
+   "nombre": "Daniela Delgado Rojas",
+   "nota": "DANDO ESTUDIO CON JIMMY, EN SEGUIMIENTO CON NELA"
+  },
+  {
+   "external_id": "315",
+   "member_id": "0090bb9a-e5a7-4e84-8162-0b60e6da26c9",
+   "leader_id": "855b5327-5fdc-4c37-8f07-d51d7fa1f244",
+   "nombre": "Maria del Mar Desanti",
+   "nota": "SITUACIÓN DE SALUD DEL PAPÁ"
+  },
+  {
+   "external_id": "4101",
+   "member_id": "f5ec66e4-9b4e-4612-b61e-1012b09521c0",
+   "leader_id": "85c291f9-75cb-4dad-8897-f3e3cafebbbb",
+   "nombre": "Catalina Duran Ramirez",
+   "nota": "ES ANFRITIONA CON EL ESPOSO  EN HEREDIA Y ESTA CON MUCHO TRABAJO DESEA RECIBIR MAS BIEN ALGUN ESTUDIO EN VEZ DE DARLO / Consultar por qué no ha vuelto a charla"
+  },
+  {
+   "external_id": "4006",
+   "member_id": "d6c4eb59-001b-40f4-9057-6b43a9ac7c6f",
+   "leader_id": "8e354d13-7e5c-45a6-86f7-9a9412c95c0f",
+   "nombre": "Jose Pablo Echeverria Chaverri",
+   "nota": "Dar seguimiento a las Evaluaciones (en B3 2025, tuvo situación con unas Evaluaciones pero se solucionó bien)"
+  },
+  {
+   "external_id": "2761",
+   "member_id": "363312a1-8bfb-4032-9e89-d1b38b49c698",
+   "leader_id": "d27756a1-afe1-4104-b267-374355101587",
+   "nombre": "Juan Pablo Elizondo Monge",
+   "nota": "ESPERANDO GEMELOS SEPT. 2024"
+  },
+  {
+   "external_id": "12845",
+   "member_id": "6a20a444-bc6d-4dee-9b81-9a055534d277",
+   "leader_id": "dccdbe61-81e4-4f0b-999c-bf03a4dbf286",
+   "nombre": "Sonia Espinoza Loaiciga",
+   "nota": "TERMINO NIVEL 4, DESCANSO POR SALUD DE SU HERMANO"
+  },
+  {
+   "external_id": "257",
+   "member_id": "834c5fcf-1f76-4974-9a2b-8f9eeba7a14a",
+   "leader_id": "d48ae801-fa2c-4b3a-ba32-d6adc278e52e",
+   "nombre": "Gabriela Esquivel Runnebaum",
+   "nota": "Confirmar si dio Efesios en bloque 3, 2025"
+  },
+  {
+   "external_id": "394",
+   "member_id": "420b6bd8-d71d-4f1a-afa3-8527d2292750",
+   "leader_id": "b9bb140b-7538-4f26-b7f4-7da3ac96cfa4",
+   "nombre": "Veronica Estrada Ramirez",
+   "nota": "Llamar para motivar a servir y participar en Theos"
+  },
+  {
+   "external_id": "1966",
+   "member_id": "d061afb4-d4b2-4fb9-a301-459682377489",
+   "leader_id": "26139713-9957-49dd-8c9f-b043950aac45",
+   "nombre": "Jana Fallas Florian",
+   "nota": "GRADUADO DE CDEB JUNIO 2024/ PASANTIA CON ANDREA BLANCO"
+  },
+  {
+   "external_id": "1965",
+   "member_id": "038b7168-9947-4c6f-bd2d-6a4b06875c81",
+   "leader_id": "b650d34c-566f-4c67-93c3-42f0a180a88c",
+   "nombre": "Pablo Fallas Florian",
+   "nota": "Confirmar si dieron N3 en B3 2025"
+  },
+  {
+   "external_id": "6237",
+   "member_id": "b2b598b2-5238-4614-b06e-638940326bba",
+   "leader_id": "489bc7f7-c6ac-4670-9573-024eb80ddacf",
+   "nombre": "Maria Jose Fallas Umana",
+   "nota": "NO HA HECHO PASANTÍA, PENSÓ QUE SE OLVIDARON DE ELLA, SI LE INTERESA RETOMAR, NO ME HA DADO ZONA NI HORARIO"
+  },
+  {
+   "external_id": "216",
+   "member_id": "66a4c45e-b82f-40e3-baea-fc2eb442e788",
+   "leader_id": "4bb18650-f6a4-4e56-b959-e41c5690db10",
+   "nombre": "Carolina Fernandez Acuna",
+   "nota": "NO HA VUELTO A THEOS POR RAZONES PERSONALES"
+  },
+  {
+   "external_id": "327",
+   "member_id": "fecf0496-390c-49d9-86bc-982e6a6beef8",
+   "leader_id": "2ecb7111-6b5e-4851-9250-3706eec2b7af",
+   "nombre": "Mariela Fonseca Chaves",
+   "nota": "PREGUNTARLE A JUAN PA SOBRE CÓMO ESTÁ ÉL Y SU ESTADO COMO DIRIGENTE (ESTÁ CASADO CONJUAN PABLO ELIZONDO) / Embarazo 2025 / Maternidad 2026"
+  },
+  {
+   "external_id": "418",
+   "member_id": "7ea761e1-654a-4038-9130-7a7a121a4025",
+   "leader_id": "3ee278b7-d31c-461b-a1f6-5837fc02021e",
+   "nombre": "Guillermo (Memo) Fonseca Vargas",
+   "nota": "Consultar disponibilidad. Porque dona y no va a charlas, ni ha dado estudio hace mucho tiempo"
+  },
+  {
+   "external_id": "10708",
+   "member_id": "a2c8cc16-f0a4-447a-9a90-83ba3a478610",
+   "leader_id": "35fd7d14-4877-4764-86b1-c12933b40193",
+   "nombre": "Johana Forero",
+   "nota": "Ofreció dar estudio virtual. Confirmar disponibilidad"
+  },
+  {
+   "external_id": "9404",
+   "member_id": "340bb541-880b-4cbb-a67d-1f15c0b07dab",
+   "leader_id": "29cd8c30-9d00-419d-8ce5-79ac6e6605ce",
+   "nombre": "Maria Fernanda Garcia Calvo",
+   "nota": "Solo dona desde el 2024, no sirve ni va a charlas. Consultar por qué"
+  },
+  {
+   "external_id": "200",
+   "member_id": "30dab133-1b42-4860-a5f3-50197f0c8102",
+   "leader_id": "9aa3fac2-62ef-46b9-88cc-ede889fdf3c3",
+   "nombre": "Ana Gabriela Gomez Montoya",
+   "nota": "Consultar: dona pero no va a charlas, ni ha servido desde campaña"
+  },
+  {
+   "external_id": "1231",
+   "member_id": "421e9b5b-5f47-440a-a93a-76a817da1521",
+   "leader_id": "186e8968-5b4b-4538-a4b5-475ca0e59f5a",
+   "nombre": "Lissette Gomez Montoya",
+   "nota": "Disponible para Europa virtual (horario flexible)"
+  },
+  {
+   "external_id": "3739",
+   "member_id": "c1a14149-b63d-466c-846f-db9a734b3976",
+   "leader_id": "d2a2afa6-9cdc-49bc-aeef-f435070755e9",
+   "nombre": "Kenneth Gomez Piedra",
+   "nota": "Confirmar y consultar por qué en revisión / En el sistema no me aparece el grupo de N3"
+  },
+  {
+   "external_id": "5024",
+   "member_id": "e13c984b-04c9-467a-a0c2-b2cf452b7882",
+   "leader_id": "cad66e01-0527-4724-b1da-887f8aba4a7c",
+   "nombre": "Israel Gonzalez Leon",
+   "nota": "Quién continuó con el grupo de N2 del B3 2025"
+  },
+  {
+   "external_id": "3386",
+   "member_id": "0a5e1e2c-fdce-46ca-80cb-fca7f726fc1c",
+   "leader_id": "60022d48-2d73-4117-a1f8-3bfe53d8b9d7",
+   "nombre": "Marco Gutierrez Bruno",
+   "nota": "Motivarlo a dar y seguir yendo a charlas. Sí dona"
+  },
+  {
+   "external_id": "3014",
+   "member_id": "445d82bb-562c-4900-841c-caa96bea7561",
+   "leader_id": "0d31ff93-8d69-4d57-8c28-8d680f860710",
+   "nombre": "Fernando Gutierrez Hernandez",
+   "nota": "Consultar por qué no va a charlas"
+  },
+  {
+   "external_id": "2553",
+   "member_id": "839a28ce-bbbf-4f59-bb77-7a10a4e4bced",
+   "leader_id": "40763f58-3ba2-4aa9-98d1-32bdb8e64e5d",
+   "nombre": "Michelle Gutierrez Sandoval",
+   "nota": "FALTA DE PASANTIA, ZONA ALAJUELA, O RHORMOSER / Consultarle a Fernando Gutierrez si hizo la pasantía con él"
+  },
+  {
+   "external_id": "13975",
+   "member_id": "99536cb6-5efa-4a7a-ac5a-2aec932e3d7e",
+   "leader_id": "ee872074-b131-4210-a8b2-f2458ef6ac84",
+   "nombre": "Laura Gutierrez Soto",
+   "nota": "Motivar ir a charla"
+  },
+  {
+   "external_id": "6943",
+   "member_id": "819f3fc1-0ff9-49dc-880d-8f8d800166bf",
+   "leader_id": "da51542d-cd5a-4810-b35d-da30d61f324d",
+   "nombre": "Carlos Hernandez Arce",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025? / Va poco a charlas, dona. Contactarlo"
+  },
+  {
+   "external_id": "2150",
+   "member_id": "cf03997a-3f47-485b-82e4-51db5c8f7f42",
+   "leader_id": "11ebc7ae-da48-4595-b730-6c294e2dbf37",
+   "nombre": "Priscilla Hernandez Cerdas",
+   "nota": "Consultar por qué no da estudio"
+  },
+  {
+   "external_id": "3166",
+   "member_id": "3b0fbbb6-c011-46a2-9599-5d74d08379ff",
+   "leader_id": "90b5fca3-c427-4d47-bf68-fdb3df857f60",
+   "nombre": "Catalina Hernández Charpentier",
+   "nota": "Consultar si vive en Alajuela o Heredia? En el sistema el esposo aparece en Heredia y ella Alajuela"
+  },
+  {
+   "external_id": "7990",
+   "member_id": "079cdbf5-283a-4730-a064-fa5bfded1ea9",
+   "leader_id": "d7fab324-5a78-484c-acbf-829fd8133b08",
+   "nombre": "Gabriela Hernandez Gutierrez",
+   "nota": "ARRANCA ESTUDIO EN HEREDIA CON JORGE ROJAS (CODIRIGENTES) / dar seguimiento a esta nota antigua, consultar por qué no da estudio"
+  },
+  {
+   "external_id": "584",
+   "member_id": "be56d623-f845-4c93-b4cd-60fdbd842088",
+   "leader_id": "d3460310-a3cf-4b5b-b9e2-520f86412a56",
+   "nombre": "Aniri Herrera Sandino",
+   "nota": "Descanso de dar estudio B1 2026"
+  },
+  {
+   "external_id": "128",
+   "member_id": "cceb284a-d836-465d-892a-caf43b455d7e",
+   "leader_id": "76decd8a-a3e9-4a9d-8e13-0525eca459f4",
+   "nombre": "Henry Jimenez Aguero",
+   "nota": "Ofrecio Admin bloque 3, pero no se abrio"
+  },
+  {
+   "external_id": "6156",
+   "member_id": "e99e270f-e932-47fe-92fd-1fff2531f49f",
+   "leader_id": "6acb3def-cb89-4f39-be5f-b9bd6d8d34ab",
+   "nombre": "Laura Jiménez Trejos",
+   "nota": "RETOMANDO ESTUDIO VIRTUAL / dar seguimiento a la nota antigua. Fue dirigente de campaña pero no es muy activa en Theos"
+  },
+  {
+   "external_id": "2883",
+   "member_id": "489a202a-2cbe-4f97-801a-f10c20bab617",
+   "leader_id": "4f9433a3-e0e0-4959-81a3-ef5000732df4",
+   "nombre": "Joshua Kruk Leahy",
+   "nota": "SIRVIENDO COMO ANFITRIONES, DISPONIBLE PARA PANORAMA EN SET. / No va a charla ni ha vuelto a dar estudio"
+  },
+  {
+   "external_id": "307",
+   "member_id": "d7ca6c0e-1ac2-428b-b9a1-218b9b1d7eaa",
+   "leader_id": "ee62d151-3a65-4334-b73f-0d284168ba06",
+   "nombre": "Luis Roberto Lang Ortiz",
+   "nota": "Disponible para dar Discipulos B2 2026 y el taller (pendiente de aprobación)"
+  },
+  {
+   "external_id": "361",
+   "member_id": "b2719056-e473-43f8-bcfd-e6c8627fe923",
+   "leader_id": "0b9e5177-3b57-4032-bde2-53687f9bedbb",
+   "nombre": "Priscilla Lara Valverde",
+   "nota": "Dar seguimiento de Evaluaciones"
+  },
+  {
+   "external_id": "7606",
+   "member_id": "3a9be529-1eac-4f2d-ba0f-51b3271b4869",
+   "leader_id": "9246e486-662f-4f0a-903c-87a59e9c3a79",
+   "nombre": "Carolina Leon Castro",
+   "nota": "Desde medio año 2025: No ha vuelto a donar ni ir a charlas. Tampoco dar estudio. Motivar"
+  },
+  {
+   "external_id": "7433",
+   "member_id": "a871e2b2-05de-40a3-8c68-e6dba2e2ab74",
+   "leader_id": "521c44f5-6f66-4873-a526-9bc78b081171",
+   "nombre": "Nancy Leon Castro",
+   "nota": "ESPERANDO GEMELOS SEPT. 2024"
+  },
+  {
+   "external_id": "9712",
+   "member_id": "8a35386c-36ee-4aba-b63b-326b346f67a6",
+   "leader_id": "f3621901-3fc8-44b1-b1f8-01bfcde36935",
+   "nombre": "Alessandro Liberatoscioli",
+   "nota": "Va a charlas y dona. No está dando estudio"
+  },
+  {
+   "external_id": "1302",
+   "member_id": "c12e3708-bc3b-4fd7-ae07-c2cfa41b2d03",
+   "leader_id": "33ac573c-3d23-4bfc-9044-1e78f2c88abb",
+   "nombre": "Marcela Lizano",
+   "nota": "Consultar si es CoDirigente de Alonso Araya?"
+  },
+  {
+   "external_id": "8584",
+   "member_id": "e6a5484b-2e06-4612-972e-0235f62de00d",
+   "leader_id": "1b121e8f-c45b-4608-a49e-cee4ae931338",
+   "nombre": "Natalia Lopez Rodriguez",
+   "nota": "Donó y fue a charla en 2025. No dio estudio. Consultar"
+  },
+  {
+   "external_id": "7530",
+   "member_id": "fd41fe94-75ae-4420-a9ae-cc78a9f4f67b",
+   "leader_id": "818bcfc8-586f-4da5-9e52-7ef5bbdcc1ac",
+   "nombre": "Thais Lopez Rodriguez",
+   "nota": "No regresó a charlas desde setiembre, llevó campaña, no dona"
+  },
+  {
+   "external_id": "13608",
+   "member_id": "aee1a330-eacd-4424-869d-0ec862a64f68",
+   "leader_id": "946b2449-1136-41fd-9329-84a898ce64a7",
+   "nombre": "Carolina Madriz Arce",
+   "nota": "Confirmar si falta panorama, hablar con ella para motivarla a llevarla. Ultima donación marz 2025"
+  },
+  {
+   "external_id": "6540",
+   "member_id": "5c94d809-a702-4a7d-aab0-515b37acd63e",
+   "leader_id": "34944ef0-0463-4b34-8f6c-6ba2b5388b72",
+   "nombre": "Diana Madriz Giron",
+   "nota": "Consultar por qué no dona"
+  },
+  {
+   "external_id": "4701",
+   "member_id": "2b6d08c5-d934-4fe2-a4e2-88e8c0639bbd",
+   "leader_id": "2d47fdb5-46e1-4a83-a263-51123edfeb02",
+   "nombre": "Guiliana Mainieri",
+   "nota": "Confirmar por qué no ha vuelto a charlas, ni dado estudio"
+  },
+  {
+   "external_id": "11069",
+   "member_id": "0035f7e4-dc84-4247-94b2-d6298293977b",
+   "leader_id": "112d13a2-45a9-4d33-bd46-85776545ce3c",
+   "nombre": "Elizabeth Mainieri Fernandez",
+   "nota": "Llenó el formulario de B1 2026 como No disponible. Consultarle para el B2 2026"
+  },
+  {
+   "external_id": "15586",
+   "member_id": "e3d12eb2-87fc-4873-a116-04fc20c092da",
+   "leader_id": "932a2475-3ef0-48a7-998e-7bbf67bb19e0",
+   "nombre": "Valeria Martínez Agüero",
+   "nota": "Se graduó con Eddy dic 2025, se le ofreció grupo pero dijo que no podía ahora, que avisaba"
+  },
+  {
+   "external_id": "6080",
+   "member_id": "88a907b5-2767-49b9-87ab-a8cc619c8b05",
+   "leader_id": "4078cfa6-9a2c-47f9-acbb-6bc1127087bd",
+   "nombre": "Cindy Martinez Quesada",
+   "nota": "En el sistema no me aparece en curso pero en el archivo de Estudios de Biblia aparece dando N4. Consultar"
+  },
+  {
+   "external_id": "6113",
+   "member_id": "8231c1cb-d3b7-43da-8add-1ad4e587981b",
+   "leader_id": "30769a79-56b9-4c5e-88b0-f0674ae9c0e6",
+   "nombre": "Mariana Mayorga Obando",
+   "nota": "TUVO BEBE 2024"
+  },
+  {
+   "external_id": "6365",
+   "member_id": "6701f046-c883-4d11-9b43-34aed239cd8b",
+   "leader_id": "d37846e5-36ca-43ed-a2ef-3d471d9dbd78",
+   "nombre": "Jose Medina Hidalgo",
+   "nota": "Consultar porque va a charlas, no dona, no da estudios"
+  },
+  {
+   "external_id": "14699",
+   "member_id": "495015fb-2bd6-4e77-a873-ee66fa54363f",
+   "leader_id": "f3660970-33e4-44c4-ad4c-c6df3e7a4ba2",
+   "nombre": "Esteban Mejías Montero",
+   "nota": "Consultar por qué no va a charlas, no dona"
+  },
+  {
+   "external_id": "2093",
+   "member_id": "32755588-d589-4b35-97f9-4c2589870415",
+   "leader_id": "6f417ae2-7a9e-4f62-93a9-d0fb4157fee0",
+   "nombre": "Vanessa Mena Barrantes",
+   "nota": "Consultar por qué no dona, y no aparece en el sistema que esté dando niveles"
+  },
+  {
+   "external_id": "15404",
+   "member_id": "7dcf3d46-1d72-4273-9c46-cb0698516313",
+   "leader_id": "3fa5344d-e709-49ce-a758-cb536d17b671",
+   "nombre": "Jennifer Mendez Segura",
+   "nota": "NOV 2023: NO PUEDE, ESTÁ CON OTROS SERVICIOS: ENTRE MUJERES, ANUNCIOS Y LECTURA//// MARZO 2024 KRA-JENNIFER NO TUVO LAS MEJORES RECOMENDACIONES EN EL ÚLTIMO ESTUDIO QUE DIO, OTRA DIRIGENTE ASUMIÓ LA ÚLTIMA ETAPA DEL ESTUDIO Y SE TUVO FEEDBACK VERBAL, EN GENERAL, NO CONSIDERAR PARA ASIGNARLE UN GRUPO A MENOS QUE SEA URGENTE Y NECESARIO, TAMBIÉN PODRÍA ESTAR COMO CODIRIGIENTE PODRÍA SER CON UN HOMBRE"
+  },
+  {
+   "external_id": "1999",
+   "member_id": "e4ae066f-d1f4-4d40-947f-6d95c28bf8a0",
+   "leader_id": "98e56641-6042-4924-bc02-20ef54f44cc4",
+   "nombre": "Natalia Meneses Quiros",
+   "nota": "DANDO PANORAMA EN EL ÚLTIMO BLOQUE 2023 VIRTUAL/// KRA-ENERO 2024: NATI NO ESTÁ CON DISPONIBILIDAD PARA DAR ESTUDIO, CUALQUIER COSA, ANTES PRIMERA HABLAR CON ELLA BIEN SOBRE EXPECTATIVAS COMO DIRIGENTE Y SI PUEDE CUMPLIRLAS///"
+  },
+  {
+   "external_id": "1905",
+   "member_id": "66e48ea2-6f20-49f9-a60b-e953ca8052c2",
+   "leader_id": "868e530e-cf9f-46af-88b3-1354804bcaac",
+   "nombre": "Evelia Mercado Delgado",
+   "nota": "Consultar por qué no dona"
+  },
+  {
+   "external_id": "249",
+   "member_id": "f7ff621b-18b8-4bef-8431-55ad5c5df1f7",
+   "leader_id": "fec29d59-ea09-4d69-8f92-94c5625d9ea5",
+   "nombre": "Estefani Molina Gonzalez",
+   "nota": "Revisar por qué no me aparece que dona o haya dado Campaña"
+  },
+  {
+   "external_id": "304",
+   "member_id": "621aa565-a363-4fa3-8210-fa32824526c3",
+   "leader_id": "56671fd8-d4d6-4046-9ccc-3fbb3e2b95d9",
+   "nombre": "Loreana Molina Gonzalez",
+   "nota": "CONTACTAR - DISPONIBILIDAD 2025?"
+  },
+  {
+   "external_id": "12363",
+   "member_id": "42706c1c-ca75-4087-a825-7fa13f0f1494",
+   "leader_id": "401c5aae-b65e-4dfb-9066-0446755a338e",
+   "nombre": "Douglas Montero Arguedas",
+   "nota": "Consultar si dona"
+  },
+  {
+   "external_id": "176",
+   "member_id": "3ab6ff11-405f-491e-a4fe-08680c275e6f",
+   "leader_id": "18a6d762-5f92-478a-a12f-53028782c2bf",
+   "nombre": "Fabian Montero Soto",
+   "nota": "NINOS PEQUENOS, POR EL MOMENTO NO ESTA DISPONIBLE"
+  },
+  {
+   "external_id": "5775",
+   "member_id": "95998980-cc59-4e3d-886f-e4b78c8256fa",
+   "leader_id": "f4cfe3b4-a278-4636-8a83-a813f36a622c",
+   "nombre": "Pablo Monterroso Pacheco",
+   "nota": "Confirmar si dio Campaña porque no me aparece en el sistema"
+  },
+  {
+   "external_id": "932",
+   "member_id": "b2acbf40-b7c3-4b70-8c62-4cb7225d3330",
+   "leader_id": "cbb9d719-370b-4f02-b1c9-f7a590129e23",
+   "nombre": "Giancarlo Mora Arias",
+   "nota": "CONTACTAR - PREGUNTAR COMO ESTA?"
+  },
+  {
+   "external_id": "1089",
+   "member_id": "96ec8387-acc4-4dac-9e6b-8a8a868109ad",
+   "leader_id": "4d34f73d-111b-43bd-9b77-ccbcd936c93f",
+   "nombre": "Jose Luis Mora Arias",
+   "nota": "Va mu poco a charlas, no dona, consultar su servicio"
+  },
+  {
+   "external_id": "5754",
+   "member_id": "dd0078bc-b1f7-45c4-a8ec-b4984a536713",
+   "leader_id": "958dbaad-ee18-4376-b687-d28d33ba1d57",
+   "nombre": "Juan Mora Gomez",
+   "nota": "Consultar disponibilidad"
+  },
+  {
+   "external_id": "1809",
+   "member_id": "0fe1ab67-a67a-4093-a7a9-1f165bdb6123",
+   "leader_id": "4cc9f765-5866-4f3f-9e9e-c3d3f4d238a5",
+   "nombre": "Viviana Mora Mejia",
+   "nota": "Consultar donacion"
+  },
+  {
+   "external_id": "2908",
+   "member_id": "2920c776-5fad-46c5-b39b-cd4ffabd2cc3",
+   "leader_id": "643fdcb5-6c7c-4098-a547-e3295ec29c8d",
+   "nombre": "Ignacio Mora Valverde",
+   "nota": "Consultar va a charla, no dona y no da estudio de Biblia"
+  },
+  {
+   "external_id": "1416",
+   "member_id": "5456d0d1-9b2e-42c6-82c7-13b7fe6a404f",
+   "leader_id": "db5732ba-80d6-4221-bebd-69541a28b011",
+   "nombre": "Marilyn Morales",
+   "nota": "Consultar va a charla, no dona y no da estudio de Biblia"
+  },
+  {
+   "external_id": "1907",
+   "member_id": "4dbe7e13-ee5a-4f6c-b9f5-1c263c589e7f",
+   "leader_id": "d9081cd3-5d3d-421f-8b36-c3d8fa56d625",
+   "nombre": "Manuel Morales Alvarado",
+   "nota": "Consultar por asistencia a charla y donación"
+  },
+  {
+   "external_id": "1982",
+   "member_id": "21c7490c-027b-48e1-8e21-33b2bb9422b9",
+   "leader_id": "beb4a7e7-317c-43c1-9c6d-729632acff23",
+   "nombre": "Nancy Morales Alvarado",
+   "nota": "KRA-ENERO 2024: NANCY QUIERE DAR UNA CAPACITACIÓN, PUEDE SER UNA OPCIÓN PARA DAR DISCÍPULOS 1 EN EL II BLOQUE///"
+  },
+  {
+   "external_id": "6572",
+   "member_id": "befa48de-a873-4e3b-9bbf-b1079ee2c8f7",
+   "leader_id": "4e1a1400-7940-4b51-b797-c296290b8d55",
+   "nombre": "Christian Morales Domínguez",
+   "nota": "2024: Quiere capacitarse para dar cursos especiales (evangelios, SCJ), esta llevando el curso de HOMELETICA"
+  },
+  {
+   "external_id": "2480",
+   "member_id": "ae5f476f-6640-413b-899e-447c64e3c600",
+   "leader_id": "96c40c88-5e0c-40b9-94d5-b5e95876f4bd",
+   "nombre": "Alberto Morales Hernandez",
+   "nota": "Nota antigua: REVISAR evaluaciones / Esta volviendo en Heredia?"
+  },
+  {
+   "external_id": "1860",
+   "member_id": "aba1cf59-288c-49cd-81fa-27de30f64e8f",
+   "leader_id": "051afaa3-a39d-455b-8b82-c9627cc1c6ec",
+   "nombre": "Arnoldo (Nono) Moreno Chartier",
+   "nota": "Se encuentra dando estudio y Se le esta dando pastoreo como Matrimonio con Alex&Nela"
+  },
+  {
+   "external_id": "266",
+   "member_id": "8d11363a-ab4c-4707-934d-fc5908d1b508",
+   "leader_id": "9c019b53-a2b8-40d1-9508-46f0b1eaffb5",
+   "nombre": "Humberto Navarro",
+   "nota": "Dona, no va a charlas ni da estudio"
+  },
+  {
+   "external_id": "2116",
+   "member_id": "bbf550b9-1498-47bd-bfaf-1e9ac69b1b70",
+   "leader_id": "23ccc22d-0cca-4c29-91b4-f28af97acf18",
+   "nombre": "Priscilla Obando Godinez",
+   "nota": "VIVE EN USA"
+  },
+  {
+   "external_id": "2486",
+   "member_id": "f02f4f30-1af3-4981-9ca6-4e92e30e4611",
+   "leader_id": "7b62ed8a-b6a0-48c9-9c28-de439e717586",
+   "nombre": "Andres Ortega Saborio",
+   "nota": "Nota anterior de la esposa: ES ANFRITIONA CON EL ESPOSO  EN HEREDIA Y ESTA CON MUCHO TRABAJO DESEA RECIBIR MAS BIEN ALGUN ESTUDIO EN VEZ DE DARLO / Darle seguimiento"
+  },
+  {
+   "external_id": "3424",
+   "member_id": "549c7a3a-ad3f-4a8c-851e-88978cf6c934",
+   "leader_id": "e3253a87-5ccd-4720-8941-c0787b8d8bc4",
+   "nombre": "Adriana Ortiz Gattgens",
+   "nota": "DIC 2023: PAUSA PARA SER ENCARGADA COMITÉ DE ARTES/ Seguimiento"
+  },
+  {
+   "external_id": "1",
+   "member_id": "334d70d2-d240-41d7-8efb-7ec5864d230d",
+   "leader_id": "0d90eceb-c68e-4d20-a618-83e81c09694c",
+   "nombre": "Fabian Ortiz Sancho",
+   "nota": "SIRVE EN UNITED - NO DISPONIBLE / Dona, no charla ni estudios, consultar"
+  },
+  {
+   "external_id": "2137",
+   "member_id": "7ff5e6ab-22a2-40f2-b94f-f7b6d79b1846",
+   "leader_id": "c8bc5704-e396-48f9-9d57-80a427d672df",
+   "nombre": "Gabriela Ortiz Valverde",
+   "nota": "REVISAR EVALUACIONES / Dona y pocas charlas. Contactar y motivar"
+  },
+  {
+   "external_id": "2108",
+   "member_id": "77dbe904-a114-4166-856b-e9d94fcb51d7",
+   "leader_id": "d223d721-674e-49be-94dd-23f04130a67c",
+   "nombre": "Carlos Oviedo Alvarez",
+   "nota": "Consultar si solo dan Prematrimonial. O pueden virtual"
+  },
+  {
+   "external_id": "9247",
+   "member_id": "0a8480f8-e5f4-417b-9d13-987f722c95a6",
+   "leader_id": "558e347e-431a-404d-aa88-85f936b06a56",
+   "nombre": "Andrea Oviedo Sánchez",
+   "nota": "Disponibilidad para niveles a partir de abril 2025"
+  },
+  {
+   "external_id": "3795",
+   "member_id": "2829cdf9-29d8-4e0b-b296-af1d1a9f8310",
+   "leader_id": "ba55f3f2-6f0a-4113-b6f6-8566f28948c0",
+   "nombre": "Valeria Pacheco Solís",
+   "nota": "NO DA POR LO QUE RESTA DEL 2023, SE LE MOTIVA A LLEVAR UNA CAPACITACIÓN EN EL I BLOQUE 2024, PREGUNTARLE PARA EL II BLOQUE CÓMO SE SIENTE///"
+  },
+  {
+   "external_id": "1459",
+   "member_id": "18c003fe-b632-4365-a5ca-aaca14eccbd5",
+   "leader_id": "dbe528cc-b13e-4bd6-96fc-7779cf11a243",
+   "nombre": "Melania Pacheco Umaña",
+   "nota": "SOLO PUEDE DAR CAPACITACIÓN"
+  },
+  {
+   "external_id": "298",
+   "member_id": "9d7ea804-734c-485b-ab89-1ca180d048a4",
+   "leader_id": "df2f0d39-3b93-458e-9d12-6e20ff3974f8",
+   "nombre": "Laura Peralta Pozuelo",
+   "nota": "Consultar donación"
+  },
+  {
+   "external_id": "206",
+   "member_id": "66730514-b5c5-48a5-97ee-ae6f5084bba6",
+   "leader_id": "621506cc-2ed1-4338-9375-30df18950407",
+   "nombre": "Andrea Ramirez Rivera",
+   "nota": "Consultar disponibilidad"
+  },
+  {
+   "external_id": "13964",
+   "member_id": "324ea1ed-db19-44f5-9ebc-36b95dec5dd3",
+   "leader_id": "0ce189e1-3f09-4b7f-982a-3332806696d9",
+   "nombre": "Cinthya Ramos Marín",
+   "nota": "En revisión"
+  },
+  {
+   "external_id": "5909",
+   "member_id": "7d9f29d3-c00c-493a-b599-a1e5b745d2f5",
+   "leader_id": "a477bd3b-7127-4ffa-9205-c9ae4b4796c9",
+   "nombre": "Katherine Rojas Alfaro",
+   "nota": "NO DARÁ ESTUDIO HASTA NUEVO AVISO / Dar seguimiento a esta nota"
+  },
+  {
+   "external_id": "5382",
+   "member_id": "48d549a9-930a-4735-9e03-78b69d29d3e7",
+   "leader_id": "afcd33bc-6f31-4822-8fbc-3be442d525a0",
+   "nombre": "Jorge Rojas Hidalgo",
+   "nota": "CODIRIGENTE CON GABRIELA HERNANDEZ"
+  },
+  {
+   "external_id": "1851",
+   "member_id": "1889ef94-5678-4cfb-94a0-96b4140844bc",
+   "leader_id": "0831d99e-1369-4f85-908a-fae649403c5c",
+   "nombre": "Monserrat Rojas Orozco",
+   "nota": "Tiene bebé, consultar donación, volvió a charlas, consultar si da estudio"
+  },
+  {
+   "external_id": "3930",
+   "member_id": "d4f3face-d515-4650-9b3d-4f4962799b15",
+   "leader_id": "d8b96b98-7f94-4901-a994-c3d83e01ee89",
+   "nombre": "Roxana Rojas Sanchez",
+   "nota": "Dar seguimiento y apoyo"
+  },
+  {
+   "external_id": "4366",
+   "member_id": "2c04a86e-0166-4156-8b3b-d9477ab257c3",
+   "leader_id": "40988f77-3b19-491e-9a69-d495b1bd3d33",
+   "nombre": "Maria Jose Ruiz Fuentes",
+   "nota": "DISCIPULOS 1 Y CAPACITANDOSE PARA DECISIONES"
+  },
+  {
+   "external_id": "7117",
+   "member_id": "7539423e-2f1e-4805-93b4-4718f1c963f3",
+   "leader_id": "f052e3fb-3252-4593-8f2a-eb1eec2eaac8",
+   "nombre": "Cristina Saenz Vargas",
+   "nota": "No donan"
+  },
+  {
+   "external_id": "14454",
+   "member_id": "e1f41d67-294b-4842-b220-e78597ece711",
+   "leader_id": "d5f7b84e-e0b6-4ecb-a9c7-8fd1fbe728e5",
+   "nombre": "María Fernanda Salazar Flores",
+   "nota": "Acompañamiento por tema de salud"
+  },
+  {
+   "external_id": "22305",
+   "member_id": "35bdee78-b48f-4f21-a9fa-aa89a6d2cf4d",
+   "leader_id": "d87847da-b27a-4b02-8eac-c5e2d4c413e3",
+   "nombre": "Mariana Sanchez Alfaro",
+   "nota": "OTROS SERVICIOS"
+  },
+  {
+   "external_id": "7022",
+   "member_id": "04904d35-fc8d-4e39-a4f8-f8e92e10bafa",
+   "leader_id": "2749233c-0896-4321-a832-13c4d4aad793",
+   "nombre": "Daniela Sanchez Barrantes",
+   "nota": "Consultar donación y charlas"
+  },
+  {
+   "external_id": "299",
+   "member_id": "9691a344-5a42-48f7-8831-95855f8c994c",
+   "leader_id": "705075c6-7c1a-404f-976a-38531ff2f3cf",
+   "nombre": "Laura Sanchez Chavez",
+   "nota": "PASANTÍA, PARA REFRESCARSE, LUNES O MIERCOLES, ESTE O SABANA NORTE"
+  },
+  {
+   "external_id": "2997",
+   "member_id": "9fa4c805-1af9-49ca-9e63-3002c7e3c727",
+   "leader_id": "ed99bcd7-2246-464d-9e14-ea08b09bdd43",
+   "nombre": "Josué Sandoval Castillo",
+   "nota": "SOLO PUEDE DAR VIRTUAL"
+  },
+  {
+   "external_id": "6388",
+   "member_id": "9c57ef39-2114-4487-91ff-8e6b39431c8d",
+   "leader_id": "ebdeadb8-0ec5-4b0c-90d4-a1c43779e431",
+   "nombre": "Zila Sasso Rojas",
+   "nota": "SOLO PUEDE VIRTUAL? - no asiste charlas"
+  },
+  {
+   "external_id": "6038",
+   "member_id": "708a80e4-85ca-457e-be30-a3ff31aee1f7",
+   "leader_id": "3ac781d6-2037-4339-aadb-d4da6ac71930",
+   "nombre": "Maria Jesus Sibaja Alvarado",
+   "nota": "TUVO BEBE 2024"
+  },
+  {
+   "external_id": "8874",
+   "member_id": "3d222a9b-e310-4c29-9f09-ced4f0b6dd7f",
+   "leader_id": "00d64cd4-e981-4c75-9a3c-df250b1602c7",
+   "nombre": "William Sibaja Oviedo",
+   "nota": "ASIGNAR GRUPO MAYORES A 40"
+  },
+  {
+   "external_id": "4946",
+   "member_id": "1c556b93-2834-4589-8bb1-44816789410e",
+   "leader_id": "a33e9c66-0d0a-46f5-b3ac-1e6cfebc10cf",
+   "nombre": "Adriana Sinfonte Blanco",
+   "nota": "Consultar donación y dar estudio"
+  },
+  {
+   "external_id": "8859",
+   "member_id": "cfb4044f-6eb8-4c82-823c-2d888656d8cd",
+   "leader_id": "72cbc7e7-6133-40c1-9db7-fc73822fa8df",
+   "nombre": "Marcia Solano Solano",
+   "nota": "2024: Pausa por temas personales, Alex&Nela le estamos dando seguimiento y acompañamiento en oración al matrimonio y Nela a Marcia individual"
+  },
+  {
+   "external_id": "13933",
+   "member_id": "beb8445a-f588-4652-9b96-e7a180a150f9",
+   "leader_id": "a4d79aff-a143-4c23-94fe-766905c25db5",
+   "nombre": "Esteban Torres Pineda",
+   "nota": "Consultar disponibilidad, si dona y volvió a charlas en febrero"
+  },
+  {
+   "external_id": "6076",
+   "member_id": "e622f801-b740-4836-bf52-97dd33cb3086",
+   "leader_id": "4c524777-0418-4221-bb20-185b70df012c",
+   "nombre": "Aida Torres Villegas",
+   "nota": "SI , EN LA MAÑANA LUNES, MARTES O JUEVES / Consultar charlas y estudios"
+  },
+  {
+   "external_id": "5222",
+   "member_id": "b050f964-d79d-443f-9139-fca46dce6faa",
+   "leader_id": "0bcaa091-0f2d-43d8-9d03-294b7916598f",
+   "nombre": "Fianco Umana Vindas",
+   "nota": "NO ASIGNAR ESTUDIO SIN APROBACION DEBBIE"
+  },
+  {
+   "external_id": "2029",
+   "member_id": "8dd8a798-0ef6-497d-abc0-0bcdea2a27ca",
+   "leader_id": "e720d1f2-5608-43e8-88a1-ad6b54b069e3",
+   "nombre": "Viviana Urena Lara",
+   "nota": "Revisar evalucaciones"
+  },
+  {
+   "external_id": "387",
+   "member_id": "cadc94fb-90cf-47d6-8fdf-5c24891cadf0",
+   "leader_id": "ddd97838-18f5-4a04-97d8-67806ccc6748",
+   "nombre": "Sofia Valverde Mora",
+   "nota": "Dona y va a charlas pero no da estudio"
+  },
+  {
+   "external_id": "8133",
+   "member_id": "f637e95b-a30c-42c0-ade2-dc4abe1b00e3",
+   "leader_id": "09b02405-5eaf-4931-8d09-837eaf8f7842",
+   "nombre": "Cristoffel Van Laarhoven",
+   "nota": "REVISAR EVALUACIONES / Donación irregular, volviendo a charlas, no da estudio"
+  },
+  {
+   "external_id": "1496",
+   "member_id": "5cc935ec-eddb-445a-8ffe-911fcb5ccdc6",
+   "leader_id": "15cd5cf7-44b3-43a1-8dfb-e142924cf907",
+   "nombre": "Monica Vargas",
+   "nota": "Motivar"
+  },
+  {
+   "external_id": "9315",
+   "member_id": "284b5f3e-4149-4900-88a5-5c2f9c931236",
+   "leader_id": "faf05bb8-db34-4842-8025-3832ade37376",
+   "nombre": "Ana Laura Vargas Arias",
+   "nota": "Dona, asiste charlas, no da estudio, consultar"
+  },
+  {
+   "external_id": "1996",
+   "member_id": "5d8582e6-9194-456a-b31c-59630aed54fd",
+   "leader_id": "15bb8f32-a01d-486f-90ed-ae7eebd7bf01",
+   "nombre": "Juan Eduardo Vargas Gonzalez",
+   "nota": "Nota CDEB: Buscarle asistente que le ayude a pastorear"
+  },
+  {
+   "external_id": "13965",
+   "member_id": "ccbb06ab-8c13-4c06-9de8-a312153ba361",
+   "leader_id": "b96e9d2e-08bc-42cd-afca-7584d4b53658",
+   "nombre": "Johana Vásquez Céspedes",
+   "nota": "Se graduó CDEB con Eddy dic 2025, se contacta pero por ahora no quiere dar estudio"
+  },
+  {
+   "external_id": "2180",
+   "member_id": "4d235587-5545-4d20-932b-ed6eccdacc6e",
+   "leader_id": "a33a8bb8-9d6c-4e50-9bce-531606211f4a",
+   "nombre": "Adriana Velazquez Ramirez",
+   "nota": "Consultar si es CoDirigente de Mario Madrigal"
+  },
+  {
+   "external_id": "11051",
+   "member_id": "289f7a59-9fca-4c92-ad72-4fbcea67f058",
+   "leader_id": "833559eb-230c-4d56-ae01-afcd246af0af",
+   "nombre": "Monica Villanueva Arrieta",
+   "nota": "Va a charlas, consultar donación y estudio"
+  },
+  {
+   "external_id": "274",
+   "member_id": "4339d68b-8076-44f5-931c-6a74989bcb84",
+   "leader_id": "88a254bc-6f1e-4669-9ccb-60e41b35200f",
+   "nombre": "Jennifer Zamora Vasquez",
+   "nota": "CONTACTAR - preguntar como esta?"
+  },
+  {
+   "external_id": "3052",
+   "member_id": "9f8d1076-6038-41d6-bd2c-9114ac462d09",
+   "leader_id": "1c0a8580-30b9-4b15-a63a-07b0a59b6772",
+   "nombre": "Kimberly Zumbado Urena",
+   "nota": "KRA-MAYO 2023: SITUACIÓN DE SALUD EMOCIONAL--- KRA-ENERO 2024: SE CONFIRMA CON KIM Y MANTIENE EL QUE NO QUIERE DAR ESTUDIOS, VA A BUSCAR UN SERVICIO EN ALGUNA SEDE, SE MANTIENE INACTIVA DE FORMA INDEFINIDA."
+  },
+  {
+   "external_id": "5063",
+   "member_id": "58a15051-1fb0-468f-b90d-d294056491a2",
+   "leader_id": "668fffb4-b605-45ed-bf70-11efc29ccf15",
+   "nombre": "Tatiana Zúñiga Salas",
+   "nota": "EN SEGUIMIENTO CON NELA / Dona, va irregular a charlas, consultar estudio"
+  },
+  {
+   "external_id": "17386",
+   "member_id": "45dba1bf-55ba-43f9-ab36-62586593f9a5",
+   "leader_id": "5204d319-409f-45ca-8daf-7aba361a63b1",
+   "nombre": "Marco Acuna Gomez",
+   "nota": "Pendiente: Panorama, dar seguimiento: situación personal (viviendo con novia)"
+  },
+  {
+   "external_id": "13786",
+   "member_id": "dfcb74ab-ccef-4569-8996-0e6850f91291",
+   "leader_id": "7e34d9d1-d561-49c8-91f6-ff459aeb00fc",
+   "nombre": "Kevin Barrantes Gamboa",
+   "nota": "GRADUADO DE CDEB JUNIO 2024"
+  },
+  {
+   "external_id": "910",
+   "member_id": "d12e71c1-8680-4596-9009-ecc5288fd1d7",
+   "leader_id": "9631065a-3476-46b4-831c-cfe1a1b579e4",
+   "nombre": "Gabriela Duran Gonzalez",
+   "nota": "2024 CDEB"
+  },
+  {
+   "external_id": "14335",
+   "member_id": "833e7eba-8f33-42e5-8030-9129de56c1d5",
+   "leader_id": "1e5bdf88-75a6-4f56-8941-e87aeb3a7a40",
+   "nombre": "Catalina Esquivel Vargas",
+   "nota": "No tiene fecha de CDEB. No esta en la lista de graduados"
+  },
+  {
+   "external_id": "5203",
+   "member_id": "8d618442-135b-41e0-befc-e69f490c65f4",
+   "leader_id": "ce56aad5-307b-428b-abbc-dbcdab850118",
+   "nombre": "Maria Fernanda Quesada Rodriguez",
+   "nota": "2024 CDEB"
+  },
+  {
+   "external_id": "4976",
+   "member_id": "ee5b3814-14f3-49dc-9584-7b080943da45",
+   "leader_id": "5ee50e04-9337-4cb4-bcf1-e7bed73f1468",
+   "nombre": "Marcela Salas Ruiz",
+   "nota": "Dona, va a charlas, consultar estudio"
+  },
+  {
+   "external_id": "8230",
+   "member_id": "fa3116d6-b069-4221-b928-b7566cfd0ad7",
+   "leader_id": "e7e7951c-6295-43b1-b53c-cd368d36348d",
+   "nombre": "Jose Francisco Sanchez Navarro",
+   "nota": "Dona, va a charlas, consultar estudio"
+  }
+ ]
+}
