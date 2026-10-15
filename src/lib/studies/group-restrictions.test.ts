@@ -211,3 +211,29 @@ describe('el grupo sucesor NO hereda la restricción', () => {
     expect(insert).not.toContain('enrollment_restrictions')
   })
 })
+
+// QA-3/M1 (2026-10-15) · La matrícula ahora pide SOLO los grupos en matrícula
+// (antes los 2.222, 1,1 MB por apertura). Eso es seguro solo si el cálculo no
+// usa los otros para nada: con todos o con los filtrados tiene que dar lo MISMO.
+describe('la elegibilidad no depende de los grupos que no están en matrícula', () => {
+  const todos = [
+    grupo('abierto', 'CAP'),
+    grupo('cursando', 'CAP', { status: 'en_curso' }),
+    grupo('cerrado', 'CAP', { status: 'finalizado' }),
+    grupo('otro-abierto', 'CAP', { zone: 'OES' }),
+  ]
+  const soloAbiertos = todos.filter(g => g.status === 'en_matricula')
+
+  it('mismo resultado con todos los grupos que con los en matrícula', () => {
+    expect(computeEligibility([PLAN_ABIERTO], soloAbiertos, PERFIL))
+      .toEqual(computeEligibility([PLAN_ABIERTO], todos, PERFIL))
+  })
+
+  it('y las dos rutas de matrícula piden solo esos', () => {
+    for (const ruta of ['src/app/api/matricula/eligibility/route.ts', 'src/app/api/studies/request-options/route.ts']) {
+      const src = readFileSync(ruta, 'utf8')
+      expect(src).toContain("getStudyGroups({ filters: { statuses: ['en_matricula'] } })")
+      expect(src).not.toMatch(/getStudyGroups\(\)/)
+    }
+  })
+})

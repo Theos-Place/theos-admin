@@ -168,12 +168,14 @@ grupo de rutas que lo importa estático: los 6 reportes de `/reportes/*` y
 que no hay número por página. **Fix:** `next/dynamic` para los gráficos.
 **Esfuerzo:** S.
 
-### N3 · La ficha del miembro embebe más de lo que muestra
+### N3 · El Análisis de demanda recorre todas las matrículas de a mil
 
-`src/lib/supabase/queries/members-detail.ts:146`: matrículas con `group`,
-`plan_direct` y `member` embebidos. 3.127 llamadas · 186 ms · 583 s acumulados.
-**Fix:** quitar el embed de `member` (la ficha ya lo tiene) y pedir solo `code`
-del plan. **Esfuerzo:** S.
+**Corregido el 2026-10-15** (decía «la ficha del miembro»: era una atribución
+equivocada; la ficha trae las matrículas de UNA persona). La consulta es
+`src/lib/supabase/queries/studies-demand.ts:212`: pagina las ~37.000 matrículas
+con grupo, plan y miembro embebidos para armar el reporte en el servidor.
+3.127 llamadas · 186 ms por página · 583 s acumulados. **Fix:** una RPC que
+agregue en la base y devuelva los conteos. **Esfuerzo:** M.
 
 ### N4 · 73 columnas FK sin índice
 

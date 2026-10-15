@@ -1,3 +1,4 @@
+import { inicioDeHoyCR } from '@/lib/events/hoy-cr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { todayCR } from '@/lib/format'
 import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
@@ -204,6 +205,16 @@ export async function getEvents(filters: EventFilters = {}): Promise<{ events: D
     .range((page - 1) * pageSize, page * pageSize - 1)
 
   if (is_active !== 'all') query = query.eq('is_active', is_active)
+
+  /**
+   * QA-3/M2 (2026-10-15) · En la LISTA los check-ins embebidos son solo los de
+   * HOY (hora de Costa Rica). Quienes la usan —la pantalla de Eventos, el
+   * inicio y la elegibilidad de eventos— cuentan los check-ins de hoy y nada
+   * más, pero viajaba el historial entero: 32.476 check-ins (3,4 MB) para 500
+   * eventos, la segunda consulta más cara de prod. El detalle de un evento
+   * (getEventById) sigue trayendo todos.
+   */
+  if (!filters.light) query = query.gte('checkins.checked_in_at', inicioDeHoyCR())
 
   if (search) query = query.ilike('title', `%${search}%`)
   if (event_type) query = query.eq('event_type', event_type)

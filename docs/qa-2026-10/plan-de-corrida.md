@@ -48,7 +48,7 @@ otro archivo (documentadas en el test). Recorrido con teclado de /soporte,
 /estudios/solicitudes y /finanzas/pagos: 0 paradas sin foco visible. Los menús
 «⋯» de listas, formularios y la ficha cierran con Escape y devuelven el foco.
 
-## Tanda 3 — Las tres consultas que dominan prod (QA-3 M1, M2, M3) · M · dos días
+## Tanda 3 — Las tres consultas que dominan prod (QA-3 M1, M2, M3) · HECHA 2026-10-15 (staging)
 
 - Matrícula: `getStudyGroups` con filtro de estado y select sin inscripciones
   (1.894 s acumulados, la consulta 1.ª del sistema).
@@ -56,6 +56,19 @@ otro archivo (documentadas en el test). Recorrido con teclado de /soporte,
 - `get_group_attendance()` y familia con rango de fechas, o vista materializada
   nocturna (868 s + 362 s). Revisar de paso la ficha del miembro (QA-3 N3).
 - Medir antes y después con `pg_stat_statements`.
+
+**Resultado medido (contra prod):**
+
+| Consulta | Antes | Después |
+|---|---|---|
+| Matrícula: grupos que se traen | 2.222 grupos · 1,1 MB · 942 ms | 9 grupos · 4 KB · 105 ms |
+| Lista de eventos: check-ins embebidos (500 eventos) | 32.476 · 3,4 MB | solo los de hoy |
+| Retención: `get_group_attendance()` | 2.917 ms | 109 ms (17.945 filas idénticas) |
+
+La retención lee una vista materializada que se recalcula cada noche (00:50 CR,
+~1 s): los check-ins del día entran al reporte esa noche. La migración se
+aplica sola en el build de prod; en staging ya está. El N3 del informe estaba
+mal atribuido (no es la ficha, es el Análisis de demanda) y queda pendiente.
 
 ## Tanda 4 — Limpieza que evita bugs futuros (QA-3 M5, M6) · M · un día
 

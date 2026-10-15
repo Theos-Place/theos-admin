@@ -31,7 +31,13 @@ export async function GET(req: NextRequest) {
     }
 
     const [plans, groups, profile, exceptions] = await Promise.all([
-      getStudyPlans(), getStudyGroups(), getMemberStudyProfile(memberId), activeExceptionsByCodeForMember(memberId),
+      getStudyPlans(),
+      // QA-3/M1 (2026-10-15) · Solo los grupos EN MATRÍCULA: computeEligibility
+      // no ofrece ningún otro (eligibility.ts, `g.status === 'en_matricula'`).
+      // Antes se traían los 2.222 grupos con sus inscripciones —1,1 MB por
+      // apertura, la consulta más cara de prod— para quedarse con 9.
+      getStudyGroups({ filters: { statuses: ['en_matricula'] } }),
+      getMemberStudyProfile(memberId), activeExceptionsByCodeForMember(memberId),
     ])
     const eligibility = computeEligibility(
       plans.map(toDomainStudyType).filter(p => !p.is_archived && p.is_curricular !== false),
