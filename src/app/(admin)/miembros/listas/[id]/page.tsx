@@ -197,7 +197,7 @@ export default function ListaDetailPage() {
               <span
                 className={cn(
                   'rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-widest uppercase font-display',
-                  list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80'
+                  list.is_dynamic ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy-light/10 text-navy-light/80'
                 )}
               >
                 {list.is_dynamic ? 'Dinámica' : 'Snapshot'}
@@ -270,7 +270,7 @@ export default function ListaDetailPage() {
             {!motivoNoRecalculable(list.filters) && (
               <button
                 disabled={refrescando}
-                className="text-coral hover:underline cursor-pointer font-body bg-transparent border-0 disabled:opacity-50 disabled:cursor-default"
+                className="text-coral-deep hover:underline cursor-pointer font-body bg-transparent border-0 disabled:opacity-50 disabled:cursor-default"
                 onClick={refrescar}
               >
                 {refrescando ? 'Actualizando…' : 'Actualizar snapshot'}
@@ -459,7 +459,7 @@ export default function ListaDetailPage() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={e => { e.stopPropagation(); router.push(`/miembros/${member.id}`) }}
-                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral"
+                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral-deep"
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
                       </button>

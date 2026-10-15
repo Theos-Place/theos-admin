@@ -17,18 +17,20 @@ Regla de cada tanda: medir antes y después (axe para accesibilidad,
   (23 archivos se benefician sin tocarlos).
 
 **Resultado medido** (axe sobre las 40 pantallas que tenían contraste bajo,
-`axe/despues-tanda1-contraste.json`): escritorio de 268 a 110 elementos y de 39
-a 17 pantallas; móvil de 237 a 81 y de 40 a 16. Saltar al contenido: el primer
-Tab lo enfoca y Enter + Tab entra a `<main>` en las 5 pantallas probadas
-(`scripts/qa/probar-salto.ts`). Modal: el foco vuelve a «Agregar donación».
+`axe/despues-tanda1-contraste.json`): de 268 elementos en 39 pantallas a 4 en 1
+en escritorio, y de 237 a 4 en móvil; esos 4 se cerraron después y la pantalla
+quedó en cero. Saltar al contenido: el primer Tab lo enfoca y Enter + Tab entra
+a `<main>` en las 5 pantallas probadas (`scripts/qa/probar-salto.ts`). Modal: el
+foco vuelve a «Agregar donación».
 
-**Lo que quedó de contraste, para la tanda 2** (pares distintos de los seis):
-- `text-coral` sobre el fondo gris de página (4.35): enlaces y pestañas activas.
-  Decidir si el coral de texto pasa a `coral-deep` en todo el admin.
-- `text-teal-deep` sobre tintes teal cuando la tarjeta no es blanca
-  (`/estudios/plan`, 44 nodos): hace falta un teal de texto más oscuro.
-- Sueltos: banner de vista previa de formularios, cifras sobre barras de
-  `/reportes/asistencia`, montos ocultos en `/finanzas/pagos`.
+**Decisiones de Floriana del 2026-10-15** (ya aplicadas y fijadas en
+`contrast.test.ts` y AGENTS.md): el coral como texto es siempre `coral-deep`, y
+sobre un tinte teal la letra va en el nuevo `teal-ink` (#2F5E61).
+
+**De paso:** chips de pago y de tipo de evento con variante para la cabecera
+navy; pasos futuros del wizard de eventos como botón deshabilitado; planes
+archivados sin opacidad; en móvil, los botones de `/estudios/bloques` se salían
+de la cabecera y quedaban blancos sobre blanco.
 
 ## Tanda 2 — Nombres accesibles y foco (QA-2 M2, M3, M6) · S/M · un día
 

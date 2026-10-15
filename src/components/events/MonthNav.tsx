@@ -50,7 +50,7 @@ export function MonthNav({ month, year, onPrev, onNext, onPrevYear, onNextYear, 
       </div>
       <button
         onClick={onToday}
-        className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral hover:border-coral/30 transition-colors font-body"
+        className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral-deep hover:border-coral/30 transition-colors font-body"
       >
         Hoy
       </button>

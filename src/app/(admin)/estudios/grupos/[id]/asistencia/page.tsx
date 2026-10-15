@@ -301,7 +301,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p
-                    className="text-2xl font-bold text-coral font-display"
+                    className="text-2xl font-bold text-coral-deep font-display"
                   >
                     {presentCount} / {enrolled.length}
                   </p>
@@ -336,7 +336,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
           </div>
           )}
 
-          {error && <p className="text-[13px] text-coral font-body" role="alert">{error}</p>}
+          {error && <p className="text-[13px] text-coral-deep font-body" role="alert">{error}</p>}
 
           <button
             onClick={handleSave}
@@ -354,7 +354,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
                botón de basurero en una fila de tabla se aprieta sin leer. */
             <button
               onClick={() => setConfirmandoBorrado(true)}
-              className="flex items-center gap-1.5 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
+              className="flex items-center gap-1.5 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body"
             >
               <Trash2 size={14} aria-hidden="true" /> Borrar esta sesión
             </button>

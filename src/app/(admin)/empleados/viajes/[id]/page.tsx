@@ -149,7 +149,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
     return (
       <PageContainer width="form" className="page space-y-4">
         <button type="button" onClick={() => setEditando(false)}
-          className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
+          className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body">
           <ArrowLeft size={14} aria-hidden="true" /> Volver al expediente
         </button>
         <h1 className="text-xl font-bold text-navy font-display">Editar el viaje</h1>
@@ -160,7 +160,7 @@ export default function ViajePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <PageContainer width="form" className="page space-y-4">
-      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
+      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body">
         <ArrowLeft size={14} aria-hidden="true" /> Volver a viajes
       </Link>
 

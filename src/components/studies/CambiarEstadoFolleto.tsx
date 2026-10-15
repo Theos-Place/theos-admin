@@ -110,7 +110,7 @@ export function CambiarEstadoFolleto({ folletoId, estado, onCambiado }: {
             {pideNota && (
               <div className="space-y-1">
                 <label htmlFor="folleto-nota" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                  ¿Por qué se devuelve? <span className="text-coral">*</span>
+                  ¿Por qué se devuelve? <span className="text-coral-deep">*</span>
                 </label>
                 <textarea
                   id="folleto-nota"

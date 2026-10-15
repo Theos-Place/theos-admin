@@ -42,7 +42,7 @@ export const ETIQUETA_ESTADO: Record<EstadoCorreo, string> = {
  *  espera. "No salió" va en ámbar y no en coral: no es un error, es una
  *  decisión del modo silencioso. */
 export const BADGE_ESTADO: Record<EstadoCorreo, string> = {
-  delivered: 'bg-teal-soft/30 text-teal-deep',
+  delivered: 'bg-teal-soft/30 text-teal-ink',
   sent: 'bg-navy/10 text-navy',
   bounced: 'bg-coral/10 text-coral-deep',
   failed: 'bg-coral/10 text-coral-deep',

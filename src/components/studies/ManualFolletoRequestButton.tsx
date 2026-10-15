@@ -84,7 +84,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             </div>
 
             <div>
-              <label htmlFor="mf-level" className={LABEL_CLS}>Folleto / nivel <span className="text-coral">*</span></label>
+              <label htmlFor="mf-level" className={LABEL_CLS}>Folleto / nivel <span className="text-coral-deep">*</span></label>
               <select id="mf-level" value={level} onChange={e => setLevel(e.target.value)} className={SELECT_CLS}>
                 <option value="">Seleccionar…</option>
                 {STUDY_CATALOG.map(s => <option key={s.code} value={s.code}>{s.code} — {s.name}</option>)}
@@ -92,12 +92,12 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             </div>
 
             <div>
-              <label htmlFor="mf-qty" className={LABEL_CLS}>Cantidad <span className="text-coral">*</span></label>
+              <label htmlFor="mf-qty" className={LABEL_CLS}>Cantidad <span className="text-coral-deep">*</span></label>
               <input id="mf-qty" type="number" min={1} value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Ej: 10" className={SELECT_CLS} />
             </div>
 
             <div>
-              <label htmlFor="mf-sede" className={LABEL_CLS}>Sede de entrega <span className="text-coral">*</span></label>
+              <label htmlFor="mf-sede" className={LABEL_CLS}>Sede de entrega <span className="text-coral-deep">*</span></label>
               <select id="mf-sede" value={sede} onChange={e => setSede(e.target.value)} className={SELECT_CLS}>
                 <option value="">Seleccionar sede…</option>
                 {activeSedes.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
@@ -105,7 +105,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
             </div>
 
             <div>
-              <span className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral">*</span></span>
+              <span className={LABEL_CLS}>Dirigente a quien entregar <span className="text-coral-deep">*</span></span>
               <Combobox
                 items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
                 value={leader}
@@ -123,7 +123,7 @@ export function ManualFolletoRequestButton({ onCreated }: { onCreated?: () => vo
               <textarea id="mf-note" value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Explicá el caso especial para quien imprime…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')} />
             </div>
 
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
             <div className="flex justify-end gap-2 pt-1">
               <button onClick={() => setOpen(false)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">Cancelar</button>

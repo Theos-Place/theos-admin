@@ -93,17 +93,17 @@ export function Combobox({
             {allowEmpty && (
               <ComboOption onPick={pickEmpty} className="text-sm text-navy-light/80 font-body">
                 <span className="flex-1">{emptyLabel}</span>
-                {value.kind === 'empty' && <Check size={14} className="text-coral" />}
+                {value.kind === 'empty' && <Check size={14} className="text-coral-deep" />}
               </ComboOption>
             )}
             {filtered.map(it => (
               <ComboOption key={it.value} onPick={() => pickExisting(it)} className="text-sm text-navy font-body">
                 <span className="flex-1 truncate">{it.label}</span>
-                {value.kind === 'existing' && value.value === it.value && <Check size={14} className="text-coral" />}
+                {value.kind === 'existing' && value.value === it.value && <Check size={14} className="text-coral-deep" />}
               </ComboOption>
             ))}
             {showCreate && (
-              <ComboOption onPick={pickNew} className="text-sm text-coral font-body border-t border-[var(--outline-variant)] hover:bg-coral/5">
+              <ComboOption onPick={pickNew} className="text-sm text-coral-deep font-body border-t border-[var(--outline-variant)] hover:bg-coral/5">
                 <Plus size={14} className="shrink-0" />
                 <span className="flex-1 truncate">{createLabel(q)}</span>
               </ComboOption>

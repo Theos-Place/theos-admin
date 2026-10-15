@@ -174,7 +174,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
         return (
           <div key={p.request_id} className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-4">
             <div className="flex items-center gap-2">
-              <Heart size={15} className="text-coral shrink-0" />
+              <Heart size={15} className="text-coral-deep shrink-0" />
               <h3 className="text-sm font-bold text-navy font-display">
                 {nombreDeLaPareja(p)}
               </h3>
@@ -185,7 +185,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 1) compromiso */}
             <div>
-              <span className={LABEL}>{COMMITMENT_QUESTION} <span className="text-coral">*</span></span>
+              <span className={LABEL}>{COMMITMENT_QUESTION} <span className="text-coral-deep">*</span></span>
               <div className="flex flex-wrap gap-2">
                 {COMMITMENT_OPTIONS.map(o => (
                   <button
@@ -236,7 +236,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 5) punto ciego */}
             <div>
-              <span className={LABEL}>{BLIND_SPOT_QUESTION} <span className="text-coral">*</span></span>
+              <span className={LABEL}>{BLIND_SPOT_QUESTION} <span className="text-coral-deep">*</span></span>
               <div className="flex gap-2">
                 {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                   <button
@@ -265,7 +265,7 @@ export function PrematCoupleEvaluation({ groupId, onChange }: {
 
             {/* 6) plan de acción */}
             <div>
-              <span className={LABEL}>{ACTION_PLAN_LABEL} <span className="text-coral">*</span></span>
+              <span className={LABEL}>{ACTION_PLAN_LABEL} <span className="text-coral-deep">*</span></span>
               <div className="space-y-2">
                 {ACTION_PLAN_OPTIONS.map(o => (
                   <button

@@ -109,7 +109,7 @@ export function EventServersTab({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Stats pills */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[13px] text-teal-deep font-body">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[13px] text-teal-ink font-body">
             <Check size={12} strokeWidth={2.5} /> {confirmedCount} confirmados
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[13px] text-amber-700 font-body">
@@ -192,7 +192,7 @@ export function EventServersTab({
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={cn(
                           'rounded-md px-1.5 py-0.5 text-[11px] font-medium',
-                          b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-deep' :
+                          b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-ink' :
                           b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                           'bg-navy/10 text-navy/80'
                         )}>
@@ -290,7 +290,7 @@ export function EventServersTab({
                             {m.service_history.filter(s => s.status === 'activo').map(s => ` · ${s.committee}`).join('')}
                           </p>
                         </div>
-                        {selectedMemberId === m.id && <Check size={14} className="text-coral shrink-0" />}
+                        {selectedMemberId === m.id && <Check size={14} className="text-coral-deep shrink-0" />}
                       </button>
                     ))}
                     {filteredMembers.length === 0 && (

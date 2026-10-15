@@ -57,7 +57,7 @@ function MemberMini({ m }: { m: DupMember }) {
     <div className="flex-1 min-w-0 rounded-xl border border-[var(--outline-variant)] p-3">
       <div className="flex items-center gap-2 mb-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy text-[11px] font-display font-extrabold">{initials(m)}</span>
-        <Link href={`/miembros/${m.id}`} className="text-sm text-navy font-body font-medium truncate hover:text-coral">
+        <Link href={`/miembros/${m.id}`} className="text-sm text-navy font-body font-medium truncate hover:text-coral-deep">
           {m.first_name} {m.last_name}
         </Link>
       </div>

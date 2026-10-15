@@ -298,7 +298,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
             onChange={e => { setName(e.target.value); if (nameError && e.target.value.trim()) setNameError(false) }}
           />
           {nameError && (
-            <p id="form-name-error" className="text-[13px] text-coral font-body mt-0.5">
+            <p id="form-name-error" className="text-[13px] text-coral-deep font-body mt-0.5">
               Escribí un nombre antes de guardar
             </p>
           )}
@@ -321,7 +321,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           onClick={() => setStatus(s => s === 'draft' ? 'active' : 'draft')}
           className={cn(
             'rounded-full px-2.5 py-1 text-[13px] font-semibold transition-colors shrink-0 font-display',
-            status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
+            status === 'active' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/10 text-navy-light/80'
           )}
         >
           {status === 'active' ? 'Activo' : 'Borrador'}
@@ -723,7 +723,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                             key={f.id}
                             type="button"
                             onClick={() => { setActiveFieldId(f.id); setFocusLogic(true); setShowLogicPanel(false) }}
-                            className="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-coral transition-colors group"
+                            className="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:text-coral-deep transition-colors group"
                           >
                             <span className="text-[13px] text-navy-light/80 group-hover:text-navy truncate font-body">
                               {f.label || <span className="italic text-navy-light/80">Sin etiqueta</span>}

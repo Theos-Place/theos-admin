@@ -4,22 +4,24 @@ import type { PaymentMethod } from '@/types/finance'
 
 const METHOD_CONFIG: Record<PaymentMethod, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
   card:        { label: 'Tarjeta',     color: '#161440', bg: 'rgba(22,20,64,0.08)',    Icon: CreditCard    },
-  sinpe:       { label: 'SINPE',       color: '#3B7579', bg: 'rgba(81,157,162,0.12)',  Icon: Smartphone    },
+  sinpe:       { label: 'SINPE',       color: '#2F5E61', bg: 'rgba(81,157,162,0.12)',  Icon: Smartphone    },
   scholarship: { label: 'Beca',        color: '#1E6B42', bg: 'rgba(61,185,122,0.12)', Icon: GraduationCap },
   cash:        { label: 'Efectivo',    color: '#7F6210', bg: 'rgba(233,185,73,0.15)', Icon: Banknote      },
-  comprobante: { label: 'Comprobante', color: '#3B7579', bg: 'rgba(81,157,162,0.12)', Icon: Receipt       },
+  comprobante: { label: 'Comprobante', color: '#2F5E61', bg: 'rgba(81,157,162,0.12)', Icon: Receipt       },
 }
 
 // Fallback neutro: un método no mapeado NO debe tumbar la pantalla; muestra su
 // valor crudo. (El crash de junio-2026 fue por 'comprobante' sin entrada.)
 const FALLBACK = { label: '', color: '#161440', bg: 'rgba(22,20,64,0.08)', Icon: CreditCard }
 
-export function PaymentMethodBadge({ method }: { method: PaymentMethod }) {
+/** `tone="dark"` sobre la cabecera navy: el tinte es transparente y sobre navy
+ *  la letra no se leía (2.05). Ahí el chip va sobre blanco pleno. */
+export function PaymentMethodBadge({ method, tone = 'light' }: { method: PaymentMethod; tone?: 'light' | 'dark' }) {
   const cfg = METHOD_CONFIG[method] ?? { ...FALLBACK, label: String(method || '—') }
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-medium"
-      style={{ color: cfg.color, background: cfg.bg }}
+      style={{ color: cfg.color, background: tone === 'dark' ? '#FFFFFF' : cfg.bg }}
     >
       <cfg.Icon size={11} strokeWidth={2} />
       {cfg.label}

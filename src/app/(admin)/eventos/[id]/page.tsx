@@ -135,7 +135,7 @@ function SendMessageModal({ eventTitle, memberIds, onClose }: {
           value={msg}
           onChange={e => setMsg(e.target.value)}
         />
-        {error && <p className="text-sm text-coral font-body" role="alert">{error}</p>}
+        {error && <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>}
         <div className="flex gap-2">
           <button
             onClick={handleSend}
@@ -670,7 +670,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                 onClick={() => setActiveTab(t)}
                 className={cn(
                   'flex-1 whitespace-nowrap px-2 py-2.5 text-[13px] transition-colors',
-                  tabEfectivo === t ? 'text-coral font-semibold' : 'text-navy-light/80 hover:text-navy',
+                  tabEfectivo === t ? 'text-coral-deep font-semibold' : 'text-navy-light/80 hover:text-navy',
                   'font-body'
                 )}
               >
@@ -974,7 +974,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
       {/* Inscripción (confirmación, comprobante, beca) y aviso de éxito. */}
       {successEvent && (
-        <div className="rounded-2xl bg-teal-soft/20 px-4 py-3 text-sm text-teal-deep font-body flex items-center gap-2">
+        <div className="rounded-2xl bg-teal-soft/20 px-4 py-3 text-sm text-teal-ink font-body flex items-center gap-2">
           <Check size={16} />
           Quedaste inscrito/a en {successEvent}.
           <button onClick={clearSuccess} className="ml-auto text-navy-light/80 hover:text-navy" aria-label="Cerrar aviso">

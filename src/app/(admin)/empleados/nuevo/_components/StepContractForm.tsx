@@ -54,7 +54,7 @@ export function StepContractForm({
         <label htmlFor="puesto"
           className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
         >
-          Puesto <span className="text-coral">*</span>
+          Puesto <span className="text-coral-deep">*</span>
         </label>
         <select id="puesto"
           className={cn(inputCls, 'font-body')}
@@ -115,7 +115,7 @@ export function StepContractForm({
           <span
             className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
           >
-            Salario mensual <span className="text-coral">*</span>
+            Salario mensual <span className="text-coral-deep">*</span>
           </span>
           <div className="relative">
             <span
@@ -148,7 +148,7 @@ export function StepContractForm({
           <label htmlFor="fecha-de-inicio"
             className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display"
           >
-            Fecha de inicio <span className="text-coral">*</span>
+            Fecha de inicio <span className="text-coral-deep">*</span>
           </label>
           <input id="fecha-de-inicio"
             type="date"

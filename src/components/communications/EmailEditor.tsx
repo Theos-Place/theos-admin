@@ -227,7 +227,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
           <div className="max-h-[460px] overflow-auto bg-white [&_.ProseMirror]:break-words [&_.ProseMirror_img]:max-w-full [&_.ProseMirror_a]:text-[#3B7579] [&_.ProseMirror_a]:underline [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:my-2 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:my-1.5 [&_.ProseMirror_p]:my-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2">
             <EditorContent editor={editor} />
           </div>
-          {uploadError && <p className="px-4 py-2 text-[13px] text-coral font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
+          {uploadError && <p className="px-4 py-2 text-[13px] text-coral-deep font-body border-t border-[var(--outline-variant)]">{uploadError}</p>}
         </>
       ) : (
         <textarea

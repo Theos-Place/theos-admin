@@ -95,7 +95,7 @@ function ConditionPill({
       {!groupMode && (
         <button
           onClick={e => { e.stopPropagation(); onRemove() }}
-          className="rounded-full p-0.5 text-navy-light/80 hover:text-coral transition-colors"
+          className="rounded-full p-0.5 text-navy-light/80 hover:text-coral-deep transition-colors"
           aria-label="Quitar"
         >
           <X size={10} strokeWidth={2.5} />
@@ -149,7 +149,7 @@ function GroupBracket({
       </button>
       <button
         onClick={onRemove}
-        className="rounded-full p-0.5 text-navy-light/80 hover:text-coral transition-colors"
+        className="rounded-full p-0.5 text-navy-light/80 hover:text-coral-deep transition-colors"
         aria-label="Eliminar grupo"
       >
         <X size={10} strokeWidth={2.5} />
@@ -265,7 +265,7 @@ export function QueryBar({
 
           <button
             onClick={cancelGroup}
-            className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+            className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
           >
             Cancelar
           </button>

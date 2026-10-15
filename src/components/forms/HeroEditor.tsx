@@ -80,7 +80,7 @@ export function HeroEditor({ value, onChange, formName }: {
               <button
                 type="button"
                 onClick={() => onChange({ hero_image_url: null })}
-                className="inline-flex items-center gap-1 text-[13px] text-coral hover:underline font-body"
+                className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:underline font-body"
               >
                 <Trash2 size={12} /> Quitar imagen
               </button>
@@ -121,7 +121,7 @@ export function HeroEditor({ value, onChange, formName }: {
               if (f) void subir(f)
             }}
           />
-          {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+          {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

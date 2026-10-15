@@ -82,7 +82,7 @@ export function PositionRequestsSection() {
                   </p>
                 </button>
                 <button onClick={() => resolve(r.id, 'reject')} disabled={!!busy}
-                  className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
+                  className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-navy-light hover:text-coral-deep hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
                   <X size={13} /> Rechazar
                 </button>
                 <button onClick={() => resolve(r.id, 'approve')} disabled={!!busy}

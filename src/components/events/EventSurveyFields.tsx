@@ -189,7 +189,7 @@ export function EventSurveyFields({ value, onChange, endsAt }: {
       </p>
 
       {error && (
-        <p className="flex items-start gap-1.5 text-[13px] text-coral font-body" role="alert">
+        <p className="flex items-start gap-1.5 text-[13px] text-coral-deep font-body" role="alert">
           <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {error}
         </p>
       )}

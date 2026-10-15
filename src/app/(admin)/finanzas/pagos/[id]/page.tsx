@@ -115,7 +115,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
               </h1>
               <p className="text-[14px] text-white/80 font-body">
                 {payment.member_id ? (
-                  <Link href={`/miembros/${payment.member_id}`} className="hover:text-coral transition-colors underline decoration-dotted underline-offset-2">
+                  <Link href={`/miembros/${payment.member_id}`} className="hover:text-coral-deep transition-colors underline decoration-dotted underline-offset-2">
                     {payment.member_name}
                   </Link>
                 ) : payment.member_name}
@@ -126,8 +126,8 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                 <AmountDisplay amount={payment.amount} currency={payment.currency} defaultHidden={false} />
               </p>
               <div className="flex items-center gap-2">
-                <PaymentMethodBadge method={payment.method} />
-                <PaymentStatusBadge status={payment.status} />
+                <PaymentMethodBadge method={payment.method} tone="dark" />
+                <PaymentStatusBadge status={payment.status} tone="dark" />
               </div>
             </div>
           </div>

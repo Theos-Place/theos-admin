@@ -167,7 +167,7 @@ function ConditionsList({
               </span>
               <button
                 onClick={() => removeCondition(c.id)}
-                className="shrink-0 text-navy-light/80 hover:text-coral transition-colors"
+                className="shrink-0 text-navy-light/80 hover:text-coral-deep transition-colors"
                 aria-label="Quitar"
               >
                 <X size={12} strokeWidth={2} />
@@ -948,7 +948,7 @@ function SelectorDeEstudios({
             <button
               type="button"
               onClick={() => { if (cond) removeCondition(cond.id) }}
-              className="w-full text-left px-1.5 py-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+              className="w-full text-left px-1.5 py-1 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
             >
               Limpiar la selección
             </button>

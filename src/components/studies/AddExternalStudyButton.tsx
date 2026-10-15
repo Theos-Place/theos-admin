@@ -209,7 +209,7 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
           )}
         </div>
 
-        {err && <p className="text-sm text-coral font-body">{err}</p>}
+        {err && <p className="text-sm text-coral-deep font-body">{err}</p>}
 
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">

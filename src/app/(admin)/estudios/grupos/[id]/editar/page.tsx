@@ -216,7 +216,7 @@ function EditarForm({ group, studyType, refetch }: {
           </fieldset>
 
           <div className="col-span-2 sm:col-span-1 space-y-1 sm:pt-4">
-            <label htmlFor="editar-co-dirigente" className={cn(labelCls, esPremat && 'text-coral')}>
+            <label htmlFor="editar-co-dirigente" className={cn(labelCls, esPremat && 'text-coral-deep')}>
               {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
             </label>
             <DirigentesCombobox
@@ -383,7 +383,7 @@ function EditarForm({ group, studyType, refetch }: {
         />
         )}
 
-        {error && <p className="text-sm text-coral font-body">{error}</p>}
+        {error && <p className="text-sm text-coral-deep font-body">{error}</p>}
 
         <div className="flex justify-between pt-2">
           <Link

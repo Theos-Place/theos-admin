@@ -72,7 +72,7 @@ export function Tabs({
           >
             {t.label}
             {t.count != null && t.count > 0 && (
-              <span className={cn('ml-1', isActive && 'text-coral')}>({t.count})</span>
+              <span className={cn('ml-1', isActive && 'text-coral-deep')}>({t.count})</span>
             )}
           </button>
         )

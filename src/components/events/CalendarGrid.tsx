@@ -130,7 +130,7 @@ export function CalendarGrid({
         </div>
         <button
           onClick={onToday}
-          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral hover:border-coral/30 transition-colors font-body"
+          className="rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] font-medium text-navy-light hover:bg-coral/5 hover:text-coral-deep hover:border-coral/30 transition-colors font-body"
         >
           Hoy
         </button>
@@ -367,7 +367,7 @@ export function CalendarGrid({
                   // Mismo criterio que EventCard: 'pending' no significa "no
                   // pagó" — se queda así hasta que finanzas aprueba.
                   return (
-                    <span className="block text-center rounded-full bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+                    <span className="block text-center rounded-full bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-ink font-body">
                       {elig.payment_in_review ? 'Inscrito/a · pago en revisión' : 'Ya inscrito/a'}
                     </span>
                   )

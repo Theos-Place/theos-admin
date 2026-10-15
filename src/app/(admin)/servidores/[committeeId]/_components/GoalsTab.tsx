@@ -69,7 +69,7 @@ export function GoalsTab({
           <span
             className={cn(
               'rounded-full px-2 py-0.5 text-[11px] font-semibold shrink-0 font-display',
-              g.status === 'completed' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-amber-500/10 text-amber-600'
+              g.status === 'completed' ? 'bg-teal-deep/10 text-teal-ink' : 'bg-amber-500/10 text-amber-600'
             )}
           >
             {g.status === 'completed' ? 'Completada' : 'En progreso'}

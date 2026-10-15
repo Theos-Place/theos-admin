@@ -455,7 +455,7 @@ export function RequestBoard<R extends BaseRequest>({
             <button
               onClick={() => { setDateFrom(''); setDateTo('') }}
               aria-label="Limpiar fechas"
-              className="rounded-lg p-1 text-navy-light/80 hover:text-coral transition-colors"
+              className="rounded-lg p-1 text-navy-light/80 hover:text-coral-deep transition-colors"
             >
               <X size={13} />
             </button>
@@ -495,7 +495,7 @@ export function RequestBoard<R extends BaseRequest>({
                 const vuelve = espera.fechaDeVuelta(r)
                 return (
                   <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 border-b border-[var(--outline-variant)] last:border-0">
-                    <Link href={`/miembros/${r.member_id}`} className="text-sm text-navy font-body hover:text-coral transition-colors">
+                    <Link href={`/miembros/${r.member_id}`} className="text-sm text-navy font-body hover:text-coral-deep transition-colors">
                       {r.member_name}
                     </Link>
                     <span className="text-[13px] text-navy-light/80 font-body">
@@ -565,7 +565,7 @@ export function RequestBoard<R extends BaseRequest>({
                             </span>
                             {r.reviewed_by_name && r.status !== 'open' && (
                               <span className="hidden sm:inline-flex items-center gap-1.5 shrink-0" title={`Asignada a ${r.reviewed_by_name}`}>
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[11px] font-display font-extrabold">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-soft/40 text-teal-ink text-[11px] font-display font-extrabold">
                                   {getInitials(r.reviewed_by_name)}
                                 </span>
                                 <span className="text-[13px] text-navy-light/80 font-body max-w-[110px] truncate">{r.reviewed_by_name}</span>
@@ -580,7 +580,7 @@ export function RequestBoard<R extends BaseRequest>({
                           {isOpen && (
                             <div className="px-5 pb-4 pt-1 space-y-3 bg-surface-low/40">
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-navy-light/80 font-body">
-                                <Link href={`/miembros/${r.member_id}`} className="text-navy font-medium hover:text-coral transition-colors">
+                                <Link href={`/miembros/${r.member_id}`} className="text-navy font-medium hover:text-coral-deep transition-colors">
                                   Ver perfil de {r.member_name} →
                                 </Link>
                                 {renderDetails(r)}
@@ -848,7 +848,7 @@ export function RequestBoard<R extends BaseRequest>({
                         disabled={submitting}
                         className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-surface-low transition-colors disabled:opacity-60"
                       >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-soft/40 text-teal-deep text-[11px] font-display font-extrabold">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-soft/40 text-teal-ink text-[11px] font-display font-extrabold">
                           {getInitials(a.member_name)}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm text-navy font-body">{a.member_name}</span>

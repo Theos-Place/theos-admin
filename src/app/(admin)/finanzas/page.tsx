@@ -177,11 +177,11 @@ export default function FinanzasPage() {
           {/* Pagos pendientes */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`} />
+              <CreditCard size={16} className={`${pendingPayments > 0 ? 'text-coral-deep' : 'text-navy'}`} />
               <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Pagos pendientes</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral' : 'text-navy'}`}>
+              <p className={`text-4xl font-extrabold font-display ${pendingPayments > 0 ? 'text-coral-deep' : 'text-navy'}`}>
                 {pendingPayments}
               </p>
               {pendingPayments > 0 && (
@@ -195,11 +195,11 @@ export default function FinanzasPage() {
           {/* Devoluciones pendientes */}
           <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 mb-3">
-              <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`} />
+              <ArrowLeftRight size={16} className={`${pendingRefunds > 0 ? 'text-coral-deep' : 'text-navy'}`} />
               <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Devoluciones pend.</p>
             </div>
             <div className="flex items-center gap-2">
-              <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral' : 'text-navy'}`}>
+              <p className={`text-4xl font-extrabold font-display ${pendingRefunds > 0 ? 'text-coral-deep' : 'text-navy'}`}>
                 {pendingRefunds}
               </p>
               {pendingRefunds > 0 && (
@@ -263,7 +263,7 @@ export default function FinanzasPage() {
             {failedRecent7.length > 0 && (
               <Link href="/finanzas/pagos?estado=failed" className="flex items-center rounded-2xl px-5 py-4 transition-all hover:opacity-80 bg-[rgba(214,62,61,0.08)] border border-[rgba(214,62,61,0.20)]">
                 <div className="flex items-start gap-2.5">
-                  <AlertCircle size={15} className="text-coral mt-[1px] shrink-0" />
+                  <AlertCircle size={15} className="text-coral-deep mt-[1px] shrink-0" />
                   <div>
                     <p className="text-[13px] font-semibold font-body text-[#C41A1A]">
                       {failedRecent7.length} pago{failedRecent7.length !== 1 ? 's' : ''} fallido{failedRecent7.length !== 1 ? 's' : ''} (7 días)

@@ -356,7 +356,7 @@ export default function AccesosPage() {
                       {u.is_active && u.roles.length > 0 && (
                         <button
                           onClick={() => setConfirmRevoke(u)}
-                          className="rounded-lg border px-3 py-1.5 text-[13px] text-coral hover:bg-coral/5 transition-colors whitespace-nowrap border-coral/30 font-body"
+                          className="rounded-lg border px-3 py-1.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors whitespace-nowrap border-coral/30 font-body"
                         >
                           Revocar
                         </button>
@@ -432,7 +432,7 @@ export default function AccesosPage() {
           <div className="px-6 py-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-coral/10">
-                <AlertTriangle size={18} className="text-coral" />
+                <AlertTriangle size={18} className="text-coral-deep" />
               </div>
               <div>
                 <p id="confirm-revoke-title" className="text-sm font-bold text-navy font-display">¿Revocar todos los accesos?</p>
@@ -544,7 +544,7 @@ function DarAccesoModal({
                   <p className="text-sm font-medium text-navy font-body">{selected.first_name} {selected.last_name}</p>
                   <p className="text-[13px] text-navy-light/80 font-body">{selected.email}</p>
                 </div>
-                <button onClick={() => setSelected(null)} aria-label="Quitar miembro seleccionado" className="text-[13px] text-coral hover:underline font-body shrink-0">
+                <button onClick={() => setSelected(null)} aria-label="Quitar miembro seleccionado" className="text-[13px] text-coral-deep hover:underline font-body shrink-0">
                   Cambiar
                 </button>
               </div>
@@ -583,7 +583,7 @@ function DarAccesoModal({
                     <div className="flex items-center gap-2 mb-1">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: role.color }} />
                       <p className="text-[13px] font-semibold text-navy font-body">{role.name}</p>
-                      {isSelected && <Check size={13} className="text-coral ml-auto shrink-0" />}
+                      {isSelected && <Check size={13} className="text-coral-deep ml-auto shrink-0" />}
                     </div>
                     <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">{role.description}</p>
                   </button>

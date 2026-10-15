@@ -90,7 +90,7 @@ export function Step3SubEventos({
                 <button
                   type="button"
                   onClick={() => onRemoveSubEvent(se.id)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors"
                 >
                   <X size={14} />
                 </button>

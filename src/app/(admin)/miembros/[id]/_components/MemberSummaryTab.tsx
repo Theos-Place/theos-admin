@@ -9,7 +9,7 @@ import { formatSedeRecency } from '@/lib/sede-attendance'
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
-  Campamento: 'bg-teal-soft/30 text-teal-deep',
+  Campamento: 'bg-teal-soft/30 text-teal-ink',
   'Actividad Social': 'bg-coral/10 text-coral-deep',
   United: 'bg-navy-light/10 text-navy-light',
 }
@@ -21,7 +21,7 @@ const ATTENDANCE_BADGE: Record<string, string> = {
 
 function studyStageColor(stage: string): string {
   if (stage === 'niveles') return 'bg-navy/10 text-navy'
-  if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-deep'
+  if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-ink'
   if (stage === 'campaña') return 'bg-purple-100 text-purple-700'
   return 'bg-coral/10 text-coral-deep'
 }
@@ -58,7 +58,7 @@ export function MemberSummaryTab({
           className="rounded-2xl bg-surface-card p-4 shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-2 mb-2">
-            <MapPin size={14} className="text-coral" strokeWidth={1.75} />
+            <MapPin size={14} className="text-coral-deep" strokeWidth={1.75} />
             <span
               className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display"
             >

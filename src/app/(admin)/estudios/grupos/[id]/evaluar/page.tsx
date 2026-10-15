@@ -150,7 +150,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             return (
               <fieldset key={c.id} className="space-y-2">
                 <legend className="text-[13px] text-navy font-body">
-                  {c.label} {c.is_required && <span className="text-coral">*</span>}
+                  {c.label} {c.is_required && <span className="text-coral-deep">*</span>}
                 </legend>
                 {c.help_text && <p className="text-[13px] text-navy-light/80 font-body">{c.help_text}</p>}
                 <div className="space-y-1.5">
@@ -182,7 +182,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
             return (
               <fieldset key={c.id} className="space-y-2">
                 <legend className="text-[13px] text-navy font-body">
-                  {c.label} {c.is_required && <span className="text-coral">*</span>}
+                  {c.label} {c.is_required && <span className="text-coral-deep">*</span>}
                 </legend>
                 {c.help_text && <p className="text-[13px] text-navy-light/80 font-body">{c.help_text}</p>}
                 <ScaleField
@@ -218,7 +218,7 @@ export default function EvaluarDirigentePage({ params }: { params: Promise<{ id:
           return null
         })}
 
-        {error && <p className="text-[13px] text-coral font-body" role="alert">{error}</p>}
+        {error && <p className="text-[13px] text-coral-deep font-body" role="alert">{error}</p>}
 
         <button
           type="button"

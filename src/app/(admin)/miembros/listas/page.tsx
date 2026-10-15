@@ -276,7 +276,7 @@ export default function ListasGuardadasPage() {
                       )}
                       <button
                         onClick={() => requestDelete(list.id, list.name)}
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors font-body"
                       >
                         <Trash2 size={13} /> Eliminar
                       </button>
@@ -297,7 +297,7 @@ export default function ListasGuardadasPage() {
                 <span
                   className={cn(
                     'rounded-full px-2.5 py-0.5 text-[11px] font-semibold font-display',
-                    list.is_dynamic ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80'
+                    list.is_dynamic ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy-light/10 text-navy-light/80'
                   )}
                 >
                   {list.is_dynamic ? 'Dinámica' : 'Snapshot'}

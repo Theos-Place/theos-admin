@@ -116,13 +116,13 @@ export default function RegistroPage() {
             <label htmlFor="reg-nombre" className={LABEL}>Nombre</label>
             <input value={d.first_name} onChange={set('first_name')} autoComplete="given-name"
               className={INPUT} {...a11y.first_name.input} />
-            {errores.first_name && <p {...a11y.first_name.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.first_name}</p>}
+            {errores.first_name && <p {...a11y.first_name.error} className="mt-1.5 text-[13px] text-coral-deep font-body">{errores.first_name}</p>}
           </div>
           <div>
             <label htmlFor="reg-apellidos" className={LABEL}>Apellidos</label>
             <input value={d.last_name} onChange={set('last_name')} autoComplete="family-name"
               className={INPUT} {...a11y.last_name.input} />
-            {errores.last_name && <p {...a11y.last_name.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.last_name}</p>}
+            {errores.last_name && <p {...a11y.last_name.error} className="mt-1.5 text-[13px] text-coral-deep font-body">{errores.last_name}</p>}
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function RegistroPage() {
             <label htmlFor="reg-cedula" className={LABEL}>Número</label>
             <input value={d.cedula} onChange={set('cedula')} inputMode="numeric"
               className={INPUT} {...a11y.cedula.input} />
-            {errores.cedula && <p {...a11y.cedula.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.cedula}</p>}
+            {errores.cedula && <p {...a11y.cedula.error} className="mt-1.5 text-[13px] text-coral-deep font-body">{errores.cedula}</p>}
           </div>
         </div>
 
@@ -145,7 +145,7 @@ export default function RegistroPage() {
           <label htmlFor="reg-correo" className={LABEL}>Correo electrónico</label>
           <input type="email" value={d.email} onChange={set('email')} autoComplete="email"
             className={INPUT} {...a11y.email.input} />
-          {errores.email && <p {...a11y.email.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.email}</p>}
+          {errores.email && <p {...a11y.email.error} className="mt-1.5 text-[13px] text-coral-deep font-body">{errores.email}</p>}
           {/* Un dominio mal escrito NO bloquea: se ofrece el arreglo y
               decide la persona. El bloqueo dejaría afuera a quien tenga un
               correo de empresa poco común, y eso es peor que el dedazo.
@@ -173,7 +173,7 @@ export default function RegistroPage() {
           <label htmlFor="reg-tel" className={LABEL}>Teléfono <span className="text-navy-light/80">(opcional)</span></label>
           <input value={d.phone} onChange={set('phone')} inputMode="tel" autoComplete="tel"
             className={INPUT} {...a11y.phone.input} />
-          {errores.phone && <p {...a11y.phone.error} className="mt-1.5 text-[13px] text-coral font-body">{errores.phone}</p>}
+          {errores.phone && <p {...a11y.phone.error} className="mt-1.5 text-[13px] text-coral-deep font-body">{errores.phone}</p>}
         </div>
 
         <Button type="submit" disabled={enviando} tamano="lg" ancho="full">

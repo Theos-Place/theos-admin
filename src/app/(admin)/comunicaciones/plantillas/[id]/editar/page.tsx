@@ -114,7 +114,7 @@ export default function EditarPlantillaPage() {
     return (
       <div className="space-y-4">
         <Link href="/comunicaciones/plantillas" className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors font-body"><ChevronLeft size={15} /> Plantillas</Link>
-        <p className="text-sm text-coral font-body">No se encontró la plantilla.</p>
+        <p className="text-sm text-coral-deep font-body">No se encontró la plantilla.</p>
       </div>
     )
   }
@@ -168,7 +168,7 @@ export default function EditarPlantillaPage() {
                 <button
                   type="button"
                   onClick={() => setEmailBody(originalBody)}
-                  className="inline-flex items-center gap-1 text-[13px] text-coral hover:underline font-body"
+                  className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:underline font-body"
                 >
                   <RotateCcw size={12} /> Descartar cambios y volver al original
                 </button>

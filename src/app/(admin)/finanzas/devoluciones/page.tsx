@@ -20,7 +20,7 @@ import { formatDate, formatMoney } from '@/lib/format'
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
     pending:    { label: 'Pendiente',   color: '#7F6210', bg: 'rgba(233,185,73,0.15)'  },
-    processing: { label: 'En proceso',  color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
+    processing: { label: 'En proceso',  color: '#2F5E61', bg: 'rgba(81,157,162,0.12)'  },
     completed:  { label: 'Completada',  color: '#1E6B42', bg: 'rgba(61,185,122,0.12)'  },
     rejected:   { label: 'Rechazada',   color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
     convertida_donacion: { label: 'Convertida en donación', color: '#6A4CB0', bg: 'rgba(155,127,212,0.15)' },
@@ -329,7 +329,7 @@ export default function DevolucionesPage() {
                           </button>
                           <button
                             onClick={() => setRejectTarget(r)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral-deep font-body"
                           >
                             Rechazar
                           </button>
@@ -392,7 +392,7 @@ export default function DevolucionesPage() {
                     </button>
                     <button
                       onClick={() => setRejectTarget(r)}
-                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral-deep font-body"
                     >
                       Rechazar
                     </button>

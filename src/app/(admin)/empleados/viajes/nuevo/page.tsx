@@ -23,7 +23,7 @@ export default function NuevoViajePage() {
 
   return (
     <PageContainer width="form" className="page space-y-4">
-      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body">
+      <Link href="/empleados/viajes" className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body">
         <ArrowLeft size={14} aria-hidden="true" /> Volver a mis viajes
       </Link>
       <div>

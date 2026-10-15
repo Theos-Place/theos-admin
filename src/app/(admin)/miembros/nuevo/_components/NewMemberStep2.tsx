@@ -66,11 +66,11 @@ export function NewMemberStep2({
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-navy truncate font-body">{draftName(item)}</p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body">
+                  <span className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink font-body">
                     {item.relation}
                   </span>
                   {item.kind === 'linked' ? (
-                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[11px] text-teal-deep font-body">⇄ Perfil existente</span>
+                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[11px] text-teal-ink font-body">⇄ Perfil existente</span>
                   ) : (
                     <span className="rounded-full bg-surface-card px-2 py-0.5 text-[11px] text-navy-light/80 font-body">Perfil nuevo</span>
                   )}
@@ -82,7 +82,7 @@ export function NewMemberStep2({
               <button
                 type="button"
                 onClick={() => onRemoveFamilyMember(idx)}
-                className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-surface-card transition-all"
+                className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-surface-card transition-all"
                 aria-label="Eliminar familiar"
               >
                 <X size={14} strokeWidth={2} />
@@ -93,7 +93,7 @@ export function NewMemberStep2({
           <button
             type="button"
             onClick={onOpenModal}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--outline-variant)] py-3 text-sm text-navy-light/80 hover:border-coral/40 hover:text-coral transition-all font-body"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--outline-variant)] py-3 text-sm text-navy-light/80 hover:border-coral/40 hover:text-coral-deep transition-all font-body"
           >
             <UserPlus size={15} /> Agregar integrante
           </button>

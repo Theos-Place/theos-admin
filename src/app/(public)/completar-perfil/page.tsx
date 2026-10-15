@@ -117,7 +117,7 @@ export default function CompletarPerfilPage() {
           ) : !hasSession ? (
             <div className="py-2 space-y-4 text-center">
               <div className="h-14 w-14 rounded-full bg-coral/10 flex items-center justify-center mx-auto">
-                <AlertTriangle size={24} className="text-coral" />
+                <AlertTriangle size={24} className="text-coral-deep" />
               </div>
               <div className="space-y-1">
                 <p className="text-base font-bold text-navy font-display">
@@ -186,7 +186,7 @@ export default function CompletarPerfilPage() {
 
               {/* El error es del par de campos (no coinciden / muy corta), así que
                   lo describe el segundo: es donde uno está cuando falla. */}
-              {error && <p {...a11yConfirm.error} className="text-[13px] text-coral font-body">{error}</p>}
+              {error && <p {...a11yConfirm.error} className="text-[13px] text-coral-deep font-body">{error}</p>}
 
               <Button type="submit" disabled={saving} tamano="lg" ancho="full">
                 {saving ? 'Guardando…' : isRecovery ? 'Guardar contraseña' : 'Activar mi cuenta'}

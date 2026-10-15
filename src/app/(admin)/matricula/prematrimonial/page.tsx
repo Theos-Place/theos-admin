@@ -354,7 +354,7 @@ export default function PrematrimonialWizardPage() {
             <div className="mt-2 space-y-4 border-t border-navy/10 pt-4">
               <h3 className="font-semibold text-navy font-display">Antecedentes de la pareja</h3>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{DATING_TIME_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{DATING_TIME_QUESTION} <span className="text-coral-deep">*</span></p>
                 <div className="flex flex-wrap gap-2">
                   {DATING_TIME_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={datingTime === o.value} onClick={() => setDatingTime(o.value)}
@@ -364,7 +364,7 @@ export default function PrematrimonialWizardPage() {
                 </div>
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{FIRST_MARRIAGE_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{FIRST_MARRIAGE_QUESTION} <span className="text-coral-deep">*</span></p>
                 <div className="flex gap-2">
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={firstMarriage === o.v} onClick={() => setFirstMarriage(o.v)}
@@ -379,7 +379,7 @@ export default function PrematrimonialWizardPage() {
                 )}
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CHILDREN_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CHILDREN_QUESTION} <span className="text-coral-deep">*</span></p>
                 <div className="flex gap-2">
                   {[{ v: true, l: 'Sí' }, { v: false, l: 'No' }].map(o => (
                     <button key={o.l} type="button" aria-pressed={hasChildren === o.v} onClick={() => setHasChildren(o.v)}
@@ -394,7 +394,7 @@ export default function PrematrimonialWizardPage() {
                 )}
               </div>
               <div>
-                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{LIVING_QUESTION} <span className="text-coral">*</span></p>
+                <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{LIVING_QUESTION} <span className="text-coral-deep">*</span></p>
                 <div className="flex flex-wrap gap-2">
                   {LIVING_OPTIONS.map(o => (
                     <button key={o.value} type="button" aria-pressed={living === o.value} onClick={() => setLiving(o.value)}
@@ -450,7 +450,7 @@ export default function PrematrimonialWizardPage() {
               <button
                 type="button"
                 onClick={() => setScholarshipOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-teal/40 px-4 py-2 text-[13px] text-teal-deep hover:bg-teal/5 transition-colors font-body"
+                className="inline-flex items-center gap-1.5 rounded-full border border-teal/40 px-4 py-2 text-[13px] text-teal-ink hover:bg-teal/5 transition-colors font-body"
               >
                 <Heart size={14} /> Solicitar beca
               </button>

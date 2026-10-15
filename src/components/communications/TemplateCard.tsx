@@ -38,7 +38,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
           {categoryLabel(template.category)}
         </span>
         {template.is_system && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">
+          <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-ink px-2.5 py-0.5 text-[11px] font-semibold font-display">
             <Lock size={9} /> Plantilla del sistema
           </span>
         )}
@@ -103,7 +103,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
           )}
           {/* Las plantillas del sistema NO se borran. */}
           {onDelete && !template.is_system && (
-            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors">
+            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>
           )}

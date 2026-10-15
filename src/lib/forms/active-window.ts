@@ -32,7 +32,7 @@ export const FORM_WINDOW_LABEL: Record<FormWindowStatus, string> = {
 export const FORM_WINDOW_BADGE: Record<FormWindowStatus, string> = {
   borrador: 'bg-navy/10 text-navy-light/80',
   programado: 'bg-amber-50 text-amber-700',
-  activo: 'bg-teal-soft/30 text-teal-deep',
+  activo: 'bg-teal-soft/30 text-teal-ink',
   vencido: 'bg-coral/10 text-coral-deep',
 }
 

@@ -41,7 +41,7 @@ const STATUS_LABEL: Record<Req['status'], string> = {
   pago_en_revision: 'Pago en revisión', pendiente: 'Pendiente (armar grupo)', grupo_creado: 'Grupo creado', cancelada: 'Cancelada',
 }
 const STATUS_STYLE: Record<Req['status'], string> = {
-  pago_en_revision: 'bg-amber-100 text-amber-700', pendiente: 'bg-teal/15 text-teal-deep',
+  pago_en_revision: 'bg-amber-100 text-amber-700', pendiente: 'bg-teal/15 text-teal-ink',
   grupo_creado: 'bg-emerald-100 text-emerald-700', cancelada: 'bg-navy/10 text-navy-light/80',
 }
 const nm = (m: Req['requester']) => m ? `${m.first_name ?? ''} ${m.last_name ?? ''}`.trim() : '—'
@@ -125,7 +125,7 @@ export function PrematrimonialQueue() {
               {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
                   los tienen → se muestran con "—". */}
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-light/80">
-                <Heart size={13} className="text-coral" />
+                <Heart size={13} className="text-coral-deep" />
                 <span>Novios: {DATING_TIME_OPTIONS.find(o => o.value === r.dating_time)?.label ?? '—'}</span>
                 <span className="text-navy-light/40">·</span>
                 <span>Primer matrimonio: {r.first_marriage === true ? 'Sí' : r.first_marriage === false ? 'No' : '—'}</span>

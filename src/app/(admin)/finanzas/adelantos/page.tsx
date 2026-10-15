@@ -149,7 +149,7 @@ function Presupuestos({ sedes, onCambio }: { sedes: SedeCat[]; onCambio: () => v
               <Button type="button" variante="primario" tamano="sm" onClick={() => guardar(s.code)}>OK</Button>
             </span>
           ) : (
-            <button type="button" className="text-[13px] text-navy-light/80 hover:text-coral font-body" onClick={() => { setEditando(s.code); setMonto(s.presupuesto?.toString() ?? '') }}>
+            <button type="button" className="text-[13px] text-navy-light/80 hover:text-coral-deep font-body" onClick={() => { setEditando(s.code); setMonto(s.presupuesto?.toString() ?? '') }}>
               {s.presupuesto == null ? 'Fijar' : formatCRC(s.presupuesto)}
             </button>
           )}
@@ -271,7 +271,7 @@ function ModalFactura({ a, onCerrar, onListo }: { a: Adelanto; onCerrar: () => v
             <select id="f-estado" className={campo} value={f.estado} onChange={e => set('estado', e.target.value as Factura['estado'])}><option value="liquidada">Liquidada</option><option value="pendiente">Pendiente</option></select></div>
           <div className="space-y-1 col-span-2"><label htmlFor="f-obs" className={etiqueta}>Observaciones</label><input id="f-obs" className={campo} value={f.observaciones ?? ''} onChange={e => set('observaciones', e.target.value)} placeholder="comida, desechables…" /></div>
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral font-body">
+        <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral-deep font-body">
           <Paperclip size={14} aria-hidden="true" /> {f.receipt_path ? 'Cambiar foto de la factura' : 'Adjuntar foto de la factura'}
           <input type="file" accept="image/*,application/pdf" className="sr-only" aria-label="Foto de la factura" onChange={e => { const x = e.target.files?.[0]; if (x) subir(x) }} />
         </label>

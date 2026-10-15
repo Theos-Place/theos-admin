@@ -436,14 +436,14 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
       {isPreview && (
         <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-2 bg-amber-500">
           <div className="flex items-center gap-2">
-            <AlertTriangle size={14} className="text-white" />
-            <span className="text-[13px] font-semibold text-white font-display">
+            <AlertTriangle size={14} className="text-navy" aria-hidden="true" />
+            <span className="text-[13px] font-semibold text-navy font-display">
               VISTA PREVIA — las respuestas no se guardan
             </span>
           </div>
           <Link
             href={`/formularios/${id}`}
-            className="flex items-center gap-1 text-[13px] text-white/80 hover:text-white transition-colors font-body"
+            className="flex items-center gap-1 text-[13px] font-medium text-navy hover:underline font-body"
           >
             <ChevronLeft size={13} />
             Volver al editor
@@ -458,7 +458,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
           <div className="w-full max-w-lg mx-auto mb-4 rounded-2xl bg-surface-card shadow-[var(--shadow-md)] px-5 py-4">
             <p className="text-sm font-medium text-navy font-body">
               Llenar a nombre de otro miembro
-              {onBehalf && <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-deep font-display">{onBehalf.first_name} {onBehalf.last_name}</span>}
+              {onBehalf && <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-ink font-display">{onBehalf.first_name} {onBehalf.last_name}</span>}
             </p>
             <p className="text-[13px] text-navy-light/80 font-body mt-0.5 mb-2">
               {onBehalf
@@ -514,7 +514,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   <span className="text-[13px] font-semibold text-navy-light/80 font-body">
                     Página {currentPage + 1} de {totalPages}
                   </span>
-                  <span className="text-[13px] font-semibold text-coral font-mono">
+                  <span className="text-[13px] font-semibold text-coral-deep font-mono">
                     {progress}%
                   </span>
                 </div>
@@ -727,7 +727,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                     <label htmlFor={`campo-${field.id}`} className="block font-body">
                       <span className="text-sm font-semibold text-navy">
                         {field.label}
-                        {field.is_required && <span className="ml-1 text-coral">*</span>}
+                        {field.is_required && <span className="ml-1 text-coral-deep">*</span>}
                       </span>
                       {field.helper_text && (
                         <span className="block text-[13px] text-navy-light/80 mt-0.5">{field.helper_text}</span>
@@ -742,7 +742,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                   />
 
                   {hasError && (
-                    <p className="text-[13px] text-coral font-body">
+                    <p className="text-[13px] text-coral-deep font-body">
                       Este campo es obligatorio.
                     </p>
                   )}
@@ -757,7 +757,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
             {isGuest && isLastPage && (
               <div className="mb-5">
                 <label htmlFor="correo-electronico" className="block text-sm font-semibold text-navy mb-1.5 font-body">
-                  Correo electrónico <span className="text-coral">*</span>
+                  Correo electrónico <span className="text-coral-deep">*</span>
                 </label>
                 <input id="correo-electronico"
                   type="email"
@@ -771,8 +771,8 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
 
             {submitError && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
-                <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[13px] text-coral font-body">
+                <AlertTriangle size={14} className="text-coral-deep shrink-0" />
+                <p className="text-[13px] text-coral-deep font-body">
                   {submitError}
                 </p>
               </div>
@@ -780,8 +780,8 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
 
             {errors.length > 0 && (
               <div className="mb-4 flex items-center gap-2 rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
-                <AlertTriangle size={14} className="text-coral shrink-0" />
-                <p className="text-[13px] text-coral font-body">
+                <AlertTriangle size={14} className="text-coral-deep shrink-0" />
+                <p className="text-[13px] text-coral-deep font-body">
                   Por favor completá los campos obligatorios marcados en rojo.
                 </p>
               </div>

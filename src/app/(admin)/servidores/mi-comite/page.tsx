@@ -240,7 +240,7 @@ function MiComiteContenido() {
                         <td className="px-4 py-3">
                           <span className="flex items-center gap-1.5 text-sm font-medium text-navy font-body">
                             {f.nombre}
-                            {f.encargado && <Star size={12} className="text-coral shrink-0" fill="currentColor" aria-label="Encargado del comité" />}
+                            {f.encargado && <Star size={12} className="text-coral-deep shrink-0" fill="currentColor" aria-label="Encargado del comité" />}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{f.puestos.join(' · ')}</td>
@@ -275,7 +275,7 @@ function MiComiteContenido() {
                   <li key={f.member_id} className="px-4 py-3" style={i < c.filas.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}>
                     <p className="flex items-center gap-1.5 text-sm font-medium text-navy font-body">
                       {f.nombre}
-                      {f.encargado && <Star size={12} className="text-coral shrink-0" fill="currentColor" aria-label="Encargado del comité" />}
+                      {f.encargado && <Star size={12} className="text-coral-deep shrink-0" fill="currentColor" aria-label="Encargado del comité" />}
                     </p>
                     <p className="text-[13px] text-navy-light/80 font-body">{f.puestos.join(' · ')}</p>
                     <p className="mt-1 text-[13px] font-body">
@@ -296,7 +296,7 @@ function MiComiteContenido() {
 
       <p className="text-[13px] text-navy-light/80 font-body">
         ¿Alguien no debería estar en la lista? Eso se cambia en{' '}
-        <Link href="/servidores" className="text-coral hover:underline">Servidores</Link>.
+        <Link href="/servidores" className="text-coral-deep hover:underline">Servidores</Link>.
       </p>
     </div>
   )

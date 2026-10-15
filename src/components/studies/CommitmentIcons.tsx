@@ -35,7 +35,7 @@ function TooltipIcon({
         strokeWidth={1.75}
         className={cn(
           'transition-colors',
-          active ? 'text-coral' : 'text-navy-light/25'
+          active ? 'text-coral-deep' : 'text-navy-light/25'
         )}
       />
       {show && (

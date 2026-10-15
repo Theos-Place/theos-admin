@@ -9,7 +9,7 @@ import type { InternalNotification } from '@/types/notification'
 
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string }> = {
   alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
-  info:    { Icon: Info,          color: '#3B7579', bg: 'rgba(81,157,162,0.10)'  },
+  info:    { Icon: Info,          color: '#2F5E61', bg: 'rgba(81,157,162,0.10)'  },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)'  },
 }
 
@@ -152,7 +152,7 @@ export function NotificationsBell() {
                 className="flex w-full items-start gap-3 px-4 py-3.5 text-left hover:bg-surface-low transition-colors border-b border-outline"
               >
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 bg-coral/10">
-                  <Inbox size={14} className="text-coral" />
+                  <Inbox size={14} className="text-coral-deep" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold leading-snug text-navy font-body">{n.title}</p>

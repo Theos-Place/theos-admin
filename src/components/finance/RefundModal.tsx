@@ -57,7 +57,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--outline-variant)]">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-[rgba(214,62,61,0.10)]">
-              <AlertTriangle size={17} className="text-coral" />
+              <AlertTriangle size={17} className="text-coral-deep" />
             </div>
             <div>
               <p id="solicitar-devolucion" className="text-sm font-bold font-display text-navy">

@@ -14,7 +14,7 @@ import { formatDateTime } from '@/lib/format'
 const TYPE_CONFIG: Record<AlertType, { Icon: React.ElementType; color: string; bg: string; label: string }> = {
   alert:   { Icon: AlertCircle,   color: '#C43635', bg: 'rgba(214,62,61,0.10)',  label: 'Urgente' },
   warning: { Icon: AlertTriangle, color: '#E9B949', bg: 'rgba(233,185,73,0.12)', label: 'Atención' },
-  info:    { Icon: Info,          color: '#3B7579', bg: 'rgba(81,157,162,0.10)', label: 'Informativo' },
+  info:    { Icon: Info,          color: '#2F5E61', bg: 'rgba(81,157,162,0.10)', label: 'Informativo' },
 }
 
 export default function NotificacionesPage() {
@@ -203,7 +203,7 @@ export default function NotificacionesPage() {
                   <button
                     onClick={deleteSelected}
                     disabled={selected.size === 0}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-4 py-1.5 text-sm text-coral-deep hover:bg-coral/5 transition-colors font-body disabled:opacity-50"
                   >
                     <Trash2 size={14} />
                     Eliminar
@@ -236,7 +236,7 @@ export default function NotificacionesPage() {
                       'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
                       n.read ? 'bg-surface-low' : 'bg-coral/10',
                     )}>
-                      <Inbox size={18} className={n.read ? 'text-navy-light/80' : 'text-coral'} />
+                      <Inbox size={18} className={n.read ? 'text-navy-light/80' : 'text-coral-deep'} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={cn('text-sm font-body leading-snug break-words', n.read ? 'text-navy-light/80' : 'text-navy font-semibold')}>
@@ -256,7 +256,7 @@ export default function NotificacionesPage() {
                     onClick={() => deleteOne(n.id)}
                     aria-label={`Eliminar ${n.title}`}
                     title="Eliminar"
-                    className="shrink-0 self-center rounded-lg p-2 text-navy-light/80 hover:bg-coral/5 hover:text-coral transition-colors"
+                    className="shrink-0 self-center rounded-lg p-2 text-navy-light/80 hover:bg-coral/5 hover:text-coral-deep transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>

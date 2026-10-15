@@ -33,7 +33,7 @@ export function KpiCard({
           derecho, o sea medio tooltip afuera y cortado. */}
       <p className={cn(
         'text-[13px] tracking-widest uppercase font-display flex items-start gap-1',
-        highlight ? 'text-coral' : 'text-navy-light/80',
+        highlight ? 'text-coral-deep' : 'text-navy-light/80',
       )}>
         {/* min-w-0 + break-words: sin esto el texto es un item flex que no baja
             de su min-content y se sale por el costado. Es la red de seguridad
@@ -69,7 +69,7 @@ export function KpiCard({
         {changePct != null && (
           <span className={cn(
             'inline-flex items-center gap-0.5 text-[13px] font-medium font-body shrink-0',
-            up ? 'text-teal-deep' : down ? 'text-coral' : 'text-navy-light/80',
+            up ? 'text-teal-deep' : down ? 'text-coral-deep' : 'text-navy-light/80',
           )}>
             <Icon size={13} />
             {changePct > 0 ? '+' : ''}{changePct}%

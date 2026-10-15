@@ -134,7 +134,7 @@ export function FormCanvas({
                     <Pencil size={12} className="text-navy-light/80" />
                   </button>
                   <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label="Eliminar campo">
-                    <Trash2 size={12} className="text-coral" />
+                    <Trash2 size={12} className="text-coral-deep" />
                   </button>
                 </div>
               </div>
@@ -181,7 +181,7 @@ export function FormCanvas({
                     className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-coral/10 transition-colors"
                     aria-label="Eliminar el bloque de disponibilidad"
                   >
-                    <Trash2 size={11} className="text-coral" />
+                    <Trash2 size={11} className="text-coral-deep" />
                   </button>
                 </div>
               </div>
@@ -238,7 +238,7 @@ export function FormCanvas({
                     className="h-6 w-6 rounded-lg flex items-center justify-center hover:bg-coral/10 transition-colors"
                     aria-label="Eliminar los datos personales"
                   >
-                    <Trash2 size={11} className="text-coral" />
+                    <Trash2 size={11} className="text-coral-deep" />
                   </button>
                 </div>
               </div>
@@ -302,7 +302,7 @@ export function FormCanvas({
                 <Copy size={12} className="text-navy-light/80" />
               </button>
               <button type="button" onClick={e => { e.stopPropagation(); onDeleteField(field.id) }} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg hover:bg-coral/10 flex items-center justify-center transition-colors" title="Eliminar" aria-label="Eliminar campo">
-                <Trash2 size={12} className="text-coral" />
+                <Trash2 size={12} className="text-coral-deep" />
               </button>
             </div>
 
@@ -338,7 +338,7 @@ export function FormCanvas({
                             {field.type === 'info' ? 'Texto informativo' : 'Sin etiqueta'}
                           </span>
                         )}
-                        {field.is_required && <span className="ml-1 text-coral text-[13px]">*</span>}
+                        {field.is_required && <span className="ml-1 text-coral-deep text-[13px]">*</span>}
                       </p>
                       {logicCount > 0 && (
                         <button

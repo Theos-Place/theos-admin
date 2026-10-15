@@ -194,7 +194,7 @@ export default function NuevoEmpleadoPage() {
       )}
 
       {error && (
-        <p className="text-sm text-coral font-body">{error}</p>
+        <p className="text-sm text-coral-deep font-body">{error}</p>
       )}
 
       {step === 1 && (

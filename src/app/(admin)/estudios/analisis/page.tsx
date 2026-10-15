@@ -57,7 +57,7 @@ function RequirementChips({ requirements, size = 'md' }: { requirements: string[
             className={cn(
               'inline-flex items-center gap-1 rounded-full font-body',
               size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-[13px]',
-              active ? 'bg-teal/15 text-teal-deep font-medium' : 'bg-surface-low text-navy-light/80 line-through',
+              active ? 'bg-teal/15 text-teal-ink font-medium' : 'bg-surface-low text-navy-light/80 line-through',
             )}
           >
             <Icon size={size === 'sm' ? 10 : 12} />
@@ -266,7 +266,7 @@ export default function AnalisisPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Demanda total estimada', value: analysis.totalDemand, color: 'text-navy' },
-              { label: 'Por graduarse de prereq.', value: analysis.totalGraduating, color: 'text-coral' },
+              { label: 'Por graduarse de prereq.', value: analysis.totalGraduating, color: 'text-coral-deep' },
               { label: 'Elegibles sin inscribir', value: analysis.totalEligible, color: 'text-teal-deep' },
               { label: 'Grupos sugeridos', value: analysis.suggestedGroups, color: 'text-navy' },
             ].map(({ label, value, color }) => (
@@ -336,7 +336,7 @@ export default function AnalisisPage() {
                               disabled={row.graduating === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.graduating > 0 ? 'text-coral hover:bg-coral/10' : 'text-navy-light/80 cursor-default',
+                                row.graduating > 0 ? 'text-coral-deep hover:bg-coral/10' : 'text-navy-light/80 cursor-default',
                               )}
                             >
                               {row.graduating}
@@ -349,7 +349,7 @@ export default function AnalisisPage() {
                               disabled={row.eligible === 0}
                               className={cn(
                                 'inline-flex items-center gap-1 text-sm font-body rounded-lg px-2 py-0.5 transition-colors',
-                                row.eligible > 0 ? 'text-teal-deep hover:bg-teal/15' : 'text-navy-light/80 cursor-default',
+                                row.eligible > 0 ? 'text-teal-ink hover:bg-teal/15' : 'text-navy-light/80 cursor-default',
                               )}
                             >
                               {row.eligible}
@@ -379,7 +379,7 @@ export default function AnalisisPage() {
                   {analysis.rows.length > 0 && (
                     <tr className="bg-surface-low">
                       <td className="px-4 py-3 text-sm font-bold text-navy font-display">Total</td>
-                      <td className="px-4 py-3 text-sm font-bold text-coral font-body">{analysis.totalGraduating}</td>
+                      <td className="px-4 py-3 text-sm font-bold text-coral-deep font-body">{analysis.totalGraduating}</td>
                       <td className="px-4 py-3 text-sm font-bold text-teal-deep font-body">{analysis.totalEligible}</td>
                       <td className="px-4 py-3 text-sm font-bold text-navy font-body">{analysis.totalDemand}</td>
                       <td className="px-4 py-3 text-sm font-bold text-navy font-body">{analysis.suggestedGroups}</td>

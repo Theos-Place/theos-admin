@@ -239,7 +239,7 @@ function SolicitarVacantesContent() {
         'rounded-2xl p-4 flex items-start gap-2.5',
         windowOpen ? 'bg-surface-card shadow-[var(--shadow-md)]' : 'bg-coral/5 border border-coral/20',
       )}>
-        <CalendarClock size={16} className={cn('mt-0.5 shrink-0', windowOpen ? 'text-navy-light/80' : 'text-coral')} aria-hidden="true" />
+        <CalendarClock size={16} className={cn('mt-0.5 shrink-0', windowOpen ? 'text-navy-light/80' : 'text-coral-deep')} aria-hidden="true" />
         <div>
           <p className="text-sm text-navy font-body">{textoVentana}</p>
           {!windowOpen && !isLeader && (
@@ -304,7 +304,7 @@ function SolicitarVacantesContent() {
                       <button
                         type="button"
                         onClick={() => setDetalle(p)}
-                        className="text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+                        className="text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
                       >
                         Ver detalles
                       </button>
@@ -360,18 +360,18 @@ function SolicitarVacantesContent() {
             {saving ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar solicitud'}
           </button>
           {!canSend && (
-            <p className="text-[13px] text-coral font-body text-center sm:text-right max-w-xs">
+            <p className="text-[13px] text-coral-deep font-body text-center sm:text-right max-w-xs">
               {textoVentana}
             </p>
           )}
         </div>
       </div>
 
-      {error && <p className="text-sm text-coral font-body">{error}</p>}
+      {error && <p className="text-sm text-coral-deep font-body">{error}</p>}
 
       <p className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
         <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
-        <Link href="/servidores/puestos/nuevo" className="text-coral hover:underline">Solicitalo acá</Link>.
+        <Link href="/servidores/puestos/nuevo" className="text-coral-deep hover:underline">Solicitalo acá</Link>.
       </p>
 
       {/* La ficha del puesto, SOLO LECTURA. Se consulta, no se edita: el

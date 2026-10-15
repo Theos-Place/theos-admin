@@ -39,7 +39,7 @@ function Tarjeta({ icon: Icon, title, sub, children }: {
   return (
     <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
-        <Icon size={16} className="text-coral shrink-0" aria-hidden />
+        <Icon size={16} className="text-coral-deep shrink-0" aria-hidden />
         <h2 className="text-sm font-semibold text-navy font-display">{title}</h2>
         {sub && <span className="text-[13px] text-navy-light font-body">{sub}</span>}
       </div>
@@ -156,7 +156,7 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
             </div>
 
             <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
-              <p className="text-4xl font-bold text-coral font-display tabular-nums">{d.desglose.total}</p>
+              <p className="text-4xl font-bold text-coral-deep font-display tabular-nums">{d.desglose.total}</p>
               <p className="text-lg text-navy font-display font-semibold min-w-0">
                 folletos de {d.nivel ?? 'estudio'}
               </p>

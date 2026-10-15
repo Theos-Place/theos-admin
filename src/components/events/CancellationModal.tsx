@@ -37,7 +37,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
             {/* Header rojo */}
             <div className="bg-coral/10 border-b px-5 py-4 flex items-center gap-3 border-[var(--outline-variant)]">
               <div className="h-8 w-8 rounded-full bg-coral/20 flex items-center justify-center">
-                <AlertTriangle size={16} className="text-coral" />
+                <AlertTriangle size={16} className="text-coral-deep" />
               </div>
               <div>
                 <h3 id="cancelar-evento-titulo" className="text-sm font-semibold text-navy font-display">
@@ -51,7 +51,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
 
             <div className="p-5 space-y-4">
               <div className="rounded-xl bg-coral/5 border border-coral/20 px-4 py-3">
-                <p className="text-sm text-coral font-medium font-body">
+                <p className="text-sm text-coral-deep font-medium font-body">
                   {eventName}
                 </p>
               </div>
@@ -86,7 +86,7 @@ export function CancellationModal({ eventName, registrationCount, onConfirm, onC
               </div>
 
               {state === 'error' && (
-                <p className="text-sm text-coral font-body" role="alert">
+                <p className="text-sm text-coral-deep font-body" role="alert">
                   No se pudo cancelar el evento. Revisá tu conexión e intentá de nuevo.
                 </p>
               )}

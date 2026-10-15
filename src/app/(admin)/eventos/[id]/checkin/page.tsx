@@ -273,7 +273,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-surface-low flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-navy-light/80 font-body">Evento no encontrado.</p>
-          <Link href="/eventos" className="text-coral hover:text-coral-deep">← Volver</Link>
+          <Link href="/eventos" className="text-coral-deep hover:text-coral-deep">← Volver</Link>
         </div>
       </div>
     )
@@ -678,7 +678,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
             <p className="text-sm text-navy-light/80 font-body capitalize">{headerDate}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-4xl sm:text-5xl font-extrabold text-coral tabular-nums font-display leading-none">
+            <p className="text-4xl sm:text-5xl font-extrabold text-coral-deep tabular-nums font-display leading-none">
               {visibleCheckins.length}
             </p>
             <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display mt-1">
@@ -734,7 +734,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               <QrScanner onResult={handleScan} className="w-full aspect-square max-h-[340px]" />
               {scanMsg && (
                 <div className={cn('rounded-xl px-4 py-3 text-sm font-medium font-body text-center',
-                  scanMsg.kind === 'ok' ? 'bg-teal-soft/40 text-teal-deep'
+                  scanMsg.kind === 'ok' ? 'bg-teal-soft/40 text-teal-ink'
                   : scanMsg.kind === 'dup' ? 'bg-amber-50 text-amber-700'
                   : 'bg-coral/10 text-coral-deep')}>
                   {scanMsg.text}
@@ -998,7 +998,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   {canCheckin && (
                     <button
                       onClick={() => setConfirmarDeshacer(true)}
-                      className="rounded-xl border border-coral/40 px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body min-h-[44px]"
+                      className="rounded-xl border border-coral/40 px-4 py-2.5 text-sm text-coral-deep hover:bg-coral/5 transition-colors font-body min-h-[44px]"
                     >
                       Deshacer check-in
                     </button>
@@ -1021,7 +1021,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               // tocar a esa persona: el alta baja a secundaria para no competir
               // con el resultado. Sin resultados, es la acción principal.
               searchResults.length > 0
-                ? 'border border-dashed border-coral/50 text-coral hover:bg-coral/5'
+                ? 'border border-dashed border-coral/50 text-coral-deep hover:bg-coral/5'
                 : 'bg-coral text-white hover:bg-coral-deep',
             )}
           >
@@ -1057,7 +1057,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </p>
                 </div>
                 <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0',
-                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-deep')}>
+                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-ink')}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>
                 {canCheckin && (
@@ -1065,7 +1065,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     onClick={() => setToDelete(ci)}
                     aria-label={`Eliminar check-in de ${ci.member_name}`}
                     title="Eliminar check-in"
-                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"
+                    className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors"
                   >
                     <Trash2 size={15} />
                   </button>
@@ -1696,7 +1696,7 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
                 <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
                 <p className="text-[13px] text-white/80">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
-              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/80 hover:text-coral"><X size={14} /></button>
+              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/80 hover:text-coral-deep"><X size={14} /></button>
             </div>
           ))}
           <button

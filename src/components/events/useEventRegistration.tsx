@@ -203,7 +203,7 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
           ))}
         </div>
         <div className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-coral/7 border border-coral/20">
-          <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
+          <AlertCircle size={14} className="text-coral-deep shrink-0 mt-0.5" />
           <p className="text-[13px] text-navy-light/80 font-body">
             {pideComprobante
               ? 'Este evento tiene costo: la inscripción se completa con el comprobante. Al confirmar queda hecha y un revisor aprueba el pago.'
@@ -257,7 +257,7 @@ function ConfirmModal({ event, memberId, error, onCancel, onConfirm }: {
             </div>
           </div>
         )}
-        {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+        {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
         <div className="flex gap-2 pt-1">
           <button onClick={onCancel} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-outline font-body">Cancelar</button>
           <button
@@ -345,7 +345,7 @@ function ReceiptModal({ registrationId, eventTitle, amount, onDone }: {
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={submit}

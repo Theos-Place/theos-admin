@@ -55,13 +55,13 @@ export function EventSummary(p: EventSummaryProps) {
         {p.is_virtual && p.virtual_link && (
           <SummaryRow
             label="Link"
-            value={<a href={p.virtual_link} target="_blank" rel="noopener noreferrer" className="text-coral underline">Ver reunión</a>}
+            value={<a href={p.virtual_link} target="_blank" rel="noopener noreferrer" className="text-coral-deep underline">Ver reunión</a>}
           />
         )}
         {p.location_map_url && !p.is_virtual && (
           <SummaryRow
             label="Mapa"
-            value={<a href={p.location_map_url} target="_blank" rel="noopener noreferrer" className="text-coral underline">Ver enlace</a>}
+            value={<a href={p.location_map_url} target="_blank" rel="noopener noreferrer" className="text-coral-deep underline">Ver enlace</a>}
           />
         )}
         <SummaryRow label="Recurrente" value={p.is_recurring ? 'Sí' : 'No'} />

@@ -263,7 +263,7 @@ export function MembersTab({
                       className={cn(
                         'rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
                         g.status === 'active'
-                          ? 'bg-teal-deep/10 text-teal-deep'
+                          ? 'bg-teal-deep/10 text-teal-ink'
                           : 'bg-navy-light/10 text-navy-light/80'
                       )}
                     >
@@ -337,7 +337,7 @@ export function MembersTab({
               <span
                 className={cn(
                   'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
-                  g.status === 'active' ? 'bg-teal-deep/10 text-teal-deep' : 'bg-navy-light/10 text-navy-light/80',
+                  g.status === 'active' ? 'bg-teal-deep/10 text-teal-ink' : 'bg-navy-light/10 text-navy-light/80',
                 )}
               >
                 {g.status === 'active' ? 'Activo' : 'Inactivo'}

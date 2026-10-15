@@ -123,7 +123,7 @@ export function MoverDeGrupoModal({
                     elegido === d.id ? 'bg-coral/5' : 'hover:bg-surface-low',
                   )}
                 >
-                  <span className={cn('text-[13px] font-body block', elegido === d.id ? 'text-coral font-semibold' : 'text-navy')}>
+                  <span className={cn('text-[13px] font-body block', elegido === d.id ? 'text-coral-deep font-semibold' : 'text-navy')}>
                     {d.name}
                   </span>
                   <span className="text-[11px] text-navy-light/80 font-body">

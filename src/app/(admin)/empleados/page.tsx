@@ -96,7 +96,7 @@ export default function EmpleadosPage() {
           { label: 'Empleados activos',      value: active.length,   color: 'text-navy' },
           { label: 'En planilla',            value: planilla,         color: 'text-navy' },
           { label: 'Servicios profesionales',value: servicios,        color: 'text-teal-deep' },
-          { label: 'Vacaciones pendientes',  value: pendingVacations, color: pendingVacations > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Vacaciones pendientes',  value: pendingVacations, color: pendingVacations > 0 ? 'text-coral-deep' : 'text-navy' },
         ].map(({ label, value, color }) => (
           <div
             key={label}
@@ -184,7 +184,7 @@ export default function EmpleadosPage() {
                     <span
                       className={cn(
                         'rounded-full px-2.5 py-0.5 text-[13px] font-medium font-display',
-                        emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
+                        emp.status === 'active' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/10 text-navy-light/80'
                       )}
                     >
                       {emp.status === 'active' ? 'Activo' : 'Inactivo'}
@@ -230,7 +230,7 @@ export default function EmpleadosPage() {
                 <span
                   className={cn(
                     'rounded-full px-2 py-0.5 text-[11px] font-medium font-display',
-                    emp.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light/80'
+                    emp.status === 'active' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/10 text-navy-light/80'
                   )}
                 >
                   {emp.status === 'active' ? 'Activo' : 'Inactivo'}

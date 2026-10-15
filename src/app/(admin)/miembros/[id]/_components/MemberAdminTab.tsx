@@ -423,7 +423,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
               Crea el usuario de acceso y le manda el correo con el paso a paso para crear su contraseña. El correo NO lleva un enlace que venza: la persona lo pide desde la pantalla de ingreso cuando lo va a usar.
             </p>
             {createMsg && (
-              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${createMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                 {createMsg.ok && <Check size={12} />}{createMsg.text}
               </p>
             )}
@@ -433,7 +433,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
             {/* Indicador de estado */}
             <div className="flex items-center gap-2 flex-wrap">
               {account.state === 'active' ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[13px] font-medium text-teal-deep font-body">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-[13px] font-medium text-teal-ink font-body">
                   <UserCheck size={13} /> {ACCOUNT_STATE_LABEL.active}
                 </span>
               ) : (
@@ -505,7 +505,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
                     </button>
                   )}
                   {limpiarMsg && (
-                    <p className={`mt-1.5 inline-flex items-center gap-1 ${limpiarMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+                    <p className={`mt-1.5 inline-flex items-center gap-1 ${limpiarMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                       {limpiarMsg.ok && <Check size={12} />}{limpiarMsg.text}
                     </p>
                   )}
@@ -607,23 +607,23 @@ export function MemberAdminTab({ memberId, onChanged }: {
               </div>
             )}
             {enlaceMsg && (
-              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${enlaceMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${enlaceMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                 {enlaceMsg.ok && <Check size={12} />}{enlaceMsg.text}
               </p>
             )}
             {correoMsg && (
-              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${correoMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${correoMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                 {correoMsg.ok && <Check size={12} />}{correoMsg.text}
               </p>
             )}
 
             {resendMsg && (
-              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${resendMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                 {resendMsg.ok && <Check size={12} />}{resendMsg.text}
               </p>
             )}
             {pwMsg && (
-              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral'}`}>
+              <p className={`text-[13px] font-body inline-flex items-center gap-1 ${pwMsg.ok ? 'text-teal-deep' : 'text-coral-deep'}`}>
                 {pwMsg.ok && <Check size={12} />}{pwMsg.text}
               </p>
             )}
@@ -660,7 +660,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
         <div className="py-4 border-b border-[var(--outline-variant)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-2">
-          <Ban size={15} className="text-coral mt-0.5 shrink-0" />
+          <Ban size={15} className="text-coral-deep mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-navy font-body">No recomendado para dar estudios</p>
             <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">
@@ -731,7 +731,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
           </div>
         )}
         {saved && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {error && <p className="text-[13px] text-coral mt-2 font-body">{error}</p>}
+        {error && <p className="text-[13px] text-coral-deep mt-2 font-body">{error}</p>}
         </div>
 
         {/* Autorizado para estudios virtuales */}
@@ -808,7 +808,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
           </div>
         )}
         {savedVirtual && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {errorVirtual && <p className="text-[13px] text-coral mt-2 font-body">{errorVirtual}</p>}
+        {errorVirtual && <p className="text-[13px] text-coral-deep mt-2 font-body">{errorVirtual}</p>}
         </div>
       </div>
       </>}
@@ -825,7 +825,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
             <p className="text-sm font-medium text-navy font-body">
               Llevó el onboarding de servidores
               {admin?.servers_onboarding && admin.servers_onboarding_at && (
-                <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-deep font-display">
+                <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[13px] font-semibold text-teal-ink font-display">
                   {formatDate(admin.servers_onboarding_at)}
                 </span>
               )}
@@ -856,7 +856,7 @@ export function MemberAdminTab({ memberId, onChanged }: {
           </button>
         </div>
         {savedOnboarding && <p className="text-[13px] text-teal-deep mt-2 font-body inline-flex items-center gap-1"><Check size={12} /> Guardado</p>}
-        {errorOnboarding && <p className="text-[13px] text-coral mt-2 font-body">{errorOnboarding}</p>}
+        {errorOnboarding && <p className="text-[13px] text-coral-deep mt-2 font-body">{errorOnboarding}</p>}
       </div>
       )}
 

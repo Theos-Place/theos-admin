@@ -182,7 +182,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
             <div className="border-t py-1.5 border-[var(--outline-variant)]">
               <button
                 onClick={() => { setMenuOpen(false); handleLogout() }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-coral-deep hover:bg-coral/5 transition-colors font-body"
               >
                 <LogOut size={15} className="shrink-0" />
                 Cerrar sesión

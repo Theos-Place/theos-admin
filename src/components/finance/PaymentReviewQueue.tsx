@@ -60,7 +60,7 @@ const STATUS_TABS: { key: StatusTab; label: string }[] = [
 const QUEUE_STATUS_BADGE: Record<QueueStatus, { label: string; cls: string }> = {
   pendiente: { label: 'Pendiente', cls: 'bg-amber-50 text-amber-700' },
   en_revision: { label: 'En revisión', cls: 'bg-coral/10 text-coral-deep' },
-  cerrado: { label: 'Cerrado', cls: 'bg-teal-soft/30 text-teal-deep' },
+  cerrado: { label: 'Cerrado', cls: 'bg-teal-soft/30 text-teal-ink' },
 }
 
 function money(amount: number, currency: string) {
@@ -537,7 +537,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         {/* Al perfil de la persona: revisando un pago casi
                             siempre hay que ir a ver quién es. */}
                         {r.member_id ? (
-                          <Link href={`/miembros/${r.member_id}`} className="hover:text-coral transition-colors underline decoration-dotted underline-offset-2">
+                          <Link href={`/miembros/${r.member_id}`} className="hover:text-coral-deep transition-colors underline decoration-dotted underline-offset-2">
                             {r.member_name}
                           </Link>
                         ) : r.member_name}
@@ -595,7 +595,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                               <button
                                 onClick={() => { setReject(r); setReason('') }}
                                 disabled={busyId === r.id}
-                                className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                                className="rounded-full border border-coral/40 text-coral-deep px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                               >
                                 Rechazar
                               </button>
@@ -634,7 +634,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               // eslint-disable-next-line @next/next/no-img-element
               <img src={receipt.url} alt="Comprobante de pago" className="w-full rounded-xl border border-[var(--outline-variant)]" />
             ) : (
-              <p className="text-sm text-coral font-body py-6">No se pudo cargar el comprobante.</p>
+              <p className="text-sm text-coral-deep font-body py-6">No se pudo cargar el comprobante.</p>
             )}
           </div>
         </Modal>
@@ -919,7 +919,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     <button
                       onClick={() => { const r = detail; setDetail(null); setReject(r); setReason('') }}
                       disabled={busyId === detail.id}
-                      className="rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
+                      className="rounded-full border border-coral/40 text-coral-deep px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                     >
                       Rechazar
                     </button>

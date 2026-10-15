@@ -30,9 +30,9 @@ type RecipientFilter = 'all' | 'sent' | 'failed' | 'skipped'
 
 const STATUS_STYLE: Record<CommunicationStatus, string> = {
   draft:     'bg-navy/10 text-navy-light/80',
-  scheduled: 'bg-teal-soft/20 text-teal-deep',
+  scheduled: 'bg-teal-soft/20 text-teal-ink',
   sending:   'bg-amber-50 text-amber-700',
-  sent:    'bg-teal-soft/30 text-teal-deep',
+  sent:    'bg-teal-soft/30 text-teal-ink',
   failed:  'bg-coral/10 text-coral-deep',
   partial: 'bg-amber-50 text-amber-700',
 }
@@ -71,7 +71,7 @@ function RecipientStatus({ status }: { status: RecipientRow['status'] }) {
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[13px] text-coral font-body">
+    <span className="inline-flex items-center gap-1 text-[13px] text-coral-deep font-body">
       <XCircle size={12} /> Fallido
     </span>
   )
@@ -307,7 +307,7 @@ export default function ComunicacionDetallePage() {
                 <Clock size={13} /> {queue.pending.toLocaleString('es-CR')} en cola
               </span>
             )}
-            <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral font-medium' : 'text-navy-light/80')}>
+            <span className={cn('inline-flex items-center gap-1.5', queue.failed > 0 ? 'text-coral-deep font-medium' : 'text-navy-light/80')}>
               <XCircle size={13} /> {queue.failed.toLocaleString('es-CR')} fallidos
             </span>
             {message.stats.skipped > 0 && (

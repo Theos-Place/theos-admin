@@ -178,7 +178,7 @@ export default function AplicacionesPage() {
       </div>
 
       {result && (
-        <p className="rounded-xl bg-teal-soft/20 px-4 py-2 text-sm text-teal-deep font-body inline-flex items-center gap-1.5">
+        <p className="rounded-xl bg-teal-soft/20 px-4 py-2 text-sm text-teal-ink font-body inline-flex items-center gap-1.5">
           <Check size={14} /> {result}
         </p>
       )}

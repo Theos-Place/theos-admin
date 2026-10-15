@@ -264,13 +264,13 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                           <button
                             onClick={() => verComprobante(reg.payment_in_review_id!)}
                             disabled={abriendo === reg.payment_in_review_id}
-                            className="inline-flex items-center gap-1 rounded-full border border-teal-deep/30 bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep hover:bg-teal-soft/40 transition-colors font-display disabled:opacity-50"
+                            className="inline-flex items-center gap-1 rounded-full border border-teal-deep/30 bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-ink hover:bg-teal-soft/40 transition-colors font-display disabled:opacity-50"
                           >
                             <ImageIcon size={11} aria-hidden="true" />
                             {abriendo === reg.payment_in_review_id ? 'Abriendo…' : 'Ver comprobante'}
                           </button>
                         ) : (
-                          <span className="rounded-full bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-deep font-display">
+                          <span className="rounded-full bg-teal-soft/20 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-teal-ink font-display">
                             Comprobante en revisión
                           </span>
                         )
@@ -281,7 +281,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     <button
                       onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                       disabled={busyMember === reg.member_id}
-                      className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+                      className="inline-flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                     >
                       <Trash2 size={13} /> Quitar
                     </button>
@@ -325,7 +325,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   <button
                     onClick={() => setToRemove({ id: reg.member_id, name: reg.member_name })}
                     disabled={busyMember === reg.member_id}
-                    className="text-navy-light/80 hover:text-coral transition-colors shrink-0"
+                    className="text-navy-light/80 hover:text-coral-deep transition-colors shrink-0"
                     aria-label="Quitar inscripción"
                   >
                     <Trash2 size={15} />
@@ -450,7 +450,7 @@ function InscribirModal({ eventId, requiresPayment, alreadyRegistered, onClose, 
               <span className="font-semibold">{payFor.name}</span> — evento con cobro.
               {payFor.pricing.isServer && <span className="text-[13px] text-navy-light/80"> (precio servidor)</span>}
             </p>
-            <p className="text-2xl font-extrabold text-coral font-display">{formatCRC(payFor.pricing.price)}</p>
+            <p className="text-2xl font-extrabold text-coral-deep font-display">{formatCRC(payFor.pricing.price)}</p>
             <p className="text-[13px] text-navy-light/80 font-body">La inscripción solo se completa al registrar el pago o marcarla exenta.</p>
             <div className="flex flex-wrap gap-2">
               <button

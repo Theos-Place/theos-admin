@@ -320,6 +320,22 @@ describe('QA-2/M1 · los seis pares que fallaban, ya arreglados', () => {
     }
   })
 
+  it('teal-ink pasa sobre todos los tintes teal, en blanco, papel y gris', () => {
+    for (const papel of [TOKENS.white, TOKENS.surface, TOKENS.surfaceLow]) {
+      for (const [tinte, alfa] of [[TOKENS.tealSoft, 0.3], [TOKENS.tealSoft, 0.4], [TOKENS.tealDeep, 0.15], ['#519DA2', 0.12], [TOKENS.teal, 0.2]] as const) {
+        expect(sobreTinte(TOKENS.tealInk, tinte, alfa, papel)).toBeGreaterThanOrEqual(AA_NORMAL)
+      }
+    }
+    // Y por qué hizo falta: teal-deep sobre teal-soft/40 en una tarjeta gris.
+    expect(sobreTinte(TOKENS.tealDeep, TOKENS.tealSoft, 0.4, TOKENS.surfaceLow)).toBeLessThan(AA_NORMAL)
+  })
+
+  it('coral-deep como texto pasa sobre blanco, papel y gris', () => {
+    for (const papel of [TOKENS.white, TOKENS.surface, TOKENS.surfaceLow]) {
+      expect(ratio(TOKENS.coralDeep, papel)).toBeGreaterThanOrEqual(AA_NORMAL)
+    }
+  })
+
   it('el chip gris de «Miembro» en /accesos: #5F6378 sobre #9CA0B4/15', () => {
     expect(sobreTinte('#5F6378', '#9CA0B4', 0.15)).toBeGreaterThanOrEqual(AA_NORMAL)
   })
@@ -341,6 +357,21 @@ describe('QA-2/M1 · las combinaciones retiradas no vuelven al código', () => {
   const coralDeepSobreTinteFuerte = (l: string) => [...l.matchAll(/(['"`])([^'"`]*)\1/g)].some(([, , c]) =>
     /(^|\s)bg-coral\/(1[5-9]|[2-9]\d)\b/.test(c) && /(^|\s)text-coral-deep\b/.test(c))
 
+  // Decisión de Floriana, 2026-10-15: el coral de TEXTO es coral-deep en toda
+  // la app. El coral pleno daba 4.35 sobre el fondo gris de página y 4.55
+  // sobre blanco (al filo). Quedan permitidos con opacidad: son íconos.
+  it('el coral como texto es siempre coral-deep', () => {
+    expect(buscar(/(^|[\s'"`:])text-coral(?![-\w/])/)).toEqual([])
+  })
+  // Decisión de Floriana, 2026-10-15: sobre un tinte teal, la letra va en
+  // teal-ink. teal-deep daba 3.93 en el peor caso.
+  it('teal-deep nunca va como texto sobre un tinte teal', () => {
+    const tealSobreTinte = (l: string) => [...l.matchAll(/(['"`])([^'"`]*)\1/g)].some(([, , c]) =>
+      /(^|[\s:])(bg-teal(-soft|-deep)?\/\d+|bg-\[rgba\((81,\s?157,\s?162|112,\s?189,\s?194|59,\s?117,\s?121))/.test(c)
+      && /(^|[\s:])text-teal-deep(?![-\w/])/.test(c))
+    expect(archivos.flatMap(f => readFileSync(f, 'utf8').split('\n')
+      .flatMap((l, i) => (tealSobreTinte(l) ? [`${f}:${i + 1}`] : [])))).toEqual([])
+  })
   it('nadie pinta el verde #3DB97A como texto', () => {
     expect(buscar(/text-\[#3DB97A\]/)).toEqual([])
   })

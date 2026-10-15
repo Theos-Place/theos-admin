@@ -100,7 +100,7 @@ export function NewMemberStep3({
               <p className="text-xs text-navy-light/80 font-body">
                 {calculateAge(data.birth_date)} años
                 {isMinor && (
-                  <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep">Menor</span>
+                  <span className="ml-2 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink">Menor</span>
                 )}
               </p>
             )}
@@ -156,7 +156,7 @@ export function NewMemberStep3({
                     {familyItemRelation(item)}
                   </p>
                   {item.kind === 'linked' ? (
-                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[11px] text-teal-deep font-body">
+                    <span className="rounded-full bg-teal-soft/50 px-2 py-0.5 text-[11px] text-teal-ink font-body">
                       Perfil existente
                     </span>
                   ) : (
@@ -201,7 +201,7 @@ export function NewMemberStep3({
       </div>
 
       {submitError && (
-        <p className="text-[13px] text-coral text-center font-body">{submitError}</p>
+        <p className="text-[13px] text-coral-deep text-center font-body">{submitError}</p>
       )}
 
       {/* Submit button */}

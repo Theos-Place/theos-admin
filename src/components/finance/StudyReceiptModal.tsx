@@ -202,7 +202,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
                 </p>
               )}
             </div>
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <div className="pt-1">
               <button
                 onClick={submit}
@@ -262,7 +262,7 @@ export function StudyReceiptModal({ enrollmentId, groupId, memberId, studyName, 
               ) : (
                 <button
                   onClick={() => setConfirmarCancelar(true)}
-                  className="w-full text-center text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+                  className="w-full text-center text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                 >
                   Cancelar la matrícula
                 </button>

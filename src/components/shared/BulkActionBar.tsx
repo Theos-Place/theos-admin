@@ -64,7 +64,7 @@ export function BulkActionBar({
                     onClick={() => { setMoreOpen(false); a.onClick() }}
                     className={cn(
                       'w-full text-left px-4 py-2 text-[13px] hover:bg-surface-low transition-colors font-body',
-                      a.danger ? 'text-coral' : 'text-navy-light',
+                      a.danger ? 'text-coral-deep' : 'text-navy-light',
                     )}
                   >
                     {a.label}

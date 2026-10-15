@@ -80,14 +80,14 @@ function MemberActivityIcons({ member }: { member: Member }) {
     : 'Asistencia activa (≥6 charlas en 6 meses, con al menos una en los últimos 60 días)'
   return (
     <div className="mt-3 flex items-center gap-5">
-      <ActivityIcon active={member.is_donor} icon={Heart} label="Donante" activeColor="text-coral"
+      <ActivityIcon active={member.is_donor} icon={Heart} label="Donante" activeColor="text-coral-deep"
         tooltip="Donante activo" inactiveTooltip="No registra donaciones activas" />
       <ActivityIcon active={member.is_server} icon={Hammer} label="Servidor" activeColor="text-teal-deep"
         tooltip={committee ? `Servidor en ${committee}` : 'Servidor activo'}
         inactiveTooltip="No sirve en ningún comité" />
       <ActivityIcon active={attendanceActive} icon={CalendarCheck} label="Asistente" activeColor="text-navy"
         tooltip={attendanceTooltip} inactiveTooltip="Sin asistencia activa a charlas" />
-      <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral"
+      <ActivityIcon active={studyingActive} icon={BookOpen} label="Estudiante" activeColor="text-coral-deep"
         tooltip={member.current_study ? `Estudiando ${member.current_study}` : 'Estudiante activo'}
         inactiveTooltip="No lleva ningún estudio ahora" />
       {/* DIR-8 · Antes este era el ÚNICO de los cinco que se escondía del
@@ -199,7 +199,7 @@ export function MemberHeader({
               <span
                 title="Autorización para aparecer en fotos y publicaciones"
                 className={cn('rounded-full px-2.5 py-0.5 text-xs font-body',
-                  member.autorizacion_imagen === true ? 'bg-teal-soft/30 text-teal-deep'
+                  member.autorizacion_imagen === true ? 'bg-teal-soft/30 text-teal-ink'
                     : member.autorizacion_imagen === false ? 'bg-coral/10 text-coral-deep'
                     : 'bg-coral-soft/25 text-coral-deep')}
               >
@@ -215,7 +215,7 @@ export function MemberHeader({
             )}
             {member.is_server && (
               <span
-                className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-deep font-body"
+                className="rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-xs text-teal-ink font-body"
               >
                 Servidor
               </span>
@@ -269,7 +269,7 @@ export function MemberHeader({
                 {canDeactivate && (
                   <button
                     onClick={onDeactivate}
-                    className="w-full px-4 py-2 text-left text-sm text-coral hover:bg-coral/5 transition-colors font-body"
+                    className="w-full px-4 py-2 text-left text-sm text-coral-deep hover:bg-coral/5 transition-colors font-body"
                   >
                     Dar de baja al miembro
                   </button>

@@ -23,7 +23,7 @@ const RESULTADO_LABEL: Record<ResultadoCierre, string> = {
  *  teal-deep 5.24:1 · coral-deep 5.35:1 · navy 17.38:1 · amber-700 5.02:1.
  *  amber-600 daba 3.19:1 y no pasa AA para texto normal. */
 const RESULTADO_BADGE: Record<ResultadoCierre, string> = {
-  aprobado: 'bg-teal-deep/10 text-teal-deep',
+  aprobado: 'bg-teal-deep/10 text-teal-ink',
   reprobado: 'bg-coral/10 text-coral-deep',
   retirado: 'bg-navy/10 text-navy',
   sin_evaluar: 'bg-amber-500/10 text-amber-700',
@@ -146,7 +146,7 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
           {d.folleto_request_id && (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">
               <p className="flex flex-wrap items-center gap-2 text-sm text-navy font-body">
-                <FileText size={15} className="text-coral shrink-0" aria-hidden />
+                <FileText size={15} className="text-coral-deep shrink-0" aria-hidden />
                 De este cierre salió una solicitud de folletos para el grupo siguiente.
                 <Link href={`/estudios/folletos/${d.folleto_request_id}`} className="text-teal-deep hover:underline">
                   Verla
@@ -157,7 +157,7 @@ export default function ResumenCierrePage({ params }: { params: Promise<{ id: st
 
           <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
-              <Users size={16} className="text-coral shrink-0" aria-hidden />
+              <Users size={16} className="text-coral-deep shrink-0" aria-hidden />
               <h2 className="text-sm font-semibold text-navy font-display">Cómo terminó cada quien</h2>
               <span className="text-[13px] text-navy-light/80 font-body">{d.participantes.length} personas</span>
             </div>

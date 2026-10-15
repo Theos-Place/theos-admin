@@ -137,7 +137,7 @@ export function InformeDeViaje({ viajeId, editable, inicial, archivos, enviadoAt
           </ul>
         )}
         {editable && (
-          <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral transition-colors font-body">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral-deep transition-colors font-body">
             <Paperclip size={14} aria-hidden="true" /> Adjuntar evidencia
             <input type="file" accept="image/*,application/pdf" className="sr-only"
               aria-label="Evidencia del informe de viaje"

@@ -129,7 +129,7 @@ export default function NuevaContrasenaPage() {
       <div className="w-full max-w-[400px] text-center">
         <div className="flex justify-center mb-5">
           <div className="h-16 w-16 rounded-2xl flex items-center justify-center bg-coral/10">
-            <AlertCircle size={28} className="text-coral" />
+            <AlertCircle size={28} className="text-coral-deep" />
           </div>
         </div>
         <h2 className="text-2xl text-navy mb-3 font-display font-extrabold tracking-[-0.025em]">
@@ -239,12 +239,12 @@ export default function NuevaContrasenaPage() {
             </button>
           </div>
           {confirmErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {confirmErr}</p>
+            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral-deep font-body"><AlertCircle size={12} className="shrink-0" /> {confirmErr}</p>
           )}
         </div>
 
         {submitErr && (
-          <p className="flex items-center gap-1.5 text-[13px] text-coral font-body"><AlertCircle size={12} className="shrink-0" /> {submitErr}</p>
+          <p className="flex items-center gap-1.5 text-[13px] text-coral-deep font-body"><AlertCircle size={12} className="shrink-0" /> {submitErr}</p>
         )}
 
         <Button

@@ -88,7 +88,7 @@ function RecuperarContent() {
           Todavía no podés tener cuenta
         </h2>
         <p className="text-sm text-navy-light/80 leading-relaxed mb-4 font-body">{aviso}</p>
-        <Link href="/login" className="text-sm text-coral hover:underline font-body">
+        <Link href="/login" className="text-sm text-coral-deep hover:underline font-body">
           Volver al inicio
         </Link>
       </div>
@@ -190,7 +190,7 @@ function RecuperarContent() {
             className={`${INPUT} font-body ${emailErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
           />
           {emailErr && (
-            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral-deep font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -198,7 +198,7 @@ function RecuperarContent() {
         </div>
 
         {error && (
-          <p role="alert" className="flex items-center gap-1.5 text-[13px] text-coral font-body">
+          <p role="alert" className="flex items-center gap-1.5 text-[13px] text-coral-deep font-body">
             <AlertCircle size={12} className="shrink-0" />
             {error}
           </p>

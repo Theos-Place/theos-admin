@@ -142,7 +142,7 @@ export function CorreosDelSistemaTab() {
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <p className="text-[13px] text-navy-light/80 font-body">
             {desde}–{hasta} de {datos.total.toLocaleString('es-CR')}
-            {conProblema > 0 && <span className="text-coral"> · {conProblema} con problema en esta página</span>}
+            {conProblema > 0 && <span className="text-coral-deep"> · {conProblema} con problema en esta página</span>}
           </p>
           {paginas > 1 && (
             <div className="flex items-center gap-2">

@@ -55,7 +55,7 @@ export function CommitteeHeader({
                     </div>
                     <Link
                       href={`/miembros/${e.member_id}`}
-                      className="text-[13px] text-[rgba(41,54,92,0.7)] hover:text-coral hover:underline font-body"
+                      className="text-[13px] text-[rgba(41,54,92,0.7)] hover:text-coral-deep hover:underline font-body"
                     >
                       {e.name}
                     </Link>

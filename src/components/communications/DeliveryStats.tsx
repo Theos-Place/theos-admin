@@ -24,7 +24,7 @@ export function DeliveryStats({ message }: Props) {
     neutral: { color: 'text-navy', bg: 'bg-navy/5' },
     good:    { color: 'text-teal-deep', bg: 'bg-teal-soft/20' },
     warn:    { color: 'text-amber-600', bg: 'bg-amber-50' },
-    bad:     { color: 'text-coral', bg: 'bg-coral/10' },
+    bad:     { color: 'text-coral-deep', bg: 'bg-coral/10' },
   }
   const ICON: Record<DeliveryCard['key'], typeof Users> = {
     total: Users, enviados: Send, entregados: CheckCircle2, fallidos: XCircle,

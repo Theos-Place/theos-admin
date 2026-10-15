@@ -965,7 +965,7 @@ export default function ServidoresAdminPage() {
                       onClick={() => requestDeleteArea(area)}
                       className={cn(
                         'rounded-lg p-1.5 transition-colors',
-                        isSelected ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-navy-light/80 hover:text-coral hover:bg-coral/10'
+                        isSelected ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-navy-light/80 hover:text-coral-deep hover:bg-coral/10'
                       )}
                       title="Eliminar área"
                       aria-label={`Eliminar área ${area.name}`}
@@ -1030,7 +1030,7 @@ export default function ServidoresAdminPage() {
                 action={
                   <button
                     onClick={() => setCommModal({ open: true, editing: null })}
-                    className="text-[13px] text-coral hover:underline font-body"
+                    className="text-[13px] text-coral-deep hover:underline font-body"
                   >
                     Crear el primero
                   </button>
@@ -1064,7 +1064,7 @@ export default function ServidoresAdminPage() {
                               i < areaComm.length - 1 && 'border-b border-[var(--outline-variant)]')}
                           >
                             <td className="px-5 py-3">
-                              <span className={cn('text-[13px] font-medium font-body', selectedCommId === c.id ? 'text-coral' : 'text-navy')}>
+                              <span className={cn('text-[13px] font-medium font-body', selectedCommId === c.id ? 'text-coral-deep' : 'text-navy')}>
                                 {c.name}
                               </span>
                             </td>
@@ -1113,7 +1113,7 @@ export default function ServidoresAdminPage() {
                                 </button>
                                 <button
                                   onClick={() => requestDeleteCommittee(c)}
-                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/80 hover:text-coral hover:border-coral/30 transition-colors"
+                                  className="inline-flex items-center justify-center rounded-full border border-[var(--outline-variant)] h-7 w-7 text-navy-light/80 hover:text-coral-deep hover:border-coral/30 transition-colors"
                                   title="Eliminar comité"
                                   aria-label={`Eliminar comité ${c.name}`}
                                 >
@@ -1193,7 +1193,7 @@ export default function ServidoresAdminPage() {
                 action={
                   <button
                     onClick={() => setNuevoPuesto(true)}
-                    className="text-[13px] text-coral hover:underline font-body"
+                    className="text-[13px] text-coral-deep hover:underline font-body"
                   >
                     Crear el primero
                   </button>
@@ -1232,10 +1232,10 @@ export default function ServidoresAdminPage() {
                         aria-label={`Ver quiénes ocupan ${p.title}`}
                       >
                         <span className={cn('flex-1 text-[13px] font-body truncate',
-                          selectedPosId === p.id ? 'text-coral font-semibold' : 'text-navy')}>{p.title}</span>
+                          selectedPosId === p.id ? 'text-coral-deep font-semibold' : 'text-navy')}>{p.title}</span>
                         <Users size={12} className="shrink-0 text-navy-light/40" aria-hidden />
                         {p.study_requirement && (
-                          <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body">{p.study_requirement}</span>
+                          <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink font-body">{p.study_requirement}</span>
                         )}
                       </button>
                       <button
@@ -1247,7 +1247,7 @@ export default function ServidoresAdminPage() {
                       </button>
                       <button
                         onClick={() => requestDeletePosition(p)}
-                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
+                        className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors"
                         title="Eliminar puesto" aria-label={`Eliminar puesto ${p.title}`}
                       >
                         <Trash2 size={13} />
@@ -1355,7 +1355,7 @@ export default function ServidoresAdminPage() {
                   ? `Hay ${conteoPuesto.inactivos} registro${conteoPuesto.inactivos === 1 ? '' : 's'} inactivo${conteoPuesto.inactivos === 1 ? '' : 's'}. Marcá la casilla de arriba para verlos y reintegrar a alguien.`
                   : undefined}
                 action={selectedComm && (
-                  <Link href={`/servidores/${selectedComm.id}`} className="text-[13px] text-coral hover:underline font-body">
+                  <Link href={`/servidores/${selectedComm.id}`} className="text-[13px] text-coral-deep hover:underline font-body">
                     Asignar a alguien desde el comité
                   </Link>
                 )}
@@ -1368,7 +1368,7 @@ export default function ServidoresAdminPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/miembros/${m.member_id}`}
-                          className="text-[13px] font-semibold text-navy hover:text-coral transition-colors font-body"
+                          className="text-[13px] font-semibold text-navy hover:text-coral-deep transition-colors font-body"
                         >
                           {m.name}
                         </Link>
@@ -1382,7 +1382,7 @@ export default function ServidoresAdminPage() {
                           activas, 620 inactivas). Pintar "En pausa" sería una
                           etiqueta que nunca aparece. */}
                       <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display',
-                        m.status === 'active' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/5 text-navy-light/80')}>
+                        m.status === 'active' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/5 text-navy-light/80')}>
                         {m.status === 'active' ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>

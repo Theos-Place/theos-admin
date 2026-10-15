@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { Search, ChevronRight, QrCode, ChevronLeft } from 'lucide-react'
 
 const STATUS_STYLE: Record<CheckinStatus, string> = {
-  en_curso: 'bg-teal-soft/30 text-teal-deep',
+  en_curso: 'bg-teal-soft/30 text-teal-ink',
   por_iniciar: 'bg-navy/10 text-navy',
   recien_terminado: 'bg-amber-50 text-amber-700',
 }

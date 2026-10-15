@@ -585,7 +585,7 @@ function VentanaDelAño({ desde, hasta, disabled, onChange }: {
         {(d || h) && !disabled && (
           <button
             onClick={() => aplicar('', '')}
-            className="text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+            className="text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
           >
             Todo el año
           </button>
@@ -635,7 +635,7 @@ function ReportarFormacion({ memberId, visible }: { memberId: string; visible: b
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
       >
         <AlertTriangle size={13} aria-hidden="true" />
         Esto no es correcto

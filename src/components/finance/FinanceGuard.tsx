@@ -19,7 +19,7 @@ export function FinanceGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[rgba(214,62,61,0.10)]">
-          <Lock size={24} className="text-coral" />
+          <Lock size={24} className="text-coral-deep" />
         </div>
         <h2
           className="text-xl font-bold font-display text-navy"

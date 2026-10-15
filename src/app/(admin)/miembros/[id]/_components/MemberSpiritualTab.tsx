@@ -73,7 +73,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
   if (error && !data) {
     return (
       <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
-        <p className="text-sm text-coral font-body">{error}</p>
+        <p className="text-sm text-coral-deep font-body">{error}</p>
       </div>
     )
   }
@@ -110,7 +110,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         >
           {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : saved ? <><Check size={14} /> Guardado</> : 'Guardar'}
         </button>
-        {error && data && <span className="text-[13px] text-coral font-body">No se pudo guardar. Intentá de nuevo.</span>}
+        {error && data && <span className="text-[13px] text-coral-deep font-body">No se pudo guardar. Intentá de nuevo.</span>}
       </div>
     </div>
   )

@@ -158,7 +158,7 @@ export function ScholarshipRequestModal({
     <Modal onClose={() => !submitting && onClose()} titleId="solicitar-beca-title">
       <div className="p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <GraduationCap size={18} className="text-coral" />
+          <GraduationCap size={18} className="text-coral-deep" />
           <h2 id="solicitar-beca-title" className="text-lg font-semibold text-navy font-display">Solicitar beca</h2>
         </div>
 
@@ -207,7 +207,7 @@ export function ScholarshipRequestModal({
         {entityType === 'study_plan' && target && (
           <div>
             <label htmlFor="schol-grupo" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
-              ¿Cuál grupo? <span className="text-coral">*</span>
+              ¿Cuál grupo? <span className="text-coral-deep">*</span>
             </label>
             {gruposDelPlan === null ? (
               <p className="text-[13px] text-navy-light/80 font-body">Buscando grupos…</p>
@@ -233,7 +233,7 @@ export function ScholarshipRequestModal({
         {/* BEC-5 punto 1 · Tres razones y nada más. */}
         <div>
           <label htmlFor="schol-razon" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
-            Razón <span className="text-coral">*</span>
+            Razón <span className="text-coral-deep">*</span>
           </label>
           <select id="schol-razon" value={razon}
             onChange={e => setRazon(e.target.value as RazonDeBeca | '')} className={FIELD_CLS}>
@@ -245,7 +245,7 @@ export function ScholarshipRequestModal({
 
         <div>
           <label htmlFor="schol-reason" className="block text-[13px] font-medium text-navy-light/80 font-body mb-1.5">
-            Contanos tu situación <span className="text-coral">*</span>
+            Contanos tu situación <span className="text-coral-deep">*</span>
           </label>
           <textarea
             id="schol-reason"
@@ -281,7 +281,7 @@ export function ScholarshipRequestModal({
           <p className="text-[13px] text-amber-900 font-body">{AVISO_DE_CUPO}</p>
         </div>
 
-        {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+        {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-1">
           <button onClick={onClose} disabled={submitting} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">

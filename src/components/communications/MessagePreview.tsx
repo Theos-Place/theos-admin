@@ -27,7 +27,7 @@ export function MessagePreview({ channel, subject, waBody, emailBody, marketing 
         <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)]">
           <div className="flex items-start gap-3">
             <div className="h-8 w-8 rounded-full bg-coral/10 flex items-center justify-center shrink-0">
-              <Bell size={14} className="text-coral" />
+              <Bell size={14} className="text-coral-deep" />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-navy font-body">

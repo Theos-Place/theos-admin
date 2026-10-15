@@ -18,8 +18,8 @@ import { etiquetaDeEstado } from '@/lib/finance/payment-outcome'
 const STATUS_COLOR: Record<PaymentStatus, { color: string; bg: string }> = {
   paid:           { color: '#1E6B42', bg: 'rgba(61,185,122,0.12)'  },
   pending:        { color: '#7F6210', bg: 'rgba(233,185,73,0.15)'  },
-  refunded:       { color: '#3B7579', bg: 'rgba(81,157,162,0.12)'  },
-  partial_refund: { color: '#3B7579', bg: 'rgba(112,189,194,0.15)' },
+  refunded:       { color: '#2F5E61', bg: 'rgba(81,157,162,0.12)'  },
+  partial_refund: { color: '#2F5E61', bg: 'rgba(112,189,194,0.15)' },
   // Anulado va en gris, no en rojo: es un desenlace normal (la persona
   // canceló, se venció el plazo) y no hay nada que atender. El rojo se reserva
   // para 'failed', que sí es una avería del sistema.
@@ -27,14 +27,16 @@ const STATUS_COLOR: Record<PaymentStatus, { color: string; bg: string }> = {
   failed:         { color: '#C43635', bg: 'rgba(214,62,61,0.10)'   },
 }
 
-export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+/** `tone="dark"` sobre la cabecera navy: el tinte es transparente y sobre navy
+ *  la letra no se leía (2.05). Ahí el chip va sobre blanco pleno. */
+export function PaymentStatusBadge({ status, tone = 'light' }: { status: PaymentStatus; tone?: 'light' | 'dark' }) {
   // Fallback neutro: un estado no mapeado no debe tumbar la pantalla.
   const cfg = STATUS_COLOR[status] ?? { color: '#161440', bg: 'rgba(22,20,64,0.08)' }
   const label = etiquetaDeEstado(status, 'finanzas') || String(status || '—')
   return (
     <span
       className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
-      style={{ color: cfg.color, background: cfg.bg }}
+      style={{ color: cfg.color, background: tone === 'dark' ? '#FFFFFF' : cfg.bg }}
     >
       {label}
     </span>

@@ -57,11 +57,11 @@ function Field({
         className="block text-[13px] font-medium text-navy-light/80 mb-1.5 uppercase tracking-wider font-display"
       >
         {label}
-        {required && <span className="text-coral ml-1">*</span>}
+        {required && <span className="text-coral-deep ml-1">*</span>}
       </label>
       {children}
       {error && (
-        <p className="text-xs text-coral mt-1 font-body">
+        <p className="text-xs text-coral-deep mt-1 font-body">
           {error}
         </p>
       )}
@@ -170,7 +170,7 @@ export function NewMemberStep1({
             className={cn(
               'mt-1.5 rounded-lg px-3 py-2 text-xs',
               tseBanner.type === 'success'
-                ? 'bg-teal-soft/20 text-teal-deep'
+                ? 'bg-teal-soft/20 text-teal-ink'
                 : 'bg-amber-50 text-amber-700'
             )}
           >
@@ -201,7 +201,7 @@ export function NewMemberStep1({
 
       {isMinor ? (
         <div
-          className="rounded-xl bg-teal-soft/20 px-3 py-2.5 text-sm text-teal-deep"
+          className="rounded-xl bg-teal-soft/20 px-3 py-2.5 text-sm text-teal-ink"
         >
           Modo menor de edad — correo y teléfono opcionales
         </div>

@@ -14,7 +14,7 @@ const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  aprobado:  'bg-teal-soft/30 text-teal-deep',
+  aprobado:  'bg-teal-soft/30 text-teal-ink',
   pendiente: 'bg-amber-100 text-amber-700',
   rechazado: 'bg-coral/10 text-coral-deep',
 }
@@ -112,7 +112,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
                       type="button"
                       onClick={() => onSetVacationStatus(v.id, 'aprobado')}
                       title="Aprobar"
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-teal-deep hover:bg-teal-soft/30 transition-colors"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-teal-ink hover:bg-teal-soft/30 transition-colors"
                     >
                       <Check size={14} />
                     </button>
@@ -120,7 +120,7 @@ export function TabVacaciones({ employee, vacDiasDisponibles, onOpenVacModal, on
                       type="button"
                       onClick={() => onSetVacationStatus(v.id, 'rechazado')}
                       title="Rechazar"
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-coral hover:bg-coral/10 transition-colors"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-coral-deep hover:bg-coral/10 transition-colors"
                     >
                       <X size={14} />
                     </button>

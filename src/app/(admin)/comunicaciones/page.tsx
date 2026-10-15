@@ -181,9 +181,9 @@ export default function ComunicacionesPage() {
 
   const STATUS_STYLE: Record<CommunicationStatus, string> = {
     draft:     'bg-navy/10 text-navy-light/80',
-    scheduled: 'bg-teal-soft/20 text-teal-deep',
+    scheduled: 'bg-teal-soft/20 text-teal-ink',
     sending:   'bg-amber-50 text-amber-700',
-    sent:    'bg-teal-soft/30 text-teal-deep',
+    sent:    'bg-teal-soft/30 text-teal-ink',
     failed:  'bg-coral/10 text-coral-deep',
     partial: 'bg-amber-50 text-amber-700',
   }
@@ -235,7 +235,7 @@ export default function ComunicacionesPage() {
           },
           {
             label: 'Con errores', value: stats.conErrores.total.toLocaleString('es-CR'),
-            color: stats.conErrores.total > 0 ? 'text-coral' : 'text-navy-light/80', icon: AlertTriangle,
+            color: stats.conErrores.total > 0 ? 'text-coral-deep' : 'text-navy-light/80', icon: AlertTriangle,
             nota: desgloseDeTarjeta(stats.conErrores),
           },
         ].map(({ label, value, color, icon: Icon, nota }) => (
@@ -262,10 +262,10 @@ export default function ComunicacionesPage() {
       <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <FileText size={16} className="text-coral" />
+            <FileText size={16} className="text-coral-deep" />
             <h2 className="text-sm font-semibold text-navy font-display">Formularios</h2>
           </div>
-          <Link href="/formularios" className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body">
+          <Link href="/formularios" className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body">
             Ver formularios <ChevronRight size={12} />
           </Link>
         </div>
@@ -300,7 +300,7 @@ export default function ComunicacionesPage() {
                   style={{ height: `${maxActivity > 0 ? (d.count / maxActivity) * 56 : 0}px`, minHeight: d.count > 0 ? 4 : 0 }}
                 />
                 {d.count > 0 && (
-                  <span className="absolute -top-5 text-[11px] font-bold text-coral font-mono">
+                  <span className="absolute -top-5 text-[11px] font-bold text-coral-deep font-mono">
                     {d.count}
                   </span>
                 )}
@@ -422,7 +422,7 @@ export default function ComunicacionesPage() {
                           {msg.stats.delivered} entregados
                         </span>
                         {msg.stats.failed > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[13px] text-coral font-body">
+                          <span className="inline-flex items-center gap-1 text-[13px] text-coral-deep font-body">
                             <AlertTriangle size={12} />
                             {msg.stats.failed} fallidos
                           </span>
@@ -497,7 +497,7 @@ export default function ComunicacionesPage() {
                     type="button"
                     disabled={cancelando === msg.id}
                     onClick={() => cancelarProgramado(msg.id)}
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-40 font-body"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--outline-variant)] px-3.5 py-1.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors disabled:opacity-40 font-body"
                   >
                     <X size={12} />
                     {cancelando === msg.id ? 'Cancelando…' : 'Cancelar envío'}
@@ -514,7 +514,7 @@ export default function ComunicacionesPage() {
               <div className="flex justify-end">
                 <button
                   onClick={() => setPorBorrar(drafts.map(d => d.id))}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 text-coral px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors font-body"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 text-coral-deep px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors font-body"
                 >
                   <Trash2 size={13} /> Borrar los {drafts.length}
                 </button>
@@ -557,7 +557,7 @@ export default function ComunicacionesPage() {
                     <button
                       onClick={() => setPorBorrar([msg.id])}
                       aria-label={`Borrar el borrador "${msg.subject || 'sin asunto'}"`}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-coral/40 text-coral hover:bg-coral/5 transition-colors"
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-coral/40 text-coral-deep hover:bg-coral/5 transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>

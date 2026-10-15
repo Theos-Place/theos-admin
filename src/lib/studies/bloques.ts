@@ -56,10 +56,10 @@ export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
 export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   cierre: 'bg-navy-light/10 text-navy-light/80',
   preapertura_preliminar: 'bg-amber-50 text-amber-700',
-  preapertura_confirmacion: 'bg-teal-deep/10 text-teal-deep',
+  preapertura_confirmacion: 'bg-teal-deep/10 text-teal-ink',
   preapertura_final: 'bg-coral/10 text-coral-deep',
   manual: 'bg-coral/10 text-coral-deep',
-  cupo_lleno: 'bg-teal-soft/30 text-teal-deep',
+  cupo_lleno: 'bg-teal-soft/30 text-teal-ink',
   fin_matricula: 'bg-navy/10 text-navy',
   anticipado: 'bg-teal/15 text-navy',
 }
@@ -105,7 +105,7 @@ export const BLOQUE_ESTADO_LABEL: Record<BloqueEstado, string> = {
 
 export const BLOQUE_ESTADO_BADGE: Record<BloqueEstado, string> = {
   en_apertura: 'bg-amber-50 text-amber-700',
-  activo: 'bg-teal-soft/30 text-teal-deep',
+  activo: 'bg-teal-soft/30 text-teal-ink',
   archivado: 'bg-navy-light/10 text-navy-light/80',
 }
 

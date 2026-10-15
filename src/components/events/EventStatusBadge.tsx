@@ -9,7 +9,7 @@ interface EventStatusBadgeProps {
 }
 
 const BADGE_STYLES: Record<EventStatus, string> = {
-  upcoming:    'bg-teal-soft/30 text-teal-deep',
+  upcoming:    'bg-teal-soft/30 text-teal-ink',
   in_progress: 'bg-coral/10 text-coral-deep',
   finished:    'bg-navy/10 text-navy/80',
   cancelled:   'bg-red-100 text-red-600',

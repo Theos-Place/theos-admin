@@ -201,7 +201,7 @@ function CampoDelCuestionario({ campo, valor, onChange }: {
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-sm font-medium text-navy font-body">
         {campo.label}
-        {campo.is_required && <span className="text-coral"> *</span>}
+        {campo.is_required && <span className="text-coral-deep"> *</span>}
       </label>
       {campo.description && (
         <p className="text-[13px] leading-snug text-navy-light/80 font-body">{campo.description}</p>

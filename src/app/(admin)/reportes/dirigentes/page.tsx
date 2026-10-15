@@ -56,7 +56,7 @@ function Delta({ label, actual, punto }: { label: string; actual: number; punto:
       <p className="text-[11px] uppercase tracking-wide text-navy-light/80 font-body">{label}</p>
       <p className={cn(
         'mt-1 flex items-center gap-1 text-2xl font-display font-extrabold tracking-[-0.02em]',
-        d > 0 ? 'text-success-deep' : d < 0 ? 'text-coral' : 'text-navy',
+        d > 0 ? 'text-success-deep' : d < 0 ? 'text-coral-deep' : 'text-navy',
       )}>
         <Icon size={18} aria-hidden="true" />
         {d > 0 ? '+' : ''}{fmt(d)}
@@ -131,7 +131,7 @@ export default function ReporteDirigentesPage() {
     return (
       <div className="space-y-5">
         <div className="h-8 w-72 rounded-lg bg-surface-card animate-pulse" />
-        {error ? <p className="text-sm text-coral font-body">{error}</p> : (
+        {error ? <p className="text-sm text-coral-deep font-body">{error}</p> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[0, 1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-surface-card animate-pulse" />)}
           </div>
@@ -181,7 +181,7 @@ export default function ReporteDirigentesPage() {
       {jerarquia
         ? <JerarquiaDeDirigentes datos={jerarquia} />
         : errorJerarquia
-          ? <p className="text-sm text-coral font-body">{errorJerarquia}</p>
+          ? <p className="text-sm text-coral-deep font-body">{errorJerarquia}</p>
           : <div className="h-64 rounded-2xl bg-surface-card animate-pulse" />}
 
       {/* Calidad de datos: EST-1 dice que esto no debería existir, así que

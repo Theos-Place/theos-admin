@@ -80,7 +80,7 @@ export function Step4Financiero({
                 </select>
               </div>
               {desajuste && (
-                <p className="text-[13px] text-coral font-body">
+                <p className="text-[13px] text-coral-deep font-body">
                   {sede?.name} cobra normalmente en {sede?.currency}. Revisá que la moneda sea la correcta.
                 </p>
               )}

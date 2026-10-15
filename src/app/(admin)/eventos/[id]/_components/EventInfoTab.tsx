@@ -153,7 +153,7 @@ export function EventInfoTab({
               href={event.virtual_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-coral hover:underline break-all font-body"
+              className="text-sm text-coral-deep hover:underline break-all font-body"
             >
               {event.virtual_url}
             </a>
@@ -260,7 +260,7 @@ export function EventInfoTab({
             </div>
           )}
           {flyerError && (
-            <p className="text-sm text-coral font-body" role="alert">{flyerError}</p>
+            <p className="text-sm text-coral-deep font-body" role="alert">{flyerError}</p>
           )}
         </div>
       </div>

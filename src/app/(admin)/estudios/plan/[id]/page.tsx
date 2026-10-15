@@ -27,7 +27,7 @@ const sectionLabelCls = 'text-[11px] tracking-widest uppercase text-navy-light/8
 
 function levelPillCls(level: string): string {
   switch (level) {
-    case 'Básico':     return 'bg-teal-soft/30 text-teal-deep'
+    case 'Básico':     return 'bg-teal-soft/30 text-teal-ink'
     case 'Intermedio': return 'bg-navy/10 text-navy'
     case 'Avanzado':   return 'bg-coral/10 text-coral-deep'
     default:           return 'bg-surface-low text-navy-light/80'
@@ -39,7 +39,7 @@ function ConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel
     <Modal onClose={onCancel} titleId="archivar-estudio-title" width={384}>
       <div className="p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <Archive size={20} className="text-coral" />
+          <Archive size={20} className="text-coral-deep" />
           <h3 id="archivar-estudio-title" className="font-semibold text-navy font-display">
             Desactivar estudio
           </h3>
@@ -210,7 +210,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
             <p className="mt-0.5 text-sm text-navy-light/80 font-body">
               {stageInfo?.label} · {view.weeks} semanas
               {view.level && ` · Nivel ${view.level}`}
-              {isArchived && <span className="ml-2 text-coral font-semibold">[Desactivado]</span>}
+              {isArchived && <span className="ml-2 text-coral-deep font-semibold">[Desactivado]</span>}
             </p>
           </div>
         </div>
@@ -312,7 +312,7 @@ export default function PlanDeEstudioDetailPage({ params }: { params: Promise<{ 
                     </span>
                   )}
                   {view.req_server && (
-                    <span className="inline-flex items-center rounded-full bg-teal-soft/30 px-2.5 py-1 text-[13px] font-medium text-teal-deep font-body">
+                    <span className="inline-flex items-center rounded-full bg-teal-soft/30 px-2.5 py-1 text-[13px] font-medium text-teal-ink font-body">
                       Servir en un comité
                     </span>
                   )}
@@ -573,7 +573,7 @@ function DirigenteReferenteSelect({ value, currentName, onChange }: {
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
+          className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body"
         >
           <X size={13} /> Quitar
         </button>

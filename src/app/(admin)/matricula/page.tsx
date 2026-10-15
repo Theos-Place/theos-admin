@@ -363,7 +363,7 @@ export default function MatriculaPage() {
                   {completedStudies.map(s => (
                     <span
                       key={s.code}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold bg-teal-soft/30 text-teal-deep font-display"
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold bg-teal-soft/30 text-teal-ink font-display"
                     >
                       {s.code} ✓
                     </span>
@@ -422,14 +422,14 @@ export default function MatriculaPage() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-extrabold text-navy font-display tracking-[-0.01em] flex items-center gap-1.5">
-            <Sparkles size={15} className="text-coral shrink-0" />
+            <Sparkles size={15} className="text-coral-deep shrink-0" />
             Explorá el plan de estudios completo
           </p>
           <p className="text-[13px] text-navy-light/80 font-body">
             Todos los estudios de Theos Place, con los compromisos que pide cada uno — donante, servicio, asistencia y qué estudio va primero.
           </p>
         </div>
-        <ArrowRight size={18} className="shrink-0 text-coral transition-transform group-hover:translate-x-1" />
+        <ArrowRight size={18} className="shrink-0 text-coral-deep transition-transform group-hover:translate-x-1" />
       </Link>
 
       {/* Filtros */}
@@ -599,7 +599,7 @@ export default function MatriculaPage() {
         <div
           className="rounded-2xl p-12 text-center bg-surface-card shadow-card border border-coral/30"
         >
-          <AlertCircle size={28} className="text-coral mx-auto mb-3" />
+          <AlertCircle size={28} className="text-coral-deep mx-auto mb-3" />
           <p className="text-sm font-semibold text-navy font-body">
             No se pudo cargar la matrícula. Probá de nuevo.
           </p>
@@ -946,7 +946,7 @@ function StageRequirementsEmptyState({ stage, results, studyTypes }: {
 
       <Link
         href="/estudios/plan"
-        className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+        className="mt-6 inline-flex items-center gap-1.5 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body underline decoration-dotted"
       >
         Ver todos los estudios y sus compromisos <ArrowRight size={13} />
       </Link>
@@ -1025,7 +1025,7 @@ function StudyCard({
                 </span>
               )}
               {result.by_exception && (
-                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-teal-soft/40 text-teal-deep font-display">
+                <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-teal-soft/40 text-teal-ink font-display">
                   Excepción autorizada
                 </span>
               )}
@@ -1049,7 +1049,7 @@ function StudyCard({
             {result.weeks} semanas
           </span>
           {studyType?.requires_payment && studyType.cost ? (
-            <span className="flex items-center gap-1 text-coral">
+            <span className="flex items-center gap-1 text-coral-deep">
               <DollarSign size={12} />
               {formatMoney(studyType.cost, studyType.currency)}
             </span>
@@ -1064,7 +1064,7 @@ function StudyCard({
             <button
               type="button"
               onClick={onRequestScholarship}
-              className="ml-auto text-[13px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+              className="ml-auto text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body underline decoration-dotted"
             >
               ¿Necesitás ayuda para pagar? Solicitar beca
             </button>
@@ -1106,7 +1106,7 @@ function StudyCard({
                             deuda de ESA persona, no a la suya. */}
                         <Link
                           href={deudaHref}
-                          className="text-coral underline decoration-dotted hover:text-coral-deep"
+                          className="text-coral-deep underline decoration-dotted hover:text-coral-deep"
                         >
                           {deudaHref === '/mis-pagos'
                             ? 'pagalo acá y se habilita al confirmarlo'
@@ -1204,7 +1204,7 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
   )
 
   const precio = group.requires_payment && group.cost
-    ? <span className="text-[13px] font-semibold text-coral font-display">{formatCRC(group.cost)}</span>
+    ? <span className="text-[13px] font-semibold text-coral-deep font-display">{formatCRC(group.cost)}</span>
     : <span className="text-[13px] font-semibold text-teal-deep font-display">Gratuito</span>
 
   const botonMatricular = (
@@ -1220,7 +1220,7 @@ function GroupRow({ group, onEnroll }: { group: EligibleGroup; onEnroll: () => v
     <p className="text-[13px] font-medium text-navy capitalize font-body flex items-center gap-1.5 flex-wrap">
       {group.zone}
       {group.is_virtual && (
-        <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-deep normal-case">
+        <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium font-display bg-teal-soft/40 text-teal-ink normal-case">
           Virtual
         </span>
       )}
@@ -1386,7 +1386,7 @@ function ConfirmModal({
         <div
           className="flex items-start gap-2.5 rounded-xl px-3 py-3 bg-coral/7 border border-coral/20"
         >
-          <AlertCircle size={14} className="text-coral shrink-0 mt-0.5" />
+          <AlertCircle size={14} className="text-coral-deep shrink-0 mt-0.5" />
           <p className="text-[13px] text-navy-light/80 font-body">
             {group.requires_payment && group.cost
               ? 'Al confirmar, te vamos a pedir el comprobante de pago para completar la matrícula.'
@@ -1470,7 +1470,7 @@ function ConfirmModal({
           <PaymentMethodSelector value={paymentMethod} onChange={onPaymentChange} />
         )}
 
-        {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+        {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
         {/* Botones */}
         <div className="flex gap-2 pt-1">

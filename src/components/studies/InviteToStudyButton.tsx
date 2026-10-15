@@ -108,7 +108,7 @@ export function InviteToStudyButton({
                     placeholder="Motivo de la invitación…"
                   />
                 </div>
-                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
                   <button onClick={submit} disabled={!planId || saving} className="flex-1 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors disabled:opacity-40 font-body">{saving ? 'Invitando…' : 'Invitar'}</button>

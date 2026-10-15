@@ -127,7 +127,7 @@ export default function EditarPuestoPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-coral font-body mb-2">{error}</p>
+        <p className="text-sm text-coral-deep font-body mb-2">{error}</p>
       )}
 
       {/* Form card */}

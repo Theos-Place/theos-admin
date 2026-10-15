@@ -101,7 +101,7 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
         />
         {selected && !open ? <StatusBadge status={selected.status} /> : null}
         {value ? (
-          <button type="button" onClick={() => { onChange(null); setQ('') }} className="text-navy-light/80 hover:text-coral shrink-0" aria-label="Limpiar">
+          <button type="button" onClick={() => { onChange(null); setQ('') }} className="text-navy-light/80 hover:text-coral-deep shrink-0" aria-label="Limpiar">
             <X size={14} />
           </button>
         ) : (

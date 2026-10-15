@@ -91,7 +91,7 @@ export default function EventoPublicoPage() {
         <p className="text-sm text-navy-light/80 font-body">
           Puede que ya haya pasado o que el enlace no sea correcto.
         </p>
-        <Link href="/calendario" className="inline-block text-sm text-coral underline decoration-dotted font-body">
+        <Link href="/calendario" className="inline-block text-sm text-coral-deep underline decoration-dotted font-body">
           Ver todos los eventos
         </Link>
       </main>

@@ -130,7 +130,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
               <>
                 {refundBlocked && (
                   <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
-                    <p className="text-[13px] text-coral font-body">
+                    <p className="text-[13px] text-coral-deep font-body">
                       No hay pagos registrados a tu nombre para solicitar una devolución.
                     </p>
                   </div>
@@ -139,7 +139,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                 {!refundBlocked && (
                   <>
                     <div>
-                      <label htmlFor="refund-payment" className={LABEL_CLS}>Pago a devolver <span className="text-coral">*</span></label>
+                      <label htmlFor="refund-payment" className={LABEL_CLS}>Pago a devolver <span className="text-coral-deep">*</span></label>
                       <select id="refund-payment" value={paymentId} onChange={e => setPaymentId(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar pago…</option>
                         {payments.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -147,7 +147,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                     </div>
                     <div>
                       <label htmlFor="finance-reason" className={LABEL_CLS}>
-                        Razón <span className="text-coral">*</span>
+                        Razón <span className="text-coral-deep">*</span>
                       </label>
                       <textarea
                         id="finance-reason"
@@ -164,7 +164,7 @@ export function FinanceRequestActions({ memberId }: { memberId: string }) {
                   </>
                 )}
 
-                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
                 <div className="flex justify-end gap-2 pt-1">
                   <button

@@ -250,7 +250,7 @@ export default function FormulariosPage() {
         {[
           { label: 'Formularios activos',      value: stats.active,             color: 'text-navy' },
           { label: 'Respuestas este mes',       value: stats.responsesThisMonth, color: 'text-teal-deep' },
-          { label: 'Sin respuestas',            value: stats.noResponses,        color: stats.noResponses > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Sin respuestas',            value: stats.noResponses,        color: stats.noResponses > 0 ? 'text-coral-deep' : 'text-navy' },
           { label: 'Promedio respuestas',       value: stats.avg,                color: 'text-navy' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
@@ -513,7 +513,7 @@ export default function FormulariosPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleToggleActive(form.id, true)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-teal-deep hover:bg-teal-soft/20 transition-colors font-body"
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-teal-ink hover:bg-teal-soft/20 transition-colors font-body"
                                   >
                                     <Send size={13} className="text-teal-deep/60" />
                                     Publicar
@@ -545,7 +545,7 @@ export default function FormulariosPage() {
                                         'w-full flex items-center gap-2 px-3 py-2 text-[13px] transition-colors font-body',
                                         motivo
                                           ? 'text-navy-light/40 cursor-not-allowed'
-                                          : 'text-coral hover:bg-coral/5',
+                                          : 'text-coral-deep hover:bg-coral/5',
                                       )}
                                     >
                                       <Trash2 size={13} className={motivo ? 'text-navy-light/40' : 'text-coral/60'} />

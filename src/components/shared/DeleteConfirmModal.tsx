@@ -47,7 +47,7 @@ export function DeleteConfirmModal({
       <div className="p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-[rgba(214,62,61,0.12)]">
-            <Trash2 size={18} className="text-coral" />
+            <Trash2 size={18} className="text-coral-deep" />
           </div>
           <div className="flex-1 min-w-0">
             <p id="delete-confirm-title" className="text-base font-bold text-navy font-display">{title}</p>
@@ -59,7 +59,7 @@ export function DeleteConfirmModal({
 
         <div className="space-y-1.5">
           <label htmlFor="escribi-para-confirmar" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-            Escribí <span className="text-coral font-semibold">{keyword}</span> para confirmar
+            Escribí <span className="text-coral-deep font-semibold">{keyword}</span> para confirmar
           </label>
           <input id="escribi-para-confirmar"
             autoFocus

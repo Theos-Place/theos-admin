@@ -21,7 +21,7 @@ type Invitation = {
 }
 
 const STATUS_LABEL: Record<Invitation['status'], { label: string; cls: string }> = {
-  active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-deep' },
+  active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-ink' },
   used: { label: 'Matriculado', cls: 'bg-navy/10 text-navy' },
   revoked: { label: 'Revocada', cls: 'bg-surface-low text-navy-light/80' },
 }
@@ -74,7 +74,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-4">
       <div className="flex items-center gap-2">
-        <UserPlus size={16} className="text-coral" />
+        <UserPlus size={16} className="text-coral-deep" />
         <h3 className="text-sm font-semibold text-navy font-display">Invitados a este estudio</h3>
       </div>
       <p className="text-[13px] text-navy-light/80 font-body">
@@ -106,7 +106,7 @@ export function PlanInvitations({ planId }: { planId: string }) {
                 onClick={() => revoke(inv.id)}
                 aria-label={`Revocar invitación de ${inv.member_name}`}
                 title="Revocar"
-                className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"
+                className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors"
               >
                 <X size={14} />
               </button>

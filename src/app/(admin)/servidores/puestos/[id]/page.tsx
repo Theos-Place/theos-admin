@@ -156,7 +156,7 @@ export default function VacanteDetailPage() {
           <div className="ph-actions">
             <button className="btn btn-ghost btn-sm" onClick={() => window.location.href = `/servidores/puestos/${id}/editar`}>Editar publicación</button>
             {!vacancyClosed && vacancy.status !== 'despublicada' && (
-              <button className="btn btn-ghost btn-sm text-coral border-[rgba(214,62,61,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
+              <button className="btn btn-ghost btn-sm text-coral-deep border-[rgba(214,62,61,0.3)]" onClick={() => setCloseVacancyOpen(true)}>
                 Bajar de la página
               </button>
             )}
@@ -282,7 +282,7 @@ export default function VacanteDetailPage() {
               ['Pendientes', counts.pending, 'text-amber-600'],
               ['En revisión', counts.reviewing, 'text-navy'],
               ['Aprobadas', counts.approved, 'text-teal-deep'],
-              ['No selec.', counts.rejected, 'text-coral'],
+              ['No selec.', counts.rejected, 'text-coral-deep'],
             ].map(([label, value, color]) => (
               <div
                 key={label as string}

@@ -24,11 +24,15 @@ export function StepSidebar({ step, onStepClick }: StepSidebarProps) {
             <Fragment key={s.num}>
               <button
                 type="button"
+                // Un paso futuro no se puede abrir: se marca como deshabilitado
+                // de verdad, no solo con opacidad. Así el lector de pantalla lo
+                // anuncia y el teclado no se detiene en él.
+                disabled={!(done || active)}
                 onClick={() => (done || active) ? onStepClick(s.num) : undefined}
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
                   active  ? 'bg-surface-low' : '',
-                  (done || active) ? 'cursor-pointer' : 'cursor-default opacity-60',
+                  (done || active) ? 'cursor-pointer' : 'cursor-default disabled:opacity-60',
                 )}
               >
                 <div

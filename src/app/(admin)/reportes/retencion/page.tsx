@@ -40,7 +40,7 @@ export default function ReporteRetencionPage() {
     return (
       <div className="space-y-5">
         <div className="h-8 w-72 rounded-lg bg-surface-card animate-pulse" />
-        {error ? <p className="text-sm text-coral font-body">{error}</p> : (
+        {error ? <p className="text-sm text-coral-deep font-body">{error}</p> : (
           <div className="space-y-4">
             <div className="h-9 w-72 rounded-xl bg-surface-card animate-pulse" />
             <div className="h-72 rounded-2xl bg-surface-card animate-pulse" />
@@ -198,7 +198,7 @@ export default function ReporteRetencionPage() {
 }
 
 function FlowStat({ label, value, sub, tone }: { label: string; value: number; sub?: string; tone: 'navy' | 'teal' | 'coral' | 'muted' }) {
-  const color = tone === 'teal' ? 'text-teal-deep' : tone === 'coral' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/80' : 'text-navy'
+  const color = tone === 'teal' ? 'text-teal-deep' : tone === 'coral' ? 'text-coral-deep' : tone === 'muted' ? 'text-navy-light/80' : 'text-navy'
   const bg = tone === 'teal' ? 'bg-teal-soft/20' : tone === 'coral' ? 'bg-coral/10' : tone === 'muted' ? 'bg-surface-low' : 'bg-surface-low'
   return (
     <div className={cn('rounded-2xl p-4 shadow-[var(--shadow-md)]', bg)}>

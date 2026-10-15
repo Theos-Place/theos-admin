@@ -98,7 +98,7 @@ export function RowActionsMenu({
           {actions.map((a, i) => {
             const cls = cn(
               'w-full flex items-center gap-2 px-3 py-2.5 text-left text-[13px] transition-colors',
-              a.danger ? 'text-coral hover:bg-coral/5' : 'text-navy hover:bg-surface-low',
+              a.danger ? 'text-coral-deep hover:bg-coral/5' : 'text-navy hover:bg-surface-low',
             )
             return a.href ? (
               <Link key={i} href={a.href} role="menuitem" onClick={() => setOpen(false)} className={cls}>

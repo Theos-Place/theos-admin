@@ -316,7 +316,7 @@ function PagosContent() {
               "Por tarjeta"/"Por SINPE" se reactivan cuando se implementen. */}
           {[
             { label: 'Total cobrado', value: totalPaid, color: '#161440' },
-            { label: 'Pendientes', value: totalPending, color: '#E9B949' },
+            { label: 'Pendientes', value: totalPending, color: '#7F6210' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
               <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
@@ -482,7 +482,7 @@ function PagosContent() {
                       {p.member_id ? (
                         <Link
                           href={`/miembros/${p.member_id}`}
-                          className="text-[13px] font-medium font-body text-navy hover:text-coral transition-colors underline decoration-dotted underline-offset-2"
+                          className="text-[13px] font-medium font-body text-navy hover:text-coral-deep transition-colors underline decoration-dotted underline-offset-2"
                         >
                           {p.member_name}
                         </Link>
@@ -539,7 +539,7 @@ function PagosContent() {
                         {canFinanceEdit && p.status === 'paid' && (
                           <button
                             onClick={() => setRefundTarget(p)}
-                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
+                            className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral-deep font-body"
                           >
                             Devolver
                           </button>
@@ -602,7 +602,7 @@ function PagosContent() {
                   {canFinanceEdit && p.status === 'paid' && (
                     <button
                       onClick={() => setRefundTarget(p)}
-                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral font-body"
+                      className="rounded-lg border px-3 py-1.5 text-[13px] transition-colors whitespace-nowrap border-[rgba(214,62,61,0.30)] text-coral-deep font-body"
                     >
                       Devolver
                     </button>

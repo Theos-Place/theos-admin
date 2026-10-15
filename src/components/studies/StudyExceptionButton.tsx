@@ -167,12 +167,12 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                       <p className="text-[13px] text-navy-light/80 font-body">
                         Exime: {e.waived_requirements.map(r => REQ_LABEL[r] ?? r).join(', ')}
                       </p>
-                      <p className={`text-[13px] font-body ${e.vigente === false ? 'text-coral' : 'text-navy-light/80'}`}>
+                      <p className={`text-[13px] font-body ${e.vigente === false ? 'text-coral-deep' : 'text-navy-light/80'}`}>
                         {etiquetaVigencia({ cierreMatricula: e.cierre_matricula, bloqueNombre: e.bloque_nombre, hoy })}
                       </p>
                       {e.granted_by_name && <p className="text-[13px] text-navy-light/80 font-body">Otorgada por {e.granted_by_name}</p>}
                     </div>
-                    <button onClick={() => revoke(e.id)} aria-label="Revocar excepción" className="shrink-0 rounded-lg p-1 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors">
+                    <button onClick={() => revoke(e.id)} aria-label="Revocar excepción" className="shrink-0 rounded-lg p-1 text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors">
                       <X size={15} />
                     </button>
                   </div>
@@ -268,7 +268,7 @@ export function StudyExceptionButton({ memberId, memberName = 'esta persona' }: 
                 </p>
               </div>
 
-              {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+              {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
               <div className="flex gap-2">
                 <button onClick={close} className="flex-1 rounded-full border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cerrar</button>
                 <button

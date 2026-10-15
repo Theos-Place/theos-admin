@@ -180,7 +180,7 @@ export default function DisponibilidadDirigentesPage() {
                         <dd className="text-sm font-body">
                           <span className={cn(
                             'rounded-full px-2 py-0.5 text-[13px] font-medium',
-                            r.leader.is_active ? 'bg-teal-soft/30 text-teal-deep' : 'bg-navy/10 text-navy-light',
+                            r.leader.is_active ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/10 text-navy-light',
                           )}>
                             {LEADER_STATUS_LABEL[r.leader.availability_status as LeaderStatus] ?? r.leader.availability_status}
                             {!r.leader.is_active && ' · inactivo'}

@@ -359,8 +359,8 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
         <div className="space-y-4">
           {triedNext && (unevaluated > 0 || faltanMotivos.length > 0) && (
             <div className="flex items-start gap-2 rounded-xl bg-coral/10 px-4 py-3" role="alert">
-              <AlertTriangle size={16} className="text-coral shrink-0 mt-0.5" />
-              <p className="text-sm text-coral font-body">
+              <AlertTriangle size={16} className="text-coral-deep shrink-0 mt-0.5" />
+              <p className="text-sm text-coral-deep font-body">
                 {unevaluated > 0 && `${unevaluated} estudiante${unevaluated > 1 ? 's' : ''} sin estado asignado. `}
                 {faltanMotivosMsg}
               </p>
@@ -428,7 +428,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                   {/* Justificación obligatoria al reprobar */}
                   {r.status_result === 'reprobado' && (
                     <div>
-                      <label htmlFor={`fail-${r.member_id}`} className="block text-[13px] font-medium text-coral font-body mb-1">
+                      <label htmlFor={`fail-${r.member_id}`} className="block text-[13px] font-medium text-coral-deep font-body mb-1">
                         Explicá por qué <span aria-hidden>*</span>
                       </label>
                       <textarea
@@ -452,7 +452,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                       {/* Coral y con el asterisco fuera del texto, igual que la
                           justificación del reprobado: eran las dos obligatorias
                           pero solo una se veía como tal (EST-14). */}
-                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[13px] font-medium text-coral font-body mb-1">
+                      <label htmlFor={`withdraw-${r.member_id}`} className="block text-[13px] font-medium text-coral-deep font-body mb-1">
                         Motivo del retiro <span aria-hidden>*</span>
                       </label>
                       <textarea
@@ -480,13 +480,13 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                         <button
                           type="button"
                           onClick={() => setCdebTarget({ id: r.member_id, name: r.member_name })}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 px-3 py-1.5 text-[13px] text-coral hover:bg-coral/5 transition-colors font-body"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-coral/40 px-3 py-1.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors font-body"
                         >
                           <Sparkles size={12} /> {saved ? 'Editar recomendación a CDEB' : 'Recomendar para CDEB'}
                         </button>
                         {saved && (
                           <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display',
-                            saved.status === 'enviada' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-amber-50 text-amber-700')}>
+                            saved.status === 'enviada' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-amber-50 text-amber-700')}>
                             {saved.status === 'enviada' ? 'Enviada al comité' : 'Borrador guardado'}
                           </span>
                         )}
@@ -575,7 +575,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: 'Aprobados', value: aprobados, color: 'text-teal-deep' },
-                { label: 'Reprobados', value: reprobados, color: 'text-coral' },
+                { label: 'Reprobados', value: reprobados, color: 'text-coral-deep' },
                 { label: 'Retirados', value: retirados, color: 'text-navy-light/80' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="text-center rounded-xl p-3 bg-surface-low">
@@ -596,7 +596,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
 
               {autoPromotable && studyType && (
                 <div className="flex items-start gap-2">
-                  <Star size={14} className="text-coral mt-0.5 shrink-0" />
+                  <Star size={14} className="text-coral-deep mt-0.5 shrink-0" />
                   <p className="text-sm text-navy-light/80 font-body">
                     <strong className="text-navy">{aprobados}</strong> estudiantes califican para transición automática a{' '}
                     <strong className="text-navy">{studyType.next_study_id}</strong>
@@ -755,7 +755,7 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
 
           {/* Advertencia: el cierre es irreversible. */}
           <div className="rounded-2xl p-5 bg-coral/5 border border-coral/20 flex items-start gap-3">
-            <AlertTriangle size={18} className="text-coral mt-0.5 shrink-0" />
+            <AlertTriangle size={18} className="text-coral-deep mt-0.5 shrink-0" />
             <p className="text-[13px] text-navy-light/80 leading-relaxed font-body">
               Estás a punto de cerrar este grupo. Esta acción es <strong className="text-navy">definitiva y no se puede deshacer</strong>:
               se registrarán las calificaciones y recomendaciones, y el grupo quedará finalizado.

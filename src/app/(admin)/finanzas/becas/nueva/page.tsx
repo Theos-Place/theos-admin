@@ -228,7 +228,7 @@ export default function NuevoCuponPage() {
                 </div>
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-navy-light/80">Descuento ({discountType === 'percentage' ? `${percentage}%` : 'fijo'}):</span>
-                  <span className="text-coral">-{formatCRC(discountAmount)}</span>
+                  <span className="text-coral-deep">-{formatCRC(discountAmount)}</span>
                 </div>
                 <div className="h-px bg-navy/10" />
                 <div className="flex justify-between text-sm font-bold font-body">

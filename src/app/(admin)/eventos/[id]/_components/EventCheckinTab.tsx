@@ -108,7 +108,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                 </div>
                 <span className={cn(
                   'rounded-md px-2 py-0.5 text-[11px] font-medium',
-                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-deep'
+                  ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-ink'
                 )}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
                 </span>
@@ -117,7 +117,7 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                     onClick={() => setToUndo(ci)}
                     aria-label={`Deshacer check-in de ${ci.member_name}`}
                     title="Deshacer check-in"
-                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"
+                    className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>

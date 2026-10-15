@@ -160,7 +160,7 @@ export default function HojaDelViaje({ params }: { params: Promise<{ id: string 
 function AnexoEnPapel({ anexo, primero }: { anexo: AnexoImpreso; primero: boolean }) {
   return (
     <section className={`border-t border-navy/10 px-10 py-6 ${primero ? '' : 'print:break-before-page'}`}>
-      <p className="text-[11px] tracking-widest uppercase text-coral font-display">{anexo.codigo}</p>
+      <p className="text-[11px] tracking-widest uppercase text-coral-deep font-display">{anexo.codigo}</p>
       <h2 className="text-lg font-bold text-navy font-display">{anexo.titulo}</h2>
 
       <div className="mt-3 space-y-4">

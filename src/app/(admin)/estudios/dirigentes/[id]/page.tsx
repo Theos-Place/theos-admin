@@ -240,7 +240,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
             <p className="text-sm text-navy-light/80 font-body mt-1">
               {d.total_grupos} grupos liderados · {d.total_activos} activos · {totalStudents} estudiantes en total
             </p>
-            <Link href={`/miembros/${d.member_id}`} className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors font-body mt-2">
+            <Link href={`/miembros/${d.member_id}`} className="inline-flex items-center gap-1 text-xs text-coral-deep hover:text-coral-deep transition-colors font-body mt-2">
               Ver perfil del miembro <ExternalLink size={12} />
             </Link>
           </div>
@@ -320,12 +320,12 @@ function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; edi
       {badges.map(b => b.value.startsWith('GRP:') ? (
         <span key={b.value} className="inline-flex items-center gap-1 rounded-full bg-navy/[0.06] px-2.5 py-0.5 text-[13px] text-navy font-body font-semibold">
           {b.label}
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral"><X size={11} /></button>}
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
         </span>
       ) : (
         <span key={b.value} className="inline-flex items-center gap-1">
           <StudyTypeBadge code={b.codes[0]} size="sm" />
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral"><X size={12} /></button>}
+          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={12} /></button>}
         </span>
       ))}
     </>
@@ -434,7 +434,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           {zones.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
               {sedeName(id)}
-              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/80 hover:text-coral"><X size={11} /></button>}
+              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
             </span>
           ))}
         </div>

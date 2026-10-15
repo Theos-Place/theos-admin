@@ -147,7 +147,7 @@ export default function ReporteAsistenciaPage() {
       <div className="space-y-5">
         <div className="h-8 w-64 rounded-lg bg-surface-card animate-pulse" />
         {error ? (
-          <p className="text-sm text-coral font-body">{error}</p>
+          <p className="text-sm text-coral-deep font-body">{error}</p>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-5">
             <div className="hidden lg:block h-64 rounded-2xl bg-surface-card animate-pulse" />
@@ -566,7 +566,7 @@ function MiniStat({ label, value, sub, tone = 'default' }: {
   sub?: string
   tone?: 'default' | 'up' | 'down' | 'muted'
 }) {
-  const valueColor = tone === 'up' ? 'text-teal-deep' : tone === 'down' ? 'text-coral' : tone === 'muted' ? 'text-navy-light/80' : 'text-navy'
+  const valueColor = tone === 'up' ? 'text-teal-deep' : tone === 'down' ? 'text-coral-deep' : tone === 'muted' ? 'text-navy-light/80' : 'text-navy'
   return (
     <div className="flex items-baseline justify-between gap-2">
       <p className="text-[13px] text-navy-light/80 font-body">{label}</p>

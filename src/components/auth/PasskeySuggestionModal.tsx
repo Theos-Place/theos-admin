@@ -54,8 +54,8 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
 
         <div className="mx-auto h-14 w-14 rounded-2xl flex items-center justify-center mb-4 bg-coral/10">
           {phase === 'success'
-            ? <Check size={28} className="text-coral" />
-            : <Fingerprint size={28} className="text-coral" />}
+            ? <Check size={28} className="text-coral-deep" />
+            : <Fingerprint size={28} className="text-coral-deep" />}
         </div>
 
         {phase === 'success' ? (
@@ -73,7 +73,7 @@ export function PasskeySuggestionModal({ onDone }: { onDone: () => void }) {
           </>
         ) : phase === 'error' ? (
           <>
-            <div className="mx-auto -mt-1 mb-2 flex items-center justify-center text-coral">
+            <div className="mx-auto -mt-1 mb-2 flex items-center justify-center text-coral-deep">
               <AlertCircle size={18} />
             </div>
             <h2 id="passkey-suggestion-title" className="text-lg font-bold text-navy font-display">No se pudo activar</h2>

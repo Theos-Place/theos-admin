@@ -208,7 +208,7 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
               <button
                 type="button"
                 onClick={() => onEndDateChange('')}
-                className="shrink-0 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+                className="shrink-0 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
               >
                 Quitar
               </button>

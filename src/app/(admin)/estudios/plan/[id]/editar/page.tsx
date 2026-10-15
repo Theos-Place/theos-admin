@@ -218,7 +218,7 @@ function EditarForm({ studyType }: { studyType: StudyType }) {
                   <button
                     type="button"
                     onClick={() => setForm(p => ({ ...p, mentor_id: '', mentor_name: '' }))}
-                    className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
+                    className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body"
                   >
                     <X size={13} /> Quitar
                   </button>

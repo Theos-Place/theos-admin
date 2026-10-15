@@ -66,7 +66,7 @@ export const ETIQUETA_ESTADO_BECA: Record<'active' | 'used' | 'revoked', string>
 /** Verde = plata ya aplicada; ámbar = compromiso vivo pendiente; coral = anulada. */
 export const BADGE_USO: Record<Uso, string> = {
   sin_usar: 'bg-amber-50 text-amber-700',
-  usada: 'bg-teal-soft/30 text-teal-deep',
+  usada: 'bg-teal-soft/30 text-teal-ink',
   revocada: 'bg-coral/10 text-coral-deep',
 }
 

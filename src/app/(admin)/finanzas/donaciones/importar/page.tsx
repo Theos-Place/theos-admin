@@ -229,7 +229,7 @@ export default function ImportarDonacionesPage() {
                     <label key={c} className="space-y-1 block">
                       <span className="text-[13px] text-navy-light/80 font-body">
                         {ETIQUETA[c]}
-                        {(c === 'fecha' || c === 'nombre') && <span className="text-coral"> *</span>}
+                        {(c === 'fecha' || c === 'nombre') && <span className="text-coral-deep"> *</span>}
                       </span>
                       <select
                         className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
@@ -301,8 +301,8 @@ export default function ImportarDonacionesPage() {
                       </div>
                       <span className={cn(chip,
                         f.duplicada ? 'bg-navy/10 text-navy-light'
-                          : m.estado === 'por_cedula' ? 'bg-teal-soft/40 text-teal-deep'
-                          : m.estado === 'por_nombre' ? 'bg-teal-soft/30 text-teal-deep'
+                          : m.estado === 'por_cedula' ? 'bg-teal-soft/40 text-teal-ink'
+                          : m.estado === 'por_nombre' ? 'bg-teal-soft/30 text-teal-ink'
                           : m.estado === 'ambiguo' ? 'bg-coral/10 text-coral-deep'
                           : 'bg-navy/5 text-navy-light')}>
                         {f.duplicada ? 'ya estaba'

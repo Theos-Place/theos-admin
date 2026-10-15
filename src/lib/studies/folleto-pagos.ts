@@ -32,6 +32,6 @@ export function resumenPagos(c: ConteoPagos | undefined): ResumenPago {
 
 export const RESUMEN_PAGO_BADGE: Record<ResumenPago['tono'], string> = {
   ninguno: 'bg-navy-light/10 text-navy-light/80',
-  listo: 'bg-teal-soft/30 text-teal-deep',
+  listo: 'bg-teal-soft/30 text-teal-ink',
   parcial: 'bg-amber-50 text-amber-700',
 }

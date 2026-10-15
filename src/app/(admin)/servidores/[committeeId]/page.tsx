@@ -744,7 +744,7 @@ function DirigentesEstudiosTab({ members }: { members: CommitteeServer[] }) {
             <span className="shrink-0 text-xs text-navy-light/80 font-body">
               {r.total} grupo{r.total === 1 ? '' : 's'} · {r.activos} activo{r.activos === 1 ? '' : 's'}
             </span>
-            <span className="shrink-0 inline-flex items-center gap-1 text-xs text-coral font-body">Ver dirigente →</span>
+            <span className="shrink-0 inline-flex items-center gap-1 text-xs text-coral-deep font-body">Ver dirigente →</span>
           </Link>
         ))}
         {rows.length === 0 && (

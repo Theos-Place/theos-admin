@@ -113,7 +113,7 @@ export default function EditarVacantePage() {
         </div>
       </div>
 
-      {error && <p className="text-sm text-coral font-body mb-2">{error}</p>}
+      {error && <p className="text-sm text-coral-deep font-body mb-2">{error}</p>}
 
       {/* Contenido del PUESTO (solo lectura): para cambiarlo, editá el puesto. */}
       {(desc || funcs || profile || skills || nivel) && (

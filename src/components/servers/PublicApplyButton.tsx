@@ -50,7 +50,7 @@ export function PublicApplyButton({ vacancyId, className, volverA }: {
 
   if (state === 'done' || state === 'already') {
     return (
-      <span className={cn('inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-4 py-2 text-sm text-teal-deep font-body', className)}>
+      <span className={cn('inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-4 py-2 text-sm text-teal-ink font-body', className)}>
         <Check size={15} />
         {state === 'done' ? 'Aplicación enviada' : 'Ya aplicaste'}
       </span>

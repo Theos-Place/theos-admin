@@ -63,7 +63,7 @@ export { ACCOUNT_STATE_LABEL }
  *  nunca ha entrado y activa (ver src/lib/members/account-state.ts). */
 export function AccountBadge({ state }: { state: Member['account_state'] }) {
   const cfg = {
-    active:        { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-deep', label: ACCOUNT_STATE_LABEL.active },
+    active:        { Icon: UserCheck, cls: 'bg-teal-soft/30 text-teal-ink', label: ACCOUNT_STATE_LABEL.active },
     never_entered: { Icon: Clock,     cls: 'bg-amber-100 text-amber-700',    label: ACCOUNT_STATE_LABEL.never_entered },
     none:          { Icon: UserX,     cls: 'bg-surface-low text-navy-light/80', label: ACCOUNT_STATE_LABEL.none },
   }[state]

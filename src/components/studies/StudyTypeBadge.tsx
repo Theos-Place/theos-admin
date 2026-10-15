@@ -13,7 +13,7 @@ const STAGE_OVERRIDE: Record<string, StudyStage> = {
 }
 const STAGE_COLOR: Record<StudyStage, string> = {
   niveles:    'bg-navy/10 text-navy',
-  inicial:    'bg-teal-soft/30 text-teal-deep', // etapa inicial = verde/teal
+  inicial:    'bg-teal-soft/30 text-teal-ink', // etapa inicial = verde/teal
   intermedia: 'bg-coral/10 text-coral-deep',
   avanzada:   'bg-amber-50 text-amber-700', // EST-5: solo por invitación
   campaña:    'bg-purple-100 text-purple-700',

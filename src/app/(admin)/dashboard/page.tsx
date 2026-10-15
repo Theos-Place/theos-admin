@@ -203,7 +203,7 @@ function ModuleCard({
           )
           return row.href ? (
             <Link key={i} href={row.href} className="flex items-center justify-between rounded-lg -mx-1 px-1 py-0.5 hover:bg-surface-low transition-colors">
-              <span className="text-[13px] text-coral font-body">{row.label} →</span>
+              <span className="text-[13px] text-coral-deep font-body">{row.label} →</span>
               <div className="flex items-center gap-2">{valueEl}</div>
             </Link>
           ) : (
@@ -215,7 +215,7 @@ function ModuleCard({
         })}
       </div>
       <Link href={href}
-        className="flex items-center gap-1 text-[13px] font-medium transition-colors hover:opacity-80 text-coral font-body">
+        className="flex items-center gap-1 text-[13px] font-medium transition-colors hover:opacity-80 text-coral-deep font-body">
         {hrefLabel} <ChevronRight size={13} />
       </Link>
     </div>
@@ -405,7 +405,7 @@ export default function DashboardPage() {
           )}
 
           <Link href="/eventos"
-            className="flex items-center gap-1 text-[13px] font-medium text-coral font-body">
+            className="flex items-center gap-1 text-[13px] font-medium text-coral-deep font-body">
             Ver todos los eventos <ChevronRight size={13} />
           </Link>
         </div>
@@ -447,7 +447,7 @@ export default function DashboardPage() {
           )}
 
           <Link href="/eventos"
-            className="flex items-center gap-1 text-[13px] font-medium text-coral font-body">
+            className="flex items-center gap-1 text-[13px] font-medium text-coral-deep font-body">
             Ir a check-in <ChevronRight size={13} />
           </Link>
         </div>
@@ -552,7 +552,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <Link href="/finanzas"
-              className="flex items-center gap-1 text-[13px] font-medium text-coral font-body">
+              className="flex items-center gap-1 text-[13px] font-medium text-coral-deep font-body">
               Ver finanzas → <ChevronRight size={13} />
             </Link>
           </div>
@@ -686,7 +686,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
           ))}
         </div>
         <Link href="/servidores"
-          className="flex items-center gap-1 text-[13px] font-medium text-coral font-body">
+          className="flex items-center gap-1 text-[13px] font-medium text-coral-deep font-body">
           Gestionar mi comité → <ChevronRight size={13} />
         </Link>
       </div>
@@ -703,7 +703,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
         <div className="grid grid-cols-3 gap-4 mb-3">
           {[
             { label: 'Activos',         value: '47', color: '#3DB97A' },
-            { label: 'En descanso',     value: '8',  color: '#E9B949' },
+            { label: 'En descanso',     value: '8',  color: '#7F6210' },
             { label: 'Disponibles',     value: '3',  color: '#3B7579' },
           ].map((s, i) => (
             <div key={i} className="text-center p-3 rounded-xl bg-[rgba(22,20,64,0.02)]">
@@ -717,7 +717,7 @@ function RoleSpecificModule({ hasRole }: { hasRole: (...ids: RoleId[]) => boolea
             1 evaluación baja (≤2)
           </span>
           <Link href="/estudios/dirigentes"
-            className="text-[13px] font-medium text-coral font-body">
+            className="text-[13px] font-medium text-coral-deep font-body">
             Ver dirigentes →
           </Link>
         </div>
@@ -771,7 +771,7 @@ function DirigenteGroupsModule() {
               </div>
             </div>
             <Link href={`/estudios/grupos/${g.id}`}
-              className="text-[13px] font-medium text-coral shrink-0 font-body">
+              className="text-[13px] font-medium text-coral-deep shrink-0 font-body">
               Ver grupo →
             </Link>
           </div>

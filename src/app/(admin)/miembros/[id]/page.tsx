@@ -323,7 +323,7 @@ export default function MiembroDetailPage() {
   if (esFaltaDeAcceso(error)) return <SinAcceso que="esta ficha" />
   if (error) {
     return (
-      <div className="p-8 text-center text-coral font-body">
+      <div className="p-8 text-center text-coral-deep font-body">
         Error cargando miembro: {error}
       </div>
     )
@@ -627,11 +627,11 @@ function MergeMemberModal({ keepId, keepName, onClose, onMerged }: {
             <p className="text-[13px] text-navy-light/80 font-body">
               {picked.cedula ? `Cédula ${picked.cedula}` : 'Sin cédula'}{picked.email ? ` · ${picked.email}` : ''}
             </p>
-            <button onClick={() => setPicked(null)} className="mt-2 text-[13px] text-coral hover:underline font-body">Elegir otro</button>
+            <button onClick={() => setPicked(null)} className="mt-2 text-[13px] text-coral-deep hover:underline font-body">Elegir otro</button>
           </div>
         )}
 
-        {err && <p className="text-sm text-coral font-body">{err}</p>}
+        {err && <p className="text-sm text-coral-deep font-body">{err}</p>}
 
         <div className="flex gap-2 pt-1">
           <button onClick={onClose} className="flex-1 rounded-xl border py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">

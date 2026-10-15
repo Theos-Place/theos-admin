@@ -59,7 +59,7 @@ export function ModalAjusteSalarial({
               <p className="text-sm text-navy font-mono">{currentSalary != null ? `${formatCRC(currentSalary)}` : '₡ ••••••'}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Nuevo salario <span className="text-coral">*</span></span>
+              <span className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Nuevo salario <span className="text-coral-deep">*</span></span>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">₡</span>
                 <input
@@ -71,11 +71,11 @@ export function ModalAjusteSalarial({
                 />
               </div>
               {raiseAmount && parseFloat(raiseAmount) <= (currentSalary ?? 0) && (
-                <p className="text-[13px] text-coral font-body">El nuevo salario debe ser mayor al actual.</p>
+                <p className="text-[13px] text-coral-deep font-body">El nuevo salario debe ser mayor al actual.</p>
               )}
             </div>
             <div className="space-y-1">
-              <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo <span className="text-coral">*</span></label>
+              <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo <span className="text-coral-deep">*</span></label>
               <input id="motivo"
                 className={cn(inputCls, 'font-body')}
                 placeholder="Ej: Ajuste por desempeño"
@@ -84,7 +84,7 @@ export function ModalAjusteSalarial({
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="fecha-efectiva" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral">*</span></label>
+              <label htmlFor="fecha-efectiva" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral-deep">*</span></label>
               <input id="fecha-efectiva"
                 type="date"
                 className={cn(inputCls, 'font-body')}

@@ -129,7 +129,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
       <p className={SECTION_TITLE}>Cambiar contraseña</p>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral-deep font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
@@ -193,7 +193,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
             </button>
           </div>
           {confirmErr && (
-            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral-deep font-body">
               <AlertCircle size={12} className="shrink-0" /> {confirmErr}
             </p>
           )}
@@ -299,7 +299,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
       </div>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral-deep font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
@@ -340,7 +340,7 @@ function PasskeysCard({ onSave }: { onSave: (msg: string) => void }) {
               </div>
               <button
                 onClick={() => setToDelete(pk)}
-                className="flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
+                className="flex items-center gap-1 text-[13px] text-coral-deep hover:text-coral-deep transition-colors shrink-0 font-body"
                 aria-label="Eliminar passkey"
               >
                 <Trash2 size={13} /> Eliminar
@@ -479,7 +479,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
       <p className={SECTION_TITLE}>Autenticación en dos pasos</p>
 
       {error && (
-        <p className="flex items-center gap-1.5 text-[13px] text-coral font-body">
+        <p className="flex items-center gap-1.5 text-[13px] text-coral-deep font-body">
           <AlertCircle size={12} className="shrink-0" /> {error}
         </p>
       )}
@@ -512,7 +512,7 @@ function TotpCard({ onSave }: { onSave: (msg: string) => void }) {
             </div>
             <button
               onClick={() => setShowDisable(true)}
-              className="text-[13px] text-coral hover:text-coral-deep transition-colors shrink-0 font-body"
+              className="text-[13px] text-coral-deep hover:text-coral-deep transition-colors shrink-0 font-body"
             >
               Desactivar
             </button>

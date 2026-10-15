@@ -126,7 +126,7 @@ export default function CierresPrematrimonialesPage() {
           </p>
         </div>
 
-        {error && <p className="text-sm text-coral font-body">{error}</p>}
+        {error && <p className="text-sm text-coral-deep font-body">{error}</p>}
 
         {datos && datos.total > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

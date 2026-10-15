@@ -255,7 +255,7 @@ export default function ReporteEstudiosPage() {
                           <button
                             type="button"
                             onClick={() => setPlan(plan === p.code ? '' : p.code)}
-                            className="text-left hover:text-coral hover:underline bg-transparent border-0 cursor-pointer font-body"
+                            className="text-left hover:text-coral-deep hover:underline bg-transparent border-0 cursor-pointer font-body"
                           >
                             {p.nombre}
                           </button>

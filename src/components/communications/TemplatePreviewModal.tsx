@@ -61,7 +61,7 @@ export function TemplatePreviewBody({
                   {categoryLabel(template.category)}
                 </span>
                 {template.is_system && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[11px] font-semibold font-display">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-ink px-2.5 py-0.5 text-[11px] font-semibold font-display">
                     <Lock size={9} /> Del sistema
                   </span>
                 )}

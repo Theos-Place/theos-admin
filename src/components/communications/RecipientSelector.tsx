@@ -289,7 +289,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                   audPreset === key ? 'border-coral bg-coral/[0.06]' : 'border-[var(--outline-variant)] hover:bg-surface-low',
                 )}
               >
-                <span className={cn('text-[13px] font-medium font-body', audPreset === key ? 'text-coral' : 'text-navy')}>{label}</span>
+                <span className={cn('text-[13px] font-medium font-body', audPreset === key ? 'text-coral-deep' : 'text-navy')}>{label}</span>
               </button>
             ))}
           </div>
@@ -366,7 +366,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                 >
                   {m.first_name} {m.last_name}
                   <button type="button" onClick={() => removeMember(m.id)}>
-                    <X size={12} className="text-navy-light/80 hover:text-coral" />
+                    <X size={12} className="text-navy-light/80 hover:text-coral-deep" />
                   </button>
                 </span>
               ))}
@@ -459,7 +459,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                   onClick={() => { setEventSource(src); setGroupEvent(value.groupId, src) }}
                   className={cn(
                     'flex-1 rounded-xl border px-3 py-2 text-[13px] font-body transition-colors',
-                    eventSource === src ? 'border-coral bg-coral/[0.06] text-coral' : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
+                    eventSource === src ? 'border-coral bg-coral/[0.06] text-coral-deep' : 'border-[var(--outline-variant)] text-navy-light hover:bg-surface-low',
                   )}
                 >
                   {label}

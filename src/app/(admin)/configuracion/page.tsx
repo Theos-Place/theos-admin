@@ -136,7 +136,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
   if (error || !prefs) {
     return (
       <div className="rounded-2xl p-6 bg-surface-card shadow-card">
-        <p className="text-sm text-coral font-body">
+        <p className="text-sm text-coral-deep font-body">
           {error ?? 'No se pudieron cargar tus preferencias.'}
         </p>
       </div>
@@ -176,7 +176,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
             <p className="text-sm font-medium text-navy font-body">Suscripción por email</p>
             <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">Newsletters, invitaciones a eventos y campañas</p>
             {emailBlocked && (
-              <p className="text-[13px] text-coral mt-1 font-body">
+              <p className="text-[13px] text-coral-deep mt-1 font-body">
                 Tu correo presentó problemas de entrega. Contacta a Theos Place para reactivarlo.
               </p>
             )}

@@ -36,7 +36,7 @@ function ScaleRow({ label, value, onChange, allowX }: {
   const options = ['1', '2', '3', '4', '5', ...(allowX ? ['x'] : [])]
   return (
     <div>
-      <span className={LABEL}>{label} <span className="text-coral">*</span></span>
+      <span className={LABEL}>{label} <span className="text-coral-deep">*</span></span>
       <div className="flex flex-wrap gap-1.5" role="group" aria-label={label}>
         {options.map(o => (
           <button
@@ -144,7 +144,7 @@ export function CdebRecommendationModal({
       <div className="max-h-[85vh] overflow-y-auto p-6 space-y-5">
         <div className="space-y-2">
           <h2 id="cdeb-title" className="text-base font-bold text-navy font-display inline-flex items-center gap-2">
-            <Sparkles size={16} className="text-coral" /> Recomendar a {member.name} para CDEB
+            <Sparkles size={16} className="text-coral-deep" /> Recomendar a {member.name} para CDEB
           </h2>
           <div className="rounded-xl bg-teal/8 border border-teal/20 px-4 py-3 space-y-1">
             {HEADER_TEXT.map((t, i) => (
@@ -177,7 +177,7 @@ export function CdebRecommendationModal({
                         aria-pressed={!flag}
                         onClick={() => setStance(t.value, null)}
                         className={cn('rounded-full px-2.5 py-1 text-[13px] font-body border transition-colors',
-                          !flag ? 'bg-teal/15 text-teal-deep border-teal/40' : 'bg-white text-navy-light/80 border-navy/15')}
+                          !flag ? 'bg-teal/15 text-teal-ink border-teal/40' : 'bg-white text-navy-light/80 border-navy/15')}
                       >
                         Convicción firme
                       </button>
@@ -214,13 +214,13 @@ export function CdebRecommendationModal({
         {/* Escalas + textos */}
         <ScaleRow label={TESTIMONY_LABEL} value={f.testimony_score} onChange={v => set('testimony_score', v)} allowX={allowX} />
         <div>
-          <label htmlFor="cdeb-testimony" className={LABEL}>{TESTIMONY_TEXT_LABEL} <span className="text-coral">*</span></label>
+          <label htmlFor="cdeb-testimony" className={LABEL}>{TESTIMONY_TEXT_LABEL} <span className="text-coral-deep">*</span></label>
           <textarea id="cdeb-testimony" value={f.testimony_notes ?? ''} onChange={e => set('testimony_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/80')} />
         </div>
 
         <ScaleRow label={PASSION_LABEL} value={f.passion_score} onChange={v => set('passion_score', v)} allowX={allowX} />
         <div>
-          <label htmlFor="cdeb-passion" className={LABEL}>{PASSION_TEXT_LABEL} <span className="text-coral">*</span></label>
+          <label htmlFor="cdeb-passion" className={LABEL}>{PASSION_TEXT_LABEL} <span className="text-coral-deep">*</span></label>
           <textarea id="cdeb-passion" value={f.passion_notes ?? ''} onChange={e => set('passion_notes', e.target.value)} rows={2} placeholder={NA_HINT} className={cn(INPUT, 'resize-none placeholder:text-navy-light/80')} />
         </div>
 
@@ -228,7 +228,7 @@ export function CdebRecommendationModal({
 
         <ScaleRow label={SPEECH_LABEL} value={f.speech_score} onChange={v => set('speech_score', v)} allowX={false} />
         <div>
-          <label htmlFor="cdeb-speech" className={LABEL}>{SPEECH_TEXT_LABEL} <span className="text-coral">*</span></label>
+          <label htmlFor="cdeb-speech" className={LABEL}>{SPEECH_TEXT_LABEL} <span className="text-coral-deep">*</span></label>
           <textarea id="cdeb-speech" value={f.speech_notes ?? ''} onChange={e => set('speech_notes', e.target.value)} rows={2} className={cn(INPUT, 'resize-none')} />
         </div>
 
@@ -238,13 +238,13 @@ export function CdebRecommendationModal({
         </div>
 
         <div>
-          <label htmlFor="cdeb-committee" className={LABEL}>{COMMITTEE_TEXT_LABEL} <span className="text-coral">*</span></label>
+          <label htmlFor="cdeb-committee" className={LABEL}>{COMMITTEE_TEXT_LABEL} <span className="text-coral-deep">*</span></label>
           <textarea id="cdeb-committee" value={f.committee_notes ?? ''} onChange={e => set('committee_notes', e.target.value)} rows={3} className={cn(INPUT, 'resize-none')} />
         </div>
 
         {/* Recomendación final */}
         <div>
-          <span className={LABEL}>{RECOMMENDATION_LABEL} <span className="text-coral">*</span></span>
+          <span className={LABEL}>{RECOMMENDATION_LABEL} <span className="text-coral-deep">*</span></span>
           <div className="space-y-2">
             {RECOMMENDATION_OPTIONS.map(o => (
               <button
@@ -262,7 +262,7 @@ export function CdebRecommendationModal({
           {/* Con "otro estudio primero" el dirigente indica CUÁL (obligatorio al enviar). */}
           {f.recommendation === 'si_otro_estudio' && (
             <div className="mt-2">
-              <label htmlFor="cdeb-prior-study" className={LABEL}>¿Cuál estudio debería llevar primero? <span className="text-coral">*</span></label>
+              <label htmlFor="cdeb-prior-study" className={LABEL}>¿Cuál estudio debería llevar primero? <span className="text-coral-deep">*</span></label>
               <select
                 id="cdeb-prior-study"
                 value={f.recommended_prior_study ?? ''}

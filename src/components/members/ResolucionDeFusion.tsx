@@ -133,7 +133,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
           <p className="text-[13px] text-navy-light/80 font-body mt-1">
             Sobrevive <strong className="text-navy">{nombre(principal)}</strong>; {nombre(duplicado)} queda inactiva y todo lo suyo pasa a la principal.
             {onCambiarPrincipal && (
-              <button onClick={onCambiarPrincipal} className="ml-1 text-coral hover:underline">Cambiar cuál sobrevive</button>
+              <button onClick={onCambiarPrincipal} className="ml-1 text-coral-deep hover:underline">Cambiar cuál sobrevive</button>
             )}
           </p>
           {porQueEstePrincipal && (
@@ -158,7 +158,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
         )}
 
         {login.mudar && (
-          <p className="rounded-xl bg-teal-soft/25 px-3.5 py-2.5 text-[13px] text-teal-deep font-body">
+          <p className="rounded-xl bg-teal-soft/25 px-3.5 py-2.5 text-[13px] text-teal-ink font-body">
             A partir de la fusión se entra al sistema con <strong>{login.a}</strong>, el correo que elegiste.
             El anterior, {login.desde}, deja de servir para entrar.
           </p>
@@ -186,7 +186,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
                     <div className="grid grid-cols-[150px_1fr_1fr] gap-2 items-start">
                       <span className="text-[13px] text-navy-light/80 font-body pt-1.5">
                         {x.campo.label}
-                        {x.campo.identidad && <span className="block text-[11px] text-coral">elegí uno</span>}
+                        {x.campo.identidad && <span className="block text-[11px] text-coral-deep">elegí uno</span>}
                       </span>
                       {opcion(x.campo.key, 'principal', muestra(x.principal))}
                       {opcion(x.campo.key, 'duplicado', muestra(x.duplicado))}
@@ -240,7 +240,7 @@ export function ResolucionDeFusion({ principal, duplicado, onCancelar, onFusiona
         {error && <p className="rounded-xl bg-coral-soft/20 px-3.5 py-2.5 text-[13px] text-coral-deep font-body">{error}</p>}
 
         {!listo && (
-          <p className="text-[13px] text-coral font-body">
+          <p className="text-[13px] text-coral-deep font-body">
             Falta elegir: {faltan.map(f => f.label).join(', ')}. Son datos de identidad y no traen opción por defecto a propósito.
           </p>
         )}

@@ -165,7 +165,7 @@ export function Liquidacion({ viajeId, editable, gastosIniciales, anticipo, fech
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral transition-colors font-body">
+                <label className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-navy-light hover:text-coral-deep transition-colors font-body">
                   <Paperclip size={14} aria-hidden="true" />
                   {g.receipt_path ? 'Cambiar comprobante' : 'Adjuntar comprobante'}
                   <input type="file" accept="image/*,application/pdf" className="sr-only"

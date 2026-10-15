@@ -339,7 +339,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
               <label htmlFor="etiqueta-pregunta" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
                 {field.type === 'studies_done'
                   ? 'Nombre de la columna (opcional)'
-                  : <>Etiqueta / Pregunta <span className="text-coral">*</span></>}
+                  : <>Etiqueta / Pregunta <span className="text-coral-deep">*</span></>}
               </label>
               <textarea id="etiqueta-pregunta"
                 rows={2}
@@ -419,13 +419,13 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                     placeholder={`Opción ${i + 1}`}
                   />
                   <button type="button" onClick={() => set('options', opciones.filter((_, idx) => idx !== i))} className="relative after:absolute after:content-[''] after:-inset-1.5 shrink-0 h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors" aria-label={`Eliminar opción ${i + 1}`}>
-                    <X size={13} className="text-coral" />
+                    <X size={13} className="text-coral-deep" />
                   </button>
                 </div>
                 )
               })}
             </div>
-            <button type="button" onClick={() => set('options', [...(field.options ?? []), ''])} className="flex items-center gap-1.5 text-[13px] text-coral hover:text-coral-deep transition-colors font-body">
+            <button type="button" onClick={() => set('options', [...(field.options ?? []), ''])} className="flex items-center gap-1.5 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body">
               <Plus size={13} />
               Agregar opción
             </button>
@@ -529,7 +529,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                     Regla {ruleIdx + 1}
                   </span>
                   <button type="button" onClick={() => deleteRule(rule.id)} className="relative after:absolute after:content-[''] after:-inset-2 h-6 w-6 flex items-center justify-center rounded-full hover:bg-coral/10 transition-colors" aria-label={`Eliminar regla ${ruleIdx + 1}`}>
-                    <X size={12} className="text-coral" />
+                    <X size={12} className="text-coral-deep" />
                   </button>
                 </div>
 
@@ -615,12 +615,12 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                           )
                         )}
                         <div className="flex items-center justify-between">
-                          <button type="button" onClick={() => addCondition(rule.id)} className="text-[13px] text-coral hover:text-coral-deep transition-colors flex items-center gap-1 font-body">
+                          <button type="button" onClick={() => addCondition(rule.id)} className="text-[13px] text-coral-deep hover:text-coral-deep transition-colors flex items-center gap-1 font-body">
                             <Plus size={11} /> Agregar condición
                           </button>
                           {rule.conditions.length > 1 && (
                             <button type="button" onClick={() => deleteCondition(rule.id, cond.id)} className="h-5 w-5 flex items-center justify-center rounded hover:bg-coral/10 transition-colors">
-                              <Trash2 size={11} className="text-coral" />
+                              <Trash2 size={11} className="text-coral-deep" />
                             </button>
                           )}
                         </div>
@@ -634,7 +634,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
             <button
               type="button"
               onClick={addRule}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-2.5 text-[13px] text-coral hover:bg-coral/5 transition-colors border-[rgb(255_107_74_/_0.3)] font-body"
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl border-2 border-dashed py-2.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors border-[rgb(255_107_74_/_0.3)] font-body"
             >
               <Plus size={13} />
               Agregar regla

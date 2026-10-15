@@ -537,7 +537,7 @@ function EventosContent() {
         {[
           { label: 'Este mes', value: thisMonthEvents.length, color: 'text-navy' },
           { label: 'Próximos 7 días', value: next7Days.length, color: 'text-teal-deep' },
-          { label: 'Inscritos totales', value: totalRegistrations, color: 'text-coral' },
+          { label: 'Inscritos totales', value: totalRegistrations, color: 'text-coral-deep' },
           { label: 'Check-ins hoy', value: todayCheckins, color: 'text-navy' },
         ].map(({ label, value, color }) => (
           <div
@@ -687,7 +687,7 @@ function EventosContent() {
                               Inscribirme
                             </button>
                           ) : elig?.already_registered ? (
-                            <span className="rounded-lg px-2.5 py-1 text-[13px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                            <span className="rounded-lg px-2.5 py-1 text-[13px] font-medium text-teal-ink bg-teal-soft/20 font-body whitespace-nowrap">
                               Ya inscrito/a
                             </span>
                           ) : null}
@@ -752,7 +752,7 @@ function EventosContent() {
                         Inscribirme
                       </button>
                     ) : elig?.already_registered ? (
-                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-teal-deep bg-teal-soft/20 font-body whitespace-nowrap">
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-teal-ink bg-teal-soft/20 font-body whitespace-nowrap">
                         Ya inscrito/a
                       </span>
                     ) : null}

@@ -31,7 +31,7 @@ type ScholarshipRow = {
 }
 
 const SCHOLARSHIP_BADGE: Record<ScholarshipRow['status'], { label: string; cls: string }> = {
-  active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-deep' },
+  active: { label: 'Activa', cls: 'bg-teal-soft/30 text-teal-ink' },
   used: { label: 'Aplicada', cls: 'bg-navy/8 text-navy-light/80' },
   revoked: { label: 'Anulada', cls: 'bg-coral/10 text-coral-deep' },
 }
@@ -62,7 +62,7 @@ function MemberScholarships({ memberId }: { memberId: string }) {
         <h2 className="text-[13px] font-bold text-navy font-display">Mis becas</h2>
       </div>
       {actives.length > 0 && (
-        <p className="mx-4 mt-3 rounded-xl bg-teal-soft/20 px-3 py-2 text-[13px] text-teal-deep font-body">
+        <p className="mx-4 mt-3 rounded-xl bg-teal-soft/20 px-3 py-2 text-[13px] text-teal-ink font-body">
           Tenés {actives.length === 1 ? 'una beca activa' : `${actives.length} becas activas`} — se aplica automáticamente al pagar
           {actives.length === 1 ? ` ${actives[0].entity_name}` : ' lo que corresponda'}.
         </p>
@@ -139,7 +139,7 @@ function MisPagosContent() {
     <div className="page space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-coral/10 shrink-0"><CreditCard size={20} className="text-coral" /></div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-coral/10 shrink-0"><CreditCard size={20} className="text-coral-deep" /></div>
           <div>
             <h1 className="text-xl font-bold text-navy font-display">Pagos pendientes</h1>
             <p className="text-[13px] text-navy-light/80 font-body">Subí el comprobante para completar tus pagos pendientes o en revisión.</p>
@@ -195,7 +195,7 @@ function MisPagosContent() {
             <button
               type="button"
               onClick={() => setShowAll(v => !v)}
-              className="text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+              className="text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
             >
               {showAll ? 'Ocultar pagos cerrados' : 'Ver también los pagos cerrados'}
             </button>

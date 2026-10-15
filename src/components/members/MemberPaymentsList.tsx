@@ -36,7 +36,7 @@ export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string 
    * Si esto se "arregla" para que coincida, se le va a estar diciendo a la
    * gente que su pago no existe.
    */
-  if (p.status === 'paid') return { label: 'Pagado', cls: 'bg-teal-soft/30 text-teal-deep' }
+  if (p.status === 'paid') return { label: 'Pagado', cls: 'bg-teal-soft/30 text-teal-ink' }
   if (p.status === 'refunded' || p.status === 'partial_refund') return { label: 'Devuelto', cls: 'bg-navy/5 text-navy-light/80' }
   return { label: 'Cancelado', cls: 'bg-surface-low text-navy-light/80' }
 }
@@ -81,7 +81,7 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
     if (rows && highlightId) highlightRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }, [rows, highlightId])
 
-  if (error) return <p className="px-4 py-3 text-[13px] text-coral font-body">{error}</p>
+  if (error) return <p className="px-4 py-3 text-[13px] text-coral-deep font-body">{error}</p>
   if (!rows) return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">Cargando…</p>
 
   const visible = onlyActionable ? rows.filter(p => p.queue_status === 'pendiente' || p.queue_status === 'en_revision') : rows
@@ -105,7 +105,7 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
           <button
             type="button"
             onClick={() => setSeleccion(new Set())}
-            className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body"
+            className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
           >
             <Receipt size={13} aria-hidden="true" /> Pagué varios con una sola transferencia
           </button>
@@ -329,7 +329,7 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral-deep px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
       >
         <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar matrícula'}
       </button>
@@ -386,7 +386,7 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
                 />
               </div>
             )}
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={submit}
@@ -448,7 +448,7 @@ export function PayEventRegistrationButton({ registrationId, retry, cobro, membe
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
+        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral-deep px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
       >
         <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar inscripción'}
       </button>
@@ -480,7 +480,7 @@ export function PayEventRegistrationButton({ registrationId, retry, cobro, membe
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={submit}

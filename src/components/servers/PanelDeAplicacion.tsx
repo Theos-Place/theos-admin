@@ -101,7 +101,7 @@ export function PanelDeAplicacion({
             {app.applicant_sede && (
               <p className="text-[13px] text-navy-light/80 font-body truncate">{app.applicant_sede}</p>
             )}
-            <Link href={`/miembros/${app.applicant_id}`} className="text-[13px] text-coral hover:underline font-body">
+            <Link href={`/miembros/${app.applicant_id}`} className="text-[13px] text-coral-deep hover:underline font-body">
               Ver perfil
             </Link>
           </div>
@@ -122,7 +122,7 @@ export function PanelDeAplicacion({
 
       <Link
         href={`/servidores/aplicaciones/${app.id}/hoja`}
-        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral transition-colors font-body underline"
+        className="inline-flex items-center gap-1.5 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
       >
         <Printer size={13} aria-hidden="true" /> Ver la hoja para imprimir
       </Link>

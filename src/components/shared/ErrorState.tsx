@@ -12,7 +12,7 @@ type ErrorStateProps = {
 export function ErrorState({ title = 'No se pudieron cargar los datos', message, onRetry, className }: ErrorStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center text-center px-4 py-14', className)}>
-      <AlertCircle size={28} strokeWidth={1.75} className="text-coral mb-3" />
+      <AlertCircle size={28} strokeWidth={1.75} className="text-coral-deep mb-3" />
       <p className="text-sm font-semibold text-navy font-body">{title}</p>
       {message && <p className="text-[13px] text-navy-light/80 mt-1 font-body max-w-sm">{message}</p>}
       {onRetry && (

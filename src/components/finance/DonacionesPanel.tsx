@@ -352,7 +352,7 @@ export function DonacionesPanel() {
                     <p className="text-[13px] text-navy-light/80 font-body">{d.source_file}</p>
                   </div>
                   <button onClick={() => setLinkingId(linkingId === d.id ? null : d.id)}
-                    className="rounded-full px-3 py-1.5 text-[13px] font-medium transition-all bg-[rgba(81,157,162,0.10)] text-teal-deep font-body border border-[rgba(81,157,162,0.20)]">
+                    className="rounded-full px-3 py-1.5 text-[13px] font-medium transition-all bg-[rgba(81,157,162,0.10)] text-teal-ink font-body border border-[rgba(81,157,162,0.20)]">
                     {linkingId === d.id ? 'Cancelar' : 'Vincular a miembro'}
                   </button>
                 </div>

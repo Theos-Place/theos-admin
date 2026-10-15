@@ -335,7 +335,7 @@ export default function SolicitudesPage() {
                   <button
                     onClick={() => setCreateFor(null)}
                     aria-label="Cambiar miembro"
-                    className="rounded-lg p-1 text-navy-light/80 hover:text-coral transition-colors"
+                    className="rounded-lg p-1 text-navy-light/80 hover:text-coral-deep transition-colors"
                   >
                     <X size={14} />
                   </button>

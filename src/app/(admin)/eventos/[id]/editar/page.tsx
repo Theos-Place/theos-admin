@@ -593,7 +593,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
             )}
           </div>
           {endBeforeStart && (
-            <p className="text-[13px] text-coral font-body" role="alert">
+            <p className="text-[13px] text-coral-deep font-body" role="alert">
               La fecha y hora de fin no pueden ser anteriores a las de inicio.
             </p>
           )}
@@ -656,7 +656,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                   />
                 </div>
               </div>
-              <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
+              <button type="button" onClick={() => removeSubEvent(se.id)} className="relative after:absolute after:content-[''] after:-inset-1.5 h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors" aria-label={`Eliminar sub-evento ${se.name}`}>
                 <X size={14} />
               </button>
             </div>
@@ -736,7 +736,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                   {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
                 {sedeDesajuste && (
-                  <p className="text-[13px] text-coral font-body">
+                  <p className="text-[13px] text-coral-deep font-body">
                     {sedeSel?.name} cobra normalmente en {sedeSel?.currency}. Revisá la moneda.
                   </p>
                 )}

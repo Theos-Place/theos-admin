@@ -115,7 +115,7 @@ export function EventHeader({
           <div className="space-y-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               {/* El tipo real siempre — cancelar no convierte el evento en "charla". */}
-              <EventTypeBadge type={event.event_type} size="sm" />
+              <EventTypeBadge type={event.event_type} size="sm" tone="dark" />
               {!cancelled && !event.is_recurring && isPastEvent(event)
                 ? <RealizadoBadge />
                 : <EventStatusBadge status={cancelled ? 'cancelled' : event.status} size="sm" />}
@@ -292,7 +292,7 @@ export function EventHeader({
                   </button>
                   <button
                     onClick={onDeleteClick}
-                    className="w-full text-left px-4 py-2.5 text-sm text-coral hover:bg-coral/5 transition-colors font-body border-t border-t-[var(--outline-variant)]"
+                    className="w-full text-left px-4 py-2.5 text-sm text-coral-deep hover:bg-coral/5 transition-colors font-body border-t border-t-[var(--outline-variant)]"
                   >
                     Eliminar evento
                   </button>

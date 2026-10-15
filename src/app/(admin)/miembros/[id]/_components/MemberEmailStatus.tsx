@@ -81,7 +81,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className={cn(
               'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-medium font-body',
-              status.subscribed ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/80',
+              status.subscribed ? 'bg-teal-soft/30 text-teal-ink' : 'bg-surface-low text-navy-light/80',
             )}>
               <span className={cn('h-1.5 w-1.5 rounded-full', status.subscribed ? 'bg-teal-deep' : 'bg-navy-light/40')} />
               {status.subscribed ? 'Suscrito' : 'Dado de baja'}
@@ -98,7 +98,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
           </div>
           <p className="text-[13px] text-navy-light/80 font-body">
             Para cambiar tu suscripción a correos, andá a{' '}
-            <Link href="/configuracion" className="text-coral hover:underline">Configuración → Notificaciones</Link>.
+            <Link href="/configuracion" className="text-coral-deep hover:underline">Configuración → Notificaciones</Link>.
           </p>
         </div>
       ) : status ? (
@@ -168,7 +168,7 @@ export function MemberEmailStatus({ memberId }: { memberId: string }) {
             </div>
           )}
 
-          {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+          {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
         </div>
       ) : null}
 

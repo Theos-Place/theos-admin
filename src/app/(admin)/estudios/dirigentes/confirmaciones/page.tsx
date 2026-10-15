@@ -184,7 +184,7 @@ export default function ConfirmacionesPage() {
               {visibles.map(f => (
                 <tr key={f.member_id} className="border-b border-[var(--outline-variant)] last:border-0 align-top">
                   <td className="px-4 py-3">
-                    <Link href={`/estudios/dirigentes/${f.member_id}`} className="text-navy font-medium hover:text-coral transition-colors">
+                    <Link href={`/estudios/dirigentes/${f.member_id}`} className="text-navy font-medium hover:text-coral-deep transition-colors">
                       {f.nombre}
                     </Link>
                     <div className="text-[13px] text-navy-light/80">

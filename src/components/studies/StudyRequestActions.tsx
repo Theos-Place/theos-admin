@@ -230,19 +230,19 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
 
                 {openModal === 'relocation' && relocationBlocked && (
                   <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
-                    <p className="text-[13px] text-coral font-body">No tenés estudios activos elegibles para reubicación.</p>
+                    <p className="text-[13px] text-coral-deep font-body">No tenés estudios activos elegibles para reubicación.</p>
                   </div>
                 )}
                 {openModal === 'study_interest' && interestBlocked && (
                   <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
-                    <p className="text-[13px] text-coral font-body">Ya llevaste (o estás llevando) todos los estudios del plan. No hay ninguno para solicitar.</p>
+                    <p className="text-[13px] text-coral-deep font-body">Ya llevaste (o estás llevando) todos los estudios del plan. No hay ninguno para solicitar.</p>
                   </div>
                 )}
 
                 {openModal === 'relocation' && !relocationBlocked && (
                   <>
                     <div>
-                      <label htmlFor="relocation-needed-study" className={LABEL_CLS}>Estudio que necesito <span className="text-coral">*</span></label>
+                      <label htmlFor="relocation-needed-study" className={LABEL_CLS}>Estudio que necesito <span className="text-coral-deep">*</span></label>
                       <select id="relocation-needed-study" value={neededStudyCode} onChange={e => setNeededStudyCode(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar…</option>
                         {relocationOptions.map(o => (
@@ -266,14 +266,14 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       )}
                     </div>
                     <div>
-                      <label htmlFor="relocation-last-class" className={LABEL_CLS}>En cuál clase quedé <span className="text-coral">*</span></label>
+                      <label htmlFor="relocation-last-class" className={LABEL_CLS}>En cuál clase quedé <span className="text-coral-deep">*</span></label>
                       <select id="relocation-last-class" value={lastClassAttended} onChange={e => setLastClassAttended(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar…</option>
                         {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c === 'no_recuerda' ? 'No me acuerdo' : `Clase ${c}`}</option>)}
                       </select>
                     </div>
                     <div>
-                      <span className={LABEL_CLS}>Último dirigente <span className="text-coral">*</span></span>
+                      <span className={LABEL_CLS}>Último dirigente <span className="text-coral-deep">*</span></span>
                       <Combobox
                         items={dirigentes.map(d => ({ value: d.member_id, label: d.member_name }))}
                         value={lastLeader}
@@ -329,7 +329,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral">*</span></label>
+                      <label htmlFor="request-reason" className={LABEL_CLS}>Razón <span className="text-coral-deep">*</span></label>
                       <textarea id="request-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Contanos por qué (mínimo 20 caracteres)…" className={cn(SELECT_CLS, 'resize-none placeholder:text-navy-light/80')} />
                       <p className={cn('mt-1 text-[13px] font-body', reason.trim().length < MIN_REASON ? 'text-navy-light/80' : 'text-success-deep')}>{reason.trim().length}/{MIN_REASON} caracteres mínimos</p>
                     </div>
@@ -339,7 +339,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                 {openModal === 'study_interest' && !interestBlocked && (
                   <>
                     <div>
-                      <label htmlFor="interest-plan" className={LABEL_CLS}>¿Qué estudio te interesa? <span className="text-coral">*</span></label>
+                      <label htmlFor="interest-plan" className={LABEL_CLS}>¿Qué estudio te interesa? <span className="text-coral-deep">*</span></label>
                       <select id="interest-plan" value={planId} onChange={e => setPlanId(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar estudio…</option>
                         {options.map(o => <option key={o.plan_id} value={o.plan_id}>{o.code} — {o.name}{o.is_eligible ? '' : ' (aún no elegible)'}</option>)}
@@ -394,7 +394,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                   </>
                 )}
 
-                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
 
                 <div className="flex justify-end gap-2 pt-1">
                   <button onClick={() => setOpenModal(null)} className="rounded-full px-4 py-2 text-sm text-navy-light/80 font-body hover:text-navy transition-colors">{blocked ? 'Cerrar' : 'Cancelar'}</button>

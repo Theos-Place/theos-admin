@@ -16,7 +16,7 @@ export function useToast() {
 
 const STYLES: Record<ToastType, { icon: React.ElementType; cls: string }> = {
   success: { icon: CheckCircle2, cls: 'border-[#3DB97A]/30 text-success-deep' },
-  error:   { icon: AlertTriangle, cls: 'border-coral/30 text-coral' },
+  error:   { icon: AlertTriangle, cls: 'border-coral/30 text-coral-deep' },
   info:    { icon: Info, cls: 'border-navy/15 text-navy' },
 }
 

@@ -154,7 +154,7 @@ export default function EditarEmpleadoPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-coral font-body">{error}</p>
+        <p className="text-sm text-coral-deep font-body">{error}</p>
       )}
 
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">

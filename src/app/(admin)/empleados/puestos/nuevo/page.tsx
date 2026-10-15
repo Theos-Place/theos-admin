@@ -119,7 +119,7 @@ export default function NuevoPuestoPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-coral font-body">{error}</p>
+        <p className="text-sm text-coral-deep font-body">{error}</p>
       )}
 
       <div className="rounded-2xl p-5 space-y-5 bg-surface-card shadow-[var(--shadow-md)]">
@@ -127,7 +127,7 @@ export default function NuevoPuestoPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label htmlFor="nombre-del-puesto" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
-              Nombre del puesto <span className="text-coral">*</span>
+              Nombre del puesto <span className="text-coral-deep">*</span>
             </label>
             <input id="nombre-del-puesto"
               className={cn(inputCls, 'font-body')}
@@ -139,7 +139,7 @@ export default function NuevoPuestoPage() {
 
           <div className="space-y-1">
             <label htmlFor="comite-asociado" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
-              Comité asociado <span className="text-coral">*</span>
+              Comité asociado <span className="text-coral-deep">*</span>
             </label>
             <select id="comite-asociado"
               className={cn(inputCls, 'font-body')}

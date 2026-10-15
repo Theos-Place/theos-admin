@@ -411,7 +411,7 @@ export default function RespuestasPage() {
                       href={urlDeAdjunto(txt, typeof window !== 'undefined' ? window.location.origin : undefined)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-coral hover:underline"
+                      className="text-coral-deep hover:underline"
                     >
                       Ver imagen adjunta
                     </a>

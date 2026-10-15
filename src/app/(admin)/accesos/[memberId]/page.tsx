@@ -89,7 +89,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <p className="text-navy-light/80 text-sm font-body">Miembro no encontrado</p>
-        <Link href="/accesos" className="text-sm text-coral hover:text-coral-deep font-body">
+        <Link href="/accesos" className="text-sm text-coral-deep hover:text-coral-deep font-body">
           ← Volver a Accesos
         </Link>
       </div>
@@ -216,7 +216,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                         {role.name}
                         {isAutomatic && (
                           <span
-                            className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body"
+                            className="rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink font-body"
                             title={`Otorgado automáticamente por ${positionCount} puesto${positionCount === 1 ? '' : 's'} de servicio activo${positionCount === 1 ? '' : 's'}.`}
                           >
                             Automático · {positionCount} puesto{positionCount === 1 ? '' : 's'}
@@ -234,7 +234,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                   {canManageRole(rid) && (
                     <button
                       onClick={() => handleRevoke(rid)}
-                      className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-all shrink-0"
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-all shrink-0"
                       aria-label={`Revocar rol ${role.name}`}
                     >
                       <X size={14} />
@@ -315,7 +315,7 @@ export default function AccesoDetailPage({ params }: { params: Promise<{ memberI
                   >
                     {entry.action === 'assigned'
                       ? <Check size={12} className="text-success-deep" />
-                      : <X size={12} className="text-coral" />
+                      : <X size={12} className="text-coral-deep" />
                     }
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5">

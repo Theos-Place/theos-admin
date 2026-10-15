@@ -38,7 +38,7 @@ export const ETIQUETA_VISIBLE: Record<EstadoVisible, string> = {
 
 /** "Por iniciar" va en ámbar: no es un estado malo, es uno que espera una fecha. */
 export const BADGE_VISIBLE: Record<EstadoVisible, string> = {
-  en_matricula: 'bg-teal-soft/30 text-teal-deep',
+  en_matricula: 'bg-teal-soft/30 text-teal-ink',
   por_iniciar: 'bg-amber-50 text-amber-700',
   en_curso: 'bg-navy/10 text-navy',
   finalizado: 'bg-surface-low text-navy-light/80',

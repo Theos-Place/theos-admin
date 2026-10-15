@@ -71,7 +71,7 @@ export function CommitteeMultiSelect({ value, onChange, placeholder = 'Buscar co
           {value.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-navy/10 text-navy px-2.5 py-1 text-[13px] font-body">
               {nameById[id] ?? 'Comité'}
-              <button type="button" onClick={() => remove(id)} aria-label={`Quitar ${nameById[id] ?? 'comité'}`} className="text-navy-light/80 hover:text-coral">
+              <button type="button" onClick={() => remove(id)} aria-label={`Quitar ${nameById[id] ?? 'comité'}`} className="text-navy-light/80 hover:text-coral-deep">
                 <X size={12} />
               </button>
             </span>

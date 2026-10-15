@@ -124,7 +124,7 @@ function SedeButton({ label, count, active, onClick }: { label: string; count?: 
     >
       <span className="min-w-0 truncate">{label}</span>
       {count != null && (
-        <span className={cn('text-[13px] tabular-nums shrink-0', active ? 'text-white/80' : 'text-navy-light/80')}>{count}</span>
+        <span className={cn('text-[13px] tabular-nums shrink-0', active ? 'text-white' : 'text-navy-light/80')}>{count}</span>
       )}
     </button>
   )

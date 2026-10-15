@@ -43,7 +43,7 @@ export function MemberDigitalPass({ member }: { member: Member }) {
         <div className="w-full max-w-xs rounded-2xl bg-navy p-6 shadow-[var(--shadow-md)]">
           <div className="flex items-baseline gap-0.5 mb-4">
             <span className="text-lg text-white font-display font-extrabold">Theos</span>
-            <span className="text-lg text-coral font-display font-extrabold">PLACE</span>
+            <span className="text-lg text-coral-deep font-display font-extrabold">PLACE</span>
           </div>
 
           {member.cedula && (

@@ -344,7 +344,7 @@ export default function LoginPage() {
             className={`${INPUT} font-body ${emailErr ? INPUT_ERROR : INPUT_NORMAL}`}
           />
           {emailErr && (
-            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yEmail.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral-deep font-body">
               <AlertCircle size={12} className="shrink-0" />
               {emailErr}
             </p>
@@ -377,7 +377,7 @@ export default function LoginPage() {
             </button>
           </div>
           {passErr && (
-            <p {...a11yPass.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral font-body">
+            <p {...a11yPass.error} className="flex items-center gap-1.5 mt-1.5 text-[13px] text-coral-deep font-body">
               <AlertCircle size={12} className="shrink-0" />
               {passErr}
             </p>

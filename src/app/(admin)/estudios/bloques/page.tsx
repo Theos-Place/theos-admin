@@ -146,7 +146,7 @@ export default function BloquesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 flex items-start justify-between gap-4 shadow-[var(--shadow-md)]">
+      <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 shadow-[var(--shadow-md)]">
         <div className="flex items-center gap-3">
           <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center shrink-0"><CalendarRange size={22} className="text-white" /></div>
           <div>
@@ -154,7 +154,7 @@ export default function BloquesPage() {
             <p className="mt-0.5 text-sm text-white/80 font-body">{rows.length} bloque{rows.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex items-center gap-2 sm:shrink-0 flex-wrap sm:justify-end">
           <button onClick={() => setGenConfirm(true)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-40 font-body">
             Generar año siguiente
           </button>
@@ -248,7 +248,7 @@ export default function BloquesPage() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => openEdit(b)} aria-label="Editar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light hover:bg-surface-low transition-colors"><Pencil size={14} /></button>
-                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
+                          <button onClick={() => askDelete(b)} aria-label="Eliminar bloque" className="h-8 w-8 flex items-center justify-center rounded-lg text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -304,7 +304,7 @@ export default function BloquesPage() {
                 Hitos: preliminar <strong>{fmt(milestones.preliminar)}</strong> · confirmación <strong>{fmt(milestones.confirmacion)}</strong> · final <strong>{fmt(milestones.final)}</strong> · cierre de bloque <strong>{fmt(bloqueCierre(form.fecha_cierre_matricula))}</strong>
               </p>
             )}
-            {msg && <p className="text-[13px] text-coral font-body">{msg}</p>}
+            {msg && <p className="text-[13px] text-coral-deep font-body">{msg}</p>}
             <div className="flex gap-2 pt-1">
               <button onClick={save} disabled={!valid || busy} className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (!valid || busy) && 'opacity-50 cursor-not-allowed')}>
                 {busy ? <><Loader2 size={15} className="animate-spin" /> Guardando…</> : (editing ? 'Guardar cambios' : 'Crear bloque')}

@@ -15,7 +15,7 @@ export function ContractTypeBadge({ type, size = 'md' }: ContractTypeBadgeProps)
         textSize,
         type === 'planilla'
           ? 'bg-navy/10 text-navy'
-          : 'bg-teal-deep/10 text-teal-deep'
+          : 'bg-teal-deep/10 text-teal-ink'
       )}
     >
       {type === 'planilla' ? 'Planilla' : 'Servicios prof.'}

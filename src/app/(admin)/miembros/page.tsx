@@ -263,7 +263,7 @@ function MiembrosContent() {
           </h1>
           <p className="mt-1 text-sm text-navy-light/80 font-body">
             {counts ? `${counts.total.toLocaleString('es-CR')} registrados` : countsFailed ? '— registrados' : 'Cargando…'}
-            {error && <span className="text-coral"> · {error}</span>}
+            {error && <span className="text-coral-deep"> · {error}</span>}
           </p>
         </div>
 
@@ -464,7 +464,7 @@ function MiembrosContent() {
               setShowActive(false)
               setSearch('')                      // búsqueda
             }}
-            className="flex items-center gap-1 text-sm text-coral hover:underline transition-colors font-body"
+            className="flex items-center gap-1 text-sm text-coral-deep hover:underline transition-colors font-body"
           >
             <X size={12} strokeWidth={2} />
             Limpiar todo
@@ -674,7 +674,7 @@ function MiembrosContent() {
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => router.push(`/miembros/${member.id}`)}
-                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral group-hover:text-navy-light/80"
+                        className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral-deep group-hover:text-navy-light/80"
                         aria-label={`Ver perfil de ${member.first_name}`}
                       >
                         <ArrowRight size={16} strokeWidth={1.75} />
@@ -812,7 +812,7 @@ function MiembrosContent() {
           <span className="text-white/40 mx-1">·</span>
           <button
             onClick={() => { setToast(''); router.push('/miembros/listas') }}
-            className="text-[13px] text-coral hover:underline cursor-pointer font-body bg-transparent border-0"
+            className="text-[13px] text-coral-deep hover:underline cursor-pointer font-body bg-transparent border-0"
           >
             Ver mis listas →
           </button>
@@ -820,7 +820,7 @@ function MiembrosContent() {
       )}
       {toast === 'error' && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-2xl bg-navy shadow-[0_20px_48px_rgba(22,20,64,0.30)]">
-          <AlertTriangle size={15} className="text-coral shrink-0" strokeWidth={2.5} />
+          <AlertTriangle size={15} className="text-coral-deep shrink-0" strokeWidth={2.5} />
           <p className="text-[13px] text-white font-body">
             No se pudo guardar la lista. Intentá de nuevo.
           </p>

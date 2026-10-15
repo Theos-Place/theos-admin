@@ -116,7 +116,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
             // se queda en 'pending' hasta que finanzas aprueba, así que el dato
             // que separa "ya pagué" de "no pagué" es payment_in_review.
             eligibility.payment_in_review ? (
-              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-ink font-body">
                 Inscrito/a · pago en revisión
               </span>
             ) : eligibility.registration_status === 'pending' && eligibility.registration_id && onUploadReceipt ? (
@@ -131,7 +131,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
                 Subir comprobante
               </button>
             ) : (
-              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-deep font-body">
+              <span className="block text-center rounded-xl bg-teal-soft/20 px-4 py-2 text-[13px] font-medium text-teal-ink font-body">
                 Ya inscrito/a
               </span>
             )
@@ -144,7 +144,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
             <button
               type="button"
               onClick={onRequestScholarship}
-              className="mt-1.5 w-full text-center text-[13px] text-coral hover:text-coral-deep transition-colors font-body underline decoration-dotted"
+              className="mt-1.5 w-full text-center text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body underline decoration-dotted"
             >
               ¿Necesitás ayuda para pagar? Solicitar beca
             </button>

@@ -131,7 +131,7 @@ export default function ReportesIndexPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="h-11 w-11 rounded-xl bg-coral/10 flex items-center justify-center shrink-0">
-                  <Icon size={20} className="text-coral" />
+                  <Icon size={20} className="text-coral-deep" />
                 </div>
                 <ChevronRight size={18} className="text-navy-light/40 group-hover:text-navy-light/80 transition-colors mt-1" />
               </div>

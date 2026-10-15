@@ -137,7 +137,7 @@ export function CongelarMatriculaButton({ enrollmentId, onCongelada }: {
 
                 <div className="space-y-1">
                   <label htmlFor="congelar-motivo" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                    ¿Por qué se congela? <span className="text-coral">*</span>
+                    ¿Por qué se congela? <span className="text-coral-deep">*</span>
                   </label>
                   <textarea
                     id="congelar-motivo"

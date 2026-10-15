@@ -20,7 +20,7 @@ export function PersonaLink({ id, nombre }: { id: string | null; nombre: string 
 const REC_LABEL: Record<string, string> = { oracion: 'Oración', servicio: 'Servicio', dirigente: 'Dirigente' }
 const REC_BADGE: Record<string, string> = {
   oracion: 'bg-navy/10 text-navy',
-  servicio: 'bg-teal-soft/30 text-teal-deep',
+  servicio: 'bg-teal-soft/30 text-teal-ink',
   dirigente: 'bg-coral/10 text-coral-deep',
 }
 
@@ -58,7 +58,7 @@ export function MemberRecommendations({ memberId, hideWhenEmpty = false }: { mem
   return (
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)]">
       <div className="flex items-center gap-2 mb-3">
-        <HeartHandshake size={15} className="text-coral" />
+        <HeartHandshake size={15} className="text-coral-deep" />
         <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Recomendado para oración, servicio o dar estudios</p>
       </div>
       {recs === null ? (

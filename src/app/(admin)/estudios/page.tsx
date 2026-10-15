@@ -155,7 +155,7 @@ export default function EstudiosPage() {
           { label: 'Grupos por iniciar',    value: openGroups.length,     icon: Users,        color: 'text-teal-deep' },
           { label: 'Grupos en curso',       value: inProgressGroups.length, icon: TrendingUp, color: 'text-navy' },
           { label: 'Solicitudes abiertas',  value: openRequests,          icon: Inbox,        color: 'text-amber-600' },
-          { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral', href: '/estudios/grupos?filter=closing_soon' },
+          { label: 'Por cerrar (30 días)',  value: closingSoon.length,    icon: AlertTriangle, color: 'text-coral-deep', href: '/estudios/grupos?filter=closing_soon' },
         ].map(({ label, value, icon: Icon, color, href }) => {
           const inner = (
             <>
@@ -191,7 +191,7 @@ export default function EstudiosPage() {
           {/* En curso */}
           <section className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
             <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--outline-variant)]">
-              <TrendingUp size={16} className="text-coral" />
+              <TrendingUp size={16} className="text-coral-deep" />
               <h2 className="text-sm font-semibold text-navy font-display">En curso</h2>
             </div>
             <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--outline-variant)]">
@@ -327,7 +327,7 @@ export default function EstudiosPage() {
                   href={href}
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-low transition-colors group"
                 >
-                  <Icon size={16} className="text-navy-light/80 group-hover:text-coral transition-colors" />
+                  <Icon size={16} className="text-navy-light/80 group-hover:text-coral-deep transition-colors" />
                   <div className="min-w-0">
                     <p className="text-sm text-navy font-medium font-body inline-flex items-center gap-1.5">
                       {label}
@@ -365,8 +365,8 @@ export default function EstudiosPage() {
                   href="/estudios/grupos?filter=closing_soon"
                   className="flex items-start gap-2 rounded-xl bg-coral/5 px-3 py-2.5 hover:bg-coral/10 transition-colors"
                 >
-                  <Clock size={14} className="text-coral mt-0.5 shrink-0" />
-                  <p className="text-[13px] text-coral font-body">
+                  <Clock size={14} className="text-coral-deep mt-0.5 shrink-0" />
+                  <p className="text-[13px] text-coral-deep font-body">
                     <strong>{closingSoon.length}</strong> grupo{closingSoon.length > 1 ? 's' : ''} cierran en los próximos 30 días
                   </p>
                 </Link>
@@ -411,12 +411,12 @@ function StatRow({
   return (
     <div className="px-5 py-4 min-w-0">
       <div className="flex items-center gap-2">
-        <Icon size={16} className={`shrink-0 ${muted ? 'text-navy-light/80' : 'text-coral'}`} />
+        <Icon size={16} className={`shrink-0 ${muted ? 'text-navy-light/80' : 'text-coral-deep'}`} />
         <p className="text-sm font-semibold text-navy font-body">{label}</p>
       </div>
       <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">{hint}</p>
       <div className="mt-3 flex flex-wrap items-baseline gap-x-2 font-body">
-        <span className={`text-3xl font-bold font-display ${muted ? 'text-navy' : 'text-coral'}`}>
+        <span className={`text-3xl font-bold font-display ${muted ? 'text-navy' : 'text-coral-deep'}`}>
           {grupos}
         </span>
         <span className="text-sm text-navy-light/80">grupos</span>

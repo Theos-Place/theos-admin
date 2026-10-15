@@ -93,7 +93,7 @@ export function RecipientsSection({
                   setIsImported(false)
                   setRecipients({ mode: 'manual', manualMemberIds: [], groupEntity: null, groupId: '', label: '', count: 0 })
                 }}
-                className="flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral transition-colors shrink-0 font-body"
+                className="flex items-center gap-1 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors shrink-0 font-body"
               >
                 <X size={12} />
                 Limpiar
@@ -103,7 +103,7 @@ export function RecipientsSection({
             <button
               type="button"
               onClick={() => setShowExpandedList(v => !v)}
-              className="text-[13px] text-coral hover:underline transition-colors font-body"
+              className="text-[13px] text-coral-deep hover:underline transition-colors font-body"
             >
               {showExpandedList ? 'Ocultar lista ↑' : 'Ver lista completa ↓'}
             </button>

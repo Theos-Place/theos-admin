@@ -238,7 +238,7 @@ export default function EmbedPage() {
                 href={previewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[13px] text-coral hover:text-coral-deep transition-colors font-body"
+                className="inline-flex items-center gap-1 text-[13px] text-coral-deep hover:text-coral-deep transition-colors font-body"
               >
                 <ExternalLink size={12} />
                 Abrir en nueva pestaña
@@ -265,7 +265,7 @@ export default function EmbedPage() {
                 className={cn(
                   'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all',
                   copied
-                    ? 'bg-teal-soft/20 text-teal-deep'
+                    ? 'bg-teal-soft/20 text-teal-ink'
                     : 'bg-surface-low text-navy-light/80 hover:text-navy',
                   'font-body'
                 )}

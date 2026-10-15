@@ -239,7 +239,7 @@ export function AddServerModal({
                   <p className="text-[13px] font-medium text-navy font-body">{m.first_name} {m.last_name}</p>
                   <p className="text-[13px] text-navy-light/80 font-body">{m.email}</p>
                 </div>
-                <Plus size={14} className="ml-auto text-coral shrink-0" />
+                <Plus size={14} className="ml-auto text-coral-deep shrink-0" />
               </button>
             ))}
           </div>

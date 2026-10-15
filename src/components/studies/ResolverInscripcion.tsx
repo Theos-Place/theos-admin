@@ -121,7 +121,7 @@ export function ResolverInscripcion({ groupId, memberId, memberName, onResuelto 
             {pideMotivo && (
               <div className="space-y-1">
                 <label htmlFor="resolver-motivo" className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
-                  Motivo <span className="text-coral">*</span>
+                  Motivo <span className="text-coral-deep">*</span>
                 </label>
                 <input
                   id="resolver-motivo"

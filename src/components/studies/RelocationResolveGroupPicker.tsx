@@ -112,14 +112,14 @@ export function RelocationResolveGroupPicker({
   return (
     <div className="space-y-1.5">
       <label htmlFor="relocation-target-group" className="block text-[13px] font-medium text-navy-light/80 font-body">
-        Grupo destino <span className="text-coral">*</span>
+        Grupo destino <span className="text-coral-deep">*</span>
       </label>
       {loading ? (
         <p className="text-[13px] text-navy-light/80 font-body inline-flex items-center gap-1.5">
           <Loader2 size={13} className="animate-spin" /> Cargando grupos disponibles…
         </p>
       ) : neededGroups.length === 0 && prevGroups.length === 0 ? (
-        <p className="text-[13px] text-coral font-body">
+        <p className="text-[13px] text-coral-deep font-body">
           No hay grupos abiertos de {request.needed_study_code ?? 'ese estudio'}
           {prevCode ? ` ni de ${prevCode}` : ''} en este momento.
         </p>

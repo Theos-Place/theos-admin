@@ -55,7 +55,7 @@ export function DocumentCard({ doc, onDelete }: DocumentCardProps) {
             type="button"
             onClick={() => onDelete(doc.id)}
             aria-label={`Eliminar documento ${doc.name}`}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors"
           >
             <Trash2 size={14} />
           </button>

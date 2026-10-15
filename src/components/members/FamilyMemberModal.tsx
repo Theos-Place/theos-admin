@@ -214,7 +214,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                   <option value="">Relación…</option>
                   {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+                {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
                 <button onClick={addLinked} className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
                   Vincular integrante
                 </button>
@@ -226,7 +226,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                 <p className="text-[13px] text-navy-light/80 font-body">
                   {textoSinResultados(cedula)}
                 </p>
-                <button onClick={() => { setMode('new'); setError(null) }} className="text-[13px] font-medium text-coral hover:underline font-body">
+                <button onClick={() => { setMode('new'); setError(null) }} className="text-[13px] font-medium text-coral-deep hover:underline font-body">
                   Crear integrante nuevo →
                 </button>
               </div>
@@ -280,7 +280,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
               <option value="">Relación…</option>
               {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            {error && <p className="text-[13px] text-coral font-body">{error}</p>}
+            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <button onClick={addNew} className="w-full rounded-full bg-coral shadow-[var(--shadow-pulse)] py-2.5 text-sm font-medium text-white hover:bg-coral-deep transition-colors font-body">
               Agregar integrante
             </button>

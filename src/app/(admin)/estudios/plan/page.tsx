@@ -19,7 +19,7 @@ import { visiblePlans, stageRank } from '@/lib/studies/plan-visibility'
 function StageLabel({ children, color }: { children: React.ReactNode; color: 'navy' | 'teal' | 'coral' | 'purple' }) {
   const styles = {
     navy:   'bg-navy/10 text-navy',
-    teal:   'bg-teal-soft/30 text-teal-deep',
+    teal:   'bg-teal-soft/30 text-teal-ink',
     coral:  'bg-coral/10 text-coral-deep',
     purple: 'bg-purple-100 text-purple-700',
   }
@@ -80,7 +80,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
   return (
     <div
       className={cn('rounded-xl flex flex-col gap-0 py-[14px] px-4', open && 'cursor-pointer')}
-      style={{ background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', opacity: study.is_archived ? 0.7 : 1, filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
+      style={{ background: study.is_archived ? 'rgba(120,120,130,0.10)' : 'var(--surface-low)', filter: study.is_archived ? 'grayscale(0.8)' : 'none' }}
       onClick={open}
       role={open ? 'button' : undefined}
       tabIndex={open ? 0 : undefined}
@@ -133,7 +133,7 @@ function StudyCardFull({ study, mentor, canManage }: { study: StudyType; mentor:
       {(() => {
         const STAGE_TAG: Record<string, { label: string; cls: string }> = {
           niveles:    { label: 'Niveles',    cls: 'bg-navy/8 text-navy-light' },
-          inicial:    { label: 'Inicial',    cls: 'bg-teal-soft/30 text-teal-deep' },
+          inicial:    { label: 'Inicial',    cls: 'bg-teal-soft/30 text-teal-ink' },
           intermedia: { label: 'Intermedia', cls: 'bg-coral/10 text-coral-deep' },
           avanzada:   { label: 'Avanzada · Por invitación', cls: 'bg-amber-50 text-amber-700' },
           'campaña':  { label: 'Abiertas a todo público', cls: 'bg-[rgba(155,127,212,0.15)] text-[#7c5cc4]' },
@@ -317,7 +317,7 @@ export default function PlanDeEstudiosPage() {
                 <tr
                   key={s.id}
                   className="hover:bg-surface-low transition-colors group"
-                  style={{ ...(i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}), ...(s.is_archived ? { opacity: 0.55 } : {}) }}
+                  style={{ ...(i < sortedStudyTypes.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}) }}
                 >
                   <td className="px-4 py-3">
                     <StudyTypeBadge code={s.code} size="sm" />
@@ -374,7 +374,7 @@ export default function PlanDeEstudiosPage() {
                       {canEdit && (
                         <Link
                           href={`/estudios/plan/${s.code}/editar`}
-                          className="rounded-lg px-2.5 py-1 text-[13px] text-coral border border-coral/30 hover:bg-coral/5 transition-colors font-body"
+                          className="rounded-lg px-2.5 py-1 text-[13px] text-coral-deep border border-coral/30 hover:bg-coral/5 transition-colors font-body"
                         >
                           Editar
                         </Link>

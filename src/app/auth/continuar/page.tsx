@@ -60,7 +60,7 @@ export default async function ContinuarPage({
             Continuar
           </a>
         ) : (
-          <p className="mt-6 text-sm text-coral font-body">
+          <p className="mt-6 text-sm text-coral-deep font-body">
             Este enlace está incompleto. Abrilo directo desde el correo, sin copiarlo y pegarlo.
           </p>
         )}

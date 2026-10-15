@@ -59,6 +59,8 @@ export const TOKENS = {
   coralSoft: '#F78382',
   teal: '#70BDC2',
   tealDeep: '#3B7579',
+  /** Teal de texto sobre tintes teal (2026-10-15). */
+  tealInk: '#2F5E61',
   tealSoft: '#B5DDE0',
   white: '#FFFFFF',
   surfaceLow: '#F2F4F5',

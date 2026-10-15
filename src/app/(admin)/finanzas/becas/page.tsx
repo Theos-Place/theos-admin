@@ -59,7 +59,7 @@ type Scholarship = {
 // pantallas y renombrar una etiqueta pedía acordarse de las tres.
 const STATUS_LABEL: Record<string, string> = ETIQUETA_ESTADO_BECA
 const STATUS_BADGE: Record<string, string> = {
-  active: 'bg-teal-soft/30 text-teal-deep', used: 'bg-navy/10 text-navy', revoked: 'bg-coral/10 text-coral-deep',
+  active: 'bg-teal-soft/30 text-teal-ink', used: 'bg-navy/10 text-navy', revoked: 'bg-coral/10 text-coral-deep',
 }
 
 export default function BecasPage() {
@@ -305,7 +305,7 @@ export default function BecasPage() {
                               </button>
                               <button
                                 onClick={() => requestRevoke(c)}
-                                className="rounded-full border border-coral/40 text-coral px-3 py-1 text-[13px] hover:bg-coral/5 transition-colors font-body"
+                                className="rounded-full border border-coral/40 text-coral-deep px-3 py-1 text-[13px] hover:bg-coral/5 transition-colors font-body"
                               >
                                 Cancelar
                               </button>
@@ -368,7 +368,7 @@ export default function BecasPage() {
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body max-w-xs truncate" title={r.reason}>{r.reason}</td>
                       <td className="px-4 py-3">
                         <span className={cn('rounded-full px-2.5 py-0.5 text-[13px] font-semibold font-display',
-                          r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-deep'
+                          r.status === 'resolved' ? 'bg-teal-soft/30 text-teal-ink'
                           : r.status === 'rejected' ? 'bg-coral/10 text-coral-deep'
                           : 'bg-amber-50 text-amber-700')}>
                           {r.status === 'open' ? 'Abierta' : r.status === 'in_review' ? 'En revisión' : r.status === 'resolved' ? 'Aprobada' : 'Rechazada'}
@@ -472,7 +472,7 @@ export default function BecasPage() {
               />
             )}
             {sendMember && !sendMember.email && (
-              <p className="text-[13px] text-coral font-body">Esa persona no tiene correo registrado en su perfil.</p>
+              <p className="text-[13px] text-coral-deep font-body">Esa persona no tiene correo registrado en su perfil.</p>
             )}
             <div className="flex gap-2 pt-1">
               <button
@@ -567,11 +567,11 @@ function ReviewRequestModal({ request, onClose, onDone }: {
             </div>
             <button
               onClick={() => { setDiscountValue(''); setAction('approve') }}
-              className="w-full rounded-xl border border-teal-deep text-teal-deep px-4 py-2.5 text-sm hover:bg-teal-deep/5 transition-colors font-body"
+              className="w-full rounded-xl border border-teal-deep text-teal-ink px-4 py-2.5 text-sm hover:bg-teal-deep/5 transition-colors font-body"
             >
               Otro porcentaje o monto
             </button>
-            <button onClick={() => setAction('reject')} className="w-full rounded-xl border border-coral/40 text-coral px-4 py-2.5 text-sm hover:bg-coral/5 transition-colors font-body">Rechazar</button>
+            <button onClick={() => setAction('reject')} className="w-full rounded-xl border border-coral/40 text-coral-deep px-4 py-2.5 text-sm hover:bg-coral/5 transition-colors font-body">Rechazar</button>
           </div>
         )}
 

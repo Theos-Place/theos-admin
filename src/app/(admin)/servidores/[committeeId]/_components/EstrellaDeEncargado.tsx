@@ -20,7 +20,7 @@ type Props = {
  * clickearlo y no dice nada.
  */
 export function EstrellaDeEncargado({ nombre, encargado, puedeEditar, guardando, onToggle }: Props) {
-  const clase = cn('shrink-0 transition-colors', encargado ? 'text-coral' : 'text-navy-light/40')
+  const clase = cn('shrink-0 transition-colors', encargado ? 'text-coral-deep' : 'text-navy-light/40')
 
   if (!puedeEditar) {
     return encargado
@@ -38,7 +38,7 @@ export function EstrellaDeEncargado({ nombre, encargado, puedeEditar, guardando,
       aria-label={encargado ? `Quitar a ${nombre} como encargado del comité` : `Marcar a ${nombre} como encargado del comité`}
       className={cn(
         clase,
-        'rounded p-0.5 bg-transparent border-0 cursor-pointer hover:text-coral disabled:opacity-50',
+        'rounded p-0.5 bg-transparent border-0 cursor-pointer hover:text-coral-deep disabled:opacity-50',
       )}
     >
       <Star size={14} fill={encargado ? 'currentColor' : 'none'} />

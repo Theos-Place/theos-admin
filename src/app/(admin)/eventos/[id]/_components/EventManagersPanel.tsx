@@ -126,7 +126,7 @@ export function EventManagersPanel({ eventId }: { eventId: string }) {
                 onClick={() => remove(g)}
                 disabled={busy === g.member_id}
                 aria-label={`Quitar a ${g.member_name} de los encargados`}
-                className="shrink-0 rounded-full p-2 text-navy-light/80 hover:bg-coral/10 hover:text-coral transition-colors disabled:opacity-50"
+                className="shrink-0 rounded-full p-2 text-navy-light/80 hover:bg-coral/10 hover:text-coral-deep transition-colors disabled:opacity-50"
               >
                 {busy === g.member_id
                   ? <Loader2 size={14} className="animate-spin" />

@@ -43,7 +43,7 @@ export default function ReporteDiscipulosPage() {
       <div className="space-y-5">
         <div className="h-8 w-72 rounded-lg bg-surface-card animate-pulse" />
         {error ? (
-          <p className="text-sm text-coral font-body">{error}</p>
+          <p className="text-sm text-coral-deep font-body">{error}</p>
         ) : (
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -283,7 +283,7 @@ function CohortStat({ label, value, sub, highlight }: { label: string; value: st
   return (
     <div className={cn('rounded-xl p-3', highlight ? 'bg-coral/10' : 'bg-surface-low')}>
       <p className="text-[13px] text-navy-light/80 font-body">{label}</p>
-      <p className={cn('mt-1 text-xl font-extrabold tabular-nums font-display leading-none', highlight ? 'text-coral' : 'text-navy')}>{value}</p>
+      <p className={cn('mt-1 text-xl font-extrabold tabular-nums font-display leading-none', highlight ? 'text-coral-deep' : 'text-navy')}>{value}</p>
       {sub && <p className="mt-1 text-[13px] text-navy-light/80 font-body">{sub}</p>}
     </div>
   )

@@ -488,7 +488,7 @@ export default function SolicitudesDePuestosPage() {
         <Modal onClose={() => setConfirmando(false)} titleId="publicar-title">
           <div className="p-6 space-y-4">
             <div className="flex items-start gap-2.5">
-              <AlertTriangle size={18} className="text-coral mt-0.5 shrink-0" aria-hidden="true" />
+              <AlertTriangle size={18} className="text-coral-deep mt-0.5 shrink-0" aria-hidden="true" />
               <div>
                 <h2 id="publicar-title" className="text-lg font-semibold text-navy font-display">
                   Publicar los puestos del mes

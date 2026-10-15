@@ -37,7 +37,7 @@ export const SOLICITUD_LABEL: Record<string, string> = {
 
 export const SOLICITUD_BADGE: Record<string, string> = {
   open: 'bg-amber-50 text-amber-700', in_review: 'bg-amber-50 text-amber-700',
-  resolved: 'bg-teal-soft/30 text-teal-deep', rejected: 'bg-coral/10 text-coral-deep',
+  resolved: 'bg-teal-soft/30 text-teal-ink', rejected: 'bg-coral/10 text-coral-deep',
   por_modificar: 'bg-amber-50 text-amber-700',
 }
 
@@ -77,7 +77,7 @@ export function MisSolicitudesDeBeca({ memberId }: { memberId: string }) {
             <p className="text-[13px] font-medium text-navy font-body">{r.entity_name ?? '—'}</p>
             <p className="text-[13px] text-navy-light/80 font-body">{formatDate(r.created_at)}</p>
             {r.status === 'rejected' && r.review_notes && (
-              <p className="text-[13px] text-coral font-body mt-1">Motivo: {r.review_notes}</p>
+              <p className="text-[13px] text-coral-deep font-body mt-1">Motivo: {r.review_notes}</p>
             )}
             {/* BEC-5 punto 5 · El grupo se llenó: elegir otro sin empezar de
                 cero. Va acá y no en un modal aparte porque es UNA decisión,

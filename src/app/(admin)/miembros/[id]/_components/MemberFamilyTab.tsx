@@ -204,7 +204,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                 disabled={busy}
                 onChange={e => cambiarRelacion(fm, e.target.value)}
                 aria-label={`Relación de ${fm.name}`}
-                className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-1 text-[11px] text-teal-deep outline-none transition-colors hover:bg-teal-soft/50 focus:ring-2 focus:ring-teal-deep/30 disabled:opacity-50 font-body"
+                className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-1 text-[11px] text-teal-ink outline-none transition-colors hover:bg-teal-soft/50 focus:ring-2 focus:ring-teal-deep/30 disabled:opacity-50 font-body"
               >
                 {RELACIONES_FAMILIARES.map(r => <option key={r} value={r}>{r}</option>)}
                 {/* Si la fila trae algo fuera de la lista (datos viejos), se
@@ -214,7 +214,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                 )}
               </select>
             ) : (
-              <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-deep font-body">
+              <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink font-body">
                 {fm.relation}
               </span>
             )
@@ -239,7 +239,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                     onClick={() => setUnlinkTarget(fm)}
                     aria-label={`Desvincular a ${fm.name}`}
                     title="Desvincular"
-                    className="shrink-0 rounded-lg p-2 text-navy-light/80 hover:text-coral hover:bg-coral/10 transition-colors"
+                    className="shrink-0 rounded-lg p-2 text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors"
                   >
                     <UserMinus size={15} strokeWidth={1.75} />
                   </button>

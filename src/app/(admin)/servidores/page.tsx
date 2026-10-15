@@ -26,7 +26,7 @@ function CommitteeCard({ committee, onClick }: { committee: CommitteeData; onCli
       {/* Name + vacancy badge */}
       <div className="flex items-start justify-between gap-2">
         <p
-          className="text-sm font-semibold text-navy leading-snug group-hover:text-coral transition-colors font-display"
+          className="text-sm font-semibold text-navy leading-snug group-hover:text-coral-deep transition-colors font-display"
         >
           {committee.name}
         </p>
@@ -178,7 +178,7 @@ export default function ServidoresPage() {
           { label: 'Puestos ocupados',   value: puestosOcupados,   icon: Users,         color: 'text-navy' },
           { label: 'Personas únicas',    value: personasUnicas,    icon: Users,         color: 'text-teal-deep' },
           { label: 'Comités activos',    value: totalCommittees,   icon: Briefcase,     color: 'text-navy' },
-          { label: 'Cupos abiertos',     value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral' : 'text-navy' },
+          { label: 'Cupos abiertos',     value: openVacancies,     icon: AlertCircle,   color: openVacancies > 0 ? 'text-coral-deep' : 'text-navy' },
           { label: 'Apps pendientes',    value: pendingApps,       icon: ClipboardList, color: 'text-navy' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div

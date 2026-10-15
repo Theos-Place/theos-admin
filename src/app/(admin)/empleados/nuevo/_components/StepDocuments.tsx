@@ -171,7 +171,7 @@ export function StepDocuments({
                     onClick={() => onRemoveDoc(doc.key)}
                     className="h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors"
                   >
-                    <X size={13} className="text-coral" />
+                    <X size={13} className="text-coral-deep" />
                   </button>
                 ) : (
                   <>
@@ -248,7 +248,7 @@ export function StepDocuments({
                   onClick={() => onRemoveDoc(doc.key)}
                   className="h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors"
                 >
-                  <X size={13} className="text-coral" />
+                  <X size={13} className="text-coral-deep" />
                 </button>
               ) : (
                 <>

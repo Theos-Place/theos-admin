@@ -182,7 +182,7 @@ function SolicitarPuestoContent() {
           </div>
         </div>
 
-        {error && <p className="text-sm text-coral font-body">{error}</p>}
+        {error && <p className="text-sm text-coral-deep font-body">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 pt-1 border-t border-[var(--outline-variant)]">
           <button type="button" onClick={submit} disabled={!valid || saving}

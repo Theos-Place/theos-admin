@@ -21,7 +21,7 @@ const LOAD_MORE = 10
 
 const TYPE_BADGE: Record<string, string> = {
   Charla: 'bg-navy/10 text-navy',
-  Campamento: 'bg-teal-soft/30 text-teal-deep',
+  Campamento: 'bg-teal-soft/30 text-teal-ink',
   'Actividad Social': 'bg-coral/10 text-coral-deep',
   United: 'bg-navy-light/10 text-navy-light',
 }
@@ -43,7 +43,7 @@ function formatAmount(n: number | null) {
 
 function studyStageColor(stage: string): string {
   if (stage === 'niveles') return 'bg-navy/10 text-navy'
-  if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-deep'
+  if (stage === 'inicial') return 'bg-teal-soft/30 text-teal-ink'
   if (stage === 'campaña') return 'bg-purple-100 text-purple-700' // campañas = morado (consistente con StudyTypeBadge / plan)
   return 'bg-coral/10 text-coral-deep' // intermedia
 }
@@ -273,7 +273,7 @@ export function MemberParticipationTab({
                             distinguirlo sin abrir la base. */}
                         {row.esExterno && (
                           <span
-                            className="rounded px-1.5 py-0.5 text-[11px] bg-teal-soft/30 text-teal-deep font-body whitespace-nowrap"
+                            className="rounded px-1.5 py-0.5 text-[11px] bg-teal-soft/30 text-teal-ink font-body whitespace-nowrap"
                             title={[
                               row.fuenteExterna ? `Lo llevó en: ${row.fuenteExterna}` : 'No se registró dónde lo llevó',
                               row.registradoPor ? `Registrado por ${row.registradoPor}` : null,
@@ -289,7 +289,7 @@ export function MemberParticipationTab({
                     </td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', (row.status === 'Completado' || row.status === 'Aprobado') ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral/10 text-coral-deep')}
+                        className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', (row.status === 'Completado' || row.status === 'Aprobado') ? 'bg-teal-soft/30 text-teal-ink' : 'bg-coral/10 text-coral-deep')}
                       >
                         {row.status}
                       </span>
@@ -351,7 +351,7 @@ export function MemberParticipationTab({
                           row.paymentStatus === 'en_revision' ? (
                             <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[13px] font-semibold font-display">Pago en revisión</span>
                           ) : row.paymentStatus === 'aprobado' ? (
-                            <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[13px] font-semibold font-display">Pagado</span>
+                            <span className="rounded-full bg-teal-soft/30 text-teal-ink px-2.5 py-0.5 text-[13px] font-semibold font-display">Pagado</span>
                           ) : (
                             <span className="inline-flex flex-wrap items-center gap-2">
                               <span className="rounded-full bg-coral/10 text-coral-deep px-2.5 py-0.5 text-[13px] font-semibold font-display whitespace-nowrap">
@@ -399,7 +399,7 @@ export function MemberParticipationTab({
                         {row.groupId ? (
                           <Link
                             href={`/estudios/grupos/${row.groupId}`}
-                            className="inline-flex items-center gap-1 text-xs text-coral hover:text-coral-deep transition-colors whitespace-nowrap font-body"
+                            className="inline-flex items-center gap-1 text-xs text-coral-deep hover:text-coral-deep transition-colors whitespace-nowrap font-body"
                           >
                             Ver grupo →
                           </Link>
@@ -434,7 +434,7 @@ export function MemberParticipationTab({
           <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
             <button
               onClick={onLoadMoreEstudios}
-              className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+              className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
             >
               Cargar {LOAD_MORE} más (quedan {estudiosTable.sorted.length - visibleEstudios})
             </button>
@@ -459,7 +459,7 @@ export function MemberParticipationTab({
                   </p>
                 </div>
                 <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0 font-display',
-                  g.status === 'finalizado' ? 'bg-surface-low text-navy-light/80' : 'bg-teal-soft/30 text-teal-deep')}>
+                  g.status === 'finalizado' ? 'bg-surface-low text-navy-light/80' : 'bg-teal-soft/30 text-teal-ink')}>
                   {g.status === 'finalizado' ? 'Finalizado' : g.status === 'en_curso' ? 'En curso' : 'En matrícula'}
                 </span>
               </div>
@@ -514,7 +514,7 @@ export function MemberParticipationTab({
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-deep' : 'bg-surface-low text-navy-light/80')}
+                          className={cn('rounded-full px-2.5 py-0.5 text-xs font-body', row.status === 'activo' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-surface-low text-navy-light/80')}
                         >
                           {row.status === 'activo' ? 'Activo' : 'Finalizado'}
                         </span>
@@ -528,7 +528,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreServicio}
-                  className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {servicioTable.sorted.length - visibleServicio})
                 </button>
@@ -603,7 +603,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreEventos}
-                  className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {eventosTable.sorted.length - visibleEventos})
                 </button>
@@ -655,9 +655,9 @@ export function MemberParticipationTab({
                         <div className="flex items-center justify-end gap-3">
                           {row.requiresPayment && (
                             row.paymentStatus === 'paid' ? (
-                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[13px] font-semibold font-display">Pagado</span>
+                              <span className="rounded-full bg-teal-soft/30 text-teal-ink px-2.5 py-0.5 text-[13px] font-semibold font-display">Pagado</span>
                             ) : row.paymentStatus === 'exempted' ? (
-                              <span className="rounded-full bg-teal-soft/30 text-teal-deep px-2.5 py-0.5 text-[13px] font-semibold font-display">Exento</span>
+                              <span className="rounded-full bg-teal-soft/30 text-teal-ink px-2.5 py-0.5 text-[13px] font-semibold font-display">Exento</span>
                             ) : row.paymentStatus === 'expired' ? (
                               <span className="rounded-full bg-coral/10 text-coral-deep px-2.5 py-0.5 text-[13px] font-semibold font-display">Reserva vencida</span>
                             ) : row.reviewStatus === 'en_revision' ? (
@@ -688,7 +688,7 @@ export function MemberParticipationTab({
               <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                 <button
                   onClick={onLoadMoreEventRegistrations}
-                  className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+                  className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                 >
                   Cargar {LOAD_MORE} más (quedan {eventRegistrationTable.sorted.length - visibleEventRegistrations})
                 </button>
@@ -800,7 +800,7 @@ export function MemberParticipationTab({
                   <div className="px-4 py-3 border-t border-[var(--outline-variant)]">
                     <button
                       onClick={onLoadMoreDonaciones}
-                      className="text-xs text-navy-light/80 hover:text-coral transition-colors font-body"
+                      className="text-xs text-navy-light/80 hover:text-coral-deep transition-colors font-body"
                     >
                       Cargar {LOAD_MORE} más (quedan {donacionesTable.sorted.length - visibleDonaciones})
                     </button>

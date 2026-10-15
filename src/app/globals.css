@@ -70,6 +70,9 @@
   --color-coral-soft:    #F78382;
   --color-teal:          #70BDC2;
   --color-teal-deep:     #3B7579;
+  /* 2026-10-15 · El teal como TEXTO sobre un tinte teal. teal-deep queda al filo
+     (3.93 en el peor caso, tinte sobre tarjeta gris); este da 5.44. */
+  --color-teal-ink:      #2F5E61;
   --color-teal-soft:     #B5DDE0;
   --color-surface:       #F8FAFB;
   --color-surface-low:   #F2F4F5;

@@ -189,14 +189,14 @@ export default function ImportarGruposPage() {
             <p className="text-sm mt-1 font-body text-navy-light/80">.xlsx o .csv — hacé clic para seleccionar</p>
           </button>
           <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
-          {error && <p className="text-sm text-coral font-body inline-flex items-center gap-1.5"><AlertCircle size={15} /> {error}</p>}
+          {error && <p className="text-sm text-coral-deep font-body inline-flex items-center gap-1.5"><AlertCircle size={15} /> {error}</p>}
         </div>
       )}
 
       {step === 2 && preview && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-sm font-body">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-teal-deep"><CheckCircle2 size={14} /> {preview.valid} válidas</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1 text-teal-ink"><CheckCircle2 size={14} /> {preview.valid} válidas</span>
             {preview.warnings.length > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-amber-700"><AlertTriangle size={14} /> {preview.warnings.length} advertencias</span>}
             {preview.errors.length > 0 && <span className="inline-flex items-center gap-1.5 rounded-full bg-coral/10 px-3 py-1 text-coral-deep"><AlertCircle size={14} /> {preview.errors.length} con error (no se importan)</span>}
           </div>
@@ -239,7 +239,7 @@ export default function ImportarGruposPage() {
             </div>
           </div>
 
-          {error && <p className="text-sm text-coral font-body inline-flex items-center gap-1.5"><AlertCircle size={15} /> {error}</p>}
+          {error && <p className="text-sm text-coral-deep font-body inline-flex items-center gap-1.5"><AlertCircle size={15} /> {error}</p>}
 
           <div className="flex justify-between">
             <button type="button" onClick={() => { setStep(1); setPreview(null); setRows([]); setFileName('') }} className="rounded-xl border border-[var(--outline-variant)] px-4 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">

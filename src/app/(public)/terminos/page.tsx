@@ -60,7 +60,7 @@ export default function TerminosPage() {
         </p>
 
         {/* Nota de vigencia (discreta, de cara al público) */}
-        <div className="mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-deep font-body leading-relaxed">
+        <div className="mt-5 rounded-2xl bg-teal-soft/20 px-4 py-3 text-[13px] text-teal-ink font-body leading-relaxed">
           Este documento puede actualizarse periódicamente. La fecha de última
           actualización indicada arriba refleja la versión vigente. Te recomendamos
           revisarlo de vez en cuando.
@@ -72,7 +72,7 @@ export default function TerminosPage() {
           <ol className="space-y-1.5">
             {SECTIONS.map(s => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="text-[14px] text-navy-light hover:text-coral transition-colors font-body">
+                <a href={`#${s.id}`} className="text-[14px] text-navy-light hover:text-coral-deep transition-colors font-body">
                   {s.title}
                 </a>
               </li>

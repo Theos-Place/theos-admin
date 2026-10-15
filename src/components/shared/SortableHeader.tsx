@@ -40,7 +40,7 @@ export function SortableHeader({ label, sortKey, currentSortKey, currentSortDir,
         <span
           className={cn(
             'flex items-center transition-colors duration-120',
-            isActive ? 'text-coral' : 'text-navy-light/80'
+            isActive ? 'text-coral-deep' : 'text-navy-light/80'
           )}
         >
           {isActive

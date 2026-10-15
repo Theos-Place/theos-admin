@@ -46,7 +46,7 @@ const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  aprobado:  'bg-teal-soft/30 text-teal-deep',
+  aprobado:  'bg-teal-soft/30 text-teal-ink',
   pendiente: 'bg-amber-100 text-amber-700',
   rechazado: 'bg-coral/10 text-coral-deep',
 }
@@ -207,7 +207,7 @@ export default function EmpleadoDetailPage() {
       label: `Ajuste salarial: ${s.previous_salary != null ? `${formatCRC(s.previous_salary)}` : '₡ ••••••'} → ${s.new_salary != null ? `${formatCRC(s.new_salary)}` : '₡ ••••••'}`,
       sub:   s.reason,
       icon:  DollarSign,
-      color: 'bg-teal-soft/30 text-teal-deep',
+      color: 'bg-teal-soft/30 text-teal-ink',
     })),
     ...employee.position_history.map(p => ({
       date: p.start_date,
@@ -266,7 +266,7 @@ export default function EmpleadoDetailPage() {
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px font-display',
                   tab === t.key
-                    ? 'border-coral text-coral'
+                    ? 'border-coral text-coral-deep'
                     : 'border-transparent text-navy-light/80 hover:text-navy'
                 )}
               >

@@ -149,7 +149,7 @@ export default function ReporteServidoresPage() {
           <button
             type="button"
             onClick={() => { setArea(''); setComite('') }}
-            className="text-[13px] text-coral hover:underline font-body bg-transparent border-0 cursor-pointer"
+            className="text-[13px] text-coral-deep hover:underline font-body bg-transparent border-0 cursor-pointer"
           >
             Ver todo
           </button>
@@ -195,7 +195,7 @@ export default function ReporteServidoresPage() {
                           <button
                             type="button"
                             onClick={() => (area || comite ? setComite(f.id) : setArea(f.id))}
-                            className="text-left hover:text-coral hover:underline bg-transparent border-0 cursor-pointer font-body"
+                            className="text-left hover:text-coral-deep hover:underline bg-transparent border-0 cursor-pointer font-body"
                           >
                             {f.nombre}
                           </button>

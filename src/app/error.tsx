@@ -18,7 +18,7 @@ export default function Error({
     <div className="flex min-h-screen items-center justify-center bg-surface p-6">
       <div className="flex w-full max-w-md flex-col items-center rounded-2xl border border-[rgba(214,62,61,0.15)] bg-surface-card p-8 text-center">
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(214,62,61,0.08)]">
-          <AlertTriangle size={22} className="text-coral" />
+          <AlertTriangle size={22} className="text-coral-deep" />
         </div>
         <p className="mb-1 font-display text-base font-semibold text-navy">
           Algo salió mal

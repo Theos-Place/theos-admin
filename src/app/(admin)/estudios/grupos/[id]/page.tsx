@@ -347,7 +347,7 @@ function SendMessageModal({ groupName, memberIds, onClose }: {
           value={msg}
           onChange={e => setMsg(e.target.value)}
         />
-        {error && <p className="text-sm text-coral font-body" role="alert">{error}</p>}
+        {error && <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>}
         <div className="flex gap-2">
           <button
             onClick={handleSend}
@@ -628,7 +628,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             </fieldset>
 
             <div>
-              <label htmlFor="withdraw-reason" className="block text-[13px] font-medium text-coral font-body mb-1">
+              <label htmlFor="withdraw-reason" className="block text-[13px] font-medium text-coral-deep font-body mb-1">
                 {BAJA_COPY[tipoBaja].labelMotivo} <span aria-hidden>*</span>
               </label>
               <textarea
@@ -644,11 +644,11 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               {/* La razón por la que no se puede seguir, visible antes de
                   apretar: un botón gris sin explicación es una pared. */}
               {motivoInvalido && withdrawReason.length > 0 && (
-                <p className="mt-1 text-[13px] text-coral font-body">{motivoInvalido}</p>
+                <p className="mt-1 text-[13px] text-coral-deep font-body">{motivoInvalido}</p>
               )}
             </div>
             {withdrawError && (
-              <p className="text-sm text-coral font-body" role="alert">
+              <p className="text-sm text-coral-deep font-body" role="alert">
                 No se pudo. Intentá de nuevo.
               </p>
             )}
@@ -781,7 +781,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
               </Link>
               <button
                 onClick={() => setDeleteOpen(true)}
-                className="rounded-xl border px-3.5 py-2 text-sm text-coral hover:bg-coral/10 transition-colors flex items-center border-coral/30 font-body"
+                className="rounded-xl border px-3.5 py-2 text-sm text-coral-deep hover:bg-coral/10 transition-colors flex items-center border-coral/30 font-body"
                 aria-label="Eliminar grupo"
               >
                 <Trash2 size={14} />
@@ -813,7 +813,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             className={cn(
               'px-4 py-2.5 text-sm transition-all border-b-2 -mb-px shrink-0 whitespace-nowrap',
               activeTab === t
-                ? 'border-coral text-coral font-medium'
+                ? 'border-coral text-coral-deep font-medium'
                 : 'border-transparent text-navy-light/80 hover:text-navy',
               'font-body',
             )}
@@ -943,14 +943,14 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                           'rounded-md px-2 py-0.5 text-[11px] font-medium',
                           p.status === 'withdrawn' ? 'bg-surface-low text-navy-light/80'
                             : p.result === 'reprobado' ? 'bg-coral/10 text-coral-deep'
-                            : 'bg-teal-soft/30 text-teal-deep'
+                            : 'bg-teal-soft/30 text-teal-ink'
                         )}>
                           {p.status === 'withdrawn' ? 'Retirado' : p.result === 'reprobado' ? 'Reprobó' : 'Aprobado'}
                         </span>
                       ) : (
                         <span className={cn(
                           'rounded-md px-2 py-0.5 text-[11px] font-medium',
-                          p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-deep' :
+                          p.status === 'enrolled' ? 'bg-teal-soft/30 text-teal-ink' :
                           p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                           'bg-surface-low text-navy-light/80'
                         )}>
@@ -1026,7 +1026,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                                 setTipoBaja('cancelar')
                                 setWithdrawTarget({ member_id: p.member_id, member_name: p.member_name, enrollment_id: p.enrollment_id })
                               }}
-                              className="rounded-lg px-2 py-1 text-[11px] text-coral border border-coral/20 hover:bg-coral/5 transition-colors font-body"
+                              className="rounded-lg px-2 py-1 text-[11px] text-coral-deep border border-coral/20 hover:bg-coral/5 transition-colors font-body"
                             >
                               Sacar del grupo
                             </button>
@@ -1094,7 +1094,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
                   </button>
                 </div>
                 {waError && (
-                  <p className="text-sm text-coral font-body" role="alert">
+                  <p className="text-sm text-coral-deep font-body" role="alert">
                     No se pudo guardar el link. Intentá de nuevo.
                   </p>
                 )}

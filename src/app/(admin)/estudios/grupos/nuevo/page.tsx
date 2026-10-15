@@ -357,7 +357,7 @@ export default function NuevoGrupoPage() {
                   el monto vive ahí y convertirlo sería inventar un tipo de
                   cambio. Se avisa para que se use un plan con el precio correcto. */}
               {monedaZonaDistinta && (
-                <p className="text-[13px] text-coral font-body">
+                <p className="text-[13px] text-coral-deep font-body">
                   {zonaSede?.name} cobra en {zonaSede?.currency} y este estudio está en{' '}
                   {studyType?.currency ?? 'CRC'}: la matrícula se cobraría en{' '}
                   {studyType?.currency ?? 'CRC'}. Si el precio es en {zonaSede?.currency},
@@ -602,7 +602,7 @@ export default function NuevoGrupoPage() {
             <div className="space-y-1">
               <label htmlFor="grupo-co-dirigente" className={cn(
                 'text-[13px] tracking-widest uppercase font-display',
-                esPremat ? 'text-coral' : 'text-navy-light/80',
+                esPremat ? 'text-coral-deep' : 'text-navy-light/80',
               )}>
                 {esPremat ? <>Co-dirigente <span aria-hidden>*</span></> : 'Co-dirigente (opcional)'}
               </label>

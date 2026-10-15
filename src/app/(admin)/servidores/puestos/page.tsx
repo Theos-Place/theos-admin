@@ -326,7 +326,7 @@ function CloseVacancyButton({ vacancyId, onClosed }: { vacancyId: string; onClos
   }
   return (
     <>
-      <button onClick={() => setConfirmOpen(true)} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-coral hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
+      <button onClick={() => setConfirmOpen(true)} disabled={busy} className="inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1.5 text-[13px] text-coral-deep hover:bg-coral/5 transition-colors disabled:opacity-50 font-body">
         <XCircle size={12} aria-hidden /> {busy ? 'Bajando…' : 'Bajar'}
       </button>
       {confirmOpen && (

@@ -118,7 +118,7 @@ export function Step2Programacion({
           )}
         </div>
         {endBeforeStart && (
-          <p className="text-[13px] text-coral mt-2 font-body" role="alert">
+          <p className="text-[13px] text-coral-deep mt-2 font-body" role="alert">
             La fecha y hora de fin no pueden ser anteriores a las de inicio.
           </p>
         )}

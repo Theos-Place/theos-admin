@@ -210,7 +210,7 @@ export default function ConfiguracionPage() {
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {config.is_verified ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-[11px] font-semibold text-teal-deep font-display">
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal-soft/30 px-2.5 py-0.5 text-[11px] font-semibold text-teal-ink font-display">
                 <CheckCircle2 size={10} /> Verificado
               </span>
             ) : (
@@ -222,7 +222,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral-deep')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-ink' : 'bg-coral/10 text-coral-deep')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ Conexión exitosa' : '✗ No se pudo conectar. Verificá los datos.'}
           </div>
@@ -241,7 +241,7 @@ export default function ConfiguracionPage() {
           <button type="button" onClick={() => openEditSmtp(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -262,14 +262,14 @@ export default function ConfiguracionPage() {
           </div>
           <span className={cn(
             'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0 font-display',
-            config.is_verified ? 'bg-teal-soft/30 text-teal-deep' : 'bg-red-50 text-red-600'
+            config.is_verified ? 'bg-teal-soft/30 text-teal-ink' : 'bg-red-50 text-red-600'
           )}>
             {config.is_verified ? <><CheckCircle2 size={10} /> Conectado</> : <><XCircle size={10} /> Desconectado</>}
           </span>
         </div>
 
         {result && (
-          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-deep' : 'bg-coral/10 text-coral-deep')}>
+          <div className={cn('flex items-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-body', result === 'ok' ? 'bg-teal-soft/20 text-teal-ink' : 'bg-coral/10 text-coral-deep')}>
             {result === 'ok' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
             {result === 'ok' ? '✓ WhatsApp conectado correctamente' : '✗ No se pudo conectar con la API.'}
           </div>
@@ -288,7 +288,7 @@ export default function ConfiguracionPage() {
           <button type="button" onClick={() => openEditWa(config)} aria-label={`Editar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors border-[var(--outline-variant)]">
             <Edit size={13} />
           </button>
-          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
+          <button type="button" onClick={() => setDeleteTarget(config)} aria-label={`Eliminar cuenta ${config.name}`} className="rounded-full border p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 hover:border-coral/20 transition-colors border-[var(--outline-variant)]">
             <Trash2 size={13} />
           </button>
         </div>
@@ -654,7 +654,7 @@ function EmailSection() {
         </div>
         <span className={cn(
           'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold shrink-0 font-display',
-          status.configured ? 'bg-teal-soft/30 text-teal-deep' : 'bg-coral/10 text-coral-deep',
+          status.configured ? 'bg-teal-soft/30 text-teal-ink' : 'bg-coral/10 text-coral-deep',
         )}>
           {status.configured ? <><CheckCircle2 size={10} /> Configurado</> : <><XCircle size={10} /> Sin configurar</>}
         </span>
@@ -696,7 +696,7 @@ function EmailSection() {
               </span>
             )}
             {testResult && testResult !== 'ok' && (
-              <span className="inline-flex items-center gap-1 text-[13px] text-coral font-body">
+              <span className="inline-flex items-center gap-1 text-[13px] text-coral-deep font-body">
                 <XCircle size={13} /> {testResult}
               </span>
             )}
@@ -704,7 +704,7 @@ function EmailSection() {
         </>
       ) : (
         <div className="rounded-xl bg-coral/7 border border-coral/20 px-4 py-3">
-          <p className="text-[13px] text-coral font-body">
+          <p className="text-[13px] text-coral-deep font-body">
             Configurá las variables <code className="font-mono text-[13px]">SES_SMTP_*</code> y <code className="font-mono text-[13px]">SES_FROM_*</code> en el servidor
             (Vercel → Settings → Environment Variables) para habilitar el envío de emails.
             Los envíos están bloqueados hasta entonces.
