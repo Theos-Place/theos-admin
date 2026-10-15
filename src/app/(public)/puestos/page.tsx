@@ -8,6 +8,8 @@ import { MapPin, Clock, Users, Search, Briefcase, GraduationCap } from 'lucide-r
 import { PublicApplyButton } from '@/components/servers/PublicApplyButton'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Modal } from '@/components/shared/Modal'
+import { useAlturaParaElSitio } from '@/hooks/useAlturaParaElSitio'
+import { cn } from '@/lib/utils'
 
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_PUESTOS: PublicVacancy[] = []
@@ -50,6 +52,9 @@ function VacantesPublicasContent() {
   const [comiteFilter, setComiteFilter] = useState('all')
   const [ubicacionFilter, setUbicacionFilter] = useState('all')
   const [abierto, setAbierto] = useState<PublicVacancy | null>(null)
+  /** Embebida: el detalle se abre DENTRO de la tarjeta (ver abajo). */
+  const [expandido, setExpandido] = useState<string | null>(null)
+  const medirParaElSitio = useAlturaParaElSitio(embebida)
 
   /**
    * `?puesto=<id>` abre ese puesto. Es el regreso del login: quien aplicó sin
@@ -71,7 +76,7 @@ function VacantesPublicasContent() {
   if (puestoEnURL && !yaAbrio && vacancies.length > 0) {
     setYaAbrio(true)
     const v = vacancies.find(x => x.id === puestoEnURL)
-    if (v) setAbierto(v)
+    if (v) { if (embebida) setExpandido(v.id); else setAbierto(v) }
   }
 
   const comiteOptions = useMemo(
@@ -95,7 +100,12 @@ function VacantesPublicasContent() {
   }, [vacancies, q, comiteFilter, ubicacionFilter])
 
   return (
-    <div className="min-h-screen bg-surface-low">
+    // Embebida (2026-10-15): fondo BLANCO, como el sitio, y tarjetas en gris
+    // muy claro. El gris de la página suelta delataba el iframe.
+    // Sin `min-h-screen` embebida: adentro del iframe, la pantalla ES el iframe,
+    // así que la página medía lo mismo que el iframe, el iframe crecía a lo
+    // que medía la página, y así sin parar (llegó a 17.000 px en la prueba).
+    <div ref={medirParaElSitio} className={embebida ? 'bg-white' : 'min-h-screen bg-surface-low'}>
       {/* Encabezado público. Se esconde con `?embed=1`: dentro del sitio de
           Theos, que ya tiene su propio header, se veían dos pegados. */}
       {!embebida && (
@@ -118,7 +128,7 @@ function VacantesPublicasContent() {
       </header>
       )}
 
-      <main><PageContainer width="work" className="px-5 py-8">
+      <main><PageContainer width="work" className={embebida ? 'px-1 py-2' : 'px-5 py-8'}>
         {/* Filtros */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2.5 ring-1 ring-navy/10 focus-within:ring-navy/25">
@@ -173,7 +183,8 @@ function VacantesPublicasContent() {
             const cupos = Math.max(0, v.slots_total - v.slots_filled)
             const desc = v.description || v.position_description || ''
             return (
-              <article key={v.id} className="flex flex-col rounded-2xl bg-white p-5 ring-1 ring-navy/10">
+              <article key={v.id} className={cn('flex flex-col rounded-2xl p-5',
+                embebida ? 'bg-surface' : 'bg-white ring-1 ring-navy/10')}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-base font-semibold text-navy font-display">{v.title}</h2>
@@ -182,11 +193,17 @@ function VacantesPublicasContent() {
                     </p>
                   </div>
                   {v.is_featured && (
-                    <span className="shrink-0 rounded-full bg-coral/10 px-2.5 py-1 text-[13px] font-medium text-coral-deep font-body">Destacado</span>
+                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[13px] font-medium text-coral-deep ring-1 ring-coral/25 font-body">Destacado</span>
                   )}
                 </div>
 
-                {desc && <p className="mt-3 text-sm text-navy-light/80 font-body line-clamp-4">{desc}</p>}
+                {desc && <p className={cn('mt-3 text-sm text-navy-light/80 font-body', expandido === v.id ? 'whitespace-pre-line' : 'line-clamp-4')}>{desc}</p>}
+                {expandido === v.id && v.position_study_requirement && (
+                  <p className="mt-2 inline-flex items-start gap-1.5 text-sm text-navy-light/80 font-body">
+                    <GraduationCap size={14} className="mt-0.5 shrink-0" aria-hidden />
+                    Requisito de estudios: {v.position_study_requirement}
+                  </p>
+                )}
 
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-navy-light/80 font-body">
                   {v.schedule && <span className="inline-flex items-center gap-1.5"><Clock size={13} aria-hidden />{v.schedule}</span>}
@@ -196,12 +213,17 @@ function VacantesPublicasContent() {
 
                 <div className="mt-4 pt-1 flex flex-wrap items-center gap-2">
                   <PublicApplyButton vacancyId={v.id} volverA={`/puestos?puesto=${v.id}`} />
+                  {/* Embebida, el iframe mide lo que mide el contenido: un modal
+                      quedaría centrado en una página altísima, fuera de la vista.
+                      Ahí el detalle se abre en la misma tarjeta. */}
                   <button
                     type="button"
-                    onClick={() => setAbierto(v)}
-                    className="rounded-full border border-navy/15 px-4 py-2 text-sm text-navy hover:bg-navy/5 transition-colors font-body"
+                    onClick={() => embebida ? setExpandido(expandido === v.id ? null : v.id) : setAbierto(v)}
+                    aria-expanded={embebida ? expandido === v.id : undefined}
+                    className={cn('rounded-full border border-navy/15 px-4 py-2 text-sm text-navy hover:bg-navy/5 transition-colors font-body',
+                      embebida && 'bg-white')}
                   >
-                    Ver detalle
+                    {embebida && expandido === v.id ? 'Ver menos' : 'Ver detalle'}
                   </button>
                 </div>
               </article>
