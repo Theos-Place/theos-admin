@@ -68,7 +68,10 @@ export function DirigentesCombobox({ value, onChange, placeholder = 'Seleccionar
   // LINT-1 · Abrir y cerrar son ACCIONES: el foco y los reseteos van en el
   // manejador, no en un efecto que mire `open` después de pintar.
   function abrir() {
-    abrir()
+    // Era `abrir()`: se llamaba a sí misma (refactor LINT-1, c994a9e7). Al
+    // enfocar el campo reventaba la pila y la lista nunca se abría, así que no
+    // se podía elegir dirigente ni co-dirigente al crear o editar un grupo.
+    setOpen(true)
     setHighlight(0)
     setTimeout(() => inputRef.current?.focus(), 0)
   }
