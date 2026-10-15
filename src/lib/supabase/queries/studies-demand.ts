@@ -194,8 +194,9 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
   const prereqWeeks = (prereqPlan as { duration_weeks: number | null } | null)?.duration_weeks ?? null
 
   // Inscripciones (activas + completadas) con inicio del grupo, código del plan
-  // y datos del miembro (compromisos + zona). Paginado: PostgREST corta en 1000.
+  // y datos del miembro (compromisos + zona).
   type EnrollRow = {
+    id: string
     member_id: string
     status: string
     group: { starts_at: string | null; plan: { code: string | null } | null } | null
@@ -203,24 +204,63 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
     plan_direct: { code: string | null } | null
     member: { is_donor: boolean; province: string | null; is_active: boolean; sede: { code: string } | null } | null
   }
-  const enrollments: EnrollRow[] = []
-  for (let from = 0; ; from += 1000) {
+  /**
+   * QA-3/N3 (2026-10-15) · Solo las matrículas de los planes que el cálculo
+   * USA: el estudio, su requisito y los que vienen después en la cadena. Antes
+   * se paginaban las ~37.000 matrículas de toda la historia (3.127 llamadas ·
+   * 186 ms por página · 583 s acumulados en prod) para descartar casi todas.
+   *
+   * Es la UNIÓN de dos consultas y no una sola, a propósito: el código de una
+   * matrícula sale del plan de su GRUPO y, si no tiene grupo, del suyo
+   * (`plan_direct`). En 77 matrículas los dos no coinciden (medido), así que
+   * filtrar solo por uno de ellos cambiaría resultados. Con la unión llega un
+   * superconjunto y el bucle de abajo descarta lo demás, igual que antes.
+   */
+  const ENROLL_SELECT = `
+    id, member_id, status,
+    group:study_groups!study_enrollments_group_id_fkey(starts_at, plan:study_plans(code)),
+    plan_direct:study_plans!study_enrollments_plan_id_fkey(code),
+    member:members!study_enrollments_member_id_fkey(is_donor, province, is_active, sede:sedes(code))
+  `
+  const codigosQueImportan = [...new Set([studyCode, ...(prereq ? [prereq] : []), ...descendants])]
+  const { data: planesRelevantes, error: prErr } = await supabase
+    .from('study_plans').select('id').in('code', codigosQueImportan)
+  if (prErr) throw prErr
+  const planIds = ((planesRelevantes ?? []) as Array<{ id: string }>).map(p => p.id)
+
+  const grupoIds: string[] = []
+  for (let from = 0; planIds.length; from += 1000) {
     const { data, error } = await supabase
-      .from('study_enrollments')
-      .select(`
-        member_id, status,
-        group:study_groups!study_enrollments_group_id_fkey(starts_at, plan:study_plans(code)),
-        plan_direct:study_plans!study_enrollments_plan_id_fkey(code),
-        member:members!study_enrollments_member_id_fkey(is_donor, province, is_active, sede:sedes(code))
-      `)
-      .in('status', ['enrolled', 'completed'])
-      .order('id')
-      .range(from, from + 999)
+      .from('study_groups').select('id').in('plan_id', planIds).order('id').range(from, from + 999)
     if (error) throw error
-    const batch = (data ?? []) as EnrollRow[]
-    enrollments.push(...batch)
+    const batch = (data ?? []) as Array<{ id: string }>
+    grupoIds.push(...batch.map(g => g.id))
     if (batch.length < 1000) break
   }
+
+  const porId = new Map<string, EnrollRow>()
+  async function traer(filtro: (q: ReturnType<typeof base>) => ReturnType<typeof base>) {
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await filtro(base()).order('id').range(from, from + 999)
+      if (error) throw error
+      const batch = (data ?? []) as unknown as EnrollRow[]
+      for (const r of batch) porId.set(r.id, r)
+      if (batch.length < 1000) break
+    }
+  }
+  function base() {
+    return supabase.from('study_enrollments').select(ENROLL_SELECT).in('status', ['enrolled', 'completed'])
+  }
+  if (planIds.length) await traer(q => q.in('plan_id', planIds))
+  // De a 200 ids: una lista de miles en `.in()` no cabe en la URL.
+  for (let i = 0; i < grupoIds.length; i += 200) {
+    const tanda = grupoIds.slice(i, i + 200)
+    await traer(q => q.in('group_id', tanda))
+  }
+  // EL MISMO ORDEN que la consulta vieja (por id): el bucle de abajo deja
+  // ganar a la ÚLTIMA matrícula activa del requisito (`prereqStartsAt`), así
+  // que el orden cambia resultados. Sin esto, juntar dos consultas lo rompía.
+  const enrollments = [...porId.values()].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))
 
   type MemberState = {
     zone: string
@@ -299,7 +339,10 @@ export async function getStudyDemand(studyCode: string, now: Date = new Date()):
       eligible_members: v.eligible,
     }))
     .filter(r => r.graduating + r.eligible > 0)
-    .sort((a, b) => (b.graduating + b.eligible) - (a.graduating + a.eligible))
+    // Empate en el total: por nombre de zona. Antes el empate lo resolvía el
+    // orden en que aparecía cada persona en TODA la historia de matrículas,
+    // que no significa nada y cambiaba al cambiar la consulta.
+    .sort((a, b) => (b.graduating + b.eligible) - (a.graduating + a.eligible) || a.zone.localeCompare(b.zone, 'es'))
 
   return {
     rows: rowsOut,
