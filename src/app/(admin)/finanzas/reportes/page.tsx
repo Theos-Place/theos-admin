@@ -3,6 +3,11 @@
 import { useState, useMemo } from 'react'
 import { BarChart2, Download, Package } from 'lucide-react'
 import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_PRIMARIO,
+  TARJETAS, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+  CAJA_TABLA, TH, TD, FILA, CELDA_FUERTE, CELDA, CARGAR_MAS,
+} from '@/components/finance/reporte-ui'
 import { DonacionesPanel } from '@/components/finance/DonacionesPanel'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { FinanceGuard } from '@/components/finance/FinanceGuard'
@@ -217,53 +222,46 @@ export default function ReportesPage() {
 
         {/* Tab 2 — Payments by entity */}
         {activeTab === 'payments' && (
-          <div className="space-y-5">
-            {/* Mismo molde que Donaciones: los filtros a la izquierda (bajan de
-                línea por dentro si no caben) y Mostrar/Exportar arriba a la derecha. */}
-            <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-1 min-w-0 flex-wrap items-center gap-2">
-              {/* REP-17 · rango por fecha de pago (cancelados) o de creación del cobro (el resto). */}
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-navy-light/80 font-body">Desde</span>
-                <input type="date" value={pagoDesde} onChange={e => setPagoDesde(e.target.value)} aria-label="Pagos desde"
-                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+          <div className={PESTANA}>
+            {/* Mismo molde que Donaciones: filtros a la izquierda, acciones a la derecha. */}
+            <div className={BARRA}>
+              <div className={BARRA_IZQ}>
+                {/* REP-17 · rango por fecha de pago (cancelados) o de creación del cobro (el resto). */}
+                <label className={GRUPO_FILTRO}>
+                  <span className={ETIQUETA_FILTRO}>Desde</span>
+                  <input type="date" value={pagoDesde} onChange={e => setPagoDesde(e.target.value)} aria-label="Pagos desde" className={CAMPO_FECHA} />
+                </label>
+                <label className={GRUPO_FILTRO}>
+                  <span className={ETIQUETA_FILTRO}>Hasta</span>
+                  <input type="date" value={pagoHasta} onChange={e => setPagoHasta(e.target.value)} aria-label="Pagos hasta" className={CAMPO_FECHA} />
+                </label>
+                <select value={categoriaFilter} onChange={e => { setCategoriaFilter(e.target.value); setEntityFilter('all') }} aria-label="Comité" className={CAMPO}>
+                  {opcionesDeCategoria.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} aria-label="Entidad" className={CAMPO}>
+                  {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-navy-light/80 font-body">Hasta</span>
-                <input type="date" value={pagoHasta} onChange={e => setPagoHasta(e.target.value)} aria-label="Pagos hasta"
-                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
-              </div>
-              <select value={categoriaFilter} onChange={e => { setCategoriaFilter(e.target.value); setEntityFilter('all') }} aria-label="Comité"
-                className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
-                {opcionesDeCategoria.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} aria-label="Entidad"
-                className="rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
-                {entities.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
-            </div>
-              <div className="flex shrink-0 items-center gap-2">
-              <BotonMostrarMontos visibles={revelarPagos} onCambio={() => setRevelarPagos(r => !r)} />
-              <button onClick={exportPaymentsCSV}
-                className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body">
-                <Download size={14} />
-                Exportar CSV
-              </button>
+              <div className={BARRA_DER}>
+                <BotonMostrarMontos visibles={revelarPagos} onCambio={() => setRevelarPagos(r => !r)} />
+                <button type="button" onClick={exportPaymentsCSV} className={BOTON_PRIMARIO}>
+                  <Download size={14} aria-hidden /> Exportar CSV
+                </button>
               </div>
             </div>
 
             {/* Stats for filtered */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={TARJETAS}>
               {[
                 // INT-3: totales por moneda, nunca sumados entre sí.
-                { label: 'Total cobrado', value: sumByCurrency(paidPayments), color: '#3DB97A' },
-                { label: 'Pendiente', value: sumByCurrency(pendingPayments), color: '#E9B949' },
-                { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: '#3B7579' },
+                { label: 'Total cobrado', value: sumByCurrency(paidPayments), color: VALOR_DINERO },
+                { label: 'Pendiente', value: sumByCurrency(pendingPayments), color: VALOR_PENDIENTE },
+                { label: 'Devuelto', value: sumByCurrency(refundedPayments), color: VALOR_NEUTRO },
               ].map(({ label, value, color }) => (
-                // Mismo molde que las tarjetas de Donaciones (2026-10-14).
-                <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                  <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
-                  <p className="text-2xl font-extrabold font-display" style={{ color }}>
+                // Mismo molde que las tarjetas de Donaciones (reporte-ui).
+                <div key={label} className={TARJETA}>
+                  <p className={TARJETA_ETIQUETA}>{label}</p>
+                  <p className={`${TARJETA_VALOR} ${color}`}>
                     <TotalsDisplay totals={value} revealed={revelarPagos} />
                   </p>
                 </div>
@@ -271,7 +269,7 @@ export default function ReportesPage() {
             </div>
 
             {/* REP-17 · Por comité: lo que pide finanzas de un vistazo. */}
-            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className={CAJA_TABLA}>
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[11px] uppercase tracking-widest font-display text-navy-light/80">Por comité</p>
                 <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
@@ -286,7 +284,7 @@ export default function ReportesPage() {
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Comité', 'Pagos', 'Cobrado', 'Pendiente', 'Devuelto'].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">{h}</th>
+                        <th key={h} className={TH}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -294,13 +292,13 @@ export default function ReportesPage() {
                     {resumenPorComite.length === 0 && (
                       <tr><td colSpan={5} className="px-5 py-6 text-center text-[13px] text-navy-light/80 font-body">No hay pagos en ese rango.</td></tr>
                     )}
-                    {resumenPorComite.map((r, i) => (
-                      <tr key={r.clave} className={`border-b border-[var(--outline-variant)] ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                        <td className="px-5 py-3"><p className="text-[13px] font-medium font-body text-navy">{r.label}</p></td>
-                        <td className="px-5 py-3"><p className="text-[13px] font-body text-navy-light/80 tabular-nums">{r.n}</p></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.cobrado)} revealed={revelarPagos} /></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.pendiente)} revealed={revelarPagos} /></td>
-                        <td className="px-5 py-3"><TotalsDisplay totals={sumByCurrency(r.devuelto)} revealed={revelarPagos} /></td>
+                    {resumenPorComite.map(r => (
+                      <tr key={r.clave} className={FILA}>
+                        <td className={TD}><p className={CELDA_FUERTE}>{r.label}</p></td>
+                        <td className={TD}><p className={`${CELDA} tabular-nums`}>{r.n}</p></td>
+                        <td className={TD}><TotalsDisplay totals={sumByCurrency(r.cobrado)} revealed={revelarPagos} /></td>
+                        <td className={TD}><TotalsDisplay totals={sumByCurrency(r.pendiente)} revealed={revelarPagos} /></td>
+                        <td className={TD}><TotalsDisplay totals={sumByCurrency(r.devuelto)} revealed={revelarPagos} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -308,26 +306,26 @@ export default function ReportesPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className={CAJA_TABLA}>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Miembro', 'Comité', 'Entidad', 'Monto', 'Método', 'Estado', 'Fecha'].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className={TH}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPayments.slice(0, visibles).map((p, i) => (
-                      <tr key={p.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-medium font-body text-navy">{p.member_name}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy-light/80">{etiqueta(categoriaDePago(p))}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] font-body text-navy">{p.entity_name}</p></td>
-                        <td className="px-5 py-3.5"><AmountDisplay amount={p.amount} currency={p.currency} revealed={revelarPagos} /></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{METHOD_LABEL[p.method] ?? p.method}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">{STATUS_LABEL[p.status] ?? p.status}</p></td>
-                        <td className="px-5 py-3.5"><p className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">{formatDate(fechaDelPago(p))}</p></td>
+                    {filteredPayments.slice(0, visibles).map(p => (
+                      <tr key={p.id} className={FILA}>
+                        <td className={TD}><p className={CELDA_FUERTE}>{p.member_name}</p></td>
+                        <td className={TD}><p className={CELDA}>{etiqueta(categoriaDePago(p))}</p></td>
+                        <td className={TD}><p className={CELDA}>{p.entity_name}</p></td>
+                        <td className={TD}><AmountDisplay amount={p.amount} currency={p.currency} revealed={revelarPagos} /></td>
+                        <td className={TD}><p className={CELDA}>{METHOD_LABEL[p.method] ?? p.method}</p></td>
+                        <td className={TD}><p className={CELDA}>{STATUS_LABEL[p.status] ?? p.status}</p></td>
+                        <td className={TD}><p className={CELDA}>{formatDate(fechaDelPago(p))}</p></td>
                       </tr>
                     ))}
                   </tbody>
@@ -341,7 +339,7 @@ export default function ReportesPage() {
                 </p>
                 {filteredPayments.length > visibles && (
                   <button onClick={() => setVisibles(v => v + PAGINA)}
-                    className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body">
+                    className={CARGAR_MAS}>
                     Mostrar 50 más
                   </button>
                 )}
@@ -352,36 +350,33 @@ export default function ReportesPage() {
 
         {/* Tab 3 — Transparency */}
         {activeTab === 'transparency' && (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-[rgba(22,20,64,0.55)] font-body">Año</span>
-                <select value={yearFilter} onChange={e => setYearFilter(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm outline-none border-[var(--outline-variant)] font-body text-navy">
-                  {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(2024 + i)).map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
+          <div className={PESTANA}>
+            <div className={BARRA}>
+              <div className={BARRA_IZQ}>
+                <label className={GRUPO_FILTRO}>
+                  <span className={ETIQUETA_FILTRO}>Año</span>
+                  <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} aria-label="Año" className={CAMPO}>
+                    {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(2024 + i)).map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </label>
               </div>
-              <div className="ml-auto flex items-center gap-3">
+              <div className={BARRA_DER}>
                 <BotonMostrarMontos visibles={revelarTransparencia} onCambio={() => setRevelarTransparencia(r => !r)} />
-                <button onClick={exportTransparencyCSV}
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body">
-                  <Download size={14} />
-                  Exportar informe completo
+                <button type="button" onClick={exportTransparencyCSV} className={BOTON_PRIMARIO}>
+                  <Download size={14} aria-hidden /> Exportar informe completo
                 </button>
               </div>
             </div>
 
             {/* Top months */}
             {topMonths.length > 0 && (
-              <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-                <p className="text-[13px] uppercase tracking-widest mb-4 font-display text-[rgba(22,20,64,0.60)]">
-                  Top meses {yearFilter}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className={TARJETA}>
+                <p className={TARJETA_ETIQUETA}>Top meses {yearFilter}</p>
+                <div className={TARJETAS}>
                   {topMonths.map((m, i) => (
-                    <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-[rgba(22,20,64,0.03)]'}`}>
-                      <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
-                      <p className="text-[13px] mt-1 text-navy-light/80 font-body">
+                    <div key={m.name} className={`rounded-xl p-3.5 ${i === 0 ? 'bg-navy/6' : 'bg-surface-low'}`}>
+                      <p className={CELDA_FUERTE}>{m.name}</p>
+                      <p className={`${CELDA} mt-1`}>
                         <TotalsDisplay totals={m.total} revealed={revelarTransparencia} />
                       </p>
                     </div>
@@ -391,42 +386,42 @@ export default function ReportesPage() {
             )}
 
             {/* Monthly chart table */}
-            <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+            <div className={CAJA_TABLA}>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[var(--outline-variant)]">
                       {['Mes', 'Total donaciones', 'Donantes únicos', ''].map(h => (
-                        <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-[rgba(22,20,64,0.60)]">{h}</th>
+                        <th key={h} className={TH}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {monthlyData.map((m, i) => (
-                      <tr key={m.name} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                        <td className="px-5 py-3.5">
-                          <p className="text-[13px] font-medium font-body text-navy">{m.name}</p>
+                    {monthlyData.map(m => (
+                      <tr key={m.name} className={FILA}>
+                        <td className={TD}>
+                          <p className={CELDA_FUERTE}>{m.name}</p>
                         </td>
-                        <td className="px-5 py-3.5">
-                          <p className={`text-[13px] font-body ${barra(m) > 0 ? 'text-navy' : 'text-navy/80'}`}>
+                        <td className={TD}>
+                          <p className={barra(m) > 0 ? CELDA_FUERTE : CELDA}>
                             {barra(m) > 0 ? <TotalsDisplay totals={m.total} revealed={revelarTransparencia} /> : '—'}
                           </p>
                         </td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-[13px] font-body text-[rgba(22,20,64,0.60)]">
+                        <td className={TD}>
+                          <p className={CELDA}>
                             {m.uniqueDonors > 0 ? m.uniqueDonors : '—'}
                           </p>
                         </td>
-                        <td className="px-5 py-3.5 w-[30%]">
+                        <td className={`${TD} w-[30%]`}>
                           {barra(m) > 0 && (
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 rounded-full bg-[rgba(22,20,64,0.06)]">
+                              <div className="flex-1 h-2 rounded-full bg-surface-low">
                                 <div
                                   className="h-2 rounded-full transition-all bg-teal-deep"
                                   style={{ width: `${(barra(m) / maxMonthTotal) * 100}%` }}
                                 />
                               </div>
-                              <span className="text-[11px] w-6 text-right text-[rgba(22,20,64,0.60)] font-body">
+                              <span className="text-[11px] w-8 text-right text-navy-light/80 font-body tabular-nums">
                                 {Math.round((barra(m) / maxMonthTotal) * 100)}%
                               </span>
                             </div>
@@ -449,7 +444,7 @@ export default function ReportesPage() {
             </div>
             <div>
               <p className="text-sm font-bold font-display text-navy">Exportar para QuickBooks</p>
-              <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">
+              <p className={CELDA}>
                 Formatos compatibles para importar en QuickBooks
               </p>
             </div>
@@ -462,7 +457,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-teal-deep shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar donaciones</p>
-                <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className={CELDA}>Formato CSV compatible QuickBooks</p>
               </div>
             </button>
             <button
@@ -472,7 +467,7 @@ export default function ReportesPage() {
               <Download size={16} className="text-[#3DB97A] shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium font-body text-navy">Exportar pagos</p>
-                <p className="text-[13px] text-[rgba(22,20,64,0.60)] font-body">Formato CSV compatible QuickBooks</p>
+                <p className={CELDA}>Formato CSV compatible QuickBooks</p>
               </div>
             </button>
           </div>

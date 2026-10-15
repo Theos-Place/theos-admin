@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Heart, Upload, Search, AlertTriangle, Check, Plus, BarChart2, Download } from 'lucide-react'
 import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_SECUNDARIO, BOTON_PRIMARIO, BOTON_ACENTO,
+  TARJETAS, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO,
+  CAJA_TABLA, TH, TD, FILA, CELDA, CELDA_FUERTE, CARGAR_MAS,
+} from '@/components/finance/reporte-ui'
 import Link from 'next/link'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
@@ -129,57 +134,41 @@ export function DonacionesPanel() {
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Acciones. Orden pedido por Floriana (2026-10-14): el rango primero,
-            después agregar, donantes y montos e importar; a la derecha mostrar
-            montos y exportar, igual que en las otras dos pestañas. */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-1 min-w-0 flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] text-navy-light/80 font-body">Desde</span>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="Donaciones desde"
-              className="rounded-xl border px-2.5 py-1.5 text-[13px] outline-none border-[var(--outline-variant)] font-body text-navy" />
+      <div className={PESTANA}>
+        {/* Acciones. Orden pedido por Floriana (2026-10-14): a la izquierda el
+            rango, Agregar e Importar; a la derecha Donantes y montos, Mostrar
+            montos y Exportar — igual que en las otras dos pestañas. */}
+        <div className={BARRA}>
+          <div className={BARRA_IZQ}>
+            <label className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Desde</span>
+              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="Donaciones desde" className={CAMPO_FECHA} />
+            </label>
+            <label className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Hasta</span>
+              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta" className={CAMPO_FECHA} />
+            </label>
+            <button type="button" onClick={() => setAgregando(true)} className={BOTON_SECUNDARIO}>
+              <Plus size={14} aria-hidden /> Agregar donación
+            </button>
+            <Link href="/finanzas/donaciones/importar" className={BOTON_ACENTO}>
+              <Upload size={14} aria-hidden /> Importar donaciones
+            </Link>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] text-navy-light/80 font-body">Hasta</span>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta"
-              className="rounded-xl border px-2.5 py-1.5 text-[13px] outline-none border-[var(--outline-variant)] font-body text-navy" />
-          </div>
-          <button
-            onClick={() => setAgregando(true)}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] transition-all shrink-0 border border-navy/20 text-navy hover:bg-navy/5 font-body"
-          >
-            <Plus size={14} />
-            Agregar donación
-          </button>
-          {/* DON-3B · El reporte de donantes y montos. */}
-          <Link
-            href="/finanzas/donaciones/reporte"
-            className="inline-flex items-center gap-2 rounded-full border border-navy/20 px-3 py-2 text-[13px] text-navy hover:bg-navy/5 transition-colors shrink-0 font-body"
-          >
-            <BarChart2 size={14} />
-            Donantes y montos
-          </Link>
-          <Link
-            href="/finanzas/donaciones/importar"
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] text-white transition-all shrink-0 bg-coral font-body shadow-[var(--shadow-pulse-sm)]"
-          >
-            <Upload size={14} />
-            Importar donaciones
-          </Link>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-          <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
-          <button onClick={exportarCSV} disabled={exportando}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-medium bg-navy text-white font-body disabled:opacity-50">
-            <Download size={14} />
-            {exportando ? 'Exportando…' : 'Exportar CSV'}
-          </button>
+          <div className={BARRA_DER}>
+            {/* DON-3B · El reporte de donantes y montos. */}
+            <Link href="/finanzas/donaciones/reporte" className={BOTON_SECUNDARIO}>
+              <BarChart2 size={14} aria-hidden /> Donantes y montos
+            </Link>
+            <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
+            <button type="button" onClick={exportarCSV} disabled={exportando} className={BOTON_PRIMARIO}>
+              <Download size={14} aria-hidden /> {exportando ? 'Exportando…' : 'Exportar CSV'}
+            </button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={TARJETAS}>
           {[
             // Pedido de Floriana (2026-10-14): que cada número diga a qué se refiere.
             { label: 'Donantes identificados', value: uniqueDonors, isAmount: false,
@@ -189,16 +178,16 @@ export function DonacionesPanel() {
             // refresh_donor_flags(); la explicación sale de ahí, no a mano.
             { label: 'Donantes activos', value: activeDonors, isAmount: false, info: explicacionDeDonantes(new Date()) },
           ].map(({ label, value, isAmount, info }) => (
-            <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">
+            <div key={label} className={TARJETA}>
+              <p className={TARJETA_ETIQUETA}>
                 {label}{info && <InfoDelEncabezado texto={info} />}
               </p>
               {isAmount
-                ? <p className="text-2xl font-extrabold font-display text-teal-deep">
+                ? <p className={`${TARJETA_VALOR} ${VALOR_DINERO}`}>
                     {/* INT-3: una línea por moneda; con una sola se ve igual que antes. */}
                     <TotalsDisplay totals={value as MoneyTotals | null} defaultHidden={false} revealed={revealAll} />
                   </p>
-                : <p className="text-4xl font-extrabold font-display text-navy">{value as number}</p>
+                : <p className={`${TARJETA_VALOR} ${VALOR_NEUTRO}`}>{(value as number).toLocaleString('es-CR')}</p>
               }
             </div>
           ))}
@@ -229,7 +218,7 @@ export function DonacionesPanel() {
 
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
+          <div className={`${CAMPO} flex flex-1 min-w-48 items-center gap-2`}>
             <Search size={14} className="text-navy-light/80 shrink-0" />
             <input
               type="search"
@@ -237,7 +226,7 @@ export function DonacionesPanel() {
               aria-label="Buscar por nombre o cédula"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
+              className="flex-1 bg-transparent text-[13px] outline-none font-body text-navy"
             />
           </div>
           <FilterChips
@@ -253,33 +242,32 @@ export function DonacionesPanel() {
         </div>
 
         {/* Tabla */}
-        <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
+        <div className={CAJA_TABLA}>
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
                   {['Miembro', 'Cédula', 'Fecha', 'Monto', 'Lote importación', 'Estado'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[11px] uppercase tracking-widest font-display text-navy-light/80">{h}</th>
+                    <th key={h} className={TH}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {donations.map((d, i) => (
-                  <tr key={d.id} className={`border-b border-[var(--outline-variant)] hover:bg-gray-50 transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[rgba(22,20,64,0.01)]'}`}>
-                    <td className="px-5 py-4">
-                      <p className={`text-[13px] font-medium font-body ${d.is_identified ? 'text-navy' : 'text-coral'}`}>{d.member_name || 'Sin identificar'}</p>
+                {donations.map(d => (
+                  <tr key={d.id} className={FILA}>
+                    <td className={TD}>
+                      <p className={`text-[13px] font-medium font-body ${d.is_identified ? 'text-navy' : 'text-coral-deep'}`}>{d.member_name || 'Sin identificar'}</p>
                     </td>
-                    <td className="px-5 py-4"><p className="text-[13px] font-body text-navy-light/80">{d.member_cedula}</p></td>
-                    <td className="px-5 py-4"><p className="text-[13px] whitespace-nowrap font-body text-navy-light/80">{formatDate(d.donation_date)}</p></td>
-                    <td className="px-5 py-4">
-                      <p className="text-[13px] font-medium font-body text-navy">
+                    <td className={TD}><p className={CELDA}>{d.member_cedula}</p></td>
+                    <td className={TD}><p className={`${CELDA} whitespace-nowrap`}>{formatDate(d.donation_date)}</p></td>
+                    <td className={TD}>
+                      <p className={CELDA_FUERTE}>
                         <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} restricted={!amountsVisible} />
                       </p>
                     </td>
-                    <td className="px-5 py-4"><p className="text-[13px] font-body text-navy-light/80">{d.source_file}</p></td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium"
-                        style={{ color: d.is_identified ? '#3DB97A' : '#D63E3D', background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(214,62,61,0.10)' }}>
+                    <td className={TD}><p className={CELDA}>{d.source_file}</p></td>
+                    <td className={TD}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium ${d.is_identified ? 'bg-success/10 text-[#1E6B42]' : 'bg-coral/10 text-coral-deep'}`}>
                         {d.is_identified ? 'Identificado' : 'Sin identificar'}
                       </span>
                     </td>
@@ -304,15 +292,14 @@ export function DonacionesPanel() {
               <li key={d.id} className="px-4 py-3 flex items-center gap-3"
                 style={i < donations.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[13px] font-medium font-body truncate ${d.is_identified ? 'text-navy' : 'text-coral'}`}>{d.member_name || 'Sin identificar'}</p>
+                  <p className={`text-[13px] font-medium font-body truncate ${d.is_identified ? 'text-navy' : 'text-coral-deep'}`}>{d.member_name || 'Sin identificar'}</p>
                   <p className="text-[13px] text-navy-light/80 font-body truncate">{d.member_cedula} · {formatDate(d.donation_date)}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <p className="text-[13px] font-medium font-body text-navy">
                     <AmountDisplay amount={d.amount} currency={d.currency} revealed={revealAll} restricted={!amountsVisible} />
                   </p>
-                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
-                    style={{ color: d.is_identified ? '#3DB97A' : '#D63E3D', background: d.is_identified ? 'rgba(61,185,122,0.10)' : 'rgba(214,62,61,0.10)' }}>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${d.is_identified ? 'bg-success/10 text-[#1E6B42]' : 'bg-coral/10 text-coral-deep'}`}>
                     {d.is_identified ? 'Identificado' : 'Sin identificar'}
                   </span>
                 </div>
@@ -339,7 +326,7 @@ export function DonacionesPanel() {
             </p>
             {hasMore && (
               <button onClick={loadMore} disabled={loading}
-                className="rounded-full border px-5 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body disabled:opacity-50">
+                className={CARGAR_MAS}>
                 {loading ? 'Cargando…' : 'Cargar 50 más'}
               </button>
             )}
