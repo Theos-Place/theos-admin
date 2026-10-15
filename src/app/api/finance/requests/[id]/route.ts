@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
+import { ROLES_QUE_OFRECEN_ARREGLO } from '@/lib/finance/solicitud-de-beca'
 import {
   updateFinanceRequestStatus, assignFinanceRequest, ofrecerArregloEnLugarDeBeca,
 } from '@/lib/supabase/queries/finance-requests'
@@ -52,7 +53,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireRoles('finanzas')
+    const auth = await requireRoles(...ROLES_QUE_OFRECEN_ARREGLO)
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) {
       return NextResponse.json({ error: 'Tu usuario no está vinculado a un perfil de miembro' }, { status: 409 })

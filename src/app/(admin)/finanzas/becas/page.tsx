@@ -8,6 +8,9 @@ import Link from 'next/link'
 import { GraduationCap, Plus, Loader2, AlertTriangle } from 'lucide-react'
 import { ETIQUETA_ESTADO_BECA } from '@/lib/finance/uso-de-beca'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useAuth } from '@/hooks/useAuth'
+import { OfrecerArregloButton } from '@/components/finance/OfrecerArregloButton'
+import { rolPuedeOfrecerArreglo } from '@/lib/finance/solicitud-de-beca'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -64,6 +67,10 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function BecasPage() {
   const { can, loaded } = usePermissions()
+  const { user } = useAuth()
+  /** BEC-5 punto 6, de vuelta en Becas (2026-10-15): se había quedado sin
+   *  pantalla al eliminar Solicitudes financieras el 14-oct. */
+  const ofreceArreglo = rolPuedeOfrecerArreglo(user?.roles)
   const canView = can('becas', 'view')
   const canEdit = can('becas', 'edit')
   const toast = useToast()
@@ -375,14 +382,22 @@ export default function BecasPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {canEdit && (r.status === 'open' || r.status === 'in_review') && (
-                          <button
-                            onClick={() => setReviewTarget(r)}
-                            className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
-                          >
-                            Revisar
-                          </button>
-                        )}
+                        <div className="inline-flex items-center justify-end gap-2">
+                          {canEdit && (r.status === 'open' || r.status === 'in_review') && (
+                            <button
+                              onClick={() => setReviewTarget(r)}
+                              className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity font-body"
+                            >
+                              Revisar
+                            </button>
+                          )}
+                          {/* Resolverla con un arreglo de pago en vez de aprobar o
+                              rechazar: solo finanzas (lo que pide el endpoint).
+                              El botón se esconde solo con la solicitud cerrada; el
+                              cobro lo busca el servidor aunque la solicitud no lo
+                              traiga (cobroDeLaBeca), y si no hay, lo dice. */}
+                          {ofreceArreglo && <OfrecerArregloButton req={r} onDone={() => refetchRequests()} />}
+                        </div>
                       </td>
                     </tr>
                   ))}

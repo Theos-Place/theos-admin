@@ -29,3 +29,11 @@ describe('AppShell · «Saltar al contenido»', () => {
     expect(shell).toMatch(/<main id="contenido" tabIndex=\{-1\}/)
   })
 })
+
+describe('Modal · alineación', () => {
+  it('el panel se alinea a la izquierda aunque lo abra un botón en una celda text-right', () => {
+    // 2026-10-15 · «Ofrecer arreglo» vive en la última columna de la tabla de
+    // Becas (text-right) y el modal salía con todo el texto a la derecha.
+    expect((modal.match(/overflow-y-auto w-full text-left'/g) ?? []).length).toBe(2)
+  })
+})

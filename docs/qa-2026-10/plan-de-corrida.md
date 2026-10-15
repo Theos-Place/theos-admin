@@ -93,9 +93,10 @@ lib/auth/roles (las mismas del servidor); un solo `escapeHtml`
 
 **Se dejó a propósito:** `TARIFA_POR_KM_CRC` (espera la tarifa), `env` (se
 importa por su efecto) y `MAYORIA_DE_EDAD`/`EDAD_MINIMA_PARA_CUENTA` (un solo
-umbral con dos nombres, a propósito). **Pendiente de decisión:**
-`OfrecerArregloButton` (BEC-5 punto 6) quedó sin pantalla al eliminar
-Solicitudes financieras el 14-oct; el endpoint `offer_plan` sigue vivo.
+umbral con dos nombres, a propósito). **Recuperado:** `OfrecerArregloButton` (BEC-5 punto 6) se había quedado sin
+pantalla al eliminar Solicitudes financieras el 14-oct. Decisión de Floriana:
+vuelve en Becas, junto a «Revisar», para finanzas y admin (la misma lista de
+roles que el endpoint, `ROLES_QUE_OFRECEN_ARREGLO`).
 **No entró:** el flujo de comprobante de la inscripción a eventos
 (useEventRegistration) es otro flujo —inscribe y paga en un paso— y se dejó.
 

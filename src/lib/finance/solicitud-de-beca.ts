@@ -184,3 +184,16 @@ export function cuerpoDeArregloOfrecido(tractos: number): string {
   return `Tu solicitud de beca se resolvió con un arreglo de pago: el cobro quedó partido `
     + `en ${tractos} tractos. Entrá a Mis pagos para ver las fechas y los montos.`
 }
+
+/**
+ * Quién puede resolver una solicitud de beca con un ARREGLO de pago en vez de
+ * aprobarla o rechazarla (BEC-5 punto 6). Es el mismo corte que usa el endpoint
+ * (`PATCH /api/finance/requests/[id]`, acción `offer_plan`): crear tractos es
+ * un trámite de finanzas, no de quien solo administra becas. Admin pasa
+ * siempre, igual que en `requireRoles`.
+ */
+export const ROLES_QUE_OFRECEN_ARREGLO = ['finanzas'] as const
+
+export function rolPuedeOfrecerArreglo(roles: readonly string[] | null | undefined): boolean {
+  return !!roles?.some(r => r === 'admin' || (ROLES_QUE_OFRECEN_ARREGLO as readonly string[]).includes(r))
+}

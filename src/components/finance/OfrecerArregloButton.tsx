@@ -76,7 +76,7 @@ export function OfrecerArregloButton({ req, onDone }: {
       <button
         onClick={() => setAbierto(true)}
         disabled={enviando}
-        className="inline-flex items-center gap-1.5 rounded-full border border-navy/20 px-4 py-1.5 text-[13px] text-navy font-body hover:bg-navy/5 transition-colors disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-navy/20 px-4 py-1.5 text-[13px] text-navy font-body hover:bg-navy/5 transition-colors disabled:opacity-60"
       >
         <HandCoins size={13} aria-hidden="true" />
         Ofrecer arreglo de pago

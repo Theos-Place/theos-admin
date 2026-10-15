@@ -8,8 +8,7 @@
     "src/**/*.{ts,tsx}"
   ],
   "ignore": [
-    "src/types/database.ts",
-    "src/components/finance/OfrecerArregloButton.tsx"
+    "src/types/database.ts"
   ],
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true,

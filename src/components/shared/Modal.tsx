@@ -122,8 +122,8 @@ export function Modal({
         aria-labelledby={titleId}
         className={
           tone === 'dark'
-            ? 'bg-navy border border-white/10 rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative max-h-[90vh] overflow-y-auto w-full'
-            : 'bg-surface-card rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] relative max-h-[90vh] overflow-y-auto w-full'
+            ? 'bg-navy border border-white/10 rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] relative max-h-[90vh] overflow-y-auto w-full text-left'
+            : 'bg-surface-card rounded-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] relative max-h-[90vh] overflow-y-auto w-full text-left'
         }
         style={{ maxWidth: width }}
       >
