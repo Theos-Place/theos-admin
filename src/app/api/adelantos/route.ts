@@ -45,6 +45,7 @@ const bodySchema = z.discriminatedUnion('action', [
 
 // POST — abrir el mes de una sede, o fijar su presupuesto (solo finanzas).
 export async function POST(req: NextRequest) {
+  // Solo sesión: la sede tiene que ser una que la persona atiende (alcanceDeSedes, abajo); el acceso sale del PUESTO, no de un rol.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

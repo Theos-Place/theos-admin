@@ -242,7 +242,8 @@ export default function EmpleadosPage() {
         </ul>
 
         {displayed.length === 0 && (
-          <EmptyState icon={Users} title="No hay empleados con ese filtro" />
+          <EmptyState icon={Users} title="No hay empleados con ese filtro" onLimpiarFiltros={filter !== 'all' ? () => setFilter('all') : undefined} />
+
         )}
       </div>
 

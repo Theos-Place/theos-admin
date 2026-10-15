@@ -7,7 +7,7 @@ import type { CommitteeServer } from '@/types/server'
 import { cn } from '@/lib/utils'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { type SortDirection } from '@/hooks/useSortableTable'
-import { agruparPorPersona } from '@/lib/servers/committee-filter'
+import { agruparPorPersona, TODOS_LOS_PUESTOS } from '@/lib/servers/committee-filter'
 import { formatDate } from '@/lib/format'
 import { calcularAntiguedad } from '@/lib/servers/columns'
 import type { DirigenteGrupo } from '@/lib/dirigentes'
@@ -108,6 +108,9 @@ export function MembersTab({
   // Se agrupa DESPUÉS de ordenar: agruparPorPersona respeta el orden de entrada,
   // así que el orden que eligió quien mira la tabla se conserva.
   const grupos = agruparPorPersona(sortedMembers)
+  // Los valores iniciales viven en servidores/[committeeId]/page.tsx: '', 'active', TODOS_LOS_PUESTOS.
+  const hayFiltros = search !== '' || statusFilter !== 'active' || positionFilter !== TODOS_LOS_PUESTOS
+  const limpiarFiltros = () => { onSearchChange(''); onStatusFilterChange('active'); onPositionFilterChange(TODOS_LOS_PUESTOS) }
 
   return (
     <div className="py-4 px-[22px] flex flex-col gap-4">
@@ -366,7 +369,8 @@ export function MembersTab({
         </ul>
 
         {sortedMembers.length === 0 && (
-          <EmptyState icon={Users} title="No hay servidores con ese filtro" />
+          <EmptyState icon={Users} title="No hay servidores con ese filtro" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
         )}
       </div>
     </div>

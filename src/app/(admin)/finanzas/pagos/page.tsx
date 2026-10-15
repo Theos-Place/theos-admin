@@ -128,6 +128,13 @@ function PagosContent() {
     items: payments, total, loading, error, hasMore, loadMore, reload,
   } = usePaginatedList<DbPayment, Payment>(buildUrl, { pageSize: 25, itemsKey: 'payments', mapItem: toDomainPayment })
   const filtered = payments
+  const hayFiltros = search !== '' || entityFilter !== 'all' || methodFilter !== 'all' || statusFilter !== 'all'
+    || currencyFilter !== 'all' || planFilter !== 'all' || desde !== '' || hasta !== ''
+  const limpiarFiltros = () => {
+    setSearch(''); setDebouncedSearch(''); setEntityFilter('all'); setMethodFilter('all'); setStatusFilter('all')
+    setCurrencyFilter('all'); setPlanFilter('all'); setDesde(''); setHasta('')
+  }
+
 
   // Totales globales (los montos del header) — SQL, no sobre lo cargado.
   // INT-3: los totales llegan POR MONEDA ({"CRC": 25000}); ver TotalsDisplay.
@@ -563,7 +570,7 @@ function PagosContent() {
                         ? <ErrorState message={error} onRetry={refetch} />
                         : loading
                           ? <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body">Cargando…</p>
-                          : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
+                          : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />}
                     </td>
                   </tr>
                 )}
@@ -624,7 +631,7 @@ function PagosContent() {
                   ? <ErrorState message={error} onRetry={refetch} />
                   : loading
                     ? <p className="px-4 py-8 text-center text-sm text-navy-light/80 font-body">Cargando pagos…</p>
-                    : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" />}
+                    : <EmptyState icon={CreditCard} title="No hay pagos que coincidan con los filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />}
               </li>
             )}
           </ul>

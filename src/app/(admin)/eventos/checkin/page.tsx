@@ -69,7 +69,7 @@ export default function CheckinPickerPage() {
     <div className="space-y-5">
       {/* Header */}
       <div className="rounded-2xl bg-navy px-5 py-5 shadow-[var(--shadow-md)]">
-        <Link href="/eventos" className="inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
+        <Link href="/eventos" className="relative after:absolute after:content-[''] after:-inset-x-2 after:-inset-y-3 inline-flex items-center gap-1 text-[13px] text-white/80 hover:text-white mb-2 font-body">
           <ChevronLeft size={14} /> Eventos
         </Link>
         <div className="flex items-center gap-3">

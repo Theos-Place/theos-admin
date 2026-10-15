@@ -55,6 +55,8 @@ export default function PlantillasPage() {
       return true
     })
   }, [templates, categoryFilter, channelFilter, search])
+  const hayFiltros = categoryFilter !== 'all' || channelFilter !== 'all' || search !== ''
+  const limpiarFiltros = () => { setCategoryFilter('all'); setChannelFilter('all'); setSearch('') }
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 15)
 
@@ -175,6 +177,8 @@ export default function PlantillasPage() {
           <EmptyState
             icon={FileText}
             title="No hay plantillas con ese filtro"
+            onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined}
+
             action={
               <Link
                 href="/comunicaciones/plantillas/nueva"

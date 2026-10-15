@@ -149,7 +149,8 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
   return (
     <div className="rounded-2xl border border-[var(--outline-variant)] overflow-hidden bg-surface-card">
       {/* Tabs Visual / HTML (en htmlOnly solo HTML) */}
-      <div className="flex border-b border-[var(--outline-variant)] bg-surface-low/50">
+      {/* QA-2/N4 · role="tab" sin tablist no es una pestaña para el lector. */}
+      <div role="tablist" aria-label="Modo de edición" className="flex border-b border-[var(--outline-variant)] bg-surface-low/50">
         {(['visual', 'html'] as const).map(m => (
           <button
             key={m}

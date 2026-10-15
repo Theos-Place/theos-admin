@@ -182,7 +182,7 @@ function Contenido() {
         <EmptyState icon={Heart} title="No hay donaciones en ese rango" />
       ) : (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla con desplazamiento horizontal">
             <table className="w-full border-collapse">
               <thead>
                 <tr>

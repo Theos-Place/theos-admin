@@ -53,6 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 // PUT — editar el expediente completo. Solo el dueño y solo mientras se pueda.
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: el dueño del expediente o quien lo revisa (actoresDe/esDueno, abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
@@ -163,6 +164,7 @@ const accionSchema = z.discriminatedUnion('action', [
 
 // PATCH — las acciones puntuales, con { action } validado (convención 7).
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: el dueño del expediente o quien lo revisa (actoresDe/esDueno, abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

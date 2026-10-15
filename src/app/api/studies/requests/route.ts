@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
 // resto queda forzado a su propio perfil (anti-suplantación, auditoría S2).
 export async function POST(req: NextRequest) {
   try {
+    // Solo sesión: cualquier miembro pide para sí; pedir para otro exige rol, y el resto queda forzado a su propio perfil (abajo).
     const auth = await requireRoles()
     if (auth.res) return auth.res
 

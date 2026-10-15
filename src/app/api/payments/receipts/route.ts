@@ -22,7 +22,7 @@ import { reportarError, reportarFalla } from '@/lib/observabilidad'
  * declare cuánto pagó.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireRoles() // solo sesión; la autorización fina va abajo
+  const auth = await requireRoles() // Solo sesión: la autorización fina va abajo (la propia persona, su familia o staff para el member_id).
   if (auth.res) return auth.res
   if (!rateLimit(`comprobante-multiple:${auth.ctx.userId}`, 3, 60_000)) {
     return NextResponse.json({ error: 'Demasiados comprobantes seguidos; esperá un minuto.' }, { status: 429 })

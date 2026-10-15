@@ -683,7 +683,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         <div className="flex items-center justify-between gap-3">
           <Link
             href={`/eventos/${id}`}
-            className="inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors"
+            className="relative after:absolute after:content-[''] after:-inset-x-2 after:-inset-y-3 inline-flex items-center gap-1.5 text-sm text-navy-light/80 hover:text-navy transition-colors"
           >
             <ChevronLeft size={16} /> Volver
           </Link>

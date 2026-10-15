@@ -35,6 +35,7 @@ import { ErrorState } from '@/components/shared/ErrorState'
 import { getInitials, formatDateNumeric } from '@/lib/format'
 
 const PAGE_SIZE = 25
+const ESTADOS_POR_DEFECTO: EstadoVisible[] = ['en_matricula', 'por_iniciar', 'en_curso']
 
 // Cuatro chips, no tres: "Por iniciar" es un grupo cuya matrícula ya cerró y
 // que todavía no arranca. No existe en la columna — se deriva de la ventana.
@@ -154,7 +155,7 @@ export default function GruposPage() {
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
-  const [selectedStatuses, setSelectedStatuses] = useState<EstadoVisible[]>(['en_matricula', 'por_iniciar', 'en_curso'])
+  const [selectedStatuses, setSelectedStatuses] = useState<EstadoVisible[]>(ESTADOS_POR_DEFECTO)
   // La fecha de hoy en CR, una sola vez por montaje: el estado visible se
   // deriva de ella y no tiene por qué recalcularse en cada render.
   const [hoy] = useState(ymdCR)
@@ -227,6 +228,17 @@ export default function GruposPage() {
   const [visibleColumns, setVisibleColumns] = useState<ColumnDef<StudyGroup>[]>(
     STUDY_GROUP_COLUMNS.filter(c => c.defaultVisible)
   )
+
+  // Los estados se comparan como conjunto: el orden cambia según en qué orden se marcaron.
+  const hayFiltros = selectedStatuses.length !== ESTADOS_POR_DEFECTO.length
+    || !ESTADOS_POR_DEFECTO.every(s => selectedStatuses.includes(s))
+    || selectedTypes.length > 0 || selectedZone !== '' || selectedDay !== '' || selectedBloque !== ''
+    || searchInput !== '' || noLeaderOnly || closingSoonOnly || startFrom !== '' || startTo !== ''
+  function limpiarFiltros() {
+    setSelectedStatuses(ESTADOS_POR_DEFECTO); setSelectedTypes([]); setSelectedZone(''); setSelectedDay('')
+    setSelectedBloque(''); setSearchInput(''); setSearch(''); setNoLeaderOnly(false); setClosingSoonOnly(false)
+    setStartFrom(''); setStartTo('')
+  }
 
   function toggleStatus(s: EstadoVisible) {
     setSelectedStatuses(prev =>
@@ -750,7 +762,8 @@ export default function GruposPage() {
             ? <ErrorState message={error} onRetry={reload} />
             : loading
               ? <div className="px-4 py-10 text-center text-sm text-navy-light/80 font-body">Cargando grupos…</div>
-              : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" />
+              : <EmptyState icon={BookOpen} title="No se encontraron grupos con esos filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
         )}
 
         {groups.length > 0 && (

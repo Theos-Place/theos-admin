@@ -7,6 +7,7 @@ import { reportarError } from '@/lib/observabilidad'
 // Sesión-only es suficiente: solo opera sobre las notificaciones propias.
 export async function POST() {
   try {
+    // Solo sesión: solo marca notificaciones de quien llama (member_id de la sesión en la consulta).
     const auth = await requireRoles()
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) return NextResponse.json({ ok: true })

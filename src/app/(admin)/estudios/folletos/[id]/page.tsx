@@ -33,7 +33,10 @@ function Dato({ label, children, alerta = false }: {
   )
 }
 
-function Tarjeta({ icon: Icon, title, sub, children }: {
+function Tarjeta({ icon: Icon, title, sub, children, pie }: {
+  /** Lo que va DEBAJO de la lista (avisos, enlaces): adentro de un <dl> solo
+   *  caben pares dt/dd (QA-2/N4). */
+  pie?: React.ReactNode
   icon: React.ElementType; title: string; sub?: string; children: React.ReactNode
 }) {
   return (
@@ -44,6 +47,7 @@ function Tarjeta({ icon: Icon, title, sub, children }: {
         {sub && <span className="text-[13px] text-navy-light font-body">{sub}</span>}
       </div>
       <dl className="px-5 py-3">{children}</dl>
+      {pie && <div className="px-5 pb-4">{pie}</div>}
     </section>
   )
 }
@@ -281,7 +285,20 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
 
           {/* De dónde vienen: solo el tiquete de cierre lo sabe. */}
           {d.cierre ? (
-            <Tarjeta icon={GraduationCap} title="De dónde vienen estos estudiantes" sub="cierre del grupo anterior">
+            <Tarjeta icon={GraduationCap} title="De dónde vienen estos estudiantes" sub="cierre del grupo anterior"
+              pie={<>
+                {textoDesfase(d) && (
+                  <p className="text-[13px] text-coral-deep font-body">{textoDesfase(d)}</p>
+                )}
+                <div className="pt-3">
+                  <Link
+                    href={`/estudios/grupos/${d.cierre.grupo.id}/resumen-cierre`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-4 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
+                  >
+                    Ver el detalle del cierre <ChevronRight size={14} aria-hidden />
+                  </Link>
+                </div>
+              </>}>
               <Dato label="Grupo que cerró">
                 <Link href={`/estudios/grupos/${d.cierre.grupo.id}`} className="text-teal-deep hover:underline">
                   {d.cierre.grupo.name ?? 'sin nombre'}
@@ -303,17 +320,6 @@ export default function FolletoDetallePage({ params }: { params: Promise<{ id: s
                   {d.cierre.historicos} de la importación de datos viejos — no avanzan ni llevan folleto
                 </Dato>
               )}
-              {textoDesfase(d) && (
-                <p className="pt-3 text-[13px] text-coral-deep font-body">{textoDesfase(d)}</p>
-              )}
-              <div className="pt-3">
-                <Link
-                  href={`/estudios/grupos/${d.cierre.grupo.id}/resumen-cierre`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 px-4 py-2 text-sm text-navy hover:bg-surface-low transition-colors font-body"
-                >
-                  Ver el detalle del cierre <ChevronRight size={14} aria-hidden />
-                </Link>
-              </div>
             </Tarjeta>
           ) : (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] p-5">

@@ -85,6 +85,12 @@ export default function AplicacionesPage() {
   }, [search])
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [committeeFilter, setCommitteeFilter] = useState('all')
+  const hayFiltros = search !== '' || statusFilter !== 'all' || committeeFilter !== 'all'
+    || ubicacionFiltro !== 'all' || sedeFiltro !== 'all'
+  const limpiarFiltros = () => {
+    setSearch(''); setDebouncedSearch(''); setStatusFilter('all'); setCommitteeFilter('all')
+    setUbicacionFiltro('all'); setSedeFiltro('all')
+  }
 
   // Comités para el dropdown (solo id + nombre).
   const [committees, setCommittees] = useState<{ id: string; name: string }[]>([])
@@ -430,7 +436,8 @@ export default function AplicacionesPage() {
         {filtered.length === 0 && (
           loading
             ? <p className="px-4 py-8 text-center text-sm text-navy-light/80 font-body">Cargando aplicaciones…</p>
-            : <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" />
+            : <EmptyState icon={ClipboardList} title="No hay aplicaciones con ese filtro" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
         )}
 
         {filtered.length > 0 && (

@@ -38,6 +38,7 @@ const patchSchema = z.object({
 /** El permiso y la sesión, en un solo lugar: los dos métodos lo necesitan
  *  igual y escribirlo dos veces es cómo uno de los dos se afloja. */
 async function puertaDeEntrada(groupId: string, sessionId: string) {
+  // Solo sesión: coordinación o el dirigente de ESE grupo (groupViewerScope); dirigir no es un rol.
   const auth = await requireRoles()
   if (auth.res) return { res: auth.res } as const
 

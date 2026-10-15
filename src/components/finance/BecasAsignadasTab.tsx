@@ -90,6 +90,8 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
   const visibles = useMemo(
     () => (cupo === 'todas' ? porUso : porUso.filter(b => b.cupo === cupo)),
     [porUso, cupo])
+  const hayFiltros = becas.length > 0 && (filtro !== 'sin_usar' || cupo !== 'todas')
+  const limpiarFiltros = () => { setFiltro('sin_usar'); setCupo('todas') }
 
   const [mover, setMover] = useState<BecaAsignada | null>(null)
   const [cancelar, setCancelar] = useState<BecaAsignada | null>(null)
@@ -145,7 +147,9 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
           <EmptyState
             icon={GraduationCap}
             title={becas.length === 0 ? 'No hay becas asignadas' : `No hay becas ${ETIQUETA_USO[filtro === 'todas' ? 'sin_usar' : filtro].toLowerCase()}`}
+            onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined}
           />
+
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">

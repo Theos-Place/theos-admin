@@ -51,6 +51,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: comenta solo quien puede VER esa devolución —su dueño o finanzas— (puedeVer, abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

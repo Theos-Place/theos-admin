@@ -16,6 +16,7 @@ const bodySchema = z.object({
 }).strict()
 
 export async function POST(req: NextRequest) {
+  // Solo sesión: escribe solo los avisos descartados de quien llama (member_id de la sesión).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

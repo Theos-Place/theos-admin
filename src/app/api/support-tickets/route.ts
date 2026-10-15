@@ -32,6 +32,7 @@ const bodySchema = z.object({
  * Soporte no levanta tiquetes —los resuelve—, y un miembro tampoco.
  */
 export async function POST(req: NextRequest) {
+  // Solo sesión: lo levanta quien opera el check-in (puedeLevantarTiquete, abajo); ese acceso sale del puesto o del evento.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   if (!puedeLevantarTiquete(auth.ctx.roles)) {

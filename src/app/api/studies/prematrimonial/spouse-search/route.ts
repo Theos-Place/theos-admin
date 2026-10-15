@@ -14,6 +14,7 @@ import { reportarError } from '@/lib/observabilidad'
 // corta para elegir (ver findSpouseCandidates); antes solo se podía buscar con
 // un identificador exacto y quien no lo tenía a mano quedaba trabado.
 export async function POST(req: NextRequest) {
+  // Solo sesión: busca a la pareja de quien llama; buscar a nombre de otro exige rol privilegiado (abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

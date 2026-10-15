@@ -55,6 +55,13 @@ export function CorreosDelSistemaTab() {
   const desde = datos.total === 0 ? 0 : (pagina - 1) * POR_PAGINA + 1
   const hasta = Math.min(pagina * POR_PAGINA, datos.total)
   const conProblema = useMemo(() => datos.items.filter(i => esProblema(i.estado)).length, [datos.items])
+  const hayFiltros = filtro !== 'todos' || busqueda !== ''
+  const limpiarFiltros = () => {
+    // El spinner solo si de verdad va a haber otra consulta; si no, quedaría girando.
+    if (filtro !== 'todos' || q !== '' || pagina !== 1) setCargando(true)
+    setFiltro('todos'); setBusqueda(''); setQ(''); setPagina(1)
+  }
+
 
   return (
     <div className="space-y-3">
@@ -92,7 +99,8 @@ export function CorreosDelSistemaTab() {
             <Loader2 size={15} className="animate-spin" /> Cargando…
           </p>
         ) : datos.items.length === 0 ? (
-          <EmptyState icon={Mail} title={textoVacio(filtro, q.length > 0)} />
+          <EmptyState icon={Mail} title={textoVacio(filtro, q.length > 0)} onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">

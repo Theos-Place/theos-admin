@@ -217,6 +217,8 @@ export default function FormulariosPage() {
       return true
     })
   }, [forms, categoryFilter, estadoFilter, query, soloMios])
+  const hayFiltros = categoryFilter !== 'all' || estadoFilter !== 'all' || soloMios || query !== ''
+  const limpiarFiltros = () => { setCategoryFilter('all'); setEstadoFilter('all'); setSoloMios(false); setQuery('') }
 
   const { visible, shown, total, hasMore, loadMore } = useClientPagination(filtered, 25)
 
@@ -351,7 +353,7 @@ export default function FormulariosPage() {
       {/* List */}
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {filtered.length === 0 ? (
-          <EmptyState icon={FileText} title="No hay formularios con ese filtro" />
+          <EmptyState icon={FileText} title="No hay formularios con ese filtro" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
         ) : (
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full border-collapse">

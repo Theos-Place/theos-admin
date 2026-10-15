@@ -10,6 +10,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Solo sesión: quien maneja el comité de la vacante (canManageCommittee, abajo); el mando sale del PUESTO.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {
@@ -37,6 +38,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Solo sesión: quien maneja el comité de la vacante (canManageCommittee, abajo); el mando sale del PUESTO.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

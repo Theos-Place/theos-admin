@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
 import { listarViajes, crearViaje, DatosInvalidos } from '@/lib/supabase/queries/travel'
-import { puedePedirViaje, puedeRevisarViajes } from '@/lib/travel/estados-del-viaje'
+import { puedePedirViaje, puedeRevisarViajes, puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
 import { RUBROS, MONEDAS } from '@/lib/travel/presupuesto'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -38,9 +38,29 @@ export const viajeSchema = z.object({
 })
 
 // GET — los viajes que esta persona puede ver.
+/** ¿Tiene ficha de empleado vigente? Se pregunta a la BASE y no al
+ *  `es_empleado` de la sesión: ese lo usa la pantalla, pero quien manda es el
+ *  servidor. Lo comparten el GET y el POST. */
+async function esEmpleadoVigente(memberId: string | null): Promise<boolean> {
+  if (!memberId) return false
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const { data: ficha } = await createAdminClient().from('employees').select('id')
+    .eq('member_id', memberId).is('end_date', null).limit(1)
+  return (ficha ?? []).length > 0
+}
+
 export async function GET() {
   const auth = await requireRoles()
   if (auth.res) return auth.res
+  /**
+   * QA-2/N5 (2026-10-15) · La MISMA regla que la puerta de la pantalla
+   * (`puedeEntrarAViaticos`): empleado vigente o quien revisa viajes. Antes
+   * bastaba la sesión. No era una fuga —devolvía solo los viajes propios—
+   * pero la puerta y la API decían cosas distintas.
+   */
+  if (!puedeEntrarAViaticos(await esEmpleadoVigente(auth.ctx.memberId), auth.ctx.roles)) {
+    return NextResponse.json({ error: 'Los viáticos son para el personal con ficha de empleado.' }, { status: 403 })
+  }
   try {
     const verTodos = veTodosLosViajes(auth.ctx.roles)
     const items = await listarViajes({ memberId: auth.ctx.memberId, verTodos })
@@ -58,13 +78,8 @@ export async function POST(req: NextRequest) {
   if (!auth.ctx.memberId) {
     return NextResponse.json({ error: 'Tu cuenta no tiene ficha asociada.' }, { status: 403 })
   }
-  // SOLO EMPLEADOS (Floriana, 2026-10-14). Se pregunta a la base acá y no al
-  // `es_empleado` de la sesión: ese lo usa la pantalla para esconder el
-  // botón, pero quien manda es el servidor.
-  const { createAdminClient } = await import('@/lib/supabase/admin')
-  const { data: ficha } = await createAdminClient().from('employees').select('id')
-    .eq('member_id', auth.ctx.memberId).is('end_date', null).limit(1)
-  if (!puedePedirViaje((ficha ?? []).length > 0)) {
+  // SOLO EMPLEADOS (Floriana, 2026-10-14).
+  if (!puedePedirViaje(await esEmpleadoVigente(auth.ctx.memberId))) {
     return NextResponse.json({ error: 'Las solicitudes de viaje son para el personal con ficha de empleado.' }, { status: 403 })
   }
   try {

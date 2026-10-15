@@ -248,7 +248,9 @@ type SendingOverlayProps = {
 export function SendingOverlay({ recipientCount }: SendingOverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-navy-ink/60 backdrop-blur-sm">
-      <div className="rounded-2xl px-8 py-8 flex flex-col items-center gap-4 bg-surface-card">
+      {/* QA-2/N4 · role="status": sin esto el lector de pantalla no se
+          entera de que el envío está en curso. */}
+      <div role="status" aria-live="polite" className="rounded-2xl px-8 py-8 flex flex-col items-center gap-4 bg-surface-card">
         <div className="h-12 w-12 rounded-full border-4 border-coral/30 border-t-coral animate-spin" />
         <p className="text-sm font-semibold text-navy font-display">Enviando mensaje...</p>
         <p className="text-[13px] text-navy-light/80 font-body">

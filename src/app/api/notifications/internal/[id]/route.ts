@@ -9,6 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Solo sesión: solo toca notificaciones de quien llama (member_id de la sesión en la consulta).
     const auth = await requireRoles()
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) return NextResponse.json({ ok: true })
@@ -27,6 +28,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    // Solo sesión: solo toca notificaciones de quien llama (member_id de la sesión en la consulta).
     const auth = await requireRoles()
     if (auth.res) return auth.res
     if (!auth.ctx.memberId) return NextResponse.json({ ok: true })

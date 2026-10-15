@@ -228,7 +228,7 @@ export function MemberHeader({
                 href={`/estudios/dirigentes/${member.id}`}
                 title="Ver perfil de dirigente"
                 aria-label="Ver perfil de dirigente"
-                className="inline-flex items-center gap-1 rounded-full bg-navy/10 px-2.5 py-0.5 text-xs text-navy font-body hover:bg-navy/15 transition-colors"
+                className="relative after:absolute after:content-[''] after:-inset-x-2 after:-inset-y-3 inline-flex items-center gap-1 rounded-full bg-navy/10 px-2.5 py-0.5 text-xs text-navy font-body hover:bg-navy/15 transition-colors"
               >
                 <Star size={10} strokeWidth={2} />
                 Dirigente

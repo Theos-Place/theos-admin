@@ -122,7 +122,10 @@ export function MemberCombobox({
   return (
     <div className={cn(dropdown && 'relative')}>
       <div className={cn(
-        'flex items-center gap-2 rounded-xl border px-3 py-2.5 focus-within:ring-1',
+        // QA-2/N1 · El relleno vertical va en el INPUT, no en la caja: con la
+        // caja acolchada el campo medía 20 px de alto y tocar el borde no lo
+        // enfocaba. Mismo tamaño visible.
+        'flex items-center gap-2 rounded-xl border px-3 focus-within:ring-1',
         onDark ? 'border-white/20 bg-white/10 focus-within:ring-white/60' : 'border-outline bg-surface-low focus-within:ring-coral/30',
       )}>
         <Search size={14} className={cn('shrink-0', onDark ? 'text-white/80' : 'text-navy-light/80')} />
@@ -134,7 +137,7 @@ export function MemberCombobox({
           placeholder={placeholder}
           aria-label={placeholder}
           className={cn(
-            'min-w-0 flex-1 bg-transparent text-sm outline-none font-body',
+            'min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none font-body',
             onDark ? 'text-white placeholder-white/40' : 'text-navy placeholder:text-navy-light/80',
           )}
         />

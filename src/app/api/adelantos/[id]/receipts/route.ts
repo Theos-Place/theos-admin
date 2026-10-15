@@ -10,6 +10,7 @@ import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
 /** FIN-12 · La foto de UNA factura. Devuelve la ruta; la factura se guarda aparte. */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: la sede del adelanto tiene que ser una que la persona atiende (alcanceDeSedes, abajo); el rol no alcanza porque el acceso sale del PUESTO.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   if (!rateLimit(`factura-adelanto:${auth.ctx.userId}`, 30, 60_000)) return NextResponse.json({ error: 'Demasiados archivos seguidos; esperá un minuto.' }, { status: 429 })

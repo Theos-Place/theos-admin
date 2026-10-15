@@ -25,6 +25,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Solo sesión: coordinación o el dirigente de ESE grupo (groupViewerScope, abajo); dirigir no es un rol.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

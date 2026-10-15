@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
 // POST: un coordinador solicita un puesto nuevo para un comité que gestiona (o un
 // admin global, para cualquiera). Crea la solicitud 'pending' y notifica a Staff/admin.
 export async function POST(req: NextRequest) {
+  // Solo sesión: staff global, o quien maneja algún comité (getManageableCommitteeIds, abajo); el mando sale del PUESTO.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

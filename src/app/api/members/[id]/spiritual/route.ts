@@ -36,6 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: la propia persona, o un admin de estudios para otra (abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   const { id } = await params

@@ -732,7 +732,7 @@ function EventosContent() {
           </ul>
 
           {listRows.length === 0 && (
-            <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" />
+            <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" onLimpiarFiltros={typeFilter !== 'all' ? () => setTypeFilter('all') : undefined} />
           )}
 
           {/* Paginación: contador + cargar más */}
@@ -759,7 +759,7 @@ function EventosContent() {
         <div className="space-y-4">
           {listRows.length === 0 ? (
             <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-              <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" />
+              <EmptyState icon={Calendar} title="No hay eventos este mes con ese filtro" onLimpiarFiltros={typeFilter !== 'all' ? () => setTypeFilter('all') : undefined} />
             </div>
           ) : (
             <>

@@ -95,6 +95,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: cada campo exige su propio permiso (canEdit*Auth, abajo); no hay un rol que cubra todos.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   const { id } = await params

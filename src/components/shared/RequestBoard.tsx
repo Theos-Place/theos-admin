@@ -272,6 +272,9 @@ export function RequestBoard<R extends BaseRequest>({
         ? b.created_at.localeCompare(a.created_at)
         : a.created_at.localeCompare(b.created_at))
   }, [requests, tab, statusFilter, assignedFilter, dateFrom, dateTo, sortDesc, espera])
+  // El tab es el tipo de solicitud (otro conjunto de datos), no un filtro: no se toca.
+  const hayFiltros = statusFilter !== 'open' || assignedFilter !== 'all' || dateFrom !== '' || dateTo !== ''
+  const limpiarFiltros = () => { setStatusFilter('open'); setAssignedFilter('all'); setDateFrom(''); setDateTo('') }
 
   /** REU-2 · Las que están durmiendo, de la más próxima a despertar a la más
    *  lejana: la primera de la lista es la que hay que volver a mirar antes. */
@@ -520,6 +523,8 @@ export function RequestBoard<R extends BaseRequest>({
             icon={Inbox}
             title="No hay solicitudes con estos filtros"
             description="Las solicitudes que envíen los miembros van a aparecer acá."
+            onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined}
+
           />
         </div>
       ) : (

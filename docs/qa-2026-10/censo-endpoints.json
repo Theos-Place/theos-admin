@@ -1707,7 +1707,7 @@
     "ruta": "/api/finance/requests/[id]",
     "metodo": "PATCH",
     "guard": "roles",
-    "detalle": "requireRoles('finanzas')",
+    "detalle": "requireRoles(...ROLES_QUE_OFRECEN_ARREGLO)",
     "validacion": "zod",
     "consultas": 1,
     "llamadas": 9,
@@ -2782,6 +2782,18 @@
     "catchSinReporte": false,
     "idor": false,
     "archivo": "src/app/api/payments/route.ts"
+  },
+  {
+    "ruta": "/api/public/events.ics",
+    "metodo": "GET",
+    "guard": "publico",
+    "detalle": "rateLimit(",
+    "validacion": "n/a (sin body)",
+    "consultas": 0,
+    "llamadas": 1,
+    "catchSinReporte": false,
+    "idor": false,
+    "archivo": "src/app/api/public/events.ics/route.ts"
   },
   {
     "ruta": "/api/public/events/[id]",
@@ -4746,7 +4758,7 @@
     "detalle": "requireRoles()",
     "validacion": "n/a (sin body)",
     "consultas": 0,
-    "llamadas": 2,
+    "llamadas": 3,
     "catchSinReporte": false,
     "idor": false,
     "archivo": "src/app/api/travel-requests/route.ts"
@@ -4757,8 +4769,8 @@
     "guard": "sesion",
     "detalle": "requireRoles()",
     "validacion": "zod",
-    "consultas": 1,
-    "llamadas": 5,
+    "consultas": 0,
+    "llamadas": 4,
     "catchSinReporte": false,
     "idor": false,
     "archivo": "src/app/api/travel-requests/route.ts"

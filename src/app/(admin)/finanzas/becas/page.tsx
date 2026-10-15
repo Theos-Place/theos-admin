@@ -356,7 +356,15 @@ export default function BecasPage() {
           {requestsLoading ? (
             <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : solicitudesVisibles.length === 0 ? (
-            <EmptyState icon={GraduationCap} title={textoVacio(filtroSolicitudes, requests.length > 0)} />
+            <EmptyState
+              icon={GraduationCap}
+              title={textoVacio(filtroSolicitudes, requests.length > 0)}
+              // Volver a null es volver al filtro inicial derivado; sin solicitudes, ningún filtro muestra nada.
+              onLimpiarFiltros={requests.length > 0 && filtroSolicitudes !== filtroInicial(requests)
+                ? () => setFiltroElegido(null)
+                : undefined}
+            />
+
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">

@@ -50,11 +50,14 @@ const COLUMNAS = (conTelefono: boolean): ColumnDef<PersonaNueva>[] => {
 const HOY = new Date()
 const ANIO_ACTUAL = HOY.getUTCFullYear()
 const MES_ACTUAL = `${ANIO_ACTUAL}-${String(HOY.getUTCMonth() + 1).padStart(2, '0')}`
+const FILTROS_INICIALES: FiltrosDeNuevos = { canal: '', servidor: null }
 
 export default function PersonasNuevasPage() {
   const [mes, setMes] = useState(MES_ACTUAL)
   const [anio, setAnio] = useState(ANIO_ACTUAL)
-  const [filtros, setFiltros] = useState<FiltrosDeNuevos>({ canal: '', servidor: null })
+  const [filtros, setFiltros] = useState<FiltrosDeNuevos>(FILTROS_INICIALES)
+  const hayFiltros = !!filtros.origen || !!filtros.canal || filtros.servidor != null
+    || filtros.edadMin != null || filtros.edadMax != null
 
   const serie = useCargaRemota<{ serie: FilaDeSerie[] }>(
     'personas-nuevas-serie',
@@ -302,9 +305,10 @@ export default function PersonasNuevasPage() {
         ) : detalle.error ? (
           <p className="text-[13px] text-coral-deep font-body py-4" role="alert">{detalle.error}</p>
         ) : visibles.length === 0 ? (
-          <EmptyState icon={UserPlus} title="Nadie nuevo con esos filtros" />
+          <EmptyState icon={UserPlus} title="Nadie nuevo con esos filtros" onLimpiarFiltros={hayFiltros ? () => setFiltros(FILTROS_INICIALES) : undefined} />
+
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla con desplazamiento horizontal">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">

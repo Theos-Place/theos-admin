@@ -52,6 +52,9 @@ export function DonacionesPanel() {
   }, [searchInput])
 
   const params = { search, status: statusFilter, from: dateFrom, to: dateTo }
+  const hayFiltros = searchInput !== '' || statusFilter !== 'all' || dateFrom !== '' || dateTo !== ''
+  const limpiarFiltros = () => { setSearchInput(''); setSearch(''); setStatusFilter('all'); setDateFrom(''); setDateTo('') }
+
   // Lo dice el servidor: null en un monto es «restringido» para quien no
   // tiene finanzas, y «no conocido» para quien sí (2026-10-14).
   const { donations, total, stats, filteredSum, amountsVisible, loading, error, hasMore, loadMore, refetch } =
@@ -278,7 +281,7 @@ export function DonacionesPanel() {
                     <td colSpan={6}>
                       {error
                         ? <ErrorState message={error} onRetry={refetch} />
-                        : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />}
+                        : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />}
                     </td>
                   </tr>
                 )}
@@ -309,7 +312,7 @@ export function DonacionesPanel() {
               <li>
                 {error
                   ? <ErrorState message={error} onRetry={refetch} />
-                  : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" />}
+                  : <EmptyState icon={Heart} title="No hay donaciones que coincidan con los filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />}
               </li>
             )}
           </ul>

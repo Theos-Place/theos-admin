@@ -20,7 +20,9 @@ function Copiable({ valor, etiqueta }: { valor: string; etiqueta: string }) {
         }).catch(() => {})
       }}
       aria-label={copiado ? `${etiqueta} copiado` : `Copiar ${etiqueta}`}
-      className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-navy-light/80 hover:text-navy hover:bg-navy/5 transition-colors"
+      // QA-2/N1 · Medía 21×17 px y es lo que toca un miembro en el teléfono
+      // justo antes de pagar: ahora 44×44, el blanco táctil mínimo.
+      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-navy-light/80 hover:text-navy hover:bg-navy/5 transition-colors"
     >
       {copiado
         ? <Check size={13} className="text-teal-deep" aria-hidden />
@@ -53,29 +55,40 @@ export function PaymentInstructions({ concepto, nombre, className = '' }: {
         Cómo pagar
       </p>
 
+      {/* QA-2/N4 · Adentro de un <dl> solo van pares dt/dd (en un <div> como
+          mucho): el botón de copiar va DENTRO del dd y el título de la cuenta
+          queda afuera, entre las dos listas. */}
       <dl className="space-y-2 text-[13px] font-body">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
           <dt className="text-navy-light/80 shrink-0">SINPE Móvil</dt>
-          <dd className="text-navy font-medium tabular-nums">{SINPE_TELEFONO}</dd>
-          <Copiable valor={SINPE_TELEFONO.replace(/\s/g, '')} etiqueta="número de SINPE" />
-        </div>
-
-        <div className="pt-1.5 border-t border-outline/60">
-          <p className="text-navy-light/80 mb-1">
-            Cuenta {CUENTA_BAC.banco} en {CUENTA_BAC.moneda}
-          </p>
-          <div className="flex items-baseline gap-2">
-            <dt className="text-navy-light/80 shrink-0">Número</dt>
-            <dd className="text-navy font-medium tabular-nums">{CUENTA_BAC.numero}</dd>
-            <Copiable valor={CUENTA_BAC.numero} etiqueta="número de cuenta" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <dt className="text-navy-light/80 shrink-0">IBAN</dt>
-            <dd className="text-navy font-medium tabular-nums break-all">{CUENTA_BAC.iban}</dd>
-            <Copiable valor={CUENTA_BAC.iban} etiqueta="IBAN" />
-          </div>
+          <dd className="flex items-center gap-1 text-navy font-medium tabular-nums">
+            {SINPE_TELEFONO}
+            <Copiable valor={SINPE_TELEFONO.replace(/\s/g, '')} etiqueta="número de SINPE" />
+          </dd>
         </div>
       </dl>
+
+      <div className="mt-2 pt-1.5 border-t border-outline/60 text-[13px] font-body">
+        <p className="text-navy-light/80 mb-1">
+          Cuenta {CUENTA_BAC.banco} en {CUENTA_BAC.moneda}
+        </p>
+        <dl className="space-y-1">
+          <div className="flex items-center gap-2">
+            <dt className="text-navy-light/80 shrink-0">Número</dt>
+            <dd className="flex items-center gap-1 text-navy font-medium tabular-nums">
+              {CUENTA_BAC.numero}
+              <Copiable valor={CUENTA_BAC.numero} etiqueta="número de cuenta" />
+            </dd>
+          </div>
+          <div className="flex items-center gap-2">
+            <dt className="text-navy-light/80 shrink-0">IBAN</dt>
+            <dd className="flex min-w-0 items-center gap-1 text-navy font-medium tabular-nums">
+              <span className="break-all">{CUENTA_BAC.iban}</span>
+              <Copiable valor={CUENTA_BAC.iban} etiqueta="IBAN" />
+            </dd>
+          </div>
+        </dl>
+      </div>
 
       <div className="mt-3 pt-3 border-t border-outline/60">
         {detalle ? (

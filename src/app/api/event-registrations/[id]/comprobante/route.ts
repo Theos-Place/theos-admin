@@ -13,7 +13,7 @@ import { reportarError, reportarFalla } from '@/lib/observabilidad'
 // la inscripción o staff (mismo patrón anti-suplantación que /api/payments).
 // Campos: file, reference. Monto resuelto server-side (registrationPricing).
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireRoles() // solo sesión; autorización fina abajo (dueño o staff)
+  const auth = await requireRoles() // Solo sesión: la autorización fina va abajo (dueño de la inscripción o staff).
   if (auth.res) return auth.res
   if (!rateLimit(`comprobante-evento:${auth.ctx.userId}`, 3, 60_000)) {
     return NextResponse.json({ error: 'Demasiados comprobantes seguidos; esperá un minuto.' }, { status: 429 })

@@ -95,8 +95,15 @@ describe('FIN-11 · lo que protege la API', () => {
     // sesión, que es solo para esconder el botón.
     const src = sinComentarios(RUTA)
     expect(src).toContain("from('employees')")
-    expect(src).toContain('puedePedirViaje((ficha ?? []).length > 0)')
+    // Desde 2026-10-15 la consulta vive en esEmpleadoVigente(), que comparten
+    // el POST (crear) y el GET (listar, QA-2/N5).
+    expect(src).toContain('puedePedirViaje(await esEmpleadoVigente(auth.ctx.memberId))')
     expect(src).not.toContain('puedePedirViaje(auth.ctx.roles)')
+  })
+
+  it('listar aplica la misma puerta que la pantalla (QA-2/N5)', () => {
+    const src = sinComentarios(RUTA)
+    expect(src).toContain('puedeEntrarAViaticos(await esEmpleadoVigente(auth.ctx.memberId), auth.ctx.roles)')
   })
 
   it('el expediente es de quien lo pide: no se acepta member_id del body', () => {

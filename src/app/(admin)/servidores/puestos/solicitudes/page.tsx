@@ -49,7 +49,8 @@ import {
   textoDeConfirmacion, hayAlgoQuePublicar, motivoParaNoPublicar, type PlanDePublicacion,
 } from '@/lib/servers/publicacion-mensual'
 import {
-  FILTROS, FILTRO_LABEL, FILTRO_POR_DEFECTO, vacioSegunFiltro,
+  FILTROS, FILTRO_LABEL, FILTRO_POR_DEFECTO, FILTRO_TODAS, vacioSegunFiltro,
+
   type FiltroDeSolicitudes,
 } from '@/lib/servers/filtro-de-solicitudes'
 import {
@@ -369,7 +370,12 @@ export default function SolicitudesDePuestosPage() {
           <EmptyState
             title={vacioSegunFiltro(filtro).titulo}
             description={vacioSegunFiltro(filtro).detalle}
+            // En «Todas» el vacío es real (no hay solicitudes): volver al chip por defecto no muestra nada.
+            onLimpiarFiltros={filtro !== FILTRO_POR_DEFECTO && filtro !== FILTRO_TODAS
+              ? () => { setItems(null); setFiltro(FILTRO_POR_DEFECTO) }
+              : undefined}
           />
+
         </div>
       ) : (
         <>

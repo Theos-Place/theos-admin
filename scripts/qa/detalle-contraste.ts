@@ -1,8 +1,9 @@
 /**
- * QA · El detalle de axe para el contraste de UNA pantalla: color de letra,
- * fondo que axe calculó y el ratio. Para entender un hallazgo que la cuenta
- * con contrast.ts dice que pasa. Contra STAGING.
+ * QA · El detalle de axe de UNA pantalla, nodo por nodo. Contra STAGING.
  *   QA_RUTA=/estudios/plan npx tsx scripts/qa/detalle-contraste.ts
+ *   QA_REGLAS=definition-list,dlitem QA_RUTA=/mis-pagos npx tsx scripts/qa/detalle-contraste.ts
+ * Para contraste muestra color de letra, fondo y ratio; para cualquier otra
+ * regla, el elemento y lo que axe dice que le falta.
  */
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
@@ -23,11 +24,17 @@ async function main() {
   await page.waitForURL(u => !u.pathname.startsWith('/login'), { timeout: 30_000 })
   await page.goto(BASE + process.env.QA_RUTA, { waitUntil: 'load', timeout: 60_000 })
   await page.waitForTimeout(2500)
-  const r = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze()
+  const reglas = (process.env.QA_REGLAS ?? 'color-contrast').split(',')
+  const r = await new AxeBuilder({ page }).withRules(reglas).analyze()
   for (const v of r.violations) for (const n of v.nodes.slice(0, Number(process.env.QA_N ?? 8))) {
-    const d = (n.any[0]?.data ?? {}) as { fgColor?: string; bgColor?: string; contrastRatio?: number; fontSize?: string }
-    console.log(`${d.contrastRatio} · letra ${d.fgColor} · fondo ${d.bgColor} · ${d.fontSize} · ${n.target.join(' ')} · ${n.html.replace(/\s+/g, ' ').slice(0, 90)}`)
+    if (v.id === 'color-contrast') {
+      const d = (n.any[0]?.data ?? {}) as { fgColor?: string; bgColor?: string; contrastRatio?: number; fontSize?: string }
+      console.log(`${d.contrastRatio} · letra ${d.fgColor} · fondo ${d.bgColor} · ${d.fontSize} · ${n.target.join(' ')} · ${n.html.replace(/\s+/g, ' ').slice(0, 90)}`)
+    } else {
+      console.log(`[${v.id}] ${n.target.join(' ')} · ${n.html.replace(/\s+/g, ' ').slice(0, 120)}\n    ${(n.failureSummary ?? '').replace(/\s+/g, ' ').slice(0, 200)}`)
+    }
   }
+  if (!r.violations.length) console.log('sin hallazgos de', reglas.join(', '))
   await browser.close()
 }
 main().catch(e => { console.error(e); process.exit(1) })

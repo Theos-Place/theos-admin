@@ -53,6 +53,7 @@ const accionSchema = z.discriminatedUnion('action', [
 
 // PATCH — las acciones del mes, con { action } validado (convención 7).
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: la sede del adelanto tiene que ser una que la persona atiende (alcanceDeSedes, abajo); el acceso sale del PUESTO, no de un rol.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

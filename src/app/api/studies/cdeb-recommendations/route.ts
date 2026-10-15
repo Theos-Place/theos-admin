@@ -124,6 +124,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Solo sesión: el dirigente o co-dirigente de ESE grupo, o coordinación (abajo); dirigir no es un rol.
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

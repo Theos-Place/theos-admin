@@ -195,7 +195,7 @@ function MisPagosContent() {
             <button
               type="button"
               onClick={() => setShowAll(v => !v)}
-              className="text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
+              className="relative after:absolute after:content-[''] after:-inset-x-2 after:-inset-y-3 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body"
             >
               {showAll ? 'Ocultar pagos cerrados' : 'Ver también los pagos cerrados'}
             </button>

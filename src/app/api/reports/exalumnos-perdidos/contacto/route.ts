@@ -36,6 +36,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Solo sesión: roles amplios, o un dirigente con histórico (esDirigenteConHistorico, abajo); ser dirigente no es un rol.
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const { ctx } = auth

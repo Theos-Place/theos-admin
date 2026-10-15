@@ -371,7 +371,7 @@ function SolicitarVacantesContent() {
 
       <p className="text-[13px] text-navy-light/80 font-body flex items-center gap-1.5">
         <FilePlus2 size={13} /> ¿No existe el puesto que buscás?{' '}
-        <Link href="/servidores/puestos/nuevo" className="text-coral-deep hover:underline">Solicitalo acá</Link>.
+        <Link href="/servidores/puestos/nuevo" className="text-coral-deep underline underline-offset-2">Solicitalo acá</Link>.
       </p>
 
       {/* La ficha del puesto, SOLO LECTURA. Se consulta, no se edita: el

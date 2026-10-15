@@ -28,6 +28,7 @@ type Body = {
 // de una. TODAS entran `lista_para_publicar`, la pida quien la pida (SRV-15).
 // Notifica al líder del comité (confirmación) y a los coordinadores (nueva solicitud).
 export async function POST(req: NextRequest) {
+  // Solo sesión: roles que piden para cualquier comité, o quien maneja ese comité (canManageCommittee, abajo).
   const auth = await requireRoles() // autenticado; el permiso real es por comité (abajo)
   if (auth.res) return auth.res
   try {

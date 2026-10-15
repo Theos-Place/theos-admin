@@ -56,6 +56,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  // Solo sesión: escribe solo las preferencias de quien llama (member_id de la sesión).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   const memberId = auth.ctx.memberId

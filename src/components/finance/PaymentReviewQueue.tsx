@@ -116,6 +116,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   // REV-1: filtros por plan y dirigente del grupo (solo aplican a matrícula).
   const [planFilter, setPlanFilter] = useState('all')
   const [leaderFilter, setLeaderFilter] = useState('all')
+  const hayFiltros = statusFilter !== 'all' || conceptFilter !== 'all' || planFilter !== 'all' || leaderFilter !== 'all'
+  const limpiarFiltros = () => { setStatusFilter('all'); setConceptFilter('all'); setPlanFilter('all'); setLeaderFilter('all') }
   const [options, setOptions] = useState<{ plans: { id: string; name: string }[]; leaders: { id: string; name: string }[] }>({ plans: [], leaders: [] })
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
@@ -498,7 +500,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
           {loading ? (
             <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
           ) : rows.length === 0 ? (
-            <EmptyState icon={CreditCard} title="No hay pagos con estos filtros" />
+            <EmptyState icon={CreditCard} title="No hay pagos con estos filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">

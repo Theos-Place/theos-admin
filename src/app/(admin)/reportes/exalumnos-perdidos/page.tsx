@@ -258,7 +258,8 @@ function Contenido() {
               ))}
             </ul>
             {visibles.length === 0 && (
-              <EmptyState icon={Users} title="Nadie con ese filtro" />
+              <EmptyState icon={Users} title="Nadie con ese filtro" onLimpiarFiltros={filtro !== 'todos' ? () => setFiltro('todos') : undefined} />
+
             )}
           </>
         )}

@@ -1,6 +1,6 @@
 # QA-3 · Censo de endpoints — 2026-10-15
 
-397 handlers en 299 rutas. Generado por `node scripts/qa3/censo-endpoints.cjs`.
+398 handlers en 300 rutas. Generado por `node scripts/qa3/censo-endpoints.cjs`.
 
 **Guard:** `roles` = requireRoles con roles explícitos · `modulo` = requireModuleView / requireFormEdit / requireEventAccess · `sesion` = requireRoles() o getAuthContext() a secas (el handler acota por pertenencia; ver informe) · `secreto` = CRON_SECRET · `publico` = sin sesión por diseño.
 **Consultas:** llamadas `.from()`/`.rpc()` escritas en el propio handler; las que viven en `src/lib/supabase/queries` no se cuentan acá.
@@ -10,14 +10,14 @@
 | roles | 174 |
 | sesion | 93 |
 | modulo | 93 |
-| publico | 14 |
+| publico | 15 |
 | secreto | 22 |
 | firma | 1 |
 
 | Validación | Handlers |
 |---|---|
 | a mano | 83 |
-| n/a (sin body) | 216 |
+| n/a (sin body) | 217 |
 | a mano (formData) | 12 |
 | zod | 86 |
 
@@ -165,7 +165,7 @@
 | `/api/finance/refunds` | GET | sesion — requireRoles() | n/a (sin body) | 0 |  |
 | `/api/finance/refunds` | POST | roles — requireRoles('finanzas', 'direccion') | a mano | 0 |  |
 | `/api/finance/requests/[id]/group` | PATCH | sesion — requireRoles() | zod | 0 |  |
-| `/api/finance/requests/[id]` | PATCH | roles — requireRoles('finanzas') | zod | 1 |  |
+| `/api/finance/requests/[id]` | PATCH | roles — requireRoles(...ROLES_QUE_OFRECEN_ARREGLO) | zod | 1 |  |
 | `/api/finance/requests/assignees` | GET | roles — requireRoles('finanzas') | n/a (sin body) | 0 |  |
 | `/api/finance/requests/payment-options` | GET | sesion — requireRoles() | n/a (sin body) | 0 |  |
 | `/api/finance/requests` | GET | modulo — requireRoles() / requireModuleView('finanzas') / requireModuleView('becas') | n/a (sin body) | 0 |  |
@@ -255,6 +255,7 @@
 | `/api/payments/queue` | GET | modulo — requireModuleView('revision_pagos') | n/a (sin body) | 0 |  |
 | `/api/payments/receipts` | POST | sesion — requireRoles() / rateLimit( | zod | 2 |  |
 | `/api/payments` | POST | modulo — requireModuleView('estudios') / rateLimit( | a mano (formData) | 0 |  |
+| `/api/public/events.ics` | GET | publico — rateLimit( | n/a (sin body) | 0 |  |
 | `/api/public/events/[id]` | GET | publico — rateLimit( | n/a (sin body) | 2 |  |
 | `/api/public/events` | GET | publico — rateLimit( | n/a (sin body) | 0 |  |
 | `/api/public/forms/[id]/responder` | POST | publico — rateLimit( | a mano | 4 |  |
@@ -419,4 +420,4 @@
 | `/api/travel-requests/[id]` | PUT | sesion — requireRoles() | zod | 0 |  |
 | `/api/travel-requests/[id]` | PATCH | sesion — requireRoles() | zod | 0 |  |
 | `/api/travel-requests` | GET | sesion — requireRoles() | n/a (sin body) | 0 |  |
-| `/api/travel-requests` | POST | sesion — requireRoles() | zod | 1 |  |
+| `/api/travel-requests` | POST | sesion — requireRoles() | zod | 0 |  |

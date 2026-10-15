@@ -91,6 +91,8 @@ export default function VacantesPage() {
    */
   const [ubicacionFilter, setUbicacionFilter] = useState('all')
   const [open, setOpen] = useState<Set<string>>(new Set())
+  const hayFiltros = qPuesto !== '' || committeeFilter !== 'all' || ubicacionFilter !== 'all'
+  const limpiarFiltros = () => { setQPuesto(''); setCommitteeFilter('all'); setUbicacionFilter('all') }
 
   // Opciones de comité y ubicación: solo los que tienen al menos un puesto.
   const committeeOptions = useMemo(() => {
@@ -197,7 +199,8 @@ export default function VacantesPage() {
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]"><ErrorState message={error} onRetry={refetch} /></div>
         ) : groups.length === 0 ? (
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">
-            <EmptyState icon={Users} title="No hay puestos con esos filtros" />
+            <EmptyState icon={Users} title="No hay puestos con esos filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
           </div>
         ) : groups.map(g => {
           const isOpen = open.has(g.id)

@@ -166,7 +166,10 @@ export default function ConfirmacionesPage() {
             description={filtro === 'pendientes'
               ? 'Todos confirmaron sus datos dentro de la ventana.'
               : 'Probá con otro filtro.'}
+            // En «Todos» la lista vacía es real: volver a «pendientes» no mostraría nada.
+            onLimpiarFiltros={filtro !== 'pendientes' && filtro !== 'todos' ? () => setFiltro('pendientes') : undefined}
           />
+
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl bg-surface-card shadow-[var(--shadow-md)]">

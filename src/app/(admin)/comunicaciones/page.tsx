@@ -176,6 +176,8 @@ export default function ComunicacionesPage() {
       return true
     }).sort((a, b) => (b.sent_at ?? b.created_at).localeCompare(a.sent_at ?? a.created_at))
   }, [sent, channelFilter, statusFilter, dateFrom, dateTo])
+  const hayFiltros = channelFilter !== 'all' || statusFilter !== 'all' || dateFrom !== '' || dateTo !== ''
+  const limpiarFiltros = () => { setChannelFilter('all'); setStatusFilter('all'); setDateFrom(''); setDateTo('') }
 
   const histPage = useClientPagination(filtered, 15)
 
@@ -381,7 +383,8 @@ export default function ComunicacionesPage() {
             <div className="space-y-3">
               {filtered.length === 0 ? (
                 <div className="rounded-2xl bg-surface-card">
-                  <EmptyState icon={MessageSquare} title="No hay mensajes con ese filtro" />
+                  <EmptyState icon={MessageSquare} title="No hay mensajes con ese filtro" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
                 </div>
               ) : (
                 histPage.visible.map(msg => (

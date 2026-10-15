@@ -100,13 +100,41 @@ roles que el endpoint, `ROLES_QUE_OFRECEN_ARREGLO`).
 **No entró:** el flujo de comprobante de la inscripción a eventos
 (useEventRegistration) es otro flujo —inscribe y paga en un paso— y se dejó.
 
-## Tanda 5 — Menores de los dos informes · S/M · un día
+## Tanda 5 — Menores de los dos informes · HECHA 2026-10-15 (staging)
 
 - QA-2 N1–N5: blancos táctiles (SINPE primero), «Limpiar filtros» en vacíos,
   ARIA estructural, enlaces subrayados, `GET /api/travel-requests` con rol.
 - QA-3 N1, N2, N4, N5: comentario de decisión en las 30 escrituras solo-sesión,
   `next/dynamic` para recharts, índices en las 6 FK que van a crecer, RPC de ids
   para el filtro de audiencia.
+
+**Resultado.**
+- QA-2/N5: `GET /api/travel-requests` aplica `puedeEntrarAViaticos` (empleado
+  vigente o quien revisa), igual que la pantalla.
+- QA-2/N4: listas `<dl>` de cómo pagar y del detalle de folletos bien armadas;
+  `tablist` en el editor de correo; `role="img"` en el ícono de ayuda de
+  matrícula; tablas con scroll alcanzables con teclado; `role="status"` en
+  «Enviando…». axe: 0 en las siete pantallas que tenían estos hallazgos.
+- QA-2/N3: los tres enlaces dentro de texto, subrayados siempre. axe: 0.
+- QA-2/N1: copiar SINPE de 21×17 a 44×44; el buscador de miembros enfoca desde
+  toda la caja; «Eventos», «Volver», «Ver perfil de dirigente» y «Ver también
+  los pagos cerrados» con área táctil ampliada sin cambiar su tamaño visible.
+- QA-2/N2: `EmptyState` tiene «Limpiar filtros» (`onLimpiarFiltros`) y se
+  conectó en las pantallas con filtros.
+- QA-3/N1: las 31 escrituras que solo piden sesión dicen por qué basta
+  (`// Solo sesión: …`); un test lo exige para las nuevas.
+- QA-3/N4: índices en 7 FK de 6 tablas (migración 20261015230000; aplicada en
+  staging, ensayada en prod: 258 ms).
+- QA-3/N2 **no se resolvió.** Se probó que los reportes importaran recharts
+  desde un solo módulo: el build siguió armando tres paquetes de 382.740 bytes
+  (asistencia/dirigentes/discipulos, estudios/personas-nuevas, retención).
+  Turbopack duplica el módulo por grupo de rutas y Next 16 no documenta una
+  opción para evitarlo. Se revirtió para no dejar un comentario que promete
+  algo falso. Impacto: quien pasa de un reporte a otro de otro grupo baja la
+  librería de nuevo; solo afecta a /reportes.
+- **No entró, a propósito:** QA-3/N5 (RPC de ids de audiencia). Medido: unos
+  3 s de base por día en total; ahorrarlos obliga a reescribir en SQL el motor
+  de filtros de miembros. No compensa.
 
 ## Tanda 6 — zod en las 82 escrituras (QA-3 M4) · L · por módulo, en el tiempo
 

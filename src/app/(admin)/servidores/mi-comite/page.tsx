@@ -296,7 +296,7 @@ function MiComiteContenido() {
 
       <p className="text-[13px] text-navy-light/80 font-body">
         ¿Alguien no debería estar en la lista? Eso se cambia en{' '}
-        <Link href="/servidores" className="text-coral-deep hover:underline">Servidores</Link>.
+        <Link href="/servidores" className="text-coral-deep underline underline-offset-2">Servidores</Link>.
       </p>
     </div>
   )

@@ -57,6 +57,7 @@ export async function GET() {
 // puede inscribir EN NOMBRE DE otro miembro (flujo "Ver disponibilidad como")
 // pasando on_behalf_of — solo esos roles, validado server-side.
 export async function POST(req: NextRequest) {
+  // Solo sesión: cualquier miembro se inscribe a sí mismo; inscribir a otro (on_behalf_of) exige rol privilegiado (abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   if (!auth.ctx.memberId) return NextResponse.json({ error: 'No se pudo determinar el miembro.' }, { status: 400 })

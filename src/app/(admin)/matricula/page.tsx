@@ -968,7 +968,10 @@ function CommitmentRow({ met, label, info }: { met: boolean; label: string; info
       </span>
       {info && (
         <span
+          // QA-2/N4 · aria-label en un <span> sin rol no se anuncia: con
+          // role="img" el ícono tiene nombre y el texto sale al enfocarlo.
           tabIndex={0}
+          role="img"
           title={info}
           aria-label={info}
           className="cursor-help text-navy-light/80 hover:text-navy-light/80 focus:outline-none focus:text-navy-light/80"

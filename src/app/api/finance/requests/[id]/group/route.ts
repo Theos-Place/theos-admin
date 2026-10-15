@@ -38,6 +38,7 @@ const ERRORES: Record<string, { error: string; status: number }> = {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Solo sesión: la solicitud tiene que ser de quien llama: se lee member_id de la fila, no del body (cambiarGrupoDeSolicitud).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   try {

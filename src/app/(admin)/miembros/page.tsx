@@ -240,6 +240,14 @@ function MiembrosContent() {
 
   // Cuenta TODOS los filtros activos: avanzados + chips rápidos + búsqueda.
   const activeFilterCount = filters.conditions.length + quickActiveCount + (searchActive ? 1 : 0)
+  function limpiarFiltros() {
+    filters.clearAll()                 // condiciones avanzadas + grupos + rangos
+    setShowDonors(false)               // chips rápidos
+    setShowServers(false)
+    setShowActive(false)
+    setShowStudyAttendance(false)
+    setSearch('')                      // búsqueda
+  }
 
   // Export: descarga la totalidad que coincide con búsqueda/chips (no solo lo cargado).
   async function fetchAllForExport(): Promise<Member[]> {
@@ -457,13 +465,8 @@ function MiembrosContent() {
               : `${resultTotal.toLocaleString('es-CR')} resultados`}
           </p>
           <button
-            onClick={() => {
-              filters.clearAll()                 // condiciones avanzadas + grupos + rangos
-              setShowDonors(false)               // chips rápidos
-              setShowServers(false)
-              setShowActive(false)
-              setSearch('')                      // búsqueda
-            }}
+            onClick={limpiarFiltros}
+
             className="flex items-center gap-1 text-sm text-coral-deep hover:underline transition-colors font-body"
           >
             <X size={12} strokeWidth={2} />
@@ -575,7 +578,7 @@ function MiembrosContent() {
               ) : visibleMembers.length === 0 ? (
                 <tr>
                   <td colSpan={visibleColumns.length + 2}>
-                    <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
+                    <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" onLimpiarFiltros={activeFilterCount > 0 ? limpiarFiltros : undefined} />
                   </td>
                 </tr>
               ) : (
@@ -701,7 +704,7 @@ function MiembrosContent() {
               <p className="text-sm text-navy-light/80">Buscando miembros…</p>
             </div>
           ) : visibleMembers.length === 0 ? (
-            <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" />
+            <EmptyState icon={Users} title="Sin resultados para los filtros aplicados" onLimpiarFiltros={activeFilterCount > 0 ? limpiarFiltros : undefined} />
           ) : (
             <ul>
               {visibleMembers.map((member, i) => (

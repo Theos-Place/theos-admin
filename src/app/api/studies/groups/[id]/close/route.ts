@@ -24,6 +24,7 @@ export async function POST(
   // Cierra quien gestiona grupos O el dirigente/co-dirigente DE ESTE grupo
   // (2026-08-20: el cierre es parte del trabajo del dirigente — el flujo de
   // recomendaciones a CDEB ya lo anticipaba así).
+  // Solo sesión: rol que cierra Y que pueda cerrar ESTE grupo (puedeCerrarPorRol + puedeCerrarEsteGrupo, abajo).
   const auth = await requireRoles()
   if (auth.res) return auth.res
   // Body y params fuera del try: el catch de YA_CERRADO los necesita para reconciliar.

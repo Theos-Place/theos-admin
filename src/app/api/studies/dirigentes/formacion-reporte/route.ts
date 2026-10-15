@@ -24,6 +24,7 @@ const bodySchema = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
+    // Solo sesión: el propio dirigente: member_id tiene que ser el de la sesión (abajo).
     const auth = await requireRoles()
     if (auth.res) return auth.res
 

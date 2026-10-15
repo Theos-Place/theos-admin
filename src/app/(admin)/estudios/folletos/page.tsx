@@ -69,6 +69,8 @@ export default function FolletosPage() {
     (statusFilter === 'all' || r.status === statusFilter) &&
     (tipoFilter === 'all' || r.tipo === tipoFilter),
   ), [rows, sedeFilter, statusFilter, tipoFilter])
+  const hayFiltros = sedeFilter !== 'all' || statusFilter !== 'all' || tipoFilter !== 'all'
+  const limpiarFiltros = () => { setSedeFilter('all'); setStatusFilter('all'); setTipoFilter('all') }
 
   const sel = useRowSelection(filtered.map(r => r.id))
 
@@ -193,7 +195,8 @@ export default function FolletosPage() {
         {loading ? (
           <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full"><Loader2 size={15} className="animate-spin" /> Cargando…</p>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={FileText} title="No hay solicitudes de folletos con esos filtros" />
+          <EmptyState icon={FileText} title="No hay solicitudes de folletos con esos filtros" onLimpiarFiltros={hayFiltros ? limpiarFiltros : undefined} />
+
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">

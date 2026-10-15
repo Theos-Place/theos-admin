@@ -638,7 +638,7 @@ export default function DashboardPage() {
                         <span className="font-semibold text-navy">{item.actor}</span>{' '}
                         {item.action}{' '}
                         {item.resource_url ? (
-                          <Link href={item.resource_url} className="text-[#3B7579] hover:underline">
+                          <Link href={item.resource_url} className="text-teal-deep underline underline-offset-2 hover:text-teal-ink">
                             {item.resource}
                           </Link>
                         ) : item.resource}
