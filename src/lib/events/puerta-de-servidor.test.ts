@@ -21,16 +21,17 @@ describe('puertaDeServidor', () => {
       .toEqual({ estado: 'bloqueado', aviso: NO_ES_SERVIDOR })
   })
 
-  it('evento sin comité organizador: permisivo, pero se dice', () => {
+  it('evento sin comité organizador: no (igual que el servidor), y se dice qué arreglar', () => {
     // Históricos. Negar por falta de un dato sería impedir algo legítimo.
     expect(puertaDeServidor({ hasCommittees: false, isServer: false }))
-      .toEqual({ estado: 'permitido', aviso: SIN_COMITE })
+      .toEqual({ estado: 'bloqueado', aviso: SIN_COMITE })
   })
 
   it('el botón solo se dibuja cuando está permitido', () => {
     expect(ofreceServidor(puertaDeServidor(null))).toBe(false)
     expect(ofreceServidor(puertaDeServidor({ hasCommittees: true, isServer: false }))).toBe(false)
     expect(ofreceServidor(puertaDeServidor({ hasCommittees: true, isServer: true }))).toBe(true)
-    expect(ofreceServidor(puertaDeServidor({ hasCommittees: false, isServer: false }))).toBe(true)
+    // Igual que el servidor (calificaComoServidor, SRV-1): sin comité, no.
+    expect(ofreceServidor(puertaDeServidor({ hasCommittees: false, isServer: false }))).toBe(false)
   })
 })

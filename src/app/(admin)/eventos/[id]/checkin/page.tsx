@@ -105,6 +105,18 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   // Subevento destino del check-in (null = evento padre).
   const [targetSub, setTargetSub] = useState<string | null>(null)
   const [scanOn, setScanOn] = useState(false)
+  /**
+   * Con qué calidad registra el QR (2026-10-15, pedido de Floriana). El QR no
+   * muestra tarjeta de confirmación —registra y sigue, para que la fila
+   * avance—, así que antes entraba SIEMPRE como participante y a un servidor
+   * había que borrarlo y registrarlo a mano. Ahora quien está en la fila de
+   * servidores pone «Servidor» y todos los QR que lea entran así. El servidor
+   * revalida contra los comités organizadores: quien no califica entra como
+   * participante, y el aviso lo dice.
+   */
+  const [scanComo, setScanComo] = useState<AttendanceType>('participant')
+  /** La calidad con la que el servidor registró el último check-in. */
+  const ultimaCalidad = useRef<'asistente' | 'servidor' | null>(null)
   const [scanMsg, setScanMsg] = useState<{ kind: 'ok' | 'dup' | 'error'; text: string } | null>(null)
   const [toDelete, setToDelete] = useState<EventCheckin | null>(null)
   /**
@@ -349,9 +361,13 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       // Reemplaza el id optimista por el real (para poder eliminarlo luego).
-      const data = await res.json().catch(() => null) as { id?: string } | null
+      const data = await res.json().catch(() => null) as { id?: string; checked_in_as?: 'asistente' | 'servidor' } | null
+      ultimaCalidad.current = data?.checked_in_as ?? null
       if (data?.id) {
-        setCheckins(prev => prev.map(c => c.id === tempId ? { ...c, id: data.id! } : c))
+        // La calidad también se toma de la respuesta: si se pidió servidor y no
+        // calificaba, la lista no puede seguir diciendo «Servidor».
+        const real: AttendanceType | null = data.checked_in_as === 'servidor' ? 'server' : data.checked_in_as === 'asistente' ? 'participant' : null
+        setCheckins(prev => prev.map(c => c.id === tempId ? { ...c, id: data.id!, ...(real ? { attendance_type: real } : {}) } : c))
       }
       return 'ok'
     } catch (err) {
@@ -424,16 +440,23 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       const name = mem ? `${mem.first_name} ${mem.last_name}`.trim() : 'Persona registrada'
       // El gate de "evento pago requiere inscripción" vive en persistCheckin
       // (mismo camino que nombre/cédula). 'not_registered' → cobro en sitio.
-      const r = await persistCheckin({ id: memberId, name }, 'participant', 'qr')
+      const r = await persistCheckin({ id: memberId, name }, scanComo, 'qr')
       const dest = targetSub ? subName(targetSub) : null
       if (r === 'ok') {
         scanFeedback(true)
         // CHK-2: por QR no hay tarjeta de confirmación —se registra y ya—, así
         // que el aviso va en el mismo flash o el operador no se entera.
         const cumple = avisoDeCumple(mem?.birth_md)
-        flash('ok', cumple
-          ? `✓ ${name} registrado${dest ? ` → ${dest}` : ''} · ${textoDelCumple(name, cumple)}`
-          : `✓ ${name} registrado${dest ? ` → ${dest}` : ''}`)
+        const comoServidor = ultimaCalidad.current === 'servidor'
+        const noCalifico = scanComo === 'server' && !comoServidor
+        const sinComite = event!.organizing_committee_ids.length === 0
+        const base = `✓ ${name} registrado${comoServidor ? ' como servidor' : ''}${dest ? ` → ${dest}` : ''}`
+          + (noCalifico
+            ? (sinComite
+              ? ' · como participante: el evento no tiene comité organizador'
+              : ' · como participante: no es servidor del comité organizador')
+            : '')
+        flash(noCalifico ? 'dup' : 'ok', cumple ? `${base} · ${textoDelCumple(name, cumple)}` : base)
         // Se registró sin haber podido leer el nombre: se refresca para que la
         // lista muestre a quién, en vez de dejar "Persona registrada".
         if (!mem) void refetch()
@@ -731,6 +754,19 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
 
           {scanOn && (
             <div className="space-y-2">
+              <div role="radiogroup" aria-label="Escanear como" className="flex items-center gap-1 rounded-2xl bg-surface-card p-1 shadow-[var(--shadow-sm)]">
+                <span className="px-2 text-[13px] text-navy-light/80 font-body">Escanear como</span>
+                {([['participant', 'Participante'], ['server', 'Servidor']] as const).map(([valor, etiqueta]) => (
+                  <button key={valor} type="button" role="radio" aria-checked={scanComo === valor}
+                    onClick={() => setScanComo(valor)}
+                    className={cn('flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors font-body min-h-[44px]',
+                      scanComo === valor
+                        ? (valor === 'server' ? 'bg-coral/10 text-coral-deep ring-1 ring-coral/30' : 'bg-teal-soft/30 text-teal-ink ring-1 ring-teal-deep/30')
+                        : 'text-navy-light/80 hover:bg-surface-low')}>
+                    {etiqueta}
+                  </button>
+                ))}
+              </div>
               <QrScanner onResult={handleScan} className="w-full aspect-square max-h-[340px]" />
               {scanMsg && (
                 <div className={cn('rounded-xl px-4 py-3 text-sm font-medium font-body text-center',
@@ -1696,7 +1732,7 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
                 <p className="text-sm text-white truncate font-body">{d.first_name} {d.last_name}</p>
                 <p className="text-[13px] text-white/80">{d.relation} · {d.kind === 'linked' ? 'existente' : 'nuevo'}</p>
               </div>
-              <button onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/80 hover:text-coral-deep"><X size={14} /></button>
+              <button aria-label={`Quitar a ${d.first_name} ${d.last_name}`} onClick={() => setFamilyDrafts(prev => prev.filter((_, j) => j !== i))} className="text-white/80 hover:text-coral-deep"><X size={14} /></button>
             </div>
           ))}
           <button

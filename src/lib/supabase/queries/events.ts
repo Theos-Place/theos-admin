@@ -1015,10 +1015,13 @@ export async function createCheckin(
       checked_in_as: calidad,
       checked_in_by: input.checked_in_by ?? null,
     })
-    .select('id')
+    // `checked_in_as` vuelve para que la pantalla sepa con qué calidad QUEDÓ:
+    // si se pidió 'servidor' y no califica, entra como asistente, y el QR
+    // —que no muestra tarjeta— tiene que poder decirlo (2026-10-15).
+    .select('id, checked_in_as')
     .single()
   if (error) throw error
-  return data as { id: string }
+  return data as { id: string; checked_in_as: 'asistente' | 'servidor' }
 }
 
 export type OnsiteChargeMode = 'pending' | 'verified'
