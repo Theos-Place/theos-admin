@@ -11,7 +11,6 @@ import { folletosQuePide } from '@/lib/studies/corte-de-bloque'
 import type { ResultadoPorTiquete } from '@/lib/studies/cambio-de-estado-folleto'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 
-
 export type DbFolletoRequest = {
   id: string
   source_group_id: string | null
@@ -117,22 +116,6 @@ export async function getSedeForGroup(groupId: string): Promise<string | null> {
   if (!zoneCode) return null
   const { data: s } = await supabase.from('sedes').select('name').eq('code', zoneCode).maybeSingle()
   return (s as { name: string } | null)?.name ?? null
-}
-
-export async function createFolletoRequest(input: {
-  source_group_id: string
-  source_plan_code: string
-  target_level_code: string
-  quantity: number
-  sede: string | null
-  close_date: string
-  available_at: string
-  confirmed_by: string | null
-}): Promise<{ id: string }> {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase.from('folleto_requests').insert(input).select('id').single()
-  if (error) throw error
-  return data as { id: string }
 }
 
 /** FOL-1: tiquete AUTOMÁTICO de folletos del PROPIO nivel del grupo.
@@ -250,7 +233,6 @@ export async function createAutoFolletoIfNeeded(
     return { created: false, id, reason: 'ya_existe' }
   }
   const folletoId = (creado as { id: string }).id
-
 
   // AVISO. El correo se arma desde el MISMO detalle que muestra la pantalla,
   // para que los dos digan lo mismo.

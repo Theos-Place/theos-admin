@@ -7,9 +7,8 @@
  * después nadie sabe de dónde salieron. Con tests se ve qué hace en cada caso.
  */
 
-/** Sin tildes, minúscula, espacios colapsados. Igual que el resto de los importadores. */
-export const norm = (s: string) =>
-  (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/\s+/g, ' ')
+import { norm } from '@/lib/texto/normalizar'
+export { norm }
 
 // ─── Teléfono ────────────────────────────────────────────────────────────────
 

@@ -52,9 +52,6 @@ export function exigeContacto(f: FichaConEdad, hoy: string = hoyCR()): boolean {
   return !esMenor(f, hoy) && !f.datos_protegidos
 }
 
-export const AYUDA_CONTACTO_MENOR =
-  'Es menor de edad: el correo y el teléfono son opcionales. El contacto es el de su familia.'
-
 /**
  * Un teléfono o correo que el menor tiene PRESTADO de un adulto de su familia.
  *

@@ -15,8 +15,6 @@ export const SURVEY_OFFSETS = [
   { hours: 168, label: 'Una semana después' },
 ] as const
 
-export type SurveyOffsetHours = (typeof SURVEY_OFFSETS)[number]['hours']
-
 /** Qué se manda. Uno de los dos, nunca los dos (lo enforcea un CHECK). */
 export type SurveyTarget =
   | { kind: 'form'; formId: string }

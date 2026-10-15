@@ -54,9 +54,6 @@ export type CruceSedeFormacion = {
   sinSede: number
 }
 
-/** Etiqueta de la fila de quienes no tienen sede. */
-export const SIN_SEDE = 'Sin sede'
-
 export function cruceSedeFormacion(
   gente: readonly DirigenteConSede[],
   estudios: readonly EstudioDelCruce[],

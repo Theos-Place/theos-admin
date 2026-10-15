@@ -8,11 +8,6 @@
 
 import type { RoleId } from '@/types/auth'
 
-/** Nombre canónico del comité en `areas` (area_type='committee'). Es solo la
- *  referencia legible: el match real lo hace `isStudyCommitteeArea`, que compara
- *  por palabras y no exige el nombre exacto. */
-export const STUDY_COMMITTEE_AREA_NAME = 'Comité de Estudios Bíblicos'
-
 /** Palabras que tiene que traer el nombre del área, en cualquier orden y con o
  *  sin conectores. */
 const PALABRAS_DEL_COMITE = ['comite', 'estudios', 'biblicos'] as const

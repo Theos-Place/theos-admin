@@ -2,13 +2,6 @@
 import type { FormField, MockForm, FieldType, ConditionOperator, LogicCondition, LogicRule, FormFieldNew, FormTemplate, FormResponse } from '@/types/forms'
 export type { FormField, MockForm, FieldType, ConditionOperator, LogicCondition, LogicRule, FormFieldNew, FormTemplate, FormResponse }
 
-export const FORM_CATEGORY_LABEL: Record<MockForm['category'], string> = {
-  event_registration: 'Inscripción eventos',
-  study_registration: 'Inscripción estudios',
-  survey: 'Encuestas',
-  registration: 'Registro',
-}
-
 // ─── Form builder data ────────────────────────────────────────────────────────
 
 export const PERSONAL_DATA_FIELDS: { key: string; label: string; group: string }[] = [

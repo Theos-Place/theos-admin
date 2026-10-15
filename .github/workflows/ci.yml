@@ -35,5 +35,11 @@ jobs:
         # con un useCallback (BEC-5), y el efecto que ponía `loading` en true
         # al entrar dejó de existir.
         run: npx eslint src --max-warnings=0
+      - name: Codigo muerto (knip)
+        # QA-3 tanda 4 (2026-10-15): se borraron 9 funciones, 23 constantes,
+        # 25 tipos y un componente que nadie usaba. Desde aca, un export, un
+        # tipo o un archivo nuevo sin usar rompe la CI. Config en knip.json:
+        # la unica excepcion es OfrecerArregloButton, que espera decision.
+        run: npm run knip
       - name: Tests
         run: npm test --if-present

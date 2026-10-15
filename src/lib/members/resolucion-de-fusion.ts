@@ -205,23 +205,6 @@ export function avisoDeCuentas(principal: FichaConCuenta, duplicado: FichaConCue
 }
 
 /**
- * El correo del perfil y el del login pueden quedar distintos: si se elige el
- * correo del duplicado pero la cuenta que sobrevive es la del principal, la
- * persona sigue entrando con el correo viejo. No es un error, pero hay que
- * decirlo o el próximo "no puedo entrar" sale de acá.
- */
-export function correoDeLoginQuedaDesalineado(
-  principal: FichaConCuenta, duplicado: FichaConCuenta, r: Resolucion,
-): { correoDelPerfil: string; correoDelLogin: string } | null {
-  if (!principal.auth_user_id) return null
-  if (r['email'] !== 'duplicado') return null
-  const perfil = String(duplicado.email ?? '').trim()
-  const login = String(principal.email ?? '').trim()
-  if (!perfil || !login || igual(perfil, login)) return null
-  return { correoDelPerfil: perfil, correoDelLogin: login }
-}
-
-/**
  * El correo con el que la persona va a entrar después de fusionar.
  *
  * Si se elige el correo del duplicado, la cuenta que sobrevive se muda a ese

@@ -83,12 +83,3 @@ export function requiereAtencion(status: string): boolean {
 export function cobroVivo(status: string): boolean {
   return status === 'pending' || status === 'paid'
 }
-
-/** El motivo por defecto según quién cortó el cobro. Se guarda en el pago para
- *  que dentro de seis meses se sepa por qué quedó así. */
-export const MOTIVO_CANCELACION = {
-  persona: 'La persona canceló la matrícula',
-  plazo: 'Se venció el plazo para subir el comprobante',
-  admin: 'Se cerró el cobro sin cobrarlo',
-  retiro: 'Se retiró del estudio',
-} as const

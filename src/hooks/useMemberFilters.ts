@@ -8,8 +8,6 @@ import { buildUnits, type FilterUnit } from '@/lib/filter-units'
 
 export { buildUnits }
 
-export type QuickFilter = 'todos' | 'activos' | 'donantes' | 'servidores'
-
 // ─── filter helpers ─────────────────────────────────────────────────────────
 
 function matchesCondition(m: Member, c: FilterCondition): boolean {

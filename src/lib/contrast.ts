@@ -42,7 +42,6 @@ export function composite(fg: Rgb, bg: Rgb, alpha: number): Rgb {
 
 /** Umbrales AA. El de texto grande solo aplica desde 24px, o 18.66px en negrita. */
 export const AA_NORMAL = 4.5
-export const AA_LARGE = 3
 
 export function ratio(fgHex: string, bgHex: string, alpha = 1): number {
   const bg = hexToRgb(bgHex)

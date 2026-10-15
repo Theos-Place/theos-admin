@@ -55,8 +55,6 @@ export type Restriccion = {
   ops: Record<string, 'AND' | 'OR'>
 }
 
-export const EMPTY_RESTRICTION: Restriccion = { conditions: [], groups: [], ops: {} }
-
 /** ¿Restringe a alguien? Una restricción sin condiciones es lo mismo que no
  *  tener restricción — así el "guardar vacío" limpia en vez de bloquear. */
 export function hasRestriction(r: Restriccion | null | undefined): boolean {

@@ -16,7 +16,3 @@ export const MODULO_POR_ENTIDAD = {
 } as const
 
 export type EntidadAuditable = keyof typeof MODULO_POR_ENTIDAD
-
-export function tieneHistorial(entityType: string): entityType is EntidadAuditable {
-  return entityType in MODULO_POR_ENTIDAD
-}

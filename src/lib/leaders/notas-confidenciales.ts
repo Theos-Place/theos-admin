@@ -41,7 +41,6 @@ export function puedeEscribirNotas(roles: readonly string[] | null | undefined):
 export const CAMPOS_DE_NOTA = [
   'nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general',
 ] as const
-export type CampoDeNota = (typeof CAMPOS_DE_NOTA)[number]
 
 /**
  * Quita las notas del objeto si quien mira no puede leerlas.

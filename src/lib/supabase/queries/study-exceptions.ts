@@ -5,8 +5,6 @@ import { esNivel, excepcionVigente } from '@/lib/studies/exception-scope'
 // Excepciones de requisitos de matrícula (mismo patrón que study-invitations).
 // Tabla study_requirement_exceptions (migración 072).
 
-export type WaivableRequirement = 'donor' | 'attendance' | 'server' | 'prerequisite' | 'age' | 'all'
-
 export type StudyException = {
   id: string
   member_id: string

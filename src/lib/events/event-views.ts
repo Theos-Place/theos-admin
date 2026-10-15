@@ -3,32 +3,7 @@
 // Todas se apoyan en expand-recurrence.ts.
 
 import type { AdminEvent } from '@/types/event'
-import { expandRecurring, nextOccurrence, isPastEvent } from './expand-recurrence'
-
-/**
- * Próximos eventos: los recurrentes aparecen UNA vez con su próxima ocurrencia
- * (virtual, fechas desplazadas); los puntuales futuros tal cual. Orden ascendente.
- * Excluye inactivos. Lo usan la lista y el grid.
- */
-export function upcomingEvents(events: AdminEvent[], now: Date = new Date()): AdminEvent[] {
-  const out: AdminEvent[] = []
-  for (const e of events) {
-    if (e.is_active === false) continue
-    if (e.is_recurring && e.recurrence_rule) {
-      const next = nextOccurrence(e, now)
-      if (!next) continue
-      const dur = Math.max(0, new Date(e.end_at).getTime() - new Date(e.start_at).getTime())
-      out.push({
-        ...e,
-        start_at: next.toISOString(),
-        end_at: new Date(next.getTime() + dur).toISOString(),
-      })
-    } else if (!isPastEvent(e, now)) {
-      out.push(e)
-    }
-  }
-  return out.sort((a, b) => a.start_at.localeCompare(b.start_at))
-}
+import { expandRecurring } from './expand-recurrence'
 
 /**
  * Eventos de un mes: puntuales con start_at en el mes + ocurrencias virtuales de

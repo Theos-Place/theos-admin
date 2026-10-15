@@ -2,7 +2,7 @@ import type { ApplicationState } from '@/lib/servers/application-states'
 import { ESTADO_INICIAL, type VacancyState } from '@/lib/servers/vacancy-states'
 import { motivoQueImpideCambiar } from '@/lib/servers/cambio-de-estado-de-solicitud'
 import { ESTADO_PUBLICADO, ESTADO_DESACTIVADO } from '@/lib/servers/publicacion-mensual'
-import { createAdminClient, type Insertable, type Updatable } from '@/lib/supabase/admin'
+import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { getAreaNameMap, type AreaMapEntry } from '@/lib/supabase/queries/_area-map'
 import { todayCR } from '@/lib/format'
@@ -1052,83 +1052,6 @@ export async function deleteServicePosition(id: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('service_positions').delete().eq('id', id)
   if (error) throw error
-}
-
-/** Importación bulk de puestos desde Excel/CSV. Matchea el comité por nombre
- *  (case-insensitive) contra areas de tipo committee; evita duplicados por
- *  (title + area_id + location). Reporta filas sin comité para revisión. */
-export type ImportPositionRow = {
-  committee: string
-  location?: string | null
-  title: string
-  quantity?: number | null
-  description?: string | null
-  study_requirement?: string | null
-  functions?: string | null
-  profile?: string | null
-  skills?: string | null
-  expires_at?: string | null
-  is_featured?: boolean
-}
-
-export type ImportPositionsResult = {
-  inserted: number
-  duplicates: number
-  unmatched: Array<{ row: number; committee: string; title: string }>
-}
-
-export async function importServicePositions(rows: ImportPositionRow[]): Promise<ImportPositionsResult> {
-  const supabase = createAdminClient()
-
-  // Comités por nombre normalizado (lower/trim) → id.
-  const { data: committees } = await supabase
-    .from('areas').select('id, name').eq('area_type', 'committee')
-  const byName = new Map<string, string>()
-  for (const c of (committees ?? []) as Array<{ id: string; name: string }>) {
-    byName.set(c.name.trim().toLowerCase(), c.id)
-  }
-
-  // Puestos existentes para deduplicar (title|area_id|location normalizados).
-  const { data: existing } = await supabase
-    .from('service_positions').select('title, area_id, location')
-  const seen = new Set<string>()
-  const dupKey = (areaId: string, title: string, location: string | null | undefined) =>
-    `${areaId}|${title.trim().toLowerCase()}|${(location ?? '').trim().toLowerCase()}`
-  for (const p of (existing ?? []) as Array<{ title: string; area_id: string; location: string | null }>) {
-    seen.add(dupKey(p.area_id, p.title, p.location))
-  }
-
-  const unmatched: ImportPositionsResult['unmatched'] = []
-  const toInsert: Record<string, unknown>[] = []
-  let duplicates = 0
-
-  rows.forEach((r, i) => {
-    const areaId = byName.get((r.committee ?? '').trim().toLowerCase())
-    if (!areaId) { unmatched.push({ row: i + 1, committee: r.committee, title: r.title }); return }
-    const key = dupKey(areaId, r.title, r.location)
-    if (seen.has(key)) { duplicates++; return }
-    seen.add(key)
-    toInsert.push({
-      area_id: areaId,
-      title: r.title,
-      location: r.location ?? null,
-      quantity: r.quantity ?? 1,
-      max_volunteers: r.quantity ?? 1,
-      description: r.description ?? null,
-      study_requirement: r.study_requirement ?? null,
-      functions: r.functions ?? null,
-      profile: r.profile ?? null,
-      expires_at: r.expires_at ?? null,
-      is_featured: r.is_featured ?? false,
-      is_active: true,
-    })
-  })
-
-  if (toInsert.length > 0) {
-    const { error } = await supabase.from('service_positions').insert(toInsert as Insertable<'service_positions'>[])
-    if (error) throw error
-  }
-  return { inserted: toInsert.length, duplicates, unmatched }
 }
 
 // Servidores (volunteers en una posición)

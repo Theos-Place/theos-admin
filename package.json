@@ -23,7 +23,8 @@
     "tutorial:estudio-externo": "tsx scripts/tutoriales/run.ts estudio-externo",
     "tutorial:pago-pendiente": "tsx scripts/tutoriales/run.ts pago-pendiente",
     "tutorial:viaticos": "tsx scripts/tutoriales/run.ts viaticos",
-    "tutorial:adelantos": "tsx scripts/tutoriales/run.ts adelantos"
+    "tutorial:adelantos": "tsx scripts/tutoriales/run.ts adelantos",
+    "knip": "knip --no-progress --include files,exports,types"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -67,6 +68,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "ffmpeg-static": "^5.3.0",
+    "knip": "^5.88.1",
     "playwright": "^1.62.1",
     "supabase": "^2.115.0",
     "tailwindcss": "^4",

@@ -2,12 +2,6 @@ import { createAdminClient, type TableName } from '@/lib/supabase/admin'
 import { STUDY_ADMIN_ROLES, SERVICE_ADMIN_ROLES, type RoleId } from '@/lib/auth/roles'
 
 export type AlertType = 'alert' | 'info' | 'warning'
-export type Alert = {
-  id: string
-  type: AlertType
-  message: (n: number) => string
-  url: string
-}
 
 // Alertas derivadas de datos reales. Cada una cuenta filas pendientes en su tabla
 // y solo se muestra si hay al menos una.

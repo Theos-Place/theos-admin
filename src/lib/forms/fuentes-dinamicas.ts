@@ -17,12 +17,6 @@ export function esFuenteDinamica(v: string | null | undefined): v is FuenteDinam
   return !!v && (FUENTES_DINAMICAS as readonly string[]).includes(v)
 }
 
-/** Cómo se le llama a cada fuente en el editor de formularios. */
-export const NOMBRE_DE_FUENTE: Record<FuenteDinamica, string> = {
-  study_groups_open: 'Grupos de estudio en matrícula',
-  talleres: 'Talleres',
-}
-
 /**
  * La etiqueta de un taller en el desplegable: «Entre Mujeres · 22 ago 2026».
  *

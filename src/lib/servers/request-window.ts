@@ -145,12 +145,3 @@ export function textoDeLaVentana(now: Date = new Date()): string {
 export function motivoDeVentanaCerrada(now: Date = new Date()): string {
   return textoDeLaVentana(now)
 }
-
-/** @deprecated Usar `textoDeLaVentana`, que dice la fecha real. Se conserva
- *  porque la pantalla vieja de vacantes todavía lo importa. */
-export const VACANCY_REQUEST_WINDOW_TOOLTIP =
-  `Las solicitudes se reciben del ${VENTANA_DIA_INICIAL} al ${VENTANA_DIA_FINAL} de cada mes. `
-  + 'Fuera de esa fecha, la solicitud está deshabilitada.'
-
-/** @deprecated Se conserva por compatibilidad: el inicio de la ventana. */
-export const VACANCY_REQUEST_OPEN_DAY = VENTANA_DIA_INICIAL

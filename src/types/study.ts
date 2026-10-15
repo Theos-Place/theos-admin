@@ -182,29 +182,6 @@ export type StudyLeader = {
   en_grupo_whatsapp?: boolean | null
 }
 
-export type WaitListEntry = {
-  id: string
-  member_id: string
-  member_name: string
-  age: number
-  zone_preference: string
-  horario_preference: string
-  requested_at: string
-  type: 'N1' | 'campaign'
-  campaign_code?: string
-}
-
-export type RelocationRequest = {
-  id: string
-  member_id: string
-  member_name: string
-  from_group_id: string
-  study_type: string
-  reason: string
-  status: 'pending' | 'resolved'
-  requested_at: string
-}
-
 // ── Solicitudes de estudios (tabla study_requests, migración 041) ───────────
 
 // 'study_interest' consolida los viejos 'new_group'/'join_group' (migración 050).

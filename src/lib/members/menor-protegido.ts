@@ -22,8 +22,6 @@
 /** Lo ÚNICO que se guarda de un menor con datos protegidos. */
 export const CAMPOS_MENOR_PROTEGIDO = ['first_name', 'last_name', 'birth_date'] as const
 
-export type CampoMenorProtegido = typeof CAMPOS_MENOR_PROTEGIDO[number]
-
 /** Campos que la ficha de un menor protegido NO puede llevar, ni vacíos.
  *  Se nombran para poder decir cuál llegó, en vez de descartarlo en silencio. */
 const PROHIBIDOS = ['email', 'phone', 'cedula', 'document_type', 'address', 'allergies'] as const

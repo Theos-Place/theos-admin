@@ -13,7 +13,7 @@
 import { restrictionSummary, type Restriccion } from '@/lib/audiencia/restriccion'
 
 export {
-  ALLOWED_RESTRICTION_TYPES, isAllowedRestrictionType, EMPTY_RESTRICTION,
+  ALLOWED_RESTRICTION_TYPES, isAllowedRestrictionType,
   hasRestriction, normalizeRestriction, restrictionSummary,
   type RestrictionType,
 } from '@/lib/audiencia/restriccion'

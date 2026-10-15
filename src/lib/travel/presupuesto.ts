@@ -63,6 +63,9 @@ export type Moneda = (typeof MONEDAS)[number]
  * cambiar en la versión final. Vive acá, con nombre, para que cambiarla sea
  * una línea y no una cacería; cuando haya pantalla de configuración, esto
  * pasa a ser el valor por defecto.
+ *
+ * @public Sin uso hasta que se confirme la tarifa (pendiente de Floriana): se
+ * deja a propósito como el único lugar donde va ese número.
  */
 export const TARIFA_POR_KM_CRC = 0
 

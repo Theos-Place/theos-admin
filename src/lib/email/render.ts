@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/lib/texto/escapar-html'
 /**
  * Convierte el cuerpo de un correo a HTML según su formato.
  *
@@ -10,13 +11,7 @@
  */
 export type BodyFormat = 'text' | 'html'
 
-export function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
+export { escapeHtml } from '@/lib/texto/escapar-html'
 
 export function textToHtml(text: string): string {
   return escapeHtml(text).replace(/\r\n|\r|\n/g, '<br>')

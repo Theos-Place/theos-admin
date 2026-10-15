@@ -1,6 +1,6 @@
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
 import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals } from '@/lib/money'
-import { createAdminClient, type Insertable } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 import { rangoDePago } from '@/lib/finance/rango-de-pagos'
 import type { CobroHuerfano } from '@/lib/finance/cobros-huerfanos'
@@ -590,110 +590,6 @@ export async function processRefund(
 }
 
 // ── Importación de donaciones ──────────────────────────────
-
-export type DonationRow = {
-  cedula?: string | null
-  donation_date: string
-  amount: number
-  /** INT-3: columna opcional del CSV. Sin ella, colones. */
-  currency?: string | null
-}
-
-/** Importa un lote de donaciones: identifica por cédula, detecta duplicados
- *  (mismo miembro+fecha+monto, tanto contra la BD como dentro del mismo
- *  archivo) y crea el registro del lote. `updateDonorStatus` marca is_donor
- *  a los miembros identificados. */
-export async function importDonations(
-  filename: string,
-  rows: DonationRow[],
-  opts: { updateDonorStatus?: boolean } = {},
-): Promise<DbImportBatch> {
-  const supabase = createAdminClient()
-
-  // 1. Resolver cédulas → member_id en un solo query.
-  const cedulas = Array.from(new Set(rows.map((r) => r.cedula).filter(Boolean))) as string[]
-  const cedulaToId = new Map<string, string>()
-  // Un import puede traer miles de cédulas; trocear el .in() en lotes evita una
-  // URL gigante (414/500), igual que en communications.ts y studies.ts.
-  for (let i = 0; i < cedulas.length; i += 300) {
-    const slice = cedulas.slice(i, i + 300)
-    const { data: members, error: mErr } = await supabase
-      .from('members').select('id, cedula').in('cedula', slice)
-    if (mErr) throw mErr
-    for (const m of (members ?? []) as Array<{ id: string; cedula: string }>) {
-      cedulaToId.set(m.cedula, m.id)
-    }
-  }
-
-  // 2. Armar filas, contar identificados y duplicados.
-  let identified = 0
-  let duplicates = 0
-  const toInsert: Array<Record<string, unknown>> = []
-  // Dedup DENTRO del archivo: dos filas idénticas en el mismo CSV (o el mismo
-  // CSV reimportado con filas sin cédula) se insertaban ambas.
-  const seenInFile = new Set<string>()
-
-  for (const r of rows) {
-    const memberId = r.cedula ? cedulaToId.get(r.cedula) ?? null : null
-    const isIdentified = memberId != null
-    if (isIdentified) identified++
-
-    // La moneda entra en la clave de duplicados: ₡50 000 y €50 000 el mismo día
-    // NO son la misma donación.
-    const fileKey = `${memberId ?? r.cedula ?? ''}|${r.donation_date}|${r.amount}|${toCurrency(r.currency)}`
-    let isDup = false
-    if (seenInFile.has(fileKey)) { isDup = true; duplicates++ }
-    else if (memberId) {
-      const { count } = await supabase
-        .from('donations')
-        .select('id', { count: 'exact', head: true })
-        .eq('member_id', memberId)
-        .eq('donation_date', r.donation_date)
-        .eq('amount', r.amount)
-        .eq('currency', toCurrency(r.currency))
-      if ((count ?? 0) > 0) { isDup = true; duplicates++ }
-    }
-    seenInFile.add(fileKey)
-    if (isDup) continue
-
-    toInsert.push({
-      member_id: memberId,
-      donation_date: r.donation_date,
-      amount: r.amount,
-      currency: toCurrency(r.currency),
-      source_file: filename,
-      is_identified: isIdentified,
-    })
-  }
-
-  if (toInsert.length > 0) {
-    const { error: dErr } = await supabase.from('donations').insert(toInsert as Insertable<'donations'>[])
-    if (dErr) throw dErr
-  }
-
-  // 2b. Marcar como donantes a los miembros identificados (opcional).
-  if (opts.updateDonorStatus) {
-    const donorIds = [...new Set([...cedulaToId.values()])]
-    for (let i = 0; i < donorIds.length; i += 300) {
-      const { error: uErr } = await supabase
-        .from('members').update({ is_donor: true })
-        .in('id', donorIds.slice(i, i + 300))
-        .eq('is_donor', false)
-      if (uErr) console.warn('importDonations is_donor:', uErr.message)
-    }
-  }
-
-  // 3. Registrar el lote.
-  const unidentified = rows.length - identified
-  const status = duplicates === rows.length ? 'failed' : duplicates > 0 ? 'partial' : 'completed'
-  const { data: batch, error: bErr } = await supabase
-    .from('import_batches')
-    .insert({ filename, total_rows: rows.length, identified, unidentified, duplicates, status })
-    .select('*')
-    .single()
-  if (bErr) throw bErr
-  return batch as DbImportBatch
-}
 
 /**
  * DON-2 · Registra UNA donación cargada a mano.

@@ -81,7 +81,3 @@ export function parejasDelCierre(input: {
     nombres: activos.map(p => p.member_name).join(' y '),
   }]
 }
-
-/** Lo que se le dice a quien cierra, cuando no hay nada que evaluar. */
-export const SIN_PAREJA =
-  'Este grupo no tiene participantes activos, así que no hay evaluación de pareja que llenar.'

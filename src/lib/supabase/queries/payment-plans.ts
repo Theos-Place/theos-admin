@@ -287,19 +287,6 @@ export async function cancelPaymentPlan(planId: string): Promise<boolean> {
   return (data ?? []).length > 0
 }
 
-/** Marca el arreglo como completado si ya no le quedan tractos pendientes. */
-export async function settlePlanIfPaid(planId: string): Promise<boolean> {
-  const supabase = createAdminClient()
-  const { data: pend } = await supabase
-    .from('payments').select('id').eq('payment_plan_id', planId).eq('status', 'pending').limit(1)
-  if ((pend ?? []).length > 0) return false
-  const { data, error } = await supabase
-    .from('payment_plans').update({ status: 'completado' })
-    .eq('id', planId).eq('status', 'activo').select('id')
-  if (error) throw error
-  return (data ?? []).length > 0
-}
-
 export type OverdueInstallment = {
   payment_id: string
   installment_number: number | null

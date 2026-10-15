@@ -9,9 +9,6 @@ export const FOLLETO_NEXT_LEVEL: Record<string, string> = {
   DIS2: 'DIS3',
 }
 
-/** Códigos de plan que disparan el paso de folletos en el cierre. */
-export const FOLLETO_ELIGIBLE_CODES = Object.keys(FOLLETO_NEXT_LEVEL)
-
 export function isFolletoEligible(planCode: string | null | undefined): boolean {
   return !!planCode && planCode in FOLLETO_NEXT_LEVEL
 }

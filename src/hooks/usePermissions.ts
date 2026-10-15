@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from './useAuth'
-import { ROLES } from '@/lib/auth/roles'
+import { hasModulePermission, moduleScope } from '@/lib/auth/roles'
 
 type Action = 'view' | 'create' | 'edit' | 'delete' | 'export'
 type Scope = 'own' | 'committee' | 'all'
@@ -9,33 +9,17 @@ type Scope = 'own' | 'committee' | 'all'
 export function usePermissions() {
   const { user, loaded } = useAuth()
 
+  // QA-3 tanda 4 (2026-10-15) · Las dos reglas son las MISMAS que usa el
+  // servidor (lib/auth/roles): antes estaban copiadas acá, y el día que una
+  // copia cambiara sin la otra la pantalla y el guard dirían cosas distintas.
   function can(module: string, action: Action): boolean {
     if (!user?.roles?.length) return false
-
-    return user.roles.some(roleId => {
-      const role = ROLES.find(r => r.id === roleId)
-      if (!role) return false
-      return role.permissions.some(
-        p => (p.module === 'all' || p.module === module) && p.actions.includes(action)
-      )
-    })
+    return hasModulePermission(user.roles, module, action)
   }
 
   function getScope(module: string): Scope | null {
     if (!user?.roles?.length) return null
-
-    const scopes = user.roles.flatMap(roleId => {
-      const role = ROLES.find(r => r.id === roleId)
-      if (!role) return []
-      return role.permissions
-        .filter(p => p.module === module || p.module === 'all')
-        .map(p => p.scope ?? 'all')
-    })
-
-    if (scopes.includes('all')) return 'all'
-    if (scopes.includes('committee')) return 'committee'
-    if (scopes.includes('own')) return 'own'
-    return null
+    return moduleScope(user.roles, module)
   }
 
   /**

@@ -53,8 +53,10 @@ describe('qué cobro admite una beca', () => {
 describe('el cableado: la misma regla en las dos pantallas', () => {
   const sinComentarios = (r: string) =>
     readFileSync(r, 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      // `(?<!\w)`: el `image/*` de un accept NO abre un comentario. Sin esto
+      // se emparejaba con el próximo `*/` y se tragaba medio archivo.
       .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
+      .replace(/(?<!\w)\/\*[\s\S]*?\*\//g, ' ')
       .replace(/(^|[^:])\/\/.*$/gm, '$1')
 
   const PERFIL = sinComentarios('src/components/members/MemberPaymentsList.tsx')

@@ -169,8 +169,3 @@ export const NOTA_BANDERITA =
   'Una persona puede tener varias razones a la vez, así que el desglose suma '
   + 'más que el total. La banderita convive con cualquier estado: un dirigente '
   + 'en revisión puede estar perfectamente disponible.'
-
-/** Lo mismo para las zonas, que ya lo advertía REP-7. */
-export const NOTA_ZONAS =
-  'Un dirigente puede declarar varias zonas, así que la suma por zona supera '
-  + 'el total de dirigentes.'

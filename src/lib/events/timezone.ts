@@ -24,8 +24,6 @@ export const ZONAS = [
   { id: 'Europe/Madrid', label: 'Madrid, España' },
 ] as const
 
-export type ZonaId = (typeof ZONAS)[number]['id']
-
 export function esZonaConocida(z: string | null | undefined): boolean {
   return !!z && ZONAS.some(x => x.id === z)
 }

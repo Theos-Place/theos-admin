@@ -12,8 +12,6 @@
  * desenvía, solo deja de poder responder a quién le llegó qué.
  */
 
-export type EstadoComunicado = 'draft' | 'scheduled' | 'sending' | 'sent' | 'partial' | 'failed'
-
 export type MotivoNoBorrable =
   | 'programado'   // tiene fecha puesta: cancelarlo primero
   | 'en_curso'     // se está enviando ahora mismo

@@ -91,7 +91,3 @@ export const ATTENDANCE_ESTUDIOS_TOOLTIP =
  *  de quien se perdió. Sin condición de recencia adicional. */
 export const ACTIVE_ATTENDANCE_MONTHS = 4
 export const ACTIVE_ATTENDANCE_MIN = 2
-
-/** Texto del criterio "sigue asistiendo", derivado de las constantes. */
-export const ACTIVE_ATTENDANCE_TOOLTIP =
-  `Sigue asistiendo: al menos ${ACTIVE_ATTENDANCE_MIN} check-ins de charla en los últimos ${ACTIVE_ATTENDANCE_MONTHS} meses.`

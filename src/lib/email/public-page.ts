@@ -2,9 +2,7 @@
  * Página HTML mínima para los flujos públicos de email (sin login):
  * baja y re-suscripción. Mismo look para no divergir entre rutas.
  */
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
+import { escapeHtml } from '@/lib/texto/escapar-html'
 
 /** Devuelve un Response HTML. `actionHref`/`actionLabel` agregan un botón opcional. */
 export function emailPublicPage(

@@ -70,12 +70,34 @@ La retención lee una vista materializada que se recalcula cada noche (00:50 CR,
 aplica sola en el build de prod; en staging ya está. El N3 del informe estaba
 mal atribuido (no es la ficha, es el Análisis de demanda) y queda pendiente.
 
-## Tanda 4 — Limpieza que evita bugs futuros (QA-3 M5, M6) · M · un día
+## Tanda 4 — Limpieza que evita bugs futuros (QA-3 M5, M6) · HECHA 2026-10-15 (staging)
 
 - Borrar los 129 exports, 2 componentes y 265 tipos muertos; `knip` en CI.
 - Flujo de comprobante único entre eventos y estudios; `getScope` una sola vez
   (`lib/auth/roles.ts` importado por `usePermissions`); un `escapeHtml`, un
   `norm`, un `EMPTY_RESTRICTION`.
+
+**Resultado.** El número real de código muerto era menor que el de QA-3, que
+contó lo que se usa dentro de su archivo o solo en tests: eran 31 exports, 19
+tipos y 2 componentes. Se borraron 9 funciones (deleteEvent, importDonations,
+createFolletoRequest, settlePlanIfPaid, importServicePositions, getMemberById,
+groupFeedbackSummary, leaderFeedbackSummary, tieneHistorial), 22 constantes,
+25 tipos y AprobarBecaForm. knip corre en la CI (`npm run knip`: archivos,
+exports y tipos) y falla con uno nuevo sin usar.
+
+Reglas unificadas: `usePermissions` usa `hasModulePermission`/`moduleScope` de
+lib/auth/roles (las mismas del servidor); un solo `escapeHtml`
+(lib/texto/escapar-html, eran 3) y un solo `norm` (lib/texto/normalizar, eran
+2); «Pagar matrícula» y «Pagar inscripción» son un componente
+(`PagarConComprobante`). Clones exactos: 85 → 77.
+
+**Se dejó a propósito:** `TARIFA_POR_KM_CRC` (espera la tarifa), `env` (se
+importa por su efecto) y `MAYORIA_DE_EDAD`/`EDAD_MINIMA_PARA_CUENTA` (un solo
+umbral con dos nombres, a propósito). **Pendiente de decisión:**
+`OfrecerArregloButton` (BEC-5 punto 6) quedó sin pantalla al eliminar
+Solicitudes financieras el 14-oct; el endpoint `offer_plan` sigue vivo.
+**No entró:** el flujo de comprobante de la inscripción a eventos
+(useEventRegistration) es otro flujo —inscribe y paga en un paso— y se dejó.
 
 ## Tanda 5 — Menores de los dos informes · S/M · un día
 

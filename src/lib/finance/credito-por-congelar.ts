@@ -41,7 +41,6 @@
  * el caso de «pagué y no pude ir».
  */
 export const RUBROS_DEL_CREDITO = ['study_plan', 'event'] as const
-export type RubroDelCredito = (typeof RUBROS_DEL_CREDITO)[number]
 
 export function sirveParaElRubro(entityType: string | null | undefined): boolean {
   return !!entityType && (RUBROS_DEL_CREDITO as readonly string[]).includes(entityType)
@@ -145,8 +144,6 @@ export const SALIDAS_DEL_CREDITO = [
     que: 'SOLO cuando Theos cerró el grupo. Si la persona desertó, no hay devolución.',
   },
 ] as const
-
-export type SalidaDelCredito = (typeof SALIDAS_DEL_CREDITO)[number]['clave']
 
 /**
  * La devolución NO es una opción libre: es la última y tiene condición.

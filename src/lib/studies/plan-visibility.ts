@@ -13,8 +13,6 @@ import type { RoleId } from '@/types/auth'
  *  camino. */
 export const STAGE_ORDER = ['niveles', 'inicial', 'intermedia', 'avanzada', 'campaña'] as const
 
-export type PlanStage = (typeof STAGE_ORDER)[number]
-
 /** Posición de una etapa en el orden canónico. Una etapa desconocida va al
  *  final, nunca en medio. */
 export function stageRank(stage: string | null | undefined): number {

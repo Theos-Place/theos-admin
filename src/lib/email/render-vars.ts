@@ -3,11 +3,10 @@
  *  · Secciones {{#lista}}...{{/lista}} → itera si `lista` es un array de objetos.
  *  · Variables simples {{var}} → valor escapado (vacío si no existe).
  */
+import { escapeHtml } from '@/lib/texto/escapar-html'
 export type TemplateData = Record<string, string | number | null | undefined | Array<Record<string, string | number | null | undefined>>>
 
-export function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
+export { escapeHtml } from '@/lib/texto/escapar-html'
 
 export function renderTemplate(html: string, data: TemplateData): string {
   let out = html.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_full, key: string, inner: string) => {

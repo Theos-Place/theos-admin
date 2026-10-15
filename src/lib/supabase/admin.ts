@@ -8,7 +8,6 @@ import { actorActual, HEADER_ACTOR } from '@/lib/auth/actor-actual'
 // Helpers de tipos derivados del esquema generado (src/types/database.ts).
 type PublicTables = Database['public']['Tables']
 export type TableName = keyof PublicTables
-export type Row<T extends TableName> = PublicTables[T]['Row']
 export type Insertable<T extends TableName> = PublicTables[T]['Insert']
 export type Updatable<T extends TableName> = PublicTables[T]['Update']
 

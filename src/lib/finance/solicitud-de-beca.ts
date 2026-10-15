@@ -96,7 +96,6 @@ export const AVISO_DE_CUPO =
 export const ESTADOS_DE_SOLICITUD = [
   'open', 'in_review', 'por_modificar', 'resolved', 'rejected',
 ] as const
-export type EstadoDeSolicitud = (typeof ESTADOS_DE_SOLICITUD)[number]
 
 /** ¿Sigue viva? Lo que no está resuelto ni rechazado espera algo de alguien. */
 export function sigueAbierta(estado: string): boolean {

@@ -37,9 +37,6 @@ export const CAMPOS_CORRECCION_CHECKIN = [
   'phone',
 ] as const
 
-export type CampoAlta = typeof CAMPOS_ALTA_CHECKIN[number]
-export type CampoCorreccion = typeof CAMPOS_CORRECCION_CHECKIN[number]
-
 /** Deja del cuerpo recibido SOLO las claves permitidas. Lo que no está en la
  *  lista no se ignora en silencio a medias: no llega nunca a la base. */
 export function soloCamposPermitidos<T extends string>(

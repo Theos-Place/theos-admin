@@ -29,9 +29,3 @@ export function resumenPagos(c: ConteoPagos | undefined): ResumenPago {
   if (pagados >= total) return { texto: `Pagado · ${total}/${total}`, tono: 'listo' }
   return { texto: `${pagados} de ${total} pagados`, tono: 'parcial' }
 }
-
-export const RESUMEN_PAGO_BADGE: Record<ResumenPago['tono'], string> = {
-  ninguno: 'bg-navy-light/10 text-navy-light/80',
-  listo: 'bg-teal-soft/30 text-teal-ink',
-  parcial: 'bg-amber-50 text-amber-700',
-}

@@ -267,13 +267,6 @@ export const STUDY_STAGES = {
   campaña:    { label: 'Campañas',         color: 'purple', description: 'Estudios especiales sin prerequisitos' },
 }
 
-export const INTERMEDIA_REQUIREMENTS = [
-  'Asistir regularmente a charlas (con check-in)',
-  'Haber escuchado "¿A dónde va este bus?"',
-  'Servir activamente en un comité y apoyar financieramente',
-]
-
-export type StudyCode = string
 export type StudyStage = 'niveles' | 'inicial' | 'intermedia' | 'avanzada' | 'campaña'
 
 export function studyLabel(code: string): string {

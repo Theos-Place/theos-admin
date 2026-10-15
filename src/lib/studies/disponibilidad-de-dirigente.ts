@@ -96,7 +96,6 @@ export const CAMPOS_DEL_DIRIGENTE = [
    */
   'comunidades',
 ] as const
-export type CampoDelDirigente = typeof CAMPOS_DEL_DIRIGENTE[number]
 
 /** Los que solo escribe el comité. Se nombran para poder decir POR QUÉ se
  *  rechaza, en vez de un «campo desconocido» que suena a bug. */

@@ -37,4 +37,6 @@ if (!parsed.success) {
   throw new Error(`Variables de entorno inválidas o faltantes (ver .env.example):\n${detalle}`)
 }
 
+/** @public Se importa por su EFECTO (`import '@/lib/env'` en admin.ts): valida
+ *  las variables al arrancar. El valor exportado casi no se usa, y está bien. */
 export const env = parsed.data

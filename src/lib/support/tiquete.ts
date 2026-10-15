@@ -15,8 +15,6 @@ import { hasModulePermission } from '@/lib/auth/roles'
 
 export type EstadoDeTiquete = 'open' | 'in_review' | 'resolved' | 'rejected'
 
-export const ESTADOS_DE_TIQUETE: readonly EstadoDeTiquete[] = ['open', 'in_review', 'resolved', 'rejected']
-
 /** Lo que RequestBoard recibe como `tabs`/`typeLabel`: un solo tipo. */
 export const TIPO_DE_TIQUETE = 'support'
 export const TABS_DE_SOPORTE = [{ key: TIPO_DE_TIQUETE, label: 'Soporte' }]

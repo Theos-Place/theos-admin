@@ -18,8 +18,9 @@ import { join } from 'node:path'
 // unificar el panel de revisión de aplicaciones: los dos modales que quedaron
 // huérfanos se llevaron su botón. El trinquete aprieta en los dos sentidos,
 // que es la gracia. 185 → 184 con MAT-3: el aviso al salir del modal del
-// comprobante dejó un botón donde antes había dos.
-const TECHO = 180
+// comprobante dejó un botón donde antes había dos. 180 → 179 (QA-3 tanda 4):
+// «Pagar matrícula» y «Pagar inscripción» pasaron a ser UN componente.
+const TECHO = 179
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {

@@ -109,6 +109,10 @@ matrículas). **Esfuerzo:** L, en tandas por módulo.
 
 ### M5 · Código muerto: 129 exports, 2 componentes y 265 tipos sin importador
 
+**Corregido el 2026-10-15:** con knip bien configurado (tests como entrada, sin
+contar lo que se usa en su propio archivo) eran 31 exports, 19 tipos y 2
+componentes. Resuelto en la tanda 4.
+
 `npx knip` (sin contar `scripts/` ni el design system). Se comprobó con grep que
 tampoco los usan los tests. Lo que pesa:
 

@@ -106,10 +106,6 @@ export function totalsFromJson(value: unknown): MoneyTotals {
   return out
 }
 
-// ── Compatibilidad entre monedas (becas, cupones, devoluciones) ──────────────
-
-export const CURRENCY_MISMATCH_CODE = 'moneda_distinta'
-
 const NOMBRE: Record<Currency, string> = { CRC: 'colones', USD: 'dólares', EUR: 'euros' }
 
 /** Mensaje humano para el 409 cuando una beca/cupón no va con el cobro.

@@ -241,7 +241,6 @@ export function applyMemberSearch<T extends { ilike: (col: string, pattern: stri
   return q
 }
 
-
 // ── Filtros avanzados server-side ─────────────────────────────────────────────
 // Cada condición se traduce a sets de member_ids POR CONDICIÓN; la combinación
 // (condiciones sueltas y grupos AND/OR del QueryBar, con operador top-level por
@@ -1256,19 +1255,6 @@ export async function getMembers(filters: MemberFilters = {}): Promise<{ members
   })
 
   return { members: enriched, total: count ?? 0 }
-}
-
-export async function getMemberById(id: string) {
-  const supabase = createAdminClient()
-
-  const { data, error } = await supabase
-    .from('members')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) throw error
-  return data as DbMember
 }
 
 // ── Detail view: extraído a ./members-detail (loadFamily + getMemberFullById +

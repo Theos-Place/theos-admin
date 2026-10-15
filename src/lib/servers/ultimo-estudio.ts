@@ -25,11 +25,6 @@
  * termina afirma algo falso en una hoja que alguien usa para decidir.
  */
 
-/** Los estados que `study_enrollments.status` admite hoy. */
-export type EstadoDeMatricula =
-  | 'completed' | 'enrolled' | 'en_revision' | 'reprobado'
-  | 'pendiente_de_pago' | 'dropped' | 'cancelada' | 'transferred'
-
 /** De estos la persona se salió: no cuentan como «su último estudio». */
 export const ESTADOS_QUE_NO_CUENTAN: ReadonlyArray<string> =
   ['dropped', 'cancelada', 'transferred']

@@ -18,10 +18,8 @@
 
 /** Sin tildes, minúsculas, espacios colapsados. Mismo criterio que el resto de
  *  los importadores del repo. */
-export function norm(s: string | null | undefined): string {
-  return (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/\s+/g, ' ').trim()
-}
+import { norm } from '@/lib/texto/normalizar'
+export { norm }
 
 /**
  * Palabras que NUNCA aparecen en un nombre y sí en las frases coladas.

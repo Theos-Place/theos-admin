@@ -1,7 +1,7 @@
 // Retroalimentación al dirigente contra la base. La REGLA es pura y vive en
 // @/lib/studies/leader-feedback; acá solo se leen y escriben filas.
 import { createAdminClient } from '@/lib/supabase/admin'
-import { canEvaluate, summarize, type FeedbackRow, type FeedbackSummary } from '@/lib/studies/leader-feedback'
+import { canEvaluate, type FeedbackRow } from '@/lib/studies/leader-feedback'
 import {
   responseAverage, perQuestionSummary, toRespuestaCerrada,
   type RespuestaCerrada, type CampoCerrado,
@@ -258,11 +258,6 @@ export async function groupPerQuestion(groupId: string) {
   return perQuestionSummary([...porRespuesta.values()])
 }
 
-/** Resumen de UN grupo (para la coordinación: incluye todo). */
-export async function groupFeedbackSummary(groupId: string): Promise<FeedbackSummary> {
-  return summarize(await groupFeedbackRows(groupId))
-}
-
 /** La coordinación comparte la retroalimentación con el dirigente. Idempotente:
  *  compartir dos veces no cambia quién ni cuándo fue la primera. */
 export async function releaseGroupFeedback(groupId: string, actorMemberId: string | null): Promise<void> {
@@ -292,16 +287,4 @@ export async function setFeedbackHidden(input: {
     .eq('id', input.evaluationId)
     .eq('group_id', input.groupId)   // el id solo vale dentro de SU grupo
   if (error) throw error
-}
-
-/** Resumen acumulado de un DIRIGENTE (todos sus grupos). Es lo que sirve para
- *  ver una tendencia; una sola cohorte dice poco. */
-export async function leaderFeedbackSummary(leaderMemberId: string): Promise<FeedbackSummary> {
-  const sb = createAdminClient() as unknown as SupabaseClient
-  const { data: sl } = await sb
-    .from('study_leaders').select('id').eq('member_id', leaderMemberId).limit(1).maybeSingle()
-  const leaderId = (sl as { id: string } | null)?.id
-  if (!leaderId) return summarize([])
-  const { data } = await sb.from('leader_evaluations').select('score, comments').eq('leader_id', leaderId)
-  return summarize((data ?? []) as Array<{ score: number; comments: string | null }>)
 }

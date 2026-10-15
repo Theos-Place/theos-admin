@@ -647,7 +647,7 @@ export async function getStudyNotificationRecipients(
 /** Miembros elegibles como destinatarios: con rol activo de coordinación/admin. */
 /** Ids de miembros ACTIVOS con puesto activo en el comité de estudios bíblicos.
  *  Se resuelve por NOMBRE del área (no por uuid) para no clavar un id de
- *  producción en el código; ver STUDY_COMMITTEE_AREA_NAME. */
+ *  producción en el código; el match lo hace `isStudyCommitteeArea`. */
 export async function getStudyCommitteeMembers(): Promise<Array<{ member_id: string; member_name: string }>> {
   const supabase = createAdminClient()
   const { data: areas, error: aErr } = await supabase

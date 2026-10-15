@@ -46,8 +46,6 @@ export const CAMPOS_AUTOEDITABLES = [
  */
 export const CAMPOS_DE_DOCUMENTO = ['cedula', 'document_type'] as const
 
-export type CampoAutoeditable = typeof CAMPOS_AUTOEDITABLES[number]
-
 /** Mensaje para cada campo que la persona no puede tocar. Dice A QUIÉN pedirlo:
  *  un "no autorizado" pelado deja a alguien sin saber cómo seguir. */
 const A_QUIEN_PEDIRLO: Record<string, string> = {

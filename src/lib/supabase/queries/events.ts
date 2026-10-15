@@ -1228,13 +1228,6 @@ export async function cancelEvent(id: string, reason: string): Promise<void> {
   if (error) throw error
 }
 
-/** Borrado lógico: marca is_active=false. El borrado duro lo hace el cascade. */
-export async function deleteEvent(id: string): Promise<void> {
-  const supabase = createAdminClient()
-  const { error } = await supabase.from('events').update({ is_active: false }).eq('id', id)
-  if (error) throw error
-}
-
 // ── Recurrentes: edición/eliminación por alcance (estilo Google Calendar) ──────
 
 export type EventScope = 'all' | 'future' | 'single'

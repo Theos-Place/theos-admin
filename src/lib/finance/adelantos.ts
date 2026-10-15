@@ -12,7 +12,6 @@
  *
  * Módulo PURO.
  */
-import type { Moneda } from '@/lib/travel/presupuesto'
 
 export type EstadoDeFactura = 'pendiente' | 'liquidada'
 
@@ -122,5 +121,3 @@ export function sePuedeCerrar(estado: string, facturas: readonly Factura[]): Ver
   }
   return { ok: true }
 }
-
-export const MONEDA_DEL_ADELANTO: Moneda = 'CRC'

@@ -274,25 +274,32 @@ const CONCEPTO_LABEL: Record<string, string> = {
   donacion: 'Donación',
 }
 
-// ── Botón de pago de matrícula por comprobante ───────────────────────────────
-export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
-  enrollmentId: string
+// ── Pagar con comprobante ───────────────────────────────────────────────────
+/**
+ * El modal de «subí el comprobante y la referencia», UNA vez (QA-3 tanda 4,
+ * 2026-10-15). Matrícula e inscripción a evento eran dos copias de casi cien
+ * líneas cada una; solo cambian el texto, a dónde se manda y que matrícula
+ * puede aplicar una beca adentro (`extra`).
+ */
+function PagarConComprobante({ id, titulo, etiqueta, retry, enviar, cobro, memberId, buscar, extra }: {
+  /** Prefijo de los ids de los campos: dos modales en la misma página no chocan. */
+  id: string
+  titulo: string
+  etiqueta: string
   retry: boolean
-  /** La fila del cobro, cuando quien llama ya la tiene (la lista de pagos). */
+  /** Arma el POST: a qué URL y qué campos además del archivo y la referencia. */
+  enviar: { url: string; campos?: Record<string, string> }
+  /** El cobro, si quien llama ya lo tiene; si no, se busca AL ABRIR. */
   cobro?: MemberPaymentRow
-  /** Si no la tiene (la fila de estudios de la ficha), de acá se busca al
-   *  abrir. Una sola consulta, y solo cuando la ventana se abre. */
   memberId?: string
+  buscar: (r: MemberPaymentRow) => boolean
+  /** Lo que va entre la referencia y el botón (la beca, en matrícula). Recibe
+   *  el cobro y cómo cerrar el modal. */
+  extra?: (detalle: MemberPaymentRow | null, cerrar: () => void) => React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
-  const detalle = useCobro({ open, cobro, memberId, buscar: r => r.enrollment_id === enrollmentId })
-  /**
-   * Este modal se abre también desde «mis pagos», donde lo usa la propia
-   * persona. Sin este corte, cualquiera se aplicaría una beca a sí mismo. La
-   * regla se comparte con la cola de finanzas en vez de reescribirse acá.
-   */
-  const { user } = useAuth()
-  const puedeBeca = puedeAplicarBeca(user?.roles)
+  // Solo al abrir: una lista con veinte cobros no hace veinte consultas.
+  const detalle = useCobro({ open, cobro, memberId, buscar })
   const [file, setFile] = useState<File | null>(null)
   const [reference, setReference] = useState('')
   const [busy, setBusy] = useState(false)
@@ -305,9 +312,9 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('enrollment_id', enrollmentId)
+      for (const [k, v] of Object.entries(enviar.campos ?? {})) fd.append(k, v)
       fd.append('reference', reference.trim())
-      const res = await fetch('/api/payments', { method: 'POST', body: fd })
+      const res = await fetch(enviar.url, { method: 'POST', body: fd })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
       setDone(true); setOpen(false)
@@ -331,19 +338,19 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral-deep px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
       >
-        <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar matrícula'}
+        <CreditCard size={12} /> {retry ? 'Reintentar pago' : etiqueta}
       </button>
       {open && (
-        <Modal onClose={() => !busy && setOpen(false)} titleId="pay-title" width={420}>
+        <Modal onClose={() => !busy && setOpen(false)} titleId={`${id}-title`} width={420}>
           <div className="p-6 space-y-4">
-            <h3 id="pay-title" className="text-base font-bold text-navy font-display">Pagar matrícula</h3>
+            <h3 id={`${id}-title`} className="text-base font-bold text-navy font-display">{titulo}</h3>
             <p className="text-[13px] text-navy-light/80 font-body">
               Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
             </p>
             {detalle && <DetalleDelCobro p={detalle} />}
             <div className="space-y-1">
-              <label htmlFor="comprobante-imagen" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input id="comprobante-imagen"
+              <label htmlFor={`${id}-imagen`} className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
+              <input id={`${id}-imagen`}
                 type="file"
                 accept="image/*"
                 aria-label="Comprobante de pago"
@@ -352,40 +359,16 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
               />
             </div>
             <div className="space-y-1">
-              <label htmlFor="pay-ref" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
+              <label htmlFor={`${id}-ref`} className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
               <input
-                id="pay-ref"
+                id={`${id}-ref`}
                 value={reference}
                 onChange={e => setReference(e.target.value)}
                 placeholder="Ej. 2026070212345"
                 className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               />
             </div>
-            {/**
-              * BEC-1 · Aplicar beca, DENTRO del modal (Floriana, 2026-10-09:
-              * «en el modal de los pagos de estudios, aún no me da la opción
-              * de aplicar beca»).
-              *
-              * Va acá y no al lado del botón de la lista, que fue mi primer
-              * intento: la fila del HISTORIAL DE ESTUDIOS —que es desde donde
-              * ella lo abrió— no pasa por `MemberPaymentsList`, llama a este
-              * botón directo. En el modal lo ven los DOS caminos, y además es
-              * el único lugar donde ya está cargado el cobro con su id.
-              *
-              * Si la beca cubre todo, el cobro queda aprobado y el modal se
-              * cierra: pedirle el comprobante después sería pedirle que
-              * pruebe un pago que no tiene que hacer.
-              */}
-            {puedeBeca && detalle && cobroAdmiteBeca(detalle) && (
-              <div className="rounded-xl bg-surface-low p-3">
-                <AplicarBecaEnCobro
-                  pagoId={detalle.id}
-                  monto={detalle.amount}
-                  currency={detalle.currency ?? 'CRC'}
-                  onAplicada={() => setOpen(false)}
-                />
-              </div>
-            )}
+            {extra?.(detalle, () => setOpen(false))}
             {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button
@@ -404,97 +387,64 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
   )
 }
 
-// ── Botón de pago de inscripción a evento por comprobante (clon de PayMatriculaButton) ──
+// ── Botón de pago de matrícula por comprobante ───────────────────────────────
+export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
+  enrollmentId: string
+  retry: boolean
+  /** La fila del cobro, cuando quien llama ya la tiene (la lista de pagos). */
+  cobro?: MemberPaymentRow
+  /** Si no la tiene (la fila de estudios de la ficha), de acá se busca al
+   *  abrir. Una sola consulta, y solo cuando la ventana se abre. */
+  memberId?: string
+}) {
+  /**
+   * Este modal se abre también desde «mis pagos», donde lo usa la propia
+   * persona. Sin este corte, cualquiera se aplicaría una beca a sí mismo. La
+   * regla se comparte con la cola de finanzas en vez de reescribirse acá.
+   */
+  const { user } = useAuth()
+  const puedeBeca = puedeAplicarBeca(user?.roles)
+  return (
+    <PagarConComprobante
+      id="pay" titulo="Pagar matrícula" etiqueta="Pagar matrícula" retry={retry}
+      enviar={{ url: '/api/payments', campos: { enrollment_id: enrollmentId } }}
+      cobro={cobro} memberId={memberId} buscar={r => r.enrollment_id === enrollmentId}
+      /**
+       * BEC-1 · Aplicar beca, DENTRO del modal (Floriana, 2026-10-09: «en el
+       * modal de los pagos de estudios, aún no me da la opción de aplicar
+       * beca»). Va acá y no al lado del botón de la lista: la fila del
+       * HISTORIAL DE ESTUDIOS no pasa por `MemberPaymentsList`, llama a este
+       * botón directo. Si la beca cubre todo, el cobro queda aprobado y el
+       * modal se cierra: pedirle el comprobante después sería pedirle que
+       * pruebe un pago que no tiene que hacer.
+       */
+      extra={(detalle, cerrar) => puedeBeca && detalle && cobroAdmiteBeca(detalle) && (
+        <div className="rounded-xl bg-surface-low p-3">
+          <AplicarBecaEnCobro
+            pagoId={detalle.id}
+            monto={detalle.amount}
+            currency={detalle.currency ?? 'CRC'}
+            onAplicada={cerrar}
+          />
+        </div>
+      )}
+    />
+  )
+}
+
+// ── Botón de pago de inscripción a evento por comprobante ────────────────────
 export function PayEventRegistrationButton({ registrationId, retry, cobro, memberId }: {
   registrationId: string
   retry: boolean
   cobro?: MemberPaymentRow
   memberId?: string
 }) {
-  const [open, setOpen] = useState(false)
-  const detalle = useCobro({ open, cobro, memberId, buscar: r => r.event_registration_id === registrationId })
-  const [file, setFile] = useState<File | null>(null)
-  const [reference, setReference] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function submit() {
-    if (busy || !file) return
-    setBusy(true); setError(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('reference', reference.trim())
-      const res = await fetch(`/api/event-registrations/${registrationId}/comprobante`, { method: 'POST', body: fd })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el comprobante.')
-      setDone(true); setOpen(false)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error desconocido')
-    } finally { setBusy(false) }
-  }
-
-  if (done) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[13px] font-semibold font-display">
-        <Check size={11} /> Comprobante enviado
-      </span>
-    )
-  }
-
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-coral/40 text-coral-deep px-2.5 py-1 text-[13px] hover:bg-coral/5 transition-colors whitespace-nowrap font-body"
-      >
-        <CreditCard size={12} /> {retry ? 'Reintentar pago' : 'Pagar inscripción'}
-      </button>
-      {open && (
-        <Modal onClose={() => !busy && setOpen(false)} titleId="pay-event-title" width={420}>
-          <div className="p-6 space-y-4">
-            <h3 id="pay-event-title" className="text-base font-bold text-navy font-display">Pagar inscripción</h3>
-            <p className="text-[13px] text-navy-light/80 font-body">
-              Subí el comprobante (screenshot del SINPE o transferencia) y el número de referencia. Un revisor lo verificará.
-            </p>
-            {detalle && <DetalleDelCobro p={detalle} />}
-            <div className="space-y-1">
-              <label htmlFor="comprobante-imagen-2" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Comprobante (imagen)</label>
-              <input id="comprobante-imagen-2"
-                type="file"
-                accept="image/*"
-                aria-label="Comprobante de pago"
-                onChange={e => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-[13px] text-navy-light/80 font-body file:mr-3 file:rounded-full file:border-0 file:bg-surface-low file:px-3 file:py-1.5 file:text-[13px] file:text-navy"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="pay-event-ref" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Número de referencia</label>
-              <input
-                id="pay-event-ref"
-                value={reference}
-                onChange={e => setReference(e.target.value)}
-                placeholder="Ej. 2026070212345"
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
-            </div>
-            {error && <p className="text-[13px] text-coral-deep font-body">{error}</p>}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={submit}
-                disabled={busy || !file}
-                className={cn('flex-1 rounded-full px-4 py-2.5 text-sm text-white transition-colors font-body inline-flex items-center justify-center gap-2 bg-coral shadow-[var(--shadow-pulse-sm)] hover:bg-coral-deep', (busy || !file) && 'opacity-50 cursor-not-allowed')}
-              >
-                {busy ? <><Loader2 size={15} className="animate-spin" /> Enviando…</> : 'Enviar comprobante'}
-              </button>
-              <button onClick={() => setOpen(false)} disabled={busy} className="rounded-full border border-[var(--outline-variant)] px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">Cancelar</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </>
+    <PagarConComprobante
+      id="pay-event" titulo="Pagar inscripción" etiqueta="Pagar inscripción" retry={retry}
+      enviar={{ url: `/api/event-registrations/${registrationId}/comprobante` }}
+      cobro={cobro} memberId={memberId} buscar={r => r.event_registration_id === registrationId}
+    />
   )
 }
 

@@ -16,9 +16,7 @@ import { modalidadDe, type Modalidad } from '@/lib/studies/modalidad-de-bloques'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
-
 export type PaymentConcept = 'matricula' | 'folletos' | 'evento' | 'prematrimonial'
-export type PaymentReviewStatus = 'en_revision' | 'aprobado' | 'rechazado'
 
 /** Bucket de la cola de finanzas, derivado de (status, review_status):
  *   pendiente   → status='pending', sin comprobante (o rechazado, esperando reintento)
