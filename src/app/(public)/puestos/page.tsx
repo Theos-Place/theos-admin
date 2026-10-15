@@ -105,7 +105,7 @@ function VacantesPublicasContent() {
     // Sin `min-h-screen` embebida: adentro del iframe, la pantalla ES el iframe,
     // así que la página medía lo mismo que el iframe, el iframe crecía a lo
     // que medía la página, y así sin parar (llegó a 17.000 px en la prueba).
-    <div ref={medirParaElSitio} className={embebida ? 'bg-white' : 'min-h-screen bg-surface-low'}>
+    <div ref={medirParaElSitio} data-embebida={embebida ? '' : undefined} className={embebida ? 'bg-white' : 'min-h-screen bg-surface-low'}>
       {/* Encabezado público. Se esconde con `?embed=1`: dentro del sitio de
           Theos, que ya tiene su propio header, se veían dos pegados. */}
       {!embebida && (

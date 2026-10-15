@@ -681,3 +681,13 @@ select[size]:not([size='1']) {
   /* Un dato no se parte entre dos páginas. */
   .hoja-impresa dl > div { break-inside: avoid; }
 }
+
+/* 2026-10-15 · Una página embebida en theosplace.org pinta TODO el documento de
+   blanco, no solo su contenido. Con pocos puestos el contenido mide menos que
+   el iframe y debajo asomaba el gris del admin (bg-surface del body): se veía
+   la caja del iframe. Por CSS y no con un efecto, para que no parpadee gris
+   antes de hidratar. */
+html:has([data-embebida]),
+body:has([data-embebida]) {
+  background: #FFFFFF;
+}

@@ -13,6 +13,10 @@ describe('puestos embebidos', () => {
   it('embebida no mide lo que mide la ventana: el alto se retroalimentaba sin fin', () => {
     expect(pagina).not.toMatch(/'min-h-screen', embebida/)
   })
+  it('embebida, el DOCUMENTO entero es blanco: con pocos puestos asomaba el gris', () => {
+    expect(pagina).toMatch(/data-embebida=\{embebida \? '' : undefined\}/)
+    expect(readFileSync('src/app/globals.css', 'utf8')).toMatch(/body:has\(\[data-embebida\]\)\s*\{\s*background: #FFFFFF/)
+  })
   it('le avisa su alto al sitio, solo embebida', () => {
     expect(pagina).toMatch(/useAlturaParaElSitio\(embebida\)/)
     expect(pagina).toMatch(/ref=\{medirParaElSitio\}/)
