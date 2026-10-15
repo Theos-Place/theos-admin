@@ -203,7 +203,7 @@ export default function ImportarDonacionesPage() {
                 {archivo ? `${matriz.length - encabezado - 1} filas` : 'También sirve el que exporta el banco'}
               </p>
             </button>
-            <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="sr-only"
+            <input aria-label="Archivo de donaciones (CSV o Excel)" ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="sr-only"
               onChange={e => { const f = e.target.files?.[0]; if (f) void tomarArchivo(f) }} />
 
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-navy-light/80 font-body">

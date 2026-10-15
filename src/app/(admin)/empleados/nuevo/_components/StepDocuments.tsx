@@ -166,7 +166,7 @@ export function StepDocuments({
                   </div>
                 </div>
                 {uploaded ? (
-                  <button
+                  <button aria-label={`Quitar ${doc.label}`}
                     type="button"
                     onClick={() => onRemoveDoc(doc.key)}
                     className="h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors"
@@ -243,7 +243,7 @@ export function StepDocuments({
                 </div>
               </div>
               {uploaded ? (
-                <button
+                <button aria-label={`Quitar ${doc.label}`}
                   type="button"
                   onClick={() => onRemoveDoc(doc.key)}
                   className="h-7 w-7 rounded-full hover:bg-coral/10 flex items-center justify-center transition-colors"

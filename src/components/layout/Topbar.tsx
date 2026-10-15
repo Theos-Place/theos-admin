@@ -345,7 +345,7 @@ function GlobalMemberSearch() {
           {/* Fondo para cerrar al tocar fuera */}
           <div className="absolute inset-0 bg-navy/20" onClick={() => setMobileOpen(false)} />
           <div className="absolute left-2 right-2 top-2 rounded-2xl bg-surface-card shadow-card-lg border border-outline overflow-hidden">
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
+            <div className="focus-within:ring-1 focus-within:ring-inset focus-within:ring-coral/30 flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
               <Search size={18} className="text-navy-light/80 shrink-0" strokeWidth={1.75} />
               <input
                 ref={mobileInputRef}

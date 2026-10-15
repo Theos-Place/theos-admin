@@ -84,7 +84,7 @@ export default function CheckinPickerPage() {
       </div>
 
       {/* Buscador */}
-      <div className="flex items-center gap-2 rounded-2xl bg-surface-card px-4 py-3 shadow-[var(--shadow-md)]">
+      <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-2xl bg-surface-card px-4 py-3 shadow-[var(--shadow-md)]">
         <Search size={18} className="text-navy-light/80 shrink-0" />
         <input
           autoFocus

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useCerrarConEscape } from '@/hooks/useCerrarConEscape'
 import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -39,6 +40,7 @@ export default function ListasGuardadasPage() {
   const [search, setSearch]       = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [openMenu, setOpenMenu]   = useState<string | null>(null)
+  useCerrarConEscape(openMenu !== null, useCallback(() => setOpenMenu(null), []))
   const [editTarget, setEditTarget] = useState<string | null>(null)
   const [editName, setEditName]   = useState('')
   const [editTags, setEditTags]   = useState('')
@@ -250,7 +252,7 @@ export default function ListasGuardadasPage() {
 
                 {/* Menu */}
                 <div className="relative shrink-0">
-                  <button
+                  <button aria-label={`Más acciones de ${list.name}`} aria-haspopup="menu" aria-expanded={openMenu === list.id}
                     onClick={() => setOpenMenu(openMenu === list.id ? null : list.id)}
                     className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors"
                   >

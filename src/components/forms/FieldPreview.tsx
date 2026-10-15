@@ -73,7 +73,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
 
   if (field.type === 'date') {
     return (
-      <input
+      <input aria-label={field.label || 'Fecha'}
         disabled
         type="date"
         className={inputBase}
@@ -94,7 +94,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
 
   if (field.type === 'select') {
     return (
-      <select disabled className={inputBase}>
+      <select aria-label={field.label || 'Selección'} disabled className={inputBase}>
         <option>Seleccionar...</option>
         {field.options?.map(o => <option key={o}>{o}</option>)}
       </select>

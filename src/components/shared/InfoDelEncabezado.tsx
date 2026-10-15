@@ -74,7 +74,7 @@ export function InfoDelEncabezado({ texto }: Props) {
       onMouseLeave={() => setPos(null)}
       onFocus={abrir}
       onBlur={() => setPos(null)}
-      className="relative ml-1 inline-flex align-[-2px] text-navy-light/80 outline-none"
+      className="relative ml-1 inline-flex align-[-2px] text-navy-light/80 outline-none rounded-full focus-visible:ring-2 focus-visible:ring-coral/40"
     >
       <Info size={12} strokeWidth={2} aria-hidden />
       {pos && (

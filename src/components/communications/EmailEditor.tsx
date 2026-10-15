@@ -237,7 +237,7 @@ export function EmailEditor({ value, onChange, variables = [], htmlOnly = false,
           rows={16}
           spellCheck={false}
           placeholder="<p>Hola {nombre},</p>"
-          className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[13px] font-mono text-navy outline-none block overflow-auto"
+          className="w-full max-w-full resize-y bg-surface-card px-4 py-3 text-[13px] font-mono text-navy outline-none focus:ring-1 focus:ring-coral/30 block overflow-auto"
         />
       )}
 

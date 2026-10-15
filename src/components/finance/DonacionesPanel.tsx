@@ -218,7 +218,7 @@ export function DonacionesPanel() {
 
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className={`${CAMPO} flex flex-1 min-w-48 items-center gap-2`}>
+          <div className={`focus-within:ring-1 focus-within:ring-coral/30 ${CAMPO} flex flex-1 min-w-48 items-center gap-2`}>
             <Search size={14} className="text-navy-light/80 shrink-0" />
             <input
               type="search"

@@ -207,7 +207,7 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 border-[rgba(22,20,64,0.15)] font-body`}
             />
-            <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPass} type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors">
               {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -234,7 +234,7 @@ export default function NuevaContrasenaPage() {
               placeholder="••••••••"
               className={`${INPUT} pr-11 font-body ${confirmErr ? 'border-coral/50 focus:border-coral/60 focus:ring-coral/10' : 'border-[rgba(22,20,64,0.15)]'}`}
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors" tabIndex={-1}>
+            <button aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showConfirm} type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80 transition-colors">
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>

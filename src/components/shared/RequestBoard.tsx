@@ -426,7 +426,7 @@ export function RequestBoard<R extends BaseRequest>({
               id="req-assigned-filter"
               value={assignedFilter}
               onChange={e => setAssignedFilter(e.target.value)}
-              className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
+              className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
             >
               <option value="all">Todas</option>
               <option value="none">Sin asignar</option>
@@ -441,7 +441,7 @@ export function RequestBoard<R extends BaseRequest>({
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
+            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
           />
           <label htmlFor="req-date-to" className="text-[13px] text-navy-light/80 font-body">Hasta</label>
           <input
@@ -449,7 +449,7 @@ export function RequestBoard<R extends BaseRequest>({
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none"
+            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
           />
           {(dateFrom || dateTo) && (
             <button
@@ -820,7 +820,7 @@ export function RequestBoard<R extends BaseRequest>({
             </div>
 
             {assignees.length > 6 && (
-              <div className="flex items-center gap-2 rounded-xl border border-outline bg-surface-low px-3 py-2">
+              <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl border border-outline bg-surface-low px-3 py-2">
                 <Search size={13} className="text-navy-light/80 shrink-0" />
                 <input
                   autoFocus

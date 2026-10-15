@@ -122,7 +122,7 @@ export function MultiSelect({
           onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); cerrarYVolver() } }}
         >
           {conBuscador && (
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
+            <div className="focus-within:ring-1 focus-within:ring-inset focus-within:ring-coral/30 flex items-center gap-2 px-3 py-2.5 border-b border-[var(--outline-variant)]">
               <Search size={13} className="text-navy-light/80 shrink-0" aria-hidden />
               <input
                 ref={buscador}

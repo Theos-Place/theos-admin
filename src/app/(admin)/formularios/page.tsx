@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { useCerrarConEscape } from '@/hooks/useCerrarConEscape'
 import Link from 'next/link'
 import { type FormTemplate } from '@/types/forms'
 import { useForms } from '@/hooks/useForms'
@@ -131,6 +132,7 @@ export default function FormulariosPage() {
   })
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
+  useCerrarConEscape(menuOpen !== null, useCallback(() => setMenuOpen(null), []))
 
   async function handleDuplicate(formId: string) {
     const template = forms.find(t => t.id === formId)
@@ -463,7 +465,7 @@ export default function FormulariosPage() {
                             </Link>
                           )}
                           {acc.muestraEditar && (
-                            <Link
+                            <Link aria-label={`Vista previa de ${form.name}`}
                               href={`/formularios/${form.id}/preview`}
                               className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"
                             >
@@ -472,7 +474,7 @@ export default function FormulariosPage() {
                           )}
                           {acc.muestraEditar && (
                           <div className="relative">
-                            <button
+                            <button aria-label={`Más acciones de ${form.name}`} aria-haspopup="menu" aria-expanded={menuOpen === form.id}
                               type="button"
                               onClick={() => setMenuOpen(menuOpen === form.id ? null : form.id)}
                               className="rounded-lg p-1.5 text-navy-light border border-[var(--outline-variant)] hover:bg-surface-low transition-colors"

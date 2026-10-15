@@ -484,8 +484,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       <Section id="info" title="① Información principal" open={openSections.has('info')} onToggle={() => toggleSection('info')}>
         <div className="space-y-4">
           <div>
-            <input
-              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:text-navy-light/80 transition-colors font-display"
+            <input aria-label="Nombre del evento"
+              className="w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none focus:border-b-coral placeholder:text-navy-light/80 transition-colors font-display"
               value={name}
               onChange={e => setName(e.target.value)}
             />
@@ -522,7 +522,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
               <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Descripción</span>
               <span className="text-[11px] text-navy-light/80 font-mono">{description.length}/500</span>
             </div>
-            <textarea
+            <textarea aria-label="Descripción"
               className={cn(inputCls, 'resize-none', 'font-body')}
               rows={3}
               maxLength={500}
@@ -743,7 +743,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
                 <span className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Costo</span>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-navy-light/80 font-mono">{currencySymbol(currency)}</span>
-                  <input type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
+                  <input aria-label="Costo" type="number" step={amountStep(currency)} className={cn(inputCls, 'pl-7', 'font-body')} value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1">

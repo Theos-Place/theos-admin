@@ -420,13 +420,13 @@ export default function DevolucionesPage() {
               <div>
                 <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Fecha de transferencia</label>
                 <input id="fecha-de-transferencia" type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
                 <label htmlFor="numero-de-confirmacion" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Número de confirmación</label>
                 <input id="numero-de-confirmacion" type="text" value={completionConf} onChange={e => setCompletionConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-DV-99123"
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
               </div>
             </div>
             <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">
@@ -500,7 +500,7 @@ export default function DevolucionesPage() {
                 <label htmlFor="motivo-del-rechazo" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Motivo del rechazo</label>
                 <textarea id="motivo-del-rechazo" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                   rows={3} placeholder="Explicá el motivo..."
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy" />
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 resize-none border-[var(--outline-variant)] font-body text-navy" />
               </div>
             </div>
             <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">

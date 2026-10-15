@@ -94,7 +94,7 @@ export default function NuevoCuponPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl px-6 py-5 flex items-center gap-3 bg-navy shadow-[var(--shadow-md)]">
-        <button
+        <button aria-label="Volver a becas"
           onClick={() => router.push('/finanzas/becas')}
           className="h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-white/80"
         >
@@ -137,7 +137,7 @@ export default function NuevoCuponPage() {
               </div>
             ) : (
               <div className="relative">
-                <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
+                <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl border px-3 py-2.5 border-[var(--outline-variant)]">
                   <Search size={14} className="text-navy-light/80" />
                   <input
                     type="text"
@@ -174,16 +174,16 @@ export default function NuevoCuponPage() {
             </div>
             {discountType === 'percentage' ? (
               <div className="flex items-center gap-3">
-                <input type="range" min={0} max={100} step={5} value={percentage} onChange={e => setPercentage(Number(e.target.value))} className="flex-1 accent-coral" />
-                <input type="number" min={0} max={100} value={percentage} onChange={e => setPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
-                  className="w-20 rounded-xl border px-3 py-2 text-sm text-center outline-none border-[var(--outline-variant)] font-body text-navy" />
+                <input aria-label="Porcentaje de descuento" type="range" min={0} max={100} step={5} value={percentage} onChange={e => setPercentage(Number(e.target.value))} className="flex-1 accent-coral" />
+                <input aria-label="Porcentaje de descuento, en número" type="number" min={0} max={100} value={percentage} onChange={e => setPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
+                  className="w-20 rounded-xl border px-3 py-2 text-sm text-center outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
                 <span className="text-sm font-medium text-navy font-body">%</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-navy font-display">₡</span>
                 <input type="number" min={0} value={fixedAmount} onChange={e => setFixedAmount(e.target.value)} placeholder="Monto del descuento"
-                  className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy" />
+                  className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
               </div>
             )}
           </div>
@@ -193,7 +193,7 @@ export default function NuevoCuponPage() {
             <div className="flex gap-2">
               <input id="4-codigo"
                 value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="Ej. BECA2026"
-                className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none font-mono border-[var(--outline-variant)] text-navy"
+                className="flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 font-mono border-[var(--outline-variant)] text-navy"
               />
               <button onClick={generateCode} type="button" className="rounded-xl border border-outline px-4 py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body">
                 Generar
@@ -205,7 +205,7 @@ export default function NuevoCuponPage() {
             <label htmlFor="expires" className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">5. Vencimiento</label>
             <input
               id="expires" type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
             />
           </div>
 

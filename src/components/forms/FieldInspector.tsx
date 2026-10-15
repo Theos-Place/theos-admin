@@ -536,7 +536,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                 {/* Action */}
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] text-navy-light/80 shrink-0 font-body">Acción</span>
-                  <select
+                  <select aria-label="Acción"
                     className={cn(inputCls, 'flex-1')}
                     value={rule.action}
                     onChange={e => updateRule(rule.id, { action: e.target.value as 'show' | 'hide' })}
@@ -578,7 +578,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                             {rule.condition_operator}
                           </p>
                         )}
-                        <select
+                        <select aria-label="Campo de la condición"
                           className={inputCls}
                           value={cond.field_id}
                           onChange={e => updateCondition(rule.id, cond.id, { field_id: e.target.value, value: '' })}
@@ -588,7 +588,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                             <option key={f.id} value={f.id}>{f.label || f.id}</option>
                           ))}
                         </select>
-                        <select
+                        <select aria-label="Operador de la condición"
                           className={inputCls}
                           value={cond.operator}
                           onChange={e => updateCondition(rule.id, cond.id, { operator: e.target.value as ConditionOperator })}
@@ -597,7 +597,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                         </select>
                         {needsValue && (
                           valueOptions.length > 0 ? (
-                            <select
+                            <select aria-label="Valor de la condición"
                               className={inputCls}
                               value={cond.value}
                               onChange={e => updateCondition(rule.id, cond.id, { value: e.target.value })}
@@ -619,7 +619,7 @@ export function FieldInspector({ field, allFields, onChange, onFocusLogic }: Fie
                             <Plus size={11} /> Agregar condición
                           </button>
                           {rule.conditions.length > 1 && (
-                            <button type="button" onClick={() => deleteCondition(rule.id, cond.id)} className="h-5 w-5 flex items-center justify-center rounded hover:bg-coral/10 transition-colors">
+                            <button aria-label="Eliminar condición" type="button" onClick={() => deleteCondition(rule.id, cond.id)} className="h-5 w-5 flex items-center justify-center rounded hover:bg-coral/10 transition-colors">
                               <Trash2 size={11} className="text-coral-deep" />
                             </button>
                           )}

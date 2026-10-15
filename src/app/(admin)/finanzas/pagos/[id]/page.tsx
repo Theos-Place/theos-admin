@@ -101,7 +101,7 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
           className="rounded-2xl px-6 py-5 bg-navy shadow-[var(--shadow-md)]"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Link href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]">
+            <Link aria-label="Volver a pagos" href="/finanzas/pagos" className="h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]">
               <ArrowLeft size={18} />
             </Link>
             <span className="text-[13px] text-[rgba(255,255,255,0.70)] font-body">

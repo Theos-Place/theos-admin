@@ -487,7 +487,7 @@ export default function GruposPage() {
             <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
               Zona
             </p>
-            <select
+            <select aria-label="Zona"
               className={cn(inputCls, 'font-body')}
               value={selectedZone}
               onChange={e => setSelectedZone(e.target.value)}

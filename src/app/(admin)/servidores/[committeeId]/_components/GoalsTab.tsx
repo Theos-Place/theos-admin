@@ -40,7 +40,7 @@ export function GoalsTab({
           key={g.id}
           className="flex items-start gap-3 rounded-2xl px-5 py-4 bg-surface-card shadow-[var(--shadow-md)]"
         >
-          <button
+          <button aria-label={g.status === 'completed' ? `Marcar «${g.description}» como pendiente` : `Marcar «${g.description}» como cumplida`} aria-pressed={g.status === 'completed'}
             onClick={() => onToggleGoal(g.id)}
             className={cn(
               'mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all',

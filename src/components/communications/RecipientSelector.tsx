@@ -365,7 +365,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
                   className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1 text-[13px] text-navy font-body"
                 >
                   {m.first_name} {m.last_name}
-                  <button type="button" onClick={() => removeMember(m.id)}>
+                  <button aria-label={`Quitar a ${m.first_name} ${m.last_name}`} type="button" onClick={() => removeMember(m.id)}>
                     <X size={12} className="text-navy-light/80 hover:text-coral-deep" />
                   </button>
                 </span>
@@ -436,7 +436,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
           )}
 
           {value.groupEntity === 'event' && (
-            <select
+            <select aria-label="Evento"
               className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={value.groupId}
               onChange={e => setGroupEvent(e.target.value)}
@@ -469,7 +469,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
           )}
 
           {value.groupEntity === 'study_group' && (
-            <select
+            <select aria-label="Grupo de estudio"
               className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
               value={value.groupId}
               onChange={e => setGroupStudy(e.target.value)}

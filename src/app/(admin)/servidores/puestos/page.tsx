@@ -152,7 +152,7 @@ export default function VacantesPage() {
 
       {/* Búsquedas: por puesto, por comité, por ubicación */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2 shadow-[var(--shadow-sm)]">
+        <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2 shadow-[var(--shadow-sm)]">
           <Search size={16} className="text-navy-light/80 shrink-0" aria-hidden />
           <input
             value={qPuesto}

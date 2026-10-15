@@ -532,7 +532,7 @@ function MiembrosContent() {
             <thead>
               <tr className="border-b border-[var(--outline-variant)]">
                 <th className="w-10 px-4 py-3.5">
-                  <input
+                  <input aria-label="Seleccionar todos los visibles"
                     type="checkbox"
                     checked={allVisibleSelected}
                     ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && !allVisibleSelected }}
@@ -587,7 +587,7 @@ function MiembrosContent() {
                     style={i < visibleMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                   >
                     <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                      <input
+                      <input aria-label={`Seleccionar a ${member.first_name} ${member.last_name}`}
                         type="checkbox"
                         checked={selectedIds.has(member.id)}
                         onChange={e => {
@@ -711,7 +711,7 @@ function MiembrosContent() {
                   className="flex items-center gap-3 px-4 py-3 active:bg-surface-low cursor-pointer"
                   style={i < visibleMembers.length - 1 ? { borderBottom: '1px solid var(--outline-variant)' } : {}}
                 >
-                  <input
+                  <input aria-label={`Seleccionar a ${member.first_name} ${member.last_name}`}
                     type="checkbox"
                     checked={selectedIds.has(member.id)}
                     onClick={e => e.stopPropagation()}

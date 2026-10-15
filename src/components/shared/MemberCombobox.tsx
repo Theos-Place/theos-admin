@@ -122,8 +122,8 @@ export function MemberCombobox({
   return (
     <div className={cn(dropdown && 'relative')}>
       <div className={cn(
-        'flex items-center gap-2 rounded-xl border px-3 py-2.5',
-        onDark ? 'border-white/20 bg-white/10' : 'border-outline bg-surface-low',
+        'flex items-center gap-2 rounded-xl border px-3 py-2.5 focus-within:ring-1',
+        onDark ? 'border-white/20 bg-white/10 focus-within:ring-white/60' : 'border-outline bg-surface-low focus-within:ring-coral/30',
       )}>
         <Search size={14} className={cn('shrink-0', onDark ? 'text-white/80' : 'text-navy-light/80')} />
         <input

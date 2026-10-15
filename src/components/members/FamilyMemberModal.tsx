@@ -210,7 +210,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                     <p className="text-[13px] text-navy-light/80">{found.cedula || 'sin cédula'}</p>
                   </div>
                 </div>
-                <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
+                <select aria-label="Relación" value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
                   <option value="">Relación…</option>
                   {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -258,7 +258,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                 className={cn(inputCls, 'font-mono')}
               />
               <div className="relative">
-                <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={cn(inputCls, 'font-body')} />
+                <input aria-label="Fecha de nacimiento" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={cn(inputCls, 'font-body')} />
                 {isMinor && (
                   <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-white font-display">Menor</span>
                 )}
@@ -276,7 +276,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                 />
               </div>
             )}
-            <select value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
+            <select aria-label="Relación" value={relation} onChange={e => { setRelation(e.target.value); setError(null) }} className={cn(inputCls, 'font-body')}>
               <option value="">Relación…</option>
               {RELATIONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>

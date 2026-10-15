@@ -32,11 +32,21 @@ navy; pasos futuros del wizard de eventos como botón deshabilitado; planes
 archivados sin opacidad; en móvil, los botones de `/estudios/bloques` se salían
 de la cabecera y quedaban blancos sobre blanco.
 
-## Tanda 2 — Nombres accesibles y foco (QA-2 M2, M3, M6) · S/M · un día
+## Tanda 2 — Nombres accesibles y foco (QA-2 M2, M3, M6) · HECHA 2026-10-15 (staging)
 
 - `aria-label` en los 50 botones solo-ícono y las 12 pantallas con selects sin
   etiqueta. Test que barra botones de ícono sin nombre.
 - Foco visible en las fechas de `RequestBoard` y revisión de los 43 `outline-none`.
+
+**Resultado medido.** axe en las 19 pantallas con controles sin nombre o
+campos sin etiqueta: de 96 elementos a 0. Como axe solo ve las pantallas con
+datos, se sumaron tres barridos del código entero en `src/lib/a11y/`, que ahora
+son tests: 23 controles solo-ícono o interruptores sin nombre, 50 campos sin
+etiqueta y 38 elementos con el foco invisible, los tres en cero. Las únicas
+excepciones son los campos del formulario público que etiqueta FormFiller desde
+otro archivo (documentadas en el test). Recorrido con teclado de /soporte,
+/estudios/solicitudes y /finanzas/pagos: 0 paradas sin foco visible. Los menús
+«⋯» de listas, formularios y la ficha cierran con Escape y devuelven el foco.
 
 ## Tanda 3 — Las tres consultas que dominan prod (QA-3 M1, M2, M3) · M · dos días
 

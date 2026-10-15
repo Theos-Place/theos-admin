@@ -87,7 +87,7 @@ export function Step3SubEventos({
                     {se.committee_id && ` · ${nombreDeComite(se.committee_id)}`}
                   </p>
                 </div>
-                <button
+                <button aria-label={`Eliminar ${se.name}`}
                   type="button"
                   onClick={() => onRemoveSubEvent(se.id)}
                   className="h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:text-coral-deep hover:bg-coral/10 transition-colors"

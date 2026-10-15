@@ -414,7 +414,7 @@ export default function PrematrimonialWizardPage() {
                   con su regla y su copy exacto (mínimo hoy + 6 meses). */}
               <div>
                 <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CEREMONY_DATE_QUESTION}</p>
-                <input type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+                <input aria-label={CEREMONY_DATE_QUESTION} type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
                 <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
               </div>
               <textarea value={comments} onChange={e => setComments(e.target.value)} rows={3} placeholder="Comentarios adicionales (opcional)" className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />

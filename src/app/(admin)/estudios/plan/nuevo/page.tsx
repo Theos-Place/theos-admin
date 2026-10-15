@@ -59,6 +59,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         onClick={() => onChange(!checked)}
         className={cn(
           'relative h-5 w-9 rounded-full transition-colors',

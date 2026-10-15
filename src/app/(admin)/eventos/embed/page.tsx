@@ -162,6 +162,7 @@ export default function EmbedPage() {
                 <div key={key} className="flex items-center gap-3">
                   <input
                     type="color"
+                    aria-label={label}
                     value={cfg[key]}
                     onChange={e => setCfg(prev => ({ ...prev, [key]: e.target.value }))}
                     className="h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent"

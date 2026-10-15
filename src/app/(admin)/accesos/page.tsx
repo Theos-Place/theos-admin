@@ -221,7 +221,7 @@ export default function AccesosPage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2.5 flex-1 max-w-sm border border-outline">
+        <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl bg-surface-card px-3 py-2.5 flex-1 max-w-sm border border-outline">
           <Search size={15} className="text-navy-light/80 shrink-0" />
           <input
             type="search"
@@ -232,8 +232,8 @@ export default function AccesosPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <select
-          className="rounded-xl border px-3 py-2.5 text-sm text-navy-light bg-surface-card outline-none border-outline font-body"
+        <select aria-label="Filtrar por rol"
+          className="rounded-xl border px-3 py-2.5 text-sm text-navy-light bg-surface-card outline-none focus:ring-1 focus:ring-coral/30 border-outline font-body"
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value as RoleId | '')}
         >

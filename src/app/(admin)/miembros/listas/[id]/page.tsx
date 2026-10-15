@@ -457,7 +457,7 @@ export default function ListaDetailPage() {
                       }
                     })}
                     <td className="px-4 py-3.5 text-right">
-                      <button
+                      <button aria-label={`Ver ficha de ${member.first_name} ${member.last_name}`}
                         onClick={e => { e.stopPropagation(); router.push(`/miembros/${member.id}`) }}
                         className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral-deep"
                       >

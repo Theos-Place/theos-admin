@@ -245,7 +245,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       {!event.requires_payment ? (
                         <span className="text-[13px] text-navy-light/80 font-body">No aplica</span>
                       ) : (
-                      <select
+                      <select aria-label={`Estado de pago de ${reg.member_name}`}
                         value={reg.payment_status}
                         disabled={busyMember === reg.member_id}
                         onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}
@@ -314,7 +314,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                       {new Date(reg.registered_at).toLocaleDateString('es-CR')}
                     </p>
                   </div>
-                  <select
+                  <select aria-label={`Estado de pago de ${reg.member_name}`}
                     value={reg.payment_status}
                     disabled={busyMember === reg.member_id}
                     onChange={e => changePayment(reg.member_id, e.target.value as PaymentStatus)}

@@ -320,12 +320,12 @@ function GroupedStudyBadges({ codes, editing, onRemove }: { codes: string[]; edi
       {badges.map(b => b.value.startsWith('GRP:') ? (
         <span key={b.value} className="inline-flex items-center gap-1 rounded-full bg-navy/[0.06] px-2.5 py-0.5 text-[13px] text-navy font-body font-semibold">
           {b.label}
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
+          {editing && onRemove && <button aria-label={`Quitar ${b.label}`} onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
         </span>
       ) : (
         <span key={b.value} className="inline-flex items-center gap-1">
           <StudyTypeBadge code={b.codes[0]} size="sm" />
-          {editing && onRemove && <button onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={12} /></button>}
+          {editing && onRemove && <button aria-label={`Quitar ${b.label}`} onClick={() => onRemove(b.codes)} className="text-navy-light/80 hover:text-coral-deep"><X size={12} /></button>}
         </span>
       ))}
     </>
@@ -413,7 +413,7 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           <GroupedStudyBadges codes={studies} editing={editing} onRemove={removeCodes} />
         </div>
         {editing && (
-          <select
+          <select aria-label="Agregar un estudio que puede dirigir"
             value=""
             onChange={e => addStudy(e.target.value)}
             className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"
@@ -434,12 +434,12 @@ function DirigenteConfigCard({ memberId }: { memberId: string }) {
           {zones.map(id => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full bg-surface-low px-2.5 py-0.5 text-xs text-navy font-body">
               {sedeName(id)}
-              {editing && <button onClick={() => removeZone(id)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
+              {editing && <button aria-label={`Quitar ${sedeName(id)}`} onClick={() => removeZone(id)} className="text-navy-light/80 hover:text-coral-deep"><X size={11} /></button>}
             </span>
           ))}
         </div>
         {editing && (
-          <select
+          <select aria-label="Agregar una sede"
             value=""
             onChange={e => addZone(e.target.value)}
             className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body w-full sm:w-auto"

@@ -147,7 +147,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={`${INPUT} pr-11 font-body`}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80" tabIndex={-1}>
+            <button aria-label={showNew ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showNew} type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80">
               {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -188,7 +188,7 @@ function PasswordCard({ onSave }: { onSave: (msg: string) => void }) {
               className={cn(`${INPUT} pr-11 font-body`, confirmErr ? 'border-coral/50 focus:ring-coral/10' : '')}
               autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80" tabIndex={-1}>
+            <button aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showConfirm} type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80">
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>

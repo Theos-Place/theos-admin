@@ -146,7 +146,7 @@ export default function EditarPlantillaPage() {
                   <button type="button" onClick={() => { setCreatingCategory(false); setCategory('general') }} className="inline-flex items-center gap-1 rounded-xl border px-3 py-2.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body shrink-0" aria-label="Elegir una categoría existente"><X size={13} /> Cancelar</button>
                 </div>
               ) : (
-                <select className={inputCls} value={category} onChange={e => { if (e.target.value === NEW_CATEGORY) { setCreatingCategory(true); setCategory('') } else setCategory(e.target.value) }}>
+                <select aria-label="Categoría" className={inputCls} value={category} onChange={e => { if (e.target.value === NEW_CATEGORY) { setCreatingCategory(true); setCategory('') } else setCategory(e.target.value) }}>
                   {categories.map(c => <option key={c} value={c}>{categoryLabel(c)}</option>)}
                   <option value={NEW_CATEGORY}>➕ Crear categoría nueva…</option>
                 </select>

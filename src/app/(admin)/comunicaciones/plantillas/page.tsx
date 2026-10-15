@@ -156,7 +156,7 @@ export default function PlantillasPage() {
           aria-label="Buscar plantilla por nombre"
           className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 self-start font-body min-w-[220px] placeholder:text-navy-light/80"
         />
-        <select
+        <select aria-label="Filtrar por canal"
           className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 self-start font-body"
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value as 'all' | CommunicationChannel)}

@@ -103,7 +103,7 @@ export function TemplateCard({ template, onUse, onPreview, onEdit, onDuplicate, 
           )}
           {/* Las plantillas del sistema NO se borran. */}
           {onDelete && !template.is_system && (
-            <button type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors">
+            <button aria-label={`Eliminar plantilla ${template.name}`} type="button" onClick={() => onDelete(template)} className="rounded-lg p-1.5 text-navy-light/80 hover:text-coral-deep hover:bg-coral/5 transition-colors">
               <Trash2 size={13} />
             </button>
           )}

@@ -99,6 +99,8 @@ function TypeModal({
               <button
                 key={c}
                 type="button"
+                aria-label={`Color ${c}`}
+                aria-pressed={form.color === c && !customColor}
                 onClick={() => { setForm(f => ({ ...f, color: c })); setCustomColor(false) }}
                 className="h-8 w-8 rounded-full border-2 transition-all duration-150 flex items-center justify-center"
                 style={{
@@ -127,6 +129,7 @@ function TypeModal({
             <div className="flex items-center gap-3">
               <input
                 type="color"
+                aria-label="Color personalizado"
                 className="h-9 w-16 rounded-xl cursor-pointer border-0"
                 value={form.color}
                 onChange={e => setForm(f => ({ ...f, color: e.target.value }))}

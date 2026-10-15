@@ -71,7 +71,7 @@ export default function PuestosPage() {
       </div>
 
       {/* Area filter */}
-      <select
+      <select aria-label="Filtrar por área"
         className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full max-w-xs font-body"
         value={areaFilter}
         onChange={e => setAreaFilter(e.target.value)}

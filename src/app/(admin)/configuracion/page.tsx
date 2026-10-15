@@ -5,12 +5,13 @@ import { Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TOAST_SHORT_MS } from '@/lib/constants'
 
-function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Toggle({ checked, onChange, disabled, label }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; label: string }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       disabled={disabled}
       onClick={() => { if (!disabled) onChange(!checked) }}
       className={cn(
@@ -166,7 +167,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
               <p className="text-sm font-medium text-navy font-body">{label}</p>
               <p className="text-[13px] text-navy-light/80 mt-0.5 font-body">{desc}</p>
             </div>
-            <Toggle checked={prefs[key]} onChange={() => toggle(key)} />
+            <Toggle checked={prefs[key]} onChange={() => toggle(key)} label={label} />
           </div>
         ))}
 
@@ -182,6 +183,7 @@ function NotificacionesTab({ onToast }: { onToast: (msg: string) => void }) {
             )}
           </div>
           <Toggle
+            label="Suscripción por email"
             checked={!emailBlocked && prefs.email_subscribed}
             disabled={emailBlocked}
             onChange={() => toggle('email_subscribed')}

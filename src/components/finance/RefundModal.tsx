@@ -123,7 +123,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
                 value={partialAmount}
                 onChange={e => setPartialAmount(e.target.value)}
                 placeholder={`Máx. ${formatCRC(payment.amount)}`}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
               />
             </div>
           )}
@@ -136,7 +136,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
             <select id="motivo"
               value={reason}
               onChange={e => setReason(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
             >
               {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
@@ -148,7 +148,7 @@ export function RefundModal({ isOpen, onClose, onConfirm, payment }: RefundModal
               onChange={e => setReasonDetail(e.target.value)}
               placeholder="Describí el motivo..."
               rows={3}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none resize-none border-[var(--outline-variant)] font-body text-navy"
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 resize-none border-[var(--outline-variant)] font-body text-navy"
             />
           )}
 

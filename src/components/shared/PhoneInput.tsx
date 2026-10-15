@@ -75,7 +75,7 @@ export function PhoneInput({ value, onChange, placeholder = '8888-0000', label, 
           aria-label="Código de país"
           value={countryCode}
           onChange={e => handleCodeChange(e.target.value)}
-          className="py-[9px] px-[10px] border border-[rgba(22,20,64,0.15)] border-r-0 rounded-l-xl rounded-r-none bg-[rgba(22,20,64,0.03)] text-[13px] text-[var(--fg,#161440)] cursor-pointer outline-none shrink-0 font-body"
+          className="py-[9px] px-[10px] border border-[rgba(22,20,64,0.15)] border-r-0 rounded-l-xl rounded-r-none bg-[rgba(22,20,64,0.03)] text-[13px] text-[var(--fg,#161440)] cursor-pointer outline-none focus:ring-1 focus:ring-coral/30 shrink-0 font-body"
         >
           {COUNTRY_CODES.map(c => (
             <option key={c.code} value={c.code}>

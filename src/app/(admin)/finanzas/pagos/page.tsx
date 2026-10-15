@@ -329,7 +329,7 @@ function PagosContent() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
+          <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
             <Search size={14} className="text-navy-light/80 shrink-0" />
             <input
               type="search"
@@ -722,7 +722,7 @@ function PagosContent() {
                   value={sinpeConf}
                   onChange={e => setSinpeConf(e.target.value)}
                   placeholder="ej. SINPE-2026-05-12345"
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
                 />
               </div>
               <div>
@@ -733,7 +733,7 @@ function PagosContent() {
                   type="date"
                   value={sinpeDate}
                   onChange={e => setSinpeDate(e.target.value)}
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none border-[var(--outline-variant)] font-body text-navy"
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
                 />
               </div>
             </div>

@@ -138,7 +138,7 @@ export default function NuevaPlantillaPage() {
                 </button>
               </div>
             ) : (
-              <select
+              <select aria-label="Categoría"
                 className={inputCls}
                 value={category}
                 onChange={e => {

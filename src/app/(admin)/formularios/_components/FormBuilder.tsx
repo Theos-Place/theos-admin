@@ -287,7 +287,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         <div className="flex-1 basis-full md:basis-auto min-w-0">
           <input
             className={cn(
-              'w-full bg-transparent text-base font-bold text-navy outline-none min-w-0 placeholder-navy-light/50 font-display tracking-[-0.01em]',
+              'w-full bg-transparent text-base font-bold text-navy outline-none rounded-md focus-visible:ring-1 focus-visible:ring-coral/30 min-w-0 placeholder-navy-light/50 font-display tracking-[-0.01em]',
               nameError && 'border-b border-coral'
             )}
             placeholder="Nombre del formulario"
@@ -305,8 +305,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         </div>
 
         {/* Category */}
-        <select
-          className="rounded-xl bg-surface-low px-2.5 py-1.5 text-[13px] text-navy outline-none shrink-0 font-body"
+        <select aria-label="Categoría del formulario"
+          className="rounded-xl bg-surface-low px-2.5 py-1.5 text-[13px] text-navy outline-none rounded-md focus-visible:ring-1 focus-visible:ring-coral/30 shrink-0 font-body"
           value={category}
           onChange={e => setCategory(e.target.value as FormTemplate['category'])}
         >
@@ -500,7 +500,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                     aria-label="Link público del formulario"
                     value={linkPublico}
                     onClick={e => (e.target as HTMLInputElement).select()}
-                    className="min-w-0 flex-1 rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-body outline-none"
+                    className="min-w-0 flex-1 rounded-xl bg-surface-low px-3 py-2 text-[13px] text-navy-light font-body outline-none rounded-md focus-visible:ring-1 focus-visible:ring-coral/30"
                   />
                   <button
                     type="button"
@@ -582,7 +582,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
           {/* Description input */}
           <div className="max-w-2xl mx-auto mb-4">
             <input
-              className="w-full bg-transparent text-sm text-navy-light/80 outline-none placeholder-navy-light/50 font-body"
+              className="w-full bg-transparent text-sm text-navy-light/80 outline-none rounded-md focus-visible:ring-1 focus-visible:ring-coral/30 placeholder-navy-light/50 font-body"
               placeholder="Descripción del formulario (opcional)"
               value={description}
               onChange={e => setDescription(e.target.value)}

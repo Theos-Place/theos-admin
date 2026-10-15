@@ -71,12 +71,15 @@ function Label({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Sel({ value, onChange, children, className }: {
+function Sel({ value, onChange, children, className, label }: {
   value: string; onChange: (v: string) => void
   children: React.ReactNode; className?: string
+  /** El mismo texto del rótulo visible: el rótulo es un <p> y no le llega. */
+  label: string
 }) {
   return (
     <select
+      aria-label={label}
       value={value}
       onChange={e => onChange(e.target.value)}
       className={cn(
@@ -194,7 +197,7 @@ function StudyPanel({ addCondition }: Pick<Props, 'addCondition'>) {
     <div className="space-y-4">
       <div>
         <Label>Estudio</Label>
-        <Sel value={study} onChange={setStudy}>
+        <Sel label="Estudio" value={study} onChange={setStudy}>
           {/* PAR-5 · «Cualquiera» es una opción de verdad, no el vacío inicial:
               «¿quiénes están cursando algo?» es la pregunta más frecuente y
               antes obligaba a elegir plan por plan. Vale solo con «Ha llevado»:
@@ -380,7 +383,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
       <div>
         <Label>Tipo de evento</Label>
-        <Sel value={eventType} onChange={setEventType}>
+        <Sel label="Tipo de evento" value={eventType} onChange={setEventType}>
           <option value="">Cualquier evento</option>
           {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Sel>
@@ -444,7 +447,7 @@ function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
       <div>
         <Label>Cantidad de veces</Label>
         <div className="flex gap-2">
-          <Sel value={qtyOp} onChange={v => setQtyOp(v as QtyOperator)} className="flex-1">
+          <Sel label="Cantidad de veces" value={qtyOp} onChange={v => setQtyOp(v as QtyOperator)} className="flex-1">
             {QTY_OPS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </Sel>
           {qtyOp !== 'any' && (
@@ -528,7 +531,7 @@ function RegistrationPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
       <div>
         <Label>Tipo de evento</Label>
-        <Sel value={eventType} onChange={setEventType}>
+        <Sel label="Tipo de evento" value={eventType} onChange={setEventType}>
           <option value="">Cualquier evento</option>
           {eventTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Sel>
@@ -536,7 +539,7 @@ function RegistrationPanel({ addCondition }: Pick<Props, 'addCondition'>) {
 
       <div>
         <Label>Estado del tiquete</Label>
-        <Sel value={ticketStatus} onChange={v => setTicket(v as TicketStatus)}>
+        <Sel label="Estado del tiquete" value={ticketStatus} onChange={v => setTicket(v as TicketStatus)}>
           <option value="any">Cualquiera</option>
           <option value="pending">Pendiente</option>
           <option value="paid">Pagado</option>
@@ -599,7 +602,7 @@ function ServicePanel({ conditions, addCondition, removeCondition, allowedTypes 
           puede negar. */}
       {permite('server') && <div className="pb-4 border-b border-navy/10">
         <Label>Sirve actualmente</Label>
-        <Sel value={serverVal} onChange={v => {
+        <Sel label="Sirve actualmente" value={serverVal} onChange={v => {
           if (serverCond) removeCondition(serverCond.id)
           if (v !== 'any') addCondition({ group: 'server', type: 'server', value: v as 'yes' | 'no' })
         }}>
@@ -611,7 +614,7 @@ function ServicePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       <div>
         <Label>Área</Label>
-        <Sel value={area} onChange={handleAreaChange}>
+        <Sel label="Área" value={area} onChange={handleAreaChange}>
           <option value="">Cualquier área</option>
           {AREAS.map(a => <option key={a.code} value={a.code}>{a.name}</option>)}
         </Sel>
@@ -619,7 +622,7 @@ function ServicePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       <div>
         <Label>Comité</Label>
-        <Sel value={committee} onChange={setComm}>
+        <Sel label="Comité" value={committee} onChange={setComm}>
           <option value="">Cualquier comité</option>
           {(area ? areaCommittees : AREAS.flatMap(a => a.committees as readonly string[])).map(c => (
             <option key={c} value={c}>{c}</option>
@@ -629,7 +632,7 @@ function ServicePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       <div>
         <Label>Posición</Label>
-        <Sel value={position} onChange={setPosition}>
+        <Sel label="Posición" value={position} onChange={setPosition}>
           <option value="">Cualquier posición</option>
           {POSITIONS.map(p => (
             <option key={p} value={p}>{p}</option>
@@ -698,7 +701,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
     <div className="space-y-4">
       <div>
         <Label>Formulario</Label>
-        <Sel value={formId} onChange={handleFormChange}>
+        <Sel label="Formulario" value={formId} onChange={handleFormChange}>
           <option value="">Seleccioná un formulario</option>
           {groupedForms.map(([cat, forms]) => (
             <optgroup key={cat} label={FORM_CATEGORY_LABEL[cat as keyof typeof FORM_CATEGORY_LABEL] ?? cat}>
@@ -732,7 +735,7 @@ function FormPanel({ addCondition }: Pick<Props, 'addCondition'>) {
         <div className="space-y-2">
           <div>
             <Label>Campo del formulario</Label>
-            <Sel value={field} onChange={setField}>
+            <Sel label="Campo del formulario" value={field} onChange={setField}>
               <option value="">Cualquier campo</option>
               {answerableFields.map(f => (
                 <option key={f.id} value={f.id}>{f.label}</option>
@@ -806,7 +809,7 @@ function LeaderPanel({ conditions, addCondition, removeCondition, allowedTypes }
     <div className="space-y-5">
       {permite('leader') && <div>
         <Label>Es dirigente</Label>
-        <Sel value={leaderVal} onChange={v => {
+        <Sel label="Es dirigente" value={leaderVal} onChange={v => {
           if (leaderCond) removeCondition(leaderCond.id)
           if (v !== 'any') addCondition({ group: 'leader', type: 'leader', value: v as 'yes' | 'no' })
         }}>
@@ -1027,7 +1030,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
     <div className="space-y-5">
       {permite('donor') && <div>
         <Label>Donante</Label>
-        <Sel value={donorVal} onChange={v => {
+        <Sel label="Donante" value={donorVal} onChange={v => {
           if (donorCond) removeCondition(donorCond.id)
           if (v !== 'any') addCondition({ group: 'donor', type: 'donor', value: v as 'yes' | 'no' })
         }}>
@@ -1039,7 +1042,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       {permite('marital') && <div>
         <Label>Estado civil</Label>
-        <Sel value={maritalVal} onChange={v => {
+        <Sel label="Estado civil" value={maritalVal} onChange={v => {
           if (maritalCond) removeCondition(maritalCond.id)
           if (v !== 'any') addCondition({ group: 'marital', type: 'marital', value: v })
         }}>
@@ -1054,7 +1057,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       {permite('status') && <div>
         <Label>Estado del perfil</Label>
-        <Sel value={statusVal} onChange={v => {
+        <Sel label="Estado del perfil" value={statusVal} onChange={v => {
           if (statusCond) removeCondition(statusCond.id)
           if (v !== 'any') addCondition({ group: 'status', type: 'status', value: v as 'active' | 'inactive' })
         }}>
@@ -1066,7 +1069,7 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
 
       {permite('account') && <div>
         <Label>Estado de cuenta</Label>
-        <Sel value={accountVal} onChange={v => {
+        <Sel label="Estado de cuenta" value={accountVal} onChange={v => {
           if (accountCond) removeCondition(accountCond.id)
           if (v !== 'any') addCondition({ group: 'account', type: 'account', value: v as 'none' | 'never_entered' | 'active' })
         }}>

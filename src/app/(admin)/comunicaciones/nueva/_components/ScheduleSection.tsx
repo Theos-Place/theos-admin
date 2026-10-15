@@ -49,6 +49,9 @@ export function ScheduleSection({
         </div>
         <button
           type="button"
+          role="switch"
+          aria-checked={scheduled}
+          aria-label="Programar envío"
           onClick={() => setScheduled(!scheduled)}
           className={cn(
             'relative h-6 w-11 rounded-full transition-colors',
