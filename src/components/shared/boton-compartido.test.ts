@@ -19,7 +19,7 @@ import { join } from 'node:path'
 // huérfanos se llevaron su botón. El trinquete aprieta en los dos sentidos,
 // que es la gracia. 185 → 184 con MAT-3: el aviso al salir del modal del
 // comprobante dejó un botón donde antes había dos.
-const TECHO = 184
+const TECHO = 180
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {
