@@ -10,6 +10,7 @@ import {
 } from '@/lib/supabase/queries/events'
 import { formToPartialWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 import { problemaDeLaSerie, impideGuardar, mensajeDelProblema } from '@/lib/events/fin-de-la-serie'
+import { solapamientoDeLaSerie, mensajeDeSolapamiento } from '@/lib/events/solapamiento-de-la-serie'
 import { requireEventAccess, alcanceDeEventosDeLaSesion } from '@/lib/auth/event-guard'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -117,10 +118,25 @@ export async function PUT(
     // Misma verja que al crear: una serie que termina antes de empezar no genera
     // ninguna repetición. El inicio puede venir en el body o quedarse el del
     // evento, así que se compara contra el que vaya a quedar (2026-09-21).
-    const inicio = entrada.starts_at ?? (await getEventById(id))?.starts_at ?? null
+    const guardado = await getEventById(id)
+    const inicio = entrada.starts_at ?? guardado?.starts_at ?? null
     const problema = problemaDeLaSerie(entrada.is_recurring ?? false, inicio, entrada.recurrence_end)
     if (impideGuardar(problema)) {
       return NextResponse.json({ error: mensajeDelProblema(problema) }, { status: 400 })
+    }
+    // Repeticiones que se pisan, con lo que VA A QUEDAR: lo que trae el body
+    // y, lo que no, lo guardado. Al editar una sola fecha (scope 'single') se
+    // crea un evento suelto y esto no aplica.
+    if (scope !== 'single') {
+      const quedaria = {
+        is_recurring: entrada.is_recurring ?? guardado?.is_recurring,
+        recurrence_rule: 'recurrence_rule' in entrada ? entrada.recurrence_rule : guardado?.recurrence_rule,
+        starts_at: inicio,
+        ends_at: 'ends_at' in entrada ? entrada.ends_at : guardado?.ends_at,
+        timezone: entrada.timezone ?? guardado?.timezone,
+      }
+      const solape = solapamientoDeLaSerie(quedaria)
+      if (solape) return NextResponse.json({ error: mensajeDeSolapamiento(solape), code: 'serie_solapada' }, { status: 400 })
     }
     const event = await updateEventScoped(id, scope, entrada, subEvents, occurrence, auth.ctx.userId, committees)
     return NextResponse.json(event)

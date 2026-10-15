@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
-import { getEvents, type DbEventEnriched } from '@/lib/supabase/queries/events'
+import { type DbEventEnriched } from '@/lib/supabase/queries/events'
+import { eventosPublicos } from '@/lib/supabase/queries/eventos-publicos'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET público para el widget /calendario (embebible en el sitio de la iglesia).
@@ -20,18 +21,7 @@ export async function GET(req: Request) {
     // obligatorio (su SELECT no trae registrations/checkins/volunteers, que
     // incluyen nombres de miembros) y el .map() de abajo es una whitelist —
     // nunca hacer spread del evento enriquecido acá.
-    // PostgREST corta cada respuesta en ~1000 filas: paginar hasta agotar
-    // (un pageSize gigante truncaría el calendario en silencio).
-    const pageSize = 1000
-    let events: DbEventEnriched[] = []
-    for (let page = 1; ; page++) {
-      const batch = await getEvents({ light: true, is_active: 'all', page, pageSize })
-      events = events.concat(batch.events)
-      if (events.length >= batch.total || batch.events.length < pageSize) break
-    }
-    const publicEvents = events
-      .filter(e => e.status !== 'cancelled' && e.status !== 'archived')
-      .filter(e => e.is_public !== false)
+    const publicEvents = (await eventosPublicos())
       .map((e: DbEventEnriched) => ({
       id: e.id,
       title: e.title,
@@ -49,6 +39,11 @@ export async function GET(req: Request) {
       requires_payment: e.requires_payment,
       payment_amount: e.payment_amount,
       requires_survey: e.requires_survey,
+      // Zona y excepciones: sin ellas el widget expandía las series en hora de
+      // Costa Rica aunque fueran de Madrid, y mostraba las fechas canceladas
+      // de una serie (2026-10-15). Las excepciones son solo fechas.
+      timezone: e.timezone ?? null,
+      exceptions: (e.exceptions ?? []).map(x => ({ exception_date: x.exception_date, override_event_id: x.override_event_id })),
       is_recurring: e.is_recurring,
       recurrence_rule: e.recurrence_rule,
       recurrence_end: e.recurrence_end,

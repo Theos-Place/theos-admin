@@ -8,6 +8,7 @@ import { useUrlFilter } from '@/hooks/useUrlFilter'
 import { useAuth } from '@/hooks/useAuth'
 import { reportarError } from '@/lib/observabilidad'
 import { visiblesEnCalendario } from '@/lib/events/visibilidad-en-calendario'
+import { SuscribirseAlCalendario } from '@/components/events/SuscribirseAlCalendario'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useEventTypes, useEventTypeStyle } from '@/hooks/useEventTypes'
 import { type EventType, type AdminEvent } from '@/data/event-config'
@@ -31,8 +32,7 @@ import { recurrenceLabel, isPastEvent } from '@/lib/events/expand-recurrence'
 import { monthEvents, eventsInRange } from '@/lib/events/event-views'
 import { cn } from '@/lib/utils'
 import { eventPageActions } from '@/lib/events/page-actions'
-import { downloadBlob } from '@/lib/export'
-import { Plus, Calendar, Download, Code, ExternalLink, Repeat, CheckCircle2, X, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, Code, ExternalLink, Repeat, CheckCircle2, X, AlertCircle } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
 import { mostrarInscripciones } from '@/lib/events/inscripcion-visible'
@@ -41,35 +41,6 @@ type EventView = 'calendar' | 'list' | 'grid'
 const VIEW_STORAGE_KEY = 'theos_eventos_view'
 
 const PAGE_SIZE = 15
-
-function downloadAllEventsICS(events: AdminEvent[]) {
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-
-  const vevents = events.map(event => [
-    'BEGIN:VEVENT',
-    `UID:${event.id}@theosplace.org`,
-    `DTSTAMP:${formatDate(new Date().toISOString())}`,
-    `DTSTART:${formatDate(event.start_at)}`,
-    `DTEND:${formatDate(event.end_at)}`,
-    `SUMMARY:${event.name}`,
-    `DESCRIPTION:${event.description || ''}`,
-    `LOCATION:${event.location || ''}`,
-    'END:VEVENT',
-  ].join('\r\n')).join('\r\n')
-
-  const ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Theos Place//Sistema Admin//ES',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    vevents,
-    'END:VCALENDAR',
-  ].join('\r\n')
-
-  downloadBlob(ics, `theos-eventos-${new Date().toISOString().split('T')[0]}.ics`, 'text/calendar;charset=utf-8')
-}
 
 /** Convierte un resultado de elegibilidad en un AdminEvent mínimo, suficiente
  *  para las 3 vistas (calendario/lista/cuadrícula) — usado cuando el usuario
@@ -460,13 +431,11 @@ function EventosContent() {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
-          <button
-            onClick={() => downloadAllEventsICS(listRows)}
+          {/* Antes «Exportar calendario» bajaba un .ics con la lista filtrada: una
+              foto que nunca se actualizaba (2026-10-15). */}
+          <SuscribirseAlCalendario
             className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-2 text-sm text-white/80 hover:bg-white/10 transition-all duration-150 font-body"
-          >
-            <Download size={13} />
-            Exportar calendario
-          </button>
+          />
           <a
             href="/calendario"
             target="_blank"

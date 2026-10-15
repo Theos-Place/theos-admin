@@ -47,8 +47,13 @@ describe('la elegibilidad devuelve los internos, con su bandera', () => {
 
 describe('quién filtra y quién no', () => {
   it('la CARTELERA pública filtra por is_public', () => {
-    const ruta = readFileSync('src/app/api/public/events/route.ts', 'utf8')
-    expect(ruta).toContain('e.is_public !== false')
+    // Desde 2026-10-15 el filtro vive en eventosPublicos(), que comparten la
+    // cartelera y el feed de suscripción (.ics): las dos rutas tienen que usarlo.
+    const fuente = readFileSync('src/lib/supabase/queries/eventos-publicos.ts', 'utf8')
+    expect(fuente).toContain('e.is_public !== false')
+    for (const r of ['src/app/api/public/events/route.ts', 'src/app/api/public/events.ics/route.ts']) {
+      expect(readFileSync(r, 'utf8')).toContain('eventosPublicos()')
+    }
   })
 
   it('el DETALLE público NO filtra: el link de un interno tiene que abrir', () => {

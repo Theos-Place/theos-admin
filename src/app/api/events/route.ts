@@ -5,6 +5,7 @@ import { EVENT_WRITE_ROLES } from '@/lib/auth/roles'
 import { getEvents, createEvent } from '@/lib/supabase/queries/events'
 import { formToWriteInput, formToSubEvents, formToOrganizingCommittees } from '@/lib/events/form-mapper'
 import { problemaDeLaSerie, impideGuardar, mensajeDelProblema } from '@/lib/events/fin-de-la-serie'
+import { solapamientoDeLaSerie, mensajeDeSolapamiento } from '@/lib/events/solapamiento-de-la-serie'
 import type { EventType, EventStatus } from '@/types/event'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -75,6 +76,10 @@ export async function POST(req: NextRequest) {
     if (impideGuardar(problema)) {
       return NextResponse.json({ error: mensajeDelProblema(problema) }, { status: 400 })
     }
+    // Repeticiones que se pisan: el «Fin» quedó con la fecha de la última
+    // repetición (los 13 recurrentes públicos de prod, 2026-10-15).
+    const solape = solapamientoDeLaSerie(entrada)
+    if (solape) return NextResponse.json({ error: mensajeDeSolapamiento(solape), code: 'serie_solapada' }, { status: 400 })
     const event = await createEvent(entrada, formToSubEvents(body), auth.ctx.userId, comites)
     return NextResponse.json(event, { status: 201 })
   } catch (error) {

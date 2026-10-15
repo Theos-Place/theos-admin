@@ -14,6 +14,7 @@ import {
 import { Modal } from '@/components/shared/Modal'
 import { Image as ImageIcon } from 'lucide-react'
 import { formatTime } from '@/lib/format'
+import { SuscribirseAlCalendario } from '@/components/events/SuscribirseAlCalendario'
 
 // Inner component that reads searchParams
 function CalendarioWidget() {
@@ -116,10 +117,23 @@ function CalendarioWidget() {
     <div className="min-h-screen font-[system-ui,sans-serif]" style={{ '--cal-primary': primary, '--cal-accent': accent, '--cal-bg': bg, background: bg } as React.CSSProperties}>
       {/* Header */}
       {!embebida && (
-      <div className="py-3 px-5 flex items-center justify-between" style={{ background: primary }}>
+      <div className="py-3 px-5 flex flex-wrap items-center justify-between gap-2" style={{ background: primary }}>
         <span className="text-white font-bold text-[15px]">Theos Place — Eventos</span>
-        <span className="text-[rgba(255,255,255,0.6)] text-xs">{contador}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-white/80 text-[13px]">{contador}</span>
+          <SuscribirseAlCalendario tipos={types}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/40 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-white/10 transition-colors" />
+        </div>
       </div>
+      )}
+      {/* Embebida en el sitio: el encabezado lo pone el sitio, pero suscribirse
+          tiene que poder hacerse desde ahí también. */}
+      {embebida && (
+        <div className="flex justify-end px-5 pt-3">
+          <SuscribirseAlCalendario tipos={types}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,0,0,0.15)] bg-white px-3 py-1.5 text-[13px] font-medium hover:bg-[rgba(0,0,0,0.04)] transition-colors"
+          />
+        </div>
       )}
 
       {/* List view */}
