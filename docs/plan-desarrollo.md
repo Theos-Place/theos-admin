@@ -491,11 +491,15 @@ es legítimo. Y mira solo `src/`: los scripts de un solo uso ya corrieron
 Primero lo que no necesita cuentas (QA-1), después staging (INF-1) con las cuentas
 sembradas ahí, y desde staging el QA autenticado completo (QA-2).
 
-### [~] QA-2 · QA autenticado completo, desde staging — PLAN LISTO 2026-10-15
+### [x] QA-2 · QA autenticado completo, desde staging — INFORME 2026-10-15
 
-Prompt completo, cuentas, roles a cubrir y los 6 flujos de teclado en
-`docs/qa-2026-10/plan.md`. Se ejecuta en una sesión aparte (Opus) contra el
-dev server de staging; informe a `docs/qa-2026-10/informe-autenticado.md`.
+`docs/qa-2026-10/informe-autenticado.md`. 123 pantallas con axe en dos anchos,
+81 chequeos de acceso en 14 roles (sin fugas), 0 desbordes en móvil, 5 de 6
+flujos por teclado. Hallazgos: 6 MEDIO (contraste sistémico en 6 tokens, 50
+botones de ícono sin nombre, selects sin label, sin «saltar al contenido», el
+modal no devuelve el foco con autoFocus, foco invisible en fechas de
+RequestBoard) y 5 MENOR. Sin CRÍTICOS. Cinco tandas de arreglo propuestas al
+final del informe; scripts reproducibles en `scripts/qa/`.
 
 
 Con las cuentas de staging: axe + mobile + teclado sobre las pantallas de cada módulo,

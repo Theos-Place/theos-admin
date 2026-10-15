@@ -1,0 +1,602 @@
+{
+  "/eventos/checkin": {
+    "total": 10,
+    "bajo24": 1,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Eventos",
+        "px": "67×20",
+        "bajo24": true
+      },
+      {
+        "el": "input",
+        "nombre": "Buscar evento por nombre",
+        "px": "285×24",
+        "bajo24": false
+      }
+    ]
+  },
+  "/eventos/baa92940-a909-4c41-8d04-007e289ff653/checkin": {
+    "total": 10,
+    "bajo24": 1,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Volver",
+        "px": "62×20",
+        "bajo24": true
+      },
+      {
+        "el": "button",
+        "nombre": "Levantar un tiquete de soporte",
+        "px": "31×31",
+        "bajo24": false
+      }
+    ]
+  },
+  "/matricula": {
+    "total": 18,
+    "bajo24": 2,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Copiar enlace público",
+        "px": "172×36",
+        "bajo24": false
+      },
+      {
+        "el": "input",
+        "nombre": "Buscar miembro…",
+        "px": "208×20",
+        "bajo24": true
+      },
+      {
+        "el": "button",
+        "nombre": "Todos",
+        "px": "77×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Niveles",
+        "px": "90×34",
+        "bajo24": false
+      }
+    ]
+  },
+  "/mis-pagos": {
+    "total": 15,
+    "bajo24": 5,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "32×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Ver historial de pagos",
+        "px": "183×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Ver también los pagos cerrados",
+        "px": "197×20",
+        "bajo24": true
+      },
+      {
+        "el": "a",
+        "nombre": "¿Te matriculaste en el grupo equivocado?",
+        "px": "343×39",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Copiar número de SINPE",
+        "px": "21×17",
+        "bajo24": true
+      }
+    ]
+  },
+  "/miembros/81a735ef-8b0e-4ea8-8482-d3396ded954c": {
+    "total": 19,
+    "bajo24": 1,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Ver perfil de dirigente",
+        "px": "85×20",
+        "bajo24": true
+      },
+      {
+        "el": "button",
+        "nombre": "Editar",
+        "px": "69×38",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "···",
+        "px": "35×38",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Resumen",
+        "px": "94×42",
+        "bajo24": false
+      }
+    ]
+  },
+  "/eventos": {
+    "total": 24,
+    "bajo24": 1,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "input",
+        "nombre": "Buscar miembro…",
+        "px": "263×20",
+        "bajo24": true
+      },
+      {
+        "el": "button",
+        "nombre": "Exportar calendario",
+        "px": "181×38",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Ver calendario público",
+        "px": "198×38",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Compartir calendario",
+        "px": "193×38",
+        "bajo24": false
+      }
+    ]
+  },
+  "/servidores/mi-comite": {
+    "total": 52,
+    "bajo24": 0,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "input",
+        "nombre": "Buscar comité",
+        "px": "311×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Comité Ayuda Social",
+        "px": "156×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Comité Campamentos",
+        "px": "168×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Comité Community",
+        "px": "147×34",
+        "bajo24": false
+      }
+    ]
+  },
+  "/finanzas/adelantos": {
+    "total": 29,
+    "bajo24": 9,
+    "ejemplos": [
+      {
+        "el": "button",
+        "nombre": "Cerrar menú",
+        "px": "28×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Cerrar sesión",
+        "px": "208×40",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Términos y Condiciones",
+        "px": "208×28",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir menú",
+        "px": "34×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Buscar miembro",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Centro de ayuda",
+        "px": "36×36",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Notificaciones",
+        "px": "32×32",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Menú de usuario",
+        "px": "40×40",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Mes anterior",
+        "px": "30×34",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Mes siguiente",
+        "px": "30×34",
+        "bajo24": false
+      },
+      {
+        "el": "a",
+        "nombre": "Excel",
+        "px": "82×38",
+        "bajo24": false
+      },
+      {
+        "el": "button",
+        "nombre": "Abrir mes",
+        "px": "88×38",
+        "bajo24": false
+      }
+    ]
+  }
+}

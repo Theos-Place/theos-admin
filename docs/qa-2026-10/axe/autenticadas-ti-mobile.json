@@ -1,0 +1,614 @@
+{
+  "cuenta": "ti@theosplace.org",
+  "hallazgos": [
+    {
+      "ruta": "/accesos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 9,
+      "ejemplo": "<span class=\"inline-flex text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#9CA0B4]/15 text-[#9CA0B4] font-body\">Asignado automáticamente a todos — no requie"
+    },
+    {
+      "ruta": "/accesos",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl border px-3 py-2.5 text-sm text-navy-light bg-surface-card outline-none border-outline font-body\">"
+    },
+    {
+      "ruta": "/accesos/[memberId]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<div class=\"flex items-center gap-1.5 text-[13px] font-medium\" style=\"color: rgb(155, 127, 212); font-family: var(--font-body);\">"
+    },
+    {
+      "ruta": "/comunicaciones/nueva",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 1,
+      "ejemplo": "<button type=\"button\" class=\"relative h-6 w-11 rounded-full transition-colors bg-navy/20\"><span class=\"absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white s"
+    },
+    {
+      "ruta": "/comunicaciones/nueva",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"text-[13px] font-medium font-body text-coral\">Todos los activos</span>"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 1,
+      "ejemplo": "<button type=\"button\" class=\"rounded-lg p-1.5 text-navy-light/80 hover:text-coral hover:bg-coral/5 transition-colors\">"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 self-start font-body\">"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas/nueva",
+      "ancho": "mobile",
+      "id": "aria-required-parent",
+      "impacto": "critical",
+      "descripcion": "Certain ARIA roles must be contained by particular parents",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" role=\"tab\" aria-selected=\"true\" class=\"px-4 py-2 text-sm font-body border-b-2 -mb-px transition-colors border-coral text-navy font-semibol"
+    },
+    {
+      "ruta": "/comunicaciones/plantillas/nueva",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body\">"
+    },
+    {
+      "ruta": "/configuracion",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 4,
+      "ejemplo": "<button type=\"button\" role=\"switch\" aria-checked=\"true\" class=\"relative h-6 w-11 rounded-full transition-colors shrink-0 bg-coral\"><span class=\"absolute top-0.5"
+    },
+    {
+      "ruta": "/configuracion/seguridad",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 2,
+      "ejemplo": "<button type=\"button\" class=\"absolute right-3.5 top-1/2 -translate-y-1/2 text-navy-light/80 hover:text-navy-light/80\" tabindex=\"-1\">"
+    },
+    {
+      "ruta": "/configuracion/seguridad",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"text-[13px] rounded-full px-2.5 py-1 font-medium font-body bg-success/10 text-success\">Esta sesión</span>"
+    },
+    {
+      "ruta": "/dashboard",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 19,
+      "ejemplo": "<div class=\"flex items-center gap-1 text-[13px] text-[#3DB97A] font-body\">"
+    },
+    {
+      "ruta": "/dashboard",
+      "ancho": "mobile",
+      "id": "link-in-text-block",
+      "impacto": "serious",
+      "descripcion": "Links must be distinguishable without relying on color",
+      "nodos": 10,
+      "ejemplo": "<a class=\"text-[#3B7579] hover:underline\" href=\"/miembros\">members</a>"
+    },
+    {
+      "ruta": "/empleados/puestos",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 w-full max-w-xs font-body\">"
+    },
+    {
+      "ruta": "/estudios",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<p class=\"text-[13px] text-coral font-body\"><strong>1</strong> grupo cierran en los próximos 30 días</p>"
+    },
+    {
+      "ruta": "/estudios/bloques",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<button class=\"inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors disabled:op"
+    },
+    {
+      "ruta": "/estudios/dirigentes",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 9,
+      "ejemplo": "<span class=\"rounded-full px-2 py-0.5 text-[11px] font-medium font-body bg-[rgba(61,185,122,0.12)] text-[#3DB97A]\">Activo</span>"
+    },
+    {
+      "ruta": "/estudios/folletos/[id]",
+      "ancho": "mobile",
+      "id": "definition-list",
+      "impacto": "serious",
+      "descripcion": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+      "nodos": 1,
+      "ejemplo": "<dl class=\"px-5 py-3\">"
+    },
+    {
+      "ruta": "/estudios/grupos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<span class=\"inline-flex items-center gap-1 rounded-md font-semibold tracking-wide font-display bg-coral/10 text-coral px-1.5 py-0.5 text-[11px]\">DIS1</span>"
+    },
+    {
+      "ruta": "/estudios/grupos",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body\">"
+    },
+    {
+      "ruta": "/estudios/grupos/[id]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<button class=\"px-4 py-2.5 text-sm transition-all border-b-2 -mb-px shrink-0 whitespace-nowrap border-coral text-coral font-medium font-body\">Participantes</but"
+    },
+    {
+      "ruta": "/estudios/grupos/[id]/editar",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"rounded-full px-2 py-0.5 text-[11px] font-medium font-body shrink-0 bg-[rgba(61,185,122,0.12)] text-[#3DB97A]\">Activo</span>"
+    },
+    {
+      "ruta": "/estudios/plan",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 36,
+      "ejemplo": "<span class=\"inline-flex items-center gap-1 rounded-md font-semibold tracking-wide font-display bg-coral/10 text-coral px-1.5 py-0.5 text-[11px]\">EXP</span>"
+    },
+    {
+      "ruta": "/eventos/[id]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 3,
+      "ejemplo": "<span class=\"inline-flex items-center gap-1.5 font-body text-[13px]\" style=\"color: rgb(41, 54, 92);\"><span class=\"rounded-full shrink-0 h-2 w-2\" style=\"backgrou"
+    },
+    {
+      "ruta": "/eventos/[id]/editar",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"text-[13px] font-medium font-display\">Actividad Social</span>"
+    },
+    {
+      "ruta": "/eventos/[id]/editar",
+      "ancho": "mobile",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 2,
+      "ejemplo": "<input class=\"w-full border-0 border-b border-b-2 border-b-[var(--outline-variant)] bg-transparent pb-2 text-2xl font-bold text-navy outline-none placeholder:te"
+    },
+    {
+      "ruta": "/eventos/embed",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<button type=\"button\" class=\"flex-1 rounded-xl border py-2 text-[13px] font-medium transition-all border-coral bg-coral/5 text-coral font-body\">Mensual</button>"
+    },
+    {
+      "ruta": "/eventos/embed",
+      "ancho": "mobile",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 3,
+      "ejemplo": "<input type=\"color\" class=\"h-8 w-8 rounded-lg cursor-pointer border-0 bg-transparent\" value=\"#161440\">"
+    },
+    {
+      "ruta": "/eventos/nuevo",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 4,
+      "ejemplo": "<div class=\"psub\">Completá los pasos para publicar un nuevo evento</div>"
+    },
+    {
+      "ruta": "/eventos/tipos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 7,
+      "ejemplo": "<p class=\"text-[13px] text-[var(--fg-muted)] mb-[14px] ml-12 font-body\">Actividades para crear comunidad</p>"
+    },
+    {
+      "ruta": "/finanzas",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 7,
+      "ejemplo": "<span class=\"text-[11px] rounded-full px-2 py-0.5 font-medium bg-[rgba(214,62,61,0.10)] text-coral\">Revisar</span>"
+    },
+    {
+      "ruta": "/finanzas/becas/nueva",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 1,
+      "ejemplo": "<button class=\"h-9 w-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all text-white/80\">"
+    },
+    {
+      "ruta": "/finanzas/becas/nueva",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<button class=\"rounded-xl p-3 text-sm font-medium border transition-all text-left font-body border-coral bg-coral/5 text-coral\">Estudio</button>"
+    },
+    {
+      "ruta": "/finanzas/becas/nueva",
+      "ancho": "mobile",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 2,
+      "ejemplo": "<input type=\"range\" min=\"0\" max=\"100\" step=\"5\" class=\"flex-1 accent-coral\" value=\"50\">"
+    },
+    {
+      "ruta": "/finanzas/devoluciones",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<span class=\"inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-medium bg-[rgba(214,62,61,0.10)] text-coral\">Proceso manual</span>"
+    },
+    {
+      "ruta": "/finanzas/donaciones/importar",
+      "ancho": "mobile",
+      "id": "label",
+      "impacto": "critical",
+      "descripcion": "Form elements must have labels",
+      "nodos": 1,
+      "ejemplo": "<input accept=\".csv,.xlsx,.xls\" class=\"sr-only\" type=\"file\">"
+    },
+    {
+      "ruta": "/finanzas/donaciones/reporte",
+      "ancho": "mobile",
+      "id": "scrollable-region-focusable",
+      "impacto": "serious",
+      "descripcion": "Scrollable region must have keyboard access",
+      "nodos": 1,
+      "ejemplo": "<div class=\"overflow-x-auto\">"
+    },
+    {
+      "ruta": "/finanzas/pagos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 37,
+      "ejemplo": "<span class=\"inline-flex items-center gap-1\">₡ •••,•••</span>"
+    },
+    {
+      "ruta": "/finanzas/pagos/[id]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-medium\" style=\"color: rgb(59, 117, 121); background: rgba(81, 157, 162, 0."
+    },
+    {
+      "ruta": "/finanzas/pagos/[id]",
+      "ancho": "mobile",
+      "id": "link-name",
+      "impacto": "serious",
+      "descripcion": "Links must have discernible text",
+      "nodos": 1,
+      "ejemplo": "<a class=\"h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-[rgba(255,255,255,0.60)]\" href=\"/finanzas/pagos\">"
+    },
+    {
+      "ruta": "/formularios/[id]",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl bg-surface-low px-2.5 py-1.5 text-[13px] text-navy outline-none shrink-0 font-body\">"
+    },
+    {
+      "ruta": "/formularios/[id]/preview",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<span class=\"jsx-df97c2ae6f1ea201 text-[13px] font-semibold text-white font-display\">VISTA PREVIA — las respuestas no se guardan</span>"
+    },
+    {
+      "ruta": "/formularios/nuevo",
+      "ancho": "mobile",
+      "id": "select-name",
+      "impacto": "critical",
+      "descripcion": "Select element must have an accessible name",
+      "nodos": 1,
+      "ejemplo": "<select class=\"rounded-xl bg-surface-low px-2.5 py-1.5 text-[13px] text-navy outline-none shrink-0 font-body\">"
+    },
+    {
+      "ruta": "/matricula",
+      "ancho": "mobile",
+      "id": "aria-prohibited-attr",
+      "impacto": "serious",
+      "descripcion": "Elements must only use permitted ARIA attributes",
+      "nodos": 1,
+      "ejemplo": "<span tabindex=\"0\" title=\"Al menos 6 charlas e...\" aria-label=\"Al menos 6 charlas e...\" class=\"cursor-help text-nav...\">"
+    },
+    {
+      "ruta": "/matricula",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 7,
+      "ejemplo": "<span>1 grupo disponible</span>"
+    },
+    {
+      "ruta": "/mi-perfil",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body\">Admin</span>"
+    },
+    {
+      "ruta": "/miembros/[id]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"rounded-full bg-coral-soft/20 px-2.5 py-0.5 text-xs text-coral font-body\">Admin</span>"
+    },
+    {
+      "ruta": "/miembros/[id]/editar",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 23,
+      "ejemplo": "<div class=\"psub\">TI Theos</div>"
+    },
+    {
+      "ruta": "/miembros/listas",
+      "ancho": "mobile",
+      "id": "button-name",
+      "impacto": "critical",
+      "descripcion": "Buttons must have discernible text",
+      "nodos": 1,
+      "ejemplo": "<button class=\"h-7 w-7 rounded-lg flex items-center justify-center text-navy-light/80 hover:bg-surface-low hover:text-navy transition-colors\">"
+    },
+    {
+      "ruta": "/miembros/listas",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<button class=\"flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-coral/10 py-1.5 text-[13px] font-medium text-coral hover:bg-coral/20 transition-col"
+    },
+    {
+      "ruta": "/miembros/listas/[id]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 37,
+      "ejemplo": "<span class=\"shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium font-body bg-[rgba(61,185,122,0.12)] text-[#3DB97A]\">Activo</span>"
+    },
+    {
+      "ruta": "/miembros/nuevo",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<label for=\"tel-_R_15ainebn9et9knelb_\" class=\"form-label\">Teléfono</label>"
+    },
+    {
+      "ruta": "/mis-pagos",
+      "ancho": "mobile",
+      "id": "definition-list",
+      "impacto": "serious",
+      "descripcion": "<dl> elements must only directly contain properly-ordered <dt> and <dd> groups, <script>, <template> or <div> elements",
+      "nodos": 1,
+      "ejemplo": "<dl class=\"space-y-2 text-[13px] font-body\">"
+    },
+    {
+      "ruta": "/mis-pagos",
+      "ancho": "mobile",
+      "id": "dlitem",
+      "impacto": "serious",
+      "descripcion": "<dt> and <dd> elements must be contained by a <dl>",
+      "nodos": 4,
+      "ejemplo": "<dt class=\"text-navy-light/80 shrink-0\">Número</dt>"
+    },
+    {
+      "ruta": "/reportes/asistencia",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"min-w-0 break-words\">Promedio semanal 2026</span>"
+    },
+    {
+      "ruta": "/reportes/discipulos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"min-w-0 break-words\">Discípulos Multiplicadores hoy</span>"
+    },
+    {
+      "ruta": "/reportes/personas-nuevas",
+      "ancho": "mobile",
+      "id": "scrollable-region-focusable",
+      "impacto": "serious",
+      "descripcion": "Scrollable region must have keyboard access",
+      "nodos": 1,
+      "ejemplo": "<div class=\"overflow-x-auto\">"
+    },
+    {
+      "ruta": "/servidores",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<span class=\"shrink-0 rounded-full bg-coral/10 px-2 py-0.5 text-[11px] font-semibold text-coral font-display\">1 cupo</span>"
+    },
+    {
+      "ruta": "/servidores/[committeeId]",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<div class=\"psub\">Area Sedes · 17 personas</div>"
+    },
+    {
+      "ruta": "/servidores/admin",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<button class=\"inline-flex items-center gap-1 rounded-full bg-coral/10 hover:bg-coral/20 text-coral px-3 py-1.5 text-[13px] font-medium transition-colors font-b"
+    },
+    {
+      "ruta": "/servidores/aplicaciones",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 3,
+      "ejemplo": "<span class=\"shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold font-display bg-[rgba(233,185,73,0.15)] text-[#A8821F]\">En revisión</span>"
+    },
+    {
+      "ruta": "/servidores/mi-comite",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<p class=\"psub\">Elegí un comité y vas a ver lo mismo que ve su encargado.</p>"
+    },
+    {
+      "ruta": "/servidores/mi-comite",
+      "ancho": "mobile",
+      "id": "link-in-text-block",
+      "impacto": "serious",
+      "descripcion": "Links must be distinguishable without relying on color",
+      "nodos": 1,
+      "ejemplo": "<a class=\"text-coral hover:underline\" href=\"/servidores\">Servidores</a>"
+    },
+    {
+      "ruta": "/servidores/puestos/pedir-cupos",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<a class=\"text-coral hover:underline\" href=\"/servidores/puestos/nuevo\">Solicitalo acá</a>"
+    },
+    {
+      "ruta": "/servidores/puestos/solicitudes",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 2,
+      "ejemplo": "<span class=\"rounded-full px-2 py-0.5 text-[13px] font-body bg-[rgba(233,185,73,0.15)] text-[#A8821F]\">Lista para publicar</span>"
+    },
+    {
+      "ruta": "/soporte",
+      "ancho": "mobile",
+      "id": "color-contrast",
+      "impacto": "serious",
+      "descripcion": "Elements must meet minimum color contrast ratio thresholds",
+      "nodos": 1,
+      "ejemplo": "<span class=\"rounded-full px-2.5 py-1 text-[13px] font-semibold font-body shrink-0 bg-coral/10 text-coral\">Abierta</span>"
+    }
+  ],
+  "desbordes": [],
+  "sinCargar": [
+    "mobile /comunicaciones/plantillas/[id]/editar (axe no terminó)"
+  ],
+  "sinDato": [],
+  "redirigidas": []
+}

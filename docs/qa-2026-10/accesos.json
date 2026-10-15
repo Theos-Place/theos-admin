@@ -1,0 +1,650 @@
+[
+  {
+    "tipo": "pagina",
+    "ruta": "/mi-perfil",
+    "espera": "entra",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "→ /miembros/b4f09924-3cd4-4103-a502-625e7507f324"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/matricula",
+    "espera": "entra",
+    "rol": "(sin rol)",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/mis-pagos",
+    "espera": "entra",
+    "rol": "(sin rol)",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/miembros",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/soporte",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/empleados/viajes",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/adelantos",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/members?pageSize=5",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/credits",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/travel-requests",
+    "espera": "denegado",
+    "rol": "(sin rol)",
+    "obtuvo": "entra",
+    "detalle": "HTTP 200"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/eventos/checkin",
+    "espera": "entra",
+    "rol": "encargado_eventos",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/eventos",
+    "espera": "entra",
+    "rol": "encargado_eventos",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios/dirigentes",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/miembros",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "denegado",
+    "rol": "encargado_eventos",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios/grupos",
+    "espera": "entra",
+    "rol": "dirigente",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/pagos",
+    "espera": "denegado",
+    "rol": "dirigente",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "denegado",
+    "rol": "dirigente",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/miembros",
+    "espera": "denegado",
+    "rol": "dirigente",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "dirigente",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "dirigente",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/pagos",
+    "espera": "entra",
+    "rol": "revision_pagos",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "revision_pagos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/empleados/viajes",
+    "espera": "denegado",
+    "rol": "revision_pagos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/saldos",
+    "espera": "denegado",
+    "rol": "revision_pagos",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donaciones/reporte",
+    "espera": "denegado",
+    "rol": "revision_pagos",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/credits",
+    "espera": "denegado",
+    "rol": "revision_pagos",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/becas",
+    "espera": "entra",
+    "rol": "becas",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/pagos",
+    "espera": "denegado",
+    "rol": "becas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "becas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "becas",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/soporte",
+    "espera": "entra",
+    "rol": "soporte_tecnico",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/miembros",
+    "espera": "entra",
+    "rol": "soporte_tecnico",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/reportes",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios/grupos",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "entra",
+    "rol": "soporte_tecnico",
+    "obtuvo": "entra",
+    "detalle": "HTTP 200"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "soporte_tecnico",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/adelantos",
+    "espera": "entra",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/pagos",
+    "espera": "denegado",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/saldos",
+    "espera": "denegado",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "colaborador_finanzas",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/comunicaciones",
+    "espera": "entra",
+    "rol": "comunicaciones",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "denegado",
+    "rol": "comunicaciones",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "comunicaciones",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "comunicaciones",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/miembros",
+    "espera": "entra",
+    "rol": "editor_perfiles",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "denegado",
+    "rol": "editor_perfiles",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/soporte",
+    "espera": "denegado",
+    "rol": "editor_perfiles",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "denegado",
+    "rol": "editor_perfiles",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "denegado",
+    "rol": "editor_perfiles",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios",
+    "espera": "entra",
+    "rol": "coordinador_estudios",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios/solicitudes",
+    "espera": "entra",
+    "rol": "coordinador_estudios",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "denegado",
+    "rol": "coordinador_estudios",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/saldos",
+    "espera": "denegado",
+    "rol": "coordinador_estudios",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donations?page=1&pageSize=1",
+    "espera": "denegado",
+    "rol": "coordinador_estudios",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/credits",
+    "espera": "denegado",
+    "rol": "coordinador_estudios",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas",
+    "espera": "entra",
+    "rol": "finanzas",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "entra",
+    "rol": "finanzas",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/saldos",
+    "espera": "entra",
+    "rol": "finanzas",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/soporte",
+    "espera": "denegado",
+    "rol": "finanzas",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/payments",
+    "espera": "entra",
+    "rol": "finanzas",
+    "obtuvo": "entra",
+    "detalle": "HTTP 200"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/credits",
+    "espera": "entra",
+    "rol": "finanzas",
+    "obtuvo": "entra",
+    "detalle": "HTTP 200"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "denegado",
+    "rol": "finanzas",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/finanzas/reportes",
+    "espera": "entra",
+    "rol": "direccion",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/estudios/dirigentes",
+    "espera": "entra",
+    "rol": "direccion",
+    "obtuvo": "entra",
+    "detalle": "ok"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/finance/donaciones/reporte",
+    "espera": "entra",
+    "rol": "direccion",
+    "obtuvo": "entra",
+    "detalle": "HTTP 200"
+  },
+  {
+    "tipo": "pagina",
+    "ruta": "/soporte",
+    "espera": "denegado",
+    "rol": "direccion",
+    "obtuvo": "denegado",
+    "detalle": "Acceso restringido"
+  },
+  {
+    "tipo": "api",
+    "ruta": "/api/support-tickets",
+    "espera": "denegado",
+    "rol": "direccion",
+    "obtuvo": "denegado",
+    "detalle": "HTTP 403"
+  }
+]

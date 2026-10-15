@@ -1,0 +1,58 @@
+[
+  {
+    "flujo": "d) finanzas pagos",
+    "ruta": "/finanzas/pagos",
+    "paradas": 107,
+    "alcanzaAccion": true,
+    "tabsHastaElContenido": 60,
+    "sinFocoVisible": [],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": null
+  },
+  {
+    "flujo": "e) solicitudes",
+    "ruta": "/estudios/solicitudes",
+    "paradas": 60,
+    "alcanzaAccion": false,
+    "tabsHastaElContenido": 60,
+    "sinFocoVisible": [],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": null
+  },
+  {
+    "flujo": "f) soporte",
+    "ruta": "/soporte",
+    "paradas": 69,
+    "alcanzaAccion": false,
+    "tabsHastaElContenido": 60,
+    "sinFocoVisible": [
+      "input «Desde»",
+      "input «Hasta»"
+    ],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": null
+  },
+  {
+    "flujo": "reportes",
+    "ruta": "/finanzas/reportes",
+    "paradas": 75,
+    "alcanzaAccion": true,
+    "tabsHastaElContenido": 60,
+    "sinFocoVisible": [],
+    "sinNombre": [
+      "a"
+    ],
+    "modal": {
+      "abrio": true,
+      "focoSeEscapo": 0,
+      "escCierra": true,
+      "focoVuelveA": "STAGING · los datos de esta pantalla son"
+    }
+  }
+]
