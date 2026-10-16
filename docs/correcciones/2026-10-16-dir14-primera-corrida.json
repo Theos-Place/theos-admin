@@ -1,0 +1,1444 @@
+{
+ "origen": "DIR-14 primera corrida, aprobada por Floriana 2026-10-16 (Excel revisado por coordinación)",
+ "antes": "revision_auto_faltan vacía en las 172",
+ "filas": [
+  {
+   "member_id": "529abc5a-7960-44c5-a302-e95db33b82c5",
+   "nombre": "Viviana Artavia Lobo",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "5f6712c0-1279-4f67-8801-1821d3f21f88",
+   "nombre": "Andres Astorga Alvarez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "a616e571-5be7-473c-bb99-41355f84eccc",
+   "nombre": "Gloriana Chinchilla Carranza",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "52ee8bbc-e343-4864-b464-7395e311e86b",
+   "nombre": "Fiorella Umaña Vindas",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "b2b598b2-5238-4614-b06e-638940326bba",
+   "nombre": "Maria Jose Fallas Umana",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "8d11363a-ab4c-4707-934d-fc5908d1b508",
+   "nombre": "Humberto Navarro",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "289f7a59-9fca-4c92-ad72-4fbcea67f058",
+   "nombre": "Monica Villanueva Arrieta",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "4339d68b-8076-44f5-931c-6a74989bcb84",
+   "nombre": "Jennifer Zamora Vasquez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "58a15051-1fb0-468f-b90d-d294056491a2",
+   "nombre": "Tatiana Zúñiga Salas",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "b929f414-40ff-488f-bf61-b577931245ed",
+   "nombre": "Isaac Leon Brenes",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "b8253447-f20c-4dcd-b97c-4c6052f49b36",
+   "nombre": "Walter Salas Perez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "d12e71c1-8680-4596-9009-ecc5288fd1d7",
+   "nombre": "Gabriela Duran Gonzalez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "dee22800-eb83-422f-8b89-341b567cc278",
+   "nombre": "Tatiana Quiros Granados",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "3616a61c-ff5e-4fae-943e-73a46ad21033",
+   "nombre": "Evelyn Rivera Gonzalez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "2afcd5aa-53f3-4247-9867-7327597019b2",
+   "nombre": "Carlos Campos Alfaro",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "d3d2fad4-4e86-498c-bcca-2fc8cde071a4",
+   "nombre": "Antonio Buitrago",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "d3e66277-1e39-41c6-8a0c-5b6e03b75a1f",
+   "nombre": "Keylin Soto Perez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "c8a730ff-5794-43e7-9d28-3e5e630b6b35",
+   "nombre": "Adriana Sánchez Alfaro",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "6c0151ea-53c7-4480-b83e-7c4aede7cc32",
+   "nombre": "Shirley Corrales Ramirez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "5f2bde15-7278-4b2e-87e2-c45bceac2285",
+   "nombre": "Luis Minor Cordero Fonseca",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "0a4ead72-1e8e-4baf-b548-5a8e1d9917fa",
+   "nombre": "Camila Artavia Trejos",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "08fe13d9-ee7c-491f-9275-e756f789ad92",
+   "nombre": "Randall Vega Rodríguez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "0a6d318c-2cde-46cf-8bfd-8458c983f906",
+   "nombre": "Georgina Umana",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "02dfa295-6bfb-4145-b7e3-efce7917f044",
+   "nombre": "Gabriela Alvarado Oconitrillo",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "112d6d4c-8bcb-492b-81b8-dc485bfa5b8e",
+   "nombre": "Kenneth Chaverri Venegas",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "1fa09428-525d-4c3f-9f7e-4a6f600913fa",
+   "nombre": "Shirley Solis Viquez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "7be38169-73ef-4fc5-a24d-498f868ccdfa",
+   "nombre": "Kattya Abarca Guerrero",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "38049a05-f55b-4b3f-8cd4-d45d6e1bef04",
+   "nombre": "Tatiana Fuentes Quirós",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "1aec8a98-fd22-4d95-bd9d-9a532da24dda",
+   "nombre": "Mariechen Nicoleyson Casafont",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "23d1e9f7-7479-41b7-9add-48f853315af9",
+   "nombre": "Oscar Ramirez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "08acdf3e-e497-4c9a-9ad5-d862e527ab8a",
+   "nombre": "Eyleen Alfaro Porras",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "3633e243-98c9-4d04-a886-2d9ca5dcde28",
+   "nombre": "Victor Guerra Araya",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "146588b2-fa2d-4fa4-855b-346edcbfd365",
+   "nombre": "Meysi Arias Ledezma",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "01a7739b-9836-49af-b06e-b674916bd501",
+   "nombre": "Karen Campos Castro",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "76bbb313-9696-44c0-a09a-60b1ecfde9de",
+   "nombre": "Alexandra Paiz",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "d720c34c-b3a3-445e-abe7-76dea38ec4d3",
+   "nombre": "Sergio Aguilar Araya",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "78d42915-232f-4dc4-8e3a-74927b9a4b9d",
+   "nombre": "Sofia Sanchez Vergara",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "1ac3451e-110a-48a4-a7fd-baa94c235d36",
+   "nombre": "Rosirene Calvo Garita",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "fed11721-2b31-4fc0-8d1f-1820f8e15d29",
+   "nombre": "Roberto Morales Chaves",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "f963bd0a-879d-4ab6-8c12-3418474956d0",
+   "nombre": "Maria Barrantes Serrano",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "1acd0c3b-9fc2-4ec9-9376-55cec7c7f3ac",
+   "nombre": "Catalina Morales Coto",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "3a9be529-1eac-4f2d-ba0f-51b3271b4869",
+   "nombre": "Carolina Leon Castro",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "16c0e5d5-b8de-4e4c-8675-e561a44e0803",
+   "nombre": "Wendy Calvo",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "f25ee8a3-52f4-4925-a1d6-4fb364ea5e51",
+   "nombre": "Gerardo Jiménez Sandoval",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "3ae9fbb5-446f-46d2-8b60-65c2fc1d2497",
+   "nombre": "Leyla Bukele",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "21297cac-f42a-4d6b-ae76-100f93a12580",
+   "nombre": "Marisol Calvo Rivera",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "50902b53-6363-4bbc-873d-d0fa662a9c1d",
+   "nombre": "Carlos Campos Monge",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "93a18647-c708-405d-a4de-5d57c2ad115d",
+   "nombre": "Erick Cascante Chavarria",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "47df7712-0747-4a6d-a1cb-4ba46169168a",
+   "nombre": "Adrián Castro Montealegre",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "83d8aecb-9b75-46c2-8775-07ffa1c060b0",
+   "nombre": "Yendry Corrales Quiros",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "340bb541-880b-4cbb-a67d-1f15c0b07dab",
+   "nombre": "Maria Fernanda Garcia Calvo",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "dfb59a0b-6a7f-434c-9e4d-0df733c336ac",
+   "nombre": "Ilse Johanning Mora",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "6d54ad6a-4fed-4f5d-a802-bb529902ba4c",
+   "nombre": "Andrea Chaves Castillo",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "2dae5c34-b84a-406e-9d8b-fcc0b069e7e9",
+   "nombre": "Malik Joel Cubillo Ramirez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "0090bb9a-e5a7-4e84-8162-0b60e6da26c9",
+   "nombre": "Maria del Mar Desanti",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "334d70d2-d240-41d7-8efb-7ec5864d230d",
+   "nombre": "Fabian Ortiz Sancho",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "e622f801-b740-4836-bf52-97dd33cb3086",
+   "nombre": "Aida Torres Villegas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "30dab133-1b42-4860-a5f3-50197f0c8102",
+   "nombre": "Ana Gabriela Gomez Montoya",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "c1a14149-b63d-466c-846f-db9a734b3976",
+   "nombre": "Kenneth Gomez Piedra",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "445d82bb-562c-4900-841c-caa96bea7561",
+   "nombre": "Fernando Gutierrez Hernandez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "4a578e49-81b4-4714-afdb-0e445f4c25aa",
+   "nombre": "Liza Sanchez Aymerich",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "5b32272c-eadf-4e33-8c8a-c18b36a84edc",
+   "nombre": "Wilbert Céspedes Chaves",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "99536cb6-5efa-4a7a-ac5a-2aec932e3d7e",
+   "nombre": "Laura Gutierrez Soto",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "819f3fc1-0ff9-49dc-880d-8f8d800166bf",
+   "nombre": "Carlos Hernandez Arce",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "fb65d27c-3f6d-4024-b3d9-4650731546f7",
+   "nombre": "Desiree Fonseca",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "4fb38e72-9ac7-478d-ad2a-d244ddc1e7b4",
+   "nombre": "Felix Badilla Vargas",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "b2fc54a1-04ff-46d3-acc4-bf9ce8e8591d",
+   "nombre": "Monserrat Bonilla Morales",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "cf03997a-3f47-485b-82e4-51db5c8f7f42",
+   "nombre": "Priscilla Hernandez Cerdas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "3b0fbbb6-c011-46a2-9599-5d74d08379ff",
+   "nombre": "Catalina Hernández Charpentier",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "fd41fe94-75ae-4420-a9ae-cc78a9f4f67b",
+   "nombre": "Thais Lopez Rodriguez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "8357cf02-9276-47a0-84c8-e3a61169e19e",
+   "nombre": "Carolina Aguilar Berrocal",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "079cdbf5-283a-4730-a064-fa5bfded1ea9",
+   "nombre": "Gabriela Hernandez Gutierrez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "e99e270f-e932-47fe-92fd-1fff2531f49f",
+   "nombre": "Laura Jiménez Trejos",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "8840259d-8477-4b10-bb25-3321fb6b911f",
+   "nombre": "Mariangel Montero",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "0035f7e4-dc84-4247-94b2-d6298293977b",
+   "nombre": "Elizabeth Mainieri Fernandez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "5f568f6a-425e-4920-ba4b-7405f33bd54b",
+   "nombre": "Gloria Vargas Vargas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ba1cb4b7-832e-4f54-ad1f-469dda4a5d3b",
+   "nombre": "Fiorella Badilla Peralta",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "5f5b6a9c-3712-43ee-b621-4d8e25e19385",
+   "nombre": "Dylia Sasso",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "5eb26303-2da1-45d6-bec6-9c951f7ea9e3",
+   "nombre": "Melissa Armijo Losilla",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "c12e3708-bc3b-4fd7-ae07-c2cfa41b2d03",
+   "nombre": "Marcela Lizano",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "e6a5484b-2e06-4612-972e-0235f62de00d",
+   "nombre": "Natalia Lopez Rodriguez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "aee1a330-eacd-4424-869d-0ec862a64f68",
+   "nombre": "Carolina Madriz Arce",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "2b6d08c5-d934-4fe2-a4e2-88e8c0639bbd",
+   "nombre": "Guiliana Mainieri",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "88a907b5-2767-49b9-87ab-a8cc619c8b05",
+   "nombre": "Cindy Martinez Quesada",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "495015fb-2bd6-4e77-a873-ee66fa54363f",
+   "nombre": "Esteban Mejías Montero",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "7dcf3d46-1d72-4273-9c46-cb0698516313",
+   "nombre": "Jennifer Mendez Segura",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "e4ae066f-d1f4-4d40-947f-6d95c28bf8a0",
+   "nombre": "Natalia Meneses Quiros",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "b2acbf40-b7c3-4b70-8c62-4cb7225d3330",
+   "nombre": "Giancarlo Mora Arias",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "96ec8387-acc4-4dac-9e6b-8a8a868109ad",
+   "nombre": "Jose Luis Mora Arias",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "0fe1ab67-a67a-4093-a7a9-1f165bdb6123",
+   "nombre": "Viviana Mora Mejia",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "bb7ad6a4-a7eb-4225-8619-a39533e9578f",
+   "nombre": "Leonel Pacheco",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "f5ec66e4-9b4e-4612-b61e-1012b09521c0",
+   "nombre": "Catalina Duran Ramirez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "f7ff621b-18b8-4bef-8431-55ad5c5df1f7",
+   "nombre": "Estefani Molina Gonzalez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "d7ca6c0e-1ac2-428b-b9a1-218b9b1d7eaa",
+   "nombre": "Luis Roberto Lang Ortiz",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "21c7490c-027b-48e1-8e21-33b2bb9422b9",
+   "nombre": "Nancy Morales Alvarado",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "649655b3-4cfc-4196-94ec-628755489f42",
+   "nombre": "Andres Fernandez Alvarado",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "66dc3624-02c9-4b44-9974-9b4907dd3788",
+   "nombre": "Juan Cascante Salgado",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "d8810cfb-32a6-4899-b5e1-1cba29db0b4f",
+   "nombre": "Xinia Coto",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ae5f476f-6640-413b-899e-447c64e3c600",
+   "nombre": "Alberto Morales Hernandez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "e9248e75-f701-4a75-9298-e9d4d61b9dd2",
+   "nombre": "Diego Madriz Arce",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "69546b70-77b2-40d5-b4ad-5759518012a9",
+   "nombre": "Francinie Carvajal Madrigal",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "66a4c45e-b82f-40e3-baea-fc2eb442e788",
+   "nombre": "Carolina Fernandez Acuna",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "f02f4f30-1af3-4981-9ca6-4e92e30e4611",
+   "nombre": "Andres Ortega Saborio",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "549c7a3a-ad3f-4a8c-851e-88978cf6c934",
+   "nombre": "Adriana Ortiz Gattgens",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "77dbe904-a114-4166-856b-e9d94fcb51d7",
+   "nombre": "Carlos Oviedo Alvarez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "0a8480f8-e5f4-417b-9d13-987f722c95a6",
+   "nombre": "Andrea Oviedo Sánchez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "a8eb197f-f475-4966-8807-585e4b39caa8",
+   "nombre": "Melissa Sanchez Vergara",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "9a99c973-649c-445f-bb9c-95c034f2b1d6",
+   "nombre": "Andres Santana Mora",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "420b6bd8-d71d-4f1a-afa3-8527d2292750",
+   "nombre": "Veronica Estrada Ramirez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "7ea761e1-654a-4038-9130-7a7a121a4025",
+   "nombre": "Guillermo (Memo) Fonseca Vargas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "7ff5e6ab-22a2-40f2-b94f-f7b6d79b1846",
+   "nombre": "Gabriela Ortiz Valverde",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "18c003fe-b632-4365-a5ca-aaca14eccbd5",
+   "nombre": "Melania Pacheco Umaña",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "9d7ea804-734c-485b-ab89-1ca180d048a4",
+   "nombre": "Laura Peralta Pozuelo",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "66730514-b5c5-48a5-97ee-ae6f5084bba6",
+   "nombre": "Andrea Ramirez Rivera",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "7539423e-2f1e-4805-93b4-4718f1c963f3",
+   "nombre": "Cristina Saenz Vargas",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "dfcb74ab-ccef-4569-8996-0e6850f91291",
+   "nombre": "Kevin Barrantes Gamboa",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "6e53fb60-e8fb-4afc-9c83-166f8d25a99f",
+   "nombre": "Natalia Porras Zamora",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "48d549a9-930a-4735-9e03-78b69d29d3e7",
+   "nombre": "Jorge Rojas Hidalgo",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "2c04a86e-0166-4156-8b3b-d9477ab257c3",
+   "nombre": "Maria Jose Ruiz Fuentes",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "04904d35-fc8d-4e39-a4f8-f8e92e10bafa",
+   "nombre": "Daniela Sanchez Barrantes",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "9fa4c805-1af9-49ca-9e63-3002c7e3c727",
+   "nombre": "Josué Sandoval Castillo",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "3d222a9b-e310-4c29-9f09-ced4f0b6dd7f",
+   "nombre": "William Sibaja Oviedo",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ff80cb35-336e-4963-87e1-86bbea400e3a",
+   "nombre": "Lara Aguilar",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "d4f3face-d515-4650-9b3d-4f4962799b15",
+   "nombre": "Roxana Rojas Sanchez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "cfb4044f-6eb8-4c82-823c-2d888656d8cd",
+   "nombre": "Marcia Solano Solano",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "f637e95b-a30c-42c0-ade2-dc4abe1b00e3",
+   "nombre": "Cristoffel Van Laarhoven",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "761a4dd6-c540-463d-b43d-f40a2d190e34",
+   "nombre": "Ericka Knutsen Marin",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "7daac8a3-70ca-4ce0-ab96-0ff9a3320ead",
+   "nombre": "Catalina Umana",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "7c7307bb-7f83-4b69-aa2d-a7a9c5c111ca",
+   "nombre": "Meriam Soto Jimenez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "7c86f41a-8582-4720-9081-b77d8043a519",
+   "nombre": "Adriana Lizano",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "69383f03-ca15-4a65-84b6-26edb55f0bef",
+   "nombre": "Daniella Bresciani Gutiérrez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "95613383-3ab3-4f3d-8580-e909c321cdd5",
+   "nombre": "Lucia Cespedes Gutierrez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "7ae63f68-e2cd-4223-a419-c3a8fd89c0a5",
+   "nombre": "Adriana Villalobos Vargas",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "8a170046-3a49-41f0-a9e7-dfe7ce0e2268",
+   "nombre": "Giuliana Bresciani Gutierrez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "a53a5115-72c0-42b0-8291-257af9cb9e9a",
+   "nombre": "Juan Manuel Portuguez Solis",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "9278958a-6857-45bd-9935-b8bc07d0bd0e",
+   "nombre": "Seth Thomas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "b2523230-fb2a-4b3d-93a1-9b07f1c8cedc",
+   "nombre": "Laura Brenes Brenes",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ab314a70-9270-4b0e-8977-3d5a854d269b",
+   "nombre": "Josue Sanchez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "c1d8be9b-d9e7-4e05-af4e-2c97e33f5147",
+   "nombre": "Luis Benavides Rodriguez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "becbe248-1bcd-4c15-9cea-5f8011f0bc1c",
+   "nombre": "Kristel Camacho Vargas",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "c39afb44-f4ec-4d6f-9115-3a7a011dad9c",
+   "nombre": "Ana Paola Vindas Vargas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ca79d724-b371-4865-b55d-a474ba1d36b2",
+   "nombre": "Andrea Blanco Rojas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "deddd26e-a1b8-49ba-be70-2becc728938f",
+   "nombre": "Jorge Perera",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "ed1d951e-0d7a-43a3-b894-bcb25c12b6ce",
+   "nombre": "Andrey Umaña Vindas",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "e627d8d0-2bd5-4ff9-a03c-6a21f784f8d1",
+   "nombre": "Priscilla Venegas Herrera",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "ec11f40d-985c-40b8-ac63-e35aed652221",
+   "nombre": "Ana Victoria Piedra",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "fe3fe84e-bc6e-4817-832f-44a93e94140b",
+   "nombre": "Eduardo Gutierrez Carvajal",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "fd9a9f79-27ad-43c3-bdcc-e54fed2c6a31",
+   "nombre": "Andreina Mainieri",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "ff480f40-9381-410a-b1d7-1095aaab947c",
+   "nombre": "Mariliana Ulloa Solorzano",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "a6702a56-dc95-4ece-94d5-29c2d38861fc",
+   "nombre": "Eric Baizan Artavia",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "60e0d544-ebc1-4273-8e94-b185b4318c55",
+   "nombre": "Guido Chavarria Rojas",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "939b945c-553d-412b-a930-de00a9c7e480",
+   "nombre": "Jose Carlos Guerrero Gutierrez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "c6fb8c84-70f7-4c04-8fc8-1b20811a7f74",
+   "nombre": "Eric Arguello Ballestero",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "fc80462d-c8ca-4a8d-a574-977359f55efa",
+   "nombre": "Andrey Mora Rodriguez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "ccdfc699-f970-4695-8c9d-0d565676226d",
+   "nombre": "Alberto Murillo Zamora",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "6f2c9f28-1b88-4db7-8a8d-3f28a79a4512",
+   "nombre": "Karol Arce Hernandez",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "765efe2d-dc92-424d-87c2-6e65b4ccd991",
+   "nombre": "Marianela Hernandez Sanchez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "bed1a054-ff03-4f4a-a805-324687796381",
+   "nombre": "Emerson Ulloa Avila",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "59575d63-ef1b-4a0d-b9bc-2f7949a16bbb",
+   "nombre": "Alexander Badilla Guadamuz",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "f40376e6-1da9-4bd3-9de9-f7c23b4b89f8",
+   "nombre": "Yohana Montero Trejos",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "748e0146-d229-47cd-8f1c-e729fd930b04",
+   "nombre": "Leticia Obando",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "6fa0d828-499b-49dc-b8ec-59c47b187daa",
+   "nombre": "Juan Gabriel Arguedas Solis",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "44be824e-1a56-46c6-bf73-92f3ec01ad8b",
+   "nombre": "Kimberly Blanco Mendez",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "ed19147d-20d7-4321-92b1-b1af579ec662",
+   "nombre": "Ariana Fonseca Pizarro",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "5fd7b50c-1f76-4db5-8964-575632c9fa12",
+   "nombre": "Cristina Poveda Umana",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "b78fc44f-a872-4a8e-b057-df5964e0559e",
+   "nombre": "Guiselle Trejos Granados",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "94c0eaac-81fb-4591-b242-ee0994133c56",
+   "nombre": "Alonso (Tio) Araya Morales",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "135893ec-6e7a-44d5-9247-f48960254d8b",
+   "nombre": "Criss Cyrman Rodríguez",
+   "a": [
+    "asistencia"
+   ],
+   "justificacion": "No cumple: asistencia"
+  },
+  {
+   "member_id": "0309d3a9-9266-43e2-a0dc-e8b7839021d7",
+   "nombre": "Alonso Lopez Cajina",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "14dd9046-57a7-48b7-bc13-06713f385800",
+   "nombre": "Keylor Navas",
+   "a": [
+    "donacion",
+    "asistencia"
+   ],
+   "justificacion": "No cumple: donación y asistencia"
+  },
+  {
+   "member_id": "18075ea5-f652-4b88-814c-dffd29a060b2",
+   "nombre": "Harold Espinal",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  },
+  {
+   "member_id": "742622c2-739e-49b5-a88b-c3f6df807da7",
+   "nombre": "Eddy Gomez Rivera",
+   "a": [
+    "donacion"
+   ],
+   "justificacion": "No cumple: donación"
+  }
+ ]
+}

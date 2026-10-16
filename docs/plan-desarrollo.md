@@ -2841,9 +2841,14 @@ Tests: clúster agrupa bien (mismo plan+zona), umbral, cruce con dirigentes disp
 solo roles de estudios (403 al resto). tsc/lint/vitest.
 ```
 
-### [~] DIR-14 · Banderita de revisión automática por compromisos (pedido 2026-10-16)
+### [x] DIR-14 · Banderita de revisión automática por compromisos (pedido 2026-10-16) — ACTIVO
 
-**Estado 2026-10-16: construido y probado en staging; el cron NO está agendado.**
+**2026-10-16, ACTIVADO con el visto bueno de Floriana.** Primera corrida aplicada
+en prod a mano (172 banderitas: 50 donación, 60 asistencia, 62 ambas; respaldo en
+`docs/correcciones/2026-10-16-dir14-primera-corrida.json`). El cron queda agendado
+los lunes 11:30 UTC.
+
+**Estado anterior (construido y probado en staging; el cron NO estaba agendado).**
 Falta que coordinación de dirigentes apruebe la lista del ensayo. Para activarlo:
 agregar a `vercel.json` `{ "path": "/api/cron/dirigentes-compromisos", "schedule":
 "30 11 * * 1" }` y crear el check de Healthchecks (`HEALTHCHECK_URL_DIRIGENTES_COMPROMISOS`,
