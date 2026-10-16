@@ -25,6 +25,9 @@ import { TIPOS_DE_AUDIENCIA_DE_RECURSOS, type Restriccion } from '@/lib/audienci
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Recurso } from '@/lib/supabase/queries/resources'
+import { createClient } from '@/lib/supabase/client'
+import { BUCKET_DE_RECURSOS, TIPOS_DE_ARCHIVO, TAMANO_MAXIMO } from '@/lib/recursos/reglas'
+import type { TipoDeArchivo } from '@/lib/archivos/tipo-por-contenido'
 
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
@@ -35,6 +38,18 @@ function tamano(bytes: number): string {
 }
 
 const SIN_CATEGORIA = 'Sin categoría'
+
+/** La respuesta como JSON, o null si no lo es (un 413 de Vercel viene en texto). */
+async function leer(res: Response) {
+  return res.json().catch(() => null)
+}
+
+/** El tipo declarado del archivo. El servidor igual mira el contenido real. */
+function tipoDeArchivo(f: File): TipoDeArchivo | null {
+  const porNombre: Record<string, TipoDeArchivo> = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' }
+  const t = (TIPOS_DE_ARCHIVO as readonly string[]).includes(f.type) ? f.type as TipoDeArchivo : null
+  return t ?? porNombre[f.name.split('.').pop()?.toLowerCase() ?? ''] ?? null
+}
 
 export default function RecursosPage() {
   const toast = useToast()
@@ -291,13 +306,29 @@ function EditorDeRecurso({ recurso, categorias, onCerrar, onGuardado }: {
     try {
       let res: Response
       if (nuevo) {
-        const fd = new FormData()
-        fd.append('file', file!)
-        fd.append('title', title.trim())
-        fd.append('description', description.trim())
-        fd.append('category', category.trim())
-        if (audiencia) fd.append('audience', JSON.stringify(audiencia))
-        res = await fetch('/api/resources', { method: 'POST', body: fd })
+        // El archivo va DIRECTO a Storage: por la función de Vercel no pasa
+        // nada de más de 4,5 MB (así falló la primera subida real, 2026-10-16).
+        const tipo = tipoDeArchivo(file!)
+        if (!tipo) throw new Error('Solo se aceptan PDF e imágenes (PNG, JPG o WebP).')
+        if (file!.size > TAMANO_MAXIMO) throw new Error('El archivo supera los 15 MB.')
+        const permiso = await fetch('/api/resources/upload-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ size_bytes: file!.size, mime_type: tipo }),
+        })
+        const p = await leer(permiso)
+        if (!permiso.ok) throw new Error(p?.error ?? `No se pudo autorizar la subida (${permiso.status}).`)
+        const { error: eSubida } = await createClient().storage.from(BUCKET_DE_RECURSOS)
+          .uploadToSignedUrl(p.path, p.token, file!, { contentType: tipo })
+        if (eSubida) throw new Error(`No se pudo subir el archivo: ${eSubida.message}`)
+        res = await fetch('/api/resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: p.path, file_name: file!.name.slice(0, 200), title: title.trim(),
+            description: description.trim() || null, category: category.trim() || null, audience: audiencia,
+          }),
+        })
       } else {
         res = await fetch(`/api/resources/${recurso!.id}`, {
           method: 'PATCH',
@@ -305,8 +336,8 @@ function EditorDeRecurso({ recurso, categorias, onCerrar, onGuardado }: {
           body: JSON.stringify({ title: title.trim(), description: description.trim() || null, category: category.trim() || null, audience: audiencia }),
         })
       }
-      const d = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(d?.error ?? 'No se pudo guardar.')
+      const d = await leer(res)
+      if (!res.ok) throw new Error(d?.error ?? `No se pudo guardar (${res.status}).`)
       toast(nuevo ? 'Recurso subido' : 'Cambios guardados', 'success')
       await onGuardado()
     } catch (e) {

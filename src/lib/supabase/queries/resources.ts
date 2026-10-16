@@ -114,10 +114,31 @@ export async function pasaLaAudiencia(memberId: string, f: FilaDeRecurso): Promi
   return memberPassesRestriction(memberId, audienciaDeRecurso(f.audience))
 }
 
-export async function subirArchivo(path: string, bytes: ArrayBuffer, tipo: TipoDeArchivo): Promise<void> {
+/** Paso 1 de la subida: el token para que el navegador suba UN archivo a esta ruta. */
+export async function permisoDeSubida(path: string): Promise<string> {
   const supabase = createAdminClient()
-  const { error } = await supabase.storage.from(BUCKET_DE_RECURSOS).upload(path, bytes, { contentType: tipo, upsert: false })
-  if (error) throw error
+  const { data, error } = await supabase.storage.from(BUCKET_DE_RECURSOS).createSignedUploadUrl(path)
+  if (error || !data?.token) throw error ?? new Error('No se pudo autorizar la subida')
+  return data.token
+}
+
+/**
+ * Lo que de verdad quedó en el bucket: los primeros bytes (para reconocer el
+ * tipo por el contenido) y el tamaño. null si el archivo no está.
+ *
+ * Se piden SOLO los primeros 16 bytes con un Range sobre una URL firmada: para
+ * saber si es un PDF no hace falta bajar 15 MB a la función.
+ */
+export async function inspeccionarArchivo(path: string): Promise<{ inicio: Uint8Array; tamano: number } | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.storage.from(BUCKET_DE_RECURSOS).createSignedUrl(path, 60)
+  if (error || !data?.signedUrl) return null
+  const res = await fetch(data.signedUrl, { headers: { Range: 'bytes=0-15' } })
+  if (!res.ok) return null
+  const inicio = new Uint8Array(await res.arrayBuffer()).slice(0, 16)
+  // 206 trae el total en Content-Range («bytes 0-15/123456»); un 200 sin Range, en Content-Length.
+  const total = Number(res.headers.get('content-range')?.split('/')[1] ?? res.headers.get('content-length') ?? 0)
+  return { inicio, tamano: total }
 }
 
 export async function borrarArchivo(path: string): Promise<void> {

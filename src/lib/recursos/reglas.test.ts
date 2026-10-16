@@ -126,6 +126,35 @@ describe('REC-1 · el archivo', () => {
   })
 })
 
+describe('REC-1 · la subida no pasa por la función de Vercel', () => {
+  /**
+   * 2026-10-16: la primera versión mandaba el archivo por la función, y
+   * Vercel corta todo lo que pasa de 4,5 MB con un 413 antes de llegar a la
+   * app. El primer PDF real no se pudo subir.
+   */
+  const p = sinComentarios('src/app/(admin)/recursos/page.tsx')
+  const post = sinComentarios('src/app/api/resources/route.ts')
+  const permiso = sinComentarios('src/app/api/resources/upload-urls/route.ts')
+
+  it('el navegador sube directo a Storage con un permiso firmado', () => {
+    expect(p).toContain("fetch('/api/resources/upload-urls'")
+    expect(p).toContain('.uploadToSignedUrl(p.path, p.token, file!')
+    expect(p).not.toMatch(/new FormData\(\)/)
+  })
+
+  it('el permiso lo da solo quien gestiona, y la ruta la decide el servidor', () => {
+    expect(permiso).toContain("requireModuleView('recursos', { action: 'create' })")
+    expect(permiso).toContain('rutaDelArchivo(id,')
+    expect(permiso).toContain('.max(TAMANO_MAXIMO')
+  })
+
+  it('al registrar, el servidor mira el CONTENIDO real del archivo subido', () => {
+    expect(post).toContain('inspeccionarArchivo(d.path)')
+    expect(post).toContain('tipoPorContenido(archivo.inicio, TIPOS_DE_ARCHIVO)')
+    expect(post).not.toContain('formData(')
+  })
+})
+
 describe('REC-1 · la pantalla', () => {
   const p = sinComentarios('src/app/(admin)/recursos/page.tsx')
 
