@@ -125,6 +125,9 @@ Envíos masivos por email con audiencias, listas guardadas, plantillas, programa
 | Editor | Dos modos. El visual (TipTap) destruye HTML avanzado; la detección (`email-html.ts`) evalúa señales (tablas, `<style>`, clases, VML, estilos en línea no-básicos) y abre en **modo código** con confirmación explícita para forzar el visual. Plantillas de sistema siempre abren en código y son editables pero **no borrables** ni se les puede cambiar `system_key` |
 | Depende de | Miembros (audiencias/listas), formularios, email (infra) |
 
+### Demanda declarada (EST-29)
+`/estudios/demanda`: solicitudes abiertas (interés, reubicación, becas con grupo lleno) agrupadas por estudio × zona, con dirigentes disponibles, tendencia y XLSX; «Abrir grupo con estos datos» prellena el grupo y vincula las solicitudes (`study_requests.grupo_propuesto_id`). APIs `/api/studies/demand-clusters` (+`/export`). Solo STUDY_ADMIN_ROLES.
+
 ### Recursos (REC-1)
 Biblioteca de PDFs e infografías donde cada recurso define quién lo ve.
 

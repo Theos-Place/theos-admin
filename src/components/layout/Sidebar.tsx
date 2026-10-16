@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
+import { STUDY_ADMIN_ROLES, ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
-import { FolderOpen,
+import { MapPinned, FolderOpen,
   LayoutDashboard,
   Users,
   Calendar,
@@ -208,6 +208,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     : studiesBeyondOwn
     ? [
       ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
+      // EST-29 · Demanda declarada: el MISMO gate que su endpoint (STUDY_ADMIN_ROLES).
+      ...(userRoles.some(r => (STUDY_ADMIN_ROLES as string[]).includes(r))
+        ? [{ href: '/estudios/demanda', label: 'Demanda declarada', icon: MapPinned }] : []),
       // Bloques de capacitación: solo coordinador de estudios y admin.
       ...(userRoles.some(r => ['coordinador_estudios', 'admin'].includes(r))
         ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),

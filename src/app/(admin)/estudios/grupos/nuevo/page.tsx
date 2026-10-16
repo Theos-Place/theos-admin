@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { usePrecarga } from '@/hooks/usePrecarga'
+import { prellenadoDesdeDemanda } from '@/lib/studies/grupo-desde-demanda'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
@@ -52,7 +55,12 @@ type Step1 = {
   is_virtual: boolean
 }
 
+/** `useSearchParams` exige un Suspense arriba en el App Router (EST-29). */
 export default function NuevoGrupoPage() {
+  return <Suspense fallback={null}><NuevoGrupo /></Suspense>
+}
+
+function NuevoGrupo() {
   const toast = useToast()
   const { zoneSedes: SEDES, activeSedes: ACTIVE_SEDES } = useSedes()
   const { studyTypes } = useStudies('plans')
@@ -97,6 +105,26 @@ export default function NuevoGrupoPage() {
   const leaderHint = leaderStepHint(leaderStep)
   const [statusOverride, setStatusOverride] = useState<GroupStatus | ''>('')
   const [created, setCreated] = useState(false)
+
+  /**
+   * EST-29 · Si viene de la pantalla de demanda, llega prellenado: plan, zona,
+   * el día y la franja más pedidos, y las solicitudes del clúster, que quedan
+   * VINCULADAS al grupo al crearlo. Todo editable. Se vuelca UNA vez, cuando ya
+   * están cargados los estudios y las zonas.
+   */
+  const desdeDemanda = prellenadoDesdeDemanda(useSearchParams())
+  const [vinculadas, setVinculadas] = useState<number | null>(null)
+  usePrecarga(desdeDemanda && studyTypes.length && SEDES.length ? 'demanda' : null, () => {
+    const plan = studyTypes.find(t => t.code === desdeDemanda!.plan)
+    const zona = desdeDemanda!.zona ? SEDES.find(z => z.id === desdeDemanda!.zona) : undefined
+    setStep1(prev => ({
+      ...prev,
+      study_type_id: plan?.id ?? prev.study_type_id,
+      days: desdeDemanda!.dia ? [desdeDemanda!.dia] : prev.days,
+      time: desdeDemanda!.hora ?? prev.time,
+    }))
+    if (zona) setZoneSel({ kind: 'existing', value: zona.id, label: zona.name })
+  })
 
   function setS1<K extends keyof Step1>(key: K, value: Step1[K]) {
     setStep1(prev => ({ ...prev, [key]: value }))
@@ -203,6 +231,7 @@ export default function NuevoGrupoPage() {
           status: initialStatus,
           is_virtual: step1.is_virtual,
           enrollment_restrictions: restriction,
+          ...(desdeDemanda?.solicitudes.length ? { request_ids: desdeDemanda.solicitudes } : {}),
         }),
       })
       // El servidor explica POR QUÉ falló —dirigente no recomendado, dirigente
@@ -211,6 +240,8 @@ export default function NuevoGrupoPage() {
       // reportó como "el encargado de estudios no puede crear grupos"; el
       // permiso estaba bien, lo que faltaba era poder leer el motivo.
       if (!res.ok) throw new Error(await mensajeDeLaRespuesta(res, 'No se pudo crear el grupo.'))
+      const creado = await res.json().catch(() => null)
+      setVinculadas(typeof creado?.solicitudes_vinculadas === 'number' ? creado.solicitudes_vinculadas : null)
       setCreated(true)
     } catch (e) {
       console.error(e)
@@ -233,6 +264,11 @@ export default function NuevoGrupoPage() {
             El grupo quedó en estado «{STATUS_OPTIONS.find(o => o.value === initialStatus)?.label}».
             {pendingLeader && ' Se notificó al equipo de estudios para asignar dirigente.'}
           </p>
+          {vinculadas !== null && vinculadas > 0 && (
+            <p className="text-sm text-navy-light/80 font-body">
+              {vinculadas === 1 ? 'Quedó vinculada 1 solicitud' : `Quedaron vinculadas ${vinculadas} solicitudes`}. Avisales y resolvelas desde la cola de solicitudes, como siempre.
+            </p>
+          )}
           <Link
             href="/estudios/grupos"
             className="inline-block rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-5 py-2.5 text-sm text-white hover:bg-coral-deep transition-colors mt-2"

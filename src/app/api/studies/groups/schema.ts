@@ -52,4 +52,10 @@ export const groupWriteSchema = z
 // ruta resuelve a plan_id.
 export const groupCreateSchema = groupWriteSchema.extend({
   study_type_id: z.string().trim().min(1).optional(),
+  /**
+   * EST-29 · Las solicitudes del clúster de demanda desde el que se abrió el
+   * grupo. NO van a `study_groups`: la ruta las saca del input y las vincula
+   * (`study_requests.grupo_propuesto_id`) después de crear el grupo.
+   */
+  request_ids: z.array(z.string().uuid()).max(200).optional(),
 })

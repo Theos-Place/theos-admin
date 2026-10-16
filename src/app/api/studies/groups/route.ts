@@ -15,6 +15,7 @@ import { desglosarSeleccion, ESTADOS_VISIBLES, type EstadoVisible } from '@/lib/
 import { normalizeRestriction } from '@/lib/studies/group-restrictions'
 import { EN_REVISION_BLOCK_MESSAGE } from '@/lib/studies/leader-admin-status'
 import { reportarError } from '@/lib/observabilidad'
+import { vincularSolicitudesAGrupo } from '@/lib/supabase/queries/demanda-declarada'
 
 // Roles que pueden listar grupos: los que gestionan grupos (STUDY_ADMIN +
 // editor_grupos_estudio) + dirigentes, más los consumidores cross-módulo del
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       )
     }
-    const { study_type_id, enrollment_restrictions: rawRestriction, ...rest } = parsed.data
+    const { study_type_id, request_ids, enrollment_restrictions: rawRestriction, ...rest } = parsed.data
     // GRU-2: se normaliza ANTES de tocar la base — lo que quede fuera del set
     // permitido no se guarda, y una restricción vacía se guarda como NULL.
     const input = 'enrollment_restrictions' in parsed.data
@@ -164,7 +165,17 @@ export async function POST(req: NextRequest) {
       input.plan_id = planId
     }
     const group = await createGroup(input)
-    return NextResponse.json(group, { status: 201 })
+    // EST-29 · Vincular las solicitudes del clúster. Best-effort: el grupo ya
+    // existe, y una falla acá no puede hacer que se cree dos veces por reintento.
+    let solicitudes_vinculadas = 0
+    if (request_ids?.length) {
+      try {
+        solicitudes_vinculadas = await vincularSolicitudesAGrupo(request_ids, (group as { id: string }).id, auth.ctx.memberId)
+      } catch (e) {
+        reportarError('POST /api/studies/groups vincular solicitudes:', e)
+      }
+    }
+    return NextResponse.json({ ...group, solicitudes_vinculadas }, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('PREMAT_PAREJA: ')) {
       return NextResponse.json(

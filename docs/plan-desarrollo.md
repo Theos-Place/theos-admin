@@ -2790,7 +2790,22 @@ mandaría a Servidores la inscripción de un servidor a Sports o a un taller.
 
 ## Backlog post-Tilopay (apuntados 2026-10-16, sin detallar todavía)
 
-### [ ] EST-29 · Análisis de demanda desde las solicitudes de estudio
+### [x] EST-29 · Análisis de demanda desde las solicitudes de estudio — HECHO 2026-10-16 (staging)
+
+Pantalla **/estudios/demanda** («Demanda declarada»), para STUDY_ADMIN_ROLES
+(incluye coordinador_dirigentes, como el resto de estudios).
+- Censo de fuentes: «me interesa» (plan, días, franja; zona = NOMBRE de sede o
+  texto libre), reubicaciones (zonas en código) y becas «por modificar» (sin zona).
+  En prod 30 de 35 solicitudes se ubican en una zona; el resto va a «Otra zona».
+- Clústeres plan × zona (capacitaciones solo por plan), umbral 3+, cruce con
+  dirigentes disponibles (`disponibilidadEfectiva` + `qualified_study_codes` +
+  `zone_preference`), tendencia semanal de 12 semanas, export XLSX.
+- «Abrir grupo con estos datos» prellena Nuevo grupo y, al crearlo, vincula las
+  solicitudes (`study_requests.grupo_propuesto_id`, migración `20261016200000`).
+  No resuelve ni matricula: se avisa y se resuelve en la cola, como siempre.
+- Pendiente de producto: el formulario de «me interesa» no pide zona en código;
+  pedirla con la misma lista de zonas evitaría el «Otra zona».
+
 
 Convertir las solicitudes acumuladas en decisiones de apertura: "hay 4
 solicitudes de Nivel 1 en el este → abramos ahí".

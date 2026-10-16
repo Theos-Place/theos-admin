@@ -4874,6 +4874,7 @@ export type Database = {
       }
       study_requests: {
         Row: {
+          grupo_propuesto_id: string | null
           created_at: string | null
           current_group_id: string | null
           eligibility_note: string | null
@@ -4906,6 +4907,7 @@ export type Database = {
           was_eligible: boolean | null
         }
         Insert: {
+          grupo_propuesto_id?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null
@@ -4938,6 +4940,7 @@ export type Database = {
           was_eligible?: boolean | null
         }
         Update: {
+          grupo_propuesto_id?: string | null
           created_at?: string | null
           current_group_id?: string | null
           eligibility_note?: string | null
