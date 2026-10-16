@@ -66,7 +66,7 @@ export default function ReporteDiscipulosPage() {
     { name: 'Comprometido + Sirve', value: venn.comprometidoSirve },
     { name: 'Comprometido + Dona', value: venn.comprometidoDona },
     { name: 'Sirve + Dona', value: venn.sirveDona },
-    { name: 'Las 3 (DM)', value: venn.losTres },
+    { name: 'Las 3 (Discípulos)', value: venn.losTres },
   ]
   const milestoneData = milestones.map(m => ({ ...m, meses: Math.round((m.avgDays / 30.44) * 10) / 10 }))
 
@@ -75,7 +75,7 @@ export default function ReporteDiscipulosPage() {
       {/* Header */}
       <div>
         <VolverAReportes />
-        <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Discípulos Multiplicadores</h1>
+        <h1 className="mt-1 text-2xl text-navy font-display font-extrabold tracking-[-0.02em]">Discípulos</h1>
         <p className="mt-1 text-sm text-navy-light/80 font-body">
           Personas que cumplen los 3 criterios a la vez: son asistentes comprometidos, sirven y donan activamente.
         </p>
@@ -84,7 +84,7 @@ export default function ReporteDiscipulosPage() {
       {/* Hero + criterios */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <KpiCard
-          label="Discípulos Multiplicadores hoy"
+          label="Discípulos hoy"
           value={fmt(dm)}
           sublabel={`${dmPct}% de ${fmt(total)} personas`}
           highlight
@@ -113,7 +113,7 @@ export default function ReporteDiscipulosPage() {
         {/* Venn de traslape */}
         <ChartCard
           title="Traslape entre criterios"
-          subtitle="Cómo se combinan los 3 criterios. El centro son los Discípulos Multiplicadores."
+          subtitle="Cómo se combinan los 3 criterios. El centro son los Discípulos."
           height={300}
           footnote="Asistentes comprometidos = coral · Sirve = navy · Dona = teal. Los números son personas en cada región."
         >
@@ -171,7 +171,7 @@ export default function ReporteDiscipulosPage() {
         <div>
           <h3 className="text-sm font-bold text-navy font-display">Fotografía por cohorte</h3>
           <p className="text-[13px] text-navy-light/80 font-body mt-0.5">
-            Personas cuya primera charla fue en el año elegido, y cuántas son Discípulos Multiplicadores hoy.
+            Personas cuya primera charla fue en el año elegido, y cuántas son Discípulos hoy.
           </p>
         </div>
 
@@ -195,7 +195,7 @@ export default function ReporteDiscipulosPage() {
         {cohort && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <CohortStat label={`Nuevos en ${cohort.year}`} value={fmt(cohort.nuevos)} highlight />
-            <CohortStat label="Son DM hoy" value={fmt(cohort.dmHoy)} sub={cohort.nuevos > 0 ? `${Math.round((cohort.dmHoy / cohort.nuevos) * 1000) / 10}%` : undefined} />
+            <CohortStat label="Son discípulos hoy" value={fmt(cohort.dmHoy)} sub={cohort.nuevos > 0 ? `${Math.round((cohort.dmHoy / cohort.nuevos) * 1000) / 10}%` : undefined} />
             <CohortStat label="Asistentes comprometidos" value={fmt(cohort.comprometidos)} />
             <CohortStat label="Sirven" value={fmt(cohort.sirven)} />
             <CohortStat label="Donan" value={fmt(cohort.donan)} />
@@ -209,8 +209,8 @@ export default function ReporteDiscipulosPage() {
               <tr className="text-navy-light/80 text-left border-b border-outline">
                 <th className="py-2 pr-3 font-medium">Cohorte</th>
                 <th className="py-2 px-3 font-medium text-right">Nuevos</th>
-                <th className="py-2 px-3 font-medium text-right">DM hoy</th>
-                <th className="py-2 px-3 font-medium text-right">% DM</th>
+                <th className="py-2 px-3 font-medium text-right">Discípulos hoy</th>
+                <th className="py-2 px-3 font-medium text-right">% Discípulos</th>
               </tr>
             </thead>
             <tbody>

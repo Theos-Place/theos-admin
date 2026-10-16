@@ -1,4 +1,4 @@
-// Cálculo del reporte "Discípulos Multiplicadores" (DM). Módulo PURO (sin React
+// Cálculo del reporte "Discípulos" (DM). Módulo PURO (sin React
 // ni Supabase): toma las filas por-persona del RPC `get_dm_flags` y el agregado
 // de `get_dm_milestones`, y arma el payload de la card. Se ejecuta server-side.
 //

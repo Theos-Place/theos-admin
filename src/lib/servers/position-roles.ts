@@ -146,7 +146,7 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
    *
    * PAR-3 (2026-09-23) le daba al anfitrión de sede el rol `reportes` entero
    * para que viera la asistencia de su sede. El rol abre los SIETE reportes,
-   * así que de paso les abrió Discípulos Multiplicadores, Retención y
+   * así que de paso les abrió Discípulos, Retención y
    * Dirigentes — que nadie les había dado. Medido el 2026-09-30: 21 de las 29
    * personas con ese rol lo tenían por este mapeo.
    *

@@ -213,7 +213,7 @@ Asignación de roles. Fuente de verdad: `src/lib/auth/roles.ts`.
 | Depende de | Miembros, servidores (`position-role-sync`) |
 
 ### Reportes
-Asistencia a charlas, Discípulos Multiplicadores y retención, servidos desde caché (`report_snapshots`) recalculada cada noche.
+Asistencia a charlas, Discípulos y retención, servidos desde caché (`report_snapshots`) recalculada cada noche.
 
 | | |
 |---|---|

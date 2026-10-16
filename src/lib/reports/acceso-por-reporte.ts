@@ -61,7 +61,7 @@ export const ACCESO_POR_REPORTE: Record<SlugDeReporte, ReglaDeAcceso> = {
   'personas-nuevas': { roles: [], moduloAlcanza: true, porPuesto: true },
 
   /**
-   * Discípulos Multiplicadores y Retención: el módulo, como siempre.
+   * Discípulos y Retención: el módulo, como siempre.
    *
    * Los 21 anfitriones los ven HOY y los van a perder, y es a propósito
    * (confirmado por Floriana 2026-09-30): nunca se los dieron: les cayeron de

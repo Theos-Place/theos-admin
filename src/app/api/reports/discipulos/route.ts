@@ -3,7 +3,7 @@ import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { getDiscipulosReport } from '@/lib/supabase/queries/reports'
 import { reportarError } from '@/lib/observabilidad'
 
-// GET: reporte de Discípulos Multiplicadores (payload cacheado). El filtro de
+// GET: reporte de Discípulos (payload cacheado). El filtro de
 // cohorte lo resuelve el cliente sobre el payload — no hay parámetros.
 export async function GET() {
   try {

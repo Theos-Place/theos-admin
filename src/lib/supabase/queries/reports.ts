@@ -267,7 +267,7 @@ export async function getMemberGrowthReport(opts: { year?: number; sede?: string
   return buildGrowthReport(await loadAggRows<GrowthAggRow>(supabase, 'report_member_growth'), opts)
 }
 
-/** Discípulos Multiplicadores: payload final cacheado (fallback a cómputo en
+/** Discípulos: payload final cacheado (fallback a cómputo en
  *  vivo la primera vez). El filtro de cohorte lo hace el cliente sobre el payload. */
 export async function getDiscipulosReport(): Promise<DiscipulosReport> {
   const supabase = createAdminClient()

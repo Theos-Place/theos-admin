@@ -253,7 +253,7 @@ describe('Bienvenida del Comité Youth (2026-09-18)', () => {
  * repartirse solo.
  *
  * El motivo del cambio: el rol `reportes` abre los SIETE reportes, así que
- * dárselo por tener el puesto también le abrió Discípulos Multiplicadores,
+ * dárselo por tener el puesto también le abrió Discípulos,
  * Retención y Dirigentes, que nadie le había dado. Medido el 2026-09-30: 21
  * de las 29 personas con ese rol lo tenían por este mapeo.
  *

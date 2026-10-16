@@ -45,7 +45,7 @@ const REPORTS: ReportTile[] = [
   {
     slug: 'discipulos',
     href: '/reportes/discipulos',
-    title: 'Discípulos Multiplicadores',
+    title: 'Discípulos',
     description: 'Personas que asisten comprometidas, sirven y donan. Traslape de criterios, tiempo a hitos y foto por cohorte.',
     icon: Users,
     ready: true,
