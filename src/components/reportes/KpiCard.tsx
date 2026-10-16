@@ -56,7 +56,7 @@ export function KpiCard({
                 `title` nativo, que no aparece en móvil y es lento). */}
             <span
               role="tooltip"
-              className="pointer-events-none absolute left-0 right-0 top-full z-30 mt-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-[13px] font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-[var(--shadow-lg)] transition-opacity duration-150 font-body group-hover/info:opacity-100 group-focus-within/info:opacity-100"
+              className="pointer-events-none absolute left-0 right-0 top-full z-30 mt-1.5 rounded-xl bg-navy px-4 py-3 text-[13px] font-normal normal-case leading-relaxed tracking-normal text-white opacity-0 shadow-[var(--shadow-lg)] transition-opacity duration-150 font-body group-hover/info:opacity-100 group-focus-within/info:opacity-100"
             >
               {info}
             </span>

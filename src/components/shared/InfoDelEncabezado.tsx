@@ -99,7 +99,7 @@ export function InfoDelEncabezado({ texto }: Props) {
            * exactamente el mismo motivo (el `th` va en versalitas espaciadas);
            * este faltaba, y no se notó hasta que un texto necesitó envolver.
            */
-          className="pointer-events-none z-[80] overflow-auto whitespace-normal break-words rounded-lg bg-navy px-3 py-2 text-[13px] font-normal normal-case tracking-normal leading-snug text-white shadow-[var(--shadow-lg)] font-body"
+          className="pointer-events-none z-[80] overflow-auto whitespace-normal break-words rounded-xl bg-navy px-4 py-3 text-[13px] font-normal normal-case tracking-normal leading-relaxed text-white shadow-[var(--shadow-lg)] font-body"
         >
           {texto}
         </span>
