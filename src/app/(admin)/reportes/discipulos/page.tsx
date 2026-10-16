@@ -99,7 +99,7 @@ export default function ReporteDiscipulosPage() {
           label="Sirven"
           value={fmt(criteria.sirven.n)}
           sublabel={`${criteria.sirven.pct}% de la base`}
-          info="Registrados como voluntarios activos."
+          info="Registrados como servidores activos."
         />
         <KpiCard
           label="Donan activamente"
@@ -115,7 +115,7 @@ export default function ReporteDiscipulosPage() {
           title="Traslape entre criterios"
           subtitle="Cómo se combinan los 3 criterios. El centro son los Discípulos."
           height={300}
-          footnote="Asistentes comprometidos = coral · Registrados como servidores activos = navy · Dona = teal. Los números son personas en cada región."
+          footnote="Asistentes activos = coral · Servidores = navy · Donantes = teal. Los números son personas en cada región."
         >
           <VennDiagram venn={venn} />
         </ChartCard>
@@ -247,15 +247,12 @@ function VennDiagram({ venn }: { venn: DiscipulosReport['venn'] }) {
       {/* Etiquetas de conjunto */}
       <text x="70" y="38" textAnchor="middle" fontSize="12" fontWeight="700" fill={CORAL} fontFamily="var(--font-display)">
         <tspan x="70" dy="0">Asistentes</tspan>
-        <tspan x="70" dy="13">comprometidos</tspan>
+        <tspan x="70" dy="13">activos</tspan>
       </text>
       {/* Son quienes tienen un puesto de servicio ACTIVO registrado (`volunteers`
           con status active), no cualquiera que haya ayudado en algo. */}
-      <text x="252" y="26" textAnchor="middle" fontSize="12" fontWeight="700" fill={NAVY} fontFamily="var(--font-display)">
-        <tspan x="252" dy="0">Registrados como</tspan>
-        <tspan x="252" dy="13">servidores activos</tspan>
-      </text>
-      <text x="160" y="290" textAnchor="middle" fontSize="12" fontWeight="700" fill={TEAL} fontFamily="var(--font-display)">Dona</text>
+      <text x="250" y="45" textAnchor="middle" fontSize="12" fontWeight="700" fill={NAVY} fontFamily="var(--font-display)">Servidores</text>
+      <text x="160" y="290" textAnchor="middle" fontSize="12" fontWeight="700" fill={TEAL} fontFamily="var(--font-display)">Donantes</text>
       {/* Números por región */}
       <VennNum x={88} y={100} n={venn.soloComprometido} />
       <VennNum x={232} y={100} n={venn.soloSirve} />
