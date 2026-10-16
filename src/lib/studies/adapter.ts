@@ -251,6 +251,11 @@ export function toDomainStudyLeader(db: DbLeaderEnriched, ledGroups: StudyGroup[
     razon_no_disponible: db.razon_no_disponible ?? null,
     pausa_hasta: db.pausa_hasta ?? null,
     revision: db.revision ?? [],
+    // DIR-14 · Solo si VIENE: el servidor la quita a quien no puede ver la
+    // banderita, y un `[]` acá diría «no la tiene» en vez de «no te toca».
+    ...('revision_auto_faltan' in db
+      ? { revision_auto_faltan: db.revision_auto_faltan ?? [], revision_auto_desde: db.revision_auto_desde ?? null }
+      : {}),
     en_grupo_whatsapp: db.en_grupo_whatsapp ?? false,
     ...Object.fromEntries(
       (['nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general'] as const)

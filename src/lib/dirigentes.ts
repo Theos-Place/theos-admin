@@ -72,7 +72,11 @@ export type EstadoAdministrativoDelDirigente = {
   disponibilidad: string | null
   razon_no_disponible: string | null
   pausa_hasta: string | null
+  /** Las razones MANUALES. La automática va aparte, abajo. */
   revision: string[]
+  /** DIR-14 · La banderita automática por compromiso: qué le falta y desde cuándo. */
+  revision_auto_faltan?: string[]
+  revision_auto_desde?: string | null
   nota_revision?: string | null
   nota_cdeb?: string | null
   nota_decision_propia?: string | null

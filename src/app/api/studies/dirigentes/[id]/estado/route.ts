@@ -7,7 +7,7 @@ import { DIRIGENTES_ADMIN_ROLES } from '@/lib/auth/roles'
 import {
   motivoInvalido,
   ESTADOS_BASE, RAZONES_INACTIVO, DETALLES_NO_EJERCE, SITUACIONES_CDEB,
-  DISPONIBILIDADES, RAZONES_NO_DISPONIBLE, RAZONES_DE_REVISION,
+  DISPONIBILIDADES, RAZONES_NO_DISPONIBLE, RAZONES_DE_REVISION_MANUALES,
   type EstadoDelDirigente,
 } from '@/lib/leaders/estado-del-dirigente'
 import { puedeEscribirNotas, puedeVerBanderita } from '@/lib/leaders/notas-confidenciales'
@@ -34,7 +34,9 @@ const esquema = z.object({
   disponibilidad: z.enum(DISPONIBILIDADES).nullable().default(null),
   razon_no_disponible: z.enum(RAZONES_NO_DISPONIBLE).nullable().default(null),
   pausa_hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
-  revision: z.array(z.enum(RAZONES_DE_REVISION)).default([]),
+  // DIR-14 · Solo las MANUALES: «por compromiso» la pone el cron, y si se
+  // aceptara acá se guardaría en la lista manual y el cron ya no la quitaría.
+  revision: z.array(z.enum(RAZONES_DE_REVISION_MANUALES)).default([]),
   nota_revision: z.string().trim().max(2000).nullable().optional(),
   nota_cdeb: z.string().trim().max(2000).nullable().optional(),
   nota_decision_propia: z.string().trim().max(2000).nullable().optional(),

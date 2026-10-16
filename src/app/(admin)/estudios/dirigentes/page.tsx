@@ -9,6 +9,7 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { useAuth } from '@/hooks/useAuth'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { useSedes } from '@/lib/sedes'
+import { razonesVisibles } from '@/lib/leaders/revision-por-compromiso'
 import { useUrlFlag } from '@/hooks/useUrlFilter'
 import { LoadMoreFooter } from '@/components/shared/LoadMoreFooter'
 import { BulkActionBar } from '@/components/shared/BulkActionBar'
@@ -63,7 +64,9 @@ const paraFiltrar = (d: Dirigente): DirigenteFiltrable => ({
   disponibilidad: d.estado_admin?.disponibilidad ?? null,
   razon_no_disponible: d.estado_admin?.razon_no_disponible ?? null,
   razon_inactivo: d.estado_admin?.razon_inactivo ?? null,
-  revision: d.estado_admin?.revision ?? [],
+  // DIR-14 · Las manuales MÁS la automática: «Con banderita» y «Por
+  // compromiso» tienen que encontrar también a quien la puso el cron.
+  revision: razonesVisibles(d.estado_admin?.revision, d.estado_admin?.revision_auto_faltan),
   dirigiendo: d.estudios_activos.some(
     g => dirigeAhora([g.status]) && ocupaAlDirigente(g.plan_code)),
 })

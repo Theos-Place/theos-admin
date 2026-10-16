@@ -409,10 +409,11 @@ export async function getFilasDeJerarquiaDeDirigentes(): Promise<DirigenteParaRe
       razon_no_disponible: string | null
       razon_inactivo: string | null
       revision: string[] | null
+      revision_auto_faltan: string[] | null
       members: { first_name: string | null; last_name: string | null } | null
     }>((d, h) => supabase
       .from('study_leaders')
-      .select('member_id, estado_base, disponibilidad, razon_no_disponible, razon_inactivo, revision,'
+      .select('member_id, estado_base, disponibilidad, razon_no_disponible, razon_inactivo, revision, revision_auto_faltan,'
         + ' members!inner(first_name, last_name)')
       .order('member_id').range(d, h)),
     todasLasFilas<{
@@ -444,6 +445,7 @@ export async function getFilasDeJerarquiaDeDirigentes(): Promise<DirigenteParaRe
     razon_no_disponible: f.razon_no_disponible,
     razon_inactivo: f.razon_inactivo,
     revision: f.revision,
+    revision_auto_faltan: f.revision_auto_faltan,
     dirigiendo: ocupados.has(f.member_id),
   }))
 }

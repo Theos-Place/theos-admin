@@ -22,10 +22,12 @@ import { Button } from '@/components/shared/Button'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/shared/Toast'
 import { usePrecarga } from '@/hooks/usePrecarga'
+import { justificacion } from '@/lib/leaders/revision-por-compromiso'
+import { formatDateLong } from '@/lib/format'
 import {
   motivoInvalido, resumen,
   RAZONES_INACTIVO, DETALLES_NO_EJERCE, SITUACIONES_CDEB,
-  RAZONES_NO_DISPONIBLE, RAZONES_DE_REVISION,
+  RAZONES_NO_DISPONIBLE, RAZONES_DE_REVISION_MANUALES,
   ETIQUETA_RAZON_INACTIVO, ETIQUETA_DETALLE, ETIQUETA_CDEB,
   ETIQUETA_NO_DISPONIBLE, ETIQUETA_REVISION,
   type EstadoDelDirigente as Estado, type RazonDeRevision,
@@ -100,7 +102,7 @@ function Nota({ controlId, etiqueta, valor, onChange, obligatoria }: {
 }
 
 export function EstadoDelDirigenteForm({
-  memberId, activo, inicial, puedeNotas, puedeBanderita, dirigiendo = false, onGuardado,
+  memberId, activo, inicial, puedeNotas, puedeBanderita, dirigiendo = false, automatica, onGuardado,
 }: {
   memberId: string
   /**
@@ -126,6 +128,12 @@ export function EstadoDelDirigenteForm({
    * que hasta hoy decía «Disponible» de alguien con dos grupos en curso.
    */
   dirigiendo?: boolean
+  /**
+   * DIR-14 · La banderita «por compromiso» que pone el cron. Se MUESTRA y no
+   * se edita: la quita el mismo cron cuando la persona vuelve a cumplir. Va
+   * aparte del estado del formulario para que guardar no pueda tocarla.
+   */
+  automatica?: { faltan: readonly string[]; desde: string | null }
   onGuardado: () => void
 }) {
   const toast = useToast()
@@ -183,7 +191,9 @@ export function EstadoDelDirigenteForm({
           en_grupo_whatsapp: e.enGrupoWhatsapp,
           razon_no_disponible: e.razonNoDisponible,
           pausa_hasta: e.pausaHasta,
-          revision: e.revision,
+          // DIR-14 · Solo las manuales. Una «compromiso» guardada a mano de
+          // antes del cron se descarta acá: el endpoint ya no la acepta.
+          revision: e.revision.filter(r => (RAZONES_DE_REVISION_MANUALES as readonly string[]).includes(r)),
           ...(puedeNotas ? {
             nota_revision: e.notaRevision || null,
             nota_cdeb: e.notaCdeb || null,
@@ -395,8 +405,22 @@ export function EstadoDelDirigenteForm({
           <p className="text-[13px] text-navy-light/80 font-body">
             Convive con cualquier estado y no la ve el dirigente.
           </p>
+          {automatica && automatica.faltan.length > 0 && (
+            <div className="rounded-lg border border-coral/30 bg-surface-card px-3 py-2">
+              <p className="text-[13px] font-semibold text-navy font-body">
+                {ETIQUETA_REVISION.compromiso} · automática
+              </p>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                {justificacion(automatica.faltan)}
+                {automatica.desde && <> · desde el {formatDateLong(automatica.desde)}</>}
+              </p>
+              <p className="text-[13px] text-navy-light/80 font-body">
+                La pone y la quita sola la revisión semanal de compromisos.
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
-            {RAZONES_DE_REVISION.map(r => (
+            {RAZONES_DE_REVISION_MANUALES.map(r => (
               <label key={r} className="flex items-center gap-2 text-[13px] text-navy font-body">
                 <input
                   type="checkbox"

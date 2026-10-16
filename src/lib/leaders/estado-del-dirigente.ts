@@ -66,6 +66,18 @@ export const RAZONES_DE_REVISION = [
 ] as const
 export type RazonDeRevision = (typeof RAZONES_DE_REVISION)[number]
 
+/**
+ * DIR-14 · Las que se marcan A MANO. «Por compromiso» salió de esta lista: la
+ * pone y la quita el cron semanal (ver `revision-por-compromiso.ts`). Si se
+ * pudiera marcar también a mano, el cron no sabría si quitarla cuando la
+ * persona vuelve a cumplir.
+ */
+export const RAZONES_DE_REVISION_MANUALES = [
+  'testimonio',
+  'preparacion',
+  'no_confirmo_datos',
+] as const satisfies readonly RazonDeRevision[]
+
 /* ── Dónde se puede escribir una nota ────────────────────────────────── */
 
 /**

@@ -18,6 +18,7 @@ import {
   ETIQUETA_RAZON_INACTIVO, ETIQUETA_NO_DISPONIBLE, ETIQUETA_REVISION,
   type RazonInactivo, type RazonNoDisponible, type RazonDeRevision,
 } from '@/lib/leaders/estado-del-dirigente'
+import { razonesVisibles } from '@/lib/leaders/revision-por-compromiso'
 import { disponibilidadEfectiva } from '@/lib/leaders/esta-dirigiendo'
 
 /** Una fila de `study_leaders`, con lo que el reporte necesita. */
@@ -28,7 +29,10 @@ export type DirigenteParaReporte = {
   disponibilidad: string | null
   razon_no_disponible: string | null
   razon_inactivo: string | null
+  /** Las razones MANUALES. */
   revision: readonly string[] | null
+  /** DIR-14 · La automática por compromiso: qué le falta. Vacía = no la tiene. */
+  revision_auto_faltan?: readonly string[] | null
   /**
    * ¿Tiene un grupo en curso que la ocupe? NO se lee de `study_leaders`
    * —ahí no existe— sino de los grupos. Ver `esta-dirigiendo.ts`: 116 de
@@ -62,6 +66,10 @@ export type JerarquiaDeDirigentes = {
   porRazonNoDisponible: Celda[]
   /** Solo para quien puede ver banderitas; vacío para el resto. */
   enRevision: Celda | null
+  /** DIR-14 · De esas, cuántas puso el cron y cuántas alguien a mano. Se pisan:
+   *  una persona puede tener las dos, así que no suman `enRevision`. */
+  revisionAutomaticas: Celda | null
+  revisionManuales: Celda | null
   porRazonDeRevision: Celda[]
   /**
    * Los que pasaron a «dirigiendo» por derivación y no porque alguien lo
@@ -111,7 +119,9 @@ export function jerarquiaDeDirigentes(
   const activos = filas.filter(f => f.estado_base === 'activo')
   const disponibles = soloFilas(conEfectiva.filter(x => x.efectiva.disponibilidad === 'disponible'))
   const noDisponibles = soloFilas(conEfectiva.filter(x => x.efectiva.disponibilidad === 'no_disponible'))
-  const conRevision = filas.filter(f => (f.revision ?? []).length > 0)
+  // DIR-14 · Lo que se cuenta es lo VISIBLE: las manuales más la automática.
+  const visibles = (f: DirigenteParaReporte) => razonesVisibles(f.revision, f.revision_auto_faltan)
+  const conRevision = filas.filter(f => visibles(f).length > 0)
 
   return {
     total,
@@ -144,9 +154,15 @@ export function jerarquiaDeDirigentes(
     porRazonDeRevision: opts.verBanderitas
       ? RAZONES_DE_REVISION.map(r => celda(
         `revision:${r}`, ETIQUETA_REVISION[r as RazonDeRevision],
-        filas.filter(f => (f.revision ?? []).includes(r)), total,
+        filas.filter(f => visibles(f).includes(r)), total,
       ))
       : [],
+    revisionAutomaticas: opts.verBanderitas
+      ? celda('revision:automaticas', 'Automáticas', filas.filter(f => (f.revision_auto_faltan ?? []).length > 0), total)
+      : null,
+    revisionManuales: opts.verBanderitas
+      ? celda('revision:manuales', 'Manuales', filas.filter(f => (f.revision ?? []).length > 0), total)
+      : null,
     derivadosADirigiendo: celda(
       'derivados:dirigiendo', 'Derivados de su grupo activo',
       soloFilas(conEfectiva.filter(x => x.efectiva.derivada)), total,

@@ -93,5 +93,11 @@ export function estadoAdminDe(
   for (const k of ['nota_revision', 'nota_cdeb', 'nota_decision_propia', 'nota_pausa', 'nota_general'] as const) {
     if (k in fila) out[k] = s(k)
   }
+  // DIR-14 · La banderita automática, solo si VIAJÓ: a quien no puede verla
+  // el servidor le quita la llave, y un `[]` acá diría «no la tiene».
+  if ('revision_auto_faltan' in fila) {
+    out.revision_auto_faltan = Array.isArray(fila.revision_auto_faltan) ? (fila.revision_auto_faltan as string[]) : []
+    out.revision_auto_desde = s('revision_auto_desde')
+  }
   return out
 }

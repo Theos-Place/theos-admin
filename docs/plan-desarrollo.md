@@ -2692,3 +2692,170 @@ lista de conflictos/no-matcheados/contradicciones, y muestra de 10 filas aplicad
 Aplicar solo tras aprobación. Idempotente (segunda corrida = cero cambios). Audit_log.
 Sin correos. tsc/lint/vitest.
 ```
+
+## Fase 29 — Centro de recursos (decidido 2026-10-16)
+
+### [ ] REC-1 · Centro de recursos con acceso segmentado
+
+Decisión de arquitectura ya tomada (análisis Dropbox/SharePoint/admin hecho):
+va en el sistema admin con Supabase Storage. SharePoint queda para el trabajo
+interno editable del staff (actas, contabilidad); el admin distribuye recursos
+con control de acceso. Razón de fondo: la lista de voluntarios vive en el
+admin — ahí ya se autentican, los permisos son granulares, el patrón bucket
+privado + URL firmada ya funciona (comprobantes), y quien deja un puesto
+pierde acceso solo. Contenido: PDFs e infografías (sin video; si algún día hay
+video → Microsoft Stream con solo índice/permiso en el admin). Egress de
+Supabase no es problema con este contenido.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Centro de recursos (/recursos): documentos con acceso segmentado
+
+QUÉ: biblioteca de PDFs e infografías (manuales, registros, guías) donde cada recurso
+define QUIÉN lo ve, con dos ejes COMBINABLES de audiencia:
+  a) por ROL (ej. "todos los dirigentes"),
+  b) por PUESTO de servicio (ej. "encargados de logística").
+Ambos ejes existen — REUTILIZAR el sistema de condiciones/audiencias (GRU-2/FRM-5) y los
+roles automáticos por puesto; NO inventar un modelo de permisos nuevo.
+
+ALMACENAMIENTO — el patrón de comprobantes de pago, calcado:
+- Bucket PRIVADO en Supabase Storage (jamás público).
+- Descarga/vista SIEMPRE por URL firmada temporal, emitida por un endpoint que valida el
+  acceso server-side (la UI también filtra, pero el server es el candado).
+- Tipos permitidos: PDF e imágenes (validar MIME y tamaño razonable al subir).
+
+GESTIÓN:
+- Permiso NUEVO `recursos` (asignable/removible como todos — nunca hardcodeado a
+  personas) para quienes suben y organizan: subir, editar metadatos (título, descripción,
+  categoría/carpeta), definir la audiencia y retirar recursos.
+- Registro de quién subió qué y cuándo (audit_log + columna visible).
+- Borrado con el patrón global: DeleteConfirmModal + ActiveWarningModal; si el recurso
+  tiene audiencia activa, avisar antes.
+- Organización simple: categorías/carpetas + búsqueda por título.
+
+CONSUMO:
+- Página /recursos para cualquier usuario autenticado: ve ÚNICAMENTE los recursos cuya
+  audiencia lo incluye (cálculo server-side; lista vacía con mensaje amable si no hay
+  nada para su perfil). Abrir/descargar vía la URL firmada.
+- Entrada de menú visible solo si tiene al menos un recurso o el permiso de gestión.
+- Mobile 360px (criterio MAT-2) — los voluntarios lo van a abrir del teléfono.
+
+ESTILO: navy/coral/teal del sistema, componentes existentes.
+Tests: audiencia por rol, por puesto y combinada (incluido: pierde el puesto → deja de
+ver); URL firmada denegada server-side a quien no es audiencia (403 aunque adivine el
+id); solo `recursos` sube/borra; borrado con confirmación. tsc/lint/vitest.
+```
+
+## Backlog post-Tilopay (apuntados 2026-10-16, sin detallar todavía)
+
+### [ ] EST-29 · Análisis de demanda desde las solicitudes de estudio
+
+Convertir las solicitudes acumuladas en decisiones de apertura: "hay 4
+solicitudes de Nivel 1 en el este → abramos ahí".
+
+Prompt para Claude Code:
+
+```
+FEATURE · Demanda de estudios: análisis de solicitudes para decidir aperturas
+
+QUÉ ES: pantalla para el equipo de estudios (coordinador_estudios, direccion, admin —
+probablemente en /estudios, no en /reportes: es operativa, se actúa sobre ella) que
+agrupa TODAS las solicitudes de estudio ABIERTAS/NO RESUELTAS y encuentra los factores
+en común para armar grupos.
+
+FUENTES DE DEMANDA (censar primero cuáles existen y reportar):
+1. Solicitudes de estudio ("me interesa un estudio" — las que hoy viven en la cola de
+   solicitudes; el cron study-requests-expire las vence por bloque: las vigentes).
+2. Solicitudes de reubicación pendientes y en espera (REU-2) — también son demanda de
+   un grupo que no existe.
+3. Becas aprobadas/pendientes cuyo grupo se llenó (BEC-5 "por modificar") — demanda
+   insatisfecha.
+Si alguna fuente no guarda zona o franja, reportarlo (es un dato a empezar a pedir).
+
+LA VISTA — AGRUPACIÓN POR FACTORES COMUNES:
+1. CLÚSTERES: agrupar por plan de estudio × zona (× franja día/horario si el dato
+   existe), ordenados por tamaño: "Nivel 1 · Este de San José · 4 personas". Umbral
+   visual configurable (constante, default 3+) que destaca los clústeres accionables.
+2. Al abrir un clúster: la LISTA de solicitantes (nombre, fecha de solicitud, qué pidió
+   exactamente, contacto) — para confirmar que el grupo les sirve antes de abrirlo.
+3. CRUCE CON OFERTA: junto a cada clúster, los DIRIGENTES DISPONIBLES para ese estudio
+   en esa zona (la disponibilidad declarada de DIR-8/SRV-9 + formación — el mismo cruce
+   sede×formación de DIR-9: REUTILIZAR). El insight completo es "hay 4 pidiendo Nivel 1
+   en el este Y hay 2 dirigentes disponibles ahí" vs "hay demanda pero nadie que lo dé"
+   (eso alimenta a quién capacitar).
+4. CAPACITACIONES: misma agrupación por tipo (sin zona si son centralizadas): "8 piden
+   Hermenéutica" → decidir si se abre.
+5. TENDENCIA simple: solicitudes nuevas por semana por plan (¿la demanda de X crece?).
+
+ACCIÓN DESDE EL CLÚSTER:
+- Botón "Abrir grupo con estos datos" → crear grupo prellenado (plan, zona) por el flujo
+  normal de creación; al crearse, las solicitudes del clúster quedan VINCULADAS para
+  resolverlas con el mecanismo existente (resolveStudyRequest) cuando el grupo abra
+  matrícula — no auto-matricular: avisar/resolver como hoy.
+- Export XLSX del análisis.
+
+RENDIMIENTO: SQL agregado. Excluir [prueba] y solicitudes vencidas.
+Tests: clúster agrupa bien (mismo plan+zona), umbral, cruce con dirigentes disponibles,
+solo roles de estudios (403 al resto). tsc/lint/vitest.
+```
+
+### [~] DIR-14 · Banderita de revisión automática por compromisos (pedido 2026-10-16)
+
+**Estado 2026-10-16: construido y probado en staging; el cron NO está agendado.**
+Falta que coordinación de dirigentes apruebe la lista del ensayo. Para activarlo:
+agregar a `vercel.json` `{ "path": "/api/cron/dirigentes-compromisos", "schedule":
+"30 11 * * 1" }` y crear el check de Healthchecks (`HEALTHCHECK_URL_DIRIGENTES_COMPROMISOS`,
+grace 360).
+
+- Columnas propias `revision_auto_faltan` / `revision_auto_desde` (migración
+  `20261016120000`): la manual y la automática no se pueden pisar.
+- «Por compromiso» ya no se marca a mano (`RAZONES_DE_REVISION_MANUALES`).
+- Regla pura en `src/lib/leaders/revision-por-compromiso.ts`; donación por
+  `members.is_donor` (FIN-10) y asistencia por `getActiveAttendanceMemberIds()`.
+- Freno: si la asistencia llega vacía, no escribe y responde 503.
+- Ensayo en prod (2026-10-16, solo lectura): **172 de 333 activos** (50 solo
+  donación, 60 solo asistencia, 62 ambas; 38 ya tienen una manual). **84 de los
+  172 no están en el Comité de Dirigentes** aunque la ficha los diga activos:
+  conviene revisar ese estado antes de encender el cron.
+
+Pedido de la encargada de dirigentes: automatizar la banderita de "en
+revisión" cuando el dirigente no cumple compromisos, con su justificación, y
+quitarla sola cuando vuelve a cumplir. Corre semanal.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Cron semanal: banderita de revisión automática para dirigentes por compromisos
+
+CAMBIO SOBRE DIR-8: la banderita era 100% manual; ahora la razón "POR COMPROMISO" pasa a
+ser AUTOMÁTICA. Las demás razones (testimonio, preparación, no confirmó datos) siguen
+siendo manuales y EL CRON NO LAS TOCA — distinguir el origen de la banderita
+(manual/automática, el patrón source de siempre).
+
+REGLA (sobre dirigentes ACTIVOS):
+- Si NO cumple alguno de los compromisos según LAS DEFINICIONES CENTRALES existentes —
+  donante activo (FIN-10: mes actual + 3 meses, cónyuge cuenta) o asistencia activa (la
+  regla de siempre) — se le ACTIVA la banderita automática "por compromiso" con la
+  justificación generada: "No cumple: donación" / "No cumple: asistencia" / ambas.
+  REUTILIZAR las funciones de SRV-4/REP-7 que ya calculan esto — cero definiciones nuevas.
+- Si vuelve a cumplir TODO → la banderita automática se QUITA sola (las manuales jamás).
+- Si ya tiene banderita manual, la automática no la pisa ni la duplica: se suman como
+  razones visibles por separado.
+
+CRON SEMANAL (patrón vercel.json + CRON_SECRET + check de Healthchecks nuevo con su
+schedule correcto y grace — documentar en .env.example): recalcula todo el cuerpo de
+dirigentes activos. Idempotente. Cada puesta/quitada al audit_log con la justificación.
+SIN correos ni notificaciones al dirigente (la banderita es administrativa y confidencial
+— solo la ve quien ya la ve según DIR-8).
+
+VISIBILIDAD: en la ficha administrativa, la banderita automática muestra su justificación
+y desde cuándo; en el reporte de dirigentes (DIR-9), el conteo de banderitas distingue
+automáticas de manuales.
+
+DRY-RUN antes de activar el cron: lista de a quiénes se les pondría la banderita HOY con
+las reglas (van a ser varios — la encargada debe ver la lista antes de que aparezcan 80
+banderitas de golpe).
+Tests: no dona → banderita con justificación; vuelve a donar → se quita; manual no se
+toca; ambas razones listadas; idempotente. tsc/lint/vitest.
+```

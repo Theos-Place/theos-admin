@@ -158,6 +158,9 @@ export function JerarquiaDeDirigentes({ datos }: { datos: Payload }) {
               onAbrir={setAbierta}
               tono="alerta"
             />
+            {/* DIR-14 · De dónde salieron: el cron o alguien a mano. */}
+            {datos.revisionAutomaticas && <Numero celda={datos.revisionAutomaticas} onAbrir={setAbierta} tono="alerta" />}
+            {datos.revisionManuales && <Numero celda={datos.revisionManuales} onAbrir={setAbierta} tono="alerta" />}
             {datos.porRazonDeRevision.filter(c => c.total > 0).map(c => (
               <Numero key={c.clave} celda={c} onAbrir={setAbierta} tono="alerta" />
             ))}

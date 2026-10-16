@@ -174,6 +174,9 @@ export type StudyLeader = {
   razon_no_disponible?: string | null
   pausa_hasta?: string | null
   revision?: string[] | null
+  /** DIR-14 · Banderita automática por compromiso. */
+  revision_auto_faltan?: string[] | null
+  revision_auto_desde?: string | null
   nota_revision?: string | null
   nota_cdeb?: string | null
   nota_decision_propia?: string | null

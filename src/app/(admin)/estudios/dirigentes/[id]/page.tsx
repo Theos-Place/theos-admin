@@ -267,6 +267,7 @@ export default function DirigenteDetailPage({ params }: { params: Promise<{ id: 
                * personas con grupo figuraban disponibles.
                */
               dirigiendo={d.estudios_activos.some(g => ocupaAlDirigente(g.plan_code))}
+              automatica={{ faltan: d.estado_admin?.revision_auto_faltan ?? [], desde: d.estado_admin?.revision_auto_desde ?? null }}
               onGuardado={refetch}
             />
           </div>

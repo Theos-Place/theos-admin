@@ -73,6 +73,9 @@ export function sinNotasNiBanderita<T extends object>(
   if (puedeVerBanderita(roles)) return fila
   const limpio = { ...sinNotas(fila, roles) } as Record<string, unknown>
   delete limpio.revision
+  // DIR-14 · La automática es la misma banderita: dice lo mismo, con otro origen.
+  delete limpio.revision_auto_faltan
+  delete limpio.revision_auto_desde
   return limpio as T
 }
 

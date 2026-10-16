@@ -217,6 +217,9 @@ export type DbLeaderEnriched = {
   razon_no_disponible?: string | null
   pausa_hasta?: string | null
   revision?: string[] | null
+  /** DIR-14 · La banderita automática por compromiso. Vacía = no la tiene. */
+  revision_auto_faltan?: string[] | null
+  revision_auto_desde?: string | null
   nota_revision?: string | null
   nota_cdeb?: string | null
   nota_decision_propia?: string | null
@@ -784,6 +787,7 @@ export async function getStudyLeaders(): Promise<DbLeaderEnriched[]> {
       id, member_id, zone_preference, availability_status, is_active, qualified_study_codes, formation_study_codes,
       estado_base, razon_inactivo, detalle_no_ejerce, situacion_cdeb,
       disponibilidad, razon_no_disponible, pausa_hasta, revision,
+      revision_auto_faltan, revision_auto_desde,
       nota_revision, nota_cdeb, nota_decision_propia, nota_pausa, nota_general,
       en_grupo_whatsapp,
       member:members(first_name, last_name, is_donor),
