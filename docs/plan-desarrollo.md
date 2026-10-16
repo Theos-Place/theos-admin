@@ -1311,7 +1311,10 @@ sin cargar — una donación de ₡0 no es una donación.
 Domingos 392, Antares 227, y **250 sin sede** —los que no aparecen por ninguna
 charla, que son los que a Meli le interesan—.
 
-### [~] FIN-9 · «Congelar matrícula» por CRÉDITOS — CONSTRUIDO 2026-10-05 · FALTA LO DE QUICKBOOKS
+### [x] FIN-9 · «Congelar matrícula» por CRÉDITOS — CERRADO 2026-10-16
+
+**Decisión de Floriana (2026-10-16): sale de pendientes.** Lo construido está en
+producción; el manejo en QuickBooks se resuelve aparte, fuera del sistema.
 
 **Lo construido:** congelar una matrícula quita a la persona del grupo y le
 emite un CRÉDITO por lo que ya pagó, usable en estudios y actividades
