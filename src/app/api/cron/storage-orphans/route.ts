@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
     const reports = await Promise.all([
       reportBucket(supabase, 'payment-receipts', 'payments', 'receipt_path'),
       reportBucket(supabase, 'employee-docs', 'employee_documents', 'file_url'),
+      // REC-1 · el centro de recursos (bucket privado).
+      reportBucket(supabase, 'resources', 'resources', 'file_path'),
       // EVE-2: flyers de eventos. La columna guarda la URL PÚBLICA completa →
       // se extrae el path del bucket; valores que no son del bucket (histórico
       // base64 aún no migrado) se ignoran en vez de reportarse como rotos.

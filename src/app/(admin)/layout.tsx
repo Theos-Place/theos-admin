@@ -32,6 +32,7 @@ const pageTitles: Record<string, string> = {
   '/finanzas/pagos': 'Pagos',
   '/mis-pagos':      'Pagos pendientes',
   '/soporte':        'Soporte',
+  '/recursos':       'Recursos',
 }
 
 function getTitle(pathname: string): string {
@@ -56,6 +57,8 @@ const MODULE_BY_PREFIX: Record<string, string> = {
   '/reportes':       'reportes',
   '/accesos':        'accesos',
   '/soporte':        'soporte',
+  // REC-1 · '/recursos' NO va acá a propósito: lo abre cualquier sesión, y
+  // lo que cada uno ve lo decide la audiencia de cada recurso en el servidor.
 }
 
 /** Bloquea el contenido del módulo si el rol no tiene 'view' sobre él. */

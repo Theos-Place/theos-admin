@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
-import { normalizeRestriction, restrictionSummary } from '@/lib/audiencia/restriccion'
+import { normalizeRestriction, restrictionSummary, TIPOS_DE_AUDIENCIA_DE_RECURSOS } from '@/lib/audiencia/restriccion'
+import { hasModulePermission } from '@/lib/auth/roles'
 import { countMembersMatchingRestriction } from '@/lib/supabase/queries/audiencia'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -19,7 +20,11 @@ export async function POST(req: NextRequest) {
     const auth = await requireRoles()
     if (auth.res) return auth.res
     const body = await req.json().catch(() => null)
-    const restriction = normalizeRestriction((body as { restriction?: unknown } | null)?.restriction)
+    const b = body as { restriction?: unknown; contexto?: unknown } | null
+    // REC-1 · El rol del sistema entra SOLO para quien gestiona recursos: a
+    // cualquier otra sesión le diría cuántas personas tienen cada acceso.
+    const conRol = b?.contexto === 'recursos' && hasModulePermission(auth.ctx.roles, 'recursos', 'create')
+    const restriction = normalizeRestriction(b?.restriction, conRol ? TIPOS_DE_AUDIENCIA_DE_RECURSOS : undefined)
     const count = await countMembersMatchingRestriction(restriction)
     return NextResponse.json({ count, summary: restrictionSummary(restriction) })
   } catch (error) {

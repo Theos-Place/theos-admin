@@ -53,6 +53,8 @@ export interface AuthUser {
   abre_reportes_por_puesto?: boolean
   /** DIR-7 · Dirige o dirigió un grupo: abre «Los que no volvieron». */
   es_dirigente?: boolean
+  /** REC-1 · Tiene al menos un recurso publicado para su perfil (menú). */
+  tiene_recursos?: boolean
 }
 
 interface AuthState {

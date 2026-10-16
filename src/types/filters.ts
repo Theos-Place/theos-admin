@@ -76,6 +76,13 @@ export type FilterCondition = NegableCondition & (
   // afirmar; esto además permite negarlo (quién NO está sirviendo hoy).
   | { id: number; group: 'server'; type: 'server'; value: 'yes' | 'no' }
   | { id: number; group: 'marital'; type: 'marital'; value: string }
+  /**
+   * REC-1 · Tiene este ROL del sistema (`member_roles` activo), lo haya dado
+   * alguien a mano o un puesto (roles automáticos por puesto). Solo se ofrece
+   * donde se pide explícitamente con `allowedTypes`: en el padrón diría quién
+   * tiene qué acceso, y eso no es un filtro de personas.
+   */
+  | { id: number; group: 'role'; type: 'role'; role: string }
   | { id: number; group: 'account'; type: 'account'; value: 'none' | 'never_entered' | 'active' }
   | { id: number; group: 'created'; type: 'created'; from: string; to: string }
 )

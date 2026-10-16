@@ -8,6 +8,7 @@ export type RoleId =
   | 'colaborador_finanzas'
   /** SOP-1 · Resuelve los tiquetes de soporte que levanta la puerta. Rol automático por el puesto «Soporte Técnico» de TI. */
   | 'soporte_tecnico'
+  | 'recursos'
   | 'encargado_staff'
   | 'coordinador_servidores'
   | 'coordinador_estudios'

@@ -21,6 +21,7 @@ import { formatDate } from '@/lib/format'
 import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator, TicketStatus } from '@/types/filters'
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
+import { ROLES, BASE_ROLE } from '@/lib/auth/roles'
 
 const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
   event_registration: 'Inscripción eventos',
@@ -984,6 +985,10 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   const statusCond = conditions.find(c => c.type === 'status') as Extract<FilterCondition, { type: 'status' }> | undefined
   const ageCond    = conditions.find(c => c.type === 'age')    as Extract<FilterCondition, { type: 'age'    }> | undefined
   const maritalCond = conditions.find(c => c.type === 'marital') as Extract<FilterCondition, { type: 'marital' }> | undefined
+  // REC-1 · El rol se ofrece SOLO si quien monta el editor lo pide por nombre:
+  // sin `allowedTypes` (el padrón) no aparece, aunque `permite` diga que sí.
+  const permiteRol = !!allowedTypes?.includes('role')
+  const rolesElegidos = conditions.filter(c => c.type === 'role') as Extract<FilterCondition, { type: 'role' }>[]
   const accountCond = conditions.find(c => c.type === 'account') as Extract<FilterCondition, { type: 'account' }> | undefined
 
   const donorVal  = donorCond  ? donorCond.value  : 'any'
@@ -1038,6 +1043,22 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
           <option value="yes">Sí</option>
           <option value="no">No</option>
         </Sel>
+      </div>}
+
+      {permiteRol && <div>
+        <Label>Rol en el sistema</Label>
+        <Sel label="Rol en el sistema" value="any" onChange={v => {
+          // Cada rol es una condición aparte: para «este o este» se unen con O.
+          if (v !== 'any' && !rolesElegidos.some(c => c.role === v)) addCondition({ group: 'role', type: 'role', role: v })
+        }}>
+          <option value="any">Agregar un rol…</option>
+          {ROLES.filter(r => r.id !== BASE_ROLE).map(r => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </Sel>
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Incluye a quien lo tiene a mano y a quien lo recibe por su puesto.
+        </p>
       </div>}
 
       {permite('marital') && <div>
@@ -1142,7 +1163,8 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
     // lados: dos controles que escriben la misma condición se pisan y el
     // usuario no sabe cuál manda.
     leader:  (['leader', 'leader_state', 'leader_trained', 'leader_teaching', 'leader_available'] as const).filter(permite),
-    profile: (['donor', 'age', 'status', 'marital', 'account', 'created'] as const).filter(permite),
+    profile: [...(['donor', 'age', 'status', 'marital', 'account', 'created'] as const).filter(permite),
+      ...(allowedTypes?.includes('role') ? ['role' as const] : [])],
   }
   // Una pestaña sin condiciones permitidas no se pinta.
   const tabs = TABS.filter(t => conditionTypes[t.key].length > 0)

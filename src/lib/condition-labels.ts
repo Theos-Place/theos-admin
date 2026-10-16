@@ -5,6 +5,7 @@ import {
   ESTADO_DE_DIRIGENTE_LABEL, resumenDeSeleccion, type EstadoDeDirigente,
 } from '@/lib/members/filtros-de-dirigente'
 import { STUDY_GROUPS, type StudyGroupKey } from '@/lib/studies/study-grouping'
+import { ROLES } from '@/lib/auth/roles'
 
 /**
  * PAR-5b · El chip tiene que decir que la condición está NEGADA.
@@ -89,6 +90,7 @@ function etiquetaSinNegar(c: FilterCondition): string {
     case 'leader_available': return `Disponible para dar: ${resumenDeSeleccion(c.studies, etiquetaDeEstudio)}`
     case 'server': return c.value === 'yes' ? 'Sirve actualmente' : 'No sirve actualmente'
     case 'marital': return `Estado civil: ${c.value}`
+    case 'role': return `Rol: ${ROLES.find(r => r.id === c.role)?.name ?? c.role}`
     case 'account':
       return ACCOUNT_STATE_FILTER_LABEL[c.value]
     case 'created':

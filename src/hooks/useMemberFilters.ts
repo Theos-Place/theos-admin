@@ -103,6 +103,9 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       return c.value === 'yes' ? sirve : !sirve
     }
     case 'marital': return m.marital_status === c.value
+    // REC-1 · Los roles no viajan en el Member del padrón (y el padrón no
+    // ofrece esta condición): se resuelve solo en el servidor.
+    case 'role': return true
     case 'created': {
       const d = (m.created_at ?? '').slice(0, 10)
       if (!d) return false

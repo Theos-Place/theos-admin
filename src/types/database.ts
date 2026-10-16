@@ -3839,6 +3839,51 @@ export type Database = {
         }
         Relationships: []
       }
+      resources: {
+        Row: {
+          audience: Json | null
+          category: string | null
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string
+          size_bytes: number
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          audience?: Json | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type: string
+          size_bytes: number
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          audience?: Json | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       salary_changes: {
         Row: {
           approved_by: string | null

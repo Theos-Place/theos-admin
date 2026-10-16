@@ -2695,7 +2695,20 @@ Sin correos. tsc/lint/vitest.
 
 ## Fase 29 — Centro de recursos (decidido 2026-10-16)
 
-### [ ] REC-1 · Centro de recursos con acceso segmentado
+### [x] REC-1 · Centro de recursos con acceso segmentado — HECHO 2026-10-16 (en staging)
+
+- Tabla `resources` + bucket PRIVADO `resources` (15 MB, PDF/PNG/JPG/WebP) en la
+  migración `20261016150000`; rol nuevo `recursos` (asignable desde Accesos).
+- Audiencia = la `Restriccion` de GRU-2/FRM-5 MÁS una condición nueva `role`
+  (member_roles activo, incluye los roles por puesto). El rol entra SOLO en la
+  lista de recursos (`TIPOS_DE_AUDIENCIA_DE_RECURSOS`), no en grupos/formularios
+  ni en el padrón; el contador de audiencia lo acepta solo con `recursos:create`.
+- Sin audiencia = BORRADOR (solo gestión), no «para todos».
+- Abrir/descargar por `/api/resources/[id]/file`: valida la audiencia y redirige
+  a una URL firmada de 5 min; 403 a quien no es audiencia aunque adivine el id.
+- Probado en staging con cuentas [prueba]: por rol, por puesto, combinada (O),
+  pierde el puesto → deja de ver, sin permiso no sube/edita/borra, el ejecutable
+  disfrazado de PDF se rechaza, borrar quita el archivo del bucket.
 
 Decisión de arquitectura ya tomada (análisis Dropbox/SharePoint/admin hecho):
 va en el sistema admin con Supabase Storage. SharePoint queda para el trabajo

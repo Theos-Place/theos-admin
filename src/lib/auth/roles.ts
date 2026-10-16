@@ -377,6 +377,18 @@ export const ROLES: Role[] = [
     ],
   },
   {
+    id: 'recursos',
+    name: 'Gestión de recursos',
+    description: 'Sube y organiza los documentos del centro de recursos y decide quién ve cada uno',
+    color: '#2F5E61',
+    // REC-1 · Asignable y removible desde Accesos, como todos. NO da acceso a
+    // nada más: ver los recursos no pide este rol (cada uno dice su audiencia);
+    // esto es para subir, editar, definir la audiencia y retirar.
+    permissions: [
+      { module: 'recursos', actions: ['view', 'create', 'edit', 'delete'], scope: 'all' },
+    ],
+  },
+  {
     id: 'colaborador_finanzas',
     name: 'Adelanto de comida (sede)',
     description: 'Encargado Logística y Coordinador Comida: administran el adelanto de comida de su sede',

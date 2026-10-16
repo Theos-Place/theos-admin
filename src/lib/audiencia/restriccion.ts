@@ -42,6 +42,14 @@ export const ALLOWED_RESTRICTION_TYPES = [
 
 export type RestrictionType = (typeof ALLOWED_RESTRICTION_TYPES)[number]
 
+/**
+ * REC-1 · Los recursos suman el ROL del sistema a la lista. No entra en la
+ * general a propósito: un grupo o un formulario dirigido «a quien tiene el rol
+ * becas» no es una pregunta real, y en el padrón esa condición diría quién
+ * tiene qué acceso. Acá sí: «el manual de check-in, para encargado_eventos».
+ */
+export const TIPOS_DE_AUDIENCIA_DE_RECURSOS = [...ALLOWED_RESTRICTION_TYPES, 'role'] as const
+
 export function isAllowedRestrictionType(type: string): type is RestrictionType {
   return (ALLOWED_RESTRICTION_TYPES as readonly string[]).includes(type)
 }
@@ -65,7 +73,11 @@ export function hasRestriction(r: Restriccion | null | undefined): boolean {
  *  de condición y lo que no sea un tipo permitido, y tira los grupos/ops que
  *  quedaron apuntando a condiciones inexistentes. Devuelve null si no queda
  *  nada — el caller guarda NULL y el grupo vuelve a ser abierto. */
-export function normalizeRestriction(raw: unknown): Restriccion | null {
+export function normalizeRestriction(
+  raw: unknown,
+  /** Qué tipos acepta quien llama. Por defecto, la lista general. */
+  permitidos: readonly string[] = ALLOWED_RESTRICTION_TYPES,
+): Restriccion | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Partial<Restriccion>
   const conditions = (Array.isArray(o.conditions) ? o.conditions : [])
@@ -73,7 +85,7 @@ export function normalizeRestriction(raw: unknown): Restriccion | null {
       !!c && typeof c === 'object'
       && typeof (c as FilterCondition).id === 'number'
       && typeof (c as FilterCondition).type === 'string'
-      && isAllowedRestrictionType((c as FilterCondition).type))
+      && permitidos.includes((c as FilterCondition).type))
   if (conditions.length === 0) return null
 
   const condIds = new Set(conditions.map(c => c.id))

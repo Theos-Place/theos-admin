@@ -5,24 +5,10 @@ import {
 } from '@/lib/supabase/queries/employees'
 import type { DocumentType } from '@/types/employee'
 import { reportarError } from '@/lib/observabilidad'
+import { tipoPorContenido } from '@/lib/archivos/tipo-por-contenido'
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
 const DOC_TYPES = new Set<string>(['contrato', 'identificacion', 'seguro_social', 'otro'])
-
-/** Detecta el tipo real por los primeros bytes (no confiamos en el MIME del
- *  browser ni en la extensión). Mismos formatos que acepta la UI. */
-function sniffContentType(bytes: Uint8Array): string | null {
-  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-    return 'application/pdf' // %PDF
-  }
-  if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
-    return 'image/png'
-  }
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-    return 'image/jpeg'
-  }
-  return null
-}
 
 // POST: agrega un documento. Acepta multipart/form-data (file + doc_type + title)
 // para subir el archivo al bucket privado, o JSON (sin archivo) como respaldo.
@@ -50,7 +36,7 @@ export async function POST(
       }
 
       const bytes = await file.arrayBuffer()
-      const realType = sniffContentType(new Uint8Array(bytes))
+      const realType = tipoPorContenido(new Uint8Array(bytes))
       if (!realType) {
         return NextResponse.json({ error: 'Solo se aceptan PDF, JPG o PNG' }, { status: 400 })
       }

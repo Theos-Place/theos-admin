@@ -125,6 +125,18 @@ Envíos masivos por email con audiencias, listas guardadas, plantillas, programa
 | Editor | Dos modos. El visual (TipTap) destruye HTML avanzado; la detección (`email-html.ts`) evalúa señales (tablas, `<style>`, clases, VML, estilos en línea no-básicos) y abre en **modo código** con confirmación explícita para forzar el visual. Plantillas de sistema siempre abren en código y son editables pero **no borrables** ni se les puede cambiar `system_key` |
 | Depende de | Miembros (audiencias/listas), formularios, email (infra) |
 
+### Recursos (REC-1)
+Biblioteca de PDFs e infografías donde cada recurso define quién lo ve.
+
+| | |
+|---|---|
+| Páginas | `/recursos` (una sola: consumo para todos; gestión para el rol `recursos`) |
+| APIs | `/api/resources` (GET lo visible · `?gestion=1` todo · POST subir), `/api/resources/[id]` (PATCH, DELETE), `/api/resources/[id]/file` (valida audiencia → URL firmada 5 min) |
+| Tablas | `resources` (audience jsonb; null = borrador) · bucket privado `resources` |
+| Permisos | Ver: la AUDIENCIA de cada recurso (por rol y/o puesto, evaluada en vivo). Gestionar: rol **`recursos`** + admin |
+| Estado | Funcional en staging (2026-10-16) |
+| Depende de | Audiencias (GRU-2/FRM-5) + condición `role`, Storage |
+
 ### Formularios
 Builder con campos configurables, hero con flyer, respuestas, accesos puntuales y selección de comité.
 
@@ -315,7 +327,7 @@ Las **11** variables `HEALTHCHECK_URL_*` (una por cron) están en `.env.example`
 - **Plantillas de sistema** (BD con fallback hardcodeado, editables pero no borrables): `form_asignado`, `form_completado`, `matricula_estudiante`, `matricula_dirigente`, `inicio_capacitacion`, `beca_aprobada`, `beca_aprobada_parcial`, `beca_rechazada`, `cupon_asignado`, `encuesta_evento`, `retro_dirigente`, `retro_dirigente_resumen`, `solicitud_asignada`. `bienvenida` y `recuperacion_contrasena` las maneja Supabase Auth; la invitación de cuenta y el aviso de hitos de folletos son HTML directo en código (no plantilla).
 
 ### Storage
-6 buckets referenciados en código: `payment-receipts`, `employee-docs`, `email-images` y `email-media` (editor de correos, públicos), `event-flyers` (público) y `form-heroes` (público, 5 MB, MIME limitado). No se declaran en migraciones (dashboard de Supabase; documentados en el encabezado del baseline).
+7 buckets referenciados en código: `resources` (privado, REC-1, declarado en su migración), `payment-receipts`, `employee-docs`, `email-images` y `email-media` (editor de correos, públicos), `event-flyers` (público) y `form-heroes` (público, 5 MB, MIME limitado). No se declaran en migraciones (dashboard de Supabase; documentados en el encabezado del baseline).
 
 ### RLS
 Habilitado en todas las tablas (defensa en profundidad; la app opera vía service role). Helpers `private.has_any_role()`, `is_admin()`, `is_own_member()`. `vacancies` con SELECT público a propósito; `report_snapshots` deny-all.
@@ -362,6 +374,7 @@ Fuente: `src/lib/auth/roles.ts` (constante `ROLES`, **20 roles**; el CHECK de `m
 | `encargado_eventos` | Eventos: ver/editar/exportar (check-in, cobro on-site, reportes del evento). Puro → aterriza en /eventos/checkin |
 | `finanzas` | Finanzas completo + miembros (ver) + revisión de pagos + becas |
 | `direccion` | Casi todo con crear/editar/exportar, **sin delete y sin el módulo accesos** (tampoco ve la selección de comité EST-10 ni la configuración de comunicaciones) |
+| `recursos` | Centro de recursos: subir, editar, definir audiencia y retirar. No da acceso a nada más |
 | `admin` | Todo |
 
 Permisos fuera del catálogo de roles: `event_managers` (gestionar UN evento) y `form_access_grants` (respuestas de UN formulario) — accesos puntuales por entidad, no roles.

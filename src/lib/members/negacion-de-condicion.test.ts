@@ -84,7 +84,8 @@ describe('el supuesto en el que se apoya la negación', () => {
     // `leader_available` tienen un solo push cada uno, y `leader_teaching`
     // tiene dos pero en ramas excluyentes (la de «cualquier estudio» hace
     // `break` antes de llegar a la otra). El supuesto sigue en pie.
-    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(24)
+    // 24 → 25 con REC-1 (2026-10-16): `role` aporta UN set, en su propia rama.
+    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(25)
   })
 
   it('el resolver usa el helper y no una copia a mano', () => {

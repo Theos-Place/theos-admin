@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente, esEmpleado,
+      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente, esEmpleado, tieneRecursos,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -191,6 +191,17 @@ export async function GET() {
       admin.from('employees').select('id')
         .eq('member_id', member.id).is('end_date', null).limit(1)
         .then(r => (r.data ?? []).length > 0, () => false),
+      // REC-1 · ¿Tiene al menos un recurso para su perfil? Decide si se pinta
+      // «Recursos» en el menú. El candado de verdad es el endpoint del archivo.
+      (async (): Promise<boolean> => {
+        try {
+          const { recursosVisiblesPara } = await import('@/lib/supabase/queries/resources')
+          return (await recursosVisiblesPara(member.id)).length > 0
+        } catch (e) {
+          console.warn('auth/me: recursos visibles:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
     ])
 
     // Regla de negocio: todo usuario autenticado con member enlazado es 'miembro'
@@ -222,6 +233,7 @@ export async function GET() {
         abre_mi_comite: abreMiComite,
         abre_reportes_por_puesto: abreReportes,
         es_dirigente: esDirigente,
+        tiene_recursos: tieneRecursos,
       },
     })
   } catch (error) {

@@ -36,10 +36,19 @@ type Props = {
   explicacion: React.ReactNode
   /** Qué pasa si la restricción no alcanza a nadie. */
   avisoNadie: string
+  /**
+   * REC-1 · Qué condiciones se ofrecen. Por defecto, la lista general. Los
+   * recursos pasan la suya, que suma el rol del sistema; el contador del
+   * servidor la acepta solo de quien gestiona recursos.
+   */
+  tipos?: readonly FilterCondition['type'][]
+  /** Para el contador: con 'recursos' el servidor acepta también el rol. */
+  contexto?: 'recursos'
 }
 
 export function RestriccionDeAudiencia({
   value, onChange, defaultOpen, titulo, sinRestriccion, explicacion, avisoNadie,
+  tipos = ALLOWED_RESTRICTION_TYPES, contexto,
 }: Props) {
   const [open, setOpen] = useState(!!defaultOpen)
   const [count, setCount] = useState<number | null>(null)
@@ -74,7 +83,7 @@ export function RestriccionDeAudiencia({
       fetch('/api/audience/count', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restriction: value }),
+        body: JSON.stringify({ restriction: value, contexto }),
       })
         .then(r => (r.ok ? r.json() : null))
         .then(d => { if (vivo) setCount(typeof d?.count === 'number' ? d.count : null) })
@@ -82,7 +91,7 @@ export function RestriccionDeAudiencia({
         .finally(() => { if (vivo) setCounting(false) })
     }, 400)
     return () => { vivo = false; clearTimeout(t) }
-  }, [value])
+  }, [value, contexto])
 
   const resumen = restrictionSummary(value)
 
@@ -111,7 +120,7 @@ export function RestriccionDeAudiencia({
             conditions={conditions}
             addCondition={addCondition}
             removeCondition={removeCondition}
-            allowedTypes={ALLOWED_RESTRICTION_TYPES}
+            allowedTypes={tipos}
           />
 
           {hasRestriction(value) && (

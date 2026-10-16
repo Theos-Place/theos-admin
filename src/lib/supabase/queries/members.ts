@@ -779,6 +779,14 @@ export async function resolveAdvancedConditions(
         else res.exclude.push(set)
         break
       }
+      case 'role': {
+        // REC-1 · Quien tiene el rol ACTIVO, puesto a mano o por un puesto
+        // (los roles por puesto también viven en member_roles).
+        res.include.push(await pagedIds(
+          q => q.eq('role', c.role).eq('is_active', true), 'member_roles', 'member_id', 'member_id', scopeIds,
+        ))
+        break
+      }
       case 'marital': {
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id', scopeIds))
         break

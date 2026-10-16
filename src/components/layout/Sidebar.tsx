@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
-import {
+import { FolderOpen,
   LayoutDashboard,
   Users,
   Calendar,
@@ -353,6 +353,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },
     // SOP-1 · la cola de soporte: solo quien tiene el módulo (soporte_tecnico, admin).
     { href: '/soporte',        label: 'Soporte',        icon: LifeBuoy,        subs: [],                 module: 'soporte' },
+    // REC-1 · el centro de recursos: quien gestiona, o quien tiene al menos
+    // uno publicado para su perfil (lo calcula /api/auth/me).
+    { href: '/recursos',       label: 'Recursos',       icon: FolderOpen,      subs: [],                 module: 'recursos' },
     ...(formsNav === 'top_level'
       ? [{ href: '/formularios', label: 'Formularios', icon: FileText, subs: [], module: null } as NavModule]
       : []),
@@ -393,6 +396,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // Eventos: visible para cualquier autenticado (auto-inscripción), aunque
     // no tenga el módulo de gestión.
     if (m.href === '/eventos') return true
+    // REC-1 · No alcanza con `view`: solo_lectura lo tiene sobre todo y vería
+    // una lista vacía. Gestión, o algo publicado para esta persona.
+    if (m.href === '/recursos') return can('recursos', 'create') || user?.tiene_recursos === true
     return can(m.module, 'view')
   })
 
