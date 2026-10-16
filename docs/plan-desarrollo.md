@@ -2768,7 +2768,11 @@ ver); URL firmada denegada server-side a quien no es audiencia (403 aunque adivi
 id); solo `recursos` sube/borra; borrado con confirmación. tsc/lint/vitest.
 ```
 
-### [ ] FIN-REP · Comité «Servidores» en el reporte de finanzas — PROPUESTA 2026-10-16
+### [x] FIN-REP · Comité «Servidores» en el reporte de finanzas — DESCARTADO 2026-10-16
+
+**Decisión de Floriana (2026-10-16): se deja como está.** La «Actividad
+Servidores» sigue como tipo `taller` y sus pagos salen en «Eventos · Taller».
+No se crea el tipo ni se agrega el comité. Lo de abajo queda como registro.
 
 **Definición propuesta:** un pago es del comité Servidores si es de un evento
 de tipo «Actividad de Servidores». O sea: se agrega ese tipo al catálogo
@@ -2779,8 +2783,7 @@ pasa a él. El reporte agrupa por tipo de evento, así que aparece solo como
 
 Lo que NO es la definición, a propósito: «lo que paga un servidor». Eso
 mandaría a Servidores la inscripción de un servidor a Sports o a un taller.
-Falta el visto bueno de Floriana para cambiar el tipo del evento real (también
-cambia cómo se ve esa asistencia en filtros y reportes por tipo).
+
 
 ## Backlog post-Tilopay (apuntados 2026-10-16, sin detallar todavía)
 
