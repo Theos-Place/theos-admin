@@ -11,7 +11,15 @@
 
 ## Fase 13 — Cola nueva (pedida 2026-09-10)
 
-### [~] DAT-5 · Grupos finalizados con gente sin resultado — REENCUADRADO 2026-09-28
+### [x] DAT-5 · Grupos finalizados con gente sin resultado — CERRADO 2026-10-16
+
+**Verificado en prod el 2026-10-16:** ninguna inscripción de un grupo cerrado
+desde dic-2025 sigue en `en_revision`; las 10 personas colgadas ya tienen
+resultado (26 inscripciones pasaron de `en_revision` a su desenlace el
+2026-10-15). Quedan 423 `en_revision` HISTÓRICAS (133 grupos, 2014–nov 2025),
+que no son de este ítem: vienen del histórico y no hay dirigente a quién
+preguntarle. Si algún día se quieren cerrar, es una decisión aparte.
+
 
 **LA PREMISA DEL ÍTEM ESTABA CORRIDA, y medirla de nuevo lo mostró.** Decía
 que 11.420 personas quedaron «sin nota numérica Y sin la etiqueta
@@ -2759,6 +2767,20 @@ Tests: audiencia por rol, por puesto y combinada (incluido: pierde el puesto →
 ver); URL firmada denegada server-side a quien no es audiencia (403 aunque adivine el
 id); solo `recursos` sube/borra; borrado con confirmación. tsc/lint/vitest.
 ```
+
+### [ ] FIN-REP · Comité «Servidores» en el reporte de finanzas — PROPUESTA 2026-10-16
+
+**Definición propuesta:** un pago es del comité Servidores si es de un evento
+de tipo «Actividad de Servidores». O sea: se agrega ese tipo al catálogo
+(`event_types`) y la «Actividad Servidores» del 10-oct, hoy tipo `taller`, se
+pasa a él. El reporte agrupa por tipo de evento, así que aparece solo como
+«Eventos · Actividad de Servidores», sin código. Hoy esos 90 pagos salen como
+«Eventos · Taller» (los otros 3 talleres no tienen pagos).
+
+Lo que NO es la definición, a propósito: «lo que paga un servidor». Eso
+mandaría a Servidores la inscripción de un servidor a Sports o a un taller.
+Falta el visto bueno de Floriana para cambiar el tipo del evento real (también
+cambia cómo se ve esa asistencia en filtros y reportes por tipo).
 
 ## Backlog post-Tilopay (apuntados 2026-10-16, sin detallar todavía)
 

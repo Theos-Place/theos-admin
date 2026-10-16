@@ -80,3 +80,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
+
+/**
+ * Vercel invoca los crons con GET. Sin esto el endpoint contestaba 405 y el
+ * cron NUNCA corrió en producción desde que se creó (encontrado el 2026-10-16
+ * revisando los Healthchecks). Fijado por `crons-agendados.test.ts`.
+ */
+export const GET = POST

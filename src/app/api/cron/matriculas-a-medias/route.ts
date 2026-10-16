@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { avisarMatriculasApartadas } from '@/lib/supabase/queries/aviso-matricula-apartada'
 import { reportarError } from '@/lib/observabilidad'
+import { pingHealthcheck } from '@/lib/health'
 
 /**
  * CRON · MAT-4 · Avisa a quien dejó la matrícula a medias, el mismo día.
@@ -38,9 +39,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ dry_run: true, avisaria: r.detalle })
     }
     const r = await avisarMatriculasApartadas()
-    // SIN healthcheck a propósito: habría que darlo de alta en el servicio
-    // externo, y uno sin configurar manda falsos DOWN — el ruido que ya dio
-    // LEADER_ABSENCE. Se agrega el día que se cree el monitor.
+    // El monitor se da de alta junto con este cambio (2026-10-16). Sin la
+    // variable, el ping solo deja un aviso en el log: el cron no falla.
+    await pingHealthcheck('HEALTHCHECK_URL_MATRICULAS_A_MEDIAS')
     return NextResponse.json({ avisos_enviados: r.avisados, detalle: r.detalle })
   } catch (error) {
     reportarError('POST /api/cron/matriculas-a-medias:', error)

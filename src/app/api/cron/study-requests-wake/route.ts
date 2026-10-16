@@ -134,3 +134,10 @@ async function avisarCoordinacion(
   if (error) { console.warn('study-requests-wake: aviso falló:', error.message); return 0 }
   return dest.length
 }
+
+/**
+ * Vercel invoca los crons con GET. Sin esto el endpoint contestaba 405 y el
+ * cron NUNCA corrió en producción desde que se creó (encontrado el 2026-10-16
+ * revisando los Healthchecks). Fijado por `crons-agendados.test.ts`.
+ */
+export const GET = POST
