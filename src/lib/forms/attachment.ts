@@ -5,8 +5,18 @@
 
 export const FORM_UPLOADS_BUCKET = 'form-uploads'
 
-/** El nombre que genera la subida: <uuid>.<ext>, sin carpetas. */
-const PATH_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/i
+/**
+ * Los nombres que generan las DOS subidas:
+ *  · con sesión (`/api/forms/upload-attachment`): `<uuid>.<ext>`;
+ *  · formulario público (`/api/public/forms/[id]/upload-attachment`):
+ *    `publico/<uuid del formulario>/<uuid>.<ext>`.
+ *
+ * La segunda no estaba acá (2026-10-19): el comprobante de las inscripciones a
+ * Matrimonios salía como el path pelado y no se podía abrir. Sigue siendo una
+ * forma EXACTA, con la única carpeta que existe.
+ */
+const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+const PATH_RE = new RegExp(`^(?:publico/${UUID}/)?${UUID}\\.(jpg|png|webp)$`, 'i')
 
 /**
  * ¿Es un path de adjunto y nada más?

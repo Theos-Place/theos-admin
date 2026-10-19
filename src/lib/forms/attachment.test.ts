@@ -34,3 +34,20 @@ describe('urlDeAdjunto', () => {
     expect(urlDeAdjunto('a.webp', 'https://x.test/')).toContain('https://x.test/api/')
   })
 })
+
+describe('adjuntos de formularios PÚBLICOS (2026-10-19)', () => {
+  // El comprobante de Matrimonios salía como el path pelado: la subida pública
+  // guarda en `publico/<formulario>/`, y la regla solo aceptaba el nombre suelto.
+  it('acepta la carpeta publico/<uuid>/', () => {
+    expect(esPathDeAdjunto('publico/648daa3b-6af1-4df4-be69-ab9cd8b7848c/457fef66-da60-4312-b769-899d62604398.jpg')).toBe(true)
+  })
+  it('y nada más: ni otra carpeta, ni subir de nivel, ni un nombre que no sea uuid', () => {
+    expect(esPathDeAdjunto('otra/648daa3b-6af1-4df4-be69-ab9cd8b7848c/457fef66-da60-4312-b769-899d62604398.jpg')).toBe(false)
+    expect(esPathDeAdjunto('publico/../457fef66-da60-4312-b769-899d62604398.jpg')).toBe(false)
+    expect(esPathDeAdjunto('publico/648daa3b-6af1-4df4-be69-ab9cd8b7848c/foto.jpg')).toBe(false)
+  })
+  it('la subida pública escribe justo esa forma', async () => {
+    const { readFileSync } = await import('node:fs')
+    expect(readFileSync('src/app/api/public/forms/[id]/upload-attachment/route.ts', 'utf8')).toContain('const path = `publico/${id}/${crypto.randomUUID()}.${EXT[file.type]}`')
+  })
+})
