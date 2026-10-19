@@ -63,8 +63,8 @@ describe('el cableado', () => {
   })
 
   it('deja la fila completa en la auditoría', () => {
-    expect(ruta).toContain("action: 'DELETE', entity_type: 'payments'")
-    expect(ruta).toContain('old_data: f as Json')
+    expect(ruta).toContain("actorUserId: auth.ctx.userId, action: 'DELETE', entityType: 'payments'")
+    expect(ruta).toContain('oldData: f,')
   })
 
   it('el aviso aparece al confirmar el cambio y borra después de guardar', () => {

@@ -422,6 +422,26 @@ export async function autoEnrollApprovedToNextLevel(
     .eq('cubre_bloque', true)
   const yaPagaronElPar = new Set(
     ((cubren ?? []) as Array<{ member_id: string }>).map(r => r.member_id))
+
+  /**
+   * PAQUETES DE NIVELES EN LEGACY (2026-10-19). Quien pagó varios niveles de
+   * una vez (Daniela Seas: ₡13.000 por N2+N3+N4) los tiene anotados en
+   * `niveles_prepagados` de la matrícula ORIGEN. Si el nivel que sigue está
+   * ahí, no se le cobra, y la lista viaja a la matrícula nueva sin ese nivel.
+   * Solo en legacy: en bloques la regla es `cubre_bloque`.
+   */
+  const prepagados = new Map<string, string[]>()
+  if (modalidad === 'legacy') {
+    const { data: pre } = await supabase
+      .from('study_enrollments')
+      .select('member_id, niveles_prepagados')
+      .eq('group_id', sourceGroupId)
+      .in('member_id', approvedMemberIds)
+    for (const r of (pre ?? []) as unknown as Array<{ member_id: string; niveles_prepagados: string[] | null }>) {
+      if ((r.niveles_prepagados ?? []).length) prepagados.set(r.member_id, r.niveles_prepagados ?? [])
+    }
+  }
+  const tienePrepagado = (memberId: string) => (prepagados.get(memberId) ?? []).includes(next)
   if (yaPagaronElPar.size > 0) {
     console.info(`auto-enroll: ${yaPagaronElPar.size} ya pagaron el par, no se les cobra ${next}`)
   }
@@ -432,7 +452,7 @@ export async function autoEnrollApprovedToNextLevel(
     // El dirigente del grupo sucesor (heredado del origen) no paga su matrícula;
     // el resto (alumnos, aunque dirijan otros grupos) sí.
     const memberFree = free || memberId === src.leader_id || memberId === src.co_leader_id
-      || yaPagaronElPar.has(memberId)
+      || yaPagaronElPar.has(memberId) || tienePrepagado(memberId)
     const { data: enr, error: enrErr } = await supabase
       .from('study_enrollments')
       .insert({
@@ -444,6 +464,8 @@ export async function autoEnrollApprovedToNextLevel(
         // Se arrastra: quien pagó el par al entrar al bloque sigue cubierto
         // en la segunda mitad, y su propio cierre tampoco debe cobrarle.
         cubre_bloque: yaPagaronElPar.has(memberId),
+        // Lo que le queda del paquete, sin el nivel que acaba de entrar.
+        niveles_prepagados: (prepagados.get(memberId) ?? []).filter(c => c !== next),
         // Quien repite lleva la razón escrita: sin eso, la inscripción de
         // alguien que ya tenía el nivel aprobado se lee como un error.
         ...(nota ? { notes: nota } : {}),

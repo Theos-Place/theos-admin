@@ -13,6 +13,8 @@ import { formatDate, formatMoney, ymdCR } from '@/lib/format'
 import { useAuth } from '@/hooks/useAuth'
 import { puedeAplicarBeca, cobroAdmiteBeca } from '@/lib/finance/quien-aplica-beca'
 import { AplicarBecaEnCobro } from '@/components/finance/AplicarBecaEnCobro'
+import { RegistrarPaqueteDeNiveles } from '@/components/finance/RegistrarPaqueteDeNiveles'
+import { puedeRegistrarPaquete } from '@/lib/finance/paquete-de-niveles'
 import {
   isOverdue, planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
 } from '@/lib/finance/installments'
@@ -360,6 +362,7 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
    */
   const { user } = useAuth()
   const puedeBeca = puedeAplicarBeca(user?.roles)
+  const puedePaquete = puedeRegistrarPaquete(user?.roles)
   return (
     <PagarConComprobante
       id="pay" titulo="Pagar matrícula" etiqueta="Pagar matrícula" retry={retry}
@@ -374,15 +377,26 @@ export function PayMatriculaButton({ enrollmentId, retry, cobro, memberId }: {
        * modal se cierra: pedirle el comprobante después sería pedirle que
        * pruebe un pago que no tiene que hacer.
        */
-      extra={(detalle, cerrar) => puedeBeca && detalle && cobroAdmiteBeca(detalle) && (
-        <div className="rounded-xl bg-surface-low p-3">
-          <AplicarBecaEnCobro
-            pagoId={detalle.id}
-            monto={detalle.amount}
-            currency={detalle.currency ?? 'CRC'}
-            onAplicada={cerrar}
-          />
-        </div>
+      extra={(detalle, cerrar) => detalle && (
+        <>
+          {puedeBeca && cobroAdmiteBeca(detalle) && (
+            <div className="rounded-xl bg-surface-low p-3">
+              <AplicarBecaEnCobro
+                pagoId={detalle.id}
+                monto={detalle.amount}
+                currency={detalle.currency ?? 'CRC'}
+                onAplicada={cerrar}
+              />
+            </div>
+          )}
+          {/* 2026-10-19 · Paquete de niveles (legacy): el servidor dice si
+              este cobro lo admite; acá solo se ofrece a quien revisa pagos. */}
+          {puedePaquete && cobroAdmiteBeca(detalle) && (
+            <div className="rounded-xl bg-surface-low p-3">
+              <RegistrarPaqueteDeNiveles pagoId={detalle.id} onRegistrado={cerrar} />
+            </div>
+          )}
+        </>
       )}
     />
   )

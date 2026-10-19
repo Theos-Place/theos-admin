@@ -4324,6 +4324,7 @@ export type Database = {
       }
       study_enrollments: {
         Row: {
+          niveles_prepagados: string[]
           cubre_bloque: boolean
           completed_at: string | null
           created_at: string | null
@@ -4344,6 +4345,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          niveles_prepagados?: string[]
           cubre_bloque?: boolean
           completed_at?: string | null
           created_at?: string | null
@@ -4364,6 +4366,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          niveles_prepagados?: string[]
           cubre_bloque?: boolean
           completed_at?: string | null
           created_at?: string | null

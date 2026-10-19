@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { reportarError } from '@/lib/observabilidad'
+import { logAudit } from '@/lib/audit'
 import { tipoPorContenido } from '@/lib/archivos/tipo-por-contenido'
 import {
   TIPOS_DE_ARCHIVO, TAMANO_MAXIMO, audienciaDeRecurso, gestionaRecursos, rutaDelArchivo,
@@ -84,9 +85,9 @@ export async function POST(req: NextRequest) {
       audience: audiencia, uploaded_by: auth.ctx.memberId,
     } as never)
     if (error) throw error
-    await supabase.from('audit_log').insert({
-      actor_id: auth.ctx.memberId, action: 'INSERT', entity_type: 'resources', entity_id: id,
-      new_data: { title: d.title, category: d.category, file_name: d.file_name, publicado: !!audiencia },
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'INSERT', entityType: 'resources', entityId: id,
+      newData: { title: d.title, category: d.category, file_name: d.file_name, publicado: !!audiencia },
     })
     const creado = await getRecurso(id)
     const { file_path: _p, ...resto } = creado!

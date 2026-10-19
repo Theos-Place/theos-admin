@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
     let solicitudes_vinculadas = 0
     if (request_ids?.length) {
       try {
-        solicitudes_vinculadas = await vincularSolicitudesAGrupo(request_ids, (group as { id: string }).id, auth.ctx.memberId)
+        solicitudes_vinculadas = await vincularSolicitudesAGrupo(request_ids, (group as { id: string }).id, auth.ctx.userId)
       } catch (e) {
         reportarError('POST /api/studies/groups vincular solicitudes:', e)
       }

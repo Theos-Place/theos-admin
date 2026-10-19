@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { reportarError } from '@/lib/observabilidad'
-import type { Json } from '@/types/database'
+import { logAudit } from '@/lib/audit'
 import { audienciaDeRecurso } from '@/lib/recursos/reglas'
 import { getRecurso, borrarArchivo } from '@/lib/supabase/queries/resources'
 
@@ -38,10 +38,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const supabase = createAdminClient()
     const { error } = await supabase.from('resources').update(cambios as never).eq('id', id)
     if (error) throw error
-    await supabase.from('audit_log').insert({
-      actor_id: auth.ctx.memberId, action: 'UPDATE', entity_type: 'resources', entity_id: id,
-      old_data: { title: antes.title, category: antes.category, description: antes.description, audience: antes.audience } as Json,
-      new_data: cambios as Json,
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'UPDATE', entityType: 'resources', entityId: id,
+      oldData: { title: antes.title, category: antes.category, description: antes.description, audience: antes.audience },
+      newData: cambios,
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
@@ -63,9 +63,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     // La fila ya no existe: si el archivo no se puede borrar, queda huérfano y
     // lo recoge el cron de storage-orphans. No es motivo para fallar.
     await borrarArchivo(r.file_path).catch(e => reportarError('DELETE /api/resources/[id] archivo:', e))
-    await supabase.from('audit_log').insert({
-      actor_id: auth.ctx.memberId, action: 'DELETE', entity_type: 'resources', entity_id: id,
-      old_data: { title: r.title, category: r.category, file_name: r.file_name, audience: r.audience } as Json,
+    await logAudit({
+      actorUserId: auth.ctx.userId, action: 'DELETE', entityType: 'resources', entityId: id,
+      oldData: { title: r.title, category: r.category, file_name: r.file_name, audience: r.audience },
     })
     return NextResponse.json({ ok: true })
   } catch (error) {

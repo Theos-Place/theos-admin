@@ -3,9 +3,9 @@ import { requireRoles } from '@/lib/auth/guard'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { reportarError } from '@/lib/observabilidad'
+import { logAudit } from '@/lib/audit'
 import { modalidadDe, type Modalidad } from '@/lib/studies/modalidad-de-bloques'
 import { cobrosQueNoCorresponden, type CobroDeMatricula } from '@/lib/studies/corte-de-bloque'
-import type { Json } from '@/types/database'
 
 /**
  * Cobros de matrícula que, con el grupo en el esquema viejo, no corresponden
@@ -88,13 +88,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       .select('id')
     if (error) throw error
     const hechos = new Set(((borrados ?? []) as Array<{ id: string }>).map(b => b.id))
-    if (hechos.size) {
-      await supabase.from('audit_log').insert(((completas ?? []) as Array<Record<string, unknown>>)
-        .filter(f => hechos.has(f.id as string))
-        .map(f => ({
-          actor_id: auth.ctx.memberId, action: 'DELETE', entity_type: 'payments', entity_id: f.id as string,
-          old_data: f as Json, new_data: { motivo: 'Cobro que no corresponde con el grupo en el esquema viejo', grupo: id } as Json,
-        })))
+    for (const f of ((completas ?? []) as Array<Record<string, unknown>>).filter(f => hechos.has(f.id as string))) {
+      await logAudit({
+        actorUserId: auth.ctx.userId, action: 'DELETE', entityType: 'payments', entityId: f.id as string,
+        oldData: f, newData: { motivo: 'Cobro que no corresponde con el grupo en el esquema viejo', grupo: id },
+      })
     }
     return NextResponse.json({ ok: true, borrados: hechos.size })
   } catch (error) {

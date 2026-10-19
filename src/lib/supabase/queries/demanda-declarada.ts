@@ -5,6 +5,7 @@
 // disponibilidad de cada dirigente con la MISMA regla del reporte de
 // dirigentes (`disponibilidadEfectiva` + «dirigiendo» derivado de sus grupos).
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logAudit } from '@/lib/audit'
 import { estaVencida, type BloqueMatricula } from '@/lib/studies/request-expiry'
 import { disponibilidadEfectiva, ocupaAlDirigente } from '@/lib/leaders/esta-dirigiendo'
 import { dirigeAhora } from '@/lib/studies/dirigente-activo'
@@ -183,18 +184,18 @@ async function dirigentesParaDemanda(): Promise<DirigenteParaDemanda[]> {
  * resuelta o rechazada no se toca. No las resuelve ni matricula a nadie.
  * Devuelve cuántas quedaron vinculadas.
  */
-export async function vincularSolicitudesAGrupo(ids: readonly string[], grupoId: string, actorId: string | null): Promise<number> {
+export async function vincularSolicitudesAGrupo(ids: readonly string[], grupoId: string, actorUserId: string): Promise<number> {
   const supabase = createAdminClient()
   const { data, error } = await supabase.from('study_requests')
     .update({ grupo_propuesto_id: grupoId, updated_at: new Date().toISOString() } as never)
     .in('id', [...ids]).in('status', ESTADOS_ABIERTOS).select('id')
   if (error) throw error
   const vinculadas = (data ?? []) as Array<{ id: string }>
-  if (vinculadas.length) {
-    await supabase.from('audit_log').insert(vinculadas.map(v => ({
-      actor_id: actorId, action: 'UPDATE', entity_type: 'study_requests', entity_id: v.id,
-      new_data: { grupo_propuesto_id: grupoId, origen: 'EST-29 abrir grupo desde la demanda' },
-    })))
+  for (const v of vinculadas) {
+    await logAudit({
+      actorUserId, action: 'UPDATE', entityType: 'study_requests', entityId: v.id,
+      newData: { grupo_propuesto_id: grupoId, origen: 'EST-29 abrir grupo desde la demanda' },
+    })
   }
   return vinculadas.length
 }
