@@ -1,0 +1,76 @@
+{
+ "motivo": "Grupo N1 — Escazú (Guido Chavarría) es modalidad legacy: N1 no se cobra. Pedido de Floriana 2026-10-19.",
+ "grupo": "47db1e85-73d7-4f5e-b7c5-b35540f16aa1",
+ "pagos_anulados": [
+  {
+   "id": "2afce654-eb26-4a09-98dd-305b28dc4746",
+   "member_id": "d23f7de7-5da0-4a89-ba5f-0daa1bea44d3",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "8fc84dd8-9d9c-434f-8495-b0504f333ea0"
+  },
+  {
+   "id": "90f06d4c-94e7-4995-a776-49d04ae2fe59",
+   "member_id": "792ebed3-3516-4b43-9ca7-76642c5b0ff0",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "a440eb07-b783-4015-ba1c-3bc29bee792f"
+  },
+  {
+   "id": "c4aece86-545a-4c67-81d8-4d6cf3f82b81",
+   "member_id": "1d29f2ad-12c9-4470-84bf-0b7ce3550e48",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "1b3d865c-dc10-46ec-af65-bf534d389724"
+  },
+  {
+   "id": "f4c256f9-9993-40df-8295-70ce30afe82c",
+   "member_id": "b27dba2e-d3de-4ef6-bffd-4a439d0023d5",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "ab1322c4-1d3f-4d95-95de-b11682d14144"
+  },
+  {
+   "id": "b2717f5d-7720-48c9-b4c6-5981b5c69202",
+   "member_id": "47f479d7-b7b8-4e3e-b93e-d91a6ee994c0",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "3f42ab32-160a-437a-8392-d47a41195ed7"
+  },
+  {
+   "id": "a58bc789-3ece-4b89-a3bd-01dc027816e4",
+   "member_id": "473a6ed1-7ef6-4701-a2a0-00f53cdbddca",
+   "amount": "5000.00",
+   "status": "pending",
+   "review_status": null,
+   "enrollment_id": "ca23a9af-9c4a-4bd8-8179-60e70774320b"
+  }
+ ],
+ "matriculas_a_enrolled": [
+  {
+   "id": "a440eb07-b783-4015-ba1c-3bc29bee792f",
+   "member_id": "792ebed3-3516-4b43-9ca7-76642c5b0ff0",
+   "status": "pendiente_de_pago"
+  },
+  {
+   "id": "8fc84dd8-9d9c-434f-8495-b0504f333ea0",
+   "member_id": "d23f7de7-5da0-4a89-ba5f-0daa1bea44d3",
+   "status": "pendiente_de_pago"
+  },
+  {
+   "id": "ab1322c4-1d3f-4d95-95de-b11682d14144",
+   "member_id": "b27dba2e-d3de-4ef6-bffd-4a439d0023d5",
+   "status": "pendiente_de_pago"
+  },
+  {
+   "id": "1b3d865c-dc10-46ec-af65-bf534d389724",
+   "member_id": "1d29f2ad-12c9-4470-84bf-0b7ce3550e48",
+   "status": "pendiente_de_pago"
+  }
+ ]
+}
