@@ -206,7 +206,7 @@ export function estaEnEstudio(e: EstudioDeLaPersona): boolean {
  * la de dirigentes se leía como si fuera lo que la persona había llevado.
  */
 export const INFO_ULTIMO_ESTUDIO_ESTUDIANTE =
-  'Cuenta si la persona está llevando o dando un estudio, o si lo último que llevó o dio terminó en los últimos 12 meses. Cuando hoy no está en ninguno, dice qué fue lo último («Llevó:» o «Dio:»); en gris y con «hace más de un año» si ya no cuenta.'
+  'Cuenta si la persona está llevando o dando un estudio, o si lo último que llevó como estudiante o dio como dirigente terminó en los últimos 12 meses. Cuando hoy no está en ninguno, dice qué fue lo último («Llevó:» o «Dio:»); en gris y con «hace más de un año» si ya no cuenta.'
 
 export const INFO_ULTIMO_ESTUDIO_DIRIGENTE =
   'El último estudio que la persona DIO como dirigente o co-dirigente — no el que llevó como estudiante. El punto verde marca que el grupo está en curso o en matrícula ahora.'
