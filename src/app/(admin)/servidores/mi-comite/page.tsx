@@ -255,10 +255,14 @@ function MiComiteContenido() {
                               llevó o dio algo en 12 meses), gris si no. Antes miraba
                               solo lo que está en curso hoy, y quien dio un estudio que
                               cerró en agosto salía en gris aunque cumplía (2026-10-19). */}
-                          {f.llevandoEstudio || f.dandoEstudio ? (
-                            <span className="text-navy">{textoDeEstudio(f.estudio)}</span>
-                          ) : f.estudio.ultimo || f.estudio.ultimoDado ? (
-                            <span className="text-navy-light/80">{textoDeEstudio(f.estudio)}</span>
+                          {/* ✓/✗ al lado del texto (pedido de Floriana, 2026-10-19):
+                              el color solo no se entendía; la marca es la misma de
+                              las otras columnas y dice si CUENTA para el compromiso. */}
+                          {f.estudio.llevando.length || f.estudio.dando.length || f.estudio.ultimo || f.estudio.ultimoDado ? (
+                            <span className="inline-flex items-start gap-1.5">
+                              <span className="mt-0.5 shrink-0"><Marca ok={f.llevandoEstudio || f.dandoEstudio} titulo="Estudio" /></span>
+                              <span className={f.llevandoEstudio || f.dandoEstudio ? 'text-navy' : 'text-navy-light/80'}>{textoDeEstudio(f.estudio)}</span>
+                            </span>
                           ) : (
                             <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />
                           )}

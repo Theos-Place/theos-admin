@@ -268,11 +268,17 @@ export default function ReporteServidoresPage() {
                             : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Asistencia: no cumple" />}
                         </td>
                         <td className="px-3 py-2 text-[13px] font-body">
-                          {s.llevandoEstudio || s.dandoEstudio
-                            ? <span className="text-navy">{textoDeEstudio(s.estudio)}</span>
-                            : s.estudio.ultimo || s.estudio.ultimoDado
-                              ? <span className="text-navy-light/80">{textoDeEstudio(s.estudio)}</span>
-                              : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />}
+                          {/* Misma marca ✓/✗ que en Mi comité (2026-10-19). */}
+                          {s.estudio.llevando.length || s.estudio.dando.length || s.estudio.ultimo || s.estudio.ultimoDado
+                            ? (
+                              <span className="inline-flex items-start gap-1.5">
+                                {s.llevandoEstudio || s.dandoEstudio
+                                  ? <Check size={15} strokeWidth={2.5} className="mt-0.5 shrink-0 text-teal-deep" aria-label="Estudio: cumple" />
+                                  : <X size={15} strokeWidth={2.5} className="mt-0.5 shrink-0 text-coral-deep" aria-label="Estudio: no cumple" />}
+                                <span className={s.llevandoEstudio || s.dandoEstudio ? 'text-navy' : 'text-navy-light/80'}>{textoDeEstudio(s.estudio)}</span>
+                              </span>
+                            )
+                            : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />}
                         </td>
                         <td className="px-3 py-2">
                           {s.donante

@@ -102,8 +102,8 @@ describe('textoDeEstudio', () => {
 describe('las dos pantallas pintan el estudio con la regla del servidor', () => {
   it('Mi comité y el reporte de servidores usan llevandoEstudio || dandoEstudio', async () => {
     const { readFileSync } = await import('node:fs')
-    expect(readFileSync('src/app/(admin)/servidores/mi-comite/page.tsx', 'utf8')).toContain('{f.llevandoEstudio || f.dandoEstudio ? (')
-    expect(readFileSync('src/app/(admin)/reportes/servidores/page.tsx', 'utf8')).toContain('{s.llevandoEstudio || s.dandoEstudio')
+    expect(readFileSync('src/app/(admin)/servidores/mi-comite/page.tsx', 'utf8')).toContain('<Marca ok={f.llevandoEstudio || f.dandoEstudio} titulo="Estudio" />')
+    expect(readFileSync('src/app/(admin)/reportes/servidores/page.tsx', 'utf8')).toContain('aria-label="Estudio: cumple"')
     expect(readFileSync('src/lib/supabase/queries/mi-comite.ts', 'utf8')).toContain('e.ultimoDado = { nombre: nombreDelEstudio(g.plan, g.name), fecha }')
   })
 })
