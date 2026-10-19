@@ -21,6 +21,7 @@ import {
   type SelectionStatus, type SelectionFilters, type SelectionRow,
 } from '@/lib/forms/selection-rules'
 import { formatDateLong } from '@/lib/format'
+import { esPathDeAdjunto, urlDeAdjunto } from '@/lib/forms/attachment'
 
 type Row = SelectionRow & { answers: Array<{ label: string; value: string }> }
 type Data = {
@@ -423,7 +424,13 @@ export default function SeleccionPage() {
                 <div key={`${a.label}-${i}`} className="space-y-1">
                   <p className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">{a.label}</p>
                   <p className="text-sm text-navy leading-relaxed font-body whitespace-pre-line">
-                    {a.value || <span className="italic text-navy-light/80">Sin respuesta</span>}
+                    {!a.value
+                      ? <span className="italic text-navy-light/80">Sin respuesta</span>
+                      // Un adjunto se abre, no se lee: el path pelado no le dice
+                      // nada a nadie (2026-10-19, mismo arreglo que Respuestas).
+                      : esPathDeAdjunto(a.value)
+                        ? <a href={urlDeAdjunto(a.value, typeof window !== 'undefined' ? window.location.origin : undefined)} target="_blank" rel="noopener noreferrer" className="text-coral-deep underline">Ver imagen adjunta</a>
+                        : a.value}
                   </p>
                 </div>
               ))}
