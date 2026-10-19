@@ -29,6 +29,7 @@ import {
 } from '@/lib/events/detail-access'
 import type { EventEligibilityResult } from '@/lib/events/eligibility'
 import { CompartirInscripcion } from '@/components/events/CompartirInscripcion'
+import { InscritosSinFicha } from '@/components/events/InscritosSinFicha'
 import { contarPersonasNuevas } from '@/lib/events/personas-nuevas'
 import { EventRegistrationsTab } from './_components/EventRegistrationsTab'
 import { EventCheckinTab } from './_components/EventCheckinTab'
@@ -732,6 +733,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           onChanged={refetch}
         />
       )}
+      {/* 2026-10-19 · Lo que llegó por el link público sin ficha: no son
+          inscripciones, pero alguien tiene que verlas (Matrimonios). */}
+      {tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} />}
 
       {/* Tab: Check-in */}
       {tabEfectivo === 'checkin' && (

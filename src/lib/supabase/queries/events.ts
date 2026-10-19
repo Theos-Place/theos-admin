@@ -1123,6 +1123,9 @@ export async function onsiteChargeAndCheckin(
         payment_method: 'comprobante',
         concept: 'evento',
         entity_type: 'event',
+        // 2026-10-19 · El evento, como en la inscripción por formulario: sin
+        // esto el cobro solo se encontraba pasando por la inscripción.
+        event_id: eventId,
         event_registration_id: registrationId,
         recorded_by: actor,
       }

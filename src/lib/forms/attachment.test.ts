@@ -51,3 +51,15 @@ describe('adjuntos de formularios PÚBLICOS (2026-10-19)', () => {
     expect(readFileSync('src/app/api/public/forms/[id]/upload-attachment/route.ts', 'utf8')).toContain('const path = `publico/${id}/${crypto.randomUUID()}.${EXT[file.type]}`')
   })
 })
+
+describe('todo cobro de evento anota el evento (2026-10-19)', () => {
+  it('los tres caminos que crean un cobro de evento ponen event_id', async () => {
+    const { readFileSync } = await import('node:fs')
+    const pagos = readFileSync('src/lib/supabase/queries/payments.ts', 'utf8')
+    const insert = pagos.slice(pagos.indexOf("export async function submitEventComprobante"))
+    expect(insert.slice(insert.indexOf("supabase.from('payments').insert({"), insert.indexOf("}).select('id').single()"))).toContain('event_id,')
+    const eventos = readFileSync('src/lib/supabase/queries/events.ts', 'utf8')
+    expect(eventos).toContain('event_id: eventId,\n        event_registration_id: registrationId,')
+    expect(readFileSync('src/lib/supabase/queries/forms.ts', 'utf8')).toContain('event_id: input.eventId,')
+  })
+})

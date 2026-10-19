@@ -719,6 +719,9 @@ export async function submitEventComprobante(input: {
     currency,
     payment_method: 'comprobante',
     concept: 'evento',
+    // 2026-10-19 · Este camino olvidaba el evento (7 cobros de Matrimonios
+    // quedaron sin él); la inscripción por formulario sí lo pone.
+    event_id,
     event_registration_id: input.event_registration_id,
     entity_type: 'event',
     reference_code: input.reference_code,
