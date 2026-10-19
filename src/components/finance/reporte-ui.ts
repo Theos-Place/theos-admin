@@ -16,9 +16,9 @@ export const PESTANA = 'space-y-5'
 // ── Barra de herramientas ────────────────────────────────────────────────
 /** Dos grupos: filtros a la izquierda (bajan de línea por dentro) y acciones
  *  arriba a la derecha. */
-export const BARRA = 'flex items-start justify-between gap-2'
+export const BARRA = 'flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'
 export const BARRA_IZQ = 'flex flex-1 min-w-0 flex-wrap items-center gap-1.5'
-export const BARRA_DER = 'flex shrink-0 flex-wrap items-center justify-end gap-1.5'
+export const BARRA_DER = 'flex shrink-0 flex-wrap items-center gap-1.5 sm:justify-end'
 export const ETIQUETA_FILTRO = 'text-[13px] text-navy-light/80 font-body'
 /** Etiqueta + campo («Desde [fecha]»). */
 export const GRUPO_FILTRO = 'flex items-center gap-1'

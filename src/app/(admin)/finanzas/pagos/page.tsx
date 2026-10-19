@@ -9,7 +9,13 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useUrlFilter } from '@/hooks/useUrlFilter'
-import { CreditCard, Download, Eye, EyeOff, Search } from 'lucide-react'
+import { CreditCard, Download, Search } from 'lucide-react'
+import { Tabs } from '@/components/shared/Tabs'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_SECUNDARIO, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -256,50 +262,19 @@ function PagosContent() {
               </p>
             </div>
           </div>
-          {/* PAG-6 · La hoja del resultado FILTRADO, para pegarla contra la
-              línea del estado de cuenta. Es un enlace y no un fetch: el
-              navegador baja el archivo con el nombre que manda el servidor,
-              sin tener que armar un blob en la pantalla. Lleva los mismos
-              parámetros que la lista, así que lo que se baja es lo que se
-              está viendo — un export de «todos los pagos» rotulado como los
-              de setiembre sería peor que no tenerlo. */}
-          <a
-            href={urlDelExport()}
-            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] hover:bg-[rgba(255,255,255,0.18)] transition-colors font-body"
-          >
-            <Download size={13} aria-hidden="true" />
-            Descargar XLSX
-          </a>
-          <button
-            onClick={() => setRevealAll(r => !r)}
-            className="flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] self-start sm:self-auto bg-[rgba(255,255,255,0.10)] text-[rgba(255,255,255,0.70)] font-body"
-          >
-            {revealAll ? <EyeOff size={13} /> : <Eye size={13} />}
-            {revealAll ? 'Ocultar montos' : 'Mostrar montos'}
-          </button>
         </div>
 
         {/* Pestañas: listado general / cola de revisión */}
         {canQueue && (
-          <div className="flex items-center gap-2 flex-wrap" role="tablist" aria-label="Vistas de pagos">
-            {([
-              ['todos', 'Todos los pagos'],
-              ['revision', `En revisión${queueCount !== null ? ` (${queueCount})` : ''}`],
-            ] as const).map(([key, label]) => (
-              <button
-                key={key}
-                role="tab"
-                aria-selected={tab === key}
-                onClick={() => setTab(key === 'todos' ? '' : key)}
-                className={cn(
-                  'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
-                  tab === key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-navy/15 hover:border-navy/30 bg-surface-card',
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          // Mismas tabs que el reporte de finanzas (pedido 2026-10-19).
+          <Tabs
+            tabs={[
+              { key: 'todos', label: 'Todos los pagos' },
+              { key: 'revision', label: 'En revisión', ...(queueCount !== null ? { count: queueCount } : {}) },
+            ]}
+            active={tab}
+            onChange={k => setTab(k === 'todos' ? '' : k)}
+          />
         )}
 
         {/* Cola de revisión: siempre montada (sus modales atienden aperturas
@@ -316,44 +291,79 @@ function PagosContent() {
         )}
 
         {tab === 'todos' && (<>
+        {/* Misma estructura que el reporte de finanzas (pedido de Floriana,
+            2026-10-19): arriba el rango a la izquierda y Mostrar montos +
+            Excel a la derecha; después los totales; después la búsqueda con
+            los filtros a su derecha. Las clases salen de reporte-ui. */}
+        <div className={BARRA}>
+          {/* PAG-6 · Conciliación contra el estado de cuenta. El rango es por
+              FECHA DE PAGO —no por cuándo se creó el cobro—, que es lo que
+              aparece en la línea del banco. Son días de Costa Rica y la
+              conversión la hace el servidor: `paid_at` es timestamptz y un
+              pago de las 7 p.m. se guarda con la fecha del día siguiente en
+              UTC, así que filtrado crudo se le correría un día a Andrés. */}
+          <div className={BARRA_IZQ}>
+            <label htmlFor="pago-desde" className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Pagado desde</span>
+              <input id="pago-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)}
+                aria-label="Pagado desde" className={CAMPO_FECHA} />
+            </label>
+            <label htmlFor="pago-hasta" className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Hasta</span>
+              <input id="pago-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)}
+                aria-label="Pagado hasta" className={CAMPO_FECHA} />
+            </label>
+            {(desde || hasta) && (
+              <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>
+                Limpiar
+              </button>
+            )}
+          </div>
+          <div className={BARRA_DER}>
+            <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
+            {/* PAG-6 · La hoja del resultado FILTRADO. Es un enlace y no un
+                fetch: el navegador baja el archivo con el nombre que manda el
+                servidor. Lleva los mismos parámetros que la lista, así que lo
+                que se baja es lo que se está viendo. */}
+            <a href={urlDelExport()} className={BOTON_PRIMARIO}>
+              <Download size={14} aria-hidden /> Descargar Excel
+            </a>
+          </div>
+        </div>
+
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* FASE FUTURA: pagos por tarjeta / SINPE directo aún no existen en
               el sistema (hoy todo entra por comprobante o manual) — las cards
               "Por tarjeta"/"Por SINPE" se reactivan cuando se implementen. */}
           {[
-            { label: 'Total cobrado', value: totalPaid, color: '#161440' },
-            { label: 'Pendientes', value: totalPending, color: '#7F6210' },
+            { label: 'Total cobrado', value: totalPaid, color: VALOR_DINERO },
+            { label: 'Pendientes', value: totalPending, color: VALOR_PENDIENTE },
           ].map(({ label, value, color }) => (
-            <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
-              <p className="text-xl font-extrabold font-display" style={{ color }}>
+            <div key={label} className={TARJETA}>
+              <p className={TARJETA_ETIQUETA}>{label}</p>
+              <p className={cn(TARJETA_VALOR, color)}>
                 <TotalsDisplay totals={value} defaultHidden={false} revealed={revealAll} />
               </p>
             </div>
           ))}
         </div>
 
-        {/* Filters */}
+        {/* Búsqueda y, a su derecha, los filtros. Eran cinco filas de
+            pastillas sin rótulo; pasaron a selects rotulados (2026-08-27). */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2 rounded-xl px-3 py-2.5 flex-1 min-w-48 bg-surface-card border border-[var(--outline-variant)]">
-            <Search size={14} className="text-navy-light/80 shrink-0" />
+          <div className={cn('focus-within:ring-1 focus-within:ring-coral/30 flex flex-1 min-w-48 items-center gap-2', CAMPO)}>
+            <Search size={14} className="text-navy-light/80 shrink-0" aria-hidden="true" />
             <input
               type="search"
               placeholder="Buscar por miembro, concepto..."
               aria-label="Buscar por miembro, concepto"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none font-body text-navy"
+              className="flex-1 bg-transparent text-[13px] outline-none font-body text-navy"
             />
           </div>
-
-          {/* Los filtros eran cinco filas de pastillas idénticas, cada una con
-              su "Todos" y ninguna con rótulo visible: no se entendía a qué
-              categoría pertenecía cada grupo. Pasan a dropdowns rotulados
-              (2026-08-27). El aria-label ya existía —los lectores de pantalla sí
-              sabían— así que lo que faltaba era decírselo a quien mira. */}
-          <div className="flex flex-wrap gap-x-4 gap-y-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <FiltroSelect
               label="Concepto"
               value={entityFilter}
@@ -377,7 +387,7 @@ function PagosContent() {
               ]}
             />
             <FiltroSelect
-              label="Estado del pago"
+              label="Estado"
               value={statusFilter}
               onChange={v => setStatusFilter(v as 'all' | PaymentStatus)}
               options={[
@@ -407,7 +417,7 @@ function PagosContent() {
             {/* FIN-4: los tractos son pagos normales y se mezclan con el resto;
                 este filtro los aísla para darles seguimiento. */}
             <FiltroSelect
-              label="Arreglo de pago"
+              label="Arreglo"
               value={planFilter}
               onChange={v => setPlanFilter(v as 'all' | 'in_plan')}
               options={[
@@ -415,55 +425,7 @@ function PagosContent() {
                 { value: 'in_plan', label: 'Solo en arreglo' },
               ]}
             />
-          
-          {/* PAG-6 · Conciliación contra el estado de cuenta. El rango es por
-              FECHA DE PAGO —no por cuándo se creó el cobro—, que es lo que
-              aparece en la línea del banco. El caso que lo pidió: registrar
-              el depósito del lunes y el martes contra los pagos de esos días.
-
-              Son días de Costa Rica. La conversión la hace el servidor, y no
-              es un detalle: `paid_at` es timestamptz y un pago de las 7 p.m.
-              se guarda con la fecha del día siguiente en UTC. Filtrado crudo,
-              los pagos de la noche se le corren a Andrés un día y la cuenta
-              no le cuadra, sin que nada avise. */}
-          <div className="flex items-end gap-2">
-            <div>
-              <label htmlFor="pago-desde" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
-                Pagado desde
-              </label>
-              <input
-                id="pago-desde"
-                type="date"
-                value={desde}
-                max={hasta || undefined}
-                onChange={e => setDesde(e.target.value)}
-                className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
-            </div>
-            <div>
-              <label htmlFor="pago-hasta" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
-                Hasta
-              </label>
-              <input
-                id="pago-hasta"
-                type="date"
-                value={hasta}
-                min={desde || undefined}
-                onChange={e => setHasta(e.target.value)}
-                className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
-            </div>
-            {(desde || hasta) && (
-              <button
-                type="button"
-                onClick={() => { setDesde(''); setHasta('') }}
-                className="rounded-xl px-2.5 py-2 text-[13px] text-navy-light/80 hover:text-navy hover:bg-surface-low transition-colors font-body"
-              >
-                Limpiar
-              </button>
-            )}
           </div>
-</div>
         </div>
 
         {/* Table */}
@@ -786,16 +748,9 @@ function FiltroSelect({ label, value, onChange, options }: {
 }) {
   const id = `filtro-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
-        {label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="rounded-xl border border-navy/15 bg-surface-card px-3 py-1.5 text-[13px] text-navy outline-none focus:border-navy/30 font-body"
-      >
+    <div className={GRUPO_FILTRO}>
+      <label htmlFor={id} className={ETIQUETA_FILTRO}>{label}</label>
+      <select id={id} value={value} onChange={e => onChange(e.target.value)} className={CAMPO}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
