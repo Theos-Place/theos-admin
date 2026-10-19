@@ -55,3 +55,15 @@ describe('plata', () => {
     expect(plata(100, 'USD')).toBe('$100')
   })
 })
+
+describe('cuándo se generó el saldo (2026-10-19)', () => {
+  it('un pago que viajó en un cambio de grupo cuenta desde el traslado', async () => {
+    const { llegadaDelPago } = await import('./saldo-a-favor')
+    expect(llegadaDelPago({ transfer_note: 'Movida de grupo…', updated_at: '2026-10-07T15:00:00Z', paid_at: '2026-08-01T15:00:00Z' })).toBe('2026-10-07T15:00:00Z')
+  })
+  it('sin traslado, cuenta desde que se pagó', async () => {
+    const { llegadaDelPago } = await import('./saldo-a-favor')
+    expect(llegadaDelPago({ transfer_note: null, updated_at: '2026-10-07T15:00:00Z', paid_at: '2026-08-01T15:00:00Z' })).toBe('2026-08-01T15:00:00Z')
+    expect(llegadaDelPago({ paid_at: null, created_at: '2026-08-02T15:00:00Z' })).toBe('2026-08-02T15:00:00Z')
+  })
+})

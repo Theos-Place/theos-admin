@@ -6,10 +6,10 @@ import { Wallet, Loader2, ChevronRight, Download, Search } from 'lucide-react'
 import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import {
-  BARRA, BARRA_IZQ, BARRA_DER, CAMPO, BOTON_PRIMARIO,
+  BARRA, BARRA_IZQ, BARRA_DER, GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_SECUNDARIO, BOTON_PRIMARIO,
   TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO,
 } from '@/components/finance/reporte-ui'
-import { descargarExcel } from '@/lib/finance/descargar-excel'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { formatDate } from '@/lib/format'
@@ -114,6 +114,9 @@ export default function SaldosAFavorPage() {
   const [busqueda, setBusqueda] = useState('')
   const [detalle, setDetalle] = useState<SaldoAFavor | null>(null)
   const [revealAll, setRevealAll] = useState(false)
+  // El rango es por la fecha en que se GENERÓ el saldo (ver llegadaDelPago).
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
 
   useEffect(() => {
     // Sin permiso la pantalla ya devuelve AccessDenied, así que el estado
@@ -133,10 +136,9 @@ export default function SaldosAFavorPage() {
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
-    if (!q) return items
-    return items.filter(i =>
-      i.member_name.toLowerCase().includes(q) || (i.group_name ?? '').toLowerCase().includes(q))
-  }, [items, busqueda])
+    return items.filter(i => enRango(i.generado_en, desde, hasta)
+      && (!q || i.member_name.toLowerCase().includes(q) || (i.group_name ?? '').toLowerCase().includes(q)))
+  }, [items, busqueda, desde, hasta])
 
   if (!loaded) return null
   if (!puede) return <AccessDenied />
@@ -154,12 +156,24 @@ export default function SaldosAFavorPage() {
       {/* Orden de los reportes de finanzas (pedido 2026-10-19): acciones
           arriba, totales, y la búsqueda debajo. */}
       <div className={BARRA}>
-        <div className={BARRA_IZQ} />
+        <div className={BARRA_IZQ}>
+          <label htmlFor="saldo-desde" className={GRUPO_FILTRO}>
+            <span className={ETIQUETA_FILTRO}>Generado desde</span>
+            <input id="saldo-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)} className={CAMPO_FECHA} />
+          </label>
+          <label htmlFor="saldo-hasta" className={GRUPO_FILTRO}>
+            <span className={ETIQUETA_FILTRO}>Hasta</span>
+            <input id="saldo-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)} className={CAMPO_FECHA} />
+          </label>
+          {(desde || hasta) && (
+            <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>Limpiar</button>
+          )}
+        </div>
         <div className={BARRA_DER}>
           <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
           <button type="button" disabled={filtrados.length === 0} className={BOTON_PRIMARIO}
-            onClick={() => void descargarExcel('saldos-a-favor', ['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Moneda'],
-              filtrados.map(s => [s.member_name, s.group_name ?? '', s.pagado, s.costo, s.saldo, s.currency ?? 'CRC']))}>
+            onClick={() => void descargarExcel('saldos-a-favor', ['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Moneda', 'Generado'],
+              filtrados.map(s => [s.member_name, s.group_name ?? '', s.pagado, s.costo, s.saldo, s.currency ?? 'CRC', s.generado_en ? formatDate(s.generado_en) : '']))}>
             <Download size={14} aria-hidden /> Descargar Excel
           </button>
         </div>
@@ -205,7 +219,7 @@ export default function SaldosAFavorPage() {
             <table className="w-full border-collapse text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
-                  {['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', ''].map(h => (
+                  {['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Generado', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display">
                       {h}
                     </th>
@@ -224,6 +238,7 @@ export default function SaldosAFavorPage() {
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.pagado} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.costo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
                     <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body"><AmountDisplay amount={s.saldo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{s.generado_en ? formatDate(s.generado_en) : '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <button type="button" onClick={() => setDetalle(s)}
                         className="inline-flex items-center gap-1 rounded-full border border-navy/15 px-3 py-1 text-[13px] text-navy hover:bg-surface-low font-body">
@@ -233,7 +248,7 @@ export default function SaldosAFavorPage() {
                   </tr>
                 ))}
                 {filtrados.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con ese nombre.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con esos filtros.</td></tr>
                 )}
               </tbody>
             </table>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireModuleView } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { saldosAFavor, totalPorMoneda, type MatriculaConPagos, type DetalleDelSaldo, type PagoDelSaldo } from '@/lib/finance/saldo-a-favor'
+import { saldosAFavor, totalPorMoneda, llegadaDelPago, type MatriculaConPagos, type DetalleDelSaldo, type PagoDelSaldo } from '@/lib/finance/saldo-a-favor'
 import { montoDelBloque, nivelesACobrar } from '@/lib/studies/corte-de-bloque'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
 import { reportarError } from '@/lib/observabilidad'
@@ -76,16 +76,20 @@ export async function GET(req: NextRequest) {
 
     // Lo pagado por matrícula, en una sola pasada.
     const pagadoPorMatricula = new Map<string, number>()
+    const generadoPorMatricula = new Map<string, string>()
     for (let from = 0; ; from += 1000) {
       const { data, error } = await sb.from('payments')
-        .select('enrollment_id, amount')
+        .select('enrollment_id, amount, paid_at, created_at, updated_at, transfer_note')
         .eq('status', 'paid').eq('concept', 'matricula')
         .not('enrollment_id', 'is', null)
         .range(from, from + 999)
       if (error) throw error
-      const filas = (data ?? []) as { enrollment_id: string; amount: number }[]
+      const filas = (data ?? []) as Array<{ enrollment_id: string; amount: number; paid_at: string | null; created_at: string; updated_at: string | null; transfer_note: string | null }>
       for (const p of filas) {
         pagadoPorMatricula.set(p.enrollment_id, (pagadoPorMatricula.get(p.enrollment_id) ?? 0) + Number(p.amount))
+        const llegada = llegadaDelPago(p)
+        const previa = generadoPorMatricula.get(p.enrollment_id)
+        if (llegada && (!previa || llegada > previa)) generadoPorMatricula.set(p.enrollment_id, llegada)
       }
       if (filas.length < 1000) break
     }
@@ -105,6 +109,7 @@ export async function GET(req: NextRequest) {
       costo: montoDelBloque(e.group?.plan?.code, costos, modalidadDe(e.group?.modalidad)),
       currency: e.group?.plan?.currency ?? 'CRC',
       pagado: pagadoPorMatricula.get(e.id) ?? 0,
+      generado_en: generadoPorMatricula.get(e.id) ?? null,
     }))
 
     const saldos = saldosAFavor(filas)

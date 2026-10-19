@@ -22,6 +22,8 @@ export type MatriculaConPagos = {
   currency: string | null
   /** Suma de los pagos APROBADOS de esa matrícula. */
   pagado: number
+  /** Cuándo se generó el saldo: ver `llegadaDelPago`. */
+  generado_en?: string | null
 }
 
 export type SaldoAFavor = MatriculaConPagos & { saldo: number }
@@ -62,6 +64,20 @@ export function saldosAFavor(filas: readonly MatriculaConPagos[]): SaldoAFavor[]
     .map(f => ({ ...f, saldo: Number(f.pagado) - Number(f.costo) }))
     .filter(f => f.saldo > 0)
     .sort((a, b) => b.saldo - a.saldo)
+}
+
+/**
+ * Cuándo llegó un pago a SU matrícula actual. Si viajó en un cambio de grupo
+ * (`transfer_note`), es el momento del traslado —`updated_at`, que
+ * transferEnrollment pisa al moverlo—; si no, cuándo se pagó.
+ *
+ * La fecha en que se GENERÓ un saldo a favor (pedido de Floriana, 2026-10-19:
+ * «cuando se convierte en saldo a favor») es la llegada del ÚLTIMO pago: desde
+ * ese momento lo pagado supera lo que cuesta la matrícula.
+ */
+export function llegadaDelPago(p: { transfer_note?: string | null; updated_at?: string | null; paid_at?: string | null; created_at?: string | null }): string | null {
+  if (p.transfer_note && p.updated_at) return p.updated_at
+  return p.paid_at ?? p.created_at ?? null
 }
 
 /** Total por moneda: sumar colones con dólares daría un número sin significado. */
