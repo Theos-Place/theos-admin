@@ -2,7 +2,13 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { ArrowLeftRight } from 'lucide-react'
+import { ArrowLeftRight, Download, Search } from 'lucide-react'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_SECUNDARIO, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_PENDIENTE, VALOR_DINERO,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
 import { Modal } from '@/components/shared/Modal'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,7 +19,6 @@ import { type Refund, type RefundStatus } from '@/types/finance'
 import { toDomainRefund } from '@/lib/finance/adapter'
 import type { DbRefund } from '@/lib/supabase/queries/finance'
 import { refundKindLabel, REFUND_KINDS, kindHasPlan, type RefundKind } from '@/lib/finance/refund-kind'
-import { FilterChips } from '@/components/shared/FilterChips'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate, formatMoney } from '@/lib/format'
 
@@ -43,12 +48,19 @@ export default function DevolucionesPage() {
   // FIN-6: fetch propio en vez de useFinance porque ahora la cola lleva FILTROS
   // server-side (tipo y plan) y necesita saber si esta persona puede resolver
   // (finanzas) o solo ver y comentar (responsable del origen).
-  const [refunds, setRefunds] = useState<Refund[]>([])
+  const [todas, setTodas] = useState<Refund[]>([])
   const [canResolve, setCanResolve] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [kindFilter, setKindFilter] = useState<'all' | RefundKind>('all')
   const [planFilter, setPlanFilter] = useState<'all' | string>('all')
   const [reloadKey, setReloadKey] = useState(0)
+  // Misma estructura que pagos y el reporte (pedido 2026-10-19): rango por
+  // fecha de SOLICITUD, búsqueda y Mostrar montos. La cola llega completa, así
+  // que esto filtra en el navegador.
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [revealAll, setRevealAll] = useState(false)
   const refetch = () => { setReloadKey(k => k + 1); return Promise.resolve() }
 
   // `loading` se DERIVA (qué pedimos vs qué ya cargó) en vez de setearse dentro
@@ -73,7 +85,7 @@ export default function DevolucionesPage() {
       })
       .then(d => {
         if (!alive) return
-        setRefunds(((d.refunds ?? []) as DbRefund[]).map(toDomainRefund))
+        setTodas(((d.refunds ?? []) as DbRefund[]).map(toDomainRefund))
         setCanResolve(!!d.can_resolve)
         setError(null)
       })
@@ -81,19 +93,32 @@ export default function DevolucionesPage() {
       // «no hay devoluciones» — que es exactamente lo contrario de lo que
       // hay que hacer con una cola de plata.
       .catch((e: Error) => {
-        if (alive) { setRefunds([]); setError(e.message || 'No se pudieron cargar las devoluciones.') }
+        if (alive) { setTodas([]); setError(e.message || 'No se pudieron cargar las devoluciones.') }
       })
       .finally(() => { if (alive) setLoadedKey(queryKey) })
     return () => { alive = false }
   }, [kindFilter, planFilter, queryKey])
 
+  const refunds = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return todas.filter(r => enRango(r.requested_at, desde, hasta)
+      && (!q || r.member_name.toLowerCase().includes(q) || (r.entity_name ?? '').toLowerCase().includes(q)))
+  }, [todas, busqueda, desde, hasta])
+
+  function exportar() {
+    void descargarExcel('devoluciones',
+      ['Miembro', 'Concepto', 'Monto', 'Moneda', 'Método', 'Motivo', 'Estado', 'Solicitada', 'Procesada'],
+      refunds.map(r => [r.member_name, r.entity_name, r.amount, r.currency, r.method, r.reason, r.status,
+        r.requested_at?.slice(0, 10) ?? '', r.processed_at?.slice(0, 10) ?? '']))
+  }
+
   // Planes presentes en la cola: el filtro por plan solo tiene sentido con los
   // tipos que salen de un plan, y solo con los que realmente hay.
   const planesEnCola = useMemo(() => {
     const m = new Map<string, string>()
-    for (const r of refunds) if (r.plan_id && r.plan_name) m.set(r.plan_id, r.plan_name)
+    for (const r of todas) if (r.plan_id && r.plan_name) m.set(r.plan_id, r.plan_name)
     return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]))
-  }, [refunds])
+  }, [todas])
 
   const [completeTarget, setCompleteTarget] = useState<Refund | null>(null)
   // FIN-6 (4): conversión en donación, con confirmación explícita del monto.
@@ -220,58 +245,84 @@ export default function DevolucionesPage() {
           </div>
         </div>
 
-        {/* FIN-6: filtros por tipo (derivado del pago) y, si el tipo sale de un
-            plan, por plan de estudio. Antes la cola no tenía ningún filtro. */}
-        <div className="space-y-2">
-          <FilterChips
-            ariaLabel="Filtrar por tipo"
-            activeKey={kindFilter}
-            onSelect={k => { setKindFilter(k as 'all' | RefundKind); setPlanFilter('all') }}
-            chips={[
-              { key: 'all', label: 'Todos los tipos' },
-              ...REFUND_KINDS.map(k => ({ key: k, label: refundKindLabel(k) })),
-            ]}
-          />
-          {kindHasPlan(kindFilter) && planesEnCola.length > 0 && (
-            <div className="flex items-center gap-2">
-              <label htmlFor="plan-filter" className="text-[13px] text-navy-light/80 font-body">Estudio:</label>
-              <select
-                id="plan-filter"
-                value={planFilter}
-                onChange={e => setPlanFilter(e.target.value)}
-                className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              >
-                <option value="all">Todos</option>
-                {planesEnCola.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-              </select>
-            </div>
-          )}
-          {!canResolve && (
-            <p className="text-[13px] text-navy-light/80 font-body">
-              Ves las devoluciones de lo que tenés a cargo y podés comentarlas. Resolverlas es de finanzas.
-            </p>
-          )}
+        {/* Orden de los reportes de finanzas: rango + acciones, totales,
+            búsqueda con los filtros a su derecha. */}
+        <div className={BARRA}>
+          <div className={BARRA_IZQ}>
+            <label htmlFor="dev-desde" className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Solicitada desde</span>
+              <input id="dev-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)} className={CAMPO_FECHA} />
+            </label>
+            <label htmlFor="dev-hasta" className={GRUPO_FILTRO}>
+              <span className={ETIQUETA_FILTRO}>Hasta</span>
+              <input id="dev-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)} className={CAMPO_FECHA} />
+            </label>
+            {(desde || hasta) && (
+              <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>Limpiar</button>
+            )}
+          </div>
+          <div className={BARRA_DER}>
+            <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
+            <button type="button" onClick={exportar} disabled={refunds.length === 0} className={BOTON_PRIMARIO}>
+              <Download size={14} aria-hidden /> Descargar Excel
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Pendientes',    value: stats.pending,    color: '#7F6210' },
-            { label: 'En proceso',    value: stats.processing, color: '#3B7579' },
-            { label: 'Completadas',   value: stats.completed,  color: '#1E6B42' },
+            { label: 'Pendientes',    value: stats.pending,    color: VALOR_PENDIENTE },
+            { label: 'En proceso',    value: stats.processing, color: VALOR_NEUTRO },
+            { label: 'Completadas',   value: stats.completed,  color: VALOR_DINERO },
           ].map(({ label, value, color }) => (
-            <div key={label} className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-              <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">{label}</p>
-              <p className="text-4xl font-extrabold font-display" style={{ color }}>{value}</p>
+            <div key={label} className={TARJETA}>
+              <p className={TARJETA_ETIQUETA}>{label}</p>
+              <p className={cn(TARJETA_VALOR, color)}>{value}</p>
             </div>
           ))}
-          <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
-            <p className="text-[11px] uppercase tracking-widest mb-2 font-display text-navy-light/80">Total devuelto</p>
-            <p className="text-xl font-extrabold font-display text-navy">
-              <TotalsDisplay totals={stats.totalAmount} defaultHidden={false} />
+          <div className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>Total devuelto</p>
+            <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>
+              <TotalsDisplay totals={stats.totalAmount} defaultHidden={false} revealed={revealAll} />
             </p>
           </div>
         </div>
+
+        {/* FIN-6: filtros por tipo (derivado del pago) y, si el tipo sale de un
+            plan, por plan de estudio. Antes la cola no tenía ningún filtro. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className={cn('focus-within:ring-1 focus-within:ring-coral/30 flex flex-1 min-w-48 items-center gap-2', CAMPO)}>
+            <Search size={14} className="text-navy-light/80 shrink-0" aria-hidden="true" />
+            <input type="search" value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por miembro o concepto..." aria-label="Buscar por miembro o concepto"
+              className="flex-1 bg-transparent text-[13px] outline-none font-body text-navy" />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className={GRUPO_FILTRO}>
+              <label htmlFor="kind-filter" className={ETIQUETA_FILTRO}>Tipo</label>
+              <select id="kind-filter" value={kindFilter} className={CAMPO}
+                onChange={e => { setKindFilter(e.target.value as 'all' | RefundKind); setPlanFilter('all') }}>
+                <option value="all">Todos</option>
+                {REFUND_KINDS.map(k => <option key={k} value={k}>{refundKindLabel(k)}</option>)}
+              </select>
+            </div>
+            {kindHasPlan(kindFilter) && planesEnCola.length > 0 && (
+              <div className={GRUPO_FILTRO}>
+                <label htmlFor="plan-filter" className={ETIQUETA_FILTRO}>Estudio</label>
+                <select id="plan-filter" value={planFilter} onChange={e => setPlanFilter(e.target.value)} className={CAMPO}>
+                  <option value="all">Todos</option>
+                  {planesEnCola.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+        {!canResolve && (
+          <p className="text-[13px] text-navy-light/80 font-body">
+            Ves las devoluciones de lo que tenés a cargo y podés comentarlas. Resolverlas es de finanzas.
+          </p>
+        )}
 
         {/* Cola única de devoluciones (todas se procesan manualmente hoy). */}
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
@@ -305,7 +356,7 @@ export default function DevolucionesPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <p className="text-[13px] font-medium font-body text-navy">
-                        <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} />
+                        <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} revealed={revealAll} />
                       </p>
                     </td>
                     <td className="px-5 py-3.5">
@@ -377,7 +428,7 @@ export default function DevolucionesPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="text-[13px] font-medium font-body text-navy">
-                      <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} />
+                      <AmountDisplay amount={r.amount} currency={r.currency} defaultHidden={false} revealed={revealAll} />
                     </p>
                     <RefundStatusBadge status={r.status} />
                   </div>

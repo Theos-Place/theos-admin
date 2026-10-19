@@ -2,7 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, Loader2, ChevronRight } from 'lucide-react'
+import { Wallet, Loader2, ChevronRight, Download, Search } from 'lucide-react'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, CAMPO, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel } from '@/lib/finance/descargar-excel'
+import { cn } from '@/lib/utils'
 import { Modal } from '@/components/shared/Modal'
 import { formatDate } from '@/lib/format'
 import { AccessDenied } from '@/components/shared/AccessDenied'
@@ -105,6 +113,7 @@ export default function SaldosAFavorPage() {
   const [error, setError] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [detalle, setDetalle] = useState<SaldoAFavor | null>(null)
+  const [revealAll, setRevealAll] = useState(false)
 
   useEffect(() => {
     // Sin permiso la pantalla ya devuelve AccessDenied, así que el estado
@@ -142,23 +151,34 @@ export default function SaldosAFavorPage() {
         </p>
       </div>
 
-      {totales.length > 0 && (
-        <div className="flex gap-3 flex-wrap">
-          {totales.map(t => (
-            <div key={t.currency} className="rounded-2xl bg-surface-card px-5 py-4 shadow-[var(--shadow-md)]">
-              <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                Total a favor
-              </p>
-              <p className="text-2xl font-extrabold text-navy font-display mt-0.5">
-                {plata(t.total, t.currency)}
-              </p>
-              <p className="text-[13px] text-navy-light/80 font-body">
-                {items.length} {items.length === 1 ? 'persona' : 'personas'}
-              </p>
-            </div>
-          ))}
+      {/* Orden de los reportes de finanzas (pedido 2026-10-19): acciones
+          arriba, totales, y la búsqueda debajo. */}
+      <div className={BARRA}>
+        <div className={BARRA_IZQ} />
+        <div className={BARRA_DER}>
+          <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
+          <button type="button" disabled={filtrados.length === 0} className={BOTON_PRIMARIO}
+            onClick={() => void descargarExcel('saldos-a-favor', ['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Moneda'],
+              filtrados.map(s => [s.member_name, s.group_name ?? '', s.pagado, s.costo, s.saldo, s.currency ?? 'CRC']))}>
+            <Download size={14} aria-hidden /> Descargar Excel
+          </button>
         </div>
-      )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Total a favor</p>
+          <div className={cn(TARJETA_VALOR, VALOR_DINERO)}>
+            {totales.length === 0
+              ? <AmountDisplay amount={0} defaultHidden={false} revealed={revealAll} />
+              : totales.map(t => <p key={t.currency}><AmountDisplay amount={t.total} currency={t.currency} defaultHidden={false} revealed={revealAll} /></p>)}
+          </div>
+        </div>
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Personas con saldo</p>
+          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{items.length.toLocaleString('es-CR')}</p>
+        </div>
+      </div>
 
       {cargando ? (
         <div className="flex items-center gap-2 py-12 justify-center text-navy-light/80">
@@ -175,13 +195,12 @@ export default function SaldosAFavorPage() {
         />
       ) : (
         <>
-          <input
-            value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
-            placeholder="Buscar por persona o grupo…"
-            aria-label="Buscar en los saldos a favor"
-            className="w-full max-w-md rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-sm font-body"
-          />
+          <div className={cn('focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2', CAMPO)}>
+            <Search size={14} className="text-navy-light/80 shrink-0" aria-hidden="true" />
+            <input type="search" value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por persona o grupo…" aria-label="Buscar en los saldos a favor"
+              className="flex-1 bg-transparent text-[13px] outline-none font-body text-navy" />
+          </div>
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden overflow-x-auto">
             <table className="w-full border-collapse text-sm min-w-[640px]">
               <thead>
@@ -202,9 +221,9 @@ export default function SaldosAFavorPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{s.group_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{plata(s.pagado, s.currency)}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{plata(s.costo, s.currency)}</td>
-                    <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body">{plata(s.saldo, s.currency)}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.pagado} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.costo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
+                    <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body"><AmountDisplay amount={s.saldo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
                     <td className="px-4 py-3 text-right">
                       <button type="button" onClick={() => setDetalle(s)}
                         className="inline-flex items-center gap-1 rounded-full border border-navy/15 px-3 py-1 text-[13px] text-navy hover:bg-surface-low font-body">
