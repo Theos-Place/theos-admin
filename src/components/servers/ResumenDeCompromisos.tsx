@@ -59,7 +59,7 @@ export function ResumenDeCompromisos({
           : undefined}
       />
       <Kpi titulo="Asistencia" valor={pct(pcts.asistencia)} pie={`${total.asistencia} cumplen`} info={ATTENDANCE_GENERAL_TOOLTIP} />
-      <Kpi titulo="En estudio" valor={pct(pcts.estudio)} pie={`${total.estudio} llevando o dando`} />
+      <Kpi titulo="En estudio" valor={pct(pcts.estudio)} pie={`${total.estudio} cursando o dirigiendo`} />
       <Kpi titulo="Donantes" valor={pct(pcts.donante)} pie={`${total.donante} activos`} info={explicacionDeDonantes(new Date())} />
       <Kpi titulo="Cumplen todo" valor={pct(pcts.todo)} pie={`${total.conPendientes} con algo pendiente`} />
     </div>

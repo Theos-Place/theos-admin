@@ -36,7 +36,7 @@ describe('leFaltaAlgo', () => {
 
 describe('etiquetaDeEstudio', () => {
   it('se puede llevar y dar a la vez', () => {
-    expect(etiquetaDeEstudio({ ...base, dandoEstudio: true })).toBe('Llevando · Dando')
+    expect(etiquetaDeEstudio({ ...base, dandoEstudio: true })).toBe('Cursando · Dirige')
   })
   it('sin estudio queda vacío, no "ninguno"', () => {
     expect(etiquetaDeEstudio({ ...base, llevandoEstudio: false })).toBe('')

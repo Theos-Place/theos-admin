@@ -68,7 +68,8 @@ export function faltantes(c: Compromisos): string[] {
 /** Badge de estudio: puede llevar y dar a la vez. '' si ninguno. */
 export function etiquetaDeEstudio(c: Compromisos): string {
   const partes: string[] = []
-  if (c.llevandoEstudio) partes.push('Llevando')
-  if (c.dandoEstudio) partes.push('Dando')
+  // «Cursando» y «Dirige», las mismas palabras de la columna Estudio (2026-10-19).
+  if (c.llevandoEstudio) partes.push('Cursando')
+  if (c.dandoEstudio) partes.push('Dirige')
   return partes.join(' · ')
 }

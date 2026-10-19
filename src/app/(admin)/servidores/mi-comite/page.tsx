@@ -80,7 +80,7 @@ const CABECERAS: Array<{ label: string; info?: string }> = [
   { label: 'Persona' },
   { label: 'Puesto' },
   { label: 'Asistencia', info: ATTENDANCE_GENERAL_TOOLTIP },
-  { label: 'Estudio', info: 'Llevando = matriculada en un estudio en los últimos 12 meses. Dando = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos. ' + INFO_ULTIMO_ESTUDIO_ESTUDIANTE },
+  { label: 'Estudio', info: 'Cursando = matriculada en un estudio en los últimos 12 meses. Dirige = dirigente o co-dirigente de un grupo en los últimos 12 meses. Cumple con cualquiera de los dos. ' + INFO_ULTIMO_ESTUDIO_ESTUDIANTE },
   { label: 'Donante', info: explicacionDeDonantes(new Date()) },
   { label: 'Último check-in' },
 ]
