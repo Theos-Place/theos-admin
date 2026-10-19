@@ -35,6 +35,6 @@ export async function descargarExcel(
 export function enRango(iso: string | null | undefined, desde: string, hasta: string): boolean {
   if (!desde && !hasta) return true
   if (!iso) return false
-  const dia = ymdCR(iso)
+  const dia = ymdCR(new Date(iso))
   return (!desde || dia >= desde) && (!hasta || dia <= hasta)
 }
