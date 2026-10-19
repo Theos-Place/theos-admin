@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
   grupoEnMarcha, matriculaVigente, textoDeEstudio, estaEnEstudio, mesYAnio,
+  ultimoLlevadoODado, estudioCuentaParaElCompromiso,
   estudiosQueCursa,
   type EstudioDeLaPersona, estudiosEnMarcha, SUFIJO_EN_MATRICULA } from './estudio-actual'
+
+const AHORA = new Date('2026-10-19T12:00:00Z')
 
 const e = (x: Partial<EstudioDeLaPersona> = {}): EstudioDeLaPersona => ({
   llevando: [], dando: [], ultimo: null, ...x,
@@ -30,7 +33,8 @@ describe('textoDeEstudio', () => {
     // "Último: …" la asimetría confunde.
     expect(textoDeEstudio(e({ llevando: ['X'] }))).toMatch(/^Cursando: /)
     expect(textoDeEstudio(e({ dando: ['X'] }))).toMatch(/^Dirige: /)
-    expect(textoDeEstudio(e({ ultimo: { nombre: 'X', fecha: null } }))).toMatch(/^Último: /)
+    expect(textoDeEstudio(e({ ultimo: { nombre: 'X', fecha: null } }))).toMatch(/^Llevó: /)
+    expect(textoDeEstudio(e({ ultimoDado: { nombre: 'X', fecha: null } }))).toMatch(/^Dio: /)
   })
 
   it('llevando dice cuál, con la palabra adelante', () => {
@@ -51,8 +55,8 @@ describe('textoDeEstudio', () => {
   })
 
   it('sin estudio ahora, muestra el último con su mes', () => {
-    expect(textoDeEstudio(e({ ultimo: { nombre: 'Nivel 3', fecha: '2026-03-18' } })))
-      .toBe('Último: Nivel 3 · mar 2026')
+    expect(textoDeEstudio(e({ ultimo: { nombre: 'Nivel 3', fecha: '2026-03-18' } }), AHORA))
+      .toBe('Llevó: Nivel 3 · mar 2026')
   })
 
   it('el último NO se muestra si está llevando algo: la columna se vuelve ilegible', () => {
@@ -61,11 +65,46 @@ describe('textoDeEstudio', () => {
   })
 
   it('último sin fecha no inventa una', () => {
-    expect(textoDeEstudio(e({ ultimo: { nombre: 'Nivel 1', fecha: null } }))).toBe('Último: Nivel 1')
+    expect(textoDeEstudio(e({ ultimo: { nombre: 'Nivel 1', fecha: null } }))).toBe('Llevó: Nivel 1')
   })
 
   it('nunca llevó ninguno queda vacío', () => {
     expect(textoDeEstudio(e())).toBe('')
+  })
+
+  /**
+   * 2026-10-19 · Consejo Dirección: Gustavo Zamora CUMPLÍA (dio «Sirviendo
+   * como Jesús», cerró el 24-ago-2026) y la columna decía «Último: Precampaña ·
+   * abr 2025», porque solo mostraba lo que llevó como estudiante.
+   */
+  it('muestra lo MÁS reciente entre lo que llevó y lo que dio', () => {
+    const gustavo = e({
+      ultimo: { nombre: 'Precampaña Transformados', fecha: '2025-04-29' },
+      ultimoDado: { nombre: 'Sirviendo como Jesús', fecha: '2026-08-24' },
+    })
+    expect(textoDeEstudio(gustavo, AHORA)).toBe('Dio: Sirviendo como Jesús · ago 2026')
+    expect(estudioCuentaParaElCompromiso(gustavo, AHORA)).toBe(true)
+    expect(ultimoLlevadoODado(gustavo)?.tipo).toBe('dio')
+  })
+
+  it('si lo último tiene más de un año, lo dice y no cuenta', () => {
+    const benjamin = e({ ultimo: { nombre: 'Precampaña Transformados', fecha: '2025-04-29' } })
+    expect(textoDeEstudio(benjamin, AHORA)).toBe('Llevó: Precampaña Transformados · abr 2025 · hace más de un año')
+    expect(estudioCuentaParaElCompromiso(benjamin, AHORA)).toBe(false)
+  })
+
+  it('el corte es a los 12 meses exactos', () => {
+    expect(estudioCuentaParaElCompromiso(e({ ultimo: { nombre: 'X', fecha: '2025-10-19' } }), AHORA)).toBe(true)
+    expect(estudioCuentaParaElCompromiso(e({ ultimo: { nombre: 'X', fecha: '2025-10-18' } }), AHORA)).toBe(false)
+  })
+})
+
+describe('las dos pantallas pintan el estudio con la regla del servidor', () => {
+  it('Mi comité y el reporte de servidores usan llevandoEstudio || dandoEstudio', async () => {
+    const { readFileSync } = await import('node:fs')
+    expect(readFileSync('src/app/(admin)/servidores/mi-comite/page.tsx', 'utf8')).toContain('{f.llevandoEstudio || f.dandoEstudio ? (')
+    expect(readFileSync('src/app/(admin)/reportes/servidores/page.tsx', 'utf8')).toContain('{s.llevandoEstudio || s.dandoEstudio')
+    expect(readFileSync('src/lib/supabase/queries/mi-comite.ts', 'utf8')).toContain('e.ultimoDado = { nombre: nombreDelEstudio(g.plan, g.name), fecha }')
   })
 })
 

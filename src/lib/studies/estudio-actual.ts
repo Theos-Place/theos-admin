@@ -112,8 +112,43 @@ export type EstudioDeLaPersona = {
   llevando: string[]
   /** Los que está dando ahora, por nombre. */
   dando: string[]
-  /** El último que terminó, si hoy no está llevando ninguno. */
+  /** El último que terminó como ESTUDIANTE, si hoy no está llevando ninguno. */
   ultimo: { nombre: string; fecha: string | null } | null
+  /**
+   * El último grupo que DIO como dirigente o co-dirigente y ya cerró
+   * (2026-10-19). Sin esto la columna decía «Último: Precampaña · abr 2025» de
+   * Gustavo Zamora, que sí cumplía porque dio un estudio que cerró en agosto:
+   * el compromiso contaba lo que dio y la columna solo mostraba lo que llevó.
+   */
+  ultimoDado?: { nombre: string; fecha: string | null } | null
+}
+
+/** La ventana del compromiso de estudio: llevó o dio algo en los últimos 12 meses. */
+export const MESES_DEL_COMPROMISO_DE_ESTUDIO = 12
+
+function haceUnAnio(ahora: Date): string {
+  const d = new Date(ahora)
+  d.setMonth(d.getMonth() - MESES_DEL_COMPROMISO_DE_ESTUDIO)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Lo más reciente que llevó o dio, con cuál de las dos fue. null si nada. */
+export function ultimoLlevadoODado(e: EstudioDeLaPersona): { tipo: 'llevo' | 'dio'; nombre: string; fecha: string | null } | null {
+  const llevo = e.ultimo ? { tipo: 'llevo' as const, ...e.ultimo } : null
+  const dio = e.ultimoDado ? { tipo: 'dio' as const, ...e.ultimoDado } : null
+  if (!llevo || !dio) return llevo ?? dio
+  return (dio.fecha ?? '') > (llevo.fecha ?? '') ? dio : llevo
+}
+
+/**
+ * ¿Lo de la columna cuenta para el compromiso? Llevando o dando ahora, o lo
+ * último terminó dentro de los 12 meses. Decide el color: azul si cuenta,
+ * gris si no.
+ */
+export function estudioCuentaParaElCompromiso(e: EstudioDeLaPersona, ahora: Date = new Date()): boolean {
+  if (e.llevando.length || e.dando.length) return true
+  const u = ultimoLlevadoODado(e)
+  return !!u?.fecha && u.fecha >= haceUnAnio(ahora)
 }
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic']
@@ -133,7 +168,7 @@ export function mesYAnio(fecha: string | null | undefined): string {
  * está estudiando no necesita que le recuerden el anterior, y la columna se
  * vuelve ilegible. Por eso no es "todo junto" sino una u otra cosa.
  */
-export function textoDeEstudio(e: EstudioDeLaPersona): string {
+export function textoDeEstudio(e: EstudioDeLaPersona, ahora: Date = new Date()): string {
   const partes: string[] = []
   // "Cursando:" y "Dirige:" al frente (pedido del usuario 2026-09-21): sin la
   // palabra, "Nivel 2" a secas no dice si lo está llevando o si lo dio, y en una
@@ -141,11 +176,14 @@ export function textoDeEstudio(e: EstudioDeLaPersona): string {
   if (e.llevando.length) partes.push(`Cursando: ${e.llevando.join(', ')}`)
   if (e.dando.length) partes.push(`Dirige: ${e.dando.join(', ')}`)
   if (partes.length) return partes.join(' · ')
-  if (e.ultimo) {
-    const f = mesYAnio(e.ultimo.fecha)
-    return `Último: ${e.ultimo.nombre}${f ? ` · ${f}` : ''}`
-  }
-  return ''
+  // Lo más reciente entre lo que LLEVÓ y lo que DIO, con la palabra que dice
+  // cuál de las dos (2026-10-19): «Último:» a secas se leía como lo que llevó.
+  const u = ultimoLlevadoODado(e)
+  if (!u) return ''
+  const f = mesYAnio(u.fecha)
+  // Sin fecha no se puede afirmar que pasó más de un año: no se marca.
+  const viejo = !!u.fecha && u.fecha < haceUnAnio(ahora)
+  return `${u.tipo === 'dio' ? 'Dio' : 'Llevó'}: ${u.nombre}${f ? ` · ${f}` : ''}${viejo ? ' · hace más de un año' : ''}`
 }
 
 /** ¿Cumple el compromiso de estudio? Llevar o dar, igual que antes de SRV-7:
@@ -168,7 +206,7 @@ export function estaEnEstudio(e: EstudioDeLaPersona): boolean {
  * la de dirigentes se leía como si fuera lo que la persona había llevado.
  */
 export const INFO_ULTIMO_ESTUDIO_ESTUDIANTE =
-  'El último estudio que la persona LLEVÓ como estudiante. Solo aparece cuando hoy no está llevando ni dando ninguno.'
+  'Cuenta si la persona está llevando o dando un estudio, o si lo último que llevó o dio terminó en los últimos 12 meses. Cuando hoy no está en ninguno, dice qué fue lo último («Llevó:» o «Dio:»); en gris y con «hace más de un año» si ya no cuenta.'
 
 export const INFO_ULTIMO_ESTUDIO_DIRIGENTE =
   'El último estudio que la persona DIO como dirigente o co-dirigente — no el que llevó como estudiante. El punto verde marca que el grupo está en curso o en matrícula ahora.'

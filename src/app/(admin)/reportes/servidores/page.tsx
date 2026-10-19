@@ -270,7 +270,7 @@ export default function ReporteServidoresPage() {
                         <td className="px-3 py-2 text-[13px] font-body">
                           {s.llevandoEstudio || s.dandoEstudio
                             ? <span className="text-navy">{textoDeEstudio(s.estudio)}</span>
-                            : s.estudio.ultimo
+                            : s.estudio.ultimo || s.estudio.ultimoDado
                               ? <span className="text-navy-light/80">{textoDeEstudio(s.estudio)}</span>
                               : <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />}
                         </td>

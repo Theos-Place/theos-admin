@@ -251,9 +251,13 @@ function MiComiteContenido() {
                             el peso del texto más el "Último:" y su fecha, no un
                             color. Así la columna se lee igual en toda la tabla. */}
                         <td className="px-4 py-3 text-[13px] font-body">
-                          {f.estudio.llevando.length || f.estudio.dando.length ? (
+                          {/* Azul si CUENTA para el compromiso (lo dice el servidor:
+                              llevó o dio algo en 12 meses), gris si no. Antes miraba
+                              solo lo que está en curso hoy, y quien dio un estudio que
+                              cerró en agosto salía en gris aunque cumplía (2026-10-19). */}
+                          {f.llevandoEstudio || f.dandoEstudio ? (
                             <span className="text-navy">{textoDeEstudio(f.estudio)}</span>
-                          ) : f.estudio.ultimo ? (
+                          ) : f.estudio.ultimo || f.estudio.ultimoDado ? (
                             <span className="text-navy-light/80">{textoDeEstudio(f.estudio)}</span>
                           ) : (
                             <X size={15} strokeWidth={2.5} className="text-coral-deep" aria-label="Estudio: nunca ha llevado ninguno" />

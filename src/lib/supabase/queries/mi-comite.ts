@@ -229,7 +229,13 @@ export async function getCompromisosDeComites(
       const reciente = (g.starts_at?.slice(0, 10) ?? '') >= desde || (g.closed_at?.slice(0, 10) ?? '') >= desde
       if (!enMarcha && !reciente) continue
       setDando.add(id)
-      if (!enMarcha) continue
+      if (!enMarcha) {
+        // Lo último que DIO y ya cerró: la columna tiene que poder decirlo.
+        const e = deLaPersona(id)
+        const fecha = g.closed_at?.slice(0, 10) ?? g.starts_at?.slice(0, 10) ?? null
+        if (!e.ultimoDado || (fecha ?? '') > (e.ultimoDado.fecha ?? '')) e.ultimoDado = { nombre: nombreDelEstudio(g.plan, g.name), fecha }
+        continue
+      }
       const nombre = nombreDelEstudio(g.plan, g.name)
       const e = deLaPersona(id)
       if (!e.dando.includes(nombre)) e.dando.push(nombre)
