@@ -29,7 +29,7 @@ export type DbFolletoRequest = {
   note: string | null
   target_leader_id: string | null
   target_leader_name: string | null
-  source_group: { name: string | null; modalidad?: string | null } | null
+  source_group: { name: string | null; modalidad?: string | null; dirigente?: string | null } | null
   bloque: { nombre: string } | null
   target_leader: { first_name: string | null; last_name: string | null } | null
   /** Pagos individuales enlazados a este tiquete. Ausente = nivel sin cobro. */
@@ -373,7 +373,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   const supabase = createAdminClient()
   let q = supabase
     .from('folleto_requests')
-    .select('id, source_group_id, source_plan_code, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name, modalidad, leader_id, co_leader_id), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
+    .select('id, source_group_id, source_plan_code, target_level_code, quantity, quantity_leaders, sede, close_date, available_at, status, tipo, bloque_id, confirmed_by, confirmed_at, created_at, note, target_leader_id, target_leader_name, source_group:study_groups!folleto_requests_source_group_id_fkey(name, modalidad, leader_id, co_leader_id, leader:members!study_groups_leader_id_fkey(first_name, last_name)), bloque:capacitacion_bloques(nombre), target_leader:members!folleto_requests_target_leader_id_fkey(first_name, last_name)')
     .order('created_at', { ascending: false })
   if (filters.sede) q = q.eq('sede', filters.sede)
   if (filters.status) q = q.eq('status', filters.status)
@@ -401,8 +401,15 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
   }
 
   return filas.map(row => {
-    const grupo = (Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group) as
-      { name: string | null; leader_id?: string | null; co_leader_id?: string | null } | null
+    const crudo = (Array.isArray(row.source_group) ? (row.source_group[0] ?? null) : row.source_group) as
+      { name: string | null; leader_id?: string | null; co_leader_id?: string | null
+        leader?: { first_name: string | null; last_name: string | null } | Array<{ first_name: string | null; last_name: string | null }> | null } | null
+    // 2026-10-19 · El nombre del DIRIGENTE, para el título del tiquete: un grupo
+    // creado en el sistema se llama «N2 — Escazú» y no dice de quién es.
+    const lider = Array.isArray(crudo?.leader) ? crudo?.leader[0] : crudo?.leader
+    const grupo = crudo
+      ? { ...crudo, leader: undefined, dirigente: lider ? `${lider.first_name ?? ''} ${lider.last_name ?? ''}`.trim() || null : null }
+      : null
     const leaders = (row.quantity_leaders as number | null) ?? null
     // Los tiquetes anteriores al 2026-09-02 no guardaron los folletos de
     // dirigentes: se deducen del grupo, que es la mejor lectura disponible.

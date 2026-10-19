@@ -93,3 +93,22 @@ export function etiquetaDeFolletos(
   if (codes.length === 0) return ''
   return codes.map(levelLabel).join(' y ')
 }
+
+/**
+ * El nombre del grupo para el título del tiquete, CON el dirigente si el
+ * nombre no lo trae (2026-10-19). Los grupos del histórico se llaman «Nivel 3.
+ * Mirtha Cruz. Setiembre 2026» y ya lo dicen; los creados en el sistema, «N2 —
+ * Escazú», y quien imprime no sabía de quién era el tiquete.
+ */
+export function nombreConDirigente(nombre: string | null | undefined, dirigente: string | null | undefined): string {
+  const n = (nombre ?? '').trim()
+  const d = (dirigente ?? '').trim()
+  if (!d) return n || '—'
+  if (!n) return d
+  const plano = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  // Basta con nombre y primer apellido: «Mirtha Cruz» está en el grupo aunque
+  // la ficha diga «Mirtha Cruz Graña».
+  const [primero, apellido] = plano(d).split(/\s+/)
+  const yaLoDice = plano(n).includes(primero) && (!apellido || plano(n).includes(apellido))
+  return yaLoDice ? n : `${n} · ${d}`
+}

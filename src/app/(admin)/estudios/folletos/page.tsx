@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
 import { FileText, Loader2, Check, ChevronRight, MapPin } from 'lucide-react'
 import type { DbFolletoRequest } from '@/lib/supabase/queries/folletos'
-import {
+import { nombreConDirigente,
   FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
   etiquetaDeFolletos, levelLabel, type FolletoState,
 } from '@/lib/studies/folletos'
@@ -234,7 +234,7 @@ export default function FolletosPage() {
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
                         {r.tipo === 'cierre' ? (
-                          <>{r.source_group?.name ?? '—'}{r.target_level_code && <span className="text-navy-light/80"> · → {etiquetaDeFolletos(r.source_plan_code, modalidadDe(r.source_group?.modalidad)) || levelLabel(r.target_level_code)}</span>}</>
+                          <>{nombreConDirigente(r.source_group?.name, r.source_group?.dirigente)}{r.target_level_code && <span className="text-navy-light/80"> · → {etiquetaDeFolletos(r.source_plan_code, modalidadDe(r.source_group?.modalidad)) || levelLabel(r.target_level_code)}</span>}</>
                         ) : r.tipo === 'manual' ? (
                           <>
                             {(() => {
