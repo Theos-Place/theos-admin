@@ -1,0 +1,11 @@
+{
+ "origen": "9a4f423d-9136-44b0-9763-cb86e2a0d6b6",
+ "sucesor": "41551425-9d4c-4b36-88e3-f1a1df738c76",
+ "matriculados": 8,
+ "monto": 5000,
+ "folleto": {
+  "created": true,
+  "id": "d3303972-7ed0-4f64-b292-1b015c2866ee"
+ },
+ "enlazados": 8
+}
