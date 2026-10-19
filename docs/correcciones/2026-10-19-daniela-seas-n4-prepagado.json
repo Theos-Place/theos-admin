@@ -1,0 +1,6 @@
+{
+ "motivo": "Paquete N2+N3+N4 de Daniela Seas (₡13.000, esquema viejo): N4 ya está pagado. Al cerrar N3 el sucesor no debe cobrar N4. Pedido de Floriana 2026-10-19.",
+ "grupo": "a3489ec1-78c4-4e19-a6b2-61b1664660ef",
+ "cambio": "study_enrollments.niveles_prepagados: '{}' → '{N4}' en las 8 matrículas enrolled del grupo",
+ "rollback": "update study_enrollments set niveles_prepagados='{}' where group_id='a3489ec1-78c4-4e19-a6b2-61b1664660ef'"
+}

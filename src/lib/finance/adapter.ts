@@ -5,13 +5,27 @@ import type {
 } from '@/lib/supabase/queries/finance'
 import type { Payment, Donation, Refund, ImportBatch } from '@/types/finance'
 import { paymentDescription, paymentKindLabel } from '@/lib/finance/payment-label'
+import { nombreConDirigente } from '@/lib/studies/folletos'
 
 function fullName(m: { first_name: string; last_name: string } | null): string {
   return m ? `${m.first_name} ${m.last_name}`.trim() : ''
 }
 
-function entityName(event: { title: string } | null, group: { name: string } | null): string {
-  return event?.title ?? group?.name ?? ''
+/**
+ * El nombre del evento, o el del grupo CON su dirigente. Los grupos viejos lo
+ * traen en el nombre («Nivel 4. Marco Acuña y Tatiana Arauz. Octubre 2026»),
+ * pero los creados en el sistema se llaman «N1 — Escazú» y en la lista de
+ * pagos no se sabía de quién eran (reportado 2026-10-19, grupo de Aniri
+ * Herrera). La misma regla que el tiquete de folletos: no se repite si ya está.
+ */
+function entityName(
+  event: { title: string } | null,
+  group: { name: string; leader?: { first_name: string | null; last_name: string | null } | null } | null,
+): string {
+  if (event?.title) return event.title
+  if (!group) return ''
+  const l = group.leader
+  return nombreConDirigente(group.name, l ? `${l.first_name ?? ''} ${l.last_name ?? ''}` : null)
 }
 
 /** Datos que necesita paymentDescription, sacados de la fila cruda. */

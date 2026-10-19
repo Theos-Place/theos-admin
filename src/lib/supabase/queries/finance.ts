@@ -11,7 +11,8 @@ type MemberRef = { first_name: string; last_name: string; cedula: string | null 
 // REP-17: el tipo del evento y el nivel del plan viajan con el pago para que
 // el reporte agrupe por comité (categoria-de-pago.ts).
 type EventRef = { title: string; event_type?: string | null } | null
-type GroupRef = { name: string; plan?: { code: string | null; name: string | null; level?: string | null } | null } | null
+type LeaderRef = { first_name: string | null; last_name: string | null } | null
+type GroupRef = { name: string; leader?: LeaderRef; plan?: { code: string | null; name: string | null; level?: string | null } | null } | null
 
 export type DbPayment = {
   id: string
@@ -101,7 +102,7 @@ const PAYMENT_SELECT = `
   concept, receipt_path, reference_code, review_status,
   member:members!payments_member_id_fkey(first_name, last_name, cedula),
   event:events(title, event_type),
-  study_group:study_groups(name, plan:study_plans(code, name, level))
+  study_group:study_groups(name, leader:members!study_groups_leader_id_fkey(first_name, last_name), plan:study_plans(code, name, level))
 `
 // Con búsqueda el join al miembro es inner: filtramos por nombre/cédula y los
 // pagos sin miembro (no buscables por persona) quedan fuera.
@@ -334,7 +335,7 @@ export async function getRefunds(filters: RefundFilters = {}): Promise<DbRefund[
       requested_at, processed_at, processed_by, kind, plan_id, event_id,
       member:members(first_name, last_name),
       plan:study_plans!refunds_plan_id_fkey(name),
-      payment:payments(event:events(title), study_group:study_groups(name))
+      payment:payments(event:events(title), study_group:study_groups(name, leader:members!study_groups_leader_id_fkey(first_name, last_name)))
     `)
     .order('requested_at', { ascending: false })
 
