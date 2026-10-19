@@ -323,3 +323,59 @@ export function ventanaDelCorte(input: {
     enrollment_end_date: cierre < input.hoy ? input.hoy : cierre,
   }
 }
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * COBROS QUE NO CORRESPONDEN al cambiar la modalidad (2026-10-19)
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Lo que una matrícula de este plan cobra bajo esta modalidad. Es la misma
+ * cuenta que hace `enrollMember`: en un bloque de niveles bajo `bloques`, el
+ * par al entrar y 0 en la segunda mitad; en todo lo demás, el costo del plan.
+ */
+export function montoDeMatricula(
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+  costos: Readonly<Record<string, number>>,
+): number {
+  if (!planCode) return 0
+  if (modalidad === 'bloques' && bloqueDe(planCode)) return montoDelBloque(planCode, costos, modalidad)
+  return Number(costos[planCode]) || 0
+}
+
+export type CobroDeMatricula = {
+  id: string
+  amount: number
+  status: string
+  concept: string | null
+  paid_at: string | null
+  receipt_path: string | null
+  review_status: string | null
+}
+
+/**
+ * Los cobros pendientes que, con el grupo en el esquema VIEJO, no tendrían que
+ * existir: el N1 de Guido Chavarría (2026-10-19) nació en `bloques`, se cobró
+ * ₡5.000 a cada uno, y al pasarlo a `legacy` —donde N1 no se cobra— los cobros
+ * quedaron colgados.
+ *
+ * SOLO hacia `legacy`, a propósito. Hacia `bloques` también hay cobros que
+ * pasarían a 0 (la segunda mitad del par), pero un grupo puede ser MIXTO: el
+ * que entró antes del cambio pagó nivel por nivel y su N2 SÍ se cobra (ver
+ * `modalidad-de-bloques`). Borrarle ese cobro sería regalarle el nivel.
+ *
+ * Y SOLO lo que no tiene ninguna plata ni trámite encima: pendiente, sin pago,
+ * sin comprobante y sin revisión.
+ */
+export function cobrosQueNoCorresponden(
+  cobros: readonly CobroDeMatricula[],
+  planCode: string | null | undefined,
+  modalidad: Modalidad,
+  costos: Readonly<Record<string, number>>,
+): CobroDeMatricula[] {
+  if (modalidad !== 'legacy') return []
+  if (montoDeMatricula(planCode, modalidad, costos) > 0) return []
+  return cobros.filter(c =>
+    c.concept === 'matricula' && c.status === 'pending' && !c.paid_at && !c.receipt_path && !c.review_status
+    && Number(c.amount) > 0)
+}

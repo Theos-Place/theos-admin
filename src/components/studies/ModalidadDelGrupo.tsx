@@ -47,6 +47,24 @@ export function ModalidadDelGrupo({ groupId, modalidad, onCambiada }: {
   const otra: Modalidad = actual === 'legacy' ? 'bloques' : 'legacy'
   const [confirmando, setConfirmando] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  /**
+   * 2026-10-19 · Al pasar al esquema viejo, los cobros pendientes que ahí no
+   * corresponden (el N1 de Guido Chavarría quedó con ₡5.000 a cada uno). Se
+   * consultan al abrir la confirmación y se borran junto con el cambio.
+   */
+  const [sobran, setSobran] = useState<Array<{ id: string; persona: string; monto: number }> | null>(null)
+  const [borrarSobrantes, setBorrarSobrantes] = useState(true)
+
+  function abrir() {
+    setConfirmando(true)
+    setSobran(null)
+    setBorrarSobrantes(true)
+    if (otra !== 'legacy') return
+    fetch(`/api/studies/groups/${groupId}/stale-charges?modalidad=legacy`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => setSobran(Array.isArray(d?.cobros) ? d.cobros : []))
+      .catch(() => setSobran([]))
+  }
 
   async function cambiar() {
     if (guardando) return
@@ -61,7 +79,15 @@ export function ModalidadDelGrupo({ groupId, modalidad, onCambiada }: {
         const d = await res.json().catch(() => null)
         throw new Error(d?.error || 'No se pudo cambiar.')
       }
-      toast(`El grupo quedó en «${EXPLICACION[otra].titulo}».`, 'success')
+      let extra = ''
+      if (otra === 'legacy' && borrarSobrantes && sobran?.length) {
+        const del = await fetch(`/api/studies/groups/${groupId}/stale-charges`, { method: 'DELETE' })
+        const d = await del.json().catch(() => null)
+        extra = del.ok
+          ? ` Se borraron ${d?.borrados ?? 0} cobros que no correspondían.`
+          : ' No se pudieron borrar los cobros: hacelo de nuevo desde aquí.'
+      }
+      toast(`El grupo quedó en «${EXPLICACION[otra].titulo}».${extra}`, 'success')
       setConfirmando(false)
       onCambiada?.(otra)
     } catch (e) {
@@ -83,7 +109,7 @@ export function ModalidadDelGrupo({ groupId, modalidad, onCambiada }: {
               {EXPLICACION[actual].titulo}
             </p>
           </div>
-          <Button variante="secundario" tamano="sm" radio="xl" onClick={() => setConfirmando(true)}>
+          <Button variante="secundario" tamano="sm" radio="xl" onClick={abrir}>
             Cambiar
           </Button>
         </div>
@@ -108,6 +134,30 @@ export function ModalidadDelGrupo({ groupId, modalidad, onCambiada }: {
               Esto cambia si al cerrar se le cobra a la gente y si se piden sus folletos.
               Queda registrado quién lo cambió.
             </p>
+            {otra === 'legacy' && sobran === null && (
+              <p className="flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
+                <Loader2 size={13} className="animate-spin" aria-hidden="true" /> Revisando los cobros del grupo…
+              </p>
+            )}
+            {otra === 'legacy' && !!sobran?.length && (
+              <div className="rounded-xl border border-coral/40 bg-coral/5 p-3 space-y-2" role="alert">
+                <p className="text-[13px] font-semibold text-navy font-body">
+                  {sobran.length === 1
+                    ? 'Hay 1 cobro pendiente que en el esquema viejo no corresponde:'
+                    : `Hay ${sobran.length} cobros pendientes que en el esquema viejo no corresponden:`}
+                </p>
+                <ul className="text-[13px] text-navy font-body list-disc pl-5">
+                  {sobran.map(c => <li key={c.id}>{c.persona} · ₡{c.monto.toLocaleString('es-CR')}</li>)}
+                </ul>
+                <label className="flex items-center gap-2 text-[13px] text-navy font-body">
+                  <input type="checkbox" checked={borrarSobrantes} onChange={e => setBorrarSobrantes(e.target.checked)} />
+                  Borrarlos al cambiar
+                </label>
+                <p className="text-[13px] text-navy-light/80 font-body">
+                  Solo los que no tienen pago, comprobante ni revisión. Queda registrado en la auditoría.
+                </p>
+              </div>
+            )}
             <div className="flex gap-2 pt-1">
               <Button variante="navy" ancho="flex" onClick={cambiar} disabled={guardando}>
                 {guardando ? <><Loader2 size={15} className="animate-spin" /> Guardando…</> : 'Sí, cambiarlo'}
